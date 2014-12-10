@@ -1,0 +1,67 @@
+#!/usr/bin/env python
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+"""
+Senlin API Server.
+"""
+
+import eventlet
+eventlet.monkey_patch(os=False)
+
+import os
+import six
+import sys
+
+# If ../senlin/__init__.py exists, add ../ to Python search path, so that
+# it will override what happens to be installed in /usr/(local/)lib/python...
+possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
+                                   os.pardir,
+                                   os.pardir))
+if os.path.exists(os.path.join(possible_topdir, 'senlin', '__init__.py')):
+    sys.path.insert(0, possible_topdir)
+
+from oslo.config import cfg
+from oslo import i18n
+
+from senlin.common import config
+from senlin.common.i18n import _LI
+from senlin.common import messaging
+from senlin.common import profiler
+from senlin.common import wsgi
+from senlin.openstack.common import log as logging
+from senlin.openstack.common import systemd
+
+i18n.enable_lazy()
+
+LOG = logging.getLogger('senlin.api')
+
+if __name__ == '__main__':
+    try:
+        cfg.CONF(project='senlin', prog='senlin-api')
+        logging.setup('senlin')
+        messaging.setup()
+
+        app = config.load_paste_app()
+
+        port = cfg.CONF.senlin_api.bind_port
+        host = cfg.CONF.senlin_api.bind_host
+        LOG.info(_LI('Starting Senlin ReST API on %(host)s:%(port)s'),
+                 {'host': host, 'port': port})
+        profiler.setup('senlin-api', host)
+        server = wsgi.Server()
+        server.start(app, cfg.CONF.heat_api, default_port=port)
+        systemd.notify_once()
+        server.wait()
+    except RuntimeError as ex:
+        sys.exit("ERROR: %s" % six.text_type(ex))
