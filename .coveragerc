@@ -1,0 +1,7 @@
+[run]
+branch = True
+source = senlin
+omit = */tests/*,senlin/openstack/*
+
+[report]
+ignore-errors = True

@@ -1,0 +1,22 @@
+include AUTHORS
+include ChangeLog
+include CONTRIBUTING.rst
+include HACKING.rst
+include LICENSE
+include README.rst
+include MANIFEST.in pylintrc
+include openstack-common.conf
+include babel.cfg install.sh run_tests.sh tox.ini uninstall.sh
+include senlin/db/sqlalchemy/migrate_repo/migrate.cfg
+include senlin/db/sqlalchemy/migrate_repo/README
+include senlin/openstack/common/README
+include senlin/testing/README.rst
+include senlin/tests/examples/tags.txt
+include senlin/tests/testing-overview.txt
+include senlin/tests/v1_1/testfile.txt
+include senlin/tests/policy/deny_stack_user.json
+include senlin/tests/policy/notallowed.json
+graft contrib
+graft etc
+graft doc
+graft tools
