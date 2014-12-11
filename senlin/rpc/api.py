@@ -13,26 +13,14 @@
 
 ENGINE_TOPIC = 'engine'
 
-PARAM_KEYS = (
-    PARAM_TIMEOUT,
-) = (
-    'timeout_mins',
-)
-
 CLUSTER_KEYS = (
-    CLUSTER_NAME, CLUSTER_ID,
-    CLUSTER_CREATION_TIME, CLUSTER_UPDATED_TIME, CLUSTER_DELETION_TIME,
-    CLUSTER_DESCRIPTION, CLUSTER_ACTION,
-    CLUSTER_STATUS, CLUSTER_STATUS_DATA, CLUSTER_CAPABILITIES,
-    CLUSTER_TIMEOUT, CLUSTER_OWNER,
-    CLUSTER_PARENT
+    CLUSTER_NAME, CLUSTER_ID, CLUSTER_PARENT,
+    CLUSTER_DOMAIN, CLUSTER_PROJECT, CLUSTER_USER,
+    CLUSTER_CREATED_TIME, CLUSTER_UPDATED_TIME, CLUSTER_DELETED_TIME,
+    CLUSTER_STATUS, CLUSTER_STATUS_DATA,
 ) = (
-    'cluster_name', 'cluster_identity',
-    'creation_time', 'updated_time', 'deletion_time',
-    'description', 'cluster_action',
-    'cluster_status', 'cluster_status_reason', 'capabilities',
-    'timeout_mins', 'cluster_owner',
-    'parent'
+    'name', 'id', 'parent',
+    'domain', 'project', 'user',
+    'created_time', 'updated_time', 'deleted_time',
+    'status', 'status_data',
 )
-
-THREAD_MESSAGES = (THREAD_CANCEL,) = ('cancel',)
