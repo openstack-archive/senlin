@@ -168,15 +168,6 @@ class EngineClient(object):
                                              cluster_identity=cluster_identity,
                                              args=args))
 
-    def authenticated_to_backend(self, ctxt):
-        """
-        Verify that the credentials in the RPC context are valid for the
-        current cloud backend.
-
-        :param ctxt: RPC context.
-        """
-        return self.call(ctxt, self.make_msg('authenticated_to_backend'))
-
     def delete_cluster(self, ctxt, cluster_identity, cast=True):
         """
         The delete_cluster method deletes a given cluster.
