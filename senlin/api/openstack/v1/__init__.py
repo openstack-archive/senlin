@@ -42,13 +42,15 @@ class API(wsgi.Router):
                                  "/clusters",
                                  action="create",
                                  conditions={'method': 'POST'})
-            cluster_mapper.connect("cluster_preview",
-                                 "/clusters/preview",
-                                 action="preview",
-                                 conditions={'method': 'POST'})
             cluster_mapper.connect("cluster_detail",
                                  "/clusters/detail",
                                  action="detail",
+                                 conditions={'method': 'GET'})
+
+            # Cluster data
+            cluster_mapper.connect("cluster_show",
+                                 "/clusters/{cluster_name}/{cluster_id}",
+                                 action="show",
                                  conditions={'method': 'GET'})
 
             # Cluster update/delete
@@ -56,19 +58,16 @@ class API(wsgi.Router):
                                  "/clusters/{cluster_name}/{cluster_id}",
                                  action="update",
                                  conditions={'method': 'PUT'})
-            cluster_mapper.connect("cluster_update_patch",
-                                 "/clusters/{cluster_name}/{cluster_id}",
-                                 action="update_patch",
-                                 conditions={'method': 'PATCH'})
             cluster_mapper.connect("cluster_delete",
                                  "/clusters/{cluster_name}/{cluster_id}",
                                  action="delete",
                                  conditions={'method': 'DELETE'})
 
         # Actions
+        cluster_path = "/{tenant_id}/clusters/{cluster_name}/{cluster_id}"
         actions_resource = actions.create_resource(conf)
         with mapper.submapper(controller=actions_resource,
-                              path_prefix=stack_path) as ac_mapper:
+                              path_prefix=cluster_path) as ac_mapper:
 
             ac_mapper.connect("action_cluster",
                               "/actions",
