@@ -124,18 +124,19 @@ class EngineClient(object):
         return self.call(ctxt, self.make_msg('show_cluster',
                                              cluster_identity=cluster_identity))
 
-    def create_cluster(self, ctxt, cluster_name, args):
+    def create_cluster(self, ctxt, cluster_name, size, profile):
         """
         The create_cluster method creates a new cluster using the args
         provided.
 
         :param ctxt: RPC context.
         :param cluster_name: Name of the cluster you want to create.
-        :param args: Request parameters/args passed from API
+        :param size: Size of the cluster you want to create.
+        :param profile: Profile used to create the cluster
         """
-        return self._create_cluster(ctxt, cluster_name, args)
+        return self._create_cluster(ctxt, cluster_name, size, profile)
 
-    def _create_cluster(self, ctxt, cluster_name, args,
+    def _create_cluster(self, ctxt, cluster_name, size, profile,
                       owner_id=None, nested_depth=0, user_creds_id=None,
                       cluster_user_project_id=None):
         """
@@ -149,24 +150,27 @@ class EngineClient(object):
         """
         return self.call(
             ctxt, self.make_msg('create_cluster', cluster_name=cluster_name,
-                                args=args,
+                                size=size,
+                                profile=profile,
                                 owner_id=owner_id,
                                 nested_depth=nested_depth,
                                 user_creds_id=user_creds_id,
                                 cluster_user_project_id=cluster_user_project_id))
 
-    def update_cluster(self, ctxt, cluster_identity, args):
+    def update_cluster(self, ctxt, cluster_identity, size, profile):
         """
         The update_cluster method updates an existing cluster based on the
         provided template and parameters.
 
         :param ctxt: RPC context.
         :param cluster_identity: Identity of the cluster you want to update.
-        :param args: Request parameters/args passed from API
+        :param size: Size of the cluster you want to create.
+        :param profile: Profile used to create the cluster
         """
         return self.call(ctxt, self.make_msg('update_cluster',
                                              cluster_identity=cluster_identity,
-                                             args=args))
+                                             size=size,
+                                             profile=profile))
 
     def delete_cluster(self, ctxt, cluster_identity, cast=True):
         """

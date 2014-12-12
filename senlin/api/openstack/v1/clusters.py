@@ -40,10 +40,12 @@ class InstantiationData(object):
 
     PARAMS = (
         CLUSTER_NAME,
-        PARAMETERS,
+        SIZE,
+        PROFILE,
     ) = (
         'cluster_name',
-        'parameters',
+        'size',
+        'profile'
     )
 
     def __init__(self, data):
@@ -60,13 +62,21 @@ class InstantiationData(object):
             raise exc.HTTPBadRequest(_("No cluster name specified"))
         return self.data[self.CLUSTER_NAME]
 
-    def args(self):
+    def size(self):
         """
-        Return arguments supplied by the user.
+        Return the cluster size.
         """
-        if self.PARAMETERS not in self.data:
-            raise exc.HTTPBadRequest(_("No cluster parameters provided"))
-        return self.data[self.PARAMETERS]
+        if self.SIZE not in self.data:
+            raise exc.HTTPBadRequest(_("No cluster size provided"))
+        return self.data[self.SIZE]
+
+    def profile(self):
+        """
+        Return the cluster profile.
+        """
+        if self.PROFILE not in self.data:
+            raise exc.HTTPBadRequest(_("No cluster profile provided"))
+        return self.data[self.self.PROFILE]
 
 
 class ClusterController(object):
@@ -145,7 +155,8 @@ class ClusterController(object):
 
         result = self.rpc_client.create_cluster(req.context,
                                               data.cluster_name(),
-                                              data.args())
+                                              data.size(),
+                                              data.profile())
 
         formatted_cluster = clusters_view.format_cluster(
             req,
@@ -178,7 +189,8 @@ class ClusterController(object):
 
         self.rpc_client.update_cluster(req.context,
                                      identity,
-                                     data.args())
+                                     data.size(),
+                                     data.profile())
 
         raise exc.HTTPAccepted()
 
