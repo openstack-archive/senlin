@@ -22,11 +22,19 @@ class PolicyBase(object):
         self.enabled = True
         self.uuid = None
         self.spec = {}
+        self.level = DEBUG
 
     def pre_op(self, cluster_id, action):
         '''
         Force all subclasses to implement an operation that will be invoked
         before an action.
+        '''
+        return NotImplemented
+
+    def enforce(self, cluster_id, action):
+        '''
+        Force all subclasses to implement an operation that can be called
+        during an action.
         '''
         return NotImplemented
 
@@ -43,11 +51,12 @@ class PolicyBase(object):
             'type': self.type_name,
             'uuid': self.uuid,
             'spec': self.spec,
+            'level': self.level,
             'cooldown': self.cooldown,
         }
         return pb_dict
 
     @classmethod
     def from_dict(self, **kwargs):
-        pb = PolicyBase(**kwargs)
+        pb = PolicyBase(kwargs)
         return pb
