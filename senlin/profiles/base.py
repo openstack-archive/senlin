@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import uuid
+
 
 class ProfileBase(object):
     '''
@@ -19,8 +21,44 @@ class ProfileBase(object):
         self.name = name
         self.type_name = type_name
         self.permission = ''
-        self.uuid = None
-        self.spec = {}
+        self.uuid = str(uuid.uuid4()) 
+        self.spec = kwargs.get('spec')
+
+    @classmethod
+    def create_object(cls, name, type_name, **kwargs):
+        obj = cls(name, type_name, kwargs)
+        physical_id = obj.do_create()
+        return physical_id
+
+    @classmethod
+    def delete_object(cls, physical_id):
+        obj = db_api.load_member(physical_id=physical_id)
+        result = obj.do_delete()
+        return result
+
+    @classmethod
+    def update_object(cls, physical_id, new_profile):
+        obj = db_api.load_member(physical_id=physical_id)
+        result = obj.do_update()
+        return result
+
+    def do_create(self):
+        '''
+        For subclass to overrided.
+        '''
+        return NotImplemented
+
+    def do_delete(self):
+        '''
+        For subclass to override.
+        '''
+        return NotImplemented
+
+    def do_update(self, new_profile):
+        '''
+        For subclass to override.
+        '''
+        return NotImplemented
 
     def to_dict(self):
         pb_dict = {
@@ -33,6 +71,6 @@ class ProfileBase(object):
         return pb_dict
 
     @classmethod
-    def from_dict(self, **kwargs):
-        pb = ProfileBase(**kwargs)
+    def from_dict(cls, **kwargs):
+        pb = cls(kwargs)
         return pb
