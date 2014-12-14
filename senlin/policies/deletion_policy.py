@@ -28,7 +28,8 @@ class DeletePolicy(base.PolicyBase):
     )
 
     TARGET = [
-        ('CLUSTER', 'DELETE_MEMBER'),
+        ('BEFORE', 'CLUSTER', 'DELETE_MEMBER'),
+        ('AFTER', 'CLUSTER', 'DELETE_MEMBER'),
     ]
 
     PROFILE_TYPE = [
@@ -39,6 +40,8 @@ class DeletePolicy(base.PolicyBase):
         super(DeletePolicy, self).__init__(name, type_name, kwargs)
 
         self.criteria = kwargs.get('criteria')
+        self.grace_period = kwargs.get('grace_period')
+        self.delete_desired_capacity = kwargs.get('delete_desired_capacity')
 
     def _sort_members_by_creation_time(members):
         # TODO: do sorting
