@@ -38,6 +38,12 @@ class LaunchConfigProfile(base.ProfileBase):
         self.RamDiskId = kwargs.get('RamDiskId')
         self.BlockDeviceMappings = kwargs.get('BlockDeviceMappings')
         self.NovaSchedulerHings = kwargs.get('NovaSchedulerHints')
+        
+        # new properties
+        self.InstanceMonitoring = kwargs.get('InstanceMonitoring')
+        self.SpotPrice = kwargs.get('SpotPrice')
+        self.AssocatePublicIpAddress = kwargs.get('AssociatePublicIpAddress')
+        self.PlaementTenancy = kwargs.get('PlacementTenancy')
 
     def do_create(self):
         '''
