@@ -24,21 +24,21 @@ class PolicyBase(object):
         self.spec = {}
         self.level = DEBUG
 
-    def pre_op(self, cluster_id, action):
+    def pre_op(self, cluster_id, action, **args):
         '''
         Force all subclasses to implement an operation that will be invoked
         before an action.
         '''
         return NotImplemented
 
-    def enforce(self, cluster_id, action):
+    def enforce(self, cluster_id, action, **args):
         '''
         Force all subclasses to implement an operation that can be called
         during an action.
         '''
         return NotImplemented
 
-    def post_op(self, cluster_id, action):
+    def post_op(self, cluster_id, action, **args):
         '''
         Force all subclasses to implement an operation that will be performed
         after an action.
