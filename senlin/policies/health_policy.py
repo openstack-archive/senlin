@@ -29,11 +29,12 @@ class HealthPolicy(base.PolicyBase):
     )
 
     TARGET = [
-        ('CLUSTER', 'ADD_MEMBER')
+        ('AFTER', 'CLUSTER', 'ADD_MEMBER')
     ]
 
     PROFILE_TYPE = [
         'os.nova.server',
+        'AWS.AutoScaling.LaunchConfiguration',
     ]
 
     def __init__(self, name, type_name, **kwargs):
