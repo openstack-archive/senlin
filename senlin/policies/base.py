@@ -19,7 +19,6 @@ class PolicyBase(object):
         self.name = name
         self.type_name = type_name
         self.cooldown = 0
-        self.enabled = True
         self.uuid = None
         self.spec = {}
         self.level = DEBUG
