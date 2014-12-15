@@ -16,7 +16,6 @@ from oslo.utils import importutils
 from senlin.common import exception
 from senlin.common import policy
 from senlin.common import wsgi
-from senlin.db import api as db_api
 from senlin.engine import clients
 from senlin.openstack.common import context
 from senlin.openstack.common import local
@@ -60,7 +59,6 @@ class RequestContext(context.RequestContext):
         self.roles = roles or []
         if overwrite or not hasattr(local.store, 'context'):
             self.update_store()
-        self._session = None
         self._clients = None
         self.trust_id = trust_id
         self.trustor_user_id = trustor_user_id
@@ -73,12 +71,6 @@ class RequestContext(context.RequestContext):
 
     def update_store(self):
         local.store.context = self
-
-    @property
-    def session(self):
-        if self._session is None:
-            self._session = db_api.get_session()
-        return self._session
 
     @property
     def clients(self):
