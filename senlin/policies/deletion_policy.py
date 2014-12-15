@@ -14,7 +14,7 @@ from senlin.db import api as db_api
 from senlin.policies import base
 
 
-class DeletePolicy(base.PolicyBase):
+class DeletionPolicy(base.PolicyBase):
     '''
     Policy for deleting member(s) from a cluster.
     '''
@@ -41,13 +41,17 @@ class DeletePolicy(base.PolicyBase):
 
         self.criteria = kwargs.get('criteria')
         self.grace_period = kwargs.get('grace_period')
-        self.delete_desired_capacity = kwargs.get('delete_desired_capacity')
+        self.delete_desired_capacity = kwargs.get('reduce_desired_capacity')
 
     def _sort_members_by_creation_time(members):
         # TODO: do sorting
         return members
 
     def pre_op(self, cluster_id, action, **args):
+        # :cluster_id the cluster
+        # :action 'DEL_MEMBER'
+        # :args a list of candidate members
+
         # TODO: choose victims from the given cluster
         members = db_api.get_members(cluster_id)
         sorted = self._sort_members_by_creation_time(members)
@@ -58,6 +62,8 @@ class DeletePolicy(base.PolicyBase):
         else:
             rand = random(len(softed)
             victim = sorted[rand]
+
+        # TODO: return True/False
         return victim
 
     def enforce(self, cluster_id, action, **args):
