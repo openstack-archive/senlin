@@ -32,7 +32,7 @@ class Cluster(object):
         'INIT', 'ACTIVE', 'ERROR', 'DELETED', 'UPDATING',
     )
 
-    def __init__(self, name, size=0, profile=None, **kwargs):
+    def __init__(self, name, profile, size=0, **kwargs):
         '''
         Intialize a cluster object.
         The cluster defaults to have 0 nodes with no profile assigned.
@@ -58,15 +58,15 @@ class Cluster(object):
         #    is still in progress
         db_api.create_cluster(self)
 
-    def _set_status(self, status):
+    def _set_status(self, context, status):
+        event.info(context, self.uuid, status, 
         # log status to log file
         # generate event record
 
-    def do_create(self, **kwargs):
+    def do_create(self, context, **kwargs):
         '''
         A routine to be called from an action by a thread.
         '''
-        # TODO: Fork-join
         for m in range[self.size]:
            action = MemberAction(cluster_id, profile, 'CREATE', **kwargs) 
            # start a thread asynchnously
@@ -79,7 +79,24 @@ class Cluster(object):
         self.status = self.DELETED
 
     def do_update(self, **kwargs):
-        self.status = self.UPDATING
+        # Profile type checking is done here because the do_update logic can 
+        # be triggered from API or Webhook
+        # TODO: check if profile is of the same type
+        profile = kwargs.get('profile')
+        if self.profile == profile:
+            event.warning(_LW('Cluster refuses to update to the same profile'
+                              '(%s)' % (profile))
+            return self.FAILED
+
+        self._set_status(self.UPDATING)
+
+        for m in range[self.size]:
+           action = MemberAction(cluster_id, profile, 'CREATE', **kwargs) 
+           # start a thread asynchronously
+           handle = scheduler.runAction(action) 
+           scheduler.wait(handle)
+
+        self._set_status(self.ACTIVE)
 
     def next_index(self):
         curr = self._next_index
@@ -138,7 +155,5 @@ class Cluster(object):
         cluster = db_api.get_cluster(cluster_id)
 
         # TODO: Implement this
-        # 1. check if profile is of the same type
-        # 2. fork UPDATE action for this cluster
-        
+       
         return True
