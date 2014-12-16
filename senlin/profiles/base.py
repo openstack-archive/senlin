@@ -10,14 +10,41 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import collections
 import uuid
+
+from senlin.openstack.common import log as logging
+
+LOG = logging.getLogger(__name__)
 
 
 class ProfileBase(object):
     '''
     Base class for profiles.
     '''
+    def __new__(cls, profile, *args, **kwargs):
+        '''
+        Create a new profile of the appropriate class.
+        '''
+        global _profile_classes
+        if _profile_classes is None:
+            mgr = extension.ExtensionManager(name_space='senlin.profiles',
+                                             invoke_on_load=False,
+                                             verify_requirements=True)
+            _profile_classes = dict((tuple(name.split('.')), mgr[name].plugin)
+                                    for name in mgr.names())
+
+        if cls != ProfileBase:
+            ProfileClass = cls
+        else:
+            ProfileClass = get_profile_class(profile)
+
+        return super(Profile, cls).__new__(ProfileClass)
+
     def __init__(self, name, type_name, **kwargs):
+        '''
+        Initialize the profile with given parameters and a JSON object.
+        '''
         self.name = name
         self.type_name = type_name
         self.permission = ''
