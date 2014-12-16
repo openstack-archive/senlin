@@ -13,7 +13,7 @@
 import uuid
 
 from senlin.drivers import heat_v1 as heat
-from senlin.profile import base
+from senlin.profiles import base
 
 __type_name__ = 'aws.autoscaling.launchconfig'
 
@@ -27,7 +27,7 @@ class LaunchConfigProfile(base.ProfileBase):
     AWS::AutoScaling::LaunchConfiguration resource.
     '''
     def __init__(self, name, type_name=__type_name__, **kwargs):
-        super(StackProfile, self).__init__(name, type_name, kwargs)
+        super(LaunchConfigProfile, self).__init__(name, type_name, kwargs)
 
         self.ImageId = kwargs.get('ImageId')
         self.InstanceType = kwargs.get('InstanceType')
@@ -56,5 +56,6 @@ class LaunchConfigProfile(base.ProfileBase):
 
     def do_update(self, ):
         self.status = self.UPDATING
+
         self.status = self.ACTIVE
         return True
