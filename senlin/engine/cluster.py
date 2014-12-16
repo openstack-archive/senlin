@@ -11,7 +11,7 @@
 # under the License.
 
 import uuid
-
+from senlin.engine import Node
 
 class Cluster(object):
     '''
@@ -33,7 +33,7 @@ class Cluster(object):
         self.size = size
         self.profile_type = profile_type
         self.uuid = str(uuid.uuid4())
-        self.members = {}
+        self.nodes = {}
         self.policies = {}
         self.domain = kwargs.get('domain')
         self.project = kwargs.get('project')
@@ -52,11 +52,11 @@ class Cluster(object):
         return cluster.uuid
 
     @classmethod
-    def destroy(cls, cluster_id):
+    def delete(cls, cluster_id):
         cluster = db_api.get_cluster(cluster_id)
 
         # TODO: check if actions are working on and can be canceled
-        # TODO: destroy members
+        # TODO: destroy nodes 
 
         db_api.delete_cluster(cluster_id)
         del cluster
@@ -67,8 +67,8 @@ class Cluster(object):
         self._next_index = self._next_index + 1
         return curr
 
-    def get_members(self):
-        # This method will return each member with their associated profiles.
+    def get_nodes(self):
+        # This method will return each node with their associated profiles.
         # Members may have different versions of the same profile type.
         return {} 
 
@@ -77,12 +77,12 @@ class Cluster(object):
         # this method retrieves the attached policies from database
         return {}
 
-    def add_members(self, member_ids):
+    def add_nodes(self, node_ids):
         pass
 
-    def remove_members(self, member_ids):
-        for member in member_ids:
-            res = Member.destroy(member)
+    def del_nodes(self, node_ids):
+        for node in node_ids:
+            res = Node.destroy(node)
         return True
 
     def attach_policy(self, policy_id):
