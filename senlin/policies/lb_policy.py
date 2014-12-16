@@ -13,7 +13,7 @@
 from senlin.policies import base
 
 
-class LoadBlancingPolicy(base.PolicyBase):
+class LoadBalancingPolicy(base.PolicyBase):
     '''
     Policy for load balancing among members of a cluster.
 
