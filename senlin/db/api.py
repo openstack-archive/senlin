@@ -45,7 +45,6 @@ def cluster_count_all(context, filters=None, tenant_safe=True,
 
 
 def cluster_create(context, cluster):
-    cluster.uuid = str(uuid.uuid4())
     return cluster_list.append(cluster)
 
 

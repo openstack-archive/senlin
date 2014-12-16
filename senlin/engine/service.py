@@ -467,9 +467,10 @@ class EngineService(service.Service):
         # if an update was in-progress when the cluster was stopped, so
         # reload the cluster from the database.
         cluster = self._get_cluster(cnxt, cluster_identity)
+        action = ClusterAction(cnxt, cluster, 'DELETE', **kwargs)
 
-        self.thread_group_mgr.start_with_lock(cnxt, cluster, self.engine_id,
-                                              cluster.destroy)
+        self.thread_group_mgr.start_with_lock(self.engine_id, action.execute)
+
         return None
 
     @request_context
