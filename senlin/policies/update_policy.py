@@ -39,7 +39,9 @@ class UpdatePolicy(base.PolicyBase):
 
     def pre_op(self, cluster_id, action, **args):
         # select candidates for update based on criteria
-        return candidates
+
+        # TODO: return True/False
+        return True 
 
     def enforce(self, cluster_id, action, **args):
         pass
