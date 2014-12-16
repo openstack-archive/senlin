@@ -60,13 +60,13 @@ def cluster_delete(context, cluster_id):
 
 # We assume these lock operations will always succeed.
 # Just for test.
-def cluster_lock_create(cluster_id, engine_id):
+def senlin_lock_create(target_id, engine_id):
     pass
 
 
-def cluster_lock_steal(cluster_id, old_engine_id, new_engine_id):
+def senlin_lock_steal(target_id, old_engine_id, new_engine_id):
     pass
 
 
-def cluster_lock_release(cluster_id, engine_id):
+def senlin_lock_release(target_id, engine_id):
     pass

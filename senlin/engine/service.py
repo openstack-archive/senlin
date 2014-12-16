@@ -35,8 +35,7 @@ from senlin.common.i18n import _LI
 from senlin.common.i18n import _LW
 from senlin.common import identifier
 from senlin.common import messaging as rpc_messaging
-# Just for test, need be repalced with real db api implementation
-from senlin.db import api_sim as db_api
+from senlin.db import api as db_api
 from senlin.engine import action
 from senlin.engine import cluster
 from senlin.engine import member
@@ -99,32 +98,31 @@ class ThreadGroupManager(object):
             profiler.init(**trace)
         return func(*args, **kwargs)
 
-    def start(self, cluster_id, func, *args, **kwargs):
+    def start(self, target_id, func, *args, **kwargs):
         """
         Run the given method in a sub-thread.
         """
-        if cluster_id not in self.groups:
-            self.groups[cluster_id] = threadgroup.ThreadGroup()
-        return self.groups[cluster_id].add_thread(self._start_with_trace,
+        if target_id not in self.groups:
+            self.groups[target_id] = threadgroup.ThreadGroup()
+        return self.groups[target_id].add_thread(self._start_with_trace,
                                                 self._serialize_profile_info(),
                                                 func, *args, **kwargs)
 
-    def start_with_lock(self, cnxt, cluster, engine_id, func, *args, **kwargs):
+    def start_with_lock(self, cnxt, target, engine_id, func, *args, **kwargs):
         """
-        Try to acquire a cluster lock and, if successful, run the given
-        method in a sub-thread.  Release the lock when the thread
-        finishes.
+        Try to acquire a lock for operated target and, if successful,
+        run the given method in a sub-thread.  Release the lock when
+        the thread finishes.
 
         :param cnxt: RPC context
-        :param cluster: Cluster to be operated on
-        :type cluster: heat.engine.parser.Stack
+        :param target: Target to be operated on, e.g. a cluster, node, etc.
         :param engine_id: The UUID of the engine/worker acquiring the lock
         :param func: Callable to be invoked in sub-thread
         :type func: function or instancemethod
         :param args: Args to be passed to func
         :param kwargs: Keyword-args to be passed to func.
         """
-        lock = cluster_lock.ClusterLock(cnxt, cluster, engine_id)
+        lock = senlin_lock.ClusterLock(cnxt, cluster, engine_id)
         with lock.thread_lock(cluster.id):
             th = self.start_with_acquired_lock(cluster, lock,
                                                func, *args, **kwargs)
@@ -204,6 +202,43 @@ class ThreadGroupManager(object):
 
 
 @profiler.trace_cls("rpc")
+class EngineListener(service.Service):
+    '''
+    Listen on an AMQP queue named for the engine.  Allows individual
+    engines to communicate with each other for multi-engine support.
+    '''
+
+    ACTIONS = (STOP_CLUSTER, SEND) = ('stop_cluster', 'send')
+
+    def __init__(self, host, engine_id, thread_group_mgr):
+        super(EngineListener, self).__init__()
+        self.thread_group_mgr = thread_group_mgr
+        self.engine_id = engine_id
+        self.host = host
+
+    def start(self):
+        super(EngineListener, self).start()
+        self.target = messaging.Target(
+            server=self.host, topic=self.engine_id)
+        server = rpc_messaging.get_rpc_server(self.target, self)
+        server.start()
+
+    def listening(self, ctxt):
+        '''
+        Respond affirmatively to confirm that the engine performing the
+        action is still alive.
+        '''
+        return True
+
+    def stop_cluster(self, ctxt, cluster_id):
+        '''Stop any active threads on a cluster.'''
+        self.thread_group_mgr.stop(cluster_id)
+
+    def send(self, ctxt, cluster_id, message):
+        self.thread_group_mgr.send(cluster_id, message)
+
+
+@profiler.trace_cls("rpc")
 class EngineService(service.Service):
     """
     Manages the running instances from creation to destruction.
@@ -245,7 +280,11 @@ class EngineService(service.Service):
     def start(self):
         self.engine_id = cluster_lock.ClusterLock.generate_engine_id()
         self.thread_group_mgr = ThreadGroupManager()
-        LOG.debug("Starting engine worker with engine_id %s" % self.engine_id)
+        self.listener = EngineListener(self.host, self.engine_id,
+                                       self.thread_group_mgr)
+        LOG.debug("Starting listener for engine %s" % self.engine_id)
+        self.listener.start()
+
         target = messaging.Target(
             version=self.RPC_API_VERSION, server=self.host,
             topic=self.topic)
@@ -386,7 +425,8 @@ class EngineService(service.Service):
         cluster = cluster.Cluster(name, size, profile, **kwargs)
         action = ClusterAction(cnxt, cluster, 'CREATE', **kwargs)
 
-        self.thread_group_mgr.start_with_lock(self.engine_id, action.execute)
+        self.thread_group_mgr.start_with_lock(cnxt, cluster, self.engine_id,
+                                              action.execute)
 
         return cluster['uuid']
 
@@ -443,13 +483,14 @@ class EngineService(service.Service):
         LOG.info(_LI('Deleting cluster %s'), st.name)
 
         lock = cluster_lock.ClusterLock(cnxt, cluster, self.engine_id)
-        with lock.try_thread_lock(cluster.id) as acquire_result:
+        with lock.try_thread_lock(cluster.uuid) as acquire_result:
 
             # Successfully acquired lock
             if acquire_result is None:
-                self.thread_group_mgr.stop_timers(cluster.id)
+                self.thread_group_mgr.stop_timers(cluster.uuid)
+                action = ClusterAction(cnxt, cluster, 'DELETE')
                 self.thread_group_mgr.start_with_acquired_lock(cluster, lock,
-                                                               cluster.destroy)
+                                                               action.execute)
                 return
 
         # Current engine has the lock
@@ -457,19 +498,27 @@ class EngineService(service.Service):
             # give threads which are almost complete an opportunity to
             # finish naturally before force stopping them
             eventlet.sleep(0.2)
-            self.thread_group_mgr.stop(cluster.id)
-
+            self.thread_group_mgr.stop(cluster.uuid)
         # Another active engine has the lock
-        # Doesn't suppot yet!
-        # TODO: add multi-engine support
+        elif cluster_lock.ClusterLock.engine_alive(cnxt, acquire_result):
+            stop_result = self._remote_call(
+                cnxt, acquire_result, self.listener.STOP_CLUSTER,
+                cluster_id=cluster.uuid)
+            if stop_result is None:
+                LOG.debug("Successfully stopped remote task on engine %s"
+                          % acquire_result)
+            else:
+                raise exception.StopActionFailed(cluster_name=cluster.name,
+                                                 engine_id=acquire_result)
 
-        # There may be additional resources that we don't know about
+        # There may be additional nodes that we don't know about
         # if an update was in-progress when the cluster was stopped, so
         # reload the cluster from the database.
         cluster = self._get_cluster(cnxt, cluster_identity)
-        action = ClusterAction(cnxt, cluster, 'DELETE', **kwargs)
+        action = ClusterAction(cnxt, cluster, 'DELETE')
 
-        self.thread_group_mgr.start_with_lock(self.engine_id, action.execute)
+        self.thread_group_mgr.start_with_lock(cnxt, cluster, self.engine_id,
+                                              action.execute)
 
         return None
 
@@ -502,3 +551,12 @@ class EngineService(service.Service):
         cluster = parser.Cluster.load(cnxt, cluster=s)
         self.thread_group_mgr.start_with_lock(cnxt, cluster, self.engine_id,
                                               _cluster_resume, cluster)
+
+    def _remote_call(self, cnxt, lock_engine_id, call, *args, **kwargs):
+        self.cctxt = self._client.prepare(
+            version='1.0',
+            topic=lock_engine_id)
+        try:
+            self.cctxt.call(cnxt, call, *args, **kwargs)
+        except messaging.MessagingTimeout:
+            return False
