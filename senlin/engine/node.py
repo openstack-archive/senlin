@@ -36,7 +36,7 @@ class Member(object):
         self.uuid = str(uuid.uuid4())
         self.physical_id = None
         self.cluster_id = cluster_id
-        self.index = db_api.get_next_index(cluster_id) if cluster_id or -1
+        self.index = db_api.next_index(cluster_id) if cluster_id or -1
         self.profile_id = profile_id
         self.role = None
         self.status = self.ACTIVE
