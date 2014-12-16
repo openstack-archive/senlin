@@ -13,7 +13,7 @@
 import uuid
 
 from senlin.drivers import heat_v1 as heat
-from senlin.profile import base
+from senlin.profiles import base
 
 __type_name__ = 'os.heat.resource'
 
@@ -25,7 +25,7 @@ class ResourceProfile(base.ProfileBase):
     of resources initialzed from this profile.
     '''
     def __init__(self, name, type_name=__type_name__, **kwargs):
-        super(StackProfile, self).__init__(name, type_name, kwargs)
+        super(ResourceProfile, self).__init__(name, type_name, kwargs)
 
     def do_create(self):
         '''
