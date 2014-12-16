@@ -13,8 +13,13 @@
 
 class Action(object):
     '''
-    An action can be performed on a cluster or a member of a cluster.
+    An action can be performed on a cluster or a node of a cluster.
     '''
+    RETURNS = (
+        OK, FAILED, RETRY,
+    ) = (
+        'OK', 'FAILED', 'RETRY',
+    )
 
     def __init__(self, context):
         self.context = context
@@ -32,30 +37,70 @@ class ClusterAction(Action):
     '''
     An action performed on a cluster.
     '''
+    ACTIONS = (
+        CREATE, DELETE, ADD_MEMBER, DEL_MEMBER, UPDATE,
+        ATTACH_POLICY, DETACH_POLICY,
+    ) = (
+        'CREATE', 'DELETE', 'ADD_MEMBER', 'DEL_MEMBER', 'UPDATE',
+        'ATTACH_POLICY', 'DETACH_POLICY',
+    )
 
     def __init__(self, context, cluster_id):
         super(ClusterAction, self).__init__(context)
 
-
-    def execute(self):
-        pass
+    def execute(self, action):
+        if action not in self.ACTIONS:
+            return self.FAILED 
+        return self.OK 
 
     def cancel(self):
-        pass
+        return self.FAILED 
 
 
-class MemberAction(Action):
+class NodeAction(Action):
     '''
     An action performed on a cluster member.
     '''
-    def __init__(self, context, member_id):
-        super(MemberAction, self).__init__(context)
+    ACTIONS = (
+        CREATE, DELETE, UPDATE, JOIN, LEAVE,
+    ) = (
+        'CREATE', 'DELETE', 'UPDATE', 'JOIN', 'LEAVE',
+    )
 
-        # get cluster of this member
+    def __init__(self, context, node_id):
+        super(NodeAction, self).__init__(context)
+
+        # get cluster of this node 
         # get policies associated with the cluster
 
-    def execute(self):
-        pass
+    def execute(self, action):
+        if action not in self.ACTIONS:
+            return self.FAILED 
+        return self.OK 
 
     def cancel(self):
-        pass
+        return self.OK 
+
+
+class PolicyAction(Action):
+    '''
+    An action performed on a cluster policy.
+    '''
+
+    ACTIONS = (
+        ENABLE, DISABLE, UPDATE,
+    ) = (
+        'ENABLE', 'DISABLE', 'UPDATE',
+    )
+
+    def __init__(self, context, cluster_id, policy_id):
+        super(PolicyAction, self).__init__(context)
+        # get policy associaton using the cluster id and policy id
+
+    def execute(self, action):
+        if action not in self.ACTIONS:
+            return self.FAILED 
+        return self.OK 
+
+    def cancel(self):
+        return self.OK 
