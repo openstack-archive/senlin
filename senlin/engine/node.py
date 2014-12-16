@@ -16,9 +16,9 @@ from datatime import datetime
 from senlin.db import api as db_api
 
 
-class Member(object):
+class Node(object):
     '''
-    A member is an object that can belong to at most one single cluster.
+    A node is an object that can belong to at most one single cluster.
 
     All operations are performed without further checking because the
     checkings are supposed to be de done before/after/during an action is
@@ -50,14 +50,14 @@ class Member(object):
         # TODO: invoke profile to create new object and get the physical id
         # TODO: log events?
         self.created_time = datetime.utcnnow()
-        return member.uuid
+        return node.uuid
 
     def delete(self):
-        member = db_api.get_member(self.uuid)
+        node = db_api.get_node(self.uuid)
         # TODO: invoke profile to delete this object
         # TODO: check if actions are working on it and can be canceled
 
-        db_api.delete_member(self.uuid)
+        db_api.delete_node(self.uuid)
         return True
 
     def update(self, new_profile_id):
