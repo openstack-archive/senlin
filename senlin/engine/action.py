@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo.config import cfg
+
 
 class Action(object):
     '''
@@ -25,6 +27,10 @@ class Action(object):
         self.context = context
         # the context should contain a request ID
         self.request_id = context['request_id']
+
+        # TODO: make action timeout configurable
+        # heat.common.default_action_timeout
+        self.timeout = cfg.CONF.default_action_timeout
 
     def execute(self, **kwargs):
         return NotImplemented
