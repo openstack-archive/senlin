@@ -13,7 +13,9 @@
 import uuid
 from datetime import datetime
 
+from senlin.db import api as db_api
 from senlin.engine import Node
+
 
 class Cluster(object):
     '''
@@ -27,7 +29,7 @@ class Cluster(object):
     statuses = (
         ACTIVE, ERROR, DELETED, UPDATING,
     ) = (
-        'ACTIVE', 'ERROR', 'DELETED', 'UPDATING',
+        'INIT', 'ACTIVE', 'ERROR', 'DELETED', 'UPDATING',
     )
 
     def __init__(self, name, size=0, profile=None, **kwargs):
@@ -50,13 +52,33 @@ class Cluster(object):
         self._next_index = 0
         self.tags = {}
 
-    def do_create(self):
-        self.status = self.ACTIVE
+        # persist object into database very early because:
+        # 1. object creation may be a time consuming task
+        # 2. user may want to cancel the action when cluster creation
+        #    is still in progress
+        db_api.create_cluster(self)
 
-    def do_delete(self):
+    def _set_status(self, status):
+        # log status to log file
+        # generate event record
+
+    def do_create(self, **kwargs):
+        '''
+        A routine to be called from an action by a thread.
+        '''
+        # TODO: Fork-join
+        for m in range[self.size]:
+           action = MemberAction(cluster_id, profile, 'CREATE', **kwargs) 
+           # start a thread asynchnously
+           handle = scheduler.runAction(action) 
+           scheduler.wait(handle)
+
+        self._set_status(self.ACTIVE)
+
+    def do_delete(self, **kwargs):
         self.status = self.DELETED
 
-    def do_update(self, profile):
+    def do_update(self, **kwargs):
         self.status = self.UPDATING
 
     def next_index(self):

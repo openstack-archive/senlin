@@ -26,7 +26,7 @@ class Action(object):
         # the context should contain a request ID
         self.request_id = context['request_id']
 
-    def execute(self):
+    def execute(self, **kwargs):
         return NotImplemented
 
     def cancel(self):
@@ -45,12 +45,18 @@ class ClusterAction(Action):
         'ATTACH_POLICY', 'DETACH_POLICY',
     )
 
-    def __init__(self, context, cluster_id):
+    def __init__(self, context, cluster):
         super(ClusterAction, self).__init__(context)
 
-    def execute(self, action):
+    def execute(self, action, **kwargs):
         if action not in self.ACTIONS:
             return self.FAILED 
+
+        if action == self.CREATE:
+            cluster.do_create(kwargs)
+        else:
+            return self.FAILED
+
         return self.OK 
 
     def cancel(self):
@@ -97,7 +103,7 @@ class PolicyAction(Action):
         super(PolicyAction, self).__init__(context)
         # get policy associaton using the cluster id and policy id
 
-    def execute(self, action):
+    def execute(self, action, **kwargs):
         if action not in self.ACTIONS:
             return self.FAILED 
         return self.OK 

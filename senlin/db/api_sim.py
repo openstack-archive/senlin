@@ -15,43 +15,48 @@
 Simulate the interface for Senlin database access.
 '''
 
+import uuid
+
+
+cluster_list = []
+
 def cluster_get(context, cluster_id, show_deleted=False, tenant_safe=True,
               eager_load=False):
-    return IMPL.cluster_get(context, cluster_id, show_deleted=show_deleted,
-                          tenant_safe=tenant_safe,
-                          eager_load=eager_load)
+    for cluster in cluster_list:
+        if cluster['uuid'] == cluster_id:
+            return cluster_list[cluster_name]
 
 
 def cluster_get_by_name(context, cluster_name):
-    return IMPL.cluster_get_by_name(context, cluster_name)
+    for cluster in cluster_list:
+        if cluster['name'] == cluster_name:
+            return cluster_list[cluster_name]
 
 
 def cluster_get_all(context, limit=None, sort_keys=None, marker=None,
                   sort_dir=None, filters=None, tenant_safe=True,
                   show_deleted=False, show_nested=False):
-    return IMPL.cluster_get_all(context, limit, sort_keys,
-                              marker, sort_dir, filters, tenant_safe,
-                              show_deleted, show_nested)
+    return cluster_list
 
 
 def cluster_count_all(context, filters=None, tenant_safe=True,
                     show_deleted=False, show_nested=False):
-    return IMPL.cluster_count_all(context, filters=filters,
-                                tenant_safe=tenant_safe,
-                                show_deleted=show_deleted,
-                                show_nested=show_nested)
+    pass
 
 
-def cluster_create(context, values):
-    return IMPL.cluster_create(context, values)
+def cluster_create(context, cluster):
+    cluster.uuid = str(uuid.uuid4())
+    return cluster_list.append(cluster)
 
 
 def cluster_update(context, cluster_id, values):
-    return IMPL.cluster_update(context, cluster_id, values)
+    pass
 
 
 def cluster_delete(context, cluster_id):
-    return IMPL.cluster_delete(context, cluster_id)
+    for cluster in cluster_list:
+        if cluster['uuid'] == cluster_id:
+            cluster_list.remove(cluster)
 
 
 # We assume these lock operations will always succeed.
