@@ -34,7 +34,6 @@ from oslo.config import cfg
 from oslo import i18n
 
 from senlin.common import messaging
-#from senlin.common import profiler
 from senlin.openstack.common import log as logging
 from senlin.openstack.common import service
 
@@ -52,7 +51,6 @@ if __name__ == '__main__':
 
     from senlin.engine import service as engine
 
-    # profiler.setup('senlin-engine', cfg.CONF.host)
     srv = engine.EngineService(cfg.CONF.host, rpc_api.ENGINE_TOPIC)
     launcher = service.launch(srv, workers=cfg.CONF.num_engine_workers)
     # the following periodic tasks are intended serve as HA checking
