@@ -34,6 +34,7 @@ class BaseLock(object):
     def __init__(self, context, target, engine_id):
         self.context = context
         self.target = target
+        self.target_type = 'target'
         self.engine_id = engine_id
         self.listener = None
 
@@ -68,44 +69,51 @@ class BaseLock(object):
         lock_engine_id = db_api.senlin_lock_create(self.target.uuid,
                                                   self.engine_id)
         if lock_engine_id is None:
-            LOG.debug("Engine %(engine)s acquired lock on target "
+            LOG.debug("Engine %(engine)s acquired lock on %(target_type)s "
                       "%(target)s" % {'engine': self.engine_id,
-                                     'target': self.target.uuid})
+                                      'target_type': self.target_type,
+                                      'target': self.target.uuid})
             return
 
         if lock_engine_id == self.engine_id or \
            self.engine_alive(self.context, lock_engine_id):
-            LOG.debug("Lock on target %(target)s is owned by engine "
-                      "%(engine)s" % {'target': self.target.uuid,
+            LOG.debug("Lock on %(target_type)s %(target)s is owned by engine "
+                      "%(engine)s" % {'target_type': self.target_type,
+                                      'target': self.target.uuid,
                                       'engine': lock_engine_id})
             raise exception.ActionInProgress(target_name=self.target.name,
                                              action=self.target.status)
         else:
-            LOG.info(_LI("Stale lock detected on target %(target)s.  Engine "
+            LOG.info(_LI("Stale lock detected on %(target_type)s %(target)s.  Engine "
                          "%(target)s will attempt to steal the lock"),
-                     {'target': self.target.uuid, 'engine': self.engine_id})
+                     {'target_type': self.target_type, 
+                      'target': self.target.uuid,
+                      'engine': self.engine_id})
 
             result = db_api.senlin_lock_steal(self.target.uuid, lock_engine_id,
                                              self.engine_id)
 
             if result is None:
                 LOG.info(_LI("Engine %(engine)s successfully stole the lock "
-                             "on target %(target)s"),
+                             "on %(target_type)s %(target)s"),
                          {'engine': self.engine_id,
+                          'target_type': self.target_type,
                           'target': self.target.uuid})
                 return
             elif result is True:
                 if retry:
-                    LOG.info(_LI("The lock on target %(target)s was released "
+                    LOG.info(_LI("The lock on %(target_type)s %(target)s was released "
                                  "while engine %(engine)s was stealing it. "
-                                 "Trying again"), {'target': self.target.uuid,
+                                 "Trying again"), {'target_type': self.target_type,
+                                                   'target': self.target.uuid,
                                                    'engine': self.engine_id})
                     return self.acquire(retry=False)
             else:
                 new_lock_engine_id = result
-                LOG.info(_LI("Failed to steal lock on target %(target)s. "
+                LOG.info(_LI("Failed to steal lock on %(target_type)s %(target)s. "
                              "Engine %(engine)s stole the lock first"),
-                         {'target': self.target.uuid,
+                         {'target_type': self.target_type,
+                          'target': self.target.uuid,
                           'engine': new_lock_engine_id})
 
             raise exception.ActionInProgress(
@@ -116,11 +124,14 @@ class BaseLock(object):
         # Only the engine that owns the lock will be releasing it.
         result = db_api.senlin_lock_release(target_id, self.engine_id)
         if result is True:
-            LOG.warn(_LW("Lock was already released on target %s!"), target_id)
+            LOG.warn(_LW("Lock was already released on %(target_type) %(target)s!"),
+                     {'target_type': self.target_type,
+                      'target': target_id)
         else:
-            LOG.debug("Engine %(engine)s released lock on target "
+            LOG.debug("Engine %(engine)s released lock on %(target_type)s "
                       "%(target)s" % {'engine': self.engine_id,
-                                     'target': target_id})
+                                      'target_type': self.target_type,
+                                      'target': target_id})
 
     @contextlib.contextmanager
     def thread_lock(self, target_id):
@@ -155,8 +166,11 @@ class BaseLock(object):
 
 class ClusterLock(BaseLock):
     def __init__(self, context, cluster, engine_id):
-        super(ClusterLock, self).__init__()
-        self.context = context
-        self.target = cluster
-        self.engine_id = engine_id
-        self.listener = None
+        super(ClusterLock, self).__init__(context, cluster, engine_id)
+        self.target_type = 'cluster'
+
+
+class NodeLock(BaseLock):
+    def __init__(self, context, node, engine_id):
+        super(ClusterLock, self).__init__(context, cluster, engine_id)
+        self.target_type = 'node'
