@@ -37,7 +37,6 @@ from oslo import i18n
 from senlin.common import config
 from senlin.common.i18n import _LI
 from senlin.common import messaging
-from senlin.common import profiler
 from senlin.common import wsgi
 from senlin.openstack.common import log as logging
 from senlin.openstack.common import systemd
@@ -58,7 +57,6 @@ if __name__ == '__main__':
         host = cfg.CONF.senlin_api.bind_host
         LOG.info(_LI('Starting Senlin ReST API on %(host)s:%(port)s'),
                  {'host': host, 'port': port})
-        profiler.setup('senlin-api', host)
         server = wsgi.Server()
         server.start(app, cfg.CONF.heat_api, default_port=port)
         systemd.notify_once()
