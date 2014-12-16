@@ -10,45 +10,71 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
+
+from senlin.common import i18n
+from senlin.db import api as db_api
+from senlin.openstack.common import log
+
+_LC = i18n._LC
+_LE = i18n._LE
+_LW = i18n._LW
+_LI = i18n._LI
+_ = i18n._
+
+LOG = log.getLogger(__name__)
+
+class_mapping = {
+    'senlin.engine.cluster.Cluster': 'CLUSTER',
+    'senlin.engine.node.Node': 'NODE',
+    'senlin.profiles.profile.Profile': 'PROFILE',
+    'senlin.policies.policy.Policy': 'POLICY',
+}
+
 
 class Event(object):
     '''
     Class capturing a cluster operation or state change.
     '''
-
-    def __init__(self, context, entity, action, status, reason,
-                 level, timestamp, entity_type='CLUSTER')
-        self.context = context
-        self.entity = entity 
-        self.action = action
+    def __init__(self, level, context, entity, action, status,
+                 timestamp=None, reason='', entity_type='CLUSTER'):
         self.level = level
+        self.context = context
+        self.entity = entity.uuid
+        self.action = action
         self.status = status
+        self.timestamp = timestamp or datetime.datetime.utcnow()
         self.reason = reason
-        self.timestamp = timestamp
-        self.id = id
+        self.entity_type = entity_type
 
-        # TODO: write to database
 
-    @classmethod
-    def add_event(cls):
-        pass
+def critical(context, entity, action, status, timestamp=None, reason=''):
+    entity_type = class_mapping[entity.__class__]
+    event = Event(log.CRITICAL, context, entity, action, status,
+                  entity_type=entity_type)
+    db_api.add_event(event)
+    LOG.critical(_LC(''))
 
-    @classmethod
-    def add_cluster_event(cls, context, entity, action, status, reason,
-                          level, timestamp)
-        pass
 
-    @classmethod
-    def add_member_event(cls, context, entity, action, status, reason,
-                         level, timestamp, entity_type='MEMBER')
-        pass
+def error(context, entity, action, status, timestamp=None, reason=''):
+    entity_type = class_mapping[entity.__class__]
+    event = Event(log.ERROR, context, entity, action, status,
+                  entity_type=entity_type)
+    db_api.add_event(event)
+    LOG.error(_LE(''))
 
-    @classmethod
-    def add_policy_event(cls, context, entity, action, status, reason,
-                         level, timestamp, entity_type='POLICY')
-        pass
 
-    @classmethod
-    def add_profile_event(cls, context, entity, action, status, reason,
-                          level, timestamp, entity_type='PROFILE')
-        pass
+def warning(context, entity, action, status, timestamp=None, reason=''):
+    entity_type = class_mapping[entity.__class__]
+    event = Event(log.WARNING, context, entity, action, status,
+                  entity_type=entity_type)
+    db_api.add_event(event)
+    LOG.warning(_LW(''))
+
+
+def info(context, entity, action, status, timestamp=None, reason=''):
+    entity_type = class_mapping[entity.__class__]
+    event = Event(log.INFO, context, entity, action, status,
+                  entity_type=entity_type)
+    db_api.add_event(event)
+    LOG.info(_LI(''))
