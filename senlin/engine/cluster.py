@@ -11,6 +11,8 @@
 # under the License.
 
 import uuid
+from datetime import datetime
+
 from senlin.engine import Node
 
 class Cluster(object):
@@ -28,39 +30,34 @@ class Cluster(object):
         'ACTIVE', 'ERROR', 'DELETED', 'UPDATING',
     )
 
-    def __init__(self, name, size, profile_type, **kwargs):
+    def __init__(self, name, size=0, profile=None, **kwargs):
+        '''
+        Intialize a cluster object.
+        The cluster defaults to have 0 nodes with no profile assigned.
+        '''
         self.name = name
         self.size = size
-        self.profile_type = profile_type
+        self.profile = profile
         self.uuid = str(uuid.uuid4())
         self.nodes = {}
         self.policies = {}
         self.domain = kwargs.get('domain')
         self.project = kwargs.get('project')
         self.user = kwargs.get('user')
-        self.parent = None
-        self.status = self.ACTIVE
-        self.status_reason = 'Initialized'
+        self.parent = kwargs.get('parent') 
+        self.status = self.None
+        self.created_time = None
         self._next_index = 0
         self.tags = {}
 
-    @classmethod
-    def create(cls, name, size, profile_type, **kwargs):
-        cluster = cls(name, size, profile_type, kwargs)
-        # TODO: store this to database
-        # TODO: log events?
-        return cluster.uuid
+    def do_create(self):
+        self.status = self.ACTIVE
 
-    @classmethod
-    def delete(cls, cluster_id):
-        cluster = db_api.get_cluster(cluster_id)
+    def do_delete(self):
+        self.status = self.DELETED
 
-        # TODO: check if actions are working on and can be canceled
-        # TODO: destroy nodes 
-
-        db_api.delete_cluster(cluster_id)
-        del cluster
-        return True
+    def do_update(self, profile):
+        self.status = self.UPDATING
 
     def next_index(self):
         curr = self._next_index
@@ -95,3 +92,31 @@ class Cluster(object):
     def detach_policy(self, policy_id):
         # TODO: check if actions of specified policies are ongoing
         self.policies.remove(policy_id)
+
+    @classmethod
+    def create(cls, name, size=0, profile=None, **kwargs):
+        cluster = cls(name, size, profile, kwargs)
+        cluster.do_create()
+        # TODO: store this to database
+        # TODO: log events?
+        return cluster.uuid
+
+    @classmethod
+    def delete(cls, cluster_id):
+        cluster = db_api.get_cluster(cluster_id)
+
+        # TODO: check if actions are working on and can be canceled
+        # TODO: destroy nodes 
+
+        db_api.delete_cluster(cluster_id)
+        return True
+
+    @classmethod
+    def update(cls, cluster_id, profile):
+        cluster = db_api.get_cluster(cluster_id)
+
+        # TODO: Implement this
+        # 1. check if profile is of the same type
+        # 2. fork UPDATE action for this cluster
+        
+        return True
