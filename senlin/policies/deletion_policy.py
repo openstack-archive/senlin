@@ -37,7 +37,7 @@ class DeletionPolicy(base.PolicyBase):
     ]
 
     def __init__(self, name, type_name, **kwargs):
-        super(DeletePolicy, self).__init__(name, type_name, kwargs)
+        super(DeletionPolicy, self).__init__(name, type_name, kwargs)
 
         self.criteria = kwargs.get('criteria')
         self.grace_period = kwargs.get('grace_period')
@@ -60,7 +60,7 @@ class DeletionPolicy(base.PolicyBase):
         elif self.criteria ==self.YOUNGEST_FIRST:
             victim = sorted[-1]
         else:
-            rand = random(len(softed)
+            rand = random(len(sorted))
             victim = sorted[rand]
 
         # TODO: return True/False
