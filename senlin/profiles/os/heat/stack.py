@@ -13,7 +13,7 @@
 import uuid
 
 from senlin.drivers import heat_v1 as heat
-from senlin.profile import base
+from senlin.profiles import base
 
 __type_name__ = 'os.heat.stack'
 
@@ -26,7 +26,8 @@ class StackProfile(base.ProfileBase):
     '''
     def __init__(self, name, type_name=__type_name__, **kwargs):
         super(StackProfile, self).__init__(name, type_name, kwargs)
-        self.enable_rollback = 
+
+        self.enable_rollback = kwargs.get('enable_rollback')
         self.timeout = kwargs.get('timeout') or 60
 
     def do_create(self):
