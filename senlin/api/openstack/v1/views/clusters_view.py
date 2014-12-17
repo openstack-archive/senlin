@@ -20,16 +20,20 @@ from senlin.rpc import api as rpc_api
 _collection_name = 'clusters'
 
 basic_keys = (
-    rpc_api.CLUSTER_ID,
     rpc_api.CLUSTER_NAME,
-    rpc_api.CLUSTER_DESCRIPTION,
-    rpc_api.CLUSTER_STATUS,
-    rpc_api.CLUSTER_STATUS_DATA,
-    rpc_api.CLUSTER_CREATION_TIME,
-    rpc_api.CLUSTER_DELETION_TIME,
-    rpc_api.CLUSTER_UPDATED_TIME,
-    rpc_api.CLUSTER_OWNER,
+    rpc_api.CLUSTER_PROFILE,
+    rpc_api.CLUSTER_SIZE,
+    rpc_api.CLUSTER_UUID,
     rpc_api.CLUSTER_PARENT,
+    rpc_api.CLUSTER_DOMAIN,
+    rpc_api.CLUSTER_PROJECT,
+    rpc_api.CLUSTER_USER,
+    rpc_api.CLUSTER_CREATED_TIME,
+    rpc_api.CLUSTER_DELETED_TIME,
+    rpc_api.CLUSTER_UPDATED_TIME,
+    rpc_api.CLUSTER_STATUS,
+    rpc_api.CLUSTER_STATUS_REASON,
+    rpc_api.CLUSTER_TIMEOUT,
 )
 
 
