@@ -122,21 +122,6 @@ class Cluster(BASE, SenlinBase, SoftDelete, StateAware):
     timeout = sqlalchemy.Column(sqlalchemy.Integer)
 
 
-class ClusterLock(BASE, SenlinBase):
-    """
-    Store cluster locks for actions performed by multiple workers.
-
-    Worker threads are able to grab this lock
-    """
-
-    __tablename__ = 'cluster_lock'
-
-    cluster_id = sqlalchemy.Column(sqlalchemy.String(36),
-                                   sqlalchemy.ForeignKey('cluster.uuid'),
-                                   primary_key=True)
-    engine_id = sqlalchemy.Column(sqlalchemy.String(36))
-
-
 class Node(BASE, SenlinBase, StateAware):
     """Represents a Node created by the Senlin engine."""
 
@@ -161,9 +146,25 @@ class Node(BASE, SenlinBase, StateAware):
     role = sqlalchemy.Column(sqlalchemy.Integer)
 
 
-class NodeLock(BASE, SenlinBase):
+class ClusterLock(BASE, SenlinBase):
     """
     Store cluster locks for actions performed by multiple workers.
+
+    Worker threads are able to grab this lock
+    """
+
+    __tablename__ = 'cluster_lock'
+
+    cluster_id = sqlalchemy.Column(sqlalchemy.String(36),
+                                   sqlalchemy.ForeignKey('cluster.uuid'),
+                                   primary_key=True)
+    engine_id = sqlalchemy.Column(sqlalchemy.String(36))
+
+
+
+class NodeLock(BASE, SenlinBase):
+    """
+    Store node locks for actions performed by multiple workers.
 
     Worker threads are able to grab this lock
     """
