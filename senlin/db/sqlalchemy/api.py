@@ -38,7 +38,6 @@ CONF = cfg.CONF
 CONF.import_opt('max_events_per_cluster', 'senlin.common.config')
 
 _facade = None
-_ = i18n._
 
 
 def get_facade():
@@ -209,7 +208,7 @@ def cluster_update(context, cluster_id, values):
     cluster = cluster_get(context, cluster_id)
 
     if not cluster:
-        raise exception.NotFound(_('Attempt to update a cluster with id: '
+        raise exception.NotFound(i18n._('Attempt to update a cluster with id: '
                                  '%(id)s %(msg)s') % {
                                      'id': cluster_id,
                                      'msg': 'that does not exist'})
@@ -221,7 +220,7 @@ def cluster_update(context, cluster_id, values):
 def cluster_delete(context, cluster_id):
     s = cluster_get(context, cluster_id)
     if not s:
-        raise exception.NotFound(_('Attempt to delete a cluster with id '
+        raise exception.NotFound(i18n._('Attempt to delete a cluster with id '
                                    '"%s" that does not exist') % cluster_id)
     session = orm_session.Session.object_session(s)
 
@@ -243,7 +242,8 @@ def node_create(context, values):
 def node_get(context, node_id):
     node = model_query(context, models.Node).get(node_id)
     if not node:
-        raise exception.NotFound(_('Node with id "%s" not found') % node_id)
+        raise exception.NotFound(
+            i18n._('Node with id "%s" not found') % node_id)
     return node
 
 
@@ -317,6 +317,29 @@ def cluster_lock_release(cluster_id, engine_id):
             delete()
     if not rows_affected:
         return True
+
+# Profiles 
+def profile_create(context, values):
+    profile = models.Profile()
+    profile.update(values)
+    profile.save(_session(context))
+    return profile 
+
+
+def profile_get(context, profile_id):
+    profile = model_query(context, models.Profile).get(profile_id)
+    if not profile:
+        raise exception.NotFound(
+            _('Profile with id "%s" not found') % profile_id)
+    return profile
+
+
+def profile_get_all(context):
+    profiles = model_query(context, models.Profile).all()
+
+    if not profiles:
+        raise exception.NotFound(_('No profiles were found'))
+    return profiles 
 
 
 # Events
