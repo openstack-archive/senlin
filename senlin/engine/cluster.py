@@ -28,7 +28,7 @@ class Cluster(object):
     '''
 
     statuses = (
-        ACTIVE, ERROR, DELETED, UPDATING,
+        INIT, ACTIVE, ERROR, DELETED, UPDATING,
     ) = (
         'INIT', 'ACTIVE', 'ERROR', 'DELETED', 'UPDATING',
     )
