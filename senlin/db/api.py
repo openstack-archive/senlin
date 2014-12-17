@@ -100,30 +100,28 @@ def node_get_by_physical_id(context, physical_id):
 
 
 # Locks
-def cluster_lock_create(cluster_id, engine_id):
-    return IMPL.cluster_lock_create(cluster_id, engine_id)
+def cluster_lock_create(cluster_id, worker_id):
+    return IMPL.cluster_lock_create(cluster_id, worker_id)
 
 
-def cluster_lock_steal(cluster_id, old_engine_id, new_engine_id):
-    return IMPL.cluster_lock_steal(cluster_id, old_engine_id, new_engine_id)
+def cluster_lock_steal(cluster_id, old_worker_id, new_worker_id):
+    return IMPL.cluster_lock_steal(cluster_id, old_worker_id, new_worker_id)
 
 
-def cluster_lock_release(cluster_id, engine_id):
-    return IMPL.cluster_lock_release(cluster_id, engine_id)
+def cluster_lock_release(cluster_id, worker_id):
+    return IMPL.cluster_lock_release(cluster_id, worker_id)
 
 
-# Profiles
-def profile_create(context, values):
-    return IMPL.profile_create(context, values)
+def node_lock_create(node_id, worker_id):
+    return IMPL.node_lock_create(node_id, worker_id)
 
 
-def profile_get(context, profile_id):
-    return IMPL.profile_get(context, profile_id)
+def node_lock_steal(node_id, old_worker_id, new_worker_id):
+    return IMPL.node_lock_steal(node_id, old_worker_id, new_worker_id)
 
 
-# TODO(Qiming): decide if this is needed at all
-def profile_update(context, profile_id, values):
-    return IMPL.profile_update(context, profile_id, values)
+def node_lock_release(node_id, worker_id):
+    return IMPL.node_lock_release(node_id, worker_id)
 
 
 # Policies
@@ -135,8 +133,50 @@ def policy_get(context, policy_id):
     return IMPL.policy_get(context, policy_id)
 
 
+def policy_get_all(context):
+    return IMPL.policy_get_all(context)
+
+
 def policy_update(context, policy_id, values):
     return IMPL.policy_update(context, policy_id, values)
+
+
+# Cluster-Policy Associations
+def cluster_attach_policy(context, values):
+    return IMPL.cluster_attach_policy(context, values)
+
+
+def cluster_get_policies(context, cluster_id):
+    return IMPL.cluster_get_policies(context, cluster_id)
+
+
+def cluster_detach_policy(context, cluster_id, policy_id):
+    return IMPL.cluster_detach_policy(context, cluster_id, policy_id)
+
+
+def cluster_enable_policy(context, cluster_id, policy_id):
+    return IMPL.cluster_get_policies(context, cluster_id, policy_id)
+
+
+def cluster_disable_policy(context, cluster_id, policy_id):
+    return IMPL.cluster_disable_policy(context, cluster_id, policy_id)
+
+
+# Profiles
+def profile_create(context, values):
+    return IMPL.profile_create(context, values)
+
+
+def profile_get(context, profile_id):
+    return IMPL.profile_get(context, profile_id)
+
+
+def profile_get_all(context):
+    return IMPL.profile_get_all(context)
+
+
+def profile_update(context, profile_id, values):
+    return IMPL.profile_update(context, profile_id, values)
 
 
 # Events
@@ -152,28 +192,13 @@ def event_get_all(context):
     return IMPL.event_get_all(context)
 
 
-def event_count_all_by_cluster(context, cluster_id):
-    return IMPL.event_count_all_by_cluster(context, cluster_id)
-
-
-def event_get_all_by_tenant(context, limit=None, marker=None,
-                            sort_keys=None, sort_dir=None, filters=None):
-    return IMPL.event_get_all_by_tenant(context,
-                                        limit=limit,
-                                        marker=marker,
-                                        sort_keys=sort_keys,
-                                        sort_dir=sort_dir,
-                                        filters=filters)
-
-
 def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
-                           sort_keys=None, sort_dir=None, filters=None):
+                             sort_keys=None, sort_dir=None, filters=None):
     return IMPL.event_get_all_by_cluster(context, cluster_id,
-                                       limit=limit,
-                                       marker=marker,
-                                       sort_keys=sort_keys,
-                                       sort_dir=sort_dir,
-                                       filters=filters)
+                                         limit=limit, marker=marker,
+                                         sort_keys=sort_keys,
+                                         sort_dir=sort_dir,
+                                         filters=filters)
 
 
 def db_sync(engine, version=None):

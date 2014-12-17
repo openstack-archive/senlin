@@ -49,7 +49,7 @@ def associate_with(sqltype):
         from sqlalchemy.ext import mutable
         mutable.MutableDict.associate_with(Json)
     except ImportError:
-        from heat.db.sqlalchemy import mutable
+        from senlin.db.sqlalchemy import mutable
         mutable.MutableDict.associate_with(Json)
 
 associate_with(LongText)

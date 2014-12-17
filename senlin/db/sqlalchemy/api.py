@@ -15,18 +15,14 @@
 Implementation of SQLAlchemy backend.
 '''
 
-import datetime
 import six
 import sys
 
 from oslo.config import cfg
 from oslo.db.sqlalchemy import session as db_session
 from oslo.db.sqlalchemy import utils
-import sqlalchemy
-from sqlalchemy import orm
 from sqlalchemy.orm import session as orm_session
 
-from senlin.common import crypt
 from senlin.common import exception
 from senlin.common import i18n
 from senlin.db.sqlalchemy import filters as db_filters
@@ -107,46 +103,41 @@ def cluster_get(context, cluster_id, show_deleted=False, tenant_safe=True):
     cluster = query.get(cluster_id)
 
     deleted_ok = show_deleted or context.show_deleted
-    if cluster is None or cluster.deleted_at is not None and not deleted_ok:
+    if cluster is None or cluster.deleted_time is not None and not deleted_ok:
         return None
 
     # One exception to normal project scoping is users created by the
     # clusters in the cluster_user_project_id
-    if (tenant_safe and cluster is not None and context is not None and
-        context.tenant_id not in (cluster.tenant,
-                                  cluster.cluster_user_project_id)):
-        return None
+    if tenant_safe and (cluster is not None):
+        if (context is not None) and (context.tenant_id != cluster.project):
+            return None
     return cluster
 
 
 def cluster_get_by_name(context, cluster_name):
-    query = soft_delete_aware_query(context, models.Cluster).\
-        filter(sqlalchemy.or_(
-            models.Cluster.tenant == context.tenant_id,
-            models.Cluster.cluster_user_project_id == context.tenant_id
-        )).\
-        filter_by(name=cluster_name)
-    return query.first()
+    r0 = soft_delete_aware_query(context, models.Cluster)
+    result = r0.filter_by(project=context.tenant_id, name=cluster_name).first()
+    return result
 
 
 def _query_cluster_get_all(context, tenant_safe=True, show_deleted=False,
                            show_nested=False):
-    query = soft_delete_aware_query(context, models.Cluster,
-                                    show_deleted=show_deleted)
+    q0 = soft_delete_aware_query(context, models.Cluster,
+                                 show_deleted=show_deleted)
 
     if show_nested:
-        query = query.filter_by(backup=False)
+        query = q0.filter_by(backup=False)
     else:
-        query = query.filter_by(owner_id=None)
+        query = q0.filter_by(parent=None)
 
     if tenant_safe:
-        query = query.filter_by(tenant=context.tenant_id)
+        query = query.filter_by(project=context.tenant_id)
     return query
 
 
 def _paginate_query(context, query, model, limit=None, sort_keys=None,
                     marker=None, sort_dir=None):
-    default_sort_keys = ['created_at']
+    default_sort_keys = ['created_time']
     if not sort_keys:
         sort_keys = default_sort_keys
         if not sort_dir:
@@ -208,10 +199,9 @@ def cluster_update(context, cluster_id, values):
     cluster = cluster_get(context, cluster_id)
 
     if not cluster:
-        raise exception.NotFound(i18n._('Attempt to update a cluster with id: '
-                                 '%(id)s %(msg)s') % {
-                                     'id': cluster_id,
-                                     'msg': 'that does not exist'})
+        raise exception.NotFound(
+            i18n._('Attempt to update a cluster with id: %(id)s that does not'
+                   ' exist') % cluster_id)
 
     cluster.update(values)
     cluster.save(_session(context))
@@ -220,8 +210,9 @@ def cluster_update(context, cluster_id, values):
 def cluster_delete(context, cluster_id):
     s = cluster_get(context, cluster_id)
     if not s:
-        raise exception.NotFound(i18n._('Attempt to delete a cluster with id '
-                                   '"%s" that does not exist') % cluster_id)
+        raise exception.NotFound(
+            i18n._('Attempt to delete a cluster with id "%s" that does not'
+                   ' exist') % cluster_id)
     session = orm_session.Session.object_session(s)
 
     for r in s.nodes:
@@ -242,95 +233,217 @@ def node_create(context, values):
 def node_get(context, node_id):
     node = model_query(context, models.Node).get(node_id)
     if not node:
-        raise exception.NotFound(
-            i18n._('Node with id "%s" not found') % node_id)
+        msg = i18n._('Node with id "%s" not found') % node_id
+        raise exception.NotFound(msg)
     return node
 
 
 def node_get_all(context):
     nodes = model_query(context, models.Node).all()
-
     if not nodes:
-        raise exception.NotFound(_('No nodes were found'))
+        raise exception.NotFound(i18n._('No nodes were found'))
     return nodes
 
 
 def node_get_all_by_cluster(context, cluster_id):
-    nodes = model_query(context, models.Node).\
-        filter_by(cluster_id=cluster_id).\
-        options(orm.joinedload("data")).all()
-
+    nodes = model_query(context, models.Node).filter_by(cluster_id=cluster_id)
     if not nodes:
-        raise exception.NotFound(_("no nodes for cluster_id %s were found")
-                                 % cluster_id)
+        msg = i18n._("no nodes for cluster_id %s were found") % cluster_id
+        raise exception.NotFound(msg)
+
     return dict((node.name, node) for node in nodes)
 
 
-def node_get_by_name_and_cluster(context, name, cluster_id):
-    node = model_query(context, models.Node).filter_by(name=name).\
-        filter_by(cluster_id=cluster_id).\
-        options(orm.joinedload("data")).first()
+def node_get_by_name_and_cluster(context, node_name, cluster_id):
+    q0 = model_query(context, models.Node).filter_by(name=node_name)
+    node = q0.filter_by(cluster_id=cluster_id).first()
     return node
 
 
-def node_get_by_physical_id(context, physical_id):
-    nodes = (model_query(context, models.Node)
-             .filter_by(physical_id=physical_id)
-             .all())
+def node_get_by_physical_id(context, phy_id):
+    nodes = (model_query(context, models.Node).filter_by(physical_id=phy_id))
 
     for node in nodes:
-        if context is None:
-            return node
-        if context.tenant_id in (node.cluster.tenant,
-                                 node.cluster.cluster_user_project_id):
+        if context is None or context.tenant_id == node.cluster.project:
             return node
     return None
 
 
 # Locks
-def cluster_lock_create(cluster_id, engine_id):
+def cluster_lock_create(cluster_id, worker_id):
     session = get_session()
     with session.begin():
         lock = session.query(models.ClusterLock).get(cluster_id)
+        # TODO(Qiming): lock nodes as well
         if lock is not None:
-            return lock.engine_id
+            return lock.worker_id
         session.add(models.ClusterLock(cluster_id=cluster_id,
-                                       engine_id=engine_id))
+                                       worker_id=worker_id))
 
 
-def cluster_lock_steal(cluster_id, old_engine_id, new_engine_id):
+def cluster_lock_steal(cluster_id, old_worker_id, new_worker_id):
     session = get_session()
     with session.begin():
         lock = session.query(models.ClusterLock).get(cluster_id)
         rows_affected = session.query(models.ClusterLock).\
-            filter_by(cluster_id=cluster_id, engine_id=old_engine_id).\
-            update({"engine_id": new_engine_id})
+            filter_by(cluster_id=cluster_id, worker_id=old_worker_id).\
+            update({"worker_id": new_worker_id})
+        # TODO(Qiming): steal locks from nodes as well
     if not rows_affected:
-        return lock.engine_id if lock is not None else True
+        return lock.worker_id if lock is not None else True
 
 
-def cluster_lock_release(cluster_id, engine_id):
+def cluster_lock_release(cluster_id, worker_id):
     session = get_session()
     with session.begin():
         rows_affected = session.query(models.ClusterLock).\
-            filter_by(cluster_id=cluster_id, engine_id=engine_id).\
+            filter_by(cluster_id=cluster_id, worker_id=worker_id).\
+            delete()
+        # TODO(Qiming): delete locks from nodes as well
+    if not rows_affected:
+        return True
+
+
+def node_lock_create(node_id, worker_id):
+    session = get_session()
+    with session.begin():
+        lock = session.query(models.NodeLock).get(node_id)
+        if lock is not None:
+            return lock.worker_id
+        session.add(models.NodeLock(node_id=node_id,
+                                    worker_id=worker_id))
+
+
+def node_lock_steal(node_id, old_worker_id, new_worker_id):
+    session = get_session()
+    with session.begin():
+        lock = session.query(models.NodeLock).get(node_id)
+        rows_affected = session.query(models.NodeLock).\
+            filter_by(node_id=node_id, worker_id=old_worker_id).\
+            update({"worker_id": new_worker_id})
+    if not rows_affected:
+        return lock.worker_id if lock is not None else True
+
+
+def node_lock_release(node_id, worker_id):
+    session = get_session()
+    with session.begin():
+        rows_affected = session.query(models.NodeLock).\
+            filter_by(node_id=node_id, worker_id=worker_id).\
             delete()
     if not rows_affected:
         return True
 
-# Profiles 
+
+# Policies
+def policy_create(context, values):
+    policy = models.Policy()
+    policy.update(values)
+    policy.save(_session(context))
+    return policy
+
+
+def policy_get(context, policy_id):
+    policy = model_query(context, models.Policy).get(policy_id)
+    if not policy:
+        msg = _('Policy with id "%s" not found') % policy_id
+        raise exception.NotFound(msg)
+    return policy
+
+
+def policy_get_all(context):
+    policies = model_query(context, models.Policy).all()
+    if not policies:
+        raise exception.NotFound(_('No policy were found'))
+    return policies
+
+
+def policy_update(context, policy_id, values):
+    policy = policy_get(context, policy_id)
+
+    if not policy:
+        msg = i18n._('Attempt to update a policy with id: %(id)s that does not'
+                     ' exist') % policy_id
+        raise exception.NotFound(msg)
+
+    policy.update(values)
+    policy.save(_session(context))
+    return policy
+
+
+# Cluster-Policy Associations
+def cluster_attach_policy(context, values):
+    binding = models.ClusterPolicies()
+    binding.update(values)
+    binding.save(_session(context))
+    return binding
+
+
+def cluster_get_policies(context, cluster_id):
+    policies = model_query(context, models.ClusterPolicies).\
+        filter_by(cluster_id=cluster_id).all()
+    return policies
+
+
+def cluster_detach_policy(context, cluster_id, policy_id):
+    binding = model_query(context, models.ClusterPolicies).\
+        filter(cluster_id=cluster_id, policy_id=policy_id)
+
+    if not binding:
+        msg = i18n._('Failed detach policy "%(policy)s" from cluster '
+                     '"%(cluster)s"') % {'policy': policy_id,
+                                         'cluster': cluster_id}
+        raise exception.NotFound(msg)
+
+    session = orm_session.Session.object_session(binding)
+    session.delete(binding)
+    session.flush()
+
+
+def cluster_enable_policy(context, cluster_id, policy_id):
+    binding = model_query(context, models.ClusterPolicies).\
+        filter(cluster_id=cluster_id, policy_id=policy_id)
+
+    if not binding:
+        msg = i18n._('Failed enabling policy "%(policy)s" on cluster '
+                     '"%(cluster)s"') % {'policy': policy_id,
+                                         'cluster': cluster_id}
+
+        raise exception.NotFound(msg)
+
+    binding.update(enabled=True)
+    binding.save(_session(context))
+    return binding
+
+
+def cluster_disable_policy(context, cluster_id, policy_id):
+    binding = model_query(context, models.ClusterPolicies).\
+        filter(cluster_id=cluster_id, policy_id=policy_id)
+
+    if not binding:
+        msg = i18n._('Failed disabling policy "%(policy)s" on cluster '
+                     '"%(cluster)s"') % {'policy': policy_id,
+                                         'cluster': cluster_id}
+        raise exception.NotFound(msg)
+
+    binding.update(enabled=False)
+    binding.save(_session(context))
+    return binding
+
+
+# Profiles
 def profile_create(context, values):
     profile = models.Profile()
     profile.update(values)
     profile.save(_session(context))
-    return profile 
+    return profile
 
 
 def profile_get(context, profile_id):
     profile = model_query(context, models.Profile).get(profile_id)
     if not profile:
-        raise exception.NotFound(
-            _('Profile with id "%s" not found') % profile_id)
+        msg = i18n._('Profile with id "%s" not found') % profile_id
+        raise exception.NotFound(msg)
     return profile
 
 
@@ -339,14 +452,39 @@ def profile_get_all(context):
 
     if not profiles:
         raise exception.NotFound(_('No profiles were found'))
-    return profiles 
+    return profiles
+
+
+def profile_update(context, profile_id, values):
+    profile = model_query(context, models.Profile).get(profile_id)
+    if not profile:
+        raise exception.NotFound(
+            _('Profile with id "%s" not found') % profile_id)
+
+    profile.update(values)
+    profile.save(_session(context))
+    return profile
 
 
 # Events
+def _delete_event_rows(context, cluster_id, limit):
+    # MySQL does not support LIMIT in subqueries,
+    # sqlite does not support JOIN in DELETE.
+    # So we must manually supply the IN() values.
+    # pgsql SHOULD work with the pure DELETE/JOIN below but that must be
+    # confirmed via integration tests.
+    query = _event_get_all_by_cluster(context, cluster_id)
+    session = _session(context)
+    all_events = query.order_by(models.Event.timestamp).limit(limit).all()
+    ids = [r.id for r in all_events]
+    q = session.query(models.Event).filter(models.Event.id.in_(ids))
+    return q.delete(synchronize_session='fetch')
+
+
 def event_create(context, values):
-    if 'cluster_id' in values and cfg.CONF.max_events_per_cluster:
-        cluster_id = values['cluster_id']
-        event_count = event_count_all_by_cluster(context, cluster_id).count()
+    if values['obj_type'] == 'CLUSTER' and cfg.CONF.max_events_per_cluster:
+        cluster_id = values['obj_id']
+        event_count = _event_get_all_by_cluster(context, cluster_id).count()
         if (event_count >= cfg.CONF.max_events_per_cluster):
             # prune events
             batch_size = cfg.CONF.event_purge_batch_size
@@ -364,16 +502,13 @@ def event_get(context, event_id):
 
 
 def event_get_all(context):
-    clusters = soft_delete_aware_query(context, models.Cluster)
-    cluster_ids = [cluster.id for cluster in clusters]
-    events = model_query(context, models.Event).\
-        filter(models.Event.cluster_id.in_(cluster_ids)).all()
+    events = model_query(context, models.Event).all()
     return events
 
 
 def _events_paginate_query(context, query, model, limit=None, sort_keys=None,
                            marker=None, sort_dir=None):
-    default_sort_keys = ['created_at']
+    default_sort_keys = ['timestamp']
     if not sort_keys:
         sort_keys = default_sort_keys
         if not sort_dir:
@@ -387,8 +522,7 @@ def _events_paginate_query(context, query, model, limit=None, sort_keys=None,
     if marker:
         # not to use model_query(context, model).get(marker), because
         # user can only see the ID(column 'uuid') and the ID as the marker
-        model_marker = model_query(context, model).filter_by(uuid=marker).\
-            first()
+        model_marker = model_query(context, model).filter_by(id=marker).first()
     try:
         query = utils.paginate_query(query, model, limit, sort_keys,
                                      model_marker, sort_dir)
@@ -398,15 +532,15 @@ def _events_paginate_query(context, query, model, limit=None, sort_keys=None,
     return query
 
 
-def _events_filter_and_page_query(context, query,
-                                  limit=None, marker=None,
-                                  sort_keys=None, sort_dir=None,
-                                  filters=None):
+def _events_filter_and_page_query(context, query, limit=None, marker=None,
+                                  sort_keys=None, sort_dir=None, filters=None):
     if filters is None:
         filters = {}
 
-    sort_key_map = {rpc_api.EVENT_TIMESTAMP: models.Event.created_at.key,
-                    rpc_api.EVENT_RES_TYPE: models.Event.node_type.key}
+    sort_key_map = {
+        rpc_api.EVENT_TIMESTAMP: models.Event.timestamp.key,
+        rpc_api.EVENT_OBJ_TYPE: models.Event.obj_type.key,
+    }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
     query = db_filters.exact_filter(query, models.Event, filters)
@@ -415,149 +549,65 @@ def _events_filter_and_page_query(context, query,
                                   keys, marker, sort_dir)
 
 
-def event_count_all_by_cluster(context, cid):
-    query = model_query(context, models.Event).filter_by(cluster_id=cid)
+def _event_get_all_by_cluster(context, cid):
+    query = model_query(context, models.Event).\
+        filter_by(obj_id=cid, obj_type='CLUSTER').count()
     return query
-
-
-def event_get_all_by_tenant(context, limit=None, marker=None,
-                            sort_keys=None, sort_dir=None, filters=None):
-    query = model_query(context, models.Event)
-    query = db_filters.exact_filter(query, models.Event, filters)
-    query = query.join(models.Event.cluster).\
-        filter_by(tenant=context.tenant_id).filter_by(deleted_at=None)
-    filters = None
-    return _events_filter_and_page_query(context, query, limit, marker,
-                                         sort_keys, sort_dir, filters).all()
 
 
 def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
                              sort_keys=None, sort_dir=None, filters=None):
-    query = event_count_all_by_cluster(context, cluster_id)
+    query = _event_get_all_by_cluster(context, cluster_id)
     return _events_filter_and_page_query(context, query, limit, marker,
                                          sort_keys, sort_dir, filters).all()
 
 
-def _delete_event_rows(context, cluster_id, limit):
-    # MySQL does not support LIMIT in subqueries,
-    # sqlite does not support JOIN in DELETE.
-    # So we must manually supply the IN() values.
-    # pgsql SHOULD work with the pure DELETE/JOIN below but that must be
-    # confirmed via integration tests.
-    query = event_count_all_by_cluster(context, cluster_id)
-    session = _session(context)
-    ids = [r.id for r in query.order_by(models.Event.id).limit(limit).all()]
-    q = session.query(models.Event).filter(models.Event.id.in_(ids))
-    return q.delete(synchronize_session='fetch')
-
-
 def purge_deleted(age, granularity='days'):
-    try:
-        age = int(age)
-    except ValueError:
-        raise exception.Error(_("age should be an integer"))
-    if age < 0:
-        raise exception.Error(_("age should be a positive integer"))
-
-    if granularity not in ('days', 'hours', 'minutes', 'seconds'):
-        raise exception.Error(
-            _("granularity should be days, hours, minutes, or seconds"))
-
-    if granularity == 'days':
-        age = age * 86400
-    elif granularity == 'hours':
-        age = age * 3600
-    elif granularity == 'minutes':
-        age = age * 60
-
-    time_line = datetime.datetime.now() - datetime.timedelta(seconds=age)
-    engine = get_engine()
-    meta = sqlalchemy.MetaData()
-    meta.bind = engine
-
-    cluster = sqlalchemy.Table('cluster', meta, autoload=True)
-    event = sqlalchemy.Table('event', meta, autoload=True)
-    raw_template = sqlalchemy.Table('raw_template', meta, autoload=True)
-    user_creds = sqlalchemy.Table('user_creds', meta, autoload=True)
-
-    stmt = sqlalchemy.select([cluster.c.id,
-                              cluster.c.raw_template_id,
-                              cluster.c.user_creds_id]).\
-        where(cluster.c.deleted_at < time_line)
-    deleted_clusters = engine.execute(stmt)
-
-    for s in deleted_clusters:
-        event_del = event.delete().where(event.c.cluster_id == s[0])
-        engine.execute(event_del)
-        cluster_del = cluster.delete().where(cluster.c.id == s[0])
-        engine.execute(cluster_del)
-        raw_template_del = raw_template.delete().\
-            where(raw_template.c.id == s[1])
-        engine.execute(raw_template_del)
-        user_creds_del = user_creds.delete().where(user_creds.c.id == s[2])
-        engine.execute(user_creds_del)
-
-
-# User credentials
-def _encrypt(value):
-    if value is not None:
-        return crypt.encrypt(value.encode('utf-8'))
-    else:
-        return None, None
-
-
-def _decrypt(enc_value, method):
-    if method is None:
-        return None
-    decryptor = getattr(crypt, method)
-    value = decryptor(enc_value)
-    if value is not None:
-        return unicode(value, 'utf-8')
-
-
-def user_creds_create(context):
-    values = context.to_dict()
-    user_creds_ref = models.UserCreds()
-    if values.get('trust_id'):
-        method, trust_id = _encrypt(values.get('trust_id'))
-        user_creds_ref.trust_id = trust_id
-        user_creds_ref.decrypt_method = method
-        user_creds_ref.trustor_user_id = values.get('trustor_user_id')
-        user_creds_ref.username = None
-        user_creds_ref.password = None
-        user_creds_ref.tenant = values.get('tenant')
-        user_creds_ref.tenant_id = values.get('tenant_id')
-    else:
-        user_creds_ref.update(values)
-        method, password = _encrypt(values['password'])
-        user_creds_ref.password = password
-        user_creds_ref.decrypt_method = method
-    user_creds_ref.save(_session(context))
-    return user_creds_ref
-
-
-def user_creds_get(user_creds_id):
-    db_result = model_query(None, models.UserCreds).get(user_creds_id)
-    if db_result is None:
-        return None
-    # Return a dict copy of db results, do not decrypt details into db_result
-    # or it can be committed back to the DB in decrypted form
-    result = dict(db_result)
-    del result['decrypt_method']
-    result['password'] = _decrypt(result['password'], db_result.decrypt_method)
-    result['trust_id'] = _decrypt(result['trust_id'], db_result.decrypt_method)
-    return result
-
-
-def user_creds_delete(context, user_creds_id):
-    creds = model_query(context, models.UserCreds).get(user_creds_id)
-    if not creds:
-        raise exception.NotFound(
-            _('Attempt to delete user creds with id '
-              '%(id)s that does not exist') % {'id': user_creds_id})
-    session = orm_session.Session.object_session(creds)
-    session.delete(creds)
-    session.flush()
+    pass
+#    try:
+#        age = int(age)
+#    except ValueError:
+#        raise exception.Error(_("age should be an integer"))
+#    if age < 0:
+#        raise exception.Error(_("age should be a positive integer"))
+#
+#    if granularity not in ('days', 'hours', 'minutes', 'seconds'):
+#        raise exception.Error(
+#            _("granularity should be days, hours, minutes, or seconds"))
+#
+#    if granularity == 'days':
+#        age = age * 86400
+#    elif granularity == 'hours':
+#        age = age * 3600
+#    elif granularity == 'minutes':
+#        age = age * 60
+#
+#    time_line = datetime.datetime.now() - datetime.timedelta(seconds=age)
+#    engine = get_engine()
+#    meta = sqlalchemy.MetaData()
+#    meta.bind = engine
+#
+#    cluster = sqlalchemy.Table('cluster', meta, autoload=True)
+#    event = sqlalchemy.Table('event', meta, autoload=True)
+#    cluster_policies = sqlalchemy.Table('cluster_policy', meta, autoload=True)
+#    user_creds = sqlalchemy.Table('user_creds', meta, autoload=True)
+#
+#    stmt = sqlalchemy.select([cluster.c.id,
+#                              cluster.c.profile_id,
+#                              cluster.c.user_creds_id]).\
+#        where(cluster.c.deleted_at < time_line)
+#    deleted_clusters = engine.execute(stmt)
+#
+#    for s in deleted_clusters:
+#        event_del = event.delete().where(event.c.cluster_id == s[0])
+#        engine.execute(event_del)
+#        cluster_del = cluster.delete().where(cluster.c.id == s[0])
+#        engine.execute(cluster_del)
+#        cluster_policies_del = cluster_policies.delete().\
+#            where(.c.id == s[1])
+#        engine.execute(raw_template_del)
+#        user_creds_del = user_creds.delete().where(user_creds.c.id == s[2])
+#        engine.execute(user_creds_del)
 
 
 # Utils
