@@ -14,7 +14,7 @@ import uuid
 from datetime import datetime
 
 from senlin.db import api as db_api
-from senlin.engine import Node
+from senlin.engine import node
 from senlin.rpc import api as rpc_api
 
 
@@ -63,7 +63,8 @@ class Cluster(object):
         db_api.create_cluster(self)
 
     def _set_status(self, context, status):
-        event.info(context, self.uuid, status, 
+        pass
+        #event.info(context, self.uuid, status, 
         # log status to log file
         # generate event record
 
@@ -89,7 +90,7 @@ class Cluster(object):
         profile = kwargs.get('profile')
         if self.profile == profile:
             event.warning(_LW('Cluster refuses to update to the same profile'
-                              '(%s)' % (profile))
+                              '(%s)' % (profile)))
             return self.FAILED
 
         self._set_status(self.UPDATING)
@@ -189,7 +190,7 @@ class Cluster(object):
     def _from_db(cls, context, cluster):
         # TODO: calculate current size based on nodes
         size = self.size
-        return cls(context, cluster.name, cluster.profile, size
+        return cls(context, cluster.name, cluster.profile, size,
                    uuid=cluster.uuid, status=cluster.status,
                    status_reason=cluster_status_reason,
                    parent=cluster.parent,
