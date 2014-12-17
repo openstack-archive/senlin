@@ -38,23 +38,8 @@ class AuthUrlFilter(wsgi.Middleware):
             importutils.import_module(auth_token_module)
             return cfg.CONF.keystone_authtoken.auth_uri
 
-    def _validate_auth_url(self, auth_url):
-        """Validate auth_url to ensure it can be used."""
-        if not auth_url:
-            raise exc.HTTPBadRequest(_('Request missing required header '
-                                       'X-Auth-Url'))
-        allowed = cfg.CONF.auth_password.allowed_auth_uris
-        if auth_url not in allowed:
-            raise exc.HTTPUnauthorized(_('Header X-Auth-Url "%s" not '
-                                         'an allowed endpoint') % auth_url)
-        return True
-
     def process_request(self, req):
         auth_url = self.auth_url
-        if cfg.CONF.auth_password.multi_cloud:
-            auth_url = req.headers.get('X-Auth-Url')
-            self._validate_auth_url(auth_url)
-
         req.headers['X-Auth-Url'] = auth_url
         return None
 
