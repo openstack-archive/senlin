@@ -57,7 +57,7 @@ def request_context(func):
             ctx = context.RequestContext.from_dict(ctx.to_dict())
         try:
             return func(self, ctx, *args, **kwargs)
-        except exception.HeatException:
+        except exception.SenlinException:
             raise messaging.rpc.dispatcher.ExpectedException()
     return wrapped
 
@@ -142,7 +142,7 @@ class ThreadGroupManager(object):
         when the thread finishes.
 
         :param target: Target to be operated on
-        :type target: heat.engine.parser.Stack
+        :type target: senlin.engine.parser.Stack
         :param lock: The acquired target lock
         :param func: Callable to be invoked in sub-thread
         :type func: function or instancemethod
@@ -272,14 +272,14 @@ class EngineService(service.Service):
         self.target = None
 
         if cfg.CONF.instance_user:
-            warnings.warn('The "instance_user" option in heat.conf is '
+            warnings.warn('The "instance_user" option in senlin.conf is '
                           'deprecated and will be removed in the Juno '
                           'release.', DeprecationWarning)
 
         if cfg.CONF.trusts_delegated_roles:
             warnings.warn('The default value of "trusts_delegated_roles" '
-                          'option in heat.conf is changed to [] in Kilo '
-                          'and heat will delegate all roles of trustor. '
+                          'option in senlin.conf is changed to [] in Kilo '
+                          'and senlin will delegate all roles of trustor. '
                           'Please keep the same if you do not want to '
                           'delegate subset roles when upgrading.',
                           Warning)
@@ -436,16 +436,16 @@ class EngineService(service.Service):
         The create_cluster method creates a new cluster using the template
         provided.
         Note that at this stage the template has already been fetched from the
-        heat-api process if using a template-url.
+        senlin-api process if using a template-url.
 
         :param cnxt: RPC context.
         :param cluster_name: Name of the cluster you want to create.
         :param size: Size of cluster you want to create.
         :param profile: Profile used to create cluster nodes.
         :param owner_id: parent cluster ID for nested clusters, only expected when
-                         called from another heat-engine (not a user option)
+                         called from another senlin-engine (not a user option)
         :param nested_depth: the nested depth for nested clusters, only expected
-                         when called from another heat-engine
+                         when called from another senlin-engine
         :param user_creds_id: the parent user_creds record for nested clusters
         :param cluster_user_project_id: the parent cluster_user_project_id for
                          nested clusters
@@ -473,7 +473,7 @@ class EngineService(service.Service):
         The update_cluster method updates an existing cluster nodes based
         on the new provided profile.
         Note that at this stage the template has already been fetched from the
-        heat-api process if using a template-url.
+        senlin-api process if using a template-url.
 
         :param cnxt: RPC context.
         :param cluster_identity: Name of the cluster you want to create.
