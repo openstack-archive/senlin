@@ -17,11 +17,11 @@ class PolicyBase(object):
     '''
     def __init__(self, name, type_name, **kwargs):
         self.name = name
-        self.type_name = type_name
+        self.type = type_name
         self.cooldown = 0
-        self.uuid = None
-        self.spec = {}
         self.level = DEBUG
+        self.spec = {}
+        self.data = {}
 
     def pre_op(self, cluster_id, action, **args):
         '''
