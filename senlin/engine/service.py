@@ -38,8 +38,7 @@ from senlin.common import messaging as rpc_messaging
 from senlin.db import api as db_api
 from senlin.engine import action
 from senlin.engine import cluster
-from senlin.engine import member
-from senlin.engine import profile
+from senlin.engine import node
 from senlin.engine import senlin_lock
 from senlin.openstack.common import log as logging
 from senlin.openstack.common import service
@@ -261,7 +260,6 @@ class EngineService(service.Service):
 
     def __init__(self, host, topic, manager=None):
         super(EngineService, self).__init__()
-        resources.initialise()
         self.host = host
         self.topic = topic
 
@@ -271,21 +269,8 @@ class EngineService(service.Service):
         self.thread_group_mgr = None
         self.target = None
 
-        if cfg.CONF.instance_user:
-            warnings.warn('The "instance_user" option in senlin.conf is '
-                          'deprecated and will be removed in the Juno '
-                          'release.', DeprecationWarning)
-
-        if cfg.CONF.trusts_delegated_roles:
-            warnings.warn('The default value of "trusts_delegated_roles" '
-                          'option in senlin.conf is changed to [] in Kilo '
-                          'and senlin will delegate all roles of trustor. '
-                          'Please keep the same if you do not want to '
-                          'delegate subset roles when upgrading.',
-                          Warning)
-
     def start(self):
-        self.engine_id = cluster_lock.ClusterLock.generate_engine_id()
+        self.engine_id = senlin_lock.ClusterLock.generate_engine_id()
         self.thread_group_mgr = ThreadGroupManager()
         self.listener = EngineListener(self.host, self.engine_id,
                                        self.thread_group_mgr)
@@ -516,7 +501,7 @@ class EngineService(service.Service):
 
         # This is an operation on a cluster, so we try to acquire ClusterLock
         c = cluster.Cluster.load(cnxt, cluster=db_cluster)
-        lock = cluster_lock.ClusterLock(cnxt, c, self.engine_id)
+        lock = senlin_lock.ClusterLock(cnxt, c, self.engine_id)
         with lock.try_thread_lock(c.uuid) as acquire_result:
 
             # Successfully acquired lock
@@ -534,7 +519,7 @@ class EngineService(service.Service):
             eventlet.sleep(0.2)
             self.thread_group_mgr.stop(c.uuid)
         # Another active engine has the lock
-        elif cluster_lock.ClusterLock.engine_alive(cnxt, acquire_result):
+        elif senlin_lock.ClusterLock.engine_alive(cnxt, acquire_result):
             stop_result = self._remote_call(
                 cnxt, acquire_result, self.listener.STOP_CLUSTER,
                 cluster_id=c.uuid)

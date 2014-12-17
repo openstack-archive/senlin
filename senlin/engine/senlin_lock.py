@@ -125,7 +125,7 @@ class BaseLock(object):
         if result is True:
             LOG.warn(_LW("Lock was already released on %(target_type) %(target)s!"),
                      {'target_type': self.target_type,
-                      'target': target_id)
+                      'target': target_id})
         else:
             LOG.debug("Engine %(engine)s released lock on %(target_type)s "
                       "%(target)s" % {'engine': self.engine_id,
