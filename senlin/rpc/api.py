@@ -14,13 +14,15 @@
 ENGINE_TOPIC = 'engine'
 
 CLUSTER_KEYS = (
-    CLUSTER_NAME, CLUSTER_ID, CLUSTER_PARENT,
+    CLUSTER_NAME, CLUSTER_PROFILE, CLUSTER_SIZE,
+    CLUSTER_UUID, CLUSTER_PARENT,
     CLUSTER_DOMAIN, CLUSTER_PROJECT, CLUSTER_USER,
     CLUSTER_CREATED_TIME, CLUSTER_UPDATED_TIME, CLUSTER_DELETED_TIME,
-    CLUSTER_STATUS, CLUSTER_STATUS_DATA,
+    CLUSTER_STATUS, CLUSTER_STATUS_REASON, CLUSTER_TIMEOUT,
 ) = (
-    'name', 'id', 'parent',
+    'name', 'profile', 'size',
+    'uuid', 'parent',
     'domain', 'project', 'user',
     'created_time', 'updated_time', 'deleted_time',
-    'status', 'status_data',
+    'status', 'status_reason', 'timeout'
 )

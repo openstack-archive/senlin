@@ -15,6 +15,7 @@ from datetime import datetime
 
 from senlin.db import api as db_api
 from senlin.engine import Node
+from senlin.rpc import api as rpc_api
 
 
 class Cluster(object):
@@ -47,8 +48,11 @@ class Cluster(object):
         self.project = kwargs.get('project')
         self.user = kwargs.get('user')
         self.parent = kwargs.get('parent') 
-        self.status = self.None
+        self.status = ''
+        self.status_reason = ''
         self.created_time = None
+        self.updated_time = None
+        self.deleted_time = None
         self._next_index = 0
         self.tags = {}
 
@@ -157,3 +161,62 @@ class Cluster(object):
         # TODO: Implement this
        
         return True
+
+    @classmethod
+    def load(cls, context, cluster_id=None, cluster=None, show_deleted=True):
+        '''Retrieve a Cluster from the database.'''
+        if cluster is None:
+            cluster = db_api.cluster_get(context, cluster_id,
+                                         show_deleted=show_deleted)
+
+        if cluster is None:
+            message = _('No cluster exists with id "%s"') % str(cluster_id)
+            raise exception.NotFound(message)
+
+        return cls._from_db(context, cluster)
+
+    @classmethod
+    def load_all(cls, context, limit=None, marker=None, sort_keys=None,
+                 sort_dir=None, filters=None, tenant_safe=True,
+                 show_deleted=False, show_nested=False):
+        clusters = db_api.cluster_get_all(context, limit, sort_keys, marker,
+                                          sort_dir, filters, tenant_safe,
+                                          show_deleted, show_nested) or []
+        for cluster in clusters:
+            yield cls._from_db(context, cluster)
+
+    @classmethod
+    def _from_db(cls, context, cluster):
+        # TODO: calculate current size based on nodes
+        size = self.size
+        return cls(context, cluster.name, cluster.profile, size
+                   uuid=cluster.uuid, status=cluster.status,
+                   status_reason=cluster_status_reason,
+                   parent=cluster.parent,
+                   project=cluster.project,
+                   created_time=cluster.created_time,
+                   updated_time=cluster.updated_time,
+                   deleted_time=cluster.deleted_time,
+                   domain = cluster.domain,
+                   timeout = cluster.timeout,
+                   user=cluster.user)
+
+    def to_dict(self):
+        info = {
+            rpc_api.CLUSTER_NAME: self.name,
+            rpc_api.CLUSTER_PROFILE: self.profile,
+            rpc_api.CLUSTER_SIZE: self.size,
+            rpc_api.CLUSTER_UUID: self.uuid,
+            rpc_api.CLUSTER_PARENT: self.parent,
+            rpc_api.CLUSTER_DOMAIN: self.domain,
+            rpc_api.CLUSTER_PROJECT: self.project,
+            rpc_api.CLUSTER_USER: self.user,
+            rpc_api.CLUSTER_CREATED_TIME: self.created_time,
+            rpc_api.CLUSTER_UPDATED_TIME: self.updated_time,
+            rpc_api.CLUSTER_DELETED_TIME: self.deleted_time,
+            rpc_api.CLUSTER_STATUS: self.status,
+            rpc_api.CLUSTER_STATUS_REASON: self.status_reason,
+            rpc_api.CLUSTER_TIMEOUT: self.timeout,
+        }
+   
+        return info
