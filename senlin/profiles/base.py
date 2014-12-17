@@ -48,8 +48,8 @@ class ProfileBase(object):
         self.name = name
         self.type_name = type_name
         self.permission = ''
-        self.uuid = str(uuid.uuid4()) 
         self.spec = kwargs.get('spec')
+        self.tags = {}
 
     @classmethod
     def create_object(cls, name, type_name, **kwargs):
