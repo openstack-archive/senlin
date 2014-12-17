@@ -84,22 +84,7 @@ class SoftDelete(object):
                              session=session)
 
 
-class StateAware(object):
-
-    action = sqlalchemy.Column('action', sqlalchemy.String(255))
-    status = sqlalchemy.Column('status', sqlalchemy.String(255))
-    _status_reason = sqlalchemy.Column('status_reason', sqlalchemy.String(255))
-
-    @property
-    def status_reason(self):
-        return self._status_reason
-
-    @status_reason.setter
-    def status_reason(self, reason):
-        self._status_reason = reason and reason[:255] or ''
-
-
-class Cluster(BASE, SenlinBase, SoftDelete, StateAware):
+class Cluster(BASE, SenlinBase, SoftDelete):
     """Represents a cluster created by the Senlin engine."""
 
     __tablename__ = 'cluster'
@@ -110,7 +95,7 @@ class Cluster(BASE, SenlinBase, SoftDelete, StateAware):
     profile = sqlalchemy.Column(sqlalchemy.String(36),
                                 sqlalchemy.ForeignKey('profile.uuid'),
                                 nullable=False)
-    username = sqlalchemy.Column(sqlalchemy.String(256))
+    user = sqlalchemy.Column(sqlalchemy.String(256))
     project = sqlalchemy.Column(sqlalchemy.String(256))
     domain = sqlalchemy.Column(sqlalchemy.String(256))
     parent = sqlalchemy.Column(sqlalchemy.String(36))
@@ -120,6 +105,8 @@ class Cluster(BASE, SenlinBase, SoftDelete, StateAware):
     next_index = sqlalchemy.Column(sqlalchemy.Integer)
     owner_id = sqlalchemy.Column(sqlalchemy.String(36), nullable=True)
     timeout = sqlalchemy.Column(sqlalchemy.Integer)
+    status = sqlalchemy.Column('status', sqlalchemy.String(255))
+    status_reason = sqlalchemy.Column('status_reason', sqlalchemy.String(255))
 
 
 class Node(BASE, SenlinBase, StateAware):
@@ -144,6 +131,8 @@ class Node(BASE, SenlinBase, StateAware):
     deleted_time = sqlalchemy.Column('deleted_time', sqlalchemy.DateTime)
     index = sqlalchemy.Column(sqlalchemy.Integer)
     role = sqlalchemy.Column(sqlalchemy.Integer)
+    status = sqlalchemy.Column('status', sqlalchemy.String(255))
+    status_reason = sqlalchemy.Column('status_reason', sqlalchemy.String(255))
 
 
 class ClusterLock(BASE, SenlinBase):
