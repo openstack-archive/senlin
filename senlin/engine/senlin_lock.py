@@ -57,7 +57,7 @@ class BaseLock(object):
         Try to acquire a lock for target, but don't raise an ActionInProgress
         exception or try to steal lock.
         """
-        return db_api.senlin_lock_create(self.target.uuid, self.engine_id)
+        return self.lock_create(self.target.uuid, self.engine_id)
 
     def acquire(self, retry=True):
         """
@@ -66,8 +66,7 @@ class BaseLock(object):
         :param retry: When True, retry if lock was released while stealing.
         :type retry: boolean
         """
-        lock_engine_id = db_api.senlin_lock_create(self.target.uuid,
-                                                  self.engine_id)
+        lock_engine_id = self.lock_create(self.target.uuid, self.engine_id)
         if lock_engine_id is None:
             LOG.debug("Engine %(engine)s acquired lock on %(target_type)s "
                       "%(target)s" % {'engine': self.engine_id,
@@ -84,14 +83,14 @@ class BaseLock(object):
             raise exception.ActionInProgress(target_name=self.target.name,
                                              action=self.target.status)
         else:
-            LOG.info(_LI("Stale lock detected on %(target_type)s %(target)s.  Engine "
-                         "%(target)s will attempt to steal the lock"),
+            LOG.info(_LI("Stale lock detected on %(target_type)s %(target)s. "
+                         "Engine %(engine)s will attempt to steal the lock"),
                      {'target_type': self.target_type, 
                       'target': self.target.uuid,
                       'engine': self.engine_id})
 
-            result = db_api.senlin_lock_steal(self.target.uuid, lock_engine_id,
-                                             self.engine_id)
+            result = self.lock_steal(self.target.uuid, lock_engine_id,
+                                     self.engine_id)
 
             if result is None:
                 LOG.info(_LI("Engine %(engine)s successfully stole the lock "
@@ -122,7 +121,7 @@ class BaseLock(object):
     def release(self, target_id):
         """Release a target lock."""
         # Only the engine that owns the lock will be releasing it.
-        result = db_api.senlin_lock_release(target_id, self.engine_id)
+        result = self.lock_release(target_id, self.engine_id)
         if result is True:
             LOG.warn(_LW("Lock was already released on %(target_type) %(target)s!"),
                      {'target_type': self.target_type,
@@ -169,8 +168,28 @@ class ClusterLock(BaseLock):
         super(ClusterLock, self).__init__(context, cluster, engine_id)
         self.target_type = 'cluster'
 
+    def lock_create(cluster_id, engine_id):
+        return db_api.cluster_lock_create(cluster_id, engine_id)
+
+    def lock_release(cluster_id, engine_id):
+        return db_api.cluster_lock_release(cluster_id, engine_id)
+
+    def lock_steal(cluster_id, lock_engine_id, engine_id):
+        return db_api.cluster_lock_steal(cluster_id, lock_engine_id,
+                                         engine_id)
+
 
 class NodeLock(BaseLock):
     def __init__(self, context, node, engine_id):
-        super(ClusterLock, self).__init__(context, cluster, engine_id)
+        super(NodeLock, self).__init__(context, cluster, engine_id)
         self.target_type = 'node'
+
+    def lock_create(node_id, engine_id):
+        return db_api.node_lock_create(node_id, engine_id)
+
+    def lock_release(node_id, engine_id):
+        return db_api.node_lock_release(target_id, engine_id)
+
+    def lock_steal(node_id, lock_engine_id, engine_id):
+        return db_api.node_lock_steal(node_id, lock_engine_id,
+                                      engine_id)

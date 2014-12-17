@@ -40,6 +40,7 @@ from senlin.engine import action
 from senlin.engine import cluster
 from senlin.engine import member
 from senlin.engine import profile
+from senlin.engine import senlin_lock
 from senlin.openstack.common import log as logging
 from senlin.openstack.common import service
 from senlin.openstack.common import threadgroup
@@ -108,35 +109,41 @@ class ThreadGroupManager(object):
                                                 self._serialize_profile_info(),
                                                 func, *args, **kwargs)
 
-    def start_with_lock(self, cnxt, target, engine_id, func, *args, **kwargs):
+    def start_with_lock(self, cnxt, target, target_type, engine_id,
+                        func, *args, **kwargs):
         """
         Try to acquire a lock for operated target and, if successful,
         run the given method in a sub-thread.  Release the lock when
         the thread finishes.
 
         :param cnxt: RPC context
-        :param target: Target to be operated on, e.g. a cluster, node, etc.
+        :param target: Target to be operated on
+        :param target_type: Type of operated target, e.g. cluster, node, etc.
         :param engine_id: The UUID of the engine/worker acquiring the lock
         :param func: Callable to be invoked in sub-thread
         :type func: function or instancemethod
         :param args: Args to be passed to func
         :param kwargs: Keyword-args to be passed to func.
         """
-        lock = senlin_lock.ClusterLock(cnxt, cluster, engine_id)
-        with lock.thread_lock(cluster.id):
-            th = self.start_with_acquired_lock(cluster, lock,
+        # TODO: add more target_type support
+        # TODO: Reimplement this using __new__ method
+        if target_type == 'cluster':
+            lock = senlin_lock.ClusterLock(cnxt, target, engine_id)
+        elif target_type == 'node':
+            lock = senlin_lock.NodeLock(cnxt, target, engine_id)
+        with lock.thread_lock(target.uuid):
+            th = self.start_with_acquired_lock(target, lock,
                                                func, *args, **kwargs)
             return th
 
-    def start_with_acquired_lock(self, cluster, lock, func, *args, **kwargs):
+    def start_with_acquired_lock(self, target, lock, func, *args, **kwargs):
         """
         Run the given method in a sub-thread and release the provided lock
         when the thread finishes.
 
-        :param cluster: Cluster to be operated on
-        :type cluster: heat.engine.parser.Stack
-        :param lock: The acquired cluster lock
-        :type lock: heat.engine.cluster_lock.ClusterLock
+        :param target: Target to be operated on
+        :type target: heat.engine.parser.Stack
+        :param lock: The acquired target lock
         :param func: Callable to be invoked in sub-thread
         :type func: function or instancemethod
         :param args: Args to be passed to func
@@ -149,37 +156,37 @@ class ThreadGroupManager(object):
             """
             lock.release(*args)
 
-        th = self.start(cluster.id, func, *args, **kwargs)
-        th.link(release, cluster.id)
+        th = self.start(target.uuid, func, *args, **kwargs)
+        th.link(release, target.uuid)
         return th
 
-    def add_timer(self, cluster_id, func, *args, **kwargs):
+    def add_timer(self, target_id, func, *args, **kwargs):
         """
-        Define a periodic task, to be run in a separate thread, in the cluster
+        Define a periodic task, to be run in a separate thread, in the target
         threadgroups.  Periodicity is cfg.CONF.periodic_interval
         """
-        if cluster_id not in self.groups:
-            self.groups[cluster_id] = threadgroup.ThreadGroup()
-        self.groups[cluster_id].add_timer(cfg.CONF.periodic_interval,
+        if target_id not in self.groups:
+            self.groups[target_id] = threadgroup.ThreadGroup()
+        self.groups[target_id].add_timer(cfg.CONF.periodic_interval,
                                         func, *args, **kwargs)
 
-    def add_event(self, cluster_id, event):
-        self.events[cluster_id].append(event)
+    def add_event(self, target_id, event):
+        self.events[target_id].append(event)
 
-    def remove_event(self, gt, cluster_id, event):
-        for e in self.events.pop(cluster_id, []):
+    def remove_event(self, gt, target_id, event):
+        for e in self.events.pop(target_id, []):
             if e is not event:
-                self.add_event(cluster_id, e)
+                self.add_event(target_id, e)
 
-    def stop_timers(self, cluster_id):
-        if cluster_id in self.groups:
-            self.groups[cluster_id].stop_timers()
+    def stop_timers(self, target_id):
+        if target_id in self.groups:
+            self.groups[target_id].stop_timers()
 
-    def stop(self, cluster_id, graceful=False):
-        '''Stop any active threads on a cluster.'''
-        if cluster_id in self.groups:
-            self.events.pop(cluster_id, None)
-            threadgroup = self.groups.pop(cluster_id)
+    def stop(self, target_id, graceful=False):
+        '''Stop any active threads on a target.'''
+        if target_id in self.groups:
+            self.events.pop(target_id, None)
+            threadgroup = self.groups.pop(target_id)
             threads = threadgroup.threads[:]
 
             threadgroup.stop(graceful)
@@ -196,8 +203,8 @@ class ThreadGroupManager(object):
             while not all(links_done.values()):
                 eventlet.sleep()
 
-    def send(self, cluster_id, message):
-        for event in self.events.pop(cluster_id, []):
+    def send(self, target_id, message):
+        for event in self.events.pop(target_id, []):
             event.send(message)
 
 
@@ -250,7 +257,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.2'
+    RPC_API_VERSION = '1.0'
 
     def __init__(self, host, topic, manager=None):
         super(EngineService, self).__init__()
@@ -320,34 +327,41 @@ class EngineService(service.Service):
     @request_context
     def identify_cluster(self, cnxt, cluster_name):
         """
-        The identify_cluster method returns the full cluster identifier for a
+        The identify_cluster method returns the cluster id for a
         single, live cluster given the cluster name.
 
         :param cnxt: RPC context.
         :param cluster_name: Name or UUID of the cluster to look up.
         """
-        # Just for test
         if uuidutils.is_uuid_like(cluster_name):
-            c = db_api.cluster_get(cnxt, cluster_name, show_deleted=True)
+            db_cluster = db_api.cluster_get(cnxt, cluster_name,
+                                            show_deleted=True)
             # may be the name is in uuid format, so if get by id returns None,
             # we should get the info by name again
-            if not c:
-                c = db_api.cluster_get_by_name(cnxt, cluster_name)
+            if not db_cluster:
+                db_cluster = db_api.cluster_get_by_name(cnxt, cluster_name)
         else:
-            c = db_api.cluster_get_by_name(cnxt, cluster_name)
-        if c:
+            db_cluster = db_api.cluster_get_by_name(cnxt, cluster_name)
+        if db_cluster:
+            c = cluster.Cluster.load(cnxt, cluster=db_cluster)
             return dict(c['uuid'])
         else:
             raise exception.ClusterNotFound(cluster_name=cluster_name)
 
     def _get_cluster(self, cnxt, cluster_identity, show_deleted=False):
-        identity = identifier.SenlinIdentifier(**cluster_identity)
+        """
+        Get Cluster record in DB based on cluster id
+        """
+        # Currently, cluster_identity is cluster id OR cluster name
+        # TODO: use full cluster identity as inpurt, e.g.
+        #       *cluster_name/cluster_id*
+        cluster_id = self.identify_cluster(cnxt, cluster_identity)
 
-        c = db_api.cluster_get(cnxt, identity.cluster_id,
-                             show_deleted=show_deleted,
-                             eager_load=True)
+        db_cluster = db_api.cluster_get(cnxt, cluster_id,
+                                        show_deleted=show_deleted,
+                                        eager_load=True)
 
-        if c is None:
+        if db_cluster is None:
             raise exception.ClusterNotFound(cluster_name=identity.cluster_name)
 
         if cnxt.tenant_id not in (identity.tenant, s.cluster_user_project_id):
@@ -358,7 +372,7 @@ class EngineService(service.Service):
         if identity.path or s.name != identity.cluster_name:
             raise exception.ClusterNotFound(cluster_name=identity.cluster_name)
 
-        return c
+        return db_cluster
 
     @request_context
     def show_cluster(self, cnxt, cluster_identity):
@@ -370,11 +384,18 @@ class EngineService(service.Service):
             to show all
         """
         if cluster_identity is not None:
-            clusters = self._get_cluster(cnxt, cluster_identity, show_deleted=True)
+            db_cluster = self._get_cluster(cnxt, cluster_identity,
+                                           show_deleted=True)
+            clusters = cluster.Cluster.load(cnxt, cluster=db_cluster)
         else:
-            clusters = db_api.cluster_get_all(cnxt)
+            clusters = cluster.Cluster.load_all(cnxt, show_deleted=True)
 
-        return clusters
+        # Format clusters info
+        clusters_info = []
+        for c in clusters:
+            clusters_info.append(c.to_dict())
+
+        return {'clusters': clusters_info}
 
     @request_context
     def list_clusters(self, cnxt, limit=None, marker=None, sort_keys=None,
@@ -396,8 +417,16 @@ class EngineService(service.Service):
         :param show_nested: if true, show nested clusters
         :returns: a list of formatted clusters
         """
-        clusters = db_api.cluster_get_all(cnxt)
-        return clusters
+        clusters = cluster.Cluster.load_all(cnxt, limit, marker, sort_keys,
+                                            sort_dir, filters, tenant_safe,
+                                            show_deleted, show_nested)
+
+        # Format clusters info
+        clusters_info = []
+        for c in clusters:
+            clusters_info.append(c.to_dict())
+
+        return {'clusters': clusters_info}
 
     @request_context
     def create_cluster(self, cnxt, cluster_name, size, profile,
@@ -422,19 +451,27 @@ class EngineService(service.Service):
                          nested clusters
         """
         LOG.info(_LI('Creating cluster %s'), cluster_name)
-        cluster = cluster.Cluster(name, size, profile, **kwargs)
-        action = ClusterAction(cnxt, cluster, 'CREATE', **kwargs)
 
-        self.thread_group_mgr.start_with_lock(cnxt, cluster, self.engine_id,
-                                              action.execute)
+        # TODO: construct real kwargs based on input for cluster creating
+        kwargs = {}
+        kwargs['owner_id'] = owner_id
+        kwargs['nested_depth'] = nested_depth
+        kwargs['user_creds_id'] = user_creds_id
+        kwargs['cluster_user_project_id'] = cluster_user_project_id
 
-        return cluster['uuid']
+        c = cluster.Cluster(name, size, profile, **kwargs)
+        action = ClusterAction(cnxt, c, 'CREATE', **kwargs)
+
+        self.thread_group_mgr.start_with_lock(cnxt, c, 'cluster',
+                                              self.engine_id, action.execute)
+
+        return c.uuid
 
     @request_context
-    def update_cluster(self, cnxt, cluster_identity, size, profile):
+    def update_cluster(self, cnxt, cluster_identity, profile):
         """
-        The update_cluster method updates an existing cluster based on the
-        provided template and parameters.
+        The update_cluster method updates an existing cluster nodes based
+        on the new provided profile.
         Note that at this stage the template has already been fetched from the
         heat-api process if using a template-url.
 
@@ -444,31 +481,26 @@ class EngineService(service.Service):
         :param profile: Profile used to create cluster nodes.
         """
         # Get the database representation of the existing cluster
-        cluster = self._get_cluster(cnxt, cluster_identity)
+        db_cluster = self._get_cluster(cnxt, cluster_identity)
         LOG.info(_LI('Updating cluster %s'), db_cluster.name)
 
-        if cluster.action == cluster.SUSPEND:
-            msg = _('Updating a cluster when it is suspended')
+        c = cluster.Cluster.load(cnxt, cluster=db_cluster)
+        if c.status == c.ERROR:
+            msg = _('Updating a cluster when it is errored')
             raise exception.NotSupported(feature=msg)
 
-        if cluster.action == cluster.DELETE:
-            msg = _('Updating a cluster when it is deleting')
+        if c.status == c.DELETED:
+            msg = _('Updating a cluster which has been deleted')
             raise exception.NotSupported(feature=msg)
 
-        # Just update cluster definition for test.
-        cluster.size = size
-        cluster.profile_type = profile
+        kwargs = {}
+        kwargs['profile'] = profile
+        action = ClusterAction(cnxt, c, 'UPDATE', **kwargs)
 
-        # TODO: need to do real cluster update job here,
-        # e.g. invoke cluster.update with updated parameters
-        #event = eventlet.event.Event()
-        #th = self.thread_group_mgr.start_with_lock(cnxt, current_cluster,
-        #                                           self.engine_id,
-        #                                           current_cluster.update)
-        #th.link(self.thread_group_mgr.remove_event, current_cluster.id, event)
-        #self.thread_group_mgr.add_event(current_cluster.id, event)
+        self.thread_group_mgr.start_with_lock(cnxt, c, 'cluster',
+                                              self.engine_id, action.execute)
 
-        return cluster['uuid']
+        return c.uuid
 
     @request_context
     def delete_cluster(self, cnxt, cluster_identity):
@@ -479,17 +511,19 @@ class EngineService(service.Service):
         :param cluster_identity: Name or ID of the cluster you want to delete.
         """
 
-        cluster = self._get_cluster(cnxt, cluster_identity)
-        LOG.info(_LI('Deleting cluster %s'), st.name)
+        db_cluster = self._get_cluster(cnxt, cluster_identity)
+        LOG.info(_LI('Deleting cluster %s'), db_cluster.name)
 
-        lock = cluster_lock.ClusterLock(cnxt, cluster, self.engine_id)
-        with lock.try_thread_lock(cluster.uuid) as acquire_result:
+        # This is an operation on a cluster, so we try to acquire ClusterLock
+        c = cluster.Cluster.load(cnxt, cluster=db_cluster)
+        lock = cluster_lock.ClusterLock(cnxt, c, self.engine_id)
+        with lock.try_thread_lock(c.uuid) as acquire_result:
 
             # Successfully acquired lock
             if acquire_result is None:
-                self.thread_group_mgr.stop_timers(cluster.uuid)
-                action = ClusterAction(cnxt, cluster, 'DELETE')
-                self.thread_group_mgr.start_with_acquired_lock(cluster, lock,
+                self.thread_group_mgr.stop_timers(c.uuid)
+                action = ClusterAction(cnxt, c, 'DELETE')
+                self.thread_group_mgr.start_with_acquired_lock(c, lock,
                                                                action.execute)
                 return
 
@@ -498,12 +532,12 @@ class EngineService(service.Service):
             # give threads which are almost complete an opportunity to
             # finish naturally before force stopping them
             eventlet.sleep(0.2)
-            self.thread_group_mgr.stop(cluster.uuid)
+            self.thread_group_mgr.stop(c.uuid)
         # Another active engine has the lock
         elif cluster_lock.ClusterLock.engine_alive(cnxt, acquire_result):
             stop_result = self._remote_call(
                 cnxt, acquire_result, self.listener.STOP_CLUSTER,
-                cluster_id=cluster.uuid)
+                cluster_id=c.uuid)
             if stop_result is None:
                 LOG.debug("Successfully stopped remote task on engine %s"
                           % acquire_result)
@@ -514,11 +548,12 @@ class EngineService(service.Service):
         # There may be additional nodes that we don't know about
         # if an update was in-progress when the cluster was stopped, so
         # reload the cluster from the database.
-        cluster = self._get_cluster(cnxt, cluster_identity)
-        action = ClusterAction(cnxt, cluster, 'DELETE')
+        db_cluster = self._get_cluster(cnxt, cluster_identity)
+        c = cluster.Cluster.load(cnxt, cluster=db_cluster)
+        action = ClusterAction(cnxt, c, 'DELETE')
 
-        self.thread_group_mgr.start_with_lock(cnxt, cluster, self.engine_id,
-                                              action.execute)
+        self.thread_group_mgr.start_with_lock(cnxt, c, 'cluster',
+                                              self.engine_id, action.execute)
 
         return None
 
@@ -527,30 +562,29 @@ class EngineService(service.Service):
         '''
         Handle request to perform suspend action on a cluster
         '''
-        def _cluster_suspend(cluster):
-            LOG.debug("suspending cluster %s" % cluster.name)
-            cluster.suspend()
 
-        s = self._get_cluster(cnxt, cluster_identity)
+        db_cluster = self._get_cluster(cnxt, cluster_identity)
+        LOG.debug("suspending cluster %s" % db_cluster.name)
 
-        cluster = parser.Cluster.load(cnxt, cluster=s)
-        self.thread_group_mgr.start_with_lock(cnxt, cluster, self.engine_id,
-                                              _cluster_suspend, cluster)
+        c = cluster.Cluster.load(cnxt, cluster=db_cluster)
+        action = ClusterAction(cnxt, c, 'SUSPEND')
+
+        self.thread_group_mgr.start_with_lock(cnxt, c, 'cluster',
+                                              self.engine_id, action.execute)
 
     @request_context
     def cluster_resume(self, cnxt, cluster_identity):
         '''
         Handle request to perform a resume action on a cluster
         '''
-        def _cluster_resume(cluster):
-            LOG.debug("resuming cluster %s" % cluster.name)
-            cluster.resume()
+        db_cluster = self._get_cluster(cnxt, cluster_identity)
+        LOG.debug("resuming cluster %s" % db_cluster.name)
 
-        s = self._get_cluster(cnxt, cluster_identity)
+        c = cluster.Cluster.load(cnxt, cluster=db_cluster)
+        action = ClusterAction(cnxt, c, 'RESUME')
 
-        cluster = parser.Cluster.load(cnxt, cluster=s)
-        self.thread_group_mgr.start_with_lock(cnxt, cluster, self.engine_id,
-                                              _cluster_resume, cluster)
+        self.thread_group_mgr.start_with_lock(cnxt, c, 'cluster',
+                                              self.engine_id, action.execute)
 
     def _remote_call(self, cnxt, lock_engine_id, call, *args, **kwargs):
         self.cctxt = self._client.prepare(
