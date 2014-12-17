@@ -36,9 +36,6 @@ service_opts = [
     cfg.IntOpt('periodic_interval',
                default=60,
                help=_('Seconds between running periodic tasks.')),
-    cfg.StrOpt('senlin_metadata_server_url',
-               default="",
-               help=_('URL of the Senlin metadata server.')),
     cfg.StrOpt('instance_connection_is_secure',
                default="0",
                help=_('Instance connection to CFN/CW API via https.')),
@@ -56,9 +53,6 @@ service_opts = [
                help=_('Number of senlin-engine processes to fork and run.'))]
 
 engine_opts = [
-    cfg.StrOpt('environment_dir',
-               default='/etc/senlin/environment.d',
-               help=_('The directory to search for environment files.')),
     cfg.StrOpt('deferred_auth_method',
                choices=['password', 'trusts'],
                default='password',
@@ -72,14 +66,18 @@ engine_opts = [
     cfg.IntOpt('max_members_per_cluster',
                default=1000,
                help=_('Maximum members allowed per top-level cluster.')),
-    cfg.IntOpt('max_clusters_per_tenant',
+    cfg.IntOpt('max_clusters_per_project',
                default=100,
-               help=_('Maximum number of clusters any one tenant may have'
+               help=_('Maximum number of clusters any one project may have'
                       ' active at one time.')),
-    cfg.IntOpt('cluster_action_timeout',
+    cfg.IntOpt('max_events_per_cluster',
+               default=3000,
+               help=_('Maximum events per cluster. Older events will be '
+                      'deleted when this is reached.  Set to 0 for unlimited '
+                      'events per cluster.')),
+    cfg.IntOpt('default_action_timeout',
                default=3600,
-               help=_('Timeout in seconds for cluster action (ie. create or'
-                      ' update).')),
+               help=_('Timeout in seconds for actions.')),
     cfg.IntOpt('error_wait_time',
                default=240,
                help=_('Error wait time in seconds for cluster action (ie. create'
@@ -87,15 +85,7 @@ engine_opts = [
     cfg.IntOpt('engine_life_check_timeout',
                default=2,
                help=_('RPC timeout for the engine liveness check that is used'
-                      ' for cluster locking.')),
-    cfg.BoolOpt('enable_cluster_abandon',
-                default=False,
-                help=_('Enable the preview Cluster Abandon feature.')),
-    cfg.BoolOpt('enable_cluster_adopt',
-                default=False,
-                help=_('Enable the preview Cluster Adopt feature.')),
-    cfg.StrOpt('onready',
-               help=_('Deprecated.'))]
+                      ' for cluster locking.'))]
 
 rpc_opts = [
     cfg.StrOpt('host',
@@ -105,26 +95,8 @@ rpc_opts = [
                       'It is not necessarily a hostname, FQDN, '
                       'or IP address.'))]
 
-profiler_group = cfg.OptGroup('profiler')
-profiler_opts = [
-    cfg.BoolOpt("profiler_enabled", default=False,
-                help=_('If False fully disable profiling feature.')),
-    cfg.BoolOpt("trace_sqlalchemy", default=False,
-                help=_("If False do not trace SQL requests."))
-]
-
-auth_password_group = cfg.OptGroup('auth_password')
-auth_password_opts = [
-    cfg.BoolOpt('multi_cloud',
-                default=False,
-                help=_('Allow orchestration of multiple clouds.')),
-    cfg.ListOpt('allowed_auth_uris',
-                default=[],
-                help=_('Allowed keystone endpoints for auth_uri when '
-                       'multi_cloud is enabled. At least one endpoint needs '
-                       'to be specified.'))]
-
 # these options define baseline defaults that apply to all clients
+
 default_clients_opts = [
     cfg.StrOpt('endpoint_type',
                default='publicURL',
@@ -188,9 +160,7 @@ def list_opts():
     yield None, engine_opts
     yield None, service_opts
     yield paste_deploy_group.name, paste_deploy_opts
-    yield auth_password_group.name, auth_password_opts
     yield revision_group.name, revision_opts
-    yield profiler_group.name, profiler_opts
     yield 'clients', default_clients_opts
 
     for client in ('nova', 'swift', 'neutron', 'cinder',
@@ -204,9 +174,7 @@ def list_opts():
 
 
 cfg.CONF.register_group(paste_deploy_group)
-cfg.CONF.register_group(auth_password_group)
 cfg.CONF.register_group(revision_group)
-cfg.CONF.register_group(profiler_group)
 
 for group, opts in list_opts():
     cfg.CONF.register_opts(opts, group=group)
