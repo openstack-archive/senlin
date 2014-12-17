@@ -157,7 +157,7 @@ class EngineClient(object):
                                 user_creds_id=user_creds_id,
                                 cluster_user_project_id=cluster_user_project_id))
 
-    def update_cluster(self, ctxt, cluster_identity, size, profile):
+    def update_cluster(self, ctxt, cluster_identity, profile):
         """
         The update_cluster method updates an existing cluster based on the
         provided template and parameters.
@@ -169,7 +169,6 @@ class EngineClient(object):
         """
         return self.call(ctxt, self.make_msg('update_cluster',
                                              cluster_identity=cluster_identity,
-                                             size=size,
                                              profile=profile))
 
     def delete_cluster(self, ctxt, cluster_identity, cast=True):
