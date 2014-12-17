@@ -89,7 +89,7 @@ class Cluster(BASE, SenlinBase, SoftDelete):
 
     __tablename__ = 'cluster'
 
-    uuid = sqlalchemy.Column('uuid', sqlalchemy.String(36), primary_key=True)
+    id = sqlalchemy.Column('uuid', sqlalchemy.String(36), primary_key=True)
     name = sqlalchemy.Column('name', sqlalchemy.String(255))
     profile = sqlalchemy.Column('profile', sqlalchemy.String(36),
                                 sqlalchemy.ForeignKey('profile.uuid'),
@@ -118,9 +118,9 @@ class Node(BASE, SenlinBase):
     name = sqlalchemy.Column(sqlalchemy.String(255), nullable=True)
     physical_id = sqlalchemy.Column(sqlalchemy.String(255))
     cluster_id = sqlalchemy.Column(sqlalchemy.String(36),
-                                   sqlalchemy.ForeignKey('cluster.id'))
-    profile_id = sqlalchemy.Column(sqlalchemy.String(36),
-                                   sqlalchemy.ForeignKey('profile.id'))
+                                   sqlalchemy.ForeignKey('cluster.uuid'))
+    profile = sqlalchemy.Column(sqlalchemy.String(36),
+                                sqlalchemy.ForeignKey('profile.uuid'))
 
     cluster = relationship(Cluster, backref=backref('nodes'))
 
@@ -146,7 +146,6 @@ class ClusterLock(BASE, SenlinBase):
                                    sqlalchemy.ForeignKey('cluster.uuid'),
                                    primary_key=True)
     engine_id = sqlalchemy.Column(sqlalchemy.String(36))
-
 
 
 class NodeLock(BASE, SenlinBase):
@@ -188,9 +187,9 @@ class ClusterPolicies(BASE, SenlinBase):
                            primary_key=True,
                            default=lambda: str(uuid.uuid4()))
     cluster_id = sqlalchemy.Column(sqlalchemy.String(36),
-                                   sqlalchemy.ForeignKey('cluster.id'))
+                                   sqlalchemy.ForeignKey('cluster.uuid'))
     policy_id = sqlalchemy.Column(sqlalchemy.String(36),
-                                  sqlalchemy.ForeignKey('policy.id'))
+                                  sqlalchemy.ForeignKey('policy.uuid'))
     cooldown = sqlalchemy.Column(sqlalchemy.Integer)
     level = sqlalchemy.Column(sqlalchemy.Integer)
     enabled = sqlalchemy.Column(sqlalchemy.Boolean)
@@ -201,9 +200,9 @@ class Profile(BASE, SenlinBase):
 
     __tablename__ = 'profile'
 
-    uuid = sqlalchemy.Column('uuid', sqlalchemy.String(36),
-                             primary_key=True,
-                             default=lambda: str(uuid.uuid4()))
+    id = sqlalchemy.Column('uuid', sqlalchemy.String(36),
+                           primary_key=True,
+                           default=lambda: str(uuid.uuid4()))
     name = sqlalchemy.Column(sqlalchemy.String(255), nullable=True)
     profile_type = sqlalchemy.Column('type', sqlalchemy.String(255))
     spec = sqlalchemy.Column(types.Json)
