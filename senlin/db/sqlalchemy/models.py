@@ -33,7 +33,7 @@ def get_session():
     return db_api.get_session()
 
 
-class SenlinBase(models.ModelBase, models.TimestampMixin):
+class SenlinBase(models.ModelBase):
     """Base class for Senlin Models."""
     __table_args__ = {'mysql_engine': 'InnoDB'}
 
@@ -74,11 +74,9 @@ class SenlinBase(models.ModelBase, models.TimestampMixin):
 
 
 class SoftDelete(object):
-    deleted_at = sqlalchemy.Column(sqlalchemy.DateTime)
-
     def soft_delete(self, session=None):
         # Mark an object as deleted
-        self.update_and_save({'deleted_at': timeutils.utcnow()},
+        self.update_and_save({'deleted_time': timeutils.utcnow()},
                              session=session)
 
 
