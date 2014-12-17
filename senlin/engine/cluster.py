@@ -15,6 +15,7 @@ from datetime import datetime
 
 from senlin.db import api as db_api
 from senlin.engine import Node
+from senlin.rpc import api as rpc_api
 
 
 class Cluster(object):
@@ -191,7 +192,7 @@ class Cluster(object):
         return cls(context, cluster.name, cluster.profile, size
                    uuid=cluster.uuid, status=cluster.status,
                    status_reason=cluster_status_reason,
-                   parent=cluster.parent, owner_id=cluster.owner_id,
+                   parent=cluster.parent,
                    project=cluster.project,
                    created_time=cluster.created_time,
                    updated_time=cluster.updated_time,
@@ -199,3 +200,23 @@ class Cluster(object):
                    domain = cluster.domain,
                    timeout = cluster.timeout,
                    user=cluster.user)
+
+    def to_dict(self):
+        info = {
+            rpc_api.CLUSTER_NAME: self.name,
+            rpc_api.CLUSTER_PROFILE: self.profile,
+            rpc_api.CLUSTER_SIZE: self.size,
+            rpc_api.CLUSTER_UUID: self.uuid,
+            rpc_api.CLUSTER_PARENT: self.parent,
+            rpc_api.CLUSTER_DOMAIN: self.domain,
+            rpc_api.CLUSTER_PROJECT: self.project,
+            rpc_api.CLUSTER_USER: self.user,
+            rpc_api.CLUSTER_CREATED_TIME: self.created_time,
+            rpc_api.CLUSTER_UPDATED_TIME: self.updated_time,
+            rpc_api.CLUSTER_DELETED_TIME: self.deleted_time,
+            rpc_api.CLUSTER_STATUS: self.status,
+            rpc_api.CLUSTER_STATUS_REASON: self.status_reason,
+            rpc_api.CLUSTER_TIMEOUT: self.timeout,
+        }
+   
+        return info
