@@ -89,27 +89,25 @@ class Cluster(BASE, SenlinBase, SoftDelete):
 
     __tablename__ = 'cluster'
 
-    uuid = sqlalchemy.Column(sqlalchemy.String(36), primary_key=True,
-                             default=lambda: str(uuid.uuid4()))
-    name = sqlalchemy.Column(sqlalchemy.String(255))
-    profile = sqlalchemy.Column(sqlalchemy.String(36),
+    uuid = sqlalchemy.Column('uuid', sqlalchemy.String(36), primary_key=True)
+    name = sqlalchemy.Column('name', sqlalchemy.String(255))
+    profile = sqlalchemy.Column('profile', sqlalchemy.String(36),
                                 sqlalchemy.ForeignKey('profile.uuid'),
                                 nullable=False)
     user = sqlalchemy.Column(sqlalchemy.String(256))
-    project = sqlalchemy.Column(sqlalchemy.String(256))
-    domain = sqlalchemy.Column(sqlalchemy.String(256))
+    project = sqlalchemy.Column(sqlalchemy.String(36))
+    domain = sqlalchemy.Column(sqlalchemy.String(36))
     parent = sqlalchemy.Column(sqlalchemy.String(36))
     created_time = sqlalchemy.Column(sqlalchemy.DateTime)
     deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
     updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    next_index = sqlalchemy.Column(sqlalchemy.Integer)
-    owner_id = sqlalchemy.Column(sqlalchemy.String(36), nullable=True)
+    next_index = sqlalchemy.Column(sqlalchemy.Integer, default=0)
     timeout = sqlalchemy.Column(sqlalchemy.Integer)
-    status = sqlalchemy.Column('status', sqlalchemy.String(255))
-    status_reason = sqlalchemy.Column('status_reason', sqlalchemy.String(255))
+    status = sqlalchemy.Column(sqlalchemy.String(255))
+    status_reason = sqlalchemy.Column(sqlalchemy.String(255))
 
 
-class Node(BASE, SenlinBase, StateAware):
+class Node(BASE, SenlinBase):
     """Represents a Node created by the Senlin engine."""
 
     __tablename__ = 'node'
@@ -117,8 +115,8 @@ class Node(BASE, SenlinBase, StateAware):
     id = sqlalchemy.Column('uuid', sqlalchemy.String(36),
                            primary_key=True,
                            default=lambda: str(uuid.uuid4()))
-    name = sqlalchemy.Column('name', sqlalchemy.String(255), nullable=True)
-    physical_id = sqlalchemy.Column('physical_id', sqlalchemy.String(255))
+    name = sqlalchemy.Column(sqlalchemy.String(255), nullable=True)
+    physical_id = sqlalchemy.Column(sqlalchemy.String(255))
     cluster_id = sqlalchemy.Column(sqlalchemy.String(36),
                                    sqlalchemy.ForeignKey('cluster.id'))
     profile_id = sqlalchemy.Column(sqlalchemy.String(36),
@@ -126,13 +124,13 @@ class Node(BASE, SenlinBase, StateAware):
 
     cluster = relationship(Cluster, backref=backref('nodes'))
 
-    created_time = sqlalchemy.Column('created_time', sqlalchemy.DateTime)
-    updated_time = sqlalchemy.Column('updated_time', sqlalchemy.DateTime)
-    deleted_time = sqlalchemy.Column('deleted_time', sqlalchemy.DateTime)
+    created_time = sqlalchemy.Column(sqlalchemy.DateTime)
+    updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
+    deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
     index = sqlalchemy.Column(sqlalchemy.Integer)
     role = sqlalchemy.Column(sqlalchemy.Integer)
-    status = sqlalchemy.Column('status', sqlalchemy.String(255))
-    status_reason = sqlalchemy.Column('status_reason', sqlalchemy.String(255))
+    status = sqlalchemy.Column(sqlalchemy.String(255))
+    status_reason = sqlalchemy.Column(sqlalchemy.String(255))
 
 
 class ClusterLock(BASE, SenlinBase):
@@ -174,11 +172,11 @@ class Policy(BASE, SenlinBase):
     id = sqlalchemy.Column('uuid', sqlalchemy.String(36),
                            primary_key=True,
                            default=lambda: str(uuid.uuid4()))
-    name = sqlalchemy.Column('name', sqlalchemy.String(255), nullable=True)
-    policy_type = sqlalchemy.Column('type', sqlalchemy.String(255))
-    cooldown = sqlalchemy.Column('cooldown', sqlalchemy.Integer)
-    level = sqlalchemy.Column('level', sqlalchemy.Integer)
-    spec = sqlalchemy.Column('spec', types.Json)
+    name = sqlalchemy.Column(sqlalchemy.String(255), nullable=True)
+    policy_type = sqlalchemy.Column(sqlalchemy.String(255))
+    cooldown = sqlalchemy.Column(sqlalchemy.Integer)
+    level = sqlalchemy.Column(sqlalchemy.Integer)
+    spec = sqlalchemy.Column(types.Json)
 
 
 class ClusterPolicies(BASE, SenlinBase):
@@ -193,9 +191,9 @@ class ClusterPolicies(BASE, SenlinBase):
                                    sqlalchemy.ForeignKey('cluster.id'))
     policy_id = sqlalchemy.Column(sqlalchemy.String(36),
                                   sqlalchemy.ForeignKey('policy.id'))
-    cooldown = sqlalchemy.Column('cooldown', sqlalchemy.Integer)
-    level = sqlalchemy.Column('level', sqlalchemy.Integer)
-    enabled = sqlalchemy.Column('enabled', sqlalchemy.Boolean)
+    cooldown = sqlalchemy.Column(sqlalchemy.Integer)
+    level = sqlalchemy.Column(sqlalchemy.Integer)
+    enabled = sqlalchemy.Column(sqlalchemy.Boolean)
 
 
 class Profile(BASE, SenlinBase):
@@ -203,13 +201,13 @@ class Profile(BASE, SenlinBase):
 
     __tablename__ = 'profile'
 
-    id = sqlalchemy.Column('uuid', sqlalchemy.String(36),
-                           primary_key=True,
-                           default=lambda: str(uuid.uuid4()))
-    name = sqlalchemy.Column('name', sqlalchemy.String(255), nullable=True)
+    uuid = sqlalchemy.Column('uuid', sqlalchemy.String(36),
+                             primary_key=True,
+                             default=lambda: str(uuid.uuid4()))
+    name = sqlalchemy.Column(sqlalchemy.String(255), nullable=True)
     profile_type = sqlalchemy.Column('type', sqlalchemy.String(255))
-    spec = sqlalchemy.Column('spec', types.Json)
-    permission = sqlalchemy.Column('permission', sqlalchemy.String(32))
+    spec = sqlalchemy.Column(types.Json)
+    permission = sqlalchemy.Column(sqlalchemy.String(32))
 
 
 class Event(BASE, SenlinBase):
@@ -218,12 +216,13 @@ class Event(BASE, SenlinBase):
     __tablename__ = 'event'
 
     id = sqlalchemy.Column('uuid', sqlalchemy.String(36),
-                           primary_key=True)
-    timestamp = sqlalchemy.Column('timestamp', sqlalchemy.DateTime)
-    entity_id = sqlalchemy.Column('entity', sqlalchemy.String(36))
-    entity_name = sqlalchemy.Column('entity_name', sqlalchemy.String(255))
-    entity_type = sqlalchemy.Column('entity_type', sqlalchemy.String(36))
-    username = sqlalchemy.Column('user', sqlalchemy.String(255))
-    action = sqlalchemy.Column('action', sqlalchemy.String(36))
-    status = sqlalchemy.Column('status', sqlalchemy.String(255))
-    reason = sqlalchemy.Column('reason', sqlalchemy.String(255))
+                           primary_key=True,
+                           default=lambda: str(uuid.uuid4()))
+    timestamp = sqlalchemy.Column(sqlalchemy.DateTime)
+    entity_id = sqlalchemy.Column(sqlalchemy.String(36))
+    entity_name = sqlalchemy.Column(sqlalchemy.String(255))
+    entity_type = sqlalchemy.Column(sqlalchemy.String(36))
+    user = sqlalchemy.Column(sqlalchemy.String(36))
+    action = sqlalchemy.Column(sqlalchemy.String(36))
+    status = sqlalchemy.Column(sqlalchemy.String(255))
+    status_reason = sqlalchemy.Column(sqlalchemy.String(255))
