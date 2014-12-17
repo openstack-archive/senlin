@@ -11,7 +11,7 @@
 # under the License.
 
 import uuid
-from datatime import datetime
+import datetime
 
 from senlin.db import api as db_api
 
@@ -36,7 +36,10 @@ class Node(object):
         self.uuid = str(uuid.uuid4())
         self.physical_id = None
         self.cluster_id = cluster_id
-        self.index = db_api.next_index(cluster_id) if cluster_id or -1
+        if cluster_id is None:
+            self.index = -1
+        else:
+            self.index = db_api.next_index(cluster_id)
         self.profile_id = profile_id
         self.role = None
         self.status = self.ACTIVE
@@ -49,7 +52,7 @@ class Node(object):
     def create(self, name, profile_id, cluster_id=None, **kwargs):
         # TODO: invoke profile to create new object and get the physical id
         # TODO: log events?
-        self.created_time = datetime.utcnnow()
+        self.created_time = datetime.datetime.utcnnow()
         return node.uuid
 
     def delete(self):
