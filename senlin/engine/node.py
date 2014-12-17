@@ -33,20 +33,22 @@ class Node(object):
 
     def __init__(self, name, profile_id, cluster_id=None, **kwargs):
         self.name = name
-        self.uuid = str(uuid.uuid4())
         self.physical_id = None
         self.cluster_id = cluster_id
+        self.profile_id = profile_id
         if cluster_id is None:
             self.index = -1
         else:
-            self.index = db_api.next_index(cluster_id)
-        self.profile_id = profile_id
-        self.role = None
-        self.status = self.ACTIVE
-        self.status_reason = 'Initialized'
+            self.index = db_api.get_next_index(cluster_id)
+        self.role = ''
+
         self.created_time = None
         self.updated_time = None
+        self.deleted_time = None
 
+        self.status = self.ACTIVE
+        self.status_reason = 'Initialized'
+        self.tags = {}
         # TODO: store this to database
 
     def create(self, name, profile_id, cluster_id=None, **kwargs):

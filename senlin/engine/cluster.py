@@ -39,21 +39,23 @@ class Cluster(object):
         The cluster defaults to have 0 nodes with no profile assigned.
         '''
         self.name = name
-        self.size = size
-        self.profile = profile
-        self.uuid = str(uuid.uuid4())
-        self.nodes = {}
-        self.policies = {}
-        self.domain = kwargs.get('domain')
-        self.project = kwargs.get('project')
+        self.profile_id = profile_id
+
         self.user = kwargs.get('user')
+        self.project = kwargs.get('project')
+        self.domain = kwargs.get('domain')
+
         self.parent = kwargs.get('parent') 
-        self.status = ''
-        self.status_reason = ''
+
         self.created_time = None
         self.updated_time = None
         self.deleted_time = None
-        self._next_index = 0
+
+        self.next_index = 0
+        self.timeout = 0
+
+        self.status = ''
+        self.status_reason = ''
         self.tags = {}
 
         # persist object into database very early because:
@@ -61,6 +63,13 @@ class Cluster(object):
         # 2. user may want to cancel the action when cluster creation
         #    is still in progress
         db_api.create_cluster(self)
+
+        # rt is a dict for runtime data
+        self.rt = {
+            size = size,
+            nodes = {},
+            policies = {}
+        }
 
     def _set_status(self, context, status):
         pass
@@ -103,7 +112,8 @@ class Cluster(object):
 
         self._set_status(self.ACTIVE)
 
-    def next_index(self):
+    def get_next_index(self):
+        # TODO: Get next_index from db and increment it in db
         curr = self._next_index
         self._next_index = self._next_index + 1
         return curr
