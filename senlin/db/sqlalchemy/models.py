@@ -103,6 +103,7 @@ class Cluster(BASE, SenlinBase, SoftDelete):
     status = sqlalchemy.Column(sqlalchemy.String(255))
     status_reason = sqlalchemy.Column(sqlalchemy.String(255))
     tags = sqlalchemy.Column(types.Json)
+    data = sqlalchemy.Column(types.Json)
 
 
 class Node(BASE, SenlinBase):
@@ -128,6 +129,7 @@ class Node(BASE, SenlinBase):
     status = sqlalchemy.Column(sqlalchemy.String(255))
     status_reason = sqlalchemy.Column(sqlalchemy.String(255))
     tags = sqlalchemy.Column(types.Json)
+    data = sqlalchemy.Column(types.Json)
 
 
 class ClusterLock(BASE, SenlinBase):

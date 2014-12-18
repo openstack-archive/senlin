@@ -56,6 +56,7 @@ class Cluster(object):
 
         self.status = ''
         self.status_reason = ''
+        self.data = {}
         self.tags = {}
 
         # persist object into database very early because:
