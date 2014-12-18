@@ -24,7 +24,7 @@ import testscenarios
 import testtools
 
 from senlin.common import messaging
-from senlin.engine.clients.os import keystone
+#from senlin.engine.clients.os import keystone
 from senlin.engine import scheduler
 from senlin.tests.common import fakes
 from senlin.tests.common import utils
@@ -65,7 +65,6 @@ class SenlinTestCase(testscenarios.WithScenarios,
 
     def setUp(self):
         super(SenlinTestCase, self).setUp()
-        self.addCleanup(self.m.UnsetStubs)
         self.setup_logging()
         scheduler.ENABLE_SLEEP = False
         self.useFixture(fixtures.MonkeyPatch(
@@ -113,8 +112,8 @@ class SenlinTestCase(testscenarios.WithScenarios,
         mockfixture = self.useFixture(mockpatch.Patch(target, **kwargs))
         return mockfixture.mock
 
-    def stub_keystoneclient(self, fake_client=None, **kwargs):
-        client = self.patchobject(keystone.KeystoneClientPlugin, "_create")
-        fkc = fake_client or fakes.FakeKeystoneClient(**kwargs)
-        client.return_value = fkc
-        return fkc
+#    def stub_keystoneclient(self, fake_client=None, **kwargs):
+#        client = self.patchobject(keystone.KeystoneClientPlugin, "_create")
+#        fkc = fake_client or fakes.FakeKeystoneClient(**kwargs)
+#        client.return_value = fkc
+#        return fkc
