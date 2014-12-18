@@ -65,11 +65,9 @@ class Cluster(object):
         db_api.create_cluster(self)
 
         # rt is a dict for runtime data
-        self.rt = {
-            size = size,
-            nodes = {},
-            policies = {}
-        }
+        self.rt = dict(size=size,
+                       nodes={},
+                       policies={})
 
     def _set_status(self, context, status):
         pass
