@@ -48,6 +48,7 @@ class Node(object):
 
         self.status = self.ACTIVE
         self.status_reason = 'Initialized'
+        self.data = {}
         self.tags = {}
         # TODO: store this to database
 

@@ -13,67 +13,21 @@
 import uuid
 
 from senlin.db.sqlalchemy import api as db_api
-from senlin.engine import parser
 from senlin.tests.common import base
 from senlin.tests.common import utils
+from senlin.tests.db import shared
+
 
 UUIDs = (UUID1, UUID2, UUID3) = sorted([str(uuid.uuid4())
                                         for x in range(3)])
-
-sample_profile = '''
-  name: my_test_profile
-  type: os.heat.stack
-  spec:
-    template:
-      get_file: template_file
-    files:
-      fname: contents
-'''
-
-
-def create_profile(context, **kwargs):
-    data = parser.parse_profile(sample_profile)
-    values = {
-        'name': 'test_profile_name',
-        'type': 'os.heat.stack',
-        'spec': {
-            'template': {
-                'heat_template_version': '2013-05-23',
-                'resources': {
-                    'myrandom': 'OS::Heat::RandomString',
-                }
-            },
-            'files': {'foo': 'bar'}
-        },
-        'permission': 'xxxyyy',
-    }
-    values.update(kwargs)
-    return db_api.profile_create(context, values)
-
-
-def create_cluster(ctx, profile, **kwargs):
-    values = {
-        'name': 'db_test_cluster_name',
-        'profile_id': profile.id,
-        'user': ctx.user,
-        'project': ctx.tenant_id,
-        'domain': 'unknown',
-        'parent': None,
-        'next_index': 0,
-        'timeout': '60',
-        'status': 'INIT',
-        'status_reason': 'Just Initialized'
-    }
-    values.update(kwargs)
-    return db_api.cluster_create(ctx, values)
 
 
 class DBAPILockTest(base.SenlinTestCase):
     def setUp(self):
         super(DBAPILockTest, self).setUp()
         self.ctx = utils.dummy_context()
-        self.profile = create_profile(self.ctx)
-        self.cluster = create_cluster(self.ctx, self.profile)
+        self.profile = shared.create_profile(self.ctx)
+        self.cluster = shared.create_cluster(self.ctx, self.profile)
 
     def test_cluster_lock_create_success(self):
         observed = db_api.cluster_lock_create(self.cluster.id, UUID1)

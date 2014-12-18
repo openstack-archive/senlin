@@ -53,6 +53,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('status', sqlalchemy.String(255)),
         sqlalchemy.Column('status_reason', sqlalchemy.String(255)),
         sqlalchemy.Column('tags', types.Json),
+        sqlalchemy.Column('data', types.Json),
         mysql_engine='InnoDB',
         mysql_charset='utf8'
     )
@@ -76,6 +77,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('status', sqlalchemy.String(255)),
         sqlalchemy.Column('status_reason', sqlalchemy.String(255)),
         sqlalchemy.Column('tags', types.Json),
+        sqlalchemy.Column('data', types.Json),
         mysql_engine='InnoDB',
         mysql_charset='utf8'
     )
