@@ -1,0 +1,14 @@
+#!/bin/bash
+
+MYSQL_ROOT_PW=cheerman
+MYSQL_SENLIN_PW=cheerman
+
+echo "Creating 'senlin' database."
+cat << EOF | mysql -u root --password=${MYSQL_ROOT_PW}
+DROP DATABASE senlin;
+CREATE DATABASE senlin DEFAULT CHARACTER SET utf8;
+GRANT ALL ON senlin.* TO 'root'@'localhost' IDENTIFIED BY '${MYSQL_SENLIN_PW}';
+GRANT ALL ON senlin.* TO 'root'@'%' IDENTIFIED BY '${MYSQL_SENLIN_PW}';
+flush privileges;
+EOF
+
