@@ -130,7 +130,7 @@ class ThreadGroupManager(object):
             lock = senlin_lock.ClusterLock(cnxt, target, engine_id)
         elif target_type == 'node':
             lock = senlin_lock.NodeLock(cnxt, target, engine_id)
-        with lock.thread_lock(target.uuid):
+        with lock.thread_lock(target.id):
             th = self.start_with_acquired_lock(target, lock,
                                                func, *args, **kwargs)
             return th
@@ -155,8 +155,8 @@ class ThreadGroupManager(object):
             """
             lock.release(*args)
 
-        th = self.start(target.uuid, func, *args, **kwargs)
-        th.link(release, target.uuid)
+        th = self.start(target.id, func, *args, **kwargs)
+        th.link(release, target.id)
         return th
 
     def add_timer(self, target_id, func, *args, **kwargs):
@@ -329,7 +329,7 @@ class EngineService(service.Service):
             db_cluster = db_api.cluster_get_by_name(cnxt, cluster_name)
         if db_cluster:
             c = cluster.Cluster.load(cnxt, cluster=db_cluster)
-            return dict(c['uuid'])
+            return dict(c['id'])
         else:
             raise exception.ClusterNotFound(cluster_name=cluster_name)
 
@@ -450,7 +450,7 @@ class EngineService(service.Service):
         self.thread_group_mgr.start_with_lock(cnxt, c, 'cluster',
                                               self.engine_id, action.execute)
 
-        return c.uuid
+        return c.id
 
     @request_context
     def update_cluster(self, cnxt, cluster_identity, profile):
@@ -485,7 +485,7 @@ class EngineService(service.Service):
         self.thread_group_mgr.start_with_lock(cnxt, c, 'cluster',
                                               self.engine_id, action.execute)
 
-        return c.uuid
+        return c.id
 
     @request_context
     def delete_cluster(self, cnxt, cluster_identity):
@@ -502,11 +502,11 @@ class EngineService(service.Service):
         # This is an operation on a cluster, so we try to acquire ClusterLock
         c = cluster.Cluster.load(cnxt, cluster=db_cluster)
         lock = senlin_lock.ClusterLock(cnxt, c, self.engine_id)
-        with lock.try_thread_lock(c.uuid) as acquire_result:
+        with lock.try_thread_lock(c.id) as acquire_result:
 
             # Successfully acquired lock
             if acquire_result is None:
-                self.thread_group_mgr.stop_timers(c.uuid)
+                self.thread_group_mgr.stop_timers(c.id)
                 action = ClusterAction(cnxt, c, 'DELETE')
                 self.thread_group_mgr.start_with_acquired_lock(c, lock,
                                                                action.execute)
@@ -517,12 +517,12 @@ class EngineService(service.Service):
             # give threads which are almost complete an opportunity to
             # finish naturally before force stopping them
             eventlet.sleep(0.2)
-            self.thread_group_mgr.stop(c.uuid)
+            self.thread_group_mgr.stop(c.id)
         # Another active engine has the lock
         elif senlin_lock.ClusterLock.engine_alive(cnxt, acquire_result):
             stop_result = self._remote_call(
                 cnxt, acquire_result, self.listener.STOP_CLUSTER,
-                cluster_id=c.uuid)
+                cluster_id=c.id)
             if stop_result is None:
                 LOG.debug("Successfully stopped remote task on engine %s"
                           % acquire_result)

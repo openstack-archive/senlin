@@ -22,8 +22,7 @@ _collection_name = 'clusters'
 basic_keys = (
     rpc_api.CLUSTER_NAME,
     rpc_api.CLUSTER_PROFILE,
-    rpc_api.CLUSTER_SIZE,
-    rpc_api.CLUSTER_UUID,
+    rpc_api.CLUSTER_ID,
     rpc_api.CLUSTER_PARENT,
     rpc_api.CLUSTER_DOMAIN,
     rpc_api.CLUSTER_PROJECT,
@@ -34,6 +33,7 @@ basic_keys = (
     rpc_api.CLUSTER_STATUS,
     rpc_api.CLUSTER_STATUS_REASON,
     rpc_api.CLUSTER_TIMEOUT,
+    rpc_api.CLUSTER_TAGS,
 )
 
 

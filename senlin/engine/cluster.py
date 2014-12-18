@@ -73,7 +73,7 @@ class Cluster(object):
 
     def _set_status(self, context, status):
         pass
-        #event.info(context, self.uuid, status, 
+        #event.info(context, self.id, status, 
         # log status to log file
         # generate event record
 
@@ -153,7 +153,7 @@ class Cluster(object):
         cluster.do_create()
         # TODO: store this to database
         # TODO: log events?
-        return cluster.uuid
+        return cluster.id
 
     @classmethod
     def delete(cls, cluster_id):
@@ -201,7 +201,7 @@ class Cluster(object):
         # TODO: calculate current size based on nodes
         size = self.size
         return cls(context, cluster.name, cluster.profile, size,
-                   uuid=cluster.uuid, status=cluster.status,
+                   id=cluster.id, status=cluster.status,
                    status_reason=cluster_status_reason,
                    parent=cluster.parent,
                    project=cluster.project,
@@ -217,7 +217,7 @@ class Cluster(object):
             rpc_api.CLUSTER_NAME: self.name,
             rpc_api.CLUSTER_PROFILE: self.profile,
             rpc_api.CLUSTER_SIZE: self.size,
-            rpc_api.CLUSTER_UUID: self.uuid,
+            rpc_api.CLUSTER_UUID: self.id,
             rpc_api.CLUSTER_PARENT: self.parent,
             rpc_api.CLUSTER_DOMAIN: self.domain,
             rpc_api.CLUSTER_PROJECT: self.project,
