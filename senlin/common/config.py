@@ -154,7 +154,6 @@ revision_opts = [
                       'separately, you can move this section to a different '
                       'file and add it as another config option.'))]
 
-
 def list_opts():
     yield None, rpc_opts
     yield None, engine_opts
@@ -164,7 +163,7 @@ def list_opts():
     yield 'clients', default_clients_opts
 
     for client in ('nova', 'swift', 'neutron', 'cinder',
-                   'ceilometer', 'keystone', 'senlin', 'glance', 'trove'):
+                   'ceilometer', 'keystone', 'heat', 'glance', 'trove'):
         client_specific_group = 'clients_' + client
         yield client_specific_group, clients_opts
 
