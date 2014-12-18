@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+ENGINE_SERVER = 'senlin'
 ENGINE_TOPIC = 'engine'
 
 CLUSTER_KEYS = (
