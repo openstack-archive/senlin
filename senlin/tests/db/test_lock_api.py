@@ -10,23 +10,21 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import uuid
-
 from senlin.db.sqlalchemy import api as db_api
 from senlin.tests.common import base
 from senlin.tests.common import utils
 from senlin.tests.db import shared
 
-
-UUIDs = (UUID1, UUID2, UUID3) = sorted([str(uuid.uuid4())
-                                        for x in range(3)])
+UUID1 = shared.UUID1
+UUID2 = shared.UUID2
+UUID3 = shared.UUID3
 
 
 class DBAPILockTest(base.SenlinTestCase):
     def setUp(self):
         super(DBAPILockTest, self).setUp()
         self.ctx = utils.dummy_context()
-        self.profile = shared.create_profile(self.ctx)
+        self.profile = shared.create_profile(self.ctx, 'os.heat.stack')
         self.cluster = shared.create_cluster(self.ctx, self.profile)
 
     def test_cluster_lock_create_success(self):
