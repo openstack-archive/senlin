@@ -143,3 +143,7 @@ def initialize_if_enabled():
     eventlet.spawn_n(eventlet.backdoor.backdoor_server, sock,
                      locals=backdoor_locals)
     return port
+
+
+def list_opts():
+    yield None, eventlet_backdoor_opts

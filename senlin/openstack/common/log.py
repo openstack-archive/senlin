@@ -27,6 +27,7 @@ It also allows setting of formatting information through conf.
 
 """
 
+import copy
 import inspect
 import itertools
 import logging
@@ -708,3 +709,12 @@ class DeprecatedConfig(Exception):
 
     def __init__(self, msg):
         super(Exception, self).__init__(self.message % dict(msg=msg))
+
+
+def list_opts():
+    return [
+        (None, copy.deepcopy(common_cli_opts)),
+        (None, copy.deepcopy(logging_cli_opts)),
+        (None, copy.deepcopy(generic_log_opts)),
+        (None, copy.deepcopy(log_opts)),
+    ]
