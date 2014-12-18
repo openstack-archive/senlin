@@ -80,13 +80,13 @@ import ast
 import re
 
 from oslo.config import cfg
+from oslo.serialization import jsonutils
 import six
 import six.moves.urllib.parse as urlparse
 import six.moves.urllib.request as urlrequest
 
 from senlin.openstack.common import fileutils
 from senlin.openstack.common.gettextutils import _, _LE
-from senlin.openstack.common import jsonutils
 from senlin.openstack.common import log as logging
 
 
