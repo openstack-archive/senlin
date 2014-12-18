@@ -133,6 +133,28 @@ def upgrade(migrate_engine):
         mysql_charset='utf8'
     )
 
+    action = sqlalchemy.Table(
+        'action', meta,
+        sqlalchemy.Column('id', sqlalchemy.String(36),
+                          primary_key=True, nullable=False),
+        sqlalchemy.Column('name', sqlalchemy.String(63)),
+        sqlalchemy.Column('context', types.Json),
+        sqlalchemy.Column('target', sqlalchemy.String(36)),
+        sqlalchemy.Column('action', types.LongText),
+        sqlalchemy.Column('cause', sqlalchemy.String(255)),
+        sqlalchemy.Column('owner', sqlalchemy.String(36)),
+        sqlalchemy.Column('interval', sqlalchemy.Integer),
+        sqlalchemy.Column('start_time', sqlalchemy.String(255)),
+        sqlalchemy.Column('end_time', sqlalchemy.String(255)),
+        sqlalchemy.Column('timeout', sqlalchemy.Integer),
+        sqlalchemy.Column('status', sqlalchemy.String(255)),
+        sqlalchemy.Column('status_reason', sqlalchemy.String(255)),
+        sqlalchemy.Column('inputs', types.Json),
+        sqlalchemy.Column('outputs', types.Json),
+        mysql_engine='InnoDB',
+        mysql_charset='utf8'
+    )
+
     event = sqlalchemy.Table(
         'event', meta,
         sqlalchemy.Column('id', sqlalchemy.String(36),
@@ -158,6 +180,7 @@ def upgrade(migrate_engine):
         node_lock,
         policy,
         cluster_policy,
+        action,
         event,
     )
 
