@@ -118,7 +118,7 @@ class ThreadGroupManager(object):
         :param cnxt: RPC context
         :param target: Target to be operated on
         :param target_type: Type of operated target, e.g. cluster, node, etc.
-        :param engine_id: The UUID of the engine/worker acquiring the lock
+        :param engine_id: The ID of the engine/worker acquiring the lock
         :param func: Callable to be invoked in sub-thread
         :type func: function or instancemethod
         :param args: Args to be passed to func
@@ -316,7 +316,7 @@ class EngineService(service.Service):
         single, live cluster given the cluster name.
 
         :param cnxt: RPC context.
-        :param cluster_name: Name or UUID of the cluster to look up.
+        :param cluster_name: Name or ID of the cluster to look up.
         """
         if uuidutils.is_uuid_like(cluster_name):
             db_cluster = db_api.cluster_get(cnxt, cluster_name,
