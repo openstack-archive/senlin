@@ -17,9 +17,7 @@ from senlin.common import exception
 from senlin.common import policy
 from senlin.common import wsgi
 from senlin.db import api as db_api
-from senlin.engine import clients
 from senlin.openstack.common import context
-from senlin.openstack.common import local
 
 
 class RequestContext(context.RequestContext):
@@ -29,16 +27,14 @@ class RequestContext(context.RequestContext):
     """
 
     def __init__(self, auth_token=None, username=None, password=None,
-                 aws_creds=None, tenant=None, user_id=None,
-                 tenant_id=None, auth_url=None, roles=None, is_admin=None,
+                 tenant=None, user_id=None,
+                 tenant_id=None, auth_url=None,
+                 roles=None, is_admin=None,
                  read_only=False, show_deleted=False,
-                 overwrite=True, trust_id=None, trustor_user_id=None,
-                 request_id=None, auth_token_info=None, region_name=None,
+                 request_id=None,
+                 auth_token_info=None, region_name=None,
                  **kwargs):
         """
-        :param overwrite: Set to False to ensure that the greenthread local
-            copy of the index is not overwritten.
-
          :param kwargs: Extra arguments that might be present, but we ignore
             because they possibly came in from older rpc messages.
         """
@@ -53,17 +49,12 @@ class RequestContext(context.RequestContext):
         self.user_id = user_id
         self.password = password
         self.region_name = region_name
-        self.aws_creds = aws_creds
         self.tenant_id = tenant_id
         self.auth_token_info = auth_token_info
         self.auth_url = auth_url
         self.roles = roles or []
-        if overwrite or not hasattr(local.store, 'context'):
-            self.update_store()
         self._session = None
         self._clients = None
-        self.trust_id = trust_id
-        self.trustor_user_id = trustor_user_id
         self.policy = policy.Enforcer()
 
         if is_admin is None:
@@ -71,31 +62,19 @@ class RequestContext(context.RequestContext):
         else:
             self.is_admin = is_admin
 
-    def update_store(self):
-        local.store.context = self
-
     @property
     def session(self):
         if self._session is None:
             self._session = db_api.get_session()
         return self._session
 
-    @property
-    def clients(self):
-        if self._clients is None:
-            self._clients = clients.Clients(self)
-        return self._clients
-
     def to_dict(self):
         return {'auth_token': self.auth_token,
                 'username': self.username,
                 'user_id': self.user_id,
                 'password': self.password,
-                'aws_creds': self.aws_creds,
                 'tenant': self.tenant,
                 'tenant_id': self.tenant_id,
-                'trust_id': self.trust_id,
-                'trustor_user_id': self.trustor_user_id,
                 'auth_token_info': self.auth_token_info,
                 'auth_url': self.auth_url,
                 'roles': self.roles,
@@ -141,13 +120,10 @@ class ContextMiddleware(wsgi.Middleware):
         try:
             username = None
             password = None
-            aws_creds = None
 
             if headers.get('X-Auth-User') is not None:
                 username = headers.get('X-Auth-User')
                 password = headers.get('X-Auth-Key')
-            elif headers.get('X-Auth-EC2-Creds') is not None:
-                aws_creds = headers.get('X-Auth-EC2-Creds')
 
             user_id = headers.get('X-User-Id')
             token = headers.get('X-Auth-Token')
@@ -166,7 +142,6 @@ class ContextMiddleware(wsgi.Middleware):
 
         req.context = self.make_context(auth_token=token,
                                         tenant=tenant, tenant_id=tenant_id,
-                                        aws_creds=aws_creds,
                                         username=username,
                                         user_id=user_id,
                                         password=password,

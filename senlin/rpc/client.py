@@ -34,6 +34,7 @@ class EngineClient(object):
     def __init__(self):
         self._client = messaging.get_rpc_client(
             topic=rpc_api.ENGINE_TOPIC,
+            server=rpc_api.ENGINE_SERVER,
             version=self.BASE_RPC_API_VERSION)
 
     @staticmethod

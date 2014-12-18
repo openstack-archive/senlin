@@ -56,14 +56,14 @@ class Node(object):
         # TODO: invoke profile to create new object and get the physical id
         # TODO: log events?
         self.created_time = datetime.datetime.utcnnow()
-        return node.uuid
+        return node.id
 
     def delete(self):
-        node = db_api.get_node(self.uuid)
+        node = db_api.get_node(self.id)
         # TODO: invoke profile to delete this object
         # TODO: check if actions are working on it and can be canceled
 
-        db_api.delete_node(self.uuid)
+        db_api.delete_node(self.id)
         return True
 
     def update(self, new_profile_id):
@@ -75,7 +75,7 @@ class Node(object):
 
         profile_cls = profile_registry.get_class(type_name)
 
-        profile_cls.update_object(self.uuid, new_profile)
+        profile_cls.update_object(self.id, new_profile)
         self.profile_id = new_profile
         self.updated_time = datetime.utcnow()
         return True

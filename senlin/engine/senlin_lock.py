@@ -57,7 +57,7 @@ class BaseLock(object):
         Try to acquire a lock for target, but don't raise an ActionInProgress
         exception or try to steal lock.
         """
-        return self.lock_create(self.target.uuid, self.engine_id)
+        return self.lock_create(self.target.id, self.engine_id)
 
     def acquire(self, retry=True):
         """
@@ -66,19 +66,19 @@ class BaseLock(object):
         :param retry: When True, retry if lock was released while stealing.
         :type retry: boolean
         """
-        lock_engine_id = self.lock_create(self.target.uuid, self.engine_id)
+        lock_engine_id = self.lock_create(self.target.id, self.engine_id)
         if lock_engine_id is None:
             LOG.debug("Engine %(engine)s acquired lock on %(target_type)s "
                       "%(target)s" % {'engine': self.engine_id,
                                       'target_type': self.target_type,
-                                      'target': self.target.uuid})
+                                      'target': self.target.id})
             return
 
         if lock_engine_id == self.engine_id or \
            self.engine_alive(self.context, lock_engine_id):
             LOG.debug("Lock on %(target_type)s %(target)s is owned by engine "
                       "%(engine)s" % {'target_type': self.target_type,
-                                      'target': self.target.uuid,
+                                      'target': self.target.id,
                                       'engine': lock_engine_id})
             raise exception.ActionInProgress(target_name=self.target.name,
                                              action=self.target.status)
@@ -86,10 +86,10 @@ class BaseLock(object):
             LOG.info(_LI("Stale lock detected on %(target_type)s %(target)s. "
                          "Engine %(engine)s will attempt to steal the lock"),
                      {'target_type': self.target_type, 
-                      'target': self.target.uuid,
+                      'target': self.target.id,
                       'engine': self.engine_id})
 
-            result = self.lock_steal(self.target.uuid, lock_engine_id,
+            result = self.lock_steal(self.target.id, lock_engine_id,
                                      self.engine_id)
 
             if result is None:
@@ -97,14 +97,14 @@ class BaseLock(object):
                              "on %(target_type)s %(target)s"),
                          {'engine': self.engine_id,
                           'target_type': self.target_type,
-                          'target': self.target.uuid})
+                          'target': self.target.id})
                 return
             elif result is True:
                 if retry:
                     LOG.info(_LI("The lock on %(target_type)s %(target)s was released "
                                  "while engine %(engine)s was stealing it. "
                                  "Trying again"), {'target_type': self.target_type,
-                                                   'target': self.target.uuid,
+                                                   'target': self.target.id,
                                                    'engine': self.engine_id})
                     return self.acquire(retry=False)
             else:
@@ -112,7 +112,7 @@ class BaseLock(object):
                 LOG.info(_LI("Failed to steal lock on %(target_type)s %(target)s. "
                              "Engine %(engine)s stole the lock first"),
                          {'target_type': self.target_type,
-                          'target': self.target.uuid,
+                          'target': self.target.id,
                           'engine': new_lock_engine_id})
 
             raise exception.ActionInProgress(
