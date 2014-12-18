@@ -1,3 +1,0 @@
-export SENLIN_EXTRA_MODULES=keystonemiddleware.auth_token
-export SENLIN_EXTRA_LIBRARIES="senlin.common.config senlin.common.wsgi oslo.messaging oslo.db"
-export SENLIN_EXCLUDED_FILES="senlin/common/config.py senlin/common/wsgi.py"
