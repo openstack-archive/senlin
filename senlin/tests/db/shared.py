@@ -16,38 +16,29 @@ import uuid
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import parser
 
-sample_profile_type = '''
-  name: my_test_profile_type
-  type: os.heat.stack
+
+sample_profile = '''
+  name: test_profile_name
+  type: my_test_profile_type
   spec:
     template:
-      get_file: template_file
-    files:
-      fname: contents
+      heat_template_version: "2013-05-23"
+      resources:
+        myrandom: OS::Heat::RandomString
+      files:
+        myfile: contents
+    permission: xxxyyy
 '''
+
 
 UUIDs = (UUID1, UUID2, UUID3) = sorted([str(uuid.uuid4())
                                         for x in range(3)])
 
 
-def create_profile(context, profile_type, **kwargs):
-    data = parser.parse_profile(sample_profile_type)
-    values = {
-        'name': 'test_profile_name',
-        'type': profile_type,
-        'spec': {
-            'template': {
-                'heat_template_version': '2013-05-23',
-                'resources': {
-                    'myrandom': 'OS::Heat::RandomString',
-                }
-            },
-            'files': {'input_file': 'template_file'}
-        },
-        'permission': 'xxxyyy',
-    }
-    data.update(values)
-    return db_api.profile_create(context, values)
+def create_profile(context, profile=sample_profile, **kwargs):
+    data = parser.parse_profile(profile)
+    data.update(kwargs)
+    return db_api.profile_create(context, data)
 
 
 def create_cluster(ctx, profile, **kwargs):

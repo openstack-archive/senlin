@@ -27,7 +27,7 @@ class DBAPINodeTest(base.SenlinTestCase):
     def setUp(self):
         super(DBAPINodeTest, self).setUp()
         self.ctx = utils.dummy_context()
-        self.profile = shared.create_profile(self.ctx, 'os.heat.stack')
+        self.profile = shared.create_profile(self.ctx)
         self.cluster = shared.create_cluster(self.ctx, self.profile)
 
     def test_node_create(self):
