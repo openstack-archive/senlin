@@ -24,7 +24,7 @@ class DBAPILockTest(base.SenlinTestCase):
     def setUp(self):
         super(DBAPILockTest, self).setUp()
         self.ctx = utils.dummy_context()
-        self.profile = shared.create_profile(self.ctx, 'os.heat.stack')
+        self.profile = shared.create_profile(self.ctx)
         self.cluster = shared.create_cluster(self.ctx, self.profile)
 
     def test_cluster_lock_create_success(self):

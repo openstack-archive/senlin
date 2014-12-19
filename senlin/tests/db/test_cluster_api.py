@@ -25,7 +25,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
     def setUp(self):
         super(DBAPIClusterTest, self).setUp()
         self.ctx = utils.dummy_context()
-        self.profile = shared.create_profile(self.ctx, 'os.heat.stack')
+        self.profile = shared.create_profile(self.ctx)
 
     def test_cluster_create(self):
         cluster = shared.create_cluster(self.ctx, self.profile)
