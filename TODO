@@ -19,8 +19,7 @@ Middle Priority
 DB
 --
 
-- Add test case for profile types
-
+- Add test cases for policy_delete with 'force' set to True
 
 Low Priority
 ============
