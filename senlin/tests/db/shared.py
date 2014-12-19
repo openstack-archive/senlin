@@ -30,6 +30,17 @@ sample_profile = '''
     permission: xxxyyy
 '''
 
+sample_policy = '''
+  name: test_scaling_policy
+  type: ScalingPolicy
+  cooldown: 10
+  level: WARNING
+  spec:
+    min_size: 1
+    max_size: 10
+    pause_time: PT10M
+'''
+
 
 UUIDs = (UUID1, UUID2, UUID3) = sorted([str(uuid.uuid4())
                                         for x in range(3)])
@@ -39,6 +50,12 @@ def create_profile(context, profile=sample_profile, **kwargs):
     data = parser.parse_profile(profile)
     data.update(kwargs)
     return db_api.profile_create(context, data)
+
+
+def create_policy(context, policy=sample_policy, **kwargs):
+    data = parser.parse_policy(policy)
+    data.update(kwargs)
+    return db_api.policy_create(context, data)
 
 
 def create_cluster(ctx, profile, **kwargs):
