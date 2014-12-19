@@ -25,6 +25,14 @@ class Action(object):
         'OK', 'FAILED', 'RETRY',
     )
 
+    # Action status definitions:
+    #  INIT:      Not ready to be executed because fields are being modified,
+    #             or dependency with other actions are being analyzed.
+    #  READY:     Initialized and ready to be executed by a worker.
+    #  RUNNING:   Being executed by a worker thread.
+    #  SUCCEEDED: Completed with success.
+    #  FAILED:    Completed with failure.
+    #  CANCELLED: Action cancelled because worker thread was cancelled.
     STATUSES = (
         INIT, WAITING, READY, RUNNING,
         SUCCEEDED, FAILED, CANCELED
@@ -79,6 +87,10 @@ class Action(object):
         # a list stored as JSON in DB
         self.inputs = {}
         self.outputs = {}
+
+        # Dependency with other actions
+        self.depends_on = []
+        self.depended_by = []
 
 
     def execute(self, **kwargs):
