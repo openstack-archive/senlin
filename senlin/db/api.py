@@ -210,6 +210,10 @@ def event_get_all(context):
     return IMPL.event_get_all(context)
 
 
+def event_count_by_cluster(context, cluster_id):
+    return IMPL.event_count_by_cluster(context, cluster_id)
+
+
 def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
                              sort_keys=None, sort_dir=None, filters=None):
     return IMPL.event_get_all_by_cluster(context, cluster_id,

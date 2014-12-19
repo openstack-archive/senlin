@@ -505,7 +505,7 @@ def _delete_event_rows(context, cluster_id, limit):
     # So we must manually supply the IN() values.
     # pgsql SHOULD work with the pure DELETE/JOIN below but that must be
     # confirmed via integration tests.
-    query = _event_get_all_by_cluster(context, cluster_id)
+    query = event_count_by_cluster(context, cluster_id)
     session = _session(context)
     all_events = query.order_by(models.Event.timestamp).limit(limit).all()
     ids = [r.id for r in all_events]
@@ -516,13 +516,15 @@ def _delete_event_rows(context, cluster_id, limit):
 def event_create(context, values):
     if values['obj_type'] == 'CLUSTER' and cfg.CONF.max_events_per_cluster:
         cluster_id = values['obj_id']
-        event_count = _event_get_all_by_cluster(context, cluster_id).count()
+        event_count = event_count_by_cluster(context, cluster_id)
         if (event_count >= cfg.CONF.max_events_per_cluster):
             # prune events
             batch_size = cfg.CONF.event_purge_batch_size
             _delete_event_rows(context, cluster_id, batch_size)
 
     event = models.Event()
+    if 'status_reason' in values:
+        values['status_reason'] = values['status_reason'][:255]
     event.update(values)
     event.save(_session(context))
     return event
@@ -581,15 +583,21 @@ def _events_filter_and_page_query(context, query, limit=None, marker=None,
                                   keys, marker, sort_dir)
 
 
-def _event_get_all_by_cluster(context, cid):
-    query = model_query(context, models.Event).\
+def event_count_by_cluster(context, cid):
+    count = model_query(context, models.Event).\
         filter_by(obj_id=cid, obj_type='CLUSTER').count()
+    return count 
+
+
+def _events_by_cluster(context, cid):
+    query = model_query(context, models.Event).\
+        filter_by(obj_id=cid, obj_type='CLUSTER')
     return query
 
 
 def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
                              sort_keys=None, sort_dir=None, filters=None):
-    query = _event_get_all_by_cluster(context, cluster_id)
+    query = _events_by_cluster(context, cluster_id)
     return _events_filter_and_page_query(context, query, limit, marker,
                                          sort_keys, sort_dir, filters).all()
 

@@ -243,7 +243,7 @@ class Event(BASE, SenlinBase, SoftDelete):
 
     __tablename__ = 'event'
 
-    id = sqlalchemy.Column('uuid', sqlalchemy.String(36),
+    id = sqlalchemy.Column('id', sqlalchemy.String(36),
                            primary_key=True,
                            default=lambda: str(uuid.uuid4()))
     timestamp = sqlalchemy.Column(sqlalchemy.DateTime)
