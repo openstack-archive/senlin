@@ -184,10 +184,11 @@ class PolicyAction(Action):
             # There is not direct way to update a policy because the policy
             # might be shared with another cluster, instead, we clone a new
             # policy and replace the cluster-policy entry.
+            pass
 
             # TODO(Qiming): Add DB API complete this.
        
-        self.store(end_time=datetime.datetime.utcnow()
+        self.store(end_time=datetime.datetime.utcnow(),
                    status=self.SUCCEEDED)
         return self.OK 
 
