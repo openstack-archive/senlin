@@ -151,6 +151,8 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('status_reason', sqlalchemy.String(255)),
         sqlalchemy.Column('inputs', types.Json),
         sqlalchemy.Column('outputs', types.Json),
+        sqlalchemy.Column('depends_on', types.Json),
+        sqlalchemy.Column('depended_by', types.Json),
         mysql_engine='InnoDB',
         mysql_charset='utf8'
     )

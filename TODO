@@ -4,7 +4,6 @@ High Priority
 
 DB
 --
-  - Modify action table to support dependency
   - Add action APIs
   - Make sure cluster-policy association is deleted when a cluster is deleted
   - Add field size to cluster table
