@@ -231,6 +231,8 @@ class Action(BASE, SenlinBase):
     status_reason = sqlalchemy.Column(sqlalchemy.String(255))
     inputs = sqlalchemy.Column(types.Json)
     outputs = sqlalchemy.Column(types.Json)
+    depends_on = sqlalchemy.Column(types.Json)
+    depended_by = sqlalchemy.Column(types.Json)
 
 
 class Event(BASE, SenlinBase):
