@@ -81,7 +81,7 @@ def soft_delete_aware_query(context, *args, **kwargs):
     show_deleted = kwargs.get('show_deleted') or context.show_deleted
 
     if not show_deleted:
-        query = query.filter_by(deleted_at=None)
+        query = query.filter_by(deleted_time=None)
     return query
 
 
@@ -91,11 +91,12 @@ def _session(context):
 
 # Clusters
 def cluster_create(context, values):
-    cluster = models.Cluster()
-    cluster.update(values)
-    cluster.save(_session(context))
-
-    return cluster
+    cluster_ref = models.Cluster()
+    if 'status_reason' in values:
+        values['status_reason'] = values['status_reason'][:255]
+    cluster_ref.update(values)
+    cluster_ref.save(_session(context))
+    return cluster_ref
 
 
 def cluster_get(context, cluster_id, show_deleted=False, tenant_safe=True):
@@ -106,12 +107,24 @@ def cluster_get(context, cluster_id, show_deleted=False, tenant_safe=True):
     if cluster is None or cluster.deleted_time is not None and not deleted_ok:
         return None
 
-    # One exception to normal project scoping is users created by the
-    # clusters in the cluster_user_project_id
     if tenant_safe and (cluster is not None):
         if (context is not None) and (context.tenant_id != cluster.project):
             return None
     return cluster
+
+
+def cluster_get_all_by_parent(context, parent):
+    results = soft_delete_aware_query(context, models.Cluster).\
+        filter_by(parent=parent).all()
+    return results
+
+
+def cluster_get_by_name_and_parent(context, cluster_name, parent):
+    query = soft_delete_aware_query(context, models.Cluster).\
+        filter_by(tenant == context.tenant_id).\
+        filter_by(name=cluster_name).\
+        filter_by(parent=parent)
+    return query.first()
 
 
 def cluster_get_by_name(context, cluster_name):
@@ -179,7 +192,7 @@ def _filter_and_page_query(context, query, limit=None, sort_keys=None,
 def cluster_get_all(context, limit=None, sort_keys=None, marker=None,
                     sort_dir=None, filters=None, tenant_safe=True,
                     show_deleted=False, show_nested=False):
-    query = _query_cluster_get_all(context, tenant_safe,
+    query = _query_cluster_get_all(context, tenant_safe=tenant_safe,
                                    show_deleted=show_deleted,
                                    show_nested=show_nested)
     return _filter_and_page_query(context, query, limit, sort_keys,
@@ -200,7 +213,7 @@ def cluster_update(context, cluster_id, values):
 
     if not cluster:
         raise exception.NotFound(
-            i18n._('Attempt to update a cluster with id: %(id)s that does not'
+            i18n._('Attempt to update a cluster with id "%s" that does not'
                    ' exist') % cluster_id)
 
     cluster.update(values)
@@ -208,17 +221,19 @@ def cluster_update(context, cluster_id, values):
 
 
 def cluster_delete(context, cluster_id):
-    s = cluster_get(context, cluster_id)
-    if not s:
+    cluster = cluster_get(context, cluster_id)
+    if not cluster:
         raise exception.NotFound(
             i18n._('Attempt to delete a cluster with id "%s" that does not'
                    ' exist') % cluster_id)
-    session = orm_session.Session.object_session(s)
 
-    for r in s.nodes:
-        session.delete(r)
+    session = orm_session.Session.object_session(cluster)
 
-    s.soft_delete(session=session)
+    nodes = node_get_all_by_cluster(context, cluster_id)
+    for node in nodes.values():
+        session.delete(node)
+
+    cluster.soft_delete(session=session)
     session.flush()
 
 

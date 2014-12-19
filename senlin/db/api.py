@@ -49,12 +49,20 @@ def cluster_get_by_name(context, cluster_name):
     return IMPL.cluster_get_by_name(context, cluster_name)
 
 
+def cluster_get_by_name_and_parent(context, cluster_name, parent):
+    return IMPL.cluster_get_by_name_and_parent(context, cluster_name, parent)
+
+
 def cluster_get_all(context, limit=None, sort_keys=None, marker=None,
                     sort_dir=None, filters=None, tenant_safe=True,
                     show_deleted=False, show_nested=False):
     return IMPL.cluster_get_all(context, limit, sort_keys,
                                 marker, sort_dir, filters, tenant_safe,
                                 show_deleted, show_nested)
+
+
+def cluster_get_all_by_parent(context, parent):
+    return IMPL.cluster_get_all_by_parent(context, parent)
 
 
 def cluster_count_all(context, filters=None, tenant_safe=True,
