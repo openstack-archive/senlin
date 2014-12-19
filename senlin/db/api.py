@@ -208,6 +208,42 @@ def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
                                          sort_dir=sort_dir,
                                          filters=filters)
 
+# Actions
+def action_create(context, values):
+    return IMPL.action_create(context, values)
+
+
+def action_get(context, action_id):
+    return IMPL.action_get(context, action_id)
+
+
+def action_get_1st_ready(context):
+    return IMPL.action_get_1st_ready(context)
+
+
+def action_get_all_ready(context):
+    return IMPL.action_get_all_ready(context)
+
+
+def action_get_all_by_owner(context, owner):
+    return IMPL.action_get_all_by_owner(context, owner)
+
+
+def action_get_all(context):
+    return IMPL.action_get_all(context)
+
+
+def action_mark_complete(context, action_id):
+    return IMPL.action_mark_complete(context, action_id)
+
+
+def action_start_work_on(context, action_id, owner):
+    return IMPL.action_start_work_on(context, action_id, owner)
+
+
+def action_update(context, action_id, values):
+    return IMPL.action_update(context, action_id, values)
+
 
 def db_sync(engine, version=None):
     """Migrate the database to `version` or the most recent version."""
