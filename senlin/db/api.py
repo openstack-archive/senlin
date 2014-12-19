@@ -107,6 +107,12 @@ def node_get_by_physical_id(context, physical_id):
     return IMPL.node_get_by_physical_id(context, physical_id)
 
 
+def node_set_status(context, node_id, status):
+    # TODO(Qiming): Update nodes in cluster table; set status to
+    #               ACTIVE if all created.
+    return IMPL.node_set_status(context, node_id, status)
+
+
 # Locks
 def cluster_lock_create(cluster_id, worker_id):
     return IMPL.cluster_lock_create(cluster_id, worker_id)
