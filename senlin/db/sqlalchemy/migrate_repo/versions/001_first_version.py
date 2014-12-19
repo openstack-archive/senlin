@@ -28,6 +28,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('spec', types.Json),
         sqlalchemy.Column('permission', sqlalchemy.String(32)),
         sqlalchemy.Column('tags', types.Json),
+        sqlalchemy.Column('deleted_time', sqlalchemy.DateTime),
         mysql_engine='InnoDB',
         mysql_charset='utf8'
     )
@@ -110,6 +111,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('type', sqlalchemy.String(255)),
         sqlalchemy.Column('cooldown', sqlalchemy.Integer),
         sqlalchemy.Column('level', sqlalchemy.Integer),
+        sqlalchemy.Column('deleted_time', sqlalchemy.DateTime),
         sqlalchemy.Column('spec', types.Json),
         sqlalchemy.Column('data', types.Json),
         mysql_engine='InnoDB',
@@ -153,6 +155,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('outputs', types.Json),
         sqlalchemy.Column('depends_on', types.Json),
         sqlalchemy.Column('depended_by', types.Json),
+        sqlalchemy.Column('deleted_time', sqlalchemy.DateTime),
         mysql_engine='InnoDB',
         mysql_charset='utf8'
     )
@@ -162,6 +165,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('id', sqlalchemy.String(36),
                           primary_key=True, nullable=False),
         sqlalchemy.Column('timestamp', sqlalchemy.DateTime, nullable=False),
+        sqlalchemy.Column('deleted_time', sqlalchemy.DateTime),
         sqlalchemy.Column('obj_id', sqlalchemy.String(36)),
         sqlalchemy.Column('obj_name', sqlalchemy.String(255)),
         sqlalchemy.Column('obj_type', sqlalchemy.String(36)),
