@@ -240,6 +240,8 @@ def cluster_delete(context, cluster_id):
 # Nodes
 def node_create(context, values):
     node = models.Node()
+    if 'status_reason' in values:
+        values['status_reason'] = values['status_reason'][:255]
     node.update(values)
     node.save(_session(context))
     return node
@@ -261,9 +263,10 @@ def node_get_all(context):
 
 
 def node_get_all_by_cluster(context, cluster_id):
-    nodes = model_query(context, models.Node).filter_by(cluster_id=cluster_id)
+    query = model_query(context, models.Node).filter_by(cluster_id=cluster_id)
+    nodes = query.all()
     if not nodes:
-        msg = i18n._("no nodes for cluster_id %s were found") % cluster_id
+        msg = i18n._("No nodes for cluster %s were found") % cluster_id
         raise exception.NotFound(msg)
 
     return dict((node.name, node) for node in nodes)
@@ -276,12 +279,8 @@ def node_get_by_name_and_cluster(context, node_name, cluster_id):
 
 
 def node_get_by_physical_id(context, phy_id):
-    nodes = (model_query(context, models.Node).filter_by(physical_id=phy_id))
-
-    for node in nodes:
-        if context is None or context.tenant_id == node.cluster.project:
-            return node
-    return None
+    query = model_query(context, models.Node).filter_by(physical_id=phy_id)
+    return query.first()
 
 
 # Locks
