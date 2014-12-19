@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
 import json
 import uuid
 
@@ -95,3 +96,21 @@ def create_node(ctx, cluster, profile, **kwargs):
     }
     values.update(kwargs)
     return db_api.node_create(ctx, values)
+
+
+def create_event(ctx, **kwargs):
+    timestamp = datetime.datetime.strptime('2014-12-19 11:51:54.670244',
+                                           '%Y-%m-%d %H:%M:%S.%f') 
+    values = {
+        'timestamp': timestamp,
+        'level': 50,
+        'obj_id': UUID1,
+        'obj_name': 'Server01',
+        'action': 'UPDATE',
+        'status': 'FAILED',
+        'status_reason': 'Server already deleted',
+        'obj_type': 'NODE',
+        'user': None,
+    }
+    values.update(kwargs)
+    return db_api.event_create(ctx, values)
