@@ -1,15 +1,14 @@
-#
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
 #         http://www.apache.org/licenses/LICENSE-2.0
 #
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#    License for the specific language governing permissions and limitations
-#    under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 '''
 Implementation of SQLAlchemy backend.
@@ -72,7 +71,7 @@ def _get_sort_keys(sort_keys, mapping):
 
 def soft_delete_aware_query(context, *args, **kwargs):
     """
-    Cluster query helper that accounts for the `show_deleted` field.
+    Object query helper that accounts for the `show_deleted` field.
 
     :param show_deleted: if True, overrides context's show_deleted field.
     """
@@ -357,16 +356,19 @@ def policy_create(context, values):
     return policy
 
 
-def policy_get(context, policy_id):
-    policy = model_query(context, models.Policy).get(policy_id)
+def policy_get(context, policy_id, show_deleted=False):
+    policy = soft_delete_aware_query(context, models.Policy,
+                                     show_deleted=show_deleted)
+    policy = policy.filter_by(id=policy_id).first()
     if not policy:
-        msg = _('Policy with id "%s" not found') % policy_id
+        msg = i18n._('Policy with id "%s" not found') % policy_id
         raise exception.NotFound(msg)
     return policy
 
 
-def policy_get_all(context):
-    policies = model_query(context, models.Policy).all()
+def policy_get_all(context, show_deleted=False):
+    policies = soft_delete_aware_query(context, models.Policy,
+                                       show_deleted=show_deleted).all()
     if not policies:
         raise exception.NotFound(_('No policy were found'))
     return policies

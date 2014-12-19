@@ -173,6 +173,7 @@ class Policy(BASE, SenlinBase, SoftDelete):
     type = sqlalchemy.Column(sqlalchemy.String(255))
     cooldown = sqlalchemy.Column(sqlalchemy.Integer)
     level = sqlalchemy.Column(sqlalchemy.Integer)
+    deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
     spec = sqlalchemy.Column(types.Json)
     data = sqlalchemy.Column(types.Json)
 
@@ -208,6 +209,7 @@ class Profile(BASE, SenlinBase, SoftDelete):
     spec = sqlalchemy.Column(types.Json)
     permission = sqlalchemy.Column(sqlalchemy.String(32))
     tags = sqlalchemy.Column(types.Json)
+    deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
 
 
 class Action(BASE, SenlinBase, SoftDelete):
@@ -233,6 +235,7 @@ class Action(BASE, SenlinBase, SoftDelete):
     outputs = sqlalchemy.Column(types.Json)
     depends_on = sqlalchemy.Column(types.Json)
     depended_by = sqlalchemy.Column(types.Json)
+    deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
 
 
 class Event(BASE, SenlinBase, SoftDelete):
@@ -244,6 +247,7 @@ class Event(BASE, SenlinBase, SoftDelete):
                            primary_key=True,
                            default=lambda: str(uuid.uuid4()))
     timestamp = sqlalchemy.Column(sqlalchemy.DateTime)
+    deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
     obj_id = sqlalchemy.Column(sqlalchemy.String(36))
     obj_name = sqlalchemy.Column(sqlalchemy.String(255))
     obj_type = sqlalchemy.Column(sqlalchemy.String(36))

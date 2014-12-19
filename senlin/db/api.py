@@ -143,12 +143,12 @@ def policy_create(context, values):
     return IMPL.policy_create(context, values)
 
 
-def policy_get(context, policy_id):
+def policy_get(context, policy_id, show_deleted=False):
     return IMPL.policy_get(context, policy_id)
 
 
-def policy_get_all(context):
-    return IMPL.policy_get_all(context)
+def policy_get_all(context, show_deleted=False):
+    return IMPL.policy_get_all(context, show_deleted)
 
 
 def policy_update(context, policy_id, values):
