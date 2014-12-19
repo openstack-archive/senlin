@@ -89,12 +89,13 @@ class EngineClient(object):
                                              cluster_name=cluster_name))
 
     def list_clusters(self, ctxt, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None, tenant_safe=True,
-                    show_deleted=False, show_nested=False):
+                      sort_dir=None, filters=None, tenant_safe=True,
+                      show_deleted=False, show_nested=False):
         """
-        The list_clusters method returns attributes of all clusters.  It supports
-        pagination (``limit`` and ``marker``), sorting (``sort_keys`` and
-        ``sort_dir``) and filtering (``filters``) of the results.
+        The list_clusters method returns attributes of all clusters.
+        It supports pagination (``limit`` and ``marker``),
+        sorting (``sort_keys`` and ``sort_dir``) and
+        filtering (``filters``) of the results.
 
         :param ctxt: RPC context.
         :param limit: the number of clusters to list (integer or string)
@@ -119,11 +120,12 @@ class EngineClient(object):
         """
         Return detailed information about one or all clusters.
         :param ctxt: RPC context.
-        :param cluster_identity: Name of the cluster you want to show, or None to
-        show all
+        :param cluster_identity: Name of the cluster you want to show,
+        or None to show all
         """
-        return self.call(ctxt, self.make_msg('show_cluster',
-                                             cluster_identity=cluster_identity))
+        return self.call(ctxt,
+                         self.make_msg('show_cluster',
+                                       cluster_identity=cluster_identity))
 
     def create_cluster(self, ctxt, cluster_name, size, profile):
         """
@@ -138,25 +140,26 @@ class EngineClient(object):
         return self._create_cluster(ctxt, cluster_name, size, profile)
 
     def _create_cluster(self, ctxt, cluster_name, size, profile,
-                      owner_id=None, nested_depth=0, user_creds_id=None,
-                      cluster_user_project_id=None):
+                        owner_id=None, nested_depth=0, user_creds_id=None,
+                        cluster_user_project_id=None):
         """
-        Internal create_cluster interface for engine-to-engine communication via
-        RPC.  Allows some additional options which should not be exposed to
-        users via the API:
+        Internal create_cluster interface for engine-to-engine communication
+        via RPC.  Allows some additional options which should not be exposed
+        to users via the API:
         :param owner_id: parent cluster ID for nested clusters
         :param nested_depth: nested depth for nested clusters
         :param user_creds_id: user_creds record for nested cluster
         :param cluster_user_project_id: cluster user project for nested cluster
         """
         return self.call(
-            ctxt, self.make_msg('create_cluster', cluster_name=cluster_name,
-                                size=size,
-                                profile=profile,
-                                owner_id=owner_id,
-                                nested_depth=nested_depth,
-                                user_creds_id=user_creds_id,
-                                cluster_user_project_id=cluster_user_project_id))
+            ctxt, self.make_msg(
+                'create_cluster', cluster_name=cluster_name,
+                size=size,
+                profile=profile,
+                owner_id=owner_id,
+                nested_depth=nested_depth,
+                user_creds_id=user_creds_id,
+                cluster_user_project_id=cluster_user_project_id))
 
     def update_cluster(self, ctxt, cluster_identity, profile):
         """
@@ -197,12 +200,14 @@ class EngineClient(object):
                                              nested_depth=nested_depth))
 
     def cluster_suspend(self, ctxt, cluster_identity):
-        return self.call(ctxt, self.make_msg('cluster_suspend',
-                                             cluster_identity=cluster_identity))
+        return self.call(ctxt,
+                         self.make_msg('cluster_suspend',
+                                       cluster_identity=cluster_identity))
 
     def cluster_resume(self, ctxt, cluster_identity):
-        return self.call(ctxt, self.make_msg('cluster_resume',
-                                             cluster_identity=cluster_identity))
+        return self.call(ctxt,
+                         self.make_msg('cluster_resume',
+                                       cluster_identity=cluster_identity))
 
     def get_revision(self, ctxt):
         return self.call(ctxt, self.make_msg('get_revision'))

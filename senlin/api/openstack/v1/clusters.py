@@ -15,15 +15,11 @@
 Cluster endpoint for Senlin v1 ReST API.
 """
 
-import six
-from six.moves.urllib import parse
 from webob import exc
 
 from senlin.api.openstack.v1 import util
 from senlin.api.openstack.v1.views import clusters_view
 from senlin.common.i18n import _
-from senlin.common.i18n import _LW
-from senlin.common import param_utils
 from senlin.common import serializers
 from senlin.common import wsgi
 from senlin.openstack.common import log as logging
@@ -114,13 +110,13 @@ class ClusterController(object):
             filter_params = None
 
         clusters = self.rpc_client.list_clusters(req.context,
-                                             filters=filter_params,
-                                             tenant_safe=tenant_safe,
-                                             **params)
-        
+                                                 filters=filter_params,
+                                                 tenant_safe=tenant_safe,
+                                                 **params)
+
         count = None
         return clusters_view.collection(req, clusters=clusters, count=count,
-                                      tenant_safe=tenant_safe)
+                                        tenant_safe=tenant_safe)
 
     @util.policy_enforce
     def global_index(self, req):
@@ -144,7 +140,8 @@ class ClusterController(object):
         """
         clusters = self.rpc_client.list_clusters(req.context)
 
-        return {'clusters': [clusters_view.format_cluster(req, c) for c in clusters]}
+        return {'clusters': [clusters_view.format_cluster(req, c)
+                             for c in clusters]}
 
     @util.policy_enforce
     def create(self, req, body):
@@ -154,9 +151,9 @@ class ClusterController(object):
         data = InstantiationData(body)
 
         result = self.rpc_client.create_cluster(req.context,
-                                              data.cluster_name(),
-                                              data.size(),
-                                              data.profile())
+                                                data.cluster_name(),
+                                                data.size(),
+                                                data.profile())
 
         formatted_cluster = clusters_view.format_cluster(
             req,
@@ -188,9 +185,9 @@ class ClusterController(object):
         data = InstantiationData(body)
 
         self.rpc_client.update_cluster(req.context,
-                                     identity,
-                                     data.size(),
-                                     data.profile())
+                                       identity,
+                                       data.size(),
+                                       data.profile())
 
         raise exc.HTTPAccepted()
 
@@ -201,8 +198,8 @@ class ClusterController(object):
         """
 
         res = self.rpc_client.delete_cluster(req.context,
-                                           identity,
-                                           cast=False)
+                                             identity,
+                                             cast=False)
 
         if res is not None:
             raise exc.HTTPBadRequest(res['Error'])
