@@ -1,0 +1,29 @@
+
+High Priority
+=============
+
+DB
+--
+  - Make sure cluster-policy association is deleted when a cluster is deleted
+
+ENGINE
+------
+
+
+Middle Priority
+===============
+
+DB
+--
+
+- Add test case for profile types
+
+
+Low Priority
+============
+
+TEST
+----
+
+- Add test case in db cluster to test that cluster-policy association is
+  deleted when we delete a cluster
