@@ -11,40 +11,26 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import collections
 import functools
-import json
-import os
 
 import eventlet
 from oslo.config import cfg
 from oslo import messaging
-from oslo.serialization import jsonutils
-from oslo.utils import timeutils
 from osprofiler import profiler
-import requests
-import six
-import warnings
-import webob
 
 from senlin.common import context
 from senlin.common import exception
 from senlin.common.i18n import _
-from senlin.common.i18n import _LE
 from senlin.common.i18n import _LI
-from senlin.common.i18n import _LW
-from senlin.common import identifier
 from senlin.common import messaging as rpc_messaging
 from senlin.db import api as db_api
-from senlin.engine import action
-from senlin.engine import cluster
-from senlin.engine import node
+from senlin.engine import action as actions
+from senlin.engine import cluster as clusters
 from senlin.engine import senlin_lock
 from senlin.engine.thread_mgr import ThreadGroupManager
 from senlin.openstack.common import log as logging
 from senlin.openstack.common import service
 from senlin.openstack.common import uuidutils
-from senlin.rpc import api as rpc_api
 
 LOG = logging.getLogger(__name__)
 
@@ -182,8 +168,8 @@ class EngineService(service.Service):
         else:
             db_cluster = db_api.cluster_get_by_name(cnxt, cluster_name)
         if db_cluster:
-            c = cluster.Cluster.load(cnxt, cluster=db_cluster)
-            return dict(c['id'])
+            cluster = clusters.Cluster.load(cnxt, cluster=db_cluster)
+            return dict(cluster.id)
         else:
             raise exception.ClusterNotFound(cluster_name=cluster_name)
 
@@ -201,15 +187,7 @@ class EngineService(service.Service):
                                         eager_load=True)
 
         if db_cluster is None:
-            raise exception.ClusterNotFound(cluster_name=identity.cluster_name)
-
-        if cnxt.tenant_id not in (identity.tenant, s.cluster_user_project_id):
-            # The DB API should not allow this, but sanity-check anyway..
-            raise exception.InvalidTenant(target=identity.tenant,
-                                          actual=cnxt.tenant_id)
-
-        if identity.path or s.name != identity.cluster_name:
-            raise exception.ClusterNotFound(cluster_name=identity.cluster_name)
+            raise exception.ClusterNotFound(cluster_name=cluster_identity)
 
         return db_cluster
 
@@ -225,25 +203,23 @@ class EngineService(service.Service):
         if cluster_identity is not None:
             db_cluster = self._get_cluster(cnxt, cluster_identity,
                                            show_deleted=True)
-            clusters = cluster.Cluster.load(cnxt, cluster=db_cluster)
+            cluster_list = clusters.Cluster.load(cnxt, cluster=db_cluster)
         else:
-            clusters = cluster.Cluster.load_all(cnxt, show_deleted=True)
+            cluster_list = clusters.Cluster.load_all(cnxt, show_deleted=True)
 
         # Format clusters info
         clusters_info = []
-        for c in clusters:
-            clusters_info.append(c.to_dict())
+        for cluster in cluster_list:
+            clusters_info.append(cluster.to_dict())
 
         return {'clusters': clusters_info}
 
     @request_context
     def list_clusters(self, cnxt, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None, tenant_safe=True,
-                    show_deleted=False, show_nested=False):
+                      sort_dir=None, filters=None, tenant_safe=True,
+                      show_deleted=False, show_nested=False):
         """
-        The list_clusters method returns attributes of all clusters.  It supports
-        pagination (``limit`` and ``marker``), sorting (``sort_keys`` and
-        ``sort_dir``) and filtering (``filters``) of the results.
+        The list_clusters method returns attributes of all clusters.
 
         :param cnxt: RPC context
         :param limit: the number of clusters to list (integer or string)
@@ -256,35 +232,34 @@ class EngineService(service.Service):
         :param show_nested: if true, show nested clusters
         :returns: a list of formatted clusters
         """
-        clusters = cluster.Cluster.load_all(cnxt, limit, marker, sort_keys,
-                                            sort_dir, filters, tenant_safe,
-                                            show_deleted, show_nested)
+        cluster_list = clusters.Cluster.load_all(cnxt, limit, marker,
+                                                 sort_keys, sort_dir,
+                                                 filters, tenant_safe,
+                                                 show_deleted, show_nested)
 
         # Format clusters info
         clusters_info = []
-        for c in clusters:
-            clusters_info.append(c.to_dict())
+        for cluster in cluster_list:
+            clusters_info.append(cluster.to_dict())
 
         return {'clusters': clusters_info}
 
     @request_context
     def create_cluster(self, cnxt, cluster_name, size, profile,
-                     owner_id=None, nested_depth=0, user_creds_id=None,
-                     cluster_user_project_id=None):
+                       owner_id=None, nested_depth=0, user_creds_id=None,
+                       cluster_user_project_id=None):
         """
-        The create_cluster method creates a new cluster using the template
-        provided.
-        Note that at this stage the template has already been fetched from the
-        senlin-api process if using a template-url.
+        Handle request to perform a create action on a cluster
 
         :param cnxt: RPC context.
         :param cluster_name: Name of the cluster you want to create.
         :param size: Size of cluster you want to create.
         :param profile: Profile used to create cluster nodes.
-        :param owner_id: parent cluster ID for nested clusters, only expected when
-                         called from another senlin-engine (not a user option)
-        :param nested_depth: the nested depth for nested clusters, only expected
-                         when called from another senlin-engine
+        :param owner_id: parent cluster ID for nested clusters, only
+                         expected when called from another senlin-engine
+                         (not a user option)
+        :param nested_depth: the nested depth for nested clusters, only
+                             expected when called from another senlin-engine
         :param user_creds_id: the parent user_creds record for nested clusters
         :param cluster_user_project_id: the parent cluster_user_project_id for
                          nested clusters
@@ -298,21 +273,18 @@ class EngineService(service.Service):
         kwargs['user_creds_id'] = user_creds_id
         kwargs['cluster_user_project_id'] = cluster_user_project_id
 
-        c = cluster.Cluster(name, size, profile, **kwargs)
-        action = ClusterAction(cnxt, c, 'CREATE', **kwargs)
+        cluster = clusters.Cluster(cluster_name, size, profile, **kwargs)
+        action = actions.ClusterAction(cnxt, cluster, 'CREATE', **kwargs)
 
-        self.thread_group_mgr.start_with_lock(cnxt, c, 'cluster',
+        self.thread_group_mgr.start_with_lock(cnxt, cluster, 'cluster',
                                               self.engine_id, action.execute)
 
-        return c.id
+        return cluster.id
 
     @request_context
     def update_cluster(self, cnxt, cluster_identity, profile):
         """
-        The update_cluster method updates an existing cluster nodes based
-        on the new provided profile.
-        Note that at this stage the template has already been fetched from the
-        senlin-api process if using a template-url.
+        Handle request to perform a update action on a cluster
 
         :param cnxt: RPC context.
         :param cluster_identity: Name of the cluster you want to create.
@@ -323,28 +295,28 @@ class EngineService(service.Service):
         db_cluster = self._get_cluster(cnxt, cluster_identity)
         LOG.info(_LI('Updating cluster %s'), db_cluster.name)
 
-        c = cluster.Cluster.load(cnxt, cluster=db_cluster)
-        if c.status == c.ERROR:
+        cluster = clusters.Cluster.load(cnxt, cluster=db_cluster)
+        if cluster.status == cluster.ERROR:
             msg = _('Updating a cluster when it is errored')
             raise exception.NotSupported(feature=msg)
 
-        if c.status == c.DELETED:
+        if cluster.status == cluster.DELETED:
             msg = _('Updating a cluster which has been deleted')
             raise exception.NotSupported(feature=msg)
 
         kwargs = {}
         kwargs['profile'] = profile
-        action = ClusterAction(cnxt, c, 'UPDATE', **kwargs)
+        action = actions.ClusterAction(cnxt, cluster, 'UPDATE', **kwargs)
 
-        self.thread_group_mgr.start_with_lock(cnxt, c, 'cluster',
+        self.thread_group_mgr.start_with_lock(cnxt, cluster, 'cluster',
                                               self.engine_id, action.execute)
 
-        return c.id
+        return cluster.id
 
     @request_context
     def delete_cluster(self, cnxt, cluster_identity):
         """
-        The delete_cluster method deletes a given cluster.
+        Handle request to perform a delete action on a cluster
 
         :param cnxt: RPC context.
         :param cluster_identity: Name or ID of the cluster you want to delete.
@@ -354,15 +326,15 @@ class EngineService(service.Service):
         LOG.info(_LI('Deleting cluster %s'), db_cluster.name)
 
         # This is an operation on a cluster, so we try to acquire ClusterLock
-        c = cluster.Cluster.load(cnxt, cluster=db_cluster)
-        lock = senlin_lock.ClusterLock(cnxt, c, self.engine_id)
-        with lock.try_thread_lock(c.id) as acquire_result:
+        cluster = clusters.Cluster.load(cnxt, cluster=db_cluster)
+        lock = senlin_lock.ClusterLock(cnxt, cluster, self.engine_id)
+        with lock.try_thread_lock(cluster.id) as acquire_result:
 
             # Successfully acquired lock
             if acquire_result is None:
-                self.thread_group_mgr.stop_timers(c.id)
-                action = ClusterAction(cnxt, c, 'DELETE')
-                self.thread_group_mgr.start_with_acquired_lock(c, lock,
+                self.thread_group_mgr.stop_timers(cluster.id)
+                action = actions.ClusterAction(cnxt, cluster, 'DELETE')
+                self.thread_group_mgr.start_with_acquired_lock(cluster, lock,
                                                                action.execute)
                 return
 
@@ -371,12 +343,12 @@ class EngineService(service.Service):
             # give threads which are almost complete an opportunity to
             # finish naturally before force stopping them
             eventlet.sleep(0.2)
-            self.thread_group_mgr.stop(c.id)
+            self.thread_group_mgr.stop(cluster.id)
         # Another active engine has the lock
         elif senlin_lock.ClusterLock.engine_alive(cnxt, acquire_result):
             stop_result = self._remote_call(
                 cnxt, acquire_result, self.listener.STOP_CLUSTER,
-                cluster_id=c.id)
+                cluster_id=cluster.id)
             if stop_result is None:
                 LOG.debug("Successfully stopped remote task on engine %s"
                           % acquire_result)
@@ -388,10 +360,10 @@ class EngineService(service.Service):
         # if an update was in-progress when the cluster was stopped, so
         # reload the cluster from the database.
         db_cluster = self._get_cluster(cnxt, cluster_identity)
-        c = cluster.Cluster.load(cnxt, cluster=db_cluster)
-        action = ClusterAction(cnxt, c, 'DELETE')
+        cluster = clusters.Cluster.load(cnxt, cluster=db_cluster)
+        action = actions.ClusterAction(cnxt, cluster, 'DELETE')
 
-        self.thread_group_mgr.start_with_lock(cnxt, c, 'cluster',
+        self.thread_group_mgr.start_with_lock(cnxt, cluster, 'cluster',
                                               self.engine_id, action.execute)
 
         return None
@@ -405,10 +377,10 @@ class EngineService(service.Service):
         db_cluster = self._get_cluster(cnxt, cluster_identity)
         LOG.debug("suspending cluster %s" % db_cluster.name)
 
-        c = cluster.Cluster.load(cnxt, cluster=db_cluster)
-        action = ClusterAction(cnxt, c, 'SUSPEND')
+        cluster = clusters.Cluster.load(cnxt, cluster=db_cluster)
+        action = actions.ClusterAction(cnxt, cluster, 'SUSPEND')
 
-        self.thread_group_mgr.start_with_lock(cnxt, c, 'cluster',
+        self.thread_group_mgr.start_with_lock(cnxt, cluster, 'cluster',
                                               self.engine_id, action.execute)
 
     @request_context
@@ -419,10 +391,10 @@ class EngineService(service.Service):
         db_cluster = self._get_cluster(cnxt, cluster_identity)
         LOG.debug("resuming cluster %s" % db_cluster.name)
 
-        c = cluster.Cluster.load(cnxt, cluster=db_cluster)
-        action = ClusterAction(cnxt, c, 'RESUME')
+        cluster = clusters.Cluster.load(cnxt, cluster=db_cluster)
+        action = actions.ClusterAction(cnxt, cluster, 'RESUME')
 
-        self.thread_group_mgr.start_with_lock(cnxt, c, 'cluster',
+        self.thread_group_mgr.start_with_lock(cnxt, cluster, 'cluster',
                                               self.engine_id, action.execute)
 
     def _remote_call(self, cnxt, lock_engine_id, call, *args, **kwargs):
