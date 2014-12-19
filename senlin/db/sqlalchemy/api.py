@@ -639,6 +639,62 @@ def purge_deleted(age, granularity='days'):
 #        user_creds_del = user_creds.delete().where(user_creds.c.id == s[2])
 #        engine.execute(user_creds_del)
 
+# Actions
+def action_create(context, values):
+    action = models.Action()
+    action.update(values)
+    action.save(_session(context))
+    return action 
+
+
+def action_get(context, action_id):
+    action = model_query(context, models.Action).get(action_id)
+    if not action:
+        msg = i18n._('Action with id "%s" not found') % action_id
+        raise exception.NotFound(msg)
+    return action
+
+
+def action_get_1st_ready(context):
+    pass
+
+
+def action_get_all_ready(context):
+    pass
+
+
+def action_get_all_by_owner(context, owner):
+    pass
+
+
+def action_get_all(context):
+    actions = model_query(context, models.Action).all()
+
+    if not actions:
+        raise exception.NotFound(_('No actions were found'))
+    return actions
+
+
+def action_mark_complete(context, action_id):
+    #TODO(liuh):update dependencies, add more actions if needed
+    pass
+
+
+def action_start_work_on(context, action_id, owner):
+    #TODO(liuh):Set 'owner' field to owner
+    pass
+
+
+def action_update(context, action_id, values):
+    #TODO(liuh):Need check if 'status' is being updated?
+    action = model_query(context, models.Action).get(action_id)
+    if not action:
+        raise exception.NotFound(
+            _('Action with id "%s" not found') % action_id)
+
+    action.update(values)
+    action.save(_session(context))
+    return action
 
 # Utils
 def db_sync(engine, version=None):
