@@ -26,10 +26,10 @@ class Action(object):
     )
 
     STATUSES = (
-        INIT, WAITING, IN_PROGRESS,
+        INIT, WAITING, READY, RUNNING,
         SUCCEEDED, FAILED, CANCELED
     ) = (
-        'INIT', 'WAITING', 'IN_PROGRESS',
+        'INIT', 'WAITING', 'READY', 'RUNNING',
         'SUCCEEDED', 'FAILED', 'CANCELLED',
     )
 
@@ -170,7 +170,7 @@ class PolicyAction(Action):
             return self.FAILED 
 
         self.store(start_time=datetime.datetime.utcnow(),
-                   status=self.IN_PROGRESS)
+                   status=self.RUNNING)
 
         cluster_id = kwargs.get('cluster_id')
         policy_id = kwargs.get('policy_id')
