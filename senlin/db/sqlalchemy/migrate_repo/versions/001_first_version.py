@@ -108,7 +108,7 @@ def upgrade(migrate_engine):
                           primary_key=True, nullable=False),
         sqlalchemy.Column('name', sqlalchemy.String(255)),
         sqlalchemy.Column('type', sqlalchemy.String(255)),
-        sqlalchemy.Column('coolcown', sqlalchemy.Integer),
+        sqlalchemy.Column('cooldown', sqlalchemy.Integer),
         sqlalchemy.Column('level', sqlalchemy.Integer),
         sqlalchemy.Column('spec', types.Json),
         sqlalchemy.Column('data', types.Json),
