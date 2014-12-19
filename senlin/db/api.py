@@ -155,6 +155,10 @@ def policy_update(context, policy_id, values):
     return IMPL.policy_update(context, policy_id, values)
 
 
+def policy_delete(context, policy_id, force=False):
+    return IMPL.policy_delete(context, policy_id, force)
+
+
 # Cluster-Policy Associations
 def cluster_attach_policy(context, values):
     return IMPL.cluster_attach_policy(context, values)

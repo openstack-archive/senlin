@@ -385,6 +385,22 @@ def policy_update(context, policy_id, values):
     return policy
 
 
+def policy_delete(context, policy_id, force=False):
+    policy = policy_get(context, policy_id)
+
+    if not policy:
+        msg = i18n._('Attempt to delete a policy with id "%s" that does not'
+                     ' exist') % policy_id
+        raise exception.NotFound(msg)
+
+    session = orm_session.Session.object_session(policy)
+
+    # TODO(Qiming): Check if a policy is still in use, raise an exception
+    # if so
+    policy.soft_delete(session=session)
+    session.flush()
+
+
 # Cluster-Policy Associations
 def cluster_attach_policy(context, values):
     binding = models.ClusterPolicies()
