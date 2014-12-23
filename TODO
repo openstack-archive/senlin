@@ -13,6 +13,8 @@ DB
 ENGINE
 ------
   - cleanse scheduler module
+  - complete parser logic
+
 
 Middle Priority
 ===============
