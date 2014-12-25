@@ -118,12 +118,17 @@ class ClusterAction(Action):
 
     def __init__(self, context, cluster):
         super(ClusterAction, self).__init__(context)
+        self.target = cluster
 
     def execute(self, action, **kwargs):
         if action not in self.ACTIONS:
             return self.FAILED 
 
         if action == self.CREATE:
+            # TODO:
+            # We should query the lock of cluster here and wrap
+            # cluster.do_create, and then let threadgroupmanager
+            # to start a thread for this progress.
             cluster.do_create(kwargs)
         else:
             return self.FAILED
@@ -144,13 +149,13 @@ class NodeAction(Action):
         'CREATE', 'DELETE', 'UPDATE', 'JOIN', 'LEAVE',
     )
 
-    def __init__(self, context, node_id):
+    def __init__(self, context, node):
         super(NodeAction, self).__init__(context)
 
         # get cluster of this node 
         # get policies associated with the cluster
 
-    def execute(self, action):
+    def execute(self, action, **kwargs):
         if action not in self.ACTIONS:
             return self.FAILED 
         return self.OK 

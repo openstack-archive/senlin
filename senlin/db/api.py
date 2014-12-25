@@ -247,8 +247,32 @@ def action_get_all(context):
     return IMPL.action_get_all(context)
 
 
-def action_mark_complete(context, action_id):
-    return IMPL.action_mark_complete(context, action_id)
+def action_add_depends_on(context, action_id, *actions):
+    return IMPL.action_add_depends_on(context, action_id, *actions)
+
+
+def action_del_depends_on(context, action_id, *actions):
+    return IMPL.action_del_depends_on(context, action_id, *actions)
+
+
+def action_add_depended_by(context, action_id, *actions):
+    return IMPL.action_add_depended_by(context, action_id, *actions)
+
+
+def action_del_depended_by(context, action_id, *actions):
+    return IMPL.action_del_depended_by(context, action_id, *actions)
+
+
+def action_mark_succeeded(context, action_id):
+    return IMPL.action_mark_succeeded(context, action_id)
+
+
+def action_mark_failed(context, action_id):
+    return IMPL.action_mark_failed(context, action_id)
+
+
+def action_mark_cancelled(context, action_id):
+    return IMPL.action_mark_cancelled(context, action_id)
 
 
 def action_start_work_on(context, action_id, owner):
