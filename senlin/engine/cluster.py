@@ -14,7 +14,9 @@ import uuid
 from datetime import datetime
 
 from senlin.db import api as db_api
-from senlin.engine import node
+from senlin.engine import action as actions
+from senlin.engine import node as nodes
+from senlin.engine import scheduler
 from senlin.rpc import api as rpc_api
 
 
@@ -81,10 +83,12 @@ class Cluster(object):
         A routine to be called from an action by a thread.
         '''
         for m in range[self.size]:
-           action = MemberAction(cluster_id, profile, 'CREATE', **kwargs) 
-           # start a thread asynchnously
-           handle = scheduler.runAction(action) 
-           scheduler.wait(handle)
+            node = nodes.Node(None, profile_id, cluster_id)
+            action = actions.NodeAction(context, node, 'CREATE', **kwargs) 
+            # start a thread asynchnously
+            handle = scheduler.runAction(action)
+            # add subthread to the waiting list of main thread
+            scheduler.wait(handle)
 
         self._set_status(self.ACTIVE)
 
@@ -103,11 +107,14 @@ class Cluster(object):
 
         self._set_status(self.UPDATING)
 
-        for m in range[self.size]:
-           action = MemberAction(cluster_id, profile, 'CREATE', **kwargs) 
-           # start a thread asynchronously
-           handle = scheduler.runAction(action) 
-           scheduler.wait(handle)
+        node_list = self.get_nodes()
+        for n in node_list:
+            node = nodes.Node(None, profile_id, cluster_id)
+            action = actions.NodeAction(context, node, 'UPDATE', **kwargs) 
+
+            # start a thread asynchronously
+            handle = scheduler.runAction(action) 
+            scheduler.wait(handle)
 
         self._set_status(self.ACTIVE)
 

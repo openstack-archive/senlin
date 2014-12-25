@@ -23,6 +23,7 @@ import six
 
 from senlin.common.i18n import _
 from senlin.common.i18n import _LI
+from senlin.engine import action as actions
 from senlin.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
@@ -524,3 +525,22 @@ class PollingTaskGroup(object):
             with excutils.save_and_reraise_exception():
                 for r in runners:
                     r.cancel()
+
+
+def runAction(action):
+"""
+    Start a thread to run action until finished
+"""
+    # TODO
+    # Query lock for this action
+
+    # call action.execute with args in subthread
+    pass
+
+def wait(handle):
+"""
+    Wait an action to finish
+"""
+    # TODO
+    # Make the subthread join the main thread
+    pass

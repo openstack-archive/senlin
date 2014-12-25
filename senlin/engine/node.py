@@ -32,7 +32,12 @@ class Node(object):
     )
 
     def __init__(self, name, profile_id, cluster_id=None, **kwargs):
-        self.name = name
+        if name:
+            self.name = name
+        else:
+            # TODO
+            # Using self.physical_resource_name() to generate a unique name
+            self.name = 'node-name-tmp'
         self.physical_id = None
         self.cluster_id = cluster_id
         self.profile_id = profile_id
