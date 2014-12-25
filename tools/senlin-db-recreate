@@ -1,7 +1,7 @@
 #!/bin/bash
 
-MYSQL_ROOT_PW=cheerman
-MYSQL_SENLIN_PW=cheerman
+MYSQL_ROOT_PW=openstack
+MYSQL_SENLIN_PW=openstack
 
 echo "Recreating 'senlin' database."
 cat << EOF | mysql -u root --password=${MYSQL_ROOT_PW}
