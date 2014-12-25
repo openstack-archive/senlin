@@ -109,10 +109,10 @@ class ClusterAction(Action):
     An action performed on a cluster.
     '''
     ACTIONS = (
-        CREATE, DELETE, ADD_MEMBER, DEL_MEMBER, UPDATE,
+        CREATE, DELETE, ADD_NODE, DEL_NODE, UPDATE,
         ATTACH_POLICY, DETACH_POLICY,
     ) = (
-        'CREATE', 'DELETE', 'ADD_MEMBER', 'DEL_MEMBER', 'UPDATE',
+        'CREATE', 'DELETE', 'ADD_NODE', 'DEL_NODE', 'UPDATE',
         'ATTACH_POLICY', 'DETACH_POLICY',
     )
 
