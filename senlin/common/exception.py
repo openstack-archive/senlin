@@ -211,7 +211,11 @@ class ClusterExists(SenlinException):
     msg_fmt = _("The Cluster (%(cluster_name)s) already exists.")
 
 
-class ClusterValidationFailed(SenlinException):
+class ProfileValidationFailed(SenlinException):
+    msg_fmt = _("%(message)s")
+
+
+class PolicyValidationFailed(SenlinException):
     msg_fmt = _("%(message)s")
 
 
