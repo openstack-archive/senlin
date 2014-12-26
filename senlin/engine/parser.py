@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import json
 import six
 import yaml
 
@@ -19,55 +20,71 @@ from senlin.openstack.common import log as logging
 _LE = i18n._LE
 LOG = logging.getLogger(__name__)
 
-
 # Try LibYAML if available
-try:
-    Loader = yaml.CLoader
-    Dumper = yaml.CDumper
-except ImportError as err:
-    Loader = yaml.Loader
-    Dumper = yaml.Dumper
+if hasattr(yaml, 'CSafeLoader'):
+    YamlLoader = yaml.CSafeLoader
+else:
+    YamlLoader = yaml.SafeLoader
+
+if hasattr(yaml, 'CSafeDumper'):
+    YamlDumper = yaml.CSafeDumper
+else:
+    YamlDumper = yaml.SafeDumper
 
 
-def parse_profile(profile):
+def _construct_yaml_str(self, node):
+    # Override the default string handling function
+    # to always return unicode objects
+    return self.construct_scalar(node)
+
+YamlLoader.add_constructor(u'tag:yaml.org,2002:str', _construct_yaml_str)
+
+# Unquoted dates in YAML files get loaded as objects of type datetime.date
+# which may cause problems in API layer. Therefore, make unicode string
+# out of timestamps until openstack.common.jsonutils can handle dates.
+YamlLoader.add_constructor(u'tag:yaml.org,2002:timestamp', _construct_yaml_str)
+
+
+def simple_parse(in_str):
+    try:
+        out_dict = json.loads(in_str)
+    except ValueError:
+        try:
+            out_dict = yaml.load(in_str, Loader=YamlLoader)
+        except yaml.YAMLError as yea:
+            yea = six.text_type(yea)
+            msg = _('Error parsing input: %s') % yea
+            raise ValueError(msg)
+        else:
+            if out_dict is None:
+                out_dict = {}
+
+    if not isinstance(out_dict, dict):
+        msg = _('The input is not a JSON object or YAML mapping.')
+        raise ValueError(msg)
+
+    return out_dict
+
+
+def parse_profile(profile_str):
     '''
     Parse and validate the specified string as a profile.
     '''
-    if not isinstance(profile, six.string_types):
-        # TODO(Qiming): Throw exception
-        return None
+    data = simple_parse(profile_str)
 
-    data = {}
-    try:
-        data = yaml.load(profile, Loader=Loader)
-    except Exception as ex:
-        # TODO(Qiming): Throw exception
-        LOG.error(_LE('Failed parsing given data as YAML: %s'),
-                  six.text_type(ex))
-        return None
-
-    # TODO(Qiming): Construct a profile object based on the type specified
+    # TODO(Qiming):
+    # Construct a profile object based on the type specified
 
     return data
 
 
-def parse_policy(policy):
+def parse_policy(policy_str):
     '''
     Parse and validate the specified string as a policy.
     '''
-    if not isinstance(policy, six.string_types):
-        # TODO(Qiming): Throw exception
-        return None
+    data = simple_parse(policy_str)
 
-    data = {}
-    try:
-        data = yaml.load(policy, Loader=Loader)
-    except Exception as ex:
-        # TODO(Qiming): Throw exception
-        LOG.error(_LE('Failed parsing given data as YAML: %s'),
-                  six.text_type(ex))
-        return None
-
-    # TODO(Qiming): Construct a policy object based on the type specified
+    # TODO(Qiming):
+    # Construct a policy object based on the type specified
 
     return data
