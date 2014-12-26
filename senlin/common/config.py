@@ -63,6 +63,9 @@ engine_opts = [
                 help=_('Subset of trustor roles to be delegated to senlin.'
                        ' If left unset, all roles of a user will be'
                        ' delegated to senlin when creating a cluster.')),
+    cfg.StrOpt('environment_dir',
+               default='/etc/senlin/environments',
+               help=_('The directory to search for environment files.')),
     cfg.IntOpt('max_members_per_cluster',
                default=1000,
                help=_('Maximum members allowed per top-level cluster.')),
