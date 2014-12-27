@@ -11,7 +11,10 @@
 # under the License.
 
 import json
+import os
+import requests
 import six
+from six.moves import urllib
 import yaml
 
 from senlin.common import i18n
@@ -22,27 +25,56 @@ LOG = logging.getLogger(__name__)
 
 # Try LibYAML if available
 if hasattr(yaml, 'CSafeLoader'):
-    YamlLoader = yaml.CSafeLoader
+    Loader = yaml.CSafeLoader
 else:
-    YamlLoader = yaml.SafeLoader
+    Loader = yaml.SafeLoader
 
 if hasattr(yaml, 'CSafeDumper'):
-    YamlDumper = yaml.CSafeDumper
+    Dumper = yaml.CSafeDumper
 else:
-    YamlDumper = yaml.SafeDumper
+    Dumper = yaml.SafeDumper
 
 
-def _construct_yaml_str(self, node):
-    # Override the default string handling function
-    # to always return unicode objects
-    return self.construct_scalar(node)
+class YamlLoader(Loader):
+    def __init__(self, stream):
+        self._curdir = os.path.split(stream.name)[0]
+        super(YamlLoader, self).__init__(stream)
 
-YamlLoader.add_constructor(u'tag:yaml.org,2002:str', _construct_yaml_str)
+    def include(self, node):
+        url = self.construct_scalar(node)
+        components = urllib.parse.urlparse(url)
 
-# Unquoted dates in YAML files get loaded as objects of type datetime.date
-# which may cause problems in API layer. Therefore, make unicode string
-# out of timestamps until openstack.common.jsonutils can handle dates.
-YamlLoader.add_constructor(u'tag:yaml.org,2002:timestamp', _construct_yaml_str)
+        if components.scheme == '':
+            try:
+                url = os.path.join(self._curdir, url)
+                with open(url, 'r') as f:
+                    return yaml.load(f, Loader)
+            except Exception as ex:
+                raise Exception('Failed loading file %s: %s' % (url,
+                                six.text_type(ex)))
+        try:
+            resp = requests.get(url, stream=True)
+            resp.raise_for_status()
+            reader = resp.iter_content(chunk_size=1024)
+            result = ''
+            for chunk in reader:
+                result += chunk
+            return yaml.load(result, Loader)
+        except Exception as ex:
+            raise Exception('Failed retrieving file %s: %s' % (url,
+                            six.text_type(ex)))
+
+    def process_unicode(self, node):
+        # Override the default string handling function to always return
+        # unicode objects
+        return self.construct_scalar(node)
+
+
+YamlLoader.add_constructor('!include', YamlLoader.include)
+YamlLoader.add_constructor(u'tag:yaml.org,2002:str',
+                           YamlLoader.process_unicode)
+YamlLoader.add_constructor(u'tag:yaml.org,2002:timestamp',
+                           YamlLoader.process_unicode)
 
 
 def simple_parse(in_str):
