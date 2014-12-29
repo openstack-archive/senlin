@@ -1,2 +1,7 @@
 2014-12-29 tengqm <tengqim@cn.ibm.com>
+	* db/sqlalchemy/models.py: added 'node_count' to cluster class.
+	* db/sqlalchemy/migrate_repo/versions/001_first_version.py:
+	  added 'node_count' to cluster class.
+
+2014-12-29 tengqm <tengqim@cn.ibm.com>
 	* TODO: Added some test cases jobs.
