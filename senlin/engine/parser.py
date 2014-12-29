@@ -37,7 +37,10 @@ else:
 
 class YamlLoader(Loader):
     def __init__(self, stream):
-        self._curdir = os.path.split(stream.name)[0]
+        if isinstance(stream, file):
+            self._curdir = os.path.split(stream.name)[0]
+        else:
+            self._curdir = './'
         super(YamlLoader, self).__init__(stream)
 
     def include(self, node):
