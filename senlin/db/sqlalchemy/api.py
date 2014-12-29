@@ -761,7 +761,7 @@ def action_mark_succeeded(context, action_id):
 
     action.status = ACTION_SUCCEEDED
 
-    for a in action.depended_by
+    for a in action.depended_by:
         action_del_depends_on(context, a, action_id)
 
     action.depended_by = []

@@ -88,9 +88,8 @@ class Cluster(BASE, SenlinBase, SoftDelete):
     id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
                            default=lambda: str(uuid.uuid4()))
     name = sqlalchemy.Column('name', sqlalchemy.String(255))
-    profile_id = sqlalchemy.Column(sqlalchemy.String(36),
-                                   sqlalchemy.ForeignKey('profile.id'),
-                                   nullable=False)
+    profile_type = sqlalchemy.Column(sqlalchemy.String(255),
+                                     nullable=False)
     user = sqlalchemy.Column(sqlalchemy.String(36))
     project = sqlalchemy.Column(sqlalchemy.String(36))
     domain = sqlalchemy.Column(sqlalchemy.String(36))
@@ -98,6 +97,7 @@ class Cluster(BASE, SenlinBase, SoftDelete):
     created_time = sqlalchemy.Column(sqlalchemy.DateTime)
     updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
     deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
+    node_count = sqlalchemy.Column(sqlalchemy.Integer)
     next_index = sqlalchemy.Column(sqlalchemy.Integer)
     timeout = sqlalchemy.Column(sqlalchemy.Integer)
     status = sqlalchemy.Column(sqlalchemy.String(255))
