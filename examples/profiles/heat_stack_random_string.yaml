@@ -1,12 +1,12 @@
+senlin_profile_version: 2014-10-16
 type: os.heat.stack
 spec:
   template:
-    heat_template_version: 2014-10-16
-    resources:
-      random:
-        type: OS::Heat::RandomString
-        properties:
-          length: 64
-    outputs:
-      result:
-        value: {get_attr: [random, value]}
+    !include node_stack.yaml
+  context: default
+  parameters: 
+    len: 16
+  outputs:
+  name: node-%index%
+  timeoout: 60
+  enable_rollback: True

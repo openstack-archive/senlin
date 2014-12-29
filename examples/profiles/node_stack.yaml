@@ -1,0 +1,12 @@
+heat_template_version: 2014-10-16
+parameters:
+  len:
+    type: integer
+resources:
+  random:
+    type: OS::Heat::RandomString
+    properties:
+      length: 64
+outputs:
+  result:
+    value: {get_attr: [random, value]}
