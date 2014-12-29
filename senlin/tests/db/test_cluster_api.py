@@ -31,7 +31,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
         cluster = shared.create_cluster(self.ctx, self.profile)
         self.assertIsNotNone(cluster.id)
         self.assertEqual('db_test_cluster_name', cluster.name)
-        self.assertEqual(self.profile.type, cluster.profile_type)
+        self.assertEqual(self.profile.id, cluster.profile_id)
         self.assertEqual(self.ctx.username, cluster.user)
         self.assertEqual(self.ctx.tenant_id, cluster.project)
         self.assertEqual('unknown', cluster.domain)
