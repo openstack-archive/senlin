@@ -13,7 +13,11 @@ DB
 ENGINE
 ------
   - cleanse scheduler module
-  - complete parser logic
+  - complete parser logic, construct profile/policy objects there?
+
+DRIVER
+------
+  - complete Heat stack driver [Qiming]
 
 
 Middle Priority
@@ -21,15 +25,19 @@ Middle Priority
 
 DB
 --
+  - Add test cases for policy_delete with 'force' set to True
 
-- Add test cases for policy_delete with 'force' set to True
+ENGINE
+------
 
+  - Design and implement dynamical plugin loading mechanism that allows 
+    loading plugins from any paths
 
 OSLO
 ----
 
-- Migrate to oslo.log
-- Migrate to oslo.context
+  - Migrate to oslo.log
+  - Migrate to oslo.context
 
 
 Low Priority
@@ -37,6 +45,8 @@ Low Priority
 
 TEST
 ----
-
-- Add test case in db cluster to test that cluster-policy association is
-  deleted when we delete a cluster
+  - Add test case in db cluster to test that cluster-policy association is
+    deleted when we delete a cluster
+  - Add test case to engine/parser
+  - Add test case to engine/registry
+  - Add test case to engine/environment
