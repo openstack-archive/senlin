@@ -270,6 +270,10 @@ class RequestLimitExceeded(SenlinException):
     msg_fmt = _('Request limit exceeded: %(message)s')
 
 
+class ActionNotSupported(SenlinException):
+    msg_fmt = _('Action "%(action)s" not supported by %(object)s')
+
+
 class ActionInProgress(SenlinException):
     msg_fmt = _("Cluster %(cluster_name)s already has an action (%(action)s) "
                 "in progress.")
