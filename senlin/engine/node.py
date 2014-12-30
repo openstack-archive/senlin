@@ -26,20 +26,21 @@ class Node(object):
     '''
 
     statuses = (
-        ACTIVE, ERROR, DELETED, UPDATING,
+        INIT, ACTIVE, ERROR, DELETED, UPDATING,
     ) = (
-        'ACTIVE', 'ERROR', 'DELETED', 'UPDATING',
+        'INITIALIZING', 'ACTIVE', 'ERROR', 'DELETED', 'UPDATING',
     )
 
     def __init__(self, name, profile_id, cluster_id=None, **kwargs):
+        self.id = None
         if name:
             self.name = name
         else:
             # TODO
             # Using self.physical_resource_name() to generate a unique name
             self.name = 'node-name-tmp'
-        self.physical_id = None
-        self.cluster_id = cluster_id
+        self.physical_id = ''
+        self.cluster_id = cluster_id or ''
         self.profile_id = profile_id
         if cluster_id is None:
             self.index = -1
@@ -51,11 +52,41 @@ class Node(object):
         self.updated_time = None
         self.deleted_time = None
 
-        self.status = self.ACTIVE
-        self.status_reason = 'Initialized'
+        self.status = self.INIT
+        self.status_reason = 'Initializing'
         self.data = {}
         self.tags = {}
-        # TODO: store this to database
+        self.store()
+
+    def store(self):
+        '''
+        Store the node record into database table.
+
+        The invocation of DB API could be a node_create or a node_update,
+        depending on whether node has an ID assigned.
+        '''
+
+        values = {
+            'name': self.name,
+            'physical_id': self.physical_id,
+            'cluster_id': self.cluster_id,
+            'profile_id': self.profile_id,
+            'index': self.index,
+            'role': self.role,
+            'created_time': self.created_time,
+            'updated_time': self.updated_time,
+            'deleted_time': self.deleted_time,
+            'status': self.status,
+            'status_reason': self.status_reason,
+            'data': self.data,
+            'tags': self.tags,
+        }
+
+        if self.id:
+            db_api.node_update(self.context, self.id, values)
+        else:
+            node = db_api.node_create(self.context, values)
+            self.id = node.id
 
     def create(self, name, profile_id, cluster_id=None, **kwargs):
         # TODO: invoke profile to create new object and get the physical id
@@ -65,6 +96,8 @@ class Node(object):
 
     def delete(self):
         node = db_api.get_node(self.id)
+        physical_id = node.physical_id
+
         # TODO: invoke profile to delete this object
         # TODO: check if actions are working on it and can be canceled
 

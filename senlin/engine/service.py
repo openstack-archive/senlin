@@ -58,7 +58,7 @@ class EngineListener(service.Service):
 
     def __init__(self, host, engine_id, thread_group_mgr):
         super(EngineListener, self).__init__()
-        self.thread_group_mgr = thread_group_mgr
+        self.TG = thread_group_mgr
         self.engine_id = engine_id
         self.host = host
 
@@ -78,10 +78,10 @@ class EngineListener(service.Service):
 
     def stop_cluster(self, ctxt, cluster_id):
         '''Stop any active threads on a cluster.'''
-        self.thread_group_mgr.stop(cluster_id)
+        self.TG.stop(cluster_id)
 
     def send(self, ctxt, cluster_id, message):
-        self.thread_group_mgr.send(cluster_id, message)
+        self.TG.send(cluster_id, message)
 
 
 @profiler.trace_cls("rpc")
@@ -100,20 +100,21 @@ class EngineService(service.Service):
 
     def __init__(self, host, topic, manager=None):
         super(EngineService, self).__init__()
+        # TODO(Qiming): call environment.initialize() when environment
+        # is ready
         self.host = host
         self.topic = topic
 
         # The following are initialized here, but assigned in start() which
         # happens after the fork when spawning multiple worker processes
         self.engine_id = None
-        self.thread_group_mgr = None
+        self.TG= None
         self.target = None
 
     def start(self):
         self.engine_id = senlin_lock.BaseLock.generate_engine_id()
-        self.thread_group_mgr = ThreadGroupManager()
-        self.listener = EngineListener(self.host, self.engine_id,
-                                       self.thread_group_mgr)
+        self.TG = ThreadGroupManager()
+        self.listener = EngineListener(self.host, self.engine_id, self.TG)
         LOG.debug("Starting listener for engine %s" % self.engine_id)
         self.listener.start()
 
@@ -135,14 +136,14 @@ class EngineService(service.Service):
             pass
 
         # Wait for all active threads to be finished
-        for cluster_id in self.thread_group_mgr.groups.keys():
+        for cluster_id in self.TG.groups.keys():
             # Ignore dummy service task
             if cluster_id == cfg.CONF.periodic_interval:
                 continue
             LOG.info(_LI("Waiting cluster %s processing to be finished"),
                      cluster_id)
             # Stop threads gracefully
-            self.thread_group_mgr.stop(cluster_id, True)
+            self.TG.stop(cluster_id, True)
             LOG.info(_LI("cluster %s processing was finished"), cluster_id)
 
         # Terminate the engine process
@@ -245,39 +246,29 @@ class EngineService(service.Service):
         return {'clusters': clusters_info}
 
     @request_context
-    def create_cluster(self, cnxt, cluster_name, size, profile,
-                       owner_id=None, nested_depth=0, user_creds_id=None,
-                       cluster_user_project_id=None):
-        """
+    def create_cluster(self, cntxt, name, profile_id, size, args):
+        '''
         Handle request to perform a create action on a cluster
 
-        :param cnxt: RPC context.
-        :param cluster_name: Name of the cluster you want to create.
-        :param size: Size of cluster you want to create.
-        :param profile: Profile used to create cluster nodes.
-        :param owner_id: parent cluster ID for nested clusters, only
-                         expected when called from another senlin-engine
-                         (not a user option)
-        :param nested_depth: the nested depth for nested clusters, only
-                             expected when called from another senlin-engine
-        :param user_creds_id: the parent user_creds record for nested clusters
-        :param cluster_user_project_id: the parent cluster_user_project_id for
-                         nested clusters
-        """
-        LOG.info(_LI('Creating cluster %s'), cluster_name)
+        :param cntxt: RPC context.
+        :param name: Name of the cluster to created.
+        :param profile_id: Profile used to create cluster nodes.
+        :param size: Desired size of cluster to be created.
+        :param args: A dictionary of other parameters
+        '''
+        LOG.info(_LI('Creating cluster %s'), name)
 
-        # TODO: construct real kwargs based on input for cluster creating
-        kwargs = {}
-        kwargs['owner_id'] = owner_id
-        kwargs['nested_depth'] = nested_depth
-        kwargs['user_creds_id'] = user_creds_id
-        kwargs['cluster_user_project_id'] = cluster_user_project_id
+        kwargs = {
+            'parent': args.get('parent', ''),
+            'user': cntxt.get('username', ''),
+            'project': cntxt.get('tenant_id', ''),
+            'timeout': args.get('timeout', 0),
+            'tags': args.get('tags', {}),
+        }
 
-        cluster = clusters.Cluster(cluster_name, size, profile, **kwargs)
-        action = actions.ClusterAction(cnxt, cluster, 'CREATE', **kwargs)
-
-        self.thread_group_mgr.start_with_lock(cnxt, cluster, 'cluster',
-                                              self.engine_id, action.execute)
+        cluster = clusters.Cluster(name, profile_id, size, **kwargs)
+        action = actions.Action(cnxt, cluster, 'CREATE', **kwargs)
+        self.TG.start_action_woker(action, self.engine_id)
 
         return cluster.id
 
@@ -304,12 +295,12 @@ class EngineService(service.Service):
             msg = _('Updating a cluster which has been deleted')
             raise exception.NotSupported(feature=msg)
 
-        kwargs = {}
-        kwargs['profile'] = profile
-        action = actions.ClusterAction(cnxt, cluster, 'UPDATE', **kwargs)
+        kwargs = {
+            'profile_id': profile_id
+        }
 
-        self.thread_group_mgr.start_with_lock(cnxt, cluster, 'cluster',
-                                              self.engine_id, action.execute)
+        action = actions.Action(cnxt, cluster, 'UPDATE', **kwargs)
+        self.TG.start_action_worker(action, self.engine_id)
 
         return cluster.id
 
@@ -332,9 +323,9 @@ class EngineService(service.Service):
 
             # Successfully acquired lock
             if acquire_result is None:
-                self.thread_group_mgr.stop_timers(cluster.id)
+                self.TG.stop_timers(cluster.id)
                 action = actions.ClusterAction(cnxt, cluster, 'DELETE')
-                self.thread_group_mgr.start_with_acquired_lock(cluster, lock,
+                self.TG.start_with_acquired_lock(cluster, lock,
                                                                action.execute)
                 return
 
@@ -343,7 +334,7 @@ class EngineService(service.Service):
             # give threads which are almost complete an opportunity to
             # finish naturally before force stopping them
             eventlet.sleep(0.2)
-            self.thread_group_mgr.stop(cluster.id)
+            self.TG.stop(cluster.id)
         # Another active engine has the lock
         elif senlin_lock.ClusterLock.engine_alive(cnxt, acquire_result):
             stop_result = self._remote_call(
@@ -363,7 +354,7 @@ class EngineService(service.Service):
         cluster = clusters.Cluster.load(cnxt, cluster=db_cluster)
         action = actions.ClusterAction(cnxt, cluster, 'DELETE')
 
-        self.thread_group_mgr.start_with_lock(cnxt, cluster, 'cluster',
+        self.TG.start_with_lock(cnxt, cluster, 'cluster',
                                               self.engine_id, action.execute)
 
         return None
@@ -380,7 +371,7 @@ class EngineService(service.Service):
         cluster = clusters.Cluster.load(cnxt, cluster=db_cluster)
         action = actions.ClusterAction(cnxt, cluster, 'SUSPEND')
 
-        self.thread_group_mgr.start_with_lock(cnxt, cluster, 'cluster',
+        self.TG.start_with_lock(cnxt, cluster, 'cluster',
                                               self.engine_id, action.execute)
 
     @request_context
@@ -394,7 +385,7 @@ class EngineService(service.Service):
         cluster = clusters.Cluster.load(cnxt, cluster=db_cluster)
         action = actions.ClusterAction(cnxt, cluster, 'RESUME')
 
-        self.thread_group_mgr.start_with_lock(cnxt, cluster, 'cluster',
+        self.TG.start_with_lock(cnxt, cluster, 'cluster',
                                               self.engine_id, action.execute)
 
     def _remote_call(self, cnxt, lock_engine_id, call, *args, **kwargs):

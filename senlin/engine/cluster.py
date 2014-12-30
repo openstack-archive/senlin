@@ -35,7 +35,7 @@ class Cluster(object):
         'INIT', 'ACTIVE', 'ERROR', 'DELETED', 'UPDATING',
     )
 
-    def __init__(self, name, profile, size=0, **kwargs):
+    def __init__(self, name, profile_id, size=0, **kwargs):
         '''
         Intialize a cluster object.
         The cluster defaults to have 0 nodes with no profile assigned.
@@ -43,23 +43,26 @@ class Cluster(object):
         self.name = name
         self.profile_id = profile_id
 
-        self.user = kwargs.get('user')
-        self.project = kwargs.get('project')
-        self.domain = kwargs.get('domain')
-
+        self.user = kwargs.get('user', '')
+        self.project = kwargs.get('project', '')
+        self.domain = kwargs.get('domain', '')
         self.parent = kwargs.get('parent') 
 
         self.created_time = None
         self.updated_time = None
         self.deleted_time = None
 
+        # node_count is only the 'current count', not the desired count
+        # (i.e. size)
+        self.desired_size = size
+        self.node_count = 0
         self.next_index = 0
-        self.timeout = 0
+        self.timeout = kwargs.get('timeout', 0)
 
-        self.status = ''
-        self.status_reason = ''
+        self.status = self.INIT
+        self.status_reason = 'Initializing'
         self.data = {}
-        self.tags = {}
+        self.tags = kwargs.get('tags', {})
 
         # persist object into database very early because:
         # 1. object creation may be a time consuming task
@@ -68,12 +71,21 @@ class Cluster(object):
         db_api.create_cluster(self)
 
         # rt is a dict for runtime data
-        self.rt = dict(size=size,
-                       nodes={},
+        self.rt = dict(nodes={},
                        policies={})
 
     def _set_status(self, context, status):
-        pass
+        now = datetime.datetime.utcnow()
+        if status == self.ACTIVE:
+            if self.status == self.INIT:
+                kwargs['created_time'] = now
+            else:
+                kwargs['updated_time'] = now
+        elif status == self.DELETED:
+            kwargs['deleted_time'] = now
+
+        kwargs['status'] = status
+        db_api.cluster_update(self.context, {'status': status})
         #event.info(context, self.id, status, 
         # log status to log file
         # generate event record
@@ -109,7 +121,7 @@ class Cluster(object):
 
         node_list = self.get_nodes()
         for n in node_list:
-            node = nodes.Node(None, profile_id, cluster_id)
+            node = nodes.Node(None, profile.id, cluster_id)
             action = actions.NodeAction(context, node, 'UPDATE', **kwargs) 
 
             # start a thread asynchronously
@@ -190,7 +202,7 @@ class Cluster(object):
             message = _('No cluster exists with id "%s"') % str(cluster_id)
             raise exception.NotFound(message)
 
-        return cls._from_db(context, cluster)
+        return cls.from_db(context, cluster)
 
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort_keys=None,
@@ -200,29 +212,28 @@ class Cluster(object):
                                           sort_dir, filters, tenant_safe,
                                           show_deleted, show_nested) or []
         for cluster in clusters:
-            yield cls._from_db(context, cluster)
+            yield cls.from_db(context, cluster)
 
     @classmethod
-    def _from_db(cls, context, cluster):
-        # TODO: calculate current size based on nodes
-        size = self.size
-        return cls(context, cluster.name, cluster.profile, size,
+    def from_db(cls, context, cluster):
+        # TODO(Qiming): calculate current size based on nodes
+        return cls(context, cluster.name, cluster.profile,
                    id=cluster.id, status=cluster.status,
-                   status_reason=cluster_status_reason,
+                   status_reason=cluster.status_reason,
                    parent=cluster.parent,
                    project=cluster.project,
                    created_time=cluster.created_time,
                    updated_time=cluster.updated_time,
                    deleted_time=cluster.deleted_time,
-                   domain = cluster.domain,
-                   timeout = cluster.timeout,
+                   domain=cluster.domain,
+                   timeout=cluster.timeout,
                    user=cluster.user)
 
     def to_dict(self):
         info = {
             rpc_api.CLUSTER_NAME: self.name,
             rpc_api.CLUSTER_PROFILE: self.profile,
-            rpc_api.CLUSTER_SIZE: self.size,
+            rpc_api.CLUSTER_SIZE: self.node_count,
             rpc_api.CLUSTER_UUID: self.id,
             rpc_api.CLUSTER_PARENT: self.parent,
             rpc_api.CLUSTER_DOMAIN: self.domain,
@@ -235,5 +246,5 @@ class Cluster(object):
             rpc_api.CLUSTER_STATUS_REASON: self.status_reason,
             rpc_api.CLUSTER_TIMEOUT: self.timeout,
         }
-   
+
         return info
