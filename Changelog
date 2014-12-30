@@ -1,3 +1,7 @@
+2014-12-30 tengqm <tengqim@cn.ibm.com>
+	* db/api.py: remove action_update interface function to allow
+	  stricter checking of action status changes.
+
 2014-12-29 tengqm <tengqim@cn.ibm.com>
 	* db/sqlalchemy/models.py: added 'node_count' to cluster class.
 	* db/sqlalchemy/migrate_repo/versions/001_first_version.py:
