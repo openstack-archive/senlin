@@ -793,17 +793,6 @@ def action_start_work_on(context, action_id, owner):
     return action
 
 
-def action_update(context, action_id, values):
-    #TODO(liuh):Need check if 'status' is being updated?
-    action = model_query(context, models.Action).get(action_id)
-    if not action:
-        raise exception.NotFound(
-            _('Action with id "%s" not found') % action_id)
-
-    action.update(values)
-    action.save(_session(context))
-    return action
-
 # Utils
 def db_sync(engine, version=None):
     """Migrate the database to `version` or the most recent version."""

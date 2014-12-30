@@ -279,10 +279,6 @@ def action_start_work_on(context, action_id, owner):
     return IMPL.action_start_work_on(context, action_id, owner)
 
 
-def action_update(context, action_id, values):
-    return IMPL.action_update(context, action_id, values)
-
-
 def db_sync(engine, version=None):
     """Migrate the database to `version` or the most recent version."""
     return IMPL.db_sync(engine, version=version)
