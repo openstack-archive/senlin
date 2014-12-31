@@ -713,6 +713,7 @@ def action_add_depends_on(context, action_id, *actions):
             _('Action with id "%s" not found') % action_id)
 
     action.depends_on = list(set(actions).union(set(action.depends_on)))
+    # TODO(liuh): Set status to WAITING if 'depends_on' is not empty
     action.save(_session(context))
     return action
 
@@ -724,6 +725,7 @@ def action_del_depends_on(context, action_id, *actions):
             _('Action with id "%s" not found') % action_id)
 
     action.depends_on = list(set(action.depends_on).different(set(actions)))
+    # TODO(liuh): Set status to READY if 'depends_on' is empty
     action.save(_session(context))
     return action
 
