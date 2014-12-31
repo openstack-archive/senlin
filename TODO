@@ -5,6 +5,7 @@ High Priority
 DB
 --
   - Add action APIs
+  - Revise action add/remove dependencies APIs
   - Make sure cluster-policy association is deleted when a cluster is deleted
   - Add field size to cluster table
   - Modify node_set_status to check/update cluster status
