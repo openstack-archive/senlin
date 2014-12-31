@@ -268,6 +268,7 @@ class EngineService(service.Service):
         }
 
         cluster = clusters.Cluster(name, profile_id, size, **kwargs)
+        cluster.store()
         action = actions.Action(context, cluster, 'CLUSTER_CREATE', **kwargs)
         self.TG.start_action_woker(action, self.engine_id)
 
