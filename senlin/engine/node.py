@@ -10,10 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import uuid
 import datetime
 
+from senlin.common import exception
 from senlin.db import api as db_api
+from senlin.engine import environment
 
 
 class Node(object):
@@ -32,31 +33,27 @@ class Node(object):
     )
 
     def __init__(self, name, profile_id, cluster_id=None, **kwargs):
-        self.id = None
+        self.id = kwargs.get('id', None)
         if name:
             self.name = name
         else:
-            # TODO
-            # Using self.physical_resource_name() to generate a unique name
+            # TODO(Qiming): Use self.physical_resource_name() to
+            #               generate a unique name
             self.name = 'node-name-tmp'
-        self.physical_id = ''
-        self.cluster_id = cluster_id or ''
+
+        self.physical_id = kwargs.get('physical_id', '')
         self.profile_id = profile_id
-        if cluster_id is None:
-            self.index = -1
-        else:
-            self.index = db_api.get_next_index(cluster_id)
-        self.role = ''
+        self.cluster_id = cluster_id or ''
+        self.index = kwargs.get('index', -1)
+        self.role = kwargs.get('role', '')
+        self.created_time = kwargs.get('created_time', None)
+        self.updated_time = kwargs.get('updated_time', None)
+        self.deleted_time = kwargs.get('deleted_time', None)
 
-        self.created_time = None
-        self.updated_time = None
-        self.deleted_time = None
-
-        self.status = self.INIT
-        self.status_reason = 'Initializing'
-        self.data = {}
-        self.tags = {}
-        self.store()
+        self.status = kwargs.get('status', self.INIT)
+        self.status_reason = kwargs.get('status_reason', 'Initializing')
+        self.data = kwargs.get('data', {})
+        self.tags = kwargs.get('tags', {})
 
     def store(self):
         '''
@@ -84,34 +81,94 @@ class Node(object):
 
         if self.id:
             db_api.node_update(self.context, self.id, values)
+            # TODO(Qiming): create event/log
         else:
             node = db_api.node_create(self.context, values)
+            # TODO(Qiming): create event/log
             self.id = node.id
 
+    @classmethod
+    def from_db_record(cls, context, record):
+        '''
+        Construct a node object from database record.
+        :param context: the context used for DB operations;
+        :param record: a DB node object that will receive all fields;
+        '''
+        kwargs = {
+            'id': record.id,
+            'physical_id': record.physical_id,
+            'index': record.index,
+            'role': record.role,
+            'created_time': record.created_time,
+            'updated_time': record.updated_time,
+            'deleted_time': record.deleted_time,
+            'status': record.status,
+            'status_reason': record.status_reason,
+            'data': record.data,
+            'tags': record.tags,
+        }
+        return cls(context, record.name, record.profile_id, record.size,
+                   **kwargs)
+
+    @classmethod
+    def load(cls, context, node_id):
+        '''
+        Retrieve a node from database.
+        '''
+        node = db_api.node_get(context, node_id)
+
+        if node is None:
+            msg = _('No node with id "%s" exists') % node_id
+            raise exception.NotFound(msg)
+
+        return cls._from_db_record(context, node)
+
+    @classmethod
+    def load_all(cls, context, cluster_id):
+        '''
+        Retrieve all nodes of from database.
+        '''
+        records = db_api.node_get_all_by_cluster(context, cluster_id)
+
+        for record in records:
+            yield cls._from_db_record(context, record)
+
     def create(self, name, profile_id, cluster_id=None, **kwargs):
-        # TODO: invoke profile to create new object and get the physical id
-        # TODO: log events?
+        # TODO(Qiming): invoke profile to create new object and get the
+        #               physical id
+        # TODO(Qiming): log events?
         self.created_time = datetime.datetime.utcnnow()
+        profile = db_api.get_profile(profile_id)
+        profile_cls = environment.global_env().get_profile(profile.type)
+        node = profile_cls.create_object(self.id, profile_id)
+
         return node.id
 
     def delete(self):
-        node = db_api.get_node(self.id)
-        physical_id = node.physical_id
+        # node = db_api.node_get(self.id)
+        # physical_id = node.physical_id
 
-        # TODO: invoke profile to delete this object
-        # TODO: check if actions are working on it and can be canceled
+        # TODO(Qiming): invoke profile to delete this object
+        # TODO(Qiming): check if actions are working on it and can be canceled
 
         db_api.delete_node(self.id)
         return True
 
+    def join(self, cluster):
+        return True
+
+    def leave(self, cluster):
+        return True
+
     def update(self, new_profile_id):
-        old_profile = db_api.get_profile(self.profile_id)
         new_profile = db_api.get_profile(new_profile_id)
 
-        # TODO: check if profile type matches
-        new_profile_type = new_profile.type_name
+        if self.profile_id == new_profile.id:
+            return True
 
-        profile_cls = profile_registry.get_class(type_name)
+        new_type = new_profile.type_name
+
+        profile_cls = environment.global_env().get_profile(new_type)
 
         profile_cls.update_object(self.id, new_profile)
         self.profile_id = new_profile
