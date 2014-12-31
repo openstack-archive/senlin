@@ -11,7 +11,7 @@
 # under the License.
 
 
-class PolicyBase(object):
+class Policy(object):
     '''
     Base class for policies.
     '''
