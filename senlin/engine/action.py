@@ -17,7 +17,6 @@ from oslo.config import cfg
 
 from senlin.common import exception
 from senlin.db import api as db_api
-from senlin.engine import environment
 from senlin.engine import node as nodes
 from senlin.engine import scheduler
 
@@ -314,10 +313,10 @@ class ClusterAction(Action):
         return self.RES_OK
 
     def execute(self, **kwargs):
-        res = self.RES_ERROR
+        res = False
         cluster = db_api.cluster_get(self.context, self.target)
         if not cluster:
-            return res
+            return self.RES_ERROR
 
         if self.action == self.CLUSTER_CREATE:
             res = self.do_create(cluster)
@@ -336,7 +335,7 @@ class ClusterAction(Action):
         elif self.action == self.CLUSTER_DETACH_POLICY:
             res = self.do_detach_policy(cluster)
 
-        return res
+        return self.RES_OK if res else self.RES_ERROR
 
     def cancel(self):
         return self.RES_OK
@@ -358,7 +357,7 @@ class NodeAction(Action):
         super(NodeAction, self).__init__(context, action, **kwargs)
 
     def execute(self, **kwargs):
-        res = self.RES_ERROR
+        res = False
         node = nodes.load(self.context, self.target)
         if not node:
             msg = _('Node with id (%s) is not found') % self.target
@@ -380,7 +379,7 @@ class NodeAction(Action):
         elif self.action == self.NODE_LEAVE_CLUSTER:
             res = node.do_leave()
 
-        return self.RES_OK
+        return self.RES_OK if res else self.RES_ERROR
 
     def cancel(self):
         return self.RES_OK
