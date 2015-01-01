@@ -259,6 +259,7 @@ class ClusterAction(Action):
             action.set_status(self.READY)
 
         scheduler.notify()
+        return self.RES_OK
 
     def do_update(self, cluster):
         # TODO(Yanyan): Check if cluster lock is needed
@@ -313,28 +314,29 @@ class ClusterAction(Action):
         return self.RES_OK
 
     def execute(self, **kwargs):
+        res = self.RES_ERROR
         cluster = db_api.cluster_get(self.context, self.target)
         if not cluster:
-            return self.RES_ERROR
+            return res
 
         if self.action == self.CLUSTER_CREATE:
-            return self.do_create(cluster)
+            res = self.do_create(cluster)
         elif self.action == self.CLUSTER_UPDATE:
-            return self.do_update(cluster)
+            res = self.do_update(cluster)
         elif self.action == self.CLUSTER_DELETE:
-            return self.do_delete(cluster)
+            res = self.do_delete(cluster)
         elif self.action == self.CLUSTER_ADD_NODES:
-            return self.do_add_nodes(cluster)
+            res = self.do_add_nodes(cluster)
         elif self.action == self.CLUSTER_DEL_NODES:
-            return self.do_del_nodes(cluster)
+            res = self.do_del_nodes(cluster)
         elif self.action == self.CLUSTER_RESIZE:
-            return self.do_resize(cluster)
+            res = self.do_resize(cluster)
         elif self.action == self.CLUSTER_ATTACH_POLICY:
-            return self.do_attach_policy(cluster)
+            res = self.do_attach_policy(cluster)
         elif self.action == self.CLUSTER_DETACH_POLICY:
-            return self.do_detach_policy(cluster)
+            res = self.do_detach_policy(cluster)
 
-        return self.RES_OK
+        return res
 
     def cancel(self):
         return self.RES_OK
@@ -355,85 +357,28 @@ class NodeAction(Action):
     def __init__(self, context, action, **kwargs):
         super(NodeAction, self).__init__(context, action, **kwargs)
 
-        # get cluster of this node
-        # get policies associated with the cluster
-
-    def _get_profile_cls(self, context, profile_id):
-        profile = db_api.profile_get(context, profile_id)
-        cls = environment.global_env().get_profile(profile.type)
-        if not cls:
-            raise exception.ProfileNotFound(profile=profile.name)
-        return cls
-
-    def do_create(self, node):
-        cls = self._get_profile_cls(self.context, node.profile_id)
-        node = cls.create_object(node.name, node.profile_id)
-        if not node:
-            return self.RES_ERROR
-
-        return self.RES_OK
-
-    def do_update(self, node):
-        new_profile_id = self.inputs.get('new_profile', None)
-        if not new_profile_id:
-            raise exception.ProfileNotSpecified()
-
-        if new_profile_id == node.profile_id:
-            return self.RES_OK
-
-        if not node.physical_id:
-            return self.RES_ERROR
-
-        cls = self._get_profile_cls(self.context, node.profile_id)
-        node = cls.update_object(node.physical_id, new_profile_id)
-        if not node:
-            return self.RES_ERROR
-
-        return self.RES_OK
-
-    def do_delete(self, node):
-        if not node.physical_id:
-            return self.RES_OK
-
-        cls = self._get_profile_cls(self.context, node.profile_id)
-        node = cls.delete_object(node.physical_id)
-        if not node:
-            return self.RES_ERROR
-
-        return self.RES_OK
-
-    def do_join(self, node):
-        new_cluster_id = self.inputs.get('cluster_id', None)
-        if not new_cluster_id:
-            raise exception.ClusterNotSpecified()
-
-        # TODO(Qiming): complete this
-        return self.RES_OK
-
-    def do_leave(self, node):
-        # cluster_id = node.cluster_id
-        # TODO(Qiming): complete this
-
-        return self.RES_OK
-
     def execute(self, **kwargs):
-        node = db_api.node_get(self.context, self.target)
+        res = self.RES_ERROR
+        node = nodes.load(self.context, self.target)
         if not node:
             msg = _('Node with id (%s) is not found') % self.target
             raise exception.NotFound(msg)
 
+        # TODO(Qiming): Add node status changes
         if self.action == self.NODE_CREATE:
-            return self.do_create(node)
+            res = node.do_create()
         elif self.action == self.NODE_DELETE:
-            return self.do_delete(node)
+            res = node.do_delete()
         elif self.action == self.NODE_UPDATE:
-            return self.do_update(node)
+            new_profile_id = self.inputs.get('new_profile')
+            res = node.do_update(new_profile_id)
         elif self.action == self.NODE_JOIN_CLUSTER:
-            return self.do_join(node)
+            new_cluster_id = self.inputs.get('cluster_id', None)
+            if not new_cluster_id:
+                raise exception.ClusterNotSpecified()
+            res = node.do_join(new_cluster_id)
         elif self.action == self.NODE_LEAVE_CLUSTER:
-            return self.do_leave(node)
-        else:
-            return self.RES_ERROR
+            res = node.do_leave()
 
         return self.RES_OK
 
