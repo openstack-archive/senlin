@@ -113,6 +113,10 @@ def node_set_status(context, node_id, status):
     return IMPL.node_set_status(context, node_id, status)
 
 
+def node_migrate(context, node_id, from_cluster, to_cluster):
+    return IMPL.node_migrate(context, node_id, from_cluster, to_cluster)
+
+
 # Locks
 def cluster_lock_create(cluster_id, worker_id):
     return IMPL.cluster_lock_create(cluster_id, worker_id)
@@ -221,6 +225,7 @@ def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
                                          sort_keys=sort_keys,
                                          sort_dir=sort_dir,
                                          filters=filters)
+
 
 # Actions
 def action_create(context, values):

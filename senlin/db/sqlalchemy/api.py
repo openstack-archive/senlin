@@ -33,8 +33,9 @@ CONF = cfg.CONF
 CONF.import_opt('max_events_per_cluster', 'senlin.common.config')
 
 # Action status definitions:
-#  ACTION_INIT:      Not ready to be executed because fields are being modified,
-#                    or dependency with other actions are being analyzed.
+#  ACTION_INIT:      Not ready to be executed because fields are being
+#                    modified, or dependency with other actions are being
+#                    analyzed.
 #  ACTION_READY:     Initialized and ready to be executed by a worker.
 #  ACTION_RUNNING:   Being executed by a worker thread.
 #  ACTION_SUCCEEDED: Completed with success.
@@ -136,7 +137,7 @@ def cluster_get_all_by_parent(context, parent):
 
 def cluster_get_by_name_and_parent(context, cluster_name, parent):
     query = soft_delete_aware_query(context, models.Cluster).\
-        filter_by(tenant == context.tenant_id).\
+        filter_by(tenant=context.tenant_id).\
         filter_by(name=cluster_name).\
         filter_by(parent=parent)
     return query.first()
@@ -228,8 +229,8 @@ def cluster_update(context, cluster_id, values):
 
     if not cluster:
         raise exception.NotFound(
-            _('Attempt to update a cluster with id "%s" that does not'
-                   ' exist') % cluster_id)
+            _('Attempt to update a cluster with id "%s" that does '
+              ' exist failed') % cluster_id)
 
     cluster.update(values)
     cluster.save(_session(context))
@@ -239,8 +240,8 @@ def cluster_delete(context, cluster_id):
     cluster = cluster_get(context, cluster_id)
     if not cluster:
         raise exception.NotFound(
-            _('Attempt to delete a cluster with id "%s" that does not'
-                   ' exist') % cluster_id)
+            _('Attempt to delete a cluster with id "%s" that does '
+              'not exist failed') % cluster_id)
 
     session = orm_session.Session.object_session(cluster)
 
@@ -296,6 +297,21 @@ def node_get_by_name_and_cluster(context, node_name, cluster_id):
 def node_get_by_physical_id(context, phy_id):
     query = model_query(context, models.Node).filter_by(physical_id=phy_id)
     return query.first()
+
+
+def node_migrate(context, node_id, from_cluster, to_cluster):
+    query = model_query(context, models.Node)
+    node = query.get(node_id)
+    session = query.session
+    session.begin()
+    if from_cluster:
+        cluster1 = session.query(models.Cluster).get(from_cluster)
+        cluster1.size -= 1
+    if to_cluster:
+        cluster2 = session.query(models.Cluster).get(to_cluster)
+        cluster2.size += 1
+    node.cluster_id = to_cluster
+    session.commit()
 
 
 # Locks
@@ -394,8 +410,8 @@ def policy_update(context, policy_id, values):
     policy = policy_get(context, policy_id)
 
     if not policy:
-        msg = _('Attempt to update a policy with id: %(id)s that does not'
-                     ' exist') % policy_id
+        msg = _('Attempt to update a policy with id: %(id)s that does not '
+                'exist failed') % policy_id
         raise exception.NotFound(msg)
 
     policy.update(values)
@@ -407,8 +423,8 @@ def policy_delete(context, policy_id, force=False):
     policy = policy_get(context, policy_id)
 
     if not policy:
-        msg = _('Attempt to delete a policy with id "%s" that does not'
-                     ' exist') % policy_id
+        msg = _('Attempt to delete a policy with id "%s" that does not '
+                'exist failed') % policy_id
         raise exception.NotFound(msg)
 
     session = orm_session.Session.object_session(policy)
@@ -438,9 +454,9 @@ def cluster_detach_policy(context, cluster_id, policy_id):
         filter(cluster_id=cluster_id, policy_id=policy_id)
 
     if not binding:
-        msg = _('Failed detach policy "%(policy)s" from cluster '
-                     '"%(cluster)s"') % {'policy': policy_id,
-                                         'cluster': cluster_id}
+        msg = _('Failed detaching policy "%(policy)s" from cluster '
+                '"%(cluster)s"') % {'policy': policy_id,
+                                    'cluster': cluster_id}
         raise exception.NotFound(msg)
 
     session = orm_session.Session.object_session(binding)
@@ -454,8 +470,8 @@ def cluster_enable_policy(context, cluster_id, policy_id):
 
     if not binding:
         msg = _('Failed enabling policy "%(policy)s" on cluster '
-                     '"%(cluster)s"') % {'policy': policy_id,
-                                         'cluster': cluster_id}
+                '"%(cluster)s"') % {'policy': policy_id,
+                                    'cluster': cluster_id}
 
         raise exception.NotFound(msg)
 
@@ -470,8 +486,8 @@ def cluster_disable_policy(context, cluster_id, policy_id):
 
     if not binding:
         msg = _('Failed disabling policy "%(policy)s" on cluster '
-                     '"%(cluster)s"') % {'policy': policy_id,
-                                         'cluster': cluster_id}
+                '"%(cluster)s"') % {'policy': policy_id,
+                                    'cluster': cluster_id}
         raise exception.NotFound(msg)
 
     binding.update(enabled=False)
@@ -602,7 +618,7 @@ def _events_filter_and_page_query(context, query, limit=None, marker=None,
 def event_count_by_cluster(context, cid):
     count = model_query(context, models.Event).\
         filter_by(obj_id=cid, obj_type='CLUSTER').count()
-    return count 
+    return count
 
 
 def _events_by_cluster(context, cid):
@@ -665,12 +681,13 @@ def purge_deleted(age, granularity='days'):
 #        user_creds_del = user_creds.delete().where(user_creds.c.id == s[2])
 #        engine.execute(user_creds_del)
 
+
 # Actions
 def action_create(context, values):
     action = models.Action()
     action.update(values)
     action.save(_session(context))
-    return action 
+    return action
 
 
 def action_get(context, action_id):
@@ -683,7 +700,7 @@ def action_get(context, action_id):
 
 def action_get_1st_ready(context):
     query = model_query(context, models.Action).\
-        filter_by(status == ACTION_READY)
+        filter_by(status=ACTION_READY)
     return query.first()
 
 
@@ -693,8 +710,7 @@ def action_get_all_ready(context):
 
 
 def action_get_all_by_owner(context, owner_id):
-    query = model_query(context, models.Action).\
-        filter_by(owner == owner_id)
+    query = model_query(context, models.Action).filter_by(owner=owner_id)
     return query.all()
 
 
@@ -753,7 +769,8 @@ def action_del_depended_by(context, action_id, *actions):
 
 
 def action_mark_succeeded(context, action_id):
-    action = model_query(context, models.Action).get(action_id)
+    query = model_query(context, models.Action)
+    action = query.get(action_id)
     if not action:
         raise exception.NotFound(
             _('Action with id "%s" not found') % action_id)
@@ -788,9 +805,9 @@ def action_start_work_on(context, action_id, owner):
         raise exception.NotFound(
             _('Action with id "%s" not found') % action_id)
 
-    action.owner =  owner
+    action.owner = owner
     action.status = ACTION_RUNNING
-    action.status_reason = _('The action is being processing.')
+    action.status_reason = _('The action is being processed.')
     action.save(_session(context))
     return action
 
