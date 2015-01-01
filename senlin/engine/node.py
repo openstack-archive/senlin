@@ -14,7 +14,7 @@ import datetime
 
 from senlin.common import exception
 from senlin.db import api as db_api
-from senlin.engine import environment
+from senlin.profiles import base as profiles
 
 
 class Node(object):
@@ -32,7 +32,8 @@ class Node(object):
         'INITIALIZING', 'ACTIVE', 'ERROR', 'DELETED', 'UPDATING',
     )
 
-    def __init__(self, name, profile_id, cluster_id=None, **kwargs):
+    def __init__(self, context, name, profile_id, **kwargs):
+        self.context = context
         self.id = kwargs.get('id', None)
         if name:
             self.name = name
@@ -43,7 +44,7 @@ class Node(object):
 
         self.physical_id = kwargs.get('physical_id', '')
         self.profile_id = profile_id
-        self.cluster_id = cluster_id or ''
+        self.cluster_id = kwargs.get('cluster_id', '')
         self.index = kwargs.get('index', -1)
         self.role = kwargs.get('role', '')
         self.created_time = kwargs.get('created_time', None)
@@ -54,6 +55,10 @@ class Node(object):
         self.status_reason = kwargs.get('status_reason', 'Initializing')
         self.data = kwargs.get('data', {})
         self.tags = kwargs.get('tags', {})
+
+        self.rt = {
+            'profile': profiles.load(context, self.profile_id),
+        }
 
     def store(self):
         '''
@@ -109,21 +114,20 @@ class Node(object):
             'data': record.data,
             'tags': record.tags,
         }
-        return cls(context, record.name, record.profile_id, record.size,
-                   **kwargs)
+        return cls(context, record.name, record.profile_id, **kwargs)
 
     @classmethod
     def load(cls, context, node_id):
         '''
         Retrieve a node from database.
         '''
-        node = db_api.node_get(context, node_id)
+        record = db_api.node_get(context, node_id)
 
-        if node is None:
+        if record is None:
             msg = _('No node with id "%s" exists') % node_id
             raise exception.NotFound(msg)
 
-        return cls.from_db_record(context, node)
+        return cls.from_db_record(context, record)
 
     @classmethod
     def load_all(cls, context, cluster_id):
@@ -135,44 +139,69 @@ class Node(object):
         for record in records:
             yield cls.from_db_record(context, record)
 
-    def create(self, name, profile_id, cluster_id=None, **kwargs):
-        # TODO(Qiming): invoke profile to create new object and get the
-        #               physical id
+    def do_create(self):
         # TODO(Qiming): log events?
         self.created_time = datetime.datetime.utcnnow()
-        profile = db_api.get_profile(profile_id)
-        profile_cls = environment.global_env().get_profile(profile.type)
-        node = profile_cls.create_object(self.id, profile_id)
+        res = profiles.create_object(self)
+        if res:
+            self.physical_id = res
+            return True
+        else:
+            return False
 
-        return node.id
-
-    def delete(self):
-        # node = db_api.node_get(self.id)
-        # physical_id = node.physical_id
-
-        # TODO(Qiming): invoke profile to delete this object
-        # TODO(Qiming): check if actions are working on it and can be canceled
-
-        db_api.delete_node(self.id)
-        return True
-
-    def join(self, cluster):
-        return True
-
-    def leave(self, cluster):
-        return True
-
-    def update(self, new_profile_id):
-        new_profile = db_api.get_profile(new_profile_id)
-
-        if self.profile_id == new_profile.id:
+    def do_delete(self):
+        if not self.physical_id:
             return True
 
-        new_type = new_profile.type_name
+        # TODO(Qiming): check if actions are working on it and can be canceled
+        # TODO(Qiming): log events
+        res = profiles.delete_object(self)
+        if res:
+            db_api.delete_node(self.id)
+            return True
+        else:
+            return False
 
-        profile_cls = environment.global_env().get_profile(new_type)
+    def do_update(self, new_profile_id):
+        if not new_profile_id:
+            raise exception.ProfileNotSpecified()
 
-        profile_cls.update_object(self.id, new_profile)
-        self.profile_id = new_profile
-        self.updated_time = datetime.utcnow()
+        if new_profile_id == self.profile_id:
+            return True
+
+        if not self.physical_id:
+            return False
+
+        res = profiles.update_object(self, new_profile_id)
+        if res:
+            self.rt['profile'] = profiles.load(self.context, new_profile_id)
+            self.profile_id = new_profile_id
+            self.updated_time = datetime.datetime.utcnow()
+            db_api.node_update(self.context, self.id,
+                               {'profile_id': self.profile_id,
+                                'updated_time': self.updated_time})
+
+        return res
+
+    def do_join(self, cluster_id):
+        if self.cluster_id == cluster_id:
+            return True
+
+        db_api.node_migrate(self.context, self.id, self.cluster_id,
+                            cluster_id)
+
+        self.updated_time = datetime.datetime.utcnow()
+        db_api.node_update(self.context, self.id,
+                           {'updated_time': self.updated_time})
+        return True
+
+    def do_leave(self):
+        if self.cluster_id is None:
+            return True
+
+        db_api.node_migrate(self.context, self.id, self.cluster_id, None)
+        self.updated_time = datetime.datetime.utcnow()
+        db_api.node_update(self.context, self.id,
+                           {'updated_time': self.updated_time})
+
         return True
