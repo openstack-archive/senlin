@@ -18,6 +18,7 @@ from senlin.common.i18n import _LW
 from senlin.db import api as db_api
 from senlin.engine import event as events
 from senlin.engine import node as nodes
+from senlin.profiles import base as profiles
 from senlin.rpc import api as rpc_api
 
 
@@ -36,12 +37,12 @@ class Cluster(object):
         'INIT', 'ACTIVE', 'ERROR', 'DELETED', 'UPDATING',
     )
 
-    def __init__(self, name, profile_id, size=0, **kwargs):
+    def __init__(self, context, name, profile_id, size=0, **kwargs):
         '''
         Intialize a cluster object.
         The cluster defaults to have 0 nodes with no profile assigned.
         '''
-        self.context = kwargs.get('context', {})
+        self.context = context
         self.id = kwargs.get('id', None)
         self.name = name
         self.profile_id = profile_id
@@ -68,7 +69,12 @@ class Cluster(object):
         self.tags = kwargs.get('tags', {})
 
         # rt is a dict for runtime data
-        self.rt = dict(nodes={}, policies={})
+        # TODO(Qiming): nodes have to be reloaded when membership changes
+        self.rt = {
+            'profile': profiles.load(context, self.profile_id),
+            'nodes': nodes.load_all(context, cluster_id=self.id),
+            'policies': {},
+        }
 
     @classmethod
     def from_db_record(cls, context, record):
@@ -108,7 +114,7 @@ class Cluster(object):
             msg = _('No cluster with id "%s" exists') % cluster_id
             raise exception.NotFound(msg)
 
-        return cls._from_db_record(context, cluster)
+        return cls.from_db_record(context, cluster)
 
     @classmethod
     def load_all(cls, context, limit=None, sort_keys=None, marker=None,
@@ -122,7 +128,7 @@ class Cluster(object):
                                          show_deleted, show_nested)
 
         for record in records:
-            yield cls._from_db_record(context, record)
+            yield cls.from_db_record(context, record)
 
     def store(self):
         '''
@@ -182,6 +188,7 @@ class Cluster(object):
         A routine to be called from an action.
         '''
         self._set_status(self.ACTIVE)
+        return True
 
     def do_delete(self, context, **kwargs):
         self.status = self.DELETED
@@ -262,7 +269,6 @@ class Cluster(object):
     def update(cls, cluster_id, profile):
         # cluster = db_api.get_cluster(cluster_id)
         # TODO(Qiming): Implement this
-
         return True
 
     def to_dict(self):
