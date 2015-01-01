@@ -87,12 +87,14 @@ class Node(object):
             # TODO(Qiming): create event/log
             self.id = node.id
 
+        return self.id
+
     @classmethod
     def from_db_record(cls, context, record):
         '''
         Construct a node object from database record.
         :param context: the context used for DB operations;
-        :param record: a DB node object that will receive all fields;
+        :param record: a DB node object that contains all fields;
         '''
         kwargs = {
             'id': record.id,
@@ -121,7 +123,7 @@ class Node(object):
             msg = _('No node with id "%s" exists') % node_id
             raise exception.NotFound(msg)
 
-        return cls._from_db_record(context, node)
+        return cls.from_db_record(context, node)
 
     @classmethod
     def load_all(cls, context, cluster_id):
@@ -131,7 +133,7 @@ class Node(object):
         records = db_api.node_get_all_by_cluster(context, cluster_id)
 
         for record in records:
-            yield cls._from_db_record(context, record)
+            yield cls.from_db_record(context, record)
 
     def create(self, name, profile_id, cluster_id=None, **kwargs):
         # TODO(Qiming): invoke profile to create new object and get the
