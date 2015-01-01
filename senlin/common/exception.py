@@ -219,7 +219,7 @@ class ProfileNotFound(SenlinException):
     msg_fmt = _("The profile (%(profile)s) could not be found.")
 
 
-class ProfileNotSpecicified(SenlinException):
+class ProfileNotSpecified(SenlinException):
     msg_fmt = _("Profile not specified.")
 
 
