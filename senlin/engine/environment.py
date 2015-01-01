@@ -55,8 +55,14 @@ class Environment(object):
         :param is_global: boolean indicating if this is a user created one.
         '''
         self.params = {}
-        self.profile_registry = registry.Registry('profiles', is_global)
-        self.policy_registry = registry.Registry('policies', is_global)
+        if is_global:
+            self.profile_registry = registry.Registry('profiles')
+            self.policy_registry = registry.Registry('policies')
+        else:
+            self.profile_registry = registry.Registry(
+                'profiles', global_env.profile_registry)
+            self.policy_registry = registry.Registry(
+                'policies', global_env.policy_registry)
 
         if env is None:
             env = {}
