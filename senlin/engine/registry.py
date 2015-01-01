@@ -15,7 +15,6 @@ import six
 
 from senlin.common.i18n import _LI
 from senlin.common.i18n import _LW
-from senlin.engine import environment
 from senlin.openstack.common import log
 
 LOG = log.getLogger(__name__)
@@ -70,11 +69,10 @@ class Registry(object):
     A registry for managing profile or policy classes.
     '''
 
-    def __init__(self, registry_name, is_global):
+    def __init__(self, registry_name, global_registry=None):
         self._registry = {registry_name: {}}
-        self.is_global = is_global
-        global_registry = environment.global_env().registry
-        self.global_registry = None if is_global else global_registry
+        self.is_global = True if global_registry else False
+        self.global_registry = global_registry
 
     def _register_info(self, path, info):
         '''
