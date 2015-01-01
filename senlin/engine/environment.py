@@ -12,6 +12,7 @@
 
 import glob
 import os.path
+import six
 from stevedore import extension
 
 from oslo.config import cfg
@@ -67,7 +68,7 @@ class Environment(object):
         if env is None:
             env = {}
         else:
-            # Merge user specified keys with current environment 
+            # Merge user specified keys with current environment
             self.params = env.get(self.PARAMETERS, {})
             custom_profiles = env.get(self.CUSTOM_PROFILES, {})
             custom_policies = env.get(self.CUSTOM_POLICIES, {})
