@@ -49,13 +49,13 @@ class DeletionPolicy(base.Policy):
                                                   False)
         random.seed()
 
-    def pre_op(self, cluster_id, action, **args):
+    def pre_op(self, cluster_id, action, **kwargs):
         '''
         We don't block the deletion anyhow.
         '''
         return True
 
-    def enforce(self, cluster_id, action, **args):
+    def enforce(self, cluster_id, action, **kwargs):
         '''
         The enforcement of a deletion policy returns the chosen victims
         that will be deleted.
@@ -73,6 +73,6 @@ class DeletionPolicy(base.Policy):
 
         return victim
 
-    def post_op(self, cluster_id, action, **args):
+    def post_op(self, cluster_id, action, **kwargs):
         # TODO(Qiming): process grace period here if needed
-        pass
+        return True
