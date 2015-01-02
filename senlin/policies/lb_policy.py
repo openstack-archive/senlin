@@ -10,10 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from senlin.common import senlin_consts as consts
 from senlin.policies import base
 
 
-class LoadBalancingPolicy(base.PolicyBase):
+class LoadBalancingPolicy(base.Policy):
     '''
     Policy for load balancing among members of a cluster.
 
@@ -23,8 +24,10 @@ class LoadBalancingPolicy(base.PolicyBase):
     '''
 
     TARGET = [
-        ('AFTER', 'CLUSTER', 'ADD_MEMBER'),
-        ('AFTER', 'CLUSTER', 'DEL_MEMBER'),
+        ('AFTER', consts.CLUSTER_ADD_NODES),
+        ('AFTER', consts.CLUSTER_SCALE_UP),
+        ('BEFORE', consts.CLUSTER_DEL_NODES),
+        ('BEFORE', consts.CLUSTER_SCALE_DOWN),
     ]
 
     PROFILE_TYPE = [
@@ -32,18 +35,25 @@ class LoadBalancingPolicy(base.PolicyBase):
         'aws.autoscaling.launchconfig',
     ]
 
-    def __init__(self, name, type_name, **kwargs):
-        super(LoadBalancingPolicy, self).__init__(name, type_name, kwargs)
+    def __init__(self, type_name, name, **kwargs):
+        super(LoadBalancingPolicy, self).__init__(type_name, name, kwargs)
 
         self.lb_names = kwargs.get('loadbalancer_names')
 
     def pre_op(self, cluster_id, action, **args):
-        pass
+        if action not in (consts.CLUSTER_DEL_NODES,
+                          consts.CLUSTER_SCALE_DOWN):
+            return True
+
+        # TODO(anyone): remove nodes from loadbalancer
+        return True
 
     def enforce(self, cluster_id, action, **args):
         pass
 
     def post_op(self, cluster_id, action, **args):
-        # TODO: reload load-balancer
-        # NOTE: lb_names is a list of load-balancer
+        if action not in (consts.CLUSTER_ADD_NODES, consts.CLUSTER_SCALE_UP):
+            return True
+
+        # TODO(anyone): add nodes to loadbalancer
         return True
