@@ -10,14 +10,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from senlin.common import senlin_consts as consts
 from senlin.policies import base
 
 
-class HealthPolicy(base.PolicyBase):
+class HealthPolicy(base.Policy):
     '''
     Policy for health checking for members of a cluster.
     '''
-    
+
     CHECK_TYPES = (
         VM_LIFECYCLE_EVENTS,
         VM_STATUS_POLLING,
@@ -29,7 +30,10 @@ class HealthPolicy(base.PolicyBase):
     )
 
     TARGET = [
-        ('AFTER', 'CLUSTER', 'ADD_MEMBER')
+        ('AFTER', consts.CLUSTER_SCALE_UP),
+        ('AFTER', consts.CLUSTER_ADD_NODES),
+        ('BEFORE', consts.CLUSTER_SCALE_DOWN),
+        ('BEFORE', consts.CLUSTER_DEL_NODES),
     ]
 
     PROFILE_TYPE = [
@@ -45,12 +49,23 @@ class HealthPolicy(base.PolicyBase):
         self.check_type = self.spec.get('check_type')
 
     def pre_op(self, cluster_id, action, **args):
-        pass
+        # Ignore actions that are not required to be processed at this stage
+        if action not in (consts.CLUSTER_SCALE_DOWN,
+                          consts.CLUSTER_DEL_NODES):
+            return True
+
+        # TODO(anyone): Unsubscribe nodes from backend health monitoring
+        #               infrastructure
+        return True
 
     def enforce(self, cluster_id, action, **args):
         pass
 
     def post_op(self, cluster_id, action, **args):
-        # TODO(Qiming): subscribe to vm-lifecycle-events for the specified VM
-        #               or add vm to the list of VM status polling
-        pass
+        # Ignore irrelevant action here
+        if action not in (consts.CLUSTER_SCALE_UP, consts.CLUSTER_ADD_NODES):
+            return True
+
+        # TODO(anyone): subscribe to vm-lifecycle-events for the specified VM
+        #                or add vm to the list of VM status polling
+        return True
