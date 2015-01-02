@@ -36,6 +36,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertEqual(self.ctx.tenant_id, cluster.project)
         self.assertEqual('unknown', cluster.domain)
         self.assertIsNone(cluster.parent)
+        self.assertEqual(0, cluster.node_count)
         self.assertEqual(0, cluster.next_index)
         self.assertEqual('60', cluster.timeout)
         self.assertEqual('INIT', cluster.status)

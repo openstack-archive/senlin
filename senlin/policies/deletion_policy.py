@@ -10,11 +10,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import random
+
+from senlin.common import senlin_consts as consts
 from senlin.db import api as db_api
 from senlin.policies import base
 
 
-class DeletionPolicy(base.PolicyBase):
+class DeletionPolicy(base.Policy):
     '''
     Policy for deleting member(s) from a cluster.
     '''
@@ -28,46 +31,48 @@ class DeletionPolicy(base.PolicyBase):
     )
 
     TARGET = [
-        ('BEFORE', 'CLUSTER', 'DELETE_MEMBER'),
-        ('AFTER', 'CLUSTER', 'DELETE_MEMBER'),
+        ('WHEN', consts.CLUSTER_SCALE_DOWN),
+        ('AFTER', consts.CLUSTER_DEL_NODES),
+        ('AFTER', consts.CLUSTER_SCALE_DOWN),
     ]
 
     PROFILE_TYPE = [
         'ANY'
     ]
 
-    def __init__(self, name, type_name, **kwargs):
-        super(DeletionPolicy, self).__init__(name, type_name, kwargs)
+    def __init__(self, type_name, name, **kwargs):
+        super(DeletionPolicy, self).__init__(type_name, name, **kwargs)
 
-        self.criteria = kwargs.get('criteria')
-        self.grace_period = kwargs.get('grace_period')
-        self.delete_desired_capacity = kwargs.get('reduce_desired_capacity')
-
-    def _sort_members_by_creation_time(members):
-        # TODO: do sorting
-        return members
+        self.criteria = kwargs.get('criteria', '')
+        self.grace_period = kwargs.get('grace_period', 0)
+        self.reduce_desired_capacity = kwargs.get('reduce_desired_capacity',
+                                                  False)
+        random.seed()
 
     def pre_op(self, cluster_id, action, **args):
-        # :cluster_id the cluster
-        # :action 'DEL_MEMBER'
-        # :args a list of candidate members
-
-        # TODO: choose victims from the given cluster
-        members = db_api.get_members(cluster_id)
-        sorted = self._sort_members_by_creation_time(members)
-        if self.criteria == self.OLDEST_FIRST:
-            victim = sorted[0]
-        elif self.criteria ==self.YOUNGEST_FIRST:
-            victim = sorted[-1]
-        else:
-            rand = random(len(sorted))
-            victim = sorted[rand]
-
-        # TODO: return True/False
-        return victim
+        '''
+        We don't block the deletion anyhow.
+        '''
+        return True
 
     def enforce(self, cluster_id, action, **args):
-        pass 
+        '''
+        The enforcement of a deletion policy returns the chosen victims
+        that will be deleted.
+        '''
+        nodes = db_api.node_get_all_by_cluster_id(cluster_id)
+        if self.criteria == self.RANDOM:
+            rand = random.randrange(len(nodes))
+            return nodes[rand]
+
+        sorted_list = sorted(nodes, key=lambda r: (r.created_time, r.name))
+        if self.criteria == self.OLDEST_FIRST:
+            victim = sorted_list[0]
+        else:  # self.criteria == self.YOUNGEST_FIRST:
+            victim = sorted_list[-1]
+
+        return victim
 
     def post_op(self, cluster_id, action, **args):
+        # TODO(Qiming): process grace period here if needed
         pass

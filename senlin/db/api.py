@@ -113,6 +113,10 @@ def node_set_status(context, node_id, status):
     return IMPL.node_set_status(context, node_id, status)
 
 
+def node_migrate(context, node_id, from_cluster, to_cluster):
+    return IMPL.node_migrate(context, node_id, from_cluster, to_cluster)
+
+
 # Locks
 def cluster_lock_create(cluster_id, worker_id):
     return IMPL.cluster_lock_create(cluster_id, worker_id)
@@ -160,8 +164,8 @@ def policy_delete(context, policy_id, force=False):
 
 
 # Cluster-Policy Associations
-def cluster_attach_policy(context, values):
-    return IMPL.cluster_attach_policy(context, values)
+def cluster_attach_policy(context, cluster_id, policy_id, values):
+    return IMPL.cluster_attach_policy(context, cluster_id, policy_id, values)
 
 
 def cluster_get_policies(context, cluster_id):
@@ -222,6 +226,7 @@ def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
                                          sort_dir=sort_dir,
                                          filters=filters)
 
+
 # Actions
 def action_create(context, values):
     return IMPL.action_create(context, values)
@@ -269,10 +274,6 @@ def action_mark_cancelled(context, action_id):
 
 def action_start_work_on(context, action_id, owner):
     return IMPL.action_start_work_on(context, action_id, owner)
-
-
-def action_update(context, action_id, values):
-    return IMPL.action_update(context, action_id, values)
 
 
 def action_delete(context, action_id, force=False):

@@ -12,12 +12,12 @@
 
 from oslo.middleware import request_id as oslo_request_id
 from oslo.utils import importutils
+from oslo_context import context
 
 from senlin.common import exception
 from senlin.common import policy
 from senlin.common import wsgi
 from senlin.db import api as db_api
-from senlin.openstack.common import context
 
 
 class RequestContext(context.RequestContext):

@@ -1,15 +1,14 @@
-#
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
 #         http://www.apache.org/licenses/LICENSE-2.0
 #
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#    License for the specific language governing permissions and limitations
-#    under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 import collections
 import os
@@ -40,42 +39,26 @@ class ThreadGroupManager(object):
         # Create dummy service task, because when there is nothing queued
         # on self.tg the process exits
         self.add_timer(cfg.CONF.periodic_interval, self._service_task)
-
+        
     def _service_task(self):
-        """
+        '''
         This is a dummy task which gets queued on the service.Service
         threadgroup.  Without this service.Service sees nothing running
         i.e has nothing to wait() on, so the process exits..
         This could also be used to trigger periodic non-cluster-specific
         housekeeping tasks
-        """
+        ''' 
+        # TODO(Yanyan): have this task call dbapi purge events
         pass
-
-    def _serialize_profile_info(self):
-        prof = profiler.get()
-        trace_info = None
-        if prof:
-            trace_info = {
-                "hmac_key": prof.hmac_key,
-                "base_id": prof.get_base_id(),
-                "parent_id": prof.get_id()
-            }
-        return trace_info
-
-    def _start_with_trace(self, trace, func, *args, **kwargs):
-        if trace:
-            profiler.init(**trace)
-        return func(*args, **kwargs)
-
+    
     def start(self, target_id, func, *args, **kwargs):
         """
         Run the given method in a sub-thread.
         """
         if target_id not in self.groups:
             self.groups[target_id] = threadgroup.ThreadGroup()
-        return self.groups[target_id].add_thread(self._start_with_trace,
-                                                self._serialize_profile_info(),
-                                                func, *args, **kwargs)
+
+        return self.groups[target_id].add_thread(func, *args, **kwargs)
 
     def start_with_lock(self, cnxt, target, target_type, engine_id,
                         func, *args, **kwargs):
@@ -99,6 +82,7 @@ class ThreadGroupManager(object):
             lock = senlin_lock.ClusterLock(cnxt, target, engine_id)
         elif target_type == 'node':
             lock = senlin_lock.NodeLock(cnxt, target, engine_id)
+
         with lock.thread_lock(target.id):
             th = self.start_with_acquired_lock(target, lock,
                                                func, *args, **kwargs)
@@ -168,9 +152,45 @@ class ThreadGroupManager(object):
 
             for th in threads:
                 th.link(mark_done, th)
+
             while not all(links_done.values()):
                 eventlet.sleep()
 
     def send(self, target_id, message):
         for event in self.events.pop(target_id, []):
             event.send(message)
+
+    def action_proc(self, action, worker_id):
+        '''
+        Thread procedure.
+        '''
+        status = action.get_status()
+        while status in (action.INIT, action.WAITING):
+            # TODO(Qiming): Handle 'start_time' field of an action
+            yield
+            status = action.get_status()
+
+        # Exit quickly if action has been taken care of or marked
+        # completed or cancelled by other activities
+        if status != action.READY:
+            return
+
+        done = False
+        while not done:
+            # Take over the action
+            action.set_status(action.RUNNING)
+
+            result = action.execute()
+
+            if result == action.OK:
+                action.set_status(action.SUCCEEDED)
+                done = True
+            elif result == action.ERROR:
+                action.set_status(action.FAILED)
+                done = True
+            elif result == action.RETRY:
+                continue 
+        
+
+    def start_action_worker(self, action, engine_id):
+        self.start(self.action_proc, engine_id)

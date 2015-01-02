@@ -90,6 +90,7 @@ def create_cluster(ctx, profile, **kwargs):
         'project': ctx.tenant_id,
         'domain': 'unknown',
         'parent': None,
+        'node_count': 0,
         'next_index': 0,
         'timeout': '60',
         'status': 'INIT',
@@ -137,3 +138,21 @@ def create_event(ctx, **kwargs):
     }
     values.update(kwargs)
     return db_api.event_create(ctx, values)
+
+
+def create_action(ctx, **kwargs):
+    values = {
+        'context': kwargs.get('context'),
+        'description': 'Action description',
+        'target': kwargs.get('target'),
+        'action': kwargs.get('action'),
+        'cause': 'Reason for action',
+        'owner': kwarge.get('owner'),
+        'interval': -1,
+        'inputs': {'key': 'value'},
+        'outputs': {'result': 'value'}
+        'depends_on': [],
+        'depended_on': []
+    }
+    values.update(kwargs)
+    return db_api.action_create(ctx, values)

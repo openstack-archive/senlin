@@ -211,7 +211,23 @@ class ClusterExists(SenlinException):
     msg_fmt = _("The Cluster (%(cluster_name)s) already exists.")
 
 
-class ClusterValidationFailed(SenlinException):
+class ClusterNotSpecified(SenlinException):
+    msg_fmt = _("The cluster was not specified.")
+
+
+class ProfileNotFound(SenlinException):
+    msg_fmt = _("The profile (%(profile)s) could not be found.")
+
+
+class ProfileNotSpecified(SenlinException):
+    msg_fmt = _("Profile not specified.")
+
+
+class ProfileValidationFailed(SenlinException):
+    msg_fmt = _("%(message)s")
+
+
+class PolicyValidationFailed(SenlinException):
     msg_fmt = _("%(message)s")
 
 
@@ -264,6 +280,18 @@ class InvalidContentType(SenlinException):
 
 class RequestLimitExceeded(SenlinException):
     msg_fmt = _('Request limit exceeded: %(message)s')
+
+
+class ActionMissingTarget(SenlinException):
+    msg_fmt = _('Action "%(action)s" must have target specified')
+
+
+class ActionMissingPolicy(SenlinException):
+    msg_fmt = _('Action "%(action)s" must have policy specified')
+
+
+class ActionNotSupported(SenlinException):
+    msg_fmt = _('Action "%(action)s" not supported by %(object)s')
 
 
 class ActionInProgress(SenlinException):
