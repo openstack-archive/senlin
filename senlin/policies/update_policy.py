@@ -10,10 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from senlin.common import senlin_consts as consts
 from senlin.policies import base
 
 
-class UpdatePolicy(base.PolicyBase):
+class UpdatePolicy(base.Policy):
     '''
     Policy for updating a cluster's node profile.
 
@@ -23,28 +24,27 @@ class UpdatePolicy(base.PolicyBase):
     '''
 
     TARGET = [
-        ('WHEN', 'CLUSTER', 'UPDATE'),
+        ('WHEN', consts.CLUSTER_UPDATE),
     ]
 
     PROFILE_TYPE = [
         'ANY'
     ]
 
-    def __init__(self, name, type_name, **kwargs):
-        super(UpdatePolicy, self).__init__(name, type_name, **kwargs)
+    def __init__(self, type_name, name, **kwargs):
+        super(UpdatePolicy, self).__init__(type_name, name, **kwargs)
 
-        self.min_in_service = kwargs.get('min_in_service')
-        self.max_batch_size = kwargs.get('max_batch_size')
-        self.pause_time = kwargs.get('pause_time')
+        self.min_in_service = self.spec.get('min_in_service')
+        self.max_batch_size = self.spec.get('max_batch_size')
+        self.pause_time = self.spec.get('pause_time')
 
-    def pre_op(self, cluster_id, action, **args):
-        # select candidates for update based on criteria
+    def pre_op(self, cluster_id, action, **kwargs):
+        return True
 
-        # TODO: return True/False
-        return True 
+    def enforce(self, cluster_id, action, **kwargs):
+        candidates = []
+        # TODO(anyone): select candidates for update based on criteria
+        return candidates
 
-    def enforce(self, cluster_id, action, **args):
-        pass
-
-    def post_op(self, cluster_id, action, **args):
-        pass
+    def post_op(self, cluster_id, action, **kwargs):
+        return True
