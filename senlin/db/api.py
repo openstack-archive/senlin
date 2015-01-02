@@ -164,8 +164,8 @@ def policy_delete(context, policy_id, force=False):
 
 
 # Cluster-Policy Associations
-def cluster_attach_policy(context, values):
-    return IMPL.cluster_attach_policy(context, values)
+def cluster_attach_policy(context, cluster_id, policy_id, values):
+    return IMPL.cluster_attach_policy(context, cluster_id, policy_id, values)
 
 
 def cluster_get_policies(context, cluster_id):

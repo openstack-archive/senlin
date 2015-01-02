@@ -436,8 +436,10 @@ def policy_delete(context, policy_id, force=False):
 
 
 # Cluster-Policy Associations
-def cluster_attach_policy(context, values):
+def cluster_attach_policy(context, cluster_id, policy_id, values):
     binding = models.ClusterPolicies()
+    binding.cluster_id = cluster_id
+    binding.policy_id = policy_id
     binding.update(values)
     binding.save(_session(context))
     return binding
