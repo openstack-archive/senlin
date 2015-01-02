@@ -19,6 +19,7 @@ from senlin.common import exception
 from senlin.db import api as db_api
 from senlin.engine import node as nodes
 from senlin.engine import scheduler
+from senlin.policies import policy as policies
 
 
 class Action(object):
@@ -226,11 +227,13 @@ class ClusterAction(Action):
     '''
     ACTIONS = (
         CLUSTER_CREATE, CLUSTER_DELETE, CLUSTER_UPDATE,
-        CLUSTER_ADD_NODES, CLUSTER_DEL_NODES, CLUSTER_RESIZE,
+        CLUSTER_ADD_NODES, CLUSTER_DEL_NODES,
+        CLUSTER_SCALE_UP, CLUSTER_SCALE_DOWN,
         CLUSTER_ATTACH_POLICY, CLUSTER_DETACH_POLICY,
     ) = (
         'CLUSTER_CREATE', 'CLUSTER_DELETE', 'CLUSTER_UPDATE',
-        'CLUSTER_ADD_NODES', 'CLUSTER_DEL_NODES', 'CLUSTER_RESIZE',
+        'CLUSTER_ADD_NODES', 'CLUSTER_DEL_NODES',
+        'CLUSTER_SCALE_UP', 'CLUSTER_SCALE_DOWN',
         'CLUSTER_ATTACH_POLICY', 'CLUSTER_DETACH_POLICY',
     )
 
@@ -303,10 +306,38 @@ class ClusterAction(Action):
     def do_del_nodes(self, cluster):
         return self.RES_OK
 
-    def do_resize(self, cluster):
+    def do_scale_up(self, cluster):
+        return self.RES_OK
+
+    def do_scale_down(self, cluster):
         return self.RES_OK
 
     def do_attach_policy(self, cluster):
+        policy_id = self.inputs.get('policy_id', None)
+        if policy_id is None:
+            raise exception.PolicyNotSpecified()
+
+        policy = policies.load(self.context, policy_id)
+        # Check if policy has already been attached
+        all = db_api.cluster_get_policies(self.context, cluster.id)
+        for existing in all:
+            # Policy already attached
+            if existing.id == policy_id:
+                return self.RES_OK
+
+            if existing.type == policy.type:
+                raise exception.PolicyExists(policy_type=policy.type)
+
+        values = {
+            'cooldown': self.inputs.get('cooldown', policy.cooldown),
+            'level': self.inputs.get('level', policy.level),
+            'enabled': self.inputs.get('enabled', True),
+        }
+
+        db_api.cluster_attach_policy(self.context, cluster.id, policy_id,
+                                     values)
+
+        cluster.rt.policies.append(policy)
         return self.RES_OK
 
     def do_detach_policy(self, cluster):
@@ -328,8 +359,10 @@ class ClusterAction(Action):
             res = self.do_add_nodes(cluster)
         elif self.action == self.CLUSTER_DEL_NODES:
             res = self.do_del_nodes(cluster)
-        elif self.action == self.CLUSTER_RESIZE:
-            res = self.do_resize(cluster)
+        elif self.action == self.CLUSTER_SCALE_UP:
+            res = self.do_scale_up(cluster)
+        elif self.action == self.CLUSTER_SCALE_DOWN:
+            res = self.do_scale_down(cluster)
         elif self.action == self.CLUSTER_ATTACH_POLICY:
             res = self.do_attach_policy(cluster)
         elif self.action == self.CLUSTER_DETACH_POLICY:
