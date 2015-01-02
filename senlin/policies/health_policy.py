@@ -37,12 +37,12 @@ class HealthPolicy(base.PolicyBase):
         'AWS.AutoScaling.LaunchConfiguration',
     ]
 
-    def __init__(self, name, type_name, **kwargs):
-        super(HealthPolicy, self).__init__(name, type_name, kwargs)
+    def __init__(self, type_name, name, **kwargs):
+        super(HealthPolicy, self).__init__(type_name, name, kwargs)
 
-        self.interval = kwargs.get('interval')
-        self.grace_period = kwargs.get('grace_period')
-        self.check_type = kwargs.get('check_type')
+        self.interval = self.spec.get('interval')
+        self.grace_period = self.spec.get('grace_period')
+        self.check_type = self.spec.get('check_type')
 
     def pre_op(self, cluster_id, action, **args):
         pass
@@ -51,6 +51,6 @@ class HealthPolicy(base.PolicyBase):
         pass
 
     def post_op(self, cluster_id, action, **args):
-        # TODO: subscribe to vm-lifecycle-events for the specified VM
-        #       or add vm to the list of VM status polling
+        # TODO(Qiming): subscribe to vm-lifecycle-events for the specified VM
+        #               or add vm to the list of VM status polling
         pass
