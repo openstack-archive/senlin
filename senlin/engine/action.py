@@ -19,7 +19,7 @@ from senlin.common import exception
 from senlin.db import api as db_api
 from senlin.engine import node as nodes
 from senlin.engine import scheduler
-from senlin.policies import policy as policies
+from senlin.policies import base as policies
 
 
 class Action(object):
