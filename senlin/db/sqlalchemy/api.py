@@ -27,7 +27,11 @@ from senlin.common.i18n import _
 from senlin.db.sqlalchemy import filters as db_filters
 from senlin.db.sqlalchemy import migration
 from senlin.db.sqlalchemy import models
+from senlin.openstack.common import log as logging
 from senlin.rpc import api as rpc_api
+
+LOG = logging.getLogger(__name__)
+
 
 CONF = cfg.CONF
 CONF.import_opt('max_events_per_cluster', 'senlin.common.config')
@@ -683,18 +687,20 @@ def action_get(context, action_id):
 
 def action_get_1st_ready(context):
     query = model_query(context, models.Action).\
-        filter_by(status == ACTION_READY)
+        filter_by(status=ACTION_READY)
+   
     return query.first()
 
 
 def action_get_all_ready(context):
-    query = model_query(context, models.Action)
+    query = model_query(context, models.Action).\
+        filter_by(status=ACTION_READY)
     return query.all()
 
 
 def action_get_all_by_owner(context, owner_id):
     query = model_query(context, models.Action).\
-        filter_by(owner == owner_id)
+        filter_by(owner=owner_id)
     return query.all()
 
 
@@ -706,48 +712,111 @@ def action_get_all(context):
     return actions
 
 
-def action_add_depends_on(context, action_id, *actions):
+def _action_dependency_add(context, action_id, field, adds):
+    if not isinstance(adds, list):
+      add_list = [adds]
+    else:
+      add_list = adds
+
     action = model_query(context, models.Action).get(action_id)
     if not action:
-        raise exception.NotFound(
-            _('Action with id "%s" not found') % action_id)
+        msg = _('Action with id "%s" not found') % action_id
+        raise exception.NotFound(msg)
 
-    action.depends_on = list(set(actions).union(set(action.depends_on)))
-    action.save(_session(context))
-    return action
+    d = {}
+    if action[field] is None:
+        d['l'] = add_list;
+    else:
+        d = action[field] 
+        d['l'] = list(set(d['l']) + set(add_list))
+    action[field] = d
 
+    if field == 'depends_on':
+        action.status = ACTION_WAITING
+        action.status_reason = ACTION_WAITING
+        action.status_reason = _('The action is waiting for its dependancy \
+                                   being completed.')
+    
 
-def action_del_depends_on(context, action_id, *actions):
+def _action_dependency_del(context, action_id, field, dels):
+    if not isinstance(dels, list):
+      del_list = [dels]
+    else:
+      del_list = dels
+
     action = model_query(context, models.Action).get(action_id)
     if not action:
-        raise exception.NotFound(
-            _('Action with id "%s" not found') % action_id)
+        msg = _('Action with id "%s" not found') % action_id
+        raise exception.NotFound(msg)
 
-    action.depends_on = list(set(action.depends_on).different(set(actions)))
-    action.save(_session(context))
-    return action
+    d = {}
+    if action[field] is not None:
+        d = action[field] 
+        d['l'] = list(set(d['l']) - set(del_list))
+        action[field] = d
 
-
-def action_add_depended_by(context, action_id, *actions):
-    action = model_query(context, models.Action).get(action_id)
-    if not action:
-        raise exception.NotFound(
-            _('Action with id "%s" not found') % action_id)
-
-    action.depended_by = list(set(actions).union(set(action.depended_by)))
-    action.save(_session(context))
-    return action
+    if field == 'depends_on' and len(d['l']) == 0:
+        action.status = ACTION_READY
+        action.status_reason = _('The action becomes ready due to all dependancies \
+                                  have been satisfied.')
 
 
-def action_del_depended_by(context, action_id, *actions):
-    action = model_query(context, models.Action).get(action_id)
-    if not action:
-        raise exception.NotFound(
-            _('Action with id "%s" not found') % action_id)
+def action_add_dependency(context, depended, dependent):
+    if isinstance(depended, list) and isinstance(dependent, list):
+        raise exception.NotSupport(
+            _('Multiple dependencies between lists not support'))
 
-    action.depended_by = list(set(action.depended_by).different(set(actions)))
-    action.save(_session(context))
-    return action
+    if isinstance(depended, list):   # e.g. D depends on A,B,C
+        session = get_session()
+        with session.begin():
+            for d in depended:
+                _action_dependency_add(context, d, "depended_by", dependent)
+
+            _action_dependency_add(context, dependent, "depends_on", depended)
+        return
+
+    # Only dependent can be a list now, convert it to a list if it is not a list
+    if not isinstance(dependent, list): # e.g. B,C,D depend on A
+        dependents = [dependent]
+    else:
+        dependents = dependent
+
+    session = get_session()
+    with session.begin():
+        _action_dependency_add(context, depended, "depended_by", dependent)
+
+        for d in dependents:
+           _action_dependency_add(context, d, "depends_on", depended)
+    return
+
+ 
+def action_del_dependency(context, depended, dependent):
+    if isinstance(depended, list) and isinstance(dependent, list):
+        raise exception.NotSupport(
+            _('Multiple dependencies between lists not support'))
+
+    if isinstance(depended, list):   # e.g. D depends on A,B,C
+        session = get_session()
+        with session.begin():
+            for d in depended:
+                _action_dependency_del(context, d, "depended_by", dependent)
+
+            _action_dependency_del(context, dependent, "depends_on", depended)
+        return
+
+    # Only dependent can be a list now, convert it to a list if it is not a list
+    if not isinstance(dependent, list): # e.g. B,C,D depend on A
+        dependents = [dependent]
+    else:
+        dependents = dependent
+
+    session = get_session()
+    with session.begin():
+        _action_dependency_del(context, depended, "depended_by", dependent)
+
+        for d in dependents:
+           _action_dependency_del(context, d, "depends_on", depended)
+    return
 
 
 def action_mark_succeeded(context, action_id):
@@ -756,27 +825,26 @@ def action_mark_succeeded(context, action_id):
         raise exception.NotFound(
             _('Action with id "%s" not found') % action_id)
 
-    session = query.session
-    session.begin()
+    session = get_session()
+    with session.begin():
+        action.status = ACTION_SUCCEEDED
 
-    action.status = ACTION_SUCCEEDED
+        for a in action.depended_by['l']:
+            _action_dependency_del(context, a, 'depends_on', action_id)
+        action.depended_by = {'l':[]}
 
-    for a in action.depended_by
-        action_del_depends_on(context, a, action_id)
-
-    action.depended_by = []
-
-    session.commit()
     return action
 
 
 def action_mark_failed(context, action_id):
     #TODO(liuh): Failed processing to be added
+    #TODO(liuh): Need mark all actions depending on it failed 
     pass
 
 
 def action_mark_cancelled(context, action_id):
     #TODO(liuh): Cancel processing to be added
+    #TODO(liuh): Need mark all actions depending on it being cancelled 
     pass
 
 
@@ -793,16 +861,16 @@ def action_start_work_on(context, action_id, owner):
     return action
 
 
-def action_update(context, action_id, values):
-    #TODO(liuh):Need check if 'status' is being updated?
-    action = model_query(context, models.Action).get(action_id)
-    if not action:
-        raise exception.NotFound(
-            _('Action with id "%s" not found') % action_id)
+def action_delete(context, action_id, force=False):
+    action = action_get(context, action_id)
 
-    action.update(values)
-    action.save(_session(context))
-    return action
+    if not action:
+        msg = _('Attempt to delete a action with id "%s" that does not'
+                     ' exist') % action_id
+        raise exception.NotFound(msg)
+
+    # TODO(liuh): Need check if and how an action can be safety deleted
+    action.delete()
 
 # Utils
 def db_sync(engine, version=None):

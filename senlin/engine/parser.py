@@ -71,3 +71,25 @@ def parse_policy(policy):
     # TODO(Qiming): Construct a policy object based on the type specified
 
     return data
+
+
+def parse_action(action):
+    '''
+    Parse and validate the specified string as a action.
+    '''
+    if not isinstance(action, six.string_types):
+        # TODO(Qiming): Throw exception
+        return None
+
+    data = {}
+    try:
+        data = yaml.load(action, Loader=Loader)
+    except Exception as ex:
+        # TODO(Qiming): Throw exception
+        LOG.error(_LE('Failed parsing given data as YAML: %s'),
+                  six.text_type(ex))
+        return None
+
+    # TODO(Qiming): Construct a action object based on the type specified
+
+    return data

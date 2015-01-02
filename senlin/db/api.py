@@ -247,20 +247,12 @@ def action_get_all(context):
     return IMPL.action_get_all(context)
 
 
-def action_add_depends_on(context, action_id, *actions):
-    return IMPL.action_add_depends_on(context, action_id, *actions)
+def action_add_dependency(context, depended, dependent):
+    return IMPL.action_add_dependency(context, depended, dependent)
 
-
-def action_del_depends_on(context, action_id, *actions):
-    return IMPL.action_del_depends_on(context, action_id, *actions)
-
-
-def action_add_depended_by(context, action_id, *actions):
-    return IMPL.action_add_depended_by(context, action_id, *actions)
-
-
-def action_del_depended_by(context, action_id, *actions):
-    return IMPL.action_del_depended_by(context, action_id, *actions)
+ 
+def action_del_dependency(context, depended, dependent):
+    return IMPL.action_del_dependency(context, depended, dependent)
 
 
 def action_mark_succeeded(context, action_id):
@@ -281,6 +273,10 @@ def action_start_work_on(context, action_id, owner):
 
 def action_update(context, action_id, values):
     return IMPL.action_update(context, action_id, values)
+
+
+def action_delete(context, action_id, force=False):
+    return IMPL.action_delete(context, action_id, force)
 
 
 def db_sync(engine, version=None):

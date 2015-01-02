@@ -42,6 +42,20 @@ sample_policy = '''
     pause_time: PT10M
 '''
 
+sample_action = '''
+  name: test_cluster_create_action
+  target: cluster_001 
+  action: create 
+  cause: User Initiate
+  timeout: 60
+  status: INIT
+  status_reason: Just Initialized
+  inputs:
+    min_size: 1
+    max_size: 10
+    pause_time: PT10M
+'''
+
 
 UUIDs = (UUID1, UUID2, UUID3) = sorted([str(uuid.uuid4())
                                         for x in range(3)])
@@ -58,6 +72,15 @@ def create_policy(context, policy=sample_policy, **kwargs):
     data.update(kwargs)
     return db_api.policy_create(context, data)
 
+def create_action(context, action=sample_action, **kwargs):
+    data = parser.parse_action(action)
+    #values = {
+    #    'depends_on': json.loads('{"l" : "[1, 2]"}'),
+    #    'depended_by': json.loads('{"l" : "[4, 5]"}'),
+    #}
+    #data.update(values)
+    data.update(kwargs)
+    return db_api.action_create(context, data)
 
 def create_cluster(ctx, profile, **kwargs):
     values = {

@@ -528,9 +528,9 @@ class PollingTaskGroup(object):
 
 
 def runAction(action):
-"""
+    """
     Start a thread to run action until finished
-"""
+    """
     # TODO
     # Query lock for this action
 
@@ -538,9 +538,9 @@ def runAction(action):
     pass
 
 def wait(handle):
-"""
+    """
     Wait an action to finish
-"""
+    """
     # TODO
     # Make the subthread join the main thread
     pass
