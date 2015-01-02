@@ -72,15 +72,6 @@ def create_policy(context, policy=sample_policy, **kwargs):
     data.update(kwargs)
     return db_api.policy_create(context, data)
 
-def create_action(context, action=sample_action, **kwargs):
-    data = parser.parse_action(action)
-    #values = {
-    #    'depends_on': json.loads('{"l" : "[1, 2]"}'),
-    #    'depended_by': json.loads('{"l" : "[4, 5]"}'),
-    #}
-    #data.update(values)
-    data.update(kwargs)
-    return db_api.action_create(context, data)
 
 def create_cluster(ctx, profile, **kwargs):
     values = {
@@ -147,12 +138,12 @@ def create_action(ctx, **kwargs):
         'target': kwargs.get('target'),
         'action': kwargs.get('action'),
         'cause': 'Reason for action',
-        'owner': kwarge.get('owner'),
+        'owner': kwargs.get('owner'),
         'interval': -1,
         'inputs': {'key': 'value'},
-        'outputs': {'result': 'value'}
-        'depends_on': [],
-        'depended_on': []
+        'outputs': {'result': 'value'},
+        'depends_on': {'l': []},
+        'depended_by': {'l': []}
     }
     values.update(kwargs)
     return db_api.action_create(ctx, values)

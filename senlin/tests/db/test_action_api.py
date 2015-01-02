@@ -18,6 +18,11 @@ from senlin.tests.common import utils
 from senlin.tests.db import shared
 from senlin.openstack.common import log as logging
 
+def _create_action(context, action=shared.sample_action, **kwargs):
+    data = parser.parse_action(action)
+    data.update(kwargs)
+    return db_api.action_create(context, data)
+
 
 class DBAPIActionTest(base.SenlinTestCase):
     def setUp(self):
@@ -43,7 +48,7 @@ class DBAPIActionTest(base.SenlinTestCase):
 
     def test_action_get(self):
         data = parser.parse_action(shared.sample_action)
-        action = shared.create_action(self.ctx)
+        action = _create_action(self.ctx)
         retobj = db_api.action_get(self.ctx, action.id)
 
         self.assertIsNotNone(retobj)
@@ -67,7 +72,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         ]
 
         for spec in specs:
-            shared.create_action(self.ctx,
+            _create_action(self.ctx,
                                  action=shared.sample_action,
                                  **spec)
 
@@ -84,7 +89,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         ]
 
         for spec in specs:
-            shared.create_action(self.ctx,
+            _create_action(self.ctx,
                                  action=shared.sample_action,
                                  **spec)
 
@@ -104,7 +109,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         ]
 
         for spec in specs:
-            shared.create_action(self.ctx,
+            _create_action(self.ctx,
                                  action=shared.sample_action,
                                  **spec)
 
@@ -122,7 +127,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         ]
 
         for spec in specs:
-            shared.create_action(self.ctx,
+            _create_action(self.ctx,
                                  action=shared.sample_action,
                                  **spec)
 
@@ -143,7 +148,7 @@ class DBAPIActionTest(base.SenlinTestCase):
 
         id_of = {}
         for spec in specs:
-            action = shared.create_action(self.ctx,
+            action = _create_action(self.ctx,
                                           action=shared.sample_action,
                                           **spec)
             id_of[spec['name']] = action.id
@@ -184,7 +189,7 @@ class DBAPIActionTest(base.SenlinTestCase):
 
         id_of = {}
         for spec in specs:
-            action = shared.create_action(self.ctx,
+            action = _create_action(self.ctx,
                                           action=shared.sample_action,
                                           **spec)
             id_of[spec['name']] = action.id
@@ -281,7 +286,7 @@ class DBAPIActionTest(base.SenlinTestCase):
 
 
     def test_action_start_work_on(self):
-        action = shared.create_action(self.ctx)
+        action = _create_action(self.ctx)
 
         action = db_api.action_start_work_on(self.ctx, action.id, 'worker1')
 
@@ -290,7 +295,7 @@ class DBAPIActionTest(base.SenlinTestCase):
 
 
     def test_action_delete(self):
-        action = shared.create_action(self.ctx)
+        action = _create_action(self.ctx)
         self.assertIsNotNone(action)
         action_id = action.id
         db_api.action_delete(self.ctx, action.id)

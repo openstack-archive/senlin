@@ -746,7 +746,7 @@ def _action_dependency_add(context, action_id, field, adds):
         d['l'] = add_list;
     else:
         d = action[field] 
-        d['l'] = list(set(d['l']) + set(add_list))
+        d['l'] = list(set(d['l']).union(set(add_list)))
     action[field] = d
 
     if field == 'depends_on':
