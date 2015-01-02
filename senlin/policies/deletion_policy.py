@@ -12,6 +12,7 @@
 
 import random
 
+from senlin.common import senlin_consts as consts
 from senlin.db import api as db_api
 from senlin.policies import base
 
@@ -30,9 +31,9 @@ class DeletionPolicy(base.Policy):
     )
 
     TARGET = [
-        ('WHEN', 'CLUSTER_SCALE_DOWN'),
-        ('AFTER', 'CLUSTER_DEL_NODES'),
-        ('AFTER', 'CLUSTER_SCALE_DOWN'),
+        ('WHEN', consts.CLUSTER_SCALE_DOWN),
+        ('AFTER', consts.CLUSTER_DEL_NODES),
+        ('AFTER', consts.CLUSTER_SCALE_DOWN),
     ]
 
     PROFILE_TYPE = [
