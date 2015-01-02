@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from senlin.common import senlin_consts as consts
 from senlin.policies import base
 
 
@@ -22,7 +23,7 @@ class PlacementPolicy(base.PolicyBase):
     '''
 
     TARGET = [
-        ('BEFORE', 'CLUSTER', 'ADD_MEMBER'),
+        ('WHEN', consts.CLUSTER_SCALE_UP),
     ]
 
     PROFILE_TYPE = [
@@ -30,19 +31,21 @@ class PlacementPolicy(base.PolicyBase):
         'aws.autoscaling.launchconfig',
     ]
 
-    def __init__(self, name, type_name, **kwargs):
-        super(PlacementPolicy, self).__init__(name, type_name, kwargs)
+    def __init__(self, type_name, name, **kwargs):
+        super(PlacementPolicy, self).__init__(type_name, name, kwargs)
 
-        self.regions = kwargs.get('regions')
-        self.AZs = kwargs.get('AZs')
+        self.regions = self.spec.get('regions')
+        self.AZs = self.spec.get('AZs')
 
     def pre_op(self, cluster_id, action, **args):
-        # calculate available AZs and or regions 
+        # TODO(anyone): calculate available AZs and or regions
         return True
 
-    def enforce(self, cluster_id, action, **args):
-        # modify member's scheduler hints
+    def enforce(self, cluster_id, action, **kwargs):
+        # we expect kwargs to carry node profile information before the node
+        # is created.
+        # TODO(anyone): modify node's scheduler hints and return them
         return True
 
-    def post_op(self, cluster_id, action, **args):
+    def post_op(self, cluster_id, action, **kwargs):
         pass
