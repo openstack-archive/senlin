@@ -10,11 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from senlin.engine import cluster
+from senlin.common import senlin_consts as consts
 from senlin.policies import base
 
 
-class ScalingPolicy(base.PolicyBase):
+class ScalingPolicy(base.Policy):
     '''
     Policy for chaning the size of a cluster.
 
@@ -23,37 +23,47 @@ class ScalingPolicy(base.PolicyBase):
     '''
 
     TARGET = [
-        ('BEFORE', 'CLUSTER', 'ADD_MEMBER'),
-        ('BEFORE', 'CLUSTER', 'DEL_MEMBER'),
-        ('WHEN', 'CLUSTER', 'ADD_MEMBER'),
-        ('WHEN', 'CLUSTER', 'DEL_MEMBER'),
+        ('BEFORE', consts.CLUSTER_ADD_NODES),
+        ('BEFORE', consts.CLUSTER_DEL_NODES),
+        ('BEFORE', consts.CLUSTER_SCALE_UP),
+        ('BEFORE', consts.CLUSTER_SCALE_DOWN),
+        ('WHEN', consts.CLUSTER_ADD_NODES),
+        ('WHEN', consts.CLUSTER_DEL_NODES),
+        ('WHEN', consts.CLUSTER_SCALE_UP),
+        ('WHEN', consts.CLUSTER_SCALE_DOWN),
+        ('AFTER', consts.CLUSTER_SCALE_UP),
+        ('AFTER', consts.CLUSTER_SCALE_DOWN),
+        ('AFTER', consts.CLUSTER_ADD_NODES),
+        ('AFTER', consts.CLUSTER_DEL_NODES),
     ]
 
     PROFILE_TYPE = [
         'ANY',
     ]
 
-    def __init__(self, name, type_name, **kwargs):
-        super(ScalingPolicy, self).__init__(name, type_name, kwargs)
+    def __init__(self, type_name, name, **kwargs):
+        super(ScalingPolicy, self).__init__(type_name, name, **kwargs)
 
-        self.min_size = kwargs.get('min_size')
-        self.max_size = kwargs.get('max_size')
-        self.adjustment_type = kwargs.get('adjustment_type')
-        self.adjustment_number = kwargs.get('adjustment_number')
+        self.min_size = self.spec.get('min_size')
+        self.max_size = self.spec.get('max_size')
+        self.adjustment_type = self.spec.get('adjustment_type')
+        self.adjustment_number = self.spec.get('adjustment_number')
 
-        # TODO: Make sure the default cooldown can be used if not specified 
-        self.cooldown = kwargs.get('cooldown')
+        # TODO(anyone): Make sure the default cooldown can be used if
+        # not specified
 
     def pre_op(self, cluster_id, action, **args):
-        # TODO: get cluster size 
-        # TODO: calculate new size
-        # TODO: check if new size will break min_size or max_size constraints
+        # TODO(anyone): get cluster size, calculate new size
+        # TODO(anyone): check if new size will break min_size or max_size
+        # constraints
         return True
 
-    def enforce(self, cluster_id, action, **args):
-        # calculate new size
-        # create or delete members
+    def enforce(self, cluster_id, action, **kwargs):
+        # if action in (consts.CLUSTER_SCALE_UP, consts.CLUSTER_SCALE_DOWN):
+        #     amount = get_adjustment(action)
+
+        # TODO(anyone): return new nodes to be added/removed.
         pass
 
-    def post_op(self, cluster_id, action, **args):
-        pass
+    def post_op(self, cluster_id, action, **kwargs):
+        return True
