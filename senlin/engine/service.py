@@ -16,6 +16,7 @@ import functools
 import eventlet
 from oslo.config import cfg
 from oslo import messaging
+from oslo.utils import uuidutils
 from osprofiler import profiler
 
 from senlin.common import context
@@ -30,7 +31,6 @@ from senlin.engine import senlin_lock
 from senlin.engine import thread_mgr
 from senlin.openstack.common import log as logging
 from senlin.openstack.common import service
-from senlin.openstack.common import uuidutils
 
 LOG = logging.getLogger(__name__)
 
