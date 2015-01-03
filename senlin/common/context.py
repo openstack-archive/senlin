@@ -26,14 +26,12 @@ class RequestContext(context.RequestContext):
     accesses the system, as well as additional request information.
     """
 
-    def __init__(self, auth_token=None, username=None, password=None,
-                 tenant=None, user_id=None,
-                 tenant_id=None, auth_url=None,
-                 roles=None, is_admin=None,
+    def __init__(self, auth_token=None, auth_token_info=None,
+                 username=None, password=None, user_id=None, is_admin=None,
+                 tenant=None, tenant_id=None, auth_url=None,
+                 roles=None, region_name=None,
                  read_only=False, show_deleted=False,
-                 request_id=None,
-                 auth_token_info=None, region_name=None,
-                 **kwargs):
+                 request_id=None, **kwargs):
         """
          :param kwargs: Extra arguments that might be present, but we ignore
             because they possibly came in from older rpc messages.
