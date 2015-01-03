@@ -12,6 +12,12 @@ DB
 ENGINE
 ------
   - cleanse scheduler module
+    - service start with rpc server(eventlet) and dispatcher(subthread);
+    - threadgroupmanager(TGM) module will now handle action;
+    - scheduler module will wrap TGM and expose interface to dispatcher,
+      e.g. run_action, wait, stop, notify;
+    - dispatcher using db.api to get action and use scheduler to dispatch
+      run and control action;
   - complete parser logic, construct profile/policy objects there?
 
 DRIVER
