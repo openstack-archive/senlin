@@ -457,7 +457,7 @@ def cluster_get_policies(context, cluster_id):
 
 def cluster_detach_policy(context, cluster_id, policy_id):
     binding = model_query(context, models.ClusterPolicies).\
-        filter(cluster_id=cluster_id, policy_id=policy_id)
+        filter_by(cluster_id=cluster_id, policy_id=policy_id).first()
 
     if not binding:
         msg = _('Failed detaching policy "%(policy)s" from cluster '
@@ -472,7 +472,7 @@ def cluster_detach_policy(context, cluster_id, policy_id):
 
 def cluster_enable_policy(context, cluster_id, policy_id):
     binding = model_query(context, models.ClusterPolicies).\
-        filter(cluster_id=cluster_id, policy_id=policy_id)
+        filter_by(cluster_id=cluster_id, policy_id=policy_id).first()
 
     if not binding:
         msg = _('Failed enabling policy "%(policy)s" on cluster '
@@ -481,14 +481,14 @@ def cluster_enable_policy(context, cluster_id, policy_id):
 
         raise exception.NotFound(msg)
 
-    binding.update(enabled=True)
+    binding.enabled = True
     binding.save(_session(context))
     return binding
 
 
 def cluster_disable_policy(context, cluster_id, policy_id):
     binding = model_query(context, models.ClusterPolicies).\
-        filter(cluster_id=cluster_id, policy_id=policy_id)
+        filter_by(cluster_id=cluster_id, policy_id=policy_id).first()
 
     if not binding:
         msg = _('Failed disabling policy "%(policy)s" on cluster '
@@ -496,7 +496,8 @@ def cluster_disable_policy(context, cluster_id, policy_id):
                                     'cluster': cluster_id}
         raise exception.NotFound(msg)
 
-    binding.update(enabled=False)
+    #binding.update({'enabled': False})
+    binding.enabled = False
     binding.save(_session(context))
     return binding
 
