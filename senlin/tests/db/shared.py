@@ -44,8 +44,8 @@ sample_policy = '''
 
 sample_action = '''
   name: test_cluster_create_action
-  target: cluster_001 
-  action: create 
+  target: cluster_001
+  action: create
   cause: User Initiate
   timeout: 60
   status: INIT
@@ -115,7 +115,7 @@ def create_node(ctx, cluster, profile, **kwargs):
 
 def create_event(ctx, **kwargs):
     timestamp = datetime.datetime.strptime('2014-12-19 11:51:54.670244',
-                                           '%Y-%m-%d %H:%M:%S.%f') 
+                                           '%Y-%m-%d %H:%M:%S.%f')
     values = {
         'timestamp': timestamp,
         'level': 50,

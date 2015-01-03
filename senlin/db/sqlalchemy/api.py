@@ -732,9 +732,9 @@ def action_get_all(context):
 
 def _action_dependency_add(context, action_id, field, adds):
     if not isinstance(adds, list):
-      add_list = [adds]
+        add_list = [adds]
     else:
-      add_list = adds
+        add_list = adds
 
     action = model_query(context, models.Action).get(action_id)
     if not action:
@@ -743,9 +743,9 @@ def _action_dependency_add(context, action_id, field, adds):
 
     d = {}
     if action[field] is None:
-        d['l'] = add_list;
+        d['l'] = add_list
     else:
-        d = action[field] 
+        d = action[field]
         d['l'] = list(set(d['l']).union(set(add_list)))
     action[field] = d
 
@@ -754,13 +754,13 @@ def _action_dependency_add(context, action_id, field, adds):
         action.status_reason = ACTION_WAITING
         action.status_reason = _('The action is waiting for its dependancy \
                                    being completed.')
-    
+
 
 def _action_dependency_del(context, action_id, field, dels):
     if not isinstance(dels, list):
-      del_list = [dels]
+        del_list = [dels]
     else:
-      del_list = dels
+        del_list = dels
 
     action = model_query(context, models.Action).get(action_id)
     if not action:
@@ -769,7 +769,7 @@ def _action_dependency_del(context, action_id, field, dels):
 
     d = {}
     if action[field] is not None:
-        d = action[field] 
+        d = action[field]
         d['l'] = list(set(d['l']) - set(del_list))
         action[field] = d
 
@@ -793,8 +793,9 @@ def action_add_dependency(context, depended, dependent):
             _action_dependency_add(context, dependent, "depends_on", depended)
         return
 
-    # Only dependent can be a list now, convert it to a list if it is not a list
-    if not isinstance(dependent, list): # e.g. B,C,D depend on A
+    # Only dependent can be a list now, convert it to a list if it
+    # is not a list
+    if not isinstance(dependent, list):  # e.g. B,C,D depend on A
         dependents = [dependent]
     else:
         dependents = dependent
@@ -804,10 +805,10 @@ def action_add_dependency(context, depended, dependent):
         _action_dependency_add(context, depended, "depended_by", dependent)
 
         for d in dependents:
-           _action_dependency_add(context, d, "depends_on", depended)
+            _action_dependency_add(context, d, "depends_on", depended)
     return
 
- 
+
 def action_del_dependency(context, depended, dependent):
     if isinstance(depended, list) and isinstance(dependent, list):
         raise exception.NotSupport(
@@ -822,8 +823,9 @@ def action_del_dependency(context, depended, dependent):
             _action_dependency_del(context, dependent, "depends_on", depended)
         return
 
-    # Only dependent can be a list now, convert it to a list if it is not a list
-    if not isinstance(dependent, list): # e.g. B,C,D depend on A
+    # Only dependent can be a list now, convert it to a list if it
+    # is not a list
+    if not isinstance(dependent, list):  # e.g. B,C,D depend on A
         dependents = [dependent]
     else:
         dependents = dependent
@@ -833,7 +835,7 @@ def action_del_dependency(context, depended, dependent):
         _action_dependency_del(context, depended, "depended_by", dependent)
 
         for d in dependents:
-           _action_dependency_del(context, d, "depends_on", depended)
+            _action_dependency_del(context, d, "depends_on", depended)
     return
 
 
@@ -850,20 +852,20 @@ def action_mark_succeeded(context, action_id):
 
         for a in action.depended_by['l']:
             _action_dependency_del(context, a, 'depends_on', action_id)
-        action.depended_by = {'l':[]}
+        action.depended_by = {'l': []}
 
     return action
 
 
 def action_mark_failed(context, action_id):
-    #TODO(liuh): Failed processing to be added
-    #TODO(liuh): Need mark all actions depending on it failed 
+    # TODO(liuh): Failed processing to be added
+    # TODO(liuh): Need mark all actions depending on it failed
     pass
 
 
 def action_mark_cancelled(context, action_id):
-    #TODO(liuh): Cancel processing to be added
-    #TODO(liuh): Need mark all actions depending on it being cancelled 
+    # TODO(liuh): Cancel processing to be added
+    # TODO(liuh): Need mark all actions depending on it being cancelled
     pass
 
 
@@ -885,7 +887,7 @@ def action_delete(context, action_id, force=False):
 
     if not action:
         msg = _('Attempt to delete a action with id "%s" that does not'
-                     ' exist') % action_id
+                ' exist') % action_id
         raise exception.NotFound(msg)
 
     # TODO(liuh): Need check if and how an action can be safety deleted

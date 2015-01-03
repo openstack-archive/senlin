@@ -255,7 +255,7 @@ def action_get_all(context):
 def action_add_dependency(context, depended, dependent):
     return IMPL.action_add_dependency(context, depended, dependent)
 
- 
+
 def action_del_dependency(context, depended, dependent):
     return IMPL.action_del_dependency(context, depended, dependent)
 
