@@ -263,9 +263,13 @@ class ClusterAction(Action):
         scheduler.notify()
         return self.RES_OK
 
-    def do_update(self, cluster):
+    def do_update(self, cluster, new_profile_id):
         # TODO(Yanyan): Check if cluster lock is needed
         cluster.set_status(self.UPDATING)
+        res = cluster.do_update(self.context, profile_id=new_profile_id)
+        if not res:
+            return self.RES_ERROR
+
         node_list = cluster.get_nodes()
         for node_id in node_list:
             kwargs = {
@@ -273,6 +277,9 @@ class ClusterAction(Action):
                 'context': self.context,
                 'target': node_id,
                 'cause': 'Cluster update',
+                'inputs': {
+                    'new_profile_id': new_profile_id,
+                }
             }
             action = Action(self.context, 'NODE_UPDATE', **kwargs)
             action.set_status(self.READY)
@@ -352,7 +359,8 @@ class ClusterAction(Action):
         if self.action == self.CLUSTER_CREATE:
             res = self.do_create(cluster)
         elif self.action == self.CLUSTER_UPDATE:
-            res = self.do_update(cluster)
+            new_profile_id = self.inputs.get('new_profile_id')
+            res = self.do_update(cluster, new_profile_id)
         elif self.action == self.CLUSTER_DELETE:
             res = self.do_delete(cluster)
         elif self.action == self.CLUSTER_ADD_NODES:
@@ -402,7 +410,7 @@ class NodeAction(Action):
         elif self.action == self.NODE_DELETE:
             res = node.do_delete()
         elif self.action == self.NODE_UPDATE:
-            new_profile_id = self.inputs.get('new_profile')
+            new_profile_id = self.inputs.get('new_profile_id')
             res = node.do_update(new_profile_id)
         elif self.action == self.NODE_JOIN_CLUSTER:
             new_cluster_id = self.inputs.get('cluster_id', None)
