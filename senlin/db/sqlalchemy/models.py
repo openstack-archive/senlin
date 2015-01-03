@@ -184,7 +184,7 @@ class ClusterPolicies(BASE, SenlinBase):
 
     __tablename__ = 'cluster_policy'
 
-    id = sqlalchemy.Column('uuid', sqlalchemy.String(36),
+    id = sqlalchemy.Column('id', sqlalchemy.String(36),
                            primary_key=True,
                            default=lambda: str(uuid.uuid4()))
     cluster_id = sqlalchemy.Column(sqlalchemy.String(36),

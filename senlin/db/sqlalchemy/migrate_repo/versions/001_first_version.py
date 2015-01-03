@@ -129,7 +129,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('policy_id', sqlalchemy.String(36),
                           sqlalchemy.ForeignKey('policy.id'),
                           nullable=False),
-        sqlalchemy.Column('coolcown', sqlalchemy.Integer),
+        sqlalchemy.Column('cooldown', sqlalchemy.Integer),
         sqlalchemy.Column('level', sqlalchemy.Integer),
         sqlalchemy.Column('enabled', sqlalchemy.Boolean),
         mysql_engine='InnoDB',
