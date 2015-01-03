@@ -227,6 +227,10 @@ class ProfileValidationFailed(SenlinException):
     msg_fmt = _("%(message)s")
 
 
+class PolicyNotSpecified(SenlinException):
+    msg_fmt = _("Policy not specified.")
+
+
 class PolicyValidationFailed(SenlinException):
     msg_fmt = _("%(message)s")
 
@@ -236,7 +240,7 @@ class PolicyNotFound(SenlinException):
 
 
 class PolicyExists(SenlinException):
-    msg_fmt = _("The Policy (%(policy_name)s) already exists.")
+    msg_fmt = _("The policy type (%(policy_type)s) already exists.")
 
 
 class InvalidSchemaError(SenlinException):
