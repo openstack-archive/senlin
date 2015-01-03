@@ -91,32 +91,33 @@ class Profile(object):
 
     @classmethod
     def create_object(cls, obj):
-        profile = cls.from_db(obj.context, obj.profile_id)
+        profile = cls.load(obj.context, obj.profile_id)
         return profile.do_create(obj)
 
     @classmethod
     def delete_object(cls, obj):
-        profile = cls.from_db(obj.context, obj.profile_id)
+        profile = cls.load(obj.context, obj.profile_id)
         return profile.do_delete(obj)
 
     @classmethod
     def update_object(cls, obj, new_profile_id):
-        profile = cls.from_db(obj.context, obj.profile_id)
-        return profile.do_update(obj, new_profile_id)
+        profile = cls.load(obj.context, obj.profile_id)
+        new_profile = cls.load(obj.context, new_profile_id)
+        return profile.do_update(obj, new_profile)
 
-    def do_create(self):
-        '''
-        For subclass to overrided.
-        '''
-        return NotImplemented
-
-    def do_delete(self):
+    def do_create(self, obj):
         '''
         For subclass to override.
         '''
         return NotImplemented
 
-    def do_update(self, new_profile):
+    def do_delete(self, obj):
+        '''
+        For subclass to override.
+        '''
+        return NotImplemented
+
+    def do_update(self, obj, new_profile):
         '''
         For subclass to override.
         '''
