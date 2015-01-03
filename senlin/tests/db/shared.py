@@ -42,6 +42,20 @@ sample_policy = '''
     pause_time: PT10M
 '''
 
+sample_action = '''
+  name: test_cluster_create_action
+  target: cluster_001 
+  action: create 
+  cause: User Initiate
+  timeout: 60
+  status: INIT
+  status_reason: Just Initialized
+  inputs:
+    min_size: 1
+    max_size: 10
+    pause_time: PT10M
+'''
+
 
 UUIDs = (UUID1, UUID2, UUID3) = sorted([str(uuid.uuid4())
                                         for x in range(3)])
@@ -124,12 +138,12 @@ def create_action(ctx, **kwargs):
         'target': kwargs.get('target'),
         'action': kwargs.get('action'),
         'cause': 'Reason for action',
-        'owner': kwarge.get('owner'),
+        'owner': kwargs.get('owner'),
         'interval': -1,
         'inputs': {'key': 'value'},
-        'outputs': {'result': 'value'}
-        'depends_on': [],
-        'depended_on': []
+        'outputs': {'result': 'value'},
+        'depends_on': {'l': []},
+        'depended_by': {'l': []}
     }
     values.update(kwargs)
     return db_api.action_create(ctx, values)

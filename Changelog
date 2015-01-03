@@ -9,3 +9,12 @@
 
 2014-12-29 tengqm <tengqim@cn.ibm.com>
 	* TODO: Added some test cases jobs.
+
+2015-01-02 liuhang <hangliu@cn.ibm.com>
+	* TODO: Remove DB action APIs task.
+	* db/api.py:
+	  add 'action_add_dependency', 'action_del_dependency'
+	  remove dependency api without transaction.
+	* db/sqlalchemy/api.py:
+	  add 'action_add_dependency', 'action_del_dependency'
+	  remove dependency api without transaction.

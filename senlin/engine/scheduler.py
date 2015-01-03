@@ -525,6 +525,7 @@ class PollingTaskGroup(object):
                 for r in runners:
                     r.cancel()
 
+
 def notify():
     # TODO(Yanyan): Check if workers are available to pick actions to
     #               execute
