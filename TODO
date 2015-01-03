@@ -23,7 +23,7 @@ ENGINE
 DRIVER
 ------
   - complete Heat stack driver [Qiming]
-
+  - add Heat resource driver
 
 Middle Priority
 ===============
