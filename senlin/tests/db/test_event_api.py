@@ -11,6 +11,7 @@
 # under the License.
 
 import datetime
+import mock
 
 from senlin.db.sqlalchemy import api as db_api
 from senlin.tests.common import base
@@ -171,3 +172,14 @@ class DBAPIEventTest(base.SenlinTestCase):
                                                  limit=1, marker=marker)
         self.assertEqual(1, len(events))
         self.assertEqual(expected, events[0].id)
+
+    @mock.patch.object(db_api, '_events_paginate_query')
+    def test_events_filter_and_page_query_whitelists_sort_keys(
+            self, mock_paginate_query):
+        query = mock.Mock()
+        sort_keys = ['timestamp', 'foo']
+        db_api._events_filter_and_page_query(self.ctx, query,
+                                             sort_keys=sort_keys)
+
+        args, _ = mock_paginate_query.call_args
+        self.assertIn(['timestamp'], args)
