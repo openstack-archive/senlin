@@ -141,7 +141,7 @@ def cluster_get_all_by_parent(context, parent):
 
 def cluster_get_by_name_and_parent(context, cluster_name, parent):
     query = soft_delete_aware_query(context, models.Cluster).\
-        filter_by(tenant=context.tenant_id).\
+        filter_by(project=context.tenant_id).\
         filter_by(name=cluster_name).\
         filter_by(parent=parent)
     return query.first()
@@ -155,13 +155,11 @@ def cluster_get_by_name(context, cluster_name):
 
 def _query_cluster_get_all(context, tenant_safe=True, show_deleted=False,
                            show_nested=False):
-    q0 = soft_delete_aware_query(context, models.Cluster,
-                                 show_deleted=show_deleted)
+    query = soft_delete_aware_query(context, models.Cluster,
+                                    show_deleted=show_deleted)
 
-    if show_nested:
-        query = q0.filter_by(backup=False)
-    else:
-        query = q0.filter_by(parent=None)
+    if not show_nested:
+        query = query.filter_by(parent=None)
 
     if tenant_safe:
         query = query.filter_by(project=context.tenant_id)
@@ -285,10 +283,6 @@ def node_get_all(context):
 def node_get_all_by_cluster(context, cluster_id):
     query = model_query(context, models.Node).filter_by(cluster_id=cluster_id)
     nodes = query.all()
-    if not nodes:
-        msg = _("No nodes for cluster %s were found") % cluster_id
-        raise exception.NotFound(msg)
-
     return dict((node.name, node) for node in nodes)
 
 
