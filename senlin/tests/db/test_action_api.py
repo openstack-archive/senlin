@@ -18,6 +18,7 @@ from senlin.tests.common import utils
 from senlin.tests.db import shared
 from senlin.openstack.common import log as logging
 
+
 def _create_action(context, action=shared.sample_action, **kwargs):
     data = parser.parse_action(action)
     data.update(kwargs)
@@ -28,7 +29,6 @@ class DBAPIActionTest(base.SenlinTestCase):
     def setUp(self):
         super(DBAPIActionTest, self).setUp()
         self.ctx = utils.dummy_context()
-
 
     def test_action_create(self):
         data = parser.parse_action(shared.sample_action)
@@ -44,7 +44,6 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.assertEqual(data['status_reason'], action.status_reason)
         self.assertEqual(10, action.inputs['max_size'])
         self.assertIsNone(action.outputs)
-
 
     def test_action_get(self):
         data = parser.parse_action(shared.sample_action)
@@ -62,7 +61,6 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.assertEqual(10, retobj.inputs['max_size'])
         self.assertIsNone(retobj.outputs)
 
-
     def test_action_get_1st_ready(self):
         specs = [
             {'name': 'action_001', 'status': 'INIT'},
@@ -73,12 +71,11 @@ class DBAPIActionTest(base.SenlinTestCase):
 
         for spec in specs:
             _create_action(self.ctx,
-                                 action=shared.sample_action,
-                                 **spec)
+                           action=shared.sample_action,
+                           **spec)
 
         action = db_api.action_get_1st_ready(self.ctx)
         self.assertTrue(action.name in ['action_002', 'action_004'])
-
 
     def test_action_get_all_ready(self):
         specs = [
@@ -90,15 +87,14 @@ class DBAPIActionTest(base.SenlinTestCase):
 
         for spec in specs:
             _create_action(self.ctx,
-                                 action=shared.sample_action,
-                                 **spec)
+                           action=shared.sample_action,
+                           **spec)
 
         actions = db_api.action_get_all_ready(self.ctx)
         self.assertEqual(2, len(actions))
         names = [p.name for p in actions]
         for spec in ['action_002', 'action_004']:
             self.assertIn(spec, names)
-
 
     def test_action_get_all_by_owner(self):
         specs = [
@@ -110,15 +106,14 @@ class DBAPIActionTest(base.SenlinTestCase):
 
         for spec in specs:
             _create_action(self.ctx,
-                                 action=shared.sample_action,
-                                 **spec)
+                           action=shared.sample_action,
+                           **spec)
 
         actions = db_api.action_get_all_by_owner(self.ctx, 'work1')
         self.assertEqual(2, len(actions))
         names = [p.name for p in actions]
         for spec in ['action_001', 'action_003']:
             self.assertIn(spec, names)
-
 
     def test_action_get_all(self):
         specs = [
@@ -128,15 +123,14 @@ class DBAPIActionTest(base.SenlinTestCase):
 
         for spec in specs:
             _create_action(self.ctx,
-                                 action=shared.sample_action,
-                                 **spec)
+                           action=shared.sample_action,
+                           **spec)
 
         actions = db_api.action_get_all(self.ctx)
         self.assertEqual(2, len(actions))
         names = [p.name for p in actions]
         for spec in specs:
             self.assertIn(spec['name'], names)
-
 
     def _check_action_add_dependency_depended_list(self):
         specs = [
@@ -149,8 +143,8 @@ class DBAPIActionTest(base.SenlinTestCase):
         id_of = {}
         for spec in specs:
             action = _create_action(self.ctx,
-                                          action=shared.sample_action,
-                                          **spec)
+                                    action=shared.sample_action,
+                                    **spec)
             id_of[spec['name']] = action.id
 
         db_api.action_add_dependency(self.ctx,
@@ -178,7 +172,6 @@ class DBAPIActionTest(base.SenlinTestCase):
             self.assertEqual(action.status, db_api.ACTION_WAITING)
         return id_of
 
-
     def _check_action_add_dependency_dependent_list(self):
         specs = [
             {'name': 'action_001', 'target': 'cluster_001'},
@@ -190,8 +183,8 @@ class DBAPIActionTest(base.SenlinTestCase):
         id_of = {}
         for spec in specs:
             action = _create_action(self.ctx,
-                                          action=shared.sample_action,
-                                          **spec)
+                                    action=shared.sample_action,
+                                    **spec)
             id_of[spec['name']] = action.id
 
         db_api.action_add_dependency(self.ctx,
@@ -219,18 +212,14 @@ class DBAPIActionTest(base.SenlinTestCase):
             self.assertIsNone(action.depends_on)
         return id_of
 
-
     def test_action_add_dependency_depended_list(self):
-       self._check_action_add_dependency_depended_list()
-
+        self._check_action_add_dependency_depended_list()
 
     def test_action_add_dependency_dependent_list(self):
         self._check_action_add_dependency_dependent_list()
 
-
     def test_action_del_dependency_depended_list(self):
         id_of = self._check_action_add_dependency_depended_list()
-
 
     def test_action_del_dependency_dependent_list(self):
         id_of = self._check_action_add_dependency_dependent_list()
@@ -250,7 +239,6 @@ class DBAPIActionTest(base.SenlinTestCase):
             action = db_api.action_get(self.ctx, id)
             self.assertEqual(0, len(action.depended_by['l']))
 
-
     def test_action_del_dependency_depended_list(self):
         id_of = self._check_action_add_dependency_depended_list()
         db_api.action_del_dependency(self.ctx,
@@ -269,7 +257,6 @@ class DBAPIActionTest(base.SenlinTestCase):
             self.assertEqual(0, len(action.depends_on['l']))
             self.assertEqual(action.status, db_api.ACTION_READY)
 
-
     def test_action_mark_succeeded(self):
         id_of = self._check_action_add_dependency_depended_list()
         db_api.action_mark_succeeded(self.ctx, id_of['action_001'])
@@ -284,7 +271,6 @@ class DBAPIActionTest(base.SenlinTestCase):
             action = db_api.action_get(self.ctx, id)
             self.assertEqual(0, len(action.depends_on['l']))
 
-
     def test_action_start_work_on(self):
         action = _create_action(self.ctx)
 
@@ -292,7 +278,6 @@ class DBAPIActionTest(base.SenlinTestCase):
 
         self.assertEqual(action.owner, 'worker1')
         self.assertEqual(action.status, db_api.ACTION_RUNNING)
-
 
     def test_action_delete(self):
         action = _create_action(self.ctx)
