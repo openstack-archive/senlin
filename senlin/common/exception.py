@@ -215,6 +215,10 @@ class ClusterNotSpecified(SenlinException):
     msg_fmt = _("The cluster was not specified.")
 
 
+class NodeStatusError(SenlinException):
+    msg_fmt = _("Node in error status - '%(status)s' due to '%(reason)s'.")
+
+
 class ProfileNotFound(SenlinException):
     msg_fmt = _("The profile (%(profile)s) could not be found.")
 
