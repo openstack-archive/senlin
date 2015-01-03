@@ -496,7 +496,6 @@ def cluster_disable_policy(context, cluster_id, policy_id):
                                     'cluster': cluster_id}
         raise exception.NotFound(msg)
 
-    #binding.update({'enabled': False})
     binding.enabled = False
     binding.save(_session(context))
     return binding

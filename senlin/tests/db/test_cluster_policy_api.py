@@ -10,6 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import six
+
+from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import parser
 from senlin.tests.common import base
@@ -38,9 +42,18 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual(1, len(bindings))
         self.assertEqual(True, bindings[0].enabled)
 
+        # This will succeed
         db_api.cluster_detach_policy(self.ctx, self.cluster.id, policy.id)
         bindings = db_api.cluster_get_policies(self.ctx, self.cluster.id)
         self.assertEqual(0, len(bindings))
+
+        # This will fail
+        exc = self.assertRaises(exception.NotFound,
+                                db_api.cluster_detach_policy,
+                                self.ctx, self.cluster.id, 'BOGUS')
+        msg = _('Failed detaching policy "BOGUS" from cluster '
+                '"%s"') % self.cluster.id
+        self.assertEqual(msg, six.text_type(exc))
 
     def test_policy_enable_disable(self):
         data = parser.parse_policy(shared.sample_policy)
@@ -70,3 +83,17 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
         bindings = db_api.cluster_get_policies(self.ctx, self.cluster.id)
         self.assertEqual(1, len(bindings))
         self.assertEqual(True, bindings[0].enabled)
+
+        exc = self.assertRaises(exception.NotFound,
+                                db_api.cluster_enable_policy,
+                                self.ctx, self.cluster.id, 'BOGUS')
+        msg = _('Failed enabling policy "BOGUS" on cluster '
+                '"%s"') % self.cluster.id
+        self.assertEqual(msg, six.text_type(exc))
+
+        exc = self.assertRaises(exception.NotFound,
+                                db_api.cluster_disable_policy,
+                                self.ctx, self.cluster.id, 'BOGUS')
+        msg = _('Failed disabling policy "BOGUS" on cluster '
+                '"%s"') % self.cluster.id
+        self.assertEqual(msg, six.text_type(exc))
