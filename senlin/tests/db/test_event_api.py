@@ -66,47 +66,6 @@ class DBAPIEventTest(base.SenlinTestCase):
             self.assertIn(val['obj_id'], cluster_ids)
             self.assertIn(val['obj_name'], obj_names)
 
-#    def test_event_get_all_by_tenant(self):
-#        cluster1 = shared.create_cluster(self.ctx, self.profile,
-#                                         tenant_id='tenant1')
-#        cluster2 = shared.create_cluster(self.ctx, self.profile,
-#                                         tenant_id='tenant2')
-#        values = [
-#            {'obj_id': cluster1.id, 'obj_name': 'node1'},
-#            {'obj_id': cluster1.id, 'obj_name': 'node2'},
-#            {'obj_id': cluster2.id, 'obj_name': 'node3'},
-#        ]
-#        for val in values:
-#            shared.create_event(self.ctx, **val)
-#
-#        self.ctx.tenant_id = 'tenant1'
-#        events = db_api.event_get_all_by_tenant(self.ctx)
-#        self.assertEqual(2, len(events))
-#        marker = events[0].id
-#        expected = events[1].id
-#        events = db_api.event_get_all_by_tenant(self.ctx,
-#                                                marker=marker)
-#        self.assertEqual(1, len(events))
-#        self.assertEqual(expected, events[0].id)
-#
-#        events = db_api.event_get_all_by_tenant(self.ctx, limit=1)
-#        self.assertEqual(1, len(events))
-#
-#        filters = {'obj_name': 'node2'}
-#        events = db_api.event_get_all_by_tenant(self.ctx,
-#                                                filters=filters)
-#        self.assertEqual(1, len(events))
-#        self.assertEqual('node2', events[0].obj_name)
-#
-#        sort_keys = 'obj_type'
-#        events = db_api.event_get_all_by_tenant(self.ctx,
-#                                                sort_keys=sort_keys)
-#        self.assertEqual(2, len(events))
-#
-#        self.ctx.tenant_id = 'tenant2'
-#        events = db_api.event_get_all_by_tenant(self.ctx)
-#        self.assertEqual(1, len(events))
-#
     def test_event_get_all_by_cluster(self):
         cluster1 = shared.create_cluster(self.ctx, self.profile,
                                          tenant_id='tenant1')
