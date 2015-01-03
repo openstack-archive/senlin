@@ -193,15 +193,24 @@ class Cluster(object):
     def do_delete(self, context, **kwargs):
         self.status = self.DELETED
 
-    def do_update(self, context, **kwargs):
+    def do_update(self, context, new_profile_id, **kwargs):
         # Profile type checking is done here because the do_update logic can
         # be triggered from API or Webhook
-        # TODO(Qiming): check if profile is of the same type
-        profile_id = kwargs.get('profile_id')
-        if self.profile_id == profile_id:
+        if self.profile_id == new_profile_id:
             events.warning(_LW('Cluster refuses to update to the same profile'
-                               '(%s)' % (profile_id)))
+                               '(%s)' % (new_profile_id)))
             return False
+
+        # Check if profile types match
+        old_profile = db_api.get_profile(context, self.profile_id)
+        new_profile = db_api.get_profile(context, new_profile_id)
+        if old_profile.type != new_profile.type:
+            events.warning(_LW('Cluster cannot be updated to a different '
+                               'profile type (%(oldt)s->%(newt)s)'),
+                           {'oldt': old_profile.type,
+                            'newt': new_profile.type})
+            return False
+        return True
 
     def get_next_index(self):
         # TODO(Qiming): Get next_index from db and increment it in db
