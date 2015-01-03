@@ -172,6 +172,16 @@ class Node(object):
         if not self.physical_id:
             return False
 
+        # Check if profile types match
+        old_profile = db_api.get_profile(context, self.profile_id)
+        new_profile = db_api.get_profile(context, new_profile_id)
+        if old_profile.type != new_profile.type:
+            events.warning(_LW('Node cannot be updated to a different '
+                               'profile type (%(oldt)s->%(newt)s)'),
+                           {'oldt': old_profile.type,
+                            'newt': new_profile.type})
+            return False
+
         res = profiles.update_object(self, new_profile_id)
         if res:
             self.rt['profile'] = profiles.load(self.context, new_profile_id)
