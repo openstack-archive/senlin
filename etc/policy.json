@@ -1,0 +1,4 @@
+{
+    "context_is_admin":  "role:admin",
+    "deny_everybody": "!",
+}
