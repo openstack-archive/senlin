@@ -25,12 +25,16 @@ DRIVER
   - complete Heat stack driver [Qiming]
   - add Heat resource driver
 
+POLICY
+------
+  - healthy policy[Liuh]
+
 Middle Priority
 ===============
 
 DB
 --
-  - Add test cases for policy_delete with 'force' set to True
+  - Add test cases for policy_delete with 'force' set to True[Liuh/ZhaiHF]
 
 ENGINE
 ------
