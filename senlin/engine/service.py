@@ -79,12 +79,7 @@ class Dispatcher(service.Service):
 
     def new_action(self, ctxt, action_id=None):
         '''New action has been ready, try to schedule it'''
-        # Try to lock an action and schedule it.
-        if action_id:
-            action = db_api.get_action(ctxt, action_id)
-        else:
-            action = db_api.get_1st_action(ctxt)
-        self.TG.start_action(ctxt, action, self.engine_id)
+        self.TG.start_action(ctxt, action_id, self.engine_id)
 
     def cancel_action(self, ctxt, action_id):
         '''Cancel an action.'''

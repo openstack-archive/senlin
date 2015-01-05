@@ -193,18 +193,3 @@ class NodeLock(BaseLock):
     def lock_steal(node_id, lock_engine_id, engine_id):
         return db_api.node_lock_steal(node_id, lock_engine_id,
                                       engine_id)
-
-class ActionLock(BaseLock):
-    def __init__(self, context, action, engine_id):
-        super(NodeLock, self).__init__(context, action, engine_id)
-        self.target_type = 'action'
-
-    def lock_create(action_id, engine_id):
-        return db_api.action_lock_create(actioin_id, engine_id)
-
-    def lock_release(action_id, engine_id):
-        return db_api.action_lock_release(action_id, engine_id)
-
-    def lock_steal(action_id, lock_engine_id, engine_id):
-        return db_api.action_lock_steal(action_id, lock_engine_id,
-                                        engine_id)
