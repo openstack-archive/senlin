@@ -11,7 +11,7 @@ DB
 
 ENGINE
 ------
-  - cleanse scheduler module
+  - cleanse scheduler module [Yanyan Hu]
     - service start with rpc server(eventlet) and dispatcher(subthread);
     - threadgroupmanager(TGM) module will now handle action;
     - scheduler module will wrap TGM and expose interface to dispatcher,
