@@ -170,6 +170,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('obj_id', sqlalchemy.String(36)),
         sqlalchemy.Column('obj_name', sqlalchemy.String(255)),
         sqlalchemy.Column('obj_type', sqlalchemy.String(36)),
+        sqlalchemy.Column('level', sqlalchemy.String(63)),
         sqlalchemy.Column('user', sqlalchemy.String(36)),
         sqlalchemy.Column('action', sqlalchemy.String(36)),
         sqlalchemy.Column('status', sqlalchemy.String(255)),
