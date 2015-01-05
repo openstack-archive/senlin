@@ -28,7 +28,7 @@ from senlin.db import api as db_api
 from senlin.engine import action as actions
 from senlin.engine import cluster as clusters
 from senlin.engine import senlin_lock
-from senlin.engine import thread_mgr
+from senlin.engine import scheduler
 from senlin.openstack.common import log as logging
 from senlin.openstack.common import service
 
@@ -48,22 +48,23 @@ def request_context(func):
 
 
 @profiler.trace_cls("rpc")
-class EngineListener(service.Service):
+class Dispatcher(service.Service):
     '''
-    Listen on an AMQP queue named for the engine.  Allows individual
-    engines to communicate with each other for multi-engine support.
+    Listen on an AMQP queue named for the engine.  Receive
+    notification from engine services and schedule actions.
     '''
 
-    ACTIONS = (STOP_CLUSTER, SEND) = ('stop_cluster', 'send')
+    OPERATIONS = (NEW_ACTION, CANCEL_ACTION, SEND, STOP) = (
+        'new_action', 'cancel_action', 'send', 'stop')
 
     def __init__(self, host, engine_id, thread_group_mgr):
-        super(EngineListener, self).__init__()
+        super(Dispatcher, self).__init__()
         self.TG = thread_group_mgr
         self.engine_id = engine_id
         self.host = host
 
     def start(self):
-        super(EngineListener, self).start()
+        super(Dispatcher, self).start()
         self.target = messaging.Target(
             server=self.host, topic=self.engine_id)
         server = rpc_messaging.get_rpc_server(self.target, self)
@@ -76,12 +77,38 @@ class EngineListener(service.Service):
         '''
         return True
 
-    def stop_cluster(self, ctxt, cluster_id):
-        '''Stop any active threads on a cluster.'''
-        self.TG.stop(cluster_id)
+    def new_action(self, ctxt, action_id=None):
+        '''New action has been ready, try to schedule it'''
+        # Try to lock an action and schedule it.
+        if action_id:
+            action = db_api.get_action(ctxt, action_id)
+        else:
+            action = db_api.get_1st_action(ctxt)
+        self.TG.start_action(ctxt, action, self.engine_id)
 
-    def send(self, ctxt, cluster_id, message):
-        self.TG.send(cluster_id, message)
+    def cancel_action(self, ctxt, action_id):
+        '''Cancel an action.'''
+        self.TG.cancel_action(ctxt, action_id)
+
+    def suspend_action(self, ctxt, action_id):
+        '''Suspend an action.'''
+        raise NotImplementedError
+
+    def resume_action(self, ctxt, action_id):
+        '''Resume an action.'''
+        raise NotImplementedError
+
+    def stop(self):
+        super(Dispatcher, self).stop()
+        # Wait for all action threads to be finished
+        LOG.info(_LI("Stopping all action threads of engine %s"), 
+                 self.engine_id)
+        # Stop ThreadGroup gracefully
+        self.TG.stop(True)
+        LOG.info(_LI("All action threads have been finished"))
+
+    def send(self, ctxt, action_id, message):
+        self.TG.send(action_id, message)
 
 
 @profiler.trace_cls("rpc")
@@ -113,10 +140,14 @@ class EngineService(service.Service):
 
     def start(self):
         self.engine_id = senlin_lock.BaseLock.generate_engine_id()
-        self.TG = thread_mgr.ThreadGroupManager()
-        self.listener = EngineListener(self.host, self.engine_id, self.TG)
-        LOG.debug("Starting listener for engine %s" % self.engine_id)
-        self.listener.start()
+        self.TG = scheduler.ThreadGroupManager()
+
+        # TODO(Yanyan): create a dispatcher for this engine thread.
+        # This dispatcher will run in a greenthread and it will not 
+        # stop until being notified or the engine is stopped.
+        self.dispatcher = Dispatcher(self.host, self.engine_id, self.TG)
+        LOG.debug("Starting dispatcher for engine %s" % self.engine_id)
+        self.dispatcher.start()
 
         target = messaging.Target(
             version=self.RPC_API_VERSION, server=self.host,
@@ -124,6 +155,9 @@ class EngineService(service.Service):
         self.target = target
         server = rpc_messaging.get_rpc_server(target, self)
         server.start()
+
+        self._client = rpc_messaging.get_rpc_client(
+            version=self.RPC_API_VERSION)
 
         super(EngineService, self).start()
 
@@ -135,16 +169,10 @@ class EngineService(service.Service):
         except Exception:
             pass
 
-        # Wait for all active threads to be finished
-        for cluster_id in self.TG.groups.keys():
-            # Ignore dummy service task
-            if cluster_id == cfg.CONF.periodic_interval:
-                continue
-            LOG.info(_LI("Waiting cluster %s processing to be finished"),
-                     cluster_id)
-            # Stop threads gracefully
-            self.TG.stop(cluster_id, True)
-            LOG.info(_LI("cluster %s processing was finished"), cluster_id)
+        # Notify dispatcher to stop all action threads it started.
+        res = self._notify_dispatcher(context, 
+                                      self.engine_id, 
+                                      self.dispatcher.STOP)
 
         # Terminate the engine process
         LOG.info(_LI("All threads were gone, terminating engine"))
@@ -267,10 +295,18 @@ class EngineService(service.Service):
             'tags': args.get('tags', {}),
         }
 
+        # Create a Cluster instance
         cluster = clusters.Cluster(name, profile_id, size, **kwargs)
         cluster.store()
+        # Build an Action for Cluster creating
         action = actions.Action(context, cluster, 'CLUSTER_CREATE', **kwargs)
-        self.TG.start_action_woker(action, self.engine_id)
+        action.store()
+        # Notify Dispatcher that a new action has been ready.
+        # TODO(Yanyan): We should broadcast this new action 
+        # coming to all active Dispatchers.
+        res = self._notify_dispatcher(
+            context, self.engine_id, self.dispatcher.NEW_ACTION,
+            action_id=action.id)
 
         return cluster.id
 
@@ -302,7 +338,9 @@ class EngineService(service.Service):
         }
 
         action = actions.Action(context, cluster, 'CLUSTER_UPDATE', **kwargs)
-        self.TG.start_action_worker(action, self.engine_id)
+        res = self._notify_dispatcher(
+            context, self.engine_id, self.dispatcher.NEW_ACTION,
+            action_id=action.id)
 
         return cluster.id
 
@@ -320,50 +358,26 @@ class EngineService(service.Service):
 
         # This is an operation on a cluster, so we try to acquire ClusterLock
         cluster = clusters.Cluster.load(context, cluster=db_cluster)
-        lock = senlin_lock.ClusterLock(context, cluster, self.engine_id)
-        with lock.try_thread_lock(cluster.id) as acquire_result:
-
-            # Successfully acquired lock
-            if acquire_result is None:
-                self.TG.stop_timers(cluster.id)
-                action = actions.Action(context, cluster, 'CLUSTER_DELETE')
-                self.TG.start_action_worker(action, self.engine_id)
-                return
-
-        # Current engine has the lock
-        if acquire_result == self.engine_id:
-            # give threads which are almost complete an opportunity to
-            # finish naturally before force stopping them
-            eventlet.sleep(0.2)
-            self.TG.stop(cluster.id)
-        # Another active engine has the lock
-        elif senlin_lock.ClusterLock.engine_alive(context, acquire_result):
-            stop_result = self._remote_call(
-                context, acquire_result, self.listener.STOP_CLUSTER,
-                cluster_id=cluster.id)
-            if stop_result is None:
-                LOG.debug("Successfully stopped remote task on engine %s"
-                          % acquire_result)
-            else:
-                raise exception.StopActionFailed(cluster_name=cluster.name,
-                                                 engine_id=acquire_result)
-
-        # There may be additional nodes that we don't know about
-        # if an update was in-progress when the cluster was stopped, so
-        # reload the cluster from the database.
-        db_cluster = self._get_cluster(context, cluster_identity)
-        cluster = clusters.Cluster.load(context, cluster=db_cluster)
         action = actions.Action(context, cluster, 'CLUSTER_DELETE')
+        res = self._notify_dispatcher(
+            context, self.engine_id, self.dispatcher.NEW_ACTION,
+            action_id=action.id)
 
-        self.TB.start_action_worker(action, self.engine_id)
+        return res
 
-        return None
-
-    def _remote_call(self, context, lock_engine_id, call, *args, **kwargs):
+    def _notify_dispatcher(self, cnxt, engine_id, call, *args, **kwargs):
+        '''Send notification to specific dispatcher'''
+        timeout = cfg.CONF.engine_life_check_timeout
         self.cctxt = self._client.prepare(
             version='1.0',
-            topic=lock_engine_id)
+            timeout=timeout,
+            topic=engine_id)
         try:
-            self.cctxt.call(context, call, *args, **kwargs)
+            self.cctxt.call(cnxt, call, *args, **kwargs)
         except messaging.MessagingTimeout:
             return False
+
+    def _broadcast_dispatcher(self, cnxt, engine_id, call, *args,
+                               **kwargs):
+        '''Broadcast the notification to all active dispatchers'''
+        raise NotImplementedError
