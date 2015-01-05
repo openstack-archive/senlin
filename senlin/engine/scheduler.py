@@ -22,7 +22,7 @@ from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.common.i18n import _LI
 from senlin.common.i18n import _LW
-from senlin.engine import senlin_lock
+from senlin.db import api as db_api
 from senlin.openstack.common import log as logging
 from senlin.openstack.common import threadgroup
 
@@ -33,7 +33,7 @@ class ThreadGroupManager(object):
 
     def __init__(self):
         super(ThreadGroupManager, self).__init__()
-        self.threads = []
+        self.threads = {}
         self.events = []
         self.group = threadgroup.ThreadGroup()
 
@@ -48,6 +48,8 @@ class ThreadGroupManager(object):
         i.e has nothing to wait() on, so the process exits..
         This could also be used to trigger periodic non-cluster-specific
         housekeeping tasks
+
+        (Yanyan)Not sure this is still necessary, just keep it temporarily.
         ''' 
         # TODO(Yanyan): have this task call dbapi purge events
         pass
@@ -58,50 +60,24 @@ class ThreadGroupManager(object):
         """
         return self.group.add_thread(func, *args, **kwargs)
 
-    def start_with_lock(self, cnxt, action, engine_id):
+    def start_action_thread(self, cnxt, action, *args, **kwargs):
         """
-        Try to acquire a lock for operated target and, if successful,
-        run the given method in a sub-thread.  Release the lock when
-        the thread finishes.
-
-        :param cnxt: RPC context
-        :param target: Target to be operated on
-        :param target_type: Type of operated target, e.g. cluster, node, etc.
-        :param engine_id: The ID of the engine/worker acquiring the lock
-        :param func: Callable to be invoked in sub-thread
-        :type func: function or instancemethod
-        :param args: Args to be passed to func
-        :param kwargs: Keyword-args to be passed to func.
-        """
-        lock = senlin_lock.ActionLock(cnxt, action, engine_id)
-
-        with lock.thread_lock(action.id):
-            th = self.start_with_acquired_lock(action, lock)
-            return th
-
-    def start_with_acquired_lock(self, action, lock):
-        """
-        Run the given method in a sub-thread and release the provided lock
+        Run the given action in a sub-thread and release the action lock
         when the thread finishes.
 
-        :param target: Target to be operated on
-        :type target: senlin.engine.parser.Stack
-        :param lock: The acquired target lock
-        :param func: Callable to be invoked in sub-thread
-        :type func: function or instancemethod
-        :param args: Args to be passed to func
-        :param kwargs: Keyword-args to be passed to func
+        :param cnxt: The context of rpc request
+        :param action: The action to run in thread
 
         """
-        def release(gt, action_id):
+        def release(gt, cnxt, action_id):
             """
             Callback function that will be passed to GreenThread.link().
             """
-            lock.release(action_id)
+            # Remove action thread from thread list
             self.threads.pop[action_id]
 
-        th = self.start(self.action_proc, action)
-        th.link(release, action.id)
+        th = self.start(self.action_proc, cnxt, action, *args, **kwargs)
+        th.link(release, cnxt, action.id)
         return th
 
     def add_timer(self, interval, func, *args, **kwargs):
@@ -146,7 +122,7 @@ class ThreadGroupManager(object):
         for event in self.events:
             event.send(message)
 
-    def action_proc(self, action):
+    def action_proc(self, cnxt, action):
         '''
         Thread procedure.
         '''
@@ -169,20 +145,31 @@ class ThreadGroupManager(object):
             result = action.execute()
 
             if result == action.OK:
-                action.set_status(action.SUCCEEDED)
+                db_api.action_mark_succeeded(cnxt, action.id)
                 done = True
             elif result == action.ERROR:
-                action.set_status(action.FAILED)
+                db_api.action_mark_failed(cnxt, action.id)
                 done = True
             elif result == action.RETRY:
                 continue 
 
-    def start_action(self, cnxt, action, engine_id):
-        th = self.start_with_lock(cnxt, action, engine_id)
-        self.threads[action.id] = th
+    def start_action(self, cnxt, action_id, engine_id):
+        action = db_pai.action_start_work_on(cnxt, action_id, engine_id)
+        if action:
+            # Lock action successfully, start a thread to run it
+            # TODO(Yanyan): create and inject event into thread
+            LOG.info(_LI('Successfully locked action %s.'), action_id)
+            th = self.start_action_thread(cnxt, action)
+            self.threads[action.id] = th
+        else:
+            # The action has been locked which means other
+            # dispatcher has start to work on it, so just return
+            LOG.info(_LI('Action %s has been locked by other dispatcher'),
+                    action_id)
 
     def cancel_action(self, cnxt, action_id):
         # We just kill the action thread directly.
+        # TODO(Yanyan): use event wait() to handle action cancelling.
         th = self.threads[action_id]
         th.kill()
         self.threads.pop(action_id)
