@@ -18,7 +18,10 @@ ENGINE
       e.g. run_action, wait, stop, notify;
     - dispatcher using db.api to get action and use scheduler to dispatch
       run and control action;
-    - use event to control action progress
+    - use event to control action progress: wrap action_proc into ActionRunner
+      and using start/step to support event wait.
+    - action(ClusterAction, NodeAction, etc.) itself has to handle its own
+      progress control(e.g. implement as generator and support canceling)
   - complete parser logic, construct profile/policy objects there?
 
 DRIVER
