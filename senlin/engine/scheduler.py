@@ -11,17 +11,11 @@
 # under the License.
 
 import collections
-import os
 
 import eventlet
 from oslo.config import cfg
-from osprofiler import profiler
 
-from senlin.common import exception
-from senlin.common.i18n import _
-from senlin.common.i18n import _LE
 from senlin.common.i18n import _LI
-from senlin.common.i18n import _LW
 from senlin.db import api as db_api
 from senlin.openstack.common import log as logging
 from senlin.openstack.common import threadgroup
@@ -34,13 +28,13 @@ class ThreadGroupManager(object):
     def __init__(self):
         super(ThreadGroupManager, self).__init__()
         self.threads = {}
-        self.events = []
+        self.events = collections.defaultdict(list)
         self.group = threadgroup.ThreadGroup()
 
         # Create dummy service task, because when there is nothing queued
         # on self.tg the process exits
         self.add_timer(cfg.CONF.periodic_interval, self._service_task)
-        
+
     def _service_task(self):
         '''
         This is a dummy task which gets queued on the service.Service
@@ -50,17 +44,17 @@ class ThreadGroupManager(object):
         housekeeping tasks
 
         (Yanyan)Not sure this is still necessary, just keep it temporarily.
-        ''' 
+        '''
         # TODO(Yanyan): have this task call dbapi purge events
         pass
-    
+
     def start(self, func, *args, **kwargs):
         """
         Run the given method in a sub-thread.
         """
         return self.group.add_thread(func, *args, **kwargs)
 
-    def start_action_thread(self, cnxt, action, *args, **kwargs):
+    def start_action_thread(self, cnxt, action, **kwargs):
         """
         Run the given action in a sub-thread and release the action lock
         when the thread finishes.
@@ -74,9 +68,9 @@ class ThreadGroupManager(object):
             Callback function that will be passed to GreenThread.link().
             """
             # Remove action thread from thread list
-            self.threads.pop[action_id]
+            self.threads.pop(action_id)
 
-        th = self.start(self.action_proc, cnxt, action, *args, **kwargs)
+        th = self.start(self.action_proc, cnxt, action, **kwargs)
         th.link(release, cnxt, action.id)
         return th
 
@@ -88,13 +82,16 @@ class ThreadGroupManager(object):
         self.group.add_timer(cfg.CONF.periodic_interval,
                              func, *args, **kwargs)
 
-    def add_event(self, event):
-        self.events.append(event)
+    def add_event(self, action_id, event):
+        '''Add an event to an action thread'''
+        self.events[action_id].append(event)
 
-    def remove_event(self, gt, event):
-        for e in self.events:
-            if e is not event:
-                self.add_event(e)
+    def remove_event(self, gt, action_id, event=None):
+        '''Remove event from an action thread'''
+        for e in self.events.pop(action_id, []):
+            if event:
+                if e is not event:
+                    self.add_event(action_id, e)
 
     def stop_timers(self):
         self.group.stop_timers()
@@ -103,14 +100,14 @@ class ThreadGroupManager(object):
         '''Stop any active threads belong to this threadgroup.'''
         threads = self.group.threads[:]
 
-        group.stop(graceful)
-        group.wait()
+        self.group.stop(graceful)
+        self.group.wait()
 
         # Wait for link()ed functions (i.e. lock release)
         links_done = dict((th, False) for th in threads)
 
         def mark_done(gt, th):
-            alinks_done[th] = True
+            links_done[th] = True
 
         for th in threads:
             th.link(mark_done, th)
@@ -118,13 +115,21 @@ class ThreadGroupManager(object):
         while not all(links_done.values()):
             eventlet.sleep()
 
-    def send(self, message):
-        for event in self.events:
-            event.send(message)
+    def send(self, message, action_id, event=None):
+        '''Send message to event belong to an action thread'''
+        if event:
+            # Just send message to specific event
+            for e in self.events.pop(action_id, []):
+                if e is event:
+                    e.send(message)
+        else:
+            # Send message to all events
+            for e in self.events.pop(action_id, []):
+                e.send(message)
 
-    def action_proc(self, cnxt, action):
+    def action_proc(self, cnxt, action, event=None):
         '''
-        Thread procedure.
+        Action thread procedure.
         '''
         status = action.get_status()
         while status in (action.INIT, action.WAITING):
@@ -142,6 +147,7 @@ class ThreadGroupManager(object):
             # Take over the action
             action.set_status(action.RUNNING)
 
+            # TODO: Add progress control using event
             result = action.execute()
 
             if result == action.OK:
@@ -151,25 +157,29 @@ class ThreadGroupManager(object):
                 db_api.action_mark_failed(cnxt, action.id)
                 done = True
             elif result == action.RETRY:
-                continue 
+                continue
 
     def start_action(self, cnxt, action_id, engine_id):
-        action = db_pai.action_start_work_on(cnxt, action_id, engine_id)
+        action = db_api.action_start_work_on(cnxt, action_id, engine_id)
         if action:
             # Lock action successfully, start a thread to run it
-            # TODO(Yanyan): create and inject event into thread
             LOG.info(_LI('Successfully locked action %s.'), action_id)
-            th = self.start_action_thread(cnxt, action)
+            # Create an event and inject it into thread, this
+            # event is for action progress control, e.g. canceling
+            event = eventlet.event.Event()
+            th = self.start_action_thread(cnxt, action, event=event)
+            th.link(self.remove_event, action.id)
+            self.add_event(action.id, event)
             self.threads[action.id] = th
         else:
             # The action has been locked which means other
             # dispatcher has start to work on it, so just return
             LOG.info(_LI('Action %s has been locked by other dispatcher'),
-                    action_id)
+                     action_id)
 
     def cancel_action(self, cnxt, action_id):
         # We just kill the action thread directly.
-        # TODO(Yanyan): use event wait() to handle action cancelling.
+        # TODO(Yanyan): use event to handle action cancelling.
         th = self.threads[action_id]
         th.kill()
         self.threads.pop(action_id)
