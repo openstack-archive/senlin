@@ -18,6 +18,7 @@ ENGINE
       e.g. run_action, wait, stop, notify;
     - dispatcher using db.api to get action and use scheduler to dispatch
       run and control action;
+    - use event to control action progress
   - complete parser logic, construct profile/policy objects there?
 
 DRIVER
