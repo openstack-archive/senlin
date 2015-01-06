@@ -14,8 +14,8 @@
 import json
 
 from sqlalchemy.dialects import mysql
+from sqlalchemy.ext import mutable
 from sqlalchemy import types
-
 
 dumps = json.dumps
 loads = json.loads
@@ -32,7 +32,6 @@ class LongText(types.TypeDecorator):
 
 
 class Json(LongText):
-
     def process_bind_param(self, value, dialect):
         return dumps(value)
 
@@ -42,15 +41,5 @@ class Json(LongText):
         return loads(value)
 
 
-def associate_with(sqltype):
-    # TODO(leizhang) When we removed sqlalchemy 0.7 dependence
-    # we can import MutableDict directly and remove ./mutable.py
-    try:
-        from sqlalchemy.ext import mutable
-        mutable.MutableDict.associate_with(Json)
-    except ImportError:
-        from senlin.db.sqlalchemy import mutable
-        mutable.MutableDict.associate_with(Json)
-
-associate_with(LongText)
-associate_with(Json)
+mutable.MutableDict.associate_with(LongText)
+mutable.MutableDict.associate_with(Json)
