@@ -252,6 +252,7 @@ class Event(BASE, SenlinBase, SoftDelete):
     obj_id = sqlalchemy.Column(sqlalchemy.String(36))
     obj_name = sqlalchemy.Column(sqlalchemy.String(255))
     obj_type = sqlalchemy.Column(sqlalchemy.String(36))
+    level = sqlalchemy.Column(sqlalchemy.String(64))
     user = sqlalchemy.Column(sqlalchemy.String(36))
     action = sqlalchemy.Column(sqlalchemy.String(36))
     status = sqlalchemy.Column(sqlalchemy.String(255))
