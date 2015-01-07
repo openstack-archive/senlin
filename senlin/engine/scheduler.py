@@ -11,9 +11,11 @@
 # under the License.
 
 import collections
+import types
 
 import eventlet
 from oslo.config import cfg
+import six
 
 from senlin.common.i18n import _LI
 from senlin.db import api as db_api
@@ -151,7 +153,7 @@ class ThreadGroupManager(object):
         # We just kill the action thread directly.
         # TODO(Yanyan): use event to handle action cancelling,
         # something like this :
-        #         self.send('cancel', action_id)
+        #     self.send('cancel', action_id)
         th = self.threads[action_id]
         th.kill()
         self.threads.pop(action_id)
@@ -165,8 +167,21 @@ class ActionProc(object):
         self.cnxt = cnxt
         self.action = action
         self.event = event
+        self.done = False
 
-    def __call__(self):
+    def _sleep(self, wait_time):
+        """Sleep for the specified number of seconds."""
+        if ENABLE_SLEEP and wait_time is not None:
+            LOG.debug('%s sleeping' % six.text_type(self))
+            eventlet.sleep(wait_time)
+
+    def __call__(self,  wait_time=1):
+        """
+        Start and run action progress.
+
+        Action progress will sleep for `wait_time` seconds between 
+        each step. To avoid sleeping, pass `None` for `wait_time`.
+        """
         status = self.action.get_status()
         while status in (self.action.INIT, self.action.WAITING):
             # TODO(Qiming): Handle 'start_time' field of an action
@@ -178,19 +193,170 @@ class ActionProc(object):
         if status != self.action.READY:
             return
 
-        done = False
-        while not done:
-            # Take over the action
-            self.action.set_status(self.action.RUNNING)
+        # Do the first step
+        result = self.start(timeout=self.action.timeout)
+        if result == self.action.ERROR:
+            # Error happened during the start,
+            # mark entire action as failed and return
+            db_api.action_mark_failed(self.cnxt, self.action.id)
+            return
 
-            # TODO: Add progress control using event
-            result = self.action.execute()
+        # Do remaining steps
+        while not self.done:
+            # move one step each time, and then wait for
+            # a while for possible control ops, e.g. 
+            # canceling, suspend, resume
+            result = self.step()
+            if event is None or not event.ready():
+                self._sleep(wait_time)
+            else:
+                msg = self.event.wait()
+                if msg == 'cancel':
+                    self.cancel()
+                else:
+                    pass
 
-            if result == self.action.OK:
-                db_api.action_mark_succeeded(self.cnxt, self.action.id)
-                done = True
-            elif result == self.action.ERROR:
-                db_api.action_mark_failed(self.cnxt, self.action.id)
-                done = True
-            elif result == self.action.RETRY:
-                continue
+        if result == self.action.ERROR:
+            # Error happened during remaining steps,
+            # mark action as failed and return
+            db_api.action_mark_failed(self.cnxt, self.action.id)
+            return
+
+        # Action executing has completed, mark its status to OK
+        db_api.action_mark_succeeded(self.cnxt, self.action.id)
+        LOG.info(_LI('Successfully run action %s.'), self.action.id)
+
+    def start(self, timeout=None):
+        """
+        Initialise the task and run its first step.
+
+        If a timeout is specified, any attempt to step the task after that
+        number of seconds has elapsed will result in a Timeout being
+        raised inside the task.
+        """
+        assert self.execution is None, "Action already started"
+        assert not self.done, "Action already cancelled"
+
+        LOG.debug('%s starting' % six.text_type(self))
+
+        if timeout is not None:
+            self._timeout = Timeout(self, timeout)
+
+        self.action.set_status(self.action.RUNNING)
+        result = self.action.execute()
+        # Mark action status to RUNNING
+        if isinstance(result, types.GeneratorType):
+            # If the execute() of action is a generator
+            # run its first step.
+            self.execution = result
+            self.step()
+        else:
+            # if not, the execute() progress should have done,
+            # return execute result
+            self.execution = False
+            self.done = True
+            LOG.debug('%s done (not resumable)' % six.text_type(self))
+            return result
+
+    def step(self):
+        """
+        Run one step of the action. If error happened during
+        this step, return action.Error. If not, return True if
+        the task is complete, false otherwise.
+        """
+        if not self.done:
+            assert self.execution is not None, "Action not started"
+
+            if self._timeout is not None and self._timeout.expired():
+                LOG.info(_LI('%s timed out'), six.text_type(self))
+                self.done = True
+
+                # Trigger the timeout of action execution
+                self._timeout.trigger(self.execution)
+            else:
+                LOG.debug('%s running' % six.text_type(self))
+
+                try:
+                    result = next(self.execution)
+                except StopIteration:
+                    self.done = True
+                    LOG.debug('%s complete' % six.text_type(self))
+
+        if result == self.action.ERROR:
+            # Error happened during this step, cancel
+            # this action execution, mark it as one
+            # and return action.ERROR flag
+            LOG.info(_LI('Error happened during action %s running.'),
+                     self.action.id)
+            self.cancel()
+            self.done = True
+            return result
+        else:
+            # No error happened, return current done status
+            return self.done
+
+    def cancel(self, grace_period=None):
+        """Cancel the task and mark it as done."""
+        if self.done:
+            return
+
+        if not self.started() or grace_period is None:
+            LOG.debug('%s cancelled' % six.text_type(self))
+            self.done = True
+            if self.started():
+                self.execution.close()
+        else:
+            timeout = TimedCancel(self, grace_period)
+            if self._timeout is None or timeout < self._timeout:
+                self._timeout = timeout
+
+    def started(self):
+        """Return True if the task has been started."""
+        return self.execution is not None
+
+
+class Timeout(BaseException):
+    """
+    Timeout exception, raised within an action when it has exceeded 
+    its allotted(wallclock) running time.
+    """
+
+    def __init__(self, task_runner, timeout):
+        """
+        Initialise with the TaskRunner and a timeout period in seconds.
+        """
+        message = _('%s Timed out') % six.text_type(task_runner)
+        super(Timeout, self).__init__(message)
+
+        # Note that we don't attempt to handle leap seconds or large clock
+        # jumps here. The latter are assumed to be rare and the former
+        # negligible in the context of the timeout. Time zone adjustments,
+        # Daylight Savings and the like *are* handled. PEP 418 adds a proper
+        # monotonic clock, but only in Python 3.3.
+        self._endtime = wallclock() + timeout
+
+    def expired(self):
+        return wallclock() > self._endtime
+
+    def trigger(self, generator):
+        """Trigger the timeout on a given generator."""
+        try:
+            generator.throw(self)
+        except StopIteration:
+            return True
+        else:
+            # Clean up in case task swallows exception without exiting
+            generator.close()
+            return False
+
+    def __cmp__(self, other):
+        if not isinstance(other, Timeout):
+            return NotImplemented
+        return cmp(self._endtime, other._endtime)
+
+
+class TimedCancel(Timeout):
+    def trigger(self, generator):
+        """Trigger the timeout on a given generator."""
+        generator.close()
+        return False
