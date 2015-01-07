@@ -1,0 +1,40 @@
+{
+    "type": "os.heat.stack",
+    "spec": {
+        "context": {
+            "description": "A map used for customizing stack context",
+            "required": "False",
+            "type": "Map",
+        },
+        "environment": {
+            "description": "A map providing additional settings for stack",
+            "required": "False",
+            "type": "Map",
+        },
+        "files": {
+            "description": "A map of name and contents used for stack operation",
+            "required": "False",
+            "type": "Map",
+        },
+        "parameters": {
+            "description": "A list of parameters for the template",
+            "required": "False",
+            "type": "List",
+        },
+        "template": {
+            "description": "Heat template to be used",
+            "required": "True",
+            "type": "Map",
+        },
+    },
+    "permission": {
+       "description": "A string reserved for permission checking.",
+       "required": "False",
+       "type": "String",
+    },
+    "tags": {
+        "description": "A map of tag-values to attach to this profile.",
+        "required": "False",
+        "type": "Map",
+    }
+}

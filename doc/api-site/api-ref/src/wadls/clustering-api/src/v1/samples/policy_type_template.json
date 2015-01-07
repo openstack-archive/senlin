@@ -1,0 +1,12 @@
+{
+    "policy": {
+        "level": 0,
+        "name": "",
+        "spec": {
+            "criteria": "oldest_first",
+            "grace_period": 0,
+            "reduce_desired_capacity": false,
+        },
+        "type": "os.senlin.deletion_policy",
+    }
+}

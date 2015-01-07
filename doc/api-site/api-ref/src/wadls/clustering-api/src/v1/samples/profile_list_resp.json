@@ -1,0 +1,30 @@
+{
+    "profiles": [
+        {
+            "id": "9dc26f35-9c46-4d7a-88b4-a9ca3b0b68de",
+            "name": "my_stack_profile",
+            "type": "os.heat.stack",
+            "spec": {
+                "context": {
+                    "region_name": "RegionTwo"
+                },
+                "environment": {}
+                "files": {}
+                "parameters": {
+                    "key_name": "my_key"
+                },
+                "template": {
+                    "heat_template_version": "2014-10-16",
+                    "parameters": {}
+                    "resources": {
+                        "random1": {
+                            "type": "OS::Heat::RandomString",
+                        },
+                    },
+                },
+            },
+            "permission": "",
+            "tags": {}
+        }
+    ]
+}

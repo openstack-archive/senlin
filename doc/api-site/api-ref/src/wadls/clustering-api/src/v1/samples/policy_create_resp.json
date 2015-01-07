@@ -1,0 +1,11 @@
+{
+    "policy": {
+        "id": "913e4dea-334e-4e1b-a7e0-507d3bd0271c",
+        "links": [
+            {
+                "href": "http://192.168.12.34:8778/v1/eb1c63a4f77141548385f113a28f0f52/policies/913e4dea-334e-4e1b-a7e0-507d3bd0271c",
+                "rel": "self"
+            }
+        ]
+    }
+}

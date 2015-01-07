@@ -1,0 +1,12 @@
+{
+    "type": "os.heat.stack",
+    "spec": {
+        "context": {},
+        "environment": {},
+        "files": {},
+        "parameters": [],
+        "template": {}
+    },
+    "permission": "",
+    "tags": {}
+}

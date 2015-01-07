@@ -1,0 +1,7 @@
+{
+    "profile_types": [
+        "os.heat.stack",
+        "os.heat.resource",
+        "os.nova.server"
+    ]
+}

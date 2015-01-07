@@ -1,0 +1,40 @@
+{
+    "type": "os.senlin.deletion_policy",
+    "spec": {
+        "criteria": {
+            "description": "A string specifying how to select candidates for "
+                           "deletion, can be one of 'oldest_first', "
+                           "'youngest_first', 'random'",
+            "required": "True",
+            "type": "String",
+        },
+	"grace_period": {
+            "description": "Number of seconds before actual deletion",
+            "required": "False",
+            "type": "Number",
+        },
+        "reduce_desired_capacity": {
+            "description": "Whether to reduce the desired capacity of cluster",
+            "required": "False",
+            "type": "Bool",
+        },
+    },
+    "level": {
+       "description": "A string indicating enforcement level of the policy, "
+                      "can be one of 'CRITICAL', 'ERROR', 'WARNING', 'INFO', "
+                      " or 'DEBUG'",
+       "required": "False",
+       "type": "String",
+    },
+    "cooldown": {
+       "description": "An integer indicating enforcement level of the policy, can be one of 'CRITICAL', 'ERROR', 'WARNING', 'INFO' or 'DEBUG'",
+       "required": "False",
+       "type": "String",
+    },
+
+    "tags": {
+        "description": "A map of tag-values to attach to this profile.",
+        "required": "False",
+        "type": "Map",
+    }
+}

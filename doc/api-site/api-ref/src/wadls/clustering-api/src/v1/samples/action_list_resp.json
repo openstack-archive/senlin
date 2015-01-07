@@ -1,0 +1,27 @@
+{
+    "actions": [
+        {
+            "id": "dfb0e58c-955d-478e-a512-e8cb17e2d478",
+            "name": "node-create",
+            "context": {},
+            "target": "3c7faa4040-a110-2ecf-a92c-0474bfdf73",
+            "action": "NODE_CREATE",
+            "cause": "Cluster creation",
+            "owner": "admin",
+            "interval": 0,
+            "start_time": "",
+            "end_time": "",
+            "time_out": null,
+            "status": "RUNNING",
+            "status_reason": "",
+            "inputs": {
+                "profile_id": "9dc26f35-9c46-4d7a-88b4-a9ca3b0b68de",
+                "name": "node-001",
+                "timeout": 60
+            }
+            "outputs": {},
+            "depends_on": [],
+            "depended_by": [],
+        }
+    ]
+}
