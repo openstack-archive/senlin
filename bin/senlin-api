@@ -58,7 +58,7 @@ if __name__ == '__main__':
         LOG.info(_LI('Starting Senlin ReST API on %(host)s:%(port)s'),
                  {'host': host, 'port': port})
         server = wsgi.Server()
-        server.start(app, cfg.CONF.heat_api, default_port=port)
+        server.start(app, cfg.CONF.senlin_api, default_port=port)
         systemd.notify_once()
         server.wait()
     except RuntimeError as ex:
