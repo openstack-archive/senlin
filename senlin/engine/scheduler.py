@@ -54,13 +54,14 @@ class ThreadGroupManager(object):
         """
         return self.group.add_thread(func, *args, **kwargs)
 
-    def start_action_thread(self, cnxt, action, **kwargs):
+    def start_action_thread(self, cnxt, action, event, *args, **kwargs):
         """
         Run the given action in a sub-thread and release the action lock
         when the thread finishes.
 
         :param cnxt: The context of rpc request
         :param action: The action to run in thread
+        :param event: The event that action thread might wait for
 
         """
         def release(gt, cnxt, action_id):
@@ -70,7 +71,8 @@ class ThreadGroupManager(object):
             # Remove action thread from thread list
             self.threads.pop(action_id)
 
-        th = self.start(self.action_proc, cnxt, action, **kwargs)
+        action_proc = ActionProc(cnxt, action, event)
+        th = self.start(action_proc, *args, **kwargs)
         th.link(release, cnxt, action.id)
         return th
 
@@ -127,38 +129,6 @@ class ThreadGroupManager(object):
             for e in self.events.pop(action_id, []):
                 e.send(message)
 
-    def action_proc(self, cnxt, action, event=None):
-        '''
-        Action thread procedure.
-        '''
-        status = action.get_status()
-        while status in (action.INIT, action.WAITING):
-            # TODO(Qiming): Handle 'start_time' field of an action
-            yield
-            status = action.get_status()
-
-        # Exit quickly if action has been taken care of or marked
-        # completed or cancelled by other activities
-        if status != action.READY:
-            return
-
-        done = False
-        while not done:
-            # Take over the action
-            action.set_status(action.RUNNING)
-
-            # TODO: Add progress control using event
-            result = action.execute()
-
-            if result == action.OK:
-                db_api.action_mark_succeeded(cnxt, action.id)
-                done = True
-            elif result == action.ERROR:
-                db_api.action_mark_failed(cnxt, action.id)
-                done = True
-            elif result == action.RETRY:
-                continue
-
     def start_action(self, cnxt, action_id, engine_id):
         action = db_api.action_start_work_on(cnxt, action_id, engine_id)
         if action:
@@ -167,7 +137,7 @@ class ThreadGroupManager(object):
             # Create an event and inject it into thread, this
             # event is for action progress control, e.g. canceling
             event = eventlet.event.Event()
-            th = self.start_action_thread(cnxt, action, event=event)
+            th = self.start_action_thread(cnxt, action, event)
             th.link(self.remove_event, action.id)
             self.add_event(action.id, event)
             self.threads[action.id] = th
@@ -179,7 +149,48 @@ class ThreadGroupManager(object):
 
     def cancel_action(self, cnxt, action_id):
         # We just kill the action thread directly.
-        # TODO(Yanyan): use event to handle action cancelling.
+        # TODO(Yanyan): use event to handle action cancelling,
+        # something like this :
+        #         self.send('cancel', action_id)
         th = self.threads[action_id]
         th.kill()
         self.threads.pop(action_id)
+
+
+class ActionProc(object):
+    """
+    Wrapper for a resumable task(co-routine) for action execution
+    """
+    def __init__(self, cnxt, action, event=None):
+        self.cnxt = cnxt
+        self.action = action
+        self.event = event
+
+    def __call__(self):
+        status = self.action.get_status()
+        while status in (self.action.INIT, self.action.WAITING):
+            # TODO(Qiming): Handle 'start_time' field of an action
+            yield
+            status = self.action.get_status()
+
+        # Exit quickly if action has been taken care of or marked
+        # completed or cancelled by other activities
+        if status != self.action.READY:
+            return
+
+        done = False
+        while not done:
+            # Take over the action
+            self.action.set_status(self.action.RUNNING)
+
+            # TODO: Add progress control using event
+            result = self.action.execute()
+
+            if result == self.action.OK:
+                db_api.action_mark_succeeded(self.cnxt, self.action.id)
+                done = True
+            elif result == self.action.ERROR:
+                db_api.action_mark_failed(self.cnxt, self.action.id)
+                done = True
+            elif result == self.action.RETRY:
+                continue
