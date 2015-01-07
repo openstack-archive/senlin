@@ -306,7 +306,7 @@ class ActionProc(object):
             if self.started():
                 self.execution.close()
         else:
-            timeout = TimedCancel(self, grace_period)
+            timeout = Timeout(self, grace_period, True)
             if self._timeout is None or timeout < self._timeout:
                 self._timeout = timeout
 
@@ -321,18 +321,14 @@ class Timeout(BaseException):
     its allotted(wallclock) running time.
     """
 
-    def __init__(self, task_runner, timeout):
+    def __init__(self, action_proc, timeout, enforce=False):
         """
         Initialise with the TaskRunner and a timeout period in seconds.
         """
-        message = _('%s Timed out') % six.text_type(task_runner)
+        self.enforce = enforce
+        message = _('%s Timed out') % six.text_type(action_proc)
         super(Timeout, self).__init__(message)
 
-        # Note that we don't attempt to handle leap seconds or large clock
-        # jumps here. The latter are assumed to be rare and the former
-        # negligible in the context of the timeout. Time zone adjustments,
-        # Daylight Savings and the like *are* handled. PEP 418 adds a proper
-        # monotonic clock, but only in Python 3.3.
         self._endtime = wallclock() + timeout
 
     def expired(self):
@@ -340,6 +336,9 @@ class Timeout(BaseException):
 
     def trigger(self, generator):
         """Trigger the timeout on a given generator."""
+        if enforce:
+            generator.close()
+            return False
         try:
             generator.throw(self)
         except StopIteration:
@@ -353,10 +352,3 @@ class Timeout(BaseException):
         if not isinstance(other, Timeout):
             return NotImplemented
         return cmp(self._endtime, other._endtime)
-
-
-class TimedCancel(Timeout):
-    def trigger(self, generator):
-        """Trigger the timeout on a given generator."""
-        generator.close()
-        return False
