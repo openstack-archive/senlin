@@ -154,7 +154,7 @@
         <title>Build info</title>
         <wadl:resources xmlns:wadl="http://wadl.dev.java.net/2009/02">
             <wadl:resource href="../wadls/clustering-api/src/v1/clustering-api.wadl#build_info">
-                <wadl:method href="#build_info_show"/>
+                <wadl:method href="#build_info_get"/>
             </wadl:resource>
         </wadl:resources>
     </section>
