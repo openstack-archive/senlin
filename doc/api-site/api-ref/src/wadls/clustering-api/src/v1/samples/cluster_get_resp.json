@@ -1,0 +1,19 @@
+{
+    "cluster": {
+        "created_time": "2014-06-03T20:59:46Z",
+        "id": "3095aefc-09fb-4bc7-b1f0-f21a304e864c",
+        "links": [
+            {
+                "href": "http://192.168.12.34:8778/v1/eb1c63a4f77141548385f113a28f0f52/clusters/3095aefc-09fb-4bc7-b1f0-f21a304e864c",
+                "rel": "self"
+            }
+        ],
+        "name": "test_cluster",
+        "profile_id": "40be8d1a-3eb9-40de-8abd-43237517384f",
+        "size": "5",
+        "status": "ACTIVE",
+        "status_reason": "Cluster created successfully",
+        "timeout_mins": "60",
+        "updated_time": ""
+    }
+}

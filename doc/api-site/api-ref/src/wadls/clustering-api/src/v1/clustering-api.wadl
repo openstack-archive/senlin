@@ -1,0 +1,1154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- (C) 2012-2014 OpenStack Foundation, All Rights Reserved -->
+<!-- Useful for describing APIs -->
+<!DOCTYPE application[
+<!-- Useful for describing APIs -->
+<!ENTITY GET    '<command xmlns="http://docbook.org/ns/docbook">GET</command>'>
+<!ENTITY PUT    '<command xmlns="http://docbook.org/ns/docbook">PUT</command>'>
+<!ENTITY POST   '<command xmlns="http://docbook.org/ns/docbook">POST</command>'>
+<!ENTITY DELETE '<command xmlns="http://docbook.org/ns/docbook">DELETE</command>'>
+
+<!-- Common descriptions for cases where a user supplies a new stack name -->
+<!ENTITY CLUSTER_NAME_FORMAT 'The value must be unique within a project. The name must start with an ASCII letter and can contain ASCII letters, digits,
+underscores, periods, and hyphens. Specifically, the name must match the regular expression <code>^[a-zA-Z][a-zA-Z0-9_.-]*$</code>.'>
+<!ENTITY CLUSTER_NAME_CREATE_DESC 'A name for the new stack. &CLUSTER_NAME_FORMAT; <note><para>Deleting or abandoning a stack may not make the stack name available
+for reuse, or the ability to reuse a stack name could be delayed for an unspecified time.</para></note>'>
+
+<!-- Common descriptions for cases where a user supplies a template_url -->
+<!ENTITY TEMPLATE_URL_COMMON 'See the description of the <code>template</code> property for information about the expected template content located at the URI.
+<note><para>This parameter is only required when the <code>template</code> parameter is omitted. The value is ignored if the <code>template</code> property
+is also specified.</para></note>'>
+
+<!ENTITY TEMPLATE_URL_CREATE_DESC 'A URI to the location containing the stack template to instantiate. &TEMPLATE_URL_COMMON;'>
+
+<!ENTITY TEMPLATE_URL_PREVIEW_DESC 'A URI to the location containing the stack template to preview. &TEMPLATE_URL_COMMON;'>
+
+<!ENTITY TEMPLATE_URL_UPDATE_DESC 'A URI to the location containing the updated stack template. &TEMPLATE_URL_COMMON;'>
+
+<!-- Common descriptions for cases where a user supplies a template -->
+<!ENTITY TEMPLATE_COMMON 'This parameter is always provided as a <code>string</code> in the JSON request body. The content of the string is an
+Orchestration template, and may be provided in either YAML or JSON syntax.  Complete details about the syntax of an Orchestration template are provided in
+the <link xlink:href="http://docs.openstack.org/hot-guide/content/">Heat Orchestration Template (HOT) specification</link>. <note><para>This parameter is
+only required when the <code>template_url</code> parameter is omitted. If both are specified, this value overrides any value provided for
+<code>template_url</code>.</para></note>'>
+
+<!ENTITY TEMPLATE_CREATE_DESC 'The stack template to instantiate.  &TEMPLATE_COMMON;'>
+
+<!ENTITY TEMPLATE_PREVIEW_DESC 'The stack template to preview.  &TEMPLATE_COMMON;'>
+
+<!ENTITY TEMPLATE_UPDATE_DESC 'The updated stack template.  &TEMPLATE_COMMON;'>
+
+]>
+
+<application xmlns="http://wadl.dev.java.net/2009/02"
+    xmlns:xsdxt="http://docs.rackspacecloud.com/xsd-ext/v1.0"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:wadl="http://wadl.dev.java.net/2009/02"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+    <resources base="https://senlin.example.com/" xml:id="clustering-api-v1.0">
+        <resource id="versions" path="//">
+            <method href="#getVersions-senlin-v1"/>
+        </resource>
+        <resource id="version" path="//v1">
+            <resource id="tenant_id" path="{tenant_id}">
+                <param name="tenant_id" style="template">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>The unique identifier of the tenant or account.</para>
+                    </wadl:doc>
+                </param>
+                <resource id="profile_types" path="profile_types">
+                    <method href="#profile_type_list"/>
+                    <resource path="{type_name}" id="profile_schema">
+                        <param name="type_name" style="template" required="true">
+                            <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                                <para>The name of a profile type.</para>
+                            </wadl:doc>
+                        </param>
+                        <method href="#profile_type_get"/>
+                        <resource path="template" id="profile_template">
+                            <method href="#profile_type_template"/>
+                        </resource>
+                    </resource>
+                </resource>
+                <resource id="policy_types" path="policy_types">
+                    <method href="#policy_type_list"/>
+                    <resource path="{type_name}" id="policy_schema">
+                        <param name="type_name" style="template" required="true">
+                            <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                                <para>The name of a policy type.</para>
+                            </wadl:doc>
+                        </param>
+                        <method href="#policy_type_get"/>
+                        <resource id="policy_template" path="template">
+                            <method href="#policy_type_template"/>
+                        </resource>
+                    </resource>
+                </resource>
+                <resource path="profiles" id="profiles">
+                    <method href="#profile_list"/>
+                    <method href="#profile_create"/>
+                    <resource path="{profile_id}" id="profile_id">
+                        <param name="profile_id" style="template" required="true">
+                            <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                                <para>ID of a profile.</para>
+                            </wadl:doc>
+                        </param>
+                        <method href="#profile_get"/>
+                        <method href="#profile_update"/>
+                        <method href="#profile_delete"/>
+                    </resource>
+                </resource>
+                <resource path="policies" id="policies">
+                    <method href="#policy_list"/>
+                    <method href="#policy_create"/>
+                    <resource path="{policy_id}" id="policy_id">
+                        <param name="policy_id" style="template" required="true">
+                            <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                                <para>ID of a policy.</para>
+                            </wadl:doc>
+                        </param>
+                        <method href="#policy_get"/>
+                        <method href="#policy_update"/>
+                        <method href="#policy_delete"/>
+                    </resource>
+                </resource>
+                <resource id="clusters" path="clusters">
+                    <method href="#cluster_list"/>
+                    <method href="#cluster_create"/>
+                    <resource path="{cluster_id}" id="cluster_id">
+                        <param name="cluster_id" style="template" required="true">
+                            <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                                <para>The unique identifier for a cluster.</para>
+                            </wadl:doc>
+                        </param>
+                        <method href="#cluster_get"/>
+                        <method href="#cluster_update"/>
+                        <method href="#cluster_delete"/>
+                        <resource path="nodes" id="cluster_nodes">
+                            <method href="#cluster_add_node"/>
+                            <resource path="{node_id}" id="cluster_node_id">
+                                <param name="node_id" style="template" required="true">
+                                    <wadl:doc xlmns="http://docbook.org/ns/docbook" xml:lang="EN">
+                                        The ID of a cluster node.
+                                    </wadl:doc>
+                                </param>
+                                <method href="#cluster_get_node"/>
+                                <method href="#cluster_del_node"/>
+                            </resource>
+                        </resource>
+                        <resource path="policies" id="cluster_policies">
+                            <method href="#cluster_list_policies"/>
+                            <method href="#cluster_attach_policy"/>
+                            <resource path="{policy_id}" id="cluster_policy_id">
+                                <param name="policy_id" style="template" required="true">
+                                    <wadl:doc xlmns="http://docbook.org/ns/docbook" xml:lang="EN">
+                                        The ID of a policy.
+                                    </wadl:doc>
+                                </param>
+                                <method href="#cluster_get_policy"/>
+                                <method href="#cluster_detach_policy"/>
+                            </resource>
+                        </resource>
+                   </resource>
+                </resource>
+                <resource path="nodes" id="nodes">
+                    <method href="#node_list"/>
+                    <method href="#node_create"/>
+                    <resource path="{node_id}" id="node_id">
+                        <param name="node_id" style="template" required="true">
+                            <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                                The ID of a node.
+                            </wadl:doc>
+                        </param>
+                        <method href="#node_get"/>
+                        <method href="#node_update"/>
+                        <method href="#node_delete"/>
+                    </resource>
+                </resource>
+                <resource path="actions" id="actions">
+                    <method href="#action_list"/>
+                    <resource path="{action_id}" id="action_id">
+                        <param name="action_id" style="template" required="true">
+                            <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                                <para>The unique ID of an action.</para>
+                            </wadl:doc>
+                        </param>
+                        <method href="#action_get"/>
+                    </resource>
+                </resource>
+                <resource path="events" id="events">
+                    <method href="#event_list"/>
+                    <resource path="{event_id}" id="event_id">
+                        <param name="event_id" style="template" required="true">
+                            <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                                <para>The unique ID of an event.</para>
+                            </wadl:doc>
+                        </param>
+                        <method href="#event_get"/>
+                    </resource>
+                </resource>
+                <resource path="build_info" id="build_info">
+                    <method href="#build_info_get"/>
+                </resource>
+            </resource>
+        </resource>
+    </resources>
+    <method name="GET" id="getVersions-senlin-v1">
+        <wadl:doc xml:lang="EN" title="List versions" xmlns="http://docbook.org/ns/docbook">
+            <para role="shortdesc">Lists information about all Clustering API versions.</para>
+        </wadl:doc>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/senlin-versions-response.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
+    <method name="GET" id="cluster_list">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="List clusters.">
+            <para role="shortdesc">Lists clusters.</para>
+        </wadl:doc>
+        <request>
+            <representation mediaType="application/xml">
+                <param name="limit" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            Limits the number of clusters that appear on a page to this value. The typical pattern of <code>limit</code> and 
+                            <code>marker</code> is to make an initial limited request and then to use the <code>id</code> of the last cluster
+                            from the response as the <code>marker</code> parameter in a subsequent limited request.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="marker" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            Specifies the <code>id</code> of the last-seen cluster. The typical pattern of <code>limit</code> and <code>marker</code>
+                            is to make an initial limited request and then to use the <code>id</code> of the last cluster from the response as
+                            the <code>marker</code> parameter in a subsequent limited request.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="filters" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Filters to apply on the returned clusters. Each filter is in the form of key-value pair.</para>
+                    </wadl:doc>
+                </param>
+                <param name="show_deleted" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            Specifies whether to include deleted clusters in the cluster list. Set to <code>False</code> by default, so that
+                            deleted clusters are not shown in the results of the &GET; request unless you set this value to <code>True</code>.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="show_nested" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            Specifies whether to include nested cluster in the cluster list.</para>
+                    </wadl:doc>
+                </param>
+                <param name="sort_keys" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook"
+                        xml:lang="EN">
+                        <para>
+                            Sorts the cluster list by one of these attributes: <code>name</code>, <code>status</code>, <code>created_time</code>,
+                            or <code>updated_time</code>.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="sort_dir" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>The sort direction of the cluster list.  Either <code>asc</code> (ascending) or <code>desc</code> (descending).
+                        </para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/cluster_list_resp.json"/>
+                </wadl:doc>
+                <param name="clusters" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            List of cluster records where each record contains fields like <code>created_time</code>, <code>id</code>,
+                            <code>name</code>, <code>profile_id</code>, <code>size</code>, <code>status</code>, <code>status_reason</code>.
+                        </para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </response>
+    </method>
+    <method name="POST" id="cluster_create">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Create cluster">
+            <para role="shortdesc">Creates a cluster.</para>
+        </wadl:doc>
+        <request>
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/cluster_create.json"/>
+                </wadl:doc>
+                <param name="name" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>&CLUSTER_NAME_CREATE_DESC;</para>
+                    </wadl:doc>
+                </param>
+                <param name="profile_id" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>ID of profile to be used for this cluster.</para>
+                    </wadl:doc>
+                </param>
+                <param name="size" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Initial size of the cluster.</para>
+                    </wadl:doc>
+                </param>
+                <param name="timeout" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Cluster creation timeout as number of minutes.</para>
+                    </wadl:doc>
+                </param>
+                <param name="tags" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A collection of key-value pairs to be associated with the stack.</para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
+        <response status="201">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/cluster_create_resp.json" />
+                </wadl:doc>
+                <param name="cluster" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A dictionary containing the <code>id</code> of and <code>link</code> to the cluster.</para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </response>
+    </method>
+    <method name="GET" id="cluster_get">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Show cluster details">
+            <para role="shortdesc">Shows details for a specified cluster.</para>
+        </wadl:doc>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/cluster_get_resp.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
+    <method name="POST" id="cluster_update">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Update cluster">
+            <para role="shortdesc">Updates a specified cluster.</para>
+        </wadl:doc>
+        <request>
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/cluster_update.json"/>
+                </wadl:doc>
+                <param name="profile_id" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>ID of profile to be used for the updated cluster.</para>
+                    </wadl:doc>
+                </param>
+                <param name="size" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>New size for the updated cluster.</para>
+                    </wadl:doc>
+                </param>
+                <param name="tags" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>The tags to be associated with the cluster.</para>
+                    </wadl:doc>
+                </param>
+                <param name="timeout" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>The timeout for cluster update in minutes.</para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
+        <response status="202"/>
+    </method>
+    <method name="DELETE" id="cluster_delete">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Delete cluster">
+            <para role="shortdesc">Deletes a specified cluster.</para>
+        </wadl:doc>
+        <response status="204"/>
+    </method>
+    <method name="POST" id="cluster_add_node">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Add node">
+            <para role="shortdesc">Add specified node to a cluster.</para>
+        </wadl:doc>
+        <request>
+            <representation mediaType="application/json">
+                <param name="node_id" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>The ID of the node to be added.</para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
+        <response status="202"/>
+    </method>
+    <method name="GET" id="cluster_get_node">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Get node">
+            <para role="shortdesc">Show details of a node attached to a cluster.</para>
+        </wadl:doc>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/cluster_get_node.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
+    <method name="DELETE" id="cluster_del_node">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Delete node">
+            <para role="shortdesc">Delete node from a cluster.</para>
+        </wadl:doc>
+        <response status="204"/>
+    </method>
+    <method name="GET" id="cluster_list_policies">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="List policies">
+            <para role="shortdesc">List the policies attahed to a cluster.</para>
+        </wadl:doc>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/cluster_list_policies.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
+    <method name="GET" id="cluster_get_policy">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Get policy">
+            <para role="shortdesc">Show details of a policy attached to a cluster.</para>
+        </wadl:doc>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/cluster_get_policy.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
+    <method name="POST" id="cluster_attach_policy">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Attach policy">
+            <para role="shortdesc">Add policy to a cluster.</para>
+        </wadl:doc>
+        <request>
+            <representation mediaType="application/json">
+                <param name="policy_id" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>The ID of the policy to be attached.</para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
+        <response status="202"/>
+    </method>
+    <method name="DELETE" id="cluster_detach_policy">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Detach policy">
+            <para role="shortdesc">Detach a policy from a cluster.</para>
+        </wadl:doc>
+        <response status="204"/>
+    </method>
+    <method name="GET" id="profile_type_list">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="List profile types">
+            <para role="shortdesc">Lists the supported profile types.</para>
+        </wadl:doc>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <para>A list of profile types supported.</para>
+                    <xsdxt:code href="samples/profile_type_list_resp.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
+    <method name="GET" id="profile_type_get">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Show profile spec">
+            <para role="shortdesc">Shows the interface schema for a specified profile type.</para>
+        </wadl:doc>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/profile_schema.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
+    <method name="GET" id="profile_type_template">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Show profile template">
+            <para role="shortdesc">Shows the template representation for a specified profile type.</para>
+        </wadl:doc>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <para>A template showing the template that can be used to create a profile.</para>
+                    <xsdxt:code href="samples/profile_type_template.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
+    <method name="GET" id="policy_type_list">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="List policy types">
+            <para role="shortdesc">Lists the supported policy types.</para>
+        </wadl:doc>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <para>A list of policy types supported.</para>
+                    <xsdxt:code href="samples/policy_type_list_resp.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
+    <method name="GET" id="policy_type_get">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Show policy schema">
+            <para role="shortdesc">Shows the interface schema for a specified policy type.</para>
+        </wadl:doc>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/policy_schema.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
+    <method name="GET" id="policy_type_template">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Show policy template">
+            <para role="shortdesc">Shows the template representation for a specified policy type.</para>
+        </wadl:doc>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <para>A template showing the template that can be used to create a policy.</para>
+                    <xsdxt:code href="samples/policy_type_template.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
+    <method name="GET" id="profile_list">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="List profiles">
+            <para role="shortdesc">List profiles.</para>
+        </wadl:doc>
+        <request>
+            <representation mediaType="application/xml">
+                <param name="type" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Type of profiles to be listed.</para>
+                    </wadl:doc>
+                </param>
+                <param name="show_deleted" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Specifies whether deleted profiles are to be listed.</para>
+                    </wadl:doc>
+                </param>
+                <param name="permission" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A permission string for filtering the returned profiles.</para>
+                    </wadl:doc>
+                </param>
+                <param name="tags" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A list of key-value pairs for filtering the profiles.</para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/profile_list_resp.json"/>
+                </wadl:doc>
+                <param name="nodes" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            List of node records where each record contains fields like <code>id</code>, <code>name</code>, <code>type</code>,
+                            <code>spec</code>, <code>permission</code>, <code>tags</code> etc.
+                        </para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </response>
+    </method>
+    <method name="POST" id="profile_create">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Create profile">
+            <para role="shortdesc">Creates a new profile.</para>
+        </wadl:doc>
+        <request>
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/profile_create.json"/>
+                </wadl:doc>
+                <param name="name" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Name for the newly created profile.</para>
+                    </wadl:doc>
+                </param>
+                <param name="type" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Name of profile type to be used for the profile.</para>
+                    </wadl:doc>
+                </param>
+                <param name="spec" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Detailed specification based on the chosen profile type.</para>
+                    </wadl:doc>
+                </param>
+                <param name="permission" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A string to be interpreted as a permission.</para>
+                    </wadl:doc>
+                </param>
+                <param name="tags" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A list of key-value pairs to be associated with the profile.</para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
+        <response status="201">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/profile_create_resp.json" />
+                </wadl:doc>
+                <param name="profile" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A dictionary containing the <code>id</code> of and <code>link</code> to the profile.</para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </response>
+    </method>
+    <method name="POST" id="profile_update">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Update profile">
+            <para role="shortdesc">Update the specified profile.</para>
+        </wadl:doc>
+        <request>
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/profile_update.json"/>
+                </wadl:doc>
+                <param name="name" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>New name, if specified, for the target profile.</para>
+                    </wadl:doc>
+                </param>
+                <param name="spec" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Detailed specification based on the chosen profile type.</para>
+                    </wadl:doc>
+                </param>
+                <param name="permission" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A string to be interpreted as new permission.</para>
+                    </wadl:doc>
+                </param>
+                <param name="tags" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A list of key-value pairs to be associated with the target profile.</para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
+        <response status="202"/>
+    </method>
+    <method name="DELETE" id="profile_delete">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Delete profile">
+            <para role="shortdesc">Deletes a specified profile.</para>
+        </wadl:doc>
+        <response status="204"/>
+    </method>
+    <method name="GET" id="profile_get">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Show profile data">
+            <para role="shortdesc">Show detailed data for a specified profile.</para>
+        </wadl:doc>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <para>
+                        A node record that contains fields like <code>id</code>, <code>name</code>, <code>type</code>,
+                        <code>spec</code>, <code>permission</code>, <code>tags</code> etc.
+                    </para>
+                    <xsdxt:code href="samples/profile_get_resp.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
+    <method name="GET" id="policy_list">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="List policies">
+            <para role="shortdesc">List policies.</para>
+        </wadl:doc>
+        <request>
+            <representation mediaType="application/xml">
+                <param name="type" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Type of policies to be listed.</para>
+                    </wadl:doc>
+                </param>
+                <param name="level" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A enforcement level (number) for filtering the returned policies.</para>
+                    </wadl:doc>
+                </param>
+                <param name="show_deleted" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Specifies whether deleted policies are to be listed.</para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/policy_list_resp.json"/>
+                </wadl:doc>
+                <param name="profiles" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            List of policy records where each record contains fields like <code>id</code>, <code>name</code>, <code>type</code>,
+                            <code>spec</code>, <code>level</code> etc.
+                        </para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </response>
+    </method>
+    <method name="POST" id="policy_create">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Create policy">
+            <para role="shortdesc">Create a new policy.</para>
+        </wadl:doc>
+        <request>
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/policy_create.json"/>
+                </wadl:doc>
+                <param name="name" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Name for the newly created policy.</para>
+                    </wadl:doc>
+                </param>
+                <param name="type" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Name of policy type to be used for the policy.</para>
+                    </wadl:doc>
+                </param>
+                <param name="spec" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Detailed specification based on the chosen policy type.</para>
+                    </wadl:doc>
+                </param>
+                <param name="level" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A number representing the default enforcement level.</para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
+        <response status="201">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/policy_create_resp.json" />
+                </wadl:doc>
+                <param name="policy" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A dictionary containing the <code>id</code> of and <code>link</code> to the policy.</para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </response>
+    </method>
+    <method name="POST" id="policy_update">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Update policy">
+            <para role="shortdesc">Update the specified policy.</para>
+        </wadl:doc>
+        <request>
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/policy_update.json"/>
+                </wadl:doc>
+                <param name="name" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>New name, if specified, for the target policy.</para>
+                    </wadl:doc>
+                </param>
+                <param name="spec" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Detailed specification based on the chosen policy type.</para>
+                    </wadl:doc>
+                </param>
+                <param name="level" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A new default enforcement level for the policy.</para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
+        <response status="202"/>
+    </method>
+    <method name="DELETE" id="policy_delete">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Delete policy">
+            <para role="shortdesc">Deletes a specified policy.</para>
+        </wadl:doc>
+        <response status="204"/>
+    </method>
+    <method name="GET" id="policy_get">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Show policy data">
+            <para role="shortdesc">Show detailed data for a specified policy.</para>
+        </wadl:doc>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <para>
+                        A node record that contains fields like <code>id</code>, <code>name</code>, <code>type</code>,
+                        <code>spec</code>, <code>level</code> etc.
+                    </para>
+                    <xsdxt:code href="samples/policy_get_resp.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
+    <method name="GET" id="node_list">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="List nodes">
+            <para role="shortdesc">Lists nodes.</para>
+        </wadl:doc>
+        <request>
+            <representation mediaType="application/xml">
+                <param name="cluster_id" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>ID of the cluster for the nodes to be listed.</para>
+                    </wadl:doc>
+                </param>
+                <param name="show_deleted" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Specifies whether deleted nodes are to be listed.</para>
+                    </wadl:doc>
+                </param>
+                <param name="filters" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A list of key-value pairs for filtering the returned nodes.</para>
+                    </wadl:doc>
+                </param>
+                <param name="limit" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            Limits the number of nodes that appear on a page to this value. The typical pattern of <code>limit</code> and 
+                            <code>marker</code> is to make an initial limited request and then to use the <code>id</code> of the last node
+                            from the response as the <code>marker</code> parameter in a subsequent limited request.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="marker" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            Specifies the <code>id</code> of the last-seen node. The typical pattern of <code>limit</code> and <code>marker</code>
+                            is to make an initial limited request and then to use the <code>id</code> of the last node from the response as
+                            the <code>marker</code> parameter in a subsequent limited request.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="global_tenant" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Indicates whether nodes from tenants(projects) are to be listed.  Operation subject to policy authorization.</para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/node_list_resp.json"/>
+                </wadl:doc>
+                <param name="nodes" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            List of node records where each record contains fields like <code>id</code>, <code>cluster_id</code>, <code>name</code>,
+                            <code>physical_id</code>, <code>profile_id</code>, <code>created_time</code>, <code>index</code>, <code>status</code>,
+                            <code>status_reason</code>, <code>tags</code>, <code>updated_time</code>.
+                        </para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </response>
+    </method>
+    <method name="POST" id="node_create">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Create node">
+            <para role="shortdesc">Creates a new node.</para>
+        </wadl:doc>
+        <request>
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/node_create.json"/>
+                </wadl:doc>
+                <param name="name" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Name for the newly created node.</para>
+                    </wadl:doc>
+                </param>
+                <param name="profile_id" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>ID of profile to be used for the specified node.</para>
+                    </wadl:doc>
+                </param>
+                <param name="cluster_id" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>ID of the cluster this new node will belong to.  If not specified, the created node becomes a orphan node.</para>
+                    </wadl:doc>
+                </param>
+                <param name="role" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A role to be assigned to the node.</para>
+                    </wadl:doc>
+                </param>
+                <param name="tags" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A list of key-value pairs to be associated with the node.</para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
+        <response status="201">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/node_create_resp.json" />
+                </wadl:doc>
+                <param name="cluster" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A dictionary containing the <code>id</code> of and <code>link</code> to the node.</para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </response>
+    </method>
+    <method name="POST" id="node_update">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Update node">
+            <para role="shortdesc">Update the specified node.</para>
+        </wadl:doc>
+        <request>
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/node_update.json"/>
+                </wadl:doc>
+                <param name="name" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Name for the newly created node.</para>
+                    </wadl:doc>
+                </param>
+                <param name="profile_id" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>ID of profile to be used for the specified node.</para>
+                    </wadl:doc>
+                </param>
+                <param name="role" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A role to be assigned to the node.</para>
+                    </wadl:doc>
+                </param>
+                <param name="tags" style="plain" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A list of key-value pairs to be associated with the node.</para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
+        <response status="202"/>
+    </method>
+    <method name="DELETE" id="node_delete">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Delete node">
+            <para role="shortdesc">Deletes a specified node.</para>
+        </wadl:doc>
+        <response status="204"/>
+    </method>
+    <method name="GET" id="node_get">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Show node data">
+            <para role="shortdesc">Shows data for a specified node.</para>
+        </wadl:doc>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <para>
+                        A node record that contains fields like <code>id</code>, <code>cluster_id</code>, <code>name</code>,
+                        <code>physical_id</code>, <code>profile_id</code>, <code>created_time</code>, <code>index</code>,
+                        <code>status</code>, <code>status_reason</code>, <code>tags</code>, <code>updated_time</code> etc.
+                    </para>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
+    <method name="GET" id="event_list">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="List events">
+            <para role="shortdesc">Lists events.</para>
+        </wadl:doc>
+        <request>
+            <representation mediaType="application/xml">
+                <param name="obj_id" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>ID of an object for which the events are to be listed. An object here can be a cluster, a node, a policy etc.</para>
+                    </wadl:doc>
+                </param>
+                <param name="obj_name" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Filter the events by object names.</para>
+                    </wadl:doc>
+                </param>
+                <param name="obj_type" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            The type of objects for which the events are listed. The type here can be <code>CLUSTER</code>, <code>NODE</code>,
+                            <code>PROFILE</code>, <code>POLICY</code> etc.
+                        </para>
+                        <para>Filters the event list by the specified resource_status. You can use this filter multiple times to filter by multiple
+                            resource statuses:
+                            <code>IN_PROGRESS</code>, <code>COMPLETE</code> or <code>FAILED</code>.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="filters" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A list of key-value pairs for filtering the events returned.</para>
+                    </wadl:doc>
+                </param>
+                <param name="sort_keys" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Sorts the event list by: <code>resource_type</code> or <code>created_at</code>.</para>
+                    </wadl:doc>
+                </param>
+                <param name="sort_dir" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook"
+                        xml:lang="EN">
+                        <para>The sort direction of the event list.  Which is <code>asc</code> (ascending) or <code>desc</code> (descending).</para>
+                    </wadl:doc>
+                </param>
+                <param name="limit" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            Limits the number of events that appear on a page to this value. The typical pattern of limit and marker is to make an
+                            initial limited request and then to use the ID of the last event from the response as the marker parameter in a subsequent
+                            limited request.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="marker" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            Specifies the ID of the last-seen event.  The typical pattern of limit and marker is to make an initial limited request and
+                            then to use the ID of the last event from the response as the marker parameter in a subsequent limited request.
+                        </para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/event_list_resp.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
+    <method name="GET" id="event_get">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Show event details">
+            <para role="shortdesc">Shows details for a specified event.</para>
+        </wadl:doc>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <para>A dictionary that contains the fields of an event such as <code>TIMESTAMP</code>, <code>LEVEL</code>.</para>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
+    <method name="GET" id="action_list">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="List actions">
+            <para role="shortdesc">Lists actions.</para>
+        </wadl:doc>
+        <request>
+            <representation mediaType="application/xml">
+                <param name="target" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>ID of an object for which the actions are to be listed. An object here can be a cluster, a node, a policy etc.</para>
+                    </wadl:doc>
+                </param>
+                <param name="action" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Filter action list by action name specified.</para>
+                    </wadl:doc>
+                </param>
+                <param name="filters" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A list of key-value pairs for filtering the actions returned.</para>
+                    </wadl:doc>
+                </param>
+                <param name="sort_keys" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Sorts the action list by the specified keys.</para>
+                    </wadl:doc>
+                </param>
+                <param name="sort_dir" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook"
+                        xml:lang="EN">
+                        <para>The sort direction of the action list.  Which is <code>asc</code> (ascending) or <code>desc</code> (descending).</para>
+                    </wadl:doc>
+                </param>
+                <param name="limit" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            Limits the number of actions that appear on a page to this value. The typical pattern of <code>limit</code> and 
+                            <code>marker</code> is to make an initial limited request and then to use the <code>id</code> of the last action
+                            from the response as the <code>marker</code> parameter in a subsequent limited request.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="marker" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            Specifies the <code>id</code> of the last-seen action.  The typical pattern of <code>limit</code> and <code>marker</code>
+                            is to make an initial limited request and then to use the <code>id</code> of the last action from the response as the 
+                            <code>marker</code> parameter in a subsequent limited request.
+                        </para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/action_list_resp.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
+    <method name="GET" id="action_get">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Show action details">
+            <para role="shortdesc">Shows details for a specified action.</para>
+        </wadl:doc>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <para>A dictionary that contains the fields of an action such as <code>id</code>, <code>action</code>.</para>
+                    <xsdxt:code href="samples/action_get_resp.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
+    <method name="GET" id="build_info_get">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Show build information">
+            <para role="shortdesc">Shows build information for a senlin deployment.</para>
+        </wadl:doc>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/build_info.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
+</application>

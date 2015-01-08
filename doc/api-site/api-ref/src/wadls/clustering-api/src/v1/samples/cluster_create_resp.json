@@ -1,0 +1,11 @@
+{
+    "cluster": {
+        "id": "3095aefc-09fb-4bc7-b1f0-f21a304e864c",
+        "links": [
+            {
+                "href": "http://192.168.12.34:8778/v1/eb1c63a4f77141548385f113a28f0f52/clusters/3095aefc-09fb-4bc7-b1f0-f21a304e864c",
+                "rel": "self"
+            }
+        ]
+    }
+}

@@ -1,0 +1,15 @@
+{
+    "policies": [
+        {
+            "id": "913e4dea-334e-4e1b-a7e0-507d3bd0271c",
+            "level": 50,
+            "name": "my_deletion_policy",
+            "spec": {
+                "criteria": "oldest_first",
+                "grace_period": 60,
+                "reduce_desired_capacity": false,
+            },
+            "type": "os.senlin.deletion_policy",
+       }
+    ]
+}

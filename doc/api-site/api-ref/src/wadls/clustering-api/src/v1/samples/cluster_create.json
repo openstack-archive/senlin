@@ -1,0 +1,9 @@
+{
+    "name": "testcluster",
+    "profile_id": "40be8d1a-3eb9-40de-8abd-43237517384f",
+    "size": 5,
+    "timeout": 60,
+    "tags": {
+        "owner": "Thomas",
+    }
+}

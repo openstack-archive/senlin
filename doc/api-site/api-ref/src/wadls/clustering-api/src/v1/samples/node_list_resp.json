@@ -1,0 +1,34 @@
+{
+    "nodes": [
+        {
+            "cluster_id": "3095aefc-09fb-4bc7-b1f0-f21a304e864c",
+            "created_time": "2014-12-25T07:00:21Z",
+            "id": "7c4e1ef4-bf1b-41ab-a0c8-ce01f4ffdfa1",
+            "index": 1,
+            "name": "node-001",
+            "physical_id": "dd06b8ae-93ba-45b1-a58e-521ff35341d8",
+            "profile_id": "40be8d1a-3eb9-40de-8abd-43237517384f",
+            "project": "ac21bddf-7f53-4bb9-903b-6453b21571ba",
+            "role": null,
+            "status": "ACTIVE",
+            "status_reason": "Node created successfully",
+            "tags": {},
+            "updated_time": ""
+        },
+        {
+            "cluster_id": "3095aefc-09fb-4bc7-b1f0-f21a304e864c",
+            "created_time": "2014-12-25T07:02:34Z",
+            "id": "c81f4ff4-4e1e-41ab-80ca-cebdfa1f1b0f",
+            "index": 2,
+            "name": "node-002",
+            "physical_id": "ae83991b-6645-41c1-82c3-66be51a30c00",
+            "profile_id": "40be8d1a-3eb9-40de-8abd-43237517384f",
+            "project": "ac21bddf-7f53-4bb9-903b-6453b21571ba",
+            "role": null,
+            "status": "ACTIVE",
+            "status_reason": "Node created successfully",
+            "tags": {},
+            "updated_time": ""
+        },
+    ],
+}

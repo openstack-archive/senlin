@@ -1,0 +1,11 @@
+{
+    "profile": {
+        "id": "9dc26f35-9c46-4d7a-88b4-a9ca3b0b68de",
+        "links": [
+            {
+                "href": "http://192.168.12.34:8778/v1/eb1c63a4f77141548385f113a28f0f52/profiles/9dc26f35-9c46-4d7a-88b4-a9ca3b0b68de",
+                "rel": "self"
+            }
+        ]
+    }
+}
