@@ -356,6 +356,8 @@ class ClusterAction(Action):
         if not cluster:
             return self.RES_ERROR
 
+        checkpoint = kwargs.get('checkpoint')
+
         if self.action == self.CLUSTER_CREATE:
             res = self.do_create(cluster)
         elif self.action == self.CLUSTER_UPDATE:
@@ -403,6 +405,8 @@ class NodeAction(Action):
         if not node:
             msg = _('Node with id (%s) is not found') % self.target
             raise exception.NotFound(msg)
+
+        checkpoint = kwargs.get('checkpoint')
 
         # TODO(Qiming): Add node status changes
         if self.action == self.NODE_CREATE:
@@ -462,6 +466,8 @@ class PolicyAction(Action):
         cluster_id = kwargs.get('cluster_id')
         policy_id = kwargs.get('policy_id')
 
+        checkpoint = kwargs.get('checkpoint')
+
         # an ENABLE/DISABLE action only changes the database table
         if self.action == self.POLICY_ENABLE:
             db_api.cluster_enable_policy(cluster_id, policy_id)
@@ -497,6 +503,7 @@ class CustomAction(Action):
         super(CustomAction, self).__init__(context, action, **kwargs)
 
     def execute(self, **kwargs):
+        checkpoint = kwargs.get('checkpoint')
         return self.RES_OK
 
     def cancel(self):
