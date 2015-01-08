@@ -13,6 +13,7 @@
 
 ENGINE_SERVER = 'senlin'
 ENGINE_TOPIC = 'engine'
+ENGINE_DISPATCHER_TOPIC = 'engine-dispatcher'
 
 CLUSTER_KEYS = (
     CLUSTER_NAME, CLUSTER_PROFILE,
