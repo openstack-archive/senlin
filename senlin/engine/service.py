@@ -54,8 +54,8 @@ class Dispatcher(service.Service):
     notification from engine services and schedule actions.
     '''
 
-    OPERATIONS = (NEW_ACTION, CANCEL_ACTION, SEND, STOP) = (
-        'new_action', 'cancel_action', 'send', 'stop')
+    OPERATIONS = (NEW_ACTION, CANCEL_ACTION, STOP) = (
+        'new_action', 'cancel_action', 'stop')
 
     def __init__(self, engine_id, topic, version, thread_group_mgr):
         super(Dispatcher, self).__init__()
@@ -81,19 +81,19 @@ class Dispatcher(service.Service):
 
     def new_action(self, ctxt, action_id=None):
         '''New action has been ready, try to schedule it'''
-        self.TG.start_action(ctxt, action_id, self.engine_id)
+        scheduler.start_action(ctxt, action_id, self.engine_id, self.TG)
 
     def cancel_action(self, ctxt, action_id):
         '''Cancel an action.'''
-        self.TG.cancel_action(ctxt, action_id)
+        scheduler.cancel_action(ctxt, action_id)
 
     def suspend_action(self, ctxt, action_id):
         '''Suspend an action.'''
-        raise NotImplementedError
+        scheduler.suspend_action(ctxt, action_id)
 
     def resume_action(self, ctxt, action_id):
         '''Resume an action.'''
-        raise NotImplementedError
+        scheduler.resume_action(ctxt, action_id)
 
     def stop(self):
         super(Dispatcher, self).stop()
@@ -103,9 +103,6 @@ class Dispatcher(service.Service):
         # Stop ThreadGroup gracefully
         self.TG.stop(True)
         LOG.info(_LI("All action threads have been finished"))
-
-    def send(self, ctxt, action_id, message):
-        self.TG.send(action_id, message)
 
 
 @profiler.trace_cls("rpc")
@@ -358,6 +355,7 @@ class EngineService(service.Service):
 
         return res
 
+
 def notify_dispatcher(self, cnxt, engine_id, call, *args, **kwargs):
     '''Send notification to specific dispatcher'''
     timeout = cfg.CONF.engine_life_check_timeout
@@ -372,6 +370,7 @@ def notify_dispatcher(self, cnxt, engine_id, call, *args, **kwargs):
         cctxt.call(cnxt, call, *args, **kwargs)
     except messaging.MessagingTimeout:
         return False
+
 
 def broadcast_dispatcher(self, cnxt, call, *args, **kwargs):
     '''Broadcast notification to all active dispatchers'''
