@@ -876,6 +876,26 @@ def action_start_work_on(context, action_id, owner):
     return action
 
 
+def action_control(context, action_id, value):
+    action = model_query(context, models.Action).get(action_id)
+    if not action:
+        raise exception.NotFound(
+            _('Action with id "%s" not found') % action_id)
+
+    action.control = value
+    action.save(_session(context))
+
+
+def action_control_check(context, action_id):
+    action = model_query(context, models.Action).get(action_id)
+    if not action:
+        raise exception.NotFound(
+            _('Action with id "%s" not found') % action_id)
+
+    value = action.control
+    return value
+
+
 def action_delete(context, action_id, force=False):
     action = action_get(context, action_id)
 
