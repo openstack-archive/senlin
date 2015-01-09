@@ -8,6 +8,8 @@ DB
   - Add field size to cluster table
   - Modify node_set_status to check/update cluster status
   - Add field cluster_id to event table so that query by cluster is easier
+  - Add more action related support in DB, e.g. unlock action, mark action
+    control status to cancel, suspend, resume, etc. [Yanyan Hu]
 
 ENGINE
 ------
