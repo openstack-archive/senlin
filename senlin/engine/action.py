@@ -16,9 +16,11 @@ import datetime
 from oslo.config import cfg
 
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.db import api as db_api
 from senlin.engine import node as nodes
 from senlin.engine import scheduler
+from senlin.engine import service
 from senlin.policies import base as policies
 
 
@@ -27,9 +29,9 @@ class Action(object):
     An action can be performed on a cluster or a node of a cluster.
     '''
     RETURNS = (
-        RES_OK, RES_ERROR, RES_RETRY,
+        RES_OK, RES_ERROR, RES_RETRY, RES_CANCEL,
     ) = (
-        'OK', 'ERROR', 'RETRY',
+        'OK', 'ERROR', 'RETRY', 'CANCEL',
     )
 
     # Action status definitions:
@@ -240,7 +242,7 @@ class ClusterAction(Action):
     def __init__(self, context, action, **kwargs):
         super(ClusterAction, self).__init__(context, action, **kwargs)
 
-    def do_cluster_create(self, cluster):
+    def do_create(self, cluster):
         # TODO(Yanyan): Check if cluster lock is needed
         res = cluster.do_create()
         if res is False:
@@ -260,18 +262,50 @@ class ClusterAction(Action):
             action = Action(self.context, 'NODE_CREATE', **kwargs)
             action.set_status(self.READY)
 
-        scheduler.notify()
+        service.broadcast_dispatcher(self.context,
+                                     service.Dispatcher.NEW_ACTION,
+                                     action_id=action.id)
+
+        # Wait for cluster create complete
+        while not cluster.check_complete():
+            # Sleep for a while if cluster updating
+            # has not finished
+            scheduler.action_sleep(self)
+
+        # Cluster create finished, update its status
+        # TODO(Yanyan): release lock
+        cluster.set_status(self.ACTIVE)
+
         return self.RES_OK
 
     def do_update(self, cluster, new_profile_id):
         # TODO(Yanyan): Check if cluster lock is needed
+        old_profile_id = cluster.profile_id
         cluster.set_status(self.UPDATING)
+        # Note: we need clean the node count of cluster each time
+        # cluster.do_update is invoked; Then this count could be added
+        # gradually each time a node update action finished. This helps
+        # us to track the progress of cluster updating.
         res = cluster.do_update(self.context, profile_id=new_profile_id)
         if not res:
             return self.RES_ERROR
 
+        # We need this list for cancel update
+        action_list = []
+
         node_list = cluster.get_nodes()
         for node_id in node_list:
+            res = scheduler.action_checkpoint(self)
+            if res == scheduler.ACTION_CANCEL:
+                # If cancel request come during this period,
+                # all node update actions have not been started
+                # yet, we just remove these actions that have
+                # been created and restore cluster.
+                for action in action_list:
+                    db_api.action_delete(action.id)
+                res = cluster.do_update(self.context,
+                                        profile_id=old_profile_id)
+                return self.RES_CANCEL
             kwargs = {
                 'name': 'node-update-%s' % node_id,
                 'context': self.context,
@@ -282,13 +316,79 @@ class ClusterAction(Action):
                 }
             }
             action = Action(self.context, 'NODE_UPDATE', **kwargs)
+            action_list.append(action)
             action.set_status(self.READY)
 
-        scheduler.notify()
+        service.broadcast_dispatcher(self.context,
+                                     service.Dispatcher.NEW_ACTION,
+                                     action_id=action.id)
+
+        # Wait for cluster updating complete
+        while not cluster.check_complete():
+            res = scheduler.action_checkpoint(self)
+            if res == scheduler.ACTION_CANCEL:
+                # During this period, if cancel request come,
+                # cancel this cluster updating, including all
+                # possible in-progress node update actions.
+                self.do_cancel_update(cluster, old_profile_id)
+                return self.RES_CANCEL
+            # Sleep for a while if cluster updating
+            # has not finished
+            scheduler.action_sleep(self)
+
         # TODO(Yanyan): release lock
         cluster.set_status(self.ACTIVE)
 
         return self.RES_OK
+
+    def do_cancel_update(self, cluster, old_profile_id):
+        node_list = cluster.get_nodes()
+        for node_id in node_list:
+            node = db_api.node_get(self.context, node_id)
+            # We try to search node related action in DB
+            node_action = db_api.action_get_from_target()
+            if not node_action:
+                # Node action doesn't exist which means this
+                # action has been executed successfully, we
+                # need to update this node back to old verison.
+                # Create a new action to do this.
+                kwargs = {
+                    'name': 'node-update-%s' % node_id,
+                    'context': self.context,
+                    'target': node_id,
+                    'cause': 'Cluster update',
+                    'inputs': {
+                        'new_profile_id': old_profile_id,
+                    }
+                }
+                action = Action(self.context, 'NODE_UPDATE', **kwargs)
+                action.set_status(self.READY)
+            elif db_api.action_lock_check(node_action.id):
+                # If node action exist and is now in progress,
+                # cancel it.
+                # TODO: we need new db_api interface here.
+                scheduler.cancel_action(self.context, node_action.id)
+            else:
+                # Node action exist and not been locked,
+                # directly remove it from DB.
+                db_api.action_delete(node_action.id)
+
+            # Restore node obj
+            node.do_update(self.context, profile_id=old_profile_id)
+
+        # Wait for cluster create complete
+        while not cluster.check_complete():
+            # Sleep for a while if cluster updating
+            # has not finished
+            scheduler.action_sleep(self)
+
+        # Restore cluster based on old profile
+        res = cluster.do_update(self.context, profile_id=old_profile_id)
+
+        # TODO(Yanyan): release lock
+        cluster.set_status(self.ACTIVE)
+
+        return res
 
     def do_delete(self, cluster):
         # TODO(Yanyan): Check if cluster lock is needed
@@ -303,7 +403,9 @@ class ClusterAction(Action):
             action = Action(self.context, 'NODE_UPDATE', **kwargs)
             action.set_status(self.READY)
 
-        scheduler.notify()
+        service.broadcast_dispatcher(self.context,
+                                     service.Dispatcher.NEW_ACTION,
+                                     action_id=action.id)
 
         return self.RES_OK
 
@@ -356,8 +458,6 @@ class ClusterAction(Action):
         if not cluster:
             return self.RES_ERROR
 
-        checkpoint = kwargs.get('checkpoint')
-
         if self.action == self.CLUSTER_CREATE:
             res = self.do_create(cluster)
         elif self.action == self.CLUSTER_UPDATE:
@@ -405,8 +505,6 @@ class NodeAction(Action):
         if not node:
             msg = _('Node with id (%s) is not found') % self.target
             raise exception.NotFound(msg)
-
-        checkpoint = kwargs.get('checkpoint')
 
         # TODO(Qiming): Add node status changes
         if self.action == self.NODE_CREATE:
@@ -466,8 +564,6 @@ class PolicyAction(Action):
         cluster_id = kwargs.get('cluster_id')
         policy_id = kwargs.get('policy_id')
 
-        checkpoint = kwargs.get('checkpoint')
-
         # an ENABLE/DISABLE action only changes the database table
         if self.action == self.POLICY_ENABLE:
             db_api.cluster_enable_policy(cluster_id, policy_id)
@@ -503,7 +599,6 @@ class CustomAction(Action):
         super(CustomAction, self).__init__(context, action, **kwargs)
 
     def execute(self, **kwargs):
-        checkpoint = kwargs.get('checkpoint')
         return self.RES_OK
 
     def cancel(self):
