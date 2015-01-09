@@ -132,7 +132,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         for spec in specs:
             self.assertIn(spec['name'], names)
 
-    def _check_action_add_dependency_depended_list(self):
+    def _check_action_add_dependency_dependent_list(self):
         specs = [
             {'name': 'action_001', 'target': 'cluster_001'},
             {'name': 'action_002', 'target': 'node_001'},
@@ -172,7 +172,7 @@ class DBAPIActionTest(base.SenlinTestCase):
             self.assertEqual(action.status, db_api.ACTION_WAITING)
         return id_of
 
-    def _check_action_add_dependency_dependent_list(self):
+    def _check_action_add_dependency_depended_list(self):
         specs = [
             {'name': 'action_001', 'target': 'cluster_001'},
             {'name': 'action_002', 'target': 'node_001'},
@@ -220,9 +220,6 @@ class DBAPIActionTest(base.SenlinTestCase):
 
     def test_action_del_dependency_depended_list(self):
         id_of = self._check_action_add_dependency_depended_list()
-
-    def test_action_del_dependency_dependent_list(self):
-        id_of = self._check_action_add_dependency_dependent_list()
         db_api.action_del_dependency(self.ctx,
                                      [id_of['action_002'],
                                       id_of['action_003'],
@@ -239,8 +236,8 @@ class DBAPIActionTest(base.SenlinTestCase):
             action = db_api.action_get(self.ctx, id)
             self.assertEqual(0, len(action.depended_by['l']))
 
-    def test_action_del_dependency_depended_list(self):
-        id_of = self._check_action_add_dependency_depended_list()
+    def test_action_del_dependency_dependent_list(self):
+        id_of = self._check_action_add_dependency_dependent_list()
         db_api.action_del_dependency(self.ctx,
                                      id_of['action_001'],
                                      [id_of['action_002'],
@@ -258,7 +255,7 @@ class DBAPIActionTest(base.SenlinTestCase):
             self.assertEqual(action.status, db_api.ACTION_READY)
 
     def test_action_mark_succeeded(self):
-        id_of = self._check_action_add_dependency_depended_list()
+        id_of = self._check_action_add_dependency_dependent_list()
         db_api.action_mark_succeeded(self.ctx, id_of['action_001'])
 
         action = db_api.action_get(self.ctx, id_of['action_001'])
