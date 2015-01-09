@@ -18,9 +18,9 @@ from oslo.config import cfg
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.db import api as db_api
+from senlin.engine import dispatcher
 from senlin.engine import node as nodes
 from senlin.engine import scheduler
-from senlin.engine import service
 from senlin.policies import base as policies
 
 
@@ -262,9 +262,10 @@ class ClusterAction(Action):
             action = Action(self.context, 'NODE_CREATE', **kwargs)
             action.set_status(self.READY)
 
-        service.broadcast_dispatcher(self.context,
-                                     service.Dispatcher.NEW_ACTION,
-                                     action_id=action.id)
+        dispatcher.notify(self.context,
+                          dispatcher.Dispatcher.NEW_ACTION,
+                          None,
+                          action_id=action.id)
 
         # Wait for cluster create complete
         while not cluster.check_complete():
@@ -290,22 +291,10 @@ class ClusterAction(Action):
         if not res:
             return self.RES_ERROR
 
-        # We need this list for cancel update
+        # Create NodeActions for all nodes
         action_list = []
-
         node_list = cluster.get_nodes()
         for node_id in node_list:
-            res = scheduler.action_checkpoint(self)
-            if res == scheduler.ACTION_CANCEL:
-                # If cancel request come during this period,
-                # all node update actions have not been started
-                # yet, we just remove these actions that have
-                # been created and restore cluster.
-                for action in action_list:
-                    db_api.action_delete(action.id)
-                res = cluster.do_update(self.context,
-                                        profile_id=old_profile_id)
-                return self.RES_CANCEL
             kwargs = {
                 'name': 'node-update-%s' % node_id,
                 'context': self.context,
@@ -319,75 +308,77 @@ class ClusterAction(Action):
             action_list.append(action)
             action.set_status(self.READY)
 
-        service.broadcast_dispatcher(self.context,
-                                     service.Dispatcher.NEW_ACTION,
-                                     action_id=action.id)
+            # add new action to waiting/dependency list 
+            # TODO: need db_api support
+            db_api.add_dependency(self, action)
+
+        # Notify dispatcher
+        for action in action_list:
+            dispatcher.notify(self.context,
+                              dispatcher.Dispatcher.NEW_ACTION,
+                              action_id=action.id)
 
         # Wait for cluster updating complete
-        while not cluster.check_complete():
-            res = scheduler.action_checkpoint(self)
-            if res == scheduler.ACTION_CANCEL:
+        # TODO: need db support
+        while self.get_status() != self.READY:
+            if scheduler.action_cancelled(self)
                 # During this period, if cancel request come,
                 # cancel this cluster updating, including all
                 # possible in-progress node update actions.
-                self.do_cancel_update(cluster, old_profile_id)
+                self.cancel_update(cluster, old_profile_id)
                 return self.RES_CANCEL
-            # Sleep for a while if cluster updating
-            # has not finished
-            scheduler.action_sleep(self)
+
+            # Continue waiting (with sleep)
+            scheduler.reschedule(self, sleep=0)
 
         # TODO(Yanyan): release lock
-        cluster.set_status(self.ACTIVE)
+        cluster.set_status(cluster.ACTIVE)
 
         return self.RES_OK
 
-    def do_cancel_update(self, cluster, old_profile_id):
+    def _cancel_update(self, cluster, old_profile_id):
         node_list = cluster.get_nodes()
         for node_id in node_list:
-            node = db_api.node_get(self.context, node_id)
             # We try to search node related action in DB
             # TODO: we need a new db_api interface here
-            node_action = db_api.action_get_from_target()
+            node_action = db_api.action_get_by_target(node_id)
             if not node_action:
                 # Node action doesn't exist which means this
                 # action has been executed successfully, we
-                # need to update this node back to old verison.
-                # Create a new action to do this.
-                kwargs = {
-                    'name': 'node-update-%s' % node_id,
-                    'context': self.context,
-                    'target': node_id,
-                    'cause': 'Cluster update',
-                    'inputs': {
-                        'new_profile_id': old_profile_id,
-                    }
-                }
-                action = Action(self.context, 'NODE_UPDATE', **kwargs)
-                action.set_status(self.READY)
+                # don't do anything to it
+                continue
             elif db_api.action_lock_check(self.context, node_action.id):
                 # If node action exist and is now in progress,
-                # cancel it.
+                # try to cancel it.
                 # TODO: we need new db_api interface here.
                 scheduler.cancel_action(self.context, node_action.id)
             else:
                 # Node action exist and not been locked,
-                # directly remove it from DB.
-                db_api.action_delete(node_action.id)
+                # try to lock it and remove it from DB.
+
+                # Just use action_id as the owner_id when lock action
+                action = db_api.action_start_work_on(self.context,
+                                                     node_action.id,
+                                                     node_action.id)
+                if action:
+                    # Get lock successfully, delete this action
+                    db_api.action_delete(action.id)
+                else:
+                    # Action is locked by other worker, cancel it
+                    scheduler.cancel_action(self.context, action.id)
 
             # Restore node obj
+            node = db_api.node_get(self.context, node_id)
             node.do_update(self.context, profile_id=old_profile_id)
 
-        # Wait for cluster create complete
-        while not cluster.check_complete():
-            # Sleep for a while if cluster updating
-            # has not finished
-            scheduler.action_sleep(self)
+        # We don't wait for node action cancel finishing
+        # TODO: may need more discussion
 
         # Restore cluster based on old profile
         res = cluster.do_update(self.context, profile_id=old_profile_id)
 
         # TODO(Yanyan): release lock
-        cluster.set_status(self.ACTIVE)
+        cluster.set_status(cluster.UPDATE_CANCELLED)
 
         return res
 
@@ -404,9 +395,10 @@ class ClusterAction(Action):
             action = Action(self.context, 'NODE_UPDATE', **kwargs)
             action.set_status(self.READY)
 
-        service.broadcast_dispatcher(self.context,
-                                     service.Dispatcher.NEW_ACTION,
-                                     action_id=action.id)
+        dispatcher.notify(self.context,
+                          dispatcher.Dispatcher.NEW_ACTION,
+                          None,
+                          action_id=action.id)
 
         return self.RES_OK
 

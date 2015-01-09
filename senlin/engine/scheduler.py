@@ -267,17 +267,16 @@ def action_timeout(action):
         return False
 
 
-def action_sleep(action, wait_time=1):
+def reschedule(action, sleep_time=1):
     """
     Eventlet Sleep for the specified number of seconds.
 
-    :param wait_time: seconds to wait if no any control
-                      event exists; if None, no sleep;
+    :param sleep_time: seconds to sleep; if None, no sleep;
     """
-    if wait_time is not None:
+    if sleep_time is not None:
         LOG.debug('Action %s sleep for %s seconds' % (
-            action.id, wait_time))
-        eventlet.sleep(wait_time)
+            action.id, sleep_time))
+        eventlet.sleep(sleep_time)
 
 
 def action_wait(action):
