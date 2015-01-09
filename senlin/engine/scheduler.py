@@ -202,7 +202,7 @@ def suspend_action(cnxt, action_id):
     """
     # Set action control flag to suspend
     # TODO: need db_api support
-    db_api.action_suspend(cnxt, action_id)
+    db_api.action_control(cnxt, action_id, ACTION_SUSPEND)
 
 
 def resume_action(cnxt, action_id):
@@ -214,7 +214,7 @@ def resume_action(cnxt, action_id):
     """
     # Set action control flag to suspend
     # TODO: need db_api support
-    db_api.action_resume(cnxt, action_id)
+    db_api.action_control(cnxt, action_id, ACTION_RESUME)
 
 
 def cancel_action(cnxt, action_id):
@@ -226,7 +226,7 @@ def cancel_action(cnxt, action_id):
     """
     # Set action control flag to cancel
     # TODO: need db_api support
-    db_api.action_cancel(cnxt, action_id)
+    db_api.action_control(cnxt, action_id, ACTION_CANCEL)
 
 
 def action_checkpoint(action, wait_time=0):
@@ -243,7 +243,7 @@ def action_checkpoint(action, wait_time=0):
         return ACTION_TIMEOUT
 
     # Check possible control control request
-    result = db_api.check_control_request(self.cnxt, action.id)
+    result = db_api.action_control_check(self.cnxt, action.id)
     if not result:
         # no control request, sleep if
         # necessary and then return

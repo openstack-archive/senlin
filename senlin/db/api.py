@@ -276,6 +276,21 @@ def action_start_work_on(context, action_id, owner):
     return IMPL.action_start_work_on(context, action_id, owner)
 
 
+def action_unlock(context, action_id, owner):
+    """Unlock and action so it can be queried again"""
+    return IMPL.action_unlock(context, action_id, owner)
+
+
+def action_control(context, action_id, value):
+    """Set action control status to value"""
+    return IMPL.action_control(context, action_id, value)
+
+
+def action_control_check(context, action_id):
+    """Get action control status"""
+    return IMPL.action_control_check(context, action_id)
+
+
 def action_delete(context, action_id, force=False):
     return IMPL.action_delete(context, action_id, force)
 
