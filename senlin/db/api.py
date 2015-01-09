@@ -281,6 +281,11 @@ def action_unlock(context, action_id, owner):
     return IMPL.action_unlock(context, action_id, owner)
 
 
+def action_lock_check(context, action_id, owner=None):
+    """Check whether an action has been locked(by a owner)"""
+    return IMPL.action_lock_check(context, action_id, owner)
+
+
 def action_control(context, action_id, value):
     """Set action control status to value"""
     return IMPL.action_control(context, action_id, value)

@@ -346,6 +346,7 @@ class ClusterAction(Action):
         for node_id in node_list:
             node = db_api.node_get(self.context, node_id)
             # We try to search node related action in DB
+            # TODO: we need a new db_api interface here
             node_action = db_api.action_get_from_target()
             if not node_action:
                 # Node action doesn't exist which means this
@@ -363,7 +364,7 @@ class ClusterAction(Action):
                 }
                 action = Action(self.context, 'NODE_UPDATE', **kwargs)
                 action.set_status(self.READY)
-            elif db_api.action_lock_check(node_action.id):
+            elif db_api.action_lock_check(self.context, node_action.id):
                 # If node action exist and is now in progress,
                 # cancel it.
                 # TODO: we need new db_api interface here.
