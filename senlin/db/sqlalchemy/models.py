@@ -232,6 +232,7 @@ class Action(BASE, SenlinBase, SoftDelete):
     timeout = sqlalchemy.Column(sqlalchemy.Integer)
     status = sqlalchemy.Column(sqlalchemy.String(255))
     status_reason = sqlalchemy.Column(sqlalchemy.String(255))
+    control = sqlalchemy.Column(sqlalchemy.String(255))
     inputs = sqlalchemy.Column(types.Json)
     outputs = sqlalchemy.Column(types.Json)
     depends_on = sqlalchemy.Column(types.Json)

@@ -13,7 +13,6 @@
 
 import functools
 
-from oslo.config import cfg
 from oslo import messaging
 from oslo.utils import uuidutils
 from osprofiler import profiler
@@ -26,6 +25,7 @@ from senlin.common import messaging as rpc_messaging
 from senlin.db import api as db_api
 from senlin.engine import action as actions
 from senlin.engine import cluster as clusters
+from senlin.engine import dispatcher
 from senlin.engine import senlin_lock
 from senlin.engine import scheduler
 from senlin.openstack.common import log as logging
@@ -45,67 +45,6 @@ def request_context(func):
         except exception.SenlinException:
             raise messaging.rpc.dispatcher.ExpectedException()
     return wrapped
-
-
-@profiler.trace_cls("rpc")
-class Dispatcher(service.Service):
-    '''
-    Listen on an AMQP queue named for the engine.  Receive
-    notification from engine services and schedule actions.
-    '''
-
-    OPERATIONS = (NEW_ACTION, CANCEL_ACTION, SEND, STOP) = (
-        'new_action', 'cancel_action', 'send', 'stop')
-
-    def __init__(self, engine_id, topic, version, thread_group_mgr):
-        super(Dispatcher, self).__init__()
-        self.TG = thread_group_mgr
-        self.engine_id = engine_id
-        self.topic = topic
-        self.version = version
-
-    def start(self):
-        super(Dispatcher, self).start()
-        self.target = messaging.Target(server=self.engine_id,
-                                       topic=self.topic,
-                                       version=self.version)
-        server = rpc_messaging.get_rpc_server(self.target, self)
-        server.start()
-
-    def listening(self, ctxt):
-        '''
-        Respond affirmatively to confirm that the engine performing the
-        action is still alive.
-        '''
-        return True
-
-    def new_action(self, ctxt, action_id=None):
-        '''New action has been ready, try to schedule it'''
-        self.TG.start_action(ctxt, action_id, self.engine_id)
-
-    def cancel_action(self, ctxt, action_id):
-        '''Cancel an action.'''
-        self.TG.cancel_action(ctxt, action_id)
-
-    def suspend_action(self, ctxt, action_id):
-        '''Suspend an action.'''
-        raise NotImplementedError
-
-    def resume_action(self, ctxt, action_id):
-        '''Resume an action.'''
-        raise NotImplementedError
-
-    def stop(self):
-        super(Dispatcher, self).stop()
-        # Wait for all action threads to be finished
-        LOG.info(_LI("Stopping all action threads of engine %s"),
-                 self.engine_id)
-        # Stop ThreadGroup gracefully
-        self.TG.stop(True)
-        LOG.info(_LI("All action threads have been finished"))
-
-    def send(self, ctxt, action_id, message):
-        self.TG.send(action_id, message)
 
 
 @profiler.trace_cls("rpc")
@@ -143,10 +82,10 @@ class EngineService(service.Service):
         # TODO(Yanyan): create a dispatcher for this engine thread.
         # This dispatcher will run in a greenthread and it will not
         # stop until being notified or the engine is stopped.
-        self.dispatcher = Dispatcher(self.engine_id,
-                                     self.dispatcher_topic,
-                                     self.RPC_API_VERSION,
-                                     self.TG)
+        self.dispatcher = dispatcher.Dispatcher(self.engine_id,
+                                                self.dispatcher_topic,
+                                                self.RPC_API_VERSION,
+                                                self.TG)
         LOG.debug("Starting dispatcher for engine %s" % self.engine_id)
         self.dispatcher.start()
 
@@ -168,7 +107,7 @@ class EngineService(service.Service):
             pass
 
         # Notify dispatcher to stop all action threads it started.
-        notify_dispatcher(context, self.engine_id, self.dispatcher.STOP)
+        dispatcher.notify(context, self.dispatcher.STOP, self.engine_id)
 
         # Terminate the engine process
         LOG.info(_LI("All threads were gone, terminating engine"))
@@ -298,9 +237,10 @@ class EngineService(service.Service):
         action = actions.Action(context, cluster, 'CLUSTER_CREATE', **kwargs)
         action.store()
         # Notify Dispatchers that a new action has been ready.
-        broadcast_dispatcher(context,
-                             self.dispatcher.NEW_ACTION,
-                             action_id=action.id)
+        dispatcher.notify(context,
+                          self.dispatcher.NEW_ACTION,
+                          None,
+                          action_id=action.id)
 
         return cluster.id
 
@@ -332,9 +272,10 @@ class EngineService(service.Service):
         }
 
         action = actions.Action(context, cluster, 'CLUSTER_UPDATE', **kwargs)
-        broadcast_dispatcher(context,
-                             self.dispatcher.NEW_ACTION,
-                             action_id=action.id)
+        dispatcher.notify(context,
+                          self.dispatcher.NEW_ACTION,
+                          None,
+                          action_id=action.id)
 
         return cluster.id
 
@@ -352,38 +293,9 @@ class EngineService(service.Service):
 
         cluster = clusters.Cluster.load(context, cluster=db_cluster)
         action = actions.Action(context, cluster, 'CLUSTER_DELETE')
-        res = broadcast_dispatcher(context,
-                                   self.dispatcher.NEW_ACTION,
-                                   action_id=action.id)
+        res = dispatcher.notify(context,
+                                self.dispatcher.NEW_ACTION,
+                                None,
+                                action_id=action.id)
 
         return res
-
-def notify_dispatcher(self, cnxt, engine_id, call, *args, **kwargs):
-    '''Send notification to specific dispatcher'''
-    timeout = cfg.CONF.engine_life_check_timeout
-    client = rpc_messaging.get_rpc_client(
-        version=EngineService.RPC_API_VERSION)
-
-    cctxt = client.prepare(version=EngineService.RPC_API_VERSION,
-                           timeout=timeout,
-                           topic=rpc_api.ENGINE_DISPATCHER_TOPIC,
-                           server=engine_id)
-    try:
-        cctxt.call(cnxt, call, *args, **kwargs)
-    except messaging.MessagingTimeout:
-        return False
-
-def broadcast_dispatcher(self, cnxt, call, *args, **kwargs):
-    '''Broadcast notification to all active dispatchers'''
-    timeout = cfg.CONF.engine_life_check_timeout
-    client = rpc_messaging.get_rpc_client(
-        version=EngineService.RPC_API_VERSION)
-
-    cctxt = client.prepare(version=EngineService.RPC_API_VERSION,
-                           timeout=timeout,
-                           topic=rpc_api.ENGINE_DISPATCHER_TOPIC,
-                           fanout=True)
-    try:
-        cctxt.call(cnxt, call, *args, **kwargs)
-    except messaging.MessagingTimeout:
-        return False

@@ -32,9 +32,9 @@ class Cluster(object):
     '''
 
     statuses = (
-        INIT, ACTIVE, ERROR, DELETED, UPDATING,
+        INIT, ACTIVE, ERROR, DELETED, UPDATING, UPDATE_CANCELLED,
     ) = (
-        'INIT', 'ACTIVE', 'ERROR', 'DELETED', 'UPDATING',
+        'INIT', 'ACTIVE', 'ERROR', 'DELETED', 'UPDATING', 'UPDATE_CANCELLED',
     )
 
     def __init__(self, context, name, profile_id, size=0, **kwargs):
