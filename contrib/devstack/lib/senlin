@@ -1,0 +1,199 @@
+#!/bin/bash
+#
+# lib/senlin
+# Install and start **Senlin** service
+
+# To enable, add the following to localrc
+#
+#   ENABLED_SERVICES+=,senlin,sl-api,,sl-eng
+
+# Dependencies:
+#
+# - functions
+
+# stack.sh
+# ---------
+# - install_senlinclient
+# - install_senlin
+# - configure_senlinclient
+# - configure_senlin
+# - init_senlin
+# - start_senlin
+# - stop_senlin
+# - cleanup_senlin
+
+# Save trace setting
+XTRACE=$(set +o | grep xtrace)
+set +o xtrace
+
+
+# Defaults
+# --------
+
+# set up default directories
+GITDIR["python-senlinclient"]=$DEST/python-senlinclient
+
+SENLIN_DIR=$DEST/senlin
+SENLIN_AUTH_CACHE_DIR=${SENLIN_AUTH_CACHE_DIR:-/var/cache/senlin}
+SENLIN_CONF_DIR=/etc/senlin
+SENLIN_CONF=$SENLIN_CONF_DIR/senlin.conf
+SENLIN_API_HOST=${SENLIN_API_HOST:-$HOST_IP}
+SENLIN_API_PORT=${SENLIN_API_PORT:-8778}
+
+
+# Functions
+# ---------
+
+# Test if any Senlin services are enabled
+function is_senlin_enabled {
+    [[ ,${ENABLED_SERVICES} =~ ,"sl-" ]] && return 0
+    return 1
+}
+
+# cleanup_senlin() - Remove residual data files, anything left over from previous
+# runs that a clean run would need to clean up
+function cleanup_senlin {
+    sudo rm -rf $SENLIN_AUTH_CACHE_DIR
+}
+
+# configure_senlin() - Set config files, create data dirs, etc
+function configure_senlin {
+    setup_develop $SENLIN_DIR
+
+    if [[ ! -d $SENLIN_CONF_DIR ]]; then
+        sudo mkdir -p $SENLIN_CONF_DIR
+    fi
+    sudo chown $STACK_USER $SENLIN_CONF_DIR
+    # remove old config files
+    rm -f $SENLIN_CONF_DIR/senlin-*.conf
+
+    SENLIN_ENGINE_HOST=${SENLIN_ENGINE_HOST:-$SERVICE_HOST}
+    SENLIN_ENGINE_PORT=${SENLIN_ENGINE_PORT:-8778}
+    SENLIN_API_PASTE_FILE=$SENLIN_CONF_DIR/api-paste.ini
+    SENLIN_POLICY_FILE=$SENLIN_CONF_DIR/policy.json
+
+    cp $SENLIN_DIR/etc/senlin/api-paste.ini $SENLIN_API_PASTE_FILE
+    cp $SENLIN_DIR/etc/senlin/policy.json $SENLIN_POLICY_FILE
+
+    # common options
+    iniset_rpc_backend senlin $SENLIN_CONF DEFAULT
+    iniset $SENLIN_CONF database connection `database_connection_url senlin`
+    iniset $SENLIN_CONF DEFAULT auth_encryption_key $(generate_hex_string 16)
+
+    iniset $SENLIN_CONF DEFAULT region_name_for_services "$REGION_NAME"
+
+    # logging
+    iniset $SENLIN_CONF DEFAULT debug $ENABLE_DEBUG_LOG_LEVEL
+    iniset $SENLIN_CONF DEFAULT use_syslog $SYSLOG
+    if [ "$LOG_COLOR" == "True" ] && [ "$SYSLOG" == "False" ]; then
+        # Add color to logging output
+        setup_colorized_logging $SENLIN_CONF DEFAULT tenant user
+    fi
+
+    configure_auth_token_middleware $SENLIN_CONF senlin $SENLIN_AUTH_CACHE_DIR
+
+    if is_ssl_enabled_service "key"; then
+        iniset $SENLIN_CONF clients_keystone ca_file $SSL_BUNDLE_FILE
+    fi
+
+    # ec2authtoken
+    iniset $SENLIN_CONF ec2authtoken auth_uri $KEYSTONE_SERVICE_URI/v2.0
+
+    # OpenStack API
+    iniset $SENLIN_CONF senlin_api bind_port $SENLIN_API_PORT
+
+    if is_ssl_enabled_service "key" || is_service_enabled tls-proxy; then
+        iniset $SENLIN_CONF clients_keystone ca_file $SSL_BUNDLE_FILE
+    fi
+
+    if is_ssl_enabled_service "nova" || is_service_enabled tls-proxy; then
+        iniset $SENLIN_CONF clients_nova ca_file $SSL_BUNDLE_FILE
+    fi
+
+    if is_ssl_enabled_service "cinder" || is_service_enabled tls-proxy; then
+        iniset $SENLIN_CONF clients_cinder ca_file $SSL_BUNDLE_FILE
+    fi
+}
+
+# init_senlin() - Initialize database
+function init_senlin {
+
+    # (re)create senlin database
+    recreate_database senlin utf8
+
+    $SENLIN_DIR/bin/senlin-manage db_sync
+    create_senlin_cache_dir
+}
+
+# create_senlin_cache_dir() - Part of the init_senlin() process
+function create_senlin_cache_dir {
+    # Create cache dirs
+    sudo mkdir -p $SENLIN_AUTH_CACHE_DIR
+    sudo chown $STACK_USER $SENLIN_AUTH_CACHE_DIR
+}
+
+# install_senlinclient() - Collect source and prepare
+function install_senlinclient {
+    if use_library_from_git "python-senlinclient"; then
+        git_clone_by_name "python-senlinclient"
+        setup_dev_lib "python-senlinclient"
+        sudo install -D -m 0644 -o $STACK_USER {${GITDIR["python-senlinclient"]}/tools/,/etc/bash_completion.d/}senlin.bash_completion
+    fi
+}
+
+# install_senlin() - Collect source and prepare
+function install_senlin {
+    git_clone $SENLIN_REPO $SENLIN_DIR $SENLIN_BRANCH
+}
+
+# install_senlin_other() - Collect source and prepare
+function install_senlin_other {
+}
+
+# start_senlin() - Start running processes, including screen
+function start_senlin {
+    run_process sl-eng "$SENLIN_DIR/bin/senlin-engine --config-file=$SENLIN_CONF"
+    run_process sl-api "$SENLIN_DIR/bin/senlin-api --config-file=$SENLIN_CONF"
+}
+
+# stop_senlin() - Stop running processes
+function stop_senlin {
+    # Kill the screen windows
+    local serv
+    for serv in sl-eng sl-api; do
+        stop_process $serv
+    done
+}
+
+# create_senlin_accounts() - Set up common required senlin accounts
+function create_senlin_accounts {
+    # migrated from files/keystone_data.sh
+    local service_tenant=$(openstack project list | awk "/ $SERVICE_TENANT_NAME / { print \$2 }")
+    local admin_role=$(openstack role list | awk "/ admin / { print \$2 }")
+
+    local senlin_user=$(get_or_create_user "senlin" \
+        "$SERVICE_PASSWORD" $service_tenant)
+    get_or_add_user_role $admin_role $senlin_user $service_tenant
+
+    if [[ "$KEYSTONE_CATALOG_BACKEND" = 'sql' ]]; then
+
+        local senlin_service=$(get_or_create_service "senlin" \
+                "clustering" "Senlin Clustering Service")
+        get_or_create_endpoint $senlin_service \
+            "$REGION_NAME" \
+            "$SERVICE_PROTOCOL://$SENLIN_API_HOST:$SENLIN_API_PORT/v1/\$(tenant_id)s" \
+            "$SERVICE_PROTOCOL://$SENLIN_API_HOST:$SENLIN_API_PORT/v1/\$(tenant_id)s" \
+            "$SERVICE_PROTOCOL://$SENLIN_API_HOST:$SENLIN_API_PORT/v1/\$(tenant_id)s"
+    fi
+
+    # senlin_stack_user role is for users created by Senlin 
+    # get_or_create_role "senlin_cluster_user"
+}
+
+# Restore xtrace
+$XTRACE
+
+# Tell emacs to use shell-script-mode
+## Local variables:
+## mode: shell-script
+## End:
