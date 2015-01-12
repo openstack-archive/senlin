@@ -248,6 +248,7 @@ class ClusterAction(Action):
         if res is False:
             return self.RES_ERROR
 
+        action_list = []
         for m in range(cluster.size):
             name = 'node-%003d' % m
             node = nodes.Node(name, cluster.profile_id, cluster.id)
@@ -260,22 +261,36 @@ class ClusterAction(Action):
             }
 
             action = Action(self.context, 'NODE_CREATE', **kwargs)
+            action_list.append(action)
             action.set_status(self.READY)
 
-        dispatcher.notify(self.context,
-                          dispatcher.Dispatcher.NEW_ACTION,
-                          None,
-                          action_id=action.id)
+            # add new action to waiting/dependency list 
+            # TODO: need db_api support
+            db_api.action_add_dependency(action, self)
 
-        # Wait for cluster create complete
-        while not cluster.check_complete():
-            # Sleep for a while if cluster updating
-            # has not finished
-            scheduler.action_sleep(self)
+        # Notify dispatcher
+        for action in action_list:
+            dispatcher.notify(self.context,
+                              dispatcher.Dispatcher.NEW_ACTION,
+                              None,
+                              action_id=action.id)
+
+        # Wait for cluster creating complete
+        # TODO: need db support
+        while self.get_status() != self.READY:
+            if scheduler.action_cancelled(self):
+                # During this period, if cancel request come,
+                # cancel this cluster updating, including all
+                # possible in-progress node update actions.
+                self.cancel_update(cluster, old_profile_id)
+                return self.RES_CANCEL
+
+            # Continue waiting (with sleep)
+            scheduler.reschedule(self, sleep=0)
 
         # Cluster create finished, update its status
         # TODO(Yanyan): release lock
-        cluster.set_status(self.ACTIVE)
+        cluster.set_status(cluster.ACTIVE)
 
         return self.RES_OK
 
@@ -310,18 +325,19 @@ class ClusterAction(Action):
 
             # add new action to waiting/dependency list 
             # TODO: need db_api support
-            db_api.add_dependency(self, action)
+            db_api.action_add_dependency(action, self)
 
         # Notify dispatcher
         for action in action_list:
             dispatcher.notify(self.context,
                               dispatcher.Dispatcher.NEW_ACTION,
+                              None,
                               action_id=action.id)
 
         # Wait for cluster updating complete
         # TODO: need db support
         while self.get_status() != self.READY:
-            if scheduler.action_cancelled(self)
+            if scheduler.action_cancelled(self):
                 # During this period, if cancel request come,
                 # cancel this cluster updating, including all
                 # possible in-progress node update actions.
@@ -384,6 +400,12 @@ class ClusterAction(Action):
 
     def do_delete(self, cluster):
         # TODO(Yanyan): Check if cluster lock is needed
+        # Try to lock the cluster. If failed, it means
+        # the cluster in an action progress, try to cancel
+        # this action
+        lock = db_api.cluster_lock_create(cluster.id)
+    
+
         node_list = cluster.get_nodes()
         for node_id in node_list:
             kwargs = {
