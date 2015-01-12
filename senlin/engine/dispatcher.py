@@ -19,7 +19,6 @@ from senlin.common import context
 from senlin.common.i18n import _LI
 from senlin.common import messaging as rpc_messaging
 from senlin.engine import scheduler
-from senlin.engine import engine_service
 from senlin.openstack.common import log as logging
 from senlin.openstack.common import service
 from senlin.rpc import api as rpc_api
@@ -37,10 +36,10 @@ class Dispatcher(service.Service):
     OPERATIONS = (NEW_ACTION, CANCEL_ACTION, STOP) = (
         'new_action', 'cancel_action', 'stop')
 
-    def __init__(self, engine_id, topic, version, thread_group_mgr):
+    def __init__(self, engine_service, topic, version, thread_group_mgr):
         super(Dispatcher, self).__init__()
         self.TG = thread_group_mgr
-        self.engine_id = engine_id
+        self.engine_id = engine_service.engine_id
         self.topic = topic
         self.version = version
 
@@ -88,7 +87,7 @@ class Dispatcher(service.Service):
 
         # Terminate the engine process
         LOG.info(_LI("All threads were gone, terminating engine"))
-        super(engine_service.EngineService, self).stop()
+        self.engine.stop()
 
 
 def notify(self, cnxt, call, engine_id, *args, **kwargs):
@@ -101,19 +100,19 @@ def notify(self, cnxt, call, engine_id, *args, **kwargs):
     """
     timeout = cfg.CONF.engine_life_check_timeout
     client = rpc_messaging.get_rpc_client(
-        version=engine_service.EngineService.RPC_API_VERSION)
+        version=rpc_api.RPC_API_VERSION)
 
     if engine_id:
         # Notify specific dispatcher identified by engine_id
         cctxt = client.prepare(
-            version=engine_service.EngineService.RPC_API_VERSION,
+            version=rpc_api.RPC_API_VERSION,
             timeout=timeout,
             topic=rpc_api.ENGINE_DISPATCHER_TOPIC,
             server=engine_id)
     else:
         # Broadcast to all disptachers
         cctxt = client.prepare(
-            version=engine_service.EngineService.RPC_API_VERSION,
+            version=rpc_api.RPC_API_VERSION,
             timeout=timeout,
             topic=rpc_api.ENGINE_DISPATCHER_TOPIC,
             fanout=True)

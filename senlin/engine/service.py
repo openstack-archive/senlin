@@ -59,7 +59,6 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.0'
 
     def __init__(self, host, topic, manager=None):
         super(EngineService, self).__init__()
@@ -82,14 +81,14 @@ class EngineService(service.Service):
         # TODO(Yanyan): create a dispatcher for this engine thread.
         # This dispatcher will run in a greenthread and it will not
         # stop until being notified or the engine is stopped.
-        self.dispatcher = dispatcher.Dispatcher(self.engine_id,
+        self.dispatcher = dispatcher.Dispatcher(self,
                                                 self.dispatcher_topic,
-                                                self.RPC_API_VERSION,
+                                                rpc_api.RPC_API_VERSION,
                                                 self.TG)
         LOG.debug("Starting dispatcher for engine %s" % self.engine_id)
         self.dispatcher.start()
 
-        target = messaging.Target(version=self.RPC_API_VERSION,
+        target = messaging.Target(version=rpc_api.RPC_API_VERSION,
                                   server=self.host,
                                   topic=self.topic)
         self.target = target
