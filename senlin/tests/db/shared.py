@@ -48,6 +48,7 @@ sample_action = '''
   action: create
   cause: User Initiate
   timeout: 60
+  control: READY
   status: INIT
   status_reason: Just Initialized
   inputs:

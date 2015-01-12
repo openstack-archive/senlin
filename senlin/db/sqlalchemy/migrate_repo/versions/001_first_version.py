@@ -150,6 +150,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('start_time', sqlalchemy.String(255)),
         sqlalchemy.Column('end_time', sqlalchemy.String(255)),
         sqlalchemy.Column('timeout', sqlalchemy.Integer),
+        sqlalchemy.Column('control', sqlalchemy.String(255)),
         sqlalchemy.Column('status', sqlalchemy.String(255)),
         sqlalchemy.Column('status_reason', sqlalchemy.String(255)),
         sqlalchemy.Column('inputs', types.Json),
