@@ -134,7 +134,7 @@ class ActionProc(object):
         status = self.action.get_status()
         while status in (self.action.INIT, self.action.WAITING):
             # TODO(Qiming): Handle 'start_time' field of an action
-            action_sleep(self.wait_time)
+            reschedule(self.action, sleep=self.wait_time)
             status = self.action.get_status()
 
         # Exit quickly if action has been taken care of or marked
@@ -229,30 +229,50 @@ def cancel_action(cnxt, action_id):
     db_api.action_control(cnxt, action_id, ACTION_CANCEL)
 
 
-def action_checkpoint(action, wait_time=0):
+def action_control_flag(action):
     """
     Check whether there are some action control requests
-    need to be handled or the action proc has timeout
-
-    :param wait_time: seconds to wait if no any control
-                      request exists; if None, no wait.
+    need to be handled.
     """
     # Check timeout first, if true, return timeout message
     if action.timeout is not None and action_timeout(action):
         LOG.debug('Action %s run timeout' % action.id)
         return ACTION_TIMEOUT
 
-    # Check possible control control request
+    # Check if action control flag is set
     result = db_api.action_control_check(self.cnxt, action.id)
-    if not result:
-        # no control request, sleep if
-        # necessary and then return
-        action_sleep(wait_time)
-        return
+    LOG.debug('Action %s control flag is %s', (action.id, result))
+    return result
+
+
+def action_cancelled(action):
+    """
+    Check whether an action's control flag is set to cancel
+    """
+    if action_control_flag(action) == ACTION_CANCEL:
+        return True
     else:
-        # Get event message and return it
-        LOG.debug('Action %s is request to %s', (action.id, result))
-        return result
+        return False
+
+
+def action_suspended(action):
+    """
+    Check whether an action's control flag is set to suspend
+    """
+    if action_control_flag(action) == ACTION_SUSPEND:
+        return True
+    else:
+        return False
+
+
+def action_resumed(action):
+    """
+    Check whether an action's control flag is set to suspend
+    """
+    if action_control_flag(action) == ACTION_RESUME:
+        return True
+    else:
+        return False
 
 
 def action_timeout(action):
@@ -281,8 +301,8 @@ def reschedule(action, sleep_time=1):
 
 def action_wait(action):
     """
-    Keep waiting util action resuming request come
+    Keep waiting util action resume control flag is set
     """
-    while action_checkpoint(action) is not ACTION_RESUME:
-        action_sleep(action)
+    while not action_resumed(action):
+        reschedule(action, sleep_time=1)
         continue
