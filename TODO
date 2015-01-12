@@ -1,11 +1,14 @@
 
-High Priority
+HIGH PRIORITY
 =============
+
+API
+---
+  - Complete the API layer for Senlin service
 
 DB
 --
   - Make sure cluster-policy association is deleted when a cluster is deleted
-  - Add field size to cluster table
   - Modify node_set_status to check/update cluster status
   - Add field cluster_id to event table so that query by cluster is easier
   - Add more action related support in DB, e.g. unlock action, mark action
@@ -29,14 +32,15 @@ ENGINE
 
 DRIVER
 ------
-  - complete Heat stack driver [Qiming]
+  - complete Heat stack driver
   - add Heat resource driver
 
 POLICY
 ------
   - healthy policy[Liuh]
 
-Middle Priority
+
+MIDDLE PRIORITY
 ===============
 
 DB
@@ -56,7 +60,7 @@ OSLO
   - Migrate to oslo.context
 
 
-Low Priority
+LOW PRIORITY
 ============
 
 TEST
