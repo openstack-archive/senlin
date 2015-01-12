@@ -251,8 +251,8 @@ class ClusterAction(Action):
         if worker_id != self.id:
             # This cluster has been locked by other action?
             # This should never happen here, raise an execption.
-            LOG.error('Cluster is locked by multiple actions during creation!'
-                % (self.id, worker_id))
+            LOG.error(
+                'Cluster has been locked by %s before creating.' % worker_id)
             raise exception.Error('Cluster is locked by action %s and action \
                 %s at the same time during creation' % (self.id, worker_id))
 
@@ -278,7 +278,7 @@ class ClusterAction(Action):
             action_list.append(action)
             action.set_status(self.READY)
 
-            # add new action to waiting/dependency list 
+            # add new action to waiting/dependency list
             db_api.action_add_dependency(action, self)
 
         # Notify dispatcher
@@ -351,7 +351,7 @@ class ClusterAction(Action):
             action_list.append(action)
             action.set_status(self.READY)
 
-            # add new action to waiting/dependency list 
+            # add new action to waiting/dependency list
             # TODO: need db_api support
             db_api.action_add_dependency(action, self)
 
@@ -434,22 +434,22 @@ class ClusterAction(Action):
         return res
 
     def do_delete(self, cluster):
-        # Try to lock the cluster.  
+        # Try to lock the cluster
         worker_id = db_api.cluster_lock_create(cluster.id, self.id)
         if worker_id != self.id:
             # Lock cluster failed, other action of this cluster
             # is in progress, try to cancel it.
             scheduler.cancel_action(self.context, worker_id)
 
-        # Sleep until this action get the lock or timeout
-        while db_api.cluster_lock_create(cluster.id, self.id) is not self.id:
-            if scheduler.action_timeout(self):
-                # Action timeout, return
-                LOG.debug('Cluster deleting action %s timeout' % self.id)
-                db_api.cluster_lock_release(cluster.id, self.id)
-                return self.RES_TIMEOUT
-            # Sleep for a while
-            scheduler.reschedule(self, sleep=0)
+            # Sleep until this action get the lock or timeout
+            while db_api.cluster_lock_create(cluster.id, self.id) != self.id:
+                if scheduler.action_timeout(self):
+                    # Action timeout, return
+                    LOG.debug('Cluster deleting action %s timeout' % self.id)
+                    db_api.cluster_lock_release(cluster.id, self.id)
+                    return self.RES_TIMEOUT
+                # Sleep for a while
+                scheduler.reschedule(self, sleep=0)
 
         action_list = []
         node_list = cluster.get_nodes()
@@ -464,7 +464,7 @@ class ClusterAction(Action):
             action_list.append(action)
             action.set_status(self.READY)
 
-            # add new action to waiting/dependency list 
+            # add new action to waiting/dependency list
             db_api.action_add_dependency(action, self)
 
         # Notify dispatcher

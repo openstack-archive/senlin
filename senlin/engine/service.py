@@ -59,7 +59,6 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-
     def __init__(self, host, topic, manager=None):
         super(EngineService, self).__init__()
         # TODO(Qiming): call environment.initialize() when environment

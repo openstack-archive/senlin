@@ -240,7 +240,7 @@ def action_control_flag(action):
         return ACTION_TIMEOUT
 
     # Check if action control flag is set
-    result = db_api.action_control_check(self.cnxt, action.id)
+    result = db_api.action_control_check(action.context, action.id)
     LOG.debug('Action %s control flag is %s', (action.id, result))
     return result
 
