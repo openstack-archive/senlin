@@ -82,15 +82,9 @@ class Dispatcher(service.Service):
         # Stop ThreadGroup gracefully
         self.TG.stop(True)
         LOG.info(_LI("All action threads have been finished"))
-        # Notify dispatcher to stop all action threads it started.
-        notify(context, self.STOP, self.engine_id)
-
-        # Terminate the engine process
-        LOG.info(_LI("All threads were gone, terminating engine"))
-        self.engine.stop()
 
 
-def notify(self, cnxt, call, engine_id, *args, **kwargs):
+def notify(cnxt, call, engine_id, *args, **kwargs):
     """
     Send notification to dispatcher
 

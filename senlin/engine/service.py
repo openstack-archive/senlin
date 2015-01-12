@@ -106,7 +106,7 @@ class EngineService(service.Service):
             pass
 
         # Notify dispatcher to stop all action threads it started.
-        dispatcher.notify(context, self.dispatcher.STOP, self.engine_id)
+        self.dispatcher.stop()
 
         # Terminate the engine process
         LOG.info(_LI("All threads were gone, terminating engine"))
