@@ -21,7 +21,10 @@ from senlin.db import api as db_api
 from senlin.engine import dispatcher
 from senlin.engine import node as nodes
 from senlin.engine import scheduler
+from senlin.openstack.common import log as logging
 from senlin.policies import base as policies
+
+LOG = logging.getLogger(__name__)
 
 
 class Action(object):
@@ -29,9 +32,9 @@ class Action(object):
     An action can be performed on a cluster or a node of a cluster.
     '''
     RETURNS = (
-        RES_OK, RES_ERROR, RES_RETRY, RES_CANCEL,
+        RES_OK, RES_ERROR, RES_RETRY, RES_CANCEL, RES_TIMEOUT,
     ) = (
-        'OK', 'ERROR', 'RETRY', 'CANCEL',
+        'OK', 'ERROR', 'RETRY', 'CANCEL', 'TIMEOUT',
     )
 
     # Action status definitions:
@@ -243,9 +246,20 @@ class ClusterAction(Action):
         super(ClusterAction, self).__init__(context, action, **kwargs)
 
     def do_create(self, cluster):
-        # TODO(Yanyan): Check if cluster lock is needed
+        # Try to lock cluster first
+        worker_id = db_api.cluster_lock_create(cluster.id, self.id)
+        if worker_id != self.id:
+            # This cluster has been locked by other action?
+            # This should never happen here, raise an execption.
+            LOG.error('Cluster is locked by multiple actions during creation!'
+                % (self.id, worker_id))
+            raise exception.Error('Cluster is locked by action %s and action \
+                %s at the same time during creation' % (self.id, worker_id))
+
+        # Got the lock, start to work
         res = cluster.do_create()
         if res is False:
+            db_api.cluster_lock_release(cluster.id, self.id)
             return self.RES_ERROR
 
         action_list = []
@@ -265,7 +279,6 @@ class ClusterAction(Action):
             action.set_status(self.READY)
 
             # add new action to waiting/dependency list 
-            # TODO: need db_api support
             db_api.action_add_dependency(action, self)
 
         # Notify dispatcher
@@ -280,22 +293,36 @@ class ClusterAction(Action):
         while self.get_status() != self.READY:
             if scheduler.action_cancelled(self):
                 # During this period, if cancel request come,
-                # cancel this cluster updating, including all
-                # possible in-progress node update actions.
-                self.cancel_update(cluster, old_profile_id)
+                # cancel this cluster creating immediately, then
+                # release the cluster lock and return.
+                LOG.debug('Cluster creating action %s cancelled' % self.id)
+                db_api.cluster_lock_release(cluster.id, self.id)
                 return self.RES_CANCEL
+            elif scheduler.action_timeout(self):
+                # Action timeout, return
+                LOG.debug('Cluster creating action %s timeout' % self.id)
+                db_api.cluster_lock_release(cluster.id, self.id)
+                return self.RES_TIMEOUT
 
-            # Continue waiting (with sleep)
+            # Continue waiting (with reschedule)
             scheduler.reschedule(self, sleep=0)
 
         # Cluster create finished, update its status
-        # TODO(Yanyan): release lock
+        # to active and release the lock.
         cluster.set_status(cluster.ACTIVE)
+        db_api.cluster_lock_release(cluster.id, self.id)
 
         return self.RES_OK
 
     def do_update(self, cluster, new_profile_id):
-        # TODO(Yanyan): Check if cluster lock is needed
+        # Try to lock cluster first
+        worker_id = db_api.cluster_lock_create(cluster.id, self.id)
+        if worker_id != self.id:
+            # This cluster has been locked by other action.
+            # We can't update this cluster, cancel this action.
+            LOG.debug('Cluster has been locked by action %s' % worker_id)
+            return self.RES_CANCEL
+
         old_profile_id = cluster.profile_id
         cluster.set_status(self.UPDATING)
         # Note: we need clean the node count of cluster each time
@@ -304,6 +331,7 @@ class ClusterAction(Action):
         # us to track the progress of cluster updating.
         res = cluster.do_update(self.context, profile_id=new_profile_id)
         if not res:
+            db_api.cluster_lock_release(cluster.id, self.id)
             return self.RES_ERROR
 
         # Create NodeActions for all nodes
@@ -341,14 +369,22 @@ class ClusterAction(Action):
                 # During this period, if cancel request come,
                 # cancel this cluster updating, including all
                 # possible in-progress node update actions.
-                self.cancel_update(cluster, old_profile_id)
+                LOG.debug('Cluster updating action %s cancelled' % self.id)
+                self._cancel_update(cluster, old_profile_id)
                 return self.RES_CANCEL
+            elif scheduler.action_timeout(self):
+                # Action timeout, return
+                LOG.debug('Cluster updating action %s timeout' % self.id)
+                db_api.cluster_lock_release(cluster.id, self.id)
+                return self.RES_TIMEOUT
 
             # Continue waiting (with sleep)
             scheduler.reschedule(self, sleep=0)
 
-        # TODO(Yanyan): release lock
+        # Cluster updating finished, set its status
+        # to active and release lock
         cluster.set_status(cluster.ACTIVE)
+        db_api.cluster_lock_release(cluster.id, self.id)
 
         return self.RES_OK
 
@@ -366,7 +402,6 @@ class ClusterAction(Action):
             elif db_api.action_lock_check(self.context, node_action.id):
                 # If node action exist and is now in progress,
                 # try to cancel it.
-                # TODO: we need new db_api interface here.
                 scheduler.cancel_action(self.context, node_action.id)
             else:
                 # Node action exist and not been locked,
@@ -393,34 +428,75 @@ class ClusterAction(Action):
         # Restore cluster based on old profile
         res = cluster.do_update(self.context, profile_id=old_profile_id)
 
-        # TODO(Yanyan): release lock
         cluster.set_status(cluster.UPDATE_CANCELLED)
+        db_api.cluster_lock_release(cluster.id, self.id)
 
         return res
 
     def do_delete(self, cluster):
-        # TODO(Yanyan): Check if cluster lock is needed
-        # Try to lock the cluster. If failed, it means
-        # the cluster in an action progress, try to cancel
-        # this action
-        lock = db_api.cluster_lock_create(cluster.id)
-    
+        # Try to lock the cluster.  
+        worker_id = db_api.cluster_lock_create(cluster.id, self.id)
+        if worker_id != self.id:
+            # Lock cluster failed, other action of this cluster
+            # is in progress, try to cancel it.
+            scheduler.cancel_action(self.context, worker_id)
 
+        # Sleep until this action get the lock or timeout
+        while db_api.cluster_lock_create(cluster.id, self.id) is not self.id:
+            if scheduler.action_timeout(self):
+                # Action timeout, return
+                LOG.debug('Cluster deleting action %s timeout' % self.id)
+                db_api.cluster_lock_release(cluster.id, self.id)
+                return self.RES_TIMEOUT
+            # Sleep for a while
+            scheduler.reschedule(self, sleep=0)
+
+        action_list = []
         node_list = cluster.get_nodes()
         for node_id in node_list:
             kwargs = {
                 'name': 'node-delete-%s' % node_id,
                 'context': self.context,
                 'target': node_id,
-                'cause': 'Cluster update',
+                'cause': 'Cluster delete',
             }
-            action = Action(self.context, 'NODE_UPDATE', **kwargs)
+            action = Action(self.context, 'NODE_DELETE', **kwargs)
+            action_list.append(action)
             action.set_status(self.READY)
 
-        dispatcher.notify(self.context,
-                          dispatcher.Dispatcher.NEW_ACTION,
-                          None,
-                          action_id=action.id)
+            # add new action to waiting/dependency list 
+            db_api.action_add_dependency(action, self)
+
+        # Notify dispatcher
+        for action in action_list:
+            dispatcher.notify(self.context,
+                              dispatcher.Dispatcher.NEW_ACTION,
+                              None,
+                              action_id=action.id)
+
+        # Wait for cluster creating complete
+        # TODO: need db supportting dependency based status management
+        while self.get_status() != self.READY:
+            if scheduler.action_cancelled(self):
+                # During this period, if cancel request come,
+                # cancel this cluster deleting immediately, then
+                # release the cluster lock and return.
+                LOG.debug('Cluster deleting action %s cancelled' % self.id)
+                db_api.cluster_lock_release(cluster.id, self.id)
+                return self.RES_CANCEL
+            elif scheduler.action_timeout(self):
+                # Action timeout, return
+                LOG.debug('Cluster deleting action %s timeout' % self.id)
+                db_api.cluster_lock_release(cluster.id, self.id)
+                return self.RES_TIMEOUT
+
+            # Continue waiting (with sleep)
+            scheduler.reschedule(self, sleep=0)
+
+        # Cluster is deleted successfully, set its status
+        # to deleted and release the lock.
+        cluster.set_status(cluster.DELETED)
+        db_api.cluster_lock_release(cluster.id, self.id)
 
         return self.RES_OK
 
@@ -493,7 +569,7 @@ class ClusterAction(Action):
         elif self.action == self.CLUSTER_DETACH_POLICY:
             res = self.do_detach_policy(cluster)
 
-        return self.RES_OK if res else self.RES_ERROR
+        return res
 
     def cancel(self):
         return self.RES_OK

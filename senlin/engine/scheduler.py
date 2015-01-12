@@ -293,6 +293,11 @@ def reschedule(action, sleep_time=1):
 
     :param sleep_time: seconds to sleep; if None, no sleep;
     """
+    # Check timeout first, if true, return timeout message
+    if action.timeout is not None and action_timeout(action):
+        LOG.debug('Action %s run timeout' % action.id)
+        return ACTION_TIMEOUT
+
     if sleep_time is not None:
         LOG.debug('Action %s sleep for %s seconds' % (
             action.id, sleep_time))
