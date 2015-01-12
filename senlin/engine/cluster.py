@@ -32,9 +32,11 @@ class Cluster(object):
     '''
 
     statuses = (
-        INIT, ACTIVE, ERROR, DELETED, UPDATING, UPDATE_CANCELLED,
+        INIT, CREATING, ACTIVE, ERROR, DELETING, DELETED,
+        UPDATING, UPDATE_CANCELLED,
     ) = (
-        'INIT', 'ACTIVE', 'ERROR', 'DELETED', 'UPDATING', 'UPDATE_CANCELLED',
+        'INIT', 'CREATING', 'ACTIVE', 'ERROR', 'DELETING', 'DELETED',
+        'UPDATING', 'UPDATE_CANCELLED',
     )
 
     def __init__(self, context, name, profile_id, size=0, **kwargs):
@@ -164,7 +166,7 @@ class Cluster(object):
 
         return self.id
 
-    def _set_status(self, status):
+    def set_status(self, status, reason=None):
         '''
         Set status of the cluster.
         '''
@@ -179,21 +181,33 @@ class Cluster(object):
             values['deleted_time'] = now
 
         values['status'] = status
+        if reason:
+            values['status_reason'] = reason
         db_api.cluster_update(self.context, self.id, values)
         # log status to log file
         # generate event record
 
     def do_create(self, **kwargs):
         '''
-        A routine to be called from an action.
+        Invoked at the beginning of cluster creating
+        progress to set cluster status to CREATING.
         '''
-        self._set_status(self.ACTIVE)
+        self.set_status(self.CREATING)
         return True
 
     def do_delete(self, context, **kwargs):
-        self.status = self.DELETED
+        '''
+        Invoked at the end of entire cluster deleting
+        progress to set cluster status to DELETED.
+        '''
+        self.set_status(self.DELETED)
 
     def do_update(self, context, new_profile_id, **kwargs):
+        '''
+        Invoked at the beginning of cluster updating progress
+        to check profile and set cluster status to UPDATING.
+        '''
+        self.set_status(self.UPDATING)
         # Profile type checking is done here because the do_update logic can
         # be triggered from API or Webhook
         if self.profile_id == new_profile_id:
