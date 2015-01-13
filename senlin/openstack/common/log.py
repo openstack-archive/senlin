@@ -46,7 +46,7 @@ from six import moves
 
 _PY26 = sys.version_info[0:2] == (2, 6)
 
-from senlin.openstack.common._i18n import _
+from senlin.common.i18n import _
 from senlin.openstack.common import local
 
 

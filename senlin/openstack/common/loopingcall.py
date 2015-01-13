@@ -21,7 +21,7 @@ import time
 from eventlet import event
 from eventlet import greenthread
 
-from senlin.openstack.common._i18n import _LE, _LW
+from senlin.common.i18n import _LE, _LW
 from senlin.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)

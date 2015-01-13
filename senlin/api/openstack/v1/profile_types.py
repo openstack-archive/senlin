@@ -32,7 +32,7 @@ class ProfileTypeController(object):
     Implements the API actions
     """
     # Define request scope (must match what is in policy.json)
-    REQUEST_SCOPE = 'profiles'
+    REQUEST_SCOPE = 'profile_types'
 
     def __init__(self, options):
         self.options = options
