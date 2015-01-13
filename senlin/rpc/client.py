@@ -209,5 +209,37 @@ class EngineClient(object):
                          self.make_msg('cluster_resume',
                                        cluster_identity=cluster_identity))
 
+    def list_profile_types(self, ctxt):
+        """
+        The list_profile_types method returns all available profile_types.
+
+        :param ctxt: RPC context.
+        :returns: a list of profile types
+        """
+        return self.call(ctxt,
+                         self.make_msg('list_profile_types'))
+
+    def profile_type_spec(self, ctxt, type_name):
+        """
+        Return spec of a profile_type.
+
+        :param ctxt: RPC context.
+        :param type_name: Name of the profile_type you want to show
+        """
+        return self.call(ctxt,
+                         self.make_msg('show_profile_type_spec',
+                                       type_name=type_name))
+
+    def profile_type_template(self, ctxt, type_name):
+        """
+        Return template of a profile_type.
+
+        :param ctxt: RPC context.
+        :param type_name: Name of the profile_type you want to show
+        """
+        return self.call(ctxt,
+                         self.make_msg('show_profile_type_template',
+                                       type_name=type_name))
+
     def get_revision(self, ctxt):
         return self.call(ctxt, self.make_msg('get_revision'))
