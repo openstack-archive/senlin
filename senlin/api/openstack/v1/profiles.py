@@ -167,13 +167,13 @@ class ProfileController(object):
         return {'profile': result}
 
     @util.policy_enforce
-    def show(self, req, identity):
+    def show(self, req, profile_id):
         """
         Gets detailed information for a profile
         """
 
         profile = self.rpc_client.show_profile(req.context,
-                                               identity)
+                                               profile_id)
 
         if not profile:
             raise exc.HTTPInternalServerError()
@@ -181,14 +181,14 @@ class ProfileController(object):
         return {'profile': profile}
 
     @util.policy_enforce
-    def update(self, req, identity, body):
+    def update(self, req, profile_id, body):
         """
         Update an existing profile with new parameters
         """
         data = ProfileData(body)
 
         self.rpc_client.update_profile(req.context,
-                                       identity,
+                                       profile_id,
                                        data.name(),
                                        data.spec(),
                                        data.permission(),
@@ -197,13 +197,13 @@ class ProfileController(object):
         raise exc.HTTPAccepted()
 
     @util.policy_enforce
-    def delete(self, req, identity):
+    def delete(self, req, profile_id):
         """
         Delete the specified profile
         """
 
         res = self.rpc_client.delete_profile(req.context,
-                                             identity,
+                                             profile_id,
                                              cast=False)
 
         if res is not None:

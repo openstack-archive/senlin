@@ -17,6 +17,7 @@ from senlin.api.openstack.v1 import actions
 from senlin.api.openstack.v1 import build_info
 from senlin.api.openstack.v1 import clusters
 from senlin.api.openstack.v1 import profiles
+from senlin.api.openstack.v1 import profile_types
 from senlin.common import wsgi
 
 
@@ -64,6 +65,24 @@ class API(wsgi.Router):
                                    action="delete",
                                    conditions={'method': 'DELETE'})
 
+        # Profile_types
+        profile_types_resource = profile_types.create_resource(conf)
+        with mapper.submapper(controller=profile_types_resource,
+                              path_prefix="/{tenant_id}") as profile_type_mapper:
+            # Profile collection
+            profile_type_mapper.connect("profile_type_index",
+                                        "/profile_types",
+                                        action="index",
+                                        conditions={'method': 'GET'})
+            profile_type_mapper.connect("profile_type_spec",
+                                        "/profiles/{type_name}",
+                                        action="spec",
+                                        conditions={'method': 'GET'})
+            profile_type_mapper.connect("profile_type_template",
+                                        "/profiles/{type_name}/template",
+                                        action="template",
+                                        conditions={'method': 'GET'})
+
         # Profiles
         profiles_resource = profiles.create_resource(conf)
         with mapper.submapper(controller=profiles_resource,
@@ -81,7 +100,7 @@ class API(wsgi.Router):
             # Profile data
             profile_mapper.connect("profile_show",
                                    "/profiles/{profile_id}",
-                                   action="detail",
+                                   action="show",
                                    conditions={'method': 'GET'})
 
             # Profile update/delete
