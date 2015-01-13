@@ -26,8 +26,8 @@ from senlin.db import api as db_api
 from senlin.engine import action as actions
 from senlin.engine import cluster as clusters
 from senlin.engine import dispatcher
-from senlin.engine import senlin_lock
 from senlin.engine import scheduler
+from senlin.engine import senlin_lock
 from senlin.openstack.common import log as logging
 from senlin.openstack.common import service
 from senlin.rpc import api as rpc_api
@@ -159,8 +159,8 @@ class EngineService(service.Service):
         Return detailed information about one or all clusters.
 
         :param context: RPC context.
-        :param cluster_identity: Name of the cluster you want to show, or None
-            to show all
+        :param cluster_identity: Name or ID of the cluster you want to show,
+               or None to show all.
         """
         if cluster_identity is not None:
             db_cluster = self._get_cluster(context, cluster_identity,
@@ -248,9 +248,8 @@ class EngineService(service.Service):
         Handle request to perform a update action on a cluster
 
         :param context: RPC context.
-        :param cluster_identity: Name of the cluster you want to create.
-        :param size: Size of cluster you want to create.
-        :param profile: Profile used to create cluster nodes.
+        :param cluster_identity: Name or ID of the cluster you want to update.
+        :param profile: Profile used to update the cluster's nodes.
         """
         # Get the database representation of the existing cluster
         db_cluster = self._get_cluster(context, cluster_identity)
