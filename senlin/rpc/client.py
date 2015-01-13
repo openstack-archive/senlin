@@ -17,6 +17,8 @@
 Client side of the senlin engine RPC API.
 """
 
+from oslo.config import cfg
+
 from senlin.common import messaging
 from senlin.rpc import api as rpc_api
 
@@ -34,7 +36,7 @@ class EngineClient(object):
     def __init__(self):
         self._client = messaging.get_rpc_client(
             topic=rpc_api.ENGINE_TOPIC,
-            server=rpc_api.ENGINE_SERVER,
+            server=cfg.CONF.host,
             version=self.BASE_RPC_API_VERSION)
 
     @staticmethod

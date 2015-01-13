@@ -11,8 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-ENGINE_SERVER = 'senlin'
-ENGINE_TOPIC = 'engine'
+ENGINE_TOPIC = 'senlin-engine'
 ENGINE_DISPATCHER_TOPIC = 'engine-dispatcher'
 RPC_API_VERSION = '1.0'
 
