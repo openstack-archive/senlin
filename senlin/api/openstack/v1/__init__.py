@@ -16,6 +16,7 @@ import routes
 from senlin.api.openstack.v1 import actions
 from senlin.api.openstack.v1 import build_info
 from senlin.api.openstack.v1 import clusters
+from senlin.api.openstack.v1 import profiles
 from senlin.common import wsgi
 
 
@@ -35,33 +36,63 @@ class API(wsgi.Router):
                               path_prefix="/{tenant_id}") as cluster_mapper:
             # Cluster collection
             cluster_mapper.connect("cluster_index",
-                                 "/clusters",
-                                 action="index",
-                                 conditions={'method': 'GET'})
+                                   "/clusters",
+                                   action="index",
+                                   conditions={'method': 'GET'})
             cluster_mapper.connect("cluster_create",
-                                 "/clusters",
-                                 action="create",
-                                 conditions={'method': 'POST'})
+                                   "/clusters",
+                                   action="create",
+                                   conditions={'method': 'POST'})
             cluster_mapper.connect("cluster_detail",
-                                 "/clusters/detail",
-                                 action="detail",
-                                 conditions={'method': 'GET'})
+                                   "/clusters/detail",
+                                   action="detail",
+                                   conditions={'method': 'GET'})
 
             # Cluster data
             cluster_mapper.connect("cluster_show",
-                                 "/clusters/{cluster_name}/{cluster_id}",
-                                 action="show",
-                                 conditions={'method': 'GET'})
+                                   "/clusters/{cluster_name}/{cluster_id}",
+                                   action="show",
+                                   conditions={'method': 'GET'})
 
             # Cluster update/delete
             cluster_mapper.connect("cluster_update",
-                                 "/clusters/{cluster_name}/{cluster_id}",
-                                 action="update",
-                                 conditions={'method': 'PUT'})
+                                   "/clusters/{cluster_name}/{cluster_id}",
+                                   action="update",
+                                   conditions={'method': 'PUT'})
             cluster_mapper.connect("cluster_delete",
-                                 "/clusters/{cluster_name}/{cluster_id}",
-                                 action="delete",
-                                 conditions={'method': 'DELETE'})
+                                   "/clusters/{cluster_name}/{cluster_id}",
+                                   action="delete",
+                                   conditions={'method': 'DELETE'})
+
+        # Profiles
+        profiles_resource = profiles.create_resource(conf)
+        with mapper.submapper(controller=profiles_resource,
+                              path_prefix="/{tenant_id}") as profile_mapper:
+            # Profile collection
+            profile_mapper.connect("profile_index",
+                                   "/profiles",
+                                   action="index",
+                                   conditions={'method': 'GET'})
+            profile_mapper.connect("profile_create",
+                                   "/profiles",
+                                   action="create",
+                                   conditions={'method': 'POST'})
+
+            # Profile data
+            profile_mapper.connect("profile_show",
+                                   "/profiles/{profile_id}",
+                                   action="detail",
+                                   conditions={'method': 'GET'})
+
+            # Profile update/delete
+            profile_mapper.connect("profile_update",
+                                   "/profiles/{profile_id}",
+                                   action="update",
+                                   conditions={'method': 'PUT'})
+            profile_mapper.connect("profile_delete",
+                                   "/profiles/{profile_id}",
+                                   action="delete",
+                                   conditions={'method': 'DELETE'})
 
         # Actions
         cluster_path = "/{tenant_id}/clusters/{cluster_name}/{cluster_id}"
