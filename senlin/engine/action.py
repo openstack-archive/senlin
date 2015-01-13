@@ -259,6 +259,7 @@ class ClusterAction(Action):
         # Got the lock, start to work
         res = cluster.do_create()
         if res is False:
+            cluster.set_status(cluster.ERROR, 'Cluster creating failed')
             db_api.cluster_lock_release(cluster.id, self.id)
             return self.RES_ERROR
 
@@ -296,11 +297,13 @@ class ClusterAction(Action):
                 # cancel this cluster creating immediately, then
                 # release the cluster lock and return.
                 LOG.debug('Cluster creating action %s cancelled' % self.id)
+                cluster.set_status(cluster.ERROR, 'Cluster creating cancel')
                 db_api.cluster_lock_release(cluster.id, self.id)
                 return self.RES_CANCEL
             elif scheduler.action_timeout(self):
                 # Action timeout, return
                 LOG.debug('Cluster creating action %s timeout' % self.id)
+                cluster.set_status(cluster.ERROR, 'Cluster creating timeout')
                 db_api.cluster_lock_release(cluster.id, self.id)
                 return self.RES_TIMEOUT
 
@@ -309,7 +312,7 @@ class ClusterAction(Action):
 
         # Cluster create finished, update its status
         # to active and release the lock.
-        cluster.set_status(cluster.ACTIVE)
+        cluster.set_status(cluster.ACTIVE, 'Cluster creating completed')
         db_api.cluster_lock_release(cluster.id, self.id)
 
         return self.RES_OK
@@ -324,13 +327,15 @@ class ClusterAction(Action):
             return self.RES_CANCEL
 
         old_profile_id = cluster.profile_id
-        cluster.set_status(self.UPDATING)
         # Note: we need clean the node count of cluster each time
         # cluster.do_update is invoked; Then this count could be added
         # gradually each time a node update action finished. This helps
-        # us to track the progress of cluster updating.
+        # us to track the progress of cluster updating. 
+        # (TODO) update this comment
         res = cluster.do_update(self.context, profile_id=new_profile_id)
         if not res:
+            cluster.set_status(cluster.ACTIVE,
+                               'Cluster updating was not executed')
             db_api.cluster_lock_release(cluster.id, self.id)
             return self.RES_ERROR
 
@@ -375,6 +380,7 @@ class ClusterAction(Action):
             elif scheduler.action_timeout(self):
                 # Action timeout, return
                 LOG.debug('Cluster updating action %s timeout' % self.id)
+                cluster.set_status(cluster.ERROR, 'cluster updating timeout')
                 db_api.cluster_lock_release(cluster.id, self.id)
                 return self.RES_TIMEOUT
 
@@ -383,7 +389,7 @@ class ClusterAction(Action):
 
         # Cluster updating finished, set its status
         # to active and release lock
-        cluster.set_status(cluster.ACTIVE)
+        cluster.set_status(cluster.ACTIVE, 'Cluster updating completed')
         db_api.cluster_lock_release(cluster.id, self.id)
 
         return self.RES_OK
@@ -434,6 +440,8 @@ class ClusterAction(Action):
         return res
 
     def do_delete(self, cluster):
+        # Set cluster status to DELETING
+        cluster.set_status(cluster.DELETING)
         # Try to lock the cluster
         worker_id = db_api.cluster_lock_create(cluster.id, self.id)
         if worker_id != self.id:
@@ -444,9 +452,10 @@ class ClusterAction(Action):
             # Sleep until this action get the lock or timeout
             while db_api.cluster_lock_create(cluster.id, self.id) != self.id:
                 if scheduler.action_timeout(self):
-                    # Action timeout, return
+                    # Action timeout, set cluster status to ERROR and return
                     LOG.debug('Cluster deleting action %s timeout' % self.id)
-                    db_api.cluster_lock_release(cluster.id, self.id)
+                    cluster.set_status(cluster.ERROR, 
+                        'Cluster wait for deleting timeout')
                     return self.RES_TIMEOUT
                 # Sleep for a while
                 scheduler.reschedule(self, sleep=0)
@@ -482,20 +491,24 @@ class ClusterAction(Action):
                 # cancel this cluster deleting immediately, then
                 # release the cluster lock and return.
                 LOG.debug('Cluster deleting action %s cancelled' % self.id)
+                cluster.set_status(cluster.ERROR,
+                                   'Cluster deleting cancelled')
                 db_api.cluster_lock_release(cluster.id, self.id)
                 return self.RES_CANCEL
             elif scheduler.action_timeout(self):
-                # Action timeout, return
+                # Action timeout, set cluster status to ERROR and return
                 LOG.debug('Cluster deleting action %s timeout' % self.id)
+                cluster.set_status(cluster.ERROR, 
+                                  'Cluster deleting timeout')
                 db_api.cluster_lock_release(cluster.id, self.id)
                 return self.RES_TIMEOUT
 
             # Continue waiting (with sleep)
             scheduler.reschedule(self, sleep=0)
 
-        # Cluster is deleted successfully, set its status
-        # to deleted and release the lock.
-        cluster.set_status(cluster.DELETED)
+        # Cluster is deleted successfully, set its
+        # status to DELETE and release the lock.
+        cluster.do_delete(self.context)
         db_api.cluster_lock_release(cluster.id, self.id)
 
         return self.RES_OK
