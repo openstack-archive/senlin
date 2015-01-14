@@ -12,6 +12,7 @@
 #    under the License.
 
 import functools
+import six
 
 from oslo import messaging
 from oslo.utils import uuidutils
@@ -26,6 +27,7 @@ from senlin.db import api as db_api
 from senlin.engine import action as actions
 from senlin.engine import cluster as clusters
 from senlin.engine import dispatcher
+from senlin.engine import environment 
 from senlin.engine import senlin_lock
 from senlin.engine import scheduler
 from senlin.openstack.common import log as logging
@@ -110,6 +112,11 @@ class EngineService(service.Service):
         # Terminate the engine process
         LOG.info(_LI("All threads were gone, terminating engine"))
         super(EngineService, self).stop()
+
+    @request_context
+    def list_profile_types(self, context):
+        types = environment.global_env().get_profile_types()
+        return types
 
     @request_context
     def identify_cluster(self, context, cluster_name):
@@ -201,11 +208,7 @@ class EngineService(service.Service):
                                                  show_deleted, show_nested)
 
         # Format clusters info
-        clusters_info = []
-        for cluster in cluster_list:
-            clusters_info.append(cluster.to_dict())
-
-        return {'clusters': clusters_info}
+        return [c.to_dict() for c cluster_list]
 
     @request_context
     def create_cluster(self, context, name, profile_id, size, args):
