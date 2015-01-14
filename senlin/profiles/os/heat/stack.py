@@ -14,9 +14,8 @@ import six
 
 from senlin.common import context
 from senlin.common import exception
+from senlin.engine import scheduler
 from senlin.profiles import base
-
-__PROFILE_TYPE__ = 'os.heat.stack'
 
 
 class StackProfile(base.Profile):
@@ -125,7 +124,8 @@ class StackProfile(base.Profile):
 
         # Wait for action to complete/fail
         while not self._check_action_complete(obj, 'CREATE'):
-            yield
+            scheduler.sleep(1)
+
         return True
 
     def do_delete(self, obj):
@@ -143,7 +143,7 @@ class StackProfile(base.Profile):
 
         # Wait for action to complete/fail
         while not self._check_action_complete(obj, 'DELETE'):
-            yield
+            scheduler.sleep(1)
 
         return True
 
@@ -172,6 +172,6 @@ class StackProfile(base.Profile):
 
         # Wait for action to complete/fail
         while not self._check_action_complete(obj, 'UPDATE'):
-            yield
+            scheduler.sleep(1)
 
         return True
