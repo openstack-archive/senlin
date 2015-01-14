@@ -14,7 +14,7 @@ from senlin.common import senlin_consts as consts
 from senlin.policies import base
 
 
-class PlacementPolicy(base.PolicyBase):
+class PlacementPolicy(base.Policy):
     '''
     Policy for placing members of a cluster.
 
