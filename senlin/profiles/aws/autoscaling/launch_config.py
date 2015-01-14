@@ -18,7 +18,7 @@ from senlin.profiles import base
 __type_name__ = 'aws.autoscaling.launchconfig'
 
 
-class LaunchConfigProfile(base.ProfileBase):
+class LaunchConfigProfile(base.Profile):
     '''
     Profile for an AWS AutoScaling LaunchConfiguration.
 

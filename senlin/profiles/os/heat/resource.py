@@ -18,7 +18,7 @@ from senlin.profiles import base
 __type_name__ = 'os.heat.resource'
 
 
-class ResourceProfile(base.ProfileBase):
+class ResourceProfile(base.Profile):
     '''
     Profile for an OpenStack Heat resource.
     When this profile is used, the whole cluster is Heat stack, composed
