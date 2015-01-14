@@ -306,3 +306,9 @@ def action_wait(action):
     while not action_resumed(action):
         reschedule(action, sleep_time=1)
         continue
+
+def sleep(sleep_time):
+    '''
+    Interface for sleeping.
+    '''
+    eventlet.sleep(sleep_time)
