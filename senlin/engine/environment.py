@@ -193,7 +193,7 @@ def initialize():
         return
 
     # TODO(Qiming): Check when to initialize clients if needed
-    clients.initialise()
+    # clients.initialise()
 
     env = Environment(is_global=True)
 
