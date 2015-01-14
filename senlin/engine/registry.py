@@ -70,11 +70,12 @@ class Registry(object):
     '''
 
     def __init__(self, registry_name, global_registry=None):
-        self._registry = {registry_name: {}}
-        self.is_global = True if global_registry else False
+        self.registry_name = registry_name
+        self._registry = {}
+        self.is_global = False if global_registry else True
         self.global_registry = global_registry
 
-    def _register_info(self, path, info):
+    def _register_info(self, name, info):
         '''
         place the new info in the correct location in the registry.
 
@@ -83,41 +84,32 @@ class Registry(object):
         :param info: reference to a PluginInfo data structure, deregister a
                      PluginInfo if specified as None.
         '''
-        descriptive_path = '/'.join(path)
-        name = path[-1]
-        # create the structure if needed
         registry = self._registry
-        for key in path[:-1]:
-            if key not in registry:
-                registry[key] = {}
-            registry = registry[key]
-
         if info is None:
             # delete this entry.
-            LOG.warn(_LW('Removing %(item)s from %(path)s'), {
-                'item': name, 'path': descriptive_path})
-            registry.pop(name, None)
+            LOG.warn(_LW('Removing %(item)s from registry'), {'item': name})
+            registry.pop(path, None)
             return
 
         if name in registry and isinstance(registry[name], PluginInfo):
             if registry[name] == info:
                 return
             details = {
-                'path': descriptive_path,
-                'old': str(registry[name].value),
-                'new': str(info.value)
+                'name': name,
+                'old': str(registry[name].plugin),
+                'new': str(info.plugin)
             }
-            LOG.warn(_LW('Changing %(path)s from %(old)s to %(new)s'), details)
+            LOG.warn(_LW('Changing %(name)s from %(old)s to %(new)s'), details)
         else:
-            LOG.info(_LI('Registering %(path)s -> %(value)s'), {
-                'path': descriptive_path, 'value': str(info.value)})
+            LOG.info(_LI('Registering %(name)s -> %(value)s'), {
+                'name': name, 'value': str(info.plugin)})
 
-        info.user_provided = self.user_env
+        info.user_provided = not self.is_global
         registry[name] = info
 
     def register_plugin(self, name, plugin):
-        pi = PluginInfo(self, [name], plugin)
-        self._register_info([name], pi)
+        pi = PluginInfo(self, name, plugin)
+        self._register_info(name, pi)
 
     def _load_registry(self, path, registry):
         for k, v in iter(registry.items()):
@@ -162,4 +154,4 @@ class Registry(object):
 
     def get_types(self):
         '''Return a list of valid profile types.'''
-        return [name for name in six.iteritems(self._registry)]
+        return [name for name in six.iterkeys(self._registry)]
