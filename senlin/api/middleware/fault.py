@@ -22,7 +22,7 @@ Cinder's faultwrapper
 
 import traceback
 
-from oslo.config import cfg
+from oslo_config import cfg
 import webob
 
 from senlin.common import exception
