@@ -11,9 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-Profile endpoint for Senlin v1 ReST API.
-"""
+'''
+Profile type endpoint for Senlin v1 ReST API.
+'''
 
 from webob import exc
 
@@ -27,10 +27,9 @@ LOG = logging.getLogger(__name__)
 
 
 class ProfileTypeController(object):
-    """
-    WSGI controller for profiles resource in Senlin v1 API
-    Implements the API actions
-    """
+    '''
+    WSGI controller for profile types resource in Senlin v1 API
+    '''
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'profile_types'
 
@@ -43,66 +42,39 @@ class ProfileTypeController(object):
 
     @util.policy_enforce
     def index(self, req):
-        """
+        '''
         Lists all available profile_types
-        """
-        profile_types = self.rpc_client.list_profile_types(req.context)
-
-        return {'profile_types': profile_types}
+        '''
+        types = self.rpc_client.list_profile_types(req.context)
+        return {'profile_types': types}
 
     @util.policy_enforce
     def spec(self, req, type_name):
-        """
+        '''
         Gets the interface schema for a specified profile type.
-        """
-
-        profile_type_spec = self.rpc_client.profile_type_spec(req.context,
-                                                              type_name)
-
-        if not profile_type_spec:
+        '''
+        spec = self.rpc_client.profile_type_spec(req.context, type_name)
+        if not spec:
             raise exc.HTTPInternalServerError()
 
-        return profile_type_spec
+        return spec
 
     @util.policy_enforce
     def template(self, req, type_name):
-        """
+        '''
         Gets the template representation for a specified profile type.
-        """
-
-        profile_type_template = self.rpc_client.profile_type_template(
-            req.context,
-            type_name)
-
-        if not profile_type_template:
+        '''
+        tmpl = self.rpc_client.profile_type_template(req.context, type_name)
+        if not tmpl:
             raise exc.HTTPInternalServerError()
 
-        return profile_type_template
-
-
-class ProfileTypeSerializer(serializers.JSONResponseSerializer):
-    """Handles serialization of specific controller method responses."""
-
-    def _populate_response_header(self, response, location, status):
-        response.status = status
-        response.headers['Location'] = location.encode('utf-8')
-        response.headers['Content-Type'] = 'application/json'
-        return response
-
-    def create(self, response, result):
-        self._populate_response_header(response,
-                                       result['profile']['links'][0]['href'],
-                                       201)
-        response.body = self.to_json(result)
-        return response
+        return tmpl
 
 
 def create_resource(options):
-    """
+    '''
     Profiles resource factory method.
-    """
-    deserializer = wsgi.JSONRequestDeserializer()
-    serializer = ProfileTypeSerializer()
+    '''
     return wsgi.Resource(ProfileTypeController(options),
-                         deserializer,
-                         serializer)
+                         wsgi.JSONRequestDeserializer(),
+                         serializers.JSONResponseSerializer())
