@@ -11,9 +11,10 @@
 # under the License.
 
 import eventlet
-from oslo.config import cfg
+
 import oslo.messaging
-from oslo.serialization import jsonutils
+from oslo_config import cfg
+from oslo_serialization import jsonutils
 
 from senlin.common import context
 
