@@ -869,11 +869,16 @@ def action_start_work_on(context, action_id, owner):
         raise exception.NotFound(
             _('Action with id "%s" not found') % action_id)
 
-    action.owner = owner
-    action.status = ACTION_RUNNING
-    action.status_reason = _('The action is being processed.')
-    action.save(_session(context))
-    return action
+    if action.owner and action.owner != owner:
+            raise exception.ActionBeingWorked(owner=action.owner)
+
+    session = get_session()
+    with session.begin():
+        action.owner = owner
+        action.status = ACTION_RUNNING
+        action.status_reason = _('The action is being processed.')
+        action.save(_session(context))
+        return action
 
 
 def action_lock_check(context, action_id, owner=None):

@@ -307,6 +307,10 @@ class ActionInProgress(SenlinException):
                 "in progress.")
 
 
+class ActionBeingWorked(SenlinException):
+    msg_fmt = _("Worker %(owner)s is working on this action." )
+
+
 class StopActionFailed(SenlinException):
     msg_fmt = _("Failed to stop cluster (%(cluster_name)s) on other engine "
                 "(%(engine_id)s)")
