@@ -5,6 +5,7 @@ HIGH PRIORITY
 API
 ---
   - Complete the API layer for Senlin service
+  - Remove {name}/{id} kind of identifier
 
 DB
 --
