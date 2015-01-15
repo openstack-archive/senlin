@@ -49,11 +49,11 @@ def identified_cluster(handler):
     """
     @policy_enforce
     @functools.wraps(handler)
-    def handle_cluster_method(controller, req, cluster_name, cluster_id, **kwargs):
-        cluster_identity = identifier.ClusterIdentifier(req.context.tenant_id,
-                                                   cluster_name,
-                                                   cluster_id)
-        return handler(controller, req, dict(cluster_identity), **kwargs)
+    def handle_cluster_method(controller, req, cluster_name, cluster_id,
+                              **kwargs):
+        cid = identifier.ClusterIdentifier(req.context.tenant_id,
+                                           cluster_name, cluster_id)
+        return handler(controller, req, dict(cid), **kwargs)
 
     return handle_cluster_method
 
@@ -61,12 +61,12 @@ def identified_cluster(handler):
 def make_url(req, identity):
     """Return the URL for the supplied identity dictionary."""
     try:
-        cluster_identity = identifier.SenlinIdentifier(**identity)
+        cid = identifier.SenlinIdentifier(**identity)
     except ValueError:
         err_reason = _('Invalid Cluster address')
         raise exc.HTTPInternalServerError(err_reason)
 
-    return req.relative_url(cluster_identity.url_path(), True)
+    return req.relative_url(cid.url_path(), True)
 
 
 def make_link(req, identity, relationship='self'):
