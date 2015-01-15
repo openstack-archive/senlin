@@ -540,14 +540,6 @@ class Resource(object):
         """WSGI method that controls (de)serialization and method dispatch."""
         action_args = self.get_action_args(request.environ)
         action = action_args.pop('action', None)
-
-        # From reading the boto code, and observation of real AWS api responses
-        # it seems that the AWS api ignores the content-type in the html header
-        # Instead it looks at a "ContentType" GET query parameter
-        # This doesn't seem to be documented in the AWS cfn API spec, but it
-        # would appear that the default response serialization is XML, as
-        # described in the API docs, but passing a query parameter of
-        # ContentType=JSON results in a JSON serialized response...
         content_type = request.params.get("ContentType")
 
         try:
@@ -588,31 +580,15 @@ class Resource(object):
         except Exception as err:
             log_exception(err, sys.exc_info())
             raise translate_exception(err, request.best_match_language())
-        # Here we support either passing in a serializer or detecting it
-        # based on the content type.
-        try:
-            serializer = self.serializer
-            if serializer is None:
-                if content_type == "JSON":
-                    serializer = serializers.JSONResponseSerializer()
-                else:
-                    serializer = serializers.XMLResponseSerializer()
 
+        serializer = self.serializer or serializers.JSONResponseSerializer()
+        try:
             response = webob.Response(request=request)
             self.dispatch(serializer, action, response, action_result)
             return response
 
         # return unserializable result (typically an exception)
         except Exception:
-            # Here we should get API exceptions derived from SenlinAPIException
-            # these implement get_unserialized_body(), which allow us to get
-            # a dict containing the unserialized error response.
-            # We only need to serialize for JSON content_type, as the
-            # exception body is pre-serialized to the default XML in the
-            # SenlinAPIException constructor
-            # If we get something else here (e.g a webob.exc exception),
-            # this will fail, and we just return it without serializing,
-            # which will not conform to the expected AWS error response format
             if content_type == "JSON":
                 try:
                     err_body = action_result.get_unserialized_body()

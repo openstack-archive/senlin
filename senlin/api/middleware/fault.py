@@ -40,10 +40,7 @@ class Fault(object):
 
     @webob.dec.wsgify(RequestClass=wsgi.Request)
     def __call__(self, req):
-        if req.content_type == 'application/xml':
-            serializer = serializers.XMLResponseSerializer()
-        else:
-            serializer = serializers.JSONResponseSerializer()
+        serializer = serializers.JSONResponseSerializer()
         resp = webob.Response(request=req)
         default_webob_exc = webob.exc.HTTPInternalServerError()
         resp.status_code = self.error.get('code', default_webob_exc.code)
