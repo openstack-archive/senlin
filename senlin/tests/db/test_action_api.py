@@ -276,6 +276,9 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.assertEqual(action.owner, 'worker1')
         self.assertEqual(action.status, db_api.ACTION_RUNNING)
 
+        self.assertRaises(exception.ActionBeingWorked, db_api.action_start_work_on,
+                          self.ctx, action.id, 'worker2')
+
     def test_action_delete(self):
         action = _create_action(self.ctx)
         self.assertIsNotNone(action)
