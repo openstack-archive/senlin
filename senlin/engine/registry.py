@@ -154,4 +154,4 @@ class Registry(object):
 
     def get_types(self):
         '''Return a list of valid profile types.'''
-        return [name for name in six.iterkeys(self._registry)]
+        return [{'name': name} for name in six.iterkeys(self._registry)]
