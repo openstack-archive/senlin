@@ -13,7 +13,6 @@ DB
   - Add field cluster_id to event table so that query by cluster is easier
   - Add more action related support in DB, e.g. unlock action, mark action
     control status to cancel, suspend, resume, etc. [Yanyan Hu]
-  - lock and unlock action when query it from or return it back to DB. [Liuh]
 
 ENGINE
 ------
