@@ -4,7 +4,7 @@
     "deny_everybody": "!",
 
     "build_info:build_info": "",
-    "clusters:index": "rule:admin_or_owner"
+    "clusters:index": "rule:admin_or_owner",
     "profile_types:index": "",
     "policy_types:index": ""
 }
