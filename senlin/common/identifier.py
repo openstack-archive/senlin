@@ -1,15 +1,14 @@
-#
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
 #         http://www.apache.org/licenses/LICENSE-2.0
 #
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#    License for the specific language governing permissions and limitations
-#    under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 import collections
 import re
@@ -93,10 +92,10 @@ class SenlinIdentifier(collections.Mapping):
         """Return as an ARN.
 
         Returned in the form:
-            arn:openstack:senlin::<tenant>:clusters/<cluster_name>/<cluster_id><path>
+            arn:openstack:senlin::<tenant>:clusters/<cluster_id><path>
         """
-        return 'arn:openstack:senlin::%s:%s' % (urlparse.quote(self.tenant, ''),
-                                              self._tenant_path())
+        proj = urlparse.quote(self.tenant, '')
+        return 'arn:openstack:senlin::%s:%s' % (proj, self._tenant_path())
 
     def arn_url_path(self):
         """Return an ARN quoted correctly for use in a URL."""
@@ -116,9 +115,8 @@ class SenlinIdentifier(collections.Mapping):
         Returned in the form:
             clusters/<cluster_name>/<cluster_id><path>
         """
-        return 'clusters/%s%s' % (self.cluster_path(),
-                                urlparse.quote(encodeutils.safe_encode(
-                                    self.path)))
+        encoded_path = urlparse.quote(encodeutils.safe_encode(self.path))
+        return 'clusters/%s%s' % (self.cluster_path(), encoded_path)
 
     def cluster_path(self):
         """Return a URL-encoded path segment of a URL without a tenant.

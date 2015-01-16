@@ -308,7 +308,7 @@ class ActionInProgress(SenlinException):
 
 
 class ActionBeingWorked(SenlinException):
-    msg_fmt = _("Worker %(owner)s is working on this action." )
+    msg_fmt = _("Worker %(owner)s is working on this action.")
 
 
 class StopActionFailed(SenlinException):

@@ -10,9 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo_middleware import request_id as oslo_request_id
-from oslo.utils import importutils
 from oslo_context import context
+from oslo_middleware import request_id as oslo_request_id
+from oslo_utils import importutils
 
 from senlin.common import exception
 from senlin.common import policy
