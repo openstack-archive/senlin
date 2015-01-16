@@ -12,8 +12,8 @@
 
 import functools
 
-from oslo_config import cfg
 from oslo import messaging
+from oslo_config import cfg
 from oslo_utils import uuidutils
 from osprofiler import profiler
 
@@ -114,7 +114,7 @@ class EngineService(service.Service):
 
     @request_context
     def get_revision(self, context):
-        return cfg.CONF.revision['senlin_revision']
+        return cfg.CONF.revision['senlin_engine_revision']
 
     @request_context
     def list_profile_types(self, context):
