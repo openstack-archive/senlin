@@ -83,8 +83,8 @@ engine_opts = [
                help=_('Timeout in seconds for actions.')),
     cfg.IntOpt('error_wait_time',
                default=240,
-               help=_('Error wait time in seconds for cluster action (ie. create'
-                      ' or update).')),
+               help=_('Error wait time in seconds for cluster action (ie. '
+                      'create or update).')),
     cfg.IntOpt('engine_life_check_timeout',
                default=2,
                help=_('RPC timeout for the engine liveness check that is used'
@@ -150,12 +150,12 @@ client_http_log_debug_opts = [
 
 revision_group = cfg.OptGroup('revision')
 revision_opts = [
-    cfg.StrOpt('senlin_revision',
-               default='unknown',
-               help=_('Senlin build revision. '
-                      'If you would prefer to manage your build revision '
-                      'separately, you can move this section to a different '
-                      'file and add it as another config option.'))]
+    cfg.StrOpt('senlin_api_revision',
+               default='1.0',
+               help=_('Senlin API revision.')),
+    cfg.StrOpt('senlin_engine_revision', default='1.0',
+               help=_('Senlin engine revision.'))]
+
 
 def list_opts():
     yield None, rpc_opts
