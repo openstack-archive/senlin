@@ -1,23 +1,20 @@
-#
-# Copyright 2012, Red Hat, Inc.
-#
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
 #         http://www.apache.org/licenses/LICENSE-2.0
 #
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#    License for the specific language governing permissions and limitations
-#    under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
-"""
+'''
 Client side of the senlin engine RPC API.
-"""
+'''
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 from senlin.common import messaging
 from senlin.rpc import api as rpc_api
@@ -27,7 +24,6 @@ class EngineClient(object):
     '''Client side of the senlin engine rpc API.
 
     API version history::
-
         1.0 - Initial version.
     '''
 
@@ -80,7 +76,7 @@ class EngineClient(object):
 
     def list_profile_types(self, ctxt):
         """
-        The list_profile_types method returns all available profile types.
+        List all registered profile types.
 
         :param ctxt: RPC context.
         :returns: a list of profile types
@@ -92,22 +88,49 @@ class EngineClient(object):
         Return spec of a profile_type.
 
         :param ctxt: RPC context.
-        :param type_name: Name of the profile_type you want to show
+        :param type_name: Name of the profile type
         """
-        return self.call(ctxt,
-                         self.make_msg('show_profile_type_spec',
-                                       type_name=type_name))
+        return self.call(ctxt, self.make_msg('profile_type_spec',
+                                             type_name=type_name))
 
     def profile_type_template(self, ctxt, type_name):
         """
-        Return template of a profile_type.
+        Return template of a profile type.
 
         :param ctxt: RPC context.
         :param type_name: Name of the profile_type you want to show
         """
-        return self.call(ctxt,
-                         self.make_msg('show_profile_type_template',
-                                       type_name=type_name))
+        return self.call(ctxt, self.make_msg('profile_type_template',
+                                             type_name=type_name))
+
+    def list_policy_types(self, ctxt):
+        """
+        List all registered policy types.
+
+        :param ctxt: RPC context.
+        :returns: a list of policy types
+        """
+        return self.call(ctxt, self.make_msg('list_policy_types'))
+
+    def policy_type_spec(self, ctxt, type_name):
+        """
+        Return spec of a policy type.
+
+        :param ctxt: RPC context.
+        :param type_name: Name of the policy type
+        """
+        return self.call(ctxt, self.make_msg('policy_type_spec',
+                                             type_name=type_name))
+
+    def policy_type_template(self, ctxt, type_name):
+        """
+        Return template of a policy type.
+
+        :param ctxt: RPC context.
+        :param type_name: Name of the policy type.
+        """
+        return self.call(ctxt, self.make_msg('policy_type_template',
+                                             type_name=type_name))
 
     def identify_cluster(self, ctxt, cluster_name):
         """
