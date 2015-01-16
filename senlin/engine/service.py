@@ -1,20 +1,20 @@
-#
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
 #         http://www.apache.org/licenses/LICENSE-2.0
 #
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#    License for the specific language governing permissions and limitations
-#    under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 import functools
 
+from oslo_config import cfg
 from oslo import messaging
-from oslo.utils import uuidutils
+from oslo_utils import uuidutils
 from osprofiler import profiler
 
 from senlin.common import context
@@ -113,9 +113,34 @@ class EngineService(service.Service):
         super(EngineService, self).stop()
 
     @request_context
+    def get_revision(self, context):
+        return cfg.CONF.revision['senlin_revision']
+
+    @request_context
     def list_profile_types(self, context):
         types = environment.global_env().get_profile_types()
         return types
+
+    @request_context
+    def profile_type_spec(self, context, type_name):
+        return {}
+
+    @request_context
+    def profile_type_template(self, context, type_name):
+        return {}
+
+    @request_context
+    def list_policy_types(self, context):
+        types = environment.global_env().get_policy_types()
+        return types
+
+    @request_context
+    def policy_type_spec(self, context, type_name):
+        return {}
+
+    @request_context
+    def policy_type_template(self, context, type_name):
+        return {}
 
     @request_context
     def identify_cluster(self, context, cluster_name):
