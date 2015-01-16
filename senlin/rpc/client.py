@@ -193,29 +193,10 @@ class EngineClient(object):
         :param size: Size of the cluster you want to create.
         :param profile: Profile used to create the cluster
         """
-        return self._create_cluster(ctxt, cluster_name, size, profile)
-
-    def _create_cluster(self, ctxt, cluster_name, size, profile,
-                        owner_id=None, nested_depth=0, user_creds_id=None,
-                        cluster_user_project_id=None):
-        """
-        Internal create_cluster interface for engine-to-engine communication
-        via RPC.  Allows some additional options which should not be exposed
-        to users via the API:
-        :param owner_id: parent cluster ID for nested clusters
-        :param nested_depth: nested depth for nested clusters
-        :param user_creds_id: user_creds record for nested cluster
-        :param cluster_user_project_id: cluster user project for nested cluster
-        """
-        return self.call(
-            ctxt, self.make_msg(
-                'create_cluster', cluster_name=cluster_name,
-                size=size,
-                profile=profile,
-                owner_id=owner_id,
-                nested_depth=nested_depth,
-                user_creds_id=user_creds_id,
-                cluster_user_project_id=cluster_user_project_id))
+        return self.call(ctxt, self.make_msg('create_cluster',
+                                             cluster_name=cluster_name,
+                                             size=size,
+                                             profile=profile))
 
     def update_cluster(self, ctxt, cluster_identity, profile):
         """

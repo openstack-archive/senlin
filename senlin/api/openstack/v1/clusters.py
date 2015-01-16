@@ -55,7 +55,7 @@ class InstantiationData(object):
         Return the cluster name.
         """
         if self.CLUSTER_NAME not in self.data:
-            raise exc.HTTPBadRequest(_("No cluster name specified"))
+            raise exc.HTTPBadRequest(_("No cluster name specified."))
         return self.data[self.CLUSTER_NAME]
 
     def size(self):
@@ -63,7 +63,7 @@ class InstantiationData(object):
         Return the cluster size.
         """
         if self.SIZE not in self.data:
-            raise exc.HTTPBadRequest(_("No cluster size provided"))
+            raise exc.HTTPBadRequest(_("No cluster size provided."))
         return self.data[self.SIZE]
 
     def profile(self):
@@ -71,8 +71,8 @@ class InstantiationData(object):
         Return the cluster profile.
         """
         if self.PROFILE not in self.data:
-            raise exc.HTTPBadRequest(_("No cluster profile provided"))
-        return self.data[self.self.PROFILE]
+            raise exc.HTTPBadRequest(_("No cluster profile provided."))
+        return self.data[self.PROFILE]
 
 
 class ClusterController(object):
