@@ -35,7 +35,7 @@ import eventlet.greenio
 import eventlet.wsgi
 from oslo.config import cfg
 from oslo import i18n
-from oslo.utils import importutils
+from oslo_utils import importutils
 from paste import deploy
 import routes
 import routes.middleware

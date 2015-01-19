@@ -17,7 +17,7 @@ SQLAlchemy models for Senlin data.
 import uuid
 
 from oslo.db.sqlalchemy import models
-from oslo.utils import timeutils
+from oslo_utils import timeutils
 import six
 import sqlalchemy
 from sqlalchemy.ext import declarative

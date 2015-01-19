@@ -16,7 +16,7 @@ import uuid
 
 from oslo.config import cfg
 from oslo import messaging
-from oslo.utils import excutils
+from oslo_utils import excutils
 
 from senlin.common import exception
 from senlin.common.i18n import _LI
