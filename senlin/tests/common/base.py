@@ -1,24 +1,22 @@
-#
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
 #         http://www.apache.org/licenses/LICENSE-2.0
 #
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#    License for the specific language governing permissions and limitations
-#    under the License.
-
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 import logging
 import os
-import sys
+# import sys
 import time
 
 import fixtures
-from oslo.config import cfg
+from oslo_config import cfg
 from oslotest import mockpatch
 import testscenarios
 import testtools
@@ -26,7 +24,7 @@ import testtools
 from senlin.common import messaging
 #from senlin.engine.clients.os import keystone
 from senlin.engine import scheduler
-from senlin.tests.common import fakes
+# from senlin.tests.common import fakes
 from senlin.tests.common import utils
 
 
@@ -76,8 +74,8 @@ class SenlinTestCase(testscenarios.WithScenarios,
 
         self.addCleanup(enable_sleep)
 
-        mod_dir = os.path.dirname(sys.modules[__name__].__file__)
-        project_dir = os.path.abspath(os.path.join(mod_dir, '../../'))
+        # mod_dir = os.path.dirname(sys.modules[__name__].__file__)
+        # project_dir = os.path.abspath(os.path.join(mod_dir, '../../'))
 
         cfg.CONF.set_override('error_wait_time', None)
         self.addCleanup(cfg.CONF.reset)

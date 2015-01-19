@@ -17,9 +17,9 @@ Implementation of SQLAlchemy backend.
 import six
 import sys
 
-from oslo.config import cfg
 from oslo.db.sqlalchemy import session as db_session
 from oslo.db.sqlalchemy import utils
+from oslo_config import cfg
 from sqlalchemy.orm import session as orm_session
 
 from senlin.common import exception
@@ -769,8 +769,8 @@ def _action_dependency_del(context, action_id, field, dels):
 
     if field == 'depends_on' and len(d['l']) == 0:
         action.status = ACTION_READY
-        action.status_reason = _('The action becomes ready due to all dependancies \
-                                  have been satisfied.')
+        action.status_reason = _('The action becomes ready due to all '
+                                 'dependencies have been satisfied.')
 
 
 def action_add_dependency(context, depended, dependent):

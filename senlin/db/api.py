@@ -16,8 +16,8 @@ Interface for database access.
 SQLAlchemy is currently the only supported backend.
 '''
 
-from oslo.config import cfg
 from oslo.db import api
+from oslo_config import cfg
 
 CONF = cfg.CONF
 

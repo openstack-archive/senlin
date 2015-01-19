@@ -33,7 +33,7 @@ from eventlet.green import socket
 from eventlet.green import ssl
 import eventlet.greenio
 import eventlet.wsgi
-from oslo.config import cfg
+from oslo_config import cfg
 from oslo import i18n
 from oslo_utils import importutils
 from paste import deploy

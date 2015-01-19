@@ -10,13 +10,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-"""
-  CLI interface for senlin management.
-"""
+'''
+CLI interface for senlin management.
+'''
 
 import sys
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 from senlin.common.i18n import _
 from senlin.db import api

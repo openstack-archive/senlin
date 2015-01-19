@@ -14,8 +14,8 @@
 import contextlib
 import uuid
 
-from oslo.config import cfg
 from oslo import messaging
+from oslo_config import cfg
 from oslo_utils import excutils
 
 from senlin.common import exception
@@ -85,7 +85,7 @@ class BaseLock(object):
         else:
             LOG.info(_LI("Stale lock detected on %(target_type)s %(target)s. "
                          "Engine %(engine)s will attempt to steal the lock"),
-                     {'target_type': self.target_type, 
+                     {'target_type': self.target_type,
                       'target': self.target.id,
                       'engine': self.engine_id})
 
@@ -101,19 +101,20 @@ class BaseLock(object):
                 return
             elif result is True:
                 if retry:
-                    LOG.info(_LI("The lock on %(target_type)s %(target)s was released "
-                                 "while engine %(engine)s was stealing it. "
-                                 "Trying again"), {'target_type': self.target_type,
-                                                   'target': self.target.id,
-                                                   'engine': self.engine_id})
+                    LOG.info(_LI("The lock on %(target_type)s %(target)s was "
+                                 "released while engine %(engine)s was "
+                                 "stealing it. Trying again"),
+                             {'target_type': self.target_type,
+                              'target': self.target.id,
+                              'engine': self.engine_id})
                     return self.acquire(retry=False)
             else:
                 new_lock_engine_id = result
-                LOG.info(_LI("Failed to steal lock on %(target_type)s %(target)s. "
-                             "Engine %(engine)s stole the lock first"),
-                         {'target_type': self.target_type,
-                          'target': self.target.id,
-                          'engine': new_lock_engine_id})
+                LOG.info(_LI("Failed to steal lock on %(target_type)s "
+                             "%(target)s. Engine %(engine)s stole the "
+                             "lock already"), {'target_type': self.target_type,
+                                               'target': self.target.id,
+                                               'engine': new_lock_engine_id})
 
             raise exception.ActionInProgress(
                 target_name=self.target.name, action=self.target.status)
@@ -123,9 +124,9 @@ class BaseLock(object):
         # Only the engine that owns the lock will be releasing it.
         result = self.lock_release(target_id, self.engine_id)
         if result is True:
-            LOG.warn(_LW("Lock was already released on %(target_type) %(target)s!"),
-                     {'target_type': self.target_type,
-                      'target': target_id})
+            LOG.warn(_LW("Lock was already released on %(target_type) "
+                         "%(target)s!"), {'target_type': self.target_type,
+                                          'target': target_id})
         else:
             LOG.debug("Engine %(engine)s released lock on %(target_type)s "
                       "%(target)s" % {'engine': self.engine_id,
@@ -163,6 +164,7 @@ class BaseLock(object):
                     self.release(target_id)
             raise
 
+
 class ClusterLock(BaseLock):
     def __init__(self, context, cluster, engine_id):
         super(ClusterLock, self).__init__(context, cluster, engine_id)
@@ -188,7 +190,7 @@ class NodeLock(BaseLock):
         return db_api.node_lock_create(node_id, engine_id)
 
     def lock_release(node_id, engine_id):
-        return db_api.node_lock_release(target_id, engine_id)
+        return db_api.node_lock_release(node_id, engine_id)
 
     def lock_steal(node_id, lock_engine_id, engine_id):
         return db_api.node_lock_steal(node_id, lock_engine_id,

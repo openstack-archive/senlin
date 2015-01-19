@@ -18,7 +18,7 @@ import logging as sys_logging
 import os
 
 from eventlet.green import socket
-from oslo.config import cfg
+from oslo_config import cfg
 
 from senlin.common.i18n import _
 from senlin.common import wsgi

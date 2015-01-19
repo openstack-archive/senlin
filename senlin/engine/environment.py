@@ -15,7 +15,7 @@ import os.path
 import six
 from stevedore import extension
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 from senlin.common import exception
 from senlin.common.i18n import _

@@ -13,7 +13,7 @@
 import time
 
 import eventlet
-from oslo.config import cfg
+from oslo_config import cfg
 import six
 
 from senlin.common.i18n import _LI
