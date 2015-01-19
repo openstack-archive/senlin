@@ -34,7 +34,7 @@ from eventlet.green import ssl
 import eventlet.greenio
 import eventlet.wsgi
 from oslo_config import cfg
-from oslo import i18n
+import oslo_i18n
 from oslo_utils import importutils
 from paste import deploy
 import routes
@@ -451,7 +451,7 @@ class Request(webob.Request):
         """
         if not self.accept_language:
             return None
-        all_languages = i18n.get_available_languages('senlin')
+        all_languages = oslo_i18n.get_available_languages('senlin')
         return self.accept_language.best_match(all_languages)
 
 
@@ -636,13 +636,13 @@ def log_exception(err, exc_info):
 def translate_exception(exc, locale):
     """Translates all translatable elements of the given exception."""
     if isinstance(exc, exception.SenlinException):
-        exc.message = i18n.translate(exc.message, locale)
+        exc.message = oslo_i18n.translate(exc.message, locale)
     else:
-        exc.message = i18n.translate(six.text_type(exc), locale)
+        exc.message = oslo_i18n.translate(six.text_type(exc), locale)
 
     if isinstance(exc, webob.exc.HTTPError):
-        exc.explanation = i18n.translate(exc.explanation, locale)
-        exc.detail = i18n.translate(getattr(exc, 'detail', ''), locale)
+        exc.explanation = oslo_i18n.translate(exc.explanation, locale)
+        exc.detail = oslo_i18n.translate(getattr(exc, 'detail', ''), locale)
     return exc
 
 
