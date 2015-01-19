@@ -1,15 +1,14 @@
-#
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
 #         http://www.apache.org/licenses/LICENSE-2.0
 #
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#    License for the specific language governing permissions and limitations
-#    under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 """
 Profile endpoint for Senlin v1 ReST API.
@@ -32,72 +31,43 @@ class ProfileData(object):
     The data accompanying a PUT or POST request to create or update a cluster.
     """
 
-    PARAMS = (
-        NAME,
-        SPEC,
-        TYPE,
-        PERMISSION,
-        TAGS,
-    ) = (
-        'name',
-        'spec',
-        'type',
-        'permission',
-        'tags',
+    PARAMS = (NAME, SPEC, TYPE, PERMISSION, TAGS,
+    ) = ('name', 'spec', 'type', 'permission', 'tags',
     )
 
     def __init__(self, data):
-        """
-        Initialise from the request object.
-        """
         self.data = data
 
     def name(self):
-        """
-        Return the profile name.
-        """
         if self.NAME not in self.data:
             raise exc.HTTPBadRequest(_("No profile name specified"))
         return self.data[self.NAME]
 
     def spec(self):
-        """
-        Return the profile spec.
-        """
         if self.SPEC not in self.data:
             raise exc.HTTPBadRequest(_("No profile spec provided"))
         return self.data[self.self.SPEC]
 
     def type(self):
-        """
-        Return the profile type.
-        """
         if self.TYPE not in self.data:
             raise exc.HTTPBadRequest(_("No profile type provided"))
         return self.data[self.self.TYPE]
 
     def permission(self):
-        """
-        Return the profile permission.
-        """
         if self.PERMISSION not in self.data:
             return None
         return self.data[self.PERMISSION]
 
     def tags(self):
-        """
-        Return the profile tags.
-        """
         if self.TAGS not in self.data:
             return None
         return self.data[self.self.TAGS]
 
 
 class ProfileController(object):
-    """
-    WSGI controller for profiles resource in Senlin v1 API
-    Implements the API actions
-    """
+    '''WSGI controller for profiles resource in Senlin v1 API.
+    '''
+
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'profiles'
 
@@ -141,9 +111,6 @@ class ProfileController(object):
 
     @util.policy_enforce
     def index(self, req):
-        """
-        Lists summary information for all profiles
-        """
         global_tenant = bool(req.params.get('global_tenant', False))
         if global_tenant:
             return self.global_index(req, req.context.tenant_id)
@@ -152,11 +119,7 @@ class ProfileController(object):
 
     @util.policy_enforce
     def create(self, req, body):
-        """
-        Create a new profile
-        """
         data = ProfileData(body)
-
         result = self.rpc_client.create_profile(req.context,
                                                 data.name(),
                                                 data.spec(),
@@ -167,11 +130,7 @@ class ProfileController(object):
         return {'profile': result}
 
     @util.policy_enforce
-    def show(self, req, profile_id):
-        """
-        Gets detailed information for a profile
-        """
-
+    def get(self, req, profile_id):
         profile = self.rpc_client.show_profile(req.context,
                                                profile_id)
 
@@ -182,11 +141,7 @@ class ProfileController(object):
 
     @util.policy_enforce
     def update(self, req, profile_id, body):
-        """
-        Update an existing profile with new parameters
-        """
         data = ProfileData(body)
-
         self.rpc_client.update_profile(req.context,
                                        profile_id,
                                        data.name(),
@@ -198,10 +153,6 @@ class ProfileController(object):
 
     @util.policy_enforce
     def delete(self, req, profile_id):
-        """
-        Delete the specified profile
-        """
-
         res = self.rpc_client.delete_profile(req.context,
                                              profile_id,
                                              cast=False)
