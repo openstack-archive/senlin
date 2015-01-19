@@ -1,0 +1,21 @@
+#!/bin/bash
+
+OS_TOKEN=your token_here
+PORT=8778
+HOST=192.168.42.11
+
+SERVICE_ID=$(openstack service show senlin -f value -c id 2>/dev/null)
+if [[ -z $SERVICE_ID ]]; then
+  SERVICE_ID=$(openstack service create \
+    --name senlin \
+    clustering \
+    -f value -cid)
+fi
+
+if [[ -z $SERVICE_ID ]]; then
+  exit
+fi
+
+openstack endpoint create --region RegionOne $SERVICE_ID --admin "http://$HOST:$PORT/v1/\$(tenant_id)s"
+openstack endpoint create --region RegionOne $SERVICE_ID --public "http://$HOST:$PORT/v1/\$(tenant_id)s"
+openstack endpoint create --region RegionOne $SERVICE_ID --internal "http://$HOST:$PORT/v1/\$(tenant_id)s"
