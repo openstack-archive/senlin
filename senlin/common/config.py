@@ -38,10 +38,10 @@ service_opts = [
                help=_('Seconds between running periodic tasks.')),
     cfg.StrOpt('instance_connection_is_secure',
                default="0",
-               help=_('Instance connection to CFN/CW API via https.')),
+               help=_('Instance connection to API via https.')),
     cfg.StrOpt('instance_connection_https_validate_certificates',
                default="1",
-               help=_('Instance connection to CFN/CW API validate certs if '
+               help=_('Instance connection to API validate certs if '
                       'SSL is used.')),
     cfg.StrOpt('region_name_for_services',
                help=_('Default region name used to get services endpoints.')),
