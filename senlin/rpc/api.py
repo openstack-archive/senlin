@@ -31,6 +31,16 @@ CLUSTER_KEYS = (
     'tags',
 )
 
+PROFILE_KEYS = (
+    PROFILE_ID, PROFILE_NAME, PROFILE_TYPE, PROFILE_PERMISSION,
+    PROFILE_CREATED_TIME, PROFILE_UPDATED_TIME, PROFILE_DELETED_TIME,
+    PROFILE_TAGS,
+) = (
+    'id', 'name', 'type', 'permission',
+    'created_time', 'updated_time', 'deleted_time',
+    'tags',
+)
+
 EVENT_KEYS = (
     EVENT_TIMESTAMP, EVENT_OBJ_ID, EVENT_OBJ_NAME, EVENT_OBJ_TYPE,
     EVENT_USER, EVENT_ACTION, EVENT_STATUS, EVENT_STATUS_REASON,
