@@ -109,10 +109,10 @@ class ClusterController(object):
         if not filter_params:
             filter_params = None
 
-        clusters = self.rpc_client.list_clusters(req.context,
-                                                 filters=filter_params,
-                                                 tenant_safe=tenant_safe,
-                                                 **params)
+        clusters = self.rpc_client.cluster_list(req.context,
+                                                filters=filter_params,
+                                                tenant_safe=tenant_safe,
+                                                **params)
 
         count = None
         return clusters_view.collection(req, clusters=clusters, count=count,
@@ -138,7 +138,7 @@ class ClusterController(object):
         """
         Lists detailed information for all clusters
         """
-        clusters = self.rpc_client.list_clusters(req.context)
+        clusters = self.rpc_client.cluster_list(req.context)
 
         return {'clusters': [clusters_view.format_cluster(req, c)
                              for c in clusters]}
@@ -150,10 +150,11 @@ class ClusterController(object):
         """
         data = InstantiationData(body)
 
-        result = self.rpc_client.create_cluster(req.context,
+        result = self.rpc_client.cluster_create(req.context,
                                                 data.cluster_name(),
                                                 data.size(),
-                                                data.profile())
+                                                data.profile(),
+                                                data.args())
 
         formatted_cluster = clusters_view.format_cluster(
             req,
@@ -162,13 +163,13 @@ class ClusterController(object):
         return {'cluster': formatted_cluster}
 
     @util.identified_cluster
-    def show(self, req, identity):
+    def get(self, req, identity):
         """
         Gets detailed information for a cluster
         """
 
-        cluster_list = self.rpc_client.show_cluster(req.context,
-                                                    identity)
+        cluster_list = self.rpc_client.cluster_get(req.context,
+                                                   identity)
 
         if not cluster_list:
             raise exc.HTTPInternalServerError()
@@ -184,7 +185,7 @@ class ClusterController(object):
         """
         data = InstantiationData(body)
 
-        self.rpc_client.update_cluster(req.context,
+        self.rpc_client.cluster_update(req.context,
                                        identity,
                                        data.size(),
                                        data.profile())
@@ -193,11 +194,7 @@ class ClusterController(object):
 
     @util.identified_cluster
     def delete(self, req, identity):
-        """
-        Delete the specified cluster
-        """
-
-        res = self.rpc_client.delete_cluster(req.context,
+        res = self.rpc_client.cluster_delete(req.context,
                                              identity,
                                              cast=False)
 

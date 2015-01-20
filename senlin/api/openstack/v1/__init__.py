@@ -46,7 +46,7 @@ class API(wsgi.Router):
                                conditions={'method': 'POST'})
             sub_mapper.connect("cluster_get",
                                "/clusters/{cluster_id}",
-                               action="show",
+                               action="get",
                                conditions={'method': 'GET'})
             sub_mapper.connect("cluster_update",
                                "/clusters/{cluster_id}",

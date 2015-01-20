@@ -157,108 +157,69 @@ class EngineService(service.Service):
         return {}
 
     @request_context
-    def identify_cluster(self, context, cluster_name):
-        """
-        The identify_cluster method returns the cluster id for a
-        single, live cluster given the cluster name.
+    def cluster_list(self, context, limit=None, marker=None, sort_keys=None,
+                     sort_dir=None, filters=None, tenant_safe=True,
+                     show_deleted=False, show_nested=False):
+        all_clusters = clusters.Cluster.load_all(context, limit, marker,
+                                                 sort_keys, sort_dir,
+                                                 filters, tenant_safe,
+                                                 show_deleted, show_nested)
 
-        :param context: RPC context.
-        :param cluster_name: Name or ID of the cluster to look up.
-        """
-        if uuidutils.is_uuid_like(cluster_name):
-            db_cluster = db_api.cluster_get(context, cluster_name,
+        return [c.to_dict() for c in all_clusters]
+
+    @request_context
+    def cluster_find(self, context, identity):
+        '''
+        Find a cluster with the given identity (could be name or ID).
+        '''
+        if uuidutils.is_uuid_like(identity):
+            db_cluster = db_api.cluster_get(context, identity,
                                             show_deleted=True)
             # may be the name is in uuid format, so if get by id returns None,
             # we should get the info by name again
             if not db_cluster:
-                db_cluster = db_api.cluster_get_by_name(context, cluster_name)
+                db_cluster = db_api.cluster_get_by_name(context, identity)
         else:
-            db_cluster = db_api.cluster_get_by_name(context, cluster_name)
+            db_cluster = db_api.cluster_get_by_name(context, identity)
         if db_cluster:
             cluster = clusters.Cluster.load(context, cluster=db_cluster)
             return dict(cluster.id)
         else:
-            raise exception.ClusterNotFound(cluster_name=cluster_name)
+            raise exception.ClusterNotFound(cluster_name=identity)
 
-    def _get_cluster(self, context, cluster_identity, show_deleted=False):
-        """
+    def _get_cluster(self, context, identity, show_deleted=False):
+        '''
         Get Cluster record in DB based on cluster id
-        """
-        # Currently, cluster_identity is cluster id OR cluster name
-        # TODO(Yanyan): use full cluster identity as input, e.g.
-        #       *cluster_name/cluster_id*
-        cluster_id = self.identify_cluster(context, cluster_identity)
+        '''
+        cluster_id = self.cluster_find(context, identity)
 
         db_cluster = db_api.cluster_get(context, cluster_id,
                                         show_deleted=show_deleted,
                                         eager_load=True)
 
         if db_cluster is None:
-            raise exception.ClusterNotFound(cluster_name=cluster_identity)
+            raise exception.ClusterNotFound(cluster_name=identity)
 
         return db_cluster
 
     @request_context
-    def show_cluster(self, context, cluster_identity):
-        """
-        Return detailed information about one or all clusters.
-
-        :param context: RPC context.
-        :param cluster_identity: Name or ID of the cluster you want to show,
-               or None to show all.
-        """
-        if cluster_identity is not None:
-            db_cluster = self._get_cluster(context, cluster_identity,
+    def cluster_get(self, context, identity):
+        if identity is not None:
+            db_cluster = self._get_cluster(context, identity,
                                            show_deleted=True)
-            cluster_list = clusters.Cluster.load(context, cluster=db_cluster)
+            clist = clusters.Cluster.load(context, cluster=db_cluster)
         else:
-            cluster_list = clusters.Cluster.load_all(context,
-                                                     show_deleted=True)
+            clist = clusters.Cluster.load_all(context, show_deleted=True)
 
         # Format clusters info
         clusters_info = []
-        for cluster in cluster_list:
+        for cluster in clist:
             clusters_info.append(cluster.to_dict())
 
         return {'clusters': clusters_info}
 
     @request_context
-    def list_clusters(self, context, limit=None, marker=None, sort_keys=None,
-                      sort_dir=None, filters=None, tenant_safe=True,
-                      show_deleted=False, show_nested=False):
-        """
-        The list_clusters method returns attributes of all clusters.
-
-        :param context: RPC context
-        :param limit: the number of clusters to list (integer or string)
-        :param marker: the ID of the last item in the previous page
-        :param sort_keys: an array of fields used to sort the list
-        :param sort_dir: the direction of the sort ('asc' or 'desc')
-        :param filters: a dict with attribute:value to filter the list
-        :param tenant_safe: if true, scope the request by the current tenant
-        :param show_deleted: if true, show soft-deleted clusters
-        :param show_nested: if true, show nested clusters
-        :returns: a list of formatted clusters
-        """
-        cluster_list = clusters.Cluster.load_all(context, limit, marker,
-                                                 sort_keys, sort_dir,
-                                                 filters, tenant_safe,
-                                                 show_deleted, show_nested)
-
-        # Format clusters info
-        return [c.to_dict() for c in cluster_list]
-
-    @request_context
-    def create_cluster(self, context, name, profile_id, size, args):
-        '''
-        Handle request to perform a create action on a cluster
-
-        :param cntxt: RPC context.
-        :param name: Name of the cluster to created.
-        :param profile_id: Profile used to create cluster nodes.
-        :param size: Desired size of cluster to be created.
-        :param args: A dictionary of other parameters
-        '''
+    def cluster_create(self, context, name, size, profile_id, args):
         LOG.info(_LI('Creating cluster %s'), name)
 
         kwargs = {
@@ -284,16 +245,9 @@ class EngineService(service.Service):
         return cluster.id
 
     @request_context
-    def update_cluster(self, context, cluster_identity, profile_id):
-        """
-        Handle request to perform a update action on a cluster
-
-        :param context: RPC context.
-        :param cluster_identity: Name or ID of the cluster you want to update.
-        :param profile: Profile used to update the cluster's nodes.
-        """
+    def cluster_update(self, context, identity, size, profile_id):
         # Get the database representation of the existing cluster
-        db_cluster = self._get_cluster(context, cluster_identity)
+        db_cluster = self._get_cluster(context, identity)
         LOG.info(_LI('Updating cluster %s'), db_cluster.name)
 
         cluster = clusters.Cluster.load(context, cluster=db_cluster)
@@ -309,6 +263,7 @@ class EngineService(service.Service):
             'profile_id': profile_id
         }
 
+        # TODO(Qiming): Hande size changes here!
         action = actions.Action(context, cluster, 'CLUSTER_UPDATE', **kwargs)
         dispatcher.notify(context,
                           self.dispatcher.NEW_ACTION,
@@ -318,15 +273,8 @@ class EngineService(service.Service):
         return cluster.id
 
     @request_context
-    def delete_cluster(self, context, cluster_identity):
-        """
-        Handle request to perform a delete action on a cluster
-
-        :param context: RPC context.
-        :param cluster_identity: Name or ID of the cluster you want to delete.
-        """
-
-        db_cluster = self._get_cluster(context, cluster_identity)
+    def cluster_delete(self, context, identity):
+        db_cluster = self._get_cluster(context, identity)
         LOG.info(_LI('Deleting cluster %s'), db_cluster.name)
 
         cluster = clusters.Cluster.load(context, cluster=db_cluster)

@@ -139,11 +139,11 @@ class EngineClient(object):
         return self.call(ctxt, self.make_msg('identify_cluster',
                                              cluster_name=cluster_name))
 
-    def list_clusters(self, ctxt, limit=None, marker=None, sort_keys=None,
-                      sort_dir=None, filters=None, tenant_safe=True,
-                      show_deleted=False, show_nested=False):
+    def cluster_list(self, ctxt, limit=None, marker=None, sort_keys=None,
+                     sort_dir=None, filters=None, tenant_safe=True,
+                     show_deleted=False, show_nested=False):
         """
-        The list_clusters method returns attributes of all clusters.
+        Get a list of all clusters.
         It supports pagination (``limit`` and ``marker``),
         sorting (``sort_keys`` and ``sort_dir``) and
         filtering (``filters``) of the results.
@@ -160,86 +160,41 @@ class EngineClient(object):
         :returns: a list of clusters
         """
         return self.call(ctxt,
-                         self.make_msg('list_clusters', limit=limit,
+                         self.make_msg('cluster_list', limit=limit,
                                        sort_keys=sort_keys, marker=marker,
                                        sort_dir=sort_dir, filters=filters,
                                        tenant_safe=tenant_safe,
                                        show_deleted=show_deleted,
                                        show_nested=show_nested))
 
-    def show_cluster(self, ctxt, cluster_identity):
+    def cluster_get(self, ctxt, cluster_id):
         """
         Return detailed information about one or all clusters.
         :param ctxt: RPC context.
-        :param cluster_identity: Name of the cluster you want to show,
+        :param cluster_id: Name of the cluster you want to show,
         or None to show all
         """
         return self.call(ctxt,
                          self.make_msg('show_cluster',
-                                       cluster_identity=cluster_identity))
+                                       cluster_id=cluster_id))
 
-    def create_cluster(self, ctxt, cluster_name, size, profile):
-        """
-        The create_cluster method creates a new cluster using the args
-        provided.
+    def cluster_create(self, ctxt, name, size, profile_id, args=args):
+        return self.call(ctxt, self.make_msg('cluster_create',
+                                             name=name, size=size,
+                                             profile_id=profile_id,
+                                             args=args))
 
-        :param ctxt: RPC context.
-        :param cluster_name: Name of the cluster you want to create.
-        :param size: Size of the cluster you want to create.
-        :param profile: Profile used to create the cluster
-        """
-        return self.call(ctxt, self.make_msg('create_cluster',
-                                             cluster_name=cluster_name,
+    def cluster_update(self, ctxt, identity, size, profile_id):
+        return self.call(ctxt, self.make_msg('cluster_update',
+                                             identity=identity,
                                              size=size,
-                                             profile=profile))
+                                             profile_id=profile_id))
 
-    def update_cluster(self, ctxt, cluster_identity, profile):
-        """
-        The update_cluster method updates an existing cluster based on the
-        provided template and parameters.
-
-        :param ctxt: RPC context.
-        :param cluster_identity: Identity of the cluster you want to update.
-        :param size: Size of the cluster you want to create.
-        :param profile: Profile used to create the cluster
-        """
-        return self.call(ctxt, self.make_msg('update_cluster',
-                                             cluster_identity=cluster_identity,
-                                             profile=profile))
-
-    def delete_cluster(self, ctxt, cluster_identity, cast=True):
-        """
-        The delete_cluster method deletes a given cluster.
-
-        :param ctxt: RPC context.
-        :param cluster_identity: Name of the cluster you want to delete.
-        :param cast: cast the message or use call (default: True)
-        """
+    def cluster_delete(self, ctxt, cluster_id, cast=True):
         rpc_method = self.cast if cast else self.call
         return rpc_method(ctxt,
-                          self.make_msg('delete_cluster',
-                                        cluster_identity=cluster_identity))
-
-    def list_cluster_members(self, ctxt, cluster_identity, nested_depth=0):
-        """
-        List the members belonging to a cluster.
-        :param ctxt: RPC context.
-        :param cluster_identity: Name of the cluster.
-        :param nested_depth: Levels of nested clusters of which list members.
-        """
-        return self.call(ctxt, self.make_msg('list_cluster_members',
-                                             cluster_identity=cluster_identity,
-                                             nested_depth=nested_depth))
-
-    def cluster_suspend(self, ctxt, cluster_identity):
-        return self.call(ctxt,
-                         self.make_msg('cluster_suspend',
-                                       cluster_identity=cluster_identity))
-
-    def cluster_resume(self, ctxt, cluster_identity):
-        return self.call(ctxt,
-                         self.make_msg('cluster_resume',
-                                       cluster_identity=cluster_identity))
+                          self.make_msg('cluster_delete',
+                                        cluster_id=cluster_id))
 
     def get_revision(self, ctxt):
         return self.call(ctxt, self.make_msg('get_revision'))
