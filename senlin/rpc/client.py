@@ -85,32 +85,14 @@ class EngineClient(object):
         return self.call(ctxt, self.make_msg('profile_type_template',
                                              type_name=type_name))
 
-    def list_policy_types(self, ctxt):
-        """
-        List all registered policy types.
-
-        :param ctxt: RPC context.
-        :returns: a list of policy types
-        """
+    def policy_type_list(self, ctxt):
         return self.call(ctxt, self.make_msg('list_policy_types'))
 
     def policy_type_spec(self, ctxt, type_name):
-        """
-        Return spec of a policy type.
-
-        :param ctxt: RPC context.
-        :param type_name: Name of the policy type
-        """
         return self.call(ctxt, self.make_msg('policy_type_spec',
                                              type_name=type_name))
 
     def policy_type_template(self, ctxt, type_name):
-        """
-        Return template of a policy type.
-
-        :param ctxt: RPC context.
-        :param type_name: Name of the policy type.
-        """
         return self.call(ctxt, self.make_msg('policy_type_template',
                                              type_name=type_name))
 

@@ -129,9 +129,8 @@ class EngineService(service.Service):
         return {}
 
     @request_context
-    def list_policy_types(self, context):
-        types = environment.global_env().get_policy_types()
-        return types
+    def policy_type_list(self, context):
+        return environment.global_env().get_policy_types()
 
     @request_context
     def policy_type_spec(self, context, type_name):

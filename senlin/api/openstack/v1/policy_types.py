@@ -41,17 +41,11 @@ class PolicyTypeController(object):
 
     @util.policy_enforce
     def index(self, req):
-        '''
-        Lists all available policy types
-        '''
-        types = self.rpc_client.list_policy_types(req.context)
+        types = self.rpc_client.policy_type_list(req.context)
         return {'policy_types': types}
 
     @util.policy_enforce
     def spec(self, req, type_name):
-        '''
-        Gets the interface schema for a specified policy type.
-        '''
         spec = self.rpc_client.policy_type_spec(req.context, type_name)
         if not spec:
             raise exc.HTTPInternalServerError()
@@ -60,9 +54,6 @@ class PolicyTypeController(object):
 
     @util.policy_enforce
     def template(self, req, type_name):
-        '''
-        Gets the template representation for a specified policy type.
-        '''
         tmpl = self.rpc_client.policy_type_template(req.context, type_name)
         if not tmpl:
             raise exc.HTTPInternalServerError()
