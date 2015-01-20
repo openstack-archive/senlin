@@ -201,6 +201,10 @@ def profile_update(context, profile_id, values):
     return IMPL.profile_update(context, profile_id, values)
 
 
+def profile_delete(context, profile_id):
+    return IMPL.profile_delete(context, profile_id)
+
+
 # Events
 def event_create(context, values):
     return IMPL.event_create(context, values)

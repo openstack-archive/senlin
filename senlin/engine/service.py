@@ -155,7 +155,9 @@ class EngineService(service.Service):
 
     @request_context
     def profile_delete(self, context, profile_id):
-        return {}
+        LOG.info(_LI('Delete profile: %s'), profile_id)
+        profile_base.Profile.delete(context, profile_id)
+        return None
 
     @request_context
     def policy_type_list(self, context):

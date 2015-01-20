@@ -92,6 +92,10 @@ class Profile(object):
         for record in records:
             yield cls.from_db_record(context, record)
 
+    @classmethod
+    def delete(cls, context, profile_id):
+        db_api.profile_delete(context, profile_id)
+
     def store(self, context):
         '''
         Store the profile into database and return its ID.
