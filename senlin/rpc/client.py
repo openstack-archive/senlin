@@ -75,7 +75,7 @@ class EngineClient(object):
             raise error
 
     def profile_type_list(self, ctxt):
-        return self.call(ctxt, self.make_msg('list_profile_types'))
+        return self.call(ctxt, self.make_msg('profile_type_list'))
 
     def profile_type_spec(self, ctxt, type_name):
         return self.call(ctxt, self.make_msg('profile_type_spec',
@@ -117,7 +117,7 @@ class EngineClient(object):
                                         profile_id=profile_id))
 
     def policy_type_list(self, ctxt):
-        return self.call(ctxt, self.make_msg('list_policy_types'))
+        return self.call(ctxt, self.make_msg('policy_type_list'))
 
     def policy_type_spec(self, ctxt, type_name):
         return self.call(ctxt, self.make_msg('policy_type_spec',
