@@ -74,32 +74,14 @@ class EngineClient(object):
         if self.local_error_name(error) != name:
             raise error
 
-    def list_profile_types(self, ctxt):
-        """
-        List all registered profile types.
-
-        :param ctxt: RPC context.
-        :returns: a list of profile types
-        """
+    def profile_type_list(self, ctxt):
         return self.call(ctxt, self.make_msg('list_profile_types'))
 
     def profile_type_spec(self, ctxt, type_name):
-        """
-        Return spec of a profile_type.
-
-        :param ctxt: RPC context.
-        :param type_name: Name of the profile type
-        """
         return self.call(ctxt, self.make_msg('profile_type_spec',
                                              type_name=type_name))
 
     def profile_type_template(self, ctxt, type_name):
-        """
-        Return template of a profile type.
-
-        :param ctxt: RPC context.
-        :param type_name: Name of the profile_type you want to show
-        """
         return self.call(ctxt, self.make_msg('profile_type_template',
                                              type_name=type_name))
 

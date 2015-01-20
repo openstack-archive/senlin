@@ -42,10 +42,7 @@ class ProfileTypeController(object):
 
     @util.policy_enforce
     def index(self, req):
-        '''
-        Lists all available profile_types
-        '''
-        types = self.rpc_client.list_profile_types(req.context)
+        types = self.rpc_client.profile_type_list(req.context)
         return {'profile_types': types}
 
     @util.policy_enforce

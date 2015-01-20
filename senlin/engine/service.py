@@ -117,9 +117,8 @@ class EngineService(service.Service):
         return cfg.CONF.revision['senlin_engine_revision']
 
     @request_context
-    def list_profile_types(self, context):
-        types = environment.global_env().get_profile_types()
-        return types
+    def profile_type_list(self, context):
+        return environment.global_env().get_profile_types()
 
     @request_context
     def profile_type_spec(self, context, type_name):
