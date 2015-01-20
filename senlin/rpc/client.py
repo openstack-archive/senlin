@@ -85,12 +85,13 @@ class EngineClient(object):
         return self.call(ctxt, self.make_msg('profile_type_template',
                                              type_name=type_name))
 
-    def profile_list(self, ctxt, filters, tenant_safe, **params):
+    def profile_list(self, ctxt, limit=None, marker=None, sort_keys=None,
+                     sort_dir=None, filters=None, show_deleted=False):
         return self.call(ctxt,
-                         self.make_msg('profile_list',
-                                       filters=filters,
-                                       tenant_safe=tenant_safe,
-                                       **params))
+                         self.make_msg('profile_list', limit=limit,
+                                       marker=marker, sort_keys=sort_keys,
+                                       sort_dir=sort_dir, filters=filters,
+                                       show_deleted=show_deleted))
 
     def profile_create(self, ctxt, name, type, spec, perm, tags):
         return self.call(ctxt,
