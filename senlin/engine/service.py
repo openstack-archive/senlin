@@ -31,6 +31,7 @@ from senlin.engine import scheduler
 from senlin.engine import senlin_lock
 from senlin.openstack.common import log as logging
 from senlin.openstack.common import service
+from senlin.profiles import base as profile_base
 from senlin.rpc import api as rpc_api
 
 LOG = logging.getLogger(__name__)
@@ -129,12 +130,24 @@ class EngineService(service.Service):
         return {}
 
     @request_context
-    def profile_list(self, context, filters, tenant_safe, **params):
-        return {}
+    def profile_list(self, context, limit=None, marker=None, sort_keys=None,
+                     sort_dir=None, filters=None, show_deleted=False):
+        profiles = profile_base.Profile.load_all(
+            context, limit, marker, sort_keys, sort_dir, filters, show_deleted)
+
+        return [p.to_dict() for p in profiles]
 
     @request_context
     def profile_create(self, context, name, type, spec, perm, tags):
-        return {}
+        LOG.info(_LI('Creating profile %s:%s'), type, name)
+        kwargs = {
+            'spec': spec,
+            'permission': perm,
+            'tags': tags,
+        }
+        profile = profile_base.Profile(type, name, **kwargs)
+        profile.store(context)
+        return profile.to_dict()
 
     @request_context
     def profile_update(self, context, profile_id, name, spec, perm, tags):
