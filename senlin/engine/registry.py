@@ -132,11 +132,11 @@ class Registry(object):
 
     def get_plugin(self, name):
         giter = []
-        if self.user_env:
+        if not self.is_global:
             giter = self.global_registry.iterable_by(name)
 
         matches = itertools.chain(self.iterable_by(name), giter)
-        info = sorted(matches)
+        info = sorted(matches)[0]
         return info.plugin if info else None
 
     def as_dict(self):
