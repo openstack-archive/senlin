@@ -193,8 +193,10 @@ def profile_get(context, profile_id):
     return IMPL.profile_get(context, profile_id)
 
 
-def profile_get_all(context):
-    return IMPL.profile_get_all(context)
+def profile_get_all(context, limit=None, marker=None, sort_keys=None,
+                    sort_dir=None, filters=None, show_deleted=False):
+    return IMPL.profile_get_all(context, limit, marker, sort_keys,
+                                sort_dir, filters, show_deleted)
 
 
 def profile_update(context, profile_id, values):

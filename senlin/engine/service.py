@@ -132,8 +132,9 @@ class EngineService(service.Service):
     @request_context
     def profile_list(self, context, limit=None, marker=None, sort_keys=None,
                      sort_dir=None, filters=None, show_deleted=False):
-        profiles = profile_base.Profile.load_all(
-            context, limit, marker, sort_keys, sort_dir, filters, show_deleted)
+        profiles = profile_base.Profile.load_all(context, limit, marker,
+                                                 sort_keys, sort_dir, filters,
+                                                 show_deleted)
 
         return [p.to_dict() for p in profiles]
 

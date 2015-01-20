@@ -82,12 +82,12 @@ class Profile(object):
 
     @classmethod
     def load_all(cls, context, limit=None, sort_keys=None, marker=None,
-                 sort_dir=None, filters=None, tenant_safe=True,
-                 show_deleted=False):
+                 sort_dir=None, filters=None, show_deleted=False):
         '''
         Retrieve all profiles from database.
         '''
-        records = db_api.profile_get_all(context)
+        records = db_api.profile_get_all(context, limit, marker, sort_keys,
+                                         sort_dir, filters, show_deleted)
 
         for record in records:
             yield cls.from_db_record(context, record)

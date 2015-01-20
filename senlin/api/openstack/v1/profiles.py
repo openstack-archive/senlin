@@ -83,25 +83,29 @@ class ProfileController(object):
     @util.policy_enforce
     def index(self, req):
         filter_whitelist = {
+            'name': 'mixed',
             'type': 'mixed',
-            'show_deleted': 'single',
+            'created_time': 'single',
+            'updated_time': 'single',
+            'deleted_time': 'single',
             'permission': 'mixed',
             'tags': 'mixed',
         }
-        whitelist = {
+        param_whitelist = {
             'limit': 'single',
             'marker': 'single',
             'sort_dir': 'single',
             'sort_keys': 'multi',
+            'show_deleted': 'single',
         }
-        params = util.get_allowed_params(req.params, whitelist)
-        filter_params = util.get_allowed_params(req.params, filter_whitelist)
+        params = util.get_allowed_params(req.params, param_whitelist)
+        filters = util.get_allowed_params(req.params, filter_whitelist)
 
-        if not filter_params:
-            filter_params = None
+        if not filters:
+            filters = None
 
         profiles = self.rpc_client.profile_list(req.context,
-                                                filters=filter_params,
+                                                filters=filters,
                                                 **params)
 
         # TODO(Qiming): Add profiles_view to handle profile collection?

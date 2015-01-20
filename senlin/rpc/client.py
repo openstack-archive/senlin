@@ -17,7 +17,10 @@ Client side of the senlin engine RPC API.
 from oslo_config import cfg
 
 from senlin.common import messaging
+from senlin.openstack.common import log as logging
 from senlin.rpc import api as rpc_api
+
+LOG = logging.getLogger(__name__)
 
 
 class EngineClient(object):

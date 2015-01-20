@@ -100,7 +100,7 @@ def soft_delete_aware_query(context, *args, **kwargs):
     query = model_query(context, *args)
     show_deleted = kwargs.get('show_deleted') or context.show_deleted
 
-    if not show_deleted:
+    if (not show_deleted) or show_deleted in ('False', 'false', 'no', 'No'):
         query = query.filter_by(deleted_time=None)
     return query
 
@@ -511,12 +511,38 @@ def profile_get(context, profile_id):
     return profile
 
 
-def profile_get_all(context):
-    profiles = model_query(context, models.Profile).all()
+def _query_profile_get_all(context, show_deleted=False):
+    query = soft_delete_aware_query(context, models.Profile,
+                                    show_deleted=show_deleted)
+    return query
 
-    if not profiles:
-        raise exception.NotFound(_('No profiles were found'))
-    return profiles
+
+def _filter_and_page_profile(context, query, limit=None, sort_keys=None,
+                             sort_dir=None, marker=None, filters=None):
+    if filters is None:
+        filters = {}
+
+    sort_key_map = {
+        rpc_api.PROFILE_TYPE: models.Profile.type.key,
+        rpc_api.PROFILE_NAME: models.Profile.name.key,
+        rpc_api.PROFILE_PERMISSION: models.Profile.permission.key,
+        rpc_api.PROFILE_CREATED_TIME: models.Profile.created_time.key,
+        rpc_api.PROFILE_UPDATED_TIME: models.Profile.updated_time.key,
+        rpc_api.PROFILE_DELETED_TIME: models.Profile.deleted_time.key,
+        rpc_api.PROFILE_TAGS: models.Profile.tags.key,
+    }
+    keys = _get_sort_keys(sort_keys, sort_key_map)
+
+    query = db_filters.exact_filter(query, models.Profile, filters)
+    return _paginate_query(context, query, models.Profile, limit,
+                           keys, marker, sort_dir)
+
+
+def profile_get_all(context, limit=None, marker=None, sort_keys=None,
+                    sort_dir=None, filters=None, show_deleted=False):
+    query = _query_profile_get_all(context, show_deleted=show_deleted)
+    return _filter_and_page_profile(context, query, limit, sort_keys,
+                                    sort_dir, marker, filters).all()
 
 
 def profile_update(context, profile_id, values):
