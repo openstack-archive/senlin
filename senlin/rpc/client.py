@@ -178,7 +178,7 @@ class EngineClient(object):
                          self.make_msg('show_cluster',
                                        cluster_id=cluster_id))
 
-    def cluster_create(self, ctxt, name, size, profile_id, args=args):
+    def cluster_create(self, ctxt, name, size, profile_id, args):
         return self.call(ctxt, self.make_msg('cluster_create',
                                              name=name, size=size,
                                              profile_id=profile_id,
