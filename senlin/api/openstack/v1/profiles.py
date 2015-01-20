@@ -31,8 +31,10 @@ class ProfileData(object):
     The data accompanying a PUT or POST request to create or update a cluster.
     """
 
-    PARAMS = (NAME, SPEC, TYPE, PERMISSION, TAGS,
-    ) = ('name', 'spec', 'type', 'permission', 'tags',
+    PARAMS = (
+        NAME, SPEC, TYPE, PERMISSION, TAGS,
+    ) = (
+        'name', 'spec', 'type', 'permission', 'tags',
     )
 
     def __init__(self, data):
@@ -81,7 +83,7 @@ class ProfileController(object):
     def _index(self, req, tenant_safe=True):
         filter_whitelist = {
             'type': 'mixed',
-            'show_deleted': 'mixed',
+            'show_deleted': 'single',
             'permission': 'mixed',
             'tags': 'mixed',
         }
@@ -97,12 +99,12 @@ class ProfileController(object):
         if not filter_params:
             filter_params = None
 
-        profiles = self.rpc_client.list_profiles(req.context,
-                                                 filters=filter_params,
-                                                 tenant_safe=tenant_safe,
-                                                 **params)
+        profiles = self.rpc_client.profile_list(req.context,
+                                                filters=filter_params,
+                                                tenant_safe=tenant_safe,
+                                                **params)
 
-        # TODO: Add profiles_view to handle profile collection?
+        # TODO(Qiming): Add profiles_view to handle profile collection?
         return {'profiles': profiles}
 
     @util.policy_enforce
@@ -120,7 +122,7 @@ class ProfileController(object):
     @util.policy_enforce
     def create(self, req, body):
         data = ProfileData(body)
-        result = self.rpc_client.create_profile(req.context,
+        result = self.rpc_client.profile_create(req.context,
                                                 data.name(),
                                                 data.spec(),
                                                 data.type(),
@@ -131,8 +133,8 @@ class ProfileController(object):
 
     @util.policy_enforce
     def get(self, req, profile_id):
-        profile = self.rpc_client.show_profile(req.context,
-                                               profile_id)
+        profile = self.rpc_client.profile_get(req.context,
+                                              profile_id)
 
         if not profile:
             raise exc.HTTPInternalServerError()
@@ -142,7 +144,7 @@ class ProfileController(object):
     @util.policy_enforce
     def update(self, req, profile_id, body):
         data = ProfileData(body)
-        self.rpc_client.update_profile(req.context,
+        self.rpc_client.profile_update(req.context,
                                        profile_id,
                                        data.name(),
                                        data.spec(),
@@ -153,7 +155,7 @@ class ProfileController(object):
 
     @util.policy_enforce
     def delete(self, req, profile_id):
-        res = self.rpc_client.delete_profile(req.context,
+        res = self.rpc_client.profile_delete(req.context,
                                              profile_id,
                                              cast=False)
 
@@ -163,27 +165,10 @@ class ProfileController(object):
         raise exc.HTTPNoContent()
 
 
-class ProfileSerializer(serializers.JSONResponseSerializer):
-    """Handles serialization of specific controller method responses."""
-
-    def _populate_response_header(self, response, location, status):
-        response.status = status
-        response.headers['Location'] = location.encode('utf-8')
-        response.headers['Content-Type'] = 'application/json'
-        return response
-
-    def create(self, response, result):
-        self._populate_response_header(response,
-                                       result['profile']['links'][0]['href'],
-                                       201)
-        response.body = self.to_json(result)
-        return response
-
-
 def create_resource(options):
     """
     Profiles resource factory method.
     """
-    deserializer = wsgi.JSONRequestDeserializer()
-    serializer = ProfileSerializer()
-    return wsgi.Resource(ProfileController(options), deserializer, serializer)
+    return wsgi.Resource(ProfileController(options),
+                         wsgi.JSONRequestDeserializer(),
+                         serializers.JSONResponseSerializer())

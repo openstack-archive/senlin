@@ -85,6 +85,37 @@ class EngineClient(object):
         return self.call(ctxt, self.make_msg('profile_type_template',
                                              type_name=type_name))
 
+    def profile_list(self, ctxt, filters, tenant_safe, **params):
+        return self.call(ctxt,
+                         self.make_msg('profile_list',
+                                       filters=filters,
+                                       tenant_safe=tenant_safe,
+                                       **params))
+
+    def profile_create(self, ctxt, name, type, spec, perm, tags):
+        return self.call(ctxt,
+                         self.make_msg('profile_create',
+                                       name=name, type=type, spec=spec,
+                                       perm=perm, tags=tags))
+
+    def profile_get(self, ctxt, profile_id):
+        return self.call(ctxt,
+                         self.make_msg('profile_get',
+                                       profile_id=profile_id))
+
+    def profile_update(self, ctxt, profile_id, name, spec, perm, tags):
+        return self.call(ctxt,
+                         self.make_msg('profile_update',
+                                       profile_id=profile_id,
+                                       name=name, spec=spec,
+                                       perm=perm, tags=tags))
+
+    def profile_delete(self, ctxt, profile_id, cast=True):
+        rpc_method = self.cast if cast else self.call
+        return rpc_method(ctxt,
+                          self.make_msg('profile_delete',
+                                        profile_id=profile_id))
+
     def policy_type_list(self, ctxt):
         return self.call(ctxt, self.make_msg('list_policy_types'))
 

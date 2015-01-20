@@ -129,6 +129,22 @@ class EngineService(service.Service):
         return {}
 
     @request_context
+    def profile_list(self, context, filters, tenant_safe, **params):
+        return {}
+
+    @request_context
+    def profile_create(self, context, name, type, spec, perm, tags):
+        return {}
+
+    @request_context
+    def profile_update(self, context, profile_id, name, spec, perm, tags):
+        return {}
+
+    @request_context
+    def profile_delete(self, context, profile_id):
+        return {}
+
+    @request_context
     def policy_type_list(self, context):
         return environment.global_env().get_policy_types()
 
