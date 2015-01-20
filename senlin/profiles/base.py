@@ -75,7 +75,19 @@ class Profile(object):
 
         return cls.from_db_record(context, profile)
 
-    def store(self):
+    @classmethod
+    def load_all(cls, context, limit=None, sort_keys=None, marker=None,
+                 sort_dir=None, filters=None, tenant_safe=True,
+                 show_deleted=False):
+        '''
+        Retrieve all profiles from database.
+        '''
+        records = db_api.profile_get_all(context)
+
+        for record in records:
+            yield cls.from_db_record(context, record)
+
+    def store(self, context):
         '''
         Store the profile into database and return its ID.
         '''
@@ -86,7 +98,8 @@ class Profile(object):
             'permission': self.permission,
             'tags': self.tags,
         }
-        profile = db_api.profile_create(self.context, values)
+        profile = db_api.profile_create(context, values)
+        self.id = profile.id
         return profile.id
 
     @classmethod
@@ -125,11 +138,12 @@ class Profile(object):
 
     def to_dict(self):
         pb_dict = {
+            'id': self.id,
             'name': self.name,
-            'type': self.type_name,
-            'uuid': self.uuid,
+            'type': self.type,
             'permission': self.permission,
             'spec': self.spec,
+            'tags': self.tags,
         }
         return pb_dict
 
