@@ -80,7 +80,8 @@ class ProfileController(object):
     def default(self, req, **args):
         raise exc.HTTPNotFound()
 
-    def _index(self, req, tenant_safe=True):
+    @util.policy_enforce
+    def index(self, req):
         filter_whitelist = {
             'type': 'mixed',
             'show_deleted': 'single',
@@ -101,35 +102,22 @@ class ProfileController(object):
 
         profiles = self.rpc_client.profile_list(req.context,
                                                 filters=filter_params,
-                                                tenant_safe=tenant_safe,
                                                 **params)
 
         # TODO(Qiming): Add profiles_view to handle profile collection?
         return {'profiles': profiles}
 
     @util.policy_enforce
-    def global_index(self, req):
-        return self._index(req, tenant_safe=False)
-
-    @util.policy_enforce
-    def index(self, req):
-        global_tenant = bool(req.params.get('global_tenant', False))
-        if global_tenant:
-            return self.global_index(req, req.context.tenant_id)
-
-        return self._index(req)
-
-    @util.policy_enforce
     def create(self, req, body):
         data = ProfileData(body)
         result = self.rpc_client.profile_create(req.context,
                                                 data.name(),
-                                                data.spec(),
                                                 data.type(),
+                                                data.spec(),
                                                 data.permission(),
                                                 data.tags())
 
-        return {'profile': result}
+        return result
 
     @util.policy_enforce
     def get(self, req, profile_id):
@@ -139,7 +127,7 @@ class ProfileController(object):
         if not profile:
             raise exc.HTTPInternalServerError()
 
-        return {'profile': profile}
+        return profile
 
     @util.policy_enforce
     def update(self, req, profile_id, body):
