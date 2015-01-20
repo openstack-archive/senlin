@@ -28,6 +28,8 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('spec', types.Json),
         sqlalchemy.Column('permission', sqlalchemy.String(32)),
         sqlalchemy.Column('tags', types.Json),
+        sqlalchemy.Column('created_time', sqlalchemy.DateTime),
+        sqlalchemy.Column('updated_time', sqlalchemy.DateTime),
         sqlalchemy.Column('deleted_time', sqlalchemy.DateTime),
         mysql_engine='InnoDB',
         mysql_charset='utf8'

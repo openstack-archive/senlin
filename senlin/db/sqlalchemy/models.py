@@ -210,6 +210,8 @@ class Profile(BASE, SenlinBase, SoftDelete):
     spec = sqlalchemy.Column(types.Json)
     permission = sqlalchemy.Column(sqlalchemy.String(32))
     tags = sqlalchemy.Column(types.Json)
+    created_time = sqlalchemy.Column(sqlalchemy.DateTime)
+    updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
     deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
 
 

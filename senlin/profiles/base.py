@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
 
 from senlin.common import exception
 from senlin.db import api as db_api
@@ -44,6 +45,8 @@ class Profile(object):
         self.permission = kwargs.get('permission', '')
         self.spec = kwargs.get('spec', {})
         self.tags = kwargs.get('tags', {})
+        self.created_time = kwargs.get('created_time', None)
+        self.updated_time = kwargs.get('updated_time', None)
         self.deleted_time = kwargs.get('deleted_time', None)
 
     @classmethod
@@ -58,6 +61,8 @@ class Profile(object):
             'spec': record.spec,
             'permission': record.permission,
             'tags': record.tags,
+            'created_time': record.created_time,
+            'updated_time': record.updated_time,
             'deleted_time': record.deleted_time,
         }
 
@@ -97,6 +102,7 @@ class Profile(object):
             'spec': self.spec,
             'permission': self.permission,
             'tags': self.tags,
+            'created_time': datetime.datetime.utcnow()
         }
         profile = db_api.profile_create(context, values)
         self.id = profile.id
@@ -144,6 +150,9 @@ class Profile(object):
             'permission': self.permission,
             'spec': self.spec,
             'tags': self.tags,
+            'created_time': self.created_time,
+            'updated_time': self.updated_time,
+            'deleted_time': self.deleted_time,
         }
         return pb_dict
 
