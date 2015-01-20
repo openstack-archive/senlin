@@ -104,8 +104,7 @@ class EngineClient(object):
 
     def profile_get(self, ctxt, profile_id):
         return self.call(ctxt,
-                         self.make_msg('profile_get',
-                                       profile_id=profile_id))
+                         self.make_msg('profile_get', profile_id=profile_id))
 
     def profile_update(self, ctxt, profile_id, name, spec, perm, tags):
         return self.call(ctxt,

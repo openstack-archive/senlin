@@ -13,5 +13,6 @@
     "policy_types:index": "",
     "profiles:index": "rule:admin_or_owner",
     "profiles:create": "",
-    "profiles:delete": "rule:admin_or_owner"
+    "profiles:delete": "rule:admin_or_owner",
+    "profiles:get": "rule:admin_or_owner"
 }
