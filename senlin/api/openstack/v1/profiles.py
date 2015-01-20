@@ -48,12 +48,12 @@ class ProfileData(object):
     def spec(self):
         if self.SPEC not in self.data:
             raise exc.HTTPBadRequest(_("No profile spec provided"))
-        return self.data[self.self.SPEC]
+        return self.data[self.SPEC]
 
     def type(self):
         if self.TYPE not in self.data:
             raise exc.HTTPBadRequest(_("No profile type provided"))
-        return self.data[self.self.TYPE]
+        return self.data[self.TYPE]
 
     def permission(self):
         if self.PERMISSION not in self.data:
@@ -63,7 +63,7 @@ class ProfileData(object):
     def tags(self):
         if self.TAGS not in self.data:
             return None
-        return self.data[self.self.TAGS]
+        return self.data[self.TAGS]
 
 
 class ProfileController(object):
