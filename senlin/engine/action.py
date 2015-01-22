@@ -12,6 +12,7 @@
 
 import copy
 import datetime
+import random
 
 from oslo_config import cfg
 
@@ -25,6 +26,53 @@ from senlin.openstack.common import log as logging
 from senlin.policies import base as policies
 
 LOG = logging.getLogger(__name__)
+
+
+def policy_check(self, context, cluster_id, target):
+    """
+    Check all policies attached to cluster and give result
+
+    :param target: A tuple of ('when', action_name)
+    """
+    # Get list of policy IDs attached to cluster
+    policy_list = db_api.cluster_get_policies(context,
+                                              cluster_id)
+
+    policy_ids = [p.id for p in policy_list if p.enabled]
+
+    policy_check_list = []
+    for pid in policy_ids:
+        policy = policies.load(self.context, pid)
+        for t in policy.TARGET:
+            if t == target:
+                policy_check_list.append(policy)
+                break
+
+    # No policy need to check
+    if len(policy_check_list) == 0:
+        return
+
+    # Initialize an empty dict for policy check result
+    data = {}
+    data['result'] = policies.Policy.CHECK_SUCCEED
+    for policy in policy_check_list.append:
+        # Check all policies and collect return data
+        if target[0] == 'BEFORE':
+            data = policy.pre_op(self.cluster_id,
+                                 target[1],
+                                 data)
+        elif target[0] == 'AFTER':
+            data = policy.post_op(self.cluster_id,
+                                  target[1],
+                                  data)
+        else:
+            data = data
+
+        if data['result'] != policies.Policy.CHECK_SUCCEED:
+            # policy check failed, return
+            break
+
+    return data
 
 
 class Action(object):
@@ -330,7 +378,7 @@ class ClusterAction(Action):
         # Note: we need clean the node count of cluster each time
         # cluster.do_update is invoked; Then this count could be added
         # gradually each time a node update action finished. This helps
-        # us to track the progress of cluster updating. 
+        # us to track the progress of cluster updating.
         # (TODO) update this comment
         res = cluster.do_update(self.context, profile_id=new_profile_id)
         if not res:
@@ -454,8 +502,8 @@ class ClusterAction(Action):
                 if scheduler.action_timeout(self):
                     # Action timeout, set cluster status to ERROR and return
                     LOG.debug('Cluster deleting action %s timeout' % self.id)
-                    cluster.set_status(cluster.ERROR, 
-                        'Cluster wait for deleting timeout')
+                    cluster.set_status(cluster.ERROR,
+                                       'Cluster wait for deleting timeout')
                     return self.RES_TIMEOUT
                 # Sleep for a while
                 scheduler.reschedule(self, sleep=0)
@@ -498,8 +546,8 @@ class ClusterAction(Action):
             elif scheduler.action_timeout(self):
                 # Action timeout, set cluster status to ERROR and return
                 LOG.debug('Cluster deleting action %s timeout' % self.id)
-                cluster.set_status(cluster.ERROR, 
-                                  'Cluster deleting timeout')
+                cluster.set_status(cluster.ERROR,
+                                   'Cluster deleting timeout')
                 db_api.cluster_lock_release(cluster.id, self.id)
                 return self.RES_TIMEOUT
 
@@ -523,6 +571,96 @@ class ClusterAction(Action):
         return self.RES_OK
 
     def do_scale_down(self, cluster):
+        # Try to lock the cluster
+        worker_id = db_api.cluster_lock_create(cluster.id, self.id)
+        if worker_id != self.id:
+            # Lock cluster failed, other action of this cluster
+            # is in progress, give up this scaling down operation.
+            return self.RES_RETRY
+
+        # Go through all policies before scaling down.
+        policy_target = ('BEFORE', self.action)
+        result = policy_check(self.context, cluster.id, policy_target)
+        if not result['pass']:
+            # Policy check failed, release lock and return ERROR
+            db_api.cluster_lock_release(cluster.id, self.id)
+            return self.RES_ERROR
+
+        # Start to scale down based on policy check result
+        candidates = []
+        if 'candidates' not in result:
+            # No candidates for scaling down op which
+            # mean no deletion policy is applied to
+            # cluster, we just choose random nodes to
+            # delete based on scaling policy result.
+            count = result['count']
+            nodes = db_api.node_get_all_by_cluster(self.cluster_id)
+            # TODO: add some warning here
+            if count > len(nodes):
+                count = len(nodes)
+
+            for i in range(1, count):
+                rand = random.randrange(len(nodes))
+                candidates.append(nodes[rand])
+                nodes.remove(nodes[rand])
+        else:
+            candidates = result['candidates']
+
+        action_list = []
+        node_id_list = []
+        for node in candidates:
+            node_id_list.append(node.id)
+            kwargs = {
+                'name': 'node-delete-%s' % node.id,
+                'context': self.context,
+                'target': node.id,
+                'cause': 'Cluster scaling down',
+            }
+            action = Action(self.context, 'NODE_DELETE', **kwargs)
+            action_list.append(action)
+            action.set_status(self.READY)
+
+            # add new action to waiting/dependency list
+            db_api.action_add_dependency(action, self)
+
+        # Notify dispatcher
+        for action in action_list:
+            dispatcher.notify(self.context,
+                              dispatcher.Dispatcher.NEW_ACTION,
+                              None,
+                              action_id=action.id)
+
+        # Wait for cluster creating complete. If timeout,
+        # set cluster status to error.
+        # Note: we don't allow to cancel scaling operations.
+        while self.get_status() != self.READY:
+            if scheduler.action_timeout(self):
+                # Action timeout, set cluster status to ERROR and return
+                LOG.debug('Cluster scale_down action %s timeout' % self.id)
+                cluster.set_status(cluster.ERROR,
+                                   'Cluster scaling down timeout')
+                db_api.cluster_lock_release(cluster.id, self.id)
+                return self.RES_TIMEOUT
+
+            # Continue waiting (with sleep)
+            scheduler.reschedule(self, sleep=0)
+
+        # Cluster is scaled down successfully, remove
+        # deleted nodes
+        cluster.delete_nodes(node_id_list)
+
+        # Go through policies again to handle some post_ops
+        # e.g. LB
+        policy_target = ('AFTER', self.action)
+        result = policy_check(self.context, cluster.id, policy_target)
+        if not result['pass']:
+            # Policy check failed, release lock and return ERROR
+            db_api.cluster_lock_release(cluster.id, self.id)
+            return self.RES_ERROR
+
+        # set cluster status to OK and release the lock.
+        db_api.cluster_lock_release(cluster.id, self.id)
+
         return self.RES_OK
 
     def do_attach_policy(self, cluster):
@@ -530,7 +668,7 @@ class ClusterAction(Action):
         if policy_id is None:
             raise exception.PolicyNotSpecified()
 
-        policy = policies.load(self.context, policy_id)
+        policy = policies.Policy.load(self.context, policy_id)
         # Check if policy has already been attached
         all = db_api.cluster_get_policies(self.context, cluster.id)
         for existing in all:
