@@ -36,6 +36,8 @@ class HealthPolicy(base.Policy):
         ('BEFORE', consts.CLUSTER_DEL_NODES),
     ]
 
+    # Should be ANY if profile provides
+    # health check support?
     PROFILE_TYPE = [
         'os.nova.server',
         'AWS.AutoScaling.LaunchConfiguration',
