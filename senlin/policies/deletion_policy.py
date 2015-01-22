@@ -56,6 +56,14 @@ class DeletionPolicy(base.Policy):
         that will be deleted.
         '''
         data = kwargs.get('data')
+        data['result'] = self.CHECK_SUCCEED
+
+        if 'count' not in data:
+            # We need input from scaling policy,
+            # let's retry
+            data['result'] = self.CHECK_RETRY
+            return data
+
         data['candidates'] = []
         count = kwargs.get('count')
         if count == 0:
@@ -81,9 +89,6 @@ class DeletionPolicy(base.Policy):
                 data['candidates'].append(sorted_list[i - 1])
             else:  # self.criteria == self.YOUNGEST_FIRST:
                 data['candidates'].append(sorted_list[-i])
-
-        # Mark this policy check succeeded
-        data['result'] = self.CHECK_SUCCEED
 
         return data
 

@@ -51,8 +51,9 @@ class ScalingPolicy(base.Policy):
         # TODO(anyone): check if new size will break min_size or max_size
         # constraints
         data = kwargs.get('data')
-        adjustment = self.adjustment_number
+        data['result'] = self.CHECK_SUCCEED
 
+        adjustment = self.adjustment_number
         nodes = db_api.node_get_all_by_cluster(cluster_id)
         current_size = len(nodes)
         if current_size + adjustment > self.max_size:
@@ -61,9 +62,6 @@ class ScalingPolicy(base.Policy):
             adjustment = current_size - self.min_size
 
         data['count'] = adjustment
-
-        # Mark this policy check succeeded
-        data['result'] = self.CHECK_SUCCEED
 
         return data
 

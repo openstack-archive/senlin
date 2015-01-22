@@ -34,12 +34,14 @@ def policy_check(self, context, cluster_id, target):
 
     :param target: A tuple of ('when', action_name)
     """
+    # Initialize an empty dict for policy check result
+    data = {}
+    data['result'] = policies.Policy.CHECK_SUCCEED
+
     # Get list of policy IDs attached to cluster
     policy_list = db_api.cluster_get_policies(context,
                                               cluster_id)
-
     policy_ids = [p.id for p in policy_list if p.enabled]
-
     policy_check_list = []
     for pid in policy_ids:
         policy = policies.load(self.context, pid)
@@ -48,15 +50,13 @@ def policy_check(self, context, cluster_id, target):
                 policy_check_list.append(policy)
                 break
 
-    # No policy need to check
+    # No policy need to check, return data
     if len(policy_check_list) == 0:
-        return
+        return data
 
-    # Initialize an empty dict for policy check result
-    data = {}
-    data['result'] = policies.Policy.CHECK_SUCCEED
-    for policy in policy_check_list.append:
+    while len(policy_check_list) != 0:
         # Check all policies and collect return data
+        policy = policy_check_list[0]
         if target[0] == 'BEFORE':
             data = policy.pre_op(self.cluster_id,
                                  target[1],
@@ -68,9 +68,21 @@ def policy_check(self, context, cluster_id, target):
         else:
             data = data
 
-        if data['result'] != policies.Policy.CHECK_SUCCEED:
-            # policy check failed, return
-            break
+        if data['result'] == policies.Policy.CHECK_FAIL:
+            # Policy check failed, return
+            return False
+        elif data['result'] == policies.Policy.CHECK_RETRY:
+            # Policy check need extra input, move
+            # it to the end of policy list and
+            # wait for retry
+            policy_check_list.remove(policy)
+            policy_check_list.append(policy)
+        else:
+            # Policy check succeeded
+            policy_check_list.remove(policy)
+
+        # TODO: add retry limitation check to
+        # prevent endless loop on single policy
 
     return data
 
@@ -581,7 +593,7 @@ class ClusterAction(Action):
         # Go through all policies before scaling down.
         policy_target = ('BEFORE', self.action)
         result = policy_check(self.context, cluster.id, policy_target)
-        if not result['pass']:
+        if result is False:
             # Policy check failed, release lock and return ERROR
             db_api.cluster_lock_release(cluster.id, self.id)
             return self.RES_ERROR
@@ -590,7 +602,7 @@ class ClusterAction(Action):
         candidates = []
         if 'candidates' not in result:
             # No candidates for scaling down op which
-            # mean no deletion policy is applied to
+            # mean no DeletionPolicy is applied to
             # cluster, we just choose random nodes to
             # delete based on scaling policy result.
             count = result['count']
@@ -653,7 +665,7 @@ class ClusterAction(Action):
         # e.g. LB
         policy_target = ('AFTER', self.action)
         result = policy_check(self.context, cluster.id, policy_target)
-        if not result['pass']:
+        if result is False:
             # Policy check failed, release lock and return ERROR
             db_api.cluster_lock_release(cluster.id, self.id)
             return self.RES_ERROR

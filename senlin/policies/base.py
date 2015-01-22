@@ -25,6 +25,12 @@ class Policy(object):
         'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG',
     )
 
+    CHECK_RESULTS = (
+        CHECK_SUCCEED, CHECK_FAIL, CHECK_RETRY,
+    ) = (
+        'SUCCEED', 'FAIL', 'RERTY'
+    )
+
     def __new__(cls, type_name, name, **kwargs):
         '''
         Create a new policy of the appropriate class.
