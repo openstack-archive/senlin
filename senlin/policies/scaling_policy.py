@@ -11,6 +11,7 @@
 # under the License.
 
 from senlin.common import senlin_consts as consts
+from senlin.db import api as db_api
 from senlin.policies import base
 
 
@@ -22,19 +23,11 @@ class ScalingPolicy(base.Policy):
     is changed.
     '''
 
+    __type_name__ = 'ScalingPolicy'
+
     TARGET = [
-        ('BEFORE', consts.CLUSTER_ADD_NODES),
-        ('BEFORE', consts.CLUSTER_DEL_NODES),
         ('BEFORE', consts.CLUSTER_SCALE_UP),
         ('BEFORE', consts.CLUSTER_SCALE_DOWN),
-        ('WHEN', consts.CLUSTER_ADD_NODES),
-        ('WHEN', consts.CLUSTER_DEL_NODES),
-        ('WHEN', consts.CLUSTER_SCALE_UP),
-        ('WHEN', consts.CLUSTER_SCALE_DOWN),
-        ('AFTER', consts.CLUSTER_SCALE_UP),
-        ('AFTER', consts.CLUSTER_SCALE_DOWN),
-        ('AFTER', consts.CLUSTER_ADD_NODES),
-        ('AFTER', consts.CLUSTER_DEL_NODES),
     ]
 
     PROFILE_TYPE = [
@@ -52,18 +45,40 @@ class ScalingPolicy(base.Policy):
         # TODO(anyone): Make sure the default cooldown can be used if
         # not specified
 
-    def pre_op(self, cluster_id, action, **args):
-        # TODO(anyone): get cluster size, calculate new size
+    def pre_op(self, cluster_id, action, **kwargs):
+        # TODO(anyone): get cluster size, calculate new size and return
+        # count of nodes need to create or delete;
         # TODO(anyone): check if new size will break min_size or max_size
         # constraints
-        return True
+        data = kwargs.get('data')
+        adjustment = self.adjustment_number
+
+        nodes = db_api.node_get_all_by_cluster(cluster_id)
+        current_size = len(nodes)
+        if current_size + adjustment > self.max_size:
+            adjustment = self.max_size - current_size
+        elif current_size + adjustment < self.min_size:
+            adjustment = current_size - self.min_size
+
+        data['count'] = adjustment
+
+        # Mark this policy check succeeded
+        data['result'] = self.CHECK_SUCCEED
+
+        return data
 
     def enforce(self, cluster_id, action, **kwargs):
-        # if action in (consts.CLUSTER_SCALE_UP, consts.CLUSTER_SCALE_DOWN):
-        #     amount = get_adjustment(action)
+        data = kwargs.get('data')
 
-        # TODO(anyone): return new nodes to be added/removed.
-        pass
+        # Mark this policy check succeeded
+        data['result'] = self.CHECK_SUCCEED
+
+        return data
 
     def post_op(self, cluster_id, action, **kwargs):
-        return True
+        data = kwargs.get('data')
+
+        # Mark this policy check succeeded
+        data['result'] = self.CHECK_SUCCEED
+
+        return data

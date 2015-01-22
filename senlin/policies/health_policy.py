@@ -19,6 +19,8 @@ class HealthPolicy(base.Policy):
     Policy for health checking for members of a cluster.
     '''
 
+    __type_name__ = 'HealthPolicy'
+
     CHECK_TYPES = (
         VM_LIFECYCLE_EVENTS,
         VM_STATUS_POLLING,
