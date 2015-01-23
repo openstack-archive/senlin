@@ -13,6 +13,7 @@
 
 import routes
 
+from senlin.api.openstack.v1 import actions
 from senlin.api.openstack.v1 import build_info
 from senlin.api.openstack.v1 import clusters
 from senlin.api.openstack.v1 import nodes
@@ -147,6 +148,24 @@ class API(wsgi.Router):
                                "/nodes/{node_id}",
                                action="delete",
                                conditions={'method': 'DELETE'})
+
+        # Actions
+        actions_resource = actions.create_resource(conf)
+        with mapper.submapper(controller=actions_resource,
+                              path_prefix="/{tenant_id}") as sub_mapper:
+
+            sub_mapper.connect("action_index",
+                               "/actions",
+                               action="index",
+                               conditions={'method': 'GET'})
+            sub_mapper.connect("action_create",
+                               "/actions",
+                               action="create",
+                               conditions={'method': 'POST'})
+            sub_mapper.connect("action_get",
+                               "/actions/{action_id}",
+                               action="get",
+                               conditions={'method': 'GET'})
 
         # Info
         info_resource = build_info.create_resource(conf)

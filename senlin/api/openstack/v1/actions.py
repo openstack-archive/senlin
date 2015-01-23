@@ -17,56 +17,112 @@ from senlin.api.openstack.v1 import util
 from senlin.common.i18n import _
 from senlin.common import serializers
 from senlin.common import wsgi
+from senlin.openstack.common import log as logging
 from senlin.rpc import client as rpc_client
+
+LOG = logging.getLogger(__name__)
+
+
+class ActionData(object):
+    '''All required data fields for an action.'''
+    PARAMS = (
+        NAME, TARGET, ACTION,
+    ) = (
+        'name', 'target', 'action',
+    )
+
+    def __init__(self, data):
+        self.data = data
+
+    def name(self):
+        if self.NAME not in self.data:
+            raise exc.HTTPBadRequest(_("No profile name specified"))
+        return self.data[self.NAME]
+
+    def target(self):
+        if self.TARGET not in self.data:
+            raise exc.HTTPBadRequest(_("No target specified"))
+        return self.data[self.TARGET]
+
+    def action(self):
+        if self.ACTION not in self.data:
+            raise exc.HTTPBadRequest(_("No action specified"))
+        return self.data[self.ACTION]
+
+    def params(self):
+        data = self.data.items()
+        return dict((k, v) for k, v in data if k not in self.PARAMS)
 
 
 class ActionController(object):
     """
     WSGI controller for Actions in Senlin v1 API
-    Implements the API for cluster actions
     """
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'actions'
-
-    ACTIONS = (
-        SUSPEND, RESUME
-    ) = (
-        'suspend', 'resume'
-    )
 
     def __init__(self, options):
         self.options = options
         self.rpc_client = rpc_client.EngineClient()
 
-    @util.identified_cluster
-    def action(self, req, identity, body=None):
-        """
-        Performs a specified action on a cluster, the body is expecting to
-        contain exactly one item whose key specifies the action
-        """
-        body = body or {}
-        if len(body) < 1:
-            raise exc.HTTPBadRequest(_("No action specified"))
+    def default(self, req, **args):
+        raise exc.HTTPNotFound()
 
-        if len(body) > 1:
-            raise exc.HTTPBadRequest(_("Multiple actions specified"))
+    @util.policy_enforce
+    def index(self, req):
+        filter_whitelist = {
+            'name': 'mixed',
+            'target': 'mixed',
+            'action': 'mixed',
+            'created_time': 'single',
+            'updated_time': 'single',
+            'deleted_time': 'single',
+            'permission': 'mixed',
+        }
+        param_whitelist = {
+            'limit': 'single',
+            'marker': 'single',
+            'sort_dir': 'single',
+            'sort_keys': 'multi',
+            'show_deleted': 'single',
+        }
+        params = util.get_allowed_params(req.params, param_whitelist)
+        filters = util.get_allowed_params(req.params, filter_whitelist)
 
-        ac = body.keys()[0]
-        if ac not in self.ACTIONS:
-            raise exc.HTTPBadRequest(_("Invalid action %s specified") % ac)
+        if not filters:
+            filters = None
 
-        if ac == self.SUSPEND:
-            self.rpc_client.cluster_suspend(req.context, identity)
-        elif ac == self.RESUME:
-            self.rpc_client.cluster_resume(req.context, identity)
-        else:
-            raise exc.HTTPInternalServerError(_("Unexpected action %s") % ac)
+        actions = self.rpc_client.action_list(req.context,
+                                              filters=filters,
+                                              **params)
+
+        # TODO(Qiming): Add action_view to handle collection?
+        return {'actions': actions}
+
+    @util.policy_enforce
+    def create(self, req, body):
+        data = ActionData(body)
+        result = self.rpc_client.action_create(req.context,
+                                               data.name(),
+                                               data.target(),
+                                               data.action(),
+                                               data.params())
+
+        return result
+
+    @util.policy_enforce
+    def get(self, req, action_id):
+        action = self.rpc_client.action_get(req.context, action_id)
+        if not action:
+            raise exc.HTTPInternalServerError()
+
+        return action
 
 
 def create_resource(options):
     """
-    Actions action factory method.
+    Actions factory method.
     """
-    deserializer = wsgi.JSONRequestDeserializer()
-    serializer = serializers.JSONResponseSerializer()
-    return wsgi.Resource(ActionController(options), deserializer, serializer)
+    return wsgi.Resource(ActionController(options),
+                         wsgi.JSONRequestDeserializer(),
+                         serializers.JSONResponseSerializer())

@@ -216,5 +216,23 @@ class EngineClient(object):
                                         node_id=identity,
                                         force=force))
 
+    def action_list(self, ctxt, filters=None, limit=None, marker=None,
+                    sort_keys=None, sort_dir=None, show_deleted=False):
+        return self.call(ctxt,
+                         self.make_msg('action_list', filters=filters,
+                                       limit=limit, marker=marker,
+                                       sort_keys=sort_keys, sort_dir=sort_dir,
+                                       show_deleted=show_deleted))
+
+    def action_create(self, ctxt, name, target, action, params):
+        return self.call(ctxt,
+                         self.make_msg('action_create',
+                                       name=name, target=target,
+                                       action=action, params=params))
+
+    def action_get(self, ctxt, action_id):
+        return self.call(ctxt,
+                         self.make_msg('action_get', action_id=action_id))
+
     def get_revision(self, ctxt):
         return self.call(ctxt, self.make_msg('get_revision'))

@@ -803,12 +803,39 @@ def action_get_all_by_owner(context, owner_id):
     return query.all()
 
 
-def action_get_all(context):
-    actions = model_query(context, models.Action).all()
+def _filter_and_page_action(context, query, limit=None, sort_keys=None,
+                            sort_dir=None, marker=None, filters=None):
+    if filters is None:
+        filters = {}
 
-    if not actions:
-        raise exception.NotFound(_('No actions were found'))
-    return actions
+    sort_key_map = {
+        rpc_api.ACTION_NAME: models.Action.name.key,
+        rpc_api.ACTION_TARGET: models.Action.target.key,
+        rpc_api.ACTION_ACTION: models.Action.action.key,
+        rpc_api.ACTION_INTERVAL: models.Action.interval.key,
+        rpc_api.ACTION_START_TIME: models.Action.start_time.key,
+        rpc_api.ACTION_END_TIME: models.Action.end_time.key,
+        rpc_api.ACTION_INPUTS: models.Action.inputs.key,
+        rpc_api.ACTION_OUTPUTS: models.Action.outputs.key,
+        rpc_api.ACTION_DEPENDS_ON: models.Action.depends_on.key,
+        rpc_api.ACTION_DEPENDED_BY: models.Action.depended_by.key,
+        rpc_api.ACTION_STATUS: models.Action.status.key,
+        rpc_api.ACTION_STATUS_REASON: models.Action.status_reason.key,
+    }
+    keys = _get_sort_keys(sort_keys, sort_key_map)
+
+    query = db_filters.exact_filter(query, models.Action, filters)
+    return _paginate_query(context, query, models.Action, limit,
+                           keys, marker, sort_dir)
+
+
+def action_get_all(context, filters=None, limit=None, marker=None,
+                   sort_keys=None, sort_dir=None, show_deleted=False):
+    query = soft_delete_aware_query(context, models.Action,
+                                    show_deleted=show_deleted)
+
+    return _filter_and_page_action(context, query, limit, sort_keys,
+                                   sort_dir, marker, filters).all()
 
 
 def _action_dependency_add(context, action_id, field, adds):

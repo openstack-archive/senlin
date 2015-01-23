@@ -364,3 +364,35 @@ class EngineService(service.Service):
         #               directly.
         nodes.Node.delete(context, node_id, force)
         return action.to_dict()
+
+    @request_context
+    def action_list(self, context, filters=None, limit=None, marker=None,
+                    sort_keys=None, sort_dir=None, show_deleted=False):
+
+        all_actions = actions.Action.load_all(context, filters, limit, marker,
+                                              sort_keys, sort_dir,
+                                              show_deleted)
+
+        raw = [action.to_dict() for action in all_actions]
+        for a in raw:
+            del a['context']
+            yield a
+
+    @request_context
+    def action_create(self, context, name, target, action, params):
+        LOG.info(_LI('Creating action %s'), name)
+
+        # Create a node instance
+        act = actions.Action(context, action, target, name=name, params=params)
+        act.store(context)
+
+        # TODO(Anyone): Uncomment this to notify the dispatcher
+        # dispatcher.notify(context, self.dispatcher.NEW_ACTION,
+        #                   None, action_id=action.id)
+
+        return act.to_dict()
+
+    @request_context
+    def action_get(self, context, action_id):
+        # TODO(Qiming): Add conversion from name to id
+        return actions.Action.load(context, action_id)

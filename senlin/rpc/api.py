@@ -58,3 +58,15 @@ EVENT_KEYS = (
     'timestamp', 'obj_id', 'obj_name', 'obj_type',
     'user', 'action', 'status', 'status_reason',
 )
+
+ACTION_KEYS = (
+    ACTION_NAME, ACTION_TARGET, ACTION_ACTION, ACTION_CAUSE,
+    ACTION_INTERVAL, ACTION_START_TIME, ACTION_END_TIME,
+    ACTION_TIMEOUT, ACTION_STATUS, ACTION_STATUS_REASON,
+    ACTION_INPUTS, ACTION_OUTPUTS, ACTION_DEPENDS_ON, ACTION_DEPENDED_BY,
+) = (
+    'name', 'target', 'action', 'cause',
+    'interval', 'start_time', 'end_time',
+    'timeout', 'status', 'status_reason',
+    'inputs', 'outputs', 'depends_on', 'depended_by',
+)

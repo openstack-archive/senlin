@@ -262,8 +262,12 @@ def action_get_all_by_owner(context, owner):
     return IMPL.action_get_all_by_owner(context, owner)
 
 
-def action_get_all(context):
-    return IMPL.action_get_all(context)
+def action_get_all(context, filters=None, limit=None, marker=None,
+                   sort_keys=None, sort_dir=None, show_deleted=False):
+    return IMPL.action_get_all(context, filters=filters,
+                               limit=limit, marker=marker,
+                               sort_keys=sort_keys, sort_dir=sort_dir,
+                               show_deleted=show_deleted)
 
 
 def action_add_dependency(context, depended, dependent):

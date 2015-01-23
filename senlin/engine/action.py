@@ -81,7 +81,7 @@ def policy_check(self, context, cluster_id, target):
             # Policy check succeeded
             policy_check_list.remove(policy)
 
-        # TODO: add retry limitation check to
+        # TODO(anyone): add retry limitation check to
         # prevent endless loop on single policy
 
     return data
@@ -223,10 +223,10 @@ class Action(object):
         :param context: the context used for DB operations;
         :param record: a DB action object that contains all fields.
         '''
+        context = req_context.RequestContext.from_dict(record.context)
         kwargs = {
             'id': record.id,
             'name': record.name,
-            'context': req_context.RequestContext.from_dict(record.context),
             'target': record.target,
             'cause': record.cause,
             'owner': record.owner,
@@ -256,6 +256,25 @@ class Action(object):
             raise exception.NotFound(msg)
 
         return cls.from_db_record(context, action)
+
+    @classmethod
+    def load_all(cls, context, filters=None, limit=None, marker=None,
+                 sort_keys=None, sort_dir=None, show_deleted=False):
+        '''
+        Retrieve all actions of from database.
+        '''
+        records = db_api.action_get_all(context, filters=filters,
+                                        limit=limit, marker=marker,
+                                        sort_keys=sort_keys,
+                                        sort_dir=sort_dir,
+                                        show_deleted=show_deleted)
+
+        for record in records:
+            yield cls.from_db_record(context, record)
+
+    @classmethod
+    def delete(cls, context, action_id, force=False):
+        db_api.action_delete(context, action_id, force)
 
     def execute(self, **kwargs):
         '''
@@ -293,6 +312,7 @@ class Action(object):
         action_dict = {
             'id': self.id,
             'name': self.name,
+            'action': self.action,
             'context': self.context.to_dict(),
             'target': self.target,
             'cause': self.cause,
@@ -638,7 +658,7 @@ class ClusterAction(Action):
             # delete based on scaling policy result.
             count = result['count']
             nodes = db_api.node_get_all_by_cluster(self.cluster_id)
-            # TODO: add some warning here
+            # TODO(anyone): add some warning here
             if count > len(nodes):
                 count = len(nodes)
 
