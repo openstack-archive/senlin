@@ -18,5 +18,7 @@
     "nodes:index": "rule:admin_or_owner",
     "nodes:create": "",
     "nodes:get": "rule:admin_or_owner",
-    "nodes:delete": "rule:admin_or_owner"
+    "nodes:delete": "rule:admin_or_owner",
+    "actions:index": "rule:admin_or_owner",
+    "actions:get": "rule:admin_or_owner"
 }
