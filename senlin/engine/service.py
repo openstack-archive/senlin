@@ -254,10 +254,10 @@ class EngineService(service.Service):
 
         # Create a Cluster instance
         cluster = clusters.Cluster(name, profile_id, size, **kwargs)
-        cluster.store()
+        cluster.store(context)
         # Build an Action for Cluster creating
         action = actions.Action(context, cluster, 'CLUSTER_CREATE', **kwargs)
-        action.store()
+        action.store(context)
         # Notify Dispatchers that a new action has been ready.
         dispatcher.notify(context,
                           self.dispatcher.NEW_ACTION,
@@ -326,11 +326,11 @@ class EngineService(service.Service):
         # Create a node instance
         node = nodes.Node(context, name, profile_id, cluster_id=cluster_id,
                           role=role, tags=tags)
-        node.store()
+        node.store(context)
 
         action = actions.Action(context, 'NODE_CREATE',
                                 target=node.id, cause='Node creation')
-        action.store()
+        action.store(context)
 
         # TODO(Anyone): Uncomment this to notify the dispatcher
         # dispatcher.notify(context, self.dispatcher.NEW_ACTION,
@@ -349,15 +349,18 @@ class EngineService(service.Service):
         return {}
 
     @request_context
-    def node_delete(self, context, identity):
-        LOG.info(_LI('Deleting node %s'), identity)
+    def node_delete(self, context, node_id, force=False):
+        LOG.info(_LI('Deleting node %s'), node_id)
 
-        node = nodes.Node.load(context, identity)
+        node = nodes.Node.load(context, node_id)
         action = actions.Action(context, 'NODE_DELETE',
                                 target=node.id, cause='Node deletion')
-        action.store()
+        action.store(context)
         # TODO(Anyone): Uncomment the following lines to send notifications
         # res = dispatcher.notify(context, self.dispatcher.NEW_ACTION,
         #                        None, action_id=action.id)
 
-        return None
+        # TODO(anyone): Fix this behavior, node record cannot be deleted
+        #               directly.
+        nodes.Node.delete(context, node_id, force)
+        return action.to_dict()

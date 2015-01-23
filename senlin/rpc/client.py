@@ -209,11 +209,12 @@ class EngineClient(object):
                                        name=name, profile_id=profile_id,
                                        role=role, tags=tags))
 
-    def node_delete(self, ctxt, identity, cast=True):
+    def node_delete(self, ctxt, identity, force=False, cast=True):
         rpc_method = self.cast if cast else self.call
         return rpc_method(ctxt,
                           self.make_msg('node_delete',
-                                        node_id=identity))
+                                        node_id=identity,
+                                        force=force))
 
     def get_revision(self, ctxt):
         return self.call(ctxt, self.make_msg('get_revision'))

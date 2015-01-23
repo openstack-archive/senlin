@@ -147,6 +147,10 @@ class Node(object):
         for record in records:
             yield cls.from_db_record(context, record)
 
+    @classmethod
+    def delete(cls, context, node_id, force=False):
+        db_api.node_delete(context, node_id, force)
+
     def to_dict(self):
         node_dict = {
             'id': self.id,

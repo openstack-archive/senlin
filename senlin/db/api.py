@@ -121,6 +121,10 @@ def node_migrate(context, node_id, from_cluster, to_cluster):
     return IMPL.node_migrate(context, node_id, from_cluster, to_cluster)
 
 
+def node_delete(context, node_id, force=False):
+    return IMPL.node_delete(context, node_id, force)
+
+
 # Locks
 def cluster_lock_create(cluster_id, worker_id):
     return IMPL.cluster_lock_create(cluster_id, worker_id)

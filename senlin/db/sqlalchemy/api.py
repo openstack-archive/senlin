@@ -344,6 +344,19 @@ def node_migrate(context, node_id, from_cluster, to_cluster):
     session.commit()
 
 
+def node_delete(context, node_id, force=False):
+    node = node_get(context, node_id)
+
+    if not node:
+        msg = _('Attempt to delete a node with id "%s" that does not '
+                'exist failed') % node_id
+        raise exception.NotFound(msg)
+
+    session = orm_session.Session.object_session(node)
+    node.soft_delete(session=session)
+    session.flush()
+
+
 # Locks
 def cluster_lock_create(cluster_id, worker_id):
     session = get_session()
