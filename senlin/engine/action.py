@@ -10,11 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import copy
 import datetime
 
 from oslo_config import cfg
 
+from senlin.common import context as req_context
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.db import api as db_api
@@ -76,7 +76,9 @@ class Action(object):
             raise exception.ActionNotSupported(
                 action=action, object=_('target %s') % self.target)
 
-        self.context = copy.deepcopy(context)
+        self.id = kwargs.get('id', '')
+        self.name = kwargs.get('name', '')
+        self.context = req_context.RequestContext.from_dict(context.to_dict())
 
         self.description = kwargs.get('description', '')
 
@@ -124,13 +126,15 @@ class Action(object):
         self.depends_on = kwargs.get('depends_on', [])
         self.depended_by = kwargs.get('depended_by', [])
 
+        self.deleted_time = None
+
     def store(self):
         '''
         Store the action record into database table.
         '''
         values = {
             'name': self.name,
-            'context': self.context,
+            'context': self.context.to_dict(),
             'target': self.target,
             'action': self.action,
             'cause': self.cause,
@@ -148,7 +152,7 @@ class Action(object):
             'deleted_time': self.deleted_time,
         }
 
-        action = db_api.action_create(self.context, self.id, values)
+        action = db_api.action_create(self.context, values)
         self.id = action.id
         return self.id
 
@@ -162,7 +166,7 @@ class Action(object):
         kwargs = {
             'id': record.id,
             'name': record.name,
-            'context': record.context,
+            'context': req_context.RequestContext.from_dict(record.context),
             'target': record.target,
             'cause': record.cause,
             'owner': record.owner,
@@ -224,6 +228,33 @@ class Action(object):
         action = db_api.action_get(self.context, self.id)
         self.status = action.status
         return action.status
+
+    def to_dict(self):
+        action_dict = {
+            'id': self.id,
+            'name': self.name,
+            'context': self.context.to_dict(),
+            'target': self.target,
+            'cause': self.cause,
+            'owner': self.owner,
+            'interval': self.interval,
+            'start_time': self.start_time,
+            'end_time': self.end_time,
+            'interval': self.interval,
+            'timeout': self.timeout,
+            'status': self.status,
+            'status_reason': self.status_reason,
+            'inputs': self.inputs,
+            'outputs': self.outputs,
+            'depends_on': self.depends_on,
+            'depended_by': self.depended_by,
+            'deleted_time': self.deleted_time,
+        }
+        return action_dict
+
+    @classmethod
+    def from_dict(cls, context=None, **kwargs):
+        return cls(context=context, **kwargs)
 
 
 class ClusterAction(Action):
@@ -290,7 +321,7 @@ class ClusterAction(Action):
                               action_id=action.id)
 
         # Wait for cluster creating complete
-        # TODO: need db support
+        # TODO(anyone): need db support
         while self.get_status() != self.READY:
             if scheduler.action_cancelled(self):
                 # During this period, if cancel request come,
@@ -330,8 +361,8 @@ class ClusterAction(Action):
         # Note: we need clean the node count of cluster each time
         # cluster.do_update is invoked; Then this count could be added
         # gradually each time a node update action finished. This helps
-        # us to track the progress of cluster updating. 
-        # (TODO) update this comment
+        # us to track the progress of cluster updating.
+        # TODO(anyone): update this comment
         res = cluster.do_update(self.context, profile_id=new_profile_id)
         if not res:
             cluster.set_status(cluster.ACTIVE,
@@ -357,7 +388,7 @@ class ClusterAction(Action):
             action.set_status(self.READY)
 
             # add new action to waiting/dependency list
-            # TODO: need db_api support
+            # TODO(anyone): need db_api support
             db_api.action_add_dependency(action, self)
 
         # Notify dispatcher
@@ -368,7 +399,7 @@ class ClusterAction(Action):
                               action_id=action.id)
 
         # Wait for cluster updating complete
-        # TODO: need db support
+        # TODO(anyone): need db support
         while self.get_status() != self.READY:
             if scheduler.action_cancelled(self):
                 # During this period, if cancel request come,
@@ -398,7 +429,7 @@ class ClusterAction(Action):
         node_list = cluster.get_nodes()
         for node_id in node_list:
             # We try to search node related action in DB
-            # TODO: we need a new db_api interface here
+            # TODO(anyone): we need a new db_api interface here
             node_action = db_api.action_get_by_target(node_id)
             if not node_action:
                 # Node action doesn't exist which means this
@@ -429,7 +460,7 @@ class ClusterAction(Action):
             node.do_update(self.context, profile_id=old_profile_id)
 
         # We don't wait for node action cancel finishing
-        # TODO: may need more discussion
+        # TODO(anyone): may need more discussion
 
         # Restore cluster based on old profile
         res = cluster.do_update(self.context, profile_id=old_profile_id)
@@ -454,8 +485,8 @@ class ClusterAction(Action):
                 if scheduler.action_timeout(self):
                     # Action timeout, set cluster status to ERROR and return
                     LOG.debug('Cluster deleting action %s timeout' % self.id)
-                    cluster.set_status(cluster.ERROR, 
-                        'Cluster wait for deleting timeout')
+                    cluster.set_status(cluster.ERROR,
+                                       'Cluster deletion timed out waiting')
                     return self.RES_TIMEOUT
                 # Sleep for a while
                 scheduler.reschedule(self, sleep=0)
@@ -484,7 +515,7 @@ class ClusterAction(Action):
                               action_id=action.id)
 
         # Wait for cluster creating complete
-        # TODO: need db supportting dependency based status management
+        # TODO(anyone): need db supportting dependency based status management
         while self.get_status() != self.READY:
             if scheduler.action_cancelled(self):
                 # During this period, if cancel request come,
@@ -497,9 +528,9 @@ class ClusterAction(Action):
                 return self.RES_CANCEL
             elif scheduler.action_timeout(self):
                 # Action timeout, set cluster status to ERROR and return
-                LOG.debug('Cluster deleting action %s timeout' % self.id)
-                cluster.set_status(cluster.ERROR, 
-                                  'Cluster deleting timeout')
+                LOG.debug('Cluster deleting action %s timed out' % self.id)
+                cluster.set_status(cluster.ERROR,
+                                   'Cluster deletion timed out')
                 db_api.cluster_lock_release(cluster.id, self.id)
                 return self.RES_TIMEOUT
 
