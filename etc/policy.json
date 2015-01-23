@@ -14,5 +14,7 @@
     "profiles:index": "rule:admin_or_owner",
     "profiles:create": "",
     "profiles:delete": "rule:admin_or_owner",
-    "profiles:get": "rule:admin_or_owner"
+    "profiles:get": "rule:admin_or_owner",
+    "nodes:index": "rule:admin_or_owner",
+    "nodes:create": ""
 }
