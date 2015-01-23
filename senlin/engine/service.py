@@ -339,9 +339,9 @@ class EngineService(service.Service):
         return action.to_dict()
 
     @request_context
-    def node_get(self, context, identity):
+    def node_get(self, context, node_id):
         # TODO(Qiming): Add conversion from name to id
-        node = nodes.Node.load(context, identity)
+        node = nodes.Node.load(context, node_id)
         return node
 
     @request_context

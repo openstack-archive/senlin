@@ -197,10 +197,10 @@ class EngineClient(object):
                                        profile_id=profile_id,
                                        role=role, tags=tags))
 
-    def node_get(self, ctxt, identity):
+    def node_get(self, ctxt, node_id):
         # TODO(Anyone): check if a conversion from name to ID is needed
         return self.call(ctxt,
-                         self.make_msg('node_get', node_id=identity))
+                         self.make_msg('node_get', node_id=node_id))
 
     def node_update(self, ctxt, identity, name, profile_id, role, tags):
         # TODO(Anyone): check if a conversion from name to ID is needed
