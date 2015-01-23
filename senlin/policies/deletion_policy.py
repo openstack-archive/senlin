@@ -22,6 +22,8 @@ class DeletionPolicy(base.Policy):
     Policy for deleting member(s) from a cluster.
     '''
 
+    __type_name__ = 'DeletionPolicy'
+
     CRITERIA = (
         OLDEST_FIRST, YOUNGEST_FIRST, RANDOM,
     ) = (
@@ -31,9 +33,8 @@ class DeletionPolicy(base.Policy):
     )
 
     TARGET = [
-        ('WHEN', consts.CLUSTER_SCALE_DOWN),
-        ('AFTER', consts.CLUSTER_DEL_NODES),
-        ('AFTER', consts.CLUSTER_SCALE_DOWN),
+        ('BEFORE', consts.CLUSTER_SCALE_DOWN),
+        ('BEFORE', consts.CLUSTER_DEL_NODES),
     ]
 
     PROFILE_TYPE = [
@@ -51,28 +52,59 @@ class DeletionPolicy(base.Policy):
 
     def pre_op(self, cluster_id, action, **kwargs):
         '''
-        We don't block the deletion anyhow.
-        '''
-        return True
-
-    def enforce(self, cluster_id, action, **kwargs):
-        '''
-        The enforcement of a deletion policy returns the chosen victims
+        The pre-op of a deletion policy returns the chosen victims
         that will be deleted.
         '''
-        nodes = db_api.node_get_all_by_cluster_id(cluster_id)
+        data = kwargs.get('data')
+        data['result'] = self.CHECK_SUCCEED
+
+        if 'count' not in data:
+            # We need input from scaling policy,
+            # let's retry
+            data['result'] = self.CHECK_RETRY
+            return data
+
+        data['candidates'] = []
+        count = kwargs.get('count')
+        if count == 0:
+            # No candidates is choosen for deletion
+            return data
+
+        nodes = db_api.node_get_all_by_cluster(cluster_id)
+        # TODO: Add count check to ensure it is not larger
+        # then the current size of cluster.
+        if count > len(nodes):
+            count = len(nodes)
+
         if self.criteria == self.RANDOM:
-            rand = random.randrange(len(nodes))
-            return nodes[rand]
+            for i in range(1, count):
+                rand = random.randrange(len(nodes))
+                data['candidates'].append(nodes[rand])
+                nodes.remove(nodes[rand])
+            return data
 
         sorted_list = sorted(nodes, key=lambda r: (r.created_time, r.name))
-        if self.criteria == self.OLDEST_FIRST:
-            victim = sorted_list[0]
-        else:  # self.criteria == self.YOUNGEST_FIRST:
-            victim = sorted_list[-1]
+        for i in range(1, count):
+            if self.criteria == self.OLDEST_FIRST:
+                data['candidates'].append(sorted_list[i - 1])
+            else:  # self.criteria == self.YOUNGEST_FIRST:
+                data['candidates'].append(sorted_list[-i])
 
-        return victim
+        return data
+
+    def enforce(self, cluster_id, action, **kwargs):
+        data = kwargs.get('data')
+
+        # Mark this policy check succeeded
+        data['result'] = self.CHECK_SUCCEED
+
+        return data
 
     def post_op(self, cluster_id, action, **kwargs):
         # TODO(Qiming): process grace period here if needed
-        return True
+        data = kwargs.get('data')
+
+        # Mark this policy check succeeded
+        data['result'] = self.CHECK_SUCCEED
+
+        return data

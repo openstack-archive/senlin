@@ -19,6 +19,8 @@ class HealthPolicy(base.Policy):
     Policy for health checking for members of a cluster.
     '''
 
+    __type_name__ = 'HealthPolicy'
+
     CHECK_TYPES = (
         VM_LIFECYCLE_EVENTS,
         VM_STATUS_POLLING,
@@ -36,6 +38,8 @@ class HealthPolicy(base.Policy):
         ('BEFORE', consts.CLUSTER_DEL_NODES),
     ]
 
+    # Should be ANY if profile provides
+    # health check support?
     PROFILE_TYPE = [
         'os.nova.server',
         'AWS.AutoScaling.LaunchConfiguration',

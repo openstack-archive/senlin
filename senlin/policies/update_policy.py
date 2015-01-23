@@ -23,6 +23,8 @@ class UpdatePolicy(base.Policy):
     DeletePolicy.
     '''
 
+    __type_name__ = 'UpdatePolicy'
+
     TARGET = [
         ('WHEN', consts.CLUSTER_UPDATE),
     ]

@@ -22,6 +22,8 @@ class PlacementPolicy(base.Policy):
     existing cluster.
     '''
 
+    __type_name__ = 'PlacementPolicy'
+
     TARGET = [
         ('WHEN', consts.CLUSTER_SCALE_UP),
     ]
