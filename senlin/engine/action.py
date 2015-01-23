@@ -188,7 +188,7 @@ class Action(object):
 
         self.deleted_time = None
 
-    def store(self):
+    def store(self, context):
         '''
         Store the action record into database table.
         '''
@@ -212,7 +212,7 @@ class Action(object):
             'deleted_time': self.deleted_time,
         }
 
-        action = db_api.action_create(self.context, values)
+        action = db_api.action_create(context, values)
         self.id = action.id
         return self.id
 
