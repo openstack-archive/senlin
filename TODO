@@ -28,6 +28,7 @@ ENGINE
       and using start/step to support event wait.
     - action(ClusterAction, NodeAction, etc.) itself has to handle its own
       progress control(e.g. implement as generator and support canceling)
+  - Using python threading to replace greenthread(long term).
   - complete parser logic, construct profile/policy objects there?
 
 DRIVER
