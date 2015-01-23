@@ -31,7 +31,7 @@ class Node(object):
     statuses = (
         INIT, ACTIVE, ERROR, DELETED, UPDATING,
     ) = (
-        'INITIALIZING', 'ACTIVE', 'ERROR', 'DELETED', 'UPDATING',
+        'INIT', 'ACTIVE', 'ERROR', 'DELETED', 'UPDATING',
     )
 
     def __init__(self, context, name, profile_id, **kwargs):
