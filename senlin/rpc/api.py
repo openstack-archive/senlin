@@ -31,6 +31,16 @@ CLUSTER_KEYS = (
     'tags',
 )
 
+NODE_KEYS = (
+    NODE_INDEX, NODE_NAME,
+    NODE_CREATED_TIME, NODE_UPDATED_TIME, NODE_DELETED_TIME,
+    NODE_STATUS,
+) = (
+    'index', 'name',
+    'created_time', 'updated_time', 'deleted_time',
+    'status',
+)
+
 PROFILE_KEYS = (
     PROFILE_ID, PROFILE_NAME, PROFILE_TYPE, PROFILE_PERMISSION,
     PROFILE_CREATED_TIME, PROFILE_UPDATED_TIME, PROFILE_DELETED_TIME,

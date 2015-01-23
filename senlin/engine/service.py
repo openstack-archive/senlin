@@ -27,6 +27,7 @@ from senlin.engine import action as actions
 from senlin.engine import cluster as clusters
 from senlin.engine import dispatcher
 from senlin.engine import environment
+from senlin.engine import node as nodes
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock
 from senlin.openstack.common import log as logging
@@ -306,3 +307,57 @@ class EngineService(service.Service):
                                 action_id=action.id)
 
         return res
+
+    @request_context
+    def node_list(self, context, cluster_id=None, show_deleted=False,
+                  limit=None, marker=None, sort_keys=None, sort_dir=None,
+                  filters=None, tenant_safe=True):
+
+        all_nodes = nodes.Node.load_all(context, cluster_id, show_deleted,
+                                        limit, marker, sort_keys, sort_dir,
+                                        filters, tenant_safe)
+
+        return [node.to_dict() for node in all_nodes]
+
+    @request_context
+    def node_create(self, context, name, cluster_id, profile_id, role, tags):
+        LOG.info(_LI('Creating node %s'), name)
+
+        # Create a node instance
+        node = nodes.Node(context, name, profile_id, cluster_id=cluster_id,
+                          role=role, tags=tags)
+        node.store()
+
+        action = actions.Action(context, 'NODE_CREATE',
+                                target=node.id, cause='Node creation')
+        action.store()
+
+        # TODO(Anyone): Uncomment this to notify the dispatcher
+        # dispatcher.notify(context, self.dispatcher.NEW_ACTION,
+        #                   None, action_id=action.id)
+
+        return action.to_dict()
+
+    @request_context
+    def node_get(self, context, identity):
+        # TODO(Qiming): Add conversion from name to id
+        node = nodes.Node.load(context, identity)
+        return node
+
+    @request_context
+    def node_update(self, context, identity, name, profile_id, role, tags):
+        return {}
+
+    @request_context
+    def node_delete(self, context, identity):
+        LOG.info(_LI('Deleting node %s'), identity)
+
+        node = nodes.Node.load(context, identity)
+        action = actions.Action(context, 'NODE_DELETE',
+                                target=node.id, cause='Node deletion')
+        action.store()
+        # TODO(Anyone): Uncomment the following lines to send notifications
+        # res = dispatcher.notify(context, self.dispatcher.NEW_ACTION,
+        #                        None, action_id=action.id)
+
+        return None

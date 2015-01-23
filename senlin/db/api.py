@@ -16,8 +16,8 @@ Interface for database access.
 SQLAlchemy is currently the only supported backend.
 '''
 
-from oslo.db import api
 from oslo_config import cfg
+from oslo_db import api
 
 CONF = cfg.CONF
 
@@ -90,8 +90,12 @@ def node_get(context, node_id):
     return IMPL.node_get(context, node_id)
 
 
-def node_get_all(context):
-    return IMPL.node_get_all(context)
+def node_get_all(context, cluster_id=None, show_deleted=False,
+                 limit=None, marker=None, sort_keys=None, sort_dir=None,
+                 filters=None, tenant_safe=True):
+    return IMPL.node_get_all(context, cluster_id, show_deleted,
+                             limit, marker, sort_keys, sort_dir,
+                             filters, tenant_safe)
 
 
 def node_get_all_by_cluster(context, cluster_id):

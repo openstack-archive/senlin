@@ -145,41 +145,19 @@ class EngineClient(object):
     def cluster_list(self, ctxt, limit=None, marker=None, sort_keys=None,
                      sort_dir=None, filters=None, tenant_safe=True,
                      show_deleted=False, show_nested=False):
-        """
-        Get a list of all clusters.
-        It supports pagination (``limit`` and ``marker``),
-        sorting (``sort_keys`` and ``sort_dir``) and
-        filtering (``filters``) of the results.
-
-        :param ctxt: RPC context.
-        :param limit: the number of clusters to list (integer or string)
-        :param marker: the ID of the last item in the previous page
-        :param sort_keys: an array of fields used to sort the list
-        :param sort_dir: the direction of the sort ('asc' or 'desc')
-        :param filters: a dict with attribute:value to filter the list
-        :param tenant_safe: if true, scope the request by the current tenant
-        :param show_deleted: if true, show soft-deleted clusters
-        :param show_nested: if true, show nested clusters
-        :returns: a list of clusters
-        """
+        # We keep the tenant_safe param here for the moment
         return self.call(ctxt,
-                         self.make_msg('cluster_list', limit=limit,
-                                       sort_keys=sort_keys, marker=marker,
-                                       sort_dir=sort_dir, filters=filters,
+                         self.make_msg('cluster_list',
+                                       limit=limit, marker=marker,
+                                       sort_keys=sort_keys, sort_dir=sort_dir,
+                                       filters=filters,
                                        tenant_safe=tenant_safe,
                                        show_deleted=show_deleted,
                                        show_nested=show_nested))
 
     def cluster_get(self, ctxt, cluster_id):
-        """
-        Return detailed information about one or all clusters.
-        :param ctxt: RPC context.
-        :param cluster_id: Name of the cluster you want to show,
-        or None to show all
-        """
         return self.call(ctxt,
-                         self.make_msg('show_cluster',
-                                       cluster_id=cluster_id))
+                         self.make_msg('cluster_get', cluster_id=cluster_id))
 
     def cluster_create(self, ctxt, name, size, profile_id, args):
         return self.call(ctxt, self.make_msg('cluster_create',
@@ -198,6 +176,44 @@ class EngineClient(object):
         return rpc_method(ctxt,
                           self.make_msg('cluster_delete',
                                         cluster_id=cluster_id))
+
+    def node_list(self, ctxt, cluster_id=None, show_deleted=False,
+                  limit=None, marker=None,
+                  sort_keys=None, sort_dir=None,
+                  filters=None, tenant_safe=True):
+        # We keep the tenant_safe param here for the moment
+        return self.call(ctxt,
+                         self.make_msg('node_list', cluster_id=cluster_id,
+                                       show_deleted=show_deleted,
+                                       limit=limit, marker=marker,
+                                       sort_keys=sort_keys, sort_dir=sort_dir,
+                                       filters=filters,
+                                       tenant_safe=tenant_safe))
+
+    def node_create(self, ctxt, name, cluster_id, profile_id, role, tags):
+        return self.call(ctxt,
+                         self.make_msg('node_create', name=name,
+                                       cluster_id=cluster_id,
+                                       profile_id=profile_id,
+                                       role=role, tags=tags))
+
+    def node_get(self, ctxt, identity):
+        # TODO(Anyone): check if a conversion from name to ID is needed
+        return self.call(ctxt,
+                         self.make_msg('node_get', node_id=identity))
+
+    def node_update(self, ctxt, identity, name, profile_id, role, tags):
+        # TODO(Anyone): check if a conversion from name to ID is needed
+        return self.call(ctxt,
+                         self.make_msg('node_update', node_id=identity,
+                                       name=name, profile_id=profile_id,
+                                       role=role, tags=tags))
+
+    def node_delete(self, ctxt, identity, cast=True):
+        rpc_method = self.cast if cast else self.call
+        return rpc_method(ctxt,
+                          self.make_msg('node_delete',
+                                        node_id=identity))
 
     def get_revision(self, ctxt):
         return self.call(ctxt, self.make_msg('get_revision'))

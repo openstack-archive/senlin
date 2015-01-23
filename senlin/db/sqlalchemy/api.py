@@ -17,9 +17,9 @@ Implementation of SQLAlchemy backend.
 import six
 import sys
 
-from oslo.db.sqlalchemy import session as db_session
-from oslo.db.sqlalchemy import utils
 from oslo_config import cfg
+from oslo_db.sqlalchemy import session as db_session
+from oslo_db.sqlalchemy import utils
 from sqlalchemy.orm import session as orm_session
 
 from senlin.common import exception
@@ -168,7 +168,7 @@ def _query_cluster_get_all(context, tenant_safe=True, show_deleted=False,
 
 def _paginate_query(context, query, model, limit=None, sort_keys=None,
                     marker=None, sort_dir=None):
-    default_sort_keys = ['created_time']
+    default_sort_keys = []
     if not sort_keys:
         sort_keys = default_sort_keys
         if not sort_dir:
@@ -273,11 +273,43 @@ def node_get(context, node_id):
     return node
 
 
-def node_get_all(context):
-    nodes = model_query(context, models.Node).all()
-    if not nodes:
-        raise exception.NotFound(_('No nodes were found'))
-    return nodes
+def _query_node_get_all(context, show_deleted=False, cluster_id=None):
+    query = soft_delete_aware_query(context, models.Node,
+                                    show_deleted=show_deleted)
+
+    if cluster_id:
+        query = query.filter_by(cluster_id=cluster_id).all()
+
+    return query
+
+
+def _filter_and_page_node(context, query, limit=None, sort_keys=None,
+                          sort_dir=None, marker=None, filters=None):
+    if filters is None:
+        filters = {}
+
+    sort_key_map = {
+        rpc_api.NODE_INDEX: models.Node.index.key,
+        rpc_api.NODE_NAME: models.Node.name.key,
+        rpc_api.NODE_CREATED_TIME: models.Node.created_time.key,
+        rpc_api.NODE_UPDATED_TIME: models.Node.updated_time.key,
+        rpc_api.NODE_DELETED_TIME: models.Node.deleted_time.key,
+        rpc_api.NODE_STATUS: models.Node.status.key,
+    }
+    keys = _get_sort_keys(sort_keys, sort_key_map)
+
+    query = db_filters.exact_filter(query, models.Node, filters)
+    return _paginate_query(context, query, models.Node, limit,
+                           keys, marker, sort_dir)
+
+
+def node_get_all(context, cluster_id=None, show_deleted=False,
+                 limit=None, marker=None, sort_keys=None, sort_dir=None,
+                 filters=None, tenant_safe=True):
+    query = _query_node_get_all(context, show_deleted=show_deleted,
+                                cluster_id=cluster_id)
+    return _filter_and_page_node(context, query, limit, sort_keys,
+                                 sort_dir, marker, filters).all()
 
 
 def node_get_all_by_cluster(context, cluster_id):

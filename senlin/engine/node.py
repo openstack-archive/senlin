@@ -13,8 +13,10 @@
 import datetime
 
 from senlin.common import exception
+from senlin.common.i18n import _LW
 from senlin.db import api as db_api
-from senlin.profiles import base as profiles
+from senlin.engine import event as events
+from senlin.profiles import base as profile_base
 
 
 class Node(object):
@@ -33,7 +35,6 @@ class Node(object):
     )
 
     def __init__(self, context, name, profile_id, **kwargs):
-        self.context = context
         self.id = kwargs.get('id', None)
         if name:
             self.name = name
@@ -57,10 +58,10 @@ class Node(object):
         self.tags = kwargs.get('tags', {})
 
         self.rt = {
-            'profile': profiles.load(context, self.profile_id),
+            'profile': profile_base.Profile.load(context, self.profile_id),
         }
 
-    def store(self):
+    def store(self, context):
         '''
         Store the node record into database table.
 
@@ -85,10 +86,10 @@ class Node(object):
         }
 
         if self.id:
-            db_api.node_update(self.context, self.id, values)
+            db_api.node_update(context, self.id, values)
             # TODO(Qiming): create event/log
         else:
-            node = db_api.node_create(self.context, values)
+            node = db_api.node_create(context, values)
             # TODO(Qiming): create event/log
             self.id = node.id
 
@@ -130,39 +131,69 @@ class Node(object):
         return cls.from_db_record(context, record)
 
     @classmethod
-    def load_all(cls, context, cluster_id):
+    def load_all(cls, context, cluster_id=None, show_deleted=False,
+                 limit=None, marker=None, sort_keys=None, sort_dir=None,
+                 filters=None, tenant_safe=True):
         '''
         Retrieve all nodes of from database.
         '''
-        records = db_api.node_get_all_by_cluster(context, cluster_id)
+        records = db_api.node_get_all(context, cluster_id=cluster_id,
+                                      show_deleted=show_deleted,
+                                      limit=limit, marker=marker,
+                                      sort_keys=sort_keys, sort_dir=sort_dir,
+                                      filters=filters,
+                                      tenant_safe=tenant_safe)
 
         for record in records:
             yield cls.from_db_record(context, record)
 
-    def do_create(self):
+    def to_dict(self):
+        node_dict = {
+            'id': self.id,
+            'name': self.name,
+            'cluster_id': self.cluster_id,
+            'physical_id': self.physical_id,
+            'profile_id': self.profile_id,
+            'index': self.index,
+            'role': self.role,
+            'created_time': self.created_time,
+            'updated_time': self.updated_time,
+            'deleted_time': self.deleted_time,
+            'status': self.status,
+            'status_reason': self.status_reason,
+            'data': self.data,
+            'tags': self.tags,
+        }
+        return node_dict
+
+    @classmethod
+    def from_dict(cls, **kwargs):
+        return cls(**kwargs)
+
+    def do_create(self, context):
         # TODO(Qiming): log events?
         self.created_time = datetime.datetime.utcnnow()
-        res = profiles.create_object(self)
+        res = profile_base.create_object(self, context)
         if res:
             self.physical_id = res
             return True
         else:
             return False
 
-    def do_delete(self):
+    def do_delete(self, context):
         if not self.physical_id:
             return True
 
         # TODO(Qiming): check if actions are working on it and can be canceled
         # TODO(Qiming): log events
-        res = profiles.delete_object(self)
+        res = profile_base.delete_object(self)
         if res:
             db_api.delete_node(self.id)
             return True
         else:
             return False
 
-    def do_update(self, new_profile_id):
+    def do_update(self, context, new_profile_id):
         if not new_profile_id:
             raise exception.ProfileNotSpecified()
 
@@ -182,36 +213,37 @@ class Node(object):
                             'newt': new_profile.type})
             return False
 
-        res = profiles.update_object(self, new_profile_id)
+        res = profile_base.update_object(self, new_profile_id)
         if res:
-            self.rt['profile'] = profiles.load(self.context, new_profile_id)
+            self.rt['profile'] = profile_base.load(context,
+                                                   new_profile_id)
             self.profile_id = new_profile_id
             self.updated_time = datetime.datetime.utcnow()
-            db_api.node_update(self.context, self.id,
+            db_api.node_update(context, self.id,
                                {'profile_id': self.profile_id,
                                 'updated_time': self.updated_time})
 
         return res
 
-    def do_join(self, cluster_id):
+    def do_join(self, context, cluster_id):
         if self.cluster_id == cluster_id:
             return True
 
-        db_api.node_migrate(self.context, self.id, self.cluster_id,
+        db_api.node_migrate(context, self.id, self.cluster_id,
                             cluster_id)
 
         self.updated_time = datetime.datetime.utcnow()
-        db_api.node_update(self.context, self.id,
+        db_api.node_update(context, self.id,
                            {'updated_time': self.updated_time})
         return True
 
-    def do_leave(self):
+    def do_leave(self, context):
         if self.cluster_id is None:
             return True
 
-        db_api.node_migrate(self.context, self.id, self.cluster_id, None)
+        db_api.node_migrate(context, self.id, self.cluster_id, None)
         self.updated_time = datetime.datetime.utcnow()
-        db_api.node_update(self.context, self.id,
+        db_api.node_update(context, self.id,
                            {'updated_time': self.updated_time})
 
         return True

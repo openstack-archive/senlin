@@ -15,6 +15,7 @@ import routes
 
 from senlin.api.openstack.v1 import build_info
 from senlin.api.openstack.v1 import clusters
+from senlin.api.openstack.v1 import nodes
 from senlin.api.openstack.v1 import policy_types
 from senlin.api.openstack.v1 import profile_types
 from senlin.api.openstack.v1 import profiles
@@ -30,32 +31,6 @@ class API(wsgi.Router):
     def __init__(self, conf, **local_conf):
         self.conf = conf
         mapper = routes.Mapper()
-
-        # Clusters
-        clusters_resource = clusters.create_resource(conf)
-        with mapper.submapper(controller=clusters_resource,
-                              path_prefix="/{tenant_id}") as sub_mapper:
-
-            sub_mapper.connect("cluster_index",
-                               "/clusters",
-                               action="index",
-                               conditions={'method': 'GET'})
-            sub_mapper.connect("cluster_create",
-                               "/clusters",
-                               action="create",
-                               conditions={'method': 'POST'})
-            sub_mapper.connect("cluster_get",
-                               "/clusters/{cluster_id}",
-                               action="get",
-                               conditions={'method': 'GET'})
-            sub_mapper.connect("cluster_update",
-                               "/clusters/{cluster_id}",
-                               action="update",
-                               conditions={'method': 'POST'})
-            sub_mapper.connect("cluster_delete",
-                               "/clusters/{cluster_id}",
-                               action="delete",
-                               conditions={'method': 'DELETE'})
 
         # Profile_types
         profile_types_resource = profile_types.create_resource(conf)
@@ -118,6 +93,60 @@ class API(wsgi.Router):
                                "/policy_types/{type_name}/template",
                                action="template",
                                conditions={'method': 'GET'})
+
+        # Policies (To do)
+
+        # Clusters
+        clusters_resource = clusters.create_resource(conf)
+        with mapper.submapper(controller=clusters_resource,
+                              path_prefix="/{tenant_id}") as sub_mapper:
+
+            sub_mapper.connect("cluster_index",
+                               "/clusters",
+                               action="index",
+                               conditions={'method': 'GET'})
+            sub_mapper.connect("cluster_create",
+                               "/clusters",
+                               action="create",
+                               conditions={'method': 'POST'})
+            sub_mapper.connect("cluster_get",
+                               "/clusters/{cluster_id}",
+                               action="get",
+                               conditions={'method': 'GET'})
+            sub_mapper.connect("cluster_update",
+                               "/clusters/{cluster_id}",
+                               action="update",
+                               conditions={'method': 'POST'})
+            sub_mapper.connect("cluster_delete",
+                               "/clusters/{cluster_id}",
+                               action="delete",
+                               conditions={'method': 'DELETE'})
+
+        # Nodes
+        nodes_resource = nodes.create_resource(conf)
+        with mapper.submapper(controller=nodes_resource,
+                              path_prefix="/{tenant_id}") as sub_mapper:
+
+            sub_mapper.connect("node_index",
+                               "/nodes",
+                               action="index",
+                               conditions={'method': 'GET'})
+            sub_mapper.connect("node_create",
+                               "/nodes",
+                               action="create",
+                               conditions={'method': 'POST'})
+            sub_mapper.connect("node_get",
+                               "/nodes/{node_id}",
+                               action="get",
+                               conditions={'method': 'GET'})
+            sub_mapper.connect("node_update",
+                               "/nodes/{node_id}",
+                               action="update",
+                               conditions={'method': 'POST'})
+            sub_mapper.connect("node_delete",
+                               "/nodes/{node_id}",
+                               action="delete",
+                               conditions={'method': 'DELETE'})
 
         # Info
         info_resource = build_info.create_resource(conf)
