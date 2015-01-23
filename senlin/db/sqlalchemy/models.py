@@ -16,7 +16,7 @@ SQLAlchemy models for Senlin data.
 
 import uuid
 
-from oslo.db.sqlalchemy import models
+from oslo_db.sqlalchemy import models
 from oslo_utils import timeutils
 import six
 import sqlalchemy
@@ -103,8 +103,8 @@ class Cluster(BASE, SenlinBase, SoftDelete):
     timeout = sqlalchemy.Column(sqlalchemy.Integer)
     status = sqlalchemy.Column(sqlalchemy.String(255))
     status_reason = sqlalchemy.Column(sqlalchemy.String(255))
-    tags = sqlalchemy.Column(types.Json)
-    data = sqlalchemy.Column(types.Json)
+    tags = sqlalchemy.Column(types.Dict)
+    data = sqlalchemy.Column(types.Dict)
 
 
 class Node(BASE, SenlinBase, SoftDelete):
@@ -129,8 +129,8 @@ class Node(BASE, SenlinBase, SoftDelete):
 
     status = sqlalchemy.Column(sqlalchemy.String(255))
     status_reason = sqlalchemy.Column(sqlalchemy.String(255))
-    tags = sqlalchemy.Column(types.Json)
-    data = sqlalchemy.Column(types.Json)
+    tags = sqlalchemy.Column(types.Dict)
+    data = sqlalchemy.Column(types.Dict)
 
 
 class ClusterLock(BASE, SenlinBase):
@@ -175,8 +175,8 @@ class Policy(BASE, SenlinBase, SoftDelete):
     cooldown = sqlalchemy.Column(sqlalchemy.Integer)
     level = sqlalchemy.Column(sqlalchemy.Integer)
     deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    spec = sqlalchemy.Column(types.Json)
-    data = sqlalchemy.Column(types.Json)
+    spec = sqlalchemy.Column(types.Dict)
+    data = sqlalchemy.Column(types.Dict)
 
 
 class ClusterPolicies(BASE, SenlinBase):
@@ -207,9 +207,9 @@ class Profile(BASE, SenlinBase, SoftDelete):
                            default=lambda: str(uuid.uuid4()))
     name = sqlalchemy.Column(sqlalchemy.String(255))
     type = sqlalchemy.Column(sqlalchemy.String(255))
-    spec = sqlalchemy.Column(types.Json)
+    spec = sqlalchemy.Column(types.Dict)
     permission = sqlalchemy.Column(sqlalchemy.String(32))
-    tags = sqlalchemy.Column(types.Json)
+    tags = sqlalchemy.Column(types.Dict)
     created_time = sqlalchemy.Column(sqlalchemy.DateTime)
     updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
     deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
@@ -223,9 +223,9 @@ class Action(BASE, SenlinBase, SoftDelete):
     id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
                            default=lambda: str(uuid.uuid4()))
     name = sqlalchemy.Column(sqlalchemy.String(63))
-    context = sqlalchemy.Column(types.Json)
+    context = sqlalchemy.Column(types.Dict)
     target = sqlalchemy.Column(sqlalchemy.String(36))
-    action = sqlalchemy.Column(types.LongText)
+    action = sqlalchemy.Column(sqlalchemy.Text)
     cause = sqlalchemy.Column(sqlalchemy.String(255))
     owner = sqlalchemy.Column(sqlalchemy.String(36))
     interval = sqlalchemy.Column(sqlalchemy.Integer)
@@ -235,10 +235,10 @@ class Action(BASE, SenlinBase, SoftDelete):
     status = sqlalchemy.Column(sqlalchemy.String(255))
     status_reason = sqlalchemy.Column(sqlalchemy.String(255))
     control = sqlalchemy.Column(sqlalchemy.String(255))
-    inputs = sqlalchemy.Column(types.Json)
-    outputs = sqlalchemy.Column(types.Json)
-    depends_on = sqlalchemy.Column(types.Json)
-    depended_by = sqlalchemy.Column(types.Json)
+    inputs = sqlalchemy.Column(types.Dict)
+    outputs = sqlalchemy.Column(types.Dict)
+    depends_on = sqlalchemy.Column(types.List)
+    depended_by = sqlalchemy.Column(types.List)
     deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
 
 

@@ -12,7 +12,7 @@
 
 import os
 
-from oslo.db.sqlalchemy import migration as oslo_migration
+from oslo_db.sqlalchemy import migration as oslo_migration
 
 
 INIT_VERSION = 0

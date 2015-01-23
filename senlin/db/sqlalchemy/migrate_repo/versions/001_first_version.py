@@ -25,9 +25,9 @@ def upgrade(migrate_engine):
                           primary_key=True, nullable=False),
         sqlalchemy.Column('name', sqlalchemy.String(255)),
         sqlalchemy.Column('type', sqlalchemy.String(255)),
-        sqlalchemy.Column('spec', types.Json),
+        sqlalchemy.Column('spec', types.Dict),
         sqlalchemy.Column('permission', sqlalchemy.String(32)),
-        sqlalchemy.Column('tags', types.Json),
+        sqlalchemy.Column('tags', types.Dict),
         sqlalchemy.Column('created_time', sqlalchemy.DateTime),
         sqlalchemy.Column('updated_time', sqlalchemy.DateTime),
         sqlalchemy.Column('deleted_time', sqlalchemy.DateTime),
@@ -56,8 +56,8 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('timeout', sqlalchemy.Integer),
         sqlalchemy.Column('status', sqlalchemy.String(255)),
         sqlalchemy.Column('status_reason', sqlalchemy.String(255)),
-        sqlalchemy.Column('tags', types.Json),
-        sqlalchemy.Column('data', types.Json),
+        sqlalchemy.Column('tags', types.Dict),
+        sqlalchemy.Column('data', types.Dict),
         mysql_engine='InnoDB',
         mysql_charset='utf8'
     )
@@ -80,8 +80,8 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('deleted_time', sqlalchemy.DateTime),
         sqlalchemy.Column('status', sqlalchemy.String(255)),
         sqlalchemy.Column('status_reason', sqlalchemy.String(255)),
-        sqlalchemy.Column('tags', types.Json),
-        sqlalchemy.Column('data', types.Json),
+        sqlalchemy.Column('tags', types.Dict),
+        sqlalchemy.Column('data', types.Dict),
         mysql_engine='InnoDB',
         mysql_charset='utf8'
     )
@@ -115,8 +115,8 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('cooldown', sqlalchemy.Integer),
         sqlalchemy.Column('level', sqlalchemy.Integer),
         sqlalchemy.Column('deleted_time', sqlalchemy.DateTime),
-        sqlalchemy.Column('spec', types.Json),
-        sqlalchemy.Column('data', types.Json),
+        sqlalchemy.Column('spec', types.Dict),
+        sqlalchemy.Column('data', types.Dict),
         mysql_engine='InnoDB',
         mysql_charset='utf8'
     )
@@ -143,9 +143,9 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('id', sqlalchemy.String(36),
                           primary_key=True, nullable=False),
         sqlalchemy.Column('name', sqlalchemy.String(63)),
-        sqlalchemy.Column('context', types.Json),
+        sqlalchemy.Column('context', types.Dict),
         sqlalchemy.Column('target', sqlalchemy.String(36)),
-        sqlalchemy.Column('action', types.LongText),
+        sqlalchemy.Column('action', sqlalchemy.Text),
         sqlalchemy.Column('cause', sqlalchemy.String(255)),
         sqlalchemy.Column('owner', sqlalchemy.String(36)),
         sqlalchemy.Column('interval', sqlalchemy.Integer),
@@ -155,10 +155,10 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('control', sqlalchemy.String(255)),
         sqlalchemy.Column('status', sqlalchemy.String(255)),
         sqlalchemy.Column('status_reason', sqlalchemy.String(255)),
-        sqlalchemy.Column('inputs', types.Json),
-        sqlalchemy.Column('outputs', types.Json),
-        sqlalchemy.Column('depends_on', types.Json),
-        sqlalchemy.Column('depended_by', types.Json),
+        sqlalchemy.Column('inputs', types.Dict),
+        sqlalchemy.Column('outputs', types.Dict),
+        sqlalchemy.Column('depends_on', types.List),
+        sqlalchemy.Column('depended_by', types.List),
         sqlalchemy.Column('deleted_time', sqlalchemy.DateTime),
         mysql_engine='InnoDB',
         mysql_charset='utf8'
@@ -178,7 +178,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('action', sqlalchemy.String(36)),
         sqlalchemy.Column('status', sqlalchemy.String(255)),
         sqlalchemy.Column('status_reason', sqlalchemy.String(255)),
-        sqlalchemy.Column('tags', types.Json),
+        sqlalchemy.Column('tags', types.Dict),
         mysql_engine='InnoDB',
         mysql_charset='utf8'
     )
