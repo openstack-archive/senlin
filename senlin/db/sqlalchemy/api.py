@@ -22,13 +22,13 @@ from oslo_db.sqlalchemy import session as db_session
 from oslo_db.sqlalchemy import utils
 from sqlalchemy.orm import session as orm_session
 
+from senlin.common import attr
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.db.sqlalchemy import filters as db_filters
 from senlin.db.sqlalchemy import migration
 from senlin.db.sqlalchemy import models
 from senlin.openstack.common import log as logging
-from senlin.rpc import api as rpc_api
 
 LOG = logging.getLogger(__name__)
 
@@ -195,10 +195,10 @@ def _filter_and_page_query(context, query, limit=None, sort_keys=None,
         filters = {}
 
     sort_key_map = {
-        rpc_api.CLUSTER_NAME: models.Cluster.name.key,
-        rpc_api.CLUSTER_STATUS: models.Cluster.status.key,
-        rpc_api.CLUSTER_CREATED_TIME: models.Cluster.created_time.key,
-        rpc_api.CLUSTER_UPDATED_TIME: models.Cluster.updated_time.key,
+        attr.CLUSTER_NAME: models.Cluster.name.key,
+        attr.CLUSTER_STATUS: models.Cluster.status.key,
+        attr.CLUSTER_CREATED_TIME: models.Cluster.created_time.key,
+        attr.CLUSTER_UPDATED_TIME: models.Cluster.updated_time.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
@@ -289,12 +289,12 @@ def _filter_and_page_node(context, query, limit=None, sort_keys=None,
         filters = {}
 
     sort_key_map = {
-        rpc_api.NODE_INDEX: models.Node.index.key,
-        rpc_api.NODE_NAME: models.Node.name.key,
-        rpc_api.NODE_CREATED_TIME: models.Node.created_time.key,
-        rpc_api.NODE_UPDATED_TIME: models.Node.updated_time.key,
-        rpc_api.NODE_DELETED_TIME: models.Node.deleted_time.key,
-        rpc_api.NODE_STATUS: models.Node.status.key,
+        attr.NODE_INDEX: models.Node.index.key,
+        attr.NODE_NAME: models.Node.name.key,
+        attr.NODE_CREATED_TIME: models.Node.created_time.key,
+        attr.NODE_UPDATED_TIME: models.Node.updated_time.key,
+        attr.NODE_DELETED_TIME: models.Node.deleted_time.key,
+        attr.NODE_STATUS: models.Node.status.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
@@ -568,13 +568,13 @@ def _filter_and_page_profile(context, query, limit=None, sort_keys=None,
         filters = {}
 
     sort_key_map = {
-        rpc_api.PROFILE_TYPE: models.Profile.type.key,
-        rpc_api.PROFILE_NAME: models.Profile.name.key,
-        rpc_api.PROFILE_PERMISSION: models.Profile.permission.key,
-        rpc_api.PROFILE_CREATED_TIME: models.Profile.created_time.key,
-        rpc_api.PROFILE_UPDATED_TIME: models.Profile.updated_time.key,
-        rpc_api.PROFILE_DELETED_TIME: models.Profile.deleted_time.key,
-        rpc_api.PROFILE_TAGS: models.Profile.tags.key,
+        attr.PROFILE_TYPE: models.Profile.type.key,
+        attr.PROFILE_NAME: models.Profile.name.key,
+        attr.PROFILE_PERMISSION: models.Profile.permission.key,
+        attr.PROFILE_CREATED_TIME: models.Profile.created_time.key,
+        attr.PROFILE_UPDATED_TIME: models.Profile.updated_time.key,
+        attr.PROFILE_DELETED_TIME: models.Profile.deleted_time.key,
+        attr.PROFILE_TAGS: models.Profile.tags.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
@@ -691,8 +691,8 @@ def _events_filter_and_page_query(context, query, limit=None, marker=None,
         filters = {}
 
     sort_key_map = {
-        rpc_api.EVENT_TIMESTAMP: models.Event.timestamp.key,
-        rpc_api.EVENT_OBJ_TYPE: models.Event.obj_type.key,
+        attr.EVENT_TIMESTAMP: models.Event.timestamp.key,
+        attr.EVENT_OBJ_TYPE: models.Event.obj_type.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
@@ -809,18 +809,18 @@ def _filter_and_page_action(context, query, limit=None, sort_keys=None,
         filters = {}
 
     sort_key_map = {
-        rpc_api.ACTION_NAME: models.Action.name.key,
-        rpc_api.ACTION_TARGET: models.Action.target.key,
-        rpc_api.ACTION_ACTION: models.Action.action.key,
-        rpc_api.ACTION_INTERVAL: models.Action.interval.key,
-        rpc_api.ACTION_START_TIME: models.Action.start_time.key,
-        rpc_api.ACTION_END_TIME: models.Action.end_time.key,
-        rpc_api.ACTION_INPUTS: models.Action.inputs.key,
-        rpc_api.ACTION_OUTPUTS: models.Action.outputs.key,
-        rpc_api.ACTION_DEPENDS_ON: models.Action.depends_on.key,
-        rpc_api.ACTION_DEPENDED_BY: models.Action.depended_by.key,
-        rpc_api.ACTION_STATUS: models.Action.status.key,
-        rpc_api.ACTION_STATUS_REASON: models.Action.status_reason.key,
+        attr.ACTION_NAME: models.Action.name.key,
+        attr.ACTION_TARGET: models.Action.target.key,
+        attr.ACTION_ACTION: models.Action.action.key,
+        attr.ACTION_INTERVAL: models.Action.interval.key,
+        attr.ACTION_START_TIME: models.Action.start_time.key,
+        attr.ACTION_END_TIME: models.Action.end_time.key,
+        attr.ACTION_INPUTS: models.Action.inputs.key,
+        attr.ACTION_OUTPUTS: models.Action.outputs.key,
+        attr.ACTION_DEPENDS_ON: models.Action.depends_on.key,
+        attr.ACTION_DEPENDED_BY: models.Action.depended_by.key,
+        attr.ACTION_STATUS: models.Action.status.key,
+        attr.ACTION_STATUS_REASON: models.Action.status_reason.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 

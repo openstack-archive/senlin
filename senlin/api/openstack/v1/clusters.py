@@ -19,11 +19,11 @@ from webob import exc
 
 from senlin.api.openstack.v1 import util
 from senlin.api.openstack.v1.views import clusters_view
+from senlin.common import attr
 from senlin.common.i18n import _
 from senlin.common import serializers
 from senlin.common import wsgi
 from senlin.openstack.common import log as logging
-from senlin.rpc import api as rpc_api
 from senlin.rpc import client as rpc_client
 
 LOG = logging.getLogger(__name__)
@@ -158,7 +158,7 @@ class ClusterController(object):
 
         formatted_cluster = clusters_view.format_cluster(
             req,
-            {rpc_api.CLUSTER_ID: result}
+            {attr.CLUSTER_ID: result}
         )
         return {'cluster': formatted_cluster}
 

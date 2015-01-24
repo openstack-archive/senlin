@@ -92,8 +92,8 @@ class Cluster(BASE, SenlinBase, SoftDelete):
                                    sqlalchemy.ForeignKey('profile.id'),
                                    nullable=False)
     user = sqlalchemy.Column(sqlalchemy.String(36))
-    project = sqlalchemy.Column(sqlalchemy.String(36))
     domain = sqlalchemy.Column(sqlalchemy.String(36))
+    project = sqlalchemy.Column(sqlalchemy.String(36))
     parent = sqlalchemy.Column(sqlalchemy.String(36))
     created_time = sqlalchemy.Column(sqlalchemy.DateTime)
     updated_time = sqlalchemy.Column(sqlalchemy.DateTime)

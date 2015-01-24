@@ -14,12 +14,12 @@ from oslo import messaging
 from oslo_config import cfg
 from osprofiler import profiler
 
+from senlin.common import attr
 from senlin.common.i18n import _LI
 from senlin.common import messaging as rpc_messaging
 from senlin.engine import scheduler
 from senlin.openstack.common import log as logging
 from senlin.openstack.common import service
-from senlin.rpc import api as rpc_api
 
 LOG = logging.getLogger(__name__)
 
@@ -92,21 +92,21 @@ def notify(cnxt, call, engine_id, *args, **kwargs):
     """
     timeout = cfg.CONF.engine_life_check_timeout
     client = rpc_messaging.get_rpc_client(
-        version=rpc_api.RPC_API_VERSION)
+        version=attr.RPC_API_VERSION)
 
     if engine_id:
         # Notify specific dispatcher identified by engine_id
         cctxt = client.prepare(
-            version=rpc_api.RPC_API_VERSION,
+            version=attr.RPC_API_VERSION,
             timeout=timeout,
-            topic=rpc_api.ENGINE_DISPATCHER_TOPIC,
+            topic=attr.ENGINE_DISPATCHER_TOPIC,
             server=engine_id)
     else:
         # Broadcast to all disptachers
         cctxt = client.prepare(
-            version=rpc_api.RPC_API_VERSION,
+            version=attr.RPC_API_VERSION,
             timeout=timeout,
-            topic=rpc_api.ENGINE_DISPATCHER_TOPIC,
+            topic=attr.ENGINE_DISPATCHER_TOPIC,
             fanout=True)
 
     try:
