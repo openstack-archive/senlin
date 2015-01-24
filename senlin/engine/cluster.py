@@ -12,14 +12,12 @@
 
 import datetime
 
-from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LW
 from senlin.db import api as db_api
 from senlin.engine import event as events
 from senlin.engine import node as nodes
 from senlin.profiles import base as profiles
-from senlin.rpc import api as rpc_api
 
 
 class Cluster(object):
@@ -39,12 +37,11 @@ class Cluster(object):
         'UPDATING', 'UPDATE_CANCELLED',
     )
 
-    def __init__(self, context, name, profile_id, size=0, **kwargs):
+    def __init__(self, name, profile_id, size=0, **kwargs):
         '''
         Intialize a cluster object.
         The cluster defaults to have 0 nodes with no profile assigned.
         '''
-        self.context = context
         self.id = kwargs.get('id', None)
         self.name = name
         self.profile_id = profile_id
@@ -72,14 +69,10 @@ class Cluster(object):
 
         # rt is a dict for runtime data
         # TODO(Qiming): nodes have to be reloaded when membership changes
-        self.rt = {
-            'profile': profiles.load(context, self.profile_id),
-            'nodes': nodes.load_all(context, cluster_id=self.id),
-            'policies': {},
-        }
+        self.rt = {}
 
     @classmethod
-    def from_db_record(cls, context, record):
+    def _from_db_record(cls, record):
         '''
         Construct a cluster object from database record.
         :param context: the context used for DB operations;
@@ -87,6 +80,7 @@ class Cluster(object):
         '''
         kwargs = {
             'id': record.id,
+            'name': record.name,
             'user': record.user,
             'project': record.project,
             'domain': record.domain,
@@ -101,22 +95,25 @@ class Cluster(object):
             'data': record.data,
             'tags': record.tags,
         }
-        return cls(context, record.name, record.profile_id, record.size,
-                   **kwargs)
+        return cls(record.name, record.profile_id, record.size, **kwargs)
+
+    def load_runtime_data(self, context):
+        self.rt = {
+            'profile': profiles.load(context, self.profile_id),
+            'nodes': nodes.load_all(context, cluster_id=self.id),
+            'policies': [],
+        }
 
     @classmethod
     def load(cls, context, cluster_id, show_deleted=False):
         '''
         Retrieve a cluster from database.
         '''
-        cluster = db_api.cluster_get(context, cluster_id,
-                                     show_deleted=show_deleted)
-
-        if cluster is None:
-            msg = _('No cluster with id "%s" exists') % cluster_id
-            raise exception.NotFound(msg)
-
-        return cls.from_db_record(context, cluster)
+        record = db_api.cluster_get(context, cluster_id,
+                                    show_deleted=show_deleted)
+        cluster = cls.from_db_record(record)
+        cluster.load_runtime_data(context)
+        return cluster
 
     @classmethod
     def load_all(cls, context, limit=None, sort_keys=None, marker=None,
@@ -130,9 +127,11 @@ class Cluster(object):
                                          show_deleted, show_nested)
 
         for record in records:
-            yield cls.from_db_record(context, record)
+            cluster = cls.from_db_record(record)
+            cluster.load_runtime_data(context)
+            yield cluster
 
-    def store(self):
+    def store(self, context):
         '''
         Store the cluster in database and return its ID.
         If the ID already exists, we do an update.
@@ -157,16 +156,16 @@ class Cluster(object):
         }
 
         if self.id:
-            db_api.cluster_update(self.context, self.id, values)
+            db_api.cluster_update(context, self.id, values)
             # TODO(Qiming): create event/log
         else:
-            cluster = db_api.cluster_create(self.context, values)
+            cluster = db_api.cluster_create(context, values)
             # TODO(Qiming): create event/log
             self.id = cluster.id
 
         return self.id
 
-    def set_status(self, status, reason=None):
+    def set_status(self, context, status, reason=None):
         '''
         Set status of the cluster.
         '''
@@ -183,16 +182,16 @@ class Cluster(object):
         values['status'] = status
         if reason:
             values['status_reason'] = reason
-        db_api.cluster_update(self.context, self.id, values)
+        db_api.cluster_update(context, self.id, values)
         # log status to log file
         # generate event record
 
-    def do_create(self, **kwargs):
+    def do_create(self, context, **kwargs):
         '''
         Invoked at the beginning of cluster creating
         progress to set cluster status to CREATING.
         '''
-        self.set_status(self.CREATING)
+        self.set_status(context, self.CREATING)
         return True
 
     def do_delete(self, context, **kwargs):
@@ -278,10 +277,6 @@ class Cluster(object):
     @classmethod
     def delete(cls, cluster_id):
         cluster = db_api.get_cluster(cluster_id)
-        if not cluster:
-            message = _('No cluster exists with id "%s"') % str(cluster_id)
-            raise exception.NotFound(message)
-
         # TODO(Qiming): check if actions are working on and can be canceled
         # destroy nodes
 
@@ -296,20 +291,20 @@ class Cluster(object):
 
     def to_dict(self):
         info = {
-            rpc_api.CLUSTER_NAME: self.name,
-            rpc_api.CLUSTER_PROFILE: self.profile,
-            rpc_api.CLUSTER_SIZE: self.node_count,
-            rpc_api.CLUSTER_UUID: self.id,
-            rpc_api.CLUSTER_PARENT: self.parent,
-            rpc_api.CLUSTER_DOMAIN: self.domain,
-            rpc_api.CLUSTER_PROJECT: self.project,
-            rpc_api.CLUSTER_USER: self.user,
-            rpc_api.CLUSTER_CREATED_TIME: self.created_time,
-            rpc_api.CLUSTER_UPDATED_TIME: self.updated_time,
-            rpc_api.CLUSTER_DELETED_TIME: self.deleted_time,
-            rpc_api.CLUSTER_STATUS: self.status,
-            rpc_api.CLUSTER_STATUS_REASON: self.status_reason,
-            rpc_api.CLUSTER_TIMEOUT: self.timeout,
+            'id': self.id,
+            'name': self.name,
+            'profile_id': self.profile,
+            'size': self.node_count,
+            'parent': self.parent,
+            'domain': self.domain,
+            'project': self.project,
+            'user': self.user,
+            'created_time': self.created_time,
+            'updated_time': self.updated_time,
+            'deleted_time': self.deleted_time,
+            'status': self.status,
+            'status_reason': self.status_reason,
+            'timeout': self.timeout,
         }
 
         return info
