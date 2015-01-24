@@ -143,8 +143,8 @@ def create_action(ctx, **kwargs):
         'interval': -1,
         'inputs': {'key': 'value'},
         'outputs': {'result': 'value'},
-        'depends_on': {'l': []},
-        'depended_by': {'l': []}
+        'depends_on': {[]},
+        'depended_by': {[]}
     }
     values.update(kwargs)
     return db_api.action_create(ctx, values)
