@@ -80,7 +80,6 @@ class Cluster(object):
         '''
         kwargs = {
             'id': record.id,
-            'name': record.name,
             'user': record.user,
             'project': record.project,
             'domain': record.domain,
