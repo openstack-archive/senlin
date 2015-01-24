@@ -849,12 +849,10 @@ def _action_dependency_add(context, action_id, field, adds):
         msg = _('Action with id "%s" not found') % action_id
         raise exception.NotFound(msg)
 
-    d = {}
     if action[field] is None:
-        d['l'] = add_list
+        d = add_list
     else:
-        d = action[field]
-        d['l'] = list(set(d['l']).union(set(add_list)))
+        d = list(set(action[field]).union(set(add_list)))
     action[field] = d
 
     if field == 'depends_on':
@@ -875,13 +873,10 @@ def _action_dependency_del(context, action_id, field, dels):
         msg = _('Action with id "%s" not found') % action_id
         raise exception.NotFound(msg)
 
-    d = {}
     if action[field] is not None:
-        d = action[field]
-        d['l'] = list(set(d['l']) - set(del_list))
-        action[field] = d
+        action[field] = list(set(action[field]) - set(del_list))
 
-    if field == 'depends_on' and len(d['l']) == 0:
+    if field == 'depends_on' and len(action[field]) == 0:
         action.status = ACTION_READY
         action.status_reason = _('The action becomes ready due to all '
                                  'dependencies have been satisfied.')
@@ -958,9 +953,9 @@ def action_mark_succeeded(context, action_id):
     with session.begin():
         action.status = ACTION_SUCCEEDED
 
-        for a in action.depended_by['l']:
+        for a in action.depended_by:
             _action_dependency_del(context, a, 'depends_on', action_id)
-        action.depended_by = {'l': []}
+        action.depended_by = []
 
     return action
 

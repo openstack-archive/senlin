@@ -154,7 +154,7 @@ class DBAPIActionTest(base.SenlinTestCase):
                                       id_of['action_004']])
 
         action = db_api.action_get(self.ctx, id_of['action_001'])
-        l = action.depended_by['l']
+        l = action.depended_by
         self.assertEqual(3, len(l))
         self.assertIn(id_of['action_002'], l)
         self.assertIn(id_of['action_003'], l)
@@ -165,7 +165,7 @@ class DBAPIActionTest(base.SenlinTestCase):
                    id_of['action_003'],
                    id_of['action_004']]:
             action = db_api.action_get(self.ctx, id)
-            l = action.depends_on['l']
+            l = action.depends_on
             self.assertEqual(1, len(l))
             self.assertIn(id_of['action_001'], l)
             self.assertIsNone(action.depended_by)
@@ -194,7 +194,7 @@ class DBAPIActionTest(base.SenlinTestCase):
                                      id_of['action_001'])
 
         action = db_api.action_get(self.ctx, id_of['action_001'])
-        l = action.depends_on['l']
+        l = action.depends_on
         self.assertEqual(3, len(l))
         self.assertIn(id_of['action_002'], l)
         self.assertIn(id_of['action_003'], l)
@@ -206,7 +206,7 @@ class DBAPIActionTest(base.SenlinTestCase):
                    id_of['action_003'],
                    id_of['action_004']]:
             action = db_api.action_get(self.ctx, id)
-            l = action.depended_by['l']
+            l = action.depended_by
             self.assertEqual(1, len(l))
             self.assertIn(id_of['action_001'], l)
             self.assertIsNone(action.depends_on)
@@ -227,14 +227,14 @@ class DBAPIActionTest(base.SenlinTestCase):
                                      id_of['action_001'])
 
         action = db_api.action_get(self.ctx, id_of['action_001'])
-        self.assertEqual(0, len(action.depends_on['l']))
+        self.assertEqual(0, len(action.depends_on))
         self.assertEqual(action.status, db_api.ACTION_READY)
 
         for id in [id_of['action_002'],
                    id_of['action_003'],
                    id_of['action_004']]:
             action = db_api.action_get(self.ctx, id)
-            self.assertEqual(0, len(action.depended_by['l']))
+            self.assertEqual(0, len(action.depended_by))
 
     def test_action_del_dependency_dependent_list(self):
         id_of = self._check_action_add_dependency_dependent_list()
@@ -245,13 +245,13 @@ class DBAPIActionTest(base.SenlinTestCase):
                                       id_of['action_004']])
 
         action = db_api.action_get(self.ctx, id_of['action_001'])
-        self.assertEqual(0, len(action.depended_by['l']))
+        self.assertEqual(0, len(action.depended_by))
 
         for id in [id_of['action_002'],
                    id_of['action_003'],
                    id_of['action_004']]:
             action = db_api.action_get(self.ctx, id)
-            self.assertEqual(0, len(action.depends_on['l']))
+            self.assertEqual(0, len(action.depends_on))
             self.assertEqual(action.status, db_api.ACTION_READY)
 
     def test_action_mark_succeeded(self):
@@ -259,14 +259,14 @@ class DBAPIActionTest(base.SenlinTestCase):
         db_api.action_mark_succeeded(self.ctx, id_of['action_001'])
 
         action = db_api.action_get(self.ctx, id_of['action_001'])
-        self.assertEqual(0, len(action.depended_by['l']))
+        self.assertEqual(0, len(action.depended_by))
         self.assertEqual(action.status, db_api.ACTION_SUCCEEDED)
 
         for id in [id_of['action_002'],
                    id_of['action_003'],
                    id_of['action_004']]:
             action = db_api.action_get(self.ctx, id)
-            self.assertEqual(0, len(action.depends_on['l']))
+            self.assertEqual(0, len(action.depends_on))
 
     def test_action_start_work_on(self):
         action = _create_action(self.ctx)
