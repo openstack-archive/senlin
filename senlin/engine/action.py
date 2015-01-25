@@ -28,65 +28,6 @@ from senlin.policies import base as policies
 LOG = logging.getLogger(__name__)
 
 
-def policy_check(self, context, cluster_id, target):
-    """
-    Check all policies attached to cluster and give result
-
-    :param target: A tuple of ('when', action_name)
-    """
-    # Initialize an empty dict for policy check result
-    data = {}
-    data['result'] = policies.Policy.CHECK_SUCCEED
-
-    # Get list of policy IDs attached to cluster
-    policy_list = db_api.cluster_get_policies(context,
-                                              cluster_id)
-    policy_ids = [p.id for p in policy_list if p.enabled]
-    policy_check_list = []
-    for pid in policy_ids:
-        policy = policies.load(self.context, pid)
-        for t in policy.TARGET:
-            if t == target:
-                policy_check_list.append(policy)
-                break
-
-    # No policy need to check, return data
-    if len(policy_check_list) == 0:
-        return data
-
-    while len(policy_check_list) != 0:
-        # Check all policies and collect return data
-        policy = policy_check_list[0]
-        if target[0] == 'BEFORE':
-            data = policy.pre_op(self.cluster_id,
-                                 target[1],
-                                 data)
-        elif target[0] == 'AFTER':
-            data = policy.post_op(self.cluster_id,
-                                  target[1],
-                                  data)
-        else:
-            data = data
-
-        if data['result'] == policies.Policy.CHECK_FAIL:
-            # Policy check failed, return
-            return False
-        elif data['result'] == policies.Policy.CHECK_RETRY:
-            # Policy check need extra input, move
-            # it to the end of policy list and
-            # wait for retry
-            policy_check_list.remove(policy)
-            policy_check_list.append(policy)
-        else:
-            # Policy check succeeded
-            policy_check_list.remove(policy)
-
-        # TODO(anyone): add retry limitation check to
-        # prevent endless loop on single policy
-
-    return data
-
-
 class Action(object):
     '''
     An action can be performed on a cluster or a node of a cluster.
@@ -217,7 +158,7 @@ class Action(object):
         return self.id
 
     @classmethod
-    def from_db_record(cls, context, record):
+    def _from_db_record(cls, record):
         '''
         Construct a action object from database record.
         :param context: the context used for DB operations;
@@ -255,7 +196,7 @@ class Action(object):
             msg = _('No action with id "%s" exists') % action_id
             raise exception.NotFound(msg)
 
-        return cls.from_db_record(context, action)
+        return cls._from_db_record(action)
 
     @classmethod
     def load_all(cls, context, filters=None, limit=None, marker=None,
@@ -270,7 +211,7 @@ class Action(object):
                                         show_deleted=show_deleted)
 
         for record in records:
-            yield cls.from_db_record(context, record)
+            yield cls._from_db_record(record)
 
     @classmethod
     def delete(cls, context, action_id, force=False):
@@ -307,6 +248,64 @@ class Action(object):
         action = db_api.action_get(self.context, self.id)
         self.status = action.status
         return action.status
+
+    def policy_check(self, context, cluster_id, target):
+        """
+        Check all policies attached to cluster and give result
+
+        :param target: A tuple of ('when', action_name)
+        """
+        # Initialize an empty dict for policy check result
+        data = {}
+        data['result'] = policies.Policy.CHECK_SUCCEED
+
+        # Get list of policy IDs attached to cluster
+        policy_list = db_api.cluster_get_policies(context,
+                                                  cluster_id)
+        policy_ids = [p.id for p in policy_list if p.enabled]
+        policy_check_list = []
+        for pid in policy_ids:
+            policy = policies.load(self.context, pid)
+            for t in policy.TARGET:
+                if t == target:
+                    policy_check_list.append(policy)
+                    break
+
+        # No policy need to check, return data
+        if len(policy_check_list) == 0:
+            return data
+
+        while len(policy_check_list) != 0:
+            # Check all policies and collect return data
+            policy = policy_check_list[0]
+            if target[0] == 'BEFORE':
+                data = policy.pre_op(self.cluster_id,
+                                     target[1],
+                                     data)
+            elif target[0] == 'AFTER':
+                data = policy.post_op(self.cluster_id,
+                                      target[1],
+                                      data)
+            else:
+                data = data
+
+            if data['result'] == policies.Policy.CHECK_FAIL:
+                # Policy check failed, return
+                return False
+            elif data['result'] == policies.Policy.CHECK_RETRY:
+                # Policy check need extra input, move
+                # it to the end of policy list and
+                # wait for retry
+                policy_check_list.remove(policy)
+                policy_check_list.append(policy)
+            else:
+                # Policy check succeeded
+                policy_check_list.remove(policy)
+
+            # TODO(anyone): add retry limitation check to
+            # prevent endless loop on single policy
+
+        return data
 
     def to_dict(self):
         action_dict = {
@@ -358,19 +357,20 @@ class ClusterAction(Action):
 
     def do_create(self, cluster):
         # Try to lock cluster first
-        worker_id = db_api.cluster_lock_create(cluster.id, self.id)
-        if worker_id != self.id:
+        action_id = db_api.cluster_lock_create(cluster.id, self.id)
+        if action_id != self.id:
             # This cluster has been locked by other action?
             # This should never happen here, raise an execption.
-            LOG.error(
-                'Cluster has been locked by %s before creating.' % worker_id)
-            raise exception.Error('Cluster is locked by action %s and action \
-                %s at the same time during creation' % (self.id, worker_id))
+            LOG.error(_('Cluster has been locked by %s before creation.'),
+                      action_id)
+            msg = _('Cluster is already locked by action %(old)s, action '
+                    '%(new)s failed grabbing the lock') % {
+                        'old': action_id, 'new': self.id}
+            raise exception.Error(msg)
 
-        # Got the lock, start to work
         res = cluster.do_create()
-        if res is False:
-            cluster.set_status(cluster.ERROR, 'Cluster creating failed')
+        if not res:
+            cluster.set_status(cluster.ERROR, 'Cluster creation failed')
             db_api.cluster_lock_release(cluster.id, self.id)
             return self.RES_ERROR
 
@@ -387,18 +387,19 @@ class ClusterAction(Action):
             }
 
             action = Action(self.context, 'NODE_CREATE', **kwargs)
-            action_list.append(action)
+            action.store(self.context)
+
+            action_list.append(action.id)
+
+            db_api.action_add_dependency(action.id, self.id)
             action.set_status(self.READY)
 
-            # add new action to waiting/dependency list
-            db_api.action_add_dependency(action, self)
-
         # Notify dispatcher
-        for action in action_list:
+        for action_id in action_list:
             dispatcher.notify(self.context,
                               dispatcher.Dispatcher.NEW_ACTION,
                               None,
-                              action_id=action.id)
+                              action_id=action_id)
 
         # Wait for cluster creating complete
         # TODO(anyone): need db support
@@ -407,8 +408,8 @@ class ClusterAction(Action):
                 # During this period, if cancel request come,
                 # cancel this cluster creating immediately, then
                 # release the cluster lock and return.
-                LOG.debug('Cluster creating action %s cancelled' % self.id)
-                cluster.set_status(cluster.ERROR, 'Cluster creating cancel')
+                LOG.debug('Cluster creation action %s cancelled' % self.id)
+                cluster.set_status(cluster.ERROR, 'Cluster creation cancelled')
                 db_api.cluster_lock_release(cluster.id, self.id)
                 return self.RES_CANCEL
             elif scheduler.action_timeout(self):
@@ -421,9 +422,7 @@ class ClusterAction(Action):
             # Continue waiting (with reschedule)
             scheduler.reschedule(self, sleep=0)
 
-        # Cluster create finished, update its status
-        # to active and release the lock.
-        cluster.set_status(cluster.ACTIVE, 'Cluster creating completed')
+        cluster.set_status(cluster.ACTIVE, 'Cluster creation completed')
         db_api.cluster_lock_release(cluster.id, self.id)
 
         return self.RES_OK
@@ -635,63 +634,63 @@ class ClusterAction(Action):
 
     def do_scale_down(self, cluster):
         # Try to lock the cluster
-        worker_id = db_api.cluster_lock_create(cluster.id, self.id)
-        if worker_id != self.id:
+        action_id = db_api.cluster_lock_create(cluster.id, self.id)
+        if action_id != self.id:
             # Lock cluster failed, other action of this cluster
             # is in progress, give up this scaling down operation.
             return self.RES_RETRY
 
         # Go through all policies before scaling down.
         policy_target = ('BEFORE', self.action)
-        result = policy_check(self.context, cluster.id, policy_target)
-        if result is False:
+        result = self.policy_check(self.context, cluster.id, policy_target)
+        if not result:
             # Policy check failed, release lock and return ERROR
             db_api.cluster_lock_release(cluster.id, self.id)
             return self.RES_ERROR
 
-        # Start to scale down based on policy check result
-        candidates = []
-        if 'candidates' not in result:
-            # No candidates for scaling down op which
-            # mean no DeletionPolicy is applied to
-            # cluster, we just choose random nodes to
+        count = result.get('count', 0)
+        if count == 0:
+            return self.RES_ERROR
+
+        candidates = result.get('candidates', [])
+        if len(candidates) == 0:
+            # No candidates for scaling down op which means no DeletionPolicy
+            # is attached to cluster, we just choose random nodes to
             # delete based on scaling policy result.
-            count = result['count']
-            nodes = db_api.node_get_all_by_cluster(self.cluster_id)
+            nodes = db_api.node_get_all_by_cluster(self.context,
+                                                   self.cluster_id)
             # TODO(anyone): add some warning here
             if count > len(nodes):
                 count = len(nodes)
 
-            for i in range(1, count):
-                rand = random.randrange(len(nodes))
-                candidates.append(nodes[rand])
+            i = count
+            while i > 0:
+                rand = random.randrange(i)
+                candidates.append(nodes[rand].id)
                 nodes.remove(nodes[rand])
-        else:
-            candidates = result['candidates']
+                i = i - 1
 
         action_list = []
-        node_id_list = []
-        for node in candidates:
-            node_id_list.append(node.id)
+        for node_id in candidates:
             kwargs = {
-                'name': 'node-delete-%s' % node.id,
+                'name': 'node-delete-%s' % node_id,
                 'context': self.context,
-                'target': node.id,
-                'cause': 'Cluster scaling down',
+                'target': node_id,
+                'cause': 'Cluster scale down',
             }
             action = Action(self.context, 'NODE_DELETE', **kwargs)
-            action_list.append(action)
+            action.store(self.context)
+
+            action_list.append(action.id)
+            db_api.action_add_dependency(action, self)
             action.set_status(self.READY)
 
-            # add new action to waiting/dependency list
-            db_api.action_add_dependency(action, self)
-
         # Notify dispatcher
-        for action in action_list:
+        for action_id in action_list:
             dispatcher.notify(self.context,
                               dispatcher.Dispatcher.NEW_ACTION,
                               None,
-                              action_id=action.id)
+                              action_id=action_id)
 
         # Wait for cluster creating complete. If timeout,
         # set cluster status to error.
@@ -708,16 +707,12 @@ class ClusterAction(Action):
             # Continue waiting (with sleep)
             scheduler.reschedule(self, sleep=0)
 
-        # Cluster is scaled down successfully, remove
-        # deleted nodes
-        cluster.delete_nodes(node_id_list)
+        cluster.delete_nodes(candidates)
 
-        # Go through policies again to handle some post_ops
-        # e.g. LB
+        # Go through policies again to handle some post_ops e.g. LB
         policy_target = ('AFTER', self.action)
-        result = policy_check(self.context, cluster.id, policy_target)
-        if result is False:
-            # Policy check failed, release lock and return ERROR
+        result = self.policy_check(self.context, cluster.id, policy_target)
+        if not result:
             db_api.cluster_lock_release(cluster.id, self.id)
             return self.RES_ERROR
 
@@ -728,7 +723,7 @@ class ClusterAction(Action):
 
     def do_attach_policy(self, cluster):
         policy_id = self.inputs.get('policy_id', None)
-        if policy_id is None:
+        if not policy_id:
             raise exception.PolicyNotSpecified()
 
         policy = policies.Policy.load(self.context, policy_id)
@@ -736,10 +731,12 @@ class ClusterAction(Action):
         all = db_api.cluster_get_policies(self.context, cluster.id)
         for existing in all:
             # Policy already attached
-            if existing.id == policy_id:
+            if existing.policy_id == policy_id:
                 return self.RES_OK
 
-            if existing.type == policy.type:
+            # Detect policy type conflicts
+            curr = policies.Policy.load(self.context, existing.policy_id)
+            if curr.type == policy.type:
                 raise exception.PolicyExists(policy_type=policy.type)
 
         values = {
