@@ -14,9 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from webob import exc
+
 from oslo_config import cfg
 from oslo_utils import importutils
 
+from senlin.common.i18n import _
 from senlin.common import wsgi
 
 
@@ -35,6 +38,13 @@ class AuthUrlFilter(wsgi.Middleware):
             auth_token_module = 'keystonemiddleware.auth_token'
             importutils.import_module(auth_token_module)
             return cfg.CONF.keystone_authtoken.auth_uri
+
+    def _validate_auth_url(self, auth_url):
+        """Validate auth_url to ensure it can be used."""
+        if not auth_url:
+            raise exc.HTTPBadRequest(_('Request missing required header '
+                                       'X-Auth-Url'))
+        return True
 
     def process_request(self, req):
         auth_url = self.auth_url
