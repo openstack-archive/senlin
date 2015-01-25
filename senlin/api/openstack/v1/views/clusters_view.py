@@ -14,25 +14,25 @@ import itertools
 
 from senlin.api.openstack.v1 import util
 from senlin.api.openstack.v1.views import views_common
-from senlin.rpc import api as rpc_api
+from senlin.common import attr
 
 _collection_name = 'clusters'
 
 basic_keys = (
-    rpc_api.CLUSTER_NAME,
-    rpc_api.CLUSTER_PROFILE,
-    rpc_api.CLUSTER_ID,
-    rpc_api.CLUSTER_PARENT,
-    rpc_api.CLUSTER_DOMAIN,
-    rpc_api.CLUSTER_PROJECT,
-    rpc_api.CLUSTER_USER,
-    rpc_api.CLUSTER_CREATED_TIME,
-    rpc_api.CLUSTER_DELETED_TIME,
-    rpc_api.CLUSTER_UPDATED_TIME,
-    rpc_api.CLUSTER_STATUS,
-    rpc_api.CLUSTER_STATUS_REASON,
-    rpc_api.CLUSTER_TIMEOUT,
-    rpc_api.CLUSTER_TAGS,
+    attr.CLUSTER_NAME,
+    attr.CLUSTER_PROFILE,
+    attr.CLUSTER_ID,
+    attr.CLUSTER_PARENT,
+    attr.CLUSTER_DOMAIN,
+    attr.CLUSTER_PROJECT,
+    attr.CLUSTER_USER,
+    attr.CLUSTER_CREATED_TIME,
+    attr.CLUSTER_DELETED_TIME,
+    attr.CLUSTER_UPDATED_TIME,
+    attr.CLUSTER_STATUS,
+    attr.CLUSTER_STATUS_REASON,
+    attr.CLUSTER_TIMEOUT,
+    attr.CLUSTER_TAGS,
 )
 
 
@@ -41,7 +41,7 @@ def format_cluster(req, cluster, keys=None, tenant_safe=True):
         if keys and key not in keys:
             return
 
-        if key == rpc_api.CLUSTER_ID:
+        if key == attr.CLUSTER_ID:
             yield ('id', value['cluster_id'])
             yield ('links', [util.make_link(req, value)])
             if not tenant_safe:
@@ -56,7 +56,7 @@ def format_cluster(req, cluster, keys=None, tenant_safe=True):
 def collection(req, clusters, count=None, tenant_safe=True):
     keys = basic_keys
     formatted_clusters = [format_cluster(req, s, keys, tenant_safe)
-                        for s in clusters]
+                          for s in clusters]
 
     result = {'clusters': formatted_clusters}
     links = views_common.get_collection_links(req, formatted_clusters)

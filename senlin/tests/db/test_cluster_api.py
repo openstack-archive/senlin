@@ -259,15 +259,6 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertIn('real_marker', args)
 
     @mock.patch.object(db_api.utils, 'paginate_query')
-    def test_paginate_query_default_sorts_by_created_at_and_id(
-            self, mock_paginate_query):
-        query = mock.Mock()
-        model = mock.Mock()
-        db_api._paginate_query(self.ctx, query, model, sort_keys=None)
-        args, _ = mock_paginate_query.call_args
-        self.assertIn(['created_time', 'id'], args)
-
-    @mock.patch.object(db_api.utils, 'paginate_query')
     def test_paginate_query_default_sorts_dir_by_desc(self,
                                                       mock_paginate_query):
         query = mock.Mock()
@@ -284,62 +275,6 @@ class DBAPIClusterTest(base.SenlinTestCase):
         db_api._paginate_query(self.ctx, query, model, sort_keys=['name'])
         args, _ = mock_paginate_query.call_args
         self.assertIn(['name', 'id'], args)
-
-    @mock.patch.object(db_api, '_paginate_query')
-    def test_filter_and_page_query_paginates_query(self, mock_paginate_query):
-        query = mock.Mock()
-        db_api._filter_and_page_query(self.ctx, query)
-
-        assert mock_paginate_query.called
-
-    @mock.patch.object(db_api, '_events_paginate_query')
-    def test_events_filter_and_page_query(self, mock_events_paginate_query):
-        query = mock.Mock()
-        db_api._events_filter_and_page_query(self.ctx, query)
-
-        assert mock_events_paginate_query.called
-
-    @mock.patch.object(db_api.db_filters, 'exact_filter')
-    def test_filter_and_page_query_handles_no_filters(self, mock_db_filter):
-        query = mock.Mock()
-        db_api._filter_and_page_query(self.ctx, query)
-
-        mock_db_filter.assert_called_once_with(mock.ANY, mock.ANY, {})
-
-    @mock.patch.object(db_api.db_filters, 'exact_filter')
-    def test_events_filter_and_page_query_handles_no_filters(self,
-                                                             mock_db_filter):
-        query = mock.Mock()
-        db_api._events_filter_and_page_query(self.ctx, query)
-
-        mock_db_filter.assert_called_once_with(mock.ANY, mock.ANY, {})
-
-    @mock.patch.object(db_api.db_filters, 'exact_filter')
-    def test_filter_and_page_query_applies_filters(self, mock_db_filter):
-        query = mock.Mock()
-        filters = {'foo': 'bar'}
-        db_api._filter_and_page_query(self.ctx, query, filters=filters)
-
-        assert mock_db_filter.called
-
-    @mock.patch.object(db_api.db_filters, 'exact_filter')
-    def test_events_filter_and_page_query_applies_filters(self,
-                                                          mock_db_filter):
-        query = mock.Mock()
-        filters = {'foo': 'bar'}
-        db_api._events_filter_and_page_query(self.ctx, query, filters=filters)
-
-        assert mock_db_filter.called
-
-    @mock.patch.object(db_api, '_paginate_query')
-    def test_filter_and_page_query_whitelists_sort_keys(self,
-                                                        mock_paginate_query):
-        query = mock.Mock()
-        sort_keys = ['name', 'foo']
-        db_api._filter_and_page_query(self.ctx, query, sort_keys=sort_keys)
-
-        args, _ = mock_paginate_query.call_args
-        self.assertIn(['name'], args)
 
     def test_nested_cluster_get_by_name(self):
         cluster1 = shared.create_cluster(self.ctx, self.profile,

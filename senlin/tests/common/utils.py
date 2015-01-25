@@ -15,7 +15,7 @@ import string
 import uuid
 
 from oslo_config import cfg
-from oslo.db import options
+from oslo_db import options
 import sqlalchemy
 
 from senlin.common import context

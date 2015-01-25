@@ -17,6 +17,7 @@ from oslo_config import cfg
 from oslo_utils import uuidutils
 from osprofiler import profiler
 
+from senlin.common import attr
 from senlin.common import context
 from senlin.common import exception
 from senlin.common.i18n import _
@@ -33,7 +34,6 @@ from senlin.engine import senlin_lock
 from senlin.openstack.common import log as logging
 from senlin.openstack.common import service
 from senlin.profiles import base as profile_base
-from senlin.rpc import api as rpc_api
 
 LOG = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ class EngineService(service.Service):
         # is ready
         self.host = host
         self.topic = topic
-        self.dispatcher_topic = rpc_api.ENGINE_DISPATCHER_TOPIC
+        self.dispatcher_topic = attr.ENGINE_DISPATCHER_TOPIC
 
         # The following are initialized here, but assigned in start() which
         # happens after the fork when spawning multiple worker processes
@@ -85,12 +85,12 @@ class EngineService(service.Service):
         # stop until being notified or the engine is stopped.
         self.dispatcher = dispatcher.Dispatcher(self,
                                                 self.dispatcher_topic,
-                                                rpc_api.RPC_API_VERSION,
+                                                attr.RPC_API_VERSION,
                                                 self.TG)
         LOG.debug("Starting dispatcher for engine %s" % self.engine_id)
         self.dispatcher.start()
 
-        target = messaging.Target(version=rpc_api.RPC_API_VERSION,
+        target = messaging.Target(version=attr.RPC_API_VERSION,
                                   server=self.host,
                                   topic=self.topic)
         self.target = target

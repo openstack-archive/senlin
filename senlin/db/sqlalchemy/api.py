@@ -22,13 +22,13 @@ from oslo_db.sqlalchemy import session as db_session
 from oslo_db.sqlalchemy import utils
 from sqlalchemy.orm import session as orm_session
 
+from senlin.common import attr
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.db.sqlalchemy import filters as db_filters
 from senlin.db.sqlalchemy import migration
 from senlin.db.sqlalchemy import models
 from senlin.openstack.common import log as logging
-from senlin.rpc import api as rpc_api
 
 LOG = logging.getLogger(__name__)
 
@@ -88,6 +88,28 @@ def _get_sort_keys(sort_keys, mapping):
     if isinstance(sort_keys, six.string_types):
         sort_keys = [sort_keys]
     return [mapping[key] for key in sort_keys or [] if key in mapping]
+
+
+def _paginate_query(context, query, model, limit=None, sort_keys=None,
+                    marker=None, sort_dir=None, default_sort_keys=None):
+    if not sort_keys:
+        sort_keys = default_sort_keys or []
+        if not sort_dir:
+            sort_dir = 'desc'
+
+    # This assures the order of the clusters will always be the same
+    # even for sort_key values that are not unique in the database
+    sort_keys = sort_keys + ['id']
+
+    model_marker = None
+    if marker:
+        model_marker = model_query(context, model).get(marker)
+    try:
+        query = utils.paginate_query(query, model, limit, sort_keys,
+                                     model_marker, sort_dir)
+    except utils.InvalidSortKey as exc:
+        raise exception.Invalid(reason=exc.message)
+    return query
 
 
 def soft_delete_aware_query(context, *args, **kwargs):
@@ -166,55 +188,27 @@ def _query_cluster_get_all(context, tenant_safe=True, show_deleted=False,
     return query
 
 
-def _paginate_query(context, query, model, limit=None, sort_keys=None,
-                    marker=None, sort_dir=None):
-    default_sort_keys = []
-    if not sort_keys:
-        sort_keys = default_sort_keys
-        if not sort_dir:
-            sort_dir = 'desc'
-
-    # This assures the order of the clusters will always be the same
-    # even for sort_key values that are not unique in the database
-    sort_keys = sort_keys + ['id']
-
-    model_marker = None
-    if marker:
-        model_marker = model_query(context, model).get(marker)
-    try:
-        query = utils.paginate_query(query, model, limit, sort_keys,
-                                     model_marker, sort_dir)
-    except utils.InvalidSortKey as exc:
-        raise exception.Invalid(reason=exc.message)
-    return query
-
-
-def _filter_and_page_query(context, query, limit=None, sort_keys=None,
-                           marker=None, sort_dir=None, filters=None):
-    if filters is None:
-        filters = {}
-
-    sort_key_map = {
-        rpc_api.CLUSTER_NAME: models.Cluster.name.key,
-        rpc_api.CLUSTER_STATUS: models.Cluster.status.key,
-        rpc_api.CLUSTER_CREATED_TIME: models.Cluster.created_time.key,
-        rpc_api.CLUSTER_UPDATED_TIME: models.Cluster.updated_time.key,
-    }
-    keys = _get_sort_keys(sort_keys, sort_key_map)
-
-    query = db_filters.exact_filter(query, models.Cluster, filters)
-    return _paginate_query(context, query, models.Cluster, limit,
-                           keys, marker, sort_dir)
-
-
 def cluster_get_all(context, limit=None, sort_keys=None, marker=None,
                     sort_dir=None, filters=None, tenant_safe=True,
                     show_deleted=False, show_nested=False):
     query = _query_cluster_get_all(context, tenant_safe=tenant_safe,
                                    show_deleted=show_deleted,
                                    show_nested=show_nested)
-    return _filter_and_page_query(context, query, limit, sort_keys,
-                                  marker, sort_dir, filters).all()
+    if filters is None:
+        filters = {}
+
+    sort_key_map = {
+        attr.CLUSTER_NAME: models.Cluster.name.key,
+        attr.CLUSTER_STATUS: models.Cluster.status.key,
+        attr.CLUSTER_CREATED_TIME: models.Cluster.created_time.key,
+        attr.CLUSTER_UPDATED_TIME: models.Cluster.updated_time.key,
+    }
+    keys = _get_sort_keys(sort_keys, sort_key_map)
+
+    query = db_filters.exact_filter(query, models.Cluster, filters)
+    return _paginate_query(context, query, models.Cluster, limit=limit,
+                           marker=marker, sort_keys=keys, sort_dir=sort_dir,
+                           default_sort_keys=['created_time']).all()
 
 
 def cluster_count_all(context, filters=None, tenant_safe=True,
@@ -283,33 +277,28 @@ def _query_node_get_all(context, show_deleted=False, cluster_id=None):
     return query
 
 
-def _filter_and_page_node(context, query, limit=None, sort_keys=None,
-                          sort_dir=None, marker=None, filters=None):
-    if filters is None:
-        filters = {}
-
-    sort_key_map = {
-        rpc_api.NODE_INDEX: models.Node.index.key,
-        rpc_api.NODE_NAME: models.Node.name.key,
-        rpc_api.NODE_CREATED_TIME: models.Node.created_time.key,
-        rpc_api.NODE_UPDATED_TIME: models.Node.updated_time.key,
-        rpc_api.NODE_DELETED_TIME: models.Node.deleted_time.key,
-        rpc_api.NODE_STATUS: models.Node.status.key,
-    }
-    keys = _get_sort_keys(sort_keys, sort_key_map)
-
-    query = db_filters.exact_filter(query, models.Node, filters)
-    return _paginate_query(context, query, models.Node, limit,
-                           keys, marker, sort_dir)
-
-
 def node_get_all(context, cluster_id=None, show_deleted=False,
                  limit=None, marker=None, sort_keys=None, sort_dir=None,
                  filters=None, tenant_safe=True):
     query = _query_node_get_all(context, show_deleted=show_deleted,
                                 cluster_id=cluster_id)
-    return _filter_and_page_node(context, query, limit, sort_keys,
-                                 sort_dir, marker, filters).all()
+    if filters is None:
+        filters = {}
+
+    sort_key_map = {
+        attr.NODE_INDEX: models.Node.index.key,
+        attr.NODE_NAME: models.Node.name.key,
+        attr.NODE_CREATED_TIME: models.Node.created_time.key,
+        attr.NODE_UPDATED_TIME: models.Node.updated_time.key,
+        attr.NODE_DELETED_TIME: models.Node.deleted_time.key,
+        attr.NODE_STATUS: models.Node.status.key,
+    }
+    keys = _get_sort_keys(sort_keys, sort_key_map)
+
+    query = db_filters.exact_filter(query, models.Node, filters)
+    return _paginate_query(context, query, models.Node, limit=limit,
+                           marker=marker, sort_keys=keys, sort_dir=sort_dir,
+                           default_sort_keys=['created_time']).all()
 
 
 def node_get_all_by_cluster(context, cluster_id):
@@ -562,32 +551,28 @@ def _query_profile_get_all(context, show_deleted=False):
     return query
 
 
-def _filter_and_page_profile(context, query, limit=None, sort_keys=None,
-                             sort_dir=None, marker=None, filters=None):
+def profile_get_all(context, limit=None, marker=None, sort_keys=None,
+                    sort_dir=None, filters=None, show_deleted=False):
+    query = _query_profile_get_all(context, show_deleted=show_deleted)
+
     if filters is None:
         filters = {}
 
     sort_key_map = {
-        rpc_api.PROFILE_TYPE: models.Profile.type.key,
-        rpc_api.PROFILE_NAME: models.Profile.name.key,
-        rpc_api.PROFILE_PERMISSION: models.Profile.permission.key,
-        rpc_api.PROFILE_CREATED_TIME: models.Profile.created_time.key,
-        rpc_api.PROFILE_UPDATED_TIME: models.Profile.updated_time.key,
-        rpc_api.PROFILE_DELETED_TIME: models.Profile.deleted_time.key,
-        rpc_api.PROFILE_TAGS: models.Profile.tags.key,
+        attr.PROFILE_TYPE: models.Profile.type.key,
+        attr.PROFILE_NAME: models.Profile.name.key,
+        attr.PROFILE_PERMISSION: models.Profile.permission.key,
+        attr.PROFILE_CREATED_TIME: models.Profile.created_time.key,
+        attr.PROFILE_UPDATED_TIME: models.Profile.updated_time.key,
+        attr.PROFILE_DELETED_TIME: models.Profile.deleted_time.key,
+        attr.PROFILE_TAGS: models.Profile.tags.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
     query = db_filters.exact_filter(query, models.Profile, filters)
-    return _paginate_query(context, query, models.Profile, limit,
-                           keys, marker, sort_dir)
-
-
-def profile_get_all(context, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None, show_deleted=False):
-    query = _query_profile_get_all(context, show_deleted=show_deleted)
-    return _filter_and_page_profile(context, query, limit, sort_keys,
-                                    sort_dir, marker, filters).all()
+    return _paginate_query(context, query, models.Profile, limit=limit,
+                           marker=marker, sort_keys=keys, sort_dir=sort_dir
+                           ).all()
 
 
 def profile_update(context, profile_id, values):
@@ -685,14 +670,14 @@ def _events_paginate_query(context, query, model, limit=None, sort_keys=None,
     return query
 
 
-def _events_filter_and_page_query(context, query, limit=None, marker=None,
-                                  sort_keys=None, sort_dir=None, filters=None):
+def _filter_and_page_event(context, query, limit=None, marker=None,
+                           sort_keys=None, sort_dir=None, filters=None):
     if filters is None:
         filters = {}
 
     sort_key_map = {
-        rpc_api.EVENT_TIMESTAMP: models.Event.timestamp.key,
-        rpc_api.EVENT_OBJ_TYPE: models.Event.obj_type.key,
+        attr.EVENT_TIMESTAMP: models.Event.timestamp.key,
+        attr.EVENT_OBJ_TYPE: models.Event.obj_type.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
@@ -717,8 +702,8 @@ def _events_by_cluster(context, cid):
 def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
                              sort_keys=None, sort_dir=None, filters=None):
     query = _events_by_cluster(context, cluster_id)
-    return _events_filter_and_page_query(context, query, limit, marker,
-                                         sort_keys, sort_dir, filters).all()
+    return _filter_and_page_event(context, query, limit, marker,
+                                  sort_keys, sort_dir, filters).all()
 
 
 def purge_deleted(age, granularity='days'):
@@ -809,18 +794,18 @@ def _filter_and_page_action(context, query, limit=None, sort_keys=None,
         filters = {}
 
     sort_key_map = {
-        rpc_api.ACTION_NAME: models.Action.name.key,
-        rpc_api.ACTION_TARGET: models.Action.target.key,
-        rpc_api.ACTION_ACTION: models.Action.action.key,
-        rpc_api.ACTION_INTERVAL: models.Action.interval.key,
-        rpc_api.ACTION_START_TIME: models.Action.start_time.key,
-        rpc_api.ACTION_END_TIME: models.Action.end_time.key,
-        rpc_api.ACTION_INPUTS: models.Action.inputs.key,
-        rpc_api.ACTION_OUTPUTS: models.Action.outputs.key,
-        rpc_api.ACTION_DEPENDS_ON: models.Action.depends_on.key,
-        rpc_api.ACTION_DEPENDED_BY: models.Action.depended_by.key,
-        rpc_api.ACTION_STATUS: models.Action.status.key,
-        rpc_api.ACTION_STATUS_REASON: models.Action.status_reason.key,
+        attr.ACTION_NAME: models.Action.name.key,
+        attr.ACTION_TARGET: models.Action.target.key,
+        attr.ACTION_ACTION: models.Action.action.key,
+        attr.ACTION_INTERVAL: models.Action.interval.key,
+        attr.ACTION_START_TIME: models.Action.start_time.key,
+        attr.ACTION_END_TIME: models.Action.end_time.key,
+        attr.ACTION_INPUTS: models.Action.inputs.key,
+        attr.ACTION_OUTPUTS: models.Action.outputs.key,
+        attr.ACTION_DEPENDS_ON: models.Action.depends_on.key,
+        attr.ACTION_DEPENDED_BY: models.Action.depended_by.key,
+        attr.ACTION_STATUS: models.Action.status.key,
+        attr.ACTION_STATUS_REASON: models.Action.status_reason.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
