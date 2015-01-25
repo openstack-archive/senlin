@@ -175,3 +175,7 @@ class StackProfile(base.Profile):
             scheduler.sleep(1)
 
         return True
+
+    def do_check(self, id):
+        #TODO(liuh): add actual checking logic
+        return True 

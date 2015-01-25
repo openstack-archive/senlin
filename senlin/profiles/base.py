@@ -12,10 +12,21 @@
 
 import datetime
 
+from oslo.config import cfg
+
 from senlin.common import exception
 from senlin.db import api as db_api
 from senlin.engine import environment
 from senlin.openstack.common import log as logging
+
+interval_opts = [
+    cfg.IntOpt('healthy_check_interval',
+               default=60,
+               help='Interval in seconds for polling healthy status')
+]
+
+CONF = cfg.CONF
+CONF.register_opts(interval_opts)
 
 LOG = logging.getLogger(__name__)
 
@@ -145,6 +156,15 @@ class Profile(object):
         For subclass to override.
         '''
         return NotImplemented
+
+    def do_check(self, obj):
+        '''
+        For subclass to override.
+        '''
+        return NotImplemented
+
+    def healty_check(self, context):
+        pass
 
     def to_dict(self):
         pb_dict = {

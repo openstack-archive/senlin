@@ -42,3 +42,7 @@ class ResourceProfile(base.Profile):
         # TODO: do update
         self.status = self.ACTIVE
         return tmpl
+
+    def do_check(self, id):
+        #TODO(liuh): add actual checking logic
+        return True 
