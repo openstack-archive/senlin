@@ -247,6 +247,7 @@ class EngineService(service.Service):
 
         # Build an Action for cluster creation
         action = base_action.Action(context, 'CLUSTER_CREATE',
+                                    name='cluster_create_%s' % cluster.id[:8],
                                     target=cluster.id, cause='RPC Request')
         action.store(context)
 
