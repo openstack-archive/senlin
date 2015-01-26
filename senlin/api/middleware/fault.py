@@ -123,6 +123,7 @@ class FaultWrapper(wsgi.Middleware):
             'title': webob_exc.title,
             'explanation': webob_exc.explanation,
             'error': {
+                'code': webob_exc.code,
                 'message': message,
                 'type': ex_type,
                 'traceback': trace,
