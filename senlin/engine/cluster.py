@@ -53,6 +53,7 @@ class Cluster(periodic_task.PeriodicTasks):
         self.domain = kwargs.get('domain', '')
         self.parent = kwargs.get('parent', '')
 
+        self.init_time = kwargs.get('init_time', None)
         self.created_time = kwargs.get('created_time', None)
         self.updated_time = kwargs.get('updated_time', None)
         self.deleted_time = kwargs.get('deleted_time', None)
@@ -85,6 +86,7 @@ class Cluster(periodic_task.PeriodicTasks):
             'project': record.project,
             'domain': record.domain,
             'parent': record.parent,
+            'init_time': record.init_time,
             'created_time': record.created_time,
             'updated_time': record.updated_time,
             'deleted_time': record.deleted_time,
@@ -143,6 +145,7 @@ class Cluster(periodic_task.PeriodicTasks):
             'project': self.project,
             'domain': self.domain,
             'parent': self.parent,
+            'init_time': self.init_time,
             'created_time': self.created_time,
             'updated_time': self.updated_time,
             'deleted_time': self.deleted_time,
@@ -156,9 +159,11 @@ class Cluster(periodic_task.PeriodicTasks):
         }
 
         if self.id:
+            values['updated_time'] = datetime.datetime.utcnow()
             db_api.cluster_update(context, self.id, values)
             # TODO(Qiming): create event/log
         else:
+            values['init_time'] = datetime.datetime.utcnow()
             cluster = db_api.cluster_create(context, values)
             # TODO(Qiming): create event/log
             self.id = cluster.id
@@ -174,6 +179,7 @@ class Cluster(periodic_task.PeriodicTasks):
             'project': self.project,
             'domain': self.domain,
             'parent': self.parent,
+            'init_time': self.init_time,
             'created_time': self.created_time,
             'updated_time': self.updated_time,
             'deleted_time': self.deleted_time,
