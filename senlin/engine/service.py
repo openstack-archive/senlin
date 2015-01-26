@@ -324,6 +324,7 @@ class EngineService(service.Service):
         node.store(context)
 
         action = base_action.Action(context, 'NODE_CREATE',
+                                    name='node_create_%s' % node.id[:8],
                                     target=node.id, cause='RPC Request')
         action.store(context)
 
@@ -349,6 +350,7 @@ class EngineService(service.Service):
 
         node = nodes.Node.load(context, node_id)
         action = base_action.Action(context, 'NODE_DELETE',
+                                    name='node_delete_%s' % node.id[:8],
                                     target=node.id, cause='RPC Request')
         action.store(context)
         # TODO(Anyone): Uncomment the following lines to send notifications
