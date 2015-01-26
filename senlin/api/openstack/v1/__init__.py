@@ -71,7 +71,7 @@ class API(wsgi.Router):
             sub_mapper.connect("profile_update",
                                "/profiles/{profile_id}",
                                action="update",
-                               conditions={'method': 'POST'})
+                               conditions={'method': 'PUT'})
             sub_mapper.connect("profile_delete",
                                "/profiles/{profile_id}",
                                action="delete",
@@ -117,7 +117,7 @@ class API(wsgi.Router):
             sub_mapper.connect("cluster_update",
                                "/clusters/{cluster_id}",
                                action="update",
-                               conditions={'method': 'POST'})
+                               conditions={'method': 'PUT'})
             sub_mapper.connect("cluster_delete",
                                "/clusters/{cluster_id}",
                                action="delete",
@@ -143,7 +143,7 @@ class API(wsgi.Router):
             sub_mapper.connect("node_update",
                                "/nodes/{node_id}",
                                action="update",
-                               conditions={'method': 'POST'})
+                               conditions={'method': 'PUT'})
             sub_mapper.connect("node_delete",
                                "/nodes/{node_id}",
                                action="delete",

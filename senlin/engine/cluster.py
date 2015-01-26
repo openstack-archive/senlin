@@ -17,10 +17,11 @@ from senlin.common.i18n import _LW
 from senlin.db import api as db_api
 from senlin.engine import event as events
 from senlin.engine import node as nodes
+from senlin.openstack.common import periodic_task
 from senlin.profiles import base as profiles
 
 
-class Cluster(object):
+class Cluster(periodic_task.PeriodicTasks):
     '''
     A cluster is a set of homogeneous objects of the same profile.
 
@@ -287,6 +288,19 @@ class Cluster(object):
         # cluster = db_api.get_cluster(cluster_id)
         # TODO(Qiming): Implement this
         return True
+
+    @periodic_task.periodic_task
+    def heathy_check(self):
+        # TODO:
+        # 1. check if a HA policy is attached, return if not
+        # 2. iterate the nodes in the cluster, invoke their
+        #    profile do_check() to check their heathy
+        # 3. if failure nodes found, enforce the HA policy
+        pass
+
+    def periodic_tasks(self, context, raise_on_error=False):
+        """Tasks to be run at a periodic interval."""
+        return self.run_periodic_tasks(context, raise_on_error=raise_on_error)
 
     def to_dict(self):
         info = {

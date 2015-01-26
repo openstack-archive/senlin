@@ -59,3 +59,7 @@ class LaunchConfigProfile(base.Profile):
 
         self.status = self.ACTIVE
         return True
+
+    def do_check(self, id):
+        #TODO(liuh): add actual checking logic
+        return True 
