@@ -945,16 +945,74 @@ def action_mark_succeeded(context, action_id):
     return action
 
 
+def _mark_failed_action(context, action_id):
+    query = model_query(context, models.Action)
+    action = query.get(action_id)
+    if not action:
+        raise exception.NotFound(
+            _('Action with id "%s" not found') % action_id)
+
+    action.status = ACTION_FAILED
+
+    if action.depended_by is not None:
+        for a in action.depended_by:
+            _mark_failed_action(context, a)
+
+    return True
+
+
 def action_mark_failed(context, action_id):
-    # TODO(liuh): Failed processing to be added
-    # TODO(liuh): Need mark all actions depending on it failed
-    pass
+    query = model_query(context, models.Action)
+    action = query.get(action_id)
+    if not action:
+        raise exception.NotFound(
+            _('Action with id "%s" not found') % action_id)
+
+    session = get_session()
+    with session.begin():
+        action.status = ACTION_FAILED
+
+        if action.depended_by is not None:
+            for a in action.depended_by:
+                #'''recursion'''
+                _mark_failed_action(context, a)
+
+    return action
+
+
+def _mark_cancelled_action(context, action_id):
+    query = model_query(context, models.Action)
+    action = query.get(action_id)
+    if not action:
+        raise exception.NotFound(
+            _('Action with id "%s" not found') % action_id)
+
+    action.status = ACTION_CANCELED
+
+    if action.depended_by is not None:
+        for a in action.depended_by:
+            _mark_cancelled_action(context, a)
+
+    return True
 
 
 def action_mark_cancelled(context, action_id):
-    # TODO(liuh): Cancel processing to be added
-    # TODO(liuh): Need mark all actions depending on it being cancelled
-    pass
+    query = model_query(context, models.Action)
+    action = query.get(action_id)
+    if not action:
+        raise exception.NotFound(
+            _('Action with id "%s" not found') % action_id)
+
+    session = get_session()
+    with session.begin():
+        action.status = ACTION_CANCELED
+
+        if action.depended_by is not None:
+            for a in action.depended_by:
+                #'''recursion'''
+                _mark_cancelled_action(context, a)
+
+    return action
 
 
 def action_start_work_on(context, action_id, owner):
