@@ -280,7 +280,7 @@ class EngineService(service.Service):
 
         # TODO(Qiming): Hande size changes here!
         action = base_action.Action(context, 'CLUSTER_UPDATE',
-                                    target=cluster.id, cause='RPC Request'
+                                    target=cluster.id, cause='RPC Request',
                                     **kwargs)
         action.store(context)
 
@@ -369,10 +369,13 @@ class EngineService(service.Service):
                                                   sort_keys, sort_dir,
                                                   show_deleted)
 
-        raw = [action.to_dict() for action in all_actions]
-        for a in raw:
-            del a['context']
-            yield a
+        results = []
+        for action in all_actions:
+            raw = action.to_dict()
+            del raw['context']
+            results.append(raw)
+
+        return results
 
     @request_context
     def action_create(self, context, name, target, action, params):
