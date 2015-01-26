@@ -25,14 +25,14 @@ RPC_ATTRS = (
 )
 
 CLUSTER_ATTRS = (
-    CLUSTER_NAME, CLUSTER_PROFILE,
+    CLUSTER_NAME, CLUSTER_PROFILE, CLUSTER_SIZE,
     CLUSTER_ID, CLUSTER_PARENT,
     CLUSTER_DOMAIN, CLUSTER_PROJECT, CLUSTER_USER,
     CLUSTER_CREATED_TIME, CLUSTER_UPDATED_TIME, CLUSTER_DELETED_TIME,
     CLUSTER_STATUS, CLUSTER_STATUS_REASON, CLUSTER_TIMEOUT,
     CLUSTER_TAGS,
 ) = (
-    'name', 'profile_id',
+    'name', 'profile_id', 'size',
     'id', 'parent',
     'domain', 'project', 'user',
     'created_time', 'updated_time', 'deleted_time',

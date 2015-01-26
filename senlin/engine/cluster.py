@@ -165,6 +165,28 @@ class Cluster(periodic_task.PeriodicTasks):
 
         return self.id
 
+    def to_dict(self):
+        info = {
+            'id': self.id,
+            'name': self.name,
+            'profile_id': self.profile_id,
+            'user': self.user,
+            'project': self.project,
+            'domain': self.domain,
+            'parent': self.parent,
+            'created_time': self.created_time,
+            'updated_time': self.updated_time,
+            'deleted_time': self.deleted_time,
+            'size': self.size,
+            'next_index': self.next_index,
+            'timeout': self.timeout,
+            'status': self.status,
+            'status_reason': self.status_reason,
+            'tags': self.tags,
+            'data': self.data,
+        }
+        return info
+
     def set_status(self, context, status, reason=None):
         '''
         Set status of the cluster.
@@ -306,8 +328,8 @@ class Cluster(periodic_task.PeriodicTasks):
         info = {
             'id': self.id,
             'name': self.name,
-            'profile_id': self.profile,
-            'size': self.node_count,
+            'profile_id': self.profile_id,
+            'size': self.size,
             'parent': self.parent,
             'domain': self.domain,
             'project': self.project,

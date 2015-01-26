@@ -17,6 +17,8 @@ Cluster endpoint for Senlin v1 ReST API.
 
 from webob import exc
 
+from oslo_config import cfg
+
 from senlin.api.openstack.v1 import util
 from senlin.api.openstack.v1.views import clusters_view
 from senlin.common import attr
@@ -33,46 +35,38 @@ class InstantiationData(object):
     """
     The data accompanying a PUT or POST request to create or update a cluster.
     """
-
     PARAMS = (
-        CLUSTER_NAME,
-        SIZE,
-        PROFILE,
-    ) = (
-        'cluster_name',
-        'size',
-        'profile'
+        attr.CLUSTER_NAME, attr.CLUSTER_SIZE, attr.CLUSTER_PROFILE,
+        attr.CLUSTER_TAGS, attr.CLUSTER_TIMEOUT
     )
 
     def __init__(self, data):
-        """
-        Initialise from the request object.
-        """
         self.data = data
 
-    def cluster_name(self):
-        """
-        Return the cluster name.
-        """
-        if self.CLUSTER_NAME not in self.data:
+    def name(self):
+        if attr.CLUSTER_NAME not in self.data:
             raise exc.HTTPBadRequest(_("No cluster name specified."))
-        return self.data[self.CLUSTER_NAME]
+        return self.data[attr.CLUSTER_NAME]
 
     def size(self):
-        """
-        Return the cluster size.
-        """
-        if self.SIZE not in self.data:
+        if attr.CLUSTER_SIZE not in self.data:
             raise exc.HTTPBadRequest(_("No cluster size provided."))
-        return self.data[self.SIZE]
+        return self.data[attr.CLUSTER_SIZE]
 
     def profile(self):
-        """
-        Return the cluster profile.
-        """
-        if self.PROFILE not in self.data:
+        if attr.CLUSTER_PROFILE not in self.data:
             raise exc.HTTPBadRequest(_("No cluster profile provided."))
-        return self.data[self.PROFILE]
+        return self.data[attr.CLUSTER_PROFILE]
+
+    def parent(self):
+        return self.data.get(attr.CLUSTER_PARENT, None)
+
+    def tags(self):
+        return self.data.get(attr.CLUSTER_TAGS, None)
+
+    def timeout(self):
+        return self.data.get(attr.CLUSTER_TIMEOUT,
+                             cfg.CONF.default_action_timeout)
 
 
 class ClusterController(object):
@@ -150,17 +144,12 @@ class ClusterController(object):
         """
         data = InstantiationData(body)
 
-        result = self.rpc_client.cluster_create(req.context,
-                                                data.cluster_name(),
-                                                data.size(),
-                                                data.profile(),
-                                                data.args())
+        action = self.rpc_client.cluster_create(req.context, data.name(),
+                                                data.size(), data.profile(),
+                                                data.parent(), data.tags(),
+                                                data.timeout())
 
-        formatted_cluster = clusters_view.format_cluster(
-            req,
-            {attr.CLUSTER_ID: result}
-        )
-        return {'cluster': formatted_cluster}
+        return {'id': action['target'], 'action_id': action['id']}
 
     @util.identified_cluster
     def get(self, req, identity):
@@ -204,27 +193,10 @@ class ClusterController(object):
         raise exc.HTTPNoContent()
 
 
-class ClusterSerializer(serializers.JSONResponseSerializer):
-    """Handles serialization of specific controller method responses."""
-
-    def _populate_response_header(self, response, location, status):
-        response.status = status
-        response.headers['Location'] = location.encode('utf-8')
-        response.headers['Content-Type'] = 'application/json'
-        return response
-
-    def create(self, response, result):
-        self._populate_response_header(response,
-                                       result['cluster']['links'][0]['href'],
-                                       201)
-        response.body = self.to_json(result)
-        return response
-
-
 def create_resource(options):
     """
     Clusters resource factory method.
     """
-    deserializer = wsgi.JSONRequestDeserializer()
-    serializer = ClusterSerializer()
-    return wsgi.Resource(ClusterController(options), deserializer, serializer)
+    return wsgi.Resource(ClusterController(options),
+                         wsgi.JSONRequestDeserializer(),
+                         serializers.JSONResponseSerializer())

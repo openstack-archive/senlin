@@ -241,30 +241,33 @@ class EngineService(service.Service):
         return {'clusters': clusters_info}
 
     @request_context
-    def cluster_create(self, context, name, size, profile_id, args):
+    def cluster_create(self, context, name, size, profile_id, parent=None,
+                      tags=None, timeout=0):
         LOG.info(_LI('Creating cluster %s'), name)
-
+        ctx = context.to_dict()
         kwargs = {
-            'parent': args.get('parent', ''),
-            'user': context.get('username', ''),
-            'project': context.get('tenant_id', ''),
-            'timeout': args.get('timeout', 0),
-            'tags': args.get('tags', {}),
+            'user': ctx.get('username', ''),
+            'project': ctx.get('tenant_id', ''),
+            'parent': parent,
+            'timeout': timeout,
+            'tags': tags
         }
 
-        # Create a Cluster instance
         cluster = clusters.Cluster(name, profile_id, size, **kwargs)
         cluster.store(context)
-        # Build an Action for Cluster creating
-        action = actions.Action(context, cluster, 'CLUSTER_CREATE', **kwargs)
-        action.store(context)
-        # Notify Dispatchers that a new action has been ready.
-        dispatcher.notify(context,
-                          self.dispatcher.NEW_ACTION,
-                          None,
-                          action_id=action.id)
 
-        return cluster.id
+        # Build an Action for cluster creation
+        action = actions.Action(context, 'CLUSTER_CREATE',
+                                target=cluster.id, cause='RPC Request')
+        action.store(context)
+
+        # Notify Dispatchers that a new action has been ready.
+        # dispatcher.notify(context,
+        #                   self.dispatcher.NEW_ACTION,
+        #                   None,
+        #                   action_id=action.id)
+
+        return action.to_dict()
 
     @request_context
     def cluster_update(self, context, identity, size, profile_id):
@@ -286,7 +289,8 @@ class EngineService(service.Service):
         }
 
         # TODO(Qiming): Hande size changes here!
-        action = actions.Action(context, cluster, 'CLUSTER_UPDATE', **kwargs)
+        action = actions.Action(context, 'CLUSTER_UPDATE',
+                                target=cluster.id, cause='RPC Request')
         dispatcher.notify(context,
                           self.dispatcher.NEW_ACTION,
                           None,
@@ -300,7 +304,9 @@ class EngineService(service.Service):
         LOG.info(_LI('Deleting cluster %s'), db_cluster.name)
 
         cluster = clusters.Cluster.load(context, cluster=db_cluster)
-        action = actions.Action(context, cluster, 'CLUSTER_DELETE')
+        action = actions.Action(context, 'CLUSTER_DELETE',
+                                target=cluster.id, cause='RPC Request')
+        action.store(context)
         res = dispatcher.notify(context,
                                 self.dispatcher.NEW_ACTION,
                                 None,
@@ -329,7 +335,7 @@ class EngineService(service.Service):
         node.store(context)
 
         action = actions.Action(context, 'NODE_CREATE',
-                                target=node.id, cause='Node creation')
+                                target=node.id, cause='RPC Request')
         action.store(context)
 
         # TODO(Anyone): Uncomment this to notify the dispatcher
@@ -354,7 +360,7 @@ class EngineService(service.Service):
 
         node = nodes.Node.load(context, node_id)
         action = actions.Action(context, 'NODE_DELETE',
-                                target=node.id, cause='Node deletion')
+                                target=node.id, cause='RPC Request')
         action.store(context)
         # TODO(Anyone): Uncomment the following lines to send notifications
         # res = dispatcher.notify(context, self.dispatcher.NEW_ACTION,
