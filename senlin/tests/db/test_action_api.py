@@ -268,6 +268,107 @@ class DBAPIActionTest(base.SenlinTestCase):
             action = db_api.action_get(self.ctx, id)
             self.assertEqual(0, len(action.depends_on))
 
+    def _prepare_action_mark_faild_cancel(self):
+        specs = [
+            {'name': 'action_001', 'status': 'INIT', 'target': 'cluster_001'},
+            {'name': 'action_002', 'status': 'INIT', 'target': 'node_001'},
+            {'name': 'action_003', 'status': 'INIT', 'target': 'node_002'},
+            {'name': 'action_004', 'status': 'INIT', 'target': 'node_003'},
+            {'name': 'action_005', 'status': 'INIT', 'target': 'cluster_002'},
+            {'name': 'action_006', 'status': 'INIT', 'target': 'cluster_003'},
+            {'name': 'action_007', 'status': 'INIT', 'target': 'cluster_004'},
+        ]
+
+        id_of = {}
+        for spec in specs:
+            action = _create_action(self.ctx,
+                                    action=shared.sample_action,
+                                    **spec)
+            #action.status = db_api.ACTION_INIT
+            id_of[spec['name']] = action.id
+
+        db_api.action_add_dependency(self.ctx,
+                                     [id_of['action_002'],
+                                      id_of['action_003'],
+                                      id_of['action_004']],
+                                     id_of['action_001'])
+
+        db_api.action_add_dependency(self.ctx,
+                                     id_of['action_001'],
+                                     [id_of['action_005'],
+                                      id_of['action_006'],
+                                      id_of['action_007']])
+
+        action = db_api.action_get(self.ctx, id_of['action_001'])
+        l = action.depends_on
+        self.assertEqual(3, len(l))
+        self.assertIn(id_of['action_002'], l)
+        self.assertIn(id_of['action_003'], l)
+        self.assertIn(id_of['action_004'], l)
+        self.assertEqual(action.status, db_api.ACTION_WAITING)
+
+        for id in [id_of['action_002'],
+                   id_of['action_003'],
+                   id_of['action_004']]:
+            action = db_api.action_get(self.ctx, id)
+            l = action.depended_by
+            self.assertEqual(1, len(l))
+            self.assertIn(id_of['action_001'], l)
+            self.assertIsNone(action.depends_on)
+
+        action = db_api.action_get(self.ctx, id_of['action_001'])
+        l = action.depended_by
+        self.assertEqual(3, len(l))
+        self.assertIn(id_of['action_005'], l)
+        self.assertIn(id_of['action_006'], l)
+        self.assertIn(id_of['action_007'], l)
+
+        for id in [id_of['action_005'],
+                   id_of['action_006'],
+                   id_of['action_007']]:
+            action = db_api.action_get(self.ctx, id)
+            l = action.depends_on
+            self.assertEqual(1, len(l))
+            self.assertIn(id_of['action_001'], l)
+            self.assertIsNone(action.depended_by)
+            self.assertEqual(action.status, db_api.ACTION_WAITING)
+
+        return id_of
+
+    def test_action_mark_failed(self):
+        id_of = self._prepare_action_mark_faild_cancel()
+        db_api.action_mark_failed(self.ctx, id_of['action_002'])
+
+        for id in [id_of['action_003'],
+                   id_of['action_004']]:
+            action = db_api.action_get(self.ctx, id)
+            self.assertEqual(action.status, db_api.ACTION_INIT)
+
+        for id in [id_of['action_002'],
+                   id_of['action_001'],
+                   id_of['action_005'],
+                   id_of['action_006'],
+                   id_of['action_007']]:
+            action = db_api.action_get(self.ctx, id)
+            self.assertEqual(action.status, db_api.ACTION_FAILED)
+
+    def test_action_mark_cancelled(self):
+        id_of = self._prepare_action_mark_faild_cancel()
+        db_api.action_mark_cancelled(self.ctx, id_of['action_002'])
+
+        for id in [id_of['action_003'],
+                   id_of['action_004']]:
+            action = db_api.action_get(self.ctx, id)
+            self.assertEqual(action.status, db_api.ACTION_INIT)
+
+        for id in [id_of['action_002'],
+                   id_of['action_001'],
+                   id_of['action_005'],
+                   id_of['action_006'],
+                   id_of['action_007']]:
+            action = db_api.action_get(self.ctx, id)
+            self.assertEqual(action.status, db_api.ACTION_CANCELED)
+
     def test_action_start_work_on(self):
         action = _create_action(self.ctx)
 
