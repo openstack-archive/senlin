@@ -7,7 +7,7 @@
     "clusters:index": "rule:admin_or_owner",
     "clusters:create": "",
     "clusters:delete": "rule:admin_or_owner",
-    "clusters:show": "rule:admin_or_owner",
+    "clusters:get": "rule:admin_or_owner",
     "clusters:update": "rule:admin_or_owner",
     "profile_types:index": "",
     "policy_types:index": "",
