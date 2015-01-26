@@ -90,8 +90,8 @@ def _get_sort_keys(sort_keys, mapping):
     return [mapping[key] for key in sort_keys or [] if key in mapping]
 
 
-def _paginate_query(context, query, model, limit=None, sort_keys=None,
-                    marker=None, sort_dir=None, default_sort_keys=None):
+def _paginate_query(context, query, model, limit=None, marker=None,
+                    sort_keys=None, sort_dir=None, default_sort_keys=None):
     if not sort_keys:
         sort_keys = default_sort_keys or []
         if not sort_dir:
@@ -272,7 +272,7 @@ def _query_node_get_all(context, show_deleted=False, cluster_id=None):
                                     show_deleted=show_deleted)
 
     if cluster_id:
-        query = query.filter_by(cluster_id=cluster_id).all()
+        query = query.filter_by(cluster_id=cluster_id)
 
     return query
 
@@ -294,11 +294,10 @@ def node_get_all(context, cluster_id=None, show_deleted=False,
         attr.NODE_STATUS: models.Node.status.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
-
     query = db_filters.exact_filter(query, models.Node, filters)
     return _paginate_query(context, query, models.Node, limit=limit,
-                           marker=marker, sort_keys=keys, sort_dir=sort_dir,
-                           default_sort_keys=['created_time']).all()
+                           marker=marker, sort_keys=keys,
+                           sort_dir=sort_dir).all()
 
 
 def node_get_all_by_cluster(context, cluster_id):
