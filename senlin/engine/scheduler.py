@@ -182,7 +182,7 @@ def start_action(cnxt, action_id, engine_id, tgm):
         th = tgm.start_action_thread(cnxt, action)
         if th is None:
             LOG.debug('Action start failed, unlock action.')
-            # TODO: need db_api support
+            # TODO(anyone): need db_api support
             db_api.action_unlock(cnxt, action_id, engine_id)
         else:
             return True
@@ -201,7 +201,7 @@ def suspend_action(cnxt, action_id):
     :param action_id: The id of action to run in thread
     """
     # Set action control flag to suspend
-    # TODO: need db_api support
+    # TODO(anyone): need db_api support
     db_api.action_control(cnxt, action_id, ACTION_SUSPEND)
 
 
@@ -213,7 +213,7 @@ def resume_action(cnxt, action_id):
     :param action_id: The id of action to run in thread
     """
     # Set action control flag to suspend
-    # TODO: need db_api support
+    # TODO(anyone): need db_api support
     db_api.action_control(cnxt, action_id, ACTION_RESUME)
 
 
@@ -225,7 +225,7 @@ def cancel_action(cnxt, action_id):
     :param action_id: The id of action to run in thread
     """
     # Set action control flag to cancel
-    # TODO: need db_api support
+    # TODO(anyone): need db_api support
     db_api.action_control(cnxt, action_id, ACTION_CANCEL)
 
 
@@ -306,6 +306,7 @@ def action_wait(action):
     while not action_resumed(action):
         reschedule(action, sleep_time=1)
         continue
+
 
 def sleep(sleep_time):
     '''
