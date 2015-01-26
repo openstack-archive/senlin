@@ -15,10 +15,10 @@ import random
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.db import api as db_api
+from senlin.engine.actions import base
 from senlin.engine import dispatcher
 from senlin.engine import node as nodes
 from senlin.engine import scheduler
-from senlin.engine.actions import base
 from senlin.openstack.common import log as logging
 from senlin.policies import base as policies
 
@@ -75,7 +75,7 @@ class ClusterAction(base.Action):
                 'cause': 'Cluster creation',
             }
 
-            action = Action(self.context, 'NODE_CREATE', **kwargs)
+            action = base.Action(self.context, 'NODE_CREATE', **kwargs)
             action.store(self.context)
 
             action_list.append(action.id)
@@ -151,7 +151,7 @@ class ClusterAction(base.Action):
                     'new_profile_id': new_profile_id,
                 }
             }
-            action = Action(self.context, 'NODE_UPDATE', **kwargs)
+            action = base.Action(self.context, 'NODE_UPDATE', **kwargs)
             action_list.append(action)
             action.set_status(self.READY)
 
@@ -268,7 +268,7 @@ class ClusterAction(base.Action):
                 'target': node_id,
                 'cause': 'Cluster delete',
             }
-            action = Action(self.context, 'NODE_DELETE', **kwargs)
+            action = base.Action(self.context, 'NODE_DELETE', **kwargs)
             action_list.append(action)
             action.set_status(self.READY)
 
@@ -367,7 +367,7 @@ class ClusterAction(base.Action):
                 'target': node_id,
                 'cause': 'Cluster scale down',
             }
-            action = Action(self.context, 'NODE_DELETE', **kwargs)
+            action = base.Action(self.context, 'NODE_DELETE', **kwargs)
             action.store(self.context)
 
             action_list.append(action.id)

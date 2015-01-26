@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
+
 from oslo_config import cfg
 
 from senlin.common import context as req_context
@@ -125,7 +127,9 @@ class Action(object):
         self.depends_on = kwargs.get('depends_on', [])
         self.depended_by = kwargs.get('depended_by', [])
 
-        self.deleted_time = None
+        self.created_time = kwargs.get('created_time', None)
+        self.updated_time = kwargs.get('updated_time', None)
+        self.deleted_time = kwargs.get('deleted_time', None)
 
     def store(self, context):
         '''
@@ -148,10 +152,18 @@ class Action(object):
             'outputs': self.outputs,
             'depends_on': self.depends_on,
             'depended_by': self.depended_by,
+            'created_time': datetime.datetime.utcnow(),
+            'updated_time': self.updated_time,
             'deleted_time': self.deleted_time,
         }
 
-        action = db_api.action_create(context, values)
+        if self.id:
+            values['updated_time'] = datetime.datetime.utcnow()
+            action = db_api.action_update(context, values)
+        else:
+            values['created_time'] = datetime.datetime.utcnow()
+            action = db_api.action_create(context, values)
+
         self.id = action.id
         return self.id
 
