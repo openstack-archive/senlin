@@ -10,13 +10,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from senlin.engine.actions.base import Action
+from senlin.engine.actions import base
 from senlin.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 
 
-class CustomAction(Action):
+class CustomAction(base.Action):
     ACTIONS = (
         ACTION_EXECUTE,
     ) = (

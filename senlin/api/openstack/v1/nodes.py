@@ -121,7 +121,7 @@ class NodeController(object):
     def get(self, req, node_id):
         node = self.rpc_client.node_get(req.context, node_id)
         if not node:
-            raise exc.HTTPInternalServerError()
+            raise exc.HTTPNotFound()
 
         return node
 

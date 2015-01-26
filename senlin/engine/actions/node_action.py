@@ -13,13 +13,13 @@
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.engine import node as nodes
-from senlin.engine.actions.base import Action
+from senlin.engine.actions import base
 from senlin.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 
 
-class NodeAction(Action):
+class NodeAction(base.Action):
     '''
     An action performed on a cluster member.
     '''

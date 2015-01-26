@@ -18,14 +18,14 @@ from senlin.db import api as db_api
 from senlin.engine import dispatcher
 from senlin.engine import node as nodes
 from senlin.engine import scheduler
-from senlin.engine.actions.base import Action
+from senlin.engine.actions import base
 from senlin.openstack.common import log as logging
 from senlin.policies import base as policies
 
 LOG = logging.getLogger(__name__)
 
 
-class ClusterAction(Action):
+class ClusterAction(base.Action):
     '''
     An action performed on a cluster.
     '''

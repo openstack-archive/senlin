@@ -20,7 +20,6 @@ from webob import exc
 from oslo_config import cfg
 
 from senlin.api.openstack.v1 import util
-from senlin.api.openstack.v1.views import clusters_view
 from senlin.common import attr
 from senlin.common.i18n import _
 from senlin.common import serializers
@@ -125,23 +124,20 @@ class ClusterController(object):
 
         return {'id': action['target'], 'action_id': action['id']}
 
-    @util.identified_cluster
-    def get(self, req, identity):
+    @util.policy_enforce
+    def get(self, req, cluster_id):
         """
         Gets detailed information for a cluster
         """
 
-        cluster_list = self.rpc_client.cluster_get(req.context,
-                                                   identity)
+        cluster = self.rpc_client.cluster_get(req.context,
+                                              cluster_id)
+        if not cluster:
+            raise exc.HTTPNotFound()
 
-        if not cluster_list:
-            raise exc.HTTPInternalServerError()
+        return cluster
 
-        cluster = cluster_list[0]
-
-        return {'cluster': clusters_view.format_cluster(req, cluster)}
-
-    @util.identified_cluster
+    @util.policy_enforce
     def update(self, req, identity, body):
         """
         Update an existing cluster with new parameters

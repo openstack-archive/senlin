@@ -97,7 +97,7 @@ class Cluster(periodic_task.PeriodicTasks):
         }
         return cls(record.name, record.profile_id, record.size, **kwargs)
 
-    def load_runtime_data(self, context):
+    def _load_runtime_data(self, context):
         self.rt = {
             'profile': profiles.Profile.load(context, self.profile_id),
             'nodes': nodes.Node.load_all(context, cluster_id=self.id),
@@ -112,7 +112,7 @@ class Cluster(periodic_task.PeriodicTasks):
         record = db_api.cluster_get(context, cluster_id,
                                     show_deleted=show_deleted)
         cluster = cls._from_db_record(record)
-        cluster.load_runtime_data(context)
+        cluster._load_runtime_data(context)
         return cluster
 
     @classmethod
@@ -178,12 +178,13 @@ class Cluster(periodic_task.PeriodicTasks):
             'updated_time': self.updated_time,
             'deleted_time': self.deleted_time,
             'size': self.size,
-            'next_index': self.next_index,
             'timeout': self.timeout,
             'status': self.status,
             'status_reason': self.status_reason,
             'tags': self.tags,
             'data': self.data,
+            'nodes': [node.id for node in self.rt['nodes']],
+            'profile_name': self.rt['profile'].name,
         }
         return info
 
@@ -302,7 +303,7 @@ class Cluster(periodic_task.PeriodicTasks):
         # TODO(Qiming): check if actions are working on and can be canceled
         # destroy nodes
 
-        db_api.delete_cluster(cluster_id)
+        db_api.delete_cluster(cluster.id)
         return True
 
     @classmethod
@@ -313,7 +314,7 @@ class Cluster(periodic_task.PeriodicTasks):
 
     @periodic_task.periodic_task
     def heathy_check(self):
-        # TODO:
+        # TODO(Anyone):
         # 1. check if a HA policy is attached, return if not
         # 2. iterate the nodes in the cluster, invoke their
         #    profile do_check() to check their heathy
@@ -323,23 +324,3 @@ class Cluster(periodic_task.PeriodicTasks):
     def periodic_tasks(self, context, raise_on_error=False):
         """Tasks to be run at a periodic interval."""
         return self.run_periodic_tasks(context, raise_on_error=raise_on_error)
-
-    def to_dict(self):
-        info = {
-            'id': self.id,
-            'name': self.name,
-            'profile_id': self.profile_id,
-            'size': self.size,
-            'parent': self.parent,
-            'domain': self.domain,
-            'project': self.project,
-            'user': self.user,
-            'created_time': self.created_time,
-            'updated_time': self.updated_time,
-            'deleted_time': self.deleted_time,
-            'status': self.status,
-            'status_reason': self.status_reason,
-            'timeout': self.timeout,
-        }
-
-        return info

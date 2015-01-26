@@ -12,7 +12,7 @@
 
 import datetime
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 from senlin.common import exception
 from senlin.db import api as db_api

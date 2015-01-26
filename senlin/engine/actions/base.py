@@ -16,7 +16,6 @@ from senlin.common import context as req_context
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.db import api as db_api
-from senlin.engine import action as senlin_action
 from senlin.openstack.common import log as logging
 from senlin.policies import base as policies
 
@@ -55,13 +54,17 @@ class Action(object):
 
         target_type = action.split('_')[0]
         if target_type == 'CLUSTER':
-            ActionClass = senlin_action.ClusterAction
+            from senlin.engine.actions import cluster_action
+            ActionClass = cluster_action.ClusterAction
         elif target_type == 'NODE':
-            ActionClass = senlin_action.NodeAction
+            from senlin.engine.actions import node_action
+            ActionClass = node_action.NodeAction
         elif target_type == 'POLICY':
-            ActionClass = senlin_action.PolicyAction
+            from senlin.engine.actions import policy_action
+            ActionClass = policy_action.PolicyAction
         else:
-            ActionClass = senlin_action.CustomAction
+            from senlin.engine.actions import custom_action
+            ActionClass = custom_action.CustomAction
 
         return super(Action, cls).__new__(ActionClass)
 

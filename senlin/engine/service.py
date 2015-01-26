@@ -210,9 +210,6 @@ class EngineService(service.Service):
             raise exception.ClusterNotFound(cluster_name=identity)
 
     def _get_cluster(self, context, identity, show_deleted=False):
-        '''
-        Get Cluster record in DB based on cluster id
-        '''
         cluster_id = self.cluster_find(context, identity)
 
         db_cluster = db_api.cluster_get(context, cluster_id,
@@ -225,20 +222,9 @@ class EngineService(service.Service):
         return db_cluster
 
     @request_context
-    def cluster_get(self, context, identity):
-        if identity is not None:
-            db_cluster = self._get_cluster(context, identity,
-                                           show_deleted=True)
-            clist = clusters.Cluster.load(context, cluster=db_cluster)
-        else:
-            clist = clusters.Cluster.load_all(context, show_deleted=True)
-
-        # Format clusters info
-        clusters_info = []
-        for cluster in clist:
-            clusters_info.append(cluster.to_dict())
-
-        return {'clusters': clusters_info}
+    def cluster_get(self, context, cluster_id):
+        cluster = clusters.Cluster.load(context, cluster_id=cluster_id)
+        return cluster.to_dict()
 
     @request_context
     def cluster_create(self, context, name, size, profile_id, parent=None,

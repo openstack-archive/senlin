@@ -93,9 +93,11 @@ def node_get(context, node_id):
 def node_get_all(context, cluster_id=None, show_deleted=False,
                  limit=None, marker=None, sort_keys=None, sort_dir=None,
                  filters=None, tenant_safe=True):
-    return IMPL.node_get_all(context, cluster_id, show_deleted,
-                             limit, marker, sort_keys, sort_dir,
-                             filters, tenant_safe)
+    return IMPL.node_get_all(context, cluster_id=cluster_id,
+                             show_deleted=show_deleted,
+                             limit=limit, marker=marker,
+                             sort_keys=sort_keys, sort_dir=sort_dir,
+                             filters=filters, tenant_safe=tenant_safe)
 
 
 def node_get_all_by_cluster(context, cluster_id):
