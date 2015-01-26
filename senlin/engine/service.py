@@ -24,7 +24,7 @@ from senlin.common.i18n import _
 from senlin.common.i18n import _LI
 from senlin.common import messaging as rpc_messaging
 from senlin.db import api as db_api
-from senlin.engine import action as actions
+from senlin.engine.actions import base as base_action
 from senlin.engine import cluster as clusters
 from senlin.engine import dispatcher
 from senlin.engine import environment
@@ -256,7 +256,10 @@ class EngineService(service.Service):
         cluster = clusters.Cluster(name, profile_id, size, **kwargs)
         cluster.store(context)
         # Build an Action for Cluster creating
-        action = actions.Action(context, cluster, 'CLUSTER_CREATE', **kwargs)
+        action = base_action.Action(context,
+                                    cluster,
+                                    'CLUSTER_CREATE',
+                                    **kwargs)
         action.store(context)
         # Notify Dispatchers that a new action has been ready.
         dispatcher.notify(context,
@@ -286,7 +289,10 @@ class EngineService(service.Service):
         }
 
         # TODO(Qiming): Hande size changes here!
-        action = actions.Action(context, cluster, 'CLUSTER_UPDATE', **kwargs)
+        action = base_action.Action(context,
+                                    cluster,
+                                    'CLUSTER_UPDATE',
+                                    **kwargs)
         dispatcher.notify(context,
                           self.dispatcher.NEW_ACTION,
                           None,
@@ -300,7 +306,7 @@ class EngineService(service.Service):
         LOG.info(_LI('Deleting cluster %s'), db_cluster.name)
 
         cluster = clusters.Cluster.load(context, cluster=db_cluster)
-        action = actions.Action(context, cluster, 'CLUSTER_DELETE')
+        action = base_action.Action(context, cluster, 'CLUSTER_DELETE')
         res = dispatcher.notify(context,
                                 self.dispatcher.NEW_ACTION,
                                 None,
@@ -328,8 +334,8 @@ class EngineService(service.Service):
                           role=role, tags=tags)
         node.store(context)
 
-        action = actions.Action(context, 'NODE_CREATE',
-                                target=node.id, cause='Node creation')
+        action = base_action.Action(context, 'NODE_CREATE',
+                                    target=node.id, cause='Node creation')
         action.store(context)
 
         # TODO(Anyone): Uncomment this to notify the dispatcher
@@ -353,8 +359,8 @@ class EngineService(service.Service):
         LOG.info(_LI('Deleting node %s'), node_id)
 
         node = nodes.Node.load(context, node_id)
-        action = actions.Action(context, 'NODE_DELETE',
-                                target=node.id, cause='Node deletion')
+        action = base_action.Action(context, 'NODE_DELETE',
+                                    target=node.id, cause='Node deletion')
         action.store(context)
         # TODO(Anyone): Uncomment the following lines to send notifications
         # res = dispatcher.notify(context, self.dispatcher.NEW_ACTION,
@@ -369,9 +375,10 @@ class EngineService(service.Service):
     def action_list(self, context, filters=None, limit=None, marker=None,
                     sort_keys=None, sort_dir=None, show_deleted=False):
 
-        all_actions = actions.Action.load_all(context, filters, limit, marker,
-                                              sort_keys, sort_dir,
-                                              show_deleted)
+        all_actions = base_action.Action.load_all(context, filters,
+                                                  limit, marker,
+                                                  sort_keys, sort_dir,
+                                                  show_deleted)
 
         raw = [action.to_dict() for action in all_actions]
         for a in raw:
@@ -383,7 +390,8 @@ class EngineService(service.Service):
         LOG.info(_LI('Creating action %s'), name)
 
         # Create a node instance
-        act = actions.Action(context, action, target, name=name, params=params)
+        act = base_action.Action(context, action, target,
+                                 name=name, params=params)
         act.store(context)
 
         # TODO(Anyone): Uncomment this to notify the dispatcher
@@ -395,4 +403,4 @@ class EngineService(service.Service):
     @request_context
     def action_get(self, context, action_id):
         # TODO(Qiming): Add conversion from name to id
-        return actions.Action.load(context, action_id)
+        return base_action.Action.load(context, action_id)
