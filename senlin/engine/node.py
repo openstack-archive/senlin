@@ -167,6 +167,7 @@ class Node(object):
             'profile_id': self.profile_id,
             'index': self.index,
             'role': self.role,
+            'init_time': self.init_time,
             'created_time': self.created_time,
             'updated_time': self.updated_time,
             'deleted_time': self.deleted_time,
