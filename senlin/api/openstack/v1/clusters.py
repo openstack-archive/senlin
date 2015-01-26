@@ -84,58 +84,32 @@ class ClusterController(object):
     def default(self, req, **args):
         raise exc.HTTPNotFound()
 
-    def _index(self, req, tenant_safe=True):
+    @util.policy_enforce
+    def index(self, req):
         filter_whitelist = {
             'status': 'mixed',
             'name': 'mixed',
-            'tenant': 'mixed',
-            'username': 'mixed',
+            'project': 'mixed',
+            'parent': 'mixed',
+            'user': 'mixed',
         }
-        whitelist = {
+        param_whitelist = {
             'limit': 'single',
             'marker': 'single',
             'sort_dir': 'single',
             'sort_keys': 'multi',
+            'show_deleted': 'single',
+            'show_nested': 'single',
         }
-        params = util.get_allowed_params(req.params, whitelist)
-        filter_params = util.get_allowed_params(req.params, filter_whitelist)
+        params = util.get_allowed_params(req.params, param_whitelist)
+        filters = util.get_allowed_params(req.params, filter_whitelist)
 
-        if not filter_params:
-            filter_params = None
+        if not filters:
+            filters = None
 
-        clusters = self.rpc_client.cluster_list(req.context,
-                                                filters=filter_params,
-                                                tenant_safe=tenant_safe,
+        clusters = self.rpc_client.cluster_list(req.context, filters=filters,
                                                 **params)
-
-        count = None
-        return clusters_view.collection(req, clusters=clusters, count=count,
-                                        tenant_safe=tenant_safe)
-
-    @util.policy_enforce
-    def global_index(self, req):
-        return self._index(req, tenant_safe=False)
-
-    @util.policy_enforce
-    def index(self, req):
-        """
-        Lists summary information for all clusters
-        """
-        global_tenant = bool(req.params.get('global_tenant', False))
-        if global_tenant:
-            return self.global_index(req, req.context.tenant_id)
-
-        return self._index(req)
-
-    @util.policy_enforce
-    def detail(self, req):
-        """
-        Lists detailed information for all clusters
-        """
-        clusters = self.rpc_client.cluster_list(req.context)
-
-        return {'clusters': [clusters_view.format_cluster(req, c)
-                             for c in clusters]}
+        return {'clusters': clusters}
 
     @util.policy_enforce
     def create(self, req, body):
