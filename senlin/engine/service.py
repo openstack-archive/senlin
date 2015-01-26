@@ -266,7 +266,8 @@ class EngineService(service.Service):
         #                   self.dispatcher.NEW_ACTION,
         #                   None,
         #                   action_id=action.id)
-
+        cluster.set_status(context, clusters.Cluster.ACTIVE,
+                           reason='Action dispatched')
         return action.to_dict()
 
     @request_context

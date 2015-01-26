@@ -99,8 +99,8 @@ class Cluster(periodic_task.PeriodicTasks):
 
     def load_runtime_data(self, context):
         self.rt = {
-            'profile': profiles.load(context, self.profile_id),
-            'nodes': nodes.load_all(context, cluster_id=self.id),
+            'profile': profiles.Profile.load(context, self.profile_id),
+            'nodes': nodes.Node.load_all(context, cluster_id=self.id),
             'policies': [],
         }
 
@@ -111,23 +111,23 @@ class Cluster(periodic_task.PeriodicTasks):
         '''
         record = db_api.cluster_get(context, cluster_id,
                                     show_deleted=show_deleted)
-        cluster = cls.from_db_record(record)
+        cluster = cls._from_db_record(record)
         cluster.load_runtime_data(context)
         return cluster
 
     @classmethod
-    def load_all(cls, context, limit=None, sort_keys=None, marker=None,
+    def load_all(cls, context, limit=None, marker=None, sort_keys=None,
                  sort_dir=None, filters=None, tenant_safe=True,
                  show_deleted=False, show_nested=False):
         '''
         Retrieve all clusters from database.
         '''
-        records = db_api.cluster_get_all(context, limit, sort_keys, marker,
+        records = db_api.cluster_get_all(context, limit, marker, sort_keys,
                                          sort_dir, filters, tenant_safe,
                                          show_deleted, show_nested)
 
         for record in records:
-            cluster = cls.from_db_record(record)
+            cluster = cls._from_db_record(record)
             cluster.load_runtime_data(context)
             yield cluster
 

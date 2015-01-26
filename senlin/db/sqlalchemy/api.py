@@ -188,7 +188,7 @@ def _query_cluster_get_all(context, tenant_safe=True, show_deleted=False,
     return query
 
 
-def cluster_get_all(context, limit=None, sort_keys=None, marker=None,
+def cluster_get_all(context, limit=None, marker=None, sort_keys=None,
                     sort_dir=None, filters=None, tenant_safe=True,
                     show_deleted=False, show_nested=False):
     query = _query_cluster_get_all(context, tenant_safe=tenant_safe,
@@ -208,7 +208,7 @@ def cluster_get_all(context, limit=None, sort_keys=None, marker=None,
     query = db_filters.exact_filter(query, models.Cluster, filters)
     return _paginate_query(context, query, models.Cluster, limit=limit,
                            marker=marker, sort_keys=keys, sort_dir=sort_dir,
-                           default_sort_keys=['created_time']).all()
+                           default_sort_keys=[]).all()
 
 
 def cluster_count_all(context, filters=None, tenant_safe=True,
