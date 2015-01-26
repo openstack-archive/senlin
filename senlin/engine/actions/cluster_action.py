@@ -10,7 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
 import random
 
 from senlin.common import exception
@@ -471,127 +470,6 @@ class ClusterAction(Action):
             res = self.do_detach_policy(cluster)
 
         return res
-
-    def cancel(self):
-        return self.RES_OK
-
-
-class NodeAction(Action):
-    '''
-    An action performed on a cluster member.
-    '''
-    ACTIONS = (
-        NODE_CREATE, NODE_DELETE, NODE_UPDATE,
-        NODE_JOIN_CLUSTER, NODE_LEAVE_CLUSTER,
-    ) = (
-        'NODE_CREATE', 'NODE_DELETE', 'NODE_UPDATE',
-        'NODE_JOIN_CLUSTER', 'NODE_LEAVE_CLUSTER',
-    )
-
-    def __init__(self, context, action, **kwargs):
-        super(NodeAction, self).__init__(context, action, **kwargs)
-
-    def execute(self, **kwargs):
-        res = False
-        node = nodes.load(self.context, self.target)
-        if not node:
-            msg = _('Node with id (%s) is not found') % self.target
-            raise exception.NotFound(msg)
-
-        # TODO(Qiming): Add node status changes
-        if self.action == self.NODE_CREATE:
-            res = node.do_create()
-        elif self.action == self.NODE_DELETE:
-            res = node.do_delete()
-        elif self.action == self.NODE_UPDATE:
-            new_profile_id = self.inputs.get('new_profile_id')
-            res = node.do_update(new_profile_id)
-        elif self.action == self.NODE_JOIN_CLUSTER:
-            new_cluster_id = self.inputs.get('cluster_id', None)
-            if not new_cluster_id:
-                raise exception.ClusterNotSpecified()
-            res = node.do_join(new_cluster_id)
-        elif self.action == self.NODE_LEAVE_CLUSTER:
-            res = node.do_leave()
-
-        return self.RES_OK if res else self.RES_ERROR
-
-    def cancel(self):
-        return self.RES_OK
-
-
-class PolicyAction(Action):
-    '''
-    An action performed on a cluster policy.
-
-    Note that these can be treated as cluster operations instead of operations
-    on a policy itself.
-    '''
-
-    ACTIONS = (
-        POLICY_ENABLE, POLICY_DISABLE, POLICY_UPDATE,
-    ) = (
-        'POLICY_ENABLE', 'POLICY_DISABLE', 'POLICY_UPDATE',
-    )
-
-    def __init__(self, context, action, **kwargs):
-        super(PolicyAction, self).__init__(context, action, **kwargs)
-        self.cluster_id = kwargs.get('cluster_id', None)
-        if self.cluster_id is None:
-            raise exception.ActionMissingTarget(action)
-
-        self.policy_id = kwargs.get('policy_id', None)
-        if self.policy_id is None:
-            raise exception.ActionMissingPolicy(action)
-
-        # get policy associaton using the cluster id and policy id
-
-    def execute(self, **kwargs):
-        if self.action not in self.ACTIONS:
-            return self.RES_ERROR
-
-        self.store(start_time=datetime.datetime.utcnow(),
-                   status=self.RUNNING)
-
-        cluster_id = kwargs.get('cluster_id')
-        policy_id = kwargs.get('policy_id')
-
-        # an ENABLE/DISABLE action only changes the database table
-        if self.action == self.POLICY_ENABLE:
-            db_api.cluster_enable_policy(cluster_id, policy_id)
-        elif self.action == self.POLICY_DISABLE:
-            db_api.cluster_disable_policy(cluster_id, policy_id)
-        else:  # self.action == self.UPDATE:
-            # There is not direct way to update a policy because the policy
-            # might be shared with another cluster, instead, we clone a new
-            # policy and replace the cluster-policy entry.
-            pass
-
-            # TODO(Qiming): Add DB API complete this.
-
-        self.store(end_time=datetime.datetime.utcnow(),
-                   status=self.SUCCEEDED)
-
-        return self.RES_OK
-
-    def cancel(self):
-        self.store(end_time=datetime.datetime.utcnow(),
-                   status=self.CANCELLED)
-        return self.RES_OK
-
-
-class CustomAction(Action):
-    ACTIONS = (
-        ACTION_EXECUTE,
-    ) = (
-        'ACTION_EXECUTE',
-    )
-
-    def __init__(self, context, action, **kwargs):
-        super(CustomAction, self).__init__(context, action, **kwargs)
-
-    def execute(self, **kwargs):
-        return self.RES_OK
 
     def cancel(self):
         return self.RES_OK
