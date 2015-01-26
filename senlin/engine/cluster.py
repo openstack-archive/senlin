@@ -128,7 +128,7 @@ class Cluster(periodic_task.PeriodicTasks):
 
         for record in records:
             cluster = cls._from_db_record(record)
-            cluster.load_runtime_data(context)
+            cluster._load_runtime_data(context)
             yield cluster
 
     def store(self, context):
