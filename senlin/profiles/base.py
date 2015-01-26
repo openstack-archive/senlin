@@ -97,8 +97,11 @@ class Profile(object):
         '''
         Retrieve all profiles from database.
         '''
-        records = db_api.profile_get_all(context, limit, marker, sort_keys,
-                                         sort_dir, filters, show_deleted)
+        records = db_api.profile_get_all(context, limit=limit, marker=marker,
+                                         sort_keys=sort_keys,
+                                         sort_dir=sort_dir,
+                                         filters=filters,
+                                         show_deleted=show_deleted)
 
         for record in records:
             yield cls.from_db_record(context, record)

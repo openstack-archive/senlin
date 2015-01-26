@@ -544,15 +544,11 @@ def profile_get(context, profile_id):
     return profile
 
 
-def _query_profile_get_all(context, show_deleted=False):
-    query = soft_delete_aware_query(context, models.Profile,
-                                    show_deleted=show_deleted)
-    return query
-
 
 def profile_get_all(context, limit=None, marker=None, sort_keys=None,
                     sort_dir=None, filters=None, show_deleted=False):
-    query = _query_profile_get_all(context, show_deleted=show_deleted)
+    query = soft_delete_aware_query(context, models.Profile,
+                                    show_deleted=show_deleted)
 
     if filters is None:
         filters = {}
