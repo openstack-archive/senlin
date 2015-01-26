@@ -159,7 +159,6 @@ class Forbidden(SenlinException):
     msg_fmt = _("You are not authorized to complete this action.")
 
 
-#NOTE(bcwaldon): here for backwards-compatibility, need to deprecate.
 class NotAuthorized(Forbidden):
     msg_fmt = _("You are not authorized to complete this action.")
 

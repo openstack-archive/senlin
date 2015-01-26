@@ -71,7 +71,7 @@ class DeletionPolicy(base.Policy):
             return data
 
         nodes = db_api.node_get_all_by_cluster(cluster_id)
-        # TODO: Add count check to ensure it is not larger
+        # TODO(anyone): Add count check to ensure it is not larger
         # then the current size of cluster.
         if count > len(nodes):
             count = len(nodes)

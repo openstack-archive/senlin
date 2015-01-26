@@ -12,6 +12,7 @@
 
 from senlin.drivers import base
 
+
 class DriverHeatV1(base.DriverBase):
     '''
     Base class for Heat V1 drivers.

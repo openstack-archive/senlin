@@ -10,9 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import uuid
-
-from senlin.drivers import heat_v1 as heat
+#from senlin.drivers import heat_v1 as heat
 from senlin.profiles import base
 
 __type_name__ = 'os.heat.resource'
@@ -32,17 +30,17 @@ class ResourceProfile(base.Profile):
         A resource is represented as a YAML snippet that can be composed
         into a Heat stack.
         '''
-        return tmpl 
+        return {}
 
     def do_delete(self, id):
-        return True 
+        return True
 
     def do_update(self, ):
         self.status = self.UPDATING
-        # TODO: do update
+        # TODO(anyone): do update
         self.status = self.ACTIVE
-        return tmpl
+        return {}
 
     def do_check(self, id):
         #TODO(liuh): add actual checking logic
-        return True 
+        return True
