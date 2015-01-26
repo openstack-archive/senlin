@@ -208,7 +208,7 @@ def cluster_get_all(context, limit=None, marker=None, sort_keys=None,
     query = db_filters.exact_filter(query, models.Cluster, filters)
     return _paginate_query(context, query, models.Cluster, limit=limit,
                            marker=marker, sort_keys=keys, sort_dir=sort_dir,
-                           default_sort_keys=[]).all()
+                           default_sort_keys=['init_time']).all()
 
 
 def cluster_count_all(context, filters=None, tenant_safe=True,
@@ -295,9 +295,10 @@ def node_get_all(context, cluster_id=None, show_deleted=False,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
     query = db_filters.exact_filter(query, models.Node, filters)
-    return _paginate_query(context, query, models.Node, limit=limit,
-                           marker=marker, sort_keys=keys,
-                           sort_dir=sort_dir).all()
+    return _paginate_query(context, query, models.Node,
+                           limit=limit, marker=marker,
+                           sort_keys=keys, sort_dir=sort_dir,
+                           default_sort_keys=['init_time']).all()
 
 
 def node_get_all_by_cluster(context, cluster_id):
@@ -544,7 +545,6 @@ def profile_get(context, profile_id):
     return profile
 
 
-
 def profile_get_all(context, limit=None, marker=None, sort_keys=None,
                     sort_dir=None, filters=None, show_deleted=False):
     query = soft_delete_aware_query(context, models.Profile,
@@ -565,9 +565,10 @@ def profile_get_all(context, limit=None, marker=None, sort_keys=None,
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
     query = db_filters.exact_filter(query, models.Profile, filters)
-    return _paginate_query(context, query, models.Profile, limit=limit,
-                           marker=marker, sort_keys=keys, sort_dir=sort_dir
-                           ).all()
+    return _paginate_query(context, query, models.Profile,
+                           limit=limit, marker=marker,
+                           sort_keys=keys, sort_dir=sort_dir,
+                           default_sort_keys=['created_time']).all()
 
 
 def profile_update(context, profile_id, values):
@@ -665,23 +666,6 @@ def _events_paginate_query(context, query, model, limit=None, sort_keys=None,
     return query
 
 
-def _filter_and_page_event(context, query, limit=None, marker=None,
-                           sort_keys=None, sort_dir=None, filters=None):
-    if filters is None:
-        filters = {}
-
-    sort_key_map = {
-        attr.EVENT_TIMESTAMP: models.Event.timestamp.key,
-        attr.EVENT_OBJ_TYPE: models.Event.obj_type.key,
-    }
-    keys = _get_sort_keys(sort_keys, sort_key_map)
-
-    query = db_filters.exact_filter(query, models.Event, filters)
-
-    return _events_paginate_query(context, query, models.Event, limit,
-                                  keys, marker, sort_dir)
-
-
 def event_count_by_cluster(context, cid):
     count = model_query(context, models.Event).\
         filter_by(obj_id=cid, obj_type='CLUSTER').count()
@@ -697,8 +681,21 @@ def _events_by_cluster(context, cid):
 def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
                              sort_keys=None, sort_dir=None, filters=None):
     query = _events_by_cluster(context, cluster_id)
-    return _filter_and_page_event(context, query, limit, marker,
-                                  sort_keys, sort_dir, filters).all()
+
+    if filters is None:
+        filters = {}
+
+    sort_key_map = {
+        attr.EVENT_TIMESTAMP: models.Event.timestamp.key,
+        attr.EVENT_OBJ_TYPE: models.Event.obj_type.key,
+    }
+    keys = _get_sort_keys(sort_keys, sort_key_map)
+
+    query = db_filters.exact_filter(query, models.Event, filters)
+    return _events_paginate_query(context, query, models.Event,
+                                  limit=limit, marker=marker,
+                                  sort_keys=keys, sort_dir=sort_dir,
+                                  default_sort_keys=['timestamp']).all()
 
 
 def purge_deleted(age, granularity='days'):
@@ -783,8 +780,11 @@ def action_get_all_by_owner(context, owner_id):
     return query.all()
 
 
-def _filter_and_page_action(context, query, limit=None, sort_keys=None,
-                            sort_dir=None, marker=None, filters=None):
+def action_get_all(context, filters=None, limit=None, marker=None,
+                   sort_keys=None, sort_dir=None, show_deleted=False):
+    query = soft_delete_aware_query(context, models.Action,
+                                    show_deleted=show_deleted)
+
     if filters is None:
         filters = {}
 
@@ -805,17 +805,10 @@ def _filter_and_page_action(context, query, limit=None, sort_keys=None,
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
     query = db_filters.exact_filter(query, models.Action, filters)
-    return _paginate_query(context, query, models.Action, limit,
-                           keys, marker, sort_dir)
-
-
-def action_get_all(context, filters=None, limit=None, marker=None,
-                   sort_keys=None, sort_dir=None, show_deleted=False):
-    query = soft_delete_aware_query(context, models.Action,
-                                    show_deleted=show_deleted)
-
-    return _filter_and_page_action(context, query, limit, sort_keys,
-                                   sort_dir, marker, filters).all()
+    return _paginate_query(context, query, models.Action,
+                           limit=limit, marker=marker,
+                           sort_keys=keys, sort_dir=sort_dir,
+                           default_sort_keys=['created_time']).all()
 
 
 def _action_dependency_add(context, action_id, field, adds):
