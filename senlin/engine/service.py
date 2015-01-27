@@ -252,10 +252,8 @@ class EngineService(service.Service):
         action.store(context)
 
         # Notify Dispatchers that a new action has been ready.
-        # dispatcher.notify(context,
-        #                   self.dispatcher.NEW_ACTION,
-        #                   None,
-        #                   action_id=action.id)
+        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
+                          None, action_id=action.id)
         cluster.set_status(context, clusters.Cluster.ACTIVE,
                            reason='Action dispatched')
         return action.to_dict()
