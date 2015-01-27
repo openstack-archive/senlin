@@ -18,9 +18,9 @@ from senlin.tests.common import base
 from senlin.tests.common import utils
 from senlin.tests.db import shared
 
-UUID1=shared.UUID1
-UUID2=shared.UUID2
-UUID3=shared.UUID3
+UUID1 = shared.UUID1
+UUID2 = shared.UUID2
+UUID3 = shared.UUID3
 
 
 class DBAPINodeTest(base.SenlinTestCase):
@@ -59,8 +59,8 @@ class DBAPINodeTest(base.SenlinTestCase):
     def test_node_get_by_name_and_cluster(self):
         shared.create_node(self.ctx, self.cluster, self.profile)
         node = db_api.node_get_by_name_and_cluster(self.ctx,
-                                                        'test_node_name',
-                                                        self.cluster.id)
+                                                   'test_node_name',
+                                                   self.cluster.id)
 
         self.assertIsNotNone(node)
         self.assertEqual('test_node_name', node.name)

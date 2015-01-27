@@ -10,9 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import uuid
-
-from senlin.drivers import heat_v1 as heat
+#from senlin.drivers import heat_v1 as heat
 from senlin.profiles import base
 
 __type_name__ = 'aws.autoscaling.launchconfig'
@@ -38,7 +36,7 @@ class LaunchConfigProfile(base.Profile):
         self.RamDiskId = kwargs.get('RamDiskId')
         self.BlockDeviceMappings = kwargs.get('BlockDeviceMappings')
         self.NovaSchedulerHings = kwargs.get('NovaSchedulerHints')
-        
+
         # new properties
         self.InstanceMonitoring = kwargs.get('InstanceMonitoring')
         self.SpotPrice = kwargs.get('SpotPrice')
@@ -49,7 +47,7 @@ class LaunchConfigProfile(base.Profile):
         '''
         This method creates a YAML format Heat resource definition.
         '''
-        return tmpl
+        return {}
 
     def do_delete(self):
         return True
@@ -62,4 +60,4 @@ class LaunchConfigProfile(base.Profile):
 
     def do_check(self, id):
         #TODO(liuh): add actual checking logic
-        return True 
+        return True

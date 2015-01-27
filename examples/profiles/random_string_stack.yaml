@@ -2,6 +2,9 @@ heat_template_version: 2014-10-16
 parameters:
   len:
     type: integer
+  file:
+    type: string
+    default: {get_file: test_script.sh}
 resources:
   random:
     type: OS::Heat::RandomString

@@ -30,7 +30,7 @@ class DBAPIProfileTest(base.SenlinTestCase):
         self.assertEqual('xxxyyy', profile.spec['permission'])
 
     def test_profile_get(self):
-        data = parser.parse_profile(shared.sample_profile)
+        parser.parse_profile(shared.sample_profile)
         profile = shared.create_profile(self.ctx,
                                         profile=shared.sample_profile)
         retobj = db_api.profile_get(self.ctx, profile.id)
@@ -42,9 +42,8 @@ class DBAPIProfileTest(base.SenlinTestCase):
             {'name': 'test_profile1'},
             {'name': 'test_proflie2'},
         ]
-        profiles = [shared.create_profile(
-                        self.ctx, profile=shared.sample_profile, **v)
-                        for v in values]
+        [shared.create_profile(self.ctx, profile=shared.sample_profile, **v)
+         for v in values]
 
         retobjs = db_api.profile_get_all(self.ctx)
         names = [obj.name for obj in retobjs]
@@ -63,7 +62,7 @@ class DBAPIProfileTest(base.SenlinTestCase):
                 myrandom: OS::Heat::RandomString
               files:
                 myfile: new contents
-            permission: yyyyxxxx 
+            permission: yyyyxxxx
         '''
 
         new_data = parser.parse_profile(another_profile)

@@ -88,7 +88,7 @@ class Registry(object):
         if info is None:
             # delete this entry.
             LOG.warn(_LW('Removing %(item)s from registry'), {'item': name})
-            registry.pop(path, None)
+            registry.pop(name, None)
             return
 
         if name in registry and isinstance(registry[name], PluginInfo):

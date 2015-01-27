@@ -296,14 +296,13 @@ class EngineService(service.Service):
 
         # Build an Action for cluster creation
         action = base_action.Action(context, 'CLUSTER_CREATE',
+                                    name='cluster_create_%s' % cluster.id[:8],
                                     target=cluster.id, cause='RPC Request')
         action.store(context)
 
         # Notify Dispatchers that a new action has been ready.
-        # dispatcher.notify(context,
-        #                   self.dispatcher.NEW_ACTION,
-        #                   None,
-        #                   action_id=action.id)
+        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
+                          None, action_id=action.id)
         cluster.set_status(context, clusters.Cluster.ACTIVE,
                            reason='Action dispatched')
         return action.to_dict()
@@ -329,7 +328,7 @@ class EngineService(service.Service):
 
         # TODO(Qiming): Hande size changes here!
         action = base_action.Action(context, 'CLUSTER_UPDATE',
-                                    target=cluster.id, cause='RPC Request'
+                                    target=cluster.id, cause='RPC Request',
                                     **kwargs)
         action.store(context)
 
@@ -373,6 +372,7 @@ class EngineService(service.Service):
         node.store(context)
 
         action = base_action.Action(context, 'NODE_CREATE',
+                                    name='node_create_%s' % node.id[:8],
                                     target=node.id, cause='RPC Request')
         action.store(context)
 
@@ -398,6 +398,7 @@ class EngineService(service.Service):
 
         node = nodes.Node.load(context, node_id)
         action = base_action.Action(context, 'NODE_DELETE',
+                                    name='node_delete_%s' % node.id[:8],
                                     target=node.id, cause='RPC Request')
         action.store(context)
         # TODO(Anyone): Uncomment the following lines to send notifications
@@ -418,10 +419,13 @@ class EngineService(service.Service):
                                                   sort_keys, sort_dir,
                                                   show_deleted)
 
-        raw = [action.to_dict() for action in all_actions]
-        for a in raw:
-            del a['context']
-            yield a
+        results = []
+        for action in all_actions:
+            raw = action.to_dict()
+            del raw['context']
+            results.append(raw)
+
+        return results
 
     @request_context
     def action_create(self, context, name, target, action, params):

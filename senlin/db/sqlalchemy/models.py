@@ -95,12 +95,16 @@ class Cluster(BASE, SenlinBase, SoftDelete):
     domain = sqlalchemy.Column(sqlalchemy.String(36))
     project = sqlalchemy.Column(sqlalchemy.String(36))
     parent = sqlalchemy.Column(sqlalchemy.String(36))
+
+    init_time = sqlalchemy.Column(sqlalchemy.DateTime)
     created_time = sqlalchemy.Column(sqlalchemy.DateTime)
     updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
     deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
+
     size = sqlalchemy.Column(sqlalchemy.Integer)
     next_index = sqlalchemy.Column(sqlalchemy.Integer)
     timeout = sqlalchemy.Column(sqlalchemy.Integer)
+
     status = sqlalchemy.Column(sqlalchemy.String(255))
     status_reason = sqlalchemy.Column(sqlalchemy.String(255))
     tags = sqlalchemy.Column(types.Dict)
@@ -123,6 +127,7 @@ class Node(BASE, SenlinBase, SoftDelete):
     index = sqlalchemy.Column(sqlalchemy.Integer)
     role = sqlalchemy.Column(sqlalchemy.String(64))
 
+    init_time = sqlalchemy.Column(sqlalchemy.DateTime)
     created_time = sqlalchemy.Column(sqlalchemy.DateTime)
     updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
     deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
@@ -239,6 +244,8 @@ class Action(BASE, SenlinBase, SoftDelete):
     outputs = sqlalchemy.Column(types.Dict)
     depends_on = sqlalchemy.Column(types.List)
     depended_by = sqlalchemy.Column(types.List)
+    created_time = sqlalchemy.Column(sqlalchemy.DateTime)
+    updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
     deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
 
 

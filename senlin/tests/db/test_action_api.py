@@ -16,7 +16,6 @@ from senlin.engine import parser
 from senlin.tests.common import base
 from senlin.tests.common import utils
 from senlin.tests.db import shared
-from senlin.openstack.common import log as logging
 
 
 def _create_action(context, action=shared.sample_action, **kwargs):
@@ -377,7 +376,8 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.assertEqual(action.owner, 'worker1')
         self.assertEqual(action.status, db_api.ACTION_RUNNING)
 
-        self.assertRaises(exception.ActionBeingWorked, db_api.action_start_work_on,
+        self.assertRaises(exception.ActionBeingWorked,
+                          db_api.action_start_work_on,
                           self.ctx, action.id, 'worker2')
 
     def test_action_delete(self):

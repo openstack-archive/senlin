@@ -18,6 +18,7 @@ import six
 
 from senlin.common.i18n import _LI
 from senlin.db import api as db_api
+from senlin.engine.actions import base as base_action
 from senlin.openstack.common import log as logging
 from senlin.openstack.common import threadgroup
 
@@ -63,26 +64,25 @@ class ThreadGroupManager(object):
         """
         return self.group.add_thread(func, *args, **kwargs)
 
-    def start_action_thread(self, cnxt, action, *args, **kwargs):
+    def start_action_thread(self, context, action, *args, **kwargs):
         """
         Run the given action in a sub-thread and release the action lock
         when the thread finishes.
 
-        :param cnxt: The context of rpc request
+        :param context: The context of rpc request
         :param action: The action to run in thread
 
         """
-        def release(gt, cnxt, action):
+        def release(gt, context, action):
             """
             Callback function that will be passed to GreenThread.link().
             """
             # Remove action thread from thread list
             self.threads.pop(action.id)
 
-        action_proc = ActionProc(cnxt, action)
-        th = self.start(action_proc, *args, **kwargs)
+        th = self.start(ActionProc, context, action, **kwargs)
         self.threads[action.id] = th
-        th.link(release, cnxt, action)
+        th.link(release, context, action)
         return th
 
     def add_timer(self, interval, func, *args, **kwargs):
@@ -90,8 +90,7 @@ class ThreadGroupManager(object):
         Define a periodic task, to be run in a separate thread, in the target
         threadgroups.  Periodicity is cfg.CONF.periodic_interval
         """
-        self.group.add_timer(cfg.CONF.periodic_interval,
-                             func, *args, **kwargs)
+        self.group.add_timer(cfg.CONF.periodic_interval, func, *args, **kwargs)
 
     def stop_timers(self):
         self.group.stop_timers()
@@ -116,117 +115,94 @@ class ThreadGroupManager(object):
             eventlet.sleep()
 
 
-class ActionProc(object):
+def ActionProc(context, action, wait_time=1, **kwargs):
     """
-    Wrapper for a resumable task(co-routine) for action execution
+    Start and run action progress.
+
+    Action progress will sleep for `wait_time` seconds between
+    each step. To avoid sleeping, pass `None` for `wait_time`.
     """
-    def __init__(self, cnxt, action):
-        self.cnxt = cnxt
-        self.action = action
+    # Do the first step
+    LOG.debug('Starting %s' % six.text_type(action.action))
 
-    def __call__(self, wait_time=1):
-        """
-        Start and run action progress.
+    result = action.execute()
+    while result == action.RES_RETRY:
+        LOG.info(_LI('Action %s returned with retry.'), action.id)
+        result = action.execute()
 
-        Action progress will sleep for `wait_time` seconds between
-        each step. To avoid sleeping, pass `None` for `wait_time`.
-        """
-        status = self.action.get_status()
-        while status in (self.action.INIT, self.action.WAITING):
-            # TODO(Qiming): Handle 'start_time' field of an action
-            reschedule(self.action, sleep=self.wait_time)
-            status = self.action.get_status()
-
-        # Exit quickly if action has been taken care of or marked
-        # completed or cancelled by other activities
-        if status != self.action.READY:
-            return
-
-        # Do the first step
-        LOG.debug('%s starting' % six.text_type(self))
-
-        # Start action execute
-        self.action.set_status(self.action.RUNNING)
-        self.action.start_time = wallclock()
-
-        result = self.action.execute()
-
-        self.action.end_time = wallclock()
-
-        if result == self.action.ERROR:
-            # Error happened during the start,
-            # mark entire action as failed and return
-            LOG.info(_LI('Successfully run action %s.'), self.action.id)
-            db_api.action_mark_failed(self.cnxt, self.action.id)
-        elif result == self.action.OK:
-            LOG.info(_LI('Action %s run failed.'), self.action.id)
-            db_api.action_mark_succeeded(self.cnxt, self.action.id)
-        else:
-            # TODO(Yanyan): handle action retry scenario.
-            pass
+    if result == action.RES_ERROR:
+        LOG.info(_LI('Action %s completed with failure.'), action.id)
+        db_api.action_mark_failed(context, action.id)
+    elif result == action.RES_OK:
+        LOG.info(_LI('Action %s completed with success.'), action.id)
+        db_api.action_mark_succeeded(context, action.id)
+    elif result == action.RES_CANCEL:
+        LOG.info(_LI('Action %s is cancelled'), action.id)
+    else:  # result == action.RES_TIMEOUT:
+        LOG.info(_LI('Action %s failed with timeout'), action.id)
 
 
-def start_action(cnxt, action_id, engine_id, tgm):
+def start_action(context, action_id, engine_id, tgm):
     """
     Start an action execution progress using given ThreadGroupManager
 
-    :param cnxt: The context of rpc request
+    :param context: The context of rpc request
     :param action_id: The id of action to run in thread
     :param engine_id: The id of engine try to lock the action
     :param tgm: The ThreadGroupManager of the engine
     """
-    action = db_api.action_start_work_on(cnxt, action_id, engine_id)
-    if action:
+    action = base_action.Action.load(context, action_id)
+    result = db_api.action_start_work_on(context, action_id, engine_id)
+    if result:
         # Lock action successfully, start a thread to run it
         LOG.info(_LI('Successfully locked action %s.'), action_id)
-        th = tgm.start_action_thread(cnxt, action)
+        th = tgm.start_action_thread(context, action)
         if th is None:
             LOG.debug('Action start failed, unlock action.')
-            # TODO: need db_api support
-            db_api.action_unlock(cnxt, action_id, engine_id)
+            # TODO(anyone): need db_api support
+            db_api.action_unlock(context, action_id, engine_id)
         else:
             return True
     else:
-        # The action has been locked which means other
-        # dispatcher has start to work on it, so just return
+        # The action is locked
         LOG.info(_LI('Action %s has been locked by other dispatcher'),
                  action_id)
 
 
-def suspend_action(cnxt, action_id):
+def suspend_action(context, action_id):
     """
     Try to suspend an action execution progress
 
-    :param cnxt: The context of rpc request
+    :param context: The context of rpc request
     :param action_id: The id of action to run in thread
     """
     # Set action control flag to suspend
-    # TODO: need db_api support
-    db_api.action_control(cnxt, action_id, ACTION_SUSPEND)
+    # TODO(anyone): need db_api support
+    db_api.action_control(context, action_id, ACTION_SUSPEND)
 
 
-def resume_action(cnxt, action_id):
+def resume_action(context, action_id):
     """
     Try to resume an action execution progress
 
-    :param cnxt: The context of rpc request
+    :param context: The context of rpc request
     :param action_id: The id of action to run in thread
     """
     # Set action control flag to suspend
-    # TODO: need db_api support
-    db_api.action_control(cnxt, action_id, ACTION_RESUME)
+    # TODO(anyone): need db_api support
+    db_api.action_control(context, action_id, ACTION_RESUME)
 
 
-def cancel_action(cnxt, action_id):
+def cancel_action(context, action_id):
     """
     Try to cancel an action execution progress
 
-    :param cnxt: The context of rpc request
+    :param context: The context of rpc request
     :param action_id: The id of action to run in thread
     """
     # Set action control flag to cancel
-    # TODO: need db_api support
-    db_api.action_control(cnxt, action_id, ACTION_CANCEL)
+    # TODO(anyone): need db_api support
+    db_api.action_control(context, action_id, ACTION_CANCEL)
 
 
 def action_control_flag(action):
@@ -306,6 +282,7 @@ def action_wait(action):
     while not action_resumed(action):
         reschedule(action, sleep_time=1)
         continue
+
 
 def sleep(sleep_time):
     '''

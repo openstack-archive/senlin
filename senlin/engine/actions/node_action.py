@@ -12,8 +12,8 @@
 
 from senlin.common import exception
 from senlin.common.i18n import _
-from senlin.engine import node as nodes
 from senlin.engine.actions import base
+from senlin.engine import node as nodes
 from senlin.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)

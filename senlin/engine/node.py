@@ -48,6 +48,8 @@ class Node(object):
         self.cluster_id = kwargs.get('cluster_id', '')
         self.index = kwargs.get('index', -1)
         self.role = kwargs.get('role', '')
+
+        self.init_time = kwargs.get('init_time', None)
         self.created_time = kwargs.get('created_time', None)
         self.updated_time = kwargs.get('updated_time', None)
         self.deleted_time = kwargs.get('deleted_time', None)
@@ -76,6 +78,7 @@ class Node(object):
             'profile_id': self.profile_id,
             'index': self.index,
             'role': self.role,
+            'init_time': self.init_time,
             'created_time': self.created_time,
             'updated_time': self.updated_time,
             'deleted_time': self.deleted_time,
@@ -86,9 +89,11 @@ class Node(object):
         }
 
         if self.id:
+            values['updated_time'] = datetime.datetime.utcnow()
             db_api.node_update(context, self.id, values)
             # TODO(Qiming): create event/log
         else:
+            values['init_time'] = datetime.datetime.utcnow()
             node = db_api.node_create(context, values)
             # TODO(Qiming): create event/log
             self.id = node.id
@@ -105,8 +110,10 @@ class Node(object):
         kwargs = {
             'id': record.id,
             'physical_id': record.physical_id,
+            'cluster_id': record.cluster_id,
             'index': record.index,
             'role': record.role,
+            'init_time': record.init_time,
             'created_time': record.created_time,
             'updated_time': record.updated_time,
             'deleted_time': record.deleted_time,
@@ -160,6 +167,7 @@ class Node(object):
             'profile_id': self.profile_id,
             'index': self.index,
             'role': self.role,
+            'init_time': self.init_time,
             'created_time': self.created_time,
             'updated_time': self.updated_time,
             'deleted_time': self.deleted_time,
@@ -167,6 +175,7 @@ class Node(object):
             'status_reason': self.status_reason,
             'data': self.data,
             'tags': self.tags,
+            'profile_name': self.rt['profile'].name,
         }
         return node_dict
 

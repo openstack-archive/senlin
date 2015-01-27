@@ -18,9 +18,9 @@ from senlin.tests.common import base
 from senlin.tests.common import utils
 from senlin.tests.db import shared
 
-UUID1=shared.UUID1
-UUID2=shared.UUID2
-UUID3=shared.UUID3
+UUID1 = shared.UUID1
+UUID2 = shared.UUID2
+UUID3 = shared.UUID3
 
 
 class DBAPIEventTest(base.SenlinTestCase):

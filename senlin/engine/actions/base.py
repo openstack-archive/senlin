@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
+
 from oslo_config import cfg
 
 from senlin.common import context as req_context
@@ -125,7 +127,9 @@ class Action(object):
         self.depends_on = kwargs.get('depends_on', [])
         self.depended_by = kwargs.get('depended_by', [])
 
-        self.deleted_time = None
+        self.created_time = kwargs.get('created_time', None)
+        self.updated_time = kwargs.get('updated_time', None)
+        self.deleted_time = kwargs.get('deleted_time', None)
 
     def store(self, context):
         '''
@@ -148,10 +152,18 @@ class Action(object):
             'outputs': self.outputs,
             'depends_on': self.depends_on,
             'depended_by': self.depended_by,
+            'created_time': datetime.datetime.utcnow(),
+            'updated_time': self.updated_time,
             'deleted_time': self.deleted_time,
         }
 
-        action = db_api.action_create(context, values)
+        if self.id:
+            values['updated_time'] = datetime.datetime.utcnow()
+            action = db_api.action_update(context, values)
+        else:
+            values['created_time'] = datetime.datetime.utcnow()
+            action = db_api.action_create(context, values)
+
         self.id = action.id
         return self.id
 
@@ -247,7 +259,7 @@ class Action(object):
         self.status = action.status
         return action.status
 
-    def policy_check(self, context, cluster_id, target):
+    def policy_check(self, cluster_id, target):
         """
         Check all policies attached to cluster and give result
 
@@ -258,14 +270,14 @@ class Action(object):
         data['result'] = policies.Policy.CHECK_SUCCEED
 
         # Get list of policy IDs attached to cluster
-        policy_list = db_api.cluster_get_policies(context,
-                                                  cluster_id)
+        policy_list = db_api.cluster_get_policies(self.context, cluster_id)
+
         policy_ids = [p.id for p in policy_list if p.enabled]
         policy_check_list = []
         for pid in policy_ids:
             policy = policies.load(self.context, pid)
             for t in policy.TARGET:
-                if t == target:
+                if t == (target, self.action):
                     policy_check_list.append(policy)
                     break
 
@@ -276,14 +288,10 @@ class Action(object):
         while len(policy_check_list) != 0:
             # Check all policies and collect return data
             policy = policy_check_list[0]
-            if target[0] == 'BEFORE':
-                data = policy.pre_op(self.cluster_id,
-                                     target[1],
-                                     data)
-            elif target[0] == 'AFTER':
-                data = policy.post_op(self.cluster_id,
-                                      target[1],
-                                      data)
+            if target == 'BEFORE':
+                data = policy.pre_op(self.cluster_id, self.action, data)
+            elif target == 'AFTER':
+                data = policy.post_op(self.cluster_id, self.action, data)
             else:
                 data = data
 
