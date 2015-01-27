@@ -31,8 +31,11 @@ class Dispatcher(service.Service):
     notification from engine services and schedule actions.
     '''
 
-    OPERATIONS = (NEW_ACTION, CANCEL_ACTION, STOP) = (
-        'new_action', 'cancel_action', 'stop')
+    OPERATIONS = (
+        NEW_ACTION, CANCEL_ACTION, STOP
+    ) = (
+        'new_action', 'cancel_action', 'stop'
+    )
 
     def __init__(self, engine_service, topic, version, thread_group_mgr):
         super(Dispatcher, self).__init__()
@@ -49,28 +52,28 @@ class Dispatcher(service.Service):
         server = rpc_messaging.get_rpc_server(self.target, self)
         server.start()
 
-    def listening(self, ctxt):
+    def listening(self, context):
         '''
         Respond affirmatively to confirm that the engine performing the
         action is still alive.
         '''
         return True
 
-    def new_action(self, ctxt, action_id=None):
+    def new_action(self, context, action_id=None):
         '''New action has been ready, try to schedule it'''
-        scheduler.start_action(ctxt, action_id, self.engine_id, self.TG)
+        scheduler.start_action(context, action_id, self.engine_id, self.TG)
 
-    def cancel_action(self, ctxt, action_id):
+    def cancel_action(self, context, action_id):
         '''Cancel an action.'''
-        scheduler.cancel_action(ctxt, action_id)
+        scheduler.cancel_action(context, action_id)
 
-    def suspend_action(self, ctxt, action_id):
+    def suspend_action(self, context, action_id):
         '''Suspend an action.'''
-        scheduler.suspend_action(ctxt, action_id)
+        scheduler.suspend_action(context, action_id)
 
-    def resume_action(self, ctxt, action_id):
+    def resume_action(self, context, action_id):
         '''Resume an action.'''
-        scheduler.resume_action(ctxt, action_id)
+        scheduler.resume_action(context, action_id)
 
     def stop(self):
         super(Dispatcher, self).stop()
@@ -82,34 +85,33 @@ class Dispatcher(service.Service):
         LOG.info(_LI("All action threads have been finished"))
 
 
-def notify(cnxt, call, engine_id, *args, **kwargs):
+def notify(context, call, engine_id, *args, **kwargs):
     """
     Send notification to dispatcher
 
-    :param cnxt: rpc request context
+    :param context: rpc request context
     :param call: remote method want to call
     :param engine_id: dispatcher want to notify, if None, broadcast
     """
     timeout = cfg.CONF.engine_life_check_timeout
-    client = rpc_messaging.get_rpc_client(
-        version=attr.RPC_API_VERSION)
+    client = rpc_messaging.get_rpc_client(version=attr.RPC_API_VERSION)
 
     if engine_id:
         # Notify specific dispatcher identified by engine_id
-        cctxt = client.prepare(
+        call_context = client.prepare(
             version=attr.RPC_API_VERSION,
             timeout=timeout,
             topic=attr.ENGINE_DISPATCHER_TOPIC,
             server=engine_id)
     else:
         # Broadcast to all disptachers
-        cctxt = client.prepare(
+        call_context = client.prepare(
             version=attr.RPC_API_VERSION,
             timeout=timeout,
             topic=attr.ENGINE_DISPATCHER_TOPIC,
             fanout=True)
 
     try:
-        cctxt.call(cnxt, call, *args, **kwargs)
+        call_context.call(context, call, *args, **kwargs)
     except messaging.MessagingTimeout:
         return False
