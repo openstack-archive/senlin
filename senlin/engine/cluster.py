@@ -30,7 +30,7 @@ class Cluster(periodic_task.PeriodicTasks):
     excuted.
     '''
 
-    statuses = (
+    STATUSES = (
         INIT, CREATING, ACTIVE, ERROR, DELETING, DELETED,
         UPDATING, UPDATE_CANCELLED,
     ) = (
