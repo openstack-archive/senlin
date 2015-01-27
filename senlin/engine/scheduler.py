@@ -114,6 +114,7 @@ class ThreadGroupManager(object):
         while not all(links_done.values()):
             eventlet.sleep()
 
+
 def ActionProc(context, action, wait_time=1, **kwargs):
     """
     Start and run action progress.
@@ -121,40 +122,24 @@ def ActionProc(context, action, wait_time=1, **kwargs):
     Action progress will sleep for `wait_time` seconds between
     each step. To avoid sleeping, pass `None` for `wait_time`.
     """
-
-    status = action.get_status()
-    while status in (action.INIT, action.WAITING):
-        # TODO(Qiming): Handle 'start_time' field of an action
-        reschedule(action, sleep=self.wait_time)
-        status = action.get_status()
-
-    # Exit quickly if action has been taken care of or marked
-    # completed or cancelled by other activities
-    if status != action.READY:
-        return
-
     # Do the first step
-    LOG.debug('%s starting' % six.text_type(self))
-
-    # Start action execute
-    action.set_status(action.RUNNING)
-    action.start_time = wallclock()
+    LOG.debug('Starting %s' % six.text_type(action.action))
 
     result = action.execute()
+    while result == action.RES_RETRY:
+        LOG.info(_LI('Action %s returned with retry.'), action.id)
+        result = action.execute()
 
-    action.end_time = wallclock()
-
-    if result == action.ERROR:
-        # Error happened during the start,
-        # mark entire action as failed and return
-        LOG.info(_LI('Successfully run action %s.'), action.id)
+    if result == action.RES_ERROR:
+        LOG.info(_LI('Action %s completed with failure.'), action.id)
         db_api.action_mark_failed(context, action.id)
-    elif result == action.OK:
-        LOG.info(_LI('Action %s run failed.'), action.id)
+    elif result == action.RES_OK:
+        LOG.info(_LI('Action %s completed with success.'), action.id)
         db_api.action_mark_succeeded(context, action.id)
-    else:
-        # TODO(Yanyan): handle action retry scenario.
-        pass
+    elif result == action.RES_CANCEL:
+        LOG.info(_LI('Action %s is cancelled'), action.id)
+    else:  # result == action.RES_TIMEOUT:
+        LOG.info(_LI('Action %s failed with timeout'), action.id)
 
 
 def start_action(context, action_id, engine_id, tgm):
