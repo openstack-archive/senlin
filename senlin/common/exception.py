@@ -258,15 +258,6 @@ class ClusterActionNotSupported(SenlinException):
     msg_fmt = _("%(action)s is not supported for Cluster.")
 
 
-class HTTPExceptionDisguise(Exception):
-    """Disguises HTTP exceptions so they can be handled by the webob fault
-    application in the wsgi pipeline.
-    """
-
-    def __init__(self, exception):
-        self.exc = exception
-        self.tb = sys.exc_info()[2]
-
 
 class Error(SenlinException):
     msg_fmt = "%(message)s"
@@ -306,6 +297,14 @@ class ActionInProgress(SenlinException):
                 "in progress.")
 
 
+class ActionIsOwned(SenlinException):
+    msg_fmt = _("Worker %(owner)s is working on this action.")
+
+
+class ActionIsStolen(SenlinException):
+    msg_fmt = _("Worker %(owner)s has stolen the action.")
+
+
 class ActionBeingWorked(SenlinException):
     msg_fmt = _("Worker %(owner)s is working on this action.")
 
@@ -318,3 +317,13 @@ class StopActionFailed(SenlinException):
 class EventSendFailed(SenlinException):
     msg_fmt = _("Failed to send message to cluster (%(cluster_name)s) "
                 "on other engine (%(engine_id)s)")
+
+
+class HTTPExceptionDisguise(Exception):
+    """Disguises HTTP exceptions so they can be handled by the webob fault
+    application in the wsgi pipeline.
+    """
+
+    def __init__(self, exception):
+        self.exc = exception
+        self.tb = sys.exc_info()[2]
