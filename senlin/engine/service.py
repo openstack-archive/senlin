@@ -290,15 +290,13 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_delete(self, context, identity):
-        db_cluster = self._get_cluster(context, identity)
-        LOG.info(_LI('Deleting cluster %s'), db_cluster.name)
+        LOG.info(_LI('Deleting cluster %s'), identity)
 
-        cluster = clusters.Cluster.load(context, cluster=db_cluster)
         action = base_action.Action(context, 'CLUSTER_DELETE',
-                                    target=cluster.id, cause='RPC Request')
+                                    target=identity, cause='RPC Request')
         action.store(context)
-        # res = dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-        #                        None, action_id=action.id)
+        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
+                          None, action_id=action.id)
 
         return action.to_dict()
 
@@ -327,7 +325,6 @@ class EngineService(service.Service):
                                     target=node.id, cause='RPC Request')
         action.store(context)
 
-        # TODO(Anyone): Uncomment this to notify the dispatcher
         # dispatcher.notify(context, self.dispatcher.NEW_ACTION,
         #                   None, action_id=action.id)
 
