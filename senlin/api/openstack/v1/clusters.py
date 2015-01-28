@@ -153,12 +153,12 @@ class ClusterController(object):
 
     @util.policy_enforce
     def delete(self, req, cluster_id):
-        res = self.rpc_client.cluster_delete(req.context,
+        action = self.rpc_client.cluster_delete(req.context,
                                              cluster_id,
                                              cast=False)
 
-        if res is not None:
-            raise exc.HTTPBadRequest(res['Error'])
+        if action:
+            return {'id': action['target'], 'action_id': action['id']}
 
         raise exc.HTTPNoContent()
 
