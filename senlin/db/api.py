@@ -282,11 +282,11 @@ def action_del_dependency(context, depended, dependent):
 
 
 def action_mark_succeeded(context, action_id, timestamp):
-    return IMPL.action_mark_succeeded(context, action_id)
+    return IMPL.action_mark_succeeded(context, action_id, timestamp)
 
 
 def action_mark_failed(context, action_id, timestamp):
-    return IMPL.action_mark_failed(context, action_id)
+    return IMPL.action_mark_failed(context, action_id, timestamp)
 
 
 def action_mark_cancelled(context, action_id, timestamp):
