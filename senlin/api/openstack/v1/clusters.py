@@ -138,23 +138,23 @@ class ClusterController(object):
         return cluster
 
     @util.policy_enforce
-    def update(self, req, identity, body):
+    def update(self, req, cluster_id, body):
         """
         Update an existing cluster with new parameters
         """
         data = InstantiationData(body)
 
         self.rpc_client.cluster_update(req.context,
-                                       identity,
+                                       cluster_id,
                                        data.size(),
                                        data.profile())
 
         raise exc.HTTPAccepted()
 
-    @util.identified_cluster
-    def delete(self, req, identity):
+    @util.policy_enforce
+    def delete(self, req, cluster_id):
         res = self.rpc_client.cluster_delete(req.context,
-                                             identity,
+                                             cluster_id,
                                              cast=False)
 
         if res is not None:
