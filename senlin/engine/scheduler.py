@@ -130,14 +130,16 @@ def ActionProc(context, action, wait_time=1, **kwargs):
         LOG.info(_LI('Action %s returned with retry.'), action.id)
         result = action.execute()
 
+    timestamp = wallclock()
     if result == action.RES_ERROR:
         LOG.info(_LI('Action %s completed with failure.'), action.id)
-        db_api.action_mark_failed(context, action.id)
+        db_api.action_mark_failed(context, action.id, timestamp)
     elif result == action.RES_OK:
         LOG.info(_LI('Action %s completed with success.'), action.id)
-        db_api.action_mark_succeeded(context, action.id)
+        db_api.action_mark_succeeded(context, action.id, timestamp)
     elif result == action.RES_CANCEL:
         LOG.info(_LI('Action %s is cancelled'), action.id)
+        db_api.action_mark_cancelled(context, action.id, timestamp)
     else:  # result == action.RES_TIMEOUT:
         LOG.info(_LI('Action %s failed with timeout'), action.id)
 
@@ -152,21 +154,22 @@ def start_action(context, action_id, engine_id, tgm):
     :param tgm: The ThreadGroupManager of the engine
     """
     action = base_action.Action.load(context, action_id)
-    result = db_api.action_start_work_on(context, action_id, engine_id)
+
+    action.start_time = wallclock()
+    result = db_api.action_acquire(context, action_id, engine_id,
+                                   action.start_time)
     if result:
-        # Lock action successfully, start a thread to run it
         LOG.info(_LI('Successfully locked action %s.'), action_id)
+
         th = tgm.start_action_thread(context, action)
-        if th is None:
+        if not th:
             LOG.debug('Action start failed, unlock action.')
-            # TODO(anyone): need db_api support
-            db_api.action_unlock(context, action_id, engine_id)
+            db_api.action_release(context, action_id, engine_id)
         else:
             return True
     else:
-        # The action is locked
-        LOG.info(_LI('Action %s has been locked by other dispatcher'),
-                 action_id)
+        LOG.info(_LI('Action %s has been locked by other worker'), action_id)
+        return False
 
 
 def suspend_action(context, action_id):
