@@ -156,7 +156,7 @@ class ClusterAction(base.Action):
                 }
             }
             action = base.Action(self.context, 'NODE_UPDATE', **kwargs)
-            action.store()
+            action.store(self.context)
 
             db_api.action_add_dependency(action, self)
             action.set_status(self.READY)
