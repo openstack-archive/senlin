@@ -263,7 +263,7 @@ class Cluster(periodic_task.PeriodicTasks):
     def get_nodes(self):
         # This method will return each node with their associated profiles.
         # Members may have different versions of the same profile type.
-        return self.rt.nodes
+        return self.rt['nodes']
 
     def get_policies(self):
         # policies are stored in database when policy association is created
