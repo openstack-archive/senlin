@@ -11,6 +11,7 @@
 # under the License.
 
 import functools
+import random
 
 from oslo import messaging
 from oslo_config import cfg
@@ -37,6 +38,22 @@ from senlin.profiles import base as profile_base
 
 LOG = logging.getLogger(__name__)
 
+service_opts = [
+    cfg.IntOpt('periodic_interval_max',
+               default=60,
+               help='Seconds between periodic tasks to be called'),
+    cfg.BoolOpt('periodic_enable',
+               default=True,
+               help='Enable periodic tasks'),
+    cfg.IntOpt('periodic_fuzzy_delay',
+               default=60,
+               help='Range of seconds to randomly delay when starting the'
+                    ' periodic task scheduler to reduce stampeding.'
+                    ' (Disable by setting to 0)'),
+    ]
+
+CONF = cfg.CONF
+CONF.register_opts(service_opts)
 
 def request_context(func):
     @functools.wraps(func)
@@ -62,13 +79,28 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    def __init__(self, host, topic, manager=None):
+    def __init__(self, host, topic, manager=None, 
+                 periodic_enable=None, periodic_fuzzy_delay=None,
+                 periodic_interval_max=None ):
+
         super(EngineService, self).__init__()
         # TODO(Qiming): call environment.initialize() when environment
         # is ready
         self.host = host
         self.topic = topic
         self.dispatcher_topic = attr.ENGINE_DISPATCHER_TOPIC
+
+        #params for periodic running task
+        if periodic_interval_max is None:
+            periodic_interval_max = CONF.periodic_interval_max
+        if periodic_enable is None:
+            periodic_enable = CONF.periodic_enable
+        if periodic_fuzzy_delay is None:
+            periodic_fuzzy_delay = CONF.periodic_fuzzy_delay
+
+        self.periodic_interval_max = periodic_interval_max
+        self.periodic_enable = periodic_enable
+        self.periodic_fuzzy_delay = periodic_fuzzy_delay
 
         # The following are initialized here, but assigned in start() which
         # happens after the fork when spawning multiple worker processes
@@ -88,6 +120,18 @@ class EngineService(service.Service):
                                                 attr.RPC_API_VERSION,
                                                 self.TG)
         LOG.debug("Starting dispatcher for engine %s" % self.engine_id)
+
+        if self.periodic_enable:
+            if self.periodic_fuzzy_delay:
+                initial_delay = random.randint(0, self.periodic_fuzzy_delay)
+            else:
+                initial_delay = None
+
+            self.tg.add_dynamic_timer(self.periodic_tasks,
+                                      initial_delay=initial_delay,
+                                      periodic_interval_max=
+                                        self.periodic_interval_max)
+
         self.dispatcher.start()
 
         target = messaging.Target(version=attr.RPC_API_VERSION,
@@ -113,6 +157,11 @@ class EngineService(service.Service):
         # Terminate the engine process
         LOG.info(_LI("All threads were gone, terminating engine"))
         super(EngineService, self).stop()
+
+    def periodic_tasks(self, raise_on_error=False):
+        """Tasks to be run at a periodic interval."""
+        #TODO: iterate clusters and call their periodic_tasks
+        return self.periodic_interval_max 
 
     @request_context
     def get_revision(self, context):
