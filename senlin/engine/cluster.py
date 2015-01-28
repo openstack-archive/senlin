@@ -228,7 +228,7 @@ class Cluster(periodic_task.PeriodicTasks):
         Invoked at the end of entire cluster deleting
         progress to set cluster status to DELETED.
         '''
-        self.set_status(self.DELETED)
+        self.set_status(context, self.DELETED)
 
     def do_update(self, context, new_profile_id, **kwargs):
         '''
