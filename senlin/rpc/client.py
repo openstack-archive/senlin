@@ -177,7 +177,7 @@ class EngineClient(object):
         rpc_method = self.cast if cast else self.call
         return rpc_method(ctxt,
                           self.make_msg('cluster_delete',
-                                        cluster_id=cluster_id))
+                                        identity=cluster_id))
 
     def node_list(self, ctxt, cluster_id=None, show_deleted=False,
                   limit=None, marker=None,
