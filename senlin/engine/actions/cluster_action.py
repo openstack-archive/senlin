@@ -169,31 +169,34 @@ class ClusterAction(base.Action):
             result = self._wait_for_action()
 
         if result == self.RES_OK:
-            cluster.set_status(cluster.ACTIVE, 'Cluster update completed')
+            cluster.set_status(self.context, cluster.ACTIVE,
+                               'Cluster update completed')
 
         db_api.cluster_lock_release(cluster.id, self.id)
 
         return self.RES_OK
 
     def do_delete(self, cluster):
-        cluster.set_status(cluster.DELETING)
+        cluster.set_status(self.context, cluster.DELETING)
 
         # Try lock the cluster
         action_id = db_api.cluster_lock_create(cluster.id, self.id)
-        if action_id != self.id:
+        if action_id and action_id != self.id:
             # Lock failed, cancel the action that owns the lock
             scheduler.cancel_action(self.context, action_id)
 
             # Sleep until this action get the lock or timeout
-            while db_api.cluster_lock_create(cluster.id, self.id) != self.id:
+            action_id = db_api.cluster_lock_create(cluster.id, self.id)
+            while action_id is not None and action_id != self.id:
                 if scheduler.action_timeout(self):
                     # Action timeout, set cluster status to ERROR and return
                     LOG.debug('Cluster deletion %s timeout' % self.id)
-                    cluster.set_status(cluster.ERROR,
+                    cluster.set_status(self.context, cluster.ERROR,
                                        'Cluster deletion timeout')
                     return self.RES_TIMEOUT
 
                 scheduler.reschedule(self, sleep=0)
+                action_id = db_api.cluster_lock_create(cluster.id, self.id)
 
         node_list = cluster.get_nodes()
         for node_id in node_list:
@@ -201,13 +204,13 @@ class ClusterAction(base.Action):
                 'name': 'node_delete_%s' % node_id[:8],
                 'context': self.context,
                 'target': node_id,
-                'cause': 'Cluster delete',
+                'cause': 'Cluster deletion',
             }
             action = base.Action(self.context, 'NODE_DELETE', **kwargs)
             action.store(self.context)
 
             # Build dependency and make the new action ready
-            db_api.action_add_dependency(action, self)
+            db_api.action_add_dependency(action.id, self)
             action.set_status(self.READY)
 
             dispatcher.notify(self.context, dispatcher.Dispatcher.NEW_ACTION,
@@ -218,7 +221,20 @@ class ClusterAction(base.Action):
             result = self._wait_for_action()
 
         if result == self.RES_OK:
-            cluster.do_delete(self.context)
+            result = cluster.do_delete(self.context)
+
+        if result == self.RES_OK:
+            cluster.set_status(self.context, cluster.DELETED,
+                               'Cluster deletion completed')
+        elif result == self.RES_CANCEL:
+            cluster.set_status(self.context, cluster.ERROR,
+                               'Cluster deletion cancelled')
+        elif result == self.RES_TIMEOUT:
+            cluster.set_status(self.context, cluster.ERROR,
+                               'Cluster deletion timeout')
+        else:
+            # RETRY
+            pass
 
         db_api.cluster_lock_release(cluster.id, self.id)
 
