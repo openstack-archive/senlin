@@ -281,25 +281,24 @@ def action_del_dependency(context, depended, dependent):
     return IMPL.action_del_dependency(context, depended, dependent)
 
 
-def action_mark_succeeded(context, action_id):
+def action_mark_succeeded(context, action_id, timestamp):
     return IMPL.action_mark_succeeded(context, action_id)
 
 
-def action_mark_failed(context, action_id):
+def action_mark_failed(context, action_id, timestamp):
     return IMPL.action_mark_failed(context, action_id)
 
 
-def action_mark_cancelled(context, action_id):
-    return IMPL.action_mark_cancelled(context, action_id)
+def action_mark_cancelled(context, action_id, timestamp):
+    return IMPL.action_mark_cancelled(context, action_id, timestamp)
 
 
-def action_start_work_on(context, action_id, owner):
-    return IMPL.action_start_work_on(context, action_id, owner)
+def action_acquire(context, action_id, owner, timestamp):
+    return IMPL.action_acquire(context, action_id, owner, timestamp)
 
 
-def action_unlock(context, action_id, owner):
-    """Unlock and action so it can be queried again"""
-    return IMPL.action_unlock(context, action_id, owner)
+def action_release(context, action_id, owner):
+    return IMPL.action_release(context, action_id, owner)
 
 
 def action_lock_check(context, action_id, owner=None):

@@ -920,7 +920,7 @@ def action_del_dependency(context, depended, dependent):
     session.commit()
 
 
-def action_mark_succeeded(context, action_id):
+def action_mark_succeeded(context, action_id, timestamp):
     query = model_query(context, models.Action)
     action = query.get(action_id)
     if not action:
@@ -931,6 +931,7 @@ def action_mark_succeeded(context, action_id):
     session.begin()
 
     action.status = ACTION_SUCCEEDED
+    action.end_time = timestamp
 
     for a in action.depended_by:
         _action_dependency_del(query, a, 'depends_on', action_id)
@@ -940,19 +941,20 @@ def action_mark_succeeded(context, action_id):
     return action
 
 
-def _mark_failed_action(query, action_id):
+def _mark_failed_action(query, action_id, timestamp):
     action = query.get(action_id)
     if not action:
         LOG.warning(_('Action with id "%s" not found') % action_id)
         return
 
     action.status = ACTION_FAILED
+    action.end_time = timestamp
     if action.depended_by is not None:
         for a in action.depended_by:
-            _mark_failed_action(query, a)
+            _mark_failed_action(query, a, timestamp)
 
 
-def action_mark_failed(context, action_id):
+def action_mark_failed(context, action_id, timestamp):
     query = model_query(context, models.Action)
     action = query.get(action_id)
     if not action:
@@ -961,28 +963,31 @@ def action_mark_failed(context, action_id):
 
     session = query.session
     session.begin()
+
     action.status = ACTION_FAILED
+    action.end_time = timestamp
 
     for a in action.depended_by:
-        _mark_failed_action(query, a)
+        _mark_failed_action(query, a, timestamp)
 
     session.commit()
     return action
 
 
-def _mark_cancelled_action(query, action_id):
+def _mark_cancelled_action(query, action_id, timestamp):
     action = query.get(action_id)
     if not action:
         LOG.warning(_('Action with id "%s" not found') % action_id)
         return
 
     action.status = ACTION_CANCELED
+    action.end_time = timestamp
     if action.depended_by is not None:
         for a in action.depended_by:
-            _mark_cancelled_action(query, a)
+            _mark_cancelled_action(query, a, timestamp)
 
 
-def action_mark_cancelled(context, action_id):
+def action_mark_cancelled(context, action_id, timestamp):
     query = model_query(context, models.Action)
     action = query.get(action_id)
     if not action:
@@ -991,16 +996,18 @@ def action_mark_cancelled(context, action_id):
 
     session = query.session
     session.begin()
+
     action.status = ACTION_CANCELED
+    action.end_time = timestamp
 
     for a in action.depended_by:
-        _mark_cancelled_action(query, a)
+        _mark_cancelled_action(query, a, timestamp)
     session.commit()
 
     return action
 
 
-def action_start_work_on(context, action_id, owner):
+def action_acquire(context, action_id, owner, timestamp):
     query = model_query(context, models.Action)
     action = query.get(action_id)
     if not action:
@@ -1008,11 +1015,33 @@ def action_start_work_on(context, action_id, owner):
             _('Action with id "%s" not found') % action_id)
 
     if action.owner and action.owner != owner:
-            raise exception.ActionBeingWorked(owner=action.owner)
+        raise exception.ActionIsOwned(owner=action.owner)
 
     action.owner = owner
+    action.start_time = timestamp
     action.status = ACTION_RUNNING
     action.status_reason = _('The action is being processed.')
+    action.save(query.session)
+    return action
+
+
+def action_release(context, action_id, owner):
+    query = model_query(context, models.Action)
+    action = query.get(action_id)
+    if not action:
+        raise exception.NotFound(
+            _('Action with id "%s" not found') % action_id)
+
+    if action.owner is None:
+        return
+
+    if action.owner != owner:
+        raise exception.ActionIsStolen(owner=action.owner)
+
+    action.owner = owner
+    action.start_time = None
+    action.status = ACTION_READY
+    action.status_reason = _('The action released.')
     action.save(query.session)
     return action
 
