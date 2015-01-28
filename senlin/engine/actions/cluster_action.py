@@ -61,7 +61,7 @@ class ClusterAction(base.Action):
                 return self.RES_TIMEOUT
 
             # Continue waiting (with reschedule)
-            scheduler.reschedule(self, sleep=0)
+            scheduler.reschedule(self)
 
         return self.RES_OK
 
@@ -187,7 +187,7 @@ class ClusterAction(base.Action):
 
             # Sleep until this action get the lock or timeout
             action_id = db_api.cluster_lock_create(cluster.id, self.id)
-            while action_id is not None and action_id != self.id:
+            while action_id and action_id != self.id:
                 if scheduler.action_timeout(self):
                     # Action timeout, set cluster status to ERROR and return
                     LOG.debug('Cluster deletion %s timeout' % self.id)
@@ -195,7 +195,7 @@ class ClusterAction(base.Action):
                                        'Cluster deletion timeout')
                     return self.RES_TIMEOUT
 
-                scheduler.reschedule(self, sleep=0)
+                scheduler.reschedule(self)
                 action_id = db_api.cluster_lock_create(cluster.id, self.id)
 
         node_list = cluster.get_nodes()
@@ -309,7 +309,7 @@ class ClusterAction(base.Action):
                 return self.RES_TIMEOUT
 
             # Continue waiting (with sleep)
-            scheduler.reschedule(self, sleep=0)
+            scheduler.reschedule(self)
 
         cluster.delete_nodes(candidates)
 
