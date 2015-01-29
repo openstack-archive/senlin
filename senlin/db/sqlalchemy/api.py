@@ -226,7 +226,7 @@ def cluster_update(context, cluster_id, values):
     if not cluster:
         raise exception.NotFound(
             _('Attempt to update a cluster with id "%s" that does '
-              ' exist failed') % cluster_id)
+              'not exist failed') % cluster_id)
 
     cluster.update(values)
     cluster.save(_session(context))
@@ -316,6 +316,25 @@ def node_get_by_name_and_cluster(context, node_name, cluster_id):
 def node_get_by_physical_id(context, phy_id):
     query = model_query(context, models.Node).filter_by(physical_id=phy_id)
     return query.first()
+
+
+def node_update(context, node_id, values):
+    '''Update a node with new property values.
+
+    :param node_id: ID of the node to be updated.
+    :param values: A dictionary of values to be updated on the node.
+    :raises NotFound: The specified node does not exist in database.
+    '''
+    query = model_query(context, models.Node)
+    node = query.get(node_id)
+
+    if not node:
+        raise exception.NotFound(
+            _('Attempt to update a node with id "%s" that does '
+              ' not exists failed') % node_id)
+
+    node.update(values)
+    node.save(query.session)
 
 
 def node_migrate(context, node_id, from_cluster, to_cluster):
