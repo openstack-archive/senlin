@@ -127,20 +127,20 @@ class Profile(object):
         return profile.id
 
     @classmethod
-    def create_object(cls, obj):
-        profile = cls.load(obj.context, obj.profile_id)
-        return profile.do_create(obj)
+    def create_object(cls, context, obj):
+        profile = cls.load(context, obj.profile_id)
+        return profile.do_create(context, obj)
 
     @classmethod
-    def delete_object(cls, obj):
-        profile = cls.load(obj.context, obj.profile_id)
-        return profile.do_delete(obj)
+    def delete_object(cls, context, obj):
+        profile = cls.load(context, obj.profile_id)
+        return profile.do_delete(context, obj)
 
     @classmethod
-    def update_object(cls, obj, new_profile_id):
-        profile = cls.load(obj.context, obj.profile_id)
-        new_profile = cls.load(obj.context, new_profile_id)
-        return profile.do_update(obj, new_profile)
+    def update_object(cls, context, obj, new_profile_id):
+        profile = cls.load(context, obj.profile_id)
+        new_profile = cls.load(context, new_profile_id)
+        return profile.do_update(context, obj, new_profile)
 
     def do_create(self, obj):
         '''

@@ -39,6 +39,7 @@ class StackProfile(base.Profile):
         self.template = self.spec.get('template', {})
         self.profile_context = self.spec.get('context', {})
         self.parameters = self.spec.get('parameters', {})
+        self.files = self.spec.get('files', {})
         self.disable_rollback = self.spec.get('disable_rollback', True)
         self.timeout = self.spec.get('timeout', 60)
 
@@ -46,20 +47,20 @@ class StackProfile(base.Profile):
         self.stack_context = None
         self.stack_id = None
 
-    def heat(self, obj):
+    def heat(self, context):
         '''
         Construct heat client using the combined context.
         '''
         if self.hc:
             return self.hc
 
-        ctx = obj.context
+        ctx = context
         if self.profile_context:
             ctx.update(self.profile_context)
         self.stack_context = context.RequestContext.from_dict(ctx)
         self.hc = self.stack_context.clients.heat()
 
-    def do_validate(self, obj):
+    def do_validate(self, context, obj):
         '''
         Validate if the spec has provided reasonable info for stack creation.
         '''
@@ -73,7 +74,7 @@ class StackProfile(base.Profile):
             'environment': {}
         }
         try:
-            self.heat().stacks.validate(**kwargs)
+            self.heat(context).stacks.validate(**kwargs)
         except Exception as ex:
             msg = _('Failed validate stack template due to '
                     '"%s"') % six.text_type(ex)
@@ -82,7 +83,7 @@ class StackProfile(base.Profile):
         return True
 
     def _check_action_complete(self, obj, action):
-        stack = self.heat(obj).stacks.get(stack_id=self.stack_id)
+        stack = self.heat(context).stacks.get(stack_id=self.stack_id)
         if stack.action == action:
             if stack.status == 'IN_PROGRESS':
                 return False
@@ -105,7 +106,7 @@ class StackProfile(base.Profile):
             raise exception.NodeStatusError(status=stack.stack_status,
                                             reason=msg)
 
-    def do_create(self, obj):
+    def do_create(self, context, obj):
         '''
         Create a stack using the given profile.
         '''
@@ -119,7 +120,7 @@ class StackProfile(base.Profile):
             'environment': {}
         }
 
-        stack = self.heat(obj).stacks.create(**kwargs)
+        stack = self.heat(context).stacks.create(**kwargs)
         self.stack_id = stack['stack']['id']
 
         # Wait for action to complete/fail
@@ -128,14 +129,14 @@ class StackProfile(base.Profile):
 
         return True
 
-    def do_delete(self, obj):
+    def do_delete(self, context, obj):
         self.stack_id = obj.physical_id
 
         if not self.stack_id:
             return True
 
         try:
-            self.heat(obj).stacks.delete(stack_id=self.stack_id)
+            self.heat(context).stacks.delete(stack_id=self.stack_id)
         except Exception as ex:
             if isinstance(ex, exception.NotFound):
                 pass
@@ -147,7 +148,7 @@ class StackProfile(base.Profile):
 
         return True
 
-    def do_update(self, obj, new_profile):
+    def do_update(self, context, obj, new_profile):
         '''
         :param obj: the node object to operate on
         :param new_profile: the new profile used for updating
@@ -168,7 +169,7 @@ class StackProfile(base.Profile):
             'environment': {},
         }
 
-        self.heat(obj).stacks.update(**fields)
+        self.heat(context).stacks.update(**fields)
 
         # Wait for action to complete/fail
         while not self._check_action_complete(obj, 'UPDATE'):
@@ -176,6 +177,6 @@ class StackProfile(base.Profile):
 
         return True
 
-    def do_check(self, id):
+    def do_check(self, context, id):
         #TODO(liuh): add actual checking logic
         return True
