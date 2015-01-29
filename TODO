@@ -12,23 +12,11 @@ DB
   - Make sure cluster-policy association is deleted when a cluster is deleted
   - Modify node_set_status to check/update cluster status
   - Add field cluster_id to event table so that query by cluster is easier
-  - Add more action related support in DB, e.g. unlock action, mark action
-    control status to cancel, suspend, resume, etc. [Yanyan Hu]
 
 ENGINE
 ------
   - cleanse scheduler module [Yanyan Hu]
-    - service start with rpc server(eventlet) and dispatcher(subthread);
-    - threadgroupmanager(TGM) module will now handle action;
-    - scheduler module will wrap TGM and expose interface to dispatcher,
-      e.g. run_action, wait, stop, notify;
-    - dispatcher using db.api to get action and use scheduler to dispatch
-      run and control action;
-    - use event to control action progress: wrap action_proc into ActionRunner
-      and using start/step to support event wait.
-    - action(ClusterAction, NodeAction, etc.) itself has to handle its own
-      progress control(e.g. implement as generator and support canceling)
-  - Using python threading to replace greenthread(long term).
+    - Using python threading to replace greenthread(long term).
   - complete parser logic, construct profile/policy objects there?
 
 DRIVER
