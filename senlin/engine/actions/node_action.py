@@ -13,7 +13,7 @@
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.engine.actions import base
-from senlin.engine import node as nodes
+from senlin.engine import node as nodem
 from senlin.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
@@ -35,27 +35,33 @@ class NodeAction(base.Action):
         super(NodeAction, self).__init__(context, action, **kwargs)
 
     def execute(self, **kwargs):
-        res = False
-        node = nodes.load(self.context, self.target)
-        if not node:
-            msg = _('Node with id (%s) is not found') % self.target
-            raise exception.NotFound(msg)
+        try:
+            node = nodem.Node.load(self.context, self.target)
+        except exception.NotFound:
+            LOG.error(_LE('Node with id (%s) is not found'), self.target)
+            return res.RES_ERROR
+
+        if node.cluster_id:
+            check_result = self.policy_check(node.cluster_id, 'BEFORE')
+            if not check_result:
+                # Don't emit message here since policy_check should have done it
+                return res.RES_ERROR
 
         # TODO(Qiming): Add node status changes
         if self.action == self.NODE_CREATE:
-            res = node.do_create()
+            res = node.do_create(self.context)
         elif self.action == self.NODE_DELETE:
-            res = node.do_delete()
+            res = node.do_delete(self.context)
         elif self.action == self.NODE_UPDATE:
             new_profile_id = self.inputs.get('new_profile_id')
-            res = node.do_update(new_profile_id)
+            res = node.do_update(self.context, new_profile_id)
         elif self.action == self.NODE_JOIN_CLUSTER:
             new_cluster_id = self.inputs.get('cluster_id', None)
             if not new_cluster_id:
                 raise exception.ClusterNotSpecified()
             res = node.do_join(new_cluster_id)
         elif self.action == self.NODE_LEAVE_CLUSTER:
-            res = node.do_leave()
+            res = node.do_leave(self.context)
 
         return self.RES_OK if res else self.RES_ERROR
 

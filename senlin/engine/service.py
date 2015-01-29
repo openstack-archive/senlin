@@ -374,8 +374,8 @@ class EngineService(service.Service):
                                     target=node.id, cause='RPC Request')
         action.store(context)
 
-        # dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-        #                   None, action_id=action.id)
+        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
+                          None, action_id=action.id)
 
         return action.to_dict()
 

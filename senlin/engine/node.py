@@ -13,10 +13,14 @@
 import datetime
 
 from senlin.common import exception
+from senlin.common.i18n import _LE
 from senlin.common.i18n import _LW
 from senlin.db import api as db_api
 from senlin.engine import event as events
+from senlin.openstack.common import log as logging
 from senlin.profiles import base as profile_base
+
+LOG = logging.getLogger(__name__)
 
 
 class Node(object):
@@ -29,9 +33,11 @@ class Node(object):
     '''
 
     statuses = (
-        INIT, ACTIVE, ERROR, DELETED, UPDATING,
+        INIT, ACTIVE, ERROR, DELETED,
+        CREATING, UPDATING, DELETING,
     ) = (
-        'INIT', 'ACTIVE', 'ERROR', 'DELETED', 'UPDATING',
+        'INIT', 'ACTIVE', 'ERROR', 'DELETED',
+        'CREATING', 'UPDATING', 'DELETING',
     )
 
     def __init__(self, context, name, profile_id, **kwargs):
@@ -183,15 +189,38 @@ class Node(object):
     def from_dict(cls, **kwargs):
         return cls(**kwargs)
 
+    def set_status(self, context, status, reason=None):
+        values = {}
+        now = datetime.datetime.utcnow()
+        if status == self.ACTIVE and self.status == self.CREATING:
+            values['created_time'] = now
+        elif status == self.DELETED:
+            values['deleted_time'] = now
+        else:
+            values['updated_time'] = now
+
+        values['status'] = status
+        if reason:
+            values['status_reason'] = reason
+        db_api.node_update(context, self.id, values)
+        # TODO(anyone): generate event record
+
     def do_create(self, context):
         # TODO(Qiming): log events?
-        self.created_time = datetime.datetime.utcnnow()
-        res = profile_base.create_object(self, context)
-        if res:
-            self.physical_id = res
-            return True
-        else:
+        if self.status != self.INIT:
+            LOG.error(_LE('Node in wrong status'))
             return False
+
+        self.set_status(context, self.CREATING, reason='Creation in progress')
+        physical_id = profile_base.Profile.create_object(context, self)
+        if not physical_id:
+            return False
+
+        self.physical_id = physical_id
+        db_api.node_update(context, self.id, {'physical_id': physical_id})
+
+        self.set_status(context, self.ACTIVE, reason='Creation succeeded')
+        return True
 
     def do_delete(self, context):
         if not self.physical_id:
