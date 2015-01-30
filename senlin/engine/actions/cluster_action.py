@@ -14,6 +14,7 @@ import random
 
 from senlin.common import exception
 from senlin.common.i18n import _
+from senlin.common.i18n import _LE
 from senlin.db import api as db_api
 from senlin.engine.actions import base
 from senlin.engine import cluster as clusterm
@@ -359,18 +360,18 @@ class ClusterAction(base.Action):
         return self.RES_OK
 
     def execute(self, **kwargs):
-        res = self.RES_ERROR
-        cluster = clusterm.Cluster.load(self.context, self.target)
-        if not cluster:
-            LOG.error(_('Cluster %(name)s [%(id)s] not found') % {
+        try:
+            cluster = clusterm.Cluster.load(self.context, self.target)
+        except exception.NotFound:
+            LOG.error(_LE('Cluster %(name)s [%(id)s] not found') % {
                 'name': cluster.name, 'id': cluster.id})
-            return res
+            return self.RES_ERROR
 
         # do pre-action policy checking
         check_result = self.policy_check(cluster.id, 'BEFORE')
         if not check_result:
             # Don't emit message here since policy_check should have done it
-            return res
+            return self.RES_ERROR
 
         if self.action == self.CLUSTER_CREATE:
             res = self.do_create(cluster)
