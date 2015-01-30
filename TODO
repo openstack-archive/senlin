@@ -21,7 +21,8 @@ ENGINE
 
 DRIVER
 ------
-  - complete Heat stack driver
+  - add keystone driver first, because it might be required by other drivers [Qiming]
+  - complete Heat stack driver [Qiming]
   - add Heat resource driver
 
 POLICY
@@ -49,9 +50,8 @@ ENGINE
 OSLO
 ----
 
-  - Migrate to oslo.log
-  - Migrate to oslo.context
-
+  - Migrate to oslo.log -- hold on, it is not stable!!!
+  - Migrate to oslo.policy 
 
 LOW PRIORITY
 ============
