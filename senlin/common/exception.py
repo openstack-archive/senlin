@@ -319,6 +319,10 @@ class EventSendFailed(SenlinException):
                 "on other engine (%(engine_id)s)")
 
 
+class DriverFailure(SenlinException):
+    msg_fmt = _("Driver '%(driver)s' failed creation: %(exc)s")
+
+
 class HTTPExceptionDisguise(Exception):
     """Disguises HTTP exceptions so they can be handled by the webob fault
     application in the wsgi pipeline.
