@@ -10,10 +10,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+'''
+Base class for all drivers.
+'''
 
 class DriverBase(object):
     '''
     Base class for all drivers.
     '''
-    def __init__(self):
-        pass
+    def __init__(self, context):
+        self.context = context
