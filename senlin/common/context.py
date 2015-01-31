@@ -18,6 +18,9 @@ from senlin.common import exception
 from senlin.common import policy
 from senlin.common import wsgi
 from senlin.db import api as db_api
+from senlin.openstack.common import log as logging
+
+LOG = logging.getLogger(__name__)
 
 
 class RequestContext(context.RequestContext):
@@ -27,9 +30,11 @@ class RequestContext(context.RequestContext):
     """
 
     def __init__(self, auth_token=None, auth_token_info=None,
-                 username=None, password=None, user_id=None, is_admin=None,
+                 username=None, user_id=None, password=None, is_admin=None,
                  tenant=None, tenant_id=None, auth_url=None,
-                 roles=None, region_name=None,
+                 domain_id=None, project_id=None, project_domain_id=None,
+                 user_domain_id=None,
+                 region_name=None, roles=None,
                  read_only=False, show_deleted=False,
                  request_id=None, **kwargs):
         """
@@ -37,24 +42,36 @@ class RequestContext(context.RequestContext):
             because they possibly came in from older rpc messages.
         """
         super(RequestContext, self).__init__(auth_token=auth_token,
-                                             user=username, tenant=tenant,
+                                             user=username,
+                                             tenant=tenant,
                                              is_admin=is_admin,
                                              read_only=read_only,
                                              show_deleted=show_deleted,
                                              request_id=request_id)
-
-        self.username = username
-        self.user_id = user_id
-        self.password = password
-        self.region_name = region_name
-        self.tenant_id = tenant_id
-        self.auth_token_info = auth_token_info
-        self.auth_url = auth_url
-        self.roles = roles or []
+        # Session for DB access
         self._session = None
-        self._clients = None
-        self.policy = policy.Enforcer()
 
+        self.auth_url = auth_url
+        self.auth_token_info = auth_token_info
+
+        self.user_id = user_id
+        self.username = username
+        self.password = password
+
+        # To be deprecated
+        self.tenant_id = tenant_id
+
+        self.domain_id = domain_id
+        self.project_id = project_id
+        self.project_domain_id = project_domain_id
+        self.user_domain_id = user_domain_id
+
+        self.region_name = region_name
+
+        self.roles = roles or []
+
+        # Check user is admin or not
+        self.policy = policy.Enforcer()
         if is_admin is None:
             self.is_admin = self.policy.check_is_admin(self)
         else:
@@ -67,20 +84,25 @@ class RequestContext(context.RequestContext):
         return self._session
 
     def to_dict(self):
-        return {'auth_token': self.auth_token,
-                'username': self.username,
-                'user_id': self.user_id,
-                'password': self.password,
-                'tenant': self.tenant,
-                'tenant_id': self.tenant_id,
-                'auth_token_info': self.auth_token_info,
-                'auth_url': self.auth_url,
-                'roles': self.roles,
-                'is_admin': self.is_admin,
-                'user': self.user,
-                'request_id': self.request_id,
-                'show_deleted': self.show_deleted,
-                'region_name': self.region_name}
+        return {
+            'auth_url': self.auth_url,
+            'auth_token': self.auth_token,
+            'auth_token_info': self.auth_token_info,
+            'username': self.username,
+            'user_id': self.user_id,
+            'password': self.password,
+            'tenant': self.tenant,
+            'tenant_id': self.tenant_id,
+            'domain_id': self.domain_id,
+            'project_id': self.project_id,
+            'project_domain_id': self.project_domain_id,
+            'user_domain_id': self.user_domain_id,
+            'region_name': self.region_name,
+            'roles': self.roles,
+            'show_deleted': self.show_deleted,
+            'is_admin': self.is_admin,
+            'request_id': self.request_id
+        }
 
     @classmethod
     def from_dict(cls, values):
@@ -114,40 +136,46 @@ class ContextMiddleware(wsgi.Middleware):
         """
         headers = req.headers
         environ = req.environ
-
         try:
-            username = None
+            auth_url = headers.get('X-Auth-Url')
+            auth_token = headers.get('X-Auth-Token')
+            auth_token_info = environ.get('keystone.token_info')
+
+            tenant_id = headers.get('X-Tenant-Id')
+            tenant_name = headers.get('X-Tenant-Name')
+
+            domain_id = headers.get('X-Domain-Id')
+            project_id = headers.get('X-Project-Id')
+            project_domain_id = headers.get('X-Project-Domain-Id')
+
+            user_id = headers.get('X-User-Id')
+            username = headers.get('X-User-Name')
             password = None
+
+            user_domain_id = headers.get('X-User-Domain-Id')
 
             if headers.get('X-Auth-User') is not None:
                 username = headers.get('X-Auth-User')
                 password = headers.get('X-Auth-Key')
 
-            user_id = headers.get('X-User-Id')
-            token = headers.get('X-Auth-Token')
-            tenant = headers.get('X-Tenant-Name')
-            tenant_id = headers.get('X-Tenant-Id')
             region_name = headers.get('X-Region-Name')
-            auth_url = headers.get('X-Auth-Url')
             roles = headers.get('X-Roles')
             if roles is not None:
                 roles = roles.split(',')
-            token_info = environ.get('keystone.token_info')
-            req_id = environ.get(oslo_request_id.ENV_REQUEST_ID)
+            request_id = environ.get(oslo_request_id.ENV_REQUEST_ID)
 
         except Exception:
             raise exception.NotAuthenticated()
 
-        req.context = self.make_context(auth_token=token,
-                                        tenant=tenant, tenant_id=tenant_id,
-                                        username=username,
-                                        user_id=user_id,
-                                        password=password,
-                                        auth_url=auth_url,
-                                        roles=roles,
-                                        request_id=req_id,
-                                        auth_token_info=token_info,
-                                        region_name=region_name)
+        req.context = self.make_context(
+            auth_token=auth_token, auth_token_info=auth_token_info,
+            username=username, user_id=user_id, password=password,
+            tenant=tenant_name, tenant_id=tenant_id,
+            auth_url=auth_url, domain_id=domain_id,
+            project_id=project_id, project_domain_id=project_domain_id,
+            user_domain_id=user_domain_id,
+            region_name=region_name, roles=roles,
+            request_id=request_id)
 
 
 def ContextMiddleware_filter_factory(global_conf, **local_conf):
