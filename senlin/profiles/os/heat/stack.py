@@ -14,8 +14,12 @@ import six
 
 from senlin.common import context
 from senlin.common import exception
+from senlin.drivers import heat_v1 as heatclient
 from senlin.engine import scheduler
+from senlin.openstack.common import log as logging
 from senlin.profiles import base
+
+LOG = logging.getLogger(__name__)
 
 
 class StackProfile(base.Profile):
@@ -37,30 +41,34 @@ class StackProfile(base.Profile):
         super(StackProfile, self).__init__(type_name, name, **kwargs)
 
         self.template = self.spec.get('template', {})
-        self.profile_context = self.spec.get('context', {})
+        self.stack_context = self.spec.get('context', {})
         self.parameters = self.spec.get('parameters', {})
         self.files = self.spec.get('files', {})
         self.disable_rollback = self.spec.get('disable_rollback', True)
         self.timeout = self.spec.get('timeout', 60)
+        self.environment = self.spec.get('environment', {})
+        self.context = kwargs.get('context')
 
         self.hc = None
         self.stack_context = None
         self.stack_id = None
 
-    def heat(self, context):
+    def heat(self):
         '''
         Construct heat client using the combined context.
         '''
         if self.hc:
             return self.hc
 
-        ctx = context
-        if self.profile_context:
-            ctx.update(self.profile_context)
-        self.stack_context = context.RequestContext.from_dict(ctx)
-        self.hc = self.stack_context.clients.heat()
+        if self.stack_context:
+            ctx = self.context.to_dict()
+            ctx.update(self.stack_context.to_dict())
+            self.context = context.RequestContext.from_dict(ctx)
 
-    def do_validate(self, context, obj):
+        self.hc = heatclient.HeatClient(self.context)
+        return self.hc
+
+    def do_validate(self, obj):
         '''
         Validate if the spec has provided reasonable info for stack creation.
         '''
@@ -70,11 +78,11 @@ class StackProfile(base.Profile):
             'timeout_mins': self.timeout,
             'disable_rollback': self.disable_rollback,
             'parameters': self.parameters,
-            # 'files':
-            'environment': {}
+            'files': self.files,
+            'environment': self.environment,
         }
         try:
-            self.heat(context).stacks.validate(**kwargs)
+            self.heat().stacks.validate(**kwargs)
         except Exception as ex:
             msg = _('Failed validate stack template due to '
                     '"%s"') % six.text_type(ex)
@@ -83,15 +91,17 @@ class StackProfile(base.Profile):
         return True
 
     def _check_action_complete(self, obj, action):
-        stack = self.heat(context).stacks.get(stack_id=self.stack_id)
-        if stack.action == action:
-            if stack.status == 'IN_PROGRESS':
+        stack = self.heat().stack_get(id=self.stack_id)
+        status = stack.stack_status.split('_', 1)
+
+        if status[0] == action:
+            if status[1] == 'IN_PROGRESS':
                 return False
 
-            if stack.status == 'COMPLETE':
+            if status[1] == 'COMPLETE':
                 return True
 
-            if stack.status == 'FAILED':
+            if status[1] == 'FAILED':
                 raise exception.NodeStatusError(
                     status=stack.stack_status,
                     reason=stack.stack_status_reason)
@@ -102,11 +112,11 @@ class StackProfile(base.Profile):
         else:
             msg = _('Node action mismatch detected: expected=%(expected)s '
                     'actual=%(actual)s') % dict(expected=action,
-                                                actual=stack.action)
+                                                actual=status[0])
             raise exception.NodeStatusError(status=stack.stack_status,
                                             reason=msg)
 
-    def do_create(self, context, obj):
+    def do_create(self, obj):
         '''
         Create a stack using the given profile.
         '''
@@ -116,27 +126,28 @@ class StackProfile(base.Profile):
             'timeout_mins': self.timeout,
             'disable_rollback': self.disable_rollback,
             'parameters': self.parameters,
-            # 'files':
-            'environment': {}
+            'files': self.files,
+            'environment': self.environment
         }
 
-        stack = self.heat(context).stacks.create(**kwargs)
-        self.stack_id = stack['stack']['id']
+        LOG.info('Creating stack: %s' % kwargs)
+        stack = self.heat().stack_create(**kwargs)
+        self.stack_id = stack.id
 
         # Wait for action to complete/fail
         while not self._check_action_complete(obj, 'CREATE'):
             scheduler.sleep(1)
 
-        return True
+        return stack.id
 
-    def do_delete(self, context, obj):
+    def do_delete(self, obj):
         self.stack_id = obj.physical_id
 
         if not self.stack_id:
             return True
 
         try:
-            self.heat(context).stacks.delete(stack_id=self.stack_id)
+            self.heat().stacks_delete(id=self.stack_id)
         except Exception as ex:
             if isinstance(ex, exception.NotFound):
                 pass
@@ -148,7 +159,7 @@ class StackProfile(base.Profile):
 
         return True
 
-    def do_update(self, context, obj, new_profile):
+    def do_update(self, obj, new_profile):
         '''
         :param obj: the node object to operate on
         :param new_profile: the new profile used for updating
@@ -165,11 +176,11 @@ class StackProfile(base.Profile):
             'template': new_profile.template,
             'timeout_mins': new_profile.timeout,
             'disable_rollback': new_profile.disable_rollback,
-            #'files': self.stack.t.files,
+            'files': self.stack.t.files,
             'environment': {},
         }
 
-        self.heat(context).stacks.update(**fields)
+        self.heat().stacks.update(**fields)
 
         # Wait for action to complete/fail
         while not self._check_action_complete(obj, 'UPDATE'):
