@@ -14,7 +14,6 @@ import datetime
 
 from oslo_config import cfg
 
-from senlin.common import exception
 from senlin.db import api as db_api
 from senlin.engine import environment
 from senlin.openstack.common import log as logging
@@ -60,6 +59,8 @@ class Profile(object):
         self.updated_time = kwargs.get('updated_time', None)
         self.deleted_time = kwargs.get('deleted_time', None)
 
+        self.context = kwargs.get('context', None)
+
     @classmethod
     def from_db_record(cls, context, record):
         '''
@@ -75,6 +76,7 @@ class Profile(object):
             'created_time': record.created_time,
             'updated_time': record.updated_time,
             'deleted_time': record.deleted_time,
+            'context': context,
         }
 
         return cls(record.type, record.name, **kwargs)
@@ -84,12 +86,8 @@ class Profile(object):
         '''
         Retrieve a profile object from database.
         '''
-        profile = db_api.profile_get(context, profile_id)
-        if profile is None:
-            msg = _('No profile with id "%s" exists') % profile_id
-            raise exception.NotFound(msg)
-
-        return cls.from_db_record(context, profile)
+        record = db_api.profile_get(context, profile_id)
+        return cls.from_db_record(context, record)
 
     @classmethod
     def load_all(cls, context, limit=None, sort_keys=None, marker=None,
@@ -129,18 +127,18 @@ class Profile(object):
     @classmethod
     def create_object(cls, context, obj):
         profile = cls.load(context, obj.profile_id)
-        return profile.do_create(context, obj)
+        return profile.do_create(obj)
 
     @classmethod
     def delete_object(cls, context, obj):
         profile = cls.load(context, obj.profile_id)
-        return profile.do_delete(context, obj)
+        return profile.do_delete(obj)
 
     @classmethod
     def update_object(cls, context, obj, new_profile_id):
         profile = cls.load(context, obj.profile_id)
         new_profile = cls.load(context, new_profile_id)
-        return profile.do_update(context, obj, new_profile)
+        return profile.do_update(obj, new_profile)
 
     def do_create(self, obj):
         '''
