@@ -11,8 +11,8 @@
 # under the License.
 
 
-from openstack import resource
 from openstack.orchestration import orchestration_service
+from openstack import resource
 
 
 class Stack(resource.Resource):
@@ -36,4 +36,4 @@ class Stack(resource.Resource):
     deletion_time = resource.prop('deletion_time')
     updated_time = resource.prop('updated_time')
     stack_owner = resource.prop('stack_owner')
-    parent  = resource.prop('parent')
+    parent = resource.prop('parent')
