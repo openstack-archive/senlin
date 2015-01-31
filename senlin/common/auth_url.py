@@ -31,13 +31,10 @@ class AuthUrlFilter(wsgi.Middleware):
         self.auth_url = self._get_auth_url()
 
     def _get_auth_url(self):
-        if 'auth_uri' in self.conf:
-            return self.conf['auth_uri']
-        else:
-            # Import auth_token to have keystone_authtoken settings setup.
-            auth_token_module = 'keystonemiddleware.auth_token'
-            importutils.import_module(auth_token_module)
-            return cfg.CONF.keystone_authtoken.auth_uri
+        # Import auth_token to have keystone_authtoken settings setup.
+        auth_token_module = 'keystonemiddleware.auth_token'
+        importutils.import_module(auth_token_module)
+        return cfg.CONF.keystone_authtoken.auth_uri
 
     def _validate_auth_url(self, auth_url):
         """Validate auth_url to ensure it can be used."""
@@ -47,8 +44,7 @@ class AuthUrlFilter(wsgi.Middleware):
         return True
 
     def process_request(self, req):
-        auth_url = self.auth_url
-        req.headers['X-Auth-Url'] = auth_url
+        req.headers['X-Auth-Url'] = self.auth_url
         return None
 
 
