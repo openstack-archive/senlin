@@ -258,7 +258,6 @@ class ClusterActionNotSupported(SenlinException):
     msg_fmt = _("%(action)s is not supported for Cluster.")
 
 
-
 class Error(SenlinException):
     msg_fmt = "%(message)s"
 

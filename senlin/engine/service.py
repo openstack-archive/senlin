@@ -43,17 +43,18 @@ service_opts = [
                default=60,
                help='Seconds between periodic tasks to be called'),
     cfg.BoolOpt('periodic_enable',
-               default=True,
-               help='Enable periodic tasks'),
+                default=True,
+                help='Enable periodic tasks'),
     cfg.IntOpt('periodic_fuzzy_delay',
                default=60,
                help='Range of seconds to randomly delay when starting the'
                     ' periodic task scheduler to reduce stampeding.'
                     ' (Disable by setting to 0)'),
-    ]
+]
 
 CONF = cfg.CONF
 CONF.register_opts(service_opts)
+
 
 def request_context(func):
     @functools.wraps(func)
@@ -79,9 +80,9 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    def __init__(self, host, topic, manager=None, 
+    def __init__(self, host, topic, manager=None,
                  periodic_enable=None, periodic_fuzzy_delay=None,
-                 periodic_interval_max=None ):
+                 periodic_interval_max=None):
 
         super(EngineService, self).__init__()
         # TODO(Qiming): call environment.initialize() when environment
@@ -130,7 +131,7 @@ class EngineService(service.Service):
             self.tg.add_dynamic_timer(self.periodic_tasks,
                                       initial_delay=initial_delay,
                                       periodic_interval_max=
-                                        self.periodic_interval_max)
+                                      self.periodic_interval_max)
 
         self.dispatcher.start()
 
@@ -160,8 +161,8 @@ class EngineService(service.Service):
 
     def periodic_tasks(self, raise_on_error=False):
         """Tasks to be run at a periodic interval."""
-        #TODO: iterate clusters and call their periodic_tasks
-        return self.periodic_interval_max 
+        #TODO(anyone): iterate clusters and call their periodic_tasks
+        return self.periodic_interval_max
 
     @request_context
     def get_revision(self, context):

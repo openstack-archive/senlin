@@ -11,7 +11,7 @@
 # under the License.
 
 from senlin.common import exception
-from senlin.common.i18n import _
+from senlin.common.i18n import _LE
 from senlin.engine.actions import base
 from senlin.engine import node as nodem
 from senlin.openstack.common import log as logging
@@ -39,13 +39,14 @@ class NodeAction(base.Action):
             node = nodem.Node.load(self.context, self.target)
         except exception.NotFound:
             LOG.error(_LE('Node with id (%s) is not found'), self.target)
-            return res.RES_ERROR
+            return self.RES_ERROR
 
         if node.cluster_id:
             check_result = self.policy_check(node.cluster_id, 'BEFORE')
             if not check_result:
-                # Don't emit message here since policy_check should have done it
-                return res.RES_ERROR
+                # Don't emit message here since policy_check should have
+                # done it
+                return self.RES_ERROR
 
         # TODO(Qiming): Add node status changes
         if self.action == self.NODE_CREATE:

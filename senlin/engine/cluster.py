@@ -12,7 +12,6 @@
 
 import datetime
 
-from senlin.common.i18n import _
 from senlin.common.i18n import _LW
 from senlin.db import api as db_api
 from senlin.engine import event as events
