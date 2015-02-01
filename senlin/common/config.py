@@ -98,17 +98,6 @@ rpc_opts = [
                       'It is not necessarily a hostname, FQDN, '
                       'or IP address.'))]
 
-senlin_client_opts = [
-    cfg.StrOpt('url',
-               default='',
-               help=_('Optional senlin url in format like'
-                      ' http://0.0.0.0:8778/v1/%(tenant_id)s.'))]
-
-client_http_log_debug_opts = [
-    cfg.BoolOpt('http_log_debug',
-                default=False,
-                help=_("Allow client's debug log output."))]
-
 revision_group = cfg.OptGroup('revision')
 revision_opts = [
     cfg.StrOpt('senlin_api_revision',
@@ -124,10 +113,6 @@ def list_opts():
     yield None, service_opts
     yield paste_deploy_group.name, paste_deploy_opts
     yield revision_group.name, revision_opts
-
-    yield 'clients_senlin', senlin_client_opts
-    yield 'clients_nova', client_http_log_debug_opts
-    yield 'clients_cinder', client_http_log_debug_opts
 
 
 cfg.CONF.register_group(paste_deploy_group)
