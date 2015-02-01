@@ -92,27 +92,8 @@ function configure_senlin {
 
     configure_auth_token_middleware $SENLIN_CONF senlin $SENLIN_AUTH_CACHE_DIR
 
-    if is_ssl_enabled_service "key"; then
-        iniset $SENLIN_CONF clients_keystone ca_file $SSL_BUNDLE_FILE
-    fi
-
-    # ec2authtoken
-    iniset $SENLIN_CONF ec2authtoken auth_uri $KEYSTONE_SERVICE_URI/v2.0
-
     # OpenStack API
     iniset $SENLIN_CONF senlin_api bind_port $SENLIN_API_PORT
-
-    if is_ssl_enabled_service "key" || is_service_enabled tls-proxy; then
-        iniset $SENLIN_CONF clients_keystone ca_file $SSL_BUNDLE_FILE
-    fi
-
-    if is_ssl_enabled_service "nova" || is_service_enabled tls-proxy; then
-        iniset $SENLIN_CONF clients_nova ca_file $SSL_BUNDLE_FILE
-    fi
-
-    if is_ssl_enabled_service "cinder" || is_service_enabled tls-proxy; then
-        iniset $SENLIN_CONF clients_cinder ca_file $SSL_BUNDLE_FILE
-    fi
 }
 
 # init_senlin() - Initialize database
