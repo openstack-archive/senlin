@@ -22,7 +22,6 @@ import testscenarios
 import testtools
 
 from senlin.common import messaging
-#from senlin.engine.clients.os import keystone
 from senlin.engine import scheduler
 # from senlin.tests.common import fakes
 from senlin.tests.common import utils
