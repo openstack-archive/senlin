@@ -98,50 +98,11 @@ rpc_opts = [
                       'It is not necessarily a hostname, FQDN, '
                       'or IP address.'))]
 
-# these options define baseline defaults that apply to all clients
-
-default_clients_opts = [
-    cfg.StrOpt('endpoint_type',
-               default='publicURL',
-               help=_(
-                   'Type of endpoint in Identity service catalog to use '
-                   'for communication with the OpenStack service.')),
-    cfg.StrOpt('ca_file',
-               help=_('Optional CA cert file to use in SSL connections.')),
-    cfg.StrOpt('cert_file',
-               help=_('Optional PEM-formatted certificate chain file.')),
-    cfg.StrOpt('key_file',
-               help=_('Optional PEM-formatted file that contains the '
-                      'private key.')),
-    cfg.BoolOpt('insecure',
-                default=False,
-                help=_("If set, then the server's certificate will not "
-                       "be verified."))]
-
-# these options can be defined for each client
-# they must not specify defaults, since any options not defined in a client
-# specific group is looked up on the generic group above
-clients_opts = [
-    cfg.StrOpt('endpoint_type',
-               help=_(
-                   'Type of endpoint in Identity service catalog to use '
-                   'for communication with the OpenStack service.')),
-    cfg.StrOpt('ca_file',
-               help=_('Optional CA cert file to use in SSL connections.')),
-    cfg.StrOpt('cert_file',
-               help=_('Optional PEM-formatted certificate chain file.')),
-    cfg.StrOpt('key_file',
-               help=_('Optional PEM-formatted file that contains the '
-                      'private key.')),
-    cfg.BoolOpt('insecure',
-                help=_("If set, then the server's certificate will not "
-                       "be verified."))]
-
 senlin_client_opts = [
     cfg.StrOpt('url',
                default='',
                help=_('Optional senlin url in format like'
-                      ' http://0.0.0.0:8194/v1/%(tenant_id)s.'))]
+                      ' http://0.0.0.0:8778/v1/%(tenant_id)s.'))]
 
 client_http_log_debug_opts = [
     cfg.BoolOpt('http_log_debug',
@@ -163,11 +124,6 @@ def list_opts():
     yield None, service_opts
     yield paste_deploy_group.name, paste_deploy_opts
     yield revision_group.name, revision_opts
-    yield 'clients', default_clients_opts
-
-    for client in ('nova', 'ceilometer', 'heat'):
-        client_specific_group = 'clients_' + client
-        yield client_specific_group, clients_opts
 
     yield 'clients_senlin', senlin_client_opts
     yield 'clients_nova', client_http_log_debug_opts
