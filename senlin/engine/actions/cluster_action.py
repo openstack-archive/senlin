@@ -81,14 +81,14 @@ class ClusterAction(base.Action):
             action_id = db_api.cluster_lock_acquire(cluster.id, self.id)
             while action_id and action_id != self.id:
                 if scheduler.action_timeout(self):
-                    LOG.error(_LE('Cluster lock timeout, action (%s)'),
-                              % self.id)
+                    msg = _LE('Cluster lock timeout, action (%s)')
+                    LOG.error(msg, self.id)
                     cluster.set_status(self.context, cluster.ERROR,
                                        reason='Cluster lock timeout')
                     return self.RES_TIMEOUT
 
                 scheduler.reschedule(self)
-                action_id = db_api.cluster_lock_acquire(cluster.id, self.id)
+                action_id = db_api.cluster_lock_(cluster.id, self.id)
 
             return self.RES_OK
 
@@ -359,7 +359,7 @@ class ClusterAction(base.Action):
             # Don't emit message here since policy_check should have done it
             return self.RES_ERROR
 
-        res = self.OK
+        res = self.RES_OK
         if self.action == self.CLUSTER_CREATE:
             res = self.do_create(cluster)
         elif self.action == self.CLUSTER_UPDATE:
@@ -406,7 +406,7 @@ class ClusterAction(base.Action):
             steal_lock = True
 
         # Try to lock cluster before do real action
-        res = self._query_cluster_lock(cluster, steal_lock)
+        res = self._cluster_lock_acquire(cluster, steal_lock)
 
         if res != self.RES_OK:
             return res
