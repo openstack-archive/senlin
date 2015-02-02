@@ -31,23 +31,23 @@ class StackProfile(base.Profile):
     '''
 
     KEYS = (
-        TEMPLATE, CONTEXT, PARAMETERS,
-        TIMEOUT, ENABLE_ROLLBACK,
+        TEMPLATE, CONTEXT, PARAMETERS, FILES,
+        TIMEOUT, DISABLE_ROLLBACK, ENVIRONMENT,
     ) = (
-        'template', 'context', 'parameters',
-        'timeout', 'enable_rollback'
+        'template', 'context', 'parameters', 'files',
+        'timeout', 'disable_rollback', 'environment',
     )
 
     def __init__(self, type_name, name, **kwargs):
         super(StackProfile, self).__init__(type_name, name, **kwargs)
 
-        self.template = self.spec.get('template', {})
-        self.stack_context = self.spec.get('context', {})
-        self.parameters = self.spec.get('parameters', {})
-        self.files = self.spec.get('files', {})
-        self.disable_rollback = self.spec.get('disable_rollback', True)
-        self.timeout = self.spec.get('timeout', 60)
-        self.environment = self.spec.get('environment', {})
+        self.template = self.spec.get(self.TEMPLATE, {})
+        self.stack_context = self.spec.get(self.CONTEXT, {})
+        self.parameters = self.spec.get(self.PARAMETERS, {})
+        self.files = self.spec.get(self.FILES, {})
+        self.disable_rollback = self.spec.get(self.DISABLE_ROLLBACK, True)
+        self.timeout = self.spec.get(self.TIMEOUT, 60)
+        self.environment = self.spec.get(self.ENVIRONMENT, {})
         self.context = kwargs.get('context')
 
         self.hc = None
