@@ -40,7 +40,7 @@ class Node(object):
         'CREATING', 'UPDATING', 'DELETING',
     )
 
-    def __init__(self, name, profile_id, cluster_id, **kwargs):
+    def __init__(self, name, profile_id, cluster_id, context=None, **kwargs):
         self.id = kwargs.get('id', None)
         if name:
             self.name = name
@@ -66,11 +66,13 @@ class Node(object):
         self.tags = kwargs.get('tags', {})
         self.rt = {}
 
-        ctx = kwargs.get('context', None)
-        if ctx:
-            self.rt = {
-                'profile': profile_base.Profile.load(ctx, self.profile_id),
-            }
+        if context is not None:
+            self._load_runtime_data(context)
+
+    def _load_runtime_data(self, context):
+        self.rt = {
+            'profile': profile_base.Profile.load(context, self.profile_id),
+        }
 
     def store(self, context):
         '''Store the node record into database table.
@@ -97,7 +99,6 @@ class Node(object):
         }
 
         if self.id:
-            values['updated_time'] = datetime.datetime.utcnow()
             db_api.node_update(context, self.id, values)
             # TODO(Qiming): create event/log
         else:
@@ -109,7 +110,7 @@ class Node(object):
         return self.id
 
     @classmethod
-    def from_db_record(cls, context, record):
+    def _from_db_record(cls, context, record):
         '''Construct a node object from database record.
 
         :param context: the context used for DB operations;
@@ -128,22 +129,22 @@ class Node(object):
             'status_reason': record.status_reason,
             'data': record.data,
             'tags': record.tags,
-            'context': context,
         }
+
         return cls(record.name, record.profile_id, record.cluster_id,
-                   **kwargs)
+                   context=context, **kwargs)
 
     @classmethod
     def load(cls, context, node_id):
         '''Retrieve a node from database.'''
 
-        record = db_api.node_get(context, node_id)
+        record = db_api.node_get(context, node_id, show_deleted=False)
 
         if record is None:
-            msg = _('No node with id "%s" exists') % node_id
+            msg = _('No node with id "%s" is found') % node_id
             raise exception.NotFound(msg)
 
-        return cls.from_db_record(context, record)
+        return cls._from_db_record(context, record)
 
     @classmethod
     def load_all(cls, context, cluster_id=None, show_deleted=False,
@@ -159,11 +160,7 @@ class Node(object):
                                       tenant_safe=tenant_safe)
 
         for record in records:
-            yield cls.from_db_record(context, record)
-
-    @classmethod
-    def delete(cls, context, node_id, force=False):
-        db_api.node_delete(context, node_id, force)
+            yield cls._from_db_record(context, record)
 
     def to_dict(self):
         node_dict = {
@@ -191,6 +188,8 @@ class Node(object):
         return cls(**kwargs)
 
     def set_status(self, context, status, reason=None):
+        '''Set status of the node.'''
+
         values = {}
         now = datetime.datetime.utcnow()
         if status == self.ACTIVE and self.status == self.CREATING:
@@ -211,7 +210,7 @@ class Node(object):
     def do_create(self, context):
         # TODO(Qiming): log events?
         if self.status != self.INIT:
-            LOG.error(_LE('Node in wrong status'))
+            LOG.error(_LE('Node is in status "%s"'), self.status)
             return False
 
         self.set_status(context, self.CREATING, reason='Creation in progress')
