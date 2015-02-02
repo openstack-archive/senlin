@@ -31,6 +31,13 @@ type::
   environment:
     - env.yaml
 
+The primary job for a profile's implementation is to translate user provided
+JSON data structure into information that can be consumed by a driver. A 
+driver will create/delete/update a physical object based on the information
+provided.
+
+A profile as a `permission` string which defaults to an empty string at the
+moment. In future, it will be used for access authorization checking.
 
 Profile Types
 -------------
@@ -61,3 +68,22 @@ A profile of type `aws.autoscaling.launchconfig` may look like::
   ImageId: 23
   KeyName: oskey
   InstanceType: m1.small
+
+Implementation Hints
+--------------------
+
+Handling Context
+^^^^^^^^^^^^^^^^
+
+In the Profile class implementation, a profile can be stored into DB and then
+loaded from DB given an ID. We don't record the context used by a profile. On
+the contrary, the context is assigned to a profile when it is (re)intialized.
+This enables a profile to be used by different context, which is usually the
+context saved into an action. There won't be security problem if we have
+recorded the correct context of an action.
+
+Abstract Methods
+^^^^^^^^^^^^^^^^
+
+The Profile class provides abstract methods such as `do_create()`,
+`do_delete()` and `do_update()` for sub-classes to override.
