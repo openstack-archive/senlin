@@ -162,7 +162,7 @@ class Cluster(periodic_task.PeriodicTasks):
             msg = _('No cluster with id "%s" is found') % cluster_id
             raise exception.NotFound(msg)
 
-        return cls._from_db_record(record)
+        return cls._from_db_record(context, record)
 
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort_keys=None,
@@ -175,7 +175,7 @@ class Cluster(periodic_task.PeriodicTasks):
                                          show_deleted, show_nested)
 
         for record in records:
-            cluster = cls._from_db_record(record)
+            cluster = cls._from_db_record(context, record)
             yield cluster
 
     def to_dict(self):
