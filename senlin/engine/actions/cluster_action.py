@@ -17,9 +17,10 @@ from oslo_config import cfg
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
+from senlin.common.i18n import _LW
 from senlin.db import api as db_api
 from senlin.engine.actions import base
-from senlin.engine import cluster as clusterm
+from senlin.engine import cluster as cluster_mod
 from senlin.engine import dispatcher
 from senlin.engine import node as nodes
 from senlin.engine import scheduler
@@ -62,7 +63,7 @@ class ClusterAction(base.Action):
         if action_id == self.id:
             return self.RES_OK
 
-        # Step 2: retry 
+        # Step 2: retry
         retries = cfg.CONF.lock_retry_times
         interval = cfg.CONF.lock_retry_interval
 
@@ -95,7 +96,7 @@ class ClusterAction(base.Action):
         # Return
         msg = _LW('Cluster is already locked by action %(old)s, '
                   'action %(new)s failed grabbing the lock') % {
-                  'old': action_id, 'new': self.id}
+                      'old': action_id, 'new': self.id}
         LOG.warn(msg)
 
         return self.RES_RETRY
@@ -395,7 +396,7 @@ class ClusterAction(base.Action):
 
     def execute(self, **kwargs):
         try:
-            cluster = clusterm.Cluster.load(self.context, self.target)
+            cluster = cluster_mod.Cluster.load(self.context, self.target)
         except exception.NotFound:
             LOG.error(_LE('Cluster %(name)s [%(id)s] not found') % {
                 'name': cluster.name, 'id': cluster.id})

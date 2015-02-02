@@ -26,7 +26,7 @@ from senlin.common.i18n import _LI
 from senlin.common import messaging as rpc_messaging
 from senlin.db import api as db_api
 from senlin.engine.actions import base as base_action
-from senlin.engine import cluster as clusters
+from senlin.engine import cluster as cluster_mod
 from senlin.engine import dispatcher
 from senlin.engine import environment
 from senlin.engine import node as nodes
@@ -235,12 +235,12 @@ class EngineService(service.Service):
     def cluster_list(self, context, limit=None, marker=None, sort_keys=None,
                      sort_dir=None, filters=None, tenant_safe=True,
                      show_deleted=False, show_nested=False):
-        all_clusters = clusters.Cluster.load_all(context, limit, marker,
-                                                 sort_keys, sort_dir,
-                                                 filters, tenant_safe,
-                                                 show_deleted, show_nested)
+        clusters = cluster_mod.Cluster.load_all(context, limit, marker,
+                                                sort_keys, sort_dir,
+                                                filters, tenant_safe,
+                                                show_deleted, show_nested)
 
-        return [c.to_dict() for c in all_clusters]
+        return [cluster.to_dict() for cluster in clusters]
 
     @request_context
     def cluster_find(self, context, identity):
@@ -256,7 +256,7 @@ class EngineService(service.Service):
         else:
             db_cluster = db_api.cluster_get_by_name(context, identity)
         if db_cluster:
-            cluster = clusters.Cluster.load(context, cluster=db_cluster)
+            cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
             return dict(cluster.id)
         else:
             raise exception.ClusterNotFound(cluster_name=identity)
@@ -275,7 +275,7 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_get(self, context, cluster_id):
-        cluster = clusters.Cluster.load(context, cluster_id=cluster_id)
+        cluster = cluster_mod.Cluster.load(context, cluster_id=cluster_id)
         return cluster.to_dict()
 
     @request_context
@@ -291,7 +291,7 @@ class EngineService(service.Service):
             'tags': tags
         }
 
-        cluster = clusters.Cluster(name, profile_id, size, **kwargs)
+        cluster = cluster_mod.Cluster(name, profile_id, size, **kwargs)
         cluster.store(context)
 
         # Build an Action for cluster creation
@@ -303,7 +303,7 @@ class EngineService(service.Service):
         # Notify Dispatchers that a new action has been ready.
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
-        cluster.set_status(context, clusters.Cluster.ACTIVE,
+        cluster.set_status(context, cluster_mod.Cluster.ACTIVE,
                            reason='Action dispatched')
         return action.to_dict()
 
@@ -313,7 +313,7 @@ class EngineService(service.Service):
         db_cluster = self._get_cluster(context, identity)
         LOG.info(_LI('Updating cluster %s'), db_cluster.name)
 
-        cluster = clusters.Cluster.load(context, cluster=db_cluster)
+        cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
         if cluster.status == cluster.ERROR:
             msg = _('Updating a cluster when it is errored')
             raise exception.NotSupported(feature=msg)
