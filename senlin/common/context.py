@@ -179,7 +179,7 @@ class ContextMiddleware(wsgi.Middleware):
 
 
 def ContextMiddleware_filter_factory(global_conf, **local_conf):
-    '''Factory method for paste.deploy'''
+    '''Factory method for paste.deploy.'''
 
     conf = global_conf.copy()
     conf.update(local_conf)

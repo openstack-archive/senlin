@@ -12,8 +12,6 @@
 
 import datetime
 
-from oslo_config import cfg
-
 from senlin.db import api as db_api
 from senlin.engine import environment
 from senlin.openstack.common import log as logging
