@@ -40,7 +40,7 @@ class Node(object):
         'CREATING', 'UPDATING', 'DELETING',
     )
 
-    def __init__(self, context, name, profile_id, **kwargs):
+    def __init__(self, name, profile_id, cluster_id, **kwargs):
         self.id = kwargs.get('id', None)
         if name:
             self.name = name
@@ -51,7 +51,7 @@ class Node(object):
 
         self.physical_id = kwargs.get('physical_id', '')
         self.profile_id = profile_id
-        self.cluster_id = kwargs.get('cluster_id', '')
+        self.cluster_id = cluster_id
         self.index = kwargs.get('index', -1)
         self.role = kwargs.get('role', '')
 
@@ -64,10 +64,13 @@ class Node(object):
         self.status_reason = kwargs.get('status_reason', 'Initializing')
         self.data = kwargs.get('data', {})
         self.tags = kwargs.get('tags', {})
+        self.rt = {}
 
-        self.rt = {
-            'profile': profile_base.Profile.load(context, self.profile_id),
-        }
+        ctx = kwargs.get('context', None)
+        if ctx:
+            self.rt = {
+                'profile': profile_base.Profile.load(ctx, self.profile_id),
+            }
 
     def store(self, context):
         '''Store the node record into database table.
@@ -115,7 +118,6 @@ class Node(object):
         kwargs = {
             'id': record.id,
             'physical_id': record.physical_id,
-            'cluster_id': record.cluster_id,
             'index': record.index,
             'role': record.role,
             'init_time': record.init_time,
@@ -126,8 +128,10 @@ class Node(object):
             'status_reason': record.status_reason,
             'data': record.data,
             'tags': record.tags,
+            'context': context,
         }
-        return cls(context, record.name, record.profile_id, **kwargs)
+        return cls(record.name, record.profile_id, record.cluster_id,
+                   **kwargs)
 
     @classmethod
     def load(cls, context, node_id):
@@ -196,6 +200,7 @@ class Node(object):
         else:
             values['updated_time'] = now
 
+        self.status = status
         values['status'] = status
         if reason:
             values['status_reason'] = reason

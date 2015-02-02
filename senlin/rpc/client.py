@@ -193,8 +193,8 @@ class EngineClient(object):
     def node_create(self, ctxt, name, cluster_id, profile_id, role, tags):
         return self.call(ctxt,
                          self.make_msg('node_create', name=name,
-                                       cluster_id=cluster_id,
                                        profile_id=profile_id,
+                                       cluster_id=cluster_id,
                                        role=role, tags=tags))
 
     def node_get(self, ctxt, node_id):

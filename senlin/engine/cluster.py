@@ -72,6 +72,12 @@ class Cluster(periodic_task.PeriodicTasks):
         # TODO(Qiming): nodes have to be reloaded when membership changes
         self.rt = {}
 
+        ctx = kwargs.get('context', None)
+        if ctx:
+            self.rt = {
+                'profile': profile_base.Profile.load(ctx, self.profile_id),
+            }
+
     @classmethod
     def _from_db_record(cls, record):
         '''Construct a cluster object from database record.
