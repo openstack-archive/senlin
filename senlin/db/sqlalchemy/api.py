@@ -1079,8 +1079,7 @@ def action_control(context, action_id, value):
     query = model_query(context, models.Action)
     action = query.get(action_id)
     if not action:
-        raise exception.NotFound(
-            _('Action with id "%s" not found') % action_id)
+        return
 
     action.control = value
     action.save(query.session)
