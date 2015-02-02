@@ -270,7 +270,7 @@ class Action(object):
         policy_ids = [p.id for p in policy_list if p.enabled]
         policy_check_list = []
         for pid in policy_ids:
-            policy = policies.load(self.context, pid)
+            policy = policies.Policy.load(self.context, pid)
             for t in policy.TARGET:
                 if t == (target, self.action):
                     policy_check_list.append(policy)

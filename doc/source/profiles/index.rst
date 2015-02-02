@@ -61,5 +61,3 @@ A profile of type `aws.autoscaling.launchconfig` may look like::
   ImageId: 23
   KeyName: oskey
   InstanceType: m1.small
-
-

@@ -284,11 +284,11 @@ class Cluster(periodic_task.PeriodicTasks):
         '''Attach specified policy instance to this cluster.'''
 
         # TODO(Qiming): check conflicts with existing policies
-        self.policies.append(policy_id)
+        self.rt.policies.append(policy_id)
 
     def detach_policy(self, policy_id):
         # TODO(Qiming): check if actions of specified policies are ongoing
-        self.policies.remove(policy_id)
+        self.rt.policies.remove(policy_id)
 
     @classmethod
     def create(cls, name, size=0, profile=None, **kwargs):
