@@ -74,7 +74,7 @@ class ClusterAction(base.Action):
             retries = retries - 1
 
         # Step 3: Last resort is 'stealing', only needed when retry failed
-        if force:
+        if steal_lock:
             # Cancel the action that owns the lock
             scheduler.cancel_action(self.context, action_id)
 
