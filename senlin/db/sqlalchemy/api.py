@@ -602,12 +602,6 @@ def profile_update(context, profile_id, values):
 
 def profile_delete(context, profile_id, force=False):
     profile = profile_get(context, profile_id)
-
-    if not profile:
-        msg = _('Attempt to delete a profile with id "%s" that does not '
-                'exist failed') % profile_id
-        raise exception.NotFound(msg)
-
     session = orm_session.Session.object_session(profile)
 
     # TODO(Qiming): Check if a profile is still in use, raise an exception

@@ -106,7 +106,7 @@ class Cluster(periodic_task.PeriodicTasks):
 
     def _load_runtime_data(self, context):
         self.rt = {
-            'profile': profiles.Profile.load(context, self.profile_id),
+            'profile': profiles_base.Profile.load(context, self.profile_id),
             'nodes': nodes.Node.load_all(context, cluster_id=self.id),
             'policies': [],
         }
