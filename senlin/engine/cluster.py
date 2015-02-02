@@ -243,8 +243,9 @@ class Cluster(periodic_task.PeriodicTasks):
 
         Set cluster status to DELETED.
         '''
+        # TODO(Qiming): merge this two calls
         self.set_status(context, self.DELETED)
-        db_api.cluster_delete(context, self.id)
+        #db_api.cluster_delete(context, self.id)
         return True
 
     def do_update(self, context, new_profile_id, **kwargs):
