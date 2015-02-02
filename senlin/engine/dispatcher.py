@@ -59,7 +59,7 @@ class Dispatcher(service.Service):
         return True
 
     def new_action(self, context, action_id=None):
-        '''New action has been ready, try to schedule it'''
+        # New action has been ready, try to schedule it
         scheduler.start_action(context, action_id, self.engine_id, self.TG)
 
     def cancel_action(self, context, action_id):
