@@ -20,14 +20,11 @@ from senlin.api.openstack.v1 import util
 from senlin.common.i18n import _
 from senlin.common import serializers
 from senlin.common import wsgi
-from senlin.openstack.common import log as logging
 from senlin.rpc import client as rpc_client
-
-LOG = logging.getLogger(__name__)
 
 
 class ProfileData(object):
-    '''The data accompanying a PUT/POST request to create/update a profile.'''
+    '''The data accompanying a POST/PUT request to create/update a profile.'''
 
     PARAMS = (
         NAME, SPEC, TYPE, PERMISSION, TAGS,
@@ -54,14 +51,10 @@ class ProfileData(object):
         return self.data[self.TYPE]
 
     def permission(self):
-        if self.PERMISSION not in self.data:
-            return None
-        return self.data[self.PERMISSION]
+        return self.data.get(self.PERMISSION)
 
     def tags(self):
-        if self.TAGS not in self.data:
-            return None
-        return self.data[self.TAGS]
+        return self.data.get(self.TAGS)
 
 
 class ProfileController(object):
@@ -125,10 +118,7 @@ class ProfileController(object):
         profile = self.rpc_client.profile_get(req.context,
                                               profile_id)
 
-        if not profile:
-            raise exc.HTTPInternalServerError()
-
-        return profile
+        return {'profile': profile}
 
     @util.policy_enforce
     def update(self, req, profile_id, body):
