@@ -119,25 +119,32 @@ def ActionProc(context, action, wait_time=1, **kwargs):
     each step. To avoid sleeping, pass `None` for `wait_time`.
     '''
 
-    LOG.debug('Starting %s' % six.text_type(action.action))
+    LOG.info(_LI('Action %(name)s [%(id)s] started'),
+             {'name': six.text_type(action.action), 'id': action.id})
 
     result = action.execute()
+    # TODO(Qiming): add max retry times
     while result == action.RES_RETRY:
-        LOG.info(_LI('Action %s returned with retry.'), action.id)
+        LOG.info(_LI('Action %(name)s [%(id)s] returned with retry.'),
+                 {'name': six.text_type(action.action), 'id': action.id})
         result = action.execute()
 
     timestamp = wallclock()
     if result == action.RES_ERROR:
-        LOG.info(_LI('Action %s completed with failure.'), action.id)
         db_api.action_mark_failed(context, action.id, timestamp)
+        LOG.info(_LI('Action %(name)s [%(id)s] completed with failure.'),
+                 {'name': six.text_type(action.action), 'id': action.id})
     elif result == action.RES_OK:
-        LOG.info(_LI('Action %s completed with success.'), action.id)
         db_api.action_mark_succeeded(context, action.id, timestamp)
+        LOG.info(_LI('Action %(name)s [%(id)s] completed with success.'),
+                 {'name': six.text_type(action.action), 'id': action.id})
     elif result == action.RES_CANCEL:
-        LOG.info(_LI('Action %s is cancelled'), action.id)
         db_api.action_mark_cancelled(context, action.id, timestamp)
+        LOG.info(_LI('Action %(name)s [%(id)s] was cancelled'),
+                 {'name': six.text_type(action.action), 'id': action.id})
     else:  # result == action.RES_TIMEOUT:
-        LOG.info(_LI('Action %s failed with timeout'), action.id)
+        LOG.info(_LI('Action %(name)s [%(id)s] failed with timeout'),
+                 {'name': six.text_type(action.action), 'id': action.id})
 
 
 def start_action(context, action_id, engine_id, tgm):
@@ -211,7 +218,7 @@ def action_control_flag(action):
 
     # Check if action control flag is set
     result = db_api.action_control_check(action.context, action.id)
-    LOG.debug('Action %s control flag is %s', (action.id, result))
+    # LOG.debug('Action %s control flag is %s', (action.id, result))
     return result
 
 
