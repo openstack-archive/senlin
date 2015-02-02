@@ -87,11 +87,11 @@ class ClusterAction(base.Action):
 
         for m in range(cluster.size):
             name = 'node-%003d' % m
-            node = nodes.Node(name, cluster.profile_id, cluster.id)
+            node = nodes.Node(name, cluster.profile_id, cluster.id,
+                              context=self.context)
             node.store(self.context)
             kwargs = {
                 'name': 'node_create_%s' % node.id[:8],
-                'context': self.context,
                 'target': node.id,
                 'cause': 'Cluster creation',
             }
@@ -100,11 +100,11 @@ class ClusterAction(base.Action):
             action.store(self.context)
 
             # Build dependency and make the new action ready
-            db_api.action_add_dependency(action.id, self.id)
+            db_api.action_add_dependency(self.context, action.id, self.id)
             action.set_status(self.READY)
 
             dispatcher.notify(self.context, dispatcher.Dispatcher.NEW_ACTION,
-                              None, action_id=action_id)
+                              None, action_id=action.id)
 
         # Wait for cluster creating complete
         result = self.RES_OK

@@ -361,12 +361,12 @@ class EngineService(service.Service):
         return [node.to_dict() for node in all_nodes]
 
     @request_context
-    def node_create(self, context, name, cluster_id, profile_id, role, tags):
+    def node_create(self, context, name, profile_id, cluster_id=None,
+                    role=None, tags=None):
         LOG.info(_LI('Creating node %s'), name)
 
         # Create a node instance
-        node = nodes.Node(context, name, profile_id, cluster_id=cluster_id,
-                          role=role, tags=tags)
+        node = nodes.Node(name, profile_id, cluster_id, role=role, tags=tags)
         node.store(context)
 
         action = base_action.Action(context, 'NODE_CREATE',

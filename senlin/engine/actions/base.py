@@ -43,7 +43,7 @@ class Action(object):
     #  CANCELLED: Action cancelled because worker thread was cancelled.
     STATUSES = (
         INIT, WAITING, READY, RUNNING,
-        SUCCEEDED, FAILED, CANCELED
+        SUCCEEDED, FAILED, CANCELLED
     ) = (
         'INIT', 'WAITING', 'READY', 'RUNNING',
         'SUCCEEDED', 'FAILED', 'CANCELLED',
