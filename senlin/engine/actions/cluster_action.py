@@ -45,6 +45,46 @@ class ClusterAction(base.Action):
     def __init__(self, context, action, **kwargs):
         super(ClusterAction, self).__init__(context, action, **kwargs)
 
+    def _query_cluster_lock(self, cluster, enforce=False):
+        """ Try to lock the cluster
+
+            :param enforce: whether to cancel current actoin on the cluster
+                            and get the lock
+        """
+        # Try lock the cluster
+        action_id = db_api.cluster_lock_create(cluster.id, self.id)
+        if action_id and action_id != self.id:
+            # Cluster has been locked by other action
+            if enforce:
+                # try to cancel the action that owns the lock
+                scheduler.cancel_action(self.context, action_id)
+
+                # Sleep until this action get the lock or timeout
+                action_id = db_api.cluster_lock_create(cluster.id, self.id)
+                while action_id and action_id != self.id:
+                    if scheduler.action_timeout(self):
+                        # Action timeout, set cluster status to ERROR
+                        LOG.debug('Cluster deletion %s timeout' % self.id)
+                        cluster.set_status(self.context, cluster.ERROR,
+                                           'Cluster deletion timeout')
+                        return self.RES_TIMEOUT
+
+                    scheduler.reschedule(self)
+                    action_id = db_api.cluster_lock_create(cluster.id, self.id)
+            else:
+                # Return
+                msg = _('Cluster is already locked by action %(old)s, action '
+                        '%(new)s failed grabbing the lock') % {
+                            'old': action_id, 'new': self.id}
+                LOG.warn(msg)
+                # TODO(Qiming): Decide how to handle this situation
+                return False
+
+        return True
+
+    def _release_cluster_lock(self, cluster):
+        db_api.cluster_lock_release(cluster.id, self.id)
+
     def _wait_for_action(self):
         while self.get_status() != self.READY:
             if scheduler.action_cancelled(self):
@@ -66,23 +106,9 @@ class ClusterAction(base.Action):
         return self.RES_OK
 
     def do_create(self, cluster):
-        # Try to lock cluster first
-        action_id = db_api.cluster_lock_create(cluster.id, self.id)
-        if action_id is not None and action_id != self.id:
-            # This cluster has been locked by other action?
-            # This should never happen here, raise an execption.
-            LOG.error(_('Cluster has been locked by %s before creation.'),
-                      action_id)
-            msg = _('Cluster is already locked by action %(old)s, action '
-                    '%(new)s failed grabbing the lock') % {
-                        'old': action_id, 'new': self.id}
-            # TODO(Qiming): Decide how to handle this situation
-            raise exception.Error(msg)
-
         res = cluster.do_create(self.context)
         if not res:
             cluster.set_status(cluster.ERROR, 'Cluster creation failed')
-            db_api.cluster_lock_release(cluster.id, self.id)
             return self.RES_ERROR
 
         for m in range(cluster.size):
@@ -104,7 +130,7 @@ class ClusterAction(base.Action):
             action.set_status(self.READY)
 
             dispatcher.notify(self.context, dispatcher.Dispatcher.NEW_ACTION,
-                              None, action_id=action_id)
+                              None, action_id=action.id)
 
         # Wait for cluster creating complete
         result = self.RES_OK
@@ -124,23 +150,13 @@ class ClusterAction(base.Action):
             # RETRY
             pass
 
-        db_api.cluster_lock_release(cluster.id, self.id)
         return result
 
     def do_update(self, cluster, new_profile_id):
-        # Try to lock cluster first
-        owner = db_api.cluster_lock_create(cluster.id, self.id)
-        if owner != self.id:
-            # This cluster has been locked by other action.
-            # We can't update this cluster, cancel this action.
-            LOG.debug('Cluster has been locked by action %s' % owner)
-            return self.RES_RETRY
-
         res = cluster.do_update(self.context, profile_id=new_profile_id)
         if not res:
             cluster.set_status(cluster.ACTIVE,
                                'Cluster updating was not executed')
-            db_api.cluster_lock_release(cluster.id, self.id)
             return self.RES_ERROR
 
         # Create NodeActions for all nodes
@@ -172,32 +188,10 @@ class ClusterAction(base.Action):
             cluster.set_status(self.context, cluster.ACTIVE,
                                'Cluster update completed')
 
-        db_api.cluster_lock_release(cluster.id, self.id)
-
         return self.RES_OK
 
     def do_delete(self, cluster):
         cluster.set_status(self.context, cluster.DELETING)
-
-        # Try lock the cluster
-        action_id = db_api.cluster_lock_create(cluster.id, self.id)
-        if action_id and action_id != self.id:
-            # Lock failed, cancel the action that owns the lock
-            scheduler.cancel_action(self.context, action_id)
-
-            # Sleep until this action get the lock or timeout
-            action_id = db_api.cluster_lock_create(cluster.id, self.id)
-            while action_id and action_id != self.id:
-                if scheduler.action_timeout(self):
-                    # Action timeout, set cluster status to ERROR and return
-                    LOG.debug('Cluster deletion %s timeout' % self.id)
-                    cluster.set_status(self.context, cluster.ERROR,
-                                       'Cluster deletion timeout')
-                    return self.RES_TIMEOUT
-
-                scheduler.reschedule(self)
-                action_id = db_api.cluster_lock_create(cluster.id, self.id)
-
         node_list = cluster.get_nodes()
         for node_id in node_list:
             kwargs = {
@@ -236,8 +230,6 @@ class ClusterAction(base.Action):
             # RETRY
             pass
 
-        db_api.cluster_lock_release(cluster.id, self.id)
-
         return self.RES_OK
 
     def do_add_nodes(self, cluster):
@@ -251,12 +243,6 @@ class ClusterAction(base.Action):
 
     def do_scale_down(self, cluster, count, candidates):
         # Go through all policies before scaling down.
-        # Try to lock the cluster
-        action_id = db_api.cluster_lock_create(cluster.id, self.id)
-        if action_id != self.id:
-            # Lock cluster failed, return with retry
-            return self.RES_RETRY
-
         if len(candidates) == 0:
             # No candidates for scaling down op which means no DeletionPolicy
             # is attached to cluster, we just choose random nodes to
@@ -305,7 +291,6 @@ class ClusterAction(base.Action):
                 LOG.debug('Cluster scale_down action %s timeout' % self.id)
                 cluster.set_status(cluster.ERROR,
                                    'Cluster scaling down timeout')
-                db_api.cluster_lock_release(cluster.id, self.id)
                 return self.RES_TIMEOUT
 
             # Continue waiting (with sleep)
@@ -313,16 +298,7 @@ class ClusterAction(base.Action):
 
         cluster.delete_nodes(candidates)
 
-        # Go through policies again to handle some post_ops e.g. LB
-        policy_target = ('AFTER', self.action)
-        result = self.policy_check(self.context, cluster.id, policy_target)
-        if not result:
-            db_api.cluster_lock_release(cluster.id, self.id)
-            return self.RES_ERROR
-
-        # set cluster status to OK and release the lock.
-        db_api.cluster_lock_release(cluster.id, self.id)
-
+        # set cluster status to OK
         return self.RES_OK
 
     def do_attach_policy(self, cluster):
@@ -358,20 +334,14 @@ class ClusterAction(base.Action):
     def do_detach_policy(self, cluster):
         return self.RES_OK
 
-    def execute(self, **kwargs):
-        try:
-            cluster = clusterm.Cluster.load(self.context, self.target)
-        except exception.NotFound:
-            LOG.error(_LE('Cluster %(name)s [%(id)s] not found') % {
-                'name': cluster.name, 'id': cluster.id})
-            return self.RES_ERROR
-
+    def _execute(self, cluster):
         # do pre-action policy checking
         check_result = self.policy_check(cluster.id, 'BEFORE')
         if not check_result:
             # Don't emit message here since policy_check should have done it
             return self.RES_ERROR
 
+        res = self.OK
         if self.action == self.CLUSTER_CREATE:
             res = self.do_create(cluster)
         elif self.action == self.CLUSTER_UPDATE:
@@ -391,7 +361,6 @@ class ClusterAction(base.Action):
             if count == 0:
                 # We assume the policy has emit error/warnings
                 return self.RES_ERROR
-
             candidates = check_result.get('candidates', [])
             res = self.do_scale_down(cluster, count, candidates)
         elif self.action == self.CLUSTER_ATTACH_POLICY:
@@ -399,10 +368,59 @@ class ClusterAction(base.Action):
         elif self.action == self.CLUSTER_DETACH_POLICY:
             res = self.do_detach_policy(cluster)
 
+        # do post-action policy checking
         if res == self.RES_OK:
             check_result = self.policy_check(cluster.id, 'AFTER')
             res = self.RES_OK if check_result else self.ERROR
 
+        return res
+
+    def execute(self, **kwargs):
+        try:
+            cluster = clusterm.Cluster.load(self.context, self.target)
+        except exception.NotFound:
+            LOG.error(_LE('Cluster %(name)s [%(id)s] not found') % {
+                'name': cluster.name, 'id': cluster.id})
+            return self.RES_ERROR
+
+        # Check if this is an enforced action to do
+        if 'enforce' in kwargs:
+            lock_enforce = kwargs.get('enforce')
+        elif self.action in [self.CLUSTER_DELETE]:
+            # TODO: add more actions which default
+            # need to enforce
+            lock_enforce = True
+        else:
+            lock_enforce = False
+
+        # Check if this is an action should retry
+        if 'retry' in kwargs:
+            retry = kwargs.get('retry')
+        elif self.action in [self.CLUSTER_UPDATE,
+                             self.CLUSTER_SCALE_DOWN]:
+            # TODO: add more actions which default
+            # support retry
+            retry = True
+        else:
+            retry = False
+
+        # Try to lock cluster before do real action
+        res = self._query_cluster_lock(cluster, lock_enforce)
+        if not res:
+            if retry:
+                return self.RES_RETRY
+            else:
+                return self.ERROR
+        elif res == self.TIMEOUT:
+            return self.TIMEOUT
+        else:
+            res = self.RES_OK
+
+        # Do real operation here
+        res = self._execute(cluster)
+
+        # We've done, release cluster lock
+        self._release_cluster_lock(cluster)
         return res
 
     def cancel(self):
