@@ -106,6 +106,8 @@ class Profile(object):
         }
         profile = db_api.profile_create(context, values)
         self.id = profile.id
+        self.context = context
+        self.created_time = profile.created_time
         return profile.id
 
     @classmethod

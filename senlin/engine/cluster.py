@@ -17,7 +17,7 @@ from senlin.db import api as db_api
 from senlin.engine import event as events
 from senlin.engine import node as nodes
 from senlin.openstack.common import periodic_task
-from senlin.profiles import base as profiles
+from senlin.profiles import base as profiles_base
 
 
 class Cluster(periodic_task.PeriodicTasks):
@@ -75,7 +75,7 @@ class Cluster(periodic_task.PeriodicTasks):
         ctx = kwargs.get('context', None)
         if ctx:
             self.rt = {
-                'profile': profile_base.Profile.load(ctx, self.profile_id),
+                'profile': profiles_base.Profile.load(ctx, self.profile_id),
             }
 
     @classmethod
