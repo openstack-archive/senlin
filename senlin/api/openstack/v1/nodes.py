@@ -27,9 +27,7 @@ LOG = logging.getLogger(__name__)
 
 
 class InstantiationData(object):
-    """
-    The data accompanying a PUT or POST request to create or update a cluster.
-    """
+    '''The data accompanying a PUT/POST request to create/update a node.'''
 
     PARAMS = (
         NAME, CLUSTER_ID, PROFILE_ID, ROLE, TAGS,
@@ -69,9 +67,7 @@ class InstantiationData(object):
 
 
 class NodeController(object):
-    '''
-    WSGI controller for nodes resource in Senlin v1 API
-    '''
+    '''WSGI controller for nodes resource in Senlin v1 API.'''
 
     REQUEST_SCOPE = 'nodes'
 
@@ -149,9 +145,8 @@ class NodeController(object):
 
 
 def create_resource(options):
-    """
-    Nodes resource factory method.
-    """
+    '''Nodes resource factory method.'''
+
     return wsgi.Resource(NodeController(options),
                          wsgi.JSONRequestDeserializer(),
                          serializers.JSONResponseSerializer())

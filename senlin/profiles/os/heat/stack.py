@@ -14,6 +14,7 @@ import six
 
 from senlin.common import context
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.drivers import heat_v1 as heatclient
 from senlin.engine import scheduler
 from senlin.openstack.common import log as logging
@@ -23,8 +24,8 @@ LOG = logging.getLogger(__name__)
 
 
 class StackProfile(base.Profile):
-    '''
-    Profile for an OpenStack Heat stack.
+    '''Profile for an OpenStack Heat stack.
+
     When this profile is used, the whole cluster is a collection of Heat
     stacks.
     '''
@@ -54,9 +55,8 @@ class StackProfile(base.Profile):
         self.stack_id = None
 
     def heat(self):
-        '''
-        Construct heat client using the combined context.
-        '''
+        '''Construct heat client using the combined context.'''
+
         if self.hc:
             return self.hc
 
@@ -69,9 +69,8 @@ class StackProfile(base.Profile):
         return self.hc
 
     def do_validate(self, obj):
-        '''
-        Validate if the spec has provided reasonable info for stack creation.
-        '''
+        '''Validate if the spec has provided info for stack creation.'''
+
         kwargs = {
             'stack_name': obj.name,
             'template': self.template,
@@ -117,9 +116,8 @@ class StackProfile(base.Profile):
                                             reason=msg)
 
     def do_create(self, obj):
-        '''
-        Create a stack using the given profile.
-        '''
+        '''Create a stack using the given profile.'''
+
         kwargs = {
             'stack_name': obj.name,
             'template': self.template,
@@ -160,7 +158,8 @@ class StackProfile(base.Profile):
         return True
 
     def do_update(self, obj, new_profile):
-        '''
+        '''Perform update on object.
+
         :param obj: the node object to operate on
         :param new_profile: the new profile used for updating
         '''

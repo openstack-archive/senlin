@@ -27,9 +27,7 @@ LOG = logging.getLogger(__name__)
 
 
 class ProfileData(object):
-    """
-    The data accompanying a PUT or POST request to create or update a cluster.
-    """
+    '''The data accompanying a PUT/POST request to create/update a profile.'''
 
     PARAMS = (
         NAME, SPEC, TYPE, PERMISSION, TAGS,
@@ -67,8 +65,7 @@ class ProfileData(object):
 
 
 class ProfileController(object):
-    '''WSGI controller for profiles resource in Senlin v1 API.
-    '''
+    '''WSGI controller for profiles resource in Senlin v1 API.'''
 
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'profiles'
@@ -158,9 +155,8 @@ class ProfileController(object):
 
 
 def create_resource(options):
-    """
-    Profiles resource factory method.
-    """
+    '''Profiles resource factory method.'''
+
     return wsgi.Resource(ProfileController(options),
                          wsgi.JSONRequestDeserializer(),
                          serializers.JSONResponseSerializer())

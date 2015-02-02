@@ -17,10 +17,10 @@ import six
 from six.moves import urllib
 import yaml
 
-from senlin.common import i18n
+from senlin.common.i18n import _
+from senlin.common.i18n import _LE
 from senlin.openstack.common import log as logging
 
-_LE = i18n._LE
 LOG = logging.getLogger(__name__)
 
 # Try LibYAML if available
@@ -102,9 +102,8 @@ def simple_parse(in_str):
 
 
 def parse_profile(profile_str):
-    '''
-    Parse and validate the specified string as a profile.
-    '''
+    '''Parse and validate the specified string as a profile.'''
+
     data = simple_parse(profile_str)
 
     # TODO(Qiming):
@@ -114,9 +113,8 @@ def parse_profile(profile_str):
 
 
 def parse_policy(policy_str):
-    '''
-    Parse and validate the specified string as a policy.
-    '''
+    '''Parse and validate the specified string as a policy.'''
+
     data = simple_parse(policy_str)
 
     # TODO(Qiming):
@@ -126,9 +124,8 @@ def parse_policy(policy_str):
 
 
 def parse_action(action):
-    '''
-    Parse and validate the specified string as a action.
-    '''
+    '''Parse and validate the specified string as a action.'''
+
     if not isinstance(action, six.string_types):
         # TODO(Qiming): Throw exception
         return None

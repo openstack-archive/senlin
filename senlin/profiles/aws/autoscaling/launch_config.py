@@ -17,8 +17,7 @@ __type_name__ = 'aws.autoscaling.launchconfig'
 
 
 class LaunchConfigProfile(base.Profile):
-    '''
-    Profile for an AWS AutoScaling LaunchConfiguration.
+    '''Profile for an AWS AutoScaling LaunchConfiguration.
 
     When this profile is used, the whole cluster is a Heat stack where each
     member is a YAML snippet that describes a
@@ -44,9 +43,7 @@ class LaunchConfigProfile(base.Profile):
         self.PlaementTenancy = kwargs.get('PlacementTenancy')
 
     def do_create(self):
-        '''
-        This method creates a YAML format Heat resource definition.
-        '''
+        '''This method creates a YAML format Heat resource definition.'''
         return {}
 
     def do_delete(self):

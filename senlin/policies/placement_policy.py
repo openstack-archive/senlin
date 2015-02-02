@@ -15,8 +15,7 @@ from senlin.policies import base
 
 
 class PlacementPolicy(base.Policy):
-    '''
-    Policy for placing members of a cluster.
+    '''Policy for placing members of a cluster.
 
     This policy is expected to be enforced before new member(s) added to an
     existing cluster.

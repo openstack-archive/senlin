@@ -139,8 +139,7 @@ class Node(BASE, SenlinBase, SoftDelete):
 
 
 class ClusterLock(BASE, SenlinBase):
-    """
-    Store cluster locks for actions performed by multiple workers.
+    """Store cluster locks for actions performed by multiple workers.
 
     Worker threads are able to grab this lock
     """
@@ -154,8 +153,7 @@ class ClusterLock(BASE, SenlinBase):
 
 
 class NodeLock(BASE, SenlinBase):
-    """
-    Store node locks for actions performed by multiple workers.
+    """Store node locks for actions performed by multiple workers.
 
     Worker threads are able to grab this lock
     """

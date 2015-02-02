@@ -15,8 +15,7 @@ from senlin.policies import base
 
 
 class UpdatePolicy(base.Policy):
-    '''
-    Policy for updating a cluster's node profile.
+    '''Policy for updating a cluster's node profile.
 
     Note that we differentiate the updates to the size(scale) of a cluster from
     the updates to the node profile.  The former is handled by CreatePolicy,

@@ -21,12 +21,11 @@ LOG = log.getLogger(__name__)
 
 
 class PluginInfo(object):
-    '''
-    Base mapping of plugin type to implementation.
-    '''
+    '''Base mapping of plugin type to implementation.'''
+
     def __new__(cls, registry, name, plugin, **kwargs):
-        '''
-        Create a new PluginInfo of the appropriate class.
+        '''Create a new PluginInfo of the appropriate class.
+
         Placeholder for class hierarchy extensibility
         '''
         return super(PluginInfo, cls).__new__(cls)
@@ -65,9 +64,7 @@ class PluginInfo(object):
 
 
 class Registry(object):
-    '''
-    A registry for managing profile or policy classes.
-    '''
+    '''A registry for managing profile or policy classes.'''
 
     def __init__(self, registry_name, global_registry=None):
         self.registry_name = registry_name
@@ -76,8 +73,7 @@ class Registry(object):
         self.global_registry = global_registry
 
     def _register_info(self, name, info):
-        '''
-        place the new info in the correct location in the registry.
+        '''place the new info in the correct location in the registry.
 
         :param path: a list of keys ['profiles', 'my_stack', 'os.heat.stack'],
                      or ['policies', 'my_policy', 'ScalingPolicy']
@@ -140,7 +136,7 @@ class Registry(object):
         return info.plugin if info else None
 
     def as_dict(self):
-        """Return profiles in a dict format."""
+        '''Return profiles in a dict format.'''
         def _as_dict(level):
             tmp = {}
             for k, v in iter(level.items()):

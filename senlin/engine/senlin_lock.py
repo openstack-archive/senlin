@@ -31,6 +31,8 @@ LOG = logging.getLogger(__name__)
 
 
 class BaseLock(object):
+    '''Base class for locks.'''
+
     def __init__(self, context, target, engine_id):
         self.context = context
         self.target = target
@@ -53,19 +55,19 @@ class BaseLock(object):
         return str(uuid.uuid4())
 
     def try_acquire(self):
-        """
-        Try to acquire a lock for target, but don't raise an ActionInProgress
-        exception or try to steal lock.
-        """
+        '''Try to acquire a lock for target.
+
+        It won't raise an ActionInProgress exception or try to steal lock.
+        '''
         return self.lock_create(self.target.id, self.engine_id)
 
     def acquire(self, retry=True):
-        """
-        Acquire a lock on the target.
+        '''Acquire a lock on the target.
 
         :param retry: When True, retry if lock was released while stealing.
         :type retry: boolean
-        """
+        '''
+
         lock_engine_id = self.lock_create(self.target.id, self.engine_id)
         if lock_engine_id is None:
             LOG.debug("Engine %(engine)s acquired lock on %(target_type)s "
@@ -135,11 +137,11 @@ class BaseLock(object):
 
     @contextlib.contextmanager
     def thread_lock(self, target_id):
-        """
-        Acquire a lock and release it only if there is an exception.  The
-        release method still needs to be scheduled to be run at the
+        '''Acquire a lock and release it only if there is an exception.
+
+        The release method still needs to be scheduled to be run at the
         end of the thread using the Thread.link method.
-        """
+        '''
         try:
             self.acquire()
             yield
@@ -149,11 +151,13 @@ class BaseLock(object):
 
     @contextlib.contextmanager
     def try_thread_lock(self, target_id):
-        """
+        '''Acquire the lock using try_acquire.
+
         Similar to thread_lock, but acquire the lock using try_acquire
         and only release it upon any exception after a successful
         acquisition.
-        """
+        '''
+
         result = None
         try:
             result = self.try_acquire()

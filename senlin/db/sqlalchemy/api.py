@@ -113,8 +113,7 @@ def _paginate_query(context, query, model, limit=None, marker=None,
 
 
 def soft_delete_aware_query(context, *args, **kwargs):
-    """
-    Object query helper that accounts for the `show_deleted` field.
+    """Object query helper that accounts for the `show_deleted` field.
 
     :param show_deleted: if True, overrides context's show_deleted field.
     """

@@ -17,8 +17,8 @@ __type_name__ = 'os.heat.resource'
 
 
 class ResourceProfile(base.Profile):
-    '''
-    Profile for an OpenStack Heat resource.
+    '''Profile for an OpenStack Heat resource.
+
     When this profile is used, the whole cluster is Heat stack, composed
     of resources initialzed from this profile.
     '''
@@ -26,10 +26,6 @@ class ResourceProfile(base.Profile):
         super(ResourceProfile, self).__init__(name, type_name, kwargs)
 
     def do_create(self):
-        '''
-        A resource is represented as a YAML snippet that can be composed
-        into a Heat stack.
-        '''
         return {}
 
     def do_delete(self, id):

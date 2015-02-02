@@ -16,8 +16,7 @@ from senlin.policies import base
 
 
 class ScalingPolicy(base.Policy):
-    '''
-    Policy for chaning the size of a cluster.
+    '''Policy for chaning the size of a cluster.
 
     This policy is expected to be enforced before the member list of a cluster
     is changed.

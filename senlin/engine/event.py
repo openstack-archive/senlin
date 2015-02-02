@@ -33,9 +33,8 @@ class_mapping = {
 
 
 class Event(object):
-    '''
-    Class capturing a cluster operation or state change.
-    '''
+    '''Class capturing a cluster operation or state change.'''
+
     def __init__(self, level, context, entity, action, status,
                  timestamp=None, reason='', entity_type='CLUSTER'):
         self.level = level

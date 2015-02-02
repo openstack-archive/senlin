@@ -18,9 +18,7 @@ from senlin.policies import base
 
 
 class DeletionPolicy(base.Policy):
-    '''
-    Policy for deleting member(s) from a cluster.
-    '''
+    '''Policy for deleting member(s) from a cluster.'''
 
     __type_name__ = 'DeletionPolicy'
 
@@ -51,8 +49,7 @@ class DeletionPolicy(base.Policy):
         random.seed()
 
     def pre_op(self, cluster_id, action, **kwargs):
-        '''
-        The pre-op of a deletion policy returns the chosen victims
+        '''The pre-op of a deletion policy returns the chosen victims
         that will be deleted.
         '''
         data = kwargs.get('data')

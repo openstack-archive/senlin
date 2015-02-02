@@ -26,9 +26,9 @@ LOG = logging.getLogger(__name__)
 
 @profiler.trace_cls("rpc")
 class Dispatcher(service.Service):
-    '''
-    Listen on an AMQP queue named for the engine.  Receive
-    notification from engine services and schedule actions.
+    '''Listen on an AMQP queue named for the engine.
+
+    Receive notification from engine services and schedule actions.
     '''
 
     OPERATIONS = (
@@ -53,8 +53,7 @@ class Dispatcher(service.Service):
         server.start()
 
     def listening(self, context):
-        '''
-        Respond affirmatively to confirm that the engine performing the
+        '''Respond affirmatively to confirm that the engine performing the
         action is still alive.
         '''
         return True
@@ -86,13 +85,13 @@ class Dispatcher(service.Service):
 
 
 def notify(context, call, engine_id, *args, **kwargs):
-    """
-    Send notification to dispatcher
+    '''Send notification to dispatcher
 
     :param context: rpc request context
     :param call: remote method want to call
     :param engine_id: dispatcher want to notify, if None, broadcast
-    """
+    '''
+
     timeout = cfg.CONF.engine_life_check_timeout
     client = rpc_messaging.get_rpc_client(version=attr.RPC_API_VERSION)
 

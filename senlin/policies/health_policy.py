@@ -15,9 +15,7 @@ from senlin.policies import base
 
 
 class HealthPolicy(base.Policy):
-    '''
-    Policy for health checking for members of a cluster.
-    '''
+    '''Policy for health checking for members of a cluster.'''
 
     __type_name__ = 'HealthPolicy'
 

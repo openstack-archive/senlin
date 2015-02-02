@@ -58,21 +58,20 @@ class EngineClient(object):
         return client.cast(ctxt, method, **kwargs)
 
     def local_error_name(self, error):
-        """
-        Returns the name of the error with any _Remote postfix removed.
+        '''Returns the name of the error with any _Remote postfix removed.
 
         :param error: Remote raised error to derive the name from.
-        """
+        '''
+
         error_name = error.__class__.__name__
         return error_name.split('_Remote')[0]
 
     def ignore_error_named(self, error, name):
-        """
-        Raises the error unless its local name matches the supplied name
+        '''Raises the error unless its local name matches the supplied name
 
         :param error: Remote raised error to derive the local name from.
         :param name: Name to compare local name to.
-        """
+        '''
         if self.local_error_name(error) != name:
             raise error
 
@@ -130,14 +129,13 @@ class EngineClient(object):
                                              type_name=type_name))
 
     def identify_cluster(self, ctxt, cluster_name):
-        """
-        The identify_cluster method returns the full cluster identifier for a
-        single, live cluster given the cluster name.
+        '''Get the full cluster identifier for a single, live cluster given
+        the cluster name.
 
         :param ctxt: RPC context.
         :param cluster_name: Name of the cluster you want to see,
                            or None to see all
-        """
+        '''
         return self.call(ctxt, self.make_msg('identify_cluster',
                                              cluster_name=cluster_name))
 

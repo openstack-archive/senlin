@@ -123,8 +123,7 @@ for group, opts in list_opts():
 
 
 def _get_deployment_flavor():
-    """
-    Retrieve the paste_deploy.flavor config item, formatted appropriately
+    """Retrieve the paste_deploy.flavor config item, formatted appropriately
     for appending to the application name.
     """
     flavor = cfg.CONF.paste_deploy.flavor
@@ -132,8 +131,7 @@ def _get_deployment_flavor():
 
 
 def _get_deployment_config_file():
-    """
-    Retrieve the deployment_config_file config item, formatted as an
+    """Retrieve the deployment_config_file config item, formatted as an
     absolute pathname.
     """
     config_path = cfg.CONF.find_file(
@@ -145,8 +143,7 @@ def _get_deployment_config_file():
 
 
 def load_paste_app(app_name=None):
-    """
-    Builds and returns a WSGI app from a paste config file.
+    """Builds and returns a WSGI app from a paste config file.
 
     We assume the last config file specified in the supplied ConfigOpts
     object is the paste config file.

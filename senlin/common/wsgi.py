@@ -114,8 +114,7 @@ def get_bind_addr(conf, default_port=None):
 
 
 def get_socket(conf, default_port):
-    """
-    Bind socket to bind ip:port in conf
+    '''Bind socket to bind ip:port in conf
 
     note: Mostly comes from Swift with a few small changes...
 
@@ -124,7 +123,8 @@ def get_socket(conf, default_port):
 
     :returns : a socket object as returned from socket.listen or
                ssl.wrap_socket if conf specifies cert_file
-    """
+    '''
+
     bind_addr = get_bind_addr(conf, default_port)
 
     # TODO(jaypipes): eventlet's greened socket module does not actually
@@ -179,13 +179,12 @@ class Server(object):
         self.running = True
 
     def start(self, application, conf, default_port):
-        """
-        Run a WSGI server with the given application.
+        '''Run a WSGI server with the given application.
 
         :param application: The application to run in the WSGI server
         :param conf: a cfg.ConfigOpts object
         :param default_port: Port to bind to if none is specified in conf
-        """
+        '''
         def kill_children(*args):
             """Kills the entire process group."""
             self.LOG.error(_LE('SIGTERM received'))
@@ -194,9 +193,8 @@ class Server(object):
             os.killpg(0, signal.SIGTERM)
 
         def hup(*args):
-            """
-            Shuts down the server(s), but allows running requests to complete
-            """
+            # Shuts down the server(s), but allows running requests to complete
+
             self.LOG.error(_LE('SIGHUP received'))
             signal.signal(signal.SIGHUP, signal.SIG_IGN)
             os.killpg(0, signal.SIGHUP)
@@ -291,25 +289,24 @@ class Server(object):
 
 
 class Middleware(object):
-    """
-    Base WSGI middleware wrapper. These classes require an application to be
-    initialized that will be called next.  By default the middleware will
-    simply call its wrapped app, or you can override __call__ to customize its
-    behavior.
-    """
+    '''Base WSGI middleware wrapper.
+
+    These classes require an application to be initialized that will be called
+    next.  By default the middleware will simply call its wrapped app, or you
+    can override __call__ to customize its behavior.
+    '''
 
     def __init__(self, application):
         self.application = application
 
     def process_request(self, req):
-        """
-        Called on each request.
+        '''Called on each request.
 
         If this returns None, the next application down the stack will be
         executed. If it returns a response then that response will be returned
         and execution will stop here.
+        '''
 
-        """
         return None
 
     def process_response(self, response):
@@ -326,10 +323,9 @@ class Middleware(object):
 
 
 class Debug(Middleware):
-    """
-    Helper class that can be inserted into any WSGI application chain
+    '''Helper class that can be inserted into any WSGI application chain
     to get information about the request and response.
-    """
+    '''
 
     @webob.dec.wsgify
     def __call__(self, req):
@@ -350,10 +346,8 @@ class Debug(Middleware):
 
     @staticmethod
     def print_generator(app_iter):
-        """
-        Iterator that prints the contents of a wrapper string iterator
-        when iterated.
-        """
+        # Iterator that prints the contents of a wrapper string iterator
+        # when iterated.
         print(("*" * 40) + " BODY")
         for part in app_iter:
             sys.stdout.write(part)
@@ -367,13 +361,10 @@ def debug_filter(app, conf, **local_conf):
 
 
 class Router(object):
-    """
-    WSGI middleware that maps incoming requests to WSGI apps.
-    """
+    '''WSGI middleware that maps incoming requests to WSGI apps.'''
 
     def __init__(self, mapper):
-        """
-        Create a router for the given routes.Mapper.
+        '''Create a router for the given routes.Mapper.
 
         Each route in `mapper` must specify a 'controller', which is a
         WSGI app to call.  You'll probably want to specify an 'action' as
@@ -394,27 +385,30 @@ class Router(object):
           # {path_info:.*} parameter so the target app can be handed just that
           # section of the URL.
           mapper.connect(None, "/v1.0/{path_info:.*}", controller=BlogApp())
-        """
+        '''
+
         self.map = mapper
         self._router = routes.middleware.RoutesMiddleware(self._dispatch,
                                                           self.map)
 
     @webob.dec.wsgify
     def __call__(self, req):
-        """
-        Route the incoming request to a controller based on self.map.
+        '''Route the incoming request to a controller based on self.map.
+
         If no match, return a 404.
-        """
+        '''
+
         return self._router
 
     @staticmethod
     @webob.dec.wsgify
     def _dispatch(req):
-        """
-        Called by self._router after matching the incoming request to a route
-        and putting the information into req.environ.  Either returns 404
-        or the routed WSGI app's response.
-        """
+        '''Called by self._router after matching the incoming request to
+        a route and putting the information into req.environ.
+
+        Either returns 404 or the routed WSGI app's response.
+        '''
+
         match = req.environ['wsgiorg.routing_args'][1]
         if not match:
             return webob.exc.HTTPNotFound()
@@ -477,11 +471,11 @@ def is_json_content_type(request):
 
 class JSONRequestDeserializer(object):
     def has_body(self, request):
-        """
-        Returns whether a Webob.Request object will possess an entity body.
+        '''Returns whether a Webob.Request object will possess an entity body.
 
         :param request:  Webob.Request object
-        """
+        '''
+
         if request.content_length > 0 and is_json_content_type(request):
             return True
 
@@ -507,8 +501,7 @@ class JSONRequestDeserializer(object):
 
 
 class Resource(object):
-    """
-    WSGI app that handles (de)serialization and controller dispatch.
+    '''WSGI app that handles (de)serialization and controller dispatch.
 
     Reads routing information supplied by RoutesMiddleware and calls
     the requested action method upon its deserializer, controller,
@@ -522,9 +515,10 @@ class Resource(object):
     arguments that represent the keys returned by the Deserializer. They
     may raise a webob.exc exception or return a dict, which will be
     serialized by requested content type.
-    """
+    '''
+
     def __init__(self, controller, deserializer, serializer=None):
-        """
+        """Initializer.
         :param controller: object that implement methods created by routes lib
         :param deserializer: object that supports webob request deserialization
                              through controller-like actions
@@ -647,7 +641,6 @@ def translate_exception(exc, locale):
 
 
 class BasePasteFactory(object):
-
     """A base class for paste app and filter factories.
 
     Sub-classes must override the KEY class attribute and provide
@@ -684,7 +677,6 @@ class BasePasteFactory(object):
 
 
 class AppFactory(BasePasteFactory):
-
     """A Generic paste.deploy app factory.
 
     This requires senlin.app_factory to be set to a callable which returns a

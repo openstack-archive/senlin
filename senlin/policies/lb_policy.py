@@ -15,8 +15,7 @@ from senlin.policies import base
 
 
 class LoadBalancingPolicy(base.Policy):
-    '''
-    Policy for load balancing among members of a cluster.
+    '''Policy for load balancing among members of a cluster.
 
     This policy is expected to be enforced after the member list of a cluster
     is changed. We need to reload the load-balancer specified (or internally

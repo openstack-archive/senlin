@@ -16,8 +16,7 @@ Base class for all drivers.
 
 
 class DriverBase(object):
-    '''
-    Base class for all drivers.
-    '''
+    '''Base class for all drivers.'''
+
     def __init__(self, context):
         self.context = context

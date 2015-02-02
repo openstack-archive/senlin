@@ -57,7 +57,8 @@ _levelNames = {
 
 
 def getLevelName(level):
-    '''
+    '''Get a level name or number.
+
     Return a level name if given a numeric value; or return a value if given
     a string.  If level is not predefined, "Level %s" will be returned.
     '''

@@ -13,6 +13,7 @@
 import datetime
 
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.common.i18n import _LW
 from senlin.db import api as db_api
@@ -24,8 +25,7 @@ LOG = logging.getLogger(__name__)
 
 
 class Node(object):
-    '''
-    A node is an object that can belong to at most one single cluster.
+    '''A node is an object that can belong to at most one single cluster.
 
     All operations are performed without further checking because the
     checkings are supposed to be de done before/after/during an action is
@@ -70,8 +70,7 @@ class Node(object):
         }
 
     def store(self, context):
-        '''
-        Store the node record into database table.
+        '''Store the node record into database table.
 
         The invocation of DB API could be a node_create or a node_update,
         depending on whether node has an ID assigned.
@@ -108,8 +107,8 @@ class Node(object):
 
     @classmethod
     def from_db_record(cls, context, record):
-        '''
-        Construct a node object from database record.
+        '''Construct a node object from database record.
+
         :param context: the context used for DB operations;
         :param record: a DB node object that contains all fields;
         '''
@@ -132,9 +131,8 @@ class Node(object):
 
     @classmethod
     def load(cls, context, node_id):
-        '''
-        Retrieve a node from database.
-        '''
+        '''Retrieve a node from database.'''
+
         record = db_api.node_get(context, node_id)
 
         if record is None:
@@ -147,9 +145,8 @@ class Node(object):
     def load_all(cls, context, cluster_id=None, show_deleted=False,
                  limit=None, marker=None, sort_keys=None, sort_dir=None,
                  filters=None, tenant_safe=True):
-        '''
-        Retrieve all nodes of from database.
-        '''
+        '''Retrieve all nodes of from database.'''
+
         records = db_api.node_get_all(context, cluster_id=cluster_id,
                                       show_deleted=show_deleted,
                                       limit=limit, marker=marker,

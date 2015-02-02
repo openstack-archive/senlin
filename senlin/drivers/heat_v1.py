@@ -16,9 +16,8 @@ from senlin.openstack.orchestration.v1 import stack
 
 
 class HeatClient(base.DriverBase):
-    '''
-    Heat V1 driver.
-    '''
+    '''Heat V1 driver.'''
+
     def __init__(self, context):
         conn = sdk.create_connection(context)
         self.session = conn.session

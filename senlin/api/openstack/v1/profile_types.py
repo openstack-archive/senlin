@@ -27,9 +27,8 @@ LOG = logging.getLogger(__name__)
 
 
 class ProfileTypeController(object):
-    '''
-    WSGI controller for profile types resource in Senlin v1 API
-    '''
+    '''WSGI controller for profile types resource in Senlin v1 API.'''
+
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'profile_types'
 
@@ -47,9 +46,7 @@ class ProfileTypeController(object):
 
     @util.policy_enforce
     def spec(self, req, type_name):
-        '''
-        Gets the interface schema for a specified profile type.
-        '''
+        '''Gets the interface schema for a specified profile type.'''
         spec = self.rpc_client.profile_type_spec(req.context, type_name)
         if not spec:
             raise exc.HTTPInternalServerError()
@@ -58,9 +55,8 @@ class ProfileTypeController(object):
 
     @util.policy_enforce
     def template(self, req, type_name):
-        '''
-        Gets the template representation for a specified profile type.
-        '''
+        '''Gets the template representation for a specified profile type.'''
+
         tmpl = self.rpc_client.profile_type_template(req.context, type_name)
         if not tmpl:
             raise exc.HTTPInternalServerError()
@@ -69,9 +65,8 @@ class ProfileTypeController(object):
 
 
 def create_resource(options):
-    '''
-    Profiles resource factory method.
-    '''
+    '''Profiles resource factory method.'''
+
     return wsgi.Resource(ProfileTypeController(options),
                          wsgi.JSONRequestDeserializer(),
                          serializers.JSONResponseSerializer())

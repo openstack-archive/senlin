@@ -24,10 +24,11 @@ LOG = logging.getLogger(__name__)
 
 
 class RequestContext(context.RequestContext):
-    """
-    Stores information about the security context under which the user
+    '''Stores information about the security context.
+
+    The context encapsulates information related to the user
     accesses the system, as well as additional request information.
-    """
+    '''
 
     def __init__(self, auth_token=None, auth_token_info=None,
                  username=None, user_id=None, password=None, is_admin=None,
@@ -37,10 +38,10 @@ class RequestContext(context.RequestContext):
                  region_name=None, roles=None,
                  read_only=False, show_deleted=False,
                  request_id=None, **kwargs):
-        """
+        '''Initializer of request context.
          :param kwargs: Extra arguments that might be present, but we ignore
             because they possibly came in from older rpc messages.
-        """
+        '''
         super(RequestContext, self).__init__(auth_token=auth_token,
                                              user=username,
                                              tenant=tenant,
@@ -124,16 +125,15 @@ class ContextMiddleware(wsgi.Middleware):
         super(ContextMiddleware, self).__init__(app)
 
     def make_context(self, *args, **kwargs):
-        """
-        Create a context with the given arguments.
-        """
+        '''Create a context with the given arguments.'''
+
         return self.ctxcls(*args, **kwargs)
 
     def process_request(self, req):
-        """
-        Extract any authentication information in the request and
+        '''Extract any authentication information in the request and
         construct an appropriate context from it.
-        """
+        '''
+
         headers = req.headers
         environ = req.environ
         try:
@@ -179,9 +179,8 @@ class ContextMiddleware(wsgi.Middleware):
 
 
 def ContextMiddleware_filter_factory(global_conf, **local_conf):
-    """
-    Factory method for paste.deploy
-    """
+    '''Factory method for paste.deploy'''
+
     conf = global_conf.copy()
     conf.update(local_conf)
 

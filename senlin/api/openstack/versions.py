@@ -22,10 +22,7 @@ import webob.dec
 
 
 class Controller(object):
-
-    """
-    A controller that produces information on the senlin API versions.
-    """
+    '''A controller that produces information on the senlin API versions.'''
 
     def __init__(self, conf):
         self.conf = conf

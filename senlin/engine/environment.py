@@ -38,9 +38,8 @@ def global_env():
 
 
 class Environment(object):
-    '''
-    An object that contains all profiles, policies and customizations.
-    '''
+    '''An object that contains all profiles, policies and customizations.'''
+
     SECTIONS = (
         PARAMETERS, CUSTOM_PROFILES, CUSTOM_POLICIES,
     ) = (
@@ -48,8 +47,7 @@ class Environment(object):
     )
 
     def __init__(self, env=None, is_global=False):
-        '''
-        Create an Environment from a dict.
+        '''Create an Environment from a dict.
 
         :param env: the json environment
         :param is_global: boolean indicating if this is a user created one.
@@ -75,9 +73,8 @@ class Environment(object):
             self.policy_registry.load(custom_policies)
 
     def parse(self, env_str):
-        '''
-        Parse a string format environment file into a dictionary.
-        '''
+        '''Parse a string format environment file into a dictionary.'''
+
         if env_str is None:
             return {}
 
@@ -97,9 +94,8 @@ class Environment(object):
         return env
 
     def load(self, env_dict):
-        '''
-        Load environment from the given dictionary.
-        '''
+        '''Load environment from the given dictionary.'''
+
         self.params.update(env_dict.get(self.PARAMETERS, {}))
         self.profile_registry.load(env_dict.get(self.CUSTOM_PROFILES, {}))
         self.policy_registry.load(env_dict.get(self.CUSTOM_POLICIES, {}))
@@ -151,9 +147,8 @@ class Environment(object):
         return self.policy_registry.get_types()
 
     def read_global_environment(self):
-        '''
-        Read and parse global enviroment files.
-        '''
+        '''Read and parse global enviroment files.'''
+
         cfg.CONF.import_opt('environment_dir', 'senlin.common.config')
         env_dir = cfg.CONF.environment_dir
 

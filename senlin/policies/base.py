@@ -11,14 +11,14 @@
 # under the License.
 
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.db import api as db_api
 from senlin.engine import environment
 
 
 class Policy(object):
-    '''
-    Base class for policies.
-    '''
+    '''Base class for policies.'''
+
     ENFORCEMENT_LEVELS = (
         CRITICAL, ERROR, WARNING, INFO, DEBUG,
     ) = (
@@ -32,9 +32,8 @@ class Policy(object):
     )
 
     def __new__(cls, type_name, name, **kwargs):
-        '''
-        Create a new policy of the appropriate class.
-        '''
+        '''Create a new policy of the appropriate class.'''
+
         if cls != Policy:
             PolicyClass = cls
         else:
@@ -54,8 +53,8 @@ class Policy(object):
         self.data = kwargs.get('data', {})
 
     def store(self):
-        '''
-        Store the policy object into database table.
+        '''Store the policy object into database table.
+
         This could be a policy_create or a policy_update DB API invocation,
         depends on whether self.id is set.
         '''
@@ -77,11 +76,8 @@ class Policy(object):
 
     @classmethod
     def from_db_record(cls, context, record):
-        '''
-        Construct a policy object from a database record.
-        :param context:
-        :param record:
-        '''
+        '''Construct a policy object from a database record.'''
+
         kwargs = {
             'id': record.id,
             'name': record.name,
@@ -96,9 +92,8 @@ class Policy(object):
 
     @classmethod
     def load(cls, context, policy_id):
-        '''
-        Retrieve and reconstruct a policy object from DB.
-        '''
+        '''Retrieve and reconstruct a policy object from DB.'''
+
         policy = db_api.policy_get(context, policy_id)
         if policy is None:
             msg = _('No policy with id "%s" exists') % policy_id
@@ -107,23 +102,20 @@ class Policy(object):
         return cls.from_db_record(context, policy)
 
     def pre_op(self, cluster_id, action, **kwargs):
-        '''
-        Force all subclasses to implement an operation that will be invoked
+        '''Force all subclasses to implement an operation that will be invoked
         before an action.
         '''
         return NotImplemented
 
     def enforce(self, cluster_id, action, **kwargs):
-        '''
-        Force all subclasses to implement an operation that can be called
+        '''Force all subclasses to implement an operation that can be called
         during an action.
         '''
         return NotImplemented
 
     def post_op(self, cluster_id, action, **kwargs):
-        '''
-        Force all subclasses to implement an operation that will be performed
-        after an action.
+        '''Force all subclasses to implement an operation that will be
+        performed after an action.
         '''
         return NotImplemented
 

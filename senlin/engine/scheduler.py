@@ -34,8 +34,8 @@ ACTION_CONTROL_REQUEST = (
 
 
 class ThreadGroupManager(object):
-    """
-    """
+    '''Thread group manager.'''
+
     def __init__(self):
         super(ThreadGroupManager, self).__init__()
         self.threads = {}
@@ -46,10 +46,10 @@ class ThreadGroupManager(object):
         self.add_timer(cfg.CONF.periodic_interval, self._service_task)
 
     def _service_task(self):
-        '''
-        This is a dummy task which gets queued on the service.Service
-        threadgroup.  Without this service.Service sees nothing running
-        i.e has nothing to wait() on, so the process exits..
+        '''Dummy task which gets queued on the service.Service threadgroup.
+
+        Without this service.Service sees nothing running i.e has nothing to
+        wait() on, so the process exits..
         This could also be used to trigger periodic non-cluster-specific
         housekeeping tasks
 
@@ -59,24 +59,20 @@ class ThreadGroupManager(object):
         pass
 
     def start(self, func, *args, **kwargs):
-        """
-        Run the given method in a sub-thread.
-        """
+        '''Run the given method in a sub-thread.'''
+
         return self.group.add_thread(func, *args, **kwargs)
 
     def start_action_thread(self, context, action, *args, **kwargs):
-        """
-        Run the given action in a sub-thread and release the action lock
+        '''Run the given action in a sub-thread and release the action lock
         when the thread finishes.
 
         :param context: The context of rpc request
         :param action: The action to run in thread
+        '''
 
-        """
         def release(gt, context, action):
-            """
-            Callback function that will be passed to GreenThread.link().
-            """
+            '''Callback function that will be passed to GreenThread.link().'''
             # Remove action thread from thread list
             self.threads.pop(action.id)
 
@@ -86,10 +82,11 @@ class ThreadGroupManager(object):
         return th
 
     def add_timer(self, interval, func, *args, **kwargs):
-        """
-        Define a periodic task, to be run in a separate thread, in the target
-        threadgroups.  Periodicity is cfg.CONF.periodic_interval
-        """
+        '''Define a periodic task, to be run in a separate thread, in the
+        target threadgroups.
+        Interval is from cfg.CONF.periodic_interval
+        '''
+
         self.group.add_timer(cfg.CONF.periodic_interval, func, *args, **kwargs)
 
     def stop_timers(self):
@@ -116,13 +113,12 @@ class ThreadGroupManager(object):
 
 
 def ActionProc(context, action, wait_time=1, **kwargs):
-    """
-    Start and run action progress.
+    '''Start and run action progress.
 
     Action progress will sleep for `wait_time` seconds between
     each step. To avoid sleeping, pass `None` for `wait_time`.
-    """
-    # Do the first step
+    '''
+
     LOG.debug('Starting %s' % six.text_type(action.action))
 
     result = action.execute()
@@ -145,14 +141,14 @@ def ActionProc(context, action, wait_time=1, **kwargs):
 
 
 def start_action(context, action_id, engine_id, tgm):
-    """
-    Start an action execution progress using given ThreadGroupManager
+    '''Start an action execution progress using given ThreadGroupManager.
 
     :param context: The context of rpc request
     :param action_id: The id of action to run in thread
     :param engine_id: The id of engine try to lock the action
     :param tgm: The ThreadGroupManager of the engine
-    """
+    '''
+
     action = base_action.Action.load(context, action_id)
 
     action.start_time = wallclock()
@@ -173,46 +169,41 @@ def start_action(context, action_id, engine_id, tgm):
 
 
 def suspend_action(context, action_id):
-    """
-    Try to suspend an action execution progress
+    '''Suspend an action execution progress.
 
     :param context: The context of rpc request
     :param action_id: The id of action to run in thread
-    """
+    '''
     # Set action control flag to suspend
     # TODO(anyone): need db_api support
     db_api.action_control(context, action_id, ACTION_SUSPEND)
 
 
 def resume_action(context, action_id):
-    """
-    Try to resume an action execution progress
+    '''Resume an action execution progress.
 
     :param context: The context of rpc request
     :param action_id: The id of action to run in thread
-    """
+    '''
     # Set action control flag to suspend
     # TODO(anyone): need db_api support
     db_api.action_control(context, action_id, ACTION_RESUME)
 
 
 def cancel_action(context, action_id):
-    """
-    Try to cancel an action execution progress
+    '''Try to cancel an action execution progress.
 
     :param context: The context of rpc request
     :param action_id: The id of action to run in thread
-    """
+    '''
     # Set action control flag to cancel
     # TODO(anyone): need db_api support
     db_api.action_control(context, action_id, ACTION_CANCEL)
 
 
 def action_control_flag(action):
-    """
-    Check whether there are some action control requests
-    need to be handled.
-    """
+    '''Check whether there are some action control requests.'''
+
     # Check timeout first, if true, return timeout message
     if action.timeout is not None and action_timeout(action):
         LOG.debug('Action %s run timeout' % action.id)
@@ -225,9 +216,8 @@ def action_control_flag(action):
 
 
 def action_cancelled(action):
-    """
-    Check whether an action's control flag is set to cancel
-    """
+    '''Check whether an action is flagged to be cancelled.'''
+
     if action_control_flag(action) == ACTION_CANCEL:
         return True
     else:
@@ -235,9 +225,8 @@ def action_cancelled(action):
 
 
 def action_suspended(action):
-    """
-    Check whether an action's control flag is set to suspend
-    """
+    '''Check whether an action's control flag is set to suspend.'''
+
     if action_control_flag(action) == ACTION_SUSPEND:
         return True
     else:
@@ -245,9 +234,8 @@ def action_suspended(action):
 
 
 def action_resumed(action):
-    """
-    Check whether an action's control flag is set to suspend
-    """
+    '''Check whether an action's control flag is set to resume.'''
+
     if action_control_flag(action) == ACTION_RESUME:
         return True
     else:
@@ -255,9 +243,8 @@ def action_resumed(action):
 
 
 def action_timeout(action):
-    """
-    Return True if an action has run timeout, False otherwise.
-    """
+    '''Return True if an action has run timeout, False otherwise.'''
+
     time_lapse = wallclock() - action.start_time
 
     if time_lapse > action.timeout:
@@ -267,11 +254,11 @@ def action_timeout(action):
 
 
 def reschedule(action, sleep_time=1):
-    """
-    Eventlet Sleep for the specified number of seconds.
+    '''Eventlet Sleep for the specified number of seconds.
 
     :param sleep_time: seconds to sleep; if None, no sleep;
-    """
+    '''
+
     if sleep_time is not None:
         LOG.debug('Action %s sleep for %s seconds' % (
             action.id, sleep_time))
@@ -279,16 +266,14 @@ def reschedule(action, sleep_time=1):
 
 
 def action_wait(action):
-    """
-    Keep waiting util action resume control flag is set
-    """
+    '''Keep waiting util action resume control flag is set.'''
+
     while not action_resumed(action):
         reschedule(action, sleep_time=1)
         continue
 
 
 def sleep(sleep_time):
-    '''
-    Interface for sleeping.
-    '''
+    '''Interface for sleeping.'''
+
     eventlet.sleep(sleep_time)

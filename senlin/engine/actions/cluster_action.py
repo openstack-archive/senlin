@@ -28,9 +28,8 @@ LOG = logging.getLogger(__name__)
 
 
 class ClusterAction(base.Action):
-    '''
-    An action performed on a cluster.
-    '''
+    '''An action performed on a cluster.'''
+
     ACTIONS = (
         CLUSTER_CREATE, CLUSTER_DELETE, CLUSTER_UPDATE,
         CLUSTER_ADD_NODES, CLUSTER_DEL_NODES,

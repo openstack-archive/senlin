@@ -25,6 +25,7 @@ LOG = logging.getLogger(__name__)
 
 class ActionData(object):
     '''All required data fields for an action.'''
+
     PARAMS = (
         NAME, TARGET, ACTION,
     ) = (
@@ -55,9 +56,8 @@ class ActionData(object):
 
 
 class ActionController(object):
-    """
-    WSGI controller for Actions in Senlin v1 API
-    """
+    '''WSGI controller for Actions in Senlin v1 API.'''
+
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'actions'
 
@@ -120,9 +120,8 @@ class ActionController(object):
 
 
 def create_resource(options):
-    """
-    Actions factory method.
-    """
+    '''Actions factory method.'''
+
     return wsgi.Resource(ActionController(options),
                          wsgi.JSONRequestDeserializer(),
                          serializers.JSONResponseSerializer())

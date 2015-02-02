@@ -26,9 +26,7 @@ LOG = logging.getLogger(__name__)
 
 
 class PolicyTypeController(object):
-    '''
-    WSGI controller for policy types resource in Senlin v1 API
-    '''
+    '''WSGI controller for policy types resource in Senlin v1 API.'''
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'policy_types'
 
@@ -62,9 +60,8 @@ class PolicyTypeController(object):
 
 
 def create_resource(options):
-    '''
-    Policy type resource factory method.
-    '''
+    '''Policy type resource factory method.'''
+
     return wsgi.Resource(PolicyTypeController(options),
                          wsgi.JSONRequestDeserializer(),
                          serializers.JSONResponseSerializer())

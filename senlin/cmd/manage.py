@@ -34,17 +34,15 @@ def do_db_version():
 
 
 def do_db_sync():
-    """
-    Place a database under migration control and upgrade,
+    """Place a database under migration control and upgrade,
     creating first if necessary.
     """
     api.db_sync(api.get_engine(), CONF.command.version)
 
 
 def purge_deleted():
-    """
-    Remove database records that have been previously soft deleted
-    """
+    """Remove database records that have been previously soft deleted."""
+
     utils.purge_deleted(CONF.command.age, CONF.command.granularity)
 
 

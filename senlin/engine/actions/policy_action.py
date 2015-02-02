@@ -21,8 +21,7 @@ LOG = logging.getLogger(__name__)
 
 
 class PolicyAction(base.Action):
-    '''
-    An action performed on a cluster policy.
+    '''An action performed on a cluster policy.
 
     Note that these can be treated as cluster operations instead of operations
     on a policy itself.

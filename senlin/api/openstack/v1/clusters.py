@@ -31,9 +31,8 @@ LOG = logging.getLogger(__name__)
 
 
 class InstantiationData(object):
-    """
-    The data accompanying a PUT or POST request to create or update a cluster.
-    """
+    '''The data accompanying a PUT/POST request to create/update a cluster.'''
+
     PARAMS = (
         attr.CLUSTER_NAME, attr.CLUSTER_SIZE, attr.CLUSTER_PROFILE,
         attr.CLUSTER_TAGS, attr.CLUSTER_TIMEOUT
@@ -69,10 +68,8 @@ class InstantiationData(object):
 
 
 class ClusterController(object):
-    """
-    WSGI controller for clusters resource in Senlin v1 API
-    Implements the API actions
-    """
+    '''WSGI controller for clusters resource in Senlin v1 API.'''
+
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'clusters'
 
@@ -112,9 +109,8 @@ class ClusterController(object):
 
     @util.policy_enforce
     def create(self, req, body):
-        """
-        Create a new cluster
-        """
+        '''Create a new cluster.'''
+
         data = InstantiationData(body)
 
         action = self.rpc_client.cluster_create(req.context, data.name(),
@@ -126,9 +122,7 @@ class ClusterController(object):
 
     @util.policy_enforce
     def get(self, req, cluster_id):
-        """
-        Gets detailed information for a cluster
-        """
+        '''Gets detailed information for a cluster.'''
 
         cluster = self.rpc_client.cluster_get(req.context,
                                               cluster_id)
@@ -139,9 +133,8 @@ class ClusterController(object):
 
     @util.policy_enforce
     def update(self, req, cluster_id, body):
-        """
-        Update an existing cluster with new parameters
-        """
+        '''Update an existing cluster with new parameters.'''
+
         data = InstantiationData(body)
 
         self.rpc_client.cluster_update(req.context,
@@ -164,9 +157,8 @@ class ClusterController(object):
 
 
 def create_resource(options):
-    """
-    Clusters resource factory method.
-    """
+    '''Clusters resource factory method.'''
+
     return wsgi.Resource(ClusterController(options),
                          wsgi.JSONRequestDeserializer(),
                          serializers.JSONResponseSerializer())

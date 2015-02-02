@@ -70,15 +70,15 @@ def request_context(func):
 
 @profiler.trace_cls("rpc")
 class EngineService(service.Service):
-    """
-    Manages the running instances from creation to destruction.
+    '''Manages the running instances from creation to destruction.
+
     All the methods in here are called from the RPC backend.  This is
     all done dynamically so if a call is made via RPC that does not
     have a corresponding method here, an exception will be thrown when
     it attempts to call into this class.  Arguments to these methods
     are also dynamically added and will be named as keyword arguments
     by the RPC caller.
-    """
+    '''
 
     def __init__(self, host, topic, manager=None,
                  periodic_enable=None, periodic_fuzzy_delay=None,
@@ -244,9 +244,8 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_find(self, context, identity):
-        '''
-        Find a cluster with the given identity (could be name or ID).
-        '''
+        '''Find a cluster with the given identity (could be name or ID).'''
+
         if uuidutils.is_uuid_like(identity):
             db_cluster = db_api.cluster_get(context, identity,
                                             show_deleted=True)

@@ -31,13 +31,11 @@ LOG = logging.getLogger(__name__)
 
 
 class Profile(object):
-    '''
-    Base class for profiles.
-    '''
+    '''Base class for profiles.'''
+
     def __new__(cls, type_name, name, **kwargs):
-        '''
-        Create a new profile of the appropriate class.
-        '''
+        '''Create a new profile of the appropriate class.'''
+
         if cls != Profile:
             ProfileClass = cls
         else:
@@ -46,9 +44,8 @@ class Profile(object):
         return super(Profile, cls).__new__(ProfileClass)
 
     def __init__(self, type_name, name, **kwargs):
-        '''
-        Initialize the profile with given parameters and a JSON object.
-        '''
+        '''Initialize the profile with given parameters and a JSON object.'''
+
         self.name = name
         self.type = type_name
         self.id = kwargs.get('id', None)
@@ -63,8 +60,8 @@ class Profile(object):
 
     @classmethod
     def from_db_record(cls, context, record):
-        '''
-        Construct a profile object from database record.
+        '''Construct a profile object from database record.
+
         :param context: the context used for DB operations.
         :param record: a DB Profle object that contains all required fields.
         '''
@@ -83,18 +80,16 @@ class Profile(object):
 
     @classmethod
     def load(cls, context, profile_id):
-        '''
-        Retrieve a profile object from database.
-        '''
+        '''Retrieve a profile object from database.'''
+
         record = db_api.profile_get(context, profile_id)
         return cls.from_db_record(context, record)
 
     @classmethod
     def load_all(cls, context, limit=None, sort_keys=None, marker=None,
                  sort_dir=None, filters=None, show_deleted=False):
-        '''
-        Retrieve all profiles from database.
-        '''
+        '''Retrieve all profiles from database.'''
+
         records = db_api.profile_get_all(context, limit=limit, marker=marker,
                                          sort_keys=sort_keys,
                                          sort_dir=sort_dir,
@@ -109,9 +104,8 @@ class Profile(object):
         db_api.profile_delete(context, profile_id)
 
     def store(self, context):
-        '''
-        Store the profile into database and return its ID.
-        '''
+        '''Store the profile into database and return its ID.'''
+
         values = {
             'name': self.name,
             'type': self.type,
@@ -141,27 +135,22 @@ class Profile(object):
         return profile.do_update(obj, new_profile)
 
     def do_create(self, obj):
-        '''
-        For subclass to override.
-        '''
+        '''For subclass to override.'''
+
         return NotImplemented
 
     def do_delete(self, obj):
-        '''
-        For subclass to override.
-        '''
+        '''For subclass to override.'''
+
         return NotImplemented
 
     def do_update(self, obj, new_profile):
-        '''
-        For subclass to override.
-        '''
+        '''For subclass to override.'''
+
         return NotImplemented
 
     def do_check(self, obj):
-        '''
-        For subclass to override.
-        '''
+        '''For subclass to override.'''
         return NotImplemented
 
     def healty_check(self, context):

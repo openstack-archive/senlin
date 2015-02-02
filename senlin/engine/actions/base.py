@@ -25,9 +25,8 @@ LOG = logging.getLogger(__name__)
 
 
 class Action(object):
-    '''
-    An action can be performed on a cluster or a node of a cluster.
-    '''
+    '''An action can be performed on a cluster or a node of a cluster.'''
+
     RETURNS = (
         RES_OK, RES_ERROR, RES_RETRY, RES_CANCEL, RES_TIMEOUT,
     ) = (
@@ -132,9 +131,8 @@ class Action(object):
         self.deleted_time = kwargs.get('deleted_time', None)
 
     def store(self, context):
-        '''
-        Store the action record into database table.
-        '''
+        '''Store the action record into database table.'''
+
         values = {
             'name': self.name,
             'context': self.context.to_dict(),
@@ -169,8 +167,8 @@ class Action(object):
 
     @classmethod
     def _from_db_record(cls, record):
-        '''
-        Construct a action object from database record.
+        '''Construct a action object from database record.
+
         :param context: the context used for DB operations;
         :param record: a DB action object that contains all fields.
         '''
@@ -198,9 +196,8 @@ class Action(object):
 
     @classmethod
     def load(cls, context, action_id):
-        '''
-        Retrieve an action from database.
-        '''
+        '''Retrieve an action from database.'''
+
         action = db_api.action_get(context, action_id)
         if action is None:
             msg = _('No action with id "%s" exists') % action_id
@@ -211,9 +208,8 @@ class Action(object):
     @classmethod
     def load_all(cls, context, filters=None, limit=None, marker=None,
                  sort_keys=None, sort_dir=None, show_deleted=False):
-        '''
-        Retrieve all actions of from database.
-        '''
+        '''Retrieve all actions of from database.'''
+
         records = db_api.action_get_all(context, filters=filters,
                                         limit=limit, marker=marker,
                                         sort_keys=sort_keys,
@@ -228,8 +224,8 @@ class Action(object):
         db_api.action_delete(context, action_id, force)
 
     def execute(self, **kwargs):
-        '''
-        Execute the action.
+        '''Execute the action.
+
         In theory, the action encapsulates all information needed for
         execution.  'kwargs' may specify additional parameters.
         :param kwargs: additional parameters that may override the default
@@ -241,8 +237,8 @@ class Action(object):
         return NotImplemented
 
     def set_status(self, status):
-        '''
-        Set action status.
+        '''Set action status.
+
         This is not merely about a db record update.
         '''
         if status == self.SUCCEEDED:
@@ -260,8 +256,7 @@ class Action(object):
         return action.status
 
     def policy_check(self, cluster_id, target):
-        """
-        Check all policies attached to cluster and give result
+        """Check all policies attached to cluster and give result.
 
         :param target: A tuple of ('when', action_name)
         """

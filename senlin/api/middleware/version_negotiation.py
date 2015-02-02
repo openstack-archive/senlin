@@ -37,7 +37,8 @@ class VersionNegotiationFilter(wsgi.Middleware):
         super(VersionNegotiationFilter, self).__init__(app)
 
     def process_request(self, req):
-        """
+        """Process WSGI requests.
+
         If there is a version identifier in the URI, simply
         return the correct API controller, otherwise, if we
         find an Accept: header, process it
@@ -104,10 +105,11 @@ class VersionNegotiationFilter(wsgi.Middleware):
         return None
 
     def _match_version_string(self, subject, req):
-        """
-        Given a subject string, tries to match a major and/or
-        minor version number. If found, sets the api.major_version
-        and api.minor_version environ variables.
+        """Do version matching.
+
+        Given a subject string, tries to match a major and/or minor version
+        number. If found, sets the api.major_version and api.minor_version
+        environ variables.
 
         Returns True if there was a match, false otherwise.
 

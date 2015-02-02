@@ -24,10 +24,7 @@ from senlin.common import wsgi
 
 
 class API(wsgi.Router):
-
-    """
-    WSGI router for Cluster v1 ReST API requests.
-    """
+    '''WSGI router for Cluster v1 ReST API requests.'''
 
     def __init__(self, conf, **local_conf):
         self.conf = conf
