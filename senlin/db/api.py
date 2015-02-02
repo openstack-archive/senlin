@@ -126,8 +126,8 @@ def node_delete(context, node_id, force=False):
 
 
 # Locks
-def cluster_lock_create(cluster_id, worker_id):
-    return IMPL.cluster_lock_create(cluster_id, worker_id)
+def cluster_lock_acquire(cluster_id, action_id):
+    return IMPL.cluster_lock_acquire(cluster_id, action_id)
 
 
 def cluster_lock_steal(cluster_id, old_worker_id, new_worker_id):

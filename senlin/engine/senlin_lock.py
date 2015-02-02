@@ -175,7 +175,7 @@ class ClusterLock(BaseLock):
         self.target_type = 'cluster'
 
     def lock_create(cluster_id, engine_id):
-        return db_api.cluster_lock_create(cluster_id, engine_id)
+        return db_api.cluster_lock_acquire(cluster_id, engine_id)
 
     def lock_release(cluster_id, engine_id):
         return db_api.cluster_lock_release(cluster_id, engine_id)

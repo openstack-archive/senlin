@@ -12,6 +12,8 @@
 
 import random
 
+from oslo_config import cfg
+
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
@@ -23,6 +25,10 @@ from senlin.engine import node as nodes
 from senlin.engine import scheduler
 from senlin.openstack.common import log as logging
 from senlin.policies import base as policies
+
+CONF = cfg.CONF
+CONF.import_opt('lock_retry_times', 'senlin.common.config')
+CONF.import_opt('lock_retry_interval', 'senlin.common.config')
 
 LOG = logging.getLogger(__name__)
 
@@ -45,42 +51,54 @@ class ClusterAction(base.Action):
     def __init__(self, context, action, **kwargs):
         super(ClusterAction, self).__init__(context, action, **kwargs)
 
-    def _query_cluster_lock(self, cluster, enforce=False):
-        """ Try to lock the cluster
+    def _cluster_lock_acquire(self, cluster, steal_lock=False):
+        '''Try to lock the cluster
 
-            :param enforce: whether to cancel current actoin on the cluster
-                            and get the lock
-        """
-        # Try lock the cluster
-        action_id = db_api.cluster_lock_create(cluster.id, self.id)
-        if action_id and action_id != self.id:
-            # Cluster has been locked by other action
-            if enforce:
-                # try to cancel the action that owns the lock
-                scheduler.cancel_action(self.context, action_id)
+        :param steal_lock: set to True to cancel current action that owns the
+                           lock, if any.
+        '''
+        # Step 1: try lock the cluster
+        action_id = db_api.cluster_lock_acquire(cluster.id, self.id)
+        if action_id == self.id:
+            return self.RES_OK
 
-                # Sleep until this action get the lock or timeout
-                action_id = db_api.cluster_lock_create(cluster.id, self.id)
-                while action_id and action_id != self.id:
-                    if scheduler.action_timeout(self):
-                        # Action timeout, set cluster status to ERROR
-                        LOG.debug('Cluster deletion %s timeout' % self.id)
-                        cluster.set_status(self.context, cluster.ERROR,
-                                           'Cluster deletion timeout')
-                        return self.RES_TIMEOUT
+        # Step 2: retry 
+        retries = cfg.CONF.lock_retry_times
+        interval = cfg.CONF.lock_retry_interval
 
-                    scheduler.reschedule(self)
-                    action_id = db_api.cluster_lock_create(cluster.id, self.id)
-            else:
-                # Return
-                msg = _('Cluster is already locked by action %(old)s, action '
-                        '%(new)s failed grabbing the lock') % {
-                            'old': action_id, 'new': self.id}
-                LOG.warn(msg)
-                # TODO(Qiming): Decide how to handle this situation
-                return False
+        while retries > 0:
+            scheduler.sleep(interval)
+            action_id = db_api.cluster_lock_acquire(cluster.id, self.id)
+            if action_id == self.id:
+                return self.RES_OK
+            retries = retries - 1
 
-        return True
+        # Step 3: Last resort is 'stealing', only needed when retry failed
+        if force:
+            # Cancel the action that owns the lock
+            scheduler.cancel_action(self.context, action_id)
+
+            action_id = db_api.cluster_lock_acquire(cluster.id, self.id)
+            while action_id and action_id != self.id:
+                if scheduler.action_timeout(self):
+                    LOG.error(_LE('Cluster lock timeout, action (%s)'),
+                              % self.id)
+                    cluster.set_status(self.context, cluster.ERROR,
+                                       reason='Cluster lock timeout')
+                    return self.RES_TIMEOUT
+
+                scheduler.reschedule(self)
+                action_id = db_api.cluster_lock_acquire(cluster.id, self.id)
+
+            return self.RES_OK
+
+        # Return
+        msg = _LW('Cluster is already locked by action %(old)s, '
+                  'action %(new)s failed grabbing the lock') % {
+                  'old': action_id, 'new': self.id}
+        LOG.warn(msg)
+
+        return self.RES_RETRY
 
     def _release_cluster_lock(self, cluster):
         db_api.cluster_lock_release(cluster.id, self.id)
@@ -383,38 +401,15 @@ class ClusterAction(base.Action):
                 'name': cluster.name, 'id': cluster.id})
             return self.RES_ERROR
 
-        # Check if this is an enforced action to do
-        if 'enforce' in kwargs:
-            lock_enforce = kwargs.get('enforce')
-        elif self.action in [self.CLUSTER_DELETE]:
-            # TODO: add more actions which default
-            # need to enforce
-            lock_enforce = True
-        else:
-            lock_enforce = False
-
-        # Check if this is an action should retry
-        if 'retry' in kwargs:
-            retry = kwargs.get('retry')
-        elif self.action in [self.CLUSTER_UPDATE,
-                             self.CLUSTER_SCALE_DOWN]:
-            # TODO: add more actions which default
-            # support retry
-            retry = True
-        else:
-            retry = False
+        steal_lock = kwargs.get('steal_lock', False)
+        if self.action in [self.CLUSTER_DELETE]:
+            steal_lock = True
 
         # Try to lock cluster before do real action
-        res = self._query_cluster_lock(cluster, lock_enforce)
-        if not res:
-            if retry:
-                return self.RES_RETRY
-            else:
-                return self.ERROR
-        elif res == self.TIMEOUT:
-            return self.TIMEOUT
-        else:
-            res = self.RES_OK
+        res = self._query_cluster_lock(cluster, steal_lock)
+
+        if res != self.RES_OK:
+            return res
 
         # Do real operation here
         res = self._execute(cluster)
