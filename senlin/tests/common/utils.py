@@ -20,7 +20,7 @@ import sqlalchemy
 
 from senlin.common import context
 from senlin.db import api as db_api
-from senlin.engine import node
+from senlin.engine import node as node_mod
 
 get_engine = db_api.get_engine
 
@@ -90,7 +90,7 @@ class PhysName(object):
         name = '%s-%s-%s' % (cluster_name,
                              node_name,
                              self.mock_short_id)
-        self._physname = node.Node.reduce_physical_node_name(
+        self._physname = node_mod.Node.reduce_physical_node_name(
             name, limit)
         self.cluster, self.res, self.sid = self._physname.rsplit('-', 2)
 

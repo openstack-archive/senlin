@@ -13,7 +13,7 @@
 from senlin.common import exception
 from senlin.common.i18n import _LE
 from senlin.engine.actions import base
-from senlin.engine import node as nodem
+from senlin.engine import node as node_mod
 from senlin.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ class NodeAction(base.Action):
 
     def execute(self, **kwargs):
         try:
-            node = nodem.Node.load(self.context, self.target)
+            node = node_mod.Node.load(self.context, self.target)
         except exception.NotFound:
             LOG.error(_LE('Node with id (%s) is not found'), self.target)
             return self.RES_ERROR

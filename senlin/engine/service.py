@@ -29,7 +29,7 @@ from senlin.engine.actions import base as base_action
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import dispatcher
 from senlin.engine import environment
-from senlin.engine import node as nodes
+from senlin.engine import node as node_mod
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock
 from senlin.openstack.common import log as logging
@@ -354,11 +354,11 @@ class EngineService(service.Service):
                   limit=None, marker=None, sort_keys=None, sort_dir=None,
                   filters=None, tenant_safe=True):
 
-        all_nodes = nodes.Node.load_all(context, cluster_id, show_deleted,
-                                        limit, marker, sort_keys, sort_dir,
-                                        filters, tenant_safe)
+        nodes = node_mod.Node.load_all(context, cluster_id, show_deleted,
+                                       limit, marker, sort_keys, sort_dir,
+                                       filters, tenant_safe)
 
-        return [node.to_dict() for node in all_nodes]
+        return [node.to_dict() for node in nodes]
 
     @request_context
     def node_create(self, context, name, profile_id, cluster_id=None,
@@ -366,7 +366,8 @@ class EngineService(service.Service):
         LOG.info(_LI('Creating node %s'), name)
 
         # Create a node instance
-        node = nodes.Node(name, profile_id, cluster_id, role=role, tags=tags)
+        node = node_mod.Node(name, profile_id, cluster_id, role=role,
+                             tags=tags)
         node.store(context)
 
         action = base_action.Action(context, 'NODE_CREATE',
@@ -382,7 +383,7 @@ class EngineService(service.Service):
     @request_context
     def node_get(self, context, node_id):
         # TODO(Qiming): Add conversion from name to id
-        node = nodes.Node.load(context, node_id)
+        node = node_mod.Node.load(context, node_id)
         return node
 
     @request_context
@@ -393,7 +394,7 @@ class EngineService(service.Service):
     def node_delete(self, context, node_id, force=False):
         LOG.info(_LI('Deleting node %s'), node_id)
 
-        node = nodes.Node.load(context, node_id)
+        node = node_mod.Node.load(context, node_id)
         action = base_action.Action(context, 'NODE_DELETE',
                                     name='node_delete_%s' % node.id[:8],
                                     target=node.id, cause='RPC Request')
@@ -404,7 +405,7 @@ class EngineService(service.Service):
 
         # TODO(anyone): Fix this behavior, node record cannot be deleted
         #               directly.
-        nodes.Node.delete(context, node_id, force)
+        node_mod.Node.delete(context, node_id, force)
         return action.to_dict()
 
     @request_context

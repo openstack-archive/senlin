@@ -22,7 +22,7 @@ from senlin.db import api as db_api
 from senlin.engine.actions import base
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import dispatcher
-from senlin.engine import node as nodes
+from senlin.engine import node as node_mod
 from senlin.engine import scheduler
 from senlin.openstack.common import log as logging
 from senlin.policies import base as policies
@@ -132,8 +132,8 @@ class ClusterAction(base.Action):
 
         for m in range(cluster.size):
             name = 'node-%s-%003d' % (cluster.id[:8], m + 1)
-            node = nodes.Node(name, cluster.profile_id, cluster.id,
-                              context=self.context)
+            node = node_mod.Node(name, cluster.profile_id, cluster.id,
+                                 context=self.context)
             node.store(self.context)
             kwargs = {
                 'name': 'node_create_%s' % node.id[:8],

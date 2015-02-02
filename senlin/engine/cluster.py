@@ -15,7 +15,7 @@ import datetime
 from senlin.common.i18n import _LW
 from senlin.db import api as db_api
 from senlin.engine import event as events
-from senlin.engine import node as nodes
+from senlin.engine import node as node_mod
 from senlin.openstack.common import periodic_task
 from senlin.profiles import base as profiles_base
 
@@ -107,7 +107,7 @@ class Cluster(periodic_task.PeriodicTasks):
     def _load_runtime_data(self, context):
         self.rt = {
             'profile': profiles_base.Profile.load(context, self.profile_id),
-            'nodes': nodes.Node.load_all(context, cluster_id=self.id),
+            'nodes': node_mod.Node.load_all(context, cluster_id=self.id),
             'policies': [],
         }
 
