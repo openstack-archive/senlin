@@ -200,6 +200,7 @@ class Node(object):
         else:
             values['updated_time'] = now
 
+        self.status = status
         values['status'] = status
         if reason:
             values['status_reason'] = reason
