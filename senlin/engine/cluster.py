@@ -12,6 +12,8 @@
 
 import datetime
 
+from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.common.i18n import _LW
 from senlin.db import api as db_api
 from senlin.engine import event as events
@@ -114,9 +116,12 @@ class Cluster(periodic_task.PeriodicTasks):
     @classmethod
     def load(cls, context, cluster_id, show_deleted=False):
         '''Retrieve a cluster from database.'''
-
         record = db_api.cluster_get(context, cluster_id,
                                     show_deleted=show_deleted)
+        if record is None:
+            raise exception.NotFound(
+                _('No cluster with id "%s" is found') % cluster_id)
+
         cluster = cls._from_db_record(record)
         cluster._load_runtime_data(context)
         return cluster

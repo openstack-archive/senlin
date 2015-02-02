@@ -89,7 +89,7 @@ class ClusterAction(base.Action):
                     return self.RES_TIMEOUT
 
                 scheduler.reschedule(self)
-                action_id = db_api.cluster_lock_(cluster.id, self.id)
+                action_id = db_api.cluster_lock_acquire(cluster.id, self.id)
 
             return self.RES_OK
 
@@ -398,8 +398,7 @@ class ClusterAction(base.Action):
         try:
             cluster = cluster_mod.Cluster.load(self.context, self.target)
         except exception.NotFound:
-            LOG.error(_LE('Cluster %(name)s [%(id)s] not found') % {
-                'name': cluster.name, 'id': cluster.id})
+            LOG.error(_LE('Cluster %(id)s not found') % {'id': self.target})
             return self.RES_ERROR
 
         steal_lock = kwargs.get('steal_lock', False)
