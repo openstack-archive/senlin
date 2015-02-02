@@ -130,7 +130,7 @@ class ClusterAction(base.Action):
             return self.RES_ERROR
 
         for m in range(cluster.size):
-            name = 'node-%003d' % m
+            name = 'node-%s-%003d' % (cluster.id[:8], m + 1)
             node = nodes.Node(name, cluster.profile_id, cluster.id,
                               context=self.context)
             node.store(self.context)
