@@ -365,7 +365,7 @@ def node_delete(context, node_id, force=False):
 
 
 # Locks
-def cluster_lock_create(cluster_id, worker_id):
+def cluster_lock_acquire(cluster_id, action_id):
     session = get_session()
     with session.begin():
         lock = session.query(models.ClusterLock).get(cluster_id)
@@ -373,7 +373,8 @@ def cluster_lock_create(cluster_id, worker_id):
         if lock is not None:
             return lock.worker_id
         session.add(models.ClusterLock(cluster_id=cluster_id,
-                                       worker_id=worker_id))
+                                       worker_id=action_id))
+        return action_id
 
 
 def cluster_lock_steal(cluster_id, old_worker_id, new_worker_id):
