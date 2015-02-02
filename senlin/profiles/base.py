@@ -18,14 +18,6 @@ from senlin.db import api as db_api
 from senlin.engine import environment
 from senlin.openstack.common import log as logging
 
-interval_opts = [
-    cfg.IntOpt('healthy_check_interval',
-               default=60,
-               help='Interval in seconds for polling healthy status')
-]
-
-CONF = cfg.CONF
-CONF.register_opts(interval_opts)
 
 LOG = logging.getLogger(__name__)
 
