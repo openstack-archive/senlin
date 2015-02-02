@@ -145,9 +145,6 @@ class Profile(object):
         '''For subclass to override.'''
         return NotImplemented
 
-    def healty_check(self, context):
-        pass
-
     def to_dict(self):
         pb_dict = {
             'id': self.id,
