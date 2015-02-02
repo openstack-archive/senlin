@@ -108,6 +108,7 @@ def _paginate_query(context, query, model, limit=None, marker=None,
         query = utils.paginate_query(query, model, limit, sort_keys,
                                      model_marker, sort_dir)
     except utils.InvalidSortKey as exc:
+        # TODO(Qiming): Catch this exception and return to user
         raise exception.Invalid(reason=exc.message)
     return query
 
@@ -258,11 +259,14 @@ def node_create(context, values):
     return node
 
 
-def node_get(context, node_id):
+def node_get(context, node_id, show_deleted=False):
     node = model_query(context, models.Node).get(node_id)
     if not node:
-        msg = _('Node with id "%s" not found') % node_id
-        raise exception.NotFound(msg)
+        return None
+
+    if not show_deleted and node.deleted_time is not None:
+        return None
+
     return node
 
 

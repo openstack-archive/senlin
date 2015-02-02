@@ -86,8 +86,8 @@ def node_create(context, values):
     return IMPL.node_create(context, values)
 
 
-def node_get(context, node_id):
-    return IMPL.node_get(context, node_id)
+def node_get(context, node_id, show_deleted=False):
+    return IMPL.node_get(context, node_id, show_deleted=show_deleted)
 
 
 def node_get_all(context, cluster_id=None, show_deleted=False,
