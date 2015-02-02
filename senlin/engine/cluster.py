@@ -14,12 +14,16 @@ import datetime
 
 from senlin.common import exception
 from senlin.common.i18n import _
+from senlin.common.i18n import _LE
 from senlin.common.i18n import _LW
 from senlin.db import api as db_api
 from senlin.engine import event as events
 from senlin.engine import node as node_mod
+from senlin.openstack.common import log as logging
 from senlin.openstack.common import periodic_task
 from senlin.profiles import base as profiles_base
+
+LOG = logging.getLogger(__name__)
 
 
 class Cluster(periodic_task.PeriodicTasks):
@@ -38,7 +42,7 @@ class Cluster(periodic_task.PeriodicTasks):
         'UPDATING', 'UPDATE_CANCELLED',
     )
 
-    def __init__(self, name, profile_id, size=0, **kwargs):
+    def __init__(self, name, profile_id, size=0, context=None, **kwargs):
         '''Intialize a cluster object.
 
         The cluster defaults to have 0 nodes with no profile assigned.
@@ -74,37 +78,8 @@ class Cluster(periodic_task.PeriodicTasks):
         # TODO(Qiming): nodes have to be reloaded when membership changes
         self.rt = {}
 
-        ctx = kwargs.get('context', None)
-        if ctx:
-            self.rt = {
-                'profile': profiles_base.Profile.load(ctx, self.profile_id),
-            }
-
-    @classmethod
-    def _from_db_record(cls, record):
-        '''Construct a cluster object from database record.
-
-        :param context: the context used for DB operations;
-        :param record: a DB cluster object that will receive all fields;
-        '''
-        kwargs = {
-            'id': record.id,
-            'user': record.user,
-            'project': record.project,
-            'domain': record.domain,
-            'parent': record.parent,
-            'init_time': record.init_time,
-            'created_time': record.created_time,
-            'updated_time': record.updated_time,
-            'deleted_time': record.deleted_time,
-            'next_index': record.next_index,
-            'timeout': record.timeout,
-            'status': record.status,
-            'status_reason': record.status_reason,
-            'data': record.data,
-            'tags': record.tags,
-        }
-        return cls(record.name, record.profile_id, record.size, **kwargs)
+        if context is not None:
+            self._load_runtime_data(context)
 
     def _load_runtime_data(self, context):
         self.rt = {
@@ -112,34 +87,6 @@ class Cluster(periodic_task.PeriodicTasks):
             'nodes': node_mod.Node.load_all(context, cluster_id=self.id),
             'policies': [],
         }
-
-    @classmethod
-    def load(cls, context, cluster_id, show_deleted=False):
-        '''Retrieve a cluster from database.'''
-        record = db_api.cluster_get(context, cluster_id,
-                                    show_deleted=show_deleted)
-        if record is None:
-            raise exception.NotFound(
-                _('No cluster with id "%s" is found') % cluster_id)
-
-        cluster = cls._from_db_record(record)
-        cluster._load_runtime_data(context)
-        return cluster
-
-    @classmethod
-    def load_all(cls, context, limit=None, marker=None, sort_keys=None,
-                 sort_dir=None, filters=None, tenant_safe=True,
-                 show_deleted=False, show_nested=False):
-        '''Retrieve all clusters from database.'''
-
-        records = db_api.cluster_get_all(context, limit, marker, sort_keys,
-                                         sort_dir, filters, tenant_safe,
-                                         show_deleted, show_nested)
-
-        for record in records:
-            cluster = cls._from_db_record(record)
-            cluster._load_runtime_data(context)
-            yield cluster
 
     def store(self, context):
         '''Store the cluster in database and return its ID.
@@ -168,7 +115,6 @@ class Cluster(periodic_task.PeriodicTasks):
         }
 
         if self.id:
-            values['updated_time'] = datetime.datetime.utcnow()
             db_api.cluster_update(context, self.id, values)
             # TODO(Qiming): create event/log
         else:
@@ -178,6 +124,59 @@ class Cluster(periodic_task.PeriodicTasks):
             self.id = cluster.id
 
         return self.id
+
+    @classmethod
+    def _from_db_record(cls, context, record):
+        '''Construct a cluster object from database record.
+
+        :param context: the context used for DB operations;
+        :param record: a DB cluster object that will receive all fields;
+        '''
+        kwargs = {
+            'id': record.id,
+            'user': record.user,
+            'project': record.project,
+            'domain': record.domain,
+            'parent': record.parent,
+            'init_time': record.init_time,
+            'created_time': record.created_time,
+            'updated_time': record.updated_time,
+            'deleted_time': record.deleted_time,
+            'next_index': record.next_index,
+            'timeout': record.timeout,
+            'status': record.status,
+            'status_reason': record.status_reason,
+            'data': record.data,
+            'tags': record.tags,
+        }
+
+        return cls(record.name, record.profile_id, record.size,
+                   context=context, **kwargs)
+
+    @classmethod
+    def load(cls, context, cluster_id, show_deleted=False):
+        '''Retrieve a cluster from database.'''
+        record = db_api.cluster_get(context, cluster_id,
+                                    show_deleted=show_deleted)
+        if record is None:
+            msg = _('No cluster with id "%s" is found') % cluster_id
+            raise exception.NotFound(msg)
+
+        return cls._from_db_record(record)
+
+    @classmethod
+    def load_all(cls, context, limit=None, marker=None, sort_keys=None,
+                 sort_dir=None, filters=None, tenant_safe=True,
+                 show_deleted=False, show_nested=False):
+        '''Retrieve all clusters from database.'''
+
+        records = db_api.cluster_get_all(context, limit, marker, sort_keys,
+                                         sort_dir, filters, tenant_safe,
+                                         show_deleted, show_nested)
+
+        for record in records:
+            cluster = cls._from_db_record(record)
+            yield cluster
 
     def to_dict(self):
         info = {
@@ -203,63 +202,80 @@ class Cluster(periodic_task.PeriodicTasks):
         }
         return info
 
+    @classmethod
+    def from_dict(cls, **kwargs):
+        return cls(**kwargs)
+
     def set_status(self, context, status, reason=None):
         '''Set status of the cluster.'''
 
         values = {}
         now = datetime.datetime.utcnow()
-        if status == self.ACTIVE:
-            if self.status == self.INIT:
-                values['created_time'] = now
-            else:
-                values['updated_time'] = now
+        if status == self.ACTIVE and self.status == self.CREATING:
+            values['created_time'] = now
         elif status == self.DELETED:
             values['deleted_time'] = now
+        elif status == self.ACTIVE and self.status == self.UPDATING:
+            values['updated_time'] = now
 
+        self.status = status
         values['status'] = status
         if reason:
             values['status_reason'] = reason
         db_api.cluster_update(context, self.id, values)
-        # log status to log file
-        # generate event record
+        # TODO(anyone): generate event record
+        return
 
     def do_create(self, context, **kwargs):
-        '''Invoked at the beginning of cluster creating progress to set
-        cluster status to CREATING.
-        '''
+        '''Additional logic at the beginning of cluster creation process.
 
-        self.set_status(context, self.CREATING)
+        Set cluster status to CREATING.
+        '''
+        if self.status != self.INIT:
+            LOG.error(_LE('Cluster is in status "%s"'), self.status)
+            return False
+
+        self.set_status(context, self.CREATING, reason='Creation in progress')
         return True
 
     def do_delete(self, context, **kwargs):
-        '''Invoked at the end of entire cluster deleting
-        progress to set cluster status to DELETED.
-        '''
+        '''Additional logic at the end of cluster deletion process.
 
+        Set cluster status to DELETED.
+        '''
         self.set_status(context, self.DELETED)
+        db_api.cluster_delete(context, self.id)
+        return True
 
     def do_update(self, context, new_profile_id, **kwargs):
-        '''Invoked at the beginning of cluster updating progress
-        to check profile and set cluster status to UPDATING.
-        '''
+        '''Additional logic at the beginning of cluster updating progress.
 
-        self.set_status(self.UPDATING)
+        Check profile and set cluster status to UPDATING.
+        '''
         # Profile type checking is done here because the do_update logic can
         # be triggered from API or Webhook
-        if self.profile_id == new_profile_id:
-            events.warning(_LW('Cluster refuses to update to the same profile'
-                               '(%s)' % (new_profile_id)))
+        if not new_profile_id:
+            raise exception.ProfileNotSpecified()
+
+        if new_profile_id == self.profile_id:
+            return True
+
+        new_profile = db_api.get_profile(context, new_profile_id)
+        if not new_profile:
+            events.warning(_LW('Cluster cannot be updated to a profile '
+                               'that does not exists'))
             return False
 
         # Check if profile types match
         old_profile = db_api.get_profile(context, self.profile_id)
-        new_profile = db_api.get_profile(context, new_profile_id)
         if old_profile.type != new_profile.type:
             events.warning(_LW('Cluster cannot be updated to a different '
                                'profile type (%(oldt)s->%(newt)s)'),
                            {'oldt': old_profile.type,
                             'newt': new_profile.type})
             return False
+
+        self.set_status(self.UPDATING)
         return True
 
     def get_next_index(self):
@@ -269,17 +285,15 @@ class Cluster(periodic_task.PeriodicTasks):
         return curr
 
     def get_nodes(self):
-        # This method will return each node with their associated profiles.
-        # Members may have different versions of the same profile type.
+        '''Get all nodes for this cluster.'''
         return self.rt['nodes']
 
     def get_policies(self):
-        # policies are stored in database when policy association is created
-        # this method retrieves the attached policies from database
-        return self.rt.policies
+        '''Get all policies associated with the cluster.'''
+        return self.rt['policies']
 
     def add_nodes(self, node_ids):
-        pass
+        return
 
     def del_nodes(self, node_ids):
         '''Remove nodes from current cluster.'''
@@ -287,7 +301,7 @@ class Cluster(periodic_task.PeriodicTasks):
         deleted = []
         for node_id in node_ids:
             node = db_api.node_get(node_id)
-            if node.leave(self):
+            if node and node.leave(self):
                 deleted.append(node_id)
         return deleted
 
@@ -300,29 +314,6 @@ class Cluster(periodic_task.PeriodicTasks):
     def detach_policy(self, policy_id):
         # TODO(Qiming): check if actions of specified policies are ongoing
         self.rt.policies.remove(policy_id)
-
-    @classmethod
-    def create(cls, name, size=0, profile=None, **kwargs):
-        cluster = cls(name, size, profile, kwargs)
-        cluster.do_create()
-        # TODO(Qiming): store this to database
-        # log events?
-        return cluster.id
-
-    @classmethod
-    def delete(cls, cluster_id):
-        cluster = db_api.get_cluster(cluster_id)
-        # TODO(Qiming): check if actions are working on and can be canceled
-        # destroy nodes
-
-        db_api.delete_cluster(cluster.id)
-        return True
-
-    @classmethod
-    def update(cls, cluster_id, profile):
-        # cluster = db_api.get_cluster(cluster_id)
-        # TODO(Qiming): Implement this
-        return True
 
     @periodic_task.periodic_task
     def heathy_check(self):
