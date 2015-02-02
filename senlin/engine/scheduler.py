@@ -18,7 +18,7 @@ import six
 
 from senlin.common.i18n import _LI
 from senlin.db import api as db_api
-from senlin.engine.actions import base as base_action
+from senlin.engine.actions import base as action_mod
 from senlin.openstack.common import log as logging
 from senlin.openstack.common import threadgroup
 
@@ -149,7 +149,7 @@ def start_action(context, action_id, engine_id, tgm):
     :param tgm: The ThreadGroupManager of the engine
     '''
 
-    action = base_action.Action.load(context, action_id)
+    action = action_mod.Action.load(context, action_id)
 
     action.start_time = wallclock()
     result = db_api.action_acquire(context, action_id, engine_id,

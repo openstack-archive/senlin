@@ -25,7 +25,7 @@ from senlin.common.i18n import _
 from senlin.common.i18n import _LI
 from senlin.common import messaging as rpc_messaging
 from senlin.db import api as db_api
-from senlin.engine.actions import base as base_action
+from senlin.engine.actions import base as action_mod
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import dispatcher
 from senlin.engine import environment
@@ -295,9 +295,9 @@ class EngineService(service.Service):
         cluster.store(context)
 
         # Build an Action for cluster creation
-        action = base_action.Action(context, 'CLUSTER_CREATE',
-                                    name='cluster_create_%s' % cluster.id[:8],
-                                    target=cluster.id, cause='RPC Request')
+        action = action_mod.Action(context, 'CLUSTER_CREATE',
+                                   name='cluster_create_%s' % cluster.id[:8],
+                                   target=cluster.id, cause='RPC Request')
         action.store(context)
 
         # Notify Dispatchers that a new action has been ready.
@@ -327,9 +327,9 @@ class EngineService(service.Service):
         }
 
         # TODO(Qiming): Hande size changes here!
-        action = base_action.Action(context, 'CLUSTER_UPDATE',
-                                    target=cluster.id, cause='RPC Request',
-                                    **kwargs)
+        action = action_mod.Action(context, 'CLUSTER_UPDATE',
+                                   target=cluster.id, cause='RPC Request',
+                                   **kwargs)
         action.store(context)
 
         # dispatcher.notify(context, self.dispatcher.NEW_ACTION,
@@ -341,8 +341,8 @@ class EngineService(service.Service):
     def cluster_delete(self, context, identity):
         LOG.info(_LI('Deleting cluster %s'), identity)
 
-        action = base_action.Action(context, 'CLUSTER_DELETE',
-                                    target=identity, cause='RPC Request')
+        action = action_mod.Action(context, 'CLUSTER_DELETE',
+                                   target=identity, cause='RPC Request')
         action.store(context)
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
@@ -370,9 +370,9 @@ class EngineService(service.Service):
                              tags=tags)
         node.store(context)
 
-        action = base_action.Action(context, 'NODE_CREATE',
-                                    name='node_create_%s' % node.id[:8],
-                                    target=node.id, cause='RPC Request')
+        action = action_mod.Action(context, 'NODE_CREATE',
+                                   name='node_create_%s' % node.id[:8],
+                                   target=node.id, cause='RPC Request')
         action.store(context)
 
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
@@ -395,9 +395,9 @@ class EngineService(service.Service):
         LOG.info(_LI('Deleting node %s'), node_id)
 
         node = node_mod.Node.load(context, node_id)
-        action = base_action.Action(context, 'NODE_DELETE',
-                                    name='node_delete_%s' % node.id[:8],
-                                    target=node.id, cause='RPC Request')
+        action = action_mod.Action(context, 'NODE_DELETE',
+                                   name='node_delete_%s' % node.id[:8],
+                                   target=node.id, cause='RPC Request')
         action.store(context)
         # TODO(Anyone): Uncomment the following lines to send notifications
         # res = dispatcher.notify(context, self.dispatcher.NEW_ACTION,
@@ -412,10 +412,10 @@ class EngineService(service.Service):
     def action_list(self, context, filters=None, limit=None, marker=None,
                     sort_keys=None, sort_dir=None, show_deleted=False):
 
-        all_actions = base_action.Action.load_all(context, filters,
-                                                  limit, marker,
-                                                  sort_keys, sort_dir,
-                                                  show_deleted)
+        all_actions = action_mod.Action.load_all(context, filters,
+                                                 limit, marker,
+                                                 sort_keys, sort_dir,
+                                                 show_deleted)
 
         results = []
         for action in all_actions:
@@ -430,8 +430,8 @@ class EngineService(service.Service):
         LOG.info(_LI('Creating action %s'), name)
 
         # Create a node instance
-        act = base_action.Action(context, action, target,
-                                 name=name, params=params)
+        act = action_mod.Action(context, action, target,
+                                name=name, params=params)
         act.store(context)
 
         # TODO(Anyone): Uncomment this to notify the dispatcher
@@ -443,4 +443,4 @@ class EngineService(service.Service):
     @request_context
     def action_get(self, context, action_id):
         # TODO(Qiming): Add conversion from name to id
-        return base_action.Action.load(context, action_id)
+        return action_mod.Action.load(context, action_id)
