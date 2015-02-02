@@ -82,10 +82,8 @@ class ClusterAction(base.Action):
             action_id = db_api.cluster_lock_acquire(cluster.id, self.id)
             while action_id and action_id != self.id:
                 if scheduler.action_timeout(self):
-                    msg = _LE('Cluster lock timeout, action (%s)')
-                    LOG.error(msg, self.id)
-                    cluster.set_status(self.context, cluster.ERROR,
-                                       reason='Cluster lock timeout')
+                    LOG.error(_LE('Cluster lock timeout, action (%s)'),
+                              self.id)
                     return self.RES_TIMEOUT
 
                 scheduler.reschedule(self)
@@ -94,10 +92,9 @@ class ClusterAction(base.Action):
             return self.RES_OK
 
         # Return
-        msg = _LW('Cluster is already locked by action %(old)s, '
-                  'action %(new)s failed grabbing the lock') % {
-                      'old': action_id, 'new': self.id}
-        LOG.warn(msg)
+        LOG.warn(_LW('Cluster is already locked by action %(old)s, '
+                     'action %(new)s failed grabbing the lock') % {
+                        'old': action_id, 'new': self.id})
 
         return self.RES_RETRY
 
