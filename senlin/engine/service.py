@@ -399,13 +399,9 @@ class EngineService(service.Service):
                                    name='node_delete_%s' % node.id[:8],
                                    target=node.id, cause='RPC Request')
         action.store(context)
-        # TODO(Anyone): Uncomment the following lines to send notifications
-        # res = dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-        #                        None, action_id=action.id)
+        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
+                          None, action_id=action.id)
 
-        # TODO(anyone): Fix this behavior, node record cannot be deleted
-        #               directly.
-        node_mod.Node.delete(context, node_id, force)
         return action.to_dict()
 
     @request_context

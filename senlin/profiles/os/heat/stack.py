@@ -141,11 +141,8 @@ class StackProfile(base.Profile):
     def do_delete(self, obj):
         self.stack_id = obj.physical_id
 
-        if not self.stack_id:
-            return True
-
         try:
-            self.heat().stacks_delete(id=self.stack_id)
+            self.heat().stack_delete(id=self.stack_id)
         except Exception as ex:
             if isinstance(ex, exception.NotFound):
                 pass
