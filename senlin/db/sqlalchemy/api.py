@@ -356,15 +356,22 @@ def node_migrate(context, node_id, from_cluster, to_cluster):
 
 
 def node_delete(context, node_id, force=False):
-    node = node_get(context, node_id)
-
+    query = model_query(context, models.Node)
+    node = query.get(node_id)
     if not node:
-        msg = _('Attempt to delete a node with id "%s" that does not '
-                'exist failed') % node_id
-        raise exception.NotFound(msg)
+        # Note: this is okay, because the node may have already gone
+        return
 
-    session = orm_session.Session.object_session(node)
+    session = query.session
+    session.begin()
+
+    if node.cluster_id is not None:
+        cluster = session.query(models.Cluster).get(node.cluster_id)
+        cluster.size -= 1
+
     node.soft_delete(session=session)
+    session.commit()
+
     session.flush()
 
 
