@@ -93,7 +93,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('cluster_id', sqlalchemy.String(36),
                           sqlalchemy.ForeignKey('cluster.id'),
                           primary_key=True, nullable=False),
-        sqlalchemy.Column('worker_id', sqlalchemy.String(36)),
+        sqlalchemy.Column('action_ids', types.List),
         sqlalchemy.Column('semaphore', sqlalchemy.Integer),
         mysql_engine='InnoDB',
         mysql_charset='utf8'
