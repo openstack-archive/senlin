@@ -11,16 +11,21 @@
 # under the License.
 
 import datetime
+import six
+import time
 
 from oslo_config import cfg
 
 from senlin.common import context as req_context
 from senlin.common import exception
 from senlin.common.i18n import _
+from senlin.common.i18n import _LI
 from senlin.db import api as db_api
+from senlin.engine import dispatcher
 from senlin.openstack.common import log as logging
 from senlin.policies import base as policies
 
+wallclock = time.time
 LOG = logging.getLogger(__name__)
 
 
@@ -224,9 +229,9 @@ class Action(object):
         db_api.action_delete(context, action_id, force)
 
     @classmethod
-    def signal(cls, context, action_id, word):
+    def signal(cls, context, action_id, cmd):
         '''Cancel an action execution progress.'''
-        db_api.action_control(context, action_id, word)
+        db_api.action_signal(context, action_id, cmd)
 
     def execute(self, **kwargs):
         '''Execute the action.
@@ -337,3 +342,65 @@ class Action(object):
     @classmethod
     def from_dict(cls, context=None, **kwargs):
         return cls(context=context, **kwargs)
+
+
+def ActionProc(context, action_id, worker_id):
+    '''Action process.'''
+
+    # Step 1: lock the action for execution
+    timestamp = wallclock()
+    result = db_api.action_acquire(context, action_id, worker_id, timestamp)
+    if result is None:
+        LOG.debug(_('Failed locking action "%s" for execution'), action_id)
+        return False
+
+    # Step 2: materialize the action object
+    action = Action.load(context, action_id)
+
+    LOG.info(_LI('Action %(name)s [%(id)s] started'),
+             {'name': six.text_type(action.action), 'id': action.id})
+
+    # Step 3: execute the action
+    result = action.execute()
+
+    # Step 4: check return result (and release lock implicitly)
+    timestamp = wallclock()
+
+    if result == action.RES_OK:
+
+        db_api.action_mark_succeeded(context, action.id, timestamp)
+        LOG.info(_LI('Action %(name)s [%(id)s] completed with success.'),
+                 {'name': six.text_type(action.action), 'id': action.id})
+
+    elif result == action.RES_RETRY:
+
+        # Action failed at the moment, but can be retried
+        # We abandon it and then notify other dispatchers to execute it
+        db_api.action_abandon(context, action_id, worker_id)
+        # TODO(yanyan): This is dirty, we have to import dispatcher here?
+        dispatcher.notify(context, dispatcher.NEW_ACTION,
+                          None, action_id=action.id)
+        LOG.info(_LI('Action %(name)s [%(id)s] returned with retry.'),
+                 {'name': six.text_type(action.action), 'id': action.id})
+
+    elif result == action.RES_ERROR:
+
+        db_api.action_mark_failed(context, action.id, timestamp,
+                                  reason='ERROR')
+
+        LOG.info(_LI('Action %(name)s [%(id)s] completed with failure.'),
+                 {'name': six.text_type(action.action), 'id': action.id})
+
+    elif result == action.RES_CANCEL:
+
+        db_api.action_mark_cancelled(context, action.id, timestamp)
+
+        LOG.info(_LI('Action %(name)s [%(id)s] was cancelled'),
+                 {'name': six.text_type(action.action), 'id': action.id})
+
+    else:  # result == action.RES_TIMEOUT:
+        db_api.action_mark_failed(context, action.id, timestamp,
+                                  reason='TIMEOUT')
+
+        LOG.info(_LI('Action %(name)s [%(id)s] failed with timeout'),
+                 {'name': six.text_type(action.action), 'id': action.id})
