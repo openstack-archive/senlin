@@ -24,6 +24,7 @@ from senlin.common.i18n import _LI
 from senlin.common.i18n import _LW
 from senlin.common import messaging as rpc_messaging
 from senlin.db import api as db_api
+from senlin.engine import dispatcher
 from senlin.engine import scheduler
 from senlin.openstack.common import log as logging
 
@@ -202,11 +203,12 @@ def cluster_lock_acquire(cluster_id, action, steal_lock=False):
     # Step 3: Last resort is 'stealing', only needed when retry failed
     if steal_lock:
         # Cancel the action that currently owns the lock
-        scheduler.cancel_action(action.context, owner_id)
+        dispatcher.notify(action.context, dispatcher.CANCEL_ACTION,
+                          None, action_id=owner_id)
 
         owner_id = db_api.cluster_lock_acquire(cluster_id, action.id)
         while owner_id != action.id:
-            if scheduler.action_timeout(action):
+            if action.is_timeout():
                 LOG.error(_LE('Cluster lock timeout for action %(name)s '
                               '[%(id)s]'), {'name': action.action,
                                             'id': action.id})
