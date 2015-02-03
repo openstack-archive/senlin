@@ -162,8 +162,6 @@ def start_action(context, action_id, engine_id, tgm):
     result = db_api.action_acquire(context, action_id, engine_id,
                                    action.start_time)
     if result:
-        LOG.info(_LI('Successfully locked action %s.'), action_id)
-
         th = tgm.start_action_thread(context, action)
         if not th:
             LOG.debug('Action start failed, unlock action.')
