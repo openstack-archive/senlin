@@ -223,6 +223,11 @@ class Action(object):
     def delete(cls, context, action_id, force=False):
         db_api.action_delete(context, action_id, force)
 
+    @classmethod
+    def signal(cls, context, action_id, word):
+        '''Cancel an action execution progress.'''
+        db_api.action_control(context, action_id, word)
+
     def execute(self, **kwargs):
         '''Execute the action.
 
@@ -231,9 +236,6 @@ class Action(object):
         :param kwargs: additional parameters that may override the default
                        properties stored in the action record.
         '''
-        return NotImplemented
-
-    def cancel(self):
         return NotImplemented
 
     def set_status(self, status):
