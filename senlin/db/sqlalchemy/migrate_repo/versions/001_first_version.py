@@ -94,6 +94,7 @@ def upgrade(migrate_engine):
                           sqlalchemy.ForeignKey('cluster.id'),
                           primary_key=True, nullable=False),
         sqlalchemy.Column('worker_id', sqlalchemy.String(36)),
+        sqlalchemy.Column('scope', sqlalchemy.String(32)),
         mysql_engine='InnoDB',
         mysql_charset='utf8'
     )
