@@ -17,7 +17,6 @@ from osprofiler import profiler
 from senlin.common import attr
 from senlin.common.i18n import _LI
 from senlin.common import messaging as rpc_messaging
-from senlin.engine import scheduler
 from senlin.openstack.common import log as logging
 from senlin.openstack.common import service
 
@@ -59,20 +58,19 @@ class Dispatcher(service.Service):
         return True
 
     def new_action(self, context, action_id=None):
-        # New action has been ready, try to schedule it
-        scheduler.start_action(context, action_id, self.engine_id, self.TG)
+        self.TG.start_action(context, action_id, self.engine_id)
 
     def cancel_action(self, context, action_id):
         '''Cancel an action.'''
-        scheduler.cancel_action(context, action_id)
+        self.TG.cancel_action(context, action_id)
 
     def suspend_action(self, context, action_id):
         '''Suspend an action.'''
-        scheduler.suspend_action(context, action_id)
+        self.TG.suspend_action(context, action_id)
 
     def resume_action(self, context, action_id):
         '''Resume an action.'''
-        scheduler.resume_action(context, action_id)
+        self.TG.resume_action(context, action_id)
 
     def stop(self):
         super(Dispatcher, self).stop()

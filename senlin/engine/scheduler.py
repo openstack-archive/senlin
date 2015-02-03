@@ -10,14 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import eventlet
 import time
 
-import eventlet
 from oslo_config import cfg
-import six
 
-from senlin.common.i18n import _LI
-from senlin.db import api as db_api
 from senlin.engine.actions import base as action_mod
 from senlin.openstack.common import log as logging
 from senlin.openstack.common import threadgroup
@@ -25,12 +22,6 @@ from senlin.openstack.common import threadgroup
 LOG = logging.getLogger(__name__)
 
 wallclock = time.time
-
-ACTION_CONTROL_REQUEST = (
-    ACTION_CANCEL, ACTION_SUSPEND, ACTION_RESUME, ACTION_TIMEOUT,
-) = (
-    'cancel', 'suspend', 'resume', 'timeout',
-)
 
 
 class ThreadGroupManager(object):
@@ -63,23 +54,38 @@ class ThreadGroupManager(object):
 
         return self.group.add_thread(func, *args, **kwargs)
 
-    def start_action_thread(self, context, action, *args, **kwargs):
-        '''Run the given action in a sub-thread and release the action lock
-        when the thread finishes.
+    def start_action(self, context, action_id, worker_id):
+        '''Run the given action in a sub-thread.
 
-        :param context: The context of rpc request
-        :param action: The action to run in thread
+        Release the action lock when the thread finishes?
+
+        :param context: The context of rpc request.
+        :param action_id: ID of the action to run in thread.
         '''
-
-        def release(gt, context, action):
+        def release(gt, context, action_id):
             '''Callback function that will be passed to GreenThread.link().'''
             # Remove action thread from thread list
-            self.threads.pop(action.id)
+            self.threads.pop(action_id)
 
-        th = self.start(ActionProc, context, action, **kwargs)
-        self.threads[action.id] = th
-        th.link(release, context, action)
+        th = self.start(action_mod.ActionProc, context, action_id, worker_id)
+        self.threads[action_id] = th
+        th.link(release, context, action_id)
         return th
+
+    def cancel_action(self, context, action_id):
+        '''Cancel an action execution progress.'''
+        action = action_mod.Action.load(context, action_id)
+        action.signal(context, action.SIG_CANCEL)
+
+    def suspend_action(self, context, action_id):
+        '''Suspend an action execution progress.'''
+        action = action_mod.Action.load(context, action_id)
+        action.signal(context, action.SIG_SUSPEND)
+
+    def resume_action(self, context, action_id):
+        '''Resume an action execution progress.'''
+        action = action_mod.Action.load(context, action_id)
+        action.signal(context, action.SIG_RESUME)
 
     def add_timer(self, interval, func, *args, **kwargs):
         '''Define a periodic task, to be run in a separate thread, in the
@@ -112,156 +118,6 @@ class ThreadGroupManager(object):
             eventlet.sleep()
 
 
-def ActionProc(context, action, wait_time=1, **kwargs):
-    '''Start and run action progress.
-
-    Action progress will sleep for `wait_time` seconds between
-    each step. To avoid sleeping, pass `None` for `wait_time`.
-    '''
-
-    LOG.info(_LI('Action %(name)s [%(id)s] started'),
-             {'name': six.text_type(action.action), 'id': action.id})
-
-    result = action.execute()
-    # TODO(Qiming): add max retry times
-    while result == action.RES_RETRY:
-        LOG.info(_LI('Action %(name)s [%(id)s] returned with retry.'),
-                 {'name': six.text_type(action.action), 'id': action.id})
-        result = action.execute()
-
-    timestamp = wallclock()
-    if result == action.RES_ERROR:
-        db_api.action_mark_failed(context, action.id, timestamp)
-        LOG.info(_LI('Action %(name)s [%(id)s] completed with failure.'),
-                 {'name': six.text_type(action.action), 'id': action.id})
-    elif result == action.RES_OK:
-        db_api.action_mark_succeeded(context, action.id, timestamp)
-        LOG.info(_LI('Action %(name)s [%(id)s] completed with success.'),
-                 {'name': six.text_type(action.action), 'id': action.id})
-    elif result == action.RES_CANCEL:
-        db_api.action_mark_cancelled(context, action.id, timestamp)
-        LOG.info(_LI('Action %(name)s [%(id)s] was cancelled'),
-                 {'name': six.text_type(action.action), 'id': action.id})
-    else:  # result == action.RES_TIMEOUT:
-        LOG.info(_LI('Action %(name)s [%(id)s] failed with timeout'),
-                 {'name': six.text_type(action.action), 'id': action.id})
-
-
-def start_action(context, action_id, engine_id, tgm):
-    '''Start an action execution progress using given ThreadGroupManager.
-
-    :param context: The context of rpc request
-    :param action_id: The id of action to run in thread
-    :param engine_id: The id of engine try to lock the action
-    :param tgm: The ThreadGroupManager of the engine
-    '''
-
-    action = action_mod.Action.load(context, action_id)
-
-    action.start_time = wallclock()
-    result = db_api.action_acquire(context, action_id, engine_id,
-                                   action.start_time)
-    if not result:
-        LOG.debug(_('Action %s has been locked by other worker'), action_id)
-        return False
-
-    th = tgm.start_action_thread(context, action)
-    if th:
-        return True
-
-    LOG.debug(_('Action start failed, abandoning.'))
-    try:
-        db_api.action_abandon(context, action_id, engine_id)
-    except exception.NotFound, exception.ActionIsStolen:
-        # We ignore the above exceptions
-        pass
-
-
-def suspend_action(context, action_id):
-    '''Suspend an action execution progress.
-
-    :param context: The context of rpc request
-    :param action_id: The id of action to run in thread
-    '''
-    # Set action control flag to suspend
-    # TODO(anyone): need db_api support
-    db_api.action_control(context, action_id, ACTION_SUSPEND)
-
-
-def resume_action(context, action_id):
-    '''Resume an action execution progress.
-
-    :param context: The context of rpc request
-    :param action_id: The id of action to run in thread
-    '''
-    # Set action control flag to suspend
-    # TODO(anyone): need db_api support
-    db_api.action_control(context, action_id, ACTION_RESUME)
-
-
-def cancel_action(context, action_id):
-    '''Try to cancel an action execution progress.
-
-    :param context: The context of rpc request
-    :param action_id: The id of action to run in thread
-    '''
-    # Set action control flag to cancel
-    # TODO(anyone): need db_api support
-    db_api.action_control(context, action_id, ACTION_CANCEL)
-
-
-def action_control_flag(action):
-    '''Check whether there are some action control requests.'''
-
-    # Check timeout first, if true, return timeout message
-    if action.timeout is not None and action_timeout(action):
-        LOG.debug('Action %s run timeout' % action.id)
-        return ACTION_TIMEOUT
-
-    # Check if action control flag is set
-    result = db_api.action_control_check(action.context, action.id)
-    # LOG.debug('Action %s control flag is %s', (action.id, result))
-    return result
-
-
-def action_cancelled(action):
-    '''Check whether an action is flagged to be cancelled.'''
-
-    if action_control_flag(action) == ACTION_CANCEL:
-        return True
-    else:
-        return False
-
-
-def action_suspended(action):
-    '''Check whether an action's control flag is set to suspend.'''
-
-    if action_control_flag(action) == ACTION_SUSPEND:
-        return True
-    else:
-        return False
-
-
-def action_resumed(action):
-    '''Check whether an action's control flag is set to resume.'''
-
-    if action_control_flag(action) == ACTION_RESUME:
-        return True
-    else:
-        return False
-
-
-def action_timeout(action):
-    '''Return True if an action has run timeout, False otherwise.'''
-
-    time_lapse = wallclock() - action.start_time
-
-    if time_lapse > action.timeout:
-        return True
-    else:
-        return False
-
-
 def reschedule(action, sleep_time=1):
     '''Eventlet Sleep for the specified number of seconds.
 
@@ -277,7 +133,8 @@ def reschedule(action, sleep_time=1):
 def action_wait(action):
     '''Keep waiting util action resume control flag is set.'''
 
-    while not action_resumed(action):
+    # TODO(Yanyan): This may not be correct!!!
+    while not action.is_resumed():
         reschedule(action, sleep_time=1)
         continue
 
