@@ -1084,7 +1084,7 @@ def action_lock_check(context, action_id, owner=None):
         return action.owner if action.owner else None
 
 
-def action_control(context, action_id, value):
+def action_signal(context, action_id, value):
     query = model_query(context, models.Action)
     action = query.get(action_id)
     if not action:

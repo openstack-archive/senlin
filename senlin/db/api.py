@@ -304,9 +304,9 @@ def action_lock_check(context, action_id, owner=None):
     return IMPL.action_lock_check(context, action_id, owner)
 
 
-def action_control(context, action_id, value):
+def action_signal(context, action_id, value):
     '''Set action control status to value.'''
-    return IMPL.action_control(context, action_id, value)
+    return IMPL.action_signal(context, action_id, value)
 
 
 def action_control_check(context, action_id):
