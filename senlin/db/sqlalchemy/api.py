@@ -947,7 +947,9 @@ def action_mark_succeeded(context, action_id, timestamp):
     session = query.session
     session.begin()
 
+    action.owner = None
     action.status = ACTION_SUCCEEDED
+    action.status_reason = _('Action completed successfully.')
     action.end_time = timestamp
 
     for a in action.depended_by:
@@ -958,34 +960,41 @@ def action_mark_succeeded(context, action_id, timestamp):
     return action
 
 
-def _mark_failed_action(query, action_id, timestamp):
+def _mark_failed_action(query, action_id, timestamp, reason):
     action = query.get(action_id)
     if not action:
         LOG.warning(_('Action with id "%s" not found') % action_id)
         return
 
+    action.owner = None
     action.status = ACTION_FAILED
+    action.status_reason = reason
     action.end_time = timestamp
+
     if action.depended_by is not None:
-        for a in action.depended_by:
-            _mark_failed_action(query, a, timestamp)
+        for child in action.depended_by:
+            _mark_failed_action(query, child, timestamp, reason)
 
 
-def action_mark_failed(context, action_id, timestamp):
+def action_mark_failed(context, action_id, timestamp, reason=None):
     query = model_query(context, models.Action)
     action = query.get(action_id)
-    if not action:
-        raise exception.NotFound(
-            _('Action with id "%s" not found') % action_id)
 
     session = query.session
     session.begin()
 
+    action.owner = None
     action.status = ACTION_FAILED
+    if reason is not None:
+        action.status_reason = six.text_type(reason)
+    else:
+        action.status_reason = _('Action execution failed')
     action.end_time = timestamp
 
-    for a in action.depended_by:
-        _mark_failed_action(query, a, timestamp)
+    for child in action.depended_by:
+        child_reason = _('Action %(id)s failed: %(reason)s') % {
+            'id': action_id, 'reason': action.status_reason}
+        _mark_failed_action(query, child, timestamp, child_reason)
 
     session.commit()
     return action
@@ -997,7 +1006,9 @@ def _mark_cancelled_action(query, action_id, timestamp):
         LOG.warning(_('Action with id "%s" not found') % action_id)
         return
 
+    action.owner = None
     action.status = ACTION_CANCELED
+    action.status_reason = _('Dependent action was cancelled')
     action.end_time = timestamp
     if action.depended_by is not None:
         for a in action.depended_by:
@@ -1014,7 +1025,9 @@ def action_mark_cancelled(context, action_id, timestamp):
     session = query.session
     session.begin()
 
+    action.owner = None
     action.status = ACTION_CANCELED
+    action.reason = _('Action execution was cancelled')
     action.end_time = timestamp
 
     for a in action.depended_by:
@@ -1028,11 +1041,10 @@ def action_acquire(context, action_id, owner, timestamp):
     query = model_query(context, models.Action)
     action = query.get(action_id)
     if not action:
-        raise exception.NotFound(
-            _('Action with id "%s" not found') % action_id)
+        return None
 
     if action.owner and action.owner != owner:
-        raise exception.ActionIsOwned(owner=action.owner)
+        return None
 
     action.owner = owner
     action.start_time = timestamp
@@ -1043,17 +1055,14 @@ def action_acquire(context, action_id, owner, timestamp):
 
 
 def action_abandon(context, action_id, owner):
+    '''Abandon an action for other workers to execute again.
+
+    This API is always called with the action locked by the current
+    worker. There is no chance the action is gone or stolen by others.
+    '''
+
     query = model_query(context, models.Action)
     action = query.get(action_id)
-    if not action:
-        raise exception.NotFound(
-            _('Action with id "%s" not found') % action_id)
-
-    if action.owner is None:
-        return
-
-    if action.owner != owner:
-        raise exception.ActionIsStolen(owner=action.owner)
 
     action.owner = None
     action.start_time = None
