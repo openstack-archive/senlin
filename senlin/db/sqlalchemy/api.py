@@ -383,6 +383,7 @@ def cluster_lock_acquire(cluster_id, action_id, scope):
     :param action_id: ID of the action that attempts to lock the cluster.
     :param scope: +1 means a node-level operation lock; -1 indicates
                   a cluster-level lock.
+    :return: A list of action IDs that currently works on the cluster.
     '''
     session = get_session()
     session.begin()
@@ -407,9 +408,10 @@ def cluster_lock_release(cluster_id, action_id, scope):
     '''Release lock on a cluster.
 
     :param cluster_id: ID of the cluster.
-    :param action_id: ID of the action that attempts to lock the cluster.
+    :param action_id: ID of the action that attempts to release the cluster.
     :param scope: +1 means a node-level operation lock; -1 indicates
                   a cluster-level lock.
+    :return: True indicates successful release, False indicates failure.
     '''
     session = get_session()
     session.begin()

@@ -36,6 +36,12 @@ CONF.import_opt('lock_retry_interval', 'senlin.common.config')
 
 LOG = logging.getLogger(__name__)
 
+LOCK_SCOPES = (
+    CLUSTER_SCOPE, NODE_SCOPE,
+) = (
+    -1, 1,
+)
+
 
 class BaseLock(object):
     '''Base class for locks.'''
@@ -176,7 +182,8 @@ class BaseLock(object):
             raise
 
 
-def cluster_lock_acquire(cluster_id, action, steal_lock=False):
+def cluster_lock_acquire(cluster_id, action, scope=CLUSTER_SCOPE,
+                         steal_lock=False):
     '''Try to lock the specified cluster
 
     :param steal_lock: set to True to cancel current action that owns the
@@ -185,8 +192,8 @@ def cluster_lock_acquire(cluster_id, action, steal_lock=False):
     # Step 1: try lock the cluster - if the returned owner_id is the
     #         action id, it was a success
 
-    owner_id = db_api.cluster_lock_acquire(cluster_id, action.id)
-    if owner_id == action.id:
+    owners = db_api.cluster_lock_acquire(cluster_id, action.id, scope)
+    if action.id in owners:
         return True
 
     # Step 2: retry using global configuration options
@@ -195,19 +202,20 @@ def cluster_lock_acquire(cluster_id, action, steal_lock=False):
 
     while retries > 0:
         scheduler.sleep(retry_interval)
-        owner_id = db_api.cluster_lock_acquire(cluster_id, action.id)
-        if owner_id == action.id:
+        owners = db_api.cluster_lock_acquire(cluster_id, action.id, scope)
+        if action.id in owners:
             return True
         retries = retries - 1
 
     # Step 3: Last resort is 'stealing', only needed when retry failed
     if steal_lock:
         # Cancel the action that currently owns the lock
-        dispatcher.notify(action.context, dispatcher.CANCEL_ACTION,
-                          None, action_id=owner_id)
+        for owner in owners:
+            dispatcher.notify(action.context, dispatcher.CANCEL_ACTION,
+                              None, action_id=owner)
 
-        owner_id = db_api.cluster_lock_acquire(cluster_id, action.id)
-        while owner_id != action.id:
+        owners = db_api.cluster_lock_acquire(cluster_id, action.id, scope)
+        while action.id not in owners:
             if action.is_timeout():
                 LOG.error(_LE('Cluster lock timeout for action %(name)s '
                               '[%(id)s]'), {'name': action.action,
@@ -215,16 +223,16 @@ def cluster_lock_acquire(cluster_id, action, steal_lock=False):
                 return False
 
             scheduler.reschedule(action)
-            owner_id = db_api.cluster_lock_acquire(cluster_id, action.id)
+            owners = db_api.cluster_lock_acquire(cluster_id, action.id, scope)
 
         return True
 
     LOG.error(_LE('Cluster is already locked by action %(old)s, '
                   'action %(new)s failed grabbing the lock') % {
-                      'old': owner_id, 'new': action.id})
+                      'old': owners, 'new': action.id})
 
     return False
 
 
-def cluster_lock_release(cluster_id, action_id):
-    db_api.cluster_lock_release(cluster_id, action_id)
+def cluster_lock_release(cluster_id, action_id, scope):
+    db_api.cluster_lock_release(cluster_id, action_id, scope)

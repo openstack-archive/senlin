@@ -348,14 +348,18 @@ class ClusterAction(base.Action):
             steal_lock = True
 
         # Try to lock cluster before do real action
-        res = senlin_lock.cluster_lock_acquire(cluster.id, self.id, steal_lock)
+        res = senlin_lock.cluster_lock_acquire(cluster.id, self.id,
+                                               senlin_lock.CLUSTER_SCOPE,
+                                               steal_lock)
         if not res:
             return self.RES_ERROR
 
-        res = self._execute(cluster)
+        try:
+            res = self._execute(cluster)
+        finally:
+            senlin_lock.cluster_lock_release(cluster.id, self.id,
+                                             senlin_lock.CLUSTER_SCOPE)
 
-        # We've done, release cluster lock
-        senlin_lock.cluster_lock_release(cluster.id, self.id)
         return res
 
     def cancel(self):
