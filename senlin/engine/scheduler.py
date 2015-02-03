@@ -161,16 +161,20 @@ def start_action(context, action_id, engine_id, tgm):
     action.start_time = wallclock()
     result = db_api.action_acquire(context, action_id, engine_id,
                                    action.start_time)
-    if result:
-        th = tgm.start_action_thread(context, action)
-        if not th:
-            LOG.debug('Action start failed, unlock action.')
-            db_api.action_release(context, action_id, engine_id)
-        else:
-            return True
-    else:
-        LOG.info(_LI('Action %s has been locked by other worker'), action_id)
+    if not result:
+        LOG.debug(_('Action %s has been locked by other worker'), action_id)
         return False
+
+    th = tgm.start_action_thread(context, action)
+    if th:
+        return True
+
+    LOG.debug(_('Action start failed, abandoning.'))
+    try:
+        db_api.action_abandon(context, action_id, engine_id)
+    except exception.NotFound, exception.ActionIsStolen:
+        # We ignore the above exceptions
+        pass
 
 
 def suspend_action(context, action_id):

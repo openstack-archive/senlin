@@ -1042,7 +1042,7 @@ def action_acquire(context, action_id, owner, timestamp):
     return action
 
 
-def action_release(context, action_id, owner):
+def action_abandon(context, action_id, owner):
     query = model_query(context, models.Action)
     action = query.get(action_id)
     if not action:
@@ -1055,10 +1055,10 @@ def action_release(context, action_id, owner):
     if action.owner != owner:
         raise exception.ActionIsStolen(owner=action.owner)
 
-    action.owner = owner
+    action.owner = None
     action.start_time = None
     action.status = ACTION_READY
-    action.status_reason = _('The action released.')
+    action.status_reason = _('The action was abandoned.')
     action.save(query.session)
     return action
 
