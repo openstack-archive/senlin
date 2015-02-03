@@ -207,7 +207,7 @@ class EngineService(service.Service):
     @request_context
     def profile_get(self, context, profile_id):
         profile = profile_base.Profile.load(context, profile_id)
-        return profile
+        return profile.to_dict()
 
     @request_context
     def profile_update(self, context, profile_id, name, spec, perm, tags):

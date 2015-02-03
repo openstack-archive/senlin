@@ -33,7 +33,7 @@ class ProfileData(object):
     )
 
     def __init__(self, data):
-        self.data = data
+        self.data = data['profile']
 
     def name(self):
         if self.NAME not in self.data:
@@ -111,7 +111,7 @@ class ProfileController(object):
                                                 data.permission(),
                                                 data.tags())
 
-        return result
+        return {'profile': result}
 
     @util.policy_enforce
     def get(self, req, profile_id):
