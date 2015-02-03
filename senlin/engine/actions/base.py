@@ -54,6 +54,13 @@ class Action(object):
         'SUCCEEDED', 'FAILED', 'CANCELLED',
     )
 
+    # Signal commands
+    COMMANDS = (
+        SIG_CANCEL, SIG_SUSPEND, SIG_RESUME,
+    ) = (
+        'CANCEL', 'SUSPEND', 'RESUME',
+    )
+
     def __new__(cls, context, action, **kwargs):
         if (cls != Action):
             return super(Action, cls).__new__(cls)
@@ -228,10 +235,9 @@ class Action(object):
     def delete(cls, context, action_id, force=False):
         db_api.action_delete(context, action_id, force)
 
-    @classmethod
-    def signal(cls, context, action_id, cmd):
+    def signal(self, context, cmd):
         '''Cancel an action execution progress.'''
-        db_api.action_signal(context, action_id, cmd)
+        db_api.action_signal(context, self.id, cmd)
 
     def execute(self, **kwargs):
         '''Execute the action.
@@ -261,6 +267,29 @@ class Action(object):
         action = db_api.action_get(self.context, self.id)
         self.status = action.status
         return action.status
+
+    def _is_timeout(self):
+        time_lapse = wallclock() - self.start_time
+        return time_lapse > self.timeout
+
+    def _check_signal(self):
+        # Check timeout first, if true, return timeout message
+        if self.timeout is not None and self._is_timeout():
+            LOG.debug('Action %s run timeout' % self.id)
+            return self.RES_TIMEOUT
+
+        # Check if action control flag is set
+        result = db_api.action_control_check(self.context, self.id)
+        return result
+
+    def is_cancelled(self):
+        return self._check_signal() == self.SIG_CANCEL
+
+    def is_suspended(self):
+        return self._check_signal() == self.SIG_SUSPEND
+
+    def is_resumed(self):
+        return self._check_signal() == self.SIG_RESUME
 
     def policy_check(self, cluster_id, target):
         """Check all policies attached to cluster and give result.
