@@ -48,7 +48,7 @@ class ClusterAction(base.Action):
 
     def _wait_for_action(self):
         while self.get_status() != self.READY:
-            if scheduler.action_cancelled(self):
+            if self.is_cancelled():
                 # During this period, if cancel request come, cancel this
                 # cluster operation immediately, then release the cluster
                 # lock and return.
