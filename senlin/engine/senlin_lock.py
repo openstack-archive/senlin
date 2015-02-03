@@ -19,13 +19,19 @@ from oslo_config import cfg
 from oslo_utils import excutils
 
 from senlin.common import exception
+from senlin.common.i18n import _LE
 from senlin.common.i18n import _LI
 from senlin.common.i18n import _LW
 from senlin.common import messaging as rpc_messaging
 from senlin.db import api as db_api
+from senlin.engine import scheduler
 from senlin.openstack.common import log as logging
 
-cfg.CONF.import_opt('engine_life_check_timeout', 'senlin.common.config')
+CONF = cfg.CONF
+
+CONF.import_opt('engine_life_check_timeout', 'senlin.common.config')
+CONF.import_opt('lock_retry_times', 'senlin.common.config')
+CONF.import_opt('lock_retry_interval', 'senlin.common.config')
 
 LOG = logging.getLogger(__name__)
 
@@ -169,33 +175,54 @@ class BaseLock(object):
             raise
 
 
-class ClusterLock(BaseLock):
-    def __init__(self, context, cluster, engine_id):
-        super(ClusterLock, self).__init__(context, cluster, engine_id)
-        self.target_type = 'cluster'
+def cluster_lock_acquire(cluster_id, action, steal_lock=False):
+    '''Try to lock the specified cluster
 
-    def lock_create(cluster_id, engine_id):
-        return db_api.cluster_lock_acquire(cluster_id, engine_id)
+    :param steal_lock: set to True to cancel current action that owns the
+                       lock, if any.
+    '''
+    # Step 1: try lock the cluster - if the returned owner_id is the
+    #         action id, it was a success
 
-    def lock_release(cluster_id, engine_id):
-        return db_api.cluster_lock_release(cluster_id, engine_id)
+    owner_id = db_api.cluster_lock_acquire(cluster_id, action.id)
+    if owner_id == action.id:
+        return True
 
-    def lock_steal(cluster_id, lock_engine_id, engine_id):
-        return db_api.cluster_lock_steal(cluster_id, lock_engine_id,
-                                         engine_id)
+    # Step 2: retry using global configuration options
+    retries = cfg.CONF.lock_retry_times
+    retry_interval = cfg.CONF.lock_retry_interval
+
+    while retries > 0:
+        scheduler.sleep(retry_interval)
+        owner_id = db_api.cluster_lock_acquire(cluster_id, action.id)
+        if owner_id == action.id:
+            return True
+        retries = retries - 1
+
+    # Step 3: Last resort is 'stealing', only needed when retry failed
+    if steal_lock:
+        # Cancel the action that currently owns the lock
+        scheduler.cancel_action(action.context, owner_id)
+
+        owner_id = db_api.cluster_lock_acquire(cluster_id, action.id)
+        while owner_id != action.id:
+            if scheduler.action_timeout(action):
+                LOG.error(_LE('Cluster lock timeout for action %(name)s '
+                              '[%(id)s]'), {'name': action.action,
+                                            'id': action.id})
+                return False
+
+            scheduler.reschedule(action)
+            owner_id = db_api.cluster_lock_acquire(cluster_id, action.id)
+
+        return True
+
+    LOG.error(_LE('Cluster is already locked by action %(old)s, '
+                  'action %(new)s failed grabbing the lock') % {
+                      'old': owner_id, 'new': action.id})
+
+    return False
 
 
-class NodeLock(BaseLock):
-    def __init__(self, context, node, engine_id):
-        super(NodeLock, self).__init__(context, node, engine_id)
-        self.target_type = 'node'
-
-    def lock_create(node_id, engine_id):
-        return db_api.node_lock_create(node_id, engine_id)
-
-    def lock_release(node_id, engine_id):
-        return db_api.node_lock_release(node_id, engine_id)
-
-    def lock_steal(node_id, lock_engine_id, engine_id):
-        return db_api.node_lock_steal(node_id, lock_engine_id,
-                                      engine_id)
+def cluster_lock_release(cluster_id, action_id):
+    db_api.cluster_lock_release(cluster_id, action_id)
