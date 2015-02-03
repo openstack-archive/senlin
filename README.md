@@ -10,3 +10,5 @@ policies to a cluster.  Sample policies include placement policy, load
 balancing policy, failover policy, scaling policy, ... and so on.
 
 Developers will decide when to contribute it to OpenStack community.
+
+IRC Channel: #senlin
