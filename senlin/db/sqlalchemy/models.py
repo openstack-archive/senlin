@@ -150,7 +150,7 @@ class ClusterLock(BASE, SenlinBase):
                                    sqlalchemy.ForeignKey('cluster.id'),
                                    primary_key=True, nullable=False)
     worker_id = sqlalchemy.Column(sqlalchemy.String(36))
-    scope = sqlalchemy.Column(sqlalchemy.String(32))
+    semaphore = sqlalchemy.Column(sqlalchemy.Integer)
 
 
 class NodeLock(BASE, SenlinBase):
