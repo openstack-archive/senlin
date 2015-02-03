@@ -20,10 +20,7 @@ from webob import exc
 from senlin.api.openstack.v1 import util
 from senlin.common import serializers
 from senlin.common import wsgi
-from senlin.openstack.common import log as logging
 from senlin.rpc import client as rpc_client
-
-LOG = logging.getLogger(__name__)
 
 
 class ProfileTypeController(object):
