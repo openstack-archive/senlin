@@ -376,16 +376,64 @@ def node_delete(context, node_id, force=False):
 
 
 # Locks
-def cluster_lock_acquire(cluster_id, action_id):
+def cluster_lock_acquire(cluster_id, action_id, scope):
+    '''Acquire lock on a cluster.
+
+    :param cluster_id: ID of the cluster.
+    :param action_id: ID of the action that attempts to lock the cluster.
+    :param scope: +1 means a node-level operation lock; -1 indicates
+                  a cluster-level lock.
+    '''
     session = get_session()
-    with session.begin():
-        lock = session.query(models.ClusterLock).get(cluster_id)
-        # TODO(Qiming): lock nodes as well
-        if lock is not None:
-            return lock.worker_id
-        session.add(models.ClusterLock(cluster_id=cluster_id,
-                                       worker_id=action_id))
-        return action_id
+    session.begin()
+    lock = session.query(models.ClusterLock).get(cluster_id)
+    if lock is not None:
+        if scope == 1 and lock.semaphore > 0:
+            if action_id not in lock.action_ids:
+                lock.action_ids.append(six.text_type(action_id))
+                lock.semaphore += 1
+                lock.save(session)
+    else:
+        lock = models.ClusterLock(cluster_id=cluster_id,
+                                  action_ids=[six.text_type(action_id)],
+                                  semaphore=scope)
+        session.add(lock)
+
+    session.commit()
+    return lock.action_ids
+
+
+def cluster_lock_release(cluster_id, action_id, scope):
+    '''Release lock on a cluster.
+
+    :param cluster_id: ID of the cluster.
+    :param action_id: ID of the action that attempts to lock the cluster.
+    :param scope: +1 means a node-level operation lock; -1 indicates
+                  a cluster-level lock.
+    '''
+    session = get_session()
+    session.begin()
+    lock = session.query(models.ClusterLock).get(cluster_id)
+    if lock is None:
+        session.commit()
+        return False
+
+    success = False
+    if scope == -1 or lock.semaphore == 1:
+        if six.text_type(action_id) in lock.action_ids:
+            session.delete(lock)
+            success = True
+    elif action_id in lock.action_ids:
+        if lock.semaphore == 1:
+            session.delete(lock)
+        else:
+            lock.action_ids.remove(six.text_type(action_id))
+            lock.semaphore -= 1
+            lock.save(session)
+        success = True
+
+    session.commit()
+    return success
 
 
 def cluster_lock_steal(cluster_id, old_worker_id, new_worker_id):
@@ -398,17 +446,6 @@ def cluster_lock_steal(cluster_id, old_worker_id, new_worker_id):
         # TODO(Qiming): steal locks from nodes as well
     if not rows_affected:
         return lock.worker_id if lock is not None else True
-
-
-def cluster_lock_release(cluster_id, worker_id):
-    session = get_session()
-    with session.begin():
-        rows_affected = session.query(models.ClusterLock).\
-            filter_by(cluster_id=cluster_id, worker_id=worker_id).\
-            delete()
-        # TODO(Qiming): delete locks from nodes as well
-    if not rows_affected:
-        return True
 
 
 def node_lock_create(node_id, worker_id):

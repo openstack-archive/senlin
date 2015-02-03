@@ -44,6 +44,14 @@ class MutableList(mutable.Mutable, list):
         list.__add__(self, state)
         self.changed()
 
+    def append(self, value):
+        list.append(self, value)
+        self.changed()
+    
+    def remove(self, value):
+        list.remove(self, value)
+        self.changed()
+
 
 class Dict(types.TypeDecorator):
     impl = types.Text
