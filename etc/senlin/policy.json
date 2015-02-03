@@ -10,6 +10,8 @@
     "clusters:get": "rule:admin_or_owner",
     "clusters:update": "rule:admin_or_owner",
     "profile_types:index": "",
+    "profile_types:template": "",
+    "profile_types:spec": "",
     "policy_types:index": "",
     "profiles:index": "rule:admin_or_owner",
     "profiles:create": "",
