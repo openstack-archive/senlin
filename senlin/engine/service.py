@@ -195,6 +195,11 @@ class EngineService(service.Service):
     @request_context
     def profile_create(self, context, name, type, spec, perm, tags):
         LOG.info(_LI('Creating profile %s:%s'), type, name)
+        # validate type
+        if type not in environment.global_env().get_profile_types():
+            LOG.info(_LI('Invalid profile type %s'), type)
+            raise exception.ProfileTypeNotSupport(profile_type=type)
+
         kwargs = {
             'spec': spec,
             'permission': perm,
