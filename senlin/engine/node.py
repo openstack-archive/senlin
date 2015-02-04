@@ -228,7 +228,6 @@ class Node(object):
     def do_delete(self, context):
         def _delete_db_record(node_id):
             self.set_status(context, self.DELETED, reason='Deletion succeeded')
-            db_api.node_delete(context, self.id)
             return
 
         if not self.physical_id:
