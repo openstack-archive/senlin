@@ -39,7 +39,7 @@ class InstantiationData(object):
     )
 
     def __init__(self, data):
-        self.data = data
+        self.data = data['cluster']
 
     def name(self):
         if attr.CLUSTER_NAME not in self.data:
@@ -113,12 +113,12 @@ class ClusterController(object):
 
         data = InstantiationData(body)
 
-        action = self.rpc_client.cluster_create(req.context, data.name(),
-                                                data.size(), data.profile(),
-                                                data.parent(), data.tags(),
-                                                data.timeout())
+        cluster = self.rpc_client.cluster_create(req.context, data.name(),
+                                                 data.size(), data.profile(),
+                                                 data.parent(), data.tags(),
+                                                 data.timeout())
 
-        return {'id': action['target'], 'action_id': action['id']}
+        return {'cluster': cluster}
 
     @util.policy_enforce
     def get(self, req, cluster_id):
@@ -129,7 +129,7 @@ class ClusterController(object):
         if not cluster:
             raise exc.HTTPNotFound()
 
-        return cluster
+        return {'cluster': cluster}
 
     @util.policy_enforce
     def update(self, req, cluster_id, body):

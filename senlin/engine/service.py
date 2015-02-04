@@ -303,9 +303,11 @@ class EngineService(service.Service):
         # Notify Dispatchers that a new action has been ready.
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
-        cluster.set_status(context, cluster_mod.Cluster.ACTIVE,
-                           reason='Action dispatched')
-        return action.to_dict()
+
+        # We return a cluster dictionary with an additional key carried
+        result = cluster.to_dict()
+        result['action'] = action.id
+        return result
 
     @request_context
     def cluster_update(self, context, identity, size, profile_id):

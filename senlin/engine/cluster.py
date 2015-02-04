@@ -123,6 +123,7 @@ class Cluster(periodic_task.PeriodicTasks):
             # TODO(Qiming): create event/log
             self.id = cluster.id
 
+        self._load_runtime_data(context)
         return self.id
 
     @classmethod
@@ -198,6 +199,7 @@ class Cluster(periodic_task.PeriodicTasks):
             'tags': self.tags,
             'data': self.data,
             'nodes': [node.id for node in self.rt['nodes']],
+            'policies': [policy.id for policy in self.rt['policies']],
             'profile_name': self.rt['profile'].name,
         }
         return info
