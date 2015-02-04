@@ -385,7 +385,10 @@ class EngineService(service.Service):
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
 
-        return action.to_dict()
+        # We return a node dictionary with an additional key (action) carried
+        result = node.to_dict()
+        result['action'] = action.id
+        return result
 
     @request_context
     def node_get(self, context, node_id):

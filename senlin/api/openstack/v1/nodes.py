@@ -36,7 +36,7 @@ class InstantiationData(object):
     )
 
     def __init__(self, data):
-        self.data = data
+        self.data = data['node']
 
     def name(self):
         if self.NAME not in self.data:
@@ -107,11 +107,11 @@ class NodeController(object):
     def create(self, req, body):
         data = InstantiationData(body)
 
-        action = self.rpc_client.node_create(req.context, data.name(),
+        result = self.rpc_client.node_create(req.context, data.name(),
                                              data.cluster_id(),
                                              data.profile_id(),
                                              data.role(), data.tags())
-        return {'id': action['target'], 'action_id': action['id']}
+        return {'node': result}
 
     @util.policy_enforce
     def get(self, req, node_id):
@@ -119,7 +119,7 @@ class NodeController(object):
         if not node:
             raise exc.HTTPNotFound()
 
-        return node
+        return {'node': node}
 
     @util.policy_enforce
     def update(self, req, node_id, body):

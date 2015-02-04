@@ -107,6 +107,7 @@ class Node(object):
             # TODO(Qiming): create event/log
             self.id = node.id
 
+        self._load_runtime_data(context)
         return self.id
 
     @classmethod
