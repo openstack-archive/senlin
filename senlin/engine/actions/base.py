@@ -421,7 +421,7 @@ def ActionProc(context, action_id, worker_id):
     except Exception as ex:
         # We catch exception here to make sure the following logics are
         # executed.
-        LOG.debug(_('Exception occurred in action execution: %s'),
+        LOG.error(_('Exception occurred in action execution: %s'),
                   six.text_type(ex))
         result = action.RES_ERROR
     finally:
