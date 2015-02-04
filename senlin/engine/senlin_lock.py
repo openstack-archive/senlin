@@ -231,7 +231,7 @@ def cluster_lock_acquire(cluster_id, action, scope=CLUSTER_SCOPE,
 
     LOG.error(_LE('Cluster is already locked by action %(old)s, '
                   'action %(new)s failed grabbing the lock') % {
-                      'old': owners, 'new': action.id})
+                      'old': str(owners), 'new': action.id})
 
     return False
 
