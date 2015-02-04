@@ -136,16 +136,17 @@ class Node(object):
                    context=context, **kwargs)
 
     @classmethod
-    def load(cls, context, node_id):
+    def load(cls, context, node_id=None, node=None, show_deleted=False):
         '''Retrieve a node from database.'''
 
-        record = db_api.node_get(context, node_id, show_deleted=False)
+        if node is None:
+            node = db_api.node_get(context, node_id, show_deleted=show_deleted)
 
-        if record is None:
+        if node is None:
             msg = _('No node with id "%s" is found') % node_id
             raise exception.NotFound(msg)
 
-        return cls._from_db_record(context, record)
+        return cls._from_db_record(context, node)
 
     @classmethod
     def load_all(cls, context, cluster_id=None, show_deleted=False,

@@ -348,6 +348,23 @@ class EngineService(service.Service):
         return action.to_dict()
 
     @request_context
+    def node_find(self, context, identity, show_deleted=False):
+        '''Find a cluster with the given identity (could be name or ID).'''
+
+        if uuidutils.is_uuid_like(identity):
+            db_node = db_api.node_get(context, identity,
+                                      show_deleted=show_deleted)
+            if not db_node:
+                db_node = db_api.node_get_by_name(context, identity)
+        else:
+            db_node = db_api.node_get_by_name(context, identity)
+
+        if db_node is None:
+            raise exception.NodeNotFound(name=identity)
+
+        return db_node
+
+    @request_context
     def node_list(self, context, cluster_id=None, show_deleted=False,
                   limit=None, marker=None, sort_keys=None, sort_dir=None,
                   filters=None, tenant_safe=True):
@@ -382,9 +399,10 @@ class EngineService(service.Service):
         return result
 
     @request_context
-    def node_get(self, context, node_id):
+    def node_get(self, context, identity):
+        db_node = self.node_find(context, identity)
         # TODO(Qiming): Add conversion from name to id
-        node = node_mod.Node.load(context, node_id)
+        node = node_mod.Node.load(context, node=db_node)
         return node.to_dict()
 
     @request_context
@@ -392,10 +410,11 @@ class EngineService(service.Service):
         return {}
 
     @request_context
-    def node_delete(self, context, node_id, force=False):
-        LOG.info(_LI('Deleting node %s'), node_id)
+    def node_delete(self, context, identity, force=False):
+        db_node = self.node_find(context, identity)
+        LOG.info(_LI('Deleting node %s'), identity)
 
-        node = node_mod.Node.load(context, node_id)
+        node = node_mod.Node.load(context, node=db_node)
         action = action_mod.Action(context, 'NODE_DELETE',
                                    name='node_delete_%s' % node.id[:8],
                                    target=node.id, cause='RPC Request')

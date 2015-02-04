@@ -152,9 +152,9 @@ class EngineClient(object):
                                        show_deleted=show_deleted,
                                        show_nested=show_nested))
 
-    def cluster_get(self, ctxt, cluster_id):
+    def cluster_get(self, ctxt, identity):
         return self.call(ctxt,
-                         self.make_msg('cluster_get', identity=cluster_id))
+                         self.make_msg('cluster_get', identity=identity))
 
     def cluster_create(self, ctxt, name, size, profile_id, parent=None,
                        tags=None, timeout=0):
@@ -171,11 +171,11 @@ class EngineClient(object):
                                              size=size,
                                              profile_id=profile_id))
 
-    def cluster_delete(self, ctxt, cluster_id, cast=True):
+    def cluster_delete(self, ctxt, identity, cast=True):
         rpc_method = self.cast if cast else self.call
         return rpc_method(ctxt,
                           self.make_msg('cluster_delete',
-                                        identity=cluster_id))
+                                        identity=identity))
 
     def node_list(self, ctxt, cluster_id=None, show_deleted=False,
                   limit=None, marker=None,
@@ -197,23 +197,20 @@ class EngineClient(object):
                                        cluster_id=cluster_id,
                                        role=role, tags=tags))
 
-    def node_get(self, ctxt, node_id):
-        # TODO(Anyone): check if a conversion from name to ID is needed
+    def node_get(self, ctxt, identity):
         return self.call(ctxt,
-                         self.make_msg('node_get', node_id=node_id))
+                         self.make_msg('node_get', identity=identity))
 
     def node_update(self, ctxt, identity, name, profile_id, role, tags):
-        # TODO(Anyone): check if a conversion from name to ID is needed
         return self.call(ctxt,
-                         self.make_msg('node_update', node_id=identity,
+                         self.make_msg('node_update', identity=identity,
                                        name=name, profile_id=profile_id,
                                        role=role, tags=tags))
 
     def node_delete(self, ctxt, identity, force=False, cast=True):
         rpc_method = self.cast if cast else self.call
         return rpc_method(ctxt,
-                          self.make_msg('node_delete',
-                                        node_id=identity,
+                          self.make_msg('node_delete', identity=identity,
                                         force=force))
 
     def action_list(self, ctxt, filters=None, limit=None, marker=None,
