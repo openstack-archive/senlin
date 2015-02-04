@@ -31,12 +31,7 @@ LOG = logging.getLogger(__name__)
 
 
 class InstantiationData(object):
-    '''The data accompanying a PUT/POST request to create/update a cluster.'''
-
-    PARAMS = (
-        attr.CLUSTER_NAME, attr.CLUSTER_SIZE, attr.CLUSTER_PROFILE,
-        attr.CLUSTER_TAGS, attr.CLUSTER_TIMEOUT
-    )
+    '''The data accompanying a POST/PUT request to create/update a cluster.'''
 
     def __init__(self, data):
         self.data = data['cluster']
