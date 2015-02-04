@@ -266,8 +266,9 @@ class EngineService(service.Service):
             raise exception.ClusterNotFound(cluster_name=identity)
 
     @request_context
-    def cluster_get(self, context, cluster_id):
-        cluster = cluster_mod.Cluster.load(context, cluster_id=cluster_id)
+    def cluster_get(self, context, identity):
+        db_cluster = self.cluster_find(context, identity)
+        cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
         return cluster.to_dict()
 
     @request_context
