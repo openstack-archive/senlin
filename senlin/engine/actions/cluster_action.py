@@ -55,7 +55,7 @@ class ClusterAction(base.Action):
                 LOG.debug(_('%(action)s %(id)s cancelled') % {
                     'action': self.action, 'id': self.id})
                 return self.RES_CANCEL
-            elif scheduler.action_timeout(self):
+            elif self.is_timeout():
                 # Action timeout, return
                 LOG.debug(_('%(action)s %(id)s timeout') % {
                     'action': self.action, 'id': self.id})

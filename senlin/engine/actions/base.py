@@ -268,13 +268,13 @@ class Action(object):
         self.status = action.status
         return action.status
 
-    def _is_timeout(self):
+    def is_timeout(self):
         time_lapse = wallclock() - self.start_time
         return time_lapse > self.timeout
 
     def _check_signal(self):
         # Check timeout first, if true, return timeout message
-        if self.timeout is not None and self._is_timeout():
+        if self.timeout is not None and self.is_timeout():
             LOG.debug('Action %s run timeout' % self.id)
             return self.RES_TIMEOUT
 
@@ -389,8 +389,15 @@ def ActionProc(context, action_id, worker_id):
     LOG.info(_LI('Action %(name)s [%(id)s] started'),
              {'name': six.text_type(action.action), 'id': action.id})
 
-    # Step 3: execute the action
-    result = action.execute()
+    try:
+        # Step 3: execute the action
+        result = action.execute()
+    except Exception as ex:
+        # We catch exception here to make sure the following logics are
+        # executed.
+        LOG.debug(_('Exception occurred in action execution: %s'),
+                  six.text_type(ex))
+        result = self.RES_ERROR
 
     # Step 4: check return result (and release lock implicitly)
     timestamp = wallclock()
