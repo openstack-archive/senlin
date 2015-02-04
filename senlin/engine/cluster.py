@@ -290,11 +290,11 @@ class Cluster(periodic_task.PeriodicTasks):
 
     def get_nodes(self):
         '''Get all nodes for this cluster.'''
-        return self.rt['nodes']
+        return self.rt.get('nodes', [])
 
     def get_policies(self):
         '''Get all policies associated with the cluster.'''
-        return self.rt['policies']
+        return self.rt.get('policies', [])
 
     def add_nodes(self, node_ids):
         return
