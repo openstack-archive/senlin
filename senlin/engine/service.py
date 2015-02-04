@@ -248,12 +248,12 @@ class EngineService(service.Service):
         return [cluster.to_dict() for cluster in clusters]
 
     @request_context
-    def cluster_find(self, context, identity):
+    def cluster_find(self, context, identity, show_deleted=False):
         '''Find a cluster with the given identity (could be name or ID).'''
 
         if uuidutils.is_uuid_like(identity):
             db_cluster = db_api.cluster_get(context, identity,
-                                            show_deleted=True)
+                                            show_deleted=show_deleted)
             # may be the name is in uuid format, so if get by id returns None,
             # we should get the info by name again
             if not db_cluster:
@@ -261,22 +261,9 @@ class EngineService(service.Service):
         else:
             db_cluster = db_api.cluster_get_by_name(context, identity)
         if db_cluster:
-            cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
-            return dict(cluster.id)
+            return db_cluster
         else:
             raise exception.ClusterNotFound(cluster_name=identity)
-
-    def _get_cluster(self, context, identity, show_deleted=False):
-        cluster_id = self.cluster_find(context, identity)
-
-        db_cluster = db_api.cluster_get(context, cluster_id,
-                                        show_deleted=show_deleted,
-                                        eager_load=True)
-
-        if db_cluster is None:
-            raise exception.ClusterNotFound(cluster_name=identity)
-
-        return db_cluster
 
     @request_context
     def cluster_get(self, context, cluster_id):
@@ -317,12 +304,12 @@ class EngineService(service.Service):
     @request_context
     def cluster_update(self, context, identity, size, profile_id):
         # Get the database representation of the existing cluster
-        db_cluster = self._get_cluster(context, identity)
+        db_cluster = self.cluster_find(context, identity)
         LOG.info(_LI('Updating cluster %s'), db_cluster.name)
 
         cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
         if cluster.status == cluster.ERROR:
-            msg = _('Updating a cluster when it is errored')
+            msg = _('Updating a cluster when it is error')
             raise exception.NotSupported(feature=msg)
 
         if cluster.status == cluster.DELETED:

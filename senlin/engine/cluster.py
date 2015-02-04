@@ -155,15 +155,16 @@ class Cluster(periodic_task.PeriodicTasks):
                    context=context, **kwargs)
 
     @classmethod
-    def load(cls, context, cluster_id, show_deleted=False):
+    def load(cls, context, cluster_id=None, cluster=None, show_deleted=False):
         '''Retrieve a cluster from database.'''
-        record = db_api.cluster_get(context, cluster_id,
-                                    show_deleted=show_deleted)
-        if record is None:
+        if cluster is None:
+            cluster = db_api.cluster_get(context, cluster_id,
+                                        show_deleted=show_deleted)
+        if cluster is None:
             msg = _('No cluster with id "%s" is found') % cluster_id
             raise exception.NotFound(msg)
 
-        return cls._from_db_record(context, record)
+        return cls._from_db_record(context, cluster)
 
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort_keys=None,
