@@ -5,7 +5,6 @@ HIGH PRIORITY
 API
 ---
   - Complete the API layer for Senlin service
-  - Remove {name}/{id} kind of identifier
 
 DB
 --
@@ -21,13 +20,9 @@ ENGINE
   - handle cancel_action() properly. When dispatcher.cancel_action() is called,
     the scheduler should check if the action is still being worked on by someone.
     It should send cancel signal, or help that action remove locks if needed.
-  - Detect profile, cluster, node name conflicts when creation?
 
 DRIVER
 ------
-  - add keystone driver first, because it might be required by other drivers [Qiming]
-  - complete Heat stack driver [Qiming]
-  - add Heat resource driver
 
 POLICY
 ------
@@ -59,6 +54,10 @@ OSLO
 
 LOW PRIORITY
 ============
+
+DRIVER
+------
+  - add Heat resource driver
 
 TEST
 ----
