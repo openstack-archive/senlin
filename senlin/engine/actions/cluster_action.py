@@ -80,7 +80,7 @@ class ClusterAction(base.Action):
             kwargs = {
                 'name': 'node_create_%s' % node.id[:8],
                 'target': node.id,
-                'cause': 'Cluster creation',
+                'cause': base.CAUSE_DERIVED,
             }
 
             action = base.Action(self.context, 'NODE_CREATE', **kwargs)
@@ -125,9 +125,8 @@ class ClusterAction(base.Action):
         for node_id in node_list:
             kwargs = {
                 'name': 'node_update_%s' % node_id[:8],
-                'context': self.context,
                 'target': node_id,
-                'cause': 'Cluster update',
+                'cause': base.CAUSE_DERIVED,
                 'inputs': {
                     'new_profile_id': new_profile_id,
                 }
@@ -159,7 +158,7 @@ class ClusterAction(base.Action):
             action = base.Action(self.context, 'NODE_DELETE',
                                  name='node_delete_%s' % node.id[:8],
                                  target=node.id,
-                                 cause='Cluster deletion')
+                                 cause=base.CAUSE_DERIVED)
             action.store(self.context)
 
             # Build dependency and make the new action ready
@@ -223,10 +222,9 @@ class ClusterAction(base.Action):
         action_list = []
         for node_id in candidates:
             kwargs = {
-                'name': 'node-delete-%s' % node_id,
-                'context': self.context,
+                'name': 'node_delete_%s' % node_id[:8],
                 'target': node_id,
-                'cause': 'Cluster scale down',
+                'cause': base.CAUSE_DERIVED,
             }
             action = base.Action(self.context, 'NODE_DELETE', **kwargs)
             action.store(self.context)

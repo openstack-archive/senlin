@@ -288,7 +288,8 @@ class EngineService(service.Service):
         # Build an Action for cluster creation
         action = action_mod.Action(context, 'CLUSTER_CREATE',
                                    name='cluster_create_%s' % cluster.id[:8],
-                                   target=cluster.id, cause='RPC Request')
+                                   target=cluster.id,
+                                   cause=action_mod.CAUSE_RPC)
         action.store(context)
 
         # Notify Dispatchers that a new action has been ready.
@@ -321,7 +322,8 @@ class EngineService(service.Service):
 
         # TODO(Qiming): Hande size changes here!
         action = action_mod.Action(context, 'CLUSTER_UPDATE',
-                                   target=cluster.id, cause='RPC Request',
+                                   target=cluster.id,
+                                   cause=action_mod.CAUSE_RPC,
                                    **kwargs)
         action.store(context)
 
@@ -338,7 +340,8 @@ class EngineService(service.Service):
         cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
         action = action_mod.Action(context, 'CLUSTER_DELETE',
                                    name='cluster_delete_%s' % cluster.id[:8],
-                                   target=cluster.id, cause='RPC Request')
+                                   target=cluster.id,
+                                   cause=action_mod.CAUSE_RPC)
         action.store(context)
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
@@ -385,7 +388,8 @@ class EngineService(service.Service):
 
         action = action_mod.Action(context, 'NODE_CREATE',
                                    name='node_create_%s' % node.id[:8],
-                                   target=node.id, cause='RPC Request')
+                                   target=node.id,
+                                   cause=action_mod.RPC)
         action.store(context)
 
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
@@ -415,7 +419,8 @@ class EngineService(service.Service):
         node = node_mod.Node.load(context, node=db_node)
         action = action_mod.Action(context, 'NODE_DELETE',
                                    name='node_delete_%s' % node.id[:8],
-                                   target=node.id, cause='RPC Request')
+                                   target=node.id,
+                                   cause=action_mod.CAUSE_RPC)
         action.store(context)
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
