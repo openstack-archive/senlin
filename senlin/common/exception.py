@@ -203,15 +203,19 @@ class InvalidTenant(SenlinException):
 
 
 class ClusterNotFound(SenlinException):
-    msg_fmt = _("The Cluster (%(cluster_name)s) could not be found.")
+    msg_fmt = _("The cluster (%(cluster_name)s) could not be found.")
 
 
 class ClusterExists(SenlinException):
-    msg_fmt = _("The Cluster (%(cluster_name)s) already exists.")
+    msg_fmt = _("The cluster (%(cluster_name)s) already exists.")
 
 
 class ClusterNotSpecified(SenlinException):
     msg_fmt = _("The cluster was not specified.")
+
+
+class NodeNotFound(SenlinException):
+    msg_fmt = _("The node (%(name)s) could not be found.")
 
 
 class NodeStatusError(SenlinException):
