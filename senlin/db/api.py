@@ -130,10 +130,6 @@ def cluster_lock_acquire(cluster_id, action_id, scope):
     return IMPL.cluster_lock_acquire(cluster_id, action_id, scope)
 
 
-def cluster_lock_steal(cluster_id, old_worker_id, new_worker_id):
-    return IMPL.cluster_lock_steal(cluster_id, old_worker_id, new_worker_id)
-
-
 def cluster_lock_release(cluster_id, worker_id, scope):
     return IMPL.cluster_lock_release(cluster_id, worker_id, scope)
 
@@ -295,8 +291,8 @@ def action_acquire(context, action_id, owner, timestamp):
     return IMPL.action_acquire(context, action_id, owner, timestamp)
 
 
-def action_abandon(context, action_id, owner):
-    return IMPL.action_abandon(context, action_id, owner)
+def action_abandon(context, action_id):
+    return IMPL.action_abandon(context, action_id)
 
 
 def action_lock_check(context, action_id, owner=None):

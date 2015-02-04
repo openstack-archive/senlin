@@ -55,7 +55,7 @@ class ClusterAction(base.Action):
                 LOG.debug(_('%(action)s %(id)s cancelled') % {
                     'action': self.action, 'id': self.id})
                 return self.RES_CANCEL
-            elif scheduler.action_timeout(self):
+            elif self.is_timeout():
                 # Action timeout, return
                 LOG.debug(_('%(action)s %(id)s timeout') % {
                     'action': self.action, 'id': self.id})
@@ -343,14 +343,10 @@ class ClusterAction(base.Action):
             LOG.error(_LE('Cluster %(id)s not found') % {'id': self.target})
             return self.RES_ERROR
 
-        steal_lock = kwargs.get('steal_lock', False)
-        if self.action in [self.CLUSTER_DELETE]:
-            steal_lock = True
-
-        # Try to lock cluster before do real action
+        # Try to lock cluster before do real operation
         res = senlin_lock.cluster_lock_acquire(cluster.id, self,
                                                senlin_lock.CLUSTER_SCOPE,
-                                               steal_lock)
+                                               False)
         if not res:
             return self.RES_ERROR
 
