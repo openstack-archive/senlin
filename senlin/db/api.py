@@ -90,6 +90,10 @@ def node_get(context, node_id, show_deleted=False):
     return IMPL.node_get(context, node_id, show_deleted=show_deleted)
 
 
+def node_get_by_name(context, name, show_deleted=False):
+    return IMPL.node_get_by_name(context, name, show_deleted=show_deleted)
+
+
 def node_get_all(context, cluster_id=None, show_deleted=False,
                  limit=None, marker=None, sort_keys=None, sort_dir=None,
                  filters=None, tenant_safe=True):

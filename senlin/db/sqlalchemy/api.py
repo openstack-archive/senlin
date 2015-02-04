@@ -270,6 +270,16 @@ def node_get(context, node_id, show_deleted=False):
     return node
 
 
+def node_get_by_name(context, name, show_deleted=False):
+    query = soft_delete_aware_query(context, models.Node)
+    nodes = query.filter_by(name=name).all()
+    for node in nodes:
+        if show_deleted or node.deleted_time is None:
+            return node
+
+    return None
+
+
 def _query_node_get_all(context, show_deleted=False, cluster_id=None):
     query = soft_delete_aware_query(context, models.Node,
                                     show_deleted=show_deleted)
