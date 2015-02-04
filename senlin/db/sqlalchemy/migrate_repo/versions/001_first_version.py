@@ -104,7 +104,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('node_id', sqlalchemy.String(36),
                           sqlalchemy.ForeignKey('node.id'),
                           primary_key=True, nullable=False),
-        sqlalchemy.Column('worker_id', sqlalchemy.String(36)),
+        sqlalchemy.Column('action_id', sqlalchemy.String(36)),
         mysql_engine='InnoDB',
         mysql_charset='utf8'
     )

@@ -164,7 +164,7 @@ class NodeLock(BASE, SenlinBase):
     node_id = sqlalchemy.Column(sqlalchemy.String(36),
                                 sqlalchemy.ForeignKey('node.id'),
                                 primary_key=True, nullable=False)
-    engine_id = sqlalchemy.Column(sqlalchemy.String(36))
+    action_id = sqlalchemy.Column(sqlalchemy.String(36))
 
 
 class Policy(BASE, SenlinBase, SoftDelete):
