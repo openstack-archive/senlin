@@ -343,14 +343,10 @@ class ClusterAction(base.Action):
             LOG.error(_LE('Cluster %(id)s not found') % {'id': self.target})
             return self.RES_ERROR
 
-        steal_lock = kwargs.get('steal_lock', False)
-        if self.action in [self.CLUSTER_DELETE]:
-            steal_lock = True
-
-        # Try to lock cluster before do real action
+        # Try to lock cluster before do real operation
         res = senlin_lock.cluster_lock_acquire(cluster.id, self,
                                                senlin_lock.CLUSTER_SCOPE,
-                                               steal_lock)
+                                               False)
         if not res:
             return self.RES_ERROR
 

@@ -183,11 +183,11 @@ class BaseLock(object):
 
 
 def cluster_lock_acquire(cluster_id, action, scope=CLUSTER_SCOPE,
-                         steal_lock=False):
+                         forced_locking=False):
     '''Try to lock the specified cluster
 
-    :param steal_lock: set to True to cancel current action that owns the
-                       lock, if any.
+    :param forced_locking: set to True to cancel current action that
+                           owns the lock, if any.
     '''
     # Step 1: try lock the cluster - if the returned owner_id is the
     #         action id, it was a success
@@ -207,8 +207,10 @@ def cluster_lock_acquire(cluster_id, action, scope=CLUSTER_SCOPE,
             return True
         retries = retries - 1
 
-    # Step 3: Last resort is 'stealing', only needed when retry failed
-    if steal_lock:
+    # Step 3: Last resort is 'forced_locking', only needed when retry failed
+    if forced_locking:
+        # TODO(anyone): Enabling the following logic one the cancle_action()
+        #               logic is complete.
         # Cancel the action that currently owns the lock
         for owner in owners:
             dispatcher.notify(action.context, dispatcher.CANCEL_ACTION,
