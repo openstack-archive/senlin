@@ -139,7 +139,7 @@ def cluster_lock_release(cluster_id, action_id, scope):
 
 
 def cluster_lock_steal(node_id, action_id):
-    return IMPL.cluster_lock_steal(node_id, new_action_id)
+    return IMPL.cluster_lock_steal(node_id, action_id)
 
 
 def node_lock_acquire(node_id, action_id):

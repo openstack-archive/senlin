@@ -450,7 +450,7 @@ def cluster_lock_release(cluster_id, action_id, scope):
 
 def cluster_lock_steal(cluster_id, action_id):
     session = get_session()
-    session.begin():
+    session.begin()
     lock = session.query(models.ClusterLock).get(cluster_id)
     if lock is not None:
         lock.action_ids = [action_id]
