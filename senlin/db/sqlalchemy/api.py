@@ -1012,11 +1012,11 @@ def _mark_failed_action(query, action_id, timestamp, reason):
 
 def action_mark_failed(context, action_id, timestamp, reason=None):
     query = model_query(context, models.Action)
-    action = query.get(action_id)
 
     session = query.session
     session.begin()
 
+    action = query.get(action_id)
     action.owner = None
     action.status = ACTION_FAILED
     if reason is not None:
