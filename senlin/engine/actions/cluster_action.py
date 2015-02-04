@@ -348,7 +348,7 @@ class ClusterAction(base.Action):
             steal_lock = True
 
         # Try to lock cluster before do real action
-        res = senlin_lock.cluster_lock_acquire(cluster.id, self.id,
+        res = senlin_lock.cluster_lock_acquire(cluster.id, self,
                                                senlin_lock.CLUSTER_SCOPE,
                                                steal_lock)
         if not res:
