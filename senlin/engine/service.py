@@ -141,7 +141,7 @@ class EngineService(service.Service):
         self.target = target
         server = rpc_messaging.get_rpc_server(target, self)
         server.start()
-
+        environment.initialize()
         super(EngineService, self).start()
 
     def stop(self):
@@ -196,16 +196,14 @@ class EngineService(service.Service):
     def profile_create(self, context, name, type, spec, perm, tags):
         LOG.info(_LI('Creating profile %s:%s'), type, name)
         # validate type
-        if type not in environment.global_env().get_profile_types():
-            LOG.info(_LI('Invalid profile type %s'), type)
-            raise exception.ProfileTypeNotSupport(profile_type=type)
+        plugin = environment.global_env().get_profile(type)
 
         kwargs = {
             'spec': spec,
             'permission': perm,
             'tags': tags,
         }
-        profile = profile_base.Profile(type, name, **kwargs)
+        profile = plugin(type, name, **kwargs)
         profile.store(context)
         return profile.to_dict()
 

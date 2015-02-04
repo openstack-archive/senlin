@@ -132,8 +132,8 @@ class Registry(object):
             giter = self.global_registry.iterable_by(name)
 
         matches = itertools.chain(self.iterable_by(name), giter)
-        info = sorted(matches)[0]
-        return info.plugin if info else None
+        infoes = sorted(matches)
+        return infoes[0].plugin if infoes else None
 
     def as_dict(self):
         '''Return profiles in a dict format.'''
