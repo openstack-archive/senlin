@@ -130,10 +130,6 @@ def cluster_lock_acquire(cluster_id, action_id, scope):
     return IMPL.cluster_lock_acquire(cluster_id, action_id, scope)
 
 
-def cluster_lock_steal(cluster_id, old_worker_id, new_worker_id):
-    return IMPL.cluster_lock_steal(cluster_id, old_worker_id, new_worker_id)
-
-
 def cluster_lock_release(cluster_id, worker_id, scope):
     return IMPL.cluster_lock_release(cluster_id, worker_id, scope)
 

@@ -438,18 +438,6 @@ def cluster_lock_release(cluster_id, action_id, scope):
     return success
 
 
-def cluster_lock_steal(cluster_id, old_worker_id, new_worker_id):
-    session = get_session()
-    with session.begin():
-        lock = session.query(models.ClusterLock).get(cluster_id)
-        rows_affected = session.query(models.ClusterLock).\
-            filter_by(cluster_id=cluster_id, worker_id=old_worker_id).\
-            update({"worker_id": new_worker_id})
-        # TODO(Qiming): steal locks from nodes as well
-    if not rows_affected:
-        return lock.worker_id if lock is not None else True
-
-
 def node_lock_create(node_id, worker_id):
     session = get_session()
     with session.begin():
