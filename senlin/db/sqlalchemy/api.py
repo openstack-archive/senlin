@@ -1088,7 +1088,7 @@ def action_acquire(context, action_id, owner, timestamp):
     return action
 
 
-def action_abandon(context, action_id, owner):
+def action_abandon(context, action_id):
     '''Abandon an action for other workers to execute again.
 
     This API is always called with the action locked by the current

@@ -291,8 +291,8 @@ def action_acquire(context, action_id, owner, timestamp):
     return IMPL.action_acquire(context, action_id, owner, timestamp)
 
 
-def action_abandon(context, action_id, owner):
-    return IMPL.action_abandon(context, action_id, owner)
+def action_abandon(context, action_id):
+    return IMPL.action_abandon(context, action_id)
 
 
 def action_lock_check(context, action_id, owner=None):
