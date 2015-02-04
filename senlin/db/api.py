@@ -134,20 +134,24 @@ def cluster_lock_acquire(cluster_id, action_id, scope):
     return IMPL.cluster_lock_acquire(cluster_id, action_id, scope)
 
 
-def cluster_lock_release(cluster_id, worker_id, scope):
-    return IMPL.cluster_lock_release(cluster_id, worker_id, scope)
+def cluster_lock_release(cluster_id, action_id, scope):
+    return IMPL.cluster_lock_release(cluster_id, action_id, scope)
 
 
-def node_lock_create(node_id, worker_id):
-    return IMPL.node_lock_create(node_id, worker_id)
+def cluster_lock_steal(node_id, action_id):
+    return IMPL.cluster_lock_steal(node_id, new_action_id)
 
 
-def node_lock_steal(node_id, old_worker_id, new_worker_id):
-    return IMPL.node_lock_steal(node_id, old_worker_id, new_worker_id)
+def node_lock_acquire(node_id, action_id):
+    return IMPL.node_lock_acquire(node_id, action_id)
 
 
-def node_lock_release(node_id, worker_id):
-    return IMPL.node_lock_release(node_id, worker_id)
+def node_lock_release(node_id, action_id):
+    return IMPL.node_lock_release(node_id, action_id)
+
+
+def node_lock_steal(node_id, action_id):
+    return IMPL.node_lock_steal(node_id, action_id)
 
 
 # Policies

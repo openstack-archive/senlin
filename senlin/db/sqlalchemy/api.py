@@ -448,35 +448,59 @@ def cluster_lock_release(cluster_id, action_id, scope):
     return success
 
 
-def node_lock_create(node_id, worker_id):
+def cluster_lock_steal(cluster_id, action_id):
     session = get_session()
-    with session.begin():
-        lock = session.query(models.NodeLock).get(node_id)
-        if lock is not None:
-            return lock.worker_id
-        session.add(models.NodeLock(node_id=node_id,
-                                    worker_id=worker_id))
+    session.begin():
+    lock = session.query(models.ClusterLock).get(cluster_id)
+    if lock is not None:
+        lock.action_ids = [action_id]
+        lock.semaphore = -1
+        lock.save(session)
+    else:
+        session.add(models.ClusterLock(cluster_id=cluster_id,
+                                       action_ids=[action_id],
+                                       semaphore=-1))
+    session.commit()
+    return lock.action_ids
 
 
-def node_lock_steal(node_id, old_worker_id, new_worker_id):
+def node_lock_acquire(node_id, action_id):
     session = get_session()
-    with session.begin():
-        lock = session.query(models.NodeLock).get(node_id)
-        rows_affected = session.query(models.NodeLock).\
-            filter_by(node_id=node_id, worker_id=old_worker_id).\
-            update({"worker_id": new_worker_id})
-    if not rows_affected:
-        return lock.worker_id if lock is not None else True
+    session.begin()
+
+    lock = session.query(models.NodeLock).get(node_id)
+    if lock is None:
+        session.add(models.NodeLock(node_id=node_id, action_id=action_id))
+    session.commit()
+
+    return lock.action_id
 
 
-def node_lock_release(node_id, worker_id):
+def node_lock_release(node_id, action_id):
     session = get_session()
-    with session.begin():
-        rows_affected = session.query(models.NodeLock).\
-            filter_by(node_id=node_id, worker_id=worker_id).\
-            delete()
-    if not rows_affected:
-        return True
+    session.begin()
+
+    success = False
+    lock = session.query(models.NodeLock).get(node_id=node_id)
+    if lock is not None and lock.action_id == action_id:
+        session.delete(lock)
+        success = True
+
+    session.commit()
+    return success
+
+
+def node_lock_steal(node_id, action_id):
+    session = get_session()
+    session.begin()
+    lock = session.query(models.NodeLock).get(node_id)
+    if lock is not None:
+        lock.action_id = action_id
+        lock.save(session)
+    else:
+        session.add(models.NodeLock(node_id=node_id, action_id=action_id))
+    session.commit()
+    return lock.action_id
 
 
 # Policies
