@@ -42,22 +42,6 @@ def policy_enforce(handler):
     return handle_cluster_method
 
 
-def identified_cluster(handler):
-    """Decorator that passes a cluster identifier instead of path components.
-
-    This is a handler method decorator.
-    """
-    @policy_enforce
-    @functools.wraps(handler)
-    def handle_cluster_method(controller, req, cluster_name, cluster_id,
-                              **kwargs):
-        cid = identifier.ClusterIdentifier(req.context.tenant_id,
-                                           cluster_name, cluster_id)
-        return handler(controller, req, dict(cid), **kwargs)
-
-    return handle_cluster_method
-
-
 def make_url(req, identity):
     """Return the URL for the supplied identity dictionary."""
     try:
