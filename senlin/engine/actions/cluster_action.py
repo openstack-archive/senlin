@@ -154,25 +154,24 @@ class ClusterAction(base.Action):
     def do_delete(self, cluster):
         cluster.set_status(self.context, cluster.DELETING)
         node_list = cluster.get_nodes()
-        for node_id in node_list:
-            kwargs = {
-                'name': 'node_delete_%s' % node_id[:8],
-                'context': self.context,
-                'target': node_id,
-                'cause': 'Cluster deletion',
-            }
-            action = base.Action(self.context, 'NODE_DELETE', **kwargs)
+
+        for node in node_list:
+            action = base.Action(self.context, 'NODE_DELETE',
+                                 name='node_delete_%s' % node.id[:8],
+                                 target=node.id,
+                                 cause='Cluster deletion')
             action.store(self.context)
 
             # Build dependency and make the new action ready
-            db_api.action_add_dependency(action.id, self)
+            db_api.action_add_dependency(self.context, action.id, self.id)
             action.set_status(self.READY)
 
             dispatcher.notify(self.context, dispatcher.Dispatcher.NEW_ACTION,
                               None, action_id=action.id)
 
         result = self.RES_OK
-        if cluster.size > 0:
+        if cluster.size > 0 and len(node_list) > 0:
+            # The size may not be accurate, so we check the node_list as well
             result = self._wait_for_action()
 
         if result == self.RES_OK:
