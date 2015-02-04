@@ -457,9 +457,11 @@ def cluster_lock_steal(cluster_id, action_id):
         lock.semaphore = -1
         lock.save(session)
     else:
-        session.add(models.ClusterLock(cluster_id=cluster_id,
-                                       action_ids=[action_id],
-                                       semaphore=-1))
+        lock = models.ClusterLock(cluster_id=cluster_id,
+                                  action_ids=[action_id],
+                                  semaphore=-1)
+        session.add(lock)
+
     session.commit()
     return lock.action_ids
 
@@ -470,7 +472,8 @@ def node_lock_acquire(node_id, action_id):
 
     lock = session.query(models.NodeLock).get(node_id)
     if lock is None:
-        session.add(models.NodeLock(node_id=node_id, action_id=action_id))
+        lock = models.NodeLock(node_id=node_id, action_id=action_id)
+        session.add(lock)
     session.commit()
 
     return lock.action_id
@@ -481,7 +484,7 @@ def node_lock_release(node_id, action_id):
     session.begin()
 
     success = False
-    lock = session.query(models.NodeLock).get(node_id=node_id)
+    lock = session.query(models.NodeLock).get(node_id)
     if lock is not None and lock.action_id == action_id:
         session.delete(lock)
         success = True
@@ -498,7 +501,8 @@ def node_lock_steal(node_id, action_id):
         lock.action_id = action_id
         lock.save(session)
     else:
-        session.add(models.NodeLock(node_id=node_id, action_id=action_id))
+        lock = models.NodeLock(node_id=node_id, action_id=action_id)
+        session.add(lock)
     session.commit()
     return lock.action_id
 

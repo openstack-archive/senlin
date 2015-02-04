@@ -26,6 +26,7 @@ class DBAPILockTest(base.SenlinTestCase):
         self.ctx = utils.dummy_context()
         self.profile = shared.create_profile(self.ctx)
         self.cluster = shared.create_cluster(self.ctx, self.profile)
+        self.node = shared.create_node(self.ctx, self.cluster, self.profile)
 
     def test_cluster_lock_cluster_scope(self):
         observed = db_api.cluster_lock_acquire(self.cluster.id, UUID1, -1)
@@ -135,4 +136,86 @@ class DBAPILockTest(base.SenlinTestCase):
         self.assertIn(UUID3, observed)
 
         observed = db_api.cluster_lock_release(self.cluster.id, UUID3, -1)
+        self.assertTrue(observed)
+
+    def test_cluster_lock_steal(self):
+        observed = db_api.cluster_lock_acquire(self.cluster.id, UUID1, -1)
+        self.assertIn(UUID1, observed)
+        self.assertNotIn(UUID2, observed)
+
+        observed = db_api.cluster_lock_steal(self.cluster.id, UUID1)
+        self.assertIn(UUID1, observed)
+        self.assertNotIn(UUID2, observed)
+
+        observed = db_api.cluster_lock_steal(self.cluster.id, UUID2)
+        self.assertNotIn(UUID1, observed)
+        self.assertIn(UUID2, observed)
+
+        observed = db_api.cluster_lock_release(self.cluster.id, UUID2, -1)
+        self.assertTrue(observed)
+
+        observed = db_api.cluster_lock_steal(self.cluster.id, UUID1)
+        self.assertIn(UUID1, observed)
+        self.assertNotIn(UUID2, observed)
+ 
+        observed = db_api.cluster_lock_release(self.cluster.id, UUID1, -1)
+        self.assertTrue(observed)
+
+        observed = db_api.cluster_lock_acquire(self.cluster.id, UUID3, 1)
+        self.assertIn(UUID3, observed)
+        self.assertNotIn(UUID1, observed)
+        self.assertNotIn(UUID2, observed)
+
+        observed = db_api.cluster_lock_steal(self.cluster.id, UUID1)
+        self.assertIn(UUID1, observed)
+        self.assertNotIn(UUID3, observed)
+
+        observed = db_api.cluster_lock_release(self.cluster.id, UUID1, -1)
+        self.assertTrue(observed)
+
+    def test_node_lock_acquire_release(self):
+        observed = db_api.node_lock_acquire(self.node.id, UUID1)
+        self.assertEqual(UUID1, observed)
+
+        observed = db_api.node_lock_acquire(self.node.id, UUID2)
+        self.assertEqual(UUID1, observed)
+
+        observed = db_api.node_lock_release(self.node.id, UUID2)
+        self.assertFalse(observed)
+
+        observed = db_api.node_lock_release(self.node.id, UUID1)
+        self.assertTrue(observed)
+
+        observed = db_api.node_lock_release(self.node.id, UUID1)
+        self.assertFalse(observed)
+
+        observed = db_api.node_lock_acquire(self.node.id, UUID2)
+        self.assertEqual(UUID2, observed)
+
+        observed = db_api.node_lock_release(self.node.id, UUID2)
+        self.assertTrue(observed)
+
+    def test_node_lock_steal(self):
+        observed = db_api.node_lock_steal(self.node.id, UUID1)
+        self.assertEqual(UUID1, observed)
+
+        observed = db_api.node_lock_acquire(self.node.id, UUID2)
+        self.assertEqual(UUID1, observed)
+
+        observed = db_api.node_lock_release(self.node.id, UUID2)
+        self.assertFalse(observed)
+
+        observed = db_api.node_lock_release(self.node.id, UUID1)
+        self.assertTrue(observed)
+
+        observed = db_api.node_lock_acquire(self.node.id, UUID1)
+        self.assertEqual(UUID1, observed)
+
+        observed = db_api.node_lock_steal(self.node.id, UUID2)
+        self.assertEqual(UUID2, observed)
+
+        observed = db_api.node_lock_release(self.node.id, UUID1)
+        self.assertFalse(observed)
+
+        observed = db_api.node_lock_release(self.node.id, UUID2)
         self.assertTrue(observed)
