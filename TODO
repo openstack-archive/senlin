@@ -18,6 +18,9 @@ ENGINE
   - cleanse scheduler module [Yanyan Hu]
     - Using python threading to replace greenthread(long term).
   - complete parser logic, construct profile/policy objects there?
+  - handle cancel_action() properly. When dispatcher.cancel_action() is called,
+    the scheduler should check if the action is still being worked on by someone.
+    It should send cancel signal, or help that action remove locks if needed.
 
 DRIVER
 ------
