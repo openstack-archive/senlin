@@ -249,18 +249,39 @@ class Action(object):
         '''
         return NotImplemented
 
-    def set_status(self, status):
-        '''Set action status.
+    def set_status(self, result):
+        '''Set action status based on return value from execute.'''
 
-        This is not merely about a db record update.
-        '''
-        if status == self.SUCCEEDED:
-            db_api.action_mark_succeeded(self.context, self.id)
-        elif status == self.FAILED:
-            db_api.action_mark_failed(self.context, self.id)
-        elif status == self.CANCELLED:
-            db_api.action_mark_cancelled(self.context, self.id)
+        timestamp = wallclock()
 
+        if result == self.RES_OK:
+            status = self.SUCCEEDED
+            msg = _LI('Action %(name)s [%(id)s] completed with %(status)s.')
+            db_api.action_mark_succeeded(self.context, self.id, timestamp)
+
+        elif result == self.RES_ERROR or result == self.RES_TIMEOUT:
+            status = self.FAILED
+            msg = _LI('Action %(name)s [%(id)s] failed with %(status)s.')
+            db_api.action_mark_failed(self.context, self.id, timestamp,
+                                      reason=result)
+
+        elif result == self.RES_CANCEL:
+            status = self.CANCELLED
+            msg = _LI('Action %(name)s [%(id)s] was cancelled.')
+            db_api.action_mark_cancelled(self.context, self.id, timestamp)
+
+        else:  # result == self.RES_RETRY:
+            status = self.READY
+            # Action failed at the moment, but can be retried
+            # We abandon it and then notify other dispatchers to execute it
+            db_api.action_abandon(self.context, self.id)
+
+            # TODO(yanyan): This is dirty, we have to import dispatcher here?
+            dispatcher.notify(self.context, dispatcher.NEW_ACTION,
+                              None, action_id=self.id)
+            msg = _LI('Action %(name)s [%(id)s] aborted with RETRY.')
+
+        LOG.info(msg, {'name': self.action, 'id': self.id, 'status': status})
         self.status = status
 
     def get_status(self):
@@ -397,46 +418,7 @@ def ActionProc(context, action_id, worker_id):
         # executed.
         LOG.debug(_('Exception occurred in action execution: %s'),
                   six.text_type(ex))
-        result = self.RES_ERROR
-
-    # Step 4: check return result (and release lock implicitly)
-    timestamp = wallclock()
-
-    if result == action.RES_OK:
-
-        db_api.action_mark_succeeded(context, action.id, timestamp)
-        LOG.info(_LI('Action %(name)s [%(id)s] completed with success.'),
-                 {'name': six.text_type(action.action), 'id': action.id})
-
-    elif result == action.RES_RETRY:
-
-        # Action failed at the moment, but can be retried
-        # We abandon it and then notify other dispatchers to execute it
-        db_api.action_abandon(context, action_id, worker_id)
-        # TODO(yanyan): This is dirty, we have to import dispatcher here?
-        dispatcher.notify(context, dispatcher.NEW_ACTION,
-                          None, action_id=action.id)
-        LOG.info(_LI('Action %(name)s [%(id)s] returned with retry.'),
-                 {'name': six.text_type(action.action), 'id': action.id})
-
-    elif result == action.RES_ERROR:
-
-        db_api.action_mark_failed(context, action.id, timestamp,
-                                  reason='ERROR')
-
-        LOG.info(_LI('Action %(name)s [%(id)s] completed with failure.'),
-                 {'name': six.text_type(action.action), 'id': action.id})
-
-    elif result == action.RES_CANCEL:
-
-        db_api.action_mark_cancelled(context, action.id, timestamp)
-
-        LOG.info(_LI('Action %(name)s [%(id)s] was cancelled'),
-                 {'name': six.text_type(action.action), 'id': action.id})
-
-    else:  # result == action.RES_TIMEOUT:
-        db_api.action_mark_failed(context, action.id, timestamp,
-                                  reason='TIMEOUT')
-
-        LOG.info(_LI('Action %(name)s [%(id)s] failed with timeout'),
-                 {'name': six.text_type(action.action), 'id': action.id})
+        result = action.RES_ERROR
+    finally:
+        # NOTE: locks on action is eventually released here by status update
+        action.set_status(result)
