@@ -261,7 +261,13 @@ class Action(object):
 
         elif result == self.RES_ERROR or result == self.RES_TIMEOUT:
             status = self.FAILED
-            msg = _LI('Action %(name)s [%(id)s] failed with %(status)s.')
+            msg = _LI('Action %(name)s [%(id)s] failed with ERROR.')
+            db_api.action_mark_failed(self.context, self.id, timestamp,
+                                      reason=result)
+
+        elif result == self.RES_TIMEOUT:
+            status = self.FAILED
+            msg = _LI('Action %(name)s [%(id)s] failed with TIMEOUT.')
             db_api.action_mark_failed(self.context, self.id, timestamp,
                                       reason=result)
 
