@@ -333,10 +333,13 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_delete(self, context, identity):
-        LOG.info(_LI('Deleting cluster %s'), identity)
+        db_cluster = self.cluster_find(context, identity)
+        LOG.info(_LI('Deleting cluster %s'), db_cluster.name)
 
+        cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
         action = action_mod.Action(context, 'CLUSTER_DELETE',
-                                   target=identity, cause='RPC Request')
+                                   name='cluster_delete_%s' % cluster.id[:8],
+                                   target=cluster.id, cause='RPC Request')
         action.store(context)
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
