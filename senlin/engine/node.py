@@ -160,8 +160,7 @@ class Node(object):
                                       filters=filters,
                                       tenant_safe=tenant_safe)
 
-        for record in records:
-            yield cls._from_db_record(context, record)
+        return [cls._from_db_record(context, record) for record in records]
 
     def to_dict(self):
         node_dict = {
