@@ -301,13 +301,13 @@ def action_lock_check(context, action_id, owner=None):
 
 
 def action_signal(context, action_id, value):
-    '''Set action control status to value.'''
+    '''Send signal to an action via DB.'''
     return IMPL.action_signal(context, action_id, value)
 
 
-def action_control_check(context, action_id):
-    '''Get action control status.'''
-    return IMPL.action_control_check(context, action_id)
+def action_signal_query(context, action_id):
+    '''Query signal status for the sepcified action.'''
+    return IMPL.action_signal_query(context, action_id)
 
 
 def action_delete(context, action_id, force=False):

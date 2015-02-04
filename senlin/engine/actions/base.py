@@ -305,8 +305,7 @@ class Action(object):
             LOG.debug('Action %s run timeout' % self.id)
             return self.RES_TIMEOUT
 
-        # Check if action control flag is set
-        result = db_api.action_control_check(self.context, self.id)
+        result = db_api.action_signal_query(self.context, self.id)
         return result
 
     def is_cancelled(self):

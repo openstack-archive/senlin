@@ -1128,11 +1128,10 @@ def action_signal(context, action_id, value):
     action.save(query.session)
 
 
-def action_control_check(context, action_id):
+def action_signal_query(context, action_id):
     action = model_query(context, models.Action).get(action_id)
     if not action:
-        raise exception.NotFound(
-            _('Action with id "%s" not found') % action_id)
+        return None
 
     return action.control
 
