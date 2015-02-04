@@ -24,7 +24,6 @@ from senlin.common.i18n import _LI
 from senlin.common.i18n import _LW
 from senlin.common import messaging as rpc_messaging
 from senlin.db import api as db_api
-from senlin.engine import dispatcher
 from senlin.engine import scheduler
 from senlin.openstack.common import log as logging
 
@@ -183,7 +182,7 @@ class BaseLock(object):
 
 
 def cluster_lock_acquire(cluster_id, action_id, scope=CLUSTER_SCOPE,
-                         forced_locking=False):
+                         forced=False):
     '''Try to lock the specified cluster
 
     :param forced_locking: set to True to cancel current action that
@@ -191,7 +190,6 @@ def cluster_lock_acquire(cluster_id, action_id, scope=CLUSTER_SCOPE,
     '''
     # Step 1: try lock the cluster - if the returned owner_id is the
     #         action id, it was a success
-
     owners = db_api.cluster_lock_acquire(cluster_id, action_id, scope)
     if action_id in owners:
         return True
@@ -207,10 +205,10 @@ def cluster_lock_acquire(cluster_id, action_id, scope=CLUSTER_SCOPE,
             return True
         retries = retries - 1
 
-    # Step 3: Last resort is 'forced_locking', only needed when retry failed
-    if forced_locking:
-        owners = db_api.cluster_lock_steal(cluster_id, action.id, scope)
-        return action_id in owners:
+    # Step 3: Last resort is 'forced locking', only needed when retry failed
+    if forced:
+        owners = db_api.cluster_lock_steal(cluster_id, action_id, scope)
+        return action_id in owners
 
     LOG.error(_LE('Cluster is already locked by action %(old)s, '
                   'action %(new)s failed grabbing the lock') % {
@@ -221,3 +219,42 @@ def cluster_lock_acquire(cluster_id, action_id, scope=CLUSTER_SCOPE,
 
 def cluster_lock_release(cluster_id, action_id, scope):
     db_api.cluster_lock_release(cluster_id, action_id, scope)
+
+
+def node_lock_acquire(node_id, action_id, forced=False):
+    '''Try to lock the specified node.
+
+    :param forced_locking: set to True to cancel current action that
+                           owns the lock, if any.
+    '''
+    # Step 1: try lock the node - if the returned owner_id is the
+    #         action id, it was a success
+    owner = db_api.node_lock_acquire(node_id, action_id)
+    if action_id == owner:
+        return True
+
+    # Step 2: retry using global configuration options
+    retries = cfg.CONF.lock_retry_times
+    retry_interval = cfg.CONF.lock_retry_interval
+
+    while retries > 0:
+        scheduler.sleep(retry_interval)
+        owner = db_api.node_lock_acquire(node_id, action_id)
+        if action_id == owner:
+            return True
+        retries = retries - 1
+
+    # Step 3: Last resort is 'forced locking', only needed when retry failed
+    if forced:
+        owner = db_api.node_lock_steal(node_id, action_id)
+        return action_id == owner
+
+    LOG.error(_LE('Node is already locked by action %(old)s, '
+                  'action %(new)s failed grabbing the lock') % {
+                      'old': owner, 'new': action_id})
+
+    return False
+
+
+def node_lock_release(node_id, action_id):
+    db_api.node_lock_release(node_id, action_id)
