@@ -181,6 +181,25 @@ class EngineService(service.Service):
         return {}
 
     @request_context
+    def profile_find(self, context, identity, show_deleted=False):
+        '''Find a profile with the given identity (could be name or ID).'''
+
+        if uuidutils.is_uuid_like(identity):
+            profile = db_api.profile_get(context, identity,
+                                         show_deleted=show_deleted)
+            if not profile:
+                profile = db_api.profile_get_by_name(context, identity)
+        else:
+            profile = db_api.profile_get_by_name(context, identity)
+            if not profile:
+                profile = db_api.profile_get_by_short_id(context, identity)
+
+        if not profile:
+            raise exception.ProfileNotFound(profile=identity)
+
+        return profile
+
+    @request_context
     def profile_list(self, context, limit=None, marker=None, sort_keys=None,
                      sort_dir=None, filters=None, show_deleted=False):
         profiles = profile_base.Profile.load_all(context, limit=limit,
@@ -208,8 +227,9 @@ class EngineService(service.Service):
         return profile.to_dict()
 
     @request_context
-    def profile_get(self, context, profile_id):
-        profile = profile_base.Profile.load(context, profile_id)
+    def profile_get(self, context, identity):
+        db_profile = self.profile_find(context, identity)
+        profile = profile_base.Profile.load(context, profile=db_profile)
         return profile.to_dict()
 
     @request_context
@@ -217,9 +237,10 @@ class EngineService(service.Service):
         return {}
 
     @request_context
-    def profile_delete(self, context, profile_id):
-        LOG.info(_LI('Delete profile: %s'), profile_id)
-        profile_base.Profile.delete(context, profile_id)
+    def profile_delete(self, context, identity):
+        db_profile = self.profile_find(context, identity)
+        LOG.info(_LI('Delete profile: %s'), identity)
+        profile_base.Profile.delete(context, db_profile.id)
         return None
 
     @request_context
@@ -251,7 +272,7 @@ class EngineService(service.Service):
 
         if uuidutils.is_uuid_like(identity):
             cluster = db_api.cluster_get(context, identity,
-                                            show_deleted=show_deleted)
+                                         show_deleted=show_deleted)
             # maybe the name is in uuid format, so if get by id returns None,
             # we should get the info by name again
             if not cluster:
@@ -263,7 +284,7 @@ class EngineService(service.Service):
                 cluster = db_api.cluster_get_by_short_id(context, identity)
 
         if not cluster:
-            raise exception.ClusterNotFound(cluster_name=identity)
+            raise exception.ClusterNotFound(cluster=identity)
 
         return cluster
 
@@ -357,17 +378,19 @@ class EngineService(service.Service):
         '''Find a cluster with the given identity (could be name or ID).'''
 
         if uuidutils.is_uuid_like(identity):
-            db_node = db_api.node_get(context, identity,
-                                      show_deleted=show_deleted)
-            if not db_node:
-                db_node = db_api.node_get_by_name(context, identity)
+            node = db_api.node_get(context, identity,
+                                   show_deleted=show_deleted)
+            if not node:
+                node = db_api.node_get_by_name(context, identity)
         else:
-            db_node = db_api.node_get_by_name(context, identity)
+            node = db_api.node_get_by_name(context, identity)
+            if not node:
+                node = db_api.node_get_by_short_id(context, identity)
 
-        if db_node is None:
-            raise exception.NodeNotFound(name=identity)
+        if node is None:
+            raise exception.NodeNotFound(node=identity)
 
-        return db_node
+        return node
 
     @request_context
     def node_list(self, context, cluster_id=None, show_deleted=False,
@@ -407,7 +430,6 @@ class EngineService(service.Service):
     @request_context
     def node_get(self, context, identity):
         db_node = self.node_find(context, identity)
-        # TODO(Qiming): Add conversion from name to id
         node = node_mod.Node.load(context, node=db_node)
         return node.to_dict()
 
@@ -442,6 +464,8 @@ class EngineService(service.Service):
                 action = db_api.action_get_by_name(context, identity)
         else:
             action = db_api.action_get_by_name(context, identity)
+            if not action:
+                action = db_api.action_get_by_short_id(context, identity)
 
         if not action:
             raise exception.ActionNotFound(action=identity)
@@ -482,6 +506,6 @@ class EngineService(service.Service):
 
     @request_context
     def action_get(self, context, identity):
-        action_record = self.action_find(context, identity)
-        action = action_mod.Action.load(context, action=action_record)
+        db_action = self.action_find(context, identity)
+        action = action_mod.Action.load(context, action=db_action)
         return action.to_dict()

@@ -100,9 +100,9 @@ class EngineClient(object):
                                        name=name, type=type, spec=spec,
                                        perm=perm, tags=tags))
 
-    def profile_get(self, ctxt, profile_id):
+    def profile_get(self, ctxt, identity):
         return self.call(ctxt,
-                         self.make_msg('profile_get', profile_id=profile_id))
+                         self.make_msg('profile_get', identity=identity))
 
     def profile_update(self, ctxt, profile_id, name, spec, perm, tags):
         return self.call(ctxt,
@@ -111,11 +111,11 @@ class EngineClient(object):
                                        name=name, spec=spec,
                                        perm=perm, tags=tags))
 
-    def profile_delete(self, ctxt, profile_id, cast=True):
+    def profile_delete(self, ctxt, identity, cast=True):
         rpc_method = self.cast if cast else self.call
         return rpc_method(ctxt,
                           self.make_msg('profile_delete',
-                                        profile_id=profile_id))
+                                        identity=identity))
 
     def policy_type_list(self, ctxt):
         return self.call(ctxt, self.make_msg('policy_type_list'))
@@ -212,7 +212,6 @@ class EngineClient(object):
         return rpc_method(ctxt,
                           self.make_msg('node_delete', identity=identity,
                                         force=force))
-
 
     def action_list(self, ctxt, filters=None, limit=None, marker=None,
                     sort_keys=None, sort_dir=None, show_deleted=False):
