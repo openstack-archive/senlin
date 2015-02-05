@@ -98,6 +98,10 @@ def node_get_by_name(context, name, show_deleted=False):
     return IMPL.node_get_by_name(context, name, show_deleted=show_deleted)
 
 
+def node_get_by_short_id(context, short_id):
+    return IMPL.node_get_by_short_id(context, short_id)
+
+
 def node_get_all(context, cluster_id=None, show_deleted=False,
                  limit=None, marker=None, sort_keys=None, sort_dir=None,
                  filters=None, tenant_safe=True):
@@ -167,6 +171,10 @@ def policy_get(context, policy_id, show_deleted=False):
     return IMPL.policy_get(context, policy_id)
 
 
+def policy_get_by_short_id(context, short_id):
+    return IMPL.policy_get_by_short_id(context, short_id)
+
+
 def policy_get_all(context, show_deleted=False):
     return IMPL.policy_get_all(context, show_deleted)
 
@@ -209,6 +217,10 @@ def profile_get(context, profile_id):
     return IMPL.profile_get(context, profile_id)
 
 
+def profile_get_by_short_id(context, short_id):
+    return IMPL.profile_get_by_short_id(context, short_id)
+
+
 def profile_get_all(context, limit=None, marker=None, sort_keys=None,
                     sort_dir=None, filters=None, show_deleted=False):
     return IMPL.profile_get_all(context, limit=limit, marker=marker,
@@ -231,6 +243,10 @@ def event_create(context, values):
 
 def event_get(context, event_id):
     return IMPL.event_get(context, event_id)
+
+
+def event_get_by_short_id(context, short_id):
+    return IMPL.event_get_by_short_id(context, short_id)
 
 
 def event_get_all(context):
@@ -261,6 +277,10 @@ def action_get(context, action_id):
 
 def action_get_by_name(context, name):
     return IMPL.action_get_by_name(context, name)
+
+
+def action_get_by_short_id(context, short_id):
+    return IMPL.action_get_by_short_id(context, short_id)
 
 
 def action_get_1st_ready(context):

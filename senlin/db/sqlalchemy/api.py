@@ -127,6 +127,17 @@ def soft_delete_aware_query(context, *args, **kwargs):
     return query
 
 
+def query_by_short_id(context, model, short_id):
+    q = soft_delete_aware_query(context, model)
+    q = q.filter(model.id.like('%s%%' % short_id))
+    if q.count() == 1:
+        return q.first()
+    elif q.count() == 0:
+        return None
+    else:
+        raise exception.MultipleChoice(arg=short_id)
+
+
 def _session(context):
     return (context and context.session) or get_session()
 
@@ -162,16 +173,7 @@ def cluster_get_by_name(context, cluster_name):
 
 
 def cluster_get_by_short_id(context, short_id):
-    q = soft_delete_aware_query(context, models.Cluster)
-    pattern = '%s%%' % short_id
-    q = q.filter(models.Cluster.id.like(pattern))
-    q = q.filter_by(project=context.tenant_id)
-    if q.count() == 1:
-        return q.first()
-    elif q.count() == 0:
-        return None
-    else:
-        raise exception.MultipleChoice(arg=short_id)
+    return query_by_short_id(context, models.Cluster, short_id)
 
 
 def cluster_get_all_by_parent(context, parent):
@@ -291,6 +293,10 @@ def node_get_by_name(context, name, show_deleted=False):
             return node
 
     return None
+
+
+def node_get_by_short_id(context, short_id):
+    return query_by_short_id(context, models.Node, short_id)
 
 
 def _query_node_get_all(context, show_deleted=False, cluster_id=None):
@@ -538,6 +544,10 @@ def policy_get(context, policy_id, show_deleted=False):
     return policy
 
 
+def policy_get_by_short_id(context, short_id):
+    return query_by_short_id(context, models.Policy, short_id)
+
+
 def policy_get_all(context, show_deleted=False):
     policies = soft_delete_aware_query(context, models.Policy,
                                        show_deleted=show_deleted).all()
@@ -653,6 +663,10 @@ def profile_get(context, profile_id):
     return profile
 
 
+def profile_get_by_short_id(context, short_id):
+    return query_by_short_id(context, models.Profile, short_id)
+
+
 def profile_get_all(context, limit=None, marker=None, sort_keys=None,
                     sort_dir=None, filters=None, show_deleted=False):
     query = soft_delete_aware_query(context, models.Profile,
@@ -735,6 +749,10 @@ def event_create(context, values):
 def event_get(context, event_id):
     event = model_query(context, models.Event).get(event_id)
     return event
+
+
+def event_get_by_short_id(context, short_id):
+    return query_by_short_id(context, models.Event, short_id)
 
 
 def event_get_all(context):
@@ -867,6 +885,10 @@ def action_get(context, action_id):
 def action_get_by_name(context, name):
     action = model_query(context, models.Action).filter_by(name=name).first()
     return action
+
+
+def action_get_by_short_id(context, short_id):
+    return query_by_short_id(context, models.Action, short_id)
 
 
 def action_get_1st_ready(context):
