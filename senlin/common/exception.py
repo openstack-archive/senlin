@@ -189,6 +189,11 @@ class RegionAmbiguity(SenlinException):
                 "supplied one.")
 
 
+class MultipleChoices(SenlinException):
+    msg_fmt = _("Multiple results found matching the query criteria %(arg)s. "
+                "Please be more specific.")
+
+
 class UserParameterMissing(SenlinException):
     msg_fmt = _("The Parameter (%(key)s) was not provided.")
 
