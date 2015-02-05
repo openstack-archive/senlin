@@ -219,9 +219,8 @@ class Action(object):
         if action is None:
             action = db_api.action_get(context, action_id)
 
-        if action is None:
-            msg = _('No action with id "%s" exists') % action_id
-            raise exception.NotFound(msg)
+            if action is None:
+                raise exception.ActionNotFound(action=action_id)
 
         return cls._from_db_record(action)
 

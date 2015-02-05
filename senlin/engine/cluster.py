@@ -15,7 +15,6 @@ import datetime
 from oslo_config import cfg
 
 from senlin.common import exception
-from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.common.i18n import _LW
 from senlin.db import api as db_api
@@ -162,9 +161,8 @@ class Cluster(periodic_task.PeriodicTasks):
         if cluster is None:
             cluster = db_api.cluster_get(context, cluster_id,
                                          show_deleted=show_deleted)
-        if cluster is None:
-            msg = _('No cluster with id "%s" is found') % cluster_id
-            raise exception.NotFound(msg)
+            if cluster is None:
+                raise exception.ClusterNotFound(cluster=cluster_id)
 
         return cls._from_db_record(context, cluster)
 

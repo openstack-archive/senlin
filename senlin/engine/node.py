@@ -13,7 +13,6 @@
 import datetime
 
 from senlin.common import exception
-from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.common.i18n import _LW
 from senlin.db import api as db_api
@@ -138,13 +137,10 @@ class Node(object):
     @classmethod
     def load(cls, context, node_id=None, node=None, show_deleted=False):
         '''Retrieve a node from database.'''
-
         if node is None:
             node = db_api.node_get(context, node_id, show_deleted=show_deleted)
-
-        if node is None:
-            msg = _('No node with id "%s" is found') % node_id
-            raise exception.NotFound(msg)
+            if node is None:
+                raise exception.NodeNotFound(node=node_id)
 
         return cls._from_db_record(context, node)
 

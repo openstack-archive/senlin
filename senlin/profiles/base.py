@@ -12,6 +12,7 @@
 
 import datetime
 
+from senlin.common import exception
 from senlin.db import api as db_api
 from senlin.engine import environment
 from senlin.openstack.common import log as logging
@@ -69,11 +70,14 @@ class Profile(object):
         return cls(record.type, record.name, **kwargs)
 
     @classmethod
-    def load(cls, context, profile_id):
+    def load(cls, context, profile_id=None, profile=None):
         '''Retrieve a profile object from database.'''
+        if profile is None:
+            profile = db_api.profile_get(context, profile_id)
+            if profile is None:
+                raise exception.ProfileNotFound(profile=profile_id)
 
-        record = db_api.profile_get(context, profile_id)
-        return cls.from_db_record(context, record)
+        return cls.from_db_record(context, profile)
 
     @classmethod
     def load_all(cls, context, limit=None, sort_keys=None, marker=None,

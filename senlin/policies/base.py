@@ -11,7 +11,6 @@
 # under the License.
 
 from senlin.common import exception
-from senlin.common.i18n import _
 from senlin.db import api as db_api
 from senlin.engine import environment
 
@@ -91,13 +90,13 @@ class Policy(object):
         return cls(record.type, record.name, **kwargs)
 
     @classmethod
-    def load(cls, context, policy_id):
+    def load(cls, context, policy_id=None, policy=None):
         '''Retrieve and reconstruct a policy object from DB.'''
 
-        policy = db_api.policy_get(context, policy_id)
         if policy is None:
-            msg = _('No policy with id "%s" exists') % policy_id
-            raise exception.NotFound(msg)
+            policy = db_api.policy_get(context, policy_id)
+            if policy is None:
+                raise exception.PolicyNotFound(policy=policy_id)
 
         return cls.from_db_record(context, policy)
 
