@@ -208,7 +208,7 @@ class InvalidTenant(SenlinException):
 
 
 class ClusterNotFound(SenlinException):
-    msg_fmt = _("The cluster (%(cluster_name)s) could not be found.")
+    msg_fmt = _("The cluster (%(cluster)s) could not be found.")
 
 
 class ClusterExists(SenlinException):
@@ -220,7 +220,7 @@ class ClusterNotSpecified(SenlinException):
 
 
 class NodeNotFound(SenlinException):
-    msg_fmt = _("The node (%(name)s) could not be found.")
+    msg_fmt = _("The node (%(node)s) could not be found.")
 
 
 class NodeStatusError(SenlinException):
@@ -252,7 +252,7 @@ class PolicyValidationFailed(SenlinException):
 
 
 class PolicyNotFound(SenlinException):
-    msg_fmt = _("The Policy (%(policy_name)s) could not be found.")
+    msg_fmt = _("The Policy (%(policy)s) could not be found.")
 
 
 class PolicyExists(SenlinException):

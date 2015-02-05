@@ -171,6 +171,10 @@ def policy_get(context, policy_id, show_deleted=False):
     return IMPL.policy_get(context, policy_id)
 
 
+def policy_get_by_name(context, name, show_deleted=False):
+    return IMPL.policy_get_by_name(context, name, show_deleted=show_deleted)
+
+
 def policy_get_by_short_id(context, short_id):
     return IMPL.policy_get_by_short_id(context, short_id)
 
@@ -215,6 +219,10 @@ def profile_create(context, values):
 
 def profile_get(context, profile_id):
     return IMPL.profile_get(context, profile_id)
+
+
+def profile_get_by_name(context, name, show_deleted=False):
+    return IMPL.profile_get_by_name(context, name, show_deleted=show_deleted)
 
 
 def profile_get_by_short_id(context, short_id):

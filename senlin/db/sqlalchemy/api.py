@@ -128,14 +128,29 @@ def soft_delete_aware_query(context, *args, **kwargs):
 
 
 def query_by_short_id(context, model, short_id):
-    q = soft_delete_aware_query(context, model)
-    q = q.filter(model.id.like('%s%%' % short_id))
+    q = soft_delete_aware_query(context, model)\
+        .filter(model.id.like('%s%%' % short_id))
     if q.count() == 1:
         return q.first()
     elif q.count() == 0:
         return None
     else:
         raise exception.MultipleChoice(arg=short_id)
+
+
+def query_by_name(context, model, name, tenant_safe=False):
+    q = soft_delete_aware_query(context, model)\
+        .filter_by(name=name)
+
+    if tenant_safe:
+        q = q.filter_by(project=context.tenant_id)
+
+    if q.count() == 1:
+        return q.first()
+    elif q.count() == 0:
+        return None
+    else:
+        raise exception.MultipleChoice(arg=name)
 
 
 def _session(context):
@@ -166,10 +181,8 @@ def cluster_get(context, cluster_id, show_deleted=False, tenant_safe=True):
     return cluster
 
 
-def cluster_get_by_name(context, cluster_name):
-    r0 = soft_delete_aware_query(context, models.Cluster)
-    result = r0.filter_by(project=context.tenant_id, name=cluster_name).first()
-    return result
+def cluster_get_by_name(context, name):
+    return query_by_name(context, models.Cluster, name, True)
 
 
 def cluster_get_by_short_id(context, short_id):
@@ -286,13 +299,8 @@ def node_get(context, node_id, show_deleted=False):
 
 
 def node_get_by_name(context, name, show_deleted=False):
-    query = soft_delete_aware_query(context, models.Node)
-    nodes = query.filter_by(name=name).all()
-    for node in nodes:
-        if show_deleted or node.deleted_time is None:
-            return node
-
-    return None
+    # TODO(Qiming): Fix this, show_deleted is ignored here
+    return query_by_name(context, models.Node, name)
 
 
 def node_get_by_short_id(context, short_id):
@@ -538,10 +546,12 @@ def policy_get(context, policy_id, show_deleted=False):
     policy = soft_delete_aware_query(context, models.Policy,
                                      show_deleted=show_deleted)
     policy = policy.filter_by(id=policy_id).first()
-    if not policy:
-        msg = _('Policy with id "%s" not found') % policy_id
-        raise exception.NotFound(msg)
     return policy
+
+
+def policy_get_by_name(context, name, show_deleted=False):
+    # TODO(Qiming): Fix this, show_deleted is ignored here
+    return query_by_name(context, models.Policy, name)
 
 
 def policy_get_by_short_id(context, short_id):
@@ -656,11 +666,12 @@ def profile_create(context, values):
 
 
 def profile_get(context, profile_id):
-    profile = model_query(context, models.Profile).get(profile_id)
-    if not profile:
-        msg = _('Profile with id "%s" not found') % profile_id
-        raise exception.NotFound(msg)
-    return profile
+    return model_query(context, models.Profile).get(profile_id)
+
+
+def profile_get_by_name(context, name, show_deleted=False):
+    # TODO(Qiming): Fix this, show_deleted is ignored here
+    return query_by_name(context, models.Profile, name)
 
 
 def profile_get_by_short_id(context, short_id):
@@ -747,8 +758,7 @@ def event_create(context, values):
 
 
 def event_get(context, event_id):
-    event = model_query(context, models.Event).get(event_id)
-    return event
+    return model_query(context, models.Event).get(event_id)
 
 
 def event_get_by_short_id(context, short_id):
@@ -883,8 +893,7 @@ def action_get(context, action_id):
 
 
 def action_get_by_name(context, name):
-    action = model_query(context, models.Action).filter_by(name=name).first()
-    return action
+    return query_by_name(context, models.Action, name)
 
 
 def action_get_by_short_id(context, short_id):
