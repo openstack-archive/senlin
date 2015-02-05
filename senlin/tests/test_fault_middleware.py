@@ -55,7 +55,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
 
     def test_openstack_exception_with_kwargs(self):
         wrapper = fault.FaultWrapper(None)
-        msg = wrapper._error(senlinexc.ClusterNotFound(cluster_name='a'))
+        msg = wrapper._error(senlinexc.ClusterNotFound(cluster='a'))
         expected = {
             'code': 404,
             'error': {
@@ -113,7 +113,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
     def test_remote_exception(self):
         # We want tracebacks
         cfg.CONF.set_override('debug', True)
-        error = senlinexc.ClusterNotFound(cluster_name='a')
+        error = senlinexc.ClusterNotFound(cluster='a')
         exc_info = (type(error), error, None)
         serialized = rpc_common.serialize_remote_exception(exc_info)
         remote_error = rpc_common.deserialize_remote_exception(
@@ -199,7 +199,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
     def test_should_not_ignore_parent_classes(self):
         wrapper = fault.FaultWrapper(None)
 
-        msg = wrapper._error(ClusterNotFoundChild(cluster_name='a'))
+        msg = wrapper._error(ClusterNotFoundChild(cluster='a'))
         expected = {
             'code': 404,
             'error': {
@@ -238,7 +238,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
         # We want tracebacks
         cfg.CONF.set_override('debug', True)
 
-        error = ClusterNotFoundChild(cluster_name='a')
+        error = ClusterNotFoundChild(cluster='a')
         exc_info = (type(error), error, None)
         serialized = rpc_common.serialize_remote_exception(exc_info)
         remote_error = rpc_common.deserialize_remote_exception(
