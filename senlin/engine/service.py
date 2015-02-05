@@ -250,18 +250,22 @@ class EngineService(service.Service):
         '''Find a cluster with the given identity (could be name or ID).'''
 
         if uuidutils.is_uuid_like(identity):
-            db_cluster = db_api.cluster_get(context, identity,
+            cluster = db_api.cluster_get(context, identity,
                                             show_deleted=show_deleted)
-            # may be the name is in uuid format, so if get by id returns None,
+            # maybe the name is in uuid format, so if get by id returns None,
             # we should get the info by name again
-            if not db_cluster:
-                db_cluster = db_api.cluster_get_by_name(context, identity)
+            if not cluster:
+                cluster = db_api.cluster_get_by_name(context, identity)
         else:
-            db_cluster = db_api.cluster_get_by_name(context, identity)
-        if db_cluster:
-            return db_cluster
-        else:
+            cluster = db_api.cluster_get_by_name(context, identity)
+            # maybe it is a short form of UUID
+            if not cluster:
+                cluster = db_api.cluster_get_by_short_id(context, identity)
+
+        if not cluster:
             raise exception.ClusterNotFound(cluster_name=identity)
+
+        return cluster
 
     @request_context
     def cluster_get(self, context, identity):

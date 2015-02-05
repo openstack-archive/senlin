@@ -49,6 +49,10 @@ def cluster_get_by_name(context, cluster_name):
     return IMPL.cluster_get_by_name(context, cluster_name)
 
 
+def cluster_get_by_short_id(context, short_id):
+    return IMPL.cluster_get_by_short_id(context, short_id)
+
+
 def cluster_get_by_name_and_parent(context, cluster_name, parent):
     return IMPL.cluster_get_by_name_and_parent(context, cluster_name, parent)
 

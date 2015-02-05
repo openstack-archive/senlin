@@ -155,6 +155,25 @@ def cluster_get(context, cluster_id, show_deleted=False, tenant_safe=True):
     return cluster
 
 
+def cluster_get_by_name(context, cluster_name):
+    r0 = soft_delete_aware_query(context, models.Cluster)
+    result = r0.filter_by(project=context.tenant_id, name=cluster_name).first()
+    return result
+
+
+def cluster_get_by_short_id(context, short_id):
+    q = soft_delete_aware_query(context, models.Cluster)
+    pattern = '%s%%' % short_id
+    q = q.filter(models.Cluster.id.like(pattern))
+    q = q.filter_by(project=context.tenant_id)
+    if q.count() == 1:
+        return q.first()
+    elif q.count() == 0:
+        return None
+    else:
+        raise exception.MultipleChoice(arg=short_id)
+
+
 def cluster_get_all_by_parent(context, parent):
     results = soft_delete_aware_query(context, models.Cluster).\
         filter_by(parent=parent).all()
@@ -167,12 +186,6 @@ def cluster_get_by_name_and_parent(context, cluster_name, parent):
         filter_by(name=cluster_name).\
         filter_by(parent=parent)
     return query.first()
-
-
-def cluster_get_by_name(context, cluster_name):
-    r0 = soft_delete_aware_query(context, models.Cluster)
-    result = r0.filter_by(project=context.tenant_id, name=cluster_name).first()
-    return result
 
 
 def _query_cluster_get_all(context, tenant_safe=True, show_deleted=False,
