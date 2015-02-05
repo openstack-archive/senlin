@@ -16,6 +16,7 @@ import time
 from oslo_config import cfg
 
 from senlin.engine.actions import base as action_mod
+from senlin.engine import dispatcher
 from senlin.openstack.common import log as logging
 from senlin.openstack.common import threadgroup
 
@@ -62,10 +63,18 @@ class ThreadGroupManager(object):
         :param context: The context of rpc request.
         :param action_id: ID of the action to run in thread.
         '''
+        def check_and_notify_retry():
+            action = action_mod.Action.load(context, action_id)
+            # This is for actions with RETRY
+            if action.status == action.READY:
+                dispatcher.notify(context, dispatcher.Dispatcher.NEW_ACTION,
+                                  None, action_id=action_id)
+
         def release(gt, context, action_id):
             '''Callback function that will be passed to GreenThread.link().'''
             # Remove action thread from thread list
             self.threads.pop(action_id)
+            check_and_notify_retry()
 
         th = self.start(action_mod.ActionProc, context, action_id, worker_id)
         self.threads[action_id] = th

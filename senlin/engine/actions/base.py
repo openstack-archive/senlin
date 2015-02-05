@@ -289,10 +289,6 @@ class Action(object):
             # Action failed at the moment, but can be retried
             # We abandon it and then notify other dispatchers to execute it
             db_api.action_abandon(self.context, self.id)
-
-            # TODO(yanyan): This is dirty, we have to import dispatcher here?
-            dispatcher.notify(self.context, dispatcher.Dispatcher.NEW_ACTION,
-                              None, action_id=self.id)
             msg = _LI('Action %(name)s [%(id)s] aborted with RETRY.')
 
         LOG.info(msg, {'name': self.action, 'id': self.id, 'status': status})
