@@ -255,6 +255,10 @@ def action_get(context, action_id):
     return IMPL.action_get(context, action_id)
 
 
+def action_get_by_name(context, name):
+    return IMPL.action_get_by_name(context, name)
+
+
 def action_get_1st_ready(context):
     return IMPL.action_get_1st_ready(context)
 

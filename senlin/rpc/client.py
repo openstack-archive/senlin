@@ -213,6 +213,7 @@ class EngineClient(object):
                           self.make_msg('node_delete', identity=identity,
                                         force=force))
 
+
     def action_list(self, ctxt, filters=None, limit=None, marker=None,
                     sort_keys=None, sort_dir=None, show_deleted=False):
         return self.call(ctxt,
@@ -227,9 +228,9 @@ class EngineClient(object):
                                        name=name, target=target,
                                        action=action, params=params))
 
-    def action_get(self, ctxt, action_id):
+    def action_get(self, ctxt, identity):
         return self.call(ctxt,
-                         self.make_msg('action_get', action_id=action_id))
+                         self.make_msg('action_get', identity=identity))
 
     def get_revision(self, ctxt):
         return self.call(ctxt, self.make_msg('get_revision'))

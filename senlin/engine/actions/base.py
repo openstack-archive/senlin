@@ -21,7 +21,6 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LI
 from senlin.db import api as db_api
-from senlin.engine import dispatcher
 from senlin.openstack.common import log as logging
 from senlin.policies import base as policies
 
@@ -215,10 +214,11 @@ class Action(object):
         return cls(context, record.action, **kwargs)
 
     @classmethod
-    def load(cls, context, action_id):
+    def load(cls, context, action_id=None, action=None):
         '''Retrieve an action from database.'''
+        if action is None:
+            action = db_api.action_get(context, action_id)
 
-        action = db_api.action_get(context, action_id)
         if action is None:
             msg = _('No action with id "%s" exists') % action_id
             raise exception.NotFound(msg)

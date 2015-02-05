@@ -428,6 +428,23 @@ class EngineService(service.Service):
         return action.to_dict()
 
     @request_context
+    def action_find(self, context, identity, show_deleted=False):
+        '''Find a cluster with the given identity (could be name or ID).'''
+
+        if uuidutils.is_uuid_like(identity):
+            action = db_api.action_get(context, identity,
+                                       show_deleted=show_deleted)
+            if not action:
+                action = db_api.action_get_by_name(context, identity)
+        else:
+            action = db_api.action_get_by_name(context, identity)
+
+        if not action:
+            raise exception.ActionNotFound(action=identity)
+
+        return action
+
+    @request_context
     def action_list(self, context, filters=None, limit=None, marker=None,
                     sort_keys=None, sort_dir=None, show_deleted=False):
 
@@ -460,6 +477,7 @@ class EngineService(service.Service):
         return act.to_dict()
 
     @request_context
-    def action_get(self, context, action_id):
-        # TODO(Qiming): Add conversion from name to id
-        return action_mod.Action.load(context, action_id)
+    def action_get(self, context, identity):
+        action_record = self.action_find(context, identity)
+        action = action_mod.Action.load(context, action=action_record)
+        return action.to_dict()

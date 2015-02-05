@@ -851,6 +851,11 @@ def action_get(context, action_id):
     return action
 
 
+def action_get_by_name(context, name):
+    action = model_query(context, models.Action).filter_by(name=name).first()
+    return action
+
+
 def action_get_1st_ready(context):
     query = model_query(context, models.Action).\
         filter_by(status=ACTION_READY)

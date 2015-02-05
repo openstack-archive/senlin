@@ -14,6 +14,7 @@
 from webob import exc
 
 from senlin.api.openstack.v1 import util
+from senlin.common import attr
 from senlin.common.i18n import _
 from senlin.common import serializers
 from senlin.common import wsgi
@@ -26,11 +27,7 @@ LOG = logging.getLogger(__name__)
 class ActionData(object):
     '''All required data fields for an action.'''
 
-    PARAMS = (
-        NAME, TARGET, ACTION,
-    ) = (
-        'name', 'target', 'action',
-    )
+    PARAMS = (attr.ACTION_NAME, attr.ACTION_TARGET, attr.ACTION_ACTION)
 
     def __init__(self, data):
         self.data = data
@@ -38,17 +35,17 @@ class ActionData(object):
     def name(self):
         if self.NAME not in self.data:
             raise exc.HTTPBadRequest(_("No profile name specified"))
-        return self.data[self.NAME]
+        return self.data[attr.ACTION_NAME]
 
     def target(self):
         if self.TARGET not in self.data:
             raise exc.HTTPBadRequest(_("No target specified"))
-        return self.data[self.TARGET]
+        return self.data[attr.ACTION_TARGET]
 
     def action(self):
         if self.ACTION not in self.data:
             raise exc.HTTPBadRequest(_("No action specified"))
-        return self.data[self.ACTION]
+        return self.data[attr.ACTION_ACTION]
 
     def params(self):
         data = self.data.items()
@@ -114,7 +111,7 @@ class ActionController(object):
     def get(self, req, action_id):
         action = self.rpc_client.action_get(req.context, action_id)
         if not action:
-            raise exc.HTTPInternalServerError()
+            raise exc.HTTPNotFound()
 
         return action
 
