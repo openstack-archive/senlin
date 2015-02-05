@@ -341,9 +341,13 @@ class ClusterAction(base.Action):
             return self.RES_ERROR
 
         # Try to lock cluster before do real operation
+        if self.action == self.CLUSTER_DELETE:
+            forced = True
+        else:
+            forced = False
         res = senlin_lock.cluster_lock_acquire(cluster.id, self.id,
                                                senlin_lock.CLUSTER_SCOPE,
-                                               False)
+                                               forced)
         if not res:
             return self.RES_ERROR
 
