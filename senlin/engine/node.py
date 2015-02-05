@@ -210,7 +210,7 @@ class Node(object):
 
     def do_create(self, context):
         # TODO(Qiming): log events?
-        if self.status != self.CREATING:
+        if self.status != self.INIT:
             LOG.error(_LE('Node is in status "%s"'), self.status)
             return False
 
