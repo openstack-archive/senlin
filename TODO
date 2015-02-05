@@ -23,6 +23,7 @@ ENGINE
 
 DRIVER
 ------
+  - Handle Heat stack operation exception handling [Qiming]
 
 POLICY
 ------
