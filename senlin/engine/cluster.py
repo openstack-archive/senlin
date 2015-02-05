@@ -12,6 +12,8 @@
 
 import datetime
 
+from oslo_config import cfg
+
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
@@ -67,7 +69,7 @@ class Cluster(periodic_task.PeriodicTasks):
         # size of the cluster at a moment.
         self.size = size
         self.next_index = kwargs.get('next_index', 0)
-        self.timeout = kwargs.get('timeout', 0)
+        self.timeout = kwargs.get('timeout', cfg.CONF.default_action_timeout)
 
         self.status = kwargs.get('status', self.INIT)
         self.status_reason = kwargs.get('status_reason', 'Initializing')
@@ -159,7 +161,7 @@ class Cluster(periodic_task.PeriodicTasks):
         '''Retrieve a cluster from database.'''
         if cluster is None:
             cluster = db_api.cluster_get(context, cluster_id,
-                                        show_deleted=show_deleted)
+                                         show_deleted=show_deleted)
         if cluster is None:
             msg = _('No cluster with id "%s" is found') % cluster_id
             raise exception.NotFound(msg)
