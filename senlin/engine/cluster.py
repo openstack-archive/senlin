@@ -67,7 +67,7 @@ class Cluster(periodic_task.PeriodicTasks):
         # size is only the 'desired capacity', which many not be the real
         # size of the cluster at a moment.
         self.size = size
-        self.next_index = kwargs.get('next_index', 0)
+        self.next_index = kwargs.get('next_index', 1)
         self.timeout = kwargs.get('timeout', cfg.CONF.default_action_timeout)
 
         self.status = kwargs.get('status', self.INIT)
@@ -225,6 +225,7 @@ class Cluster(periodic_task.PeriodicTasks):
         values['status'] = status
         if reason:
             values['status_reason'] = reason
+
         db_api.cluster_update(context, self.id, values)
         # TODO(anyone): generate event record
         return
