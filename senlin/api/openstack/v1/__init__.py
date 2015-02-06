@@ -115,6 +115,10 @@ class API(wsgi.Router):
                                "/clusters/{cluster_id}",
                                action="update",
                                conditions={'method': 'PUT'})
+            sub_mapper.connect("cluster_action",
+                               "/clusters/{cluster_id}/action",
+                               action="action",
+                               conditions={'method': 'PUT'})
             sub_mapper.connect("cluster_delete",
                                "/clusters/{cluster_id}",
                                action="delete",

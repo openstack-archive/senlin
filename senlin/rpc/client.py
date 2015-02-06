@@ -165,6 +165,36 @@ class EngineClient(object):
                                              tags=tags,
                                              timeout=timeout))
 
+    def cluster_add_nodes(self, ctxt, identity, nodes):
+        return self.call(ctxt, self.make_msg('cluster_add_nodes',
+                                             identity=identity,
+                                             nodes=nodes))
+
+    def cluster_del_nodes(self, ctxt, identity, nodes):
+        return self.call(ctxt, self.make_msg('cluster_del_nodes',
+                                             identity=identity,
+                                             nodes=nodes))
+
+    def cluster_attach_policy(self, ctxt, identity, policy):
+        return self.call(ctxt, self.make_msg('cluster_attach_policy',
+                                             identity=identity,
+                                             policy=policy))
+
+    def cluster_detach_policy(self, ctxt, identity, policy):
+        return self.call(ctxt, self.make_msg('cluster_detach_policy',
+                                             identity=identity,
+                                             policy=policy))
+
+    def cluster_enable_policy(self, ctxt, identity, policy):
+        return self.call(ctxt, self.make_msg('cluster_enable_policy',
+                                             identity=identity,
+                                             policy=policy))
+
+    def cluster_disable_policy(self, ctxt, identity, policy):
+        return self.call(ctxt, self.make_msg('cluster_disable_policy',
+                                             identity=identity,
+                                             policy=policy))
+
     def cluster_update(self, ctxt, identity, size, profile_id):
         return self.call(ctxt, self.make_msg('cluster_update',
                                              identity=identity,

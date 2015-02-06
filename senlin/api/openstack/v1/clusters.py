@@ -68,6 +68,14 @@ class ClusterController(object):
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'clusters'
 
+    SUPPORTED_ACTIONS = (
+        ADD_NODES, DEL_NODES, ATTACH_POLICY, DETACH_POLICY,
+        ENABLE_POLICY, DISABLE_POLICY,
+    ) = (
+        'add_nodes', 'del_nodes', 'attach_policy', 'detach_policy',
+        'enable_policy', 'disable_policy',
+    )
+
     def __init__(self, options):
         self.options = options
         self.rpc_client = rpc_client.EngineClient()
@@ -138,6 +146,47 @@ class ClusterController(object):
                                        data.profile())
 
         raise exc.HTTPAccepted()
+
+    @util.policy_enforce
+    def action(self, req, cluster_id, body=None):
+        '''Perform specified action on a cluster.'''
+        body = body or {}
+        if len(body) < 1:
+            raise exc.HTTPBadRequest(_('No action specified'))
+
+        if len(body) > 1:
+            raise exc.HTTPBadRequest(_('Multiple actions specified.'))
+
+        this_action = body.keys()[0]
+        if this_action not in self.SUPPORTED_ACTIONS:
+            raise exc.HTTPBadRequest(_('Unrecognized action "%s" specified'),
+                                     this_action)
+
+        if this_action == self.ADD_NODES:
+            nodes = body.get(this_action).get('nodes')
+            if nodes is None:
+                raise exc.HTTPBadRequest(_('No node to add'))
+            res = self.rpc_client.cluster_add_nodes(
+                req.context, cluster_id, nodes)
+        elif this_action == self.DEL_NODES:
+            res = self.rpc_client.cluster_del_nodes(
+                req.context, cluster_id, body.get(this_action))
+        elif this_action == self.ATTACH_POLICY:
+            res = self.rpc_client.cluster_attach_policy(
+                req.context, cluster_id, body.get(this_action))
+        elif this_action == self.DETACH_POLICY:
+            res = self.rpc_client.cluster_detach_policy(
+                req.context, cluster_id, body.get(this_action))
+        elif this_action == self.ENABLE_POLICY:
+            res = self.rpc_client.cluster_enable_policy(
+                req.context, cluster_id, body.get(this_action))
+        elif this_action == self.DISABLE_POLICY:
+            res = self.rpc_client.cluster_disable_policy(
+                req.context, cluster_id, body.get(this_action))
+        else:
+            raise exc.HTTPInternalServerError(_('Unexpected action "%s"'),
+                                              this_action)
+        return res
 
     @util.policy_enforce
     def delete(self, req, cluster_id):
