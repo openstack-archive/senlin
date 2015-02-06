@@ -16,6 +16,7 @@ from senlin.engine.actions import base
 from senlin.engine import node as node_mod
 from senlin.engine import senlin_lock
 from senlin.openstack.common import log as logging
+from senlin.policies import base as policy_mod
 
 LOG = logging.getLogger(__name__)
 
@@ -34,62 +35,87 @@ class NodeAction(base.Action):
     def __init__(self, context, action, **kwargs):
         super(NodeAction, self).__init__(context, action, **kwargs)
 
+    def do_create(self, node):
+        res = node.do_create(self.context)
+        if res:
+            return self.RES_OK, 'Node created successfully'
+        else:
+            return self.RES_ERROR, 'Node creation failed'
+
+    def do_delete(self, node):
+        res = node.do_delete(self.context)
+        if res:
+            return self.RES_OK, 'Node deleted successfully'
+        else:
+            return self.RES_ERROR, 'Node deletion failed'
+
+    def do_update(self, node):
+        new_profile_id = self.inputs.get('new_profile_id')
+        # TODO(Qiming): Check null
+        res = node.do_update(self.context, new_profile_id)
+        if res:
+            return self.RES_OK, 'Node updated successfully'
+        else:
+            return self.RES_ERROR, 'Node update failed'
+
     def _execute(self, node):
         # TODO(Qiming): Add node status changes
-        if self.action == self.NODE_CREATE:
-            res = node.do_create(self.context)
-        elif self.action == self.NODE_DELETE:
-            res = node.do_delete(self.context)
-        elif self.action == self.NODE_UPDATE:
-            new_profile_id = self.inputs.get('new_profile_id')
-            res = node.do_update(self.context, new_profile_id)
-        elif self.action == self.NODE_JOIN_CLUSTER:
-            new_cluster_id = self.inputs.get('cluster_id', None)
-            if not new_cluster_id:
-                raise exception.ClusterNotSpecified()
-            res = node.do_join(new_cluster_id)
-        elif self.action == self.NODE_LEAVE_CLUSTER:
-            res = node.do_leave(self.context)
+        result = self.RES_OK
+        action_name = self.action.lower()
+        method_name = action_name.replace('node', 'do')
+        method = getattr(self, method_name)
 
-        return self.RES_OK if res else self.RES_ERROR
+        if method is None:
+            raise exception.ActionNotSupported(action=self.action)
+
+        result, reason = method(node)
+        return result, reason
 
     def execute(self, **kwargs):
         try:
             node = node_mod.Node.load(self.context, node_id=self.target)
         except exception.NotFound:
-            LOG.error(_LE('Node with id (%s) is not found'), self.target)
-            return self.RES_ERROR
+            reason = _('Node with id (%s) is not found') % self.target
+            LOG.error(_LE(reason))
+            return self.RES_ERROR, reason
 
+        reason = ''
         if node.cluster_id:
             if self.cause == base.CAUSE_RPC:
                 res = senlin_lock.cluster_lock_acquire(
                     node.cluster_id, self.id, senlin_lock.NODE_SCOPE, False)
                 if not res:
-                    return self.RES_RETRY
+                    return self.RES_RETRY, 'Failed locking cluster'
 
-            check_result = self.policy_check(node.cluster_id, 'BEFORE')
-            if not check_result:
+            policy_data = self.policy_check(node.cluster_id, 'BEFORE')
+            if policy_data.status != policy_mod.CHECK_OK:
                 # Don't emit message here since policy_check should have
                 # done it
                 if self.cause == base.CAUSE_RPC:
                     senlin_lock.cluster_lock_release(
                         node.cluster_id, self.id, senlin_lock.NODE_SCOPE)
 
-                return self.RES_ERROR
+                return self.RES_ERROR, 'Policy check:' + policy_data.reason
 
         try:
             res = senlin_lock.node_lock_acquire(node.id, self.id, False)
-            if res:
-                res = self._execute(node)
-            if res == self.RES_OK and node.cluster_id is not None:
-                check_result = self.policy_check(node.cluster_id, 'AFTER')
-                res = self.RES_OK if check_result else self.ERROR
+            if not res:
+                reason = 'Failed locking node'
+            else:
+                res, reason = self._execute(node)
+                if res == self.RES_OK and node.cluster_id is not None:
+                    policy_data = self.policy_check(node.cluster_id, 'AFTER')
+                    if policy_data.status != policy_mod.CHECK_OK:
+                        res = self.RES_ERROR
+                        reason = 'Policy check:' + policy_data.reason
+                    else:
+                        res = self.RES_OK
         finally:
             senlin_lock.node_lock_release(node.id, self.id)
             if node.cluster_id is not None and self.cause == base.CAUSE_RPC:
                 senlin_lock.cluster_lock_release(node.cluster_id, self.id,
                                                  senlin_lock.NODE_SCOPE)
-        return res
+        return res, reason
 
     def cancel(self):
         return self.RES_OK
