@@ -215,10 +215,16 @@ class Node(object):
         if not physical_id:
             return False
 
-        self.physical_id = physical_id
-        db_api.node_update(context, self.id, {'physical_id': physical_id})
+        values = {}
+        if self.cluster_id is not None:
+            self.index = db_api.cluster_get_next_index(context,
+                                                       self.cluster_id)
 
-        self.set_status(context, self.ACTIVE, reason='Creation succeeded')
+        self.physical_id = physical_id
+        self.created_time = datetime.datetime.utcnow()
+        self.status = self.ACTIVE
+        self.status_reason = 'Creation succeeded'
+        self.store(context)
         return True
 
     def do_delete(self, context):
@@ -277,12 +283,11 @@ class Node(object):
         if self.cluster_id == cluster_id:
             return True
 
-        db_api.node_migrate(context, self.id, self.cluster_id,
-                            cluster_id)
+        db_api.node_migrate(context, self.id, self.cluster_id, cluster_id)
 
         self.updated_time = datetime.datetime.utcnow()
-        db_api.node_update(context, self.id,
-                           {'updated_time': self.updated_time})
+        self.index = db_api.cluster_get_next_index(context, cluster_id)
+        self.store()
         return True
 
     def do_leave(self, context):
