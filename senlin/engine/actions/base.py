@@ -22,7 +22,7 @@ from senlin.common.i18n import _
 from senlin.common.i18n import _LI
 from senlin.db import api as db_api
 from senlin.openstack.common import log as logging
-from senlin.policies import base as policies
+from senlin.policies import base as policy_mod
 
 wallclock = time.time
 LOG = logging.getLogger(__name__)
@@ -256,27 +256,27 @@ class Action(object):
         '''
         return NotImplemented
 
-    def set_status(self, result):
+    def set_status(self, result, reason=None):
         '''Set action status based on return value from execute.'''
 
         timestamp = wallclock()
 
         if result == self.RES_OK:
             status = self.SUCCEEDED
-            msg = _LI('Action %(name)s [%(id)s] completed with %(status)s.')
+            msg = _LI('Action %(name)s [%(id)s] completed with SUCCESS.')
             db_api.action_mark_succeeded(self.context, self.id, timestamp)
 
-        elif result == self.RES_ERROR or result == self.RES_TIMEOUT:
+        elif result == self.RES_ERROR:
             status = self.FAILED
             msg = _LI('Action %(name)s [%(id)s] failed with ERROR.')
             db_api.action_mark_failed(self.context, self.id, timestamp,
-                                      reason=result)
+                                      reason=reason or 'ERROR')
 
         elif result == self.RES_TIMEOUT:
             status = self.FAILED
             msg = _LI('Action %(name)s [%(id)s] failed with TIMEOUT.')
             db_api.action_mark_failed(self.context, self.id, timestamp,
-                                      reason=result)
+                                      reason=reason or 'TIMEOUT')
 
         elif result == self.RES_CANCEL:
             status = self.CANCELLED
@@ -292,6 +292,7 @@ class Action(object):
 
         LOG.info(msg, {'name': self.action, 'id': self.id, 'status': status})
         self.status = status
+        self.status_reason = reason
 
     def get_status(self):
         action = db_api.action_get(self.context, self.id)
@@ -324,10 +325,10 @@ class Action(object):
         """Check all policies attached to cluster and give result.
 
         :param target: A tuple of ('when', action_name)
+        :return: A dictionary that contains the check result.
         """
         # Initialize an empty dict for policy check result
-        data = {}
-        data['result'] = policies.Policy.CHECK_SUCCEED
+        data = policy_mod.PolicyData()
 
         # Get list of policy IDs attached to cluster
         policy_list = db_api.cluster_get_policies(self.context, cluster_id)
@@ -335,7 +336,7 @@ class Action(object):
         policy_ids = [p.id for p in policy_list if p.enabled]
         policy_check_list = []
         for pid in policy_ids:
-            policy = policies.Policy.load(self.context, pid)
+            policy = policy_mod.Policy.load(self.context, pid)
             for t in policy.TARGET:
                 if t == (target, self.action):
                     policy_check_list.append(policy)
@@ -355,13 +356,12 @@ class Action(object):
             else:
                 data = data
 
-            if data['result'] == policies.Policy.CHECK_FAIL:
+            if data['result'] == policy_mod.CHECK_ERROR:
                 # Policy check failed, return
                 return False
-            elif data['result'] == policies.Policy.CHECK_RETRY:
-                # Policy check need extra input, move
-                # it to the end of policy list and
-                # wait for retry
+            elif data['result'] == policy_mod.CHECK_RETRY:
+                # Policy check need extra input, move it to the end of
+                # policy list and wait for retry
                 policy_check_list.remove(policy)
                 policy_check_list.append(policy)
             else:
@@ -413,22 +413,23 @@ def ActionProc(context, action_id, worker_id):
         return False
 
     # Step 2: materialize the action object
-    action = Action.load(context, action_id)
+    action = Action.load(context, action_id=action_id)
 
     LOG.info(_LI('Action %(name)s [%(id)s] started'),
              {'name': six.text_type(action.action), 'id': action.id})
 
     try:
         # Step 3: execute the action
-        result = action.execute()
+        result, reason = action.execute()
     except Exception as ex:
         # We catch exception here to make sure the following logics are
         # executed.
-        LOG.error(_('Exception occurred in action execution: %s'),
-                  six.text_type(ex))
-        import traceback
-        LOG.error(traceback.extract_stack())
         result = action.RES_ERROR
+        reason = six.text_type(ex)
+        LOG.error(_('Exception occurred in action execution: %s'), reason)
+        import traceback
+        traceback.print_stack()
+        #LOG.error(traceback.extract_stack())
     finally:
         # NOTE: locks on action is eventually released here by status update
-        action.set_status(result)
+        action.set_status(result, reason)
