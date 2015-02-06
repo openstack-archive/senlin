@@ -83,8 +83,9 @@ def create_cluster(ctx, profile, **kwargs):
         'domain': 'unknown',
         'parent': None,
         'node_count': 0,
-        'next_index': 0,
+        'next_index': 1,
         'timeout': '60',
+        'init_time': datetime.datetime.utcnow(),
         'status': 'INIT',
         'status_reason': 'Just Initialized'
     }
