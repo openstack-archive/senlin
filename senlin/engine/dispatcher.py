@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo import messaging
+import oslo_messaging
 from oslo_config import cfg
 from osprofiler import profiler
 
@@ -45,9 +45,9 @@ class Dispatcher(service.Service):
 
     def start(self):
         super(Dispatcher, self).start()
-        self.target = messaging.Target(server=self.engine_id,
-                                       topic=self.topic,
-                                       version=self.version)
+        self.target = oslo_messaging.Target(server=self.engine_id,
+                                            topic=self.topic,
+                                            version=self.version)
         server = rpc_messaging.get_rpc_server(self.target, self)
         server.start()
 
@@ -110,5 +110,5 @@ def notify(context, call, engine_id, *args, **kwargs):
     try:
         call_context.call(context, call, *args, **kwargs)
         return True
-    except messaging.MessagingTimeout:
+    except oslo_messaging.MessagingTimeout:
         return False

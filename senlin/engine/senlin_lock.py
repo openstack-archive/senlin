@@ -14,7 +14,7 @@
 import contextlib
 import uuid
 
-from oslo import messaging
+import oslo_messaging
 from oslo_config import cfg
 from oslo_utils import excutils
 
@@ -59,7 +59,7 @@ class BaseLock(object):
             timeout=cfg.CONF.engine_life_check_timeout)
         try:
             return client_context.call(context, 'listening')
-        except messaging.MessagingTimeout:
+        except oslo_messaging.MessagingTimeout:
             return False
 
     @staticmethod
