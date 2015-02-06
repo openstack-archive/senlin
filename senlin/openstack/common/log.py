@@ -123,7 +123,7 @@ generic_log_opts = [
 
 DEFAULT_LOG_LEVELS = ['amqp=WARN', 'amqplib=WARN', 'boto=WARN',
                       'qpid=WARN', 'sqlalchemy=WARN', 'suds=INFO',
-                      'oslo.messaging=INFO', 'iso8601=WARN',
+                      'oslo_messaging=INFO', 'iso8601=WARN',
                       'requests.packages.urllib3.connectionpool=WARN',
                       'urllib3.connectionpool=WARN', 'websocket=WARN',
                       "keystonemiddleware=WARN", "routes.middleware=WARN",
