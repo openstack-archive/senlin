@@ -23,7 +23,7 @@ from senlin.engine import node as node_mod
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock
 from senlin.openstack.common import log as logging
-from senlin.policies import base as policies
+from senlin.policies import base as policy_mod
 
 LOG = logging.getLogger(__name__)
 
@@ -46,31 +46,47 @@ class ClusterAction(base.Action):
     def __init__(self, context, action, **kwargs):
         super(ClusterAction, self).__init__(context, action, **kwargs)
 
-    def _wait_for_action(self):
-        while self.get_status() != self.READY:
+    def _wait_for_dependents(self):
+        self.get_status()
+        reason = ''
+        while self.status != self.READY:
+            if self.status == self.FAILED:
+                reason = _('%(action)s [%(id)s] failed due to dependent '
+                           'action failure') % {'action': self.action,
+                                                'id': self.id}
+                LOG.debug(reason)
+                return self.RES_ERROR, reason
+
             if self.is_cancelled():
                 # During this period, if cancel request come, cancel this
                 # cluster operation immediately, then release the cluster
                 # lock and return.
-                LOG.debug(_('%(action)s %(id)s cancelled') % {
-                    'action': self.action, 'id': self.id})
-                return self.RES_CANCEL
-            elif self.is_timeout():
+                reason = _('%(action)s %(id)s cancelled') % {
+                    'action': self.action, 'id': self.id}
+                LOG.debug(reason)
+                return self.RES_CANCEL, reason
+
+            if self.is_timeout():
                 # Action timeout, return
-                LOG.debug(_('%(action)s %(id)s timeout') % {
-                    'action': self.action, 'id': self.id})
+                reason = _('%(action)s %(id)s timeout') % {
+                    'action': self.action, 'id': self.id}
+                LOG.debug(reason)
                 return self.RES_TIMEOUT
 
             # Continue waiting (with reschedule)
-            scheduler.reschedule(self)
+            scheduler.reschedule(self, 1)
+            self.get_status()
 
-        return self.RES_OK
+        return self.RES_OK, 'All dependents ended with success'
 
-    def do_create(self, cluster):
+    def do_create(self, cluster, policy_data):
+        reason = 'Cluster creation succeeded'
         res = cluster.do_create(self.context)
+
         if not res:
-            cluster.set_status(cluster.ERROR, 'Cluster creation failed')
-            return self.RES_ERROR
+            reason = 'Cluster creation failed.'
+            cluster.set_status(cluster.ERROR, reason)
+            return self.RES_ERROR, reason
 
         for m in range(cluster.size):
             name = 'node-%s-%003d' % (cluster.id[:8], m + 1)
@@ -96,28 +112,26 @@ class ClusterAction(base.Action):
         # Wait for cluster creating complete
         result = self.RES_OK
         if cluster.size > 0:
-            result = self._wait_for_action()
+            result, reason = self._wait_for_dependents()
 
         if result == self.RES_OK:
-            cluster.set_status(self.context, cluster.ACTIVE,
-                               'Cluster creation completed')
-        elif result == self.RES_CANCEL:
-            cluster.set_status(self.context, cluster.ERROR,
-                               'Cluster creation cancelled')
-        elif result == self.RES_TIMEOUT:
-            cluster.set_status(self.context, cluster.ERROR,
-                               'Cluster creation timeout')
+            cluster.set_status(self.context, cluster.ACTIVE, reason)
+        elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_FAILED]:
+            cluster.set_status(self.context, cluster.ERROR, reason)
         else:
-            # RETRY
+            # RETRY or FAILED?
             pass
 
-        return result
+        return result, reason
 
-    def do_update(self, cluster, new_profile_id):
+    def do_update(self, cluster, policy_data):
+        reason = 'Cluster update succeeded'
+        new_profile_id = self.inputs.get('new_profile_id')
         res = cluster.do_update(self.context, profile_id=new_profile_id)
         if not res:
-            cluster.set_status(cluster.ACTIVE,
-                               'Cluster updating was not executed')
+            reason = 'Cluster object cannot be updated.'
+            # Reset status to active
+            cluster.set_status(cluster.ACTIVE, reason)
             return self.RES_ERROR
 
         # Create NodeActions for all nodes
@@ -142,16 +156,16 @@ class ClusterAction(base.Action):
         # Wait for cluster updating complete
         result = self.RES_OK
         if cluster.size > 0:
-            result = self._wait_for_action()
+            result, reason = self._wait_for_dependents()
 
         if result == self.RES_OK:
-            cluster.set_status(self.context, cluster.ACTIVE,
-                               'Cluster update completed')
+            cluster.set_status(self.context, cluster.ACTIVE, reason)
 
-        return self.RES_OK
+        return result, reason
 
-    def do_delete(self, cluster):
-        cluster.set_status(self.context, cluster.DELETING)
+    def do_delete(self, cluster, policy_data):
+        reason = 'Deletion in progress'
+        cluster.set_status(self.context, cluster.DELETING, reason)
         node_list = cluster.get_nodes()
 
         for node in node_list:
@@ -169,38 +183,86 @@ class ClusterAction(base.Action):
                               None, action_id=action.id)
 
         result = self.RES_OK
+        reason = 'Cluster deletion completed'
         if cluster.size > 0 and len(node_list) > 0:
             # The size may not be accurate, so we check the node_list as well
-            result = self._wait_for_action()
+            result, reason = self._wait_for_dependents()
 
         if result == self.RES_OK:
-            result = cluster.do_delete(self.context)
+            res = cluster.do_delete(self.context)
+            if not res:
+                return self.RES_ERROR, 'Cannot delete cluster object.'
 
-        if result == self.RES_OK:
-            cluster.set_status(self.context, cluster.DELETED,
-                               'Cluster deletion completed')
-        elif result == self.RES_CANCEL:
-            cluster.set_status(self.context, cluster.ERROR,
-                               'Cluster deletion cancelled')
-        elif result == self.RES_TIMEOUT:
-            cluster.set_status(self.context, cluster.ERROR,
-                               'Cluster deletion timeout')
+        if result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_FAILED]:
+            cluster.set_status(self.context, cluster.ACTIVE, reason)
         else:
             # RETRY
             pass
 
-        return self.RES_OK
+        return result, reason
 
-    def do_add_nodes(self, cluster):
-        return self.RES_OK
+    def do_add_nodes(self, cluster, policy_data):
+        reason = 'Completed adding nodes'
 
-    def do_del_nodes(self, cluster):
-        return self.RES_OK
+        nodes = self.inputs.get('nodes')
+        failures = {}
+        dependents = 0
+        for node_id in nodes:
+            node = node_mod.Node.load(self.context, node_id)
+            # check profile type matching
+            node_profile_type = node.rt['profile'].type
+            cluster_profile_type = cluster.rt['profile'].type
+            if node_profile_type != cluster_profile_type:
+                failures[node.id] = 'Profile type does not match'
+                continue
 
-    def do_scale_up(self, cluster):
-        return self.RES_OK
+            if node.cluster_id is None:
+                # Deal with orphan nodes
+                res = node.do_join(self.context, cluster.id)
+                if not res:
+                    failures[node.id] = 'Failed moving node'
+                continue
 
-    def do_scale_down(self, cluster, count, candidates):
+            # Deal with nodes from other clusters
+            kwargs = {
+                'name': 'cluster_del_nodes_%s' % cluster.id[:8],
+                'target': cluster.id,
+                'cause': base.CAUSE_DERIVED,
+                'inputs': {
+                    'nodes': [node.id]
+                }
+            }
+
+            action = base.Action(self.context, 'CLUSTER_DEL_NODES', **kwargs)
+            action.store()
+            db_api.action_add_dependency(self.context, action.id, self.id)
+            action.set_status(self.READY)
+            dispatcher.notify(self.context, dispatcher.Dispatcher.NEW_ACTION,
+                              None, action_id=action.id)
+            dependents += 1
+
+        result = self.RES_OK
+        if dependents > 0:
+            # Wait for dependent action if any
+            result, reason = self._wait_for_dependents()
+
+        # TODO(Qiming): Summarize the above execution and report errors
+        # Don't need to change cluster status anyway
+        return result, reason
+
+    def do_del_nodes(self, cluster, policy_data=None):
+        reason = 'Completed deleting nodes'
+        #nodes = self.inputs.get('nodes')
+        return self.RES_OK, reason
+
+    def do_scale_up(self, cluster, policy_data=None):
+        return self.RES_OK, ''
+
+    def do_scale_down(self, cluster, policy_data=None):
+        count = policy_data.get('count', 0)
+        # TODO(anyone): determine what 0 means here
+        candidates = policy_data.get('candidates', [])
+
         # Go through all policies before scaling down.
         if len(candidates) == 0:
             # No candidates for scaling down op which means no DeletionPolicy
@@ -219,6 +281,7 @@ class ClusterAction(base.Action):
                 nodes.remove(nodes[rand])
                 i = i - 1
 
+        # TODO(Qiming): Need to rework this
         action_list = []
         for node_id in candidates:
             kwargs = {
@@ -244,27 +307,25 @@ class ClusterAction(base.Action):
         # set cluster status to error.
         # Note: we don't allow to cancel scaling operations.
         while self.get_status() != self.READY:
-            if scheduler.action_timeout(self):
+            if self.is_timeout():
                 # Action timeout, set cluster status to ERROR and return
-                LOG.debug('Cluster scale_down action %s timeout' % self.id)
-                cluster.set_status(cluster.ERROR,
-                                   'Cluster scaling down timeout')
-                return self.RES_TIMEOUT
+                reason = 'Cluster scale_down action %s timeout' % self.id
+                LOG.debug(reason)
+                return self.RES_TIMEOUT, reason
 
-            # Continue waiting (with sleep)
-            scheduler.reschedule(self)
+            scheduler.reschedule(self, 1)
 
         cluster.delete_nodes(candidates)
 
         # set cluster status to OK
-        return self.RES_OK
+        return self.RES_OK, ''
 
     def do_attach_policy(self, cluster):
         policy_id = self.inputs.get('policy_id', None)
         if not policy_id:
             raise exception.PolicyNotSpecified()
 
-        policy = policies.Policy.load(self.context, policy_id)
+        policy = policy_mod.Policy.load(self.context, policy_id)
         # Check if policy has already been attached
         all = db_api.cluster_get_policies(self.context, cluster.id)
         for existing in all:
@@ -273,7 +334,7 @@ class ClusterAction(base.Action):
                 return self.RES_OK
 
             # Detect policy type conflicts
-            curr = policies.Policy.load(self.context, existing.policy_id)
+            curr = policy_mod.Policy.load(self.context, existing.policy_id)
             if curr.type == policy.type:
                 raise exception.PolicyExists(policy_type=policy.type)
 
@@ -287,77 +348,64 @@ class ClusterAction(base.Action):
                                      values)
 
         cluster.rt.policies.append(policy)
-        return self.RES_OK
+        return self.RES_OK, ''
 
     def do_detach_policy(self, cluster):
-        return self.RES_OK
+        return self.RES_OK, ''
 
     def _execute(self, cluster):
         # do pre-action policy checking
-        check_result = self.policy_check(cluster.id, 'BEFORE')
-        if not check_result:
-            # Don't emit message here since policy_check should have done it
-            return self.RES_ERROR
+        policy_data = self.policy_check(cluster.id, 'BEFORE')
+        if policy_data.status != policy_mod.CHECK_OK:
+            return self.RES_ERROR, 'Policy failure:' + policy_data.reason
 
-        res = self.RES_OK
-        if self.action == self.CLUSTER_CREATE:
-            res = self.do_create(cluster)
-        elif self.action == self.CLUSTER_UPDATE:
-            new_profile_id = self.inputs.get('new_profile_id')
-            # TODO(anyone): check null?
-            res = self.do_update(cluster, new_profile_id)
-        elif self.action == self.CLUSTER_DELETE:
-            res = self.do_delete(cluster)
-        elif self.action == self.CLUSTER_ADD_NODES:
-            res = self.do_add_nodes(cluster)
-        elif self.action == self.CLUSTER_DEL_NODES:
-            res = self.do_del_nodes(cluster)
-        elif self.action == self.CLUSTER_SCALE_UP:
-            res = self.do_scale_up(cluster)
-        elif self.action == self.CLUSTER_SCALE_DOWN:
-            count = check_result.get('count', 0)
-            if count == 0:
-                # We assume the policy has emit error/warnings
-                return self.RES_ERROR
-            candidates = check_result.get('candidates', [])
-            res = self.do_scale_down(cluster, count, candidates)
-        elif self.action == self.CLUSTER_ATTACH_POLICY:
-            res = self.do_attach_policy(cluster)
-        elif self.action == self.CLUSTER_DETACH_POLICY:
-            res = self.do_detach_policy(cluster)
+        result = self.RES_OK
+        action_name = self.action.lower()
+        method_name = action_name.replace('cluster', 'do')
+        method = getattr(self, method_name)
+        if method is None:
+            raise exception.ActionNotSupported(action=self.action)
+
+        result, reason = method(cluster, policy_data=policy_data)
 
         # do post-action policy checking
-        if res == self.RES_OK:
-            check_result = self.policy_check(cluster.id, 'AFTER')
-            res = self.RES_OK if check_result else self.ERROR
+        if result == self.RES_OK:
+            policy_data = self.policy_check(cluster.id, 'AFTER')
+            if policy_data.status != policy_mod.CHECK_OK:
+                return self.RES_ERROR, policy_data.reason
 
-        return res
+        return result, reason
 
     def execute(self, **kwargs):
+        '''Wrapper of action execution.
+        This is mainly a wrapper that executes an action with cluster lock
+        acquired.
+        :return: A tuple (res, reason) that indicates whether the execution
+                 was a success and why if it wasn't a success.
+        '''
+
         try:
             cluster = cluster_mod.Cluster.load(self.context, self.target)
         except exception.NotFound:
-            LOG.error(_LE('Cluster %(id)s not found') % {'id': self.target})
-            return self.RES_ERROR
+            reason = _('Cluster %(id)s not found') % {'id': self.target}
+            LOG.error(_LE(reason))
+            return self.RES_ERROR, reason
 
         # Try to lock cluster before do real operation
-        if self.action == self.CLUSTER_DELETE:
-            forced = True
-        else:
-            forced = False
+        forced = True if self.action == self.CLUSTER_DELETE else False
         res = senlin_lock.cluster_lock_acquire(cluster.id, self.id,
                                                senlin_lock.CLUSTER_SCOPE,
                                                forced)
         if not res:
-            return self.RES_ERROR
+            return self.RES_ERROR, _('Failed locking cluster')
 
         try:
-            res = self._execute(cluster)
+            res, reason = self._execute(cluster)
         finally:
             senlin_lock.cluster_lock_release(cluster.id, self.id,
                                              senlin_lock.CLUSTER_SCOPE)
 
-        return res
+        return res, reason
 
     def cancel(self):
         return self.RES_OK
