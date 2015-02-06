@@ -44,13 +44,12 @@ class ScalingPolicy(base.Policy):
         # TODO(anyone): Make sure the default cooldown can be used if
         # not specified
 
-    def pre_op(self, cluster_id, action, **kwargs):
+    def pre_op(self, cluster_id, action, policy_data):
         # TODO(anyone): get cluster size, calculate new size and return
         # count of nodes need to create or delete;
         # TODO(anyone): check if new size will break min_size or max_size
         # constraints
-        data = kwargs.get('data')
-        data['result'] = self.CHECK_SUCCEED
+        policy_data['status'] = self.CHECK_OK
 
         adjustment = self.adjustment_number
         nodes = db_api.node_get_all_by_cluster(cluster_id)
@@ -60,22 +59,14 @@ class ScalingPolicy(base.Policy):
         elif current_size + adjustment < self.min_size:
             adjustment = current_size - self.min_size
 
-        data['count'] = adjustment
+        policy_data['count'] = adjustment
 
-        return data
+        return policy_data
 
-    def enforce(self, cluster_id, action, **kwargs):
-        data = kwargs.get('data')
+    def enforce(self, cluster_id, action, policy_data):
+        policy_data['status'] = self.CHECK_OK
+        return policy_data
 
-        # Mark this policy check succeeded
-        data['result'] = self.CHECK_SUCCEED
-
-        return data
-
-    def post_op(self, cluster_id, action, **kwargs):
-        data = kwargs.get('data')
-
-        # Mark this policy check succeeded
-        data['result'] = self.CHECK_SUCCEED
-
-        return data
+    def post_op(self, cluster_id, action, policy_data):
+        policy_data['status'] = self.CHECK_OK
+        return policy_data

@@ -10,9 +10,54 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import collections
+
 from senlin.common import exception
 from senlin.db import api as db_api
 from senlin.engine import environment
+
+CHECK_RESULTS = (
+    CHECK_OK, CHECK_ERROR, CHECK_RETRY,
+) = (
+    'OK', 'ERROR', 'RERTY'
+)
+
+
+class PolicyData(collections.Mapping):
+    '''An object wrapping the policy check result.'''
+
+    def __init__(self, status=CHECK_OK, reason='Check succeeded'):
+        self.status = status
+        self.reason = reason
+        self.data = {}
+
+    def __setitem__(self, key, value):
+        self.data.update(key, value)
+
+    def __getitem__(self, key):
+        return self.data.get(key, None)
+
+    def _len__(self):
+        return len(self.data)
+
+    def __contains__(self, key):
+        return key in self.data
+
+    def __iter__(self):
+        return iter(self.data)
+
+    def __repr__(self):
+        return ("Check Result: %s (%s)\n\t" % (self.status, self.reason) +
+                "\n\t".join(self.data.values()))
+
+    def to_dict(self):
+        result = {
+            'status': self.status,
+            'reason': self.reason,
+            'data': self.data,
+        }
+
+        return result
 
 
 class Policy(object):
@@ -22,12 +67,6 @@ class Policy(object):
         CRITICAL, ERROR, WARNING, INFO, DEBUG,
     ) = (
         'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG',
-    )
-
-    CHECK_RESULTS = (
-        CHECK_SUCCEED, CHECK_FAIL, CHECK_RETRY,
-    ) = (
-        'SUCCEED', 'FAIL', 'RERTY'
     )
 
     def __new__(cls, type_name, name, **kwargs):
@@ -71,6 +110,7 @@ class Policy(object):
         else:
             policy = db_api.policy_create(self.context, values)
             self.id = policy.id
+
         return self.id
 
     @classmethod

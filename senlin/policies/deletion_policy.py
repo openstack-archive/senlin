@@ -48,24 +48,20 @@ class DeletionPolicy(base.Policy):
                                                   False)
         random.seed()
 
-    def pre_op(self, cluster_id, action, **kwargs):
+    def pre_op(self, cluster_id, action, policy_data):
         '''The pre-op of a deletion policy returns the chosen victims
         that will be deleted.
         '''
-        data = kwargs.get('data')
-        data['result'] = self.CHECK_SUCCEED
+        if 'count' not in policy_data:
+            # We need input from scaling policy, let's retry
+            policy_data['status'] = self.CHECK_RETRY
+            return policy_data
 
-        if 'count' not in data:
-            # We need input from scaling policy,
-            # let's retry
-            data['result'] = self.CHECK_RETRY
-            return data
-
-        data['candidates'] = []
-        count = kwargs.get('count')
+        policy_data['candidates'] = []
+        count = policy_data.get('count', 0)
         if count == 0:
             # No candidates is choosen for deletion
-            return data
+            return policy_data
 
         nodes = db_api.node_get_all_by_cluster(cluster_id)
         # TODO(anyone): Add count check to ensure it is not larger
@@ -76,32 +72,26 @@ class DeletionPolicy(base.Policy):
         if self.criteria == self.RANDOM:
             for i in range(1, count):
                 rand = random.randrange(len(nodes))
-                data['candidates'].append(nodes[rand])
+                policy_data['candidates'].append(nodes[rand])
                 nodes.remove(nodes[rand])
-            return data
+            return policy_data
 
         sorted_list = sorted(nodes, key=lambda r: (r.created_time, r.name))
         for i in range(1, count):
             if self.criteria == self.OLDEST_FIRST:
-                data['candidates'].append(sorted_list[i - 1])
+                policy_data['candidates'].append(sorted_list[i - 1])
             else:  # self.criteria == self.YOUNGEST_FIRST:
-                data['candidates'].append(sorted_list[-i])
+                policy_data['candidates'].append(sorted_list[-i])
 
-        return data
+        return policy_data
 
-    def enforce(self, cluster_id, action, **kwargs):
-        data = kwargs.get('data')
-
+    def enforce(self, cluster_id, action, policy_data):
         # Mark this policy check succeeded
-        data['result'] = self.CHECK_SUCCEED
+        policy_data['status'] = base.CHECK_OK
+        return policy_data
 
-        return data
-
-    def post_op(self, cluster_id, action, **kwargs):
+    def post_op(self, cluster_id, action, policy_data):
         # TODO(Qiming): process grace period here if needed
-        data = kwargs.get('data')
-
         # Mark this policy check succeeded
-        data['result'] = self.CHECK_SUCCEED
-
-        return data
+        policy_data['status'] = self.CHECK_OK
+        return policy_data
