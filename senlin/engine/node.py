@@ -215,7 +215,6 @@ class Node(object):
         if not physical_id:
             return False
 
-        values = {}
         if self.cluster_id is not None:
             self.index = db_api.cluster_get_next_index(context,
                                                        self.cluster_id)
