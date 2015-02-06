@@ -37,7 +37,7 @@ class PolicyData(collections.Mapping):
     def __getitem__(self, key):
         return self.data.get(key, None)
 
-    def _len__(self):
+    def __len__(self):
         return len(self.data)
 
     def __contains__(self, key):
