@@ -189,6 +189,18 @@ def cluster_get_by_short_id(context, short_id):
     return query_by_short_id(context, models.Cluster, short_id)
 
 
+def cluster_get_next_index(context, cluster_id):
+    query = model_query(context, models.Cluster)
+    session = query.session
+    session.begin()
+    cluster = query.get(cluster_id)
+    index = cluster.next_index
+    cluster.next_index += 1
+    cluster.save(session)
+    session.commit()
+    return index
+
+
 def cluster_get_all_by_parent(context, parent):
     results = soft_delete_aware_query(context, models.Cluster).\
         filter_by(parent=parent).all()

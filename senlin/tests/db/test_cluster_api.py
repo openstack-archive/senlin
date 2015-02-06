@@ -40,7 +40,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertEqual('unknown', cluster.domain)
         self.assertIsNone(cluster.parent)
         self.assertEqual(0, cluster.node_count)
-        self.assertEqual(0, cluster.next_index)
+        self.assertEqual(1, cluster.next_index)
         self.assertEqual('60', cluster.timeout)
         self.assertEqual('INIT', cluster.status)
         self.assertEqual('Just Initialized', cluster.status_reason)
@@ -54,8 +54,8 @@ class DBAPIClusterTest(base.SenlinTestCase):
 
         self.assertIsNone(db_api.cluster_get(self.ctx, cluster_id,
                                              show_deleted=False))
-        self.assertRaises(exception.NotFound, db_api.node_get,
-                          self.ctx, node.id)
+        res = db_api.node_get(self.ctx, node.id)
+        self.assertIsNone(res) 
         self.assertRaises(exception.NotFound, db_api.cluster_delete,
                           self.ctx, cluster_id)
 
@@ -67,8 +67,8 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertEqual('db_test_cluster_name', ret_cluster.name)
 
         # Testing child nodes deletion
-        self.assertRaises(exception.NotFound,
-                          db_api.node_get, self.ctx, node.id)
+        res = db_api.node_get(self.ctx, node.id)
+        self.assertIsNone(res)
 
     def test_cluster_update(self):
         cluster = shared.create_cluster(self.ctx, self.profile)
@@ -128,20 +128,35 @@ class DBAPIClusterTest(base.SenlinTestCase):
 
     def test_cluster_get_by_name(self):
         cluster = shared.create_cluster(self.ctx, self.profile,
-                                        name='cluster', project=UUID2)
+                                        name='cluster_by_name', project=UUID2)
 
-        res = db_api.cluster_get_by_name(self.ctx, 'cluster')
+        res = db_api.cluster_get_by_name(self.ctx, 'cluster_by_name')
         self.assertIsNone(res)
 
         self.ctx.tenant_id = UUID3
-        self.assertIsNone(db_api.cluster_get_by_name(self.ctx, 'cluster'))
+        self.assertIsNone(db_api.cluster_get_by_name(self.ctx,
+                                                     'cluster_by_name'))
 
         self.ctx.tenant_id = UUID2
-        res = db_api.cluster_get_by_name(self.ctx, 'cluster')
+        res = db_api.cluster_get_by_name(self.ctx, 'cluster_by_name')
         self.assertEqual(cluster.id, res.id)
 
         db_api.cluster_delete(self.ctx, cluster.id)
-        self.assertIsNone(db_api.cluster_get_by_name(self.ctx, 'cluster'))
+        self.assertIsNone(db_api.cluster_get_by_name(self.ctx,
+                                                     'cluster_by_name'))
+
+    def test_cluster_get_next_index(self):
+        cluster = shared.create_cluster(self.ctx, self.profile,
+                                        name='cluster_next_index')
+
+        index = db_api.cluster_get_next_index(self.ctx, cluster.id)
+        self.assertEqual(1, index)
+
+        index = db_api.cluster_get_next_index(self.ctx, cluster.id)
+        self.assertEqual(2, index)
+
+        cluster = db_api.cluster_get(self.ctx, cluster.id)
+        self.assertEqual(3, cluster.next_index)
 
     def test_cluster_get_all(self):
         values = [
@@ -377,7 +392,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
     def test_cluster_get_all_default_sort_dir(self):
         dt = datetime.datetime
         clusters = [shared.create_cluster(self.ctx, self.profile,
-                                          created_time=dt.utcnow())
+                                          init_time=dt.utcnow())
                     for x in range(3)]
 
         st_db = db_api.cluster_get_all(self.ctx, sort_dir='asc')
