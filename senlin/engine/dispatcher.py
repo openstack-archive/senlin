@@ -105,10 +105,10 @@ def notify(context, call, engine_id, *args, **kwargs):
         call_context = client.prepare(
             version=attr.RPC_API_VERSION,
             timeout=timeout,
-            topic=attr.ENGINE_DISPATCHER_TOPIC,
-            fanout=True)
+            topic=attr.ENGINE_DISPATCHER_TOPIC)
 
     try:
         call_context.call(context, call, *args, **kwargs)
+        return True
     except messaging.MessagingTimeout:
         return False
