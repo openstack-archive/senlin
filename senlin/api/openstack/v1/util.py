@@ -17,7 +17,6 @@ import six
 from webob import exc
 
 from senlin.common.i18n import _
-from senlin.common import identifier
 
 
 def policy_enforce(handler):
@@ -40,22 +39,6 @@ def policy_enforce(handler):
         return handler(controller, req, **kwargs)
 
     return handle_cluster_method
-
-
-def make_url(req, identity):
-    """Return the URL for the supplied identity dictionary."""
-    try:
-        cid = identifier.SenlinIdentifier(**identity)
-    except ValueError:
-        err_reason = _('Invalid Cluster address')
-        raise exc.HTTPInternalServerError(err_reason)
-
-    return req.relative_url(cid.url_path(), True)
-
-
-def make_link(req, identity, relationship='self'):
-    """Return a link structure for the supplied identity dictionary."""
-    return {'href': make_url(req, identity), 'rel': relationship}
 
 
 def get_allowed_params(params, whitelist):
