@@ -280,18 +280,20 @@ class Node(object):
         if self.cluster_id == cluster_id:
             return True
 
-        db_api.node_migrate(context, self.id, self.cluster_id, cluster_id)
-
+        self.cluster_id = cluster_id
         self.updated_time = datetime.datetime.utcnow()
         self.index = db_api.cluster_get_next_index(context, cluster_id)
-        self.store()
+        self.store(context)
+
         return True
 
     def do_leave(self, context):
         if self.cluster_id is None:
             return True
 
-        db_api.node_migrate(context, self.id, self.cluster_id, None)
+        self.cluster_id = None
         self.updated_time = datetime.datetime.utcnow()
-        self.store()
+        self.index = -1
+        self.store(context)
+
         return True
