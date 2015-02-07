@@ -362,20 +362,29 @@ class EngineService(service.Service):
         db_cluster = self.cluster_find(context, identity)
         found = []
         not_found = []
+        bad_nodes = []
         for node in nodes:
             try:
                 db_node = self.node_find(context, node)
                 # Skip node in the same cluster already
-                if db_node.cluster_id != db_cluster.id:
+                if db_node.status != node_mod.Node.ACTIVE:
+                    bad_nodes.append(db_node.id)
+                elif db_node.cluster_id != db_cluster.id:
                     found.append(db_node.id)
             except exception.NodeNotFound:
                 not_found.append(node)
                 pass
 
-        if len(found) == 0:
-            return _("No nodes in the specified list %s can be found") % nodes
+        error = None
+        if len(bad_nodes) > 0:
+            error = _("Nodes are not ACTIVE: %s") % bad_nodes
         elif len(not_found) > 0:
-            return _("Some nodes %s are not found, won't be added") % not_found
+            error = _("Nodes not found: %s") % not_found
+        elif len(found) == 0:
+            error = _("No nodes to add: %s") % nodes
+
+        if error is not None:
+            raise exception.SenlinBadRequest(error)
 
         action_name = 'cluster_add_nodes_%s' % db_cluster.id[:8]
         action = action_mod.Action(context, 'CLUSTER_ADD_NODES',
@@ -394,25 +403,35 @@ class EngineService(service.Service):
         db_cluster = self.cluster_find(context, identity)
         found = []
         not_found = []
+        bad_nodes = []
         for node in nodes:
             try:
                 db_node = self.node_find(context, node)
-                found.append(db_node.id)
+                if db_node.cluster_id != db_cluster.id:
+                    bad_nodes.append(db_node.id)
+                else:
+                    found.append(db_node.id)
             except exception.NodeNotFound:
                 not_found.append(node)
                 pass
 
-        if len(found) == 0:
-            return _("No nodes in the specified list %s can be found") % nodes
-        elif len(not_found) > 0:
-            return _("Some nodes %s not found, won't be deleted") % not_found
+        error = None
+        if len(not_found) == 0:
+            error = _("Nodes %s not found") % nodes
+        elif len(bad_nodes) > 0:
+            error = _("Nodes %s not member of specified cluster") % bad_nodes
+        elif len(found) == 0:
+            error = _("No nodes specified") % nodes
+
+        if error is not None:
+            raise exception.SenlinBadRequest(error)
 
         action_name = 'cluster_del_nodes_%s' % db_cluster.id[:8]
         action = action_mod.Action(context, 'CLUSTER_DEL_NODES',
                                    name=action_name,
                                    target=db_cluster.id,
                                    cause=action_mod.CAUSE_RPC,
-                                   inputs={'nodes': nodes})
+                                   inputs={'nodes': found})
         action.store(context)
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
