@@ -382,7 +382,7 @@ class EngineService(service.Service):
         if len(bad_nodes) > 0:
             error = _("Nodes are not ACTIVE: %s") % bad_nodes
         elif len(owned_nodes) > 0:
-            error = _("Nodes %s are owned by other cluster, need to delete "
+            error = _("Nodes %s owned by other cluster, need to delete "
                       "them from those clusters first.") % owned_nodes
         elif len(not_found) > 0:
             error = _("Nodes not found: %s") % not_found
@@ -422,7 +422,7 @@ class EngineService(service.Service):
                 pass
 
         error = None
-        if len(not_found) == 0:
+        if len(not_found) > 0:
             error = _("Nodes %s not found") % nodes
         elif len(bad_nodes) > 0:
             error = _("Nodes %s not member of specified cluster") % bad_nodes
@@ -541,10 +541,9 @@ class EngineService(service.Service):
     @request_context
     def action_find(self, context, identity, show_deleted=False):
         '''Find a cluster with the given identity (could be name or ID).'''
-
+        # TODO(Qiming): add show_deleted support
         if uuidutils.is_uuid_like(identity):
-            action = db_api.action_get(context, identity,
-                                       show_deleted=show_deleted)
+            action = db_api.action_get(context, identity)
             if not action:
                 action = db_api.action_get_by_name(context, identity)
         else:
