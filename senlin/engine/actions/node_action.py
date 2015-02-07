@@ -51,12 +51,26 @@ class NodeAction(base.Action):
 
     def do_update(self, node):
         new_profile_id = self.inputs.get('new_profile_id')
-        # TODO(Qiming): Check null
         res = node.do_update(self.context, new_profile_id)
         if res:
             return self.RES_OK, 'Node updated successfully'
         else:
             return self.RES_ERROR, 'Node update failed'
+
+    def do_join(self, node):
+        cluster_id = self.inputs.get('cluster_id')
+        res = node.do_join(self.context, cluster_id)
+        if res:
+            return self.RES_OK, 'Node successfully joined cluster'
+        else:
+            return self.RES_ERROR, 'Node failed joining cluster'
+
+    def do_leave(self, node):
+        res = node.do_leave(self.context)
+        if res:
+            return self.RES_OK, 'Node successfully left cluster'
+        else:
+            return self.RES_ERROR, 'Node failed leaving cluster'
 
     def _execute(self, node):
         # TODO(Qiming): Add node status changes
