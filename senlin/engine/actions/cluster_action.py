@@ -244,8 +244,8 @@ class ClusterAction(base.Action):
                                  name='node_join_%s' % node.id[:8],
                                  target=node.id,
                                  cause=base.CAUSE_DERIVED,
-                                 inputs={'cluster': [cluster.id]})
-            action.store()
+                                 inputs={'cluster_id': cluster.id})
+            action.store(self.context)
             db_api.action_add_dependency(self.context, action.id, self.id)
             action.set_status(self.READY)
             dispatcher.notify(self.context, dispatcher.Dispatcher.NEW_ACTION,
@@ -281,10 +281,11 @@ class ClusterAction(base.Action):
 
         for node_id in nodes:
             action = base.Action(self.context, 'NODE_LEAVE',
-                                 name='node_leave_%s' % node.id[:8],
-                                 target=node.id,
+                                 name='node_leave_%s' % node_id[:8],
+                                 target=node_id,
                                  cause=base.CAUSE_DERIVED)
-            action.store()
+            action.store(self.context)
+
             db_api.action_add_dependency(self.context, action.id, self.id)
             action.set_status(self.READY)
             dispatcher.notify(self.context, dispatcher.Dispatcher.NEW_ACTION,
