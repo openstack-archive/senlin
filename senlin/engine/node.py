@@ -272,9 +272,7 @@ class Node(object):
                                                    new_profile_id)
             self.profile_id = new_profile_id
             self.updated_time = datetime.datetime.utcnow()
-            db_api.node_update(context, self.id,
-                               {'profile_id': self.profile_id,
-                                'updated_time': self.updated_time})
+            self.store()
 
         return res
 
@@ -295,7 +293,5 @@ class Node(object):
 
         db_api.node_migrate(context, self.id, self.cluster_id, None)
         self.updated_time = datetime.datetime.utcnow()
-        db_api.node_update(context, self.id,
-                           {'updated_time': self.updated_time})
-
+        self.store()
         return True
