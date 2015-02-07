@@ -169,8 +169,11 @@ class ClusterController(object):
             res = self.rpc_client.cluster_add_nodes(
                 req.context, cluster_id, nodes)
         elif this_action == self.DEL_NODES:
+            nodes = body.get(this_action).get('nodes')
+            if nodes is None:
+                raise exc.HTTPBadRequest(_('No node to delete'))
             res = self.rpc_client.cluster_del_nodes(
-                req.context, cluster_id, body.get(this_action))
+                req.context, cluster_id, nodes)
         elif this_action == self.ATTACH_POLICY:
             res = self.rpc_client.cluster_attach_policy(
                 req.context, cluster_id, body.get(this_action))
