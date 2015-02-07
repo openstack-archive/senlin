@@ -384,7 +384,7 @@ class EngineService(service.Service):
             error = _("No nodes to add: %s") % nodes
 
         if error is not None:
-            raise exception.SenlinBadRequest(error)
+            raise exception.SenlinBadRequest(msg=error)
 
         action_name = 'cluster_add_nodes_%s' % db_cluster.id[:8]
         action = action_mod.Action(context, 'CLUSTER_ADD_NODES',
@@ -424,7 +424,7 @@ class EngineService(service.Service):
             error = _("No nodes specified") % nodes
 
         if error is not None:
-            raise exception.SenlinBadRequest(error)
+            raise exception.SenlinBadRequest(msg=error)
 
         action_name = 'cluster_del_nodes_%s' % db_cluster.id[:8]
         action = action_mod.Action(context, 'CLUSTER_DEL_NODES',

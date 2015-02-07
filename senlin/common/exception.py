@@ -175,6 +175,10 @@ class RequestUriTooLong(SenlinException):
     msg_fmt = _("The URI was too long.")
 
 
+class SenlinBadRequest(SenlinException):
+    msg_fmt = _("The request is malformed: %(msg)s")
+
+
 class MaxRedirectsExceeded(SenlinException):
     msg_fmt = _("Maximum redirects (%(redirects)s) was exceeded.")
 
