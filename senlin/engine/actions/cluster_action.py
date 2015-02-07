@@ -201,14 +201,30 @@ class ClusterAction(base.Action):
 
         return result, reason
 
-    def do_add_nodes(self, cluster, policy_data):
-        reason = 'Completed adding nodes'
-
+    def do_add_nodes(self, cluster, policy_data=None):
         nodes = self.inputs.get('nodes')
+
+        # NOTE: node states might have changed before we lock the cluster
         failures = {}
-        dependents = 0
         for node_id in nodes:
-            node = node_mod.Node.load(self.context, node_id)
+            try:
+                node = node_mod.Node.load(self.context, node_id)
+            except exception.NodeNotFound:
+                failures[node_id] = 'Node not found'
+                continue
+
+            if node.cluster_id == cluster.id:
+                nodes.remove(node_id)
+                continue
+
+            if node.cluster_id is not None:
+                failures[node_id] = _('Node already owned by cluster '
+                                      '%s') % node.cluster_id
+                continue
+            if node.status != node_mod.Node.ACTIVE:
+                failures[node_id] = _('Node not in ACTIVE status')
+                continue
+
             # check profile type matching
             node_profile_type = node.rt['profile'].type
             cluster_profile_type = cluster.rt['profile'].type
@@ -216,44 +232,68 @@ class ClusterAction(base.Action):
                 failures[node.id] = 'Profile type does not match'
                 continue
 
-            if node.cluster_id is None:
-                # Deal with orphan nodes
-                res = node.do_join(self.context, cluster.id)
-                if not res:
-                    failures[node.id] = 'Failed moving node'
-                continue
+        if len(failures) > 0:
+            return self.RES_ERROR, str(failures)
 
-            # Deal with nodes from other clusters
-            kwargs = {
-                'name': 'cluster_del_nodes_%s' % cluster.id[:8],
-                'target': cluster.id,
-                'cause': base.CAUSE_DERIVED,
-                'inputs': {
-                    'nodes': [node.id]
-                }
-            }
+        reason = 'Completed adding nodes'
+        if len(nodes) == 0:
+            return self.RES_OK, reason
 
-            action = base.Action(self.context, 'CLUSTER_DEL_NODES', **kwargs)
+        for node_id in nodes:
+            action = base.Action(self.context, 'NODE_JOIN',
+                                 name='node_join_%s' % node.id[:8],
+                                 target=node.id,
+                                 cause=base.CAUSE_DERIVED,
+                                 inputs={'cluster': [cluster.id]})
             action.store()
             db_api.action_add_dependency(self.context, action.id, self.id)
             action.set_status(self.READY)
             dispatcher.notify(self.context, dispatcher.Dispatcher.NEW_ACTION,
                               None, action_id=action.id)
-            dependents += 1
 
-        result = self.RES_OK
-        if dependents > 0:
-            # Wait for dependent action if any
-            result, reason = self._wait_for_dependents()
-
-        # TODO(Qiming): Summarize the above execution and report errors
-        # Don't need to change cluster status anyway
+        # Wait for dependent action if any
+        result, new_reason = self._wait_for_dependents()
+        if result != self.RES_OK:
+            reason = new_reason
         return result, reason
 
     def do_del_nodes(self, cluster, policy_data=None):
+        nodes = self.inputs.get('nodes')
+
+        # NOTE: node states might have changed before we lock the cluster
+        failures = {}
+        for node_id in nodes:
+            try:
+                node = node_mod.Node.load(self.context, node_id)
+            except exception.NodeNotFound:
+                failures[node_id] = 'Node not found'
+                continue
+
+            if node.cluster_id is None:
+                nodes.remove(node_id)
+
+        if len(failures) > 0:
+            return self.RES_ERROR, str(failures)
+
         reason = 'Completed deleting nodes'
-        #nodes = self.inputs.get('nodes')
-        return self.RES_OK, reason
+        if len(nodes) == 0:
+            return self.RES_OK, reason
+
+        for node_id in nodes:
+            action = base.Action(self.context, 'NODE_LEAVE',
+                                 name='node_leave_%s' % node.id[:8],
+                                 target=node.id,
+                                 cause=base.CAUSE_DERIVED)
+            action.store()
+            db_api.action_add_dependency(self.context, action.id, self.id)
+            action.set_status(self.READY)
+            dispatcher.notify(self.context, dispatcher.Dispatcher.NEW_ACTION,
+                              None, action_id=action.id)
+
+        result, new_reason = self._wait_for_dependents()
+        if result != self.RES_OK:
+            reason = new_reason
+        return result, reason
 
     def do_scale_up(self, cluster, policy_data=None):
         return self.RES_OK, ''
