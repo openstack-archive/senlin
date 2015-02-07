@@ -363,13 +363,16 @@ class EngineService(service.Service):
         found = []
         not_found = []
         bad_nodes = []
+        owned_nodes = []
         for node in nodes:
             try:
                 db_node = self.node_find(context, node)
                 # Skip node in the same cluster already
                 if db_node.status != node_mod.Node.ACTIVE:
                     bad_nodes.append(db_node.id)
-                elif db_node.cluster_id != db_cluster.id:
+                elif db_node.cluster_id is not None:
+                    owned_nodes.append(node)
+                else:
                     found.append(db_node.id)
             except exception.NodeNotFound:
                 not_found.append(node)
@@ -378,6 +381,9 @@ class EngineService(service.Service):
         error = None
         if len(bad_nodes) > 0:
             error = _("Nodes are not ACTIVE: %s") % bad_nodes
+        elif len(owned_nodes) > 0:
+            error = _("Nodes %s are owned by other cluster, need to delete "
+                      "them from those clusters first.") % owned_nodes
         elif len(not_found) > 0:
             error = _("Nodes not found: %s") % not_found
         elif len(found) == 0:
