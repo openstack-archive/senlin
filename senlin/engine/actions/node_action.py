@@ -26,14 +26,11 @@ class NodeAction(base.Action):
 
     ACTIONS = (
         NODE_CREATE, NODE_DELETE, NODE_UPDATE,
-        NODE_JOIN_CLUSTER, NODE_LEAVE_CLUSTER,
+        NODE_JOIN, NODE_LEAVE,
     ) = (
         'NODE_CREATE', 'NODE_DELETE', 'NODE_UPDATE',
-        'NODE_JOIN_CLUSTER', 'NODE_LEAVE_CLUSTER',
+        'NODE_JOIN', 'NODE_LEAVE',
     )
-
-    def __init__(self, context, action, **kwargs):
-        super(NodeAction, self).__init__(context, action, **kwargs)
 
     def do_create(self, node):
         res = node.do_create(self.context)
