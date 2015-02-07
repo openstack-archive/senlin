@@ -428,8 +428,7 @@ def ActionProc(context, action_id, worker_id):
         reason = six.text_type(ex)
         LOG.error(_('Exception occurred in action execution: %s'), reason)
         import traceback
-        traceback.print_stack()
-        #LOG.error(traceback.extract_stack())
+        LOG.error(repr(traceback.format_stack()))
     finally:
         # NOTE: locks on action is eventually released here by status update
         action.set_status(result, reason)
