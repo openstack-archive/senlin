@@ -402,7 +402,7 @@ class EngineService(service.Service):
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
 
-        return action.to_dict()
+        return {'action': action.id}
 
     @request_context
     def cluster_del_nodes(self, context, identity, nodes):
@@ -442,7 +442,7 @@ class EngineService(service.Service):
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
 
-        return action.to_dict()
+        return {'action': action.id}
 
     @request_context
     def cluster_delete(self, context, identity):
