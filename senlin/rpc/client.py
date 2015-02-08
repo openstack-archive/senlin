@@ -128,6 +128,37 @@ class EngineClient(object):
         return self.call(ctxt, self.make_msg('policy_type_template',
                                              type_name=type_name))
 
+    def policy_list(self, ctxt, limit=None, marker=None, sort_keys=None,
+                    sort_dir=None, filters=None, show_deleted=False):
+        return self.call(ctxt,
+                         self.make_msg('policy_list', limit=limit,
+                                       marker=marker, sort_keys=sort_keys,
+                                       sort_dir=sort_dir, filters=filters,
+                                       show_deleted=show_deleted))
+
+    def policy_create(self, ctxt, name, type, spec, level, cooldown):
+        return self.call(ctxt,
+                         self.make_msg('policy_create',
+                                       name=name, type=type, spec=spec,
+                                       level=level, cooldown=cooldown))
+
+    def policy_get(self, ctxt, identity):
+        return self.call(ctxt,
+                         self.make_msg('policy_get', identity=identity))
+
+    def policy_update(self, ctxt, identity, name, spec, level, cooldown):
+        return self.call(ctxt,
+                         self.make_msg('policy_update',
+                                       identity=identity,
+                                       name=name, spec=spec,
+                                       level=level, cooldown=cooldown))
+
+    def policy_delete(self, ctxt, identity, cast=True):
+        rpc_method = self.cast if cast else self.call
+        return rpc_method(ctxt,
+                          self.make_msg('policy_delete',
+                                        identity=identity))
+
     def identify_cluster(self, ctxt, cluster_name):
         '''Get the full cluster identifier for a single, live cluster given
         the cluster name.

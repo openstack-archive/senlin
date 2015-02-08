@@ -34,6 +34,7 @@ from senlin.engine import scheduler
 from senlin.engine import senlin_lock
 from senlin.openstack.common import log as logging
 from senlin.openstack.common import service
+from senlin.policies import base as policy_base
 from senlin.profiles import base as profile_base
 
 LOG = logging.getLogger(__name__)
@@ -254,6 +255,69 @@ class EngineService(service.Service):
     @request_context
     def policy_type_template(self, context, type_name):
         return {}
+
+    @request_context
+    def policy_find(self, context, identity, show_deleted=False):
+        '''Find a policy with the given identity (could be name or ID).'''
+
+        if uuidutils.is_uuid_like(identity):
+            policy = db_api.policy_get(context, identity,
+                                       show_deleted=show_deleted)
+            if not policy:
+                policy = db_api.policy_get_by_name(context, identity)
+        else:
+            policy = db_api.policy_get_by_name(context, identity)
+            if not policy:
+                policy = db_api.policy_get_by_short_id(context, identity)
+
+        if not policy:
+            raise exception.PolicyNotFound(policy=identity)
+
+        return policy
+
+    @request_context
+    def policy_list(self, context, limit=None, marker=None, sort_keys=None,
+                    sort_dir=None, filters=None, show_deleted=False):
+        policies = policy_base.Policy.load_all(context, limit=limit,
+                                               marker=marker,
+                                               sort_keys=sort_keys,
+                                               sort_dir=sort_dir,
+                                               filters=filters,
+                                               show_deleted=show_deleted)
+
+        return [p.to_dict() for p in policies]
+
+    @request_context
+    def policy_create(self, context, name, type, spec, level=None,
+                      cooldown=None):
+        LOG.info(_LI('Creating policy %s:%s'), type, name)
+        plugin = environment.global_env().get_policy(type)
+
+        kwargs = {
+            'spec': spec,
+            'level': level,
+            'cooldown': cooldown,
+        }
+        policy = plugin(type, name, **kwargs)
+        policy.store(context)
+        return policy.to_dict()
+
+    @request_context
+    def policy_get(self, context, identity):
+        db_policy = self.policy_find(context, identity)
+        policy = policy_base.Policy.load(context, policy=db_policy)
+        return policy.to_dict()
+
+    @request_context
+    def policy_update(self, context, identity, name, spec, level, cooldown):
+        return {}
+
+    @request_context
+    def policy_delete(self, context, identity):
+        db_policy = self.policy_find(context, identity)
+        LOG.info(_LI('Delete policy: %s'), identity)
+        policy_base.Policy.delete(context, db_policy.id)
+        return None
 
     @request_context
     def cluster_list(self, context, limit=None, marker=None, sort_keys=None,
