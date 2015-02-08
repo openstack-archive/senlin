@@ -539,6 +539,39 @@ class EngineService(service.Service):
         return action.to_dict()
 
     @request_context
+    def node_join(self, context, identity, cluster_id):
+        db_node = self.node_find(context, identity)
+        db_cluster = self.cluster_find(context, cluster_id)
+        LOG.info(_LI('Joining node %(node)s to cluster %(cluster)s'),
+                 {'node': identity, 'cluster': cluster_id})
+
+        action = action_mod.Action(context, 'NODE_JOIN',
+                                   name='node_join_%s' % db_node.id[:8],
+                                   target=db_node.id,
+                                   cause=action_mod.CAUSE_RPC,
+                                   inputs={'cluster_id': db_cluster.id})
+        action.store(context)
+        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
+                          None, action_id=action.id)
+
+        return action.to_dict()
+
+    @request_context
+    def node_leave(self, context, identity):
+        db_node = self.node_find(context, identity)
+        LOG.info(_LI('Node %(node)s leaving cluster'), {'node': identity})
+
+        action = action_mod.Action(context, 'NODE_LEAVE',
+                                   name='node_leave_%s' % db_node.id[:8],
+                                   target=db_node.id,
+                                   cause=action_mod.CAUSE_RPC)
+        action.store(context)
+        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
+                          None, action_id=action.id)
+
+        return action.to_dict()
+
+    @request_context
     def action_find(self, context, identity, show_deleted=False):
         '''Find a cluster with the given identity (could be name or ID).'''
         # TODO(Qiming): add show_deleted support
