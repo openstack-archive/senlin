@@ -393,7 +393,7 @@ def node_migrate(context, node_id, to_cluster, timestamp):
     session = _session(context)
     session.begin()
 
-    node = session.query(context, models.Node).get(node_id)
+    node = session.query(models.Node).get(node_id)
     from_cluster = node.cluster_id
     if from_cluster is not None:
         cluster1 = session.query(models.Cluster).get(from_cluster)
@@ -577,21 +577,36 @@ def policy_get_by_short_id(context, short_id):
     return query_by_short_id(context, models.Policy, short_id)
 
 
-def policy_get_all(context, show_deleted=False):
-    policies = soft_delete_aware_query(context, models.Policy,
-                                       show_deleted=show_deleted).all()
-    if not policies:
-        raise exception.NotFound(_('No policy were found'))
-    return policies
+def policy_get_all(context, limit=None, marker=None, sort_keys=None,
+                   sort_dir=None, filters=None, show_deleted=False):
+    query = soft_delete_aware_query(context, models.Policy,
+                                    show_deleted=show_deleted)
+
+    if filters is None:
+        filters = {}
+
+    sort_key_map = {
+        attr.POLICY_TYPE: models.Policy.type.key,
+        attr.POLICY_NAME: models.Policy.name.key,
+        attr.POLICY_LEVEL: models.Policy.level.key,
+        attr.POLICY_COOLDOWN: models.Policy.cooldown.key,
+        attr.POLICY_CREATED_TIME: models.Policy.created_time.key,
+        attr.POLICY_UPDATED_TIME: models.Policy.updated_time.key,
+        attr.POLICY_DELETED_TIME: models.Policy.deleted_time.key,
+    }
+    keys = _get_sort_keys(sort_keys, sort_key_map)
+
+    query = db_filters.exact_filter(query, models.Policy, filters)
+    return _paginate_query(context, query, models.Policy,
+                           limit=limit, marker=marker,
+                           sort_keys=keys, sort_dir=sort_dir,
+                           default_sort_keys=['created_time']).all()
 
 
 def policy_update(context, policy_id, values):
-    policy = policy_get(context, policy_id)
-
+    policy = model_query(context, models.Policy).get(policy_id)
     if not policy:
-        msg = _('Attempt to update a policy with id: %(id)s that does not '
-                'exist failed') % policy_id
-        raise exception.NotFound(msg)
+        raise exception.PolicyNotFound(policy=policy_id)
 
     policy.update(values)
     policy.save(_session(context))
@@ -726,8 +741,7 @@ def profile_get_all(context, limit=None, marker=None, sort_keys=None,
 def profile_update(context, profile_id, values):
     profile = model_query(context, models.Profile).get(profile_id)
     if not profile:
-        raise exception.NotFound(
-            _('Profile with id "%s" not found') % profile_id)
+        raise exception.ProfileNotFound(profile=profile_id)
 
     profile.update(values)
     profile.save(_session(context))
