@@ -1,7 +1,3 @@
-type: os.senlin.update_policy
-spec:
-  min_in_service: 1
-  max_batch_size: 1
-  pause_time: 0
-cooldown: 0
-level: WARNING
+min_in_service: 1
+max_batch_size: 1
+pause_time: 0
