@@ -60,6 +60,16 @@ PROFILE_ATTRS = (
     'tags',
 )
 
+POLICY_ATTRS = (
+    POLICY_ID, POLICY_NAME, POLICY_TYPE,
+    POLICY_SPEC, POLICY_LEVEL, POLICY_COOLDOWN,
+    POLICY_CREATED_TIME, POLICY_UPDATED_TIME, POLICY_DELETED_TIME,
+) = (
+    'id', 'name', 'type',
+    'spec', 'level', 'cooldown',
+    'created_time', 'updated_time', 'deleted_time',
+)
+
 EVENT_ATTRS = (
     EVENT_TIMESTAMP, EVENT_OBJ_ID, EVENT_OBJ_NAME, EVENT_OBJ_TYPE,
     EVENT_USER, EVENT_ACTION, EVENT_STATUS, EVENT_STATUS_REASON,

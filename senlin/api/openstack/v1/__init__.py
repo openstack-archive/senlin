@@ -17,6 +17,7 @@ from senlin.api.openstack.v1 import actions
 from senlin.api.openstack.v1 import build_info
 from senlin.api.openstack.v1 import clusters
 from senlin.api.openstack.v1 import nodes
+from senlin.api.openstack.v1 import policies
 from senlin.api.openstack.v1 import policy_types
 from senlin.api.openstack.v1 import profile_types
 from senlin.api.openstack.v1 import profiles
@@ -93,6 +94,30 @@ class API(wsgi.Router):
                                conditions={'method': 'GET'})
 
         # Policies (To do)
+        policies_resource = policies.create_resource(conf)
+        with mapper.submapper(controller=policies_resource,
+                              path_prefix="/{tenant_id}") as sub_mapper:
+
+            sub_mapper.connect("policy_index",
+                               "/policies",
+                               action="index",
+                               conditions={'method': 'GET'})
+            sub_mapper.connect("policy_create",
+                               "/policies",
+                               action="create",
+                               conditions={'method': 'POST'})
+            sub_mapper.connect("policy_get",
+                               "/policies/{policy_id}",
+                               action="get",
+                               conditions={'method': 'GET'})
+            sub_mapper.connect("policy_update",
+                               "/policies/{profile_id}",
+                               action="update",
+                               conditions={'method': 'PUT'})
+            sub_mapper.connect("policy_delete",
+                               "/policies/{policy_id}",
+                               action="delete",
+                               conditions={'method': 'DELETE'})
 
         # Clusters
         clusters_resource = clusters.create_resource(conf)
