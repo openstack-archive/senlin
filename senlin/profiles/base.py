@@ -99,19 +99,24 @@ class Profile(object):
 
     def store(self, context):
         '''Store the profile into database and return its ID.'''
-
         values = {
             'name': self.name,
             'type': self.type,
             'spec': self.spec,
             'permission': self.permission,
             'tags': self.tags,
-            'created_time': datetime.datetime.utcnow()
         }
-        profile = db_api.profile_create(context, values)
-        self.id = profile.id
-        self.context = context
-        self.created_time = profile.created_time
+
+        if self.id:
+            self.updated_time = timestamp
+            values['updated_time'] = timestamp
+            db_api.profile_update(self.context, self.id, values)
+        else:
+            self.created_time = timestamp
+            values['created_time'] = timestamp
+            policy = db_api.profile_create(self.context, values)
+            self.id = policy.id
+
         return profile.id
 
     @classmethod
