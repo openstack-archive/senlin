@@ -279,23 +279,22 @@ class Node(object):
     def do_join(self, context, cluster_id):
         if self.cluster_id == cluster_id:
             return True
-
-        # TODO(Qiming): Increment size of cluster
+        timestamp = datetime.datetime.utcnow()
+        db_node = db_api.node_migrate(context, self.id, cluster_id,
+                                      timestamp)
         self.cluster_id = cluster_id
-        self.updated_time = datetime.datetime.utcnow()
-        self.index = db_api.cluster_get_next_index(context, cluster_id)
-        self.store(context)
-
+        self.updated_time = timestamp
+        self.index = db_node.index
         return True
 
     def do_leave(self, context):
         if self.cluster_id is None:
             return True
 
-        # TODO(Qiming): Decrement size of cluster
+        timestamp = datetime.datetime.utcnow()
+        db_api.node_migrate(context, self.id, None, timestamp)
         self.cluster_id = None
-        self.updated_time = datetime.datetime.utcnow()
+        self.updated_time = timestamp
         self.index = -1
-        self.store(context)
 
         return True
