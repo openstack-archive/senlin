@@ -389,19 +389,26 @@ def node_update(context, node_id, values):
     node.save(query.session)
 
 
-def node_migrate(context, node_id, from_cluster, to_cluster):
-    query = model_query(context, models.Node)
-    node = query.get(node_id)
-    session = query.session
+def node_migrate(context, node_id, to_cluster, timestamp):
+    session = _session(context)
     session.begin()
-    if from_cluster:
+
+    node = session.query(context, models.Node).get(node_id)
+    from_cluster = node.cluster_id
+    if from_cluster is not None:
         cluster1 = session.query(models.Cluster).get(from_cluster)
         cluster1.size -= 1
-    if to_cluster:
+        node.index = -1
+    if to_cluster is not None:
         cluster2 = session.query(models.Cluster).get(to_cluster)
         cluster2.size += 1
+        index = cluster2.next_index
+        cluster2.next_index += 1
+        node.index = index
     node.cluster_id = to_cluster
+    node.updated_time = timestamp
     session.commit()
+    return node
 
 
 def node_delete(context, node_id, force=False):
