@@ -117,6 +117,8 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('type', sqlalchemy.String(255)),
         sqlalchemy.Column('cooldown', sqlalchemy.Integer),
         sqlalchemy.Column('level', sqlalchemy.Integer),
+        sqlalchemy.Column('created_time', sqlalchemy.DateTime),
+        sqlalchemy.Column('updated_time', sqlalchemy.DateTime),
         sqlalchemy.Column('deleted_time', sqlalchemy.DateTime),
         sqlalchemy.Column('spec', types.Dict),
         sqlalchemy.Column('data', types.Dict),

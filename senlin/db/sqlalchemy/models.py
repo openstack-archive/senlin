@@ -178,6 +178,8 @@ class Policy(BASE, SenlinBase, SoftDelete):
     type = sqlalchemy.Column(sqlalchemy.String(255))
     cooldown = sqlalchemy.Column(sqlalchemy.Integer)
     level = sqlalchemy.Column(sqlalchemy.Integer)
+    created_time = sqlalchemy.Column(sqlalchemy.DateTime)
+    updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
     deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
     spec = sqlalchemy.Column(types.Dict)
     data = sqlalchemy.Column(types.Dict)
