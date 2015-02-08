@@ -11,6 +11,7 @@
 # under the License.
 
 import collections
+import datetime
 
 from senlin.common import exception
 from senlin.db import api as db_api
@@ -80,65 +81,91 @@ class Policy(object):
         return super(Policy, cls).__new__(PolicyClass)
 
     def __init__(self, type_name, name, **kwargs):
-        self.id = kwargs.get('id', None)
         self.name = name
         self.type = type_name
 
-        self.context = kwargs.get('context', None)
-        self.cooldown = kwargs.get('cooldown', 0)
+        self.id = kwargs.get('id', None)
         self.level = kwargs.get('level', self.DEBUG)
+        self.cooldown = kwargs.get('cooldown', 0)
         self.spec = kwargs.get('spec', {})
         self.data = kwargs.get('data', {})
 
-    def store(self):
-        '''Store the policy object into database table.
+        self.created_time = kwargs.get('created_time', None)
+        self.updated_time = kwargs.get('updated_time', None)
+        self.deleted_time = kwargs.get('deleted_time', None)
 
-        This could be a policy_create or a policy_update DB API invocation,
-        depends on whether self.id is set.
-        '''
-        values = {
-            'name': self.name,
-            'type': self.type,
-            'cooldown': self.cooldown,
-            'level': self.level,
-            'spec': self.spec,
-            'data': self.data,
-        }
-
-        if self.id:
-            db_api.policy_update(self.context, self.id, values)
-        else:
-            policy = db_api.policy_create(self.context, values)
-            self.id = policy.id
-
-        return self.id
+        self.context = kwargs.get('context', {})
 
     @classmethod
-    def from_db_record(cls, context, record):
+    def _from_db_record(cls, context, record):
         '''Construct a policy object from a database record.'''
 
         kwargs = {
             'id': record.id,
-            'name': record.name,
-            'context': context,
-            'type': record.type,
-            'cooldown': record.cooldown,
-            'level': record.level,
             'spec': record.spec,
+            'level': record.level,
+            'cooldown': record.cooldown,
+            'created_time': record.created_time,
+            'updated_time': record.updated_time,
+            'deleted_time': record.deleted_time,
             'data': record.data,
+            'context': context,
         }
+
         return cls(record.type, record.name, **kwargs)
 
     @classmethod
     def load(cls, context, policy_id=None, policy=None):
         '''Retrieve and reconstruct a policy object from DB.'''
-
         if policy is None:
             policy = db_api.policy_get(context, policy_id)
             if policy is None:
                 raise exception.PolicyNotFound(policy=policy_id)
 
-        return cls.from_db_record(context, policy)
+        return cls._from_db_record(context, policy)
+
+    @classmethod
+    def load_all(cls, context, limit=None, sort_keys=None, marker=None,
+                 sort_dir=None, filters=None, show_deleted=False):
+        '''Retrieve all policies from database.'''
+
+        records = db_api.policy_get_all(context, limit=limit, marker=marker,
+                                        sort_keys=sort_keys,
+                                        sort_dir=sort_dir,
+                                        filters=filters,
+                                        show_deleted=show_deleted)
+
+        for record in records:
+            yield cls._from_db_record(context, record)
+
+    @classmethod
+    def delete(cls, context, policy_id):
+        db_api.policy_delete(context, policy_id)
+
+    def store(self, context):
+        '''Store the policy object into database table.'''
+        timestamp = datetime.datetime.utcnow()
+
+        values = {
+            'name': self.name,
+            'type': self.type,
+            'spec': self.spec,
+            'level': self.level,
+            'cooldown': self.cooldown,
+            'data': self.data,
+        }
+
+        if self.id is not None:
+            self.updated_time = timestamp
+            values['updated_time'] = timestamp
+            db_api.policy_update(self.context, self.id, values)
+        else:
+            self.created_time = timestamp
+            values['created_time'] = timestamp
+            policy = db_api.policy_create(self.context, values)
+            self.id = policy.id
+
+        return self.id
 
     def pre_op(self, cluster_id, action, **kwargs):
         '''Force all subclasses to implement an operation that will be invoked
@@ -166,6 +193,9 @@ class Policy(object):
             'spec': self.spec,
             'level': self.level,
             'cooldown': self.cooldown,
+            'created_time': self.created_time,
+            'updated_time': self.updated_time,
+            'deleted_time': self.deleted_time,
             'data': self.data,
         }
         return pb_dict
