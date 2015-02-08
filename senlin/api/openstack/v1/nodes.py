@@ -71,6 +71,12 @@ class NodeController(object):
 
     REQUEST_SCOPE = 'nodes'
 
+    SUPPORTED_ACTIONS = (
+        NODE_JOIN, NODE_LEAVE,
+    ) = (
+        'join', 'leave',
+    )
+
     def __init__(self, options):
         self.options = options
         self.rpc_client = rpc_client.EngineClient()
@@ -148,12 +154,12 @@ class NodeController(object):
             raise exc.HTTPBadRequest(_('Unrecognized action "%s" specified'),
                                      this_action)
 
-        if this_action == self.JOIN:
+        if this_action == self.NODE_JOIN:
             cluster_id = body.get(this_action).get('cluster_id')
             if cluster_id is None:
                 raise exc.HTTPBadRequest(_('No cluster specified'))
             res = self.rpc_client.node_join(req.context, node_id, cluster_id)
-        elif this_action == self.LEAVE:
+        elif this_action == self.NODE_LEAVE:
             res = self.rpc_client.node_leave(req.context, node_id)
         else:
             raise exc.HTTPInternalServerError(_('Unexpected action "%s"'),
