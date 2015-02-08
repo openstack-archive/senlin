@@ -99,6 +99,8 @@ class Profile(object):
 
     def store(self, context):
         '''Store the profile into database and return its ID.'''
+        timestamp = datetime.datetime.utcnow()
+
         values = {
             'name': self.name,
             'type': self.type,
@@ -114,10 +116,10 @@ class Profile(object):
         else:
             self.created_time = timestamp
             values['created_time'] = timestamp
-            policy = db_api.profile_create(self.context, values)
-            self.id = policy.id
+            profile = db_api.profile_create(self.context, values)
+            self.id = profile.id
 
-        return profile.id
+        return self.id
 
     @classmethod
     def create_object(cls, context, obj):
