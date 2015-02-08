@@ -134,6 +134,34 @@ class NodeController(object):
         raise exc.HTTPAccepted()
 
     @util.policy_enforce
+    def action(self, req, node_id, body=None):
+        '''Perform specified action on a node.'''
+        body = body or {}
+        if len(body) == 0:
+            raise exc.HTTPBadRequest(_('No action specified'))
+
+        if len(body) > 1:
+            raise exc.HTTPBadRequest(_('Multiple actions specified'))
+
+        this_action = body.keys()[0]
+        if this_action not in self.SUPPORTED_ACTIONS:
+            raise exc.HTTPBadRequest(_('Unrecognized action "%s" specified'),
+                                     this_action)
+
+        if this_action == self.JOIN:
+            cluster_id = body.get(this_action).get('cluster_id')
+            if cluster_id is None:
+                raise exc.HTTPBadRequest(_('No cluster specified'))
+            res = self.rpc_client.node_join(req.context, node_id, cluster_id)
+        elif this_action == self.LEAVE:
+            res = self.rpc_client.node_leave(req.context, node_id)
+        else:
+            raise exc.HTTPInternalServerError(_('Unexpected action "%s"'),
+                                              this_action)
+
+        return res
+
+    @util.policy_enforce
     def delete(self, req, node_id):
         force = 'force' in req.params
         action = self.rpc_client.node_delete(req.context, node_id, force=force,

@@ -145,6 +145,10 @@ class API(wsgi.Router):
                                "/nodes/{node_id}",
                                action="update",
                                conditions={'method': 'PUT'})
+            sub_mapper.connect("node_action",
+                               "/nodes/{node_id}/action",
+                               action="action",
+                               conditions={'method': 'PUT'})
             sub_mapper.connect("node_delete",
                                "/nodes/{node_id}",
                                action="delete",
