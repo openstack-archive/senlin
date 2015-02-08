@@ -280,6 +280,7 @@ class Node(object):
         if self.cluster_id == cluster_id:
             return True
 
+        # TODO(Qiming): Increment size of cluster
         self.cluster_id = cluster_id
         self.updated_time = datetime.datetime.utcnow()
         self.index = db_api.cluster_get_next_index(context, cluster_id)
@@ -291,6 +292,7 @@ class Node(object):
         if self.cluster_id is None:
             return True
 
+        # TODO(Qiming): Decrement size of cluster
         self.cluster_id = None
         self.updated_time = datetime.datetime.utcnow()
         self.index = -1
