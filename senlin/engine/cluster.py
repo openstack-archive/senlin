@@ -283,12 +283,6 @@ class Cluster(periodic_task.PeriodicTasks):
         self.set_status(self.UPDATING)
         return True
 
-    def get_next_index(self):
-        # TODO(Qiming): Get next_index from db and increment it in db
-        curr = self._next_index
-        self._next_index = self._next_index + 1
-        return curr
-
     def get_nodes(self):
         '''Get all nodes for this cluster.'''
         return self.rt.get('nodes', [])
