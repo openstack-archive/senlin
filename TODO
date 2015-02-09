@@ -43,9 +43,13 @@ ENGINE
 
   - Design and implement dynamical plugin loading mechanism that allows 
     loading plugins from any paths
+
   - Provide support to oslo.notification and allow nodes to receive and react
     to those notifications accordingly.
     [https://ask.openstack.org/en/question/46495/heat-autoscaling-adaptation-actions-on-existing-servers/]
+
+  - Allow actions to be paused and resumed.
+    This is important for some background actions such as health checking
 
 OSLO
 ----
