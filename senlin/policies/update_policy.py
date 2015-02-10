@@ -39,13 +39,14 @@ class UpdatePolicy(base.Policy):
         self.max_batch_size = self.spec.get('max_batch_size')
         self.pause_time = self.spec.get('pause_time')
 
-    def pre_op(self, cluster_id, action, **kwargs):
+    def pre_op(self, cluster_id, action, policy_data):
+        # TODO(anyone): compute batches
+        policy_data['candidates'] = candidates
         return True
 
-    def enforce(self, cluster_id, action, **kwargs):
-        candidates = []
-        # TODO(anyone): select candidates for update based on criteria
+    def enforce(self, cluster_id, action, policy_data):
         return candidates
 
-    def post_op(self, cluster_id, action, **kwargs):
+    def post_op(self, cluster_id, action, policy_data):
+        # TODO(anyone): handle pause_time here
         return True
