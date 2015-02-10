@@ -10,6 +10,33 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+'''
+Policy for deleting node(s) from a cluster.
+'''
+
+'''
+NOTE: How deletion policy works
+Input:
+  cluster: cluster whose nodes can be deleted
+  policy_data.deletion:
+    - count: number of nodes to delete; it can be customized by a
+             scaling policy for example. If no scaling policy is
+             effective, deletion count is assumed to be 1
+  self.criteria: list of criteria for sorting nodes
+Output: policy_data
+  {
+    'status': 'OK',
+    'deletion': {
+      'count': '2',
+      'candidates': [
+        'node-id-1',
+        'node-id-2'
+      ],
+      'destroy_after_delete': 'True',
+    }
+  }
+'''
+
 import random
 
 from senlin.common import senlin_consts as consts
@@ -18,20 +45,23 @@ from senlin.policies import base
 
 
 class DeletionPolicy(base.Policy):
-    '''Policy for deleting member(s) from a cluster.'''
 
     __type_name__ = 'DeletionPolicy'
 
     CRITERIA = (
-        OLDEST_FIRST, YOUNGEST_FIRST, RANDOM,
+        OLDEST_FIRST,
+        OLDEST_PROFILE_FIRST,
+        YOUNGEST_FIRST,
+        RANDOM,
     ) = (
-        'oldest_first',
-        'youngest_first',
+        'OLDEST_FIRST',
+        'OLDEST_PROFILE_FRIST',
+        'YOUNGEST_FIRST',
         'random',
     )
 
     TARGET = [
-        ('BEFORE', consts.CLUSTER_SCALE_DOWN),
+        ('BEFORE', consts.CLUSTER_SCALE_IN),
         ('BEFORE', consts.CLUSTER_DEL_NODES),
     ]
 
@@ -42,56 +72,76 @@ class DeletionPolicy(base.Policy):
     def __init__(self, type_name, name, **kwargs):
         super(DeletionPolicy, self).__init__(type_name, name, **kwargs)
 
-        self.criteria = kwargs.get('criteria', '')
+        self.criteria = kwargs.get('criteria', self.RANDOM)
         self.grace_period = kwargs.get('grace_period', 0)
+        self.destroy_after_deletion = kwargs.get('destroy_after_deletion',
+                                                 True)
         self.reduce_desired_capacity = kwargs.get('reduce_desired_capacity',
                                                   False)
         random.seed()
 
-    def pre_op(self, cluster_id, action, policy_data):
-        '''The pre-op of a deletion policy returns the chosen victims
-        that will be deleted.
-        '''
-        if 'count' not in policy_data:
-            # We need input from scaling policy, let's retry
-            policy_data['status'] = self.CHECK_RETRY
-            return policy_data
-
-        policy_data['candidates'] = []
-        count = policy_data.get('count', 0)
-        if count == 0:
-            # No candidates is choosen for deletion
-            return policy_data
-
-        nodes = db_api.node_get_all_by_cluster(cluster_id)
-        # TODO(anyone): Add count check to ensure it is not larger
-        # then the current size of cluster.
+    def _select_candicates(self, cluster_id, count, context):
+        candidates = []
+        nodes = db_api.node_get_all_by_cluster(context, cluster_id)
         if count > len(nodes):
             count = len(nodes)
 
+        # Random selection
         if self.criteria == self.RANDOM:
-            for i in range(1, count):
-                rand = random.randrange(len(nodes))
-                policy_data['candidates'].append(nodes[rand])
+            i = count
+            while i > 0:
+                rand = random.randrange(i)
+                candidates.append(nodes[rand])
                 nodes.remove(nodes[rand])
-            return policy_data
+                i = i - 1
 
-        sorted_list = sorted(nodes, key=lambda r: (r.created_time, r.name))
-        for i in range(1, count):
-            if self.criteria == self.OLDEST_FIRST:
-                policy_data['candidates'].append(sorted_list[i - 1])
-            else:  # self.criteria == self.YOUNGEST_FIRST:
-                policy_data['candidates'].append(sorted_list[-i])
+            return candidates
 
-        return policy_data
+        # Node age based selection
+        if self.criteria in [self.OLDEST_FIRST, self.YOUNGEST_FIRST]:
+            sorted_list = sorted(nodes, key=lambda r: (r.created_time, r.name))
+            for i in range(count):
+                if self.criteria == self.OLDEST_FIRST:
+                    candidates.append(sorted_list[i])
+                else:  # YOUNGEST_FIRST
+                    candidates.append(sorted_list[-i])
+            return candidates
 
-    def enforce(self, cluster_id, action, policy_data):
-        # Mark this policy check succeeded
-        policy_data['status'] = base.CHECK_OK
+        # Node profile based selection
+        if self.criterial == self.OLDEST_PROFILE_FIRST:
+            map = []
+            for node in nodes:
+                created_at = db_api.profile_get(node.profile_id).created_time
+                map.append({'id': node.id, 'created_at': created_at})
+            sorted_map = sorted(map, key=lambda m: m['created_at'])
+            for i in range(count):
+                candidates.append(sorted_map[i])
+
+            return candidates
+
+        return []
+
+    def pre_op(self, cluster_id, action, policy_data):
+        '''Choose victims that can be deleted.'''
+
+        pd = policy_data.get('deletion', None)
+        if pd is not None:
+            count = pd.get('count', 1)
+            candidates = pd.get('candidates', [])
+        else:
+            candidates = []
+
+        # For certain operations ( e.g. DEL_NODES), the candidates might
+        # have been specified
+        if len(candidates) == 0:
+            candidates = self._select_candidates(cluster_id, count,
+                                                 action.context)
+        pd['candidates'] = candidates
+        pd['destroy_after_deletion'] = self.destroy_after_deletion
+        pd['grace_period'] = self.grace_period
+        policy_data.update({'deletion': pd})
         return policy_data
 
     def post_op(self, cluster_id, action, policy_data):
-        # TODO(Qiming): process grace period here if needed
-        # Mark this policy check succeeded
-        policy_data['status'] = self.CHECK_OK
+        # TODO(anyone): reduce desired_capacity if needed
         return policy_data
