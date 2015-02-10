@@ -10,8 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from senlin.common import senlin_consts as consts
+from senlin.common import consts
 from senlin.policies import base
+
+neutron = None
 
 
 class LoadBalancingPolicy(base.Policy):
@@ -24,9 +26,9 @@ class LoadBalancingPolicy(base.Policy):
 
     TARGET = [
         ('AFTER', consts.CLUSTER_ADD_NODES),
-        ('AFTER', consts.CLUSTER_SCALE_UP),
+        ('AFTER', consts.CLUSTER_SCALE_OUT),
         ('BEFORE', consts.CLUSTER_DEL_NODES),
-        ('BEFORE', consts.CLUSTER_SCALE_DOWN),
+        ('BEFORE', consts.CLUSTER_SCALE_IN),
     ]
 
     PROFILE_TYPE = [
@@ -37,22 +39,63 @@ class LoadBalancingPolicy(base.Policy):
     def __init__(self, type_name, name, **kwargs):
         super(LoadBalancingPolicy, self).__init__(type_name, name, kwargs)
 
-        self.lb_names = kwargs.get('loadbalancer_names')
+        self.pool_spec = kwargs.get('pool', None)
+        self.vip_spec = kwargs.get('vip', None)
+        self.pool = None
+        self.vip = None
+        self.pool_need_delete = True
+        self.vip_need_delete = True
 
-    def pre_op(self, cluster_id, action, **args):
-        if action not in (consts.CLUSTER_DEL_NODES,
-                          consts.CLUSTER_SCALE_DOWN):
-            return True
+    def attach(self, cluster_id):
+        pool_id = self.pool_spec.get('pool')
+        if pool_id is not None:
+            self.pool = neutron.get_pool(pool_id)
+            self.pool_need_delete = False
+        else:
+            # Create pool using the specified params
+            self.pool = neutron.create_pool({'pool': self.pool_spec})['pool']
 
-        # TODO(anyone): remove nodes from loadbalancer
+        vip_id = self.vip_spec.get('vip')
+        if vip_id is not None:
+            self.vip = neutron.get_vip(vip_id)
+            self.vip_need_delete = False
+        else:
+            # Create vip using specified params
+            self.vip = neutron.create_vip({'vip': self.vip_spec})['vip']
+
         return True
 
-    def enforce(self, cluster_id, action, **args):
-        pass
+    def detach(self, cluster_id):
+        if self.vip_need_delete:
+            neutron.delete_vip(self.vip)
+        if self.pool_need_delete:
+            neutron.delete_pool(self.pool)
 
-    def post_op(self, cluster_id, action, **args):
-        if action not in (consts.CLUSTER_ADD_NODES, consts.CLUSTER_SCALE_UP):
+        return True
+
+    def pre_op(self, cluster_id, action, policy_data):
+        if action not in (consts.CLUSTER_DEL_NODES, consts.CLUSTER_SCALE_IN):
+            return True
+        nodes = policy_data.get('nodes', [])
+        for node in nodes:
+            member_id = node.data.get('lb_member')
+            neutron.delete_member(member_id)
+
+        return True
+
+    def post_op(self, cluster_id, action, policy_data):
+        if action not in (consts.CLUSTER_ADD_NODES, consts.CLUSTER_SCALE_OUT):
             return True
 
-        # TODO(anyone): add nodes to loadbalancer
+        nodes = policy_data.get('nodes', [])
+        for node in nodes:
+            params = {
+                'pool_id': self.pool,
+                'address': node.data.get('ip'),
+                'protocol_port': self.protocol_port,
+                'admin_state_up': True,
+            }
+            member = neutron.create_member({'member': params})['member']
+            node.data.update('lb_member', member['id'])
+
         return True
