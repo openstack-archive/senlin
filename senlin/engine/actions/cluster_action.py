@@ -33,9 +33,14 @@ class ClusterAction(base.Action):
     '''An action performed on a cluster.'''
 
     ACTIONS = (
+        CLUSTER_CREATE, CLUSTER_DELETE, CLUSTER_UPDATE,
+        CLUSTER_ADD_NODES, CLUSTER_DEL_NODES,
+        CLUSTER_SCALE_OUT, CLUSTER_SCALE_IN,
+        CLUSTER_ATTACH_POLICY, CLUSTER_DETACH_POLICY,
+    ) = (
         consts.CLUSTER_CREATE, consts.CLUSTER_DELETE, consts.CLUSTER_UPDATE,
         consts.CLUSTER_ADD_NODES, consts.CLUSTER_DEL_NODES,
-        consts.CLUSTER_INFLATE, consts.CLUSTER_DEFLATE,
+        consts.CLUSTER_SCALE_OUT, consts.CLUSTER_SCALE_IN,
         consts.CLUSTER_ATTACH_POLICY, consts.CLUSTER_DETACH_POLICY,
     )
 
@@ -120,7 +125,7 @@ class ClusterAction(base.Action):
         if result == self.RES_OK:
             reason = 'Cluster creation succeeded'
             cluster.set_status(self.context, cluster.ACTIVE, reason)
-        elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_FAILED]:
+        elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_ERROR]:
             cluster.set_status(self.context, cluster.ERROR, reason)
         else:
             # RETRY or FAILED?
