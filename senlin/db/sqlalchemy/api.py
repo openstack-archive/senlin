@@ -291,11 +291,19 @@ def cluster_delete(context, cluster_id):
 
 # Nodes
 def node_create(context, values):
+    # This operation is always called with cluster and node locked
+    session = _session(context)
     node = models.Node()
     if 'status_reason' in values:
         values['status_reason'] = values['status_reason'][:255]
     node.update(values)
-    node.save(_session(context))
+    cluster_id = values.get('cluster_id', None)
+    if cluster_id is not None:
+        cluster = session.query(models.Cluster).get(cluster_id)
+        cluster.size += 1
+        cluster.save(session)
+
+    node.save(session)
     return node
 
 
