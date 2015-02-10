@@ -81,15 +81,19 @@ class ClusterAction(base.Action):
         return self.RES_OK, 'All dependents ended with success'
 
     def _create_nodes(self, cluster, count, policy_data):
+        '''Utility method for node creation.'''
+        placement = policy_data.get('placement', None)
+
         for m in range(count):
-            name = 'node-%s-%003d' % (cluster.id[:8], m + 1)
+            name = 'node-%s-%003d' % (cluster.id[:8], cluster.size + m + 1)
             node = node_mod.Node(name, cluster.profile_id, cluster.id,
                                  context=self.context)
-            placement = policy_data.get('placement', None)
+
             if placement is not None:
                 # We assume placement is a list
                 node.data['placement'] = placement[m]
             node.store(self.context)
+
             kwargs = {
                 'name': 'node_create_%s' % node.id[:8],
                 'target': node.id,
