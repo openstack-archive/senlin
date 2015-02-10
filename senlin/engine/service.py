@@ -641,6 +641,88 @@ class EngineService(service.Service):
         return action.to_dict()
 
     @request_context
+    def cluster_attach_policy(self, context, identity, policy, priority,
+                              level, cooldown, enabled):
+        db_cluster = self.cluster_find(context, identity)
+        db_policy = self.policy_find(context, policy)
+
+        LOG.info(_LI('Attaching policy %(policy)s to cluster %(cluster)s'),
+                 {'policy': policy, 'cluster': identity})
+
+        action_name = 'cluster_attach_policy_%s' % db_cluster.id[:8],
+        action = action_mod.Action(context, consts.CLUSTER_ATTACH_POLICY,
+                                   name=action_name,
+                                   target=db_cluster.id,
+                                   inputs={'policy_id': db_policy.id},
+                                   cause=action_mod.CAUSE_RPC)
+        action.store(context)
+        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
+                          None, action_id=action.id)
+
+        return action.to_dict()
+
+    @request_context
+    def cluster_detach_policy(self, context, identity, policy):
+        db_cluster = self.cluster_find(context, identity)
+        db_policy = self.policy_find(context, policy)
+
+        LOG.info(_LI('Detaching policy %(policy)s from cluster %(cluster)s'),
+                 {'policy': policy, 'cluster': identity})
+
+        action_name = 'cluster_detach_policy_%s' % db_cluster.id[:8],
+        action = action_mod.Action(context, consts.CLUSTER_DETACH_POLICY,
+                                   name=action_name,
+                                   target=db_cluster.id,
+                                   inputs={'policy_id': db_policy.id},
+                                   cause=action_mod.CAUSE_RPC)
+        action.store(context)
+        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
+                          None, action_id=action.id)
+
+        return action.to_dict()
+
+    @request_context
+    def cluster_enable_policy(self, context, identity, policy, priority,
+                              level, cooldown):
+        db_cluster = self.cluster_find(context, identity)
+        db_policy = self.policy_find(context, policy)
+
+        LOG.info(_LI('Enabling policy %(policy)s on cluster %(cluster)s'),
+                 {'policy': policy, 'cluster': identity})
+
+        action_name = 'cluster_enable_policy_%s' % db_cluster.id[:8],
+        action = action_mod.Action(context, consts.CLUSTER_ENABLE_POLICY,
+                                   name=action_name,
+                                   target=db_cluster.id,
+                                   inputs={'policy_id': db_policy.id},
+                                   cause=action_mod.CAUSE_RPC)
+        action.store(context)
+        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
+                          None, action_id=action.id)
+
+        return action.to_dict()
+
+    @request_context
+    def cluster_disable_policy(self, context, identity, policy):
+        db_cluster = self.cluster_find(context, identity)
+        db_policy = self.policy_find(context, policy)
+
+        LOG.info(_LI('Disabling policy %(policy)s on cluster %(cluster)s'),
+                 {'policy': policy, 'cluster': identity})
+
+        action_name = 'cluster_disable_policy_%s' % db_cluster.id[:8],
+        action = action_mod.Action(context, consts.CLUSTER_DISABLE_POLICY,
+                                   name=action_name,
+                                   target=db_cluster.id,
+                                   inputs={'policy_id': db_policy.id},
+                                   cause=action_mod.CAUSE_RPC)
+        action.store(context)
+        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
+                          None, action_id=action.id)
+
+        return action.to_dict()
+
+    @request_context
     def action_find(self, context, identity, show_deleted=False):
         '''Find a cluster with the given identity (could be name or ID).'''
         # TODO(Qiming): add show_deleted support

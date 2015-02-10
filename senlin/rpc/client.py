@@ -206,20 +206,29 @@ class EngineClient(object):
                                              identity=identity,
                                              nodes=nodes))
 
-    def cluster_attach_policy(self, ctxt, identity, policy):
+    def cluster_attach_policy(self, ctxt, identity, policy, priority,
+                              level, cooldown, enabled):
         return self.call(ctxt, self.make_msg('cluster_attach_policy',
                                              identity=identity,
-                                             policy=policy))
+                                             policy=policy,
+                                             priority=priority,
+                                             level=level,
+                                             cooldown=cooldown,
+                                             enabled=enabled))
 
     def cluster_detach_policy(self, ctxt, identity, policy):
         return self.call(ctxt, self.make_msg('cluster_detach_policy',
                                              identity=identity,
                                              policy=policy))
 
-    def cluster_enable_policy(self, ctxt, identity, policy):
+    def cluster_enable_policy(self, ctxt, identity, policy, priority,
+                              level, cooldown):
         return self.call(ctxt, self.make_msg('cluster_enable_policy',
                                              identity=identity,
-                                             policy=policy))
+                                             policy=policy,
+                                             priority=priority,
+                                             level=level,
+                                             cooldown=cooldown))
 
     def cluster_disable_policy(self, ctxt, identity, policy):
         return self.call(ctxt, self.make_msg('cluster_disable_policy',
