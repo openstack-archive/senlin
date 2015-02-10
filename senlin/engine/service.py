@@ -182,12 +182,11 @@ class EngineService(service.Service):
         return {}
 
     @request_context
-    def profile_find(self, context, identity, show_deleted=False):
+    def profile_find(self, context, identity):
         '''Find a profile with the given identity (could be name or ID).'''
-
+        # TODO(anyone): add support to show_deleted
         if uuidutils.is_uuid_like(identity):
-            profile = db_api.profile_get(context, identity,
-                                         show_deleted=show_deleted)
+            profile = db_api.profile_get(context, identity)
             if not profile:
                 profile = db_api.profile_get_by_name(context, identity)
         else:
@@ -361,6 +360,7 @@ class EngineService(service.Service):
     @request_context
     def cluster_create(self, context, name, size, profile_id, parent=None,
                        tags=None, timeout=0):
+        db_profile = self.profile_find(context, profile_id)
         LOG.info(_LI('Creating cluster %s'), name)
         ctx = context.to_dict()
         kwargs = {
@@ -371,7 +371,7 @@ class EngineService(service.Service):
             'tags': tags
         }
 
-        cluster = cluster_mod.Cluster(name, profile_id, size, **kwargs)
+        cluster = cluster_mod.Cluster(name, db_profile.id, size, **kwargs)
         cluster.store(context)
 
         # Build an Action for cluster creation
