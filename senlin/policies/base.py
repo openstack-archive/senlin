@@ -18,9 +18,9 @@ from senlin.db import api as db_api
 from senlin.engine import environment
 
 CHECK_RESULTS = (
-    CHECK_OK, CHECK_ERROR, CHECK_RETRY,
+    CHECK_OK, CHECK_ERROR
 ) = (
-    'OK', 'ERROR', 'RERTY'
+    'OK', 'ERROR'
 )
 
 
@@ -170,12 +170,6 @@ class Policy(object):
     def pre_op(self, cluster_id, action, **kwargs):
         '''Force all subclasses to implement an operation that will be invoked
         before an action.
-        '''
-        return NotImplemented
-
-    def enforce(self, cluster_id, action, **kwargs):
-        '''Force all subclasses to implement an operation that can be called
-        during an action.
         '''
         return NotImplemented
 
