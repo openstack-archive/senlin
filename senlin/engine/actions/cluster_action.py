@@ -181,10 +181,10 @@ class ClusterAction(base.Action):
             if not destroy:
                 action_name = consts.NODE_LEAVE
 
-        for node in nodes:
+        for node_id in nodes:
             action = base.Action(self.context, action_name,
-                                 name='node_delete_%s' % node.id[:8],
-                                 target=node.id,
+                                 name='node_delete_%s' % node_id[:8],
+                                 target=node_id,
                                  cause=base.CAUSE_DERIVED)
             action.store(self.context)
 
@@ -283,7 +283,7 @@ class ClusterAction(base.Action):
             reason = new_reason
         return result, reason
 
-    def do_del_nodes(self, cluster, policy_data=None):
+    def do_del_nodes(self, cluster, policy_data):
         nodes = self.inputs.get('nodes')
 
         # NOTE: node states might have changed before we lock the cluster
@@ -359,7 +359,8 @@ class ClusterAction(base.Action):
                 i = i - 1
 
         # The policy data may contain destroy flag and grace period option
-        result, new_reason = self._delete_nodes(cluster, nodes, policy_data)
+        result, new_reason = self._delete_nodes(cluster, candidates,
+                                                policy_data)
 
         if result != self.RES_OK:
             reason = new_reason
