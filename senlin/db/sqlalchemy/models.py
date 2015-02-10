@@ -200,6 +200,7 @@ class ClusterPolicies(BASE, SenlinBase):
                                   sqlalchemy.ForeignKey('policy.id'),
                                   nullable=False)
     cooldown = sqlalchemy.Column(sqlalchemy.Integer)
+    priority = sqlalchemy.Column(sqlalchemy.Integer)
     level = sqlalchemy.Column(sqlalchemy.Integer)
     enabled = sqlalchemy.Column(sqlalchemy.Boolean)
 
