@@ -80,7 +80,7 @@ class DeletionPolicy(base.Policy):
                                                   False)
         random.seed()
 
-    def _select_candicates(self, cluster_id, count, context):
+    def _select_candidates(self, context, cluster_id, count):
         candidates = []
         nodes = db_api.node_get_all_by_cluster(context, cluster_id)
         if count > len(nodes):
@@ -129,13 +129,14 @@ class DeletionPolicy(base.Policy):
             count = pd.get('count', 1)
             candidates = pd.get('candidates', [])
         else:
+            count = 1
             candidates = []
 
         # For certain operations ( e.g. DEL_NODES), the candidates might
         # have been specified
         if len(candidates) == 0:
-            candidates = self._select_candidates(cluster_id, count,
-                                                 action.context)
+            candidates = self._select_candidates(action.context, cluster_id,
+                                                 count)
         pd['candidates'] = candidates
         pd['destroy_after_deletion'] = self.destroy_after_deletion
         pd['grace_period'] = self.grace_period
