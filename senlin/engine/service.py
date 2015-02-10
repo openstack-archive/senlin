@@ -555,10 +555,15 @@ class EngineService(service.Service):
     @request_context
     def node_create(self, context, name, profile_id, cluster_id=None,
                     role=None, tags=None):
+        db_profile = self.profile_find(context, profile_id)
+        if cluster_id is not None:
+            db_cluster = self.cluster_find(context, cluster_id)
+            cluster_id = db_cluster.id
+
         LOG.info(_LI('Creating node %s'), name)
 
         # Create a node instance
-        node = node_mod.Node(name, profile_id, cluster_id, role=role,
+        node = node_mod.Node(name, db_profile.id, cluster_id, role=role,
                              tags=tags)
         node.store(context)
 
