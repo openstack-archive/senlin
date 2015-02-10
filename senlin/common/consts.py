@@ -32,7 +32,7 @@ ACTION_NAMES = (
     POLICY_ENABLE, POLICY_DISABLE, POLICY_UPDATE,
 ) = (
     'CLUSTER_CREATE', 'CLUSTER_DELETE', 'CLUSTER_UPDATE',
-    'CLUSTER_ADD_NODES', 'CLUSTER_DEL_NODES', 
+    'CLUSTER_ADD_NODES', 'CLUSTER_DEL_NODES',
     'CLUSTER_SCALE_OUT', 'CLUSTER_SCALE_IN',
     'CLUSTER_ATTACH_POLICY', 'CLUSTER_DETACH_POLICY',
 
@@ -87,6 +87,12 @@ POLICY_ATTRS = (
     'id', 'name', 'type',
     'spec', 'level', 'cooldown',
     'created_time', 'updated_time', 'deleted_time',
+)
+
+CLUSTER_POLICY_ATTRS = (
+    CP_POLICY_ID, CP_PRIORITY, CP_LEVEL, CP_COOLDOWN, CP_ENABLED,
+) = (
+    'policy_id', 'priority', 'level', 'cooldown', 'enabled',
 )
 
 EVENT_ATTRS = (

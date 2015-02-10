@@ -30,7 +30,7 @@ from senlin.rpc import client as rpc_client
 LOG = logging.getLogger(__name__)
 
 
-class InstantiationData(object):
+class ClusterData(object):
     '''The data accompanying a POST/PUT request to create/update a cluster.'''
 
     def __init__(self, data):
@@ -114,7 +114,7 @@ class ClusterController(object):
     def create(self, req, body):
         '''Create a new cluster.'''
 
-        data = InstantiationData(body)
+        data = ClusterData(body)
 
         cluster = self.rpc_client.cluster_create(req.context, data.name(),
                                                  data.size(), data.profile(),
@@ -138,7 +138,7 @@ class ClusterController(object):
     def update(self, req, cluster_id, body):
         '''Update an existing cluster with new parameters.'''
 
-        data = InstantiationData(body)
+        data = ClusterData(body)
 
         self.rpc_client.cluster_update(req.context,
                                        cluster_id,
@@ -175,17 +175,41 @@ class ClusterController(object):
             res = self.rpc_client.cluster_del_nodes(
                 req.context, cluster_id, nodes)
         elif this_action == self.ATTACH_POLICY:
+            args = body.get(this_action)
+            policy_id = args.get(consts.CP_POLICY_ID)
+            if policy_id is None:
+                raise exc.HTTPBadRequest(_('No policy specified'))
+            priority = args.get(consts.CP_PRIORITY)
+            level = args.get(consts.CP_LEVEL)
+            cooldown = args.get(consts.CP_COOLDOWN)
+            enabled = args.get(consts.CP_ENABLED)
             res = self.rpc_client.cluster_attach_policy(
-                req.context, cluster_id, body.get(this_action))
+                req.context, cluster_id, policy_id, priority, level, cooldown,
+                enabled)
         elif this_action == self.DETACH_POLICY:
+            args = body.get(this_action)
+            policy_id = args.get(consts.CP_POLICY_ID)
+            if policy_id is None:
+                raise exc.HTTPBadRequest(_('No policy specified'))
             res = self.rpc_client.cluster_detach_policy(
-                req.context, cluster_id, body.get(this_action))
+                req.context, cluster_id, policy_id)
         elif this_action == self.ENABLE_POLICY:
+            args = body.get(this_action)
+            policy_id = args.get(consts.CP_POLICY_ID)
+            if policy_id is None:
+                raise exc.HTTPBadRequest(_('No policy specified'))
+            priority = args.get(consts.CP_PRIORITY)
+            level = args.get(consts.CP_LEVEL)
+            cooldown = args.get(consts.CP_COOLDOWN)
             res = self.rpc_client.cluster_enable_policy(
-                req.context, cluster_id, body.get(this_action))
+                req.context, cluster_id, policy_id, priority, level, cooldown)
         elif this_action == self.DISABLE_POLICY:
+            args = body.get(this_action)
+            policy_id = args.get(consts.CP_POLICY_ID)
+            if policy_id is None:
+                raise exc.HTTPBadRequest(_('No policy specified'))
             res = self.rpc_client.cluster_disable_policy(
-                req.context, cluster_id, body.get(this_action))
+                req.context, cluster_id, policy_id)
         else:
             raise exc.HTTPInternalServerError(_('Unexpected action "%s"'),
                                               this_action)
