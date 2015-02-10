@@ -330,46 +330,34 @@ class Action(object):
         # Initialize an empty dict for policy check result
         data = policy_mod.PolicyData()
 
-        # Get list of policy IDs attached to cluster
-        policy_list = db_api.cluster_get_policies(self.context, cluster_id)
-
-        policy_ids = [p.id for p in policy_list if p.enabled]
-        policy_check_list = []
-        for pid in policy_ids:
-            policy = policy_mod.Policy.load(self.context, pid)
-            for t in policy.TARGET:
-                if t == (target, self.action):
-                    policy_check_list.append(policy)
-                    break
-
-        # No policy need to check, return data
-        if len(policy_check_list) == 0:
+        if target not in ['BEFORE', 'AFTER']:
             return data
 
-        while len(policy_check_list) != 0:
-            # Check all policies and collect return data
-            policy = policy_check_list[0]
+        # Get list of policy IDs attached to cluster
+        bindings = db_api.cluster_get_policies(self.context, cluster_id)
+
+        # Filter by enabled
+        filtered = [b for b in bindings if b.enabled]
+
+        # Sort the policies by their priority.
+        policies = sorted(filtered, key=lambda b: b.priority)
+
+        for p in policies:
+            policy = policy_mod.Policy.load(self.context, p.policy_id)
+            if (target, self.action) not in policy.TARGET:
+                continue
+
             if target == 'BEFORE':
-                data = policy.pre_op(self.cluster_id, self.action, data)
-            elif target == 'AFTER':
-                data = policy.post_op(self.cluster_id, self.action, data)
-            else:
-                data = data
+                method = getattr(policy, 'pre_op')
+            else:  # target == 'AFTER'
+                method = getattr(policy, 'post_op')
 
-            if data['result'] == policy_mod.CHECK_ERROR:
-                # Policy check failed, return
-                return False
-            elif data['result'] == policy_mod.CHECK_RETRY:
-                # Policy check need extra input, move it to the end of
-                # policy list and wait for retry
-                policy_check_list.remove(policy)
-                policy_check_list.append(policy)
-            else:
-                # Policy check succeeded
-                policy_check_list.remove(policy)
+            # Pass data from one policy to another
+            data = method(self.cluster_id, self, data)
 
-            # TODO(anyone): add retry limitation check to
-            # prevent endless loop on single policy
+            # Abort policy checking if failures found
+            if data.status == policy_mod.CHECK_ERROR:
+                return data
 
         return data
 
