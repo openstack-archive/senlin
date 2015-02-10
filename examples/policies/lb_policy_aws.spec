@@ -1,11 +1,7 @@
-# This is a spec for an AWS ELB load-balancer 
+# Sample load-balancing policy modled after AWS ELB load-balancer 
+
+# TODO(Qiming): Rework this based on ELB spec
 AvailabilityZones: []
-HealthCheck:
-  HealthyThreshold: 5 
-  Interval: 60
-  Target: 80
-  Timeout: 30
-  UnhealtyThreshold: 15 
 Instances: []
 Listeners:
   - InstancePort: 80
