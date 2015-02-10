@@ -24,16 +24,16 @@ class HealthPolicy(base.Policy):
         VM_STATUS_POLLING,
         LB_STATUS_POLLING,
     ) = (
-        'vm_lifecycle_events',
-        'vm_status_polling',
-        'lb_status_polling',
+        'VM_LIFECYCLE_EVENTS',
+        'NODE_STATUS_POLLING',
+        'LB_STATUS_POLLING',
     )
 
     TARGET = [
-        ('AFTER', consts.CLUSTER_SCALE_UP),
         ('AFTER', consts.CLUSTER_ADD_NODES),
-        ('BEFORE', consts.CLUSTER_SCALE_DOWN),
+        ('AFTER', consts.CLUSTER_SCALE_OUT),
         ('BEFORE', consts.CLUSTER_DEL_NODES),
+        ('BEFORE', consts.CLUSTER_SCALE_IN),
     ]
 
     # Should be ANY if profile provides
@@ -52,7 +52,7 @@ class HealthPolicy(base.Policy):
 
     def pre_op(self, cluster_id, action, **args):
         # Ignore actions that are not required to be processed at this stage
-        if action not in (consts.CLUSTER_SCALE_DOWN,
+        if action not in (consts.CLUSTER_SCALE_IN,
                           consts.CLUSTER_DEL_NODES):
             return True
 
@@ -65,7 +65,8 @@ class HealthPolicy(base.Policy):
 
     def post_op(self, cluster_id, action, **args):
         # Ignore irrelevant action here
-        if action not in (consts.CLUSTER_SCALE_UP, consts.CLUSTER_ADD_NODES):
+        if action not in (consts.CLUSTER_SCALE_OUT,
+                          consts.CLUSTER_ADD_NODES):
             return True
 
         # TODO(anyone): subscribe to vm-lifecycle-events for the specified VM
