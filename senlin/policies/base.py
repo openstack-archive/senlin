@@ -47,6 +47,9 @@ class PolicyData(collections.Mapping):
     def __iter__(self):
         return iter(self.data)
 
+    def update(self, newdata):
+        return self.data.update(newdata)
+
     def __repr__(self):
         return ("Check Result: %s (%s)\n\t" % (self.status, self.reason) +
                 "\n\t".join(self.data.values()))
