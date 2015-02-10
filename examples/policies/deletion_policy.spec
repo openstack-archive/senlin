@@ -5,7 +5,7 @@
 criteria: OLDEST_FIRST
 
 # Whether deleted node should be destroyed 
-destroy_after_delete: True
+destroy_after_deletion: True
 
 # Length in number of seconds before the actual deletion happens
 # This param buys an instance some time before deletion
