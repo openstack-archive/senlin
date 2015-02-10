@@ -39,7 +39,7 @@ Output: policy_data
 
 import random
 
-from senlin.common import senlin_consts as consts
+from senlin.common import consts
 from senlin.db import api as db_api
 from senlin.policies import base
 

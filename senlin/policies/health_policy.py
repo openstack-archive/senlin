@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from senlin.common import senlin_consts as consts
+from senlin.common import consts
 from senlin.policies import base
 
 
