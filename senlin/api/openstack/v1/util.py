@@ -16,8 +16,6 @@ import functools
 import six
 from webob import exc
 
-from senlin.common.i18n import _
-
 
 def policy_enforce(handler):
     """Decorator that enforces policies.

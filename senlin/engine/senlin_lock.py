@@ -14,8 +14,8 @@
 import contextlib
 import uuid
 
-import oslo_messaging
 from oslo_config import cfg
+import oslo_messaging
 from oslo_utils import excutils
 
 from senlin.common import exception

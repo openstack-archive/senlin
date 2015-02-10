@@ -10,8 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import oslo_messaging
 from oslo_config import cfg
+import oslo_messaging
 from osprofiler import profiler
 
 from senlin.common import consts

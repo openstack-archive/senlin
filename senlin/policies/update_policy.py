@@ -41,11 +41,8 @@ class UpdatePolicy(base.Policy):
 
     def pre_op(self, cluster_id, action, policy_data):
         # TODO(anyone): compute batches
-        policy_data['candidates'] = candidates
+        policy_data['candidates'] = []
         return True
-
-    def enforce(self, cluster_id, action, policy_data):
-        return candidates
 
     def post_op(self, cluster_id, action, policy_data):
         # TODO(anyone): handle pause_time here

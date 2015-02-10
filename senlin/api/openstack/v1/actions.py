@@ -34,7 +34,7 @@ class ActionData(object):
 
     def name(self):
         if self.NAME not in self.data:
-            raise exc.HTTPBadRequest(_("No profile name specified"))
+            raise exc.HTTPBadRequest(_("No action name specified"))
         return self.data[consts.ACTION_NAME]
 
     def target(self):

@@ -12,8 +12,8 @@
 
 import eventlet
 
-import oslo_messaging
 from oslo_config import cfg
+import oslo_messaging
 from oslo_serialization import jsonutils
 
 from senlin.common import context
