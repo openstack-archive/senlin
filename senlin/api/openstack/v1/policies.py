@@ -17,7 +17,7 @@ Policy endpoint for Senlin v1 ReST API.
 from webob import exc
 
 from senlin.api.openstack.v1 import util
-from senlin.common import attr
+from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import serializers
 from senlin.common import wsgi
@@ -30,25 +30,25 @@ class PolicyData(object):
         self.data = data['policy']
 
     def name(self):
-        if attr.POLICY_NAME not in self.data:
+        if consts.POLICY_NAME not in self.data:
             raise exc.HTTPBadRequest(_("No policy name specified"))
-        return self.data[attr.POLICY_NAME]
+        return self.data[consts.POLICY_NAME]
 
     def spec(self):
-        if attr.POLICY_SPEC not in self.data:
+        if consts.POLICY_SPEC not in self.data:
             raise exc.HTTPBadRequest(_("No policy spec provided"))
-        return self.data[attr.POLICY_SPEC]
+        return self.data[consts.POLICY_SPEC]
 
     def type(self):
-        if attr.POLICY_TYPE not in self.data:
+        if consts.POLICY_TYPE not in self.data:
             raise exc.HTTPBadRequest(_("No profile type provided"))
-        return self.data[attr.POLICY_TYPE]
+        return self.data[consts.POLICY_TYPE]
 
     def level(self):
-        return self.data.get(attr.POLICY_LEVEL)
+        return self.data.get(consts.POLICY_LEVEL)
 
     def cooldown(self):
-        return self.data.get(attr.POLICY_COOLDOWN)
+        return self.data.get(consts.POLICY_COOLDOWN)
 
 
 class PolicyController(object):

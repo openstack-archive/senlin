@@ -17,6 +17,7 @@ Node endpoint for Senlin v1 ReST API.
 from webob import exc
 
 from senlin.api.openstack.v1 import util
+from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import serializers
 from senlin.common import wsgi
@@ -29,41 +30,39 @@ LOG = logging.getLogger(__name__)
 class InstantiationData(object):
     '''The data accompanying a PUT/POST request to create/update a node.'''
 
-    PARAMS = (
-        NAME, CLUSTER_ID, PROFILE_ID, ROLE, TAGS,
-    ) = (
-        'name', 'cluster_id', 'profile_id', 'role', 'tags',
-    )
+    PARAMS = (consts.NODE_NAME, consts.NODE_CLUSTER_ID,
+              consts.NODE_PROFILE_ID, consts.NODE_ROLE,
+              consts.NODE_TAGS,)
 
     def __init__(self, data):
         self.data = data['node']
 
     def name(self):
-        if self.NAME not in self.data:
+        if consts.NODE_NAME not in self.data:
             # TODO(Anyone): Generate a random name for the node
             raise exc.HTTPBadRequest(_("No node name specified."))
-        return self.data[self.NAME]
+        return self.data[consts.NODE_NAME]
 
     def cluster_id(self):
         # cluster_id can be empty, which means the node is an orphaned node
-        if self.CLUSTER_ID not in self.data:
+        if consts.NODE_CLUSTER_ID not in self.data:
             return None
-        return self.data[self.CLUSTER_ID]
+        return self.data[consts.NODE_CLUSTER_ID]
 
     def profile_id(self):
-        if self.PROFILE_ID not in self.data:
+        if consts.NODE_PROFILE_ID not in self.data:
             raise exc.HTTPBadRequest(_("No profile ID provided."))
-        return self.data[self.PROFILE_ID]
+        return self.data[consts.NODE_PROFILE_ID]
 
     def role(self):
-        if self.ROLE not in self.data:
+        if consts.NODE_ROLE not in self.data:
             return None
-        return self.data[self.ROLE]
+        return self.data[consts.NODE_ROLE]
 
     def tags(self):
-        if self.TAGS not in self.data:
+        if consts.NODE_TAGS not in self.data:
             return {}
-        return self.data[self.TAGS]
+        return self.data[consts.NODE_TAGS]
 
 
 class NodeController(object):

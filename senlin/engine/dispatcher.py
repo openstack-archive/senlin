@@ -14,7 +14,7 @@ import oslo_messaging
 from oslo_config import cfg
 from osprofiler import profiler
 
-from senlin.common import attr
+from senlin.common import consts
 from senlin.common.i18n import _LI
 from senlin.common import messaging as rpc_messaging
 from senlin.openstack.common import log as logging
@@ -91,21 +91,21 @@ def notify(context, call, engine_id, *args, **kwargs):
     '''
 
     timeout = cfg.CONF.engine_life_check_timeout
-    client = rpc_messaging.get_rpc_client(version=attr.RPC_API_VERSION)
+    client = rpc_messaging.get_rpc_client(version=consts.RPC_API_VERSION)
 
     if engine_id:
         # Notify specific dispatcher identified by engine_id
         call_context = client.prepare(
-            version=attr.RPC_API_VERSION,
+            version=consts.RPC_API_VERSION,
             timeout=timeout,
-            topic=attr.ENGINE_DISPATCHER_TOPIC,
+            topic=consts.ENGINE_DISPATCHER_TOPIC,
             server=engine_id)
     else:
         # Broadcast to all disptachers
         call_context = client.prepare(
-            version=attr.RPC_API_VERSION,
+            version=consts.RPC_API_VERSION,
             timeout=timeout,
-            topic=attr.ENGINE_DISPATCHER_TOPIC)
+            topic=consts.ENGINE_DISPATCHER_TOPIC)
 
     try:
         call_context.call(context, call, *args, **kwargs)

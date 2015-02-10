@@ -20,7 +20,7 @@ from webob import exc
 from oslo_config import cfg
 
 from senlin.api.openstack.v1 import util
-from senlin.common import attr
+from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import serializers
 from senlin.common import wsgi
@@ -37,28 +37,28 @@ class InstantiationData(object):
         self.data = data['cluster']
 
     def name(self):
-        if attr.CLUSTER_NAME not in self.data:
+        if consts.CLUSTER_NAME not in self.data:
             raise exc.HTTPBadRequest(_("No cluster name specified."))
-        return self.data[attr.CLUSTER_NAME]
+        return self.data[consts.CLUSTER_NAME]
 
     def size(self):
-        if attr.CLUSTER_SIZE not in self.data:
+        if consts.CLUSTER_SIZE not in self.data:
             raise exc.HTTPBadRequest(_("No cluster size provided."))
-        return self.data[attr.CLUSTER_SIZE]
+        return self.data[consts.CLUSTER_SIZE]
 
     def profile(self):
-        if attr.CLUSTER_PROFILE not in self.data:
+        if consts.CLUSTER_PROFILE not in self.data:
             raise exc.HTTPBadRequest(_("No cluster profile provided."))
-        return self.data[attr.CLUSTER_PROFILE]
+        return self.data[consts.CLUSTER_PROFILE]
 
     def parent(self):
-        return self.data.get(attr.CLUSTER_PARENT, None)
+        return self.data.get(consts.CLUSTER_PARENT, None)
 
     def tags(self):
-        return self.data.get(attr.CLUSTER_TAGS, None)
+        return self.data.get(consts.CLUSTER_TAGS, None)
 
     def timeout(self):
-        return self.data.get(attr.CLUSTER_TIMEOUT,
+        return self.data.get(consts.CLUSTER_TIMEOUT,
                              cfg.CONF.default_action_timeout)
 
 

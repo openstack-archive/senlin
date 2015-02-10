@@ -22,7 +22,7 @@ from oslo_db.sqlalchemy import session as db_session
 from oslo_db.sqlalchemy import utils
 from sqlalchemy.orm import session as orm_session
 
-from senlin.common import attr
+from senlin.common import consts
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.db.sqlalchemy import filters as db_filters
@@ -238,10 +238,10 @@ def cluster_get_all(context, limit=None, marker=None, sort_keys=None,
         filters = {}
 
     sort_key_map = {
-        attr.CLUSTER_NAME: models.Cluster.name.key,
-        attr.CLUSTER_STATUS: models.Cluster.status.key,
-        attr.CLUSTER_CREATED_TIME: models.Cluster.created_time.key,
-        attr.CLUSTER_UPDATED_TIME: models.Cluster.updated_time.key,
+        consts.CLUSTER_NAME: models.Cluster.name.key,
+        consts.CLUSTER_STATUS: models.Cluster.status.key,
+        consts.CLUSTER_CREATED_TIME: models.Cluster.created_time.key,
+        consts.CLUSTER_UPDATED_TIME: models.Cluster.updated_time.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
@@ -338,12 +338,12 @@ def node_get_all(context, cluster_id=None, show_deleted=False,
         filters = {}
 
     sort_key_map = {
-        attr.NODE_INDEX: models.Node.index.key,
-        attr.NODE_NAME: models.Node.name.key,
-        attr.NODE_CREATED_TIME: models.Node.created_time.key,
-        attr.NODE_UPDATED_TIME: models.Node.updated_time.key,
-        attr.NODE_DELETED_TIME: models.Node.deleted_time.key,
-        attr.NODE_STATUS: models.Node.status.key,
+        consts.NODE_INDEX: models.Node.index.key,
+        consts.NODE_NAME: models.Node.name.key,
+        consts.NODE_CREATED_TIME: models.Node.created_time.key,
+        consts.NODE_UPDATED_TIME: models.Node.updated_time.key,
+        consts.NODE_DELETED_TIME: models.Node.deleted_time.key,
+        consts.NODE_STATUS: models.Node.status.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
     query = db_filters.exact_filter(query, models.Node, filters)
@@ -586,13 +586,13 @@ def policy_get_all(context, limit=None, marker=None, sort_keys=None,
         filters = {}
 
     sort_key_map = {
-        attr.POLICY_TYPE: models.Policy.type.key,
-        attr.POLICY_NAME: models.Policy.name.key,
-        attr.POLICY_LEVEL: models.Policy.level.key,
-        attr.POLICY_COOLDOWN: models.Policy.cooldown.key,
-        attr.POLICY_CREATED_TIME: models.Policy.created_time.key,
-        attr.POLICY_UPDATED_TIME: models.Policy.updated_time.key,
-        attr.POLICY_DELETED_TIME: models.Policy.deleted_time.key,
+        consts.POLICY_TYPE: models.Policy.type.key,
+        consts.POLICY_NAME: models.Policy.name.key,
+        consts.POLICY_LEVEL: models.Policy.level.key,
+        consts.POLICY_COOLDOWN: models.Policy.cooldown.key,
+        consts.POLICY_CREATED_TIME: models.Policy.created_time.key,
+        consts.POLICY_UPDATED_TIME: models.Policy.updated_time.key,
+        consts.POLICY_DELETED_TIME: models.Policy.deleted_time.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
@@ -721,13 +721,13 @@ def profile_get_all(context, limit=None, marker=None, sort_keys=None,
         filters = {}
 
     sort_key_map = {
-        attr.PROFILE_TYPE: models.Profile.type.key,
-        attr.PROFILE_NAME: models.Profile.name.key,
-        attr.PROFILE_PERMISSION: models.Profile.permission.key,
-        attr.PROFILE_CREATED_TIME: models.Profile.created_time.key,
-        attr.PROFILE_UPDATED_TIME: models.Profile.updated_time.key,
-        attr.PROFILE_DELETED_TIME: models.Profile.deleted_time.key,
-        attr.PROFILE_TAGS: models.Profile.tags.key,
+        consts.PROFILE_TYPE: models.Profile.type.key,
+        consts.PROFILE_NAME: models.Profile.name.key,
+        consts.PROFILE_PERMISSION: models.Profile.permission.key,
+        consts.PROFILE_CREATED_TIME: models.Profile.created_time.key,
+        consts.PROFILE_UPDATED_TIME: models.Profile.updated_time.key,
+        consts.PROFILE_DELETED_TIME: models.Profile.deleted_time.key,
+        consts.PROFILE_TAGS: models.Profile.tags.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
@@ -849,8 +849,8 @@ def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
         filters = {}
 
     sort_key_map = {
-        attr.EVENT_TIMESTAMP: models.Event.timestamp.key,
-        attr.EVENT_OBJ_TYPE: models.Event.obj_type.key,
+        consts.EVENT_TIMESTAMP: models.Event.timestamp.key,
+        consts.EVENT_OBJ_TYPE: models.Event.obj_type.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
@@ -960,18 +960,18 @@ def action_get_all(context, filters=None, limit=None, marker=None,
         filters = {}
 
     sort_key_map = {
-        attr.ACTION_NAME: models.Action.name.key,
-        attr.ACTION_TARGET: models.Action.target.key,
-        attr.ACTION_ACTION: models.Action.action.key,
-        attr.ACTION_INTERVAL: models.Action.interval.key,
-        attr.ACTION_START_TIME: models.Action.start_time.key,
-        attr.ACTION_END_TIME: models.Action.end_time.key,
-        attr.ACTION_INPUTS: models.Action.inputs.key,
-        attr.ACTION_OUTPUTS: models.Action.outputs.key,
-        attr.ACTION_DEPENDS_ON: models.Action.depends_on.key,
-        attr.ACTION_DEPENDED_BY: models.Action.depended_by.key,
-        attr.ACTION_STATUS: models.Action.status.key,
-        attr.ACTION_STATUS_REASON: models.Action.status_reason.key,
+        consts.ACTION_NAME: models.Action.name.key,
+        consts.ACTION_TARGET: models.Action.target.key,
+        consts.ACTION_ACTION: models.Action.action.key,
+        consts.ACTION_INTERVAL: models.Action.interval.key,
+        consts.ACTION_START_TIME: models.Action.start_time.key,
+        consts.ACTION_END_TIME: models.Action.end_time.key,
+        consts.ACTION_INPUTS: models.Action.inputs.key,
+        consts.ACTION_OUTPUTS: models.Action.outputs.key,
+        consts.ACTION_DEPENDS_ON: models.Action.depends_on.key,
+        consts.ACTION_DEPENDED_BY: models.Action.depended_by.key,
+        consts.ACTION_STATUS: models.Action.status.key,
+        consts.ACTION_STATUS_REASON: models.Action.status_reason.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 

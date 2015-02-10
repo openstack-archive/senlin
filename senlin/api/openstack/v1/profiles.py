@@ -17,6 +17,7 @@ Profile endpoint for Senlin v1 ReST API.
 from webob import exc
 
 from senlin.api.openstack.v1 import util
+from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import serializers
 from senlin.common import wsgi
@@ -26,35 +27,33 @@ from senlin.rpc import client as rpc_client
 class ProfileData(object):
     '''The data accompanying a POST/PUT request to create/update a profile.'''
 
-    PARAMS = (
-        NAME, SPEC, TYPE, PERMISSION, TAGS,
-    ) = (
-        'name', 'spec', 'type', 'permission', 'tags',
-    )
+    PARAMS = (consts.PROFILE_NAME, consts.PROFILE_SPEC,
+              consts.PROFILE_TYPE, consts.PROFILE_PERMISSION,
+              consts.PROFILE_TAGS)
 
     def __init__(self, data):
         self.data = data['profile']
 
     def name(self):
-        if self.NAME not in self.data:
+        if consts.PROFILE_NAME not in self.data:
             raise exc.HTTPBadRequest(_("No profile name specified"))
-        return self.data[self.NAME]
+        return self.data[consts.PROFILE_NAME]
 
     def spec(self):
-        if self.SPEC not in self.data:
+        if consts.PROFILE_SPEC not in self.data:
             raise exc.HTTPBadRequest(_("No profile spec provided"))
-        return self.data[self.SPEC]
+        return self.data[consts.PROFILE_SPEC]
 
     def type(self):
-        if self.TYPE not in self.data:
+        if consts.PROFILE_TYPE not in self.data:
             raise exc.HTTPBadRequest(_("No profile type provided"))
-        return self.data[self.TYPE]
+        return self.data[consts.PROFILE_TYPE]
 
     def permission(self):
-        return self.data.get(self.PERMISSION)
+        return self.data.get(consts.PROFILE_PERMISSION)
 
     def tags(self):
-        return self.data.get(self.TAGS)
+        return self.data.get(consts.PROFILE_TAGS)
 
 
 class ProfileController(object):

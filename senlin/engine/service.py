@@ -18,7 +18,7 @@ from oslo_config import cfg
 from oslo_utils import uuidutils
 from osprofiler import profiler
 
-from senlin.common import attr
+from senlin.common import consts
 from senlin.common import context
 from senlin.common import exception
 from senlin.common.i18n import _
@@ -90,7 +90,7 @@ class EngineService(service.Service):
         # is ready
         self.host = host
         self.topic = topic
-        self.dispatcher_topic = attr.ENGINE_DISPATCHER_TOPIC
+        self.dispatcher_topic = consts.ENGINE_DISPATCHER_TOPIC
 
         #params for periodic running task
         if periodic_interval_max is None:
@@ -119,7 +119,7 @@ class EngineService(service.Service):
         # stop until being notified or the engine is stopped.
         self.dispatcher = dispatcher.Dispatcher(self,
                                                 self.dispatcher_topic,
-                                                attr.RPC_API_VERSION,
+                                                consts.RPC_API_VERSION,
                                                 self.TG)
         LOG.debug("Starting dispatcher for engine %s" % self.engine_id)
 
@@ -136,7 +136,7 @@ class EngineService(service.Service):
 
         self.dispatcher.start()
 
-        target = messaging.Target(version=attr.RPC_API_VERSION,
+        target = messaging.Target(version=consts.RPC_API_VERSION,
                                   server=self.host,
                                   topic=self.topic)
         self.target = target

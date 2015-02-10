@@ -10,10 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-'''
-Entity attribute names.
-'''
-
 RPC_ATTRS = (
     ENGINE_TOPIC,
     ENGINE_DISPATCHER_TOPIC,
@@ -23,6 +19,29 @@ RPC_ATTRS = (
     'engine-dispatcher',
     '1.0',
 )
+
+ACTION_NAMES = (
+    CLUSTER_CREATE, CLUSTER_DELETE, CLUSTER_UPDATE,
+    CLUSTER_ADD_NODES, CLUSTER_DEL_NODES,
+    CLUSTER_SCALE_OUT, CLUSTER_SCALE_IN,
+    CLUSTER_ATTACH_POLICY, CLUSTER_DETACH_POLICY,
+
+    NODE_CREATE, NODE_DELETE, NODE_UPDATE,
+    NODE_JOIN, NODE_LEAVE,
+
+    POLICY_ENABLE, POLICY_DISABLE, POLICY_UPDATE,
+) = (
+    'CLUSTER_CREATE', 'CLUSTER_DELETE', 'CLUSTER_UPDATE',
+    'CLUSTER_ADD_NODES', 'CLUSTER_DEL_NODES', 
+    'CLUSTER_SCALE_OUT', 'CLUSTER_SCALE_IN',
+    'CLUSTER_ATTACH_POLICY', 'CLUSTER_DETACH_POLICY',
+
+    'NODE_CREATE', 'NODE_DELETE', 'NODE_UPDATE',
+    'NODE_JOIN', 'NODE_LEAVE',
+
+    'POLICY_ENABLE', 'POLICY_DISABLE', 'POLICY_UPDATE',
+)
+
 
 CLUSTER_ATTRS = (
     CLUSTER_NAME, CLUSTER_PROFILE, CLUSTER_SIZE,
@@ -41,23 +60,23 @@ CLUSTER_ATTRS = (
 )
 
 NODE_ATTRS = (
-    NODE_INDEX, NODE_NAME,
+    NODE_INDEX, NODE_NAME, NODE_PROFILE_ID, NODE_CLUSTER_ID,
     NODE_CREATED_TIME, NODE_UPDATED_TIME, NODE_DELETED_TIME,
-    NODE_STATUS,
+    NODE_STATUS, NODE_ROLE, NODE_TAGS,
 ) = (
-    'index', 'name',
+    'index', 'name', 'profile_id', 'cluster_id',
     'created_time', 'updated_time', 'deleted_time',
-    'status',
+    'status', 'role', 'tags',
 )
 
 PROFILE_ATTRS = (
     PROFILE_ID, PROFILE_NAME, PROFILE_TYPE, PROFILE_PERMISSION,
     PROFILE_CREATED_TIME, PROFILE_UPDATED_TIME, PROFILE_DELETED_TIME,
-    PROFILE_TAGS,
+    PROFILE_SPEC, PROFILE_TAGS,
 ) = (
     'id', 'name', 'type', 'permission',
     'created_time', 'updated_time', 'deleted_time',
-    'tags',
+    'spec', 'tags',
 )
 
 POLICY_ATTRS = (
