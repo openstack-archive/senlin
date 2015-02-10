@@ -9,17 +9,23 @@
 protocol_port: 80
 
 #### Pool properties
-protocol: HTTP
 
-# Subnet for the port on which members can be connected
-subnet: private_subnet
+pool:
+  # Pool ID/name, if given can use an existing pool
+  # pool: <ID>
 
-# Valid values include:
-# ROUND_ROBIN, LEAST_CONNECTIONS, SOURCE_IP
-lb_method: ROUND_ROBIN
+  # Protocol used for load balancing
+  protocol: HTTP
 
-# Administrative state of the pool
-admin_state_up: True
+  # Subnet for the port on which members can be connected
+  subnet: private_subnet
+
+  # Valid values include:
+  # ROUND_ROBIN, LEAST_CONNECTIONS, SOURCE_IP
+  lb_method: ROUND_ROBIN
+
+  # Administrative state of the pool
+  admin_state_up: True
 
 # IP address and port of the pool
 vip:
