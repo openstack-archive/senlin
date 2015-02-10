@@ -24,7 +24,7 @@ class PlacementPolicy(base.Policy):
     __type_name__ = 'PlacementPolicy'
 
     TARGET = [
-        ('WHEN', consts.CLUSTER_SCALE_UP),
+        ('BEFORE', consts.CLUSTER_SCALE_OUT),
     ]
 
     PROFILE_TYPE = [
