@@ -75,17 +75,17 @@ class LoadBalancingPolicy(base.Policy):
 
     def pre_op(self, cluster_id, action, policy_data):
         if action not in (consts.CLUSTER_DEL_NODES, consts.CLUSTER_SCALE_IN):
-            return True
+            return policy_data
         nodes = policy_data.get('nodes', [])
         for node in nodes:
             member_id = node.data.get('lb_member')
             neutron.delete_member(member_id)
 
-        return True
+        return policy_data
 
     def post_op(self, cluster_id, action, policy_data):
         if action not in (consts.CLUSTER_ADD_NODES, consts.CLUSTER_SCALE_OUT):
-            return True
+            return policy_data
 
         nodes = policy_data.get('nodes', [])
         for node in nodes:
@@ -98,4 +98,4 @@ class LoadBalancingPolicy(base.Policy):
             member = neutron.create_member({'member': params})['member']
             node.data.update('lb_member', member['id'])
 
-        return True
+        return policy_data

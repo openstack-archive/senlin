@@ -57,7 +57,6 @@ class ScalingPolicy(base.Policy):
         # TODO(anyone): check if new size will break min_size or max_size
         # constraints
         policy_data['status'] = self.CHECK_OK
-
         adjustment = self.adjustment_number
         nodes = db_api.node_get_all_by_cluster(cluster_id)
         current_size = len(nodes)
@@ -66,14 +65,10 @@ class ScalingPolicy(base.Policy):
         elif current_size + adjustment < self.min_size:
             adjustment = current_size - self.min_size
 
-        policy_data['count'] = adjustment
+        pd = {'count': adjustment}
+        if action == consts.CLUSTER_SCALE_OUT:
+            policy_data['placement'] = pd
+        elif action == consts.CLUSTER_SCALE_IN:
+            policy_data['deletion'] = pd
 
-        return policy_data
-
-    def enforce(self, cluster_id, action, policy_data):
-        policy_data['status'] = self.CHECK_OK
-        return policy_data
-
-    def post_op(self, cluster_id, action, policy_data):
-        policy_data['status'] = self.CHECK_OK
         return policy_data

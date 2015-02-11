@@ -10,6 +10,34 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+'''
+Policy for updating a cluster.
+'''
+
+'''
+NOTE: How update policy works
+Input:
+  cluster: the cluste whose nodes are to be updated.
+Output:
+  policy_data: A dictionary containing a detailed update schedule.
+  {
+    'status': 'OK',
+    'update': {
+      'pause_time': 2,
+      'plan': [{
+          'node-id-1',
+          'node-id-2',
+        }, {
+          'node-id-3',
+          'node-id-4',
+        }, {
+          'node-id-5',
+        }
+      ]
+    }
+  }
+'''
+
 from senlin.common import consts
 from senlin.policies import base
 

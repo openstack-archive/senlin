@@ -10,6 +10,38 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+'''
+Policy for placing nodes across AZs and/or regions.
+'''
+
+'''
+NOTE: How placement policy works
+Input:
+  cluster: cluster whose nodes are to be manipulated.
+  policy_data.placement:
+    - count: number of nodes to create; it can be decision from a scaling
+             policy. If no scaling policy is in effect, the count will be
+             assumed to be 1.
+Output:
+  policy_data: A dictionary containing scheduling decisions made.
+  {
+    'status': 'OK',
+    'placement': {
+      'count': 2,
+      'placements': [
+        {
+          'AZ': 'nova-1',
+          'region': 'RegionOne',
+        },
+        {
+          'AZ': 'nova-2',
+          'region': 'RegionTwo',
+        }
+      ]
+    }
+  }
+'''
+
 from senlin.common import consts
 from senlin.policies import base
 
@@ -38,15 +70,8 @@ class PlacementPolicy(base.Policy):
         self.regions = self.spec.get('regions')
         self.AZs = self.spec.get('AZs')
 
-    def pre_op(self, cluster_id, action, **args):
+    def pre_op(self, cluster_id, action, policy_data):
+        '''Call back when new nodes are created for a cluster.
+        '''
         # TODO(anyone): calculate available AZs and or regions
-        return True
-
-    def enforce(self, cluster_id, action, **kwargs):
-        # we expect kwargs to carry node profile information before the node
-        # is created.
-        # TODO(anyone): modify node's scheduler hints and return them
-        return True
-
-    def post_op(self, cluster_id, action, **kwargs):
-        pass
+        return policy_data

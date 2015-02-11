@@ -50,6 +50,21 @@ class HealthPolicy(base.Policy):
         self.grace_period = self.spec.get('grace_period')
         self.check_type = self.spec.get('check_type')
 
+    def attach(self, cluster_id):
+        '''Hook for policy attach.
+
+        Initialize the health check mechanism for existing nodes in cluster.
+        '''
+        # TODO(anyone): implement this
+        return True
+
+    def detach(self, cluster_id):
+        '''Hook for policy detach.
+
+        Deinitialize the health check mechanism (for the cluster).
+        '''
+        return True
+
     def pre_op(self, cluster_id, action, **args):
         # Ignore actions that are not required to be processed at this stage
         if action not in (consts.CLUSTER_SCALE_IN,
@@ -59,9 +74,6 @@ class HealthPolicy(base.Policy):
         # TODO(anyone): Unsubscribe nodes from backend health monitoring
         #               infrastructure
         return True
-
-    def enforce(self, cluster_id, action, **args):
-        pass
 
     def post_op(self, cluster_id, action, **args):
         # Ignore irrelevant action here

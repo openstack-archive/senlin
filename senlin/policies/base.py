@@ -170,17 +170,25 @@ class Policy(object):
 
         return self.id
 
-    def pre_op(self, cluster_id, action, **kwargs):
-        '''Force all subclasses to implement an operation that will be invoked
-        before an action.
+    def attach(self, cluster_id, **kwargs):
+        '''Method to be invoked before the policy is attached to a cluster.
         '''
-        return NotImplemented
+        return True
 
-    def post_op(self, cluster_id, action, **kwargs):
-        '''Force all subclasses to implement an operation that will be
-        performed after an action.
+    def detach(self, cluster_id, **kwargs):
+        '''Method to be invoked before the policy is detached from a cluster.
         '''
-        return NotImplemented
+        return True
+
+    def pre_op(self, cluster_id, action, policy_data):
+        '''A method that will be invoked before an action execution.
+        '''
+        return policy_data
+
+    def post_op(self, cluster_id, action, policy_data):
+        '''A method that will be invoked after an action execution.
+        '''
+        return policy_data
 
     def to_dict(self):
         pb_dict = {

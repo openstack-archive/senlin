@@ -20,8 +20,8 @@ Input:
   cluster: cluster whose nodes can be deleted
   policy_data.deletion:
     - count: number of nodes to delete; it can be customized by a
-             scaling policy for example. If no scaling policy is
-             effective, deletion count is assumed to be 1
+             scaling policy for example. If no scaling policy is in
+             effect, deletion count is assumed to be 1
   self.criteria: list of criteria for sorting nodes
 Output: policy_data
   {
@@ -141,8 +141,4 @@ class DeletionPolicy(base.Policy):
         pd['destroy_after_deletion'] = self.destroy_after_deletion
         pd['grace_period'] = self.grace_period
         policy_data.update({'deletion': pd})
-        return policy_data
-
-    def post_op(self, cluster_id, action, policy_data):
-        # TODO(anyone): reduce desired_capacity if needed
         return policy_data
