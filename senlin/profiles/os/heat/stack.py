@@ -144,8 +144,6 @@ class StackProfile(base.Profile):
         try:
             self.heat().stack_delete(id=self.stack_id)
         except Exception as ex:
-            if isinstance(ex, exception.NotFound):
-                pass
             raise ex
 
         # Wait for action to complete/fail
