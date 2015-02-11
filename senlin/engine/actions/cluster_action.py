@@ -207,7 +207,7 @@ class ClusterAction(base.Action):
     def do_delete(self, cluster, policy_data):
         reason = 'Deletion in progress'
         cluster.set_status(self.context, cluster.DELETING, reason)
-        nodes = cluster.get_nodes()
+        nodes = [node.id for node in cluster.get_nodes()]
 
         # For cluster delete, we delete the nodes
         data = {
@@ -222,8 +222,7 @@ class ClusterAction(base.Action):
             res = cluster.do_delete(self.context)
             if not res:
                 return self.RES_ERROR, 'Cannot delete cluster object.'
-
-        if result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_FAILED]:
+        elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_ERROR]:
             cluster.set_status(self.context, cluster.ACTIVE, reason)
         else:
             # RETRY
@@ -323,13 +322,20 @@ class ClusterAction(base.Action):
         return result, reason
 
     def do_scale_out(self, cluster, policy_data):
-        # Check if we have got hints as results from policy checking
-        count = policy_data.get('count', 1)
+        # We may get a scale count from the request directly, if that is the
+        # case, we will use it for scaling. Or else, we check if we have got
+        # hints from policy checking. We use policy output if any, or else
+        # the count is set to 1 as default.
+        count = self.inputs.get('count', 0)
+        if count == 0:
+            pd = policy_data.get('placement', None)
+            if pd is not None:
+                count = pd.get('count', 1)
 
         if count == 0:
             return self.RES_OK, 'No scaling needed based on policy checking'
 
-        result, reason = self._create_nodes(cluster, cluster.size, policy_data)
+        result, reason = self._create_nodes(cluster, count, policy_data)
 
         if result == self.RES_OK:
             reason = 'Cluster scale-out succeeded'
@@ -343,35 +349,51 @@ class ClusterAction(base.Action):
         return result, reason
 
     def do_scale_in(self, cluster, policy_data):
-        pd = policy_data.get('deletion', None)
+        # We may get a scale count from the request directly, if that is the
+        # case, we will use it for scaling. Or else, we check if we have got
+        # hints from policy checking. We use policy output if any, or else
+        # the count is set to 1 as default.
+        count = self.inputs.get('count', 0)
         candidates = []
-        if pd is not None:
-            # Default to 1 if count not specified
-            count = pd.get('count', 1)
-            # Try get candidates (set by deletion policy if attached)
-            candidates = policy_data.get('candidates', [])
+        if count == 0:
+            pd = policy_data.get('deletion', None)
+            if pd is not None:
+                count = pd.get('count', 1)
+                # Try get candidates (set by deletion policy if attached)
+                candidates = policy_data.get('candidates', [])
+
+        if count == 0:
+            return self.RES_OK, 'No scaling needed based on policy checking'
 
         # Choose victims randomly
         if len(candidates) == 0:
-            nodes = db_api.node_get_all_by_cluster(self.context,
-                                                   self.cluster_id)
+            nodes = db_api.node_get_all_by_cluster(self.context, cluster.id)
             i = count
             while i > 0:
-                rand = random.randrange(i)
-                candidates.append(nodes[rand].id)
-                nodes.remove(nodes[rand])
+                r = random.randrange(len(nodes))
+                candidates.append(nodes[r].id)
+                nodes.remove(nodes[r])
                 i = i - 1
 
         # The policy data may contain destroy flag and grace period option
         result, new_reason = self._delete_nodes(cluster, candidates,
                                                 policy_data)
 
-        if result != self.RES_OK:
-            reason = new_reason
+        if result == self.RES_OK:
+            reason = 'Cluster scale-in succeeded'
+            cluster.set_status(self.context, cluster.ACTIVE, reason)
+        elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_FAILED]:
+            cluster.set_status(self.context, cluster.ERROR, reason)
+        else:
+            # RETRY or FAILED?
+            pass
 
         return result, reason
 
     def do_attach_policy(self, cluster):
+        '''Attach policy to the cluster.
+        '''
+
         policy_id = self.inputs.get('policy_id', None)
         if not policy_id:
             raise exception.PolicyNotSpecified()
