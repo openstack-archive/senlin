@@ -364,7 +364,7 @@ def node_get_all(context, cluster_id=None, show_deleted=False,
 def node_get_all_by_cluster(context, cluster_id):
     query = model_query(context, models.Node).filter_by(cluster_id=cluster_id)
     nodes = query.all()
-    return dict((node.name, node) for node in nodes)
+    return nodes
 
 
 def node_get_by_name_and_cluster(context, node_name, cluster_id):
@@ -420,22 +420,18 @@ def node_migrate(context, node_id, to_cluster, timestamp):
 
 
 def node_delete(context, node_id, force=False):
-    query = model_query(context, models.Node)
-    node = query.get(node_id)
+    session = _session(context)
+    node = session.query(models.Node).get(node_id)
     if not node:
         # Note: this is okay, because the node may have already gone
         return
 
-    session = query.session
-    session.begin()
-
     if node.cluster_id is not None:
         cluster = session.query(models.Cluster).get(node.cluster_id)
         cluster.size -= 1
+        cluster.save(session)
 
     node.soft_delete(session=session)
-    session.commit()
-
     session.flush()
 
 
