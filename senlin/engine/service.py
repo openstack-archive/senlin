@@ -524,7 +524,7 @@ class EngineService(service.Service):
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
 
-        return action.to_dict()
+        return {'action': action.id}
 
     @request_context
     def cluster_scale_in(self, context, identity, count=1):
@@ -542,7 +542,7 @@ class EngineService(service.Service):
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
 
-        return action.to_dict()
+        return {'action': action.id}
 
     @request_context
     def cluster_delete(self, context, identity):
@@ -557,7 +557,7 @@ class EngineService(service.Service):
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
 
-        return action.to_dict()
+        return {'action': action.id}
 
     def node_find(self, context, identity, show_deleted=False):
         '''Find a cluster with the given identity (could be name or ID).'''
@@ -679,6 +679,29 @@ class EngineService(service.Service):
         return action.to_dict()
 
     @request_context
+    def cluster_policy_list(self, context, cluster_id, filters=None,
+                            limit=None, marker=None,
+                            sort_keys=None, sort_dir=None):
+        db_cluster = self.cluster_find(context, cluster_id)
+        bindings = db_api.cluster_get_policies(context, db_cluster.id,
+                                               filters=filters,
+                                               limit=limit, marker=marker,
+                                               sort_keys=sort_keys,
+                                               sort_dir=sort_dir)
+        result = []
+        for binding in bindings:
+            result.append({
+                'id': binding.id,
+                'cluster_id': binding.cluster_id,
+                'policy_id': binding.policy_id,
+                'priority': binding.priority,
+                'level': binding.level,
+                'cooldown': binding.cooldown,
+                'enabled': binding.enabled,
+            })
+        return result
+
+    @request_context
     def cluster_attach_policy(self, context, identity, policy, priority,
                               level, cooldown, enabled):
         db_cluster = self.cluster_find(context, identity)
@@ -694,7 +717,7 @@ class EngineService(service.Service):
             'cooldown': cooldown,
             'enabled': enabled,
         }
-        action_name = 'cluster_attach_policy_%s' % db_cluster.id[:8],
+        action_name = 'cluster_attach_policy_%s' % db_cluster.id[:8]
         action = action_mod.Action(context, consts.CLUSTER_ATTACH_POLICY,
                                    name=action_name,
                                    target=db_cluster.id,
@@ -704,7 +727,7 @@ class EngineService(service.Service):
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
 
-        return action.to_dict()
+        return {'action': action.id}
 
     @request_context
     def cluster_detach_policy(self, context, identity, policy):
