@@ -28,6 +28,11 @@
     "policies:create": "",
     "policies:get": "rule:admin_or_owner",
     "policies:delete": "rule:admin_or_owner",
+    "cluster_policies:index": "rule:admin_or_owner",
+    "cluster_policies:attach": "rule:admin_or_owner",
+    "cluster_policies:detach": "rule:admin_or_owner",
+    "cluster_policies:update": "rule:admin_or_owner",
+    "cluster_policies:get": "rule:admin_or_owner",
     "actions:index": "rule:admin_or_owner",
     "actions:get": "rule:admin_or_owner"
 }
