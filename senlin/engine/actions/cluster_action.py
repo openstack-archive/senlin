@@ -392,6 +392,7 @@ class ClusterAction(base.Action):
         values = {
             'cooldown': self.inputs.get('cooldown', policy.cooldown),
             'level': self.inputs.get('level', policy.level),
+            'priority': self.inputs.get('priority', 50),
             'enabled': self.inputs.get('enabled', True),
         }
 
