@@ -581,7 +581,9 @@ class EngineService(service.Service):
     def node_list(self, context, cluster_id=None, show_deleted=False,
                   limit=None, marker=None, sort_keys=None, sort_dir=None,
                   filters=None, tenant_safe=True):
-
+        if cluster_id is not None:
+            db_cluster = self.cluster_find(context, cluster_id)
+            cluster_id = db_cluster.id
         nodes = node_mod.Node.load_all(context, cluster_id, show_deleted,
                                        limit, marker, sort_keys, sort_dir,
                                        filters, tenant_safe)
