@@ -15,6 +15,7 @@ import routes
 
 from senlin.api.openstack.v1 import actions
 from senlin.api.openstack.v1 import build_info
+from senlin.api.openstack.v1 import cluster_policies
 from senlin.api.openstack.v1 import clusters
 from senlin.api.openstack.v1 import nodes
 from senlin.api.openstack.v1 import policies
@@ -93,7 +94,7 @@ class API(wsgi.Router):
                                action="template",
                                conditions={'method': 'GET'})
 
-        # Policies (To do)
+        # Policies
         policies_resource = policies.create_resource(conf)
         with mapper.submapper(controller=policies_resource,
                               path_prefix="/{tenant_id}") as sub_mapper:
@@ -176,6 +177,32 @@ class API(wsgi.Router):
                                conditions={'method': 'PUT'})
             sub_mapper.connect("node_delete",
                                "/nodes/{node_id}",
+                               action="delete",
+                               conditions={'method': 'DELETE'})
+
+        # Cluster Policies
+        cluster_policies_resource = cluster_policies.create_resource(conf)
+        policies_path = "/{tenant_id}/clusters/{cluster_id}"
+        with mapper.submapper(controller=cluster_policies_resource,
+                              path_prefix=policies_path) as sub_mapper:
+            sub_mapper.connect("cluster_policy_list",
+                               "/policies",
+                               action="index",
+                               conditions={'method': 'GET'})
+            sub_mapper.connect("cluster_policy_attach",
+                               "/policies",
+                               action="attach",
+                               conditions={'method': 'POST'})
+            sub_mapper.connect("cluster_policy_show",
+                               "/policies/{policy_id}",
+                               action="get",
+                               conditions={'method': 'GET'})
+            sub_mapper.connect("cluster_policy_update",
+                               "/policies/{policy_id}",
+                               action="update",
+                               conditions={'method': 'PUT'})
+            sub_mapper.connect("cluster_policy_detach",
+                               "/policies/{policy_id}",
                                action="delete",
                                conditions={'method': 'DELETE'})
 
