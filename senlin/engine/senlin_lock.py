@@ -207,7 +207,7 @@ def cluster_lock_acquire(cluster_id, action_id, scope=CLUSTER_SCOPE,
 
     # Step 3: Last resort is 'forced locking', only needed when retry failed
     if forced:
-        owners = db_api.cluster_lock_steal(cluster_id, action_id, scope)
+        owners = db_api.cluster_lock_steal(cluster_id, action_id)
         return action_id in owners
 
     LOG.error(_LE('Cluster is already locked by action %(old)s, '
