@@ -649,11 +649,18 @@ class EngineService(service.Service):
         LOG.info(_LI('Attaching policy %(policy)s to cluster %(cluster)s'),
                  {'policy': policy, 'cluster': identity})
 
+        inputs = {
+            'policy_id': db_policy.id,
+            'priority': priority,
+            'level': level,
+            'cooldown': cooldown,
+            'enabled': enabled,
+        }
         action_name = 'cluster_attach_policy_%s' % db_cluster.id[:8],
         action = action_mod.Action(context, consts.CLUSTER_ATTACH_POLICY,
                                    name=action_name,
                                    target=db_cluster.id,
-                                   inputs={'policy_id': db_policy.id},
+                                   inputs=inputs,
                                    cause=action_mod.CAUSE_RPC)
         action.store(context)
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
