@@ -33,20 +33,31 @@ class ScalingPolicy(base.Policy):
         'ANY',
     ]
 
+    ADJUSTMENT_TYPE = (
+        EXACT_CAPACITY, CHANGE_IN_CAPACITY, CHANGE_IN_PERCENTAGE,
+    ) = (
+        'EXACT_CAPACITY', 'CHANGE_IN_CAPACITY', 'CHANGE_IN_PERCENTAGE',
+    )
+
+    DEFAULT_TYPE = CHANGE_IN_CAPACITY
+    DEFAULT_NUMBER = 1
+    DEFAULT_MIN_STEP = 1
+
     def __init__(self, type_name, name, **kwargs):
         super(ScalingPolicy, self).__init__(type_name, name, **kwargs)
 
         self.min_size = self.spec.get('min_size')
         self.max_size = self.spec.get('max_size')
         adjustment = self.spec.get('adjustment')
+
         if adjustment is not None:
             self.adjustment_type = adjustment.get('type')
             self.adjustment_number = adjustment.get('number')
+            self.adjustment_min_step = adjustment.get('min_step')
         else:
             self.adjustment_type = self.DEFAULT_TYPE
             self.adjustment_number = self.DEFAULT_NUMBER
-
-        self.min_step = self.spec.get('min_step')
+            self.adjustment_min_step = self.DEFAULT_MIN_STEP
 
         # TODO(anyone): Make sure the default cooldown can be used if
         # not specified
@@ -54,10 +65,12 @@ class ScalingPolicy(base.Policy):
     def pre_op(self, cluster_id, action, policy_data):
         # TODO(anyone): get cluster size, calculate new size and return
         # count of nodes need to create or delete;
+
         # TODO(anyone): check if new size will break min_size or max_size
         # constraints
         policy_data['status'] = self.CHECK_OK
         adjustment = self.adjustment_number
+
         nodes = db_api.node_get_all_by_cluster(cluster_id)
         current_size = len(nodes)
         if current_size + adjustment > self.max_size:
