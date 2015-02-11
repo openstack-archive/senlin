@@ -230,7 +230,7 @@ class ClusterAction(base.Action):
 
         return result, reason
 
-    def do_add_nodes(self, cluster, policy_data=None):
+    def do_add_nodes(self, cluster, policy_data):
         nodes = self.inputs.get('nodes')
 
         # NOTE: node states might have changed before we lock the cluster
@@ -390,7 +390,7 @@ class ClusterAction(base.Action):
 
         return result, reason
 
-    def do_attach_policy(self, cluster):
+    def do_attach_policy(self, cluster, policy_data):
         '''Attach policy to the cluster.
         '''
 
@@ -404,7 +404,7 @@ class ClusterAction(base.Action):
         for existing in all:
             # Policy already attached
             if existing.policy_id == policy_id:
-                return self.RES_OK
+                return self.RES_OK, 'Policy already attached'
 
             # Detect policy type conflicts
             curr = policy_mod.Policy.load(self.context, existing.policy_id)
@@ -421,10 +421,10 @@ class ClusterAction(base.Action):
         db_api.cluster_attach_policy(self.context, cluster.id, policy_id,
                                      values)
 
-        cluster.rt.policies.append(policy)
+        cluster.rt['policies'].append(policy)
         return self.RES_OK, ''
 
-    def do_detach_policy(self, cluster):
+    def do_detach_policy(self, cluster, policy_data):
         return self.RES_OK, ''
 
     def _execute(self, cluster):
