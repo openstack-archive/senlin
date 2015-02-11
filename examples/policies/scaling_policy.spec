@@ -12,7 +12,7 @@ adjustment:
   type: CHANGE_IN_CAPACITY
 
   # A number that will be interpreted based on the type setting
-  value: 1
+  number: 1
  
   # When type is set CHNAGE_IN_PERCENTAGE, min_step specifies
   # that the cluster size will be changed by at least the number
