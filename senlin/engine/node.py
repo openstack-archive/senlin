@@ -192,8 +192,8 @@ class Node(object):
         if status == self.ACTIVE and self.status == self.CREATING:
             values['created_time'] = now
         elif status == self.DELETED:
+            LOG.error('Don\'t do this!!!! call db_api.node_delete()')
             values['physical_id'] = ''
-            values['deleted_time'] = now
         elif status == self.ACTIVE and self.status == self.UPDATING:
             values['updated_time'] = now
 
@@ -227,12 +227,8 @@ class Node(object):
         return True
 
     def do_delete(self, context):
-        def _delete_db_record(node_id):
-            self.set_status(context, self.DELETED, reason='Deletion succeeded')
-            return
-
         if not self.physical_id:
-            _delete_db_record(self.id)
+            db_api.node_delete(context, self.id)
             return True
 
         # TODO(Qiming): check if actions are working on it and can be canceled
@@ -240,7 +236,7 @@ class Node(object):
         self.set_status(context, self.DELETING, reason='Deletion in progress')
         res = profile_base.Profile.delete_object(context, self)
         if res:
-            _delete_db_record(self.id)
+            db_api.node_delete(context, self.id)
             return True
         else:
             self.set_status(context, self.ERROR, reason='Deletion failed')
