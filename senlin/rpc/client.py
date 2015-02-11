@@ -206,6 +206,16 @@ class EngineClient(object):
                                              identity=identity,
                                              nodes=nodes))
 
+    def cluster_scale_out(self, ctxt, identity, count):
+        return self.call(ctxt, self.make_msg('cluster_scale_out',
+                                             identity=identity,
+                                             count=count))
+
+    def cluster_scale_in(self, ctxt, identity, count):
+        return self.call(ctxt, self.make_msg('cluster_scale_in',
+                                             identity=identity,
+                                             count=count))
+
     def cluster_attach_policy(self, ctxt, identity, policy, priority,
                               level, cooldown, enabled):
         return self.call(ctxt, self.make_msg('cluster_attach_policy',

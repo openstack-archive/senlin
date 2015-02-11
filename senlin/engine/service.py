@@ -509,6 +509,42 @@ class EngineService(service.Service):
         return {'action': action.id}
 
     @request_context
+    def cluster_scale_out(self, context, identity, count=1):
+        cluster = self.cluster_find(context, identity)
+        LOG.info(_LI('Scaling out cluster %(name)s by %(delta)s'),
+                 {'name': cluster.name, 'delta': str(count)})
+
+        action_name = 'cluster_scale_out_%s' % cluster.id[:8]
+        action = action_mod.Action(context, 'CLUSTER_SCALE_OUT',
+                                   name=action_name,
+                                   target=cluster.id,
+                                   inputs={'count': count},
+                                   cause=action_mod.CAUSE_RPC)
+        action.store(context)
+        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
+                          None, action_id=action.id)
+
+        return action.to_dict()
+
+    @request_context
+    def cluster_scale_in(self, context, identity, count=1):
+        cluster = self.cluster_find(context, identity)
+        LOG.info(_LI('Scaling in cluster %(name)s by %(delta)s'),
+                 {'name': cluster.name, 'delta': count})
+
+        action_name = 'cluster_scale_in_%s' % cluster.id[:8]
+        action = action_mod.Action(context, 'CLUSTER_SCALE_IN',
+                                   name=action_name,
+                                   target=cluster.id,
+                                   inputs={'count': count},
+                                   cause=action_mod.CAUSE_RPC)
+        action.store(context)
+        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
+                          None, action_id=action.id)
+
+        return action.to_dict()
+
+    @request_context
     def cluster_delete(self, context, identity):
         cluster = self.cluster_find(context, identity)
         LOG.info(_LI('Deleting cluster %s'), cluster.name)
