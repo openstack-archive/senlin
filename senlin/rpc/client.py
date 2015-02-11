@@ -216,35 +216,6 @@ class EngineClient(object):
                                              identity=identity,
                                              count=count))
 
-    def cluster_attach_policy(self, ctxt, identity, policy, priority,
-                              level, cooldown, enabled):
-        return self.call(ctxt, self.make_msg('cluster_attach_policy',
-                                             identity=identity,
-                                             policy=policy,
-                                             priority=priority,
-                                             level=level,
-                                             cooldown=cooldown,
-                                             enabled=enabled))
-
-    def cluster_detach_policy(self, ctxt, identity, policy):
-        return self.call(ctxt, self.make_msg('cluster_detach_policy',
-                                             identity=identity,
-                                             policy=policy))
-
-    def cluster_enable_policy(self, ctxt, identity, policy, priority,
-                              level, cooldown):
-        return self.call(ctxt, self.make_msg('cluster_enable_policy',
-                                             identity=identity,
-                                             policy=policy,
-                                             priority=priority,
-                                             level=level,
-                                             cooldown=cooldown))
-
-    def cluster_disable_policy(self, ctxt, identity, policy):
-        return self.call(ctxt, self.make_msg('cluster_disable_policy',
-                                             identity=identity,
-                                             policy=policy))
-
     def cluster_update(self, ctxt, identity, size, profile_id):
         return self.call(ctxt, self.make_msg('cluster_update',
                                              identity=identity,
@@ -309,6 +280,46 @@ class EngineClient(object):
                                        limit=limit, marker=marker,
                                        sort_keys=sort_keys, sort_dir=sort_dir,
                                        show_deleted=show_deleted))
+
+    def cluster_policy_list(self, ctxt, cluster_id, filters=None,
+                            limit=None, marker=None,
+                            sort_dir=None, sort_keys=None):
+        return self.call(ctxt, self.make_msg('cluster_policy_list',
+                                             cluster_id=cluster_id,
+                                             filters=filters,
+                                             limit=limit, marker=marker,
+                                             sort_keys=sort_keys,
+                                             sort_dir=sort_dir))
+
+    def cluster_policy_attach(self, ctxt, cluster_id, policy_id, priority=50,
+                              level=50, cooldown=0, enabled=True):
+        return self.call(ctxt, self.make_msg('cluster_policy_attach',
+                                             cluster_id=cluster_id,
+                                             policy_id=policy_id,
+                                             priority=priority,
+                                             level=level,
+                                             cooldown=cooldown,
+                                             enabled=enabled))
+
+    def cluster_policy_detach(self, ctxt, cluster_id, policy_id):
+        return self.call(ctxt, self.make_msg('cluster_policy_detach',
+                                             cluster_id=cluster_id,
+                                             policy_id=policy_id))
+
+    def cluster_policy_get(self, ctxt, cluster_id, policy_id):
+        return self.call(ctxt, self.make_msg('cluster_policy_get',
+                                             cluster_id=cluster_id,
+                                             policy_id=policy_id))
+
+    def cluster_policy_update(self, ctxt, cluster_id, policy_id, priority=50,
+                              level=50, cooldown=0, enabled=True):
+        return self.call(ctxt, self.make_msg('cluster_policy_update',
+                                             cluster_id=cluster_id,
+                                             policy_id=policy_id,
+                                             priority=priority,
+                                             level=level,
+                                             cooldown=cooldown,
+                                             enabled=enabled))
 
     def action_create(self, ctxt, name, target, action, params):
         return self.call(ctxt,
