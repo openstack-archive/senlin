@@ -69,10 +69,14 @@ class ClusterController(object):
     REQUEST_SCOPE = 'clusters'
 
     SUPPORTED_ACTIONS = (
-        ADD_NODES, DEL_NODES, ATTACH_POLICY, DETACH_POLICY,
+        ADD_NODES, DEL_NODES,
+        SCALE_OUT, SCALE_IN,
+        ATTACH_POLICY, DETACH_POLICY,
         ENABLE_POLICY, DISABLE_POLICY,
     ) = (
-        'add_nodes', 'del_nodes', 'attach_policy', 'detach_policy',
+        'add_nodes', 'del_nodes',
+        'scale_out', 'scale_in',
+        'attach_policy', 'detach_policy',
         'enable_policy', 'disable_policy',
     )
 
@@ -174,6 +178,14 @@ class ClusterController(object):
                 raise exc.HTTPBadRequest(_('No node to delete'))
             res = self.rpc_client.cluster_del_nodes(
                 req.context, cluster_id, nodes)
+        elif this_action == self.SCALE_OUT:
+            count = body.get(this_action).get('count', 1)
+            res = self.rpc_client.cluster_scale_out(req.context, cluster_id,
+                                                    count)
+        elif this_action == self.SCALE_IN:
+            count = body.get(this_action).get('count', 1)
+            res = self.rpc_client.cluster_scale_in(req.context, cluster_id,
+                                                   count)
         elif this_action == self.ATTACH_POLICY:
             args = body.get(this_action)
             policy_id = args.get(consts.CP_POLICY_ID)
