@@ -20,6 +20,7 @@ from openstack import connection
 from openstack import exceptions
 from openstack import user_preference
 from requests import exceptions as reqexc
+from senlin.common.i18n import _
 
 USER_AGENT = 'senlin'
 
@@ -147,7 +148,10 @@ def parse_exception(ex):
         return
 
     try:
-        code = record['error']['code']
+        code = record['error'].get('code', None)
+        if code is None:
+            code = record['code']
+            record['error']['code'] = code
     except KeyError as err:
         print(_('Malformed exception record, missing field "%s"') % err)
         print(_('Original error record: %s') % record)
