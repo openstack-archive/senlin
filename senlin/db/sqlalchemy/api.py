@@ -643,10 +643,28 @@ def cluster_attach_policy(context, cluster_id, policy_id, values):
     return binding
 
 
-def cluster_get_policies(context, cluster_id):
-    policies = model_query(context, models.ClusterPolicies).\
-        filter_by(cluster_id=cluster_id).all()
-    return policies
+def cluster_get_policies(context, cluster_id, filters=None,
+                         limit=None, marker=None,
+                         sort_keys=None, sort_dir=None):
+    query = model_query(context, models.ClusterPolicies)
+    query = query.filter_by(cluster_id=cluster_id)
+    if filters is None:
+        filters = {}
+
+    sort_key_map = {
+        consts.CP_PRIORITY: models.ClusterPolicies.policy_id.key,
+        consts.CP_LEVEL: models.ClusterPolicies.level.key,
+        consts.CP_COOLDOWN: models.ClusterPolicies.cooldown.key,
+        consts.CP_ENABLED: models.ClusterPolicies.enabled.key,
+    }
+
+    keys = _get_sort_keys(sort_keys, sort_key_map)
+    query = db_filters.exact_filter(query, models.ClusterPolicies, filters)
+
+    return _paginate_query(context, query, models.ClusterPolicies,
+                           limit=limit, marker=marker,
+                           sort_keys=keys, sort_dir=sort_dir,
+                           default_sort_keys=['priority']).all()
 
 
 def cluster_detach_policy(context, cluster_id, policy_id):
