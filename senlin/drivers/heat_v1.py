@@ -55,4 +55,4 @@ class HeatClient(base.DriverBase):
         try:
             obj.delete(self.session)
         except sdk.exc.HttpException as ex:
-            raise ex
+            sdk.ignore_not_found(ex)
