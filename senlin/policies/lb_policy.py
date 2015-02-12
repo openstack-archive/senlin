@@ -46,7 +46,7 @@ class LoadBalancingPolicy(base.Policy):
         self.pool_need_delete = True
         self.vip_need_delete = True
 
-    def attach(self, cluster_id):
+    def attach(self, context, cluster_id, policy_data):
         pool_id = self.pool_spec.get('pool')
         if pool_id is not None:
             self.pool = neutron.get_pool(pool_id)
@@ -65,7 +65,7 @@ class LoadBalancingPolicy(base.Policy):
 
         return True
 
-    def detach(self, cluster_id):
+    def detach(self, context, cluster_id, policy_data):
         if self.vip_need_delete:
             neutron.delete_vip(self.vip)
         if self.pool_need_delete:
