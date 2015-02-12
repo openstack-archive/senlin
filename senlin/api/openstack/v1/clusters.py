@@ -71,9 +71,11 @@ class ClusterController(object):
     SUPPORTED_ACTIONS = (
         ADD_NODES, DEL_NODES,
         SCALE_OUT, SCALE_IN,
+        POLICY_ATTACH, POLICY_DETACH, POLICY_UPDATE,
     ) = (
         'add_nodes', 'del_nodes',
         'scale_out', 'scale_in',
+        'policy_attach', 'policy_detach', 'policy_update',
     )
 
     def __init__(self, options):
@@ -182,6 +184,22 @@ class ClusterController(object):
             count = body.get(this_action).get('count', 1)
             res = self.rpc_client.cluster_scale_in(req.context, cluster_id,
                                                    count)
+        elif this_action == self.POLICY_ATTACH:
+            data = body.get(this_action)
+            res = self.rpc_client.cluster_policy_attach(req.context,
+                                                        cluster_id,
+                                                        **data)
+        elif this_action == self.POLICY_DETACH:
+            data = body.get(this_action)
+            res = self.rpc_client.cluster_policy_detach(req.context,
+                                                        cluster_id,
+                                                        data.get('policy_id'))
+        elif this_action == self.POLICY_UPDATE:
+            # Note the POLICY_UPDATE action includes policy-enable/disable
+            data = body.get(this_action)
+            res = self.rpc_client.cluster_policy_update(req.context,
+                                                        cluster_id,
+                                                        **data)
         else:
             raise exc.HTTPInternalServerError(_('Unexpected action "%s"'),
                                               this_action)
