@@ -199,27 +199,27 @@ def policy_delete(context, policy_id, force=False):
 
 
 # Cluster-Policy Associations
-def cluster_attach_policy(context, cluster_id, policy_id, values):
-    return IMPL.cluster_attach_policy(context, cluster_id, policy_id, values)
+def cluster_policy_get(context, cluster_id, policy_id):
+    return IMPL.cluster_policy_get(context, cluster_id, policy_id)
 
 
-def cluster_get_policies(context, cluster_id, filters=None, limit=None,
-                         marker=None, sort_keys=None, sort_dir=None):
-    return IMPL.cluster_get_policies(context, cluster_id, filters=filters,
-                                     limit=limit, marker=marker,
-                                     sort_keys=sort_keys, sort_dir=sort_dir)
+def cluster_policy_get_all(context, cluster_id, filters=None, limit=None,
+                           marker=None, sort_keys=None, sort_dir=None):
+    return IMPL.cluster_policy_get_all(context, cluster_id, filters=filters,
+                                       limit=limit, marker=marker,
+                                       sort_keys=sort_keys, sort_dir=sort_dir)
 
 
-def cluster_detach_policy(context, cluster_id, policy_id):
-    return IMPL.cluster_detach_policy(context, cluster_id, policy_id)
+def cluster_policy_attach(context, cluster_id, policy_id, values):
+    return IMPL.cluster_policy_attach(context, cluster_id, policy_id, values)
 
 
-def cluster_enable_policy(context, cluster_id, policy_id):
-    return IMPL.cluster_get_policies(context, cluster_id, policy_id)
+def cluster_policy_detach(context, cluster_id, policy_id):
+    return IMPL.cluster_policy_detach(context, cluster_id, policy_id)
 
 
-def cluster_disable_policy(context, cluster_id, policy_id):
-    return IMPL.cluster_disable_policy(context, cluster_id, policy_id)
+def cluster_policy_update(context, cluster_id, policy_id, values):
+    return IMPL.cluster_policy_update(context, cluster_id, policy_id, values)
 
 
 # Profiles
