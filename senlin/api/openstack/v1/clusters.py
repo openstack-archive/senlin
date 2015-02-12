@@ -177,11 +177,11 @@ class ClusterController(object):
             res = self.rpc_client.cluster_del_nodes(
                 req.context, cluster_id, nodes)
         elif this_action == self.SCALE_OUT:
-            count = body.get(this_action).get('count', 1)
+            count = body.get(this_action).get('count')
             res = self.rpc_client.cluster_scale_out(req.context, cluster_id,
                                                     count)
         elif this_action == self.SCALE_IN:
-            count = body.get(this_action).get('count', 1)
+            count = body.get(this_action).get('count')
             res = self.rpc_client.cluster_scale_in(req.context, cluster_id,
                                                    count)
         elif this_action == self.POLICY_ATTACH:
