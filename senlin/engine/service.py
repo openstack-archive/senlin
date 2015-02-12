@@ -693,7 +693,10 @@ class EngineService(service.Service):
             result.append({
                 'id': binding.id,
                 'cluster_id': binding.cluster_id,
+                'cluster_name': binding.cluster.name,
                 'policy_id': binding.policy_id,
+                'policy_name': binding.policy.name,
+                'policy_type': binding.policy.type,
                 'priority': binding.priority,
                 'level': binding.level,
                 'cooldown': binding.cooldown,

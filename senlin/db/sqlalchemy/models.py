@@ -21,6 +21,8 @@ from oslo_utils import timeutils
 import six
 import sqlalchemy
 from sqlalchemy.ext import declarative
+from sqlalchemy.orm import backref
+from sqlalchemy.orm import relationship
 from sqlalchemy.orm import session as orm_session
 
 from senlin.db.sqlalchemy import types
@@ -199,6 +201,8 @@ class ClusterPolicies(BASE, SenlinBase):
     policy_id = sqlalchemy.Column(sqlalchemy.String(36),
                                   sqlalchemy.ForeignKey('policy.id'),
                                   nullable=False)
+    cluster = relationship(Cluster, backref=backref('policies'))
+    policy = relationship(Policy, backref=backref('bindings'))
     cooldown = sqlalchemy.Column(sqlalchemy.Integer)
     priority = sqlalchemy.Column(sqlalchemy.Integer)
     level = sqlalchemy.Column(sqlalchemy.Integer)
