@@ -678,7 +678,7 @@ def cluster_policy_detach(context, cluster_id, policy_id):
     session = _session(context)
     query = session.query(models.ClusterPolicies)
     bindings = query.filter_by(cluster_id=cluster_id,
-                               policy_id=policy_id).all()
+                               policy_id=policy_id).first()
     if bindings is None:
         return
 
