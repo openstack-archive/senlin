@@ -349,7 +349,7 @@ class Action(object):
                 method = getattr(policy, 'post_op')
 
             # Pass data from one policy to another
-            data = method(self.cluster_id, self, data)
+            data = method(cluster_id, self, data)
 
             # Abort policy checking if failures found
             if data.status == policy_mod.CHECK_ERROR:
