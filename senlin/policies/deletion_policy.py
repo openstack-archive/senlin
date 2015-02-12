@@ -129,6 +129,7 @@ class DeletionPolicy(base.Policy):
             count = pd.get('count', 1)
             candidates = pd.get('candidates', [])
         else:
+            pd = {}
             count = 1
             candidates = []
 
