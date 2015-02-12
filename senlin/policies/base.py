@@ -170,12 +170,12 @@ class Policy(object):
 
         return self.id
 
-    def attach(self, cluster_id, **kwargs):
+    def attach(self, context, cluster_id, policy_data):
         '''Method to be invoked before the policy is attached to a cluster.
         '''
         return True
 
-    def detach(self, cluster_id, **kwargs):
+    def detach(self, context, cluster_id, policy_data):
         '''Method to be invoked before the policy is detached from a cluster.
         '''
         return True
