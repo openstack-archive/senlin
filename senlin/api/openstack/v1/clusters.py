@@ -71,13 +71,9 @@ class ClusterController(object):
     SUPPORTED_ACTIONS = (
         ADD_NODES, DEL_NODES,
         SCALE_OUT, SCALE_IN,
-        ATTACH_POLICY, DETACH_POLICY,
-        ENABLE_POLICY, DISABLE_POLICY,
     ) = (
         'add_nodes', 'del_nodes',
         'scale_out', 'scale_in',
-        'attach_policy', 'detach_policy',
-        'enable_policy', 'disable_policy',
     )
 
     def __init__(self, options):
@@ -186,42 +182,6 @@ class ClusterController(object):
             count = body.get(this_action).get('count', 1)
             res = self.rpc_client.cluster_scale_in(req.context, cluster_id,
                                                    count)
-        elif this_action == self.ATTACH_POLICY:
-            args = body.get(this_action)
-            policy_id = args.get(consts.CP_POLICY_ID)
-            if policy_id is None:
-                raise exc.HTTPBadRequest(_('No policy specified'))
-            priority = args.get(consts.CP_PRIORITY)
-            level = args.get(consts.CP_LEVEL)
-            cooldown = args.get(consts.CP_COOLDOWN)
-            enabled = args.get(consts.CP_ENABLED)
-            res = self.rpc_client.cluster_attach_policy(
-                req.context, cluster_id, policy_id, priority, level, cooldown,
-                enabled)
-        elif this_action == self.DETACH_POLICY:
-            args = body.get(this_action)
-            policy_id = args.get(consts.CP_POLICY_ID)
-            if policy_id is None:
-                raise exc.HTTPBadRequest(_('No policy specified'))
-            res = self.rpc_client.cluster_detach_policy(
-                req.context, cluster_id, policy_id)
-        elif this_action == self.ENABLE_POLICY:
-            args = body.get(this_action)
-            policy_id = args.get(consts.CP_POLICY_ID)
-            if policy_id is None:
-                raise exc.HTTPBadRequest(_('No policy specified'))
-            priority = args.get(consts.CP_PRIORITY)
-            level = args.get(consts.CP_LEVEL)
-            cooldown = args.get(consts.CP_COOLDOWN)
-            res = self.rpc_client.cluster_enable_policy(
-                req.context, cluster_id, policy_id, priority, level, cooldown)
-        elif this_action == self.DISABLE_POLICY:
-            args = body.get(this_action)
-            policy_id = args.get(consts.CP_POLICY_ID)
-            if policy_id is None:
-                raise exc.HTTPBadRequest(_('No policy specified'))
-            res = self.rpc_client.cluster_disable_policy(
-                req.context, cluster_id, policy_id)
         else:
             raise exc.HTTPInternalServerError(_('Unexpected action "%s"'),
                                               this_action)
