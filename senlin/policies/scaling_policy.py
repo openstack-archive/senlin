@@ -68,10 +68,10 @@ class ScalingPolicy(base.Policy):
 
         # TODO(anyone): check if new size will break min_size or max_size
         # constraints
-        policy_data['status'] = self.CHECK_OK
+        policy_data['status'] = base.CHECK_OK
         adjustment = self.adjustment_number
 
-        nodes = db_api.node_get_all_by_cluster(cluster_id)
+        nodes = db_api.node_get_all_by_cluster(action.context, cluster_id)
         current_size = len(nodes)
         if current_size + adjustment > self.max_size:
             adjustment = self.max_size - current_size
