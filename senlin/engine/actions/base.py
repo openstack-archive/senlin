@@ -334,15 +334,11 @@ class Action(object):
             return data
 
         # Get list of policy IDs attached to cluster
-        bindings = db_api.cluster_get_policies(self.context, cluster_id)
+        bindings = db_api.cluster_policy_get_all(self.context, cluster_id,
+                                                 sort_keys=['priority'],
+                                                 filters={'enabled': True})
 
-        # Filter by enabled
-        filtered = [b for b in bindings if b.enabled]
-
-        # Sort the policies by their priority.
-        policies = sorted(filtered, key=lambda b: b.priority)
-
-        for p in policies:
+        for p in bindings:
             policy = policy_mod.Policy.load(self.context, p.policy_id)
             if (target, self.action) not in policy.TARGET:
                 continue
@@ -406,17 +402,21 @@ def ActionProc(context, action_id, worker_id):
     LOG.info(_LI('Action %(name)s [%(id)s] started'),
              {'name': six.text_type(action.action), 'id': action.id})
 
+    reason = 'Action completed'
     try:
         # Step 3: execute the action
         result, reason = action.execute()
-    except Exception as ex:
+
+        # NOTE: The following exception report is not giving useful
+        # information for some reasons.
+        # except Exception as ex:
         # We catch exception here to make sure the following logics are
         # executed.
-        result = action.RES_ERROR
-        reason = six.text_type(ex)
-        LOG.error(_('Exception occurred in action execution[%(action)s]: '
-                    '%(reason)s'), {'action': action.action,
-                                    'reason': reason})
+        # result = action.RES_ERROR
+        # reason = six.text_type(ex)
+        # LOG.error(_('Exception occurred in action execution[%(action)s]: '
+        #            '%(reason)s'), {'action': action.action,
+        #                            'reason': reason})
     finally:
         # NOTE: locks on action is eventually released here by status update
         action.set_status(result, reason)
