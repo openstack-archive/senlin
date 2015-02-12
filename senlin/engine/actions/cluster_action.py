@@ -329,17 +329,30 @@ class ClusterAction(base.Action):
         # the count is set to 1 as default.
         count = self.inputs.get('count', 0)
         if count == 0:
-            pd = policy_data.get('placement', None)
+            pd = policy_data.get('creation', None)
             if pd is not None:
                 count = pd.get('count', 1)
 
         if count == 0:
             return self.RES_OK, 'No scaling needed based on policy checking'
 
-        result, reason = self._create_nodes(cluster, count, policy_data)
+        if count > 0:
+            result, reason = self._create_nodes(cluster, count, policy_data)
+        else:
+            candidates = []
+            nodes = db_api.node_get_all_by_cluster(self.context, cluster.id)
+            i = count
+            while i > 0:
+                r = random.randrange(len(nodes))
+                candidates.append(nodes[r].id)
+                nodes.remove(nodes[r])
+                i = i - 1
+
+            result, reason = self._delete_nodes(cluster, candidates,
+                                                policy_data)
 
         if result == self.RES_OK:
-            reason = 'Cluster scale-out succeeded'
+            reason = 'Cluster scaling succeeded'
             cluster.set_status(self.context, cluster.ACTIVE, reason)
         elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_FAILED]:
             cluster.set_status(self.context, cluster.ERROR, reason)
@@ -381,7 +394,7 @@ class ClusterAction(base.Action):
                                                 policy_data)
 
         if result == self.RES_OK:
-            reason = 'Cluster scale-in succeeded'
+            reason = 'Cluster scaling succeeded'
             cluster.set_status(self.context, cluster.ACTIVE, reason)
         elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_FAILED]:
             cluster.set_status(self.context, cluster.ERROR, reason)
@@ -470,7 +483,7 @@ class ClusterAction(base.Action):
         # do pre-action policy checking
         pd = self.policy_check(cluster.id, 'BEFORE')
         if pd.status != policy_mod.CHECK_OK:
-            return self.RES_ERROR, 'Policy failure:' + pd.reason
+            return self.RES_ERROR, _('Policy failure: %s') % pd.reason
 
         result = self.RES_OK
         action_name = self.action.lower()
