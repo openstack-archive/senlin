@@ -36,12 +36,13 @@ class ClusterAction(base.Action):
         CLUSTER_CREATE, CLUSTER_DELETE, CLUSTER_UPDATE,
         CLUSTER_ADD_NODES, CLUSTER_DEL_NODES,
         CLUSTER_SCALE_OUT, CLUSTER_SCALE_IN,
-        CLUSTER_ATTACH_POLICY, CLUSTER_DETACH_POLICY,
+        CLUSTER_ATTACH_POLICY, CLUSTER_DETACH_POLICY, CLUSTER_UPDATE_POLICY
     ) = (
         consts.CLUSTER_CREATE, consts.CLUSTER_DELETE, consts.CLUSTER_UPDATE,
         consts.CLUSTER_ADD_NODES, consts.CLUSTER_DEL_NODES,
         consts.CLUSTER_SCALE_OUT, consts.CLUSTER_SCALE_IN,
         consts.CLUSTER_ATTACH_POLICY, consts.CLUSTER_DETACH_POLICY,
+        consts.CLUSTER_UPDATE_POLICY,
     )
 
     def __init__(self, context, action, **kwargs):
@@ -393,14 +394,13 @@ class ClusterAction(base.Action):
     def do_attach_policy(self, cluster, policy_data):
         '''Attach policy to the cluster.
         '''
-
         policy_id = self.inputs.get('policy_id', None)
         if not policy_id:
             raise exception.PolicyNotSpecified()
 
         policy = policy_mod.Policy.load(self.context, policy_id)
         # Check if policy has already been attached
-        all = db_api.cluster_get_policies(self.context, cluster.id)
+        all = db_api.cluster_policy_get_all(self.context, cluster.id)
         for existing in all:
             # Policy already attached
             if existing.policy_id == policy_id:
@@ -411,6 +411,10 @@ class ClusterAction(base.Action):
             if curr.type == policy.type:
                 raise exception.PolicyExists(policy_type=policy.type)
 
+        res = policy.attach(self.context, cluster, policy_data)
+        if not res:
+            return self.RES_ERROR, 'Failed attaching policy'
+
         values = {
             'cooldown': self.inputs.get('cooldown', policy.cooldown),
             'level': self.inputs.get('level', policy.level),
@@ -418,14 +422,49 @@ class ClusterAction(base.Action):
             'enabled': self.inputs.get('enabled', True),
         }
 
-        db_api.cluster_attach_policy(self.context, cluster.id, policy_id,
+        db_api.cluster_policy_attach(self.context, cluster.id, policy_id,
                                      values)
 
         cluster.rt['policies'].append(policy)
-        return self.RES_OK, ''
+        return self.RES_OK, 'Policy attached'
 
     def do_detach_policy(self, cluster, policy_data):
-        return self.RES_OK, ''
+        policy_id = self.inputs.get('policy_id', None)
+        if not policy_id:
+            raise exception.PolicyNotSpecified()
+
+        policy = policy_mod.Policy.load(self.context, policy_id)
+        res = policy.detach(self.context, cluster, policy_data)
+        if not res:
+            return self.RES_ERROR, 'Failed detaching policy'
+
+        db_api.cluster_policy_detach(self.context, cluster.id, policy_id)
+
+        return self.RES_OK, 'Policy detached'
+
+    def do_update_policy(self, cluster, policy_data):
+        policy_id = self.inputs.get('policy_id', None)
+        if not policy_id:
+            raise exception.PolicyNotSpecified()
+
+        values = {}
+        cooldown = self.inputs.get('cooldown')
+        if cooldown is not None:
+            values['cooldown'] = cooldown
+        level = self.inputs.get('level')
+        if level is not None:
+            values['level'] = level
+        priority = self.inputs.get('priority')
+        if priority is not None:
+            values['priority'] = priority
+        enabled = self.inputs.get('enabled')
+        if enabled is not None:
+            values['enabled'] = bool(enabled)
+
+        db_api.cluster_policy_update(self.context, cluster.id, policy_id,
+                                     values)
+
+        return self.RES_OK, 'Policy updated'
 
     def _execute(self, cluster):
         # do pre-action policy checking

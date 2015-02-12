@@ -679,15 +679,15 @@ class EngineService(service.Service):
         return action.to_dict()
 
     @request_context
-    def cluster_policy_list(self, context, cluster_id, filters=None,
+    def cluster_policy_list(self, context, identity, filters=None,
                             limit=None, marker=None,
                             sort_keys=None, sort_dir=None):
-        db_cluster = self.cluster_find(context, cluster_id)
-        bindings = db_api.cluster_get_policies(context, db_cluster.id,
-                                               filters=filters,
-                                               limit=limit, marker=marker,
-                                               sort_keys=sort_keys,
-                                               sort_dir=sort_dir)
+        db_cluster = self.cluster_find(context, identity)
+        bindings = db_api.cluster_policy_get_all(context, db_cluster.id,
+                                                 filters=filters,
+                                                 limit=limit, marker=marker,
+                                                 sort_keys=sort_keys,
+                                                 sort_dir=sort_dir)
         result = []
         for binding in bindings:
             result.append({
@@ -702,8 +702,8 @@ class EngineService(service.Service):
         return result
 
     @request_context
-    def cluster_attach_policy(self, context, identity, policy, priority,
-                              level, cooldown, enabled):
+    def cluster_policy_attach(self, context, identity, policy, priority=50,
+                              level=50, cooldown=0, enabled=True):
         db_cluster = self.cluster_find(context, identity)
         db_policy = self.policy_find(context, policy)
 
@@ -730,14 +730,14 @@ class EngineService(service.Service):
         return {'action': action.id}
 
     @request_context
-    def cluster_detach_policy(self, context, identity, policy):
+    def cluster_policy_detach(self, context, identity, policy):
         db_cluster = self.cluster_find(context, identity)
         db_policy = self.policy_find(context, policy)
 
         LOG.info(_LI('Detaching policy %(policy)s from cluster %(cluster)s'),
                  {'policy': policy, 'cluster': identity})
 
-        action_name = 'cluster_detach_policy_%s' % db_cluster.id[:8],
+        action_name = 'cluster_detach_policy_%s' % db_cluster.id[:8]
         action = action_mod.Action(context, consts.CLUSTER_DETACH_POLICY,
                                    name=action_name,
                                    target=db_cluster.id,
@@ -747,48 +747,38 @@ class EngineService(service.Service):
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
 
-        return action.to_dict()
+        return {'action': action.id}
 
     @request_context
-    def cluster_enable_policy(self, context, identity, policy, priority,
-                              level, cooldown):
+    def cluster_policy_update(self, context, identity, policy, priority,
+                              level, cooldown, enabled):
         db_cluster = self.cluster_find(context, identity)
         db_policy = self.policy_find(context, policy)
 
-        LOG.info(_LI('Enabling policy %(policy)s on cluster %(cluster)s'),
+        LOG.info(_LI('Updating policy %(policy)s on cluster %(cluster)s'),
                  {'policy': policy, 'cluster': identity})
 
-        action_name = 'cluster_enable_policy_%s' % db_cluster.id[:8],
-        action = action_mod.Action(context, consts.CLUSTER_ENABLE_POLICY,
+        inputs = {'policy_id': db_policy.id}
+        if priority is not None:
+            inputs['priority'] = priority
+        if level is not None:
+            inputs['level'] = level
+        if cooldown is not None:
+            inputs['cooldown'] = cooldown
+        if enabled is not None:
+            inputs['enabled'] = enabled
+
+        action_name = 'cluster_update_policy_%s' % db_cluster.id[:8]
+        action = action_mod.Action(context, consts.CLUSTER_UPDATE_POLICY,
                                    name=action_name,
                                    target=db_cluster.id,
-                                   inputs={'policy_id': db_policy.id},
+                                   inputs=inputs,
                                    cause=action_mod.CAUSE_RPC)
         action.store(context)
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
 
-        return action.to_dict()
-
-    @request_context
-    def cluster_disable_policy(self, context, identity, policy):
-        db_cluster = self.cluster_find(context, identity)
-        db_policy = self.policy_find(context, policy)
-
-        LOG.info(_LI('Disabling policy %(policy)s on cluster %(cluster)s'),
-                 {'policy': policy, 'cluster': identity})
-
-        action_name = 'cluster_disable_policy_%s' % db_cluster.id[:8],
-        action = action_mod.Action(context, consts.CLUSTER_DISABLE_POLICY,
-                                   name=action_name,
-                                   target=db_cluster.id,
-                                   inputs={'policy_id': db_policy.id},
-                                   cause=action_mod.CAUSE_RPC)
-        action.store(context)
-        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-                          None, action_id=action.id)
-
-        return action.to_dict()
+        return {'action': action.id}
 
     @request_context
     def action_find(self, context, identity, show_deleted=False):
@@ -812,10 +802,11 @@ class EngineService(service.Service):
     def action_list(self, context, filters=None, limit=None, marker=None,
                     sort_keys=None, sort_dir=None, show_deleted=False):
 
-        all_actions = action_mod.Action.load_all(context, filters,
-                                                 limit, marker,
-                                                 sort_keys, sort_dir,
-                                                 show_deleted)
+        all_actions = action_mod.Action.load_all(context, filters=filters,
+                                                 limit=limit, marker=marker,
+                                                 sort_keys=sort_keys,
+                                                 sort_dir=sort_dir,
+                                                 show_deleted=show_deleted)
 
         results = []
         for action in all_actions:
