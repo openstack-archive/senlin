@@ -17,37 +17,9 @@ ClusterPolicies endpoint for Senlin v1 ReST API.
 from webob import exc
 
 from senlin.api.openstack.v1 import util
-from senlin.common import consts
-from senlin.common.i18n import _
 from senlin.common import serializers
 from senlin.common import wsgi
 from senlin.rpc import client as rpc_client
-
-
-class ClusterPolicyData(object):
-    '''The data accompanying a POST/PUT request to create/update a policy.'''
-    DEFAULT_PRIORITY = 50
-    DEFAULT_LEVEL = 50
-
-    def __init__(self, data):
-        self.data = data['cluster_policy']
-
-    def policy_id(self):
-        if consts.CP_POLICY_ID not in self.data:
-            raise exc.HTTPBadRequest(_("No policy specified"))
-        return self.data[consts.CP_POLICY_ID]
-
-    def priority(self):
-        return self.data.get(consts.CP_PRIORITY, self.DEFAULT_PRIORITY)
-
-    def level(self):
-        return self.data.get(consts.CP_PRIORITY, self.DEFAULT_PRIORITY)
-
-    def cooldown(self):
-        return self.data.get(consts.CP_COOLDOWN)
-
-    def enabled(self):
-        return self.data.get(consts.CP_ENABLED)
 
 
 class ClusterPolicyController(object):
@@ -91,44 +63,10 @@ class ClusterPolicyController(object):
         return {'cluster_policies': policies}
 
     @util.policy_enforce
-    def attach(self, req, cluster_id, body):
-        data = ClusterPolicyData(body)
-        result = self.rpc_client.cluster_policy_attach(
-            req.context, cluster_id, data.policy_id(), data.priority(),
-            data.level(), data.cooldown(), data.enabled())
-
-        return result
-
-    @util.policy_enforce
     def get(self, req, cluster_id, policy_id):
         cluster_policy = self.rpc_client.cluster_policy_get(
             req.context, cluster_id=cluster_id, policy_id=policy_id)
         return {'cluster_policy': cluster_policy}
-
-    @util.policy_enforce
-    def update(self, req, cluster_id, policy_id, body):
-        data = ClusterPolicyData(body)
-        self.rpc_client.cluster_policy_update(req.context,
-                                              cluster_id=cluster_id,
-                                              policy_id=policy_id,
-                                              priority=data.priority(),
-                                              level=data.level(),
-                                              cooldown=data.cooldown(),
-                                              enabled=data.enabled())
-
-        raise exc.HTTPAccepted()
-
-    @util.policy_enforce
-    def detach(self, req, cluster_id, policy_id):
-        res = self.rpc_client.cluster_policy_detach(req.context,
-                                                    cluster_id=cluster_id,
-                                                    policy_id=policy_id,
-                                                    cast=False)
-
-        if res is not None:
-            raise exc.HTTPBadRequest(res['Error'])
-
-        raise exc.HTTPNoContent()
 
 
 def create_resource(options):

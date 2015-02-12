@@ -189,22 +189,10 @@ class API(wsgi.Router):
                                "/policies",
                                action="index",
                                conditions={'method': 'GET'})
-            sub_mapper.connect("cluster_policy_attach",
-                               "/policies",
-                               action="attach",
-                               conditions={'method': 'POST'})
             sub_mapper.connect("cluster_policy_show",
                                "/policies/{policy_id}",
                                action="get",
                                conditions={'method': 'GET'})
-            sub_mapper.connect("cluster_policy_update",
-                               "/policies/{policy_id}",
-                               action="update",
-                               conditions={'method': 'PUT'})
-            sub_mapper.connect("cluster_policy_detach",
-                               "/policies/{policy_id}",
-                               action="delete",
-                               conditions={'method': 'DELETE'})
 
         # Actions
         actions_resource = actions.create_resource(conf)
