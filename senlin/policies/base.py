@@ -33,7 +33,7 @@ class PolicyData(collections.Mapping):
         self.data = {}
 
     def __setitem__(self, key, value):
-        self.data.update(key, value)
+        self.data[key] = value
 
     def __getitem__(self, key):
         return self.data.get(key, None)
