@@ -42,16 +42,16 @@ class StackProfile(base.Profile):
         super(StackProfile, self).__init__(type_name, name, **kwargs)
 
         self.template = self.spec.get(self.TEMPLATE, {})
-        self.stack_context = self.spec.get(self.CONTEXT, {})
+        self.stack_context = self.spec.get(self.CONTEXT, None)
         self.parameters = self.spec.get(self.PARAMETERS, {})
         self.files = self.spec.get(self.FILES, {})
         self.disable_rollback = self.spec.get(self.DISABLE_ROLLBACK, True)
         self.timeout = self.spec.get(self.TIMEOUT, 60)
         self.environment = self.spec.get(self.ENVIRONMENT, {})
+
         self.context = kwargs.get('context')
 
         self.hc = None
-        self.stack_context = None
         self.stack_id = None
 
     def heat(self):
@@ -185,3 +185,9 @@ class StackProfile(base.Profile):
     def do_check(self, context, id):
         #TODO(liuh): add actual checking logic
         return True
+
+    def get_template(self):
+        return tmpl
+
+    def get_schema(self):
+        return schema
