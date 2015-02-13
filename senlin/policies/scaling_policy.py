@@ -68,8 +68,6 @@ class ScalingPolicy(base.Policy):
         # not specified
 
     def pre_op(self, cluster_id, action, policy_data):
-        # TODO(Qiming): make this work
-
         nodes = db_api.node_get_all_by_cluster(action.context, cluster_id)
         current_size = len(nodes)
 
