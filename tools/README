@@ -6,7 +6,7 @@ Tools
 -----
 
 + senlin-db-recreate
-    - This script drops the Ssenlin database from mysql in the case of developer
+    - This script drops the Senlin database from mysql in the case of developer
       data corruption or erasing Senlin.
     - Users are expected to customize the 'MYSQL_ROOT_PW' and 'MYSQL_SENLIN_PW'
       according to their deployments
