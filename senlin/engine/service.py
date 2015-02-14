@@ -202,7 +202,9 @@ class EngineService(service.Service):
 
     @request_context
     def profile_list(self, context, limit=None, marker=None, sort_keys=None,
-                     sort_dir=None, filters=None, show_deleted=False):
+                     sort_dir=None, filters=None, show_deleted=None):
+        show_deleted = utils.parse_bool_param('show_deleted', show_deleted)
+        limit = utils.parse_int_param('limit', limit)
         profiles = profile_base.Profile.load_all(context, limit=limit,
                                                  marker=marker,
                                                  sort_keys=sort_keys,
@@ -213,9 +215,8 @@ class EngineService(service.Service):
         return [p.to_dict() for p in profiles]
 
     @request_context
-    def profile_create(self, context, name, type, spec, perm, tags):
-        LOG.info(_LI('Creating profile %s:%s'), type, name)
-        # validate type
+    def profile_create(self, context, name, type, spec, perm=None, tags=None):
+        LOG.info(_LI('Creating profile %s: %s'), type, name)
         plugin = environment.global_env().get_profile(type)
 
         kwargs = {
@@ -277,7 +278,9 @@ class EngineService(service.Service):
 
     @request_context
     def policy_list(self, context, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None, show_deleted=False):
+                    sort_dir=None, filters=None, show_deleted=None):
+        limit = utils.parse_int_param('limit', limit)
+        show_deleted = utils.parse_bool_param('show_deleted', show_deleted)
         policies = policy_base.Policy.load_all(context, limit=limit,
                                                marker=marker,
                                                sort_keys=sort_keys,
@@ -290,8 +293,11 @@ class EngineService(service.Service):
     @request_context
     def policy_create(self, context, name, type, spec, level=None,
                       cooldown=None):
-        LOG.info(_LI('Creating policy %s:%s'), type, name)
+        level = utils.parse_int_param('level', level)
+        cooldown = utils.parse_int_param('cooldown', cooldown)
         plugin = environment.global_env().get_policy(type)
+
+        LOG.info(_LI('Creating policy %s:%s'), type, name)
 
         kwargs = {
             'spec': spec,
@@ -309,7 +315,8 @@ class EngineService(service.Service):
         return policy.to_dict()
 
     @request_context
-    def policy_update(self, context, identity, name, spec, level, cooldown):
+    def policy_update(self, context, identity, name, spec=None, level=None,
+                      cooldown=None):
         return {}
 
     @request_context
@@ -323,14 +330,21 @@ class EngineService(service.Service):
     def cluster_list(self, context, limit=None, marker=None, sort_keys=None,
                      sort_dir=None, filters=None, tenant_safe=True,
                      show_deleted=False, show_nested=False):
-        clusters = cluster_mod.Cluster.load_all(context, limit, marker,
-                                                sort_keys, sort_dir,
-                                                filters, tenant_safe,
-                                                show_deleted, show_nested)
+        limit = utils.parse_int_param('limit', limit)
+        tenant_safe = utils.parse_bool_param('tenant_safe', tenant_safe)
+        show_deleted = utils.parse_bool_param('show_deleted', show_deleted)
+        show_nested = utils.parse_bool_param('show_nested', show_nested)
+        clusters = cluster_mod.Cluster.load_all(context, limit=limit,
+                                                marker=marker,
+                                                sort_keys=sort_keys,
+                                                sort_dir=sort_dir,
+                                                filters=filters,
+                                                tenant_safe=tenant_safe,
+                                                show_deleted=show_deleted,
+                                                show_nested=show_nested)
 
         return [cluster.to_dict() for cluster in clusters]
 
-    @request_context
     def cluster_find(self, context, identity, show_deleted=False):
         '''Find a cluster with the given identity (could be name or ID).'''
 
@@ -363,8 +377,8 @@ class EngineService(service.Service):
                        tags=None, timeout=None):
         db_profile = self.profile_find(context, profile_id)
 
-        init_size = utils.parse_int_param(consts.SIZE, size)
-        timeout_mins = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
+        size = utils.parse_int_param(consts.SIZE, size)
+        timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
 
         LOG.info(_LI('Creating cluster %s'), name)
         ctx = context.to_dict()
@@ -372,11 +386,11 @@ class EngineService(service.Service):
             'user': ctx.get('username', ''),
             'project': ctx.get('tenant_id', ''),
             'parent': parent,
-            'timeout': timeout_mins,
+            'timeout': timeout,
             'tags': tags
         }
 
-        cluster = cluster_mod.Cluster(name, db_profile.id, init_size, **kwargs)
+        cluster = cluster_mod.Cluster(name, db_profile.id, size, **kwargs)
         cluster.store(context)
 
         # Build an Action for cluster creation
@@ -602,12 +616,16 @@ class EngineService(service.Service):
     def node_list(self, context, cluster_id=None, show_deleted=False,
                   limit=None, marker=None, sort_keys=None, sort_dir=None,
                   filters=None, tenant_safe=True):
+        show_deleted = utils.parse_bool_param('show_deleted', show_deleted)
         if cluster_id is not None:
             db_cluster = self.cluster_find(context, cluster_id)
             cluster_id = db_cluster.id
-        nodes = node_mod.Node.load_all(context, cluster_id, show_deleted,
-                                       limit, marker, sort_keys, sort_dir,
-                                       filters, tenant_safe)
+        nodes = node_mod.Node.load_all(context, cluster_id=cluster_id,
+                                       show_deleted=show_deleted,
+                                       limit=limit, marker=marker,
+                                       sort_keys=sort_keys, sort_dir=sort_dir,
+                                       filters=filters,
+                                       tenant_safe=tenant_safe)
 
         return [node.to_dict() for node in nodes]
 
@@ -703,6 +721,7 @@ class EngineService(service.Service):
     def cluster_policy_list(self, context, identity, filters=None,
                             limit=None, marker=None,
                             sort_keys=None, sort_dir=None):
+        limit = utils.parse_int_param('limit', limit)
         db_cluster = self.cluster_find(context, identity)
         bindings = db_api.cluster_policy_get_all(context, db_cluster.id,
                                                  filters=filters,
@@ -726,10 +745,14 @@ class EngineService(service.Service):
         return result
 
     @request_context
-    def cluster_policy_attach(self, context, identity, policy, priority=50,
-                              level=50, cooldown=0, enabled=True):
+    def cluster_policy_attach(self, context, identity, policy, priority=None,
+                              level=None, cooldown=None, enabled=True):
         db_cluster = self.cluster_find(context, identity)
         db_policy = self.policy_find(context, policy)
+        priority = utils.parse_int_param('priority', priority) or 50
+        level = utils.parse_int_param('level', level) or 50
+        cooldown = utils.parse_int_param('cooldown', cooldown) or 0
+        enabled = utils.parse_bool_param('cooldown', enabled)
 
         LOG.info(_LI('Attaching policy %(policy)s to cluster %(cluster)s'),
                  {'policy': policy, 'cluster': identity})
@@ -774,23 +797,23 @@ class EngineService(service.Service):
         return {'action': action.id}
 
     @request_context
-    def cluster_policy_update(self, context, identity, policy, priority,
-                              level, cooldown, enabled):
+    def cluster_policy_update(self, context, identity, policy, priority=None,
+                              level=None, cooldown=None, enabled=None):
         db_cluster = self.cluster_find(context, identity)
         db_policy = self.policy_find(context, policy)
 
-        LOG.info(_LI('Updating policy %(policy)s on cluster %(cluster)s'),
-                 {'policy': policy, 'cluster': identity})
-
         inputs = {'policy_id': db_policy.id}
         if priority is not None:
-            inputs['priority'] = priority
+            inputs['priority'] = utils.parse_int_param('priority', priority)
         if level is not None:
-            inputs['level'] = level
+            inputs['level'] = utils.parse_int_param('level', level)
         if cooldown is not None:
-            inputs['cooldown'] = cooldown
+            inputs['cooldown'] = utils.parse_int_param('cooldown', cooldown)
         if enabled is not None:
-            inputs['enabled'] = enabled
+            inputs['enabled'] = utils.parse_bool_param('cooldown', enabled)
+
+        LOG.info(_LI('Updating policy %(policy)s on cluster %(cluster)s'),
+                 {'policy': policy, 'cluster': identity})
 
         action_name = 'cluster_update_policy_%s' % db_cluster.id[:8]
         action = action_mod.Action(context, consts.CLUSTER_UPDATE_POLICY,
@@ -804,7 +827,6 @@ class EngineService(service.Service):
 
         return {'action': action.id}
 
-    @request_context
     def action_find(self, context, identity, show_deleted=False):
         '''Find a cluster with the given identity (could be name or ID).'''
         # TODO(Qiming): add show_deleted support
@@ -826,6 +848,8 @@ class EngineService(service.Service):
     def action_list(self, context, filters=None, limit=None, marker=None,
                     sort_keys=None, sort_dir=None, show_deleted=False):
 
+        limit = utils.parse_int_param('limit', limit)
+        show_deleted = utils.parse_bool_param('show_deleted', show_deleted)
         all_actions = action_mod.Action.load_all(context, filters=filters,
                                                  limit=limit, marker=marker,
                                                  sort_keys=sort_keys,
