@@ -216,10 +216,9 @@ class EngineClient(object):
                                              identity=identity,
                                              count=count))
 
-    def cluster_update(self, ctxt, identity, size, profile_id):
+    def cluster_update(self, ctxt, identity, profile_id):
         return self.call(ctxt, self.make_msg('cluster_update',
                                              identity=identity,
-                                             size=size,
                                              profile_id=profile_id))
 
     def cluster_delete(self, ctxt, identity, cast=True):

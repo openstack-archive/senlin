@@ -42,9 +42,7 @@ class ClusterData(object):
         return self.data[consts.CLUSTER_NAME]
 
     def size(self):
-        if consts.CLUSTER_SIZE not in self.data:
-            raise exc.HTTPBadRequest(_("No cluster size provided."))
-        return self.data[consts.CLUSTER_SIZE]
+        return self.data.get(consts.CLUSTER_SIZE, None)
 
     def profile(self):
         if consts.CLUSTER_PROFILE not in self.data:
@@ -117,6 +115,8 @@ class ClusterController(object):
         '''Create a new cluster.'''
 
         data = ClusterData(body)
+        if data.size() is None:
+            raise exc.HTTPBadRequest(_("No cluster size provided."))
 
         cluster = self.rpc_client.cluster_create(req.context, data.name(),
                                                  data.size(), data.profile(),
@@ -144,7 +144,6 @@ class ClusterController(object):
 
         self.rpc_client.cluster_update(req.context,
                                        cluster_id,
-                                       data.size(),
                                        data.profile())
 
         raise exc.HTTPAccepted()

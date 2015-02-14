@@ -396,9 +396,11 @@ class EngineService(service.Service):
         return result
 
     @request_context
-    def cluster_update(self, context, identity, size, profile_id):
+    def cluster_update(self, context, identity, profile_id):
         # Get the database representation of the existing cluster
         db_cluster = self.cluster_find(context, identity)
+        db_profile = self.profile_fine(context, profile_id)
+
         LOG.info(_LI('Updating cluster %s'), db_cluster.name)
 
         cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
@@ -411,10 +413,9 @@ class EngineService(service.Service):
             raise exception.NotSupported(feature=msg)
 
         kwargs = {
-            'profile_id': profile_id
+            'profile_id': db_profile.id
         }
 
-        # TODO(Qiming): Hande size changes here!
         action = action_mod.Action(context, 'CLUSTER_UPDATE',
                                    target=cluster.id,
                                    cause=action_mod.CAUSE_RPC,
