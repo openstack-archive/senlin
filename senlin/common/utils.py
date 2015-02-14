@@ -15,9 +15,10 @@ Utilities module.
 '''
 
 import base64
+import six
 import uuid
 
-import six
+from oslo_utils import strutils
 
 from senlin.common import exception
 from senlin.common.i18n import _
@@ -71,3 +72,10 @@ def parse_int_param(name, value, allow_zero=True, allow_negative=False):
     else:
         if not allow_negative and result < 0:
             raise exception.InvalidParameter(name=name, value=result)
+
+
+def parse_bool_param(name, value):
+    if str(value).lower() not in ('true', 'false'):
+        raise exception.InvalidParameter(name=name, value=str(value))
+
+    return strutils.bool_from_string(value, strict=True)
