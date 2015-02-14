@@ -202,8 +202,8 @@ class UserParameterMissing(SenlinException):
     msg_fmt = _("The Parameter (%(key)s) was not provided.")
 
 
-class UnknownUserParameter(SenlinException):
-    msg_fmt = _("The Parameter (%(key)s) was not defined in template.")
+class InvalidParameter(SenlinException):
+    msg_fmt = _("Invalid value %(value)s specified for %(name)s")
 
 
 class InvalidTenant(SenlinException):
