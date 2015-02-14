@@ -24,6 +24,7 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LI
 from senlin.common import messaging as rpc_messaging
+from senlin.common import utils 
 from senlin.db import api as db_api
 from senlin.engine.actions import base as action_mod
 from senlin.engine import cluster as cluster_mod
@@ -359,19 +360,23 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_create(self, context, name, size, profile_id, parent=None,
-                       tags=None, timeout=0):
+                       tags=None, timeout=None):
         db_profile = self.profile_find(context, profile_id)
+
+        init_size = utils.parse_int_param(size)
+        timeout_mins = utils.parse_int_param(timeout)
+
         LOG.info(_LI('Creating cluster %s'), name)
         ctx = context.to_dict()
         kwargs = {
             'user': ctx.get('username', ''),
             'project': ctx.get('tenant_id', ''),
             'parent': parent,
-            'timeout': timeout,
+            'timeout': timeout_mins,
             'tags': tags
         }
 
-        cluster = cluster_mod.Cluster(name, db_profile.id, size, **kwargs)
+        cluster = cluster_mod.Cluster(name, db_profile.id, init_size, **kwargs)
         cluster.store(context)
 
         # Build an Action for cluster creation
