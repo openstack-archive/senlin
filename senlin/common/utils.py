@@ -1,26 +1,25 @@
-#
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
 #         http://www.apache.org/licenses/LICENSE-2.0
 #
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#    License for the specific language governing permissions and limitations
-#    under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
-"""Utilities for creating short ID strings based on a random UUID.
-
-The IDs each comprise 12 (lower-case) alphanumeric characters.
-"""
+'''
+Utilities module.
+'''
 
 import base64
 import uuid
 
 import six
 
+from senlin.common import exception
 from senlin.common.i18n import _
 
 
@@ -57,3 +56,18 @@ def get_id(source_uuid):
 def generate_id():
     """Generate a short (12 character), random id."""
     return get_id(uuid.uuid4())
+
+
+def parse_int_param(name, value, allow_zero=True, allow_negative=False):
+    if value in ('0', 0, None):
+        if allow_zero:
+            return value
+        raise exception.InvalidParameter(name=name, value=value)
+
+    try:
+        result = int(value)
+    except (TypeError, ValueError):
+        raise exception.InvalidParameter(name=name, value=result)
+    else:
+        if not allow_negative and result < 0:
+            raise exception.InvalidParameter(name=name, value=result)
