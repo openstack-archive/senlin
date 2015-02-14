@@ -24,7 +24,7 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LI
 from senlin.common import messaging as rpc_messaging
-from senlin.common import utils 
+from senlin.common import utils
 from senlin.db import api as db_api
 from senlin.engine.actions import base as action_mod
 from senlin.engine import cluster as cluster_mod
@@ -363,8 +363,8 @@ class EngineService(service.Service):
                        tags=None, timeout=None):
         db_profile = self.profile_find(context, profile_id)
 
-        init_size = utils.parse_int_param(size)
-        timeout_mins = utils.parse_int_param(timeout)
+        init_size = utils.parse_int_param(consts.SIZE, size)
+        timeout_mins = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
 
         LOG.info(_LI('Creating cluster %s'), name)
         ctx = context.to_dict()
@@ -518,17 +518,12 @@ class EngineService(service.Service):
     def cluster_scale_out(self, context, identity, count=None):
         # Validation
         db_cluster = self.cluster_find(context, identity)
-        if count is not None:
-            try:
-                node_count = int(count)
-            except (TypeError, ValueError):
-                error = _("The 'count' parameter is not a valid number: "
-                          "'%s'") % count
-                raise exception.SenlinBadRequest(msg=error)
+        delta = utils.parse_int_param('count', count, allow_zero=False)
 
+        if delta is not None:
             LOG.info(_LI('Scaling out cluster %(name)s by %(delta)s nodes'),
-                     {'name': db_cluster.name, 'delta': node_count})
-            inputs = {'count': node_count}
+                     {'name': identity, 'delta': delta})
+            inputs = {'count': delta}
         else:
             LOG.info(_LI('Scaling out cluster %s'), db_cluster.name)
             inputs = {}
@@ -548,17 +543,12 @@ class EngineService(service.Service):
     @request_context
     def cluster_scale_in(self, context, identity, count=None):
         db_cluster = self.cluster_find(context, identity)
-        if count is not None:
-            try:
-                node_count = int(count)
-            except (TypeError, ValueError):
-                error = _("The 'count' parameter is not a valid number: "
-                          "'%s'") % count
-                raise exception.SenlinBadRequest(msg=error)
+        delta = utils.parse_int_param('count', count, allow_zero=False)
 
+        if delta is not None:
             LOG.info(_LI('Scaling in cluster %(name)s by %(delta)s nodes'),
-                     {'name': db_cluster.name, 'delta': node_count})
-            inputs = {'count': node_count}
+                     {'name': identity, 'delta': delta})
+            inputs = {'count': delta}
         else:
             LOG.info(_LI('Scaling in cluster %s'), db_cluster.name)
             inputs = {}
