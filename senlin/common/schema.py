@@ -78,6 +78,7 @@ class Schema(collections.Mapping):
         self.default = default
         self.required = required
         self.updatable = updatable
+        self.constraints = constraints
 
     def has_default(self):
         return self.default is not None
