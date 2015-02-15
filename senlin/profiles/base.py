@@ -13,6 +13,7 @@
 import datetime
 
 from senlin.common import exception
+from senlin.common import schema
 from senlin.db import api as db_api
 from senlin.engine import environment
 from senlin.openstack.common import log as logging
@@ -40,14 +41,17 @@ class Profile(object):
         self.name = name
         self.type = type_name
         self.id = kwargs.get('id', None)
+
+        self.context = kwargs.get('context', None)
+
+        self.spec = kwargs.get('spec', None)
+        self.spec_data = schema.Spec(self.spec_schema, self.spec, self.context)
+
         self.permission = kwargs.get('permission', '')
-        self.spec = kwargs.get('spec', {})
         self.tags = kwargs.get('tags', {})
         self.created_time = kwargs.get('created_time', None)
         self.updated_time = kwargs.get('updated_time', None)
         self.deleted_time = kwargs.get('deleted_time', None)
-
-        self.context = kwargs.get('context', None)
 
     @classmethod
     def from_db_record(cls, context, record):
@@ -136,6 +140,10 @@ class Profile(object):
         profile = cls.load(context, obj.profile_id)
         new_profile = cls.load(context, new_profile_id)
         return profile.do_update(obj, new_profile)
+
+    def validate(self):
+        '''Validate the schema and the data provided.'''
+        self.spec_data.validate()
 
     def do_create(self, obj):
         '''For subclass to override.'''
