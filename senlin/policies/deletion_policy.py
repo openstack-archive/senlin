@@ -39,7 +39,10 @@ Output: policy_data
 
 import random
 
+from senlin.common import constraints
 from senlin.common import consts
+from senlin.common.i18n import _
+from senlin.common import schema
 from senlin.db import api as db_api
 from senlin.policies import base
 
@@ -48,16 +51,18 @@ class DeletionPolicy(base.Policy):
 
     __type_name__ = 'DeletionPolicy'
 
-    CRITERIA = (
-        OLDEST_FIRST,
-        OLDEST_PROFILE_FIRST,
-        YOUNGEST_FIRST,
-        RANDOM,
+    KEYS = (
+        CRITERIA, DESTROY_AFTER_DELETION, GRACE_PERIOD,
+        REDUCE_DESIRED_CAPACITY,
     ) = (
-        'OLDEST_FIRST',
-        'OLDEST_PROFILE_FRIST',
-        'YOUNGEST_FIRST',
-        'random',
+        'criteria', 'destroy_after_deletion', 'grace_period',
+        'reduce_desired_capacity',
+    )
+
+    CRITERIA_VALUES = (
+        OLDEST_FIRST, OLDEST_PROFILE_FIRST, YOUNGEST_FIRST, RANDOM,
+    ) = (
+        'OLDEST_FIRST', 'OLDEST_PROFILE_FRIST', 'YOUNGEST_FIRST', 'RANDOM',
     )
 
     TARGET = [
@@ -68,6 +73,28 @@ class DeletionPolicy(base.Policy):
     PROFILE_TYPE = [
         'ANY'
     ]
+
+    spec_schema = {
+        CRITERIA: schema.String(
+            _('Criteria used in selecting candidates for deletion'),
+            default=RANDOM,
+            constraints=constraints.AllowedValues(CRITERIA_VALUES),
+        ),
+        DESTROY_AFTER_DELETION: schema.Boolean(
+            _('Whethere a node should be completely destroyed after '
+              'deletion. Default to True'),
+            default=True,
+        ),
+        GRACE_PERIOD: schema.Integer(
+            _('Number of seconds before real deletion happens.'),
+            default=0,
+        ),
+        REDUCE_DESIRED_CAPACITY: schema.Boolean(
+            _('Whether the desired capacity of the cluster should be '
+              'reduced along the deletion. Default to False.'),
+            default=False,
+        )
+    }
 
     def __init__(self, type_name, name, **kwargs):
         super(DeletionPolicy, self).__init__(type_name, name, **kwargs)
