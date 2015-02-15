@@ -10,7 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from senlin.common import constraints
 from senlin.common import consts
+from senlin.common.i18n import _
+from senlin.common import schema
 from senlin.policies import base
 
 neutron = None
@@ -35,6 +38,129 @@ class LoadBalancingPolicy(base.Policy):
         'os.nova.server',
         'aws.autoscaling.launchconfig',
     ]
+
+    KEYS = (
+        PROTOCOL_PORT, POOL, VIP,
+    ) = (
+        'protocol_port', 'pool', 'vip',
+    )
+
+    _POOL_KEYS = (
+        POOL_ID, PROTOCOL, POOL_SUBNET, LB_METHOD, ADMIN_STATE_UP,
+    ) = (
+        'pool_id', 'protocol', 'subnet', 'lb_method', 'admin_state_up',
+    )
+
+    PROTOCOLS = (
+        HTTP, HTTPS,
+    ) = (
+        'HTTP', 'HTTPS',
+    )
+
+    LB_METHODS = (
+        ROUND_ROBIN, LEAST_CONNECTIONS, SOURCE_IP,
+    ) = (
+        'ROUND_ROBIN', 'LEAST_CONNECTIONS', 'SOURCE_IP',
+    )
+
+    _VIP_KEYS = (
+        VIP_ID, VIP_SUBNET, ADDRESS, CONNECTION_LIMIT, VIP_PROTOCOL_PORT,
+        VIP_ADMIN_STATE_UP, SESSION_PERSISTENCE,
+    ) = (
+        'vip_id', 'subnet', 'address', 'connection_limit', 'protocol_port',
+        'admin_state_up', 'session_persistence',
+    )
+
+    _SESSION_PERSISTENCE_KEYS = (
+        PERSISTENCE_TYPE, COOKIE_NAME,
+    ) = (
+        'type', 'cookie_name',
+    )
+
+    PERSISTENCE_TYPES = (
+        PERSIST_SOURCE_IP, PERSIST_HTTP_COOKIE, PERSIST_APP_COOKIE,
+    ) = (
+        'SOURCE_IP', 'HTTP_COOKIE', 'APP_COOKIE',
+    )
+
+    spec_schema = {
+        PROTOCOL_PORT: schema.Integer(
+            _('Port on which servers are running on the nodes.'),
+            default=80,
+        ),
+        POOL: schema.Map(
+            _('LB pool properties.'),
+            schema={
+                POOL_ID: schema.String(
+                    _('ID of an existing load-balanced pool.'),
+                ),
+                PROTOCOL: schema.String(
+                    _('Protocol used for load balancing.'),
+                    constraints=[
+                        constraints.AllowedValues(PROTOCOLS),
+                    ],
+                    default=HTTP,
+                ),
+                POOL_SUBNET: schema.String(
+                    _('Subnet for the port on which nodes can be connected.'),
+                    required=True,
+                ),
+                LB_METHOD: schema.String(
+                    _('Load balancing algorithm.'),
+                    constraints=[
+                        constraints.AllowedValues(LB_METHODS),
+                    ],
+                    default=ROUND_ROBIN,
+                ),
+                ADMIN_STATE_UP: schema.Boolean(
+                    _('Administrative state of the pool.'),
+                    default=True,
+                ),
+            },
+        ),
+        VIP: schema.Map(
+            _('VIP address and port of the pool.'),
+            schema={
+                VIP_ID: schema.String(
+                    _('ID of an existing VIP object.'),
+                ),
+                VIP_SUBNET: schema.String(
+                    _('Subnet of the VIP address.'),
+                ),
+                ADDRESS: schema.String(
+                    _('IP address of the VIP.'),
+                    required=True,
+                ),
+                CONNECTION_LIMIT: schema.Integer(
+                    _('Maximum number of connections per second allowed for '
+                      'this VIP'),
+                ),
+                VIP_PROTOCOL_PORT: schema.Integer(
+                    _('TCP port to listen on.'),
+                    default=80,
+                ),
+                VIP_ADMIN_STATE_UP: schema.Boolean(
+                    _('Administrative state of the VIP.'),
+                    default=True,
+                ),
+                SESSION_PERSISTENCE: schema.Map(
+                    _('Session pesistence configuration.'),
+                    schema={
+                        PERSISTENCE_TYPE: schema.String(
+                            _('Type of session persistence implementation.'),
+                            constraints=[
+                                constraints.AllowedValues(PERSISTENCE_TYPES),
+                            ],
+                            default=PERSIST_SOURCE_IP,
+                        ),
+                        COOKIE_NAME: schema.String(
+                            _('Name of cookie if type set to APP_COOKIE.'),
+                        ),
+                    },
+                ),
+            },
+        ),
+    }
 
     def __init__(self, type_name, name, **kwargs):
         super(LoadBalancingPolicy, self).__init__(type_name, name, kwargs)
