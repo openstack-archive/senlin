@@ -267,6 +267,10 @@ class InvalidSchemaError(SenlinException):
     msg_fmt = _("%(message)s")
 
 
+class SpecValidationFailed(SenlinException):
+    msg_fmt = _("%(message)s")
+
+
 class NotSupported(SenlinException):
     msg_fmt = _("%(feature)s is not supported.")
 
