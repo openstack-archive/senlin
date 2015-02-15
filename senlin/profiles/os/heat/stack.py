@@ -15,6 +15,7 @@ import six
 from senlin.common import context
 from senlin.common import exception
 from senlin.common.i18n import _
+from senlin.common import schema
 from senlin.drivers import heat_v1 as heatclient
 from senlin.engine import scheduler
 from senlin.openstack.common import log as logging
@@ -38,18 +39,53 @@ class StackProfile(base.Profile):
         'timeout', 'disable_rollback', 'environment',
     )
 
+    spec_schema = {
+        CONTEXT: schema.Map(
+            _('A dictionary for specifying the customized context for '
+              'stack operations'),
+            default={},
+        ),
+        TEMPLATE: schema.Map(
+            _('Heat stack template.'),
+            required=True,
+        ),
+        PARAMETERS: schema.Map(
+            _('Parameters to be passed to Heat for stack operations.'),
+            default={},
+        ),
+        FILES: schema.Map(
+            _('Contents of files referenced by the template, if any.'),
+            default={},
+        ),
+        TIMEOUT: schema.Integer(
+            _('A integer that specifies the number of minutes that a '
+              'stack operation times out.'),
+        ),
+        DISABLE_ROLLBACK: schema.Boolean(
+            _('A boolean specifying whether a stack operation can be '
+              'rolled back.'),
+            default=True,
+        ),
+        ENVIRONMENT: schema.Map(
+            _('A map that specifies the environment used for stack '
+              'operations.'),
+            default={},
+        )
+    }
+
     def __init__(self, type_name, name, **kwargs):
         super(StackProfile, self).__init__(type_name, name, **kwargs)
 
-        self.template = self.spec.get(self.TEMPLATE, {})
-        self.stack_context = self.spec.get(self.CONTEXT, None)
-        self.parameters = self.spec.get(self.PARAMETERS, {})
-        self.files = self.spec.get(self.FILES, {})
-        self.disable_rollback = self.spec.get(self.DISABLE_ROLLBACK, True)
-        self.timeout = self.spec.get(self.TIMEOUT, 60)
-        self.environment = self.spec.get(self.ENVIRONMENT, {})
+        # TODO(Qiming): remove the initialization below
+        self.template = self.spec_data[self.TEMPLATE]
+        self.stack_context = self.spec_data[self.CONTEXT]
+        self.parameters = self.spec_data[self.PARAMETERS]
+        self.files = self.spec_data[self.FILES]
+        self.disable_rollback = self.spec_data[self.DISABLE_ROLLBACK]
 
-        self.context = kwargs.get('context')
+        # TODO(Qiming): use the global configuration?
+        self.timeout = self.spec_data[self.TIMEOUT]
+        self.environment = self.spec_data[self.ENVIRONMENT]
 
         self.hc = None
         self.stack_id = None
@@ -187,7 +223,7 @@ class StackProfile(base.Profile):
         return True
 
     def get_template(self):
-        return tmpl
+        return {}
 
     def get_schema(self):
-        return schema
+        return {}
