@@ -176,7 +176,11 @@ class EngineService(service.Service):
 
     @request_context
     def profile_type_spec(self, context, type_name):
-        return {}
+        profile = environment.global_env().get_profile(type_name)
+
+        data = dict((name, dict(schema))
+                    for name, schema in profile.spec_schema.items())
+        return {'schema': data}
 
     @request_context
     def profile_type_template(self, context, type_name):
@@ -237,6 +241,7 @@ class EngineService(service.Service):
 
     @request_context
     def profile_update(self, context, profile_id, name, spec, perm, tags):
+
         return {}
 
     @request_context
