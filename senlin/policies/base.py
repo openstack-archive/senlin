@@ -14,6 +14,7 @@ import collections
 import datetime
 
 from senlin.common import exception
+from senlin.common import schema
 from senlin.db import api as db_api
 from senlin.engine import environment
 
@@ -91,13 +92,13 @@ class Policy(object):
         self.level = kwargs.get('level', self.DEBUG)
         self.cooldown = kwargs.get('cooldown', 0)
         self.spec = kwargs.get('spec', {})
+        self.context = kwargs.get('context', {})
         self.data = kwargs.get('data', {})
-
         self.created_time = kwargs.get('created_time', None)
         self.updated_time = kwargs.get('updated_time', None)
         self.deleted_time = kwargs.get('deleted_time', None)
 
-        self.context = kwargs.get('context', {})
+        self.spec_data = schema.Spec(self.spec_schema, self.spec, self.context)
 
     @classmethod
     def _from_db_record(cls, context, record):
@@ -169,6 +170,10 @@ class Policy(object):
             self.id = policy.id
 
         return self.id
+
+    def validate(self):
+        '''Validate the schema and the data provided.'''
+        self.spec_data.validate()
 
     def attach(self, context, cluster_id, policy_data):
         '''Method to be invoked before the policy is attached to a cluster.
