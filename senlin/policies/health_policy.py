@@ -10,7 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from senlin.common import constraints
 from senlin.common import consts
+from senlin.common.i18n import _
+from senlin.common import schema
 from senlin.policies import base
 
 
@@ -19,16 +22,6 @@ class HealthPolicy(base.Policy):
 
     __type_name__ = 'HealthPolicy'
 
-    CHECK_TYPES = (
-        VM_LIFECYCLE_EVENTS,
-        VM_STATUS_POLLING,
-        LB_STATUS_POLLING,
-    ) = (
-        'VM_LIFECYCLE_EVENTS',
-        'NODE_STATUS_POLLING',
-        'LB_STATUS_POLLING',
-    )
-
     TARGET = [
         ('AFTER', consts.CLUSTER_ADD_NODES),
         ('AFTER', consts.CLUSTER_SCALE_OUT),
@@ -36,19 +29,87 @@ class HealthPolicy(base.Policy):
         ('BEFORE', consts.CLUSTER_SCALE_IN),
     ]
 
-    # Should be ANY if profile provides
-    # health check support?
+    # Should be ANY if profile provides health check support?
     PROFILE_TYPE = [
         'os.nova.server',
         'AWS.AutoScaling.LaunchConfiguration',
     ]
 
+    KEYS = (DETECTION, RECOVERY) = ('detection', 'recovery')
+
+    _DETECTION_KEYS = (
+        DETECTION_TYPE, DETECTION_INTERVAL
+    ) = (
+        'type', 'interval'
+    )
+
+    DETECTION_TYPES = (
+        VM_LIFECYCLE_EVENTS, NODE_STATUS_POLLING, LB_STATUS_POLLING,
+    ) = (
+        'VM_LIFECYCLE_EVENTS', 'NODE_STATUS_POLLING', 'LB_STATUS_POLLING',
+    )
+
+    _RECOVERY_KEYS = (
+        RECOVERY_ACTIONS_KEY, RECOVERY_FENCING_KEY
+    ) = (
+        'actions', 'fencing'
+    )
+
+    RECOVERY_ACTIONS = (
+        REBOOT, REBUILD, MIGRATE, EVACUATE, RECREATE, NOP
+    ) = (
+        'REBOOT', 'REBUILD', 'MIGRATE', 'EVACUATE', 'RECREATE', 'NOP',
+    )
+
+    FENCING_OPTIONS = (
+        COMPUTE, STORAGE, NETWORK,
+    ) = (
+        'COMPUTE', 'STORAGE', 'NETWORK'
+    )
+
+    spec_schema = {
+        DETECTION: schema.Map(
+            _('Policy aspect for node failure detection.'),
+            schema={
+                DETECTION_TYPE: schema.String(
+                    _('Type of node failure detection.'),
+                    constraints=constraints.AllowedValues(DETECTION_TYPES),
+                    required=True,
+                ),
+                DETECTION_INTERVAL: schema.Integer(
+                    _('Number of seconds as interval between pollings. '
+                      'Only required when type is about polling.'),
+                    default=60,
+                ),
+            },
+            required=True,
+        ),
+        RECOVERY: schema.Map(
+            _('Policy aspect for node failure recovery.'),
+            schema={
+                RECOVERY_ACTIONS_KEY: schema.List(
+                    _('List of actions to try for node recovery.'),
+                    schema=schema.String(
+                        _('Action to try for node recovery.'),
+                        constraints=constraints.AllowedValues(RECOVERY_ACTIONS)
+                    ),
+                ),
+                RECOVERY_FENCING_KEY: schema.List(
+                    _('List of services to be fenced.'),
+                    schema=schema.String(
+                        _('Service to be fenced.'),
+                        constraints=constraints.AllowedValues(FENCING_OPTIONS),
+                    ),
+                ),
+            }
+        ),
+    }
+
     def __init__(self, type_name, name, **kwargs):
         super(HealthPolicy, self).__init__(type_name, name, kwargs)
 
-        self.interval = self.spec.get('interval')
-        self.grace_period = self.spec.get('grace_period')
-        self.check_type = self.spec.get('check_type')
+        self.check_type = self.spec_data[self.DETECTION][self.DETECTION_TYPE]
+        self.interval = self.spec_data[self.DETECTION][self.CHECK_INTERVAL]
 
     def attach(self, cluster_id):
         '''Hook for policy attach.
