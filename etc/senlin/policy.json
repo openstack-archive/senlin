@@ -8,6 +8,8 @@
     "profile_types:template": "",
     "profile_types:spec": "",
     "policy_types:index": "",
+    "policy_types:template": "",
+    "policy_types:spec": "",
     "clusters:index": "rule:admin_or_owner",
     "clusters:create": "",
     "clusters:delete": "rule:admin_or_owner",
