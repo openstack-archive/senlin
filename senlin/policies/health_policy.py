@@ -73,7 +73,9 @@ class HealthPolicy(base.Policy):
             schema={
                 DETECTION_TYPE: schema.String(
                     _('Type of node failure detection.'),
-                    constraints=constraints.AllowedValues(DETECTION_TYPES),
+                    constraints=[
+                        constraints.AllowedValues(DETECTION_TYPES),
+                    ],
                     required=True,
                 ),
                 DETECTION_INTERVAL: schema.Integer(
@@ -91,14 +93,18 @@ class HealthPolicy(base.Policy):
                     _('List of actions to try for node recovery.'),
                     schema=schema.String(
                         _('Action to try for node recovery.'),
-                        constraints=constraints.AllowedValues(RECOVERY_ACTIONS)
+                        constraints=[
+                            constraints.AllowedValues(RECOVERY_ACTIONS),
+                        ]
                     ),
                 ),
                 RECOVERY_FENCING_KEY: schema.List(
                     _('List of services to be fenced.'),
                     schema=schema.String(
                         _('Service to be fenced.'),
-                        constraints=constraints.AllowedValues(FENCING_OPTIONS),
+                        constraints=[
+                            constraints.AllowedValues(FENCING_OPTIONS),
+                        ],
                     ),
                 ),
             }

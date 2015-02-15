@@ -78,7 +78,9 @@ class DeletionPolicy(base.Policy):
         CRITERIA: schema.String(
             _('Criteria used in selecting candidates for deletion'),
             default=RANDOM,
-            constraints=constraints.AllowedValues(CRITERIA_VALUES),
+            constraints=[
+                constraints.AllowedValues(CRITERIA_VALUES),
+            ]
         ),
         DESTROY_AFTER_DELETION: schema.Boolean(
             _('Whethere a node should be completely destroyed after '

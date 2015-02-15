@@ -71,7 +71,9 @@ class ScalingPolicy(base.Policy):
             schema={
                 ADJUSTMENT_TYPE: schema.String(
                     _('Type of adjustment when scaling is triggered.'),
-                    constraints=constraints.AllowedValues(ADJUSTMENT_TYPES),
+                    constraints=[
+                        constraints.AllowedValues(ADJUSTMENT_TYPES),
+                    ],
                     default=CHANGE_IN_CAPACITY,
                 ),
                 ADJUSTMENT_NUMBER: schema.Number(
