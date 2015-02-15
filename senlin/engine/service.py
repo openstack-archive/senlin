@@ -257,7 +257,11 @@ class EngineService(service.Service):
 
     @request_context
     def policy_type_spec(self, context, type_name):
-        return {}
+        policy_type = environment.global_env().get_policy(type_name)
+
+        data = dict((name, dict(schema))
+                    for name, schema in policy_type.spec_schema.items())
+        return {'schema': data}
 
     @request_context
     def policy_type_template(self, context, type_name):
