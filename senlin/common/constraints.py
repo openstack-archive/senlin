@@ -14,9 +14,16 @@ import collections
 import six
 
 from senlin.common import exception
+from senlin.common.i18n import _ 
 
 
-class BaseConstraint(object):
+class BaseConstraint(collections.Mapping):
+    KEYS = (
+        TYPE, CONSTRAINT,
+    ) = (
+        'type', 'constraint',
+    )
+
     def __str__(self):
         '''Utility method for generating schema docs.'''
         return self.desc()
@@ -30,6 +37,30 @@ class BaseConstraint(object):
         # The actual validation is implemented by subclasses
         if not self._validate(value, context):
             raise ValueError(self._error(value))
+
+    @classmethod
+    def _name(cls):
+        return cls.__name__
+
+    def __getitem__(self, key):
+        if key == self.TYPE:
+            return self._name()
+        elif key == self.CONSTRAINT:
+            return self._constraint()
+
+        raise KeyError(key)
+
+    def __iter__(self):
+        for k in self.KEYS:
+            try:
+                self[k]
+            except KeyError:
+                pass
+            else:
+                yield k
+
+    def __len__(self):
+        return len(list(iter(self)))
 
 
 class AllowedValues(BaseConstraint):
@@ -55,3 +86,6 @@ class AllowedValues(BaseConstraint):
             return all(v in self.allowed for v in value)
 
         return value in self.allowed
+
+    def _constraint(self):
+        return list(self.allowed)
