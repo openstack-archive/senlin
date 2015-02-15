@@ -225,6 +225,7 @@ class EngineService(service.Service):
             'tags': tags,
         }
         profile = plugin(type, name, **kwargs)
+        profile.validate()
         profile.store(context)
         return profile.to_dict()
 
@@ -305,6 +306,7 @@ class EngineService(service.Service):
             'cooldown': cooldown,
         }
         policy = plugin(type, name, **kwargs)
+        policy.validate()
         policy.store(context)
         return policy.to_dict()
 
