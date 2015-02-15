@@ -10,9 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from senlin.common import constraints
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common.i18n import _LW
+from senlin.common import schema
 from senlin.db import api as db_api
 from senlin.openstack.common import log as logging
 from senlin.policies import base
@@ -38,31 +40,64 @@ class ScalingPolicy(base.Policy):
         'ANY',
     ]
 
-    ADJUSTMENT_TYPE = (
+    KEYS = (
+        MIN_SIZE, MAX_SIZE, ADJUSTMENT,
+    ) = (
+        'min_size', 'max_size', 'adjustment',
+    )
+
+    ADJUSTMENT_TYPES = (
         EXACT_CAPACITY, CHANGE_IN_CAPACITY, CHANGE_IN_PERCENTAGE,
     ) = (
         'EXACT_CAPACITY', 'CHANGE_IN_CAPACITY', 'CHANGE_IN_PERCENTAGE',
     )
 
-    DEFAULT_TYPE = CHANGE_IN_CAPACITY
-    DEFAULT_NUMBER = 1
-    DEFAULT_MIN_STEP = 1
+    _ADJUSTMENT_KEYS = (
+        ADJUSTMENT_TYPE, ADJUSTMENT_NUMBER, MIN_STEP,
+    ) = (
+        'type', 'number', 'min_step',
+    )
+
+    spec_schema = {
+        MIN_SIZE: schema.Integer(
+            _('Minumum size for the cluster.'),
+            default=0,
+        ),
+        MAX_SIZE: schema.Integer(
+            _('Maximum size for the cluster.'),
+        ),
+        ADJUSTMENT: schema.Map(
+            _('Detailed specification for scaling adjustments.'),
+            schema={
+                ADJUSTMENT_TYPE: schema.String(
+                    _('Type of adjustment when scaling is triggered.'),
+                    constraints=constraints.AllowedValues(ADJUSTMENT_TYPES),
+                    default=CHANGE_IN_CAPACITY,
+                ),
+                ADJUSTMENT_NUMBER: schema.Number(
+                    _('A number specifying the amount of adjustment.'),
+                    default=1,
+                ),
+                MIN_STEP: schema.Integer(
+                    _('When adjustment type is set to "CHANGE_IN_PERCENTAGE",'
+                      ' this specifies the cluster size will be changed by '
+                      'at least this number of nodes.'),
+                    default=1,
+                ),
+            }
+        ),
+    }
 
     def __init__(self, type_name, name, **kwargs):
         super(ScalingPolicy, self).__init__(type_name, name, **kwargs)
 
-        self.min_size = self.spec.get('min_size')
-        self.max_size = self.spec.get('max_size')
-        adjustment = self.spec.get('adjustment')
+        self.min_size = self.spec_data[self.MIN_SIZE]
+        self.max_size = self.spec_data[self.MAX_SIZE]
+        adjustment = self.spec_data[self.ADJUSTMENT]
 
-        if adjustment is not None:
-            self.adjustment_type = adjustment.get('type')
-            self.adjustment_number = adjustment.get('number')
-            self.adjustment_min_step = adjustment.get('min_step')
-        else:
-            self.adjustment_type = self.DEFAULT_TYPE
-            self.adjustment_number = self.DEFAULT_NUMBER
-            self.adjustment_min_step = self.DEFAULT_MIN_STEP
+        self.adjustment_type = adjustment[self.ADJUSTMENT_TYPE]
+        self.adjustment_number = adjustment[self.ADJUSTMENT_NUMBER]
+        self.adjustment_min_step = adjustment.get[self.MIN_STEP]
 
         # TODO(anyone): Make sure the default cooldown can be used if
         # not specified
