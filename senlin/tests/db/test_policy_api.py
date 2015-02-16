@@ -93,5 +93,5 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         policy_id = policy.id
         db_api.policy_delete(self.ctx, policy.id)
 
-        self.assertRaises(exception.NotFound, db_api.policy_get,
-                          self.ctx, policy_id)
+        policy = db_api.policy_get(self.ctx, policy_id)
+        self.assertIsNone(policy)
