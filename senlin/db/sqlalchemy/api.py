@@ -274,17 +274,19 @@ def cluster_update(context, cluster_id, values):
 
 
 def cluster_delete(context, cluster_id):
-    cluster = cluster_get(context, cluster_id)
-    if not cluster:
+    session = _session(context)
+
+    cluster = session.query(models.Cluster).get(cluster_id)
+    if cluster is None or cluster.deleted_time is not None:
         raise exception.NotFound(
             _('Attempt to delete a cluster with id "%s" that does '
               'not exist failed') % cluster_id)
 
-    session = orm_session.Session.object_session(cluster)
-
-    nodes = node_get_all_by_cluster(context, cluster_id)
-    for node in nodes.values():
-        session.delete(node)
+    query = session.query(models.Node).filter_by(cluster_id=cluster_id)
+    nodes = query.all()
+    if len(nodes) != 0:
+        for node in nodes:
+            session.delete(node)
 
     cluster.soft_delete(session=session)
     session.flush()
