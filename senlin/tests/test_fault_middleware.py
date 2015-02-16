@@ -60,7 +60,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
             'code': 404,
             'error': {
                 'code': 404,
-                'message': 'The Cluster (a) could not be found.',
+                'message': 'The cluster (a) could not be found.',
                 'traceback': None,
                 'type': 'ClusterNotFound'
             },
@@ -204,7 +204,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
             'code': 404,
             'error': {
                 'code': 404,
-                'message': 'The Cluster (a) could not be found.',
+                'message': 'The cluster (a) could not be found.',
                 'traceback': None,
                 'type': 'ClusterNotFoundChild'
             },
