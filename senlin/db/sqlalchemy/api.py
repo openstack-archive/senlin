@@ -21,6 +21,7 @@ from oslo_config import cfg
 from oslo_db.sqlalchemy import session as db_session
 from oslo_db.sqlalchemy import utils
 from sqlalchemy.orm import session as orm_session
+from sqlalchemy import exc
 
 from senlin.common import consts
 from senlin.common import exception
@@ -1198,20 +1199,32 @@ def action_mark_cancelled(context, action_id, timestamp):
 
 
 def action_acquire(context, action_id, owner, timestamp):
-    query = model_query(context, models.Action)
-    action = query.get(action_id)
+    session = _session(context)
+
+    action = session.query(models.Action).get(action_id)
     if not action:
         return None
 
     if action.owner and action.owner != owner:
         return None
 
-    action.owner = owner
-    action.start_time = timestamp
-    action.status = ACTION_RUNNING
-    action.status_reason = _('The action is being processed.')
-    action.save(query.session)
-    return action
+    try:
+        session.begin()
+        try:
+
+            action.owner = owner
+            action.start_time = timestamp
+            action.status = ACTION_RUNNING
+            action.status_reason = _('The action is being processed.')
+            action.save(_session(context))
+
+            session.commit()
+            return action
+        except:
+            session.rollback()
+	    return None
+    except exc.InvalidRequestError:
+	return None
 
 
 def action_abandon(context, action_id):
