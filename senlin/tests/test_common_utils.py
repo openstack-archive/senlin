@@ -10,11 +10,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import testtools
+import requests
+from requests import exceptions
+import six
 import uuid
 
+from oslo_config import cfg
+
 from senlin.common import exception
-from senlin.common import utils 
+from senlin.common import utils
 from senlin.tests.common import base
 
 
@@ -100,10 +104,93 @@ class TestParameterParsing(base.SenlinTestCase):
         for value in (0, '0'):
             self.assertRaises(exception.InvalidParameter,
                               utils.parse_int_param, name, value,
-                                                    allow_zero=False)
+                              allow_zero=False)
         for value in (-1, '-2'):
             self.assertTrue(utils.parse_int_param(name, value,
                                                   allow_negative=True))
         for value in (-1, '-2'):
             self.assertRaises(exception.InvalidParameter,
                               utils.parse_int_param, name, value)
+
+
+class Response(object):
+    def __init__(self, buf=''):
+        self.buf = buf
+
+    def iter_content(self, chunk_size=1):
+        while self.buf:
+            yield self.buf[:chunk_size]
+            self.buf = self.buf[chunk_size:]
+
+    def raise_for_status(self):
+        pass
+
+
+class UrlFetchTest(base.SenlinTestCase):
+    def setUp(self):
+        super(UrlFetchTest, self).setUp()
+
+    def test_file_scheme_default_behaviour(self):
+        self.assertRaises(utils.URLFetchError,
+                          utils.url_fetch, 'file:///etc/profile')
+
+    def test_file_scheme_supported(self):
+        data = '{ "foo": "bar" }'
+        url = 'file:///etc/profile'
+
+        self.patchobject(six.moves.urllib.request, 'urlopen',
+                         return_value=six.moves.cStringIO(data))
+        actual = utils.url_fetch(url, allowed_schemes=['file'])
+        self.assertEqual(data, actual)
+
+    def test_file_scheme_failure(self):
+        url = 'file:///etc/profile'
+        self.patchobject(six.moves.urllib.request, 'urlopen',
+                         side_effect=six.moves.urllib.error.URLError('oops'))
+
+        self.assertRaises(utils.URLFetchError,
+                          utils.url_fetch, url, allowed_schemes=['file'])
+
+    def test_http_scheme(self):
+        url = 'http://example.com/somedata'
+        data = '{ "foo": "bar" }'
+        response = Response(data)
+        self.patchobject(requests, 'get', return_value=response)
+        self.assertEqual(data, utils.url_fetch(url))
+
+    def test_https_scheme(self):
+        url = 'https://example.com/somedata'
+        data = '{ "foo": "bar" }'
+        self.patchobject(requests, 'get', return_value=Response(data))
+        self.assertEqual(data, utils.url_fetch(url))
+
+    def test_http_error(self):
+        url = 'http://example.com/somedata'
+
+        self.patchobject(requests, 'get', side_effect=exceptions.HTTPError())
+        self.assertRaises(utils.URLFetchError, utils.url_fetch, url)
+
+    def test_non_exist_url(self):
+        url = 'http://non-exist.com/somedata'
+
+        self.patchobject(requests, 'get', side_effect=exceptions.Timeout())
+        self.assertRaises(utils.URLFetchError, utils.url_fetch, url)
+
+    def test_garbage(self):
+        self.assertRaises(utils.URLFetchError, utils.url_fetch, 'wibble')
+
+    def test_max_fetch_size_okay(self):
+        url = 'http://example.com/somedata'
+        data = '{ "foo": "bar" }'
+        cfg.CONF.set_override('max_response_size', 500)
+        self.patchobject(requests, 'get', return_value=Response(data))
+        utils.url_fetch(url)
+
+    def test_max_fetch_size_error(self):
+        url = 'http://example.com/somedata'
+        data = '{ "foo": "bar" }'
+        cfg.CONF.set_override('max_response_size', 5)
+        self.patchobject(requests, 'get', return_value=Response(data))
+        exception = self.assertRaises(utils.URLFetchError,
+                                      utils.url_fetch, url)
+        self.assertIn("Data exceeds", six.text_type(exception))

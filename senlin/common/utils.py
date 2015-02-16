@@ -15,13 +15,26 @@ Utilities module.
 '''
 
 import base64
+import requests
+from requests import exceptions
 import six
+from six.moves import urllib
 import uuid
 
+from oslo_config import cfg
 from oslo_utils import strutils
 
 from senlin.common import exception
 from senlin.common.i18n import _
+from senlin.common.i18n import _LI
+from senlin.openstack.common import log as logging
+
+cfg.CONF.import_opt('max_response_size', 'senlin.common.config')
+LOG = logging.getLogger(__name__)
+
+
+class URLFetchError(exception.Error, IOError):
+    pass
 
 
 def _to_byte_string(value, num_bits):
@@ -73,7 +86,7 @@ def parse_int_param(name, value, allow_zero=True, allow_negative=False):
     except (TypeError, ValueError):
         raise exception.InvalidParameter(name=name, value=value)
     else:
-        if allow_negative == False and result < 0:
+        if allow_negative is False and result < 0:
             raise exception.InvalidParameter(name=name, value=value)
 
     return result
@@ -84,3 +97,48 @@ def parse_bool_param(name, value):
         raise exception.InvalidParameter(name=name, value=str(value))
 
     return strutils.bool_from_string(value, strict=True)
+
+
+def url_fetch(url, allowed_schemes=('http', 'https')):
+    '''Get the data at the specified URL.
+
+    The URL must use the http: or https: schemes.
+    The file: scheme is also supported if you override
+    the allowed_schemes argument.
+    Raise an IOError if getting the data fails.
+    '''
+    LOG.info(_LI('Fetching data from %s'), url)
+
+    components = urllib.parse.urlparse(url)
+
+    if components.scheme not in allowed_schemes:
+        raise URLFetchError(_('Invalid URL scheme %s') % components.scheme)
+
+    if components.scheme == 'file':
+        try:
+            return urllib.request.urlopen(url).read()
+        except urllib.error.URLError as uex:
+            raise URLFetchError(_('Failed to retrieve data: %s') % uex)
+
+    try:
+        resp = requests.get(url, stream=True)
+        resp.raise_for_status()
+
+        # We cannot use resp.text here because it would download the entire
+        # file, and a large enough file would bring down the engine.  The
+        # 'Content-Length' header could be faked, so it's necessary to
+        # download the content in chunks to until max_reponse_size is reached.
+        # The chunk_size we use needs to balance CPU-intensive string
+        # concatenation with accuracy (eg. it's possible to fetch 1000 bytes
+        # greater than max_response_size with a chunk_size of 1000).
+        reader = resp.iter_content(chunk_size=1000)
+        result = ""
+        for chunk in reader:
+            result += chunk
+            if len(result) > cfg.CONF.max_response_size:
+                raise URLFetchError("Data exceeds maximum allowed size (%s"
+                                    " bytes)" % cfg.CONF.max_response_size)
+        return result
+
+    except exceptions.RequestException as ex:
+        raise URLFetchError(_('Failed to retrieve data: %s') % ex)
