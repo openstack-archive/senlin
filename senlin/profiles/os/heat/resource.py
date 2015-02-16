@@ -22,6 +22,9 @@ class ResourceProfile(base.Profile):
     When this profile is used, the whole cluster is Heat stack, composed
     of resources initialzed from this profile.
     '''
+    spec_schema = {}
+
+
     def __init__(self, name, type_name=__type_name__, **kwargs):
         super(ResourceProfile, self).__init__(name, type_name, kwargs)
 
