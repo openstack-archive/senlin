@@ -33,17 +33,17 @@ class ActionData(object):
         self.data = data
 
     def name(self):
-        if self.NAME not in self.data:
+        if consts.ACTION_NAME not in self.data:
             raise exc.HTTPBadRequest(_("No action name specified"))
         return self.data[consts.ACTION_NAME]
 
     def target(self):
-        if self.TARGET not in self.data:
+        if consts.ACTION_TARGET not in self.data:
             raise exc.HTTPBadRequest(_("No target specified"))
         return self.data[consts.ACTION_TARGET]
 
     def action(self):
-        if self.ACTION not in self.data:
+        if consts.ACTION_ACTION not in self.data:
             raise exc.HTTPBadRequest(_("No action specified"))
         return self.data[consts.ACTION_ACTION]
 
