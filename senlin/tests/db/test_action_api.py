@@ -382,9 +382,9 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.assertEqual(db_api.ACTION_RUNNING, action.status)
         self.assertEqual(timestamp, action.start_time)
 
-        self.assertRaises(exception.ActionIsOwned,
-                          db_api.action_acquire,
-                          self.ctx, action.id, 'worker2', timestamp)
+        action = db_api.action_acquire(self.ctx, action.id, 'worker2',
+                                       timestamp)
+        self.assertIsNone(action)
 
     def test_action_delete(self):
         action = _create_action(self.ctx)

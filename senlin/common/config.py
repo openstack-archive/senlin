@@ -16,8 +16,8 @@ Routines for configuring Senlin
 """
 import logging as sys_logging
 import os
+import socket
 
-from eventlet.green import socket
 from oslo_config import cfg
 
 from senlin.common.i18n import _
