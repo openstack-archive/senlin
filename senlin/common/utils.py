@@ -60,18 +60,23 @@ def generate_id():
 
 
 def parse_int_param(name, value, allow_zero=True, allow_negative=False):
-    if value in ('0', 0, None):
+    if value is None:
+        return None
+
+    if value in ('0', 0):
         if allow_zero:
-            return value
+            return int(value)
         raise exception.InvalidParameter(name=name, value=value)
 
     try:
         result = int(value)
     except (TypeError, ValueError):
-        raise exception.InvalidParameter(name=name, value=result)
+        raise exception.InvalidParameter(name=name, value=value)
     else:
-        if not allow_negative and result < 0:
-            raise exception.InvalidParameter(name=name, value=result)
+        if allow_negative == False and result < 0:
+            raise exception.InvalidParameter(name=name, value=value)
+
+    return result
 
 
 def parse_bool_param(name, value):
