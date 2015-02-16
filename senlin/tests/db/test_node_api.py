@@ -53,8 +53,8 @@ class DBAPINodeTest(base.SenlinTestCase):
         node = db_api.node_get(self.ctx, res.id)
         self.assertIsNotNone(node)
 
-        self.assertRaises(exception.NotFound, db_api.node_get,
-                          self.ctx, UUID2)
+        node = db_api.node_get(self.ctx, UUID2)
+        self.assertIsNone(node)
 
     def test_node_get_by_name_and_cluster(self):
         shared.create_node(self.ctx, self.cluster, self.profile)
@@ -107,11 +107,11 @@ class DBAPINodeTest(base.SenlinTestCase):
 
         nodes = db_api.node_get_all_by_cluster(self.ctx, self.cluster.id)
         self.assertEqual(2, len(nodes))
-        self.assertEqual('node1', nodes.get('node1').name)
-        self.assertEqual('node2', nodes.get('node2').name)
+        self.assertEqual('node1', nodes[0].name)
+        self.assertEqual('node2', nodes[1].name)
 
-        self.assertRaises(exception.NotFound, db_api.node_get_all_by_cluster,
-                          self.ctx, self.cluster2.id)
+        nodes = db_api.node_get_all_by_cluster(self.ctx, self.cluster2.id)
+        self.assertEqual(0, len(nodes))
 
     def test_node_status_reason_truncate(self):
         node = shared.create_node(self.ctx, self.cluster, self.profile,
