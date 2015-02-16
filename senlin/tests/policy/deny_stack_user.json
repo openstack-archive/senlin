@@ -1,3 +1,0 @@
-{
-    "deny_cluster_user": "not role:senlin_cluster_user",
-}

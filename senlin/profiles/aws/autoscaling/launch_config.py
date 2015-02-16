@@ -23,6 +23,8 @@ class LaunchConfigProfile(base.Profile):
     member is a YAML snippet that describes a
     AWS::AutoScaling::LaunchConfiguration resource.
     '''
+    spec_schema = {}
+
     def __init__(self, name, type_name=__type_name__, **kwargs):
         super(LaunchConfigProfile, self).__init__(name, type_name, kwargs)
 

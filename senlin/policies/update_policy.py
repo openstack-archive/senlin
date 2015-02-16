@@ -39,6 +39,8 @@ Output:
 '''
 
 from senlin.common import consts
+from senlin.common.i18n import _
+from senlin.common import schema
 from senlin.policies import base
 
 
@@ -53,12 +55,32 @@ class UpdatePolicy(base.Policy):
     __type_name__ = 'UpdatePolicy'
 
     TARGET = [
-        ('WHEN', consts.CLUSTER_UPDATE),
+        ('BEFORE', consts.CLUSTER_UPDATE),
     ]
 
     PROFILE_TYPE = [
         'ANY'
     ]
+
+    KEYS = (
+        MIN_IN_SERVICE, MAX_BATCH_SIZE, PAUSE_TIME,
+    ) = (
+        'min_in_service', 'max_batch_size', 'pause_time',
+    )
+
+    spec_schema = {
+        MIN_IN_SERVICE: schema.Integer(
+            _('Minimum number of nodes in service when performing updates.'),
+            default=1,
+        ),
+        MAX_BATCH_SIZE: schema.Integer(
+            _('Maximum number of nodes that can be updated at the same '
+              'time.'),
+        ),
+        PAUSE_TIME: schema.Integer(
+            _('Number of seconds between update batches if any.'),
+        )
+    }
 
     def __init__(self, type_name, name, **kwargs):
         super(UpdatePolicy, self).__init__(type_name, name, **kwargs)

@@ -18,6 +18,9 @@ from oslo_utils import strutils
 
 from senlin.common import exception
 from senlin.common.i18n import _
+from senlin.openstack.common import log as logging
+
+LOG = logging.getLogger(__name__)
 
 
 class AnyIndexDict(collections.Mapping):
@@ -316,6 +319,11 @@ class Map(Schema):
             return super(Map, self).__getitem__(key)
 
     def _get_children(self, values, context=None):
+        # There are cases where the Map is not specified to the very detailed
+        # levels, we treat them as valid specs as well.
+        if self.schema is None:
+            return values
+
         sub_schema = self.schema.schema
         if sub_schema is not None:
             # sub_schema shoud be a dict here
@@ -375,7 +383,7 @@ class Spec(collections.Mapping):
             return schema_item.resolve(raw_value)
         elif schema_item.has_default():
             return schema_item.get_default()
-        elif schema_item.required():
+        elif schema_item.required:
             raise ValueError(_('Required spec item "%s" not assigned') % key)
 
     def __getitem__(self, key):
