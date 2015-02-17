@@ -1,25 +1,25 @@
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#         http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
 
 import copy
+import logging
 import random
 import time
 
 from oslo_config import cfg
 import six
 
-from senlin.openstack.common._i18n import _, _LE, _LI
-from senlin.openstack.common import log as logging
+from openstack.common._i18n import _, _LE, _LI
 
 
 periodic_opts = [
@@ -55,14 +55,15 @@ def periodic_task(*args, **kwargs):
            interval of 60 seconds.
 
         2. With arguments:
-           @periodic_task(spacing=N [, run_immediately=[True|False]])
+           @periodic_task(spacing=N [, run_immediately=[True|False]]
+           [, name=[None|"string"])
            this will be run on approximately every N seconds. If this number is
            negative the periodic task will be disabled. If the run_immediately
            argument is provided and has a value of 'True', the first run of the
            task will be shortly after task scheduler starts.  If
            run_immediately is omitted or set to 'False', the first time the
            task runs will be approximately N seconds after the task scheduler
-           starts.
+           starts. If name is not provided, __name__ of function is used.
     """
     def decorator(f):
         # Test for old style invocation
@@ -76,6 +77,7 @@ def periodic_task(*args, **kwargs):
             f._periodic_enabled = False
         else:
             f._periodic_enabled = kwargs.pop('enabled', True)
+        f._periodic_name = kwargs.pop('name', f.__name__)
 
         # Control frequency
         f._periodic_spacing = kwargs.pop('spacing', 0)
@@ -105,6 +107,36 @@ def periodic_task(*args, **kwargs):
 
 
 class _PeriodicTasksMeta(type):
+    def _add_periodic_task(cls, task):
+        """Add a periodic task to the list of periodic tasks.
+
+        The task should already be decorated by @periodic_task.
+
+        :return: whether task was actually enabled
+        """
+        name = task._periodic_name
+
+        if task._periodic_spacing < 0:
+            LOG.info(_LI('Skipping periodic task %(task)s because '
+                         'its interval is negative'),
+                     {'task': name})
+            return False
+        if not task._periodic_enabled:
+            LOG.info(_LI('Skipping periodic task %(task)s because '
+                         'it is disabled'),
+                     {'task': name})
+            return False
+
+        # A periodic spacing of zero indicates that this task should
+        # be run on the default interval to avoid running too
+        # frequently.
+        if task._periodic_spacing == 0:
+            task._periodic_spacing = DEFAULT_INTERVAL
+
+        cls._periodic_tasks.append((name, task))
+        cls._periodic_spacing[name] = task._periodic_spacing
+        return True
+
     def __init__(cls, names, bases, dict_):
         """Metaclass that allows us to collect decorated periodic tasks."""
         super(_PeriodicTasksMeta, cls).__init__(names, bases, dict_)
@@ -125,28 +157,7 @@ class _PeriodicTasksMeta(type):
 
         for value in cls.__dict__.values():
             if getattr(value, '_periodic_task', False):
-                task = value
-                name = task.__name__
-
-                if task._periodic_spacing < 0:
-                    LOG.info(_LI('Skipping periodic task %(task)s because '
-                                 'its interval is negative'),
-                             {'task': name})
-                    continue
-                if not task._periodic_enabled:
-                    LOG.info(_LI('Skipping periodic task %(task)s because '
-                                 'it is disabled'),
-                             {'task': name})
-                    continue
-
-                # A periodic spacing of zero indicates that this task should
-                # be run on the default interval to avoid running too
-                # frequently.
-                if task._periodic_spacing == 0:
-                    task._periodic_spacing = DEFAULT_INTERVAL
-
-                cls._periodic_tasks.append((name, task))
-                cls._periodic_spacing[name] = task._periodic_spacing
+                cls._add_periodic_task(value)
 
 
 def _nearest_boundary(last_run, spacing):
@@ -177,6 +188,15 @@ class PeriodicTasks(object):
         self._periodic_last_run = {}
         for name, task in self._periodic_tasks:
             self._periodic_last_run[name] = task._periodic_last_run
+
+    def add_periodic_task(self, task):
+        """Add a periodic task to the list of periodic tasks.
+
+        The task should already be decorated by @periodic_task.
+        """
+        if self.__class__._add_periodic_task(task):
+            self._periodic_last_run[task._periodic_name] = (
+                task._periodic_last_run)
 
     def run_periodic_tasks(self, context, raise_on_error=False):
         """Tasks to be run at a periodic interval."""

@@ -91,6 +91,7 @@ as it allows particular rules to be explicitly disabled.
 import abc
 import ast
 import copy
+import logging
 import os
 import re
 
@@ -100,9 +101,8 @@ import six
 import six.moves.urllib.parse as urlparse
 import six.moves.urllib.request as urlrequest
 
-from senlin.common.i18n import _, _LE, _LI
-from senlin.openstack.common import fileutils
-from senlin.openstack.common import log as logging
+from openstack.common import fileutils
+from openstack.common._i18n import _, _LE, _LI
 
 
 policy_opts = [
@@ -132,7 +132,7 @@ _checks = {}
 
 
 def list_opts():
-    """Entry point for oslo.config-generator."""
+    """Entry point for oslo-config-generator."""
     return [(None, copy.deepcopy(policy_opts))]
 
 
@@ -960,7 +960,3 @@ class GenericCheck(Check):
             except KeyError:
                 return False
         return match == six.text_type(leftval)
-
-
-def list_opts():
-    yield None, policy_opts 
