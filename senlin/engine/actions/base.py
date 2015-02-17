@@ -353,7 +353,7 @@ class Action(object):
 
             # Abort policy checking if failures found
             if data.status == policy_mod.CHECK_ERROR:
-                LOG.warning(_('Failed policy checking: %s' % data.reason))
+                LOG.warning(_('Failed policy checking: %s'), data.reason)
                 return data
 
         return data

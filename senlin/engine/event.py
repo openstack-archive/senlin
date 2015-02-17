@@ -50,7 +50,7 @@ class Event(object):
 
 def critical(context, entity, action, status, timestamp=None, reason=''):
     entity_type = class_mapping[entity.__class__]
-    event = Event(log.CRITICAL, context, entity, action, status,
+    event = Event(logging.CRITICAL, context, entity, action, status,
                   entity_type=entity_type)
     db_api.add_event(event)
     LOG.critical(_LC(''))
@@ -58,7 +58,7 @@ def critical(context, entity, action, status, timestamp=None, reason=''):
 
 def error(context, entity, action, status, timestamp=None, reason=''):
     entity_type = class_mapping[entity.__class__]
-    event = Event(log.ERROR, context, entity, action, status,
+    event = Event(logging.ERROR, context, entity, action, status,
                   entity_type=entity_type)
     db_api.add_event(event)
     LOG.error(_LE(''))
@@ -66,7 +66,7 @@ def error(context, entity, action, status, timestamp=None, reason=''):
 
 def warning(context, entity, action, status, timestamp=None, reason=''):
     entity_type = class_mapping[entity.__class__]
-    event = Event(log.WARNING, context, entity, action, status,
+    event = Event(logging.WARNING, context, entity, action, status,
                   entity_type=entity_type)
     db_api.add_event(event)
     LOG.warning(_LW(''))
@@ -74,7 +74,7 @@ def warning(context, entity, action, status, timestamp=None, reason=''):
 
 def info(context, entity, action, status, timestamp=None, reason=''):
     entity_type = class_mapping[entity.__class__]
-    event = Event(log.INFO, context, entity, action, status,
+    event = Event(logging.INFO, context, entity, action, status,
                   entity_type=entity_type)
     db_api.add_event(event)
     LOG.info(_LI(''))

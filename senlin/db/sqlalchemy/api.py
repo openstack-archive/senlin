@@ -21,8 +21,9 @@ from oslo_config import cfg
 from oslo_db.sqlalchemy import session as db_session
 from oslo_db.sqlalchemy import utils
 from oslo_log import log as logging
-from sqlalchemy.orm import session as orm_session
+
 from sqlalchemy import exc
+from sqlalchemy.orm import session as orm_session
 
 from senlin.common import consts
 from senlin.common import exception
@@ -108,9 +109,9 @@ def _paginate_query(context, query, model, limit=None, marker=None,
     try:
         query = utils.paginate_query(query, model, limit, sort_keys,
                                      model_marker, sort_dir)
-    except utils.InvalidSortKey as exc:
+    except utils.InvalidSortKey as ex:
         # TODO(Qiming): Catch this exception and return to user
-        raise exception.Invalid(reason=exc.message)
+        raise exception.Invalid(reason=ex.message)
     return query
 
 
@@ -832,8 +833,8 @@ def _events_paginate_query(context, query, model, limit=None, sort_keys=None,
     try:
         query = utils.paginate_query(query, model, limit, sort_keys,
                                      model_marker, sort_dir)
-    except utils.InvalidSortKey as exc:
-        raise exception.Invalid(reason=exc.message)
+    except utils.InvalidSortKey as ex:
+        raise exception.Invalid(reason=ex.message)
 
     return query
 
@@ -1222,11 +1223,11 @@ def action_acquire(context, action_id, owner, timestamp):
 
             session.commit()
             return action
-        except:
+        except Exception:
             session.rollback()
-	    return None
+            return None
     except exc.InvalidRequestError:
-	return None
+        return None
 
 
 def action_abandon(context, action_id):

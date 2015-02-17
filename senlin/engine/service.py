@@ -12,6 +12,7 @@
 
 import functools
 import random
+import six
 
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -23,6 +24,7 @@ from senlin.common import consts
 from senlin.common import context
 from senlin.common import exception
 from senlin.common.i18n import _
+from senlin.common.i18n import _LE
 from senlin.common.i18n import _LI
 from senlin.common import messaging as rpc_messaging
 from senlin.common import utils
@@ -110,6 +112,7 @@ class EngineService(service.Service):
         self.engine_id = None
         self.TG = None
         self.target = None
+        self._rpc_server = None
 
     def start(self):
         self.engine_id = senlin_lock.BaseLock.generate_engine_id()
@@ -141,18 +144,24 @@ class EngineService(service.Service):
                                        server=self.host,
                                        topic=self.topic)
         self.target = target
-        server = rpc_messaging.get_rpc_server(target, self)
-        server.start()
+        self._rpc_server = rpc_messaging.get_rpc_server(target, self)
+        self._rpc_server.start()
         environment.initialize()
         super(EngineService, self).start()
 
-    def stop(self):
-        # Stop rpc connection at first for preventing new requests
-        LOG.info(_LI("Attempting to stop engine service..."))
+    def _stop_rpc_server(self):
+        # Stop RPC connection to prevent new requests
+        LOG.debug(_("Attempting to stop engine service..."))
         try:
-            self.conn.close()
-        except Exception:
-            pass
+            self._rpc_server.stop()
+            self._rpc_server.wait()
+            LOG.info(_LI('Engine service stopped successfully'))
+        except Exception as ex:
+            LOG.error(_LE('Failed to stop engine service: %s'),
+                      six.text_type(ex))
+
+    def stop(self):
+        self._stop_rpc_server()
 
         # Notify dispatcher to stop all action threads it started.
         self.dispatcher.stop()

@@ -14,7 +14,7 @@ import collections
 import six
 
 from senlin.common import exception
-from senlin.common.i18n import _ 
+from senlin.common.i18n import _
 
 
 class BaseConstraint(collections.Mapping):

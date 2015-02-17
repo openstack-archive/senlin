@@ -14,7 +14,7 @@ import eventlet
 import time
 
 from oslo_config import cfg
-from oslo_log import log as logging 
+from oslo_log import log as logging
 
 from senlin.engine.actions import base as action_mod
 from senlin.engine import dispatcher
