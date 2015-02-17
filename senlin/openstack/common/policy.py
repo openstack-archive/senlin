@@ -101,8 +101,8 @@ import six
 import six.moves.urllib.parse as urlparse
 import six.moves.urllib.request as urlrequest
 
-from openstack.common import fileutils
-from openstack.common._i18n import _, _LE, _LI
+from senlin.openstack.common import fileutils
+from senlin.openstack.common._i18n import _, _LE, _LI
 
 
 policy_opts = [

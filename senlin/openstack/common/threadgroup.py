@@ -17,7 +17,7 @@ import threading
 import eventlet
 from eventlet import greenpool
 
-from openstack.common import loopingcall
+from senlin.openstack.common import loopingcall
 
 
 LOG = logging.getLogger(__name__)

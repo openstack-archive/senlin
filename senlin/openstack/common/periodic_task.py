@@ -19,7 +19,7 @@ import time
 from oslo_config import cfg
 import six
 
-from openstack.common._i18n import _, _LE, _LI
+from senlin.openstack.common._i18n import _, _LE, _LI
 
 
 periodic_opts = [

@@ -30,7 +30,7 @@ import eventlet.backdoor
 import greenlet
 from oslo_config import cfg
 
-from senlin.common._i18n import _LI
+from senlin.openstack.common._i18n import _LI
 
 help_for_backdoor_port = (
     "Acceptable values are 0, <port>, and <start>:<end>, where 0 results "
