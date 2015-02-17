@@ -14,7 +14,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Senlin exception subclasses"""
+'''
+Senlin exception subclasses.
+'''
 
 import functools
 import sys
@@ -26,10 +28,7 @@ from six.moves.urllib import parse as urlparse
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 
-
 _FATAL_EXCEPTION_FORMAT_ERRORS = False
-
-
 LOG = logging.getLogger(__name__)
 
 
@@ -49,15 +48,11 @@ class KeystoneError(Exception):
 
 def wrap_exception(notifier=None, publisher_id=None, event_type=None,
                    level=None):
-    """This decorator wraps a method to catch any exceptions that may
-    get thrown. It logs the exception as well as optionally sending
+    '''Decorator that wraps a method to catch any exceptions.
+
+    It logs the exception as well as optionally sending
     it to the notification system.
-    """
-    # TODO(sandy): Find a way to import nova.notifier.api so we don't have
-    # to pass it in as a parameter. Otherwise we get a cyclic import of
-    # nova.notifier.api -> nova.utils -> nova.exception :(
-    # TODO(johannes): Also, it would be nice to use
-    # utils.save_and_reraise_exception() without an import loop
+    '''
     def inner(f):
         def wrapped(*args, **kw):
             try:
@@ -71,8 +66,7 @@ def wrap_exception(notifier=None, publisher_id=None, event_type=None,
                     payload = dict(args=args, exception=e)
                     payload.update(kw)
 
-                    # Use a temp vars so we don't shadow
-                    # our outer definitions.
+                    # Use a temp vars so we don't shadow outer definitions.
                     temp_level = level
                     if not temp_level:
                         temp_level = notifier.ERROR
@@ -95,13 +89,13 @@ def wrap_exception(notifier=None, publisher_id=None, event_type=None,
 
 
 class SenlinException(Exception):
-    """Base Senlin Exception
+    '''Base Senlin Exception.
 
     To correctly use this class, inherit from it and define
     a 'msg_fmt' property. That msg_fmt will get printf'd
     with the keyword arguments provided to the constructor.
+    '''
 
-    """
     message = _("An unknown exception occurred.")
 
     def __init__(self, **kwargs):
@@ -111,8 +105,8 @@ class SenlinException(Exception):
             self.message = self.msg_fmt % kwargs
         except KeyError:
             exc_info = sys.exc_info()
-            #kwargs doesn't match a variable in the message
-            #log the issue and the kwargs
+            # if kwargs doesn't match a variable in the message
+            # log the issue and the kwargs
             LOG.exception(_LE('Exception in string format operation'))
             for name, value in six.iteritems(kwargs):
                 LOG.error("%s: %s" % (name, value))  # noqa
