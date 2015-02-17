@@ -24,6 +24,7 @@ from senlin.api.openstack.v1 import util
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import serializers
+from senlin.common import utils
 from senlin.common import wsgi
 from senlin.rpc import client as rpc_client
 
@@ -105,10 +106,20 @@ class ClusterController(object):
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)
 
+        key = consts.PARAM_SHOW_DELETED
+        if key in params:
+            params[key] = utils.parse_bool_param(key, params[key])
+
+        key = consts.PARAM_SHOW_NESTED
+        if key in params:
+            params[key] = utils.parse_bool_param(key, params[key])
+
         if not filters:
             filters = None
 
-        clusters = self.rpc_client.cluster_list(req.context, filters=filters,
+        clusters = self.rpc_client.cluster_list(req.context,
+                                                filters=filters,
+                                                tenant_safe=True,
                                                 **params)
         return {'clusters': clusters}
 
