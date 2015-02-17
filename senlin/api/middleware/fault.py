@@ -23,6 +23,7 @@ Cinder's faultwrapper
 import traceback
 
 from oslo_config import cfg
+import six
 import webob
 
 from senlin.common import exception
@@ -60,14 +61,10 @@ class FaultWrapper(wsgi.Middleware):
         'Forbidden': webob.exc.HTTPForbidden,
         'ClusterExists': webob.exc.HTTPConflict,
         'InvalidSchemaError': webob.exc.HTTPBadRequest,
-        'UnknownUserParameter': webob.exc.HTTPBadRequest,
         'RevertFailed': webob.exc.HTTPInternalServerError,
         'StopActionFailed': webob.exc.HTTPInternalServerError,
-        'EventSendFailed': webob.exc.HTTPInternalServerError,
         'ServerBuildFailed': webob.exc.HTTPInternalServerError,
         'NotSupported': webob.exc.HTTPBadRequest,
-        'MissingCredentialError': webob.exc.HTTPBadRequest,
-        'UserParameterMissing': webob.exc.HTTPBadRequest,
         'RequestLimitExceeded': webob.exc.HTTPBadRequest,
         'Invalid': webob.exc.HTTPBadRequest,
     }
@@ -82,7 +79,6 @@ class FaultWrapper(wsgi.Middleware):
         return self.error_map[class_exception.__name__]
 
     def _error(self, ex):
-
         trace = None
         webob_exc = None
         if isinstance(ex, exception.HTTPExceptionDisguise):
@@ -99,7 +95,7 @@ class FaultWrapper(wsgi.Middleware):
         if is_remote:
             ex_type = ex_type[:-len('_Remote')]
 
-        full_message = unicode(ex)
+        full_message = six.text_type(ex)
         if full_message.find('\n') > -1 and is_remote:
             message, msg_trace = full_message.split('\n', 1)
         else:
