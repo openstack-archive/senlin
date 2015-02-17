@@ -52,9 +52,10 @@ class FaultWrapper(wsgi.Middleware):
     error_map = {
         'AttributeError': webob.exc.HTTPBadRequest,
         'ActionInProgress': webob.exc.HTTPConflict,
-        'ValueError': webob.exc.HTTPBadRequest,
         'ClusterNotFound': webob.exc.HTTPNotFound,
         'NotFound': webob.exc.HTTPNotFound,
+        'InvalidParameter': webob.exc.HTTPBadRequest,
+        'ValueError': webob.exc.HTTPBadRequest,
         'ClusterActionNotSupported': webob.exc.HTTPBadRequest,
         'PolicyNotFound': webob.exc.HTTPNotFound,
         'InvalidTenant': webob.exc.HTTPForbidden,
