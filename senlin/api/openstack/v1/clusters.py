@@ -34,7 +34,7 @@ class ClusterData(object):
     '''The data accompanying a POST/PUT request to create/update a cluster.'''
 
     def __init__(self, data):
-        self.data = data['cluster']
+        self.data = data
 
     def name(self):
         if consts.CLUSTER_NAME not in self.data:
@@ -42,6 +42,8 @@ class ClusterData(object):
         return self.data[consts.CLUSTER_NAME]
 
     def size(self):
+        if consts.CLUSTER_SIZE not in self.data:
+            raise exc.HTTPBadRequest(_("No cluster size provided."))
         return self.data.get(consts.CLUSTER_SIZE, None)
 
     def profile(self):
@@ -114,9 +116,12 @@ class ClusterController(object):
     def create(self, req, body):
         '''Create a new cluster.'''
 
-        data = ClusterData(body)
-        if data.size() is None:
-            raise exc.HTTPBadRequest(_("No cluster size provided."))
+        cluster_data = body.get('cluster')
+        if cluster_data is None:
+            raise exc.HTTPBadRequest(_("Malformed request data, missing"
+                                       "'cluster' body."))
+
+        data = ClusterData(cluster_data)
 
         cluster = self.rpc_client.cluster_create(req.context, data.name(),
                                                  data.size(), data.profile(),
