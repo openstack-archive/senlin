@@ -12,9 +12,10 @@
 
 import datetime
 
+from oslo_log import log as logging
+
 from senlin.common import i18n
 from senlin.db import api as db_api
-from senlin.openstack.common import log
 
 _LC = i18n._LC
 _LE = i18n._LE
@@ -22,7 +23,7 @@ _LW = i18n._LW
 _LI = i18n._LI
 _ = i18n._
 
-LOG = log.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 class_mapping = {
     'senlin.engine.cluster.Cluster': 'CLUSTER',

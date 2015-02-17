@@ -13,8 +13,9 @@
 import functools
 import random
 
-from oslo import messaging
 from oslo_config import cfg
+from oslo_log import log as logging
+import oslo_messaging
 from oslo_utils import uuidutils
 from osprofiler import profiler
 
@@ -33,7 +34,6 @@ from senlin.engine import environment
 from senlin.engine import node as node_mod
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock
-from senlin.openstack.common import log as logging
 from senlin.openstack.common import service
 from senlin.policies import base as policy_base
 from senlin.profiles import base as profile_base
@@ -66,7 +66,7 @@ def request_context(func):
         try:
             return func(self, ctx, *args, **kwargs)
         except exception.SenlinException:
-            raise messaging.rpc.dispatcher.ExpectedException()
+            raise oslo_messaging.rpc.dispatcher.ExpectedException()
     return wrapped
 
 
@@ -137,9 +137,9 @@ class EngineService(service.Service):
 
         self.dispatcher.start()
 
-        target = messaging.Target(version=consts.RPC_API_VERSION,
-                                  server=self.host,
-                                  topic=self.topic)
+        target = oslo_messaging.Target(version=consts.RPC_API_VERSION,
+                                       server=self.host,
+                                       topic=self.topic)
         self.target = target
         server = rpc_messaging.get_rpc_server(target, self)
         server.start()

@@ -14,11 +14,11 @@ import collections
 import numbers
 import six
 
+from oslo_log import log as logging
 from oslo_utils import strutils
 
 from senlin.common import exception
 from senlin.common.i18n import _
-from senlin.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

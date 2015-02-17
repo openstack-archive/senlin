@@ -20,6 +20,7 @@ import sys
 from oslo_config import cfg
 from oslo_db.sqlalchemy import session as db_session
 from oslo_db.sqlalchemy import utils
+from oslo_log import log as logging
 from sqlalchemy.orm import session as orm_session
 from sqlalchemy import exc
 
@@ -29,7 +30,6 @@ from senlin.common.i18n import _
 from senlin.db.sqlalchemy import filters as db_filters
 from senlin.db.sqlalchemy import migration
 from senlin.db.sqlalchemy import models
-from senlin.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

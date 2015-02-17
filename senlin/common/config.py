@@ -19,10 +19,10 @@ import os
 import socket
 
 from oslo_config import cfg
+from oslo_log import log as logging
 
 from senlin.common.i18n import _
 from senlin.common import wsgi
-from senlin.openstack.common import log as logging
 
 paste_deploy_group = cfg.OptGroup('paste_deploy')
 paste_deploy_opts = [

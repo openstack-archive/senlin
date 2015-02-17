@@ -12,6 +12,8 @@
 
 import random
 
+from oslo_log import log as logging
+
 from senlin.common import consts
 from senlin.common import exception
 from senlin.common.i18n import _
@@ -23,7 +25,6 @@ from senlin.engine import dispatcher
 from senlin.engine import node as node_mod
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock
-from senlin.openstack.common import log as logging
 from senlin.policies import base as policy_mod
 
 LOG = logging.getLogger(__name__)

@@ -22,12 +22,12 @@ from six.moves import urllib
 import uuid
 
 from oslo_config import cfg
+from oslo_log import log as logging
 from oslo_utils import strutils
 
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LI
-from senlin.openstack.common import log as logging
 
 cfg.CONF.import_opt('max_response_size', 'senlin.common.config')
 LOG = logging.getLogger(__name__)

@@ -14,10 +14,10 @@ import eventlet
 import time
 
 from oslo_config import cfg
+from oslo_log import log as logging 
 
 from senlin.engine.actions import base as action_mod
 from senlin.engine import dispatcher
-from senlin.openstack.common import log as logging
 from senlin.openstack.common import threadgroup
 
 LOG = logging.getLogger(__name__)

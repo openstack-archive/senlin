@@ -12,13 +12,14 @@
 
 import six
 
+from oslo_log import log as logging
+
 from senlin.common import context
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.drivers import heat_v1 as heatclient
 from senlin.engine import scheduler
-from senlin.openstack.common import log as logging
 from senlin.profiles import base
 
 LOG = logging.getLogger(__name__)

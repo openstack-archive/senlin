@@ -15,13 +15,13 @@ import six
 import time
 
 from oslo_config import cfg
+from oslo_log import log as logging
 
 from senlin.common import context as req_context
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LI
 from senlin.db import api as db_api
-from senlin.openstack.common import log as logging
 from senlin.policies import base as policy_mod
 
 wallclock = time.time

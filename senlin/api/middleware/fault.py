@@ -30,9 +30,6 @@ from senlin.common import serializers
 from senlin.common import wsgi
 
 
-cfg.CONF.import_opt('debug', 'senlin.openstack.common.log')
-
-
 class Fault(object):
 
     def __init__(self, error):

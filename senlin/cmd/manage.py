@@ -17,13 +17,12 @@ CLI interface for senlin management.
 import sys
 
 from oslo_config import cfg
+from oslo_log import log as logging
 
 from senlin.common.i18n import _
 from senlin.db import api
 from senlin.db import utils
-from senlin.openstack.common import log
 from senlin import version
-
 
 CONF = cfg.CONF
 
@@ -71,13 +70,15 @@ command_opt = cfg.SubCommandOpt('command',
 
 
 def main():
+    logging.register_options(CONF)
+    logging.setup(CONF, 'senlin-manage')
     CONF.register_cli_opt(command_opt)
+
     try:
         default_config_files = cfg.find_config_files('senlin', 'senlin-engine')
         CONF(sys.argv[1:], project='senlin', prog='senlin-manage',
              version=version.version_info.version_string(),
              default_config_files=default_config_files)
-        log.setup("senlin")
     except RuntimeError as e:
         sys.exit("ERROR: %s" % e)
 

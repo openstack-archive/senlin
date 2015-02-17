@@ -10,12 +10,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_log import log as logging
+
 from senlin.common import exception
 from senlin.common.i18n import _LE
 from senlin.engine.actions import base
 from senlin.engine import node as node_mod
 from senlin.engine import senlin_lock
-from senlin.openstack.common import log as logging
 from senlin.policies import base as policy_mod
 
 LOG = logging.getLogger(__name__)

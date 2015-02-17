@@ -16,6 +16,7 @@ import six
 from stevedore import extension
 
 from oslo_config import cfg
+from oslo_log import log as logging
 
 from senlin.common import exception
 from senlin.common.i18n import _
@@ -23,10 +24,8 @@ from senlin.common.i18n import _LE
 from senlin.common.i18n import _LI
 from senlin.engine import parser
 from senlin.engine import registry
-from senlin.openstack.common import log
 
-
-LOG = log.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 _environment = None
 

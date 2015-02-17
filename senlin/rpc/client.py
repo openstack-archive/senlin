@@ -15,10 +15,10 @@ Client side of the senlin engine RPC API.
 '''
 
 from oslo_config import cfg
+from oslo_log import log as logging
 
 from senlin.common import consts
 from senlin.common import messaging
-from senlin.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

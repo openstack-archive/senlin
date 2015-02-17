@@ -17,9 +17,10 @@ import six
 from six.moves import urllib
 import yaml
 
+from oslo_log import log as logging
+
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
-from senlin.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

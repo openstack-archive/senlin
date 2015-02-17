@@ -82,9 +82,6 @@ cfg.CONF.register_group(api_group)
 cfg.CONF.register_opts(api_opts,
                        group=api_group)
 
-cfg.CONF.import_opt('debug', 'senlin.openstack.common.log')
-cfg.CONF.import_opt('verbose', 'senlin.openstack.common.log')
-
 json_size_opt = cfg.IntOpt('max_json_body_size',
                            default=1048576,
                            help='Maximum raw byte size of JSON request body.'

@@ -13,11 +13,12 @@
 import itertools
 import six
 
+from oslo_log import log as logging
+
 from senlin.common.i18n import _LI
 from senlin.common.i18n import _LW
-from senlin.openstack.common import log
 
-LOG = log.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class PluginInfo(object):

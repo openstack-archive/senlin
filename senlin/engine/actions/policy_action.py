@@ -12,10 +12,11 @@
 
 import datetime
 
+from oslo_log import log as logging
+
 from senlin.common import exception
 from senlin.db import api as db_api
 from senlin.engine.actions import base
-from senlin.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

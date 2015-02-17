@@ -11,13 +11,13 @@
 # under the License.
 
 from oslo_config import cfg
+from oslo_log import log as logging
 import oslo_messaging
 from osprofiler import profiler
 
 from senlin.common import consts
 from senlin.common.i18n import _LI
 from senlin.common import messaging as rpc_messaging
-from senlin.openstack.common import log as logging
 from senlin.openstack.common import service
 
 LOG = logging.getLogger(__name__)

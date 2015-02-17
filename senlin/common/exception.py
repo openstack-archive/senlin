@@ -19,12 +19,12 @@
 import functools
 import sys
 
+from oslo_log import log as logging
 import six
 from six.moves.urllib import parse as urlparse
 
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
-from senlin.openstack.common import log as logging
 
 
 _FATAL_EXCEPTION_FORMAT_ERRORS = False
