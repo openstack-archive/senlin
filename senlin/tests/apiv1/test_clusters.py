@@ -335,7 +335,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, tenant_id=self.tenant,
                                               body=body)
 
-        self.assertEqual(500, resp.json['code'])
+        mock_call.assert_called_once()
+        self.assertEqual(400, resp.json['code'])
         self.assertEqual('InvalidParameter', resp.json['error']['type'])
 
     def test_create_err_cluster_bad_reqest(self, mock_enforce):
