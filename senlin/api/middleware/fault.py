@@ -53,6 +53,8 @@ class FaultWrapper(wsgi.Middleware):
         'AttributeError': webob.exc.HTTPBadRequest,
         'ActionInProgress': webob.exc.HTTPConflict,
         'ClusterNotFound': webob.exc.HTTPNotFound,
+        'NodeNotFound': webob.exc.HTTPNotFound,
+        'ProfileNotFound': webob.exc.HTTPNotFound,
         'NotFound': webob.exc.HTTPNotFound,
         'InvalidParameter': webob.exc.HTTPBadRequest,
         'ValueError': webob.exc.HTTPBadRequest,
