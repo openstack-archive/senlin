@@ -28,7 +28,7 @@ from senlin.rpc import client as rpc_client
 LOG = logging.getLogger(__name__)
 
 
-class InstantiationData(object):
+class NodeData(object):
     '''The data accompanying a PUT/POST request to create/update a node.'''
 
     PARAMS = (consts.NODE_NAME, consts.NODE_CLUSTER_ID,
@@ -36,7 +36,7 @@ class InstantiationData(object):
               consts.NODE_TAGS,)
 
     def __init__(self, data):
-        self.data = data['node']
+        self.data = data
 
     def name(self):
         if consts.NODE_NAME not in self.data:
@@ -111,7 +111,12 @@ class NodeController(object):
 
     @util.policy_enforce
     def create(self, req, body):
-        data = InstantiationData(body)
+        node_data = body.get('node')
+        if node_data is None:
+            raise exc.HTTPBadRequest(_("Malformed request data, missing"
+                                       "'node' key in request body."))
+
+        data = NodeData(node_data)
 
         result = self.rpc_client.node_create(req.context, data.name(),
                                              data.cluster_id(),
@@ -129,7 +134,12 @@ class NodeController(object):
 
     @util.policy_enforce
     def update(self, req, node_id, body):
-        data = InstantiationData(body)
+        node_data = body.get('node')
+        if node_data is None:
+            raise exc.HTTPBadRequest(_("Malformed request data, missing"
+                                       "'node' key in request body."))
+
+        data = NodeData(node_data)
         # TODO(Anyone): Need to check which fields are updatable.
         # The check should consider whether join/leave are considered node
         # updates
