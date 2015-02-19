@@ -166,8 +166,8 @@ class NodeController(object):
 
         this_action = body.keys()[0]
         if this_action not in self.SUPPORTED_ACTIONS:
-            raise exc.HTTPBadRequest(_('Unrecognized action "%s" specified'),
-                                     this_action)
+            msg = _('Unrecognized action "%s" specified') % this_action
+            raise exc.HTTPBadRequest(msg)
 
         if this_action == self.NODE_JOIN:
             cluster_id = body.get(this_action).get('cluster_id')
