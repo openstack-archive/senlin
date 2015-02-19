@@ -89,8 +89,6 @@ class EngineService(service.Service):
                  periodic_interval_max=None):
 
         super(EngineService, self).__init__()
-        # TODO(Qiming): call environment.initialize() when environment
-        # is ready
         self.host = host
         self.topic = topic
         self.dispatcher_topic = consts.ENGINE_DISPATCHER_TOPIC
@@ -196,11 +194,11 @@ class EngineService(service.Service):
         return {}
 
     @request_context
-    def profile_find(self, context, identity):
+    def profile_find(self, context, identity, show_deleted=False):
         '''Find a profile with the given identity (could be name or ID).'''
-        # TODO(anyone): add support to show_deleted
         if uuidutils.is_uuid_like(identity):
-            profile = db_api.profile_get(context, identity)
+            profile = db_api.profile_get(context, identity,
+                                         show_deleted=show_deleted)
             if not profile:
                 profile = db_api.profile_get_by_name(context, identity)
         else:
@@ -256,7 +254,7 @@ class EngineService(service.Service):
     @request_context
     def profile_delete(self, context, identity):
         db_profile = self.profile_find(context, identity)
-        LOG.info(_LI('Delete profile: %s'), identity)
+        LOG.info(_LI('Deleting profile: %s'), identity)
         profile_base.Profile.delete(context, db_profile.id)
         return None
 
