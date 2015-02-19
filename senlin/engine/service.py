@@ -685,8 +685,27 @@ class EngineService(service.Service):
         return node.to_dict()
 
     @request_context
-    def node_update(self, context, identity, name, profile_id, role, tags):
-        return {}
+    def node_update(self, context, identity, name, profile_id=None, role=None,
+                    tags=None):
+        db_node = self.node_find(context, identity)
+        if profile_id is not None:
+            db_profile = self.profile_find(context, profile_id)
+            profile_id = db_profile.id
+
+        LOG.info(_LI('Updating node %s'), identity)
+
+        # Find the node instance
+        node = node_mod.Node.load(context, node=db_node)
+
+        action = action_mod.Action(context, 'NODE_UPDATE',
+                                   name='node_update_%s' % node.id[:8],
+                                   target=node.id,
+                                   cause=action_mod.CAUSE_RPC)
+        action.store(context)
+
+        # TODO(someone): uncomment this when it is implemented
+        # dispatcher.notify(context, self.dispatcher.NEW_ACTION,
+        #                  None, action_id=action.id)
 
     @request_context
     def node_delete(self, context, identity, force=False):
