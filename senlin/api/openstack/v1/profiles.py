@@ -97,7 +97,6 @@ class ProfileController(object):
                                                 filters=filters,
                                                 **params)
 
-        # TODO(Qiming): Add profiles_view to handle profile collection?
         return {'profiles': profiles}
 
     @util.policy_enforce
