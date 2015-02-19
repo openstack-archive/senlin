@@ -709,8 +709,11 @@ def profile_create(context, values):
     return profile
 
 
-def profile_get(context, profile_id):
-    return model_query(context, models.Profile).get(profile_id)
+def profile_get(context, profile_id, show_deleted=False):
+    query = soft_delete_aware_query(context, models.Profile,
+                                    profile_id=profile_id,
+                                    show_deleted=show_deleted)
+    return query.first()
 
 
 def profile_get_by_name(context, name, show_deleted=False):
@@ -759,7 +762,10 @@ def profile_update(context, profile_id, values):
 
 
 def profile_delete(context, profile_id, force=False):
-    profile = profile_get(context, profile_id)
+    profile = profile_get(context, profile_id, show_deleted=False)
+    if profile is None:
+        return
+
     session = orm_session.Session.object_session(profile)
 
     # TODO(Qiming): Check if a profile is still in use, raise an exception
