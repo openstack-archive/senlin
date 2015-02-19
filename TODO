@@ -55,6 +55,10 @@ ENGINE
   - Allow actions to be paused and resumed.
     This is important for some background actions such as health checking
 
+  - Add support to template_url for heat stack profile
+    Note: if template and template_url are both specified, use template
+    Need to refer to heat api test for testing heat profile
+
 OSLO
 ----
 
