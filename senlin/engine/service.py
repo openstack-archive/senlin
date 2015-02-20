@@ -431,7 +431,7 @@ class EngineService(service.Service):
     def cluster_update(self, context, identity, profile_id):
         # Get the database representation of the existing cluster
         db_cluster = self.cluster_find(context, identity)
-        db_profile = self.profile_fine(context, profile_id)
+        db_profile = self.profile_find(context, profile_id)
 
         LOG.info(_LI('Updating cluster %s'), db_cluster.name)
 
