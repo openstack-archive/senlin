@@ -514,12 +514,12 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                           body=body)
 
         mock_call.assert_called_once_with(
-            req.context, 
+            req.context,
             ('cluster_update', {
                 'identity': cid, 'profile_id': 'xxxx-yyyy-zzzz',
             })
         )
- 
+
     def test_update_with_maleformed_request(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
 
@@ -540,6 +540,46 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                       "in request body.", six.text_type(ex))
 
         self.assertFalse(mock_call.called)
+
+    def test_cluster_update_cluster_notfound(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        cid = 'non-existent-cluster'
+        body = {'cluster': {'profile_id': 'xxxx-yyyy-zzzz'}}
+        req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                        json.dumps(body))
+
+        error = senlin_exc.ClusterNotFound(cluster=cid)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.update,
+                                              req, tenant_id=self.tenant,
+                                              cluster_id=cid,
+                                              body=body)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ClusterNotFound', resp.json['error']['type'])
+
+    def test_cluster_update_profile_notfound(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'cluster': {'profile_id': 'not-a-profile'}}
+        req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                        json.dumps(body))
+
+        error = senlin_exc.ProfileNotFound(profile='not-a-profile')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.update,
+                                              req, tenant_id=self.tenant,
+                                              cluster_id=cid,
+                                              body=body)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ProfileNotFound', resp.json['error']['type'])
 
     def test_update_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', False)
