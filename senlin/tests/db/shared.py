@@ -84,11 +84,12 @@ def create_cluster(ctx, profile, **kwargs):
         'parent': None,
         'node_count': 0,
         'next_index': 1,
-        'timeout': '60',
+        'timeout': 60,
         'size': 0,
         'init_time': datetime.datetime.utcnow(),
         'status': 'INIT',
-        'status_reason': 'Just Initialized'
+        'status_reason': 'Just Initialized',
+        'tags': {},
     }
     values.update(kwargs)
     if 'tenant_id' in kwargs:
