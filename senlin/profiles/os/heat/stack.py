@@ -77,17 +77,6 @@ class StackProfile(base.Profile):
     def __init__(self, type_name, name, **kwargs):
         super(StackProfile, self).__init__(type_name, name, **kwargs)
 
-        # TODO(Qiming): remove the initialization below
-        self.template = self.spec_data[self.TEMPLATE]
-        self.stack_context = self.spec_data[self.CONTEXT]
-        self.parameters = self.spec_data[self.PARAMETERS]
-        self.files = self.spec_data[self.FILES]
-        self.disable_rollback = self.spec_data[self.DISABLE_ROLLBACK]
-
-        # TODO(Qiming): use the global configuration?
-        self.timeout = self.spec_data[self.TIMEOUT]
-        self.environment = self.spec_data[self.ENVIRONMENT]
-
         self.hc = None
         self.stack_id = None
 
@@ -97,9 +86,10 @@ class StackProfile(base.Profile):
         if self.hc:
             return self.hc
 
-        if self.stack_context:
+        stack_context = self.spec_data[self.CONTEXT]
+        if stack_context is not None:
             ctx = self.context.to_dict()
-            ctx.update(self.stack_context.to_dict())
+            ctx.update(stack_context.to_dict())
             self.context = context.RequestContext.from_dict(ctx)
 
         self.hc = heatclient.HeatClient(self.context)
@@ -110,12 +100,12 @@ class StackProfile(base.Profile):
 
         kwargs = {
             'stack_name': obj.name,
-            'template': self.template,
-            'timeout_mins': self.timeout,
-            'disable_rollback': self.disable_rollback,
-            'parameters': self.parameters,
-            'files': self.files,
-            'environment': self.environment,
+            'template': self.spec_data[self.TEMPLATE],
+            'timeout_mins': self.spec_data[self.TIMEOUT],
+            'disable_rollback': self.spec_data[self.DISABLE_ROLLBACK],
+            'parameters': self.spec_data[self.PARAMETERS],
+            'files': self.spec_data[self.FILES],
+            'environment': self.spec_data[self.ENVIRONMENT],
         }
         try:
             self.heat().stacks.validate(**kwargs)
@@ -157,12 +147,12 @@ class StackProfile(base.Profile):
 
         kwargs = {
             'stack_name': obj.name,
-            'template': self.template,
-            'timeout_mins': self.timeout,
-            'disable_rollback': self.disable_rollback,
-            'parameters': self.parameters,
-            'files': self.files,
-            'environment': self.environment
+            'template': self.spec_data[self.TEMPLATE],
+            'timeout_mins': self.spec_data[self.TIMEOUT],
+            'disable_rollback': self.spec_data[self.DISABLE_ROLLBACK],
+            'parameters': self.spec_data[self.PARAMETERS],
+            'files': self.spec_data[self.FILES],
+            'environment': self.spec_data[self.ENVIRONMENT],
         }
 
         LOG.info('Creating stack: %s' % kwargs)
@@ -203,12 +193,13 @@ class StackProfile(base.Profile):
         # TODO(anyone): Check if params differs
         fields = {
             'stack_id': self.stack_id,
-            'parameters': new_profile.params,
-            'template': new_profile.template,
-            'timeout_mins': new_profile.timeout,
-            'disable_rollback': new_profile.disable_rollback,
-            'files': self.stack.t.files,
-            'environment': {},
+            'parameters': new_profile.spec_data[new_profile.PARAMETERS],
+            'template': new_profile.spec_data[new_profile.TEMPLATE],
+            'timeout_mins': new_profile.spec_data[new_profile.TIMEOUT],
+            'disable_rollback': new_profile.spec_data[
+                new_profile.DISABLE_ROLLBACK],
+            'files': new_profile.spec_data[new_profile.FILES],
+            'environment': new_profile.spec_data[new_profile.ENVIRONMENT],
         }
 
         self.heat().stacks.update(**fields)
