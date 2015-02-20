@@ -396,11 +396,10 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('HTTPBadRequest', resp.json['error']['type'])
         self.assertIsNotNone(resp.json['error']['traceback'])
 
-    def test_show(self, mock_enforce):
+    def test_cluster_get(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
-        cluster_id = 'aaaa-bbbb-cccc'
-        req = self._get('/clusters/%(cluster_id)s' % {
-            'cluster_id': cluster_id})
+        cid = 'aaaa-bbbb-cccc'
+        req = self._get('/clusters/%(cluster_id)s' % {'cluster_id': cid})
 
         engine_resp = {
             u'id': u'aaaa-bbbb-cccc',
@@ -427,44 +426,41 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
-        response = self.controller.get(req,
-                                       tenant_id=self.tenant,
-                                       cluster_id=cluster_id)
+        response = self.controller.get(req, tenant_id=self.tenant,
+                                       cluster_id=cid)
 
         mock_call.assert_called_once_with(
-            req.context, ('cluster_get', {'identity': cluster_id}))
+            req.context, ('cluster_get', {'identity': cid}))
 
         expected = {'cluster': engine_resp}
         self.assertEqual(expected, response)
 
-    def test_show_notfound(self, mock_enforce):
+    def test_cluster_get_notfound(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
-        cluster_id = 'non-existent-cluster'
-        req = self._get('/clusters/%(cluster_id)s' % {
-                        'cluster_id': cluster_id})
+        cid = 'non-existent-cluster'
+        req = self._get('/clusters/%(cluster_id)s' % {'cluster_id': cid})
 
-        error = senlin_exc.ClusterNotFound(cluster=cluster_id)
+        error = senlin_exc.ClusterNotFound(cluster=cid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,
                                               req, tenant_id=self.tenant,
-                                              cluster_id=cluster_id)
+                                              cluster_id=cid)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ClusterNotFound', resp.json['error']['type'])
 
-    def test_show_err_denied_policy(self, mock_enforce):
+    def test_cluster_get_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)
-        cluster_id = 'aaaa-bbbb-cccc'
-        req = self._get('/clusters/%(cluster_id)s' % {
-                        'cluster_id': cluster_id})
+        cid = 'aaaa-bbbb-cccc'
+        req = self._get('/clusters/%(cluster_id)s' % {'cluster_id': cid})
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,
                                               req, tenant_id=self.tenant,
-                                              cluster_id=cluster_id)
+                                              cluster_id=cid)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
@@ -487,12 +483,77 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test_delete_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', False)
         cid = 'aaaa-bbbb-cccc'
-        req = self._delete('/clusters/%(cluster_id)s' % {'cluster_id': cid})
-
+        req = self._delete('/clusters/%(cluster_id)s' % {'cluster_id': cid}) 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.delete,
                                               req, tenant_id=self.tenant,
                                               cluster_id=cid)
+
+        self.assertEqual(403, resp.status_int)
+        self.assertIn('403 Forbidden', six.text_type(resp))
+
+    def test_update(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {
+            'cluster': {
+                'profile_id': 'xxxx-yyyy-zzzz',
+            }
+        }
+
+        req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                        json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.return_value = cid
+
+        self.assertRaises(exc.HTTPAccepted,
+                          self.controller.update,
+                          req, tenant_id=self.tenant,
+                          cluster_id=cid,
+                          body=body)
+
+        mock_call.assert_called_once_with(
+            req.context, 
+            ('cluster_update', {
+                'identity': cid, 'profile_id': 'xxxx-yyyy-zzzz',
+            })
+        )
+ 
+    def test_update_with_maleformed_request(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+
+        cid = 'aaaa-bbbb-cccc'
+        body = {'profile_id': 'xxxx-yyyy-zzzz'}
+
+        req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                        json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'cluster_update')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.update,
+                               req, tenant_id=self.tenant,
+                               cluster_id=cid,
+                               body=body)
+
+        self.assertIn("Malformed request data, missing 'cluster' key "
+                      "in request body.", six.text_type(ex))
+
+        self.assertFalse(mock_call.called)
+
+    def test_update_err_denied_policy(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', False)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'cluster': {'profile_id': 'xxxx-yyyy-zzzz'}}
+
+        req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                        json.dumps(body))
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.update,
+                                              req, tenant_id=self.tenant,
+                                              cluster_id=cid,
+                                              body=body)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
