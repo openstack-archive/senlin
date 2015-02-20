@@ -129,7 +129,7 @@ class ClusterController(object):
 
         cluster_data = body.get('cluster')
         if cluster_data is None:
-            raise exc.HTTPBadRequest(_("Malformed request data, missing"
+            raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'cluster' key in request body."))
 
         data = ClusterData(cluster_data)
