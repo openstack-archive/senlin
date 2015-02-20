@@ -39,12 +39,17 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertEqual(self.ctx.tenant_id, cluster.project)
         self.assertEqual('unknown', cluster.domain)
         self.assertIsNone(cluster.parent)
-        self.assertEqual(0, cluster.node_count)
         self.assertEqual(1, cluster.next_index)
-        self.assertEqual('60', cluster.timeout)
+        self.assertEqual(60, cluster.timeout)
+        self.assertEqual(0, cluster.size)
         self.assertEqual('INIT', cluster.status)
         self.assertEqual('Just Initialized', cluster.status_reason)
-        self.assertFalse({}, cluster.tags)
+        self.assertIsNone(cluster.created_time)
+        self.assertIsNone(cluster.updated_time)
+        self.assertIsNone(cluster.deleted_time)
+        self.assertIsNotNone(cluster.init_time)
+        self.assertEqual({}, cluster.tags)
+        self.assertIsNone(cluster.data)
 
     def test_cluster_delete(self):
         cluster = shared.create_cluster(self.ctx, self.profile)
@@ -76,14 +81,14 @@ class DBAPIClusterTest(base.SenlinTestCase):
             'name': 'db_test_cluster_name2',
             'status': 'ERROR',
             'status_reason': "update failed",
-            'timeout': '90',
+            'timeout': 90,
         }
         db_api.cluster_update(self.ctx, cluster.id, values)
         cluster = db_api.cluster_get(self.ctx, cluster.id)
         self.assertEqual('db_test_cluster_name2', cluster.name)
         self.assertEqual('ERROR', cluster.status)
         self.assertEqual('update failed', cluster.status_reason)
-        self.assertEqual('90', cluster.timeout)
+        self.assertEqual(90, cluster.timeout)
 
         self.assertRaises(exception.NotFound, db_api.cluster_update, self.ctx,
                           UUID2, values)
@@ -96,17 +101,17 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertEqual(cluster.id, ret_cluster.id)
         self.assertEqual('db_test_cluster_name', ret_cluster.name)
 
-    def test_cluster_get_returns_none_if_cluster_does_not_exist(self):
+    def test_cluster_get_not_found(self):
         cluster = db_api.cluster_get(self.ctx, UUID1, show_deleted=False)
         self.assertIsNone(cluster)
 
-    def test_cluster_get_returns_none_if_tenant_id_does_not_match(self):
+    def test_cluster_get_tenant_not_match(self):
         cluster = shared.create_cluster(self.ctx, self.profile)
         self.ctx.tenant_id = 'abc'
         cluster = db_api.cluster_get(self.ctx, UUID1, show_deleted=False)
         self.assertIsNone(cluster)
 
-    def test_cluster_get_can_return_a_cluster_from_different_tenant(self):
+    def test_cluster_get_cluster_from_different_tenant(self):
         cluster = shared.create_cluster(self.ctx, self.profile)
         self.ctx.tenant_id = 'abc'
         ret_cluster = db_api.cluster_get(self.ctx, cluster.id,
@@ -124,26 +129,60 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertIsNone(db_api.cluster_get_by_name(self.ctx, 'abc'))
 
         self.ctx.tenant_id = 'abc'
-        self.assertIsNone(db_api.cluster_get_by_name(self.ctx, 'abc'))
+        self.assertIsNone(db_api.cluster_get_by_name(self.ctx, cluster.name))
 
     def test_cluster_get_by_name(self):
-        cluster = shared.create_cluster(self.ctx, self.profile,
-                                        name='cluster_by_name', project=UUID2)
+        cluster1 = shared.create_cluster(self.ctx, self.profile,
+                                        name='cluster_A',
+                                        project=UUID2)
 
-        res = db_api.cluster_get_by_name(self.ctx, 'cluster_by_name')
+        cluster2 = shared.create_cluster(self.ctx, self.profile,
+                                        name='cluster_B',
+                                        project=UUID2)
+
+        cluster3 = shared.create_cluster(self.ctx, self.profile,
+                                        name='cluster_B',
+                                        project=UUID2)
+
+        res = db_api.cluster_get_by_name(self.ctx, 'cluster_A')
         self.assertIsNone(res)
 
         self.ctx.tenant_id = UUID3
         self.assertIsNone(db_api.cluster_get_by_name(self.ctx,
-                                                     'cluster_by_name'))
+                                                     'cluster_A'))
 
         self.ctx.tenant_id = UUID2
-        res = db_api.cluster_get_by_name(self.ctx, 'cluster_by_name')
-        self.assertEqual(cluster.id, res.id)
+        res = db_api.cluster_get_by_name(self.ctx, 'cluster_A')
+        self.assertEqual(cluster1.id, res.id)
 
-        db_api.cluster_delete(self.ctx, cluster.id)
-        self.assertIsNone(db_api.cluster_get_by_name(self.ctx,
-                                                     'cluster_by_name'))
+        self.assertRaises(exception.MultipleChoices,
+                          db_api.cluster_get_by_name,
+                          self.ctx, 'cluster_B')
+
+        res = db_api.cluster_get_by_name(self.ctx, 'non-existent')
+        self.assertIsNone(res)
+
+    def test_cluster_get_by_short_id(self):
+        cid1 = 'same-part-unique-part'
+        cid2 = 'same-part-part-unique' 
+        cluster1 = shared.create_cluster(self.ctx, self.profile,
+                                         id=cid1,
+                                         name='cluster-1')
+
+        cluster2 = shared.create_cluster(self.ctx, self.profile,
+                                         id=cid2,
+                                         name='cluster-2')
+        for x in range(len('same-part-')):
+            self.assertRaises(exception.MultipleChoices,
+                              db_api.cluster_get_by_short_id,
+                              self.ctx, cid1[:x])
+
+        res = db_api.cluster_get_by_short_id(self.ctx, cid1[:11])
+        self.assertEqual(cluster1.id, res.id)
+        res = db_api.cluster_get_by_short_id(self.ctx, cid2[:11])
+        self.assertEqual(cluster2.id, res.id)
+        res = db_api.cluster_get_by_short_id(self.ctx, 'non-existent')
+        self.assertIsNone(res)
 
     def test_cluster_get_next_index(self):
         cluster = shared.create_cluster(self.ctx, self.profile,
