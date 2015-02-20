@@ -145,11 +145,7 @@ class ClusterController(object):
     def get(self, req, cluster_id):
         '''Gets detailed information for a cluster.'''
 
-        cluster = self.rpc_client.cluster_get(req.context,
-                                              cluster_id)
-        if not cluster:
-            raise exc.HTTPNotFound()
-
+        cluster = self.rpc_client.cluster_get(req.context, cluster_id)
         return {'cluster': cluster}
 
     @util.policy_enforce
