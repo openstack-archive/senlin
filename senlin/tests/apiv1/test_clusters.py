@@ -45,6 +45,15 @@ class ClusterDataTest(base.SenlinTestCase):
         data = clusters.ClusterData(body)
         self.assertEqual(0, data.size())
 
+    def test_cluster_timeout(self):
+        body = {'timeout': 33}
+        data = clusters.ClusterData(body)
+        self.assertEqual(33, data.timeout())
+
+        body = {}
+        data = clusters.ClusterData(body)
+        self.assertEqual(cfg.CONF.default_action_timeout, data.timeout())
+
 
 @mock.patch.object(policy.Enforcer, 'enforce')
 class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
@@ -289,6 +298,29 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         expected = {'cluster': engine_response}
         self.assertEqual(expected, resp)
+
+    def test_create_maleformed_body(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'create', True)
+        body = {
+            'name': 'test_cluster',
+            'profile_id': 'xxxx-yyyy',
+            'size': 0,
+            'parent': None,
+            'tags': {},
+            'timeout': None,
+        }
+
+        req = self._post('/clusters', json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.create,
+                               req, tenant_id=self.tenant, body=body)
+
+        self.assertIn("Malformed request data, missing 'cluster' key "
+                      "in request body.", six.text_type(ex))
+
+        self.assertFalse(mock_call.called)
 
     def test_create_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', False)
