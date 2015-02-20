@@ -137,7 +137,7 @@ def query_by_short_id(context, model, short_id):
     elif q.count() == 0:
         return None
     else:
-        raise exception.MultipleChoice(arg=short_id)
+        raise exception.MultipleChoices(arg=short_id)
 
 
 def query_by_name(context, model, name, tenant_safe=False):
@@ -152,7 +152,7 @@ def query_by_name(context, model, name, tenant_safe=False):
     elif q.count() == 0:
         return None
     else:
-        raise exception.MultipleChoice(arg=name)
+        raise exception.MultipleChoices(arg=name)
 
 
 def _session(context):
