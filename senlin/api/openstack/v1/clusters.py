@@ -152,11 +152,18 @@ class ClusterController(object):
     def update(self, req, cluster_id, body):
         '''Update an existing cluster with new parameters.'''
 
-        data = ClusterData(body)
+        cluster_data = body.get('cluster')
+        if cluster_data is None:
+            raise exc.HTTPBadRequest(_("Malformed request data, missing "
+                                       "'cluster' key in request body."))
+
+        if consts.CLUSTER_PROFILE not in cluster_data:
+            raise exc.HTTPBadRequest(_("No cluster profile provided."))
+        profile = cluster_data[consts.CLUSTER_PROFILE]
 
         self.rpc_client.cluster_update(req.context,
                                        cluster_id,
-                                       data.profile())
+                                       profile)
 
         raise exc.HTTPAccepted()
 
