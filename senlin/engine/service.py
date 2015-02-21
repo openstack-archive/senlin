@@ -658,6 +658,7 @@ class EngineService(service.Service):
         LOG.info(_LI('Creating node %s'), name)
 
         # Create a node instance
+        tags = tags or {}
         node = node_mod.Node(name, db_profile.id, cluster_id, role=role,
                              tags=tags)
         node.store(context)
