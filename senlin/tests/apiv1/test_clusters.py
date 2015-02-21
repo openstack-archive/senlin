@@ -682,6 +682,29 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('No node to add', six.text_type(ex))
         self.assertFalse(mock_call.called)
 
+    def test_cluster_action_add_nodes_bad_requests(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'add_nodes': {'nodes': ['bad-node-1']}}
+
+        req = self._put('/clusters/%(cluster_id)s/action' % {
+                        'cluster_id': cid}, json.dumps(body))
+
+        error = senlin_exc.SenlinBadRequest(msg='Nodes not found: bad-node-1')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.action,
+                                              req, tenant_id=self.tenant,
+                                              cluster_id=cid,
+                                              body=body)
+
+        self.assertEqual(400, resp.json['code'])
+        self.assertEqual('SenlinBadRequest', resp.json['error']['type'])
+        self.assertIn('Nodes not found: bad-node-1',
+                      resp.json['error']['message'])
+
     def test_cluster_action_del_nodes(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
@@ -730,7 +753,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('No node to delete', six.text_type(ex))
         self.assertFalse(mock_call.called)
 
-    def test_cluster_action_add_nodes_empty(self, mock_enforce):
+    def test_cluster_action_del_nodes_empty(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
         body = {'del_nodes': {'nodes': []}}
@@ -748,6 +771,29 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual('No node to delete', six.text_type(ex))
         self.assertFalse(mock_call.called)
+
+    def test_cluster_action_del_nodes_bad_requests(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'del_nodes': {'nodes': ['bad-node-1']}}
+
+        req = self._put('/clusters/%(cluster_id)s/action' % {
+                        'cluster_id': cid}, json.dumps(body))
+
+        error = senlin_exc.SenlinBadRequest(msg='Nodes not found: bad-node-1')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.action,
+                                              req, tenant_id=self.tenant,
+                                              cluster_id=cid,
+                                              body=body)
+
+        self.assertEqual(400, resp.json['code'])
+        self.assertEqual('SenlinBadRequest', resp.json['error']['type'])
+        self.assertIn('Nodes not found: bad-node-1',
+                      resp.json['error']['message'])
 
     def test_cluster_action_scale_out(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -773,6 +819,31 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             })
         )
         self.assertEqual(eng_resp, resp)
+
+    def test_cluster_action_scale_out_non_int(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'scale_out': {'count': 'abc'}}
+
+        eng_resp = {'action': {'id': 'action-id', 'target': cid}}
+
+        req = self._put('/clusters/%(cluster_id)s/action' % {
+                        'cluster_id': cid}, json.dumps(body))
+
+        error = senlin_exc.InvalidParameter(name='count', value='abc')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.action,
+                                              req, tenant_id=self.tenant,
+                                              cluster_id=cid,
+                                              body=body)
+
+        self.assertEqual(400, resp.json['code'])
+        self.assertEqual('InvalidParameter', resp.json['error']['type'])
+        self.assertIn("Invalid value 'abc' specified for 'count'",
+                      resp.json['error']['message'])
 
     def test_cluster_action_scale_in(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
