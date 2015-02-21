@@ -57,6 +57,7 @@ class FaultWrapper(wsgi.Middleware):
         'ProfileNotFound': webob.exc.HTTPNotFound,
         'NotFound': webob.exc.HTTPNotFound,
         'InvalidParameter': webob.exc.HTTPBadRequest,
+        'SenlinBadRequest': webob.exc.HTTPBadRequest,
         'ValueError': webob.exc.HTTPBadRequest,
         'ClusterActionNotSupported': webob.exc.HTTPBadRequest,
         'PolicyNotFound': webob.exc.HTTPNotFound,
