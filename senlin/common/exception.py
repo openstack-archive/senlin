@@ -197,7 +197,7 @@ class UserParameterMissing(SenlinException):
 
 
 class InvalidParameter(SenlinException):
-    msg_fmt = _("Invalid value %(value)s specified for %(name)s")
+    msg_fmt = _("Invalid value '%(value)s' specified for '%(name)s'")
 
 
 class InvalidTenant(SenlinException):
