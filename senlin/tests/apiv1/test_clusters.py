@@ -881,6 +881,75 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         )
         self.assertEqual(eng_resp, resp)
 
+    def test_cluster_action_cluster_notfound(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'non-existent-cluster'
+        body = {'add_nodes': {'nodes': ['xxxx-yyyy-zzzz']}}
+        req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                        json.dumps(body))
+
+        error = senlin_exc.ClusterNotFound(cluster=cid)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.action,
+                                              req, tenant_id=self.tenant,
+                                              cluster_id=cid,
+                                              body=body)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ClusterNotFound', resp.json['error']['type'])
+
+    def test_cluster_action_missing_action(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {}
+        req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                        json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, tenant_id=self.tenant,
+                               cluster_id=cid,
+                               body=body)
+        self.assertEqual('No action specified', six.text_type(ex))
+        self.assertFalse(mock_call.called)
+
+    def test_cluster_action_multiple_actions(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'action_1': {}, 'action_2': {}}
+        req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                        json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, tenant_id=self.tenant,
+                               cluster_id=cid,
+                               body=body)
+        self.assertEqual('Multiple actions specified', six.text_type(ex))
+        self.assertFalse(mock_call.called)
+
+    def test_cluster_action_unsupported_action(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'fly': None}
+        req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                        json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, tenant_id=self.tenant,
+                               cluster_id=cid,
+                               body=body)
+        self.assertEqual("Unrecognized action 'fly' specified",
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
+
     def test_cluster_action_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', False)
         cid = 'aaaa-bbbb-cccc'

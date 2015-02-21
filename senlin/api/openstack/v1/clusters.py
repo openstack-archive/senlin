@@ -179,18 +179,18 @@ class ClusterController(object):
 
         this_action = body.keys()[0]
         if this_action not in self.SUPPORTED_ACTIONS:
-            raise exc.HTTPBadRequest(_('Unrecognized action "%s" specified'),
-                                     this_action)
+            msg = _("Unrecognized action '%s' specified") % this_action
+            raise exc.HTTPBadRequest(msg)
 
         if this_action == self.ADD_NODES:
             nodes = body.get(this_action).get('nodes')
-            if nodes is None:
+            if nodes is None or not isinstance(nodes, list) or len(nodes) == 0:
                 raise exc.HTTPBadRequest(_('No node to add'))
             res = self.rpc_client.cluster_add_nodes(
                 req.context, cluster_id, nodes)
         elif this_action == self.DEL_NODES:
             nodes = body.get(this_action).get('nodes')
-            if nodes is None:
+            if nodes is None or not isinstance(nodes, list) or len(nodes) == 0:
                 raise exc.HTTPBadRequest(_('No node to delete'))
             res = self.rpc_client.cluster_del_nodes(
                 req.context, cluster_id, nodes)
