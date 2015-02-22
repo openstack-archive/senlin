@@ -820,31 +820,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         )
         self.assertEqual(eng_resp, resp)
 
-    def test_cluster_action_scale_out_non_int(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'aaaa-bbbb-cccc'
-        body = {'scale_out': {'count': 'abc'}}
-
-        eng_resp = {'action': {'id': 'action-id', 'target': cid}}
-
-        req = self._put('/clusters/%(cluster_id)s/action' % {
-                        'cluster_id': cid}, json.dumps(body))
-
-        error = senlin_exc.InvalidParameter(name='count', value='abc')
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        mock_call.side_effect = shared.to_remote_error(error)
-
-        resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.action,
-                                              req, tenant_id=self.tenant,
-                                              cluster_id=cid,
-                                              body=body)
-
-        self.assertEqual(400, resp.json['code'])
-        self.assertEqual('InvalidParameter', resp.json['error']['type'])
-        self.assertIn("Invalid value 'abc' specified for 'count'",
-                      resp.json['error']['message'])
-
     def test_cluster_action_scale_in(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
@@ -869,6 +844,37 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             })
         )
         self.assertEqual(eng_resp, resp)
+
+    def _cluster_action_scale_non_int(self, action, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {action: {'count': 'abc'}}
+
+        eng_resp = {'action': {'id': 'action-id', 'target': cid}}
+
+        req = self._put('/clusters/%(cluster_id)s/action' % {
+                        'cluster_id': cid}, json.dumps(body))
+
+        error = senlin_exc.InvalidParameter(name='count', value='abc')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.action,
+                                              req, tenant_id=self.tenant,
+                                              cluster_id=cid,
+                                              body=body)
+
+        self.assertEqual(400, resp.json['code'])
+        self.assertEqual('InvalidParameter', resp.json['error']['type'])
+        self.assertIn("Invalid value 'abc' specified for 'count'",
+                      resp.json['error']['message'])
+
+    def test_cluster_action_scale_out_non_int(self, mock_enforce):
+        self._cluster_action_scale_non_int('scale_out', mock_enforce)
+
+    def test_cluster_action_scale_in_non_int(self, mock_enforce):
+        self._cluster_action_scale_non_int('scale_in', mock_enforce)
 
     def test_cluster_action_attach_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
