@@ -903,6 +903,59 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         )
         self.assertEqual(eng_resp, resp)
 
+    def test_cluster_action_attach_policy_with_fields(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'policy_attach': {
+            'policy_id': 'xxxx-yyyy',
+            'priority': 40,
+            'cooldown': 20,
+            'level': 30,
+            'enabled': False,
+        }}
+
+        eng_resp = {'action': {'id': 'action-id', 'target': cid}}
+
+        req = self._put('/clusters/%(cluster_id)s/action' % {
+                        'cluster_id': cid}, json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=eng_resp)
+
+        resp = self.controller.action(req, tenant_id=self.tenant,
+                                      cluster_id=cid,
+                                      body=body)
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('cluster_policy_attach', {
+                'identity': cid, 'policy': 'xxxx-yyyy',
+                'level': 30, 'enabled': False, 'cooldown': 20,
+                'priority': 40,
+            })
+        )
+        self.assertEqual(eng_resp, resp)
+
+    def test_cluster_action_attach_policy_not_found(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'policy_attach': {'policy_id': 'not-a-policy'}}
+        req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                        json.dumps(body))
+
+        error = senlin_exc.PolicyNotFound(policy='not-a-policy')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.action,
+                                              req, tenant_id=self.tenant,
+                                              cluster_id=cid,
+                                              body=body)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('PolicyNotFound', resp.json['error']['type'])
+
     def test_cluster_action_detach_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
@@ -927,6 +980,26 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             })
         )
         self.assertEqual(eng_resp, resp)
+
+    def test_cluster_action_detach_policy_not_found(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'policy_detach': {'policy_id': 'not-a-policy'}}
+        req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                        json.dumps(body))
+
+        error = senlin_exc.PolicyNotFound(policy='not-a-policy')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.action,
+                                              req, tenant_id=self.tenant,
+                                              cluster_id=cid,
+                                              body=body)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('PolicyNotFound', resp.json['error']['type'])
 
     def test_cluster_action_update_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -957,6 +1030,26 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             })
         )
         self.assertEqual(eng_resp, resp)
+
+    def test_cluster_action_update_policy_not_found(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'policy_update': {'policy_id': 'not-a-policy'}}
+        req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                        json.dumps(body))
+
+        error = senlin_exc.PolicyNotFound(policy='not-a-policy')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.action,
+                                              req, tenant_id=self.tenant,
+                                              cluster_id=cid,
+                                              body=body)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('PolicyNotFound', resp.json['error']['type'])
 
     def test_cluster_action_cluster_notfound(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
