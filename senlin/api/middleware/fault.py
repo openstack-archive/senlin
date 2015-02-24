@@ -51,12 +51,11 @@ class FaultWrapper(wsgi.Middleware):
 
     error_map = {
         'AttributeError': webob.exc.HTTPBadRequest,
-        'ActionInProgress': webob.exc.HTTPConflict,
         'ClusterNotFound': webob.exc.HTTPNotFound,
         'NodeNotFound': webob.exc.HTTPNotFound,
         'ProfileNotFound': webob.exc.HTTPNotFound,
-        'NotFound': webob.exc.HTTPNotFound,
         'ProfileValidationFailed': webob.exc.HTTPBadRequest,
+        'SpecValidationFailed': webob.exc.HTTPBadRequest,
         'InvalidParameter': webob.exc.HTTPBadRequest,
         'SenlinBadRequest': webob.exc.HTTPBadRequest,
         'ValueError': webob.exc.HTTPBadRequest,
@@ -72,6 +71,8 @@ class FaultWrapper(wsgi.Middleware):
         'NotSupported': webob.exc.HTTPBadRequest,
         'RequestLimitExceeded': webob.exc.HTTPBadRequest,
         'Invalid': webob.exc.HTTPBadRequest,
+        'NotFound': webob.exc.HTTPNotFound,
+        'ActionInProgress': webob.exc.HTTPConflict,
     }
 
     def _map_exception_to_error(self, class_exception):
