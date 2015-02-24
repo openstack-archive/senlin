@@ -300,3 +300,48 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('ProfileValidationFailed', resp.json['error']['type'])
         self.assertIsNone(resp.json['error']['traceback'])
+
+    def test_profile_create_with_spec_validation_failed(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'create', True)
+        body = {
+            'profile': {
+                'name': 'test_profile',
+                'type': 'unknown_type',
+                'spec': {'param': 'value'},
+                'permission': None,
+                'tags': {},
+            }
+        }
+        req = self._post('/profiles', json.dumps(body))
+
+        msg = 'Spec validation error (param): value'
+        error = senlin_exc.SpecValidationFailed(message=msg)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     side_effect=error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.create,
+                                              req, tenant_id=self.tenant,
+                                              body=body)
+
+        mock_call.assert_called_once()
+        self.assertEqual(400, resp.json['code'])
+        self.assertEqual('SpecValidationFailed', resp.json['error']['type'])
+        self.assertIsNone(resp.json['error']['traceback'])
+
+    def test_profile_create_denied_policy(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'create', False)
+        body = {
+            'profile': {
+                'name': 'test_profile',
+                'type': 'test_profile_type',
+                'spec': {'param': 'value'},
+            }
+        }
+
+        req = self._post('/profiles', json.dumps(body))
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.create,
+                                              req, tenant_id=self.tenant)
+        self.assertEqual(403, resp.status_int)
+        self.assertIn('403 Forbidden', six.text_type(resp))
