@@ -56,6 +56,7 @@ class FaultWrapper(wsgi.Middleware):
         'NodeNotFound': webob.exc.HTTPNotFound,
         'ProfileNotFound': webob.exc.HTTPNotFound,
         'NotFound': webob.exc.HTTPNotFound,
+        'ProfileValidationFailed': webob.exc.HTTPBadRequest,
         'InvalidParameter': webob.exc.HTTPBadRequest,
         'SenlinBadRequest': webob.exc.HTTPBadRequest,
         'ValueError': webob.exc.HTTPBadRequest,
