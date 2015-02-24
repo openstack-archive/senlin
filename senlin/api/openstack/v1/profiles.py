@@ -112,7 +112,7 @@ class ProfileController(object):
     def create(self, req, body):
         profile_data = body.get('profile')
         if profile_data is None:
-            raise exc.HTTPBadRequest(_("Malformed request data, missing"
+            raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'profile' key in request body."))
 
         data = ProfileData(profile_data)
@@ -136,7 +136,7 @@ class ProfileController(object):
     def update(self, req, profile_id, body):
         profile_data = body.get('profile')
         if profile_data is None:
-            raise exc.HTTPBadRequest(_("Malformed request data, missing"
+            raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'profile' key in request body."))
         data = ProfileData(profile_data)
         self.rpc_client.profile_update(req.context,
