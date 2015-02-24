@@ -214,8 +214,6 @@ class EngineService(service.Service):
     @request_context
     def profile_list(self, context, limit=None, marker=None, sort_keys=None,
                      sort_dir=None, filters=None, show_deleted=None):
-        show_deleted = utils.parse_bool_param('show_deleted', show_deleted)
-        limit = utils.parse_int_param('limit', limit)
         profiles = profile_base.Profile.load_all(context, limit=limit,
                                                  marker=marker,
                                                  sort_keys=sort_keys,
