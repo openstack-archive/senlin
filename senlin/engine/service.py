@@ -245,9 +245,22 @@ class EngineService(service.Service):
         return profile.to_dict()
 
     @request_context
-    def profile_update(self, context, profile_id, name, spec, perm, tags):
+    def profile_update(self, context, profile_id, name, spec,
+                       permission=None, tags=None):
+        db_profile = self.profile_find(context, profile_id)
+        plugin = environment.global_env().get_profile(db_profile.type)
 
-        return {}
+        new_spec = db_profile.spec.update(spec)
+        kwargs = {
+            'spec': new_spec,
+            'permission': permission or db_profile.permission,
+            'tags': tags or db_profile.permission,
+        }
+
+        profile = plugin(db_profile.type, name, **kwargs)
+        profile.validate()
+        profile.store(context)
+        return profile.to_dict()
 
     @request_context
     def profile_delete(self, context, identity):
