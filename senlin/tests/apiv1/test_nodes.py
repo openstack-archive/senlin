@@ -170,7 +170,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                                      filters=mock.ANY,
                                                      show_deleted=False)
 
-    def test_index_show_deleted_true(self, mock_enforce):
+    def test_node_index_show_deleted_true(self, mock_enforce):
         rpc_client = self.controller.rpc_client
         rpc_client.node_list = mock.Mock(return_value=[])
 
@@ -181,7 +181,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                                      filters=mock.ANY,
                                                      show_deleted=True)
 
-    def test_index_cluster_not_found(self, mock_enforce):
+    def test_node_index_cluster_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         cluster_id = 'non-existent'
         req = self._get('/nodes', {'cluster_id': cluster_id})
@@ -199,7 +199,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ClusterNotFound', resp.json['error']['type'])
 
-    def test_index_denied_policy(self, mock_enforce):
+    def test_node_index_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
         req = self._get('/nodes')
 
@@ -340,12 +340,12 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         expected = {'node': engine_resp}
         self.assertEqual(expected, response)
 
-    def test_node_show_not_found(self, mock_enforce):
+    def test_node_get_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         node_id = 'non-existent-node'
         req = self._get('/nodes/%(node_id)s' % {'node_id': node_id})
 
-        error = senlin_exc.NodeNotFound(node='non-existent-node')
+        error = senlin_exc.NodeNotFound(node=node_id)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -357,7 +357,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('NodeNotFound', resp.json['error']['type'])
 
-    def test_node_show_denied_policy(self, mock_enforce):
+    def test_node_get_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)
         node_id = 'non-existent-node'
         req = self._get('/nodes/%(node_id)s' % {'node_id': node_id})
