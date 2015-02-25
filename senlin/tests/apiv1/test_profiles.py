@@ -16,12 +16,12 @@ import six
 from webob import exc
 
 from senlin.api.middleware import fault
-from senlin.api.openstack.v1 import profiles 
-from senlin.common import exception as senlin_exc 
+from senlin.api.openstack.v1 import profiles
+from senlin.common import exception as senlin_exc
 from senlin.common import policy
+from senlin.rpc import client as rpc_client
 from senlin.tests.apiv1 import shared
 from senlin.tests.common import base
-from senlin.rpc import client as rpc_client
 
 
 class ProfileDataTest(base.SenlinTestCase):
@@ -35,7 +35,7 @@ class ProfileDataTest(base.SenlinTestCase):
             'type': 'test_profile_type',
             'permission': None,
             'tags': {}
-            }
+        }
         data = profiles.ProfileData(body)
         self.assertEqual('test_profile', data.name())
         self.assertEqual({'param1': 'value1', 'param2': 'value2'}, data.spec())
@@ -59,7 +59,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         super(ProfileControllerTest, self).setUp()
 
         class DummyConfig(object):
-            bind_port = 8778 
+            bind_port = 8778
 
         cfgopts = DummyConfig()
         self.controller = profiles.ProfileController(options=cfgopts)
@@ -70,7 +70,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         engine_resp = [
             {
-                u'id': u'aaaa-bbbb-cccc', 
+                u'id': u'aaaa-bbbb-cccc',
                 u'name': u'profile-1',
                 u'type': u'test_profile_type',
                 u'spec': {
@@ -87,14 +87,15 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
-        
+
         result = self.controller.index(req, tenant_id=self.tenant)
 
         default_args = {'limit': None, 'marker': None,
                         'sort_keys': None, 'sort_dir': None,
                         'filters': None, 'show_deleted': False}
 
-        mock_call.assert_called_with(req.context, ('profile_list', default_args))
+        mock_call.assert_called_with(req.context,
+                                     ('profile_list', default_args))
 
         expected = {'profiles': engine_resp}
         self.assertEqual(expected, result)
@@ -232,9 +233,9 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'spec': {
                     'param_1': 'value1',
                     'param_2': 2,
-             },
-             'permission': None,
-             'tags': {},
+            },
+            'permission': None,
+            'tags': {},
         }
 
         req = self._post('/profiles', json.dumps(body))
@@ -343,5 +344,67 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create,
                                               req, tenant_id=self.tenant)
+        self.assertEqual(403, resp.status_int)
+        self.assertIn('403 Forbidden', six.text_type(resp))
+
+    def test_profile_get_normal(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'get', True)
+        pid = 'aaaa-bbbb-cccc'
+        req = self._get('/profiles/%(profile_id)s' % {'profile_id': pid})
+
+        engine_resp = {
+            u'id': u'aaaa-bbbb-cccc',
+            u'name': u'profile-1',
+            u'type': u'test_profile_type',
+            u'spec': {
+                u'param_1': u'value1',
+                u'param_2': u'value2',
+            },
+            u'permission': '',
+            u'created_time': u'2015-02-24T19:17:22Z',
+            u'updated_time': None,
+            u'deleted_time': None,
+            u'tags': {},
+        }
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=engine_resp)
+
+        result = self.controller.get(req, tenant_id=self.tenant,
+                                     profile_id=pid)
+
+        mock_call.assert_called_with(req.context,
+                                     ('profile_get', {'identity': pid}))
+
+        expected = {'profile': engine_resp}
+        self.assertEqual(expected, result)
+
+    def test_profile_get_not_found(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'get', True)
+        pid = 'non-existent-profile'
+        req = self._get('/profiles/%(profile_id)s' % {'profile_id': pid})
+
+        error = senlin_exc.ProfileNotFound(profile=pid)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.get,
+                                              req, tenant_id=self.tenant,
+                                              profile_id=pid)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ProfileNotFound', resp.json['error']['type'])
+
+    def test_profile_get_denied_policy(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'get', False)
+        pid = 'non-existent-profile'
+        req = self._get('/profiles/%(profile_id)s' % {'profile_id': pid})
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.get,
+                                              req, tenant_id=self.tenant,
+                                              profile_id=pid)
+
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
