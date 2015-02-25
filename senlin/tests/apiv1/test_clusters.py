@@ -21,10 +21,10 @@ from oslo_config import cfg
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import clusters
 from senlin.common import exception as senlin_exc
-from senlin.common import policy 
-from senlin.tests.apiv1 import shared 
-from senlin.tests.common import base
+from senlin.common import policy
 from senlin.rpc import client as rpc_client
+from senlin.tests.apiv1 import shared
+from senlin.tests.common import base
 
 
 class ClusterDataTest(base.SenlinTestCase):
@@ -61,6 +61,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     def setUp(self):
         super(ClusterControllerTest, self).setUp()
+
         class DummyConfig(object):
             bind_port = 8778
 
@@ -171,9 +172,9 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/clusters', params=params)
         self.controller.index(req, tenant_id=self.tenant)
         rpc_client.cluster_list.assert_called_once_with(mock.ANY,
-                                                       filters=mock.ANY,
-                                                       tenant_safe=True,
-                                                       show_deleted=False)
+                                                        filters=mock.ANY,
+                                                        tenant_safe=True,
+                                                        show_deleted=False)
 
     def test_index_show_deleted_true(self, mock_enforce):
         rpc_client = self.controller.rpc_client
@@ -183,9 +184,9 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/clusters', params=params)
         self.controller.index(req, tenant_id=self.tenant)
         rpc_client.cluster_list.assert_called_once_with(mock.ANY,
-                                                       filters=mock.ANY,
-                                                       tenant_safe=True,
-                                                       show_deleted=True)
+                                                        filters=mock.ANY,
+                                                        tenant_safe=True,
+                                                        show_deleted=True)
 
     def test_index_show_nested_false(self, mock_enforce):
         rpc_client = self.controller.rpc_client
@@ -195,9 +196,9 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/clusters', params=params)
         self.controller.index(req, tenant_id=self.tenant)
         rpc_client.cluster_list.assert_called_once_with(mock.ANY,
-                                                       filters=mock.ANY,
-                                                       tenant_safe=True,
-                                                       show_nested=False)
+                                                        filters=mock.ANY,
+                                                        tenant_safe=True,
+                                                        show_nested=False)
 
     def test_index_show_nested_true(self, mock_enforce):
         rpc_client = self.controller.rpc_client
@@ -207,9 +208,9 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/clusters', params=params)
         self.controller.index(req, tenant_id=self.tenant)
         rpc_client.cluster_list.assert_called_once_with(mock.ANY,
-                                                       filters=mock.ANY,
-                                                       tenant_safe=True,
-                                                       show_nested=True)
+                                                        filters=mock.ANY,
+                                                        tenant_safe=True,
+                                                        show_nested=True)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_remote_attribute_error(self, mock_call, mock_enforce):
@@ -283,7 +284,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                      return_value=engine_response)
 
         resp = self.controller.create(req, tenant_id=self.tenant, body=body)
-        
+
         mock_call.assert_called_with(
             req.context,
             ('cluster_create', {
@@ -292,8 +293,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'size': 0,
                 'parent': None,
                 'tags': {},
-                'timeout': None}
-            )
+                'timeout': None
+            })
         )
 
         expected = {'cluster': engine_response}
@@ -500,7 +501,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test_delete_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', False)
         cid = 'aaaa-bbbb-cccc'
-        req = self._delete('/clusters/%(cluster_id)s' % {'cluster_id': cid}) 
+        req = self._delete('/clusters/%(cluster_id)s' % {'cluster_id': cid})
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.delete,
                                               req, tenant_id=self.tenant,
@@ -620,7 +621,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'aaaa-bbbb-cccc'
         body = {
             'add_nodes': {
-                'nodes': [ 'xxxx-yyyy-zzzz', ],
+                'nodes': ['xxxx-yyyy-zzzz', ],
             }
         }
 
@@ -710,7 +711,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'aaaa-bbbb-cccc'
         body = {
             'del_nodes': {
-                'nodes': [ 'xxxx-yyyy-zzzz', ],
+                'nodes': ['xxxx-yyyy-zzzz', ],
             }
         }
 

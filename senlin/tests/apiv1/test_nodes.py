@@ -22,9 +22,9 @@ from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import nodes
 from senlin.common import exception as senlin_exc
 from senlin.common import policy
-from senlin.tests.apiv1 import shared 
-from senlin.tests.common import base
 from senlin.rpc import client as rpc_client
+from senlin.tests.apiv1 import shared
+from senlin.tests.common import base
 
 
 class NodeDataTest(base.SenlinTestCase):
@@ -62,7 +62,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         super(NodeControllerTest, self).setUp()
 
         class DummyConfig(object):
-            bind_port = 8778 
+            bind_port = 8778
 
         cfgopts = DummyConfig()
         self.controller = nodes.NodeController(options=cfgopts)
@@ -73,11 +73,11 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         engine_resp = [
             {
-                u'id': 'aaaa-bbbb-cccc', 
-                u'name': 'node-1',
+                u'id': u'aaaa-bbbb-cccc',
+                u'name': u'node-1',
                 u'cluster_id': None,
                 u'physical_id': None,
-                u'profile_id': 'pppp-rrrr-oooo-ffff',
+                u'profile_id': u'pppp-rrrr-oooo-ffff',
                 u'profile_name': u'my_stack_profile',
                 u'index': 1,
                 u'role': None,
@@ -94,7 +94,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
-        
+
         result = self.controller.index(req, tenant_id=self.tenant)
 
         default_args = {'cluster_id': None, 'limit': None, 'marker': None,
@@ -187,10 +187,9 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/nodes', {'cluster_id': cluster_id})
 
         error = senlin_exc.ClusterNotFound(cluster=cluster_id)
-        mock_call = self.patchobject(
-            rpc_client.EngineClient, 'call',
-            side_effect=shared.to_remote_error(error))
- 
+        self.patchobject(rpc_client.EngineClient, 'call',
+                         side_effect=shared.to_remote_error(error))
+
         resp = shared.request_with_middleware(
             fault.FaultWrapper,
             self.controller.index,
@@ -307,10 +306,10 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test_node_get_success(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         node_id = 'aaaa-bbbb-cccc'
-        req = self._get('/nodes/%(node_id)s' % { 'node_id': node_id})
+        req = self._get('/nodes/%(node_id)s' % {'node_id': node_id})
 
         engine_resp = {
-            u'id': 'aaaa-bbbb-cccc', 
+            u'id': 'aaaa-bbbb-cccc',
             u'name': 'node-1',
             u'cluster_id': None,
             u'physical_id': None,
@@ -392,7 +391,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._put('/nodes/%(node_id)s' % {'node_id': nid},
-                         json.dumps(body))
+                        json.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
@@ -427,7 +426,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._put('/nodes/%(node_id)s' % {'node_id': nid},
-                         json.dumps(body))
+                        json.dumps(body))
 
         error = senlin_exc.NodeNotFound(node=nid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -466,7 +465,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._put('/nodes/%(node_id)s' % {'node_id': nid},
-                         json.dumps(body))
+                        json.dumps(body))
 
         error = senlin_exc.ProfileNotFound(profile=nid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -502,7 +501,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
         req = self._put('/nodes/%(node_id)s' % {'node_id': node_id},
-                         json.dumps(body))
+                        json.dumps(body))
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,
@@ -523,7 +522,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
         req = self._put('/nodes/%(node_id)s/action' % {'node_id': node_id},
-                         json.dumps(body))
+                        json.dumps(body))
 
         engine_response = {
             'id': 'action-id',
@@ -555,7 +554,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
         req = self._put('/nodes/%(node_id)s/action' % {'node_id': node_id},
-                         json.dumps(body))
+                        json.dumps(body))
 
         error = senlin_exc.NodeNotFound(node=node_id)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
@@ -580,7 +579,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
         req = self._put('/nodes/%(node_id)s/action' % {'node_id': node_id},
-                         json.dumps(body))
+                        json.dumps(body))
 
         error = senlin_exc.ClusterNotFound(cluster=cluster_id)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
@@ -600,7 +599,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         node_id = 'xxxx-yyyy'
         body = {'leave': {}}
         req = self._put('/nodes/%(node_id)s/action' % {'node_id': node_id},
-                         json.dumps(body))
+                        json.dumps(body))
 
         engine_response = {
             'id': 'action-id',
@@ -626,7 +625,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         node_id = 'xxxx-yyyy'
         body = {}
         req = self._put('/nodes/%(node_id)s/action' % {'node_id': node_id},
-                         json.dumps(body))
+                        json.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
@@ -644,7 +643,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         node_id = 'xxxx-yyyy'
         body = {'fly': {}, 'swim': {}}
         req = self._put('/nodes/%(node_id)s/action' % {'node_id': node_id},
-                         json.dumps(body))
+                        json.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
@@ -662,7 +661,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         node_id = 'xxxx-yyyy'
         body = {'fly': None}
         req = self._put('/nodes/%(node_id)s/action' % {'node_id': node_id},
-                         json.dumps(body))
+                        json.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
@@ -680,13 +679,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         node_id = 'xxxx-yyyy'
         body = {'leave': {}}
         req = self._put('/nodes/%(node_id)s/action' % {'node_id': node_id},
-                         json.dumps(body))
-
-        engine_response = {
-            'id': 'action-id',
-            'name': 'node_leave_idstring',
-            'target': 'xxxx-yyyy',
-        }
+                        json.dumps(body))
 
         error = senlin_exc.NodeNotFound(node=node_id)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
