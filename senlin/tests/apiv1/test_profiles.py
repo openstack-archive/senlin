@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
 import json
 import mock
 import six
@@ -405,6 +406,184 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               self.controller.get,
                                               req, tenant_id=self.tenant,
                                               profile_id=pid)
+
+        self.assertEqual(403, resp.status_int)
+        self.assertIn('403 Forbidden', six.text_type(resp))
+
+    def test_profile_update_normal(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        pid = 'aaaa-bbbb-cccc'
+        body = {
+            'profile': {
+                'name': 'profile-2',
+                'spec': {
+                    'param_2': 'value3',
+                },
+                'tags': {
+                    'author': 'thomas j',
+                }
+            }
+        }
+
+        req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
+                        json.dumps(body))
+
+        engine_resp = {
+            u'id': pid,
+            u'name': u'profile-2',
+            u'type': u'test_profile_type',
+            u'spec': {
+                u'param_1': u'value1',
+                u'param_2': u'value3',
+            },
+            u'permission': '',
+            u'created_time': u'2015-02-25T16:20:13Z',
+            u'updated_time': None,
+            u'deleted_time': None,
+            u'tags': {u'author': u'thomas j'},
+        }
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=engine_resp)
+        result = self.controller.update(req, tenant_id=self.tenant,
+                                        profile_id=pid,
+                                        body=body)
+
+        args = copy.deepcopy(body['profile'])
+        args['profile_id'] = pid
+        args['permission'] = None
+        mock_call.assert_called_with(req.context, ('profile_update', args))
+
+        expected = {'profile': engine_resp}
+        self.assertEqual(expected, result)
+
+    def test_profile_update_no_name(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        pid = 'aaaa-bbbb-cccc'
+        body = {
+            'profile': {'spec': {'param_2': 'value3'},
+                        'tags': {'author': 'thomas j'}}
+        }
+
+        req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
+                        json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(exc.HTTPBadRequest, self.controller.update,
+                               req, tenant_id=self.tenant,
+                               profile_id=pid, body=body)
+
+        self.assertEqual('No profile name specified', six.text_type(ex))
+        self.assertFalse(mock_call.called)
+
+    def test_profile_update_no_spec(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        pid = 'aaaa-bbbb-cccc'
+        body = {
+            'profile': {
+                'name': 'new_profile',
+                'tags': {'author': 'john d'},
+                'permission': 'xxx',
+            }
+        }
+        req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
+                        json.dumps(body))
+
+        engine_response = {
+            u'id': pid,
+            u'name': u'new_profile',
+            u'type': u'test_profile_type',
+            u'spec': {
+                u'param_1': u'value1',
+                u'param_2': u'value3',
+            },
+            u'permission': 'xxx',
+            u'created_time': u'2015-02-25T16:20:13Z',
+            u'updated_time': u'2015-02-25T16:50:22Z',
+            u'deleted_time': None,
+            u'tags': {u'author': u'john d'},
+        }
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=engine_response)
+        result = self.controller.update(req, tenant_id=self.tenant,
+                                        profile_id=pid, body=body)
+
+        args = copy.deepcopy(body['profile'])
+        args['profile_id'] = pid
+        args['spec'] = None
+        mock_call.assert_called_with(req.context, ('profile_update', args))
+
+        expected = {'profile': engine_response}
+        self.assertEqual(expected, result)
+
+    def test_profile_update_not_found(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        pid = 'non-existent-profile'
+        body = {
+            'profile': {
+                'name': 'new_profile',
+                'tags': {'author': 'john d'},
+                'permission': 'xxx',
+            }
+        }
+        req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
+                        json.dumps(body))
+
+        error = senlin_exc.ProfileNotFound(profile=pid)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.update,
+                                              req, tenant_id=self.tenant,
+                                              profile_id=pid,
+                                              body=body)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ProfileNotFound', resp.json['error']['type'])
+
+    def test_profile_update_with_spec_validation_failed(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        pid = 'aaaa-bbbb-cccc'
+        body = {
+            'profile': {
+                'name': 'test_profile',
+                'spec': {'param4': 'value4'},
+            }
+        }
+        req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
+                        json.dumps(body))
+
+        msg = 'Spec validation error (param): value'
+        error = senlin_exc.SpecValidationFailed(message=msg)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     side_effect=error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.update,
+                                              req, tenant_id=self.tenant,
+                                              profile_id=pid,
+                                              body=body)
+        mock_call.assert_called_once()
+        self.assertEqual(400, resp.json['code'])
+        self.assertEqual('SpecValidationFailed', resp.json['error']['type'])
+        self.assertIsNone(resp.json['error']['traceback'])
+
+    def test_profile_update_denied_policy(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', False)
+        pid = 'aaaa-bbbb-cccc'
+        body = {
+            'profile': {'name': 'test_profile', 'spec': {'param5': 'value5'}},
+        }
+        req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
+                        json.dumps(body))
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.update,
+                                              req, tenant_id=self.tenant,
+                                              profile_id=pid,
+                                              body=body)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
