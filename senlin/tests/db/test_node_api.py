@@ -12,7 +12,6 @@
 
 import json
 
-from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
 from senlin.tests.common import base
 from senlin.tests.common import utils

@@ -10,7 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import parser
 from senlin.tests.common import base

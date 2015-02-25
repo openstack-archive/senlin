@@ -157,7 +157,7 @@ class DBAPILockTest(base.SenlinTestCase):
         observed = db_api.cluster_lock_steal(self.cluster.id, UUID1)
         self.assertIn(UUID1, observed)
         self.assertNotIn(UUID2, observed)
- 
+
         observed = db_api.cluster_lock_release(self.cluster.id, UUID1, -1)
         self.assertTrue(observed)
 

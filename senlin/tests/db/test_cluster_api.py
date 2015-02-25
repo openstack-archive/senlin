@@ -60,7 +60,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertIsNone(db_api.cluster_get(self.ctx, cluster_id,
                                              show_deleted=False))
         res = db_api.node_get(self.ctx, node.id)
-        self.assertIsNone(res) 
+        self.assertIsNone(res)
         self.assertRaises(exception.NotFound, db_api.cluster_delete,
                           self.ctx, cluster_id)
 
@@ -133,16 +133,13 @@ class DBAPIClusterTest(base.SenlinTestCase):
 
     def test_cluster_get_by_name(self):
         cluster1 = shared.create_cluster(self.ctx, self.profile,
-                                        name='cluster_A',
-                                        project=UUID2)
+                                         name='cluster_A',
+                                         project=UUID2)
 
-        cluster2 = shared.create_cluster(self.ctx, self.profile,
-                                        name='cluster_B',
-                                        project=UUID2)
-
-        cluster3 = shared.create_cluster(self.ctx, self.profile,
-                                        name='cluster_B',
-                                        project=UUID2)
+        shared.create_cluster(self.ctx, self.profile, name='cluster_B',
+                              project=UUID2)
+        shared.create_cluster(self.ctx, self.profile, name='cluster_B',
+                              project=UUID2)
 
         res = db_api.cluster_get_by_name(self.ctx, 'cluster_A')
         self.assertIsNone(res)
@@ -164,7 +161,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
 
     def test_cluster_get_by_short_id(self):
         cid1 = 'same-part-unique-part'
-        cid2 = 'same-part-part-unique' 
+        cid2 = 'same-part-part-unique'
         cluster1 = shared.create_cluster(self.ctx, self.profile,
                                          id=cid1,
                                          name='cluster-1')
