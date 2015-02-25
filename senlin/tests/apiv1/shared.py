@@ -10,21 +10,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import json
-import six
 import webob
-from webob import exc
 
 from oslo_config import cfg
 from oslo_log import log
 from oslo_messaging._drivers import common as rpc_common
 
-from senlin.api.openstack.v1 import clusters
 from senlin.common import consts
-from senlin.common.i18n import _
-from senlin.common import utils as senlin_utils
 from senlin.common import wsgi
-from senlin.tests.common import base
 from senlin.tests.common import utils
 
 
