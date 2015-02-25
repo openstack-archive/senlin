@@ -140,15 +140,16 @@ class ProfileController(object):
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'profile' key in request body."))
         data = ProfileData(profile_data)
+        spec = profile_data.get(consts.PROFILE_SPEC)
         # We don't check if type is specified or not
         profile = self.rpc_client.profile_update(req.context,
                                                  profile_id,
                                                  data.name(),
-                                                 data.spec(),
+                                                 spec,
                                                  data.permission(),
                                                  data.tags())
 
-        raise {'profile': profile}
+        return {'profile': profile}
 
     @util.policy_enforce
     def delete(self, req, profile_id):
