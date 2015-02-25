@@ -104,12 +104,12 @@ class EngineClient(object):
         return self.call(ctxt,
                          self.make_msg('profile_get', identity=identity))
 
-    def profile_update(self, ctxt, profile_id, name, spec, perm, tags):
+    def profile_update(self, ctxt, profile_id, name, spec, permission, tags):
         return self.call(ctxt,
                          self.make_msg('profile_update',
                                        profile_id=profile_id,
                                        name=name, spec=spec,
-                                       perm=perm, tags=tags))
+                                       permission=permission, tags=tags))
 
     def profile_delete(self, ctxt, identity, cast=True):
         rpc_method = self.cast if cast else self.call
