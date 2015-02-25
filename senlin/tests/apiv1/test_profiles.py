@@ -587,3 +587,47 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
+
+    def test_profile_delete_success(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete', True)
+        pid = 'aaaa-bbbb-cccc'
+        req = self._delete('/profiles/%(profile_id)s' % {'profile_id': pid})
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=None)
+
+        self.assertRaises(exc.HTTPNoContent, self.controller.delete,
+                          req, tenant_id=self.tenant, profile_id=pid)
+
+        mock_call.assert_called_with(
+            req.context, ('profile_delete', {'identity': pid}))
+
+    def test_node_delete_not_found(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete', True)
+        pid = 'aaaa-bbbb-cccc'
+        req = self._delete('/profiles/%(profile_id)s' % {'profile_id': pid})
+
+        error = senlin_exc.ProfileNotFound(profile=pid)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.delete,
+                                              req, tenant_id=self.tenant,
+                                              profile_id=pid)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ProfileNotFound', resp.json['error']['type'])
+
+    def test_node_delete_err_denied_policy(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete', False)
+        pid = 'aaaa-bbbb-cccc'
+        req = self._delete('/profiles/%(profile_id)s' % {'profile_id': pid})
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.delete,
+                                              req, tenant_id=self.tenant,
+                                              profile_id=pid)
+
+        self.assertEqual(403, resp.status_int)
+        self.assertIn('403 Forbidden', six.text_type(resp))
