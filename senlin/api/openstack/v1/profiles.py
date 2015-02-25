@@ -134,19 +134,21 @@ class ProfileController(object):
 
     @util.policy_enforce
     def update(self, req, profile_id, body):
+        '''The update operation actually creates a new profile.'''
         profile_data = body.get('profile')
         if profile_data is None:
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'profile' key in request body."))
         data = ProfileData(profile_data)
-        self.rpc_client.profile_update(req.context,
-                                       profile_id,
-                                       data.name(),
-                                       data.spec(),
-                                       data.permission(),
-                                       data.tags())
+        # We don't check if type is specified or not
+        profile = self.rpc_client.profile_update(req.context,
+                                                 profile_id,
+                                                 data.name(),
+                                                 data.spec(),
+                                                 data.permission(),
+                                                 data.tags())
 
-        raise exc.HTTPAccepted()
+        raise {'profile': profile}
 
     @util.policy_enforce
     def delete(self, req, profile_id):
