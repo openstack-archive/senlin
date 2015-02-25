@@ -245,9 +245,18 @@ class EngineService(service.Service):
         return profile.to_dict()
 
     @request_context
-    def profile_update(self, context, profile_id, name, spec,
+    def profile_update(self, context, profile_id, name, spec=None,
                        permission=None, tags=None):
         db_profile = self.profile_find(context, profile_id)
+        if spec is None:
+            profile = profile_base.Profile.load(context, profile=db_profile)
+            if name != profile.name:
+                profile.name = name
+                profile.permission = permission,
+                profile.tags = tags
+                profile.store(context)
+            return profile.to_dict()
+
         plugin = environment.global_env().get_profile(db_profile.type)
 
         new_spec = db_profile.spec.update(spec)
