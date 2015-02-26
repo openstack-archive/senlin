@@ -113,6 +113,84 @@ class DBAPIEventTest(base.SenlinTestCase):
         events = db_api.event_get_all(self.ctx, tenant_safe=False)
         self.assertEqual(3, len(events))
 
+    def test_event_get_all_with_limit(self):
+        cluster1 = shared.create_cluster(self.ctx, self.profile)
+
+        self.create_event(self.ctx, entity=cluster1)
+        self.create_event(self.ctx, entity=cluster1)
+        self.create_event(self.ctx, entity=cluster1)
+
+        events = db_api.event_get_all(self.ctx)
+        self.assertEqual(3, len(events))
+
+        events = db_api.event_get_all(self.ctx, limit=1)
+        self.assertEqual(1, len(events))
+
+        events = db_api.event_get_all(self.ctx, limit=2)
+        self.assertEqual(2, len(events))
+
+    def test_event_get_all_with_limit_and_marker(self):
+        cluster1 = shared.create_cluster(self.ctx, self.profile)
+
+        self.create_event(self.ctx, entity=cluster1)
+        self.create_event(self.ctx, entity=cluster1)
+        self.create_event(self.ctx, entity=cluster1)
+
+        events_all = db_api.event_get_all(self.ctx)
+        self.assertEqual(3, len(events_all))
+
+        marker = events_all[0].id
+        event1_id = events_all[1].id
+        event2_id = events_all[2].id
+        events = db_api.event_get_all(self.ctx, limit=1, marker=marker)
+        self.assertEqual(1, len(events))
+        self.assertEqual(event1_id, events[0].id)
+
+        events = db_api.event_get_all(self.ctx, limit=2, marker=marker)
+        self.assertEqual(2, len(events))
+        self.assertEqual(event1_id, events[0].id)
+        self.assertEqual(event2_id, events[1].id)
+
+        marker = event1_id
+        events = db_api.event_get_all(self.ctx, limit=1, marker=marker)
+        self.assertEqual(1, len(events))
+        self.assertEqual(event2_id, events[0].id)
+
+    def test_event_get_all_with_sort_keys_and_dir(self):
+        cluster1 = shared.create_cluster(self.ctx, self.profile)
+
+        event1 = self.create_event(self.ctx, entity=cluster1,
+                                   timestamp=datetime.datetime.utcnow(),
+                                   action='action2')
+        event2 = self.create_event(self.ctx, entity=cluster1,
+                                   timestamp=datetime.datetime.utcnow(),
+                                   action='action3')
+        event3 = self.create_event(self.ctx, entity=cluster1,
+                                   timestamp=datetime.datetime.utcnow(),
+                                   action='action1')
+
+        events = db_api.event_get_all(self.ctx, sort_keys=['timestamp'])
+        self.assertEqual(event1.id, events[0].id)
+        self.assertEqual(event2.id, events[1].id)
+        self.assertEqual(event3.id, events[2].id)
+
+        events = db_api.event_get_all(self.ctx, sort_keys=['timestamp'],
+                                      sort_dir='desc')
+        self.assertEqual(event1.id, events[2].id)
+        self.assertEqual(event2.id, events[1].id)
+        self.assertEqual(event3.id, events[0].id)
+
+        events = db_api.event_get_all(self.ctx, sort_keys=['action'])
+        self.assertEqual(event1.id, events[1].id)
+        self.assertEqual(event2.id, events[2].id)
+        self.assertEqual(event3.id, events[0].id)
+
+        events = db_api.event_get_all(self.ctx, sort_keys=['action'],
+                                      sort_dir='desc')
+        self.assertEqual(event1.id, events[1].id)
+        self.assertEqual(event2.id, events[0].id)
+        self.assertEqual(event3.id, events[2].id)
+
     def test_event_get_all_show_deleted(self):
         cluster1 = shared.create_cluster(self.ctx, self.profile)
         cluster2 = shared.create_cluster(self.ctx, self.profile)
