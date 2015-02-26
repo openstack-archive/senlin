@@ -187,7 +187,7 @@ class EngineService(service.Service):
 
         data = dict((name, dict(schema))
                     for name, schema in profile.spec_schema.items())
-        return {'schema': data}
+        return {'spec': data}
 
     @request_context
     def profile_find(self, context, identity, show_deleted=False):
@@ -284,7 +284,7 @@ class EngineService(service.Service):
 
         data = dict((name, dict(schema))
                     for name, schema in policy_type.spec_schema.items())
-        return {'schema': data}
+        return {'spec': data}
 
     @request_context
     def policy_find(self, context, identity, show_deleted=False):
