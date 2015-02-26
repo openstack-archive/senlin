@@ -100,7 +100,7 @@ def create_node(ctx, cluster, profile, **kwargs):
     values = {
         'name': 'test_node_name',
         'physical_id': UUID1,
-        'cluster_id': cluster.id,
+        'cluster_id': cluster.id if cluster else None,
         'profile_id': profile.id,
         'index': 0,
         'role': None,
