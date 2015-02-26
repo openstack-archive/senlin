@@ -233,6 +233,10 @@ class ProfileNotSpecified(SenlinException):
     msg_fmt = _("Profile not specified.")
 
 
+class ProfileTypeNotFound(SenlinException):
+    msg_fmt = _("Profile type (%(profile_type)s) is not found.")
+
+
 class ProfileValidationFailed(SenlinException):
     msg_fmt = _("%(message)s")
 
@@ -241,8 +245,8 @@ class PolicyNotSpecified(SenlinException):
     msg_fmt = _("Policy not specified.")
 
 
-class ProfileTypeNotFound(SenlinException):
-    msg_fmt = _("Profile type (%(profile_type)s) is not supported.")
+class PolicyTypeNotFound(SenlinException):
+    msg_fmt = _("Policy type (%(policy_type)s) is not found.")
 
 
 class PolicyValidationFailed(SenlinException):
