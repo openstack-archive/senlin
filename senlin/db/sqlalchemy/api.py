@@ -819,47 +819,16 @@ def event_get_all(context):
     return events
 
 
-def _events_paginate_query(context, query, model, limit=None, sort_keys=None,
-                           marker=None, sort_dir=None):
-    default_sort_keys = ['timestamp']
-    if not sort_keys:
-        sort_keys = default_sort_keys
-        if not sort_dir:
-            sort_dir = 'desc'
-
-    # This assures the order of the clusters will always be the same
-    # even for sort_key values that are not unique in the database
-    sort_keys = sort_keys + ['id']
-
-    model_marker = None
-    if marker:
-        # not to use model_query(context, model).get(marker), because
-        # user can only see the ID(column 'uuid') and the ID as the marker
-        model_marker = model_query(context, model).filter_by(id=marker).first()
-    try:
-        query = utils.paginate_query(query, model, limit, sort_keys,
-                                     model_marker, sort_dir)
-    except utils.InvalidSortKey as ex:
-        raise exception.Invalid(reason=ex.message)
-
-    return query
-
-
 def event_count_by_cluster(context, cid):
     count = model_query(context, models.Event).\
         filter_by(obj_id=cid, obj_type='CLUSTER').count()
     return count
 
 
-def _events_by_cluster(context, cid):
-    query = model_query(context, models.Event).\
-        filter_by(obj_id=cid, obj_type='CLUSTER')
-    return query
-
-
 def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
                              sort_keys=None, sort_dir=None, filters=None):
-    query = _events_by_cluster(context, cluster_id)
+    query = model_query(context, models.Event).\
+        filter_by(obj_id=cluster_id, obj_type='CLUSTER')
 
     if filters is None:
         filters = {}
@@ -871,10 +840,10 @@ def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
     query = db_filters.exact_filter(query, models.Event, filters)
-    return _events_paginate_query(context, query, models.Event,
-                                  limit=limit, marker=marker,
-                                  sort_keys=keys, sort_dir=sort_dir,
-                                  default_sort_keys=['timestamp']).all()
+    return _paginate_query(context, query, models.Event,
+                           limit=limit, marker=marker,
+                           sort_keys=keys, sort_dir=sort_dir,
+                           default_sort_keys=['timestamp']).all()
 
 
 def purge_deleted(age, granularity='days'):
