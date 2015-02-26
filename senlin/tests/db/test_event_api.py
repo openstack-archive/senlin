@@ -45,6 +45,16 @@ class DBAPIEventTest(base.SenlinTestCase):
         self.assertEqual('Server already deleted', ret_event.status_reason)
         self.assertIsNone(ret_event.user)
 
+    def test_event_get_by_short_id(self):
+        event = shared.create_event(self.ctx)
+        short_id = event.id[:6]
+        ret_event = db_api.event_get_by_short_id(self.ctx, short_id)
+        self.assertIsNotNone(ret_event)
+
+        short_id = event.id[:8]
+        ret_event = db_api.event_get_by_short_id(self.ctx, short_id)
+        self.assertIsNotNone(ret_event)
+
     def test_event_get_all(self):
         cluster1 = shared.create_cluster(self.ctx, self.profile,
                                          tenant_id='tenant1')
