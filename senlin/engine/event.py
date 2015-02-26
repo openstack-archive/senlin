@@ -46,6 +46,7 @@ class Event(object):
         self.obj_id = kwargs.get('obj_id', None)
         self.obj_type = kwargs.get('obj_type', None)
         self.obj_name = kwargs.get('obj_name', None)
+        self.cluster_id = kwargs.get('cluster_id', None)
 
         self.user = kwargs.get('user', None)
         self.project = kwargs.get('project', None)
@@ -64,6 +65,7 @@ class Event(object):
             'obj_id': record.obj_id,
             'obj_type': record.obj_type,
             'obj_name': record.obj_name,
+            'cluster_id': record.cluster_id,
             'user': record.user,
             'project': record.project,
             'action': record.action,
@@ -105,6 +107,7 @@ class Event(object):
             'obj_id': self.obj_id,
             'obj_type': self.obj_type,
             'obj_name': self.obj_name,
+            'cluster_id': self.cluster_id,
             'user': self.user,
             'project': self.project,
             'action': self.action,
@@ -130,6 +133,7 @@ class Event(object):
             'obj_type': self.obj_type,
             'obj_id': self.obj_id,
             'obj_name': self.obj_name,
+            'cluster_id': self.cluster_id,
             'user': self.user,
             'project': self.project,
             'action': self.action,
