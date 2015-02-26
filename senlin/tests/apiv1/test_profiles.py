@@ -277,10 +277,11 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     def test_profile_create_with_bad_type(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
+        type_name = 'unknown_type'
         body = {
             'profile': {
                 'name': 'test_profile',
-                'type': 'unknown_type',
+                'type': type_name,
                 'spec': {'param': 'value'},
                 'permission': None,
                 'tags': {},
@@ -288,8 +289,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
         req = self._post('/profiles', json.dumps(body))
 
-        msg = 'Unknown profile type: unknown_profile'
-        error = senlin_exc.ProfileValidationFailed(message=msg)
+        error = senlin_exc.ProfileTypeNotFound(profile_type=type_name)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      side_effect=error)
 
@@ -299,8 +299,8 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               body=body)
 
         mock_call.assert_called_once()
-        self.assertEqual(400, resp.json['code'])
-        self.assertEqual('ProfileValidationFailed', resp.json['error']['type'])
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ProfileTypeNotFound', resp.json['error']['type'])
         self.assertIsNone(resp.json['error']['traceback'])
 
     def test_profile_create_with_spec_validation_failed(self, mock_enforce):
@@ -308,7 +308,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {
             'profile': {
                 'name': 'test_profile',
-                'type': 'unknown_type',
+                'type': 'test_profile_type',
                 'spec': {'param': 'value'},
                 'permission': None,
                 'tags': {},
