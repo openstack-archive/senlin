@@ -48,18 +48,7 @@ class RoutesTest(base.SenlinTestCase):
             self.m,
             '/aaaa/profile_types/test_type',
             'GET',
-            'spec',
-            'ProfileTypeController',
-            {
-                'tenant_id': 'aaaa',
-                'type_name': 'test_type'
-            })
-
-        self.assertRoute(
-            self.m,
-            '/aaaa/profile_types/test_type/template',
-            'GET',
-            'template',
+            'schema',
             'ProfileTypeController',
             {
                 'tenant_id': 'aaaa',
@@ -135,18 +124,7 @@ class RoutesTest(base.SenlinTestCase):
             self.m,
             '/aaaa/policy_types/test_type',
             'GET',
-            'spec',
-            'PolicyTypeController',
-            {
-                'tenant_id': 'aaaa',
-                'type_name': 'test_type'
-            })
-
-        self.assertRoute(
-            self.m,
-            '/aaaa/policy_types/test_type/template',
-            'GET',
-            'template',
+            'schema',
             'PolicyTypeController',
             {
                 'tenant_id': 'aaaa',
