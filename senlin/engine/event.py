@@ -46,7 +46,10 @@ class Event(object):
         self.obj_id = kwargs.get('obj_id', None)
         self.obj_type = kwargs.get('obj_type', None)
         self.obj_name = kwargs.get('obj_name', None)
+
         self.user = kwargs.get('user', None)
+        self.project = kwargs.get('project', None)
+
         self.action = kwargs.get('action', None)
         self.status = kwargs.get('status', None)
         self.status_reason = kwargs.get('status_reason', None)
@@ -62,6 +65,7 @@ class Event(object):
             'obj_type': record.obj_type,
             'obj_name': record.obj_name,
             'user': record.user,
+            'project': record.project,
             'action': record.action,
             'status': record.status,
             'status_reason': record.status_reason,
@@ -80,12 +84,14 @@ class Event(object):
 
     @classmethod
     def load_all(cls, context, limit=None, sort_keys=None, marker=None,
-                 sort_dir=None, filters=None, show_deleted=False):
+                 sort_dir=None, filters=None, tenant_safe=True,
+                 show_deleted=False):
         '''Retrieve all events from database.'''
 
         records = db_api.event_get_all(context, limit=limit, marker=marker,
                                        sort_keys=sort_keys, sort_dir=sort_dir,
                                        filters=filters,
+                                       tenant_safe=tenant_safe,
                                        show_deleted=show_deleted)
 
         for record in records:
@@ -100,6 +106,7 @@ class Event(object):
             'obj_type': self.obj_type,
             'obj_name': self.obj_name,
             'user': self.user,
+            'project': self.project,
             'action': self.action,
             'status': self.status,
             'status_reason': self.status_reason,
@@ -124,6 +131,7 @@ class Event(object):
             'obj_id': self.obj_id,
             'obj_name': self.obj_name,
             'user': self.user,
+            'project': self.project,
             'action': self.action,
             'status': self.status,
             'status_reason': self.status_reason,
