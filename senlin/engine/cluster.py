@@ -26,6 +26,8 @@ from senlin.profiles import base as profiles_base
 
 LOG = logging.getLogger(__name__)
 
+CONF = cfg.CONF
+
 
 class Cluster(periodic_task.PeriodicTasks):
     '''A cluster is a set of homogeneous objects of the same profile.
@@ -74,6 +76,11 @@ class Cluster(periodic_task.PeriodicTasks):
         self.status_reason = kwargs.get('status_reason', 'Initializing')
         self.data = kwargs.get('data', {})
         self.tags = kwargs.get('tags', {})
+
+        # heathy checking
+        self.detect_enabled = False
+        self.detect_interval = 1  # times of global periodic task interval.
+        self.detect_counter = 0
 
         # rt is a dict for runtime data
         # TODO(Qiming): nodes have to be reloaded when membership changes
@@ -249,7 +256,7 @@ class Cluster(periodic_task.PeriodicTasks):
         '''
         # TODO(Qiming): merge this two calls
         self.set_status(context, self.DELETED)
-        #db_api.cluster_delete(context, self.id)
+        # db_api.cluster_delete(context, self.id)
         return True
 
     def do_update(self, context, new_profile_id, **kwargs):
@@ -304,23 +311,48 @@ class Cluster(periodic_task.PeriodicTasks):
                 deleted.append(node_id)
         return deleted
 
-    def attach_policy(self, policy_id):
+    def attach_policy(self, policy):
         '''Attach specified policy instance to this cluster.'''
 
         # TODO(Qiming): check conflicts with existing policies
-        self.rt.policies.append(policy_id)
+        self.rt.policies.append(policy)
 
     def detach_policy(self, policy_id):
         # TODO(Qiming): check if actions of specified policies are ongoing
-        self.rt.policies.remove(policy_id)
+        for p in self.rt.policies:
+            if(p.policy_id == policy_id):
+                self.rt.policies.remove(policy_id)
+
+    def heathy_check_enable(self):
+        self.detect_enabled = True
+
+    def heathy_check_disable(self):
+        self.detect_enabled = False
+
+    def heathy_check_set_interval(self, policy_interval):
+        self.detection_interval = ((policy_interval
+                                    + CONF.periodic_interval_max)
+                                    / CONF.periodic_interval_max)
 
     @periodic_task.periodic_task
     def heathy_check(self):
+        if(not self.detect_enabled):
+            return
+
+        if(self.detect_counter < self.detect_interval):
+            self.detect_counter += 1
+            return
+        self.detect_counter = 0
+
+        fails = 0
+        for nd in self.rt.nodes:
+            if(nd.rt.profile.do_check(nd)):
+                continue
+
+            fails += 1
+
         # TODO(Anyone):
-        # 1. check if a HA policy is attached, return if not
-        # 2. iterate the nodes in the cluster, invoke their
-        #    profile do_check() to check their heathy
-        # 3. if failure nodes found, enforce the HA policy
+        # How to enforce the HA policy?
         pass
 
     def periodic_tasks(self, context, raise_on_error=False):

@@ -32,6 +32,7 @@ class HealthPolicy(base.Policy):
     # Should be ANY if profile provides health check support?
     PROFILE_TYPE = [
         'os.nova.server',
+        'os.heat.stack',
         'AWS.AutoScaling.LaunchConfiguration',
     ]
 
@@ -117,19 +118,22 @@ class HealthPolicy(base.Policy):
         self.check_type = self.spec_data[self.DETECTION][self.DETECTION_TYPE]
         self.interval = self.spec_data[self.DETECTION][self.CHECK_INTERVAL]
 
-    def attach(self, cluster_id):
+    def attach(self, ctx, cluster, data):
         '''Hook for policy attach.
 
         Initialize the health check mechanism for existing nodes in cluster.
         '''
-        # TODO(anyone): implement this
+        cluster.heathy_check_enable()
+        cluster.heathy_check_set_interval(self.interval)
+
         return True
 
-    def detach(self, cluster_id):
+    def detach(self, ctx, cluster, data):
         '''Hook for policy detach.
 
         Deinitialize the health check mechanism (for the cluster).
         '''
+        cluster.heathy_check_disable()
         return True
 
     def pre_op(self, cluster_id, action, **args):

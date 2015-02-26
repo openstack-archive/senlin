@@ -439,7 +439,7 @@ class ClusterAction(base.Action):
         db_api.cluster_policy_attach(self.context, cluster.id, policy_id,
                                      values)
 
-        cluster.rt['policies'].append(policy)
+        cluster.attach(policy)
         return self.RES_OK, 'Policy attached'
 
     def do_detach_policy(self, cluster, policy_data):
@@ -454,6 +454,7 @@ class ClusterAction(base.Action):
 
         db_api.cluster_policy_detach(self.context, cluster.id, policy_id)
 
+        cluster.detach(policy.policy_id)
         return self.RES_OK, 'Policy detached'
 
     def do_update_policy(self, cluster, policy_data):
