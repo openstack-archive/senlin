@@ -268,6 +268,9 @@ class Event(BASE, SenlinBase, SoftDelete):
     obj_id = sqlalchemy.Column(sqlalchemy.String(36))
     obj_name = sqlalchemy.Column(sqlalchemy.String(255))
     obj_type = sqlalchemy.Column(sqlalchemy.String(36))
+    cluster_id = sqlalchemy.Column(sqlalchemy.String(36),
+                                   sqlalchemy.ForeignKey('cluster.id'),
+                                   nullable=True)
     level = sqlalchemy.Column(sqlalchemy.String(64))
     user = sqlalchemy.Column(sqlalchemy.String(36))
     project = sqlalchemy.Column(sqlalchemy.String(36))
