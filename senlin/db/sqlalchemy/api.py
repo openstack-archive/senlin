@@ -823,6 +823,7 @@ def _event_filter_paginate_query(context, query, filters=None,
     sort_key_map = {
         consts.EVENT_TIMESTAMP: models.Event.timestamp.key,
         consts.EVENT_OBJ_TYPE: models.Event.obj_type.key,
+        consts.EVENT_OBJ_NAME: models.Event.obj_name.key,
         consts.EVENT_USER: models.Event.user.key,
         consts.EVENT_ACTION: models.Event.action.key,
     }
