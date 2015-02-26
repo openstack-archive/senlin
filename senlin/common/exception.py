@@ -241,7 +241,7 @@ class PolicyNotSpecified(SenlinException):
     msg_fmt = _("Policy not specified.")
 
 
-class ProfileTypeNotSupport(SenlinException):
+class ProfileTypeNotFound(SenlinException):
     msg_fmt = _("Profile type (%(profile_type)s) is not supported.")
 
 
