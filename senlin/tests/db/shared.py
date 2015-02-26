@@ -82,7 +82,6 @@ def create_cluster(ctx, profile, **kwargs):
         'project': ctx.tenant_id,
         'domain': 'unknown',
         'parent': None,
-        'node_count': 0,
         'next_index': 1,
         'timeout': 60,
         'size': 0,
