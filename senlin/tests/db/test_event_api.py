@@ -11,6 +11,7 @@
 # under the License.
 
 import datetime
+import logging
 
 from senlin.db.sqlalchemy import api as db_api
 from senlin.tests.common import base
@@ -29,24 +30,54 @@ class DBAPIEventTest(base.SenlinTestCase):
         self.ctx = utils.dummy_context()
         self.profile = shared.create_profile(self.ctx)
 
+    def create_event(self, ctx, timestamp=None, level=logging.INFO,
+                     entity=None, action=None, status=None,
+                     status_reason=None, deleted_time=None):
+
+        fake_timestamp = datetime.datetime.strptime(
+            '2014-12-19 11:51:54.670244', '%Y-%m-%d %H:%M:%S.%f')
+
+        if entity:
+            type_name = entity.__class__.__name__.upper()
+        else:
+            type_name = ''
+
+        values = {
+            'timestamp': timestamp or fake_timestamp,
+            'level': level,
+            'obj_id': entity.id if entity else '',
+            'obj_name': entity.name if entity else '',
+            'obj_type': type_name,
+            'action': action or '',
+            'status': status or '',
+            'status_reason': status_reason or '',
+            'user': ctx.user_id,
+            'project': ctx.tenant_id,
+            'deleted_time': deleted_time,
+        }
+
+        # Make sure all fields can be customized
+        return db_api.event_create(ctx, values)
+
     def test_event_create_get(self):
-        event = shared.create_event(self.ctx)
+        event = self.create_event(self.ctx)
         ret_event = db_api.event_get(self.ctx, event.id)
         self.assertIsNotNone(ret_event)
         timestamp = datetime.datetime.strftime(ret_event.timestamp,
                                                '%Y-%m-%d %H:%M:%S.%f')
         self.assertEqual('2014-12-19 11:51:54.670244', timestamp)
-        self.assertEqual(50, ret_event.level)
-        self.assertEqual(UUID1, ret_event.obj_id)
-        self.assertEqual('NODE', ret_event.obj_type)
-        self.assertEqual('Server01', ret_event.obj_name)
-        self.assertEqual('UPDATE', ret_event.action)
-        self.assertEqual('FAILED', ret_event.status)
-        self.assertEqual('Server already deleted', ret_event.status_reason)
-        self.assertIsNone(ret_event.user)
+        self.assertEqual(logging.INFO, ret_event.level)
+        self.assertEqual('', ret_event.obj_id)
+        self.assertEqual('', ret_event.obj_type)
+        self.assertEqual('', ret_event.obj_name)
+        self.assertEqual('', ret_event.action)
+        self.assertEqual('', ret_event.status)
+        self.assertEqual('', ret_event.status_reason)
+        self.assertEqual(self.ctx.user_id, ret_event.user)
+        self.assertEqual(self.ctx.tenant_id, ret_event.project)
 
     def test_event_get_by_short_id(self):
-        event = shared.create_event(self.ctx)
+        event = self.create_event(self.ctx)
         short_id = event.id[:6]
         ret_event = db_api.event_get_by_short_id(self.ctx, short_id)
         self.assertIsNotNone(ret_event)
@@ -55,65 +86,103 @@ class DBAPIEventTest(base.SenlinTestCase):
         ret_event = db_api.event_get_by_short_id(self.ctx, short_id)
         self.assertIsNotNone(ret_event)
 
-    def test_event_get_all(self):
-        cluster1 = shared.create_cluster(self.ctx, self.profile,
-                                         tenant_id='tenant1')
-        cluster2 = shared.create_cluster(self.ctx, self.profile,
-                                         tenant_id='tenant2')
-        values = [
-            {'obj_id': cluster1.id, 'obj_name': 'node1'},
-            {'obj_id': cluster1.id, 'obj_name': 'node2'},
-            {'obj_id': cluster2.id, 'obj_name': 'node3'},
-        ]
-        for val in values:
-            shared.create_event(self.ctx, **val)
+        ret_event = db_api.event_get_by_short_id(self.ctx, 'non-existent')
+        self.assertIsNone(ret_event)
 
+    def test_event_get_all(self):
+        cluster1 = shared.create_cluster(self.ctx, self.profile)
+        cluster2 = shared.create_cluster(self.ctx, self.profile)
+
+        self.create_event(self.ctx, entity=cluster1)
+        self.create_event(self.ctx, entity=cluster1)
+        self.create_event(self.ctx, entity=cluster2)
+
+        # Default tenant_safe
         events = db_api.event_get_all(self.ctx)
         self.assertEqual(3, len(events))
 
         cluster_ids = [event.obj_id for event in events]
         obj_names = [event.obj_name for event in events]
-        for val in values:
-            self.assertIn(val['obj_id'], cluster_ids)
-            self.assertIn(val['obj_name'], obj_names)
+
+        self.assertIn(cluster1.id, cluster_ids)
+        self.assertIn(cluster1.name, obj_names)
+        self.assertIn(cluster2.id, cluster_ids)
+        self.assertIn(cluster2.name, obj_names)
+
+        # Set tenant_safe to false
+        events = db_api.event_get_all(self.ctx, tenant_safe=False)
+        self.assertEqual(3, len(events))
+
+    def test_event_get_all_show_deleted(self):
+        cluster1 = shared.create_cluster(self.ctx, self.profile)
+        cluster2 = shared.create_cluster(self.ctx, self.profile)
+
+        # Simulate deleted events by setting 'deleted_time' to not-None
+        now = datetime.datetime.utcnow()
+        self.create_event(self.ctx, entity=cluster1, deleted_time=now)
+        self.create_event(self.ctx, entity=cluster1)
+        self.create_event(self.ctx, entity=cluster2, deleted_time=now)
+
+        # Default show_deleted is False
+        events = db_api.event_get_all(self.ctx)
+        self.assertEqual(1, len(events))
+
+        events = db_api.event_get_all(self.ctx, show_deleted=True)
+        self.assertEqual(3, len(events))
+
+    def test_event_get_all_tenant_safe(self):
+        self.ctx.tenant_id = 'tenant_1'
+        cluster1 = shared.create_cluster(self.ctx, self.profile,
+                                         name='cluster1')
+        self.create_event(self.ctx, entity=cluster1)
+        self.ctx.tenant_id = 'tenant_2'
+        cluster2 = shared.create_cluster(self.ctx, self.profile,
+                                         name='cluster2')
+        self.create_event(self.ctx, entity=cluster2, action='CLUSTER_CREATE')
+        self.create_event(self.ctx, entity=cluster2, action='CLUSTER_DELETE')
+
+        # Default tenant_safe to true, only the last two events are visible
+        events = db_api.event_get_all(self.ctx)
+        self.assertEqual(2, len(events))
+
+        obj_ids = [event.obj_id for event in events]
+        obj_names = [event.obj_name for event in events]
+        self.assertNotIn(cluster1.id, obj_ids)
+        self.assertNotIn(cluster1.name, obj_names)
+        self.assertIn(cluster2.id, obj_ids)
+        self.assertIn(cluster2.name, obj_names)
+
+        # Set tenant_safe to false, we should get all three events
+        events = db_api.event_get_all(self.ctx, tenant_safe=False)
+        self.assertEqual(3, len(events))
+
+        obj_ids = [event.obj_id for event in events]
+        obj_names = [event.obj_name for event in events]
+        self.assertIn(cluster1.id, obj_ids)
+        self.assertIn(cluster1.name, obj_names)
+        self.assertIn(cluster2.id, obj_ids)
+        self.assertIn(cluster2.name, obj_names)
 
     def test_event_get_all_by_cluster(self):
-        cluster1 = shared.create_cluster(self.ctx, self.profile,
-                                         tenant_id='tenant1')
-        cluster2 = shared.create_cluster(self.ctx, self.profile,
-                                         tenant_id='tenant2')
-        values = [
-            {'obj_id': cluster1.id, 'obj_name': 'cluster1',
-             'obj_type': 'CLUSTER'},
-            {'obj_id': cluster1.id, 'obj_name': 'cluster2',
-             'obj_type': 'CLUSTER'},
-            {'obj_id': cluster2.id, 'obj_name': 'cluster3',
-             'obj_type': 'CLUSTER'},
-        ]
-        for val in values:
-            shared.create_event(self.ctx, **val)
+        cluster1 = shared.create_cluster(self.ctx, self.profile)
+        cluster2 = shared.create_cluster(self.ctx, self.profile)
 
-        self.ctx.tenant_id = 'tenant1'
+        self.create_event(self.ctx, entity=cluster1)
+        self.create_event(self.ctx, entity=cluster2)
+        self.create_event(self.ctx, entity=cluster1)
+
         events = db_api.event_get_all_by_cluster(self.ctx, cluster1.id)
         self.assertEqual(2, len(events))
 
-        self.ctx.tenant_id = 'tenant2'
         events = db_api.event_get_all_by_cluster(self.ctx, cluster2.id)
         self.assertEqual(1, len(events))
 
     def test_event_count_all_by_cluster(self):
         cluster1 = shared.create_cluster(self.ctx, self.profile)
         cluster2 = shared.create_cluster(self.ctx, self.profile)
-        values = [
-            {'obj_id': cluster1.id, 'obj_name': 'cluster1',
-             'obj_type': 'CLUSTER'},
-            {'obj_id': cluster1.id, 'obj_name': 'cluster2',
-             'obj_type': 'CLUSTER'},
-            {'obj_id': cluster2.id, 'obj_name': 'cluster3',
-             'obj_type': 'CLUSTER'},
-        ]
-        for val in values:
-            shared.create_event(self.ctx, **val)
+        self.create_event(self.ctx, entity=cluster1)
+        self.create_event(self.ctx, entity=cluster1)
+        self.create_event(self.ctx, entity=cluster2)
 
         self.assertEqual(2, db_api.event_count_by_cluster(self.ctx,
                                                           cluster1.id))
@@ -121,58 +190,59 @@ class DBAPIEventTest(base.SenlinTestCase):
                                                           cluster2.id))
 
     def test_event_node_status_reason_truncate(self):
-        event = shared.create_event(self.ctx, status_reason='a' * 1024)
+        event = self.create_event(self.ctx, status_reason='a' * 1024)
         ret_event = db_api.event_get(self.ctx, event.id)
         self.assertEqual('a' * 255, ret_event.status_reason)
 
     def test_event_get_all_filtered(self):
-        cluster1 = shared.create_cluster(self.ctx, self.profile)
-        cluster2 = shared.create_cluster(self.ctx, self.profile)
-        values = [
-            {'obj_id': cluster1.id, 'obj_name': 'c1', 'obj_type': 'CLUSTER',
-             'status': 'OK'},
-            {'obj_id': cluster1.id, 'obj_name': 'c1', 'obj_type': 'CLUSTER',
-             'status': 'FAILED'},
-            {'obj_id': cluster2.id, 'obj_name': 'c2', 'obj_type': 'CLUSTER',
-             'status': 'FAILED'},
-            {'obj_id': cluster2.id, 'obj_name': 'c2', 'obj_type': 'CLUSTER',
-             'status': 'FAILED'},
-            {'obj_id': cluster2.id, 'obj_name': 'c2', 'obj_type': 'CLUSTER',
-             'status': 'FAILED'},
-        ]
-        for val in values:
-            shared.create_event(self.ctx, **val)
+        cluster1 = shared.create_cluster(self.ctx, self.profile,
+                                         name='cluster1')
+        cluster2 = shared.create_cluster(self.ctx, self.profile,
+                                         name='cluster2')
+
+        self.create_event(self.ctx, entity=cluster1, action='CLUSTER_CREATE')
+        self.create_event(self.ctx, entity=cluster1, action='CLUSTER_DELETE')
+        self.create_event(self.ctx, entity=cluster2, action='CLUSTER_CREATE')
 
         events = db_api.event_get_all_by_cluster(self.ctx, cluster1.id)
         self.assertEqual(2, len(events))
 
-        # test filter by status
-        filters = {'status': 'FAILED'}
+        # test filter by action
+        filters = {'action': 'CLUSTER_CREATE'}
         events = db_api.event_get_all_by_cluster(self.ctx, cluster1.id,
                                                  filters=filters)
         self.assertEqual(1, len(events))
-        self.assertEqual('FAILED', events[0].status)
+        self.assertEqual('CLUSTER_CREATE', events[0].action)
 
-        # test filter by name
-        filters = {'obj_name': 'c1'}
+        filters = {'action': 'CLUSTER_UPDATE'}
+        events = db_api.event_get_all_by_cluster(self.ctx, cluster1.id,
+                                                 filters=filters)
+        self.assertEqual(0, len(events))
+
+        # test filter by obj_name
+        filters = {'obj_name': 'cluster1'}
         events = db_api.event_get_all_by_cluster(self.ctx, cluster1.id,
                                                  filters=filters)
         self.assertEqual(2, len(events))
-        self.assertEqual('c1', events[0].obj_name)
-        self.assertEqual('c1', events[1].obj_name)
+        self.assertEqual('cluster1', events[0].obj_name)
+        self.assertEqual('cluster1', events[1].obj_name)
 
-        # test filter by node_type
+        filters = {'obj_name': 'cluster3'}
+        events = db_api.event_get_all_by_cluster(self.ctx, cluster1.id,
+                                                 filters=filters)
+        self.assertEqual(0, len(events))
+
+        # test filter by obj_type
         filters = {'obj_type': 'CLUSTER'}
         events = db_api.event_get_all_by_cluster(self.ctx, cluster2.id,
                                                  filters=filters)
-        self.assertEqual(3, len(events))
+        self.assertEqual(1, len(events))
         self.assertEqual('CLUSTER', events[0].obj_type)
-        self.assertEqual('CLUSTER', events[1].obj_type)
 
-        filters = {'obj_type': 'CLUSTER'}
+        filters = {'obj_type': 'NODE'}
         events = db_api.event_get_all_by_cluster(self.ctx, cluster2.id,
                                                  filters=filters)
-        self.assertEqual(3, len(events))
+        self.assertEqual(0, len(events))
 
         # test limit and marker
         events_all = db_api.event_get_all_by_cluster(self.ctx, cluster1.id)
