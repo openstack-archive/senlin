@@ -44,20 +44,13 @@ class PolicyTypeController(object):
         return {'policy_types': types}
 
     @util.policy_enforce
-    def spec(self, req, type_name):
-        spec = self.rpc_client.policy_type_spec(req.context, type_name)
-        if not spec:
+    def schema(self, req, type_name):
+        policy_schema = self.rpc_client.policy_type_schema(req.context,
+                                                           type_name)
+        if not policy_schema:
             raise exc.HTTPInternalServerError()
 
-        return spec
-
-    @util.policy_enforce
-    def template(self, req, type_name):
-        tmpl = self.rpc_client.policy_type_template(req.context, type_name)
-        if not tmpl:
-            raise exc.HTTPInternalServerError()
-
-        return tmpl
+        return policy_schema
 
 
 def create_resource(options):

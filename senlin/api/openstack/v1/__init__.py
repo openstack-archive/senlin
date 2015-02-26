@@ -41,13 +41,9 @@ class API(wsgi.Router):
                                "/profile_types",
                                action="index",
                                conditions={'method': 'GET'})
-            sub_mapper.connect("profile_type_spec",
+            sub_mapper.connect("profile_type_schema",
                                "/profile_types/{type_name}",
-                               action="spec",
-                               conditions={'method': 'GET'})
-            sub_mapper.connect("profile_type_template",
-                               "/profile_types/{type_name}/template",
-                               action="template",
+                               action="schema",
                                conditions={'method': 'GET'})
 
         # Profiles
@@ -85,13 +81,9 @@ class API(wsgi.Router):
                                "/policy_types",
                                action="index",
                                conditions={'method': 'GET'})
-            sub_mapper.connect("policy_type_spec",
+            sub_mapper.connect("policy_type_schema",
                                "/policy_types/{type_name}",
-                               action="spec",
-                               conditions={'method': 'GET'})
-            sub_mapper.connect("policy_type_template",
-                               "/policy_types/{type_name}/template",
-                               action="template",
+                               action="schema",
                                conditions={'method': 'GET'})
 
         # Policies

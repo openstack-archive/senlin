@@ -42,23 +42,14 @@ class ProfileTypeController(object):
         return {'profile_types': types}
 
     @util.policy_enforce
-    def spec(self, req, type_name):
+    def schema(self, req, type_name):
         '''Gets the interface schema for a specified profile type.'''
-        spec = self.rpc_client.profile_type_spec(req.context, type_name)
-        if not spec:
+        profile_schema = self.rpc_client.profile_type_schema(req.context,
+                                                             type_name)
+        if not profile_schema:
             raise exc.HTTPInternalServerError()
 
-        return spec
-
-    @util.policy_enforce
-    def template(self, req, type_name):
-        '''Gets the template representation for a specified profile type.'''
-
-        tmpl = self.rpc_client.profile_type_template(req.context, type_name)
-        if not tmpl:
-            raise exc.HTTPInternalServerError()
-
-        return tmpl
+        return profile_schema
 
 
 def create_resource(options):

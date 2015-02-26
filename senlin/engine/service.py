@@ -182,16 +182,12 @@ class EngineService(service.Service):
         return environment.global_env().get_profile_types()
 
     @request_context
-    def profile_type_spec(self, context, type_name):
+    def profile_type_schema(self, context, type_name):
         profile = environment.global_env().get_profile(type_name)
 
         data = dict((name, dict(schema))
                     for name, schema in profile.spec_schema.items())
         return {'schema': data}
-
-    @request_context
-    def profile_type_template(self, context, type_name):
-        return {}
 
     @request_context
     def profile_find(self, context, identity, show_deleted=False):
@@ -283,16 +279,12 @@ class EngineService(service.Service):
         return environment.global_env().get_policy_types()
 
     @request_context
-    def policy_type_spec(self, context, type_name):
+    def policy_type_schema(self, context, type_name):
         policy_type = environment.global_env().get_policy(type_name)
 
         data = dict((name, dict(schema))
                     for name, schema in policy_type.spec_schema.items())
         return {'schema': data}
-
-    @request_context
-    def policy_type_template(self, context, type_name):
-        return {}
 
     @request_context
     def policy_find(self, context, identity, show_deleted=False):
