@@ -852,14 +852,14 @@ def event_get_all(context, limit=None, marker=None, sort_keys=None,
 
 def event_count_by_cluster(context, cluster_id):
     count = model_query(context, models.Event).\
-        filter_by(obj_id=cluster_id, obj_type='CLUSTER').count()
+        filter_by(cluster_id=cluster_id).count()
     return count
 
 
 def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
                              sort_keys=None, sort_dir=None, filters=None):
     query = model_query(context, models.Event).\
-        filter_by(obj_id=cluster_id, obj_type='CLUSTER')
+        filter_by(cluster_id=cluster_id)
 
     return _event_filter_paginate_query(context, query, filters=filters,
                                         limit=limit, marker=marker,
