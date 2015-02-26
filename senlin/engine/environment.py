@@ -115,8 +115,7 @@ class Environment(object):
         self._check_profile_type_name(name)
         plugin = self.profile_registry.get_plugin(name)
         if plugin is None:
-            msg = _("Unknown profile type : %s") % name
-            raise exception.ProfileValidationFailed(message=msg)
+            raise exception.ProfileTypeNotFound(profile_type=name)
         return plugin
 
     def get_profile_types(self):
@@ -138,8 +137,7 @@ class Environment(object):
         self._check_policy_type_name(name)
         plugin = self.policy_registry.get_plugin(name)
         if plugin is None:
-            msg = _("Unknown policy type : %s") % name
-            raise exception.PolicyValidationFailed(message=msg)
+            raise exception.PolicyTypeNotFound(policy_type=name)
         return plugin
 
     def get_policy_types(self):
