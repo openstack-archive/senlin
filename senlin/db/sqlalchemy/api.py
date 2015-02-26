@@ -814,28 +814,17 @@ def event_get_by_short_id(context, short_id):
     return query_by_short_id(context, models.Event, short_id)
 
 
-def event_get_all(context):
-    events = model_query(context, models.Event).all()
-    return events
-
-
-def event_count_by_cluster(context, cid):
-    count = model_query(context, models.Event).\
-        filter_by(obj_id=cid, obj_type='CLUSTER').count()
-    return count
-
-
-def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
-                             sort_keys=None, sort_dir=None, filters=None):
-    query = model_query(context, models.Event).\
-        filter_by(obj_id=cluster_id, obj_type='CLUSTER')
-
+def _event_filter_paginate_query(context, query, filters=None,
+                                 limit=None, marker=None,
+                                 sort_keys=None, sort_dir=None):
     if filters is None:
         filters = {}
 
     sort_key_map = {
         consts.EVENT_TIMESTAMP: models.Event.timestamp.key,
         consts.EVENT_OBJ_TYPE: models.Event.obj_type.key,
+        consts.EVENT_USER: models.Event.user.key,
+        consts.EVENT_ACTION: models.Event.action.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
@@ -844,6 +833,37 @@ def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
                            limit=limit, marker=marker,
                            sort_keys=keys, sort_dir=sort_dir,
                            default_sort_keys=['timestamp']).all()
+
+
+def event_get_all(context, limit=None, marker=None, sort_keys=None,
+                  sort_dir=None, filters=None, tenant_safe=True,
+                  show_deleted=False):
+    query = soft_delete_aware_query(context, models.Event,
+                                    show_deleted=show_deleted)
+    if tenant_safe:
+        query = query.filter_by(project=context.tenant_id)
+
+    return _event_filter_paginate_query(context, query, filters=filters,
+                                        limit=limit, marker=marker,
+                                        sort_keys=sort_keys,
+                                        sort_dir=sort_dir)
+
+
+def event_count_by_cluster(context, cluster_id):
+    count = model_query(context, models.Event).\
+        filter_by(obj_id=cluster_id, obj_type='CLUSTER').count()
+    return count
+
+
+def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
+                             sort_keys=None, sort_dir=None, filters=None):
+    query = model_query(context, models.Event).\
+        filter_by(obj_id=cluster_id, obj_type='CLUSTER')
+
+    return _event_filter_paginate_query(context, query, filters=filters,
+                                        limit=limit, marker=marker,
+                                        sort_keys=sort_keys,
+                                        sort_dir=sort_dir)
 
 
 def purge_deleted(age, granularity='days'):

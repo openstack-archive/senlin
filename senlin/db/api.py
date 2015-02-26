@@ -267,8 +267,14 @@ def event_get_by_short_id(context, short_id):
     return IMPL.event_get_by_short_id(context, short_id)
 
 
-def event_get_all(context):
-    return IMPL.event_get_all(context)
+def event_get_all(context, limit=None, marker=None, sort_keys=None,
+                  sort_dir=None, filters=None, tenant_safe=True,
+                  show_deleted=False):
+
+    return IMPL.event_get_all(context, limit=limit, marker=marker,
+                              sort_keys=sort_keys, sort_dir=sort_dir,
+                              filters=filters, tenant_safe=tenant_safe,
+                              show_deleted=show_deleted)
 
 
 def event_count_by_cluster(context, cluster_id):
