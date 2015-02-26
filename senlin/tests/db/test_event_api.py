@@ -39,8 +39,15 @@ class DBAPIEventTest(base.SenlinTestCase):
 
         if entity:
             type_name = entity.__class__.__name__.upper()
+            if type_name == 'CLUSTER':
+                cluster_id = entity.id
+            elif type_name == 'NODE':
+                cluster_id = entity.cluster_id
+            else:
+                cluster_id = ''
         else:
             type_name = ''
+            cluster_id = ''
 
         values = {
             'timestamp': timestamp or fake_timestamp,
@@ -48,6 +55,7 @@ class DBAPIEventTest(base.SenlinTestCase):
             'obj_id': entity.id if entity else '',
             'obj_name': entity.name if entity else '',
             'obj_type': type_name,
+            'cluster_id': cluster_id,
             'action': action or '',
             'status': status or '',
             'status_reason': status_reason or '',
@@ -244,25 +252,95 @@ class DBAPIEventTest(base.SenlinTestCase):
     def test_event_get_all_by_cluster(self):
         cluster1 = shared.create_cluster(self.ctx, self.profile)
         cluster2 = shared.create_cluster(self.ctx, self.profile)
+        node1_1 = shared.create_node(self.ctx, cluster1, self.profile)
+        node1_2 = shared.create_node(self.ctx, cluster1, self.profile)
+        node2_1 = shared.create_node(self.ctx, cluster2, self.profile)
+        node_orphan = shared.create_node(self.ctx, None, self.profile)
 
+        # 1 event for cluster 1
         self.create_event(self.ctx, entity=cluster1)
-        self.create_event(self.ctx, entity=cluster2)
-        self.create_event(self.ctx, entity=cluster1)
+        events = db_api.event_get_all_by_cluster(self.ctx, cluster1.id)
+        self.assertEqual(1, len(events))
+        events = db_api.event_get_all_by_cluster(self.ctx, cluster2.id)
+        self.assertEqual(0, len(events))
+
+        # two more events for cluster 1, with one for an orphan node
+        self.create_event(self.ctx, entity=node1_1)
+        self.create_event(self.ctx, entity=node1_2)
+        self.create_event(self.ctx, entity=node_orphan)
 
         events = db_api.event_get_all_by_cluster(self.ctx, cluster1.id)
-        self.assertEqual(2, len(events))
+        self.assertEqual(3, len(events))
+        events = db_api.event_get_all_by_cluster(self.ctx, cluster2.id)
+        self.assertEqual(0, len(events))
 
+        # one more events for cluster 2, with one for an orphan node
+        self.create_event(self.ctx, entity=cluster2)
+        self.create_event(self.ctx, entity=node_orphan)
+
+        events = db_api.event_get_all_by_cluster(self.ctx, cluster1.id)
+        self.assertEqual(3, len(events))
         events = db_api.event_get_all_by_cluster(self.ctx, cluster2.id)
         self.assertEqual(1, len(events))
+
+        # two more events for cluster 2, with one for an orphan node
+        self.create_event(self.ctx, entity=node2_1)
+        self.create_event(self.ctx, entity=node2_1)
+        self.create_event(self.ctx, entity=node_orphan)
+
+        events = db_api.event_get_all_by_cluster(self.ctx, cluster1.id)
+        self.assertEqual(3, len(events))
+        events = db_api.event_get_all_by_cluster(self.ctx, cluster2.id)
+        self.assertEqual(3, len(events))
+
+        # two more events for cluster 1, with one for an orphan node
+        self.create_event(self.ctx, entity=cluster1)
+        self.create_event(self.ctx, entity=node1_1)
+        self.create_event(self.ctx, entity=node_orphan)
+
+        events = db_api.event_get_all_by_cluster(self.ctx, cluster1.id)
+        self.assertEqual(5, len(events))
+        events = db_api.event_get_all_by_cluster(self.ctx, cluster2.id)
+        self.assertEqual(3, len(events))
 
     def test_event_count_all_by_cluster(self):
         cluster1 = shared.create_cluster(self.ctx, self.profile)
         cluster2 = shared.create_cluster(self.ctx, self.profile)
+        node1_1 = shared.create_node(self.ctx, cluster1, self.profile)
+        node_orphan = shared.create_node(self.ctx, None, self.profile)
+
         self.create_event(self.ctx, entity=cluster1)
         self.create_event(self.ctx, entity=cluster1)
-        self.create_event(self.ctx, entity=cluster2)
 
         self.assertEqual(2, db_api.event_count_by_cluster(self.ctx,
+                                                          cluster1.id))
+        self.assertEqual(0, db_api.event_count_by_cluster(self.ctx,
+                                                          cluster2.id))
+
+        # No change if event is not related to a cluster
+        self.create_event(self.ctx, entity=self.profile)
+
+        self.assertEqual(2, db_api.event_count_by_cluster(self.ctx,
+                                                          cluster1.id))
+        self.assertEqual(0, db_api.event_count_by_cluster(self.ctx,
+                                                          cluster2.id))
+
+        # Node level events account to cluster
+        self.create_event(self.ctx, entity=node1_1)
+        self.assertEqual(3, db_api.event_count_by_cluster(self.ctx,
+                                                          cluster1.id))
+        self.assertEqual(0, db_api.event_count_by_cluster(self.ctx,
+                                                          cluster2.id))
+
+        # Node level events account to cluster, but not for orphan nodes
+        self.create_event(self.ctx, entity=node_orphan)
+        self.assertEqual(3, db_api.event_count_by_cluster(self.ctx,
+                                                          cluster1.id))
+        self.assertEqual(0, db_api.event_count_by_cluster(self.ctx,
+                                                          cluster2.id))
+        # Another cluster
+        self.create_event(self.ctx, entity=cluster2)
+        self.assertEqual(3, db_api.event_count_by_cluster(self.ctx,
                                                           cluster1.id))
         self.assertEqual(1, db_api.event_count_by_cluster(self.ctx,
                                                           cluster2.id))
