@@ -18,7 +18,7 @@ from senlin.common import exception
 from senlin.common.i18n import _LE
 from senlin.common.i18n import _LW
 from senlin.db import api as db_api
-from senlin.engine import event as events
+from senlin.engine import event as event_mod
 from senlin.profiles import base as profile_base
 
 LOG = logging.getLogger(__name__)
@@ -206,12 +206,11 @@ class Node(object):
         # TODO(anyone): generate event record
 
     def do_create(self, context):
-        # TODO(Qiming): log events?
         if self.status != self.INIT:
             LOG.error(_LE('Node is in status "%s"'), self.status)
             return False
-
         self.set_status(context, self.CREATING, reason='Creation in progress')
+        event_mod.info(context, self, 'create', self.status, self.status_reason)
         physical_id = profile_base.Profile.create_object(context, self)
         if not physical_id:
             return False
