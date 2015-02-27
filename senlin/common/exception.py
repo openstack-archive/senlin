@@ -187,6 +187,10 @@ class RegionAmbiguity(SenlinException):
                 "supplied one.")
 
 
+class ProjectNotMatch(SenlinException):
+    msg_fmt = _("%(message)s")
+
+
 class MultipleChoices(SenlinException):
     msg_fmt = _("Multiple results found matching the query criteria %(arg)s. "
                 "Please be more specific.")
@@ -238,6 +242,10 @@ class ProfileTypeNotFound(SenlinException):
 
 
 class ProfileValidationFailed(SenlinException):
+    msg_fmt = _("%(message)s")
+
+
+class ProfileTypeNotMatch(SenlinException):
     msg_fmt = _("%(message)s")
 
 
