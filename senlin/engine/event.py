@@ -86,8 +86,11 @@ class Event(object):
         return cls(record.timestamp, record.level, **kwargs)
 
     @classmethod
-    def load(cls, context, event_id):
+    def load(cls, context, db_event=None, event_id=None):
         '''Retrieve an event record from database.'''
+        if db_event is not None:
+            return cls.from_db_record(db_event)
+
         record = db_api.event_get(context, event_id)
         if record is None:
             raise exception.EventNotFound(event=event_id)
@@ -95,8 +98,8 @@ class Event(object):
         return cls.from_db_record(record)
 
     @classmethod
-    def load_all(cls, context, limit=None, sort_keys=None, marker=None,
-                 sort_dir=None, filters=None, tenant_safe=True,
+    def load_all(cls, context, filters=None, limit=None, marker=None,
+                 sort_keys=None, sort_dir=None, tenant_safe=True,
                  show_deleted=False):
         '''Retrieve all events from database.'''
 
