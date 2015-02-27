@@ -51,48 +51,6 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertEqual({}, cluster.tags)
         self.assertIsNone(cluster.data)
 
-    def test_cluster_delete(self):
-        cluster = shared.create_cluster(self.ctx, self.profile)
-        cluster_id = cluster.id
-        node = shared.create_node(self.ctx, cluster, self.profile)
-        db_api.cluster_delete(self.ctx, cluster_id)
-
-        self.assertIsNone(db_api.cluster_get(self.ctx, cluster_id,
-                                             show_deleted=False))
-        res = db_api.node_get(self.ctx, node.id)
-        self.assertIsNone(res)
-        self.assertRaises(exception.NotFound, db_api.cluster_delete,
-                          self.ctx, cluster_id)
-
-        # Testing soft delete
-        ret_cluster = db_api.cluster_get(self.ctx, cluster_id,
-                                         show_deleted=True)
-        self.assertIsNotNone(ret_cluster)
-        self.assertEqual(cluster_id, ret_cluster.id)
-        self.assertEqual('db_test_cluster_name', ret_cluster.name)
-
-        # Testing child nodes deletion
-        res = db_api.node_get(self.ctx, node.id)
-        self.assertIsNone(res)
-
-    def test_cluster_update(self):
-        cluster = shared.create_cluster(self.ctx, self.profile)
-        values = {
-            'name': 'db_test_cluster_name2',
-            'status': 'ERROR',
-            'status_reason': "update failed",
-            'timeout': 90,
-        }
-        db_api.cluster_update(self.ctx, cluster.id, values)
-        cluster = db_api.cluster_get(self.ctx, cluster.id)
-        self.assertEqual('db_test_cluster_name2', cluster.name)
-        self.assertEqual('ERROR', cluster.status)
-        self.assertEqual('update failed', cluster.status_reason)
-        self.assertEqual(90, cluster.timeout)
-
-        self.assertRaises(exception.NotFound, db_api.cluster_update, self.ctx,
-                          UUID2, values)
-
     def test_cluster_get_returns_a_cluster(self):
         cluster = shared.create_cluster(self.ctx, self.profile)
         ret_cluster = db_api.cluster_get(self.ctx, cluster.id,
@@ -105,13 +63,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
         cluster = db_api.cluster_get(self.ctx, UUID1, show_deleted=False)
         self.assertIsNone(cluster)
 
-    def test_cluster_get_tenant_not_match(self):
-        cluster = shared.create_cluster(self.ctx, self.profile)
-        self.ctx.tenant_id = 'abc'
-        cluster = db_api.cluster_get(self.ctx, UUID1, show_deleted=False)
-        self.assertIsNone(cluster)
-
-    def test_cluster_get_cluster_from_different_tenant(self):
+    def test_cluster_get_from_different_tenant(self):
         cluster = shared.create_cluster(self.ctx, self.profile)
         self.ctx.tenant_id = 'abc'
         ret_cluster = db_api.cluster_get(self.ctx, cluster.id,
@@ -119,7 +71,37 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertEqual(cluster.id, ret_cluster.id)
         self.assertEqual('db_test_cluster_name', ret_cluster.name)
 
-    def test_cluster_get_by_name_default(self):
+        cluster = db_api.cluster_get(self.ctx, cluster.id, show_deleted=False)
+        self.assertIsNone(cluster)
+
+    def test_cluster_get_show_deleted(self):
+        cluster = shared.create_cluster(self.ctx, self.profile)
+        result = db_api.cluster_get(self.ctx, cluster.id)
+        self.assertEqual(cluster.id, result.id)
+
+        db_api.cluster_delete(self.ctx, cluster.id)
+        result = db_api.cluster_get(self.ctx, cluster.id)
+        self.assertIsNone(result)
+
+        result = db_api.cluster_get(self.ctx, cluster.id, show_deleted=True)
+        self.assertEqual(cluster.id, result.id)
+
+    def test_cluster_get_show_deleted_context(self):
+        cluster = shared.create_cluster(self.ctx, self.profile)
+
+        self.assertFalse(self.ctx.show_deleted)
+        result = db_api.cluster_get(self.ctx, cluster.id)
+        self.assertEqual(cluster.id, result.id)
+
+        db_api.cluster_delete(self.ctx, cluster.id)
+        result = db_api.cluster_get(self.ctx, cluster.id)
+        self.assertIsNone(result)
+
+        self.ctx.show_deleted = True
+        result = db_api.cluster_get(self.ctx, cluster.id)
+        self.assertEqual(cluster.id, result.id)
+
+    def test_cluster_get_by_name(self):
         cluster = shared.create_cluster(self.ctx, self.profile)
         ret_cluster = db_api.cluster_get_by_name(self.ctx, cluster.name)
         self.assertIsNotNone(ret_cluster)
@@ -131,7 +113,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.ctx.tenant_id = 'abc'
         self.assertIsNone(db_api.cluster_get_by_name(self.ctx, cluster.name))
 
-    def test_cluster_get_by_name(self):
+    def test_cluster_get_by_name_diff_tenant(self):
         cluster1 = shared.create_cluster(self.ctx, self.profile,
                                          name='cluster_A',
                                          project=UUID2)
@@ -194,6 +176,28 @@ class DBAPIClusterTest(base.SenlinTestCase):
         cluster = db_api.cluster_get(self.ctx, cluster.id)
         self.assertEqual(3, cluster.next_index)
 
+        index = db_api.cluster_get_next_index(self.ctx, 'bad-id')
+        self.assertIsNone(index)
+
+    def test_cluster_get_by_name_and_parent(self):
+        cluster1 = shared.create_cluster(self.ctx, self.profile,
+                                         name='cluster1')
+        cluster2 = shared.create_cluster(self.ctx, self.profile,
+                                         name='cluster2',
+                                         parent=cluster1.id)
+
+        result = db_api.cluster_get_by_name_and_parent(self.ctx, 'cluster2',
+                                                       None)
+        self.assertIsNone(result)
+
+        result = db_api.cluster_get_by_name_and_parent(self.ctx, 'cluster2',
+                                                       cluster1.id)
+        self.assertEqual(cluster2.id, result.id)
+
+        result = db_api.cluster_get_by_name_and_parent(self.ctx, 'cluster1',
+                                                       cluster1.id)
+        self.assertIsNone(result)
+
     def test_cluster_get_all(self):
         values = [
             {'name': 'cluster1'},
@@ -207,24 +211,6 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertEqual(4, len(ret_clusters))
         names = [ret_cluster.name for ret_cluster in ret_clusters]
         [self.assertIn(val['name'], names) for val in values]
-
-    def test_cluster_get_all_by_parent(self):
-        cluster1 = shared.create_cluster(self.ctx, self.profile)
-        cluster2 = shared.create_cluster(self.ctx, self.profile)
-        values = [
-            {'parent': cluster1.id},
-            {'parent': cluster1.id},
-            {'parent': cluster2.id},
-            {'parent': cluster2.id},
-        ]
-        [shared.create_cluster(self.ctx, self.profile, **v) for v in values]
-
-        cluster1_children = db_api.cluster_get_all_by_parent(self.ctx,
-                                                             cluster1.id)
-        self.assertEqual(2, len(cluster1_children))
-        cluster2_children = db_api.cluster_get_all_by_parent(self.ctx,
-                                                             cluster2.id)
-        self.assertEqual(2, len(cluster2_children))
 
     def test_cluster_get_all_with_regular_tenant(self):
         values = [
@@ -259,117 +245,6 @@ class DBAPIClusterTest(base.SenlinTestCase):
 
         clusters = db_api.cluster_get_all(self.ctx, tenant_safe=False)
         self.assertEqual(5, len(clusters))
-
-    def test_get_sort_keys_returns_empty_list_if_no_keys(self):
-        sort_keys = None
-        mapping = {}
-
-        filtered_keys = db_api._get_sort_keys(sort_keys, mapping)
-        self.assertEqual([], filtered_keys)
-
-    def test_get_sort_keys_whitelists_single_key(self):
-        sort_key = 'foo'
-        mapping = {'foo': 'Foo'}
-
-        filtered_keys = db_api._get_sort_keys(sort_key, mapping)
-        self.assertEqual(['Foo'], filtered_keys)
-
-    def test_get_sort_keys_whitelists_multiple_keys(self):
-        sort_keys = ['foo', 'bar', 'nope']
-        mapping = {'foo': 'Foo', 'bar': 'Bar'}
-
-        filtered_keys = db_api._get_sort_keys(sort_keys, mapping)
-        self.assertIn('Foo', filtered_keys)
-        self.assertIn('Bar', filtered_keys)
-        self.assertEqual(2, len(filtered_keys))
-
-    @mock.patch.object(db_api.utils, 'paginate_query')
-    def test_paginate_query_raises_invalid_sort_key(self, mock_paginate_query):
-        query = mock.Mock()
-        model = mock.Mock()
-
-        mock_paginate_query.side_effect = db_api.utils.InvalidSortKey()
-        self.assertRaises(exception.Invalid, db_api._paginate_query,
-                          self.ctx, query, model, sort_keys=['foo'])
-
-    @mock.patch.object(db_api.utils, 'paginate_query')
-    @mock.patch.object(db_api, 'model_query')
-    def test_paginate_query_gets_model_marker(self, mock_query,
-                                              mock_paginate_query):
-        query = mock.Mock()
-        model = mock.Mock()
-        marker = mock.Mock()
-
-        mock_query_object = mock.Mock()
-        mock_query_object.get.return_value = 'real_marker'
-        mock_query.return_value = mock_query_object
-
-        db_api._paginate_query(self.ctx, query, model, marker=marker)
-        mock_query_object.get.assert_called_once_with(marker)
-        args, _ = mock_paginate_query.call_args
-        self.assertIn('real_marker', args)
-
-    @mock.patch.object(db_api.utils, 'paginate_query')
-    def test_paginate_query_default_sorts_dir_by_desc(self,
-                                                      mock_paginate_query):
-        query = mock.Mock()
-        model = mock.Mock()
-        db_api._paginate_query(self.ctx, query, model, sort_dir=None)
-        args, _ = mock_paginate_query.call_args
-        self.assertIn('desc', args)
-
-    @mock.patch.object(db_api.utils, 'paginate_query')
-    def test_paginate_query_uses_given_sort_plus_id(self,
-                                                    mock_paginate_query):
-        query = mock.Mock()
-        model = mock.Mock()
-        db_api._paginate_query(self.ctx, query, model, sort_keys=['name'])
-        args, _ = mock_paginate_query.call_args
-        self.assertIn(['name', 'id'], args)
-
-    def test_nested_cluster_get_by_name(self):
-        cluster1 = shared.create_cluster(self.ctx, self.profile,
-                                         name='cluster1')
-        cluster2 = shared.create_cluster(self.ctx, self.profile,
-                                         name='cluster2',
-                                         parent=cluster1.id)
-
-        result = db_api.cluster_get_by_name(self.ctx, 'cluster2')
-        self.assertEqual(cluster2.id, result.id)
-
-        db_api.cluster_delete(self.ctx, cluster2.id)
-        result = db_api.cluster_get_by_name(self.ctx, 'cluster2')
-        self.assertIsNone(result)
-
-    def test_cluster_get_by_name_and_parent(self):
-        cluster1 = shared.create_cluster(self.ctx, self.profile,
-                                         name='cluster1')
-        cluster2 = shared.create_cluster(self.ctx, self.profile,
-                                         name='cluster2',
-                                         parent=cluster1.id)
-
-        result = db_api.cluster_get_by_name_and_parent(self.ctx, 'cluster2',
-                                                       None)
-        self.assertIsNone(result)
-
-        result = db_api.cluster_get_by_name_and_parent(self.ctx, 'cluster2',
-                                                       cluster1.id)
-        self.assertEqual(cluster2.id, result.id)
-
-    def test_cluster_get_show_deleted_context(self):
-        cluster = shared.create_cluster(self.ctx, self.profile)
-
-        self.assertFalse(self.ctx.show_deleted)
-        result = db_api.cluster_get(self.ctx, cluster.id)
-        self.assertEqual(cluster.id, result.id)
-
-        db_api.cluster_delete(self.ctx, cluster.id)
-        result = db_api.cluster_get(self.ctx, cluster.id)
-        self.assertIsNone(result)
-
-        self.ctx.show_deleted = True
-        result = db_api.cluster_get(self.ctx, cluster.id)
-        self.assertEqual(cluster.id, result.id)
 
     def test_cluster_get_all_show_deleted(self):
         clusters = [shared.create_cluster(self.ctx, self.profile)
@@ -482,6 +357,24 @@ class DBAPIClusterTest(base.SenlinTestCase):
         db_api.cluster_get_all(self.ctx, sort_keys=sort_keys)
         self.assertEqual(['id'], sort_keys)
 
+    def test_cluster_get_all_by_parent(self):
+        cluster1 = shared.create_cluster(self.ctx, self.profile)
+        cluster2 = shared.create_cluster(self.ctx, self.profile)
+        values = [
+            {'parent': cluster1.id},
+            {'parent': cluster1.id},
+            {'parent': cluster2.id},
+            {'parent': cluster2.id},
+        ]
+        [shared.create_cluster(self.ctx, self.profile, **v) for v in values]
+
+        children1 = db_api.cluster_get_all_by_parent(self.ctx, cluster1.id)
+        self.assertEqual(2, len(children1))
+        children2 = db_api.cluster_get_all_by_parent(self.ctx, cluster2.id)
+        self.assertEqual(2, len(children2))
+        children0 = db_api.cluster_get_all_by_parent(self.ctx, 'non-existent')
+        self.assertEqual(0, len(children0))
+
     def test_cluster_count_all(self):
         clusters = [shared.create_cluster(self.ctx, self.profile)
                     for i in range(3)]
@@ -551,6 +444,105 @@ class DBAPIClusterTest(base.SenlinTestCase):
         cl_db = db_api.cluster_count_all(self.ctx, filters=filters)
         self.assertEqual(2, cl_db)
 
+    def test_cluster_update(self):
+        cluster = shared.create_cluster(self.ctx, self.profile)
+        values = {
+            'name': 'db_test_cluster_name2',
+            'status': 'ERROR',
+            'status_reason': "update failed",
+            'timeout': 90,
+        }
+        db_api.cluster_update(self.ctx, cluster.id, values)
+        cluster = db_api.cluster_get(self.ctx, cluster.id)
+        self.assertEqual('db_test_cluster_name2', cluster.name)
+        self.assertEqual('ERROR', cluster.status)
+        self.assertEqual('update failed', cluster.status_reason)
+        self.assertEqual(90, cluster.timeout)
+
+        self.assertRaises(exception.NotFound, db_api.cluster_update, self.ctx,
+                          UUID2, values)
+
+    def test_get_sort_keys_returns_empty_list_if_no_keys(self):
+        sort_keys = None
+        mapping = {}
+
+        filtered_keys = db_api._get_sort_keys(sort_keys, mapping)
+        self.assertEqual([], filtered_keys)
+
+    def test_get_sort_keys_whitelists_single_key(self):
+        sort_key = 'foo'
+        mapping = {'foo': 'Foo'}
+
+        filtered_keys = db_api._get_sort_keys(sort_key, mapping)
+        self.assertEqual(['Foo'], filtered_keys)
+
+    def test_get_sort_keys_whitelists_multiple_keys(self):
+        sort_keys = ['foo', 'bar', 'nope']
+        mapping = {'foo': 'Foo', 'bar': 'Bar'}
+
+        filtered_keys = db_api._get_sort_keys(sort_keys, mapping)
+        self.assertIn('Foo', filtered_keys)
+        self.assertIn('Bar', filtered_keys)
+        self.assertEqual(2, len(filtered_keys))
+
+    @mock.patch.object(db_api.utils, 'paginate_query')
+    def test_paginate_query_raises_invalid_sort_key(self, mock_paginate_query):
+        query = mock.Mock()
+        model = mock.Mock()
+
+        mock_paginate_query.side_effect = db_api.utils.InvalidSortKey()
+        self.assertRaises(exception.Invalid, db_api._paginate_query,
+                          self.ctx, query, model, sort_keys=['foo'])
+
+    @mock.patch.object(db_api.utils, 'paginate_query')
+    @mock.patch.object(db_api, 'model_query')
+    def test_paginate_query_gets_model_marker(self, mock_query,
+                                              mock_paginate_query):
+        query = mock.Mock()
+        model = mock.Mock()
+        marker = mock.Mock()
+
+        mock_query_object = mock.Mock()
+        mock_query_object.get.return_value = 'real_marker'
+        mock_query.return_value = mock_query_object
+
+        db_api._paginate_query(self.ctx, query, model, marker=marker)
+        mock_query_object.get.assert_called_once_with(marker)
+        args, _ = mock_paginate_query.call_args
+        self.assertIn('real_marker', args)
+
+    @mock.patch.object(db_api.utils, 'paginate_query')
+    def test_paginate_query_default_sorts_dir_by_desc(self,
+                                                      mock_paginate_query):
+        query = mock.Mock()
+        model = mock.Mock()
+        db_api._paginate_query(self.ctx, query, model, sort_dir=None)
+        args, _ = mock_paginate_query.call_args
+        self.assertIn('desc', args)
+
+    @mock.patch.object(db_api.utils, 'paginate_query')
+    def test_paginate_query_uses_given_sort_plus_id(self,
+                                                    mock_paginate_query):
+        query = mock.Mock()
+        model = mock.Mock()
+        db_api._paginate_query(self.ctx, query, model, sort_keys=['name'])
+        args, _ = mock_paginate_query.call_args
+        self.assertIn(['name', 'id'], args)
+
+    def test_nested_cluster_get_by_name(self):
+        cluster1 = shared.create_cluster(self.ctx, self.profile,
+                                         name='cluster1')
+        cluster2 = shared.create_cluster(self.ctx, self.profile,
+                                         name='cluster2',
+                                         parent=cluster1.id)
+
+        result = db_api.cluster_get_by_name(self.ctx, 'cluster2')
+        self.assertEqual(cluster2.id, result.id)
+
+        db_api.cluster_delete(self.ctx, cluster2.id)
+        result = db_api.cluster_get_by_name(self.ctx, 'cluster2')
+        self.assertIsNone(result)
+
     def _deleted_cluster_existance(self, ctx, clusters, existing, deleted):
         for s in existing:
             self.assertIsNotNone(db_api.cluster_get(ctx, clusters[s].id,
@@ -563,3 +555,27 @@ class DBAPIClusterTest(base.SenlinTestCase):
         cluster = shared.create_cluster(self.ctx, self.profile,
                                         status_reason='a' * 1024)
         self.assertEqual('a' * 255, cluster.status_reason)
+
+    def test_cluster_delete(self):
+        cluster = shared.create_cluster(self.ctx, self.profile)
+        cluster_id = cluster.id
+        node = shared.create_node(self.ctx, cluster, self.profile)
+        db_api.cluster_delete(self.ctx, cluster_id)
+
+        self.assertIsNone(db_api.cluster_get(self.ctx, cluster_id,
+                                             show_deleted=False))
+        res = db_api.node_get(self.ctx, node.id)
+        self.assertIsNone(res)
+        self.assertRaises(exception.NotFound, db_api.cluster_delete,
+                          self.ctx, cluster_id)
+
+        # Testing soft delete
+        ret_cluster = db_api.cluster_get(self.ctx, cluster_id,
+                                         show_deleted=True)
+        self.assertIsNotNone(ret_cluster)
+        self.assertEqual(cluster_id, ret_cluster.id)
+        self.assertEqual('db_test_cluster_name', ret_cluster.name)
+
+        # Testing child nodes deletion
+        res = db_api.node_get(self.ctx, node.id)
+        self.assertIsNone(res)
