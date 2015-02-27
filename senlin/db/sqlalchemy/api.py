@@ -311,6 +311,7 @@ def node_create(context, values):
     if cluster_id is not None:
         cluster = session.query(models.Cluster).get(cluster_id)
         cluster.size += 1
+        cluster.next_index += 1
         cluster.save(session)
 
     node.save(session)
@@ -408,7 +409,7 @@ def node_update(context, node_id, values):
     if not node:
         raise exception.NotFound(
             _('Attempt to update a node with id "%s" that does '
-              ' not exists failed') % node_id)
+              'not exists failed.') % node_id)
 
     node.update(values)
     node.save(query.session)
