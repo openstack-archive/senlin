@@ -350,8 +350,11 @@ def _query_node_get_all(context, show_deleted=False, cluster_id=None):
 def node_get_all(context, cluster_id=None, show_deleted=False,
                  limit=None, marker=None, sort_keys=None, sort_dir=None,
                  filters=None, tenant_safe=True):
-    query = _query_node_get_all(context, show_deleted=show_deleted,
-                                cluster_id=cluster_id)
+    if cluster_id is None:
+        query = _query_node_get_all(context, show_deleted=show_deleted)
+    else:
+        query = _query_node_get_all(context, show_deleted=show_deleted,
+                                    cluster_id=cluster_id)
     if filters is None:
         filters = {}
 
