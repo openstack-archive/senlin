@@ -322,5 +322,19 @@ class EngineClient(object):
         return self.call(ctxt,
                          self.make_msg('action_get', identity=identity))
 
+    def event_list(self, ctxt, filters=None, limit=None, marker=None,
+                   sort_keys=None, sort_dir=None, tenant_safe=True,
+                   show_deleted=False):
+        return self.call(ctxt,
+                         self.make_msg('event_list', filters=filters,
+                                       limit=limit, marker=marker,
+                                       sort_keys=sort_keys, sort_dir=sort_dir,
+                                       tenant_safe=tenant_safe,
+                                       show_deleted=show_deleted))
+
+    def event_get(self, ctxt, identity):
+        return self.call(ctxt,
+                         self.make_msg('event_get', identity=identity))
+
     def get_revision(self, ctxt):
         return self.call(ctxt, self.make_msg('get_revision'))
