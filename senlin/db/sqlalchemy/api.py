@@ -129,9 +129,9 @@ def soft_delete_aware_query(context, *args, **kwargs):
     return query
 
 
-def query_by_short_id(context, model, short_id):
-    q = soft_delete_aware_query(context, model)\
-        .filter(model.id.like('%s%%' % short_id))
+def query_by_short_id(context, model, short_id, show_deleted=False):
+    q = soft_delete_aware_query(context, model, show_deleted=show_deleted)
+    q = q.filter(model.id.like('%s%%' % short_id))
     if q.count() == 1:
         return q.first()
     elif q.count() == 0:
@@ -140,9 +140,10 @@ def query_by_short_id(context, model, short_id):
         raise exception.MultipleChoices(arg=short_id)
 
 
-def query_by_name(context, model, name, tenant_safe=False):
-    q = soft_delete_aware_query(context, model)\
-        .filter_by(name=name)
+def query_by_name(context, model, name, tenant_safe=False,
+                  show_deleted=False):
+    q = soft_delete_aware_query(context, model, show_deleted=show_deleted)
+    q = q.filter_by(name=name)
 
     if tenant_safe:
         q = q.filter_by(project=context.tenant_id)
@@ -196,6 +197,11 @@ def cluster_get_next_index(context, cluster_id):
     session = query.session
     session.begin()
     cluster = query.get(cluster_id)
+
+    if cluster is None:
+        session.rollback()
+        return None
+
     index = cluster.next_index
     cluster.next_index += 1
     cluster.save(session)
@@ -323,12 +329,12 @@ def node_get(context, node_id, show_deleted=False):
 
 
 def node_get_by_name(context, name, show_deleted=False):
-    # TODO(Qiming): Fix this, show_deleted is ignored here
-    return query_by_name(context, models.Node, name)
+    return query_by_name(context, models.Node, name, show_deleted=show_deleted)
 
 
-def node_get_by_short_id(context, short_id):
-    return query_by_short_id(context, models.Node, short_id)
+def node_get_by_short_id(context, short_id, show_deleted=False):
+    return query_by_short_id(context, models.Node, short_id,
+                             show_deleted=show_deleted)
 
 
 def _query_node_get_all(context, show_deleted=False, cluster_id=None):
