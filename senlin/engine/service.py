@@ -739,6 +739,20 @@ class EngineService(service.Service):
     def node_join(self, context, identity, cluster_id):
         db_node = self.node_find(context, identity)
         db_cluster = self.cluster_find(context, cluster_id)
+
+        if db_node.project != db_cluster.project:
+            msg = _('Node and cluster are from different project, operation '
+                    'is not allowed.')
+            raise exception.ProjectNotMatch(message=msg)
+
+        if db_node.profile_id != db_cluster.profile_id:
+            node_profile = self.profile_find(db_node.profile_id)
+            cluster_profile = self.profile_find(db_cluster.profile_id)
+            if node_profile.type != cluster_profile.type:
+                msg = _('Node and cluster have different profile type, '
+                        'operation aborted.')
+                raise exception.ProfileTypeNotMatch(message=msg)
+
         LOG.info(_LI('Joining node %(node)s to cluster %(cluster)s'),
                  {'node': identity, 'cluster': cluster_id})
 
