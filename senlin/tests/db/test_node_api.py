@@ -219,6 +219,92 @@ class DBAPINodeTest(base.SenlinTestCase):
         nodes = db_api.node_get_all(self.ctx, limit=1, marker='node3')
         self.assertEqual(1, len(nodes))
 
+    def test_node_get_all_used_sort_keys(self):
+        node_ids = ['node1', 'node2', 'node3']
+        for v in node_ids:
+            shared.create_node(self.ctx, self.cluster, self.profile, id=v)
+
+        mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
+        sort_keys = ['index', 'name', 'created_time', 'updated_time',
+                     'deleted_time', 'status']
+
+        db_api.node_get_all(self.ctx, sort_keys=sort_keys)
+        args = mock_paginate.call_args[0]
+        used_sort_keys = set(args[3])
+        expected_keys = set(['index', 'name', 'created_time', 'updated_time',
+                             'deleted_time', 'status', 'id'])
+        self.assertEqual(expected_keys, used_sort_keys)
+
+    def test_node_get_all_sort_keys_wont_change(self):
+        sort_keys = ['id']
+        db_api.node_get_all(self.ctx, sort_keys=sort_keys)
+        self.assertEqual(['id'], sort_keys)
+
+    def test_node_get_all_sort_keys_and_dir(self):
+        values = [{'id': '001', 'name': 'node1', 'status': 'ACTIVE'},
+                  {'id': '002', 'name': 'node3', 'status': 'ERROR'},
+                  {'id': '003', 'name': 'node2', 'status': 'UPDATING'}]
+        for v in values:
+            shared.create_node(self.ctx, self.cluster, self.profile, **v)
+
+        nodes = db_api.node_get_all(self.ctx, sort_keys=['name', 'status'],
+                                    sort_dir='asc')
+        self.assertEqual(3, len(nodes))
+        # Sorted by name
+        self.assertEqual('001', nodes[0].id)
+        self.assertEqual('003', nodes[1].id)
+        self.assertEqual('002', nodes[2].id)
+
+        nodes = db_api.node_get_all(self.ctx, sort_keys=['status', 'name'],
+                                    sort_dir='asc')
+        self.assertEqual(3, len(nodes))
+        # Sorted by statuses (ascending)
+        self.assertEqual('001', nodes[0].id)
+        self.assertEqual('002', nodes[1].id)
+        self.assertEqual('003', nodes[2].id)
+
+        nodes = db_api.node_get_all(self.ctx, sort_keys=['status', 'name'],
+                                    sort_dir='desc')
+        self.assertEqual(3, len(nodes))
+        # Sorted by statuses (descending)
+        self.assertEqual('003', nodes[0].id)
+        self.assertEqual('002', nodes[1].id)
+        self.assertEqual('001', nodes[2].id)
+
+    def test_node_get_all_default_sort_dir(self):
+        dt = datetime.datetime
+        nodes = [shared.create_node(self.ctx, None, self.profile,
+                                    init_time=dt.utcnow())
+                 for x in range(3)]
+
+        results = db_api.node_get_all(self.ctx, sort_dir='asc')
+        self.assertEqual(3, len(results))
+        self.assertEqual(nodes[0].id, results[0].id)
+        self.assertEqual(nodes[1].id, results[1].id)
+        self.assertEqual(nodes[2].id, results[2].id)
+
+    def test_node_get_all_with_filters(self):
+        shared.create_node(self.ctx, None, self.profile, name='node1')
+        shared.create_node(self.ctx, None, self.profile, name='node2')
+
+        filters = {'name': ['node1', 'nodex']}
+        results = db_api.node_get_all(self.ctx, filters=filters)
+        self.assertEqual(1, len(results))
+        self.assertEqual('node1', results[0]['name'])
+
+        filters = {'name': 'node1'}
+        results = db_api.node_get_all(self.ctx, filters=filters)
+        self.assertEqual(1, len(results))
+        self.assertEqual('node1', results[0]['name'])
+
+    def test_node_get_all_with_empty_filters(self):
+        shared.create_node(self.ctx, None, self.profile, name='node1')
+        shared.create_node(self.ctx, None, self.profile, name='node2')
+
+        filters = None
+        results = db_api.node_get_all(self.ctx, filters=filters)
+        self.assertEqual(2, len(results))
+
     def test_node_get_by_name_and_cluster(self):
         shared.create_node(self.ctx, self.cluster, self.profile)
         node = db_api.node_get_by_name_and_cluster(self.ctx,
