@@ -36,5 +36,7 @@
     "cluster_policies:update": "rule:admin_or_owner",
     "cluster_policies:get": "rule:admin_or_owner",
     "actions:index": "rule:admin_or_owner",
-    "actions:get": "rule:admin_or_owner"
+    "actions:get": "rule:admin_or_owner",
+    "events:index": "rule:admin_or_owner",
+    "events:get": "rule:admin_or_owner"
 }
