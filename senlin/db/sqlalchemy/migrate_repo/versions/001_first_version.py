@@ -74,6 +74,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('profile_id', sqlalchemy.String(36),
                           sqlalchemy.ForeignKey('profile.id'),
                           nullable=False),
+        sqlalchemy.Column('project', sqlalchemy.String(36)),
         sqlalchemy.Column('index', sqlalchemy.Integer),
         sqlalchemy.Column('role', sqlalchemy.String(64)),
         sqlalchemy.Column('init_time', sqlalchemy.DateTime),

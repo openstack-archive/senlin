@@ -126,6 +126,7 @@ class Node(BASE, SenlinBase, SoftDelete):
                                    sqlalchemy.ForeignKey('cluster.id'))
     profile_id = sqlalchemy.Column(sqlalchemy.String(36),
                                    sqlalchemy.ForeignKey('profile.id'))
+    project = sqlalchemy.Column(sqlalchemy.String(36))
     index = sqlalchemy.Column(sqlalchemy.Integer)
     role = sqlalchemy.Column(sqlalchemy.String(64))
 
