@@ -668,6 +668,19 @@ class EngineService(service.Service):
             db_cluster = self.cluster_find(context, cluster_id)
             cluster_id = db_cluster.id
 
+            if context.project != db_cluster.project:
+                msg = _('Node and cluster are from different project, '
+                        'operation is disallowed.')
+                raise exception.ProjectNotMatch(message=msg)
+
+            if profile_id != db_cluster.profile_id:
+                node_profile = self.profile_find(profile_id)
+                cluster_profile = self.profile_find(db_cluster.profile_id)
+                if node_profile.type != cluster_profile.type:
+                    msg = _('Node and cluster have different profile type, '
+                            'operation aborted.')
+                    raise exception.ProfileTypeNotMatch(message=msg)
+
         LOG.info(_LI('Creating node %s'), name)
 
         # Create a node instance
