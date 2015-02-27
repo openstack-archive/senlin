@@ -102,8 +102,9 @@ def node_get_by_name(context, name, show_deleted=False):
     return IMPL.node_get_by_name(context, name, show_deleted=show_deleted)
 
 
-def node_get_by_short_id(context, short_id):
-    return IMPL.node_get_by_short_id(context, short_id)
+def node_get_by_short_id(context, short_id, show_deleted=False):
+    return IMPL.node_get_by_short_id(context, short_id,
+                                     show_deleted=show_deleted)
 
 
 def node_get_all(context, cluster_id=None, show_deleted=False,
