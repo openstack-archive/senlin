@@ -330,9 +330,11 @@ class Cluster(periodic_task.PeriodicTasks):
         self.detect_enabled = False
 
     def heathy_check_set_interval(self, policy_interval):
-        self.detection_interval = ((policy_interval
-                                    + CONF.periodic_interval_max)
-                                    / CONF.periodic_interval_max)
+        detection_interval = (policy_interval +
+                              CONF.periodic_interval_max)
+
+        self.detection_inteval = (detection_interval /
+                                  CONF.periodic_interval_max)
 
     @periodic_task.periodic_task
     def heathy_check(self):
