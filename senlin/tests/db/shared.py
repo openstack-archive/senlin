@@ -102,6 +102,7 @@ def create_node(ctx, cluster, profile, **kwargs):
         'physical_id': UUID1,
         'cluster_id': cluster.id if cluster else None,
         'profile_id': profile.id,
+        'project': ctx.tenant_id,
         'index': 0,
         'role': None,
         'created_time': None,
