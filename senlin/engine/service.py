@@ -33,6 +33,7 @@ from senlin.engine.actions import base as action_mod
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import dispatcher
 from senlin.engine import environment
+from senlin.engine import event as event_mod
 from senlin.engine import node as node_mod
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock
@@ -877,9 +878,8 @@ class EngineService(service.Service):
 
         return {'action': action.id}
 
-    def action_find(self, context, identity, show_deleted=False):
-        '''Find a cluster with the given identity (could be name or ID).'''
-        # TODO(Qiming): add show_deleted support
+    def action_find(self, context, identity):
+        '''Find an action with the given identity (could be name or ID).'''
         if uuidutils.is_uuid_like(identity):
             action = db_api.action_get(context, identity)
             if not action:
@@ -934,3 +934,37 @@ class EngineService(service.Service):
         db_action = self.action_find(context, identity)
         action = action_mod.Action.load(context, action=db_action)
         return action.to_dict()
+
+    def event_find(self, context, identity, show_deleted=False):
+        '''Find a event with the given identity (could be name or ID).'''
+        if uuidutils.is_uuid_like(identity):
+            event = db_api.event_get(context, identity)
+            if not event:
+                event = db_api.event_get_by_short_id(context, identity)
+        else:
+            event = db_api.event_get_by_short_id(context, identity)
+
+        if not event:
+            raise exception.EventNotFound(action=identity)
+
+        return event
+
+    @request_context
+    def event_list(self, context, filters=None, limit=None, marker=None,
+                   sort_keys=None, sort_dir=None, tenant_safe=True,
+                   show_deleted=False):
+        all_actions = event_mod.Event.load_all(context, filters=filters,
+                                               limit=limit, marker=marker,
+                                               sort_keys=sort_keys,
+                                               sort_dir=sort_dir,
+                                               tenant_safe=tenant_safe,
+                                               show_deleted=show_deleted)
+
+        results = [action.to_dict() for action in all_actions]
+        return results
+
+    @request_context
+    def event_get(self, context, identity):
+        db_event = self.event_find(context, identity)
+        event = event_mod.Event.load(context, db_event=db_event)
+        return event.to_dict()
