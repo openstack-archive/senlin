@@ -355,6 +355,10 @@ def node_get_all(context, cluster_id=None, show_deleted=False,
     else:
         query = _query_node_get_all(context, show_deleted=show_deleted,
                                     cluster_id=cluster_id)
+
+    if tenant_safe:
+        query = query.filter_by(project=context.tenant_id)
+
     if filters is None:
         filters = {}
 
