@@ -12,6 +12,7 @@
 
 import datetime
 import json
+import six
 
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
@@ -305,44 +306,171 @@ class DBAPINodeTest(base.SenlinTestCase):
         results = db_api.node_get_all(self.ctx, filters=filters)
         self.assertEqual(2, len(results))
 
-    def test_node_get_by_name_and_cluster(self):
-        shared.create_node(self.ctx, self.cluster, self.profile)
-        node = db_api.node_get_by_name_and_cluster(self.ctx,
-                                                   'test_node_name',
-                                                   self.cluster.id)
+    def test_node_get_all_with_tenant_safe(self):
+        shared.create_node(self.ctx, None, self.profile, name='node1')
+        shared.create_node(self.ctx, None, self.profile, name='node2')
 
+        self.ctx.tenant_id = 'a-different-tenant'
+        results = db_api.node_get_all(self.ctx, tenant_safe=False)
+        self.assertEqual(2, len(results))
+
+        self.ctx.tenant_id = 'a-different-tenant'
+        results = db_api.node_get_all(self.ctx)
+        self.assertEqual(0, len(results))
+
+        results = db_api.node_get_all(self.ctx, tenant_safe=True)
+        self.assertEqual(0, len(results))
+
+    def test_node_get_by_cluster(self):
+        cluster1 = shared.create_cluster(self.ctx, self.profile)
+
+        node0 = shared.create_node(self.ctx, None, self.profile)
+        node1 = shared.create_node(self.ctx, self.cluster, self.profile)
+        node2 = shared.create_node(self.ctx, self.cluster, self.profile)
+        node3 = shared.create_node(self.ctx, cluster1, self.profile)
+
+        nodes = db_api.node_get_all_by_cluster(self.ctx, self.cluster.id)
+
+        self.assertEqual(2, len(nodes))
+        self.assertEqual(set([node1.id, node2.id]),
+                         set([nodes[0].id, nodes[1].id]))
+
+        nodes = db_api.node_get_all_by_cluster(self.ctx, None)
+        self.assertEqual(1, len(nodes))
+        self.assertEqual(node0.id, nodes[0].id)
+
+        nodes = db_api.node_get_all_by_cluster(self.ctx, cluster1.id)
+        self.assertEqual(1, len(nodes))
+        self.assertEqual(node3.id, nodes[0].id)
+
+    def test_node_get_by_name_and_cluster(self):
+        node_name = 'test_node_007'
+        shared.create_node(self.ctx, self.cluster, self.profile,
+                           name=node_name)
+        node = db_api.node_get_by_name_and_cluster(self.ctx,
+                                                   node_name,
+                                                   self.cluster.id)
         self.assertIsNotNone(node)
-        self.assertEqual('test_node_name', node.name)
+        self.assertEqual(node_name, node.name)
         self.assertEqual(self.cluster.id, node.cluster_id)
 
-        self.assertIsNone(db_api.node_get_by_name_and_cluster(self.ctx,
-                                                              'abc',
-                                                              self.cluster.id))
+        node = db_api.node_get_by_name_and_cluster(self.ctx, 'not-exist',
+                                                   self.cluster.id)
+        self.assertIsNone(node)
+
+        node = db_api.node_get_by_name_and_cluster(self.ctx, node_name,
+                                                   'BogusClusterID')
+        self.assertIsNone(node)
 
     def test_node_get_by_physical_id(self):
-        shared.create_node(self.ctx, self.cluster, self.profile)
+        shared.create_node(self.ctx, self.cluster, self.profile,
+                           physical_id=UUID1)
 
         node = db_api.node_get_by_physical_id(self.ctx, UUID1)
         self.assertIsNotNone(node)
         self.assertEqual(UUID1, node.physical_id)
 
-        self.assertIsNone(db_api.node_get_by_physical_id(self.ctx, UUID2))
+        node = db_api.node_get_by_physical_id(self.ctx, UUID2)
+        self.assertIsNone(node)
 
-    def test_node_get_all_by_cluster(self):
-        self.cluster1 = shared.create_cluster(self.ctx, self.profile)
-        self.cluster2 = shared.create_cluster(self.ctx, self.profile)
-        values = [
-            {'name': 'node1', 'cluster_id': self.cluster.id},
-            {'name': 'node2', 'cluster_id': self.cluster.id},
-            {'name': 'node3', 'cluster_id': self.cluster1.id},
-        ]
-        [shared.create_node(self.ctx, self.cluster, self.profile, **v)
-            for v in values]
+    def test_node_update(self):
+        node = shared.create_node(self.ctx, self.cluster, self.profile)
+        new_attributes = {
+            'name': 'new node name',
+            'status': 'bad status',
+            'role': 'a new role',
+        }
+        db_api.node_update(self.ctx, node.id, new_attributes)
 
-        nodes = db_api.node_get_all_by_cluster(self.ctx, self.cluster.id)
-        self.assertEqual(2, len(nodes))
-        self.assertEqual('node1', nodes[0].name)
-        self.assertEqual('node2', nodes[1].name)
+        node = db_api.node_get(self.ctx, node.id)
+        self.assertEqual('new node name', node.name)
+        self.assertEqual('bad status', node.status)
+        self.assertEqual('a new role', node.role)
 
-        nodes = db_api.node_get_all_by_cluster(self.ctx, self.cluster2.id)
-        self.assertEqual(0, len(nodes))
+        ex = self.assertRaises(exception.NotFound,
+                               db_api.node_update,
+                               self.ctx, 'BogusId', new_attributes)
+        self.assertEqual('Attempt to update a node with id "BogusId" that '
+                         'does not exists failed.', six.text_type(ex))
+
+    def test_node_migrate_from_none(self):
+        node_orphan = shared.create_node(self.ctx, None, self.profile)
+        timestamp = datetime.datetime.utcnow()
+
+        node = db_api.node_migrate(self.ctx, node_orphan.id, self.cluster.id,
+                                   timestamp)
+        cluster = db_api.cluster_get(self.ctx, self.cluster.id)
+        self.assertEqual(timestamp, node.updated_time)
+        self.assertEqual(self.cluster.id, node.cluster_id)
+        self.assertEqual(2, cluster.next_index)
+        self.assertEqual(1, cluster.size)
+
+    def test_node_migrate_to_none(self):
+        node = shared.create_node(self.ctx, self.cluster, self.profile)
+        timestamp = datetime.datetime.utcnow()
+
+        node_new = db_api.node_migrate(self.ctx, node.id, None, timestamp)
+        cluster = db_api.cluster_get(self.ctx, self.cluster.id)
+        self.assertEqual(timestamp, node_new.updated_time)
+        self.assertIsNone(node_new.cluster_id)
+        self.assertEqual(0, cluster.size)
+
+    def test_node_migrate_between_clusters(self):
+        cluster1 = shared.create_cluster(self.ctx, self.profile)
+        cluster2 = shared.create_cluster(self.ctx, self.profile)
+
+        node = shared.create_node(self.ctx, cluster1, self.profile)
+
+        self.assertEqual(1, cluster1.size)
+        self.assertEqual(0, cluster2.size)
+        self.assertEqual(2, cluster1.next_index)
+        self.assertEqual(1, cluster2.next_index)
+
+        timestamp = datetime.datetime.utcnow()
+
+        node_new = db_api.node_migrate(self.ctx, node.id, cluster2.id,
+                                       timestamp)
+        cluster1 = db_api.cluster_get(self.ctx, cluster1.id)
+        cluster2 = db_api.cluster_get(self.ctx, cluster2.id)
+        self.assertEqual(timestamp, node_new.updated_time)
+        self.assertEqual(cluster2.id, node_new.cluster_id)
+        self.assertEqual(0, cluster1.size)
+        self.assertEqual(1, cluster2.size)
+        self.assertEqual(2, cluster1.next_index)
+        self.assertEqual(2, cluster2.next_index)
+
+        # Migrate it back!
+        timestamp = datetime.datetime.utcnow()
+
+        node_new = db_api.node_migrate(self.ctx, node.id, cluster1.id,
+                                       timestamp)
+        cluster1 = db_api.cluster_get(self.ctx, cluster1.id)
+        cluster2 = db_api.cluster_get(self.ctx, cluster2.id)
+        self.assertEqual(timestamp, node_new.updated_time)
+        self.assertEqual(cluster1.id, node_new.cluster_id)
+        self.assertEqual(1, cluster1.size)
+        self.assertEqual(0, cluster2.size)
+        self.assertEqual(3, cluster1.next_index)
+        self.assertEqual(2, cluster2.next_index)
+
+    def test_node_delete(self):
+        node = shared.create_node(self.ctx, self.cluster, self.profile)
+        node_id = node.id
+
+        cluster = db_api.cluster_get(self.ctx, self.cluster.id)
+        self.assertEqual(1, cluster.size)
+
+        db_api.node_delete(self.ctx, node_id)
+        res = db_api.node_get(self.ctx, node_id)
+        self.assertIsNone(res)
+
+        cluster = db_api.cluster_get(self.ctx, self.cluster.id)
+        self.assertEqual(0, cluster.size)
+
+    def test_node_delete_not_found(self):
+        node_id = 'BogusNodeID'
+        res = db_api.node_delete(self.ctx, node_id)
+        self.assertIsNone(res)
+
+        res = db_api.node_get(self.ctx, node_id)
+        self.assertIsNone(res)
