@@ -72,3 +72,12 @@ class DBAPIProfileTest(base.SenlinTestCase):
         self.assertEqual(old_profile.id, new_profile.id)
         self.assertEqual(new_data['name'], new_profile.name)
         self.assertEqual('test_profile_name_2', new_profile.name)
+
+    def test_profile_delete(self):
+        profile = shared.create_profile(self.ctx)
+        self.assertIsNotNone(profile)
+        profile_id = profile.id
+        db_api.profile_delete(self.ctx, profile_id)
+
+        profile= db_api.policy_get(self.ctx, profile_id)
+        self.assertIsNone(profile)
