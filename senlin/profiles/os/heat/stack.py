@@ -89,7 +89,7 @@ class StackProfile(base.Profile):
         stack_context = self.spec_data[self.CONTEXT]
         if stack_context is not None:
             ctx = self.context.to_dict()
-            ctx.update(stack_context.to_dict())
+            ctx.update(stack_context)
             self.context = context.RequestContext.from_dict(ctx)
 
         self.hc = heatclient.HeatClient(self.context)
