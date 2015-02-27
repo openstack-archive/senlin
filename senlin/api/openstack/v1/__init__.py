@@ -17,6 +17,7 @@ from senlin.api.openstack.v1 import actions
 from senlin.api.openstack.v1 import build_info
 from senlin.api.openstack.v1 import cluster_policies
 from senlin.api.openstack.v1 import clusters
+from senlin.api.openstack.v1 import events
 from senlin.api.openstack.v1 import nodes
 from senlin.api.openstack.v1 import policies
 from senlin.api.openstack.v1 import policy_types
@@ -201,6 +202,20 @@ class API(wsgi.Router):
                                conditions={'method': 'POST'})
             sub_mapper.connect("action_get",
                                "/actions/{action_id}",
+                               action="get",
+                               conditions={'method': 'GET'})
+
+        # Events
+        events_resource = events.create_resource(conf)
+        with mapper.submapper(controller=events_resource,
+                              path_prefix="/{tenant_id}") as sub_mapper:
+
+            sub_mapper.connect("event_index",
+                               "/events",
+                               action="index",
+                               conditions={'method': 'GET'})
+            sub_mapper.connect("event_get",
+                               "/events/{event_id}",
                                action="get",
                                conditions={'method': 'GET'})
 
