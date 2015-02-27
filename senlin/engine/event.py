@@ -11,8 +11,9 @@
 # under the License.
 
 import datetime
+import logging
 
-from oslo_log import log as logging
+from oslo_log import log
 
 from senlin.common import exception
 from senlin.common import i18n
@@ -24,30 +25,17 @@ _LW = i18n._LW
 _LI = i18n._LI
 _ = i18n._
 
-LOG = logging.getLogger(__name__)
-
-class_mapping = {
-    'senlin.engine.cluster.Cluster': 'CLUSTER',
-    'senlin.engine.node.Node': 'NODE',
-    'senlin.profiles.profile.Profile': 'PROFILE',
-    'senlin.policies.policy.Policy': 'POLICY',
-}
+LOG = log.getLogger(__name__)
 
 
 class Event(object):
-    '''Class capturing a cluster operation or state change.'''
+    '''Class capturing an interesting happening in Senlin.'''
 
-    def __init__(self, context, timestamp, level, **kwargs):
-        self.context = context
-        self.timestamp = timestamp or datetime.datetime.utcnow()
+    def __init__(self, timestamp, level, entity=None, **kwargs):
+        self.timestamp = timestamp
         self.level = level
 
         self.id = kwargs.get('id', None)
-        self.obj_id = kwargs.get('obj_id', None)
-        self.obj_type = kwargs.get('obj_type', None)
-        self.obj_name = kwargs.get('obj_name', None)
-        self.cluster_id = kwargs.get('cluster_id', None)
-
         self.user = kwargs.get('user', None)
         self.project = kwargs.get('project', None)
 
@@ -56,8 +44,30 @@ class Event(object):
         self.status_reason = kwargs.get('status_reason', None)
         self.deleted_time = kwargs.get('deleted_time', None)
 
+        # we deal with deserialization first
+        self.obj_id = kwargs.get('obj_id', None)
+        self.obj_type = kwargs.get('obj_type', None)
+        self.obj_name = kwargs.get('obj_name', None)
+        self.cluster_id = kwargs.get('cluster_id', None)
+
+        # entity not None implies an initial creation of event object,
+        # not a deserialization, so we try make an inference here
+        if entity is not None:
+            self._infer_entity_data(entity)
+
+    def _infer_entity_data(self, entity):
+        self.obj_id = entity.id
+        self.obj_name = entity.name
+
+        entity_type = entity.__class__.__name__.upper()
+        self.obj_type = entity_type
+        if entity_type == 'CLUSTER':
+            self.cluster_id = entity.id
+        elif entity_type == 'NODE':
+            self.cluster_id = entity.cluster_id
+
     @classmethod
-    def from_db_record(cls, context, record):
+    def from_db_record(cls, record):
         '''Construct an event object from a database record.'''
 
         kwargs = {
@@ -73,7 +83,7 @@ class Event(object):
             'status_reason': record.status_reason,
             'deleted_time': record.deleted_time,
         }
-        return cls(context, record.timestamp, record.level, **kwargs)
+        return cls(record.timestamp, record.level, **kwargs)
 
     @classmethod
     def load(cls, context, event_id):
@@ -82,7 +92,7 @@ class Event(object):
         if record is None:
             raise exception.EventNotFound(event=event_id)
 
-        return cls.from_db_record(context, record)
+        return cls.from_db_record(record)
 
     @classmethod
     def load_all(cls, context, limit=None, sort_keys=None, marker=None,
@@ -97,7 +107,7 @@ class Event(object):
                                        show_deleted=show_deleted)
 
         for record in records:
-            yield cls.from_db_record(context, record)
+            yield cls.from_db_record(record)
 
     def store(self, context):
         '''Store the event into database and return its ID.'''
@@ -116,7 +126,7 @@ class Event(object):
             'deleted_time': self.deleted_time,
         }
 
-        event = db_api.event_create(self.context, values)
+        event = db_api.event_create(context, values)
         self.id = event.id
 
         return self.id
@@ -144,33 +154,57 @@ class Event(object):
         return evt
 
 
-def critical(context, entity, action, status, timestamp=None, reason=''):
-    entity_type = class_mapping[entity.__class__]
-    event = Event(logging.CRITICAL, context, entity, action, status,
-                  entity_type=entity_type)
-    db_api.add_event(event)
-    LOG.critical(_LC(''))
+def critical(context, entity, action, status, status_reason='',
+             timestamp=None):
+    timestamp = timestamp or datetime.datetime.utcnow()
+    event = Event(timestamp, logging.CRITICAL, entity,
+                  action=action, status=status, status_reason=status_reason,
+                  user=context.user_id, project=context.project_id)
+    event.store(context)
+    LOG.critical(_LC('%(name)s[%(id)s] - %(status)s: %(reason)s') %
+                 {'name': entity.name, 'id': entity.id, 'status': status,
+                  'reason': status_reason})
 
 
-def error(context, entity, action, status, timestamp=None, reason=''):
-    entity_type = class_mapping[entity.__class__]
-    event = Event(logging.ERROR, context, entity, action, status,
-                  entity_type=entity_type)
-    db_api.add_event(event)
-    LOG.error(_LE(''))
+def error(context, entity, action, status, status_reason='', timestamp=None):
+    timestamp = timestamp or datetime.datetime.utcnow()
+    event = Event(timestamp, logging.ERROR, entity,
+                  action=action, status=status, status_reason=status_reason,
+                  user=context.user_id, project=context.project_id)
+    event.store(context)
+    LOG.error(_LE('%(name)s[%(id)s] %(action)s - %(status)s: %(reason)s') %
+              {'name': entity.name, 'id': entity.id, 'action': action,
+               'status': status, 'reason': status_reason})
 
 
-def warning(context, entity, action, status, timestamp=None, reason=''):
-    entity_type = class_mapping[entity.__class__]
-    event = Event(logging.WARNING, context, entity, action, status,
-                  entity_type=entity_type)
-    db_api.add_event(event)
-    LOG.warning(_LW(''))
+def warning(context, entity, action, status, status_reason='', timestamp=None):
+    timestamp = timestamp or datetime.datetime.utcnow()
+    event = Event(timestamp, logging.WARNING, entity,
+                  action=action, status=status, status_reason=status_reason,
+                  user=context.user_id, project=context.project_id)
+    event.store(context)
+    LOG.warning(_LW('%(name)s[%(id)s] %(action)s - %(status)s: %(reason)s') %
+                {'name': entity.name, 'id': entity.id, 'action': action,
+                 'status': status, 'reason': status_reason})
 
 
-def info(context, entity, action, status, timestamp=None, reason=''):
-    entity_type = class_mapping[entity.__class__]
-    event = Event(logging.INFO, context, entity, action, status,
-                  entity_type=entity_type)
-    db_api.add_event(event)
-    LOG.info(_LI(''))
+def info(context, entity, action, status, status_reason='', timestamp=None):
+    timestamp = timestamp or datetime.datetime.utcnow()
+    event = Event(timestamp, logging.INFO, entity,
+                  action=action, status=status, status_reason=status_reason,
+                  user=context.user_id, project=context.project_id)
+    event.store(context)
+    LOG.info(_LI('%(name)s[%(id)s] %(action)s - %(status)s: %(reason)s') %
+             {'name': entity.name, 'id': entity.id, 'action': action,
+              'status': status, 'reason': status_reason})
+
+
+def debug(context, entity, action, status, status_reason='', timestamp=None):
+    timestamp = timestamp or datetime.datetime.utcnow()
+    event = Event(timestamp, logging.DEBUG, entity,
+                  action=action, status=status, status_reason=status_reason,
+                  user=context.user_id, project=context.project_id)
+    event.store(context)
+    LOG.debug(_('%(name)s[%(id)s] %(action)s - %(status)s: %(reason)s') %
+              {'name': entity.name, 'id': entity.id, 'action': action,
+               'status': status, 'reason': status_reason})
