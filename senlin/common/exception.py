@@ -336,6 +336,10 @@ class StopActionFailed(SenlinException):
                 "(%(engine_id)s)")
 
 
+class EventNotFound(SenlinException):
+    msg_fmt = _("The event (%(event)s) could not be found.")
+
+
 class EventSendFailed(SenlinException):
     msg_fmt = _("Failed to send message to cluster (%(cluster_name)s) "
                 "on other engine (%(engine_id)s)")
