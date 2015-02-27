@@ -21,9 +21,9 @@ RPC_ATTRS = (
 )
 
 RPC_PARAMS = (
-    PARAM_SHOW_DELETED, PARAM_SHOW_NESTED, PARAM_LIMIT,
+    PARAM_SHOW_DELETED, PARAM_SHOW_NESTED, PARAM_LIMIT, PARAM_GLOBAL_TENANT,
 ) = (
-    'show_deleted', 'show_nested', 'limit',
+    'show_deleted', 'show_nested', 'limit', 'global_tenant',
 )
 
 ACTION_NAMES = (
