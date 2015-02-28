@@ -10,11 +10,19 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
+
+from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import parser
 from senlin.tests.common import base
 from senlin.tests.common import utils
-from senlin.tests.db import shared
+
+sample_spec = {
+    'min_size': 1,
+    'max_size': 10,
+    'pause_time': 'PT10M',
+}
 
 
 class DBAPIPolicyTest(base.SenlinTestCase):
@@ -22,8 +30,21 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         super(DBAPIPolicyTest, self).setUp()
         self.ctx = utils.dummy_context()
 
+    def new_policy_data(self, **kwargs):
+        data = {
+            'name': 'test_policy',
+            'type': 'ScalingPolicy',
+            'spec': sample_spec,
+            'level': 50,
+            'cooldown': 60,
+            'data': None,
+        }
+
+        data.update(kwargs)
+        return data
+
     def test_policy_create(self):
-        data = parser.parse_policy(shared.sample_policy)
+        data = self.new_policy_data()
         policy = db_api.policy_create(self.ctx, data)
 
         self.assertIsNotNone(policy)
@@ -36,9 +57,9 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         self.assertIsNone(policy.data)
 
     def test_policy_get(self):
-        data = parser.parse_policy(shared.sample_policy)
+        data = self.new_policy_data()
         policy = db_api.policy_create(self.ctx, data)
-        policy = shared.create_policy(self.ctx)
+
         retobj = db_api.policy_get(self.ctx, policy.id)
         self.assertIsNotNone(retobj)
         self.assertEqual(data['name'], retobj.name)
@@ -49,6 +70,103 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         self.assertEqual(10, retobj.spec['max_size'])
         self.assertIsNone(retobj.data)
 
+    def test_policy_get_not_found(self):
+        retobj = db_api.policy_get(self.ctx, 'BogusID')
+        self.assertIsNone(retobj)
+
+    def test_policy_get_show_deleted(self):
+        data = self.new_policy_data()
+        policy_id = db_api.policy_create(self.ctx, data).id
+
+        # check created
+        policy = db_api.policy_get(self.ctx, policy_id)
+        self.assertIsNotNone(policy)
+
+        db_api.policy_delete(self.ctx, policy_id)
+
+        # default equivalent to false
+        policy = db_api.policy_get(self.ctx, policy_id)
+        self.assertIsNone(policy)
+
+        # explicit false
+        policy = db_api.policy_get(self.ctx, policy_id, show_deleted=False)
+        self.assertIsNone(policy)
+
+        # explicit true
+        policy = db_api.policy_get(self.ctx, policy_id, show_deleted=True)
+        self.assertIsNotNone(policy)
+        self.assertEqual(policy_id, policy.id)
+
+    def test_policy_get_by_name(self):
+        policy_name = 'my_best_policy'
+        data = self.new_policy_data(name=policy_name)
+
+        # before creation
+        policy = db_api.policy_get_by_name(self.ctx, policy_name)
+        self.assertIsNone(policy)
+
+        policy = db_api.policy_create(self.ctx, data)
+
+        # after creation
+        retobj = db_api.policy_get_by_name(self.ctx, policy_name)
+        self.assertIsNotNone(retobj)
+        self.assertEqual(policy_name, retobj.name)
+
+        # bad name
+        retobj = db_api.policy_get_by_name(self.ctx, 'non-exist')
+        self.assertIsNone(retobj)
+
+    def test_policy_get_by_name_show_deleted(self):
+        policy_name = 'my_best_policy'
+        data = self.new_policy_data(name=policy_name)
+        policy_id = db_api.policy_create(self.ctx, data).id
+
+        db_api.policy_delete(self.ctx, policy_id)
+
+        # default case
+        policy = db_api.policy_get_by_name(self.ctx, policy_name)
+        self.assertIsNone(policy)
+
+        # explicit false
+        policy = db_api.policy_get_by_name(self.ctx, policy_name,
+                                           show_deleted=False)
+        self.assertIsNone(policy)
+
+        # explicit true
+        policy = db_api.policy_get_by_name(self.ctx, policy_name,
+                                           show_deleted=True)
+        self.assertIsNotNone(policy)
+        self.assertEqual(policy_id, policy.id)
+
+    def test_policy_get_by_short_id(self):
+        policy_ids = ['same-part-unique-part',
+                      'same-part-part-unique']
+
+        for pid in policy_ids:
+            data = self.new_policy_data(id=pid)
+            db_api.policy_create(self.ctx, data)
+
+            # verify creation with set ID
+            policy = db_api.policy_get(self.ctx, pid)
+            self.assertIsNotNone(policy)
+            self.assertEqual(pid, policy.id)
+
+        # too short -> multiple choices
+        for x in range(len('same-part-')):
+            self.assertRaises(exception.MultipleChoices,
+                              db_api.policy_get_by_short_id,
+                              self.ctx, policy_ids[0][:x])
+
+        # ids are unique
+        policy = db_api.policy_get_by_short_id(self.ctx, policy_ids[0][:11])
+        self.assertEqual(policy_ids[0], policy.id)
+        policy = db_api.policy_get_by_short_id(self.ctx, policy_ids[1][:11])
+        self.assertEqual(policy_ids[1], policy.id)
+
+        # bad ids
+        res = db_api.policy_get_by_short_id(self.ctx, 'non-existent')
+        self.assertIsNone(res)
+
     def test_policy_get_all(self):
         specs = [
             {'name': 'policy_short', 'cooldown': '10'},
@@ -56,15 +174,159 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         ]
 
         for spec in specs:
-            shared.create_policy(self.ctx,
-                                 policy=shared.sample_policy,
-                                 **spec)
+            data = self.new_policy_data(**spec)
+            db_api.policy_create(self.ctx, data)
 
         policies = db_api.policy_get_all(self.ctx)
         self.assertEqual(2, len(policies))
         names = [p.name for p in policies]
         for spec in specs:
             self.assertIn(spec['name'], names)
+
+        # test show_deleted here
+        db_api.policy_delete(self.ctx, policies[1].id)
+
+        # after delete one of them
+        policies = db_api.policy_get_all(self.ctx)
+        self.assertEqual(1, len(policies))
+
+        policies = db_api.policy_get_all(self.ctx, show_deleted=False)
+        self.assertEqual(1, len(policies))
+
+        policies = db_api.policy_get_all(self.ctx, show_deleted=True)
+        self.assertEqual(2, len(policies))
+
+        # after delete both policies
+        db_api.policy_delete(self.ctx, policies[0].id)
+
+        policies = db_api.policy_get_all(self.ctx)
+        self.assertEqual(0, len(policies))
+        policies = db_api.policy_get_all(self.ctx, show_deleted=True)
+        self.assertEqual(2, len(policies))
+
+    def test_policy_get_all_with_limit_marker(self):
+        ids = ['policy1', 'policy2', 'policy3']
+        for pid in ids:
+            timestamp = datetime.datetime.utcnow()
+            data = self.new_policy_data(id=pid, created_time=timestamp)
+            db_api.policy_create(self.ctx, data)
+
+        # different limit settings
+        policies = db_api.policy_get_all(self.ctx, limit=1)
+        self.assertEqual(1, len(policies))
+
+        policies = db_api.policy_get_all(self.ctx, limit=2)
+        self.assertEqual(2, len(policies))
+
+        # a large limit
+        policies = db_api.policy_get_all(self.ctx, limit=5)
+        self.assertEqual(3, len(policies))
+
+        # use marker here
+        policies = db_api.policy_get_all(self.ctx, marker='policy1')
+        self.assertEqual(0, len(policies))
+
+        policies = db_api.policy_get_all(self.ctx, marker='policy2')
+        self.assertEqual(1, len(policies))
+
+        policies = db_api.policy_get_all(self.ctx, marker='policy3')
+        self.assertEqual(2, len(policies))
+
+        policies = db_api.policy_get_all(self.ctx, limit=1, marker='policy3')
+        self.assertEqual(1, len(policies))
+
+    def test_policy_get_all_used_sort_keys(self):
+        ids = ['policy1', 'policy2', 'policy3']
+        for pid in ids:
+            data = self.new_policy_data(id=pid)
+            db_api.policy_create(self.ctx, data)
+
+        mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
+        sort_keys = ['type', 'name', 'level', 'cooldown', 'created_time',
+                     'updated_time', 'deleted_time']
+
+        db_api.policy_get_all(self.ctx, sort_keys=sort_keys)
+
+        args = mock_paginate.call_args[0]
+        used_sort_keys = set(args[3])
+        expected_keys = set(['id', 'type', 'name', 'level', 'cooldown',
+                             'created_time', 'updated_time', 'deleted_time'])
+        self.assertEqual(expected_keys, used_sort_keys)
+
+    def test_policy_get_all_sort_keys_wont_change(self):
+        sort_keys = ['id']
+        db_api.policy_get_all(self.ctx, sort_keys=sort_keys)
+        self.assertEqual(['id'], sort_keys)
+
+    def test_policy_get_all_sort_keys_and_dir(self):
+        values = [{'id': '001', 'name': 'policy1', 'level': 50},
+                  {'id': '002', 'name': 'policy3', 'level': 20},
+                  {'id': '003', 'name': 'policy2', 'level': 40}]
+
+        for v in values:
+            data = self.new_policy_data(**v)
+            db_api.policy_create(self.ctx, data)
+
+        policies = db_api.policy_get_all(self.ctx, sort_keys=['name', 'level'],
+                                         sort_dir='asc')
+        self.assertEqual(3, len(policies))
+        # Sorted by name
+        self.assertEqual('001', policies[0].id)
+        self.assertEqual('003', policies[1].id)
+        self.assertEqual('002', policies[2].id)
+
+        policies = db_api.policy_get_all(self.ctx, sort_keys=['level', 'name'],
+                                         sort_dir='asc')
+        self.assertEqual(3, len(policies))
+        # Sorted by levels (ascending)
+        self.assertEqual('002', policies[0].id)
+        self.assertEqual('003', policies[1].id)
+        self.assertEqual('001', policies[2].id)
+
+        policies = db_api.policy_get_all(self.ctx, sort_keys=['level', 'name'],
+                                         sort_dir='desc')
+        self.assertEqual(3, len(policies))
+        # Sorted by statuses (descending)
+        self.assertEqual('001', policies[0].id)
+        self.assertEqual('003', policies[1].id)
+        self.assertEqual('002', policies[2].id)
+
+    def test_policy_get_all_default_sort_dir(self):
+        dt = datetime.datetime
+        policies = []
+        for x in range(3):
+            data = self.new_policy_data(created_time=dt.utcnow())
+            policies.append(db_api.policy_create(self.ctx, data))
+
+        results = db_api.policy_get_all(self.ctx, sort_dir='asc')
+        self.assertEqual(3, len(results))
+        self.assertEqual(policies[0].id, results[0].id)
+        self.assertEqual(policies[1].id, results[1].id)
+        self.assertEqual(policies[2].id, results[2].id)
+
+    def test_policy_get_all_with_filters(self):
+        for name in ['policy1', 'policy2']:
+            data = self.new_policy_data(name=name)
+            db_api.policy_create(self.ctx, data)
+
+        filters = {'name': ['policy1', 'policyx']}
+        results = db_api.policy_get_all(self.ctx, filters=filters)
+        self.assertEqual(1, len(results))
+        self.assertEqual('policy1', results[0]['name'])
+
+        filters = {'name': 'policy1'}
+        results = db_api.policy_get_all(self.ctx, filters=filters)
+        self.assertEqual(1, len(results))
+        self.assertEqual('policy1', results[0]['name'])
+
+    def test_policy_get_all_with_empty_filters(self):
+        for name in ['policy1', 'policy2']:
+            data = self.new_policy_data(name=name)
+            db_api.policy_create(self.ctx, data)
+
+        filters = None
+        results = db_api.policy_get_all(self.ctx, filters=filters)
+        self.assertEqual(2, len(results))
 
     def test_policy_update(self):
         another_policy = '''
@@ -77,8 +339,10 @@ class DBAPIPolicyTest(base.SenlinTestCase):
             max_size: 10
             pause_time: PT10M
         '''
+        old_data = self.new_policy_data()
+        old_policy = db_api.policy_create(self.ctx, old_data)
+
         new_data = parser.parse_policy(another_policy)
-        old_policy = shared.create_policy(self.ctx)
         new_policy = db_api.policy_update(self.ctx, old_policy.id, new_data)
 
         self.assertEqual(old_policy.id, new_policy.id)
@@ -87,10 +351,14 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         self.assertEqual(11, new_policy.cooldown)
 
     def test_policy_delete(self):
-        policy = shared.create_policy(self.ctx)
+        policy = db_api.policy_create(self.ctx, self.new_policy_data())
         self.assertIsNotNone(policy)
+
         policy_id = policy.id
-        db_api.policy_delete(self.ctx, policy.id)
+        db_api.policy_delete(self.ctx, policy_id)
 
         policy = db_api.policy_get(self.ctx, policy_id)
         self.assertIsNone(policy)
+
+        res = db_api.policy_delete(self.ctx, policy_id)
+        self.assertIsNone(res)
