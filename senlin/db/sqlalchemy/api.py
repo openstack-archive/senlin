@@ -595,8 +595,9 @@ def policy_get_by_name(context, name, show_deleted=False):
                          show_deleted=show_deleted)
 
 
-def policy_get_by_short_id(context, short_id):
-    return query_by_short_id(context, models.Policy, short_id)
+def policy_get_by_short_id(context, short_id, show_deleted=False):
+    return query_by_short_id(context, models.Policy, short_id,
+                             show_deleted=show_deleted)
 
 
 def policy_get_all(context, limit=None, marker=None, sort_keys=None,
