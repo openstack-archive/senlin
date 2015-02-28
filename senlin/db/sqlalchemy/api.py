@@ -727,18 +727,19 @@ def profile_create(context, values):
 
 def profile_get(context, profile_id, show_deleted=False):
     query = soft_delete_aware_query(context, models.Profile,
-                                    profile_id=profile_id,
                                     show_deleted=show_deleted)
-    return query.first()
+    profile = query.filter_by(id=profile_id).first()
+    return profile
 
 
 def profile_get_by_name(context, name, show_deleted=False):
-    # TODO(Qiming): Fix this, show_deleted is ignored here
-    return query_by_name(context, models.Profile, name)
+    return query_by_name(context, models.Profile, name,
+                         show_deleted=show_deleted)
 
 
-def profile_get_by_short_id(context, short_id):
-    return query_by_short_id(context, models.Profile, short_id)
+def profile_get_by_short_id(context, short_id, show_deleted=False):
+    return query_by_short_id(context, models.Profile, short_id,
+                             show_deleted=show_deleted)
 
 
 def profile_get_all(context, limit=None, marker=None, sort_keys=None,
