@@ -14,7 +14,6 @@ import datetime
 
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
-from senlin.engine import parser
 from senlin.tests.common import base
 from senlin.tests.common import utils
 
@@ -329,26 +328,32 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         self.assertEqual(2, len(results))
 
     def test_policy_update(self):
-        another_policy = '''
-          name: new_scaling_policy
-          type: ScalingPolicy
-          cooldown: 11
-          level: WARNING
-          spec:
-            min_size: 1
-            max_size: 10
-            pause_time: PT10M
-        '''
+        another_policy = {
+            'name': 'new_scaling_policy',
+            'type': 'ScalingPolicy',
+            'cooldown': 11,
+            'level': 60,
+            'spec': {
+                'min_size': 5,
+                'max_size': 15,
+                'pause_time': 'PT10M',
+            }
+        }
         old_data = self.new_policy_data()
         old_policy = db_api.policy_create(self.ctx, old_data)
 
-        new_data = parser.parse_policy(another_policy)
+        new_data = self.new_policy_data(**another_policy)
         new_policy = db_api.policy_update(self.ctx, old_policy.id, new_data)
 
         self.assertEqual(old_policy.id, new_policy.id)
         self.assertEqual(new_data['name'], new_policy.name)
         self.assertEqual('new_scaling_policy', new_policy.name)
         self.assertEqual(11, new_policy.cooldown)
+
+    def test_policy_update_not_found(self):
+        self.assertRaises(exception.PolicyNotFound,
+                          db_api.policy_update,
+                          self.ctx, 'BogusID', {})
 
     def test_policy_delete(self):
         policy = db_api.policy_create(self.ctx, self.new_policy_data())
@@ -360,5 +365,6 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         policy = db_api.policy_get(self.ctx, policy_id)
         self.assertIsNone(policy)
 
+        # not found in delete is okay
         res = db_api.policy_delete(self.ctx, policy_id)
         self.assertIsNone(res)
