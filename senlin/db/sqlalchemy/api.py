@@ -667,7 +667,7 @@ def cluster_policy_get_all(context, cluster_id, filters=None,
         filters = {}
 
     sort_key_map = {
-        consts.CP_PRIORITY: models.ClusterPolicies.policy_id.key,
+        consts.CP_PRIORITY: models.ClusterPolicies.priority.key,
         consts.CP_LEVEL: models.ClusterPolicies.level.key,
         consts.CP_COOLDOWN: models.ClusterPolicies.cooldown.key,
         consts.CP_ENABLED: models.ClusterPolicies.enabled.key,
@@ -708,6 +708,9 @@ def cluster_policy_update(context, cluster_id, policy_id, values):
     query = session.query(models.ClusterPolicies)
     binding = query.filter_by(cluster_id=cluster_id,
                               policy_id=policy_id).first()
+
+    if binding is None:
+        return None
 
     binding.update(values)
     binding.save(session)
