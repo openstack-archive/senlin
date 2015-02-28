@@ -591,8 +591,8 @@ def policy_get(context, policy_id, show_deleted=False):
 
 
 def policy_get_by_name(context, name, show_deleted=False):
-    # TODO(Qiming): Fix this, show_deleted is ignored here
-    return query_by_name(context, models.Policy, name)
+    return query_by_name(context, models.Policy, name,
+                         show_deleted=show_deleted)
 
 
 def policy_get_by_short_id(context, short_id):
@@ -639,9 +639,7 @@ def policy_delete(context, policy_id, force=False):
     policy = policy_get(context, policy_id)
 
     if not policy:
-        msg = _('Attempt to delete a policy with id "%s" that does not '
-                'exist failed') % policy_id
-        raise exception.NotFound(msg)
+        return
 
     session = orm_session.Session.object_session(policy)
 
