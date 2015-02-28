@@ -28,7 +28,7 @@ sample_profile = '''
         myrandom: OS::Heat::RandomString
       files:
         myfile: contents
-    permission: xxxyyy
+  permission: xxxyyy
 '''
 
 sample_action = '''
