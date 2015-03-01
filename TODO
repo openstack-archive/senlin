@@ -58,10 +58,11 @@ ENGINE
     Note: if template and template_url are both specified, use template
     Need to refer to heat api test for testing heat profile
 
+  - Add support to periodically prune events/actions table
+
 OSLO
 ----
 
-  - Migrate to oslo.log -- hold on, it is not stable!!!
   - Migrate to oslo.policy 
 
 LOW PRIORITY
