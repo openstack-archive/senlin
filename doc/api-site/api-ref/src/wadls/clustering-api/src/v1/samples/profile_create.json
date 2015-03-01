@@ -1,39 +1,50 @@
 {
-    "name": "my_stack_profile",
-    "permission": "",
-    "spec": {
-        "context": {
-            "region_name": "RegionTwo",
-        },
-        "environment": {},
-        "files": {
-            "file1": "contents",
-        },
-        "parameters": {
-            "key_name": "JohnKey",
-        },
-        "template": {
-            "heat_template_version": "2014-10-16",
-            "parameters": {
-                "length": {
-                    "type": "integer",
-                    "default": "32",
-                },
+    "profile": {
+        "name": "test_prof1",
+        "permission": "xxx",
+        "spec": {
+            "disable_rollback": false,
+            "environment": {
+                "resource_registry": {
+                    "os.heat.server": "OS::Heat::Server"
+                }
             },
-            "outputs": {
-                "random_value": {
-                    "value": {
-                        "get_attr": ["random1", "value"],
-                    },
-                },
+            "files": {
+                "file:///opt/stack/senlin/examples/profiles/test_script.sh": "#!/bin/bash\n\necho \"this is a test script file\"\n"
             },
-            "resources": {
-                "random1": {
-                    "type": "OS::Heat::RandomString",
+            "parameters": {},
+            "template": {
+                "heat_template_version": "2014-10-16",
+                "outputs": {
+                    "result": {
+                        "value": {
+                            "get_attr": [
+                                "random",
+                                "value"
+                            ]
+                        }
+                    }
                 },
+                "parameters": {
+                    "file": {
+                        "default": {
+                            "get_file": "file:///opt/stack/senlin/examples/profiles/test_script.sh"
+                        },
+                        "type": "string"
+                    }
+                },
+                "resources": {
+                    "random": {
+                        "properties": {
+                            "length": 64
+                        },
+                        "type": "OS::Heat::RandomString"
+                    }
+                }
             },
+            "timeout": 60
         },
+        "tags": {},
+        "type": "os.heat.stack"
     }
-    "tags": {}
-    "type": "os.heat.stack",
 }
