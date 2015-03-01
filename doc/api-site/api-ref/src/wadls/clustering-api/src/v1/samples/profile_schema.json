@@ -1,40 +1,44 @@
 {
-    "type": "os.heat.stack",
     "spec": {
         "context": {
-            "description": "A map used for customizing stack context",
-            "required": "False",
-            "type": "Map",
-        },
+            "default": {}, 
+            "description": "A dictionary for specifying the customized context for stack operations", 
+            "required": false, 
+            "type": "Map"
+        }, 
+        "disable_rollback": {
+            "default": true, 
+            "description": "A boolean specifying whether a stack operation can be rolled back.", 
+            "required": false, 
+            "type": "Boolean"
+        }, 
         "environment": {
-            "description": "A map providing additional settings for stack",
-            "required": "False",
-            "type": "Map",
-        },
+            "default": {}, 
+            "description": "A map that specifies the environment used for stack operations.", 
+            "required": false, 
+            "type": "Map"
+        }, 
         "files": {
-            "description": "A map of name and contents used for stack operation",
-            "required": "False",
-            "type": "Map",
-        },
+            "default": {}, 
+            "description": "Contents of files referenced by the template, if any.", 
+            "required": false, 
+            "type": "Map"
+        }, 
         "parameters": {
-            "description": "A list of parameters for the template",
-            "required": "False",
-            "type": "List",
-        },
+            "default": {}, 
+            "description": "Parameters to be passed to Heat for stack operations.", 
+            "required": false, 
+            "type": "Map"
+        }, 
         "template": {
-            "description": "Heat template to be used",
-            "required": "True",
-            "type": "Map",
-        },
-    },
-    "permission": {
-       "description": "A string reserved for permission checking.",
-       "required": "False",
-       "type": "String",
-    },
-    "tags": {
-        "description": "A map of tag-values to attach to this profile.",
-        "required": "False",
-        "type": "Map",
+            "description": "Heat stack template.", 
+            "required": true, 
+            "type": "Map"
+        }, 
+        "timeout": {
+            "description": "A integer that specifies the number of minutes that a stack operation times out.", 
+            "required": false, 
+            "type": "Integer"
+        }
     }
 }

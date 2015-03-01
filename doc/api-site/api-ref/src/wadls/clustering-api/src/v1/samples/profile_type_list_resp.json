@@ -1,7 +1,13 @@
 {
     "profile_types": [
-        "os.heat.stack",
-        "os.heat.resource",
-        "os.nova.server"
+        {
+           "name": "os.heat.stack"
+        },
+        {
+            "name": "os.heat.resource"
+        },
+        {
+            "name": "os.nova.server"
+        }
     ]
 }

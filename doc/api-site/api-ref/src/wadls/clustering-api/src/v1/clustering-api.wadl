@@ -9,35 +9,14 @@
 <!ENTITY DELETE '<command xmlns="http://docbook.org/ns/docbook">DELETE</command>'>
 
 <!-- Common descriptions for cases where a user supplies a new stack name -->
-<!ENTITY CLUSTER_NAME_FORMAT 'The value must be unique within a project. The name must start with an ASCII letter and can contain ASCII letters, digits,
-underscores, periods, and hyphens. Specifically, the name must match the regular expression <code>^[a-zA-Z][a-zA-Z0-9_.-]*$</code>.'>
-<!ENTITY CLUSTER_NAME_CREATE_DESC 'A name for the new stack. &CLUSTER_NAME_FORMAT; <note><para>Deleting or abandoning a stack may not make the stack name available
-for reuse, or the ability to reuse a stack name could be delayed for an unspecified time.</para></note>'>
-
-<!-- Common descriptions for cases where a user supplies a template_url -->
-<!ENTITY TEMPLATE_URL_COMMON 'See the description of the <code>template</code> property for information about the expected template content located at the URI.
-<note><para>This parameter is only required when the <code>template</code> parameter is omitted. The value is ignored if the <code>template</code> property
-is also specified.</para></note>'>
-
-<!ENTITY TEMPLATE_URL_CREATE_DESC 'A URI to the location containing the stack template to instantiate. &TEMPLATE_URL_COMMON;'>
-
-<!ENTITY TEMPLATE_URL_PREVIEW_DESC 'A URI to the location containing the stack template to preview. &TEMPLATE_URL_COMMON;'>
-
-<!ENTITY TEMPLATE_URL_UPDATE_DESC 'A URI to the location containing the updated stack template. &TEMPLATE_URL_COMMON;'>
-
-<!-- Common descriptions for cases where a user supplies a template -->
-<!ENTITY TEMPLATE_COMMON 'This parameter is always provided as a <code>string</code> in the JSON request body. The content of the string is an
-Orchestration template, and may be provided in either YAML or JSON syntax.  Complete details about the syntax of an Orchestration template are provided in
-the <link xlink:href="http://docs.openstack.org/hot-guide/content/">Heat Orchestration Template (HOT) specification</link>. <note><para>This parameter is
-only required when the <code>template_url</code> parameter is omitted. If both are specified, this value overrides any value provided for
-<code>template_url</code>.</para></note>'>
-
-<!ENTITY TEMPLATE_CREATE_DESC 'The stack template to instantiate.  &TEMPLATE_COMMON;'>
-
-<!ENTITY TEMPLATE_PREVIEW_DESC 'The stack template to preview.  &TEMPLATE_COMMON;'>
-
-<!ENTITY TEMPLATE_UPDATE_DESC 'The updated stack template.  &TEMPLATE_COMMON;'>
-
+<!ENTITY CLUSTER_NAME_FORMAT 'The value must be unique within a project. The
+name must start with an ASCII letter and can contain ASCII letters, digits,
+underscores, periods, and hyphens. Specifically, the name must match the
+regular expression <code>^[a-zA-Z][a-zA-Z0-9_.-]*$</code>.'>
+<!ENTITY CLUSTER_NAME_CREATE_DESC 'A name for the new cluster. 
+&CLUSTER_NAME_FORMAT; <note><para>Deleting or abandoning a cluster may not
+make the cluster name available for reuse, or the ability to reuse a cluster
+name could be delayed for an unspecified time.</para></note>'>
 ]>
 
 <application xmlns="http://wadl.dev.java.net/2009/02"
@@ -64,10 +43,7 @@ only required when the <code>template_url</code> parameter is omitted. If both a
                                 <para>The name of a profile type.</para>
                             </wadl:doc>
                         </param>
-                        <method href="#profile_type_get"/>
-                        <resource path="template" id="profile_template">
-                            <method href="#profile_type_template"/>
-                        </resource>
+                        <method href="#profile_type_schema"/>
                     </resource>
                 </resource>
                 <resource id="policy_types" path="policy_types">
@@ -472,7 +448,7 @@ only required when the <code>template_url</code> parameter is omitted. If both a
             </representation>
         </response>
     </method>
-    <method name="GET" id="profile_type_get">
+    <method name="GET" id="profile_type_schema">
         <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Show profile spec">
             <para role="shortdesc">Shows the interface schema for a specified profile type.</para>
         </wadl:doc>
@@ -480,19 +456,6 @@ only required when the <code>template_url</code> parameter is omitted. If both a
             <representation mediaType="application/json">
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                     <xsdxt:code href="samples/profile_schema.json"/>
-                </wadl:doc>
-            </representation>
-        </response>
-    </method>
-    <method name="GET" id="profile_type_template">
-        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Show profile template">
-            <para role="shortdesc">Shows the template representation for a specified profile type.</para>
-        </wadl:doc>
-        <response status="200">
-            <representation mediaType="application/json">
-                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                    <para>A template showing the template that can be used to create a profile.</para>
-                    <xsdxt:code href="samples/profile_type_template.json"/>
                 </wadl:doc>
             </representation>
         </response>
