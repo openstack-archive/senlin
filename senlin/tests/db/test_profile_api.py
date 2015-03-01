@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
+
 from senlin.common import exception
 
 from senlin.db.sqlalchemy import api as db_api
@@ -167,27 +169,155 @@ class DBAPIProfileTest(base.SenlinTestCase):
         profiles = db_api.profile_get_all(self.ctx, show_deleted=True)
         self.assertEqual(2, len(profiles))
 
-    def test_profile_update(self):
-        another_profile = '''
-          name: test_profile_name_2
-          type: my_test_profile_type
-          spec:
-            template:
-              heat_template_version: "2013-05-23"
-              resources:
-                myrandom: OS::Heat::RandomString
-              files:
-                myfile: new contents
-            permission: yyyyxxxx
-        '''
+    def test_profile_get_all_with_limit_marker(self):
+        ids = ['profile1', 'profile2', 'profile3']
+        for pid in ids:
+            timestamp = datetime.datetime.utcnow()
+            shared.create_profile(self.ctx, id=pid, created_time=timestamp)
 
-        new_data = parser.parse_profile(another_profile)
+        # different limit settings
+        profiles = db_api.profile_get_all(self.ctx, limit=1)
+        self.assertEqual(1, len(profiles))
+
+        profiles = db_api.profile_get_all(self.ctx, limit=2)
+        self.assertEqual(2, len(profiles))
+
+        # a large limit
+        profiles = db_api.profile_get_all(self.ctx, limit=5)
+        self.assertEqual(3, len(profiles))
+
+        # use marker here
+        profiles = db_api.profile_get_all(self.ctx, marker='profile1')
+        self.assertEqual(0, len(profiles))
+
+        profiles = db_api.profile_get_all(self.ctx, marker='profile2')
+        self.assertEqual(1, len(profiles))
+
+        profiles = db_api.profile_get_all(self.ctx, marker='profile3')
+        self.assertEqual(2, len(profiles))
+
+        profiles = db_api.profile_get_all(self.ctx, limit=1, marker='profile3')
+        self.assertEqual(1, len(profiles))
+
+    def test_profile_get_all_used_sort_keys(self):
+        ids = ['profile1', 'profile2', 'profile3']
+        for pid in ids:
+            shared.create_profile(self.ctx, id=pid)
+
+        mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
+        sort_keys = ['type', 'name', 'permission', 'tags',
+                     'created_time', 'updated_time', 'deleted_time']
+
+        db_api.profile_get_all(self.ctx, sort_keys=sort_keys)
+
+        args = mock_paginate.call_args[0]
+        used_sort_keys = set(args[3])
+        expected_keys = set(['id', 'type', 'name', 'permission', 'tags',
+                             'created_time', 'updated_time', 'deleted_time'])
+        self.assertEqual(expected_keys, used_sort_keys)
+
+    def test_profile_get_all_sort_keys_wont_change(self):
+        sort_keys = ['id']
+        db_api.profile_get_all(self.ctx, sort_keys=sort_keys)
+        self.assertEqual(['id'], sort_keys)
+
+    def test_profile_get_all_sort_keys_and_dir(self):
+        values = [{'id': '001', 'name': 'profile1', 'type': 'C'},
+                  {'id': '002', 'name': 'profile3', 'type': 'B'},
+                  {'id': '003', 'name': 'profile2', 'type': 'A'}]
+
+        for v in values:
+            shared.create_profile(self.ctx, **v)
+
+        profiles = db_api.profile_get_all(self.ctx, sort_keys=['name', 'type'],
+                                          sort_dir='asc')
+        self.assertEqual(3, len(profiles))
+        # Sorted by name
+        self.assertEqual('001', profiles[0].id)
+        self.assertEqual('003', profiles[1].id)
+        self.assertEqual('002', profiles[2].id)
+
+        profiles = db_api.profile_get_all(self.ctx, sort_keys=['type', 'name'],
+                                          sort_dir='asc')
+        self.assertEqual(3, len(profiles))
+        # Sorted by levels (ascending)
+        self.assertEqual('003', profiles[0].id)
+        self.assertEqual('002', profiles[1].id)
+        self.assertEqual('001', profiles[2].id)
+
+        profiles = db_api.profile_get_all(self.ctx, sort_keys=['type', 'name'],
+                                          sort_dir='desc')
+        self.assertEqual(3, len(profiles))
+        # Sorted by statuses (descending)
+        self.assertEqual('001', profiles[0].id)
+        self.assertEqual('002', profiles[1].id)
+        self.assertEqual('003', profiles[2].id)
+
+    def test_profile_get_all_default_sort_dir(self):
+        dt = datetime.datetime
+        profiles = []
+        for x in range(3):
+            profile = shared.create_profile(self.ctx, created_time=dt.utcnow())
+            profiles.append(profile)
+
+        results = db_api.profile_get_all(self.ctx, sort_dir='asc')
+        self.assertEqual(3, len(results))
+        self.assertEqual(profiles[0].id, results[0].id)
+        self.assertEqual(profiles[1].id, results[1].id)
+        self.assertEqual(profiles[2].id, results[2].id)
+
+    def test_profile_get_all_with_filters(self):
+        for name in ['profile1', 'profile2']:
+            shared.create_profile(self.ctx, name=name)
+
+        filters = {'name': ['profile1', 'profilex']}
+        results = db_api.profile_get_all(self.ctx, filters=filters)
+        self.assertEqual(1, len(results))
+        self.assertEqual('profile1', results[0]['name'])
+
+        filters = {'name': 'profile1'}
+        results = db_api.profile_get_all(self.ctx, filters=filters)
+        self.assertEqual(1, len(results))
+        self.assertEqual('profile1', results[0]['name'])
+
+    def test_profile_get_all_with_empty_filters(self):
+        for name in ['profile1', 'profile2']:
+            shared.create_profile(self.ctx, name=name)
+
+        filters = None
+        results = db_api.profile_get_all(self.ctx, filters=filters)
+        self.assertEqual(2, len(results))
+
+    def test_profile_update(self):
+        new_fields = {
+            'name': 'test_profile_name_2',
+            'type': 'my_test_profile_type',
+            'spec': {
+                'template': {
+                    'heat_template_version': '2013-05-23',
+                    'resources': {
+                        'myrandom': 'OS::Heat::RandomString',
+                    },
+                },
+                'files': {
+                    'myfile': 'new contents',
+                },
+            },
+            'permission': 'yyyyxxxx',
+        }
+
         old_profile = shared.create_profile(self.ctx)
-        new_profile = db_api.profile_update(self.ctx, old_profile.id, new_data)
+        new_profile = db_api.profile_update(self.ctx, old_profile.id,
+                                            new_fields)
 
         self.assertEqual(old_profile.id, new_profile.id)
-        self.assertEqual(new_data['name'], new_profile.name)
+        self.assertEqual(new_fields['name'], new_profile.name)
         self.assertEqual('test_profile_name_2', new_profile.name)
+
+    def test_profile_update_not_found(self):
+        self.assertRaises(exception.ProfileNotFound,
+                          db_api.profile_update,
+                          self.ctx, 'BogusID', {})
 
     def test_profile_delete(self):
         profile = shared.create_profile(self.ctx)
@@ -197,3 +327,7 @@ class DBAPIProfileTest(base.SenlinTestCase):
 
         profile = db_api.profile_get(self.ctx, profile_id)
         self.assertIsNone(profile)
+
+        # not found in delete is okay
+        res = db_api.profile_delete(self.ctx, profile_id)
+        self.assertIsNone(res)
