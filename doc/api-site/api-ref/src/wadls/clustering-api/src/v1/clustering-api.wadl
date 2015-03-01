@@ -501,24 +501,64 @@ name could be delayed for an unspecified time.</para></note>'>
         </wadl:doc>
         <request>
             <representation mediaType="application/xml">
-                <param name="type" style="query" required="false">
+                <param name="limit" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Type of profiles to be listed.</para>
+                        <para>
+                            Limits the number of profiles that appear on a page to
+                            this value. The typical pattern of <code>limit</code>
+                            and <code>marker</code> is to make an initial limited
+                            request and then to use the <code>id</code> of the last
+                            profile from the response as the <code>marker</code>
+                            parameter in a subsequent limited request.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="marker" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            Specifies the <code>id</code> of the last-seen profile.
+                            The typical pattern of <code>limit</code> and
+                            <code>marker</code> is to make an initial limited
+                            request and then to use the <code>id</code> of the last
+                            profile from the response as the <code>marker</code>
+                            parameter in a subsequent limited request.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="sort_keys" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook"
+                        xml:lang="EN">
+                        <para>
+                            Sorts the profile list by one of these attributes:
+                            <code>name</code>, <code>type</code>,
+                            <code>created_time</code>, <code>updated_time</code>,
+                            <code>deleted_time</code>, <code>permission</code> and
+                            <code>tags</code>.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="sort_dir" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>The sort direction of the profile list.  Either
+                            <code>asc</code> (ascending) or <code>desc</code>
+                            (descending).
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="filters" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Filters to apply on the returned profiles. Each
+                            filter is in the form of key-value pair, where the
+                            key can be one of <code>name</code>, <code>type</code>,
+                            <code>created_time</code>, <code>updated_time</code>,
+                            <code>deleted_time</code>, <code>permission</code> or
+                            <code>tags</code>.
+                        </para>
                     </wadl:doc>
                 </param>
                 <param name="show_deleted" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                         <para>Specifies whether deleted profiles are to be listed.</para>
-                    </wadl:doc>
-                </param>
-                <param name="permission" style="query" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A permission string for filtering the returned profiles.</para>
-                    </wadl:doc>
-                </param>
-                <param name="tags" style="query" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A list of key-value pairs for filtering the profiles.</para>
                     </wadl:doc>
                 </param>
             </representation>
@@ -530,9 +570,10 @@ name could be delayed for an unspecified time.</para></note>'>
                 </wadl:doc>
                 <param name="nodes" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>
-                            List of node records where each record contains fields like <code>id</code>, <code>name</code>, <code>type</code>,
-                            <code>spec</code>, <code>permission</code>, <code>tags</code> etc.
+                        <para>List of profile records where each record contains
+                            fields like <code>id</code>, <code>name</code>,
+                            <code>type</code>, <code>spec</code>,
+                            <code>permission</code>, <code>tags</code> values etc.
                         </para>
                     </wadl:doc>
                 </param>
