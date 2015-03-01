@@ -1,9 +1,22 @@
 {
     "policy_types": [
-        "os.senlin.deletion_policy",
-        "os.senlin.health_policy",
-        "os.senlin.lb_policy",
-        "os.senlin.scaling_policy",
-        "os.senlin.placement_policy",
+        {
+            "name": "ScalingPolicy"
+        }, 
+        {
+            "name": "PlacementPolicy"
+        }, 
+        {
+            "name": "DeletionPolicy"
+        }, 
+        {
+            "name": "LoadBalancingPolicy"
+        }, 
+        {
+            "name": "HealthPolicy"
+        }, 
+        {
+            "name": "UpdatePolicy"
+        }
     ]
 }

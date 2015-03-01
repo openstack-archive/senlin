@@ -1,40 +1,39 @@
 {
-    "type": "os.senlin.deletion_policy",
     "spec": {
         "criteria": {
-            "description": "A string specifying how to select candidates for "
-                           "deletion, can be one of 'oldest_first', "
-                           "'youngest_first', 'random'",
-            "required": "True",
-            "type": "String",
-        },
-	"grace_period": {
-            "description": "Number of seconds before actual deletion",
-            "required": "False",
-            "type": "Number",
-        },
+            "constraints": [
+                {
+                    "constraint": [
+                        "OLDEST_FIRST", 
+                        "OLDEST_PROFILE_FRIST", 
+                        "YOUNGEST_FIRST", 
+                        "RANDOM"
+                    ], 
+                    "type": "AllowedValues"
+                }
+            ], 
+            "default": "RANDOM", 
+            "description": "Criteria used in selecting candidates for deletion", 
+            "required": false, 
+            "type": "String"
+        }, 
+        "destroy_after_deletion": {
+            "default": true, 
+            "description": "Whethere a node should be completely destroyed after deletion. Default to True", 
+            "required": false, 
+            "type": "Boolean"
+        }, 
+        "grace_period": {
+            "default": 0, 
+            "description": "Number of seconds before real deletion happens.", 
+            "required": false, 
+            "type": "Integer"
+        }, 
         "reduce_desired_capacity": {
-            "description": "Whether to reduce the desired capacity of cluster",
-            "required": "False",
-            "type": "Bool",
-        },
-    },
-    "level": {
-       "description": "A string indicating enforcement level of the policy, "
-                      "can be one of 'CRITICAL', 'ERROR', 'WARNING', 'INFO', "
-                      " or 'DEBUG'",
-       "required": "False",
-       "type": "String",
-    },
-    "cooldown": {
-       "description": "An integer indicating enforcement level of the policy, can be one of 'CRITICAL', 'ERROR', 'WARNING', 'INFO' or 'DEBUG'",
-       "required": "False",
-       "type": "String",
-    },
-
-    "tags": {
-        "description": "A map of tag-values to attach to this profile.",
-        "required": "False",
-        "type": "Map",
+            "default": false, 
+            "description": "Whether the desired capacity of the cluster should be reduced along the deletion. Default to False.", 
+            "required": false, 
+            "type": "Boolean"
+        }
     }
 }

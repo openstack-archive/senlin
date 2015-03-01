@@ -54,10 +54,7 @@ name could be delayed for an unspecified time.</para></note>'>
                                 <para>The name of a policy type.</para>
                             </wadl:doc>
                         </param>
-                        <method href="#policy_type_get"/>
-                        <resource id="policy_template" path="template">
-                            <method href="#policy_type_template"/>
-                        </resource>
+                        <method href="#policy_type_schema"/>
                     </resource>
                 </resource>
                 <resource path="profiles" id="profiles">
@@ -473,7 +470,7 @@ name could be delayed for an unspecified time.</para></note>'>
             </representation>
         </response>
     </method>
-    <method name="GET" id="policy_type_get">
+    <method name="GET" id="policy_type_schema">
         <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Show policy schema">
             <para role="shortdesc">Shows the interface schema for a specified policy type.</para>
         </wadl:doc>
