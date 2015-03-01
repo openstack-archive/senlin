@@ -806,15 +806,16 @@ def _delete_event_rows(context, cluster_id, limit):
     return q.delete(synchronize_session='fetch')
 
 
-def event_create(context, values):
-    if values['obj_type'] == 'CLUSTER' and cfg.CONF.max_events_per_cluster:
-        cluster_id = values['obj_id']
+def event_prune(context, cluster_id):
+    if cfg.CONF.max_events_per_cluster:
         event_count = event_count_by_cluster(context, cluster_id)
         if (event_count >= cfg.CONF.max_events_per_cluster):
             # prune events
             batch_size = cfg.CONF.event_purge_batch_size
             _delete_event_rows(context, cluster_id, batch_size)
 
+
+def event_create(context, values):
     event = models.Event()
     if 'status_reason' in values:
         values['status_reason'] = values['status_reason'][:255]
