@@ -1,10 +1,17 @@
 {
-    "level": 50,
-    "name": "my_deletion_policy",
-    "spec": {
-        "criteria": "oldest_first",
-        "grace_period": 60,
-        "reduce_desired_capacity": false,
-    },
-    "type": "os.senlin.deletion_policy",
+    "policy": {
+        "cooldown": 0,
+        "level": 0,
+        "name": "sp001",
+        "spec": {
+            "adjustment": {
+                "min_step": 1,
+                "number": 1,
+                "type": "CHANGE_IN_CAPACITY"
+            },
+            "max_size": 10,
+            "min_size": 1
+        },
+        "type": "ScalingPolicy"
+    }
 }
