@@ -690,7 +690,7 @@ name could be delayed for an unspecified time.</para></note>'>
         </response>
     </method>
     <method name="DELETE" id="profile_delete">
-        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Delete profile">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Delete a profile">
             <para role="shortdesc">Deletes a specified profile.</para>
         </wadl:doc>
         <response status="204"/>
@@ -701,19 +701,63 @@ name could be delayed for an unspecified time.</para></note>'>
         </wadl:doc>
         <request>
             <representation mediaType="application/xml">
-                <param name="type" style="query" required="false">
+                <param name="limit" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Type of policies to be listed.</para>
+                        <para>
+                            Limits the number of policies that appear on a page to
+                            this value. The typical pattern of <code>limit</code>
+                            and <code>marker</code> is to make an initial limited
+                            request and then to use the <code>id</code> of the last
+                            policy seen from the response as the <code>marker</code>
+                            parameter in a subsequent limited request.
+                        </para>
                     </wadl:doc>
                 </param>
-                <param name="level" style="query" required="false">
+                <param name="marker" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A enforcement level (number) for filtering the returned policies.</para>
+                        <para>
+                            Specifies the <code>id</code> of the last-seen policy.
+                            The typical pattern of <code>limit</code> and
+                            <code>marker</code> is to make an initial limited
+                            request and then to use the <code>id</code> of the last
+                            policy from the response as the <code>marker</code>
+                            parameter in a subsequent limited request.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="sort_keys" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook"
+                        xml:lang="EN">
+                        <para>Sorts the policy list by one or more of attributes:
+                            <code>name</code>, <code>type</code>, <code>level</code>,
+                            <code>created_time</code>, <code>updated_time</code>,
+                            <code>deleted_time</code>, <code>cooldown</code>.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="sort_dir" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>The sort direction of the policy list.  Either
+                            <code>asc</code> (ascending) or <code>desc</code>
+                            (descending).
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="filters" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Filters to apply on the returned policies. Each
+                            filter is in the form of key-value pair, where the
+                            key can be one of <code>name</code>, <code>type</code>,
+                            <code>level</code>, <code>cooldown</code>,
+                            <code>created_time</code>, <code>updated_time</code>,
+                            <code>deleted_time</code>.
+                        </para>
                     </wadl:doc>
                 </param>
                 <param name="show_deleted" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Specifies whether deleted policies are to be listed.</para>
+                        <para>Specifies whether deleted policies are to be
+                            listed.</para>
                     </wadl:doc>
                 </param>
             </representation>
@@ -723,10 +767,10 @@ name could be delayed for an unspecified time.</para></note>'>
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                     <xsdxt:code href="samples/policy_list_resp.json"/>
                 </wadl:doc>
-                <param name="profiles" style="query" required="false">
+                <param name="policies" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>
-                            List of policy records where each record contains fields like <code>id</code>, <code>name</code>, <code>type</code>,
+                        <para>List of policy records where each record contains fields
+                            like <code>id</code>, <code>name</code>, <code>type</code>,
                             <code>spec</code>, <code>level</code> etc.
                         </para>
                     </wadl:doc>
