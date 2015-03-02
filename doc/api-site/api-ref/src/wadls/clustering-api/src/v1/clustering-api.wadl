@@ -629,6 +629,22 @@ name could be delayed for an unspecified time.</para></note>'>
             </representation>
         </response>
     </method>
+    <method name="GET" id="profile_get">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Show profile data">
+            <para role="shortdesc">Show detailed data for a specified profile.</para>
+        </wadl:doc>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <para>A profile record that contains fields like <code>id</code>,
+                        <code>name</code>, <code>type</code>, <code>spec</code>,
+                        <code>permission</code>, <code>tags</code> etc.
+                    </para>
+                    <xsdxt:code href="samples/profile_get_resp.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
     <method name="POST" id="profile_update">
         <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Update profile">
             <para role="shortdesc">Update the specified profile.</para>
@@ -667,22 +683,6 @@ name could be delayed for an unspecified time.</para></note>'>
             <para role="shortdesc">Deletes a specified profile.</para>
         </wadl:doc>
         <response status="204"/>
-    </method>
-    <method name="GET" id="profile_get">
-        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Show profile data">
-            <para role="shortdesc">Show detailed data for a specified profile.</para>
-        </wadl:doc>
-        <response status="200">
-            <representation mediaType="application/json">
-                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                    <para>
-                        A node record that contains fields like <code>id</code>, <code>name</code>, <code>type</code>,
-                        <code>spec</code>, <code>permission</code>, <code>tags</code> etc.
-                    </para>
-                    <xsdxt:code href="samples/profile_get_resp.json"/>
-                </wadl:doc>
-            </representation>
-        </response>
     </method>
     <method name="GET" id="policy_list">
         <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="List policies">
