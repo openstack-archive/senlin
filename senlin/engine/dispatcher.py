@@ -13,7 +13,6 @@
 from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
-from osprofiler import profiler
 
 from senlin.common import consts
 from senlin.common.i18n import _LI
@@ -23,7 +22,6 @@ from senlin.openstack.common import service
 LOG = logging.getLogger(__name__)
 
 
-@profiler.trace_cls("rpc")
 class Dispatcher(service.Service):
     '''Listen on an AMQP queue named for the engine.
 

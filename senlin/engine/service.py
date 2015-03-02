@@ -18,7 +18,6 @@ from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
 from oslo_utils import uuidutils
-from osprofiler import profiler
 
 from senlin.common import consts
 from senlin.common import context
@@ -73,7 +72,6 @@ def request_context(func):
     return wrapped
 
 
-@profiler.trace_cls("rpc")
 class EngineService(service.Service):
     '''Manages the running instances from creation to destruction.
 
