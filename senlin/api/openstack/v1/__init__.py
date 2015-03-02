@@ -67,7 +67,7 @@ class API(wsgi.Router):
             sub_mapper.connect("profile_update",
                                "/profiles/{profile_id}",
                                action="update",
-                               conditions={'method': 'PUT'})
+                               conditions={'method': 'PATCH'})
             sub_mapper.connect("profile_delete",
                                "/profiles/{profile_id}",
                                action="delete",
