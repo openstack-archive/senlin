@@ -100,7 +100,7 @@ class ScalingPolicy(base.Policy):
 
         self.adjustment_type = adjustment[self.ADJUSTMENT_TYPE]
         self.adjustment_number = adjustment[self.ADJUSTMENT_NUMBER]
-        self.adjustment_min_step = adjustment.get[self.MIN_STEP]
+        self.adjustment_min_step = adjustment[self.MIN_STEP]
 
         # TODO(anyone): Make sure the default cooldown can be used if
         # not specified
