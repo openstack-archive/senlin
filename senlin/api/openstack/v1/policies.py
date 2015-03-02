@@ -20,6 +20,7 @@ from senlin.api.openstack.v1 import util
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import serializers
+from senlin.common import utils
 from senlin.common import wsgi
 from senlin.rpc import client as rpc_client
 
@@ -27,7 +28,7 @@ from senlin.rpc import client as rpc_client
 class PolicyData(object):
     '''The data accompanying a POST/PUT request to create/update a policy.'''
     def __init__(self, data):
-        self.data = data['policy']
+        self.data = data
 
     def name(self):
         if consts.POLICY_NAME not in self.data:
@@ -85,6 +86,14 @@ class PolicyController(object):
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)
 
+        key = consts.PARAM_SHOW_DELETED
+        if key in params:
+            params[key] = utils.parse_bool_param(key, params[key])
+
+        key = consts.PARAM_LIMIT
+        if key in params:
+            params[key] = utils.parse_int_param(key, params[key])
+
         if not filters:
             filters = None
 
@@ -96,7 +105,12 @@ class PolicyController(object):
 
     @util.policy_enforce
     def create(self, req, body):
-        data = PolicyData(body)
+        policy_data = body.get('policy')
+        if policy_data is None:
+            raise exc.HTTPBadRequest(_("Malformed request data, missing "
+                                       "'policy' key in request body."))
+
+        data = PolicyData(policy_data)
         result = self.rpc_client.policy_create(req.context, data.name(),
                                                data.type(), data.spec(),
                                                data.level(), data.cooldown())
@@ -110,15 +124,25 @@ class PolicyController(object):
 
     @util.policy_enforce
     def update(self, req, policy_id, body):
-        data = PolicyData(body)
-        self.rpc_client.policy_update(req.context,
-                                      policy_id,
-                                      data.name(),
-                                      data.spec(),
-                                      data.level(),
-                                      data.cooldown())
+        policy_data = body.get('policy')
+        if policy_data is None:
+            raise exc.HTTPBadRequest(_("Malformed request data, missing "
+                                       "'policy' key in request body."))
 
-        raise exc.HTTPAccepted()
+        name = policy_data.get(consts.POLICY_NAME)
+
+        level = policy_data.get(consts.POLICY_LEVEL)
+        if level is not None:
+            level = utils.parse_int_param(consts.POLICY_LEVEL, level)
+
+        cooldown = policy_data.get(consts.POLICY_COOLDOWN)
+        if cooldown is not None:
+            cooldown = utils.parse_int_param(consts.POLICY_COOLDOWN, cooldown)
+
+        policy = self.rpc_client.policy_update(req.context, policy_id, name,
+                                               level, cooldown)
+
+        return {'policy': policy}
 
     @util.policy_enforce
     def delete(self, req, policy_id):

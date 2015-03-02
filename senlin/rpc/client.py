@@ -138,12 +138,11 @@ class EngineClient(object):
         return self.call(ctxt,
                          self.make_msg('policy_get', identity=identity))
 
-    def policy_update(self, ctxt, identity, name, spec, level, cooldown):
+    def policy_update(self, ctxt, identity, name, level, cooldown):
         return self.call(ctxt,
-                         self.make_msg('policy_update',
-                                       identity=identity,
-                                       name=name, spec=spec,
-                                       level=level, cooldown=cooldown))
+                         self.make_msg('policy_update', identity=identity,
+                                       name=name, level=level,
+                                       cooldown=cooldown))
 
     def policy_delete(self, ctxt, identity, cast=True):
         rpc_method = self.cast if cast else self.call

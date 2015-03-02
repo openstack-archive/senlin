@@ -249,7 +249,7 @@ class EngineService(service.Service):
             if name is not None and name != profile.name:
                 profile.name = name
                 changed = True
-            if permission is not None and permission != profile.permission: 
+            if permission is not None and permission != profile.permission:
                 profile.permission = permission
                 changed = True
             if tags is not None and tags != profile.tags:
@@ -351,9 +351,27 @@ class EngineService(service.Service):
         return policy.to_dict()
 
     @request_context
-    def policy_update(self, context, identity, name, spec=None, level=None,
+    def policy_update(self, context, identity, name=None, level=None,
                       cooldown=None):
-        return {}
+
+        db_policy = self.policy_find(context, identity)
+        policy = policy_base.Policy.load(context, policy=db_policy)
+        changed = False
+
+        if name is not None and name != policy.name:
+            policy.name = name
+            changed = True
+        if level is not None and level != policy.level:
+            policy.level = level
+            changed = True
+        if cooldown is not None and cooldown != policy.cooldown:
+            policy.cooldown = cooldown
+            changed = True
+
+        if changed:
+            policy.store(context)
+
+        return policy.to_dict()
 
     @request_context
     def policy_delete(self, context, identity):
