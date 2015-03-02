@@ -247,10 +247,17 @@ class EngineService(service.Service):
         db_profile = self.profile_find(context, profile_id)
         if spec is None:
             profile = profile_base.Profile.load(context, profile=db_profile)
-            if name != profile.name:
+            changed = False
+            if name is not None and name != profile.name:
                 profile.name = name
-                profile.permission = permission,
+                changed = True
+            if permission is not None and permission != profile.permission: 
+                profile.permission = permission
+                changed = True
+            if tags is not None and tags != profile.tags:
                 profile.tags = tags
+                changed = True
+            if changed:
                 profile.store(context)
             return profile.to_dict()
 
