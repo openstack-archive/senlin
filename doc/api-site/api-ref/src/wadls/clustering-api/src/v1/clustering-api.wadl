@@ -671,12 +671,23 @@ name could be delayed for an unspecified time.</para></note>'>
                 </param>
                 <param name="tags" style="plain" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A list of key-value pairs to be associated with the target profile.</para>
+                        <para>A list of key-value pairs to be associated with the target
+                            profile.</para>
                     </wadl:doc>
                 </param>
             </representation>
         </request>
-        <response status="202"/>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <para>A profile record that contains fields like <code>id</code>,
+                        <code>name</code>, <code>type</code>, <code>spec</code>,
+                        <code>permission</code>, <code>tags</code> etc.
+                    </para>
+                    <xsdxt:code href="samples/profile_update_resp.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
     </method>
     <method name="DELETE" id="profile_delete">
         <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Delete profile">

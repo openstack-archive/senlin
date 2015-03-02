@@ -1,38 +1,8 @@
 {
-    "name": "my_stack_profile",
-    "permission": "",
-    "spec": {
-        "context": {
-            "region_name": "RegionTwo",
-        },
-        "environment": {},
-        "files": {
-            "file1": "new contents",
-        },
-        "parameters": {
-            "key_name": "JohnKey",
-        },
-        "template": {
-            "heat_template_version": "2014-10-16",
-            "parameters": {
-                "length": {
-                    "type": "integer",
-                    "default": "32",
-                },
-            },
-            "outputs": {
-                "random_value": {
-                    "value": {
-                        "get_attr": ["random1", "value"],
-                    },
-                },
-            },
-            "resources": {
-                "random1": {
-                    "type": "OS::Heat::RandomString",
-                },
-            },
-        },
+    "profile": {
+        "name": null,
+        "permission": "111100001111",
+        "spec": null,
+        "tags": {}
     }
-    "tags": {}
 }
