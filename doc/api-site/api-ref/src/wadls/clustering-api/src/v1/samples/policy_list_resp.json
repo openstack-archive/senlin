@@ -1,15 +1,21 @@
 {
     "policies": [
         {
-            "id": "913e4dea-334e-4e1b-a7e0-507d3bd0271c",
-            "level": 50,
-            "name": "my_deletion_policy",
+            "cooldown": 0,
+            "created_time": "2015-02-15T08:33:13.000000",
+            "data": {},
+            "deleted_time": null,
+            "id": "7192d8df-73be-4e98-ab99-1cf6d5066729",
+            "level": 0,
+            "name": "tt1",
             "spec": {
-                "criteria": "oldest_first",
+                "criteria": "OLDEST_FIRST",
+                "destroy_after_deletion": true,
                 "grace_period": 60,
-                "reduce_desired_capacity": false,
+                "reduce_desired_capacity": false
             },
-            "type": "os.senlin.deletion_policy",
-       }
+            "type": "DeletionPolicy",
+            "updated_time": null
+        }
     ]
 }

@@ -324,7 +324,7 @@ class Map(Schema):
         if self.schema is None:
             return values
 
-        sub_schema = self.schema.schema
+        sub_schema = self.schema
         if sub_schema is not None:
             # sub_schema shoud be a dict here
             subspec = Spec(sub_schema, dict(values), context)

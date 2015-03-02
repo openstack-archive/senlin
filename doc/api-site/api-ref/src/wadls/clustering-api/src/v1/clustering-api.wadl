@@ -589,29 +589,37 @@ name could be delayed for an unspecified time.</para></note>'>
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                     <xsdxt:code href="samples/profile_create.json"/>
                 </wadl:doc>
-                <param name="name" style="plain" required="true">
+                <param name="profile" style="plain" required="true">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Name for the profile to be created.</para>
-                    </wadl:doc>
-                </param>
-                <param name="type" style="plain" required="true">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Name of profile type to be used for the profile.</para>
-                    </wadl:doc>
-                </param>
-                <param name="spec" style="plain" required="true">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Detailed specification based on the chosen profile type.</para>
-                    </wadl:doc>
-                </param>
-                <param name="permission" style="plain" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A string to be interpreted as a permission.</para>
-                    </wadl:doc>
-                </param>
-                <param name="tags" style="plain" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A list of key-value pairs to be associated with the profile.</para>
+                        <para>A map that contains details for the profile to be created.</para>
+                        <itemizedlist xml:id="profile_body">
+                            <title>Profile Body</title>
+                            <listitem>
+                                <para>
+                                    <code>name</code> Name for the profile to be created. (required).
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>type</code> Name of profile type to be used for the profile. (required).
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>spec</code> Detailed specification based on the chosen profile type. (required).
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>permission</code> A string representing the default permission of the proflie. (optional).
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>tags</code> A list of key-value pairs to be associated with the profile. (optional).
+                                </para>
+                            </listitem>
+                        </itemizedlist>
                     </wadl:doc>
                 </param>
             </representation>
@@ -623,7 +631,55 @@ name could be delayed for an unspecified time.</para></note>'>
                 </wadl:doc>
                 <param name="profile" style="plain" required="true">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A dictionary containing the <code>id</code> of and <code>link</code> to the profile.</para>
+                        <para>A dictionary containing the details of the profile created.</para>
+                        <itemizedlist xml:id="profile_response_body">
+                            <title>Profile Create Response</title>
+                            <listitem>
+                                <para>
+                                    <code>id</code> An unique ID for the newly created profile.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>name</code> Name for the newly created profile.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>type</code> Name of policy type referenced by the profile.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>spec</code> Detailed specification based on the chosen profile type.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>permission</code> A string representing the permission of the profile.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>tags</code> A list of key-value pairs attached to the profile.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>created_time</code> UTC timestamp when the profile is created.
+                                </para>
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    <code>updated_time</code> UTC timestamp when the profile is updated.
+                                </para>
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    <code>deleted_time</code> UTC timestamp when the profile is deleted.
+                                </para>
+                            </listitem>
+                        </itemizedlist>
                     </wadl:doc>
                 </param>
             </representation>
@@ -690,7 +746,7 @@ name could be delayed for an unspecified time.</para></note>'>
         </response>
     </method>
     <method name="DELETE" id="profile_delete">
-        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Delete profile">
+        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Delete a profile">
             <para role="shortdesc">Deletes a specified profile.</para>
         </wadl:doc>
         <response status="204"/>
@@ -701,19 +757,63 @@ name could be delayed for an unspecified time.</para></note>'>
         </wadl:doc>
         <request>
             <representation mediaType="application/xml">
-                <param name="type" style="query" required="false">
+                <param name="limit" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Type of policies to be listed.</para>
+                        <para>
+                            Limits the number of policies that appear on a page to
+                            this value. The typical pattern of <code>limit</code>
+                            and <code>marker</code> is to make an initial limited
+                            request and then to use the <code>id</code> of the last
+                            policy seen from the response as the <code>marker</code>
+                            parameter in a subsequent limited request.
+                        </para>
                     </wadl:doc>
                 </param>
-                <param name="level" style="query" required="false">
+                <param name="marker" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A enforcement level (number) for filtering the returned policies.</para>
+                        <para>
+                            Specifies the <code>id</code> of the last-seen policy.
+                            The typical pattern of <code>limit</code> and
+                            <code>marker</code> is to make an initial limited
+                            request and then to use the <code>id</code> of the last
+                            policy from the response as the <code>marker</code>
+                            parameter in a subsequent limited request.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="sort_keys" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook"
+                        xml:lang="EN">
+                        <para>Sorts the policy list by one or more of attributes:
+                            <code>name</code>, <code>type</code>, <code>level</code>,
+                            <code>created_time</code>, <code>updated_time</code>,
+                            <code>deleted_time</code>, <code>cooldown</code>.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="sort_dir" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>The sort direction of the policy list.  Either
+                            <code>asc</code> (ascending) or <code>desc</code>
+                            (descending).
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="filters" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Filters to apply on the returned policies. Each
+                            filter is in the form of key-value pair, where the
+                            key can be one of <code>name</code>, <code>type</code>,
+                            <code>level</code>, <code>cooldown</code>,
+                            <code>created_time</code>, <code>updated_time</code>,
+                            <code>deleted_time</code>.
+                        </para>
                     </wadl:doc>
                 </param>
                 <param name="show_deleted" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Specifies whether deleted policies are to be listed.</para>
+                        <para>Specifies whether deleted policies are to be
+                            listed.</para>
                     </wadl:doc>
                 </param>
             </representation>
@@ -723,11 +823,12 @@ name could be delayed for an unspecified time.</para></note>'>
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                     <xsdxt:code href="samples/policy_list_resp.json"/>
                 </wadl:doc>
-                <param name="profiles" style="query" required="false">
+                <param name="policies" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>
-                            List of policy records where each record contains fields like <code>id</code>, <code>name</code>, <code>type</code>,
-                            <code>spec</code>, <code>level</code> etc.
+                        <para>List of policy records where each record contains fields
+                            like <code>id</code>, <code>name</code>, <code>type</code>,
+                            <code>spec</code>, <code>level</code>, <code>cooldown</code>
+                            etc.
                         </para>
                     </wadl:doc>
                 </param>
@@ -743,24 +844,38 @@ name could be delayed for an unspecified time.</para></note>'>
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                     <xsdxt:code href="samples/policy_create.json"/>
                 </wadl:doc>
-                <param name="name" style="plain" required="true">
+                <param name="policy" style="plain" required="true">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Name for the newly created policy.</para>
-                    </wadl:doc>
-                </param>
-                <param name="type" style="plain" required="true">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Name of policy type to be used for the policy.</para>
-                    </wadl:doc>
-                </param>
-                <param name="spec" style="plain" required="true">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Detailed specification based on the chosen policy type.</para>
-                    </wadl:doc>
-                </param>
-                <param name="level" style="plain" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A number representing the default enforcement level.</para>
+                        <para>A map that contains the following keys and values that specify
+                            the details of the policy to be created:</para>
+                        <itemizedlist xml:id="policy_body">
+                            <title>Policy body</title>
+                            <listitem>
+                                <para>
+                                    <code>name</code> Name for the newly created policy. (required).
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>type</code> Name of policy type to be used for the policy. (required).
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>spec</code> Detailed specification based on the chosen policy type. (required).
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>level</code> A number representing the default enforcement level. (optional).
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>cooldown</code> A number representing the default cooldown seconds. (optional).
+                                </para>
+                            </listitem>
+                        </itemizedlist>
                     </wadl:doc>
                 </param>
             </representation>
@@ -772,7 +887,56 @@ name could be delayed for an unspecified time.</para></note>'>
                 </wadl:doc>
                 <param name="policy" style="plain" required="true">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A dictionary containing the <code>id</code> of and <code>link</code> to the policy.</para>
+                        <para>A map that contains the following keys and values that provides the 
+                            details of the policy that is created:</para>
+                        <itemizedlist xml:id="policy_response_body">
+                            <title>Policy Create Response</title>
+                            <listitem>
+                                <para>
+                                    <code>id</code> An unique ID for the newly created policy.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>name</code> Name for the newly created policy.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>type</code> Name of policy type referenced by the policy.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>spec</code> Detailed specification based on the chosen policy type.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>level</code> A number representing the default enforcement level.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>cooldown</code> A number representing the default cooldown seconds.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>created_time</code> UTC timestamp when the policy is created.
+                                </para>
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    <code>updated_time</code> UTC timestamp when the policy is updated.
+                                </para>
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    <code>deleted_time</code> UTC timestamp when the policy is deleted.
+                                </para>
+                            </listitem>
+                        </itemizedlist>
                     </wadl:doc>
                 </param>
             </representation>
