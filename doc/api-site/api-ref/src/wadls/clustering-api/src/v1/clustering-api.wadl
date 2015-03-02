@@ -589,29 +589,37 @@ name could be delayed for an unspecified time.</para></note>'>
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                     <xsdxt:code href="samples/profile_create.json"/>
                 </wadl:doc>
-                <param name="name" style="plain" required="true">
+                <param name="profile" style="plain" required="true">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Name for the profile to be created.</para>
-                    </wadl:doc>
-                </param>
-                <param name="type" style="plain" required="true">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Name of profile type to be used for the profile.</para>
-                    </wadl:doc>
-                </param>
-                <param name="spec" style="plain" required="true">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Detailed specification based on the chosen profile type.</para>
-                    </wadl:doc>
-                </param>
-                <param name="permission" style="plain" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A string to be interpreted as a permission.</para>
-                    </wadl:doc>
-                </param>
-                <param name="tags" style="plain" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A list of key-value pairs to be associated with the profile.</para>
+                        <para>A map that contains details for the profile to be created.</para>
+                        <itemizedlist xml:id="profile_body">
+                            <title>Profile Body</title>
+                            <listitem>
+                                <para>
+                                    <code>name</code> Name for the profile to be created. (required).
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>type</code> Name of profile type to be used for the profile. (required).
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>spec</code> Detailed specification based on the chosen profile type. (required).
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>permission</code> A string representing the default permission of the proflie. (optional).
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>tags</code> A list of key-value pairs to be associated with the profile. (optional).
+                                </para>
+                            </listitem>
+                        </itemizedlist>
                     </wadl:doc>
                 </param>
             </representation>
@@ -623,7 +631,55 @@ name could be delayed for an unspecified time.</para></note>'>
                 </wadl:doc>
                 <param name="profile" style="plain" required="true">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A dictionary containing the <code>id</code> of and <code>link</code> to the profile.</para>
+                        <para>A dictionary containing the details of the profile created.</para>
+                        <itemizedlist xml:id="profile_response_body">
+                            <title>Profile Create Response</title>
+                            <listitem>
+                                <para>
+                                    <code>id</code> An unique ID for the newly created profile.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>name</code> Name for the newly created profile.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>type</code> Name of policy type referenced by the profile.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>spec</code> Detailed specification based on the chosen profile type.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>permission</code> A string representing the permission of the profile.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>tags</code> A list of key-value pairs attached to the profile.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>created_time</code> UTC timestamp when the profile is created.
+                                </para>
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    <code>updated_time</code> UTC timestamp when the profile is updated.
+                                </para>
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    <code>deleted_time</code> UTC timestamp when the profile is deleted.
+                                </para>
+                            </listitem>
+                        </itemizedlist>
                     </wadl:doc>
                 </param>
             </representation>
@@ -867,17 +923,17 @@ name could be delayed for an unspecified time.</para></note>'>
                             </listitem>
                             <listitem>
                                 <para>
-                                    <code>created_time</code> UTC timestamp when the profile is created.
+                                    <code>created_time</code> UTC timestamp when the policy is created.
                                 </para>
                             </listitem>
                              <listitem>
                                 <para>
-                                    <code>updated_time</code> UTC timestamp when the profile is updated.
+                                    <code>updated_time</code> UTC timestamp when the policy is updated.
                                 </para>
                             </listitem>
                              <listitem>
                                 <para>
-                                    <code>deleted_time</code> UTC timestamp when the profile is deleted.
+                                    <code>deleted_time</code> UTC timestamp when the policy is deleted.
                                 </para>
                             </listitem>
                         </itemizedlist>
