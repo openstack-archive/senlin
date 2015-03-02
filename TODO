@@ -69,6 +69,7 @@ OSLO
 ----
 
   - Migrate to oslo.policy 
+  - Default logging formatter is not compatible with new version of oslo_log/oslo_config
 
 LOW PRIORITY
 ============
