@@ -880,7 +880,7 @@ name could be delayed for an unspecified time.</para></note>'>
                 </param>
             </representation>
         </request>
-        <response status="201">
+        <response status="200">
             <representation mediaType="application/json">
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                     <xsdxt:code href="samples/policy_create_resp.json" />
