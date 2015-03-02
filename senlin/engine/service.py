@@ -408,7 +408,7 @@ class EngineService(service.Service):
                        tags=None, timeout=None):
         db_profile = self.profile_find(context, profile_id)
 
-        size = utils.parse_int_param(consts.SIZE, size)
+        size = utils.parse_int_param(consts.CLUSTER_SIZE, size)
         timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
 
         LOG.info(_LI('Creating cluster %s'), name)
