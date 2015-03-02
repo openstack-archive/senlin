@@ -108,6 +108,8 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'marker': 'fake marker',
             'sort_keys': 'fake sort keys',
             'sort_dir': 'fake sort dir',
+            'show_deleted': False,
+            'filters': None,
             'balrog': 'you shall not pass!'
         }
         req = self._get('/profiles', params=params)
@@ -468,13 +470,10 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
                         json.dumps(body))
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        ex = self.assertRaises(exc.HTTPBadRequest, self.controller.update,
-                               req, tenant_id=self.tenant,
-                               profile_id=pid, body=body)
-
-        self.assertEqual('No profile name specified', six.text_type(ex))
-        self.assertFalse(mock_call.called)
+        self.patchobject(rpc_client.EngineClient, 'call', return_value={})
+        result = self.controller.update(req, tenant_id=self.tenant,
+                                        profile_id=pid, body=body)
+        self.assertEqual({'profile': {}}, result)
 
     def test_profile_update_no_spec(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -490,7 +489,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                         json.dumps(body))
 
         engine_response = {
-            u'id': pid,
+            u'id': 'dddd-eeee-ffff',
             u'name': u'new_profile',
             u'type': u'test_profile_type',
             u'spec': {
