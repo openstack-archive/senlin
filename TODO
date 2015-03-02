@@ -30,6 +30,11 @@ POLICY
   - healthy policy[Liuh]
   - Formalize policy enforcement levels [Qiming]
 
+TEST CASES
+----------
+  - Add test case that profile_update will create a new profile when spec is
+    different.
+
 MIDDLE PRIORITY
 ===============
 
