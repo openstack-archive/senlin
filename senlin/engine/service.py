@@ -464,36 +464,74 @@ class EngineService(service.Service):
         return result
 
     @request_context
-    def cluster_update(self, context, identity, profile_id):
+    def cluster_update(self, context, identity, name=None, profile_id=None,
+                       parent=None, tags=None, timeout=None):
+        def update_cluster_properties(cluster):
+            changed = False
+            # Check out if fields other than profile_id have to be changed
+            if name is not None and name != cluster.name:
+                cluster.name = name
+                changed = True
+
+            if parent is not None:
+                db_parent = self.cluster_find(context, parent)
+                if cluster.parent != db_parent.id:
+                    cluster.parent = db_parent.id
+                    changed = True
+
+            if tags is not None and tags != cluster.tags:
+                cluster.tags = tags
+                changed = True
+
+            if timeout is not None and timeout != cluster.timeout:
+                cluster.timeout = timeout
+                changed = True
+
+            if changed is True:
+                cluster.store(context)
+
+            return
+
         # Get the database representation of the existing cluster
         db_cluster = self.cluster_find(context, identity)
-        db_profile = self.profile_find(context, profile_id)
-
-        LOG.info(_LI('Updating cluster %s'), db_cluster.name)
-
         cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
-        if cluster.status == cluster.ERROR:
-            msg = _('Updating a cluster when it is error')
-            raise exception.NotSupported(feature=msg)
 
         if cluster.status == cluster.DELETED:
             msg = _('Updating a cluster which has been deleted')
             raise exception.NotSupported(feature=msg)
 
-        kwargs = {
-            'profile_id': db_profile.id
-        }
+        update_cluster_properties(cluster)
+
+        if profile_id is None or profile_id == cluster.profile_id:
+            return
+
+        if cluster.status == cluster.ERROR:
+            msg = _('Updating a cluster when it is in error state')
+            raise exception.NotSupported(feature=msg)
+
+        new_profile = self.profile_find(context, profile_id)
+        old_profile = self.profile_find(context, cluster.profile_id)
+        if new_profile.type != old_profile.type:
+            msg = _('Cannot upgrade a cluster to a different profile type, '
+                    'operation aborted.')
+            raise exception.ProfileTypeNotMatch(message=msg)
+
+        LOG.info(_LI("Updating cluster '%(cluster)s' to profile "
+                     "'%(profile)s'.") % {'cluster': identity,
+                                          'profile': profile_id})
 
         action = action_mod.Action(context, 'CLUSTER_UPDATE',
                                    target=cluster.id,
                                    cause=action_mod.CAUSE_RPC,
-                                   **kwargs)
+                                   inputs={'profile_id': new_profile.id})
         action.store(context)
 
+        # TODO(anyone): Uncomment the following line when update action
+        # is implemented.
         # dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-        #                  None, action_id=action.id)
+        #                   None, action_id=action.id)
 
-        return cluster.id
+        return
 
     @request_context
     def cluster_add_nodes(self, context, identity, nodes):
@@ -697,8 +735,9 @@ class EngineService(service.Service):
                 raise exception.ProjectNotMatch(message=msg)
 
             if profile_id != db_cluster.profile_id:
-                node_profile = self.profile_find(profile_id)
-                cluster_profile = self.profile_find(db_cluster.profile_id)
+                node_profile = self.profile_find(context, profile_id)
+                cluster_profile = self.profile_find(context,
+                                                    db_cluster.profile_id)
                 if node_profile.type != cluster_profile.type:
                     msg = _('Node and cluster have different profile type, '
                             'operation aborted.')
