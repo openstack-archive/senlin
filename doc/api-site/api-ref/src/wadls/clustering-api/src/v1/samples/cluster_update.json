@@ -1,8 +1,9 @@
 {
-    "profile_id": "e8d140ba-40de-8abd-4323-3eb7384f9751",
-    "size": "6",
-    "tags": {
-        "new_key": "value",
+    "cluster": {
+        "name": null,
+        "parent": null,
+        "profile_id": null,
+        "tags": {},
+        "timeout": "30"
     }
-    "timeout": "60"
 }

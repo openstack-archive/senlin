@@ -361,7 +361,7 @@
             </representation>
         </response>
     </method>
-    <method name="POST" id="cluster_update">
+    <method name="PATCH" id="cluster_update">
         <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Update cluster">
             <para role="shortdesc">Updates a specified cluster.</para>
         </wadl:doc>
@@ -370,24 +370,44 @@
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                     <xsdxt:code href="samples/cluster_update.json"/>
                 </wadl:doc>
-                <param name="profile_id" style="plain" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>ID of profile to be used for the updated cluster.</para>
-                    </wadl:doc>
+                <param name="cluster" style="plain" required="true">
                 </param>
-                <param name="size" style="plain" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>New size for the updated cluster.</para>
-                    </wadl:doc>
-                </param>
-                <param name="tags" style="plain" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>The tags to be associated with the cluster.</para>
-                    </wadl:doc>
-                </param>
-                <param name="timeout" style="plain" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>The timeout for cluster update in minutes.</para>
+                        <para>A map that contains details for the cluster to be created.</para>
+                        <itemizedlist xml:id="cluster_update_body">
+                            <title>Cluster Update Request Body</title>
+                            <listitem>
+                                <para>
+                                    <code>name</code> New name for the cluster to be updated, if provided.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>profile_id</code> New profile to be used for the cluster as a
+                                    whole. Note that the new profile specified has to be of the same type
+                                    of the original profile.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>parent</code> (New) parent cluster ID for the cluster to be
+                                    updated, if provided. This is intended to make the targeted cluster
+                                    a nested one inside another cluster.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>tags</code> New tags to be associated to the cluster being
+                                    updated, if provided. The value should be a list of key-value pairs.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>timeout</code> New timeout value (in minutes) for future cluster
+                                    operations (including this update operation), if specified.
+                                </para>
+                            </listitem>
+                        </itemizedlist>
                     </wadl:doc>
                 </param>
             </representation>
