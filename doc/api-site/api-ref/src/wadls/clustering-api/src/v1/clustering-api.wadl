@@ -183,56 +183,91 @@ name could be delayed for an unspecified time.</para></note>'>
             <para role="shortdesc">Lists clusters.</para>
         </wadl:doc>
         <request>
-            <representation mediaType="application/xml">
+            <representation mediaType="application/json">
                 <param name="limit" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>
-                            Limits the number of clusters that appear on a page to this value. The typical pattern of <code>limit</code> and 
-                            <code>marker</code> is to make an initial limited request and then to use the <code>id</code> of the last cluster
-                            from the response as the <code>marker</code> parameter in a subsequent limited request.
+                        <para>Limits the number of clusters that appear on a page to this value. The
+                            typical pattern of <code>limit</code> and <code>marker</code> is to make
+                            an initial limited request and then to use the <code>id</code> of the
+                            last cluster from the response as the <code>marker</code> parameter in a
+                            subsequent limited request.
                         </para>
                     </wadl:doc>
                 </param>
                 <param name="marker" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>
-                            Specifies the <code>id</code> of the last-seen cluster. The typical pattern of <code>limit</code> and <code>marker</code>
-                            is to make an initial limited request and then to use the <code>id</code> of the last cluster from the response as
-                            the <code>marker</code> parameter in a subsequent limited request.
+                        <para>Specifies the <code>id</code> of the last-seen cluster. The typical
+                            pattern of <code>limit</code> and <code>marker</code> is to make an
+                            initial limited request and then to use the <code>id</code> of the last
+                            cluster from the response as the <code>marker</code> parameter in a
+                            subsequent limited request.
                         </para>
                     </wadl:doc>
                 </param>
                 <param name="filters" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Filters to apply on the returned clusters. Each filter is in the form of key-value pair.</para>
+                        <para>Filters to apply on the returned clusters. Each filter is in the form
+                            of key-value pair, where the keys can be one of the following values:</para>
+                        <itemizedlist xml:id="cluster_query_param">
+                            <title>Cluster Query Filters</title>
+                            <listitem>
+                                <para>
+                                    <code>name</code> Name of cluster, may appear more than once.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>status</code> Status of cluster, may appear more than once.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>project</code> Project of cluster, may appear more than once.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>user</code> User who is owner of the cluster, may appear
+                                    more than once.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>parent</code> ID of parent cluster of the cluster, may
+                                    appear more than once. This is used for nested clusters.
+                                </para>
+                            </listitem>
+                        </itemizedlist>
                     </wadl:doc>
                 </param>
                 <param name="show_deleted" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>
-                            Specifies whether to include deleted clusters in the cluster list. Set to <code>False</code> by default, so that
-                            deleted clusters are not shown in the results of the &GET; request unless you set this value to <code>True</code>.
+                        <para>Specifies whether to include deleted clusters in the cluster list. Set
+                            to <code>False</code> by default, so that deleted clusters are not shown
+                            in the results of the &GET; request unless you set this value to
+                            <code>True</code>.
                         </para>
                     </wadl:doc>
                 </param>
                 <param name="show_nested" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>
-                            Specifies whether to include nested cluster in the cluster list.</para>
+                        <para>Specifies whether to include nested cluster in the cluster list.</para>
                     </wadl:doc>
                 </param>
                 <param name="sort_keys" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook"
                         xml:lang="EN">
                         <para>
-                            Sorts the cluster list by one of these attributes: <code>name</code>, <code>status</code>, <code>created_time</code>,
-                            or <code>updated_time</code>.
+                            Sorts the cluster list by one of these attributes: <code>name</code>,
+                            <code>status</code>, <code>created_time</code>, or <code>updated_time
+                            </code>.
                         </para>
                     </wadl:doc>
                 </param>
                 <param name="sort_dir" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>The sort direction of the cluster list.  Either <code>asc</code> (ascending) or <code>desc</code> (descending).
+                        <para>The sort direction of the cluster list.  Either <code>asc</code>
+                            (ascending) or <code>desc</code> (descending).
                         </para>
                     </wadl:doc>
                 </param>
@@ -245,9 +280,10 @@ name could be delayed for an unspecified time.</para></note>'>
                 </wadl:doc>
                 <param name="clusters" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>
-                            List of cluster records where each record contains fields like <code>created_time</code>, <code>id</code>,
-                            <code>name</code>, <code>profile_id</code>, <code>size</code>, <code>status</code>, <code>status_reason</code>.
+                        <para>List of cluster records where each record contains fields like
+                            <code>created_time</code>, <code>id</code>, <code>name</code>,
+                            <code>profile_id</code>, <code>size</code>, <code>nodes</code>,
+                            <code>status</code>, <code>status_reason</code> etc.
                         </para>
                     </wadl:doc>
                 </param>
