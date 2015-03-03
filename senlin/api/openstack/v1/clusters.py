@@ -157,13 +157,22 @@ class ClusterController(object):
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'cluster' key in request body."))
 
-        if consts.CLUSTER_PROFILE not in cluster_data:
-            raise exc.HTTPBadRequest(_("No cluster profile provided."))
-        profile = cluster_data[consts.CLUSTER_PROFILE]
+        size = cluster_data.get(consts.CLUSTER_SIZE)
+        if size is not None:
+            msg = _("Updating cluster size is not supported, please use "
+                    "cluster scaling operations instead.")
+            raise exc.HTTPBadRequest(msg)
 
-        self.rpc_client.cluster_update(req.context,
-                                       cluster_id,
-                                       profile)
+        name = cluster_data.get(consts.CLUSTER_NAME)
+        profile_id = cluster_data.get(consts.CLUSTER_PROFILE)
+        parent = cluster_data.get(consts.CLUSTER_PARENT)
+        tags = cluster_data.get(consts.CLUSTER_TAGS)
+        timeout = cluster_data.get(consts.CLUSTER_TIMEOUT)
+        if timeout is not None:
+            timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
+
+        self.rpc_client.cluster_update(req.context, cluster_id, name,
+                                       profile_id, parent, tags, timeout)
 
         raise exc.HTTPAccepted()
 
