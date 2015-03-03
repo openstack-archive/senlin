@@ -163,7 +163,7 @@ class LoadBalancingPolicy(base.Policy):
     }
 
     def __init__(self, type_name, name, **kwargs):
-        super(LoadBalancingPolicy, self).__init__(type_name, name, kwargs)
+        super(LoadBalancingPolicy, self).__init__(type_name, name, **kwargs)
 
         self.pool_spec = kwargs.get('pool', None)
         self.vip_spec = kwargs.get('vip', None)
