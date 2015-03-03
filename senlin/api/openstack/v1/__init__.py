@@ -133,7 +133,7 @@ class API(wsgi.Router):
             sub_mapper.connect("cluster_update",
                                "/clusters/{cluster_id}",
                                action="update",
-                               conditions={'method': 'PUT'})
+                               conditions={'method': 'PATCH'})
             sub_mapper.connect("cluster_action",
                                "/clusters/{cluster_id}/action",
                                action="action",
