@@ -19,6 +19,7 @@ from webob import exc
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import policies
 from senlin.common import exception as senlin_exc
+from senlin.common.i18n import _
 from senlin.common import policy
 from senlin.rpc import client as rpc_client
 from senlin.tests.apiv1 import shared
@@ -120,7 +121,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.controller.index(req, tenant_id=self.tenant)
 
-        rpc_call_args, _ = mock_call.call_args
+        rpc_call_args, w = mock_call.call_args
         engine_args = rpc_call_args[1][1]
 
         self.assertEqual(6, len(engine_args))
@@ -147,7 +148,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.controller.index(req, tenant_id=self.tenant)
 
-        rpc_call_args, _ = mock_call.call_args
+        rpc_call_args, w = mock_call.call_args
         engine_args = rpc_call_args[1][1]
         self.assertIn('filters', engine_args)
 
@@ -445,14 +446,14 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         args = copy.deepcopy(body['policy'])
         args['identity'] = pid
-        args['level'] = 20 
-        args['cooldown'] = None 
+        args['level'] = 20
+        args['cooldown'] = None
         mock_call.assert_called_with(req.context, ('policy_update', args))
 
         expected = {'policy': engine_resp}
         self.assertEqual(expected, result)
 
-    def test_policy_update_no_name(self, mock_enforce):
+    def test_policy_update_with_spec(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         pid = 'aaaa-bbbb-cccc'
         body = {
@@ -460,13 +461,19 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._patch('/policies/%(policy_id)s' % {'policy_id': pid},
-                        json.dumps(body))
+                          json.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        result = self.controller.update(req, tenant_id=self.tenant,
-                                        policy_id=pid, body=body)
-        self.assertIsNotNone(result)
-        self.assertTrue(mock_call.called)
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.update,
+                               req, tenant_id=self.tenant, policy_id=pid,
+                               body=body)
+
+        msg = _("Updating the spec of a policy is not supported because "
+                "it may cause state conflicts in engine.")
+
+        self.assertEqual(msg, six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     def test_policy_update_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -478,7 +485,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
         req = self._patch('/policies/%(policy_id)s' % {'policy_id': pid},
-                        json.dumps(body))
+                          json.dumps(body))
 
         error = senlin_exc.PolicyNotFound(policy=pid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')

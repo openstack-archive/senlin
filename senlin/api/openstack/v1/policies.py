@@ -129,6 +129,12 @@ class PolicyController(object):
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'policy' key in request body."))
 
+        spec = policy_data.get(consts.POLICY_SPEC)
+        if spec is not None:
+            msg = _("Updating the spec of a policy is not supported because "
+                    "it may cause state conflicts in engine.")
+            raise exc.HTTPBadRequest(msg)
+
         name = policy_data.get(consts.POLICY_NAME)
 
         level = policy_data.get(consts.POLICY_LEVEL)
