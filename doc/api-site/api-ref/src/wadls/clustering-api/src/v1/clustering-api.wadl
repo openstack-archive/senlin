@@ -8,15 +8,6 @@
 <!ENTITY POST   '<command xmlns="http://docbook.org/ns/docbook">POST</command>'>
 <!ENTITY DELETE '<command xmlns="http://docbook.org/ns/docbook">DELETE</command>'>
 
-<!-- Common descriptions for cases where a user supplies a new stack name -->
-<!ENTITY CLUSTER_NAME_FORMAT 'The value must be unique within a project. The
-name must start with an ASCII letter and can contain ASCII letters, digits,
-underscores, periods, and hyphens. Specifically, the name must match the
-regular expression <code>^[a-zA-Z][a-zA-Z0-9_.-]*$</code>.'>
-<!ENTITY CLUSTER_NAME_CREATE_DESC 'A name for the new cluster. 
-&CLUSTER_NAME_FORMAT; <note><para>Deleting or abandoning a cluster may not
-make the cluster name available for reuse, or the ability to reuse a cluster
-name could be delayed for an unspecified time.</para></note>'>
 ]>
 
 <application xmlns="http://wadl.dev.java.net/2009/02"
@@ -278,7 +269,7 @@ name could be delayed for an unspecified time.</para></note>'>
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                     <xsdxt:code href="samples/cluster_list_resp.json"/>
                 </wadl:doc>
-                <param name="clusters" style="query" required="false">
+                <param name="clusters" style="plain" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                         <para>List of cluster records where each record contains fields like
                             <code>created_time</code>, <code>id</code>, <code>name</code>,
@@ -299,41 +290,60 @@ name could be delayed for an unspecified time.</para></note>'>
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                     <xsdxt:code href="samples/cluster_create.json"/>
                 </wadl:doc>
-                <param name="name" style="plain" required="true">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>&CLUSTER_NAME_CREATE_DESC;</para>
-                    </wadl:doc>
+                <param name="cluster" style="plain" required="true">
                 </param>
-                <param name="profile_id" style="plain" required="true">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>ID of profile to be used for this cluster.</para>
-                    </wadl:doc>
-                </param>
-                <param name="size" style="plain" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Initial size of the cluster.</para>
-                    </wadl:doc>
-                </param>
-                <param name="timeout" style="plain" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Cluster creation timeout as number of minutes.</para>
-                    </wadl:doc>
-                </param>
-                <param name="tags" style="plain" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A collection of key-value pairs to be associated with the stack.</para>
+                        <para>A map that contains details for the cluster to be created.</para>
+                        <itemizedlist xml:id="cluster_create_body">
+                            <title>Cluster Create Request Body</title>
+                            <listitem>
+                                <para>
+                                    <code>name</code> Name for the cluster to be created. (required).
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>parent</code> ID of parent cluster if the new cluster is to be
+                                    a nested cluster. (optional).
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>profile_id</code> ID or name of profile to be used by the cluster.
+                                    (required).
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>size</code> Initial size of the cluster, default to 0.  (required).
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>timeout</code> Cluster creation timeout as number of minutes.
+                                    Default to 60. (optional).
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>tags</code> List of key-value pairs that will be associated with
+                                    the cluster. (optional).
+                                </para>
+                            </listitem>
+                        </itemizedlist> 
                     </wadl:doc>
                 </param>
             </representation>
         </request>
-        <response status="201">
+        <response status="200">
             <representation mediaType="application/json">
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                     <xsdxt:code href="samples/cluster_create_resp.json" />
                 </wadl:doc>
                 <param name="cluster" style="plain" required="true">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A dictionary containing the <code>id</code> of and <code>link</code> to the cluster.</para>
+                        <para>A map containing the <code>id</code>, <code>name</code>, <code>status</code>,
+                            and many other fields of the cluster under creation.</para>
                     </wadl:doc>
                 </param>
             </representation>

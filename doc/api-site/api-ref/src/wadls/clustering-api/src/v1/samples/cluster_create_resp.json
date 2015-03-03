@@ -1,11 +1,25 @@
 {
     "cluster": {
-        "id": "3095aefc-09fb-4bc7-b1f0-f21a304e864c",
-        "links": [
-            {
-                "href": "http://192.168.12.34:8778/v1/eb1c63a4f77141548385f113a28f0f52/clusters/3095aefc-09fb-4bc7-b1f0-f21a304e864c",
-                "rel": "self"
-            }
-        ]
+        "action": "bbf4558b-9fa3-482a-93c2-a4aa5cc85317", 
+        "created_time": null, 
+        "data": {}, 
+        "deleted_time": null, 
+        "domain": "", 
+        "id": "45edadcb-c73b-4920-87e1-518b2f29f54b", 
+        "init_time": null, 
+        "name": "test_cluster", 
+        "nodes": [], 
+        "parent": null, 
+        "policies": [], 
+        "profile_id": "edc63d0a-2ca4-48fa-9854-27926da76a4a", 
+        "profile_name": "mystack", 
+        "project": "6e18cc2bdbeb48a5b3cad2dc499f6804", 
+        "size": 1, 
+        "status": "INIT", 
+        "status_reason": "Initializing", 
+        "tags": {}, 
+        "timeout": null, 
+        "updated_time": null, 
+        "user": "admin"
     }
 }
