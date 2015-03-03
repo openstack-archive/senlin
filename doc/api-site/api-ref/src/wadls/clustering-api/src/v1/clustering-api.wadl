@@ -701,7 +701,7 @@ name could be delayed for an unspecified time.</para></note>'>
             </representation>
         </response>
     </method>
-    <method name="POST" id="profile_update">
+    <method name="PATCH" id="profile_update">
         <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Update profile">
             <para role="shortdesc">Update the specified profile.</para>
         </wadl:doc>
@@ -959,7 +959,7 @@ name could be delayed for an unspecified time.</para></note>'>
             </representation>
         </response>
     </method>
-    <method name="POST" id="policy_update">
+    <method name="PATCH" id="policy_update">
         <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Update policy">
             <para role="shortdesc">Update the specified policy.</para>
         </wadl:doc>
