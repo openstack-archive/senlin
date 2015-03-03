@@ -951,24 +951,44 @@ name could be delayed for an unspecified time.</para></note>'>
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                     <xsdxt:code href="samples/policy_update.json"/>
                 </wadl:doc>
-                <param name="name" style="plain" required="false">
+                <param name="policy" style="plain" required="true">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>New name, if specified, for the target policy.</para>
-                    </wadl:doc>
-                </param>
-                <param name="spec" style="plain" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Detailed specification based on the chosen policy type.</para>
-                    </wadl:doc>
-                </param>
-                <param name="level" style="plain" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A new default enforcement level for the policy.</para>
+                        <para>A map that contains the following keys and values that specify
+                            the details of the policy to be updated:</para>
+                        <itemizedlist xml:id="policy_update_body">
+                            <title>Policy body</title>
+                            <listitem>
+                                <para>
+                                    <code>name</code> New name for the policy, if specified.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>level</code> New enforcement level for the policy, if specified.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>cooldown</code> New cooldown seconds for the policy, if specified.
+                                </para>
+                            </listitem>
+                        </itemizedlist>
                     </wadl:doc>
                 </param>
             </representation>
         </request>
-        <response status="202"/>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <para>A policy record that contains fields like <code>id</code>,
+                        <code>name</code>, <code>type</code>, <code>spec</code>, <code>level</code>,
+                        <code>cooldown</code>, <code>created_time</code>, <code>updated_time</code>,
+                        <code>deleted_time</code> etc.
+                    </para>
+                    <xsdxt:code href="samples/policy_update_resp.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
     </method>
     <method name="DELETE" id="policy_delete">
         <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Delete policy">
