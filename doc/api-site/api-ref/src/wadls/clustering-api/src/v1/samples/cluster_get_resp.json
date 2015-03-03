@@ -1,19 +1,26 @@
 {
     "cluster": {
-        "created_time": "2014-06-03T20:59:46Z",
-        "id": "3095aefc-09fb-4bc7-b1f0-f21a304e864c",
-        "links": [
-            {
-                "href": "http://192.168.12.34:8778/v1/eb1c63a4f77141548385f113a28f0f52/clusters/3095aefc-09fb-4bc7-b1f0-f21a304e864c",
-                "rel": "self"
-            }
-        ],
+        "created_time": "2015-03-03T06:24:31.000000",
+        "data": {},
+        "deleted_time": null,
+        "domain": "",
+        "id": "45edadcb-c73b-4920-87e1-518b2f29f54b",
+        "init_time": "2015-03-03T06:24:27.000000",
         "name": "test_cluster",
-        "profile_id": "40be8d1a-3eb9-40de-8abd-43237517384f",
-        "size": "5",
+        "nodes": [
+            "a0d91878-9154-4c7e-b6af-82bba7772b5e"
+        ],
+        "parent": null,
+        "policies": [],
+        "profile_id": "edc63d0a-2ca4-48fa-9854-27926da76a4a",
+        "profile_name": "mystack",
+        "project": "6e18cc2bdbeb48a5b3cad2dc499f6804",
+        "size": 2,
         "status": "ACTIVE",
-        "status_reason": "Cluster created successfully",
-        "timeout_mins": "60",
-        "updated_time": ""
+        "status_reason": "Cluster creation succeeded",
+        "tags": {},
+        "timeout": null,
+        "updated_time": null,
+        "user": "admin"
     }
 }
