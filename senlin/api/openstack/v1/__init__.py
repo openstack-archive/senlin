@@ -107,7 +107,7 @@ class API(wsgi.Router):
             sub_mapper.connect("policy_update",
                                "/policies/{policy_id}",
                                action="update",
-                               conditions={'method': 'PUT'})
+                               conditions={'method': 'PATCH'})
             sub_mapper.connect("policy_delete",
                                "/policies/{policy_id}",
                                action="delete",
