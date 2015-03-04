@@ -34,12 +34,15 @@ pip install -r requirements.txt
 ```
 
 4. Create keystone service for senlin
+There is a setup-service script under tools folder to do this for you, you should use the script to automate this step and step 5 for you.
 
 ```
 keystone service-create --type clustering --name senlin
 ```
 
 5. Create keystone endpoint for senlin
+There is a setup-service script under tools folder to do this for you, you should use the script to automate step 4 and this step for you.
+
 
 ```
 keystone endpoint-create --region RegionOne --service <service_id> --publicurl 'http://<your_ip>:8778/v1/$(tenant_id)s' --adminurl 'http://<your_ip>:8778/v1/$(tenant_id)s' --internalurl 'http://<your_ip>:8778/v1/$(tenant_id)s'
