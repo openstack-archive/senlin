@@ -16,22 +16,54 @@ IRC Channel: #senlin
 Installation
 -----
 1. Get senlin code from github
-    git clone https://github.com/tengqm/senlin.git
+
+```
+git clone https://github.com/tengqm/senlin.git
+```
+
 2. Install requirements
-    pip install -r requirements.txt
+
+```
+pip install -r requirements.txt
+```
+
 3. Install senlin
-    ./install.sh
+
+```
+./install.sh
+```
+
 4. Create keystone service for senlin
-    keystone service-create --type clustering --name senlin
+
+```
+keystone service-create --type clustering --name senlin
+```
+
 5. Create keystone endpoint for senlin
-    keystone endpoint-create --region RegionOne --service <service_id> --publicurl 'http://<your_ip>:8778/v1/$(tenant_id)s' --adminurl 'http://<your_ip>:8778/v1/$(tenant_id)s' --internalurl 'http://<your_ip>:8778/v1/$(tenant_id)s'
+
+```
+keystone endpoint-create --region RegionOne --service <service_id> --publicurl 'http://<your_ip>:8778/v1/$(tenant_id)s' --adminurl 'http://<your_ip>:8778/v1/$(tenant_id)s' --internalurl 'http://<your_ip>:8778/v1/$(tenant_id)s'
+```
+
 6. Update configuration file /etc/senlin/senlin.conf according to your system
-Note that the item policy_dir should be pointed to a folder which include file policy.json
+* Note that the item policy_dir should be pointed to a folder which include file policy.json
 7. Start senlin engine and api service
-    senlin-engine --config-file /etc/senlin/senlin.conf --log-file /tmp/senlin-api.log --debug
-    senlin-api --config-file /etc/senlin/senlin.conf --log-file /tmp/senlin-api.log --debug
+
+```
+senlin-engine --config-file /etc/senlin/senlin.conf --log-file /tmp/senlin-api.log --debug
+senlin-api --config-file /etc/senlin/senlin.conf --log-file /tmp/senlin-api.log --debug
+```
+
 8. Get senlin client code
-    git clone https://github.com/tengqm/python-senlinclient.git
+
+```
+git clone https://github.com/tengqm/python-senlinclient.git
+```
+
 9. Install senlin client
-    python setup.py install
+
+```
+python setup.py install
+```
+
 10. You are ready to play with senlin right now
