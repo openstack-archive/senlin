@@ -28,8 +28,9 @@
                 </param>
                 <resource id="profile_types" path="profile_types">
                     <method href="#profile_type_list"/>
-                    <resource path="{type_name}" id="profile_schema">
-                        <param name="type_name" style="template" required="true">
+                    <resource path="{profile_type}" id="profile_type_schema">
+                        <param name="profile_type" style="template" required="true"
+                            xmlns="http://wadl.dev.java.net/2009/02">
                             <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                                 <para>The name of a profile type.</para>
                             </wadl:doc>
@@ -39,8 +40,9 @@
                 </resource>
                 <resource id="policy_types" path="policy_types">
                     <method href="#policy_type_list"/>
-                    <resource path="{type_name}" id="policy_schema">
-                        <param name="type_name" style="template" required="true">
+                    <resource path="{policy_type}" id="policy_type_schema">
+                        <param name="policy_type" style="template" required="true"
+                            xmlns="http://wadl.dev.java.net/2009/02">
                             <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                                 <para>The name of a policy type.</para>
                             </wadl:doc>
@@ -291,7 +293,6 @@
                     <xsdxt:code href="samples/cluster_create.json"/>
                 </wadl:doc>
                 <param name="cluster" style="plain" required="true">
-                </param>
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                         <para>A map that contains details for the cluster to be created.</para>
                         <itemizedlist xml:id="cluster_create_body">
@@ -371,7 +372,6 @@
                     <xsdxt:code href="samples/cluster_update.json"/>
                 </wadl:doc>
                 <param name="cluster" style="plain" required="true">
-                </param>
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                         <para>A map that contains details for the cluster to be created.</para>
                         <itemizedlist xml:id="cluster_update_body">
@@ -548,25 +548,12 @@
             </representation>
         </response>
     </method>
-    <method name="GET" id="policy_type_template">
-        <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="Show policy template">
-            <para role="shortdesc">Shows the template representation for a specified policy type.</para>
-        </wadl:doc>
-        <response status="200">
-            <representation mediaType="application/json">
-                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                    <para>A template showing the template that can be used to create a policy.</para>
-                    <xsdxt:code href="samples/policy_type_template.json"/>
-                </wadl:doc>
-            </representation>
-        </response>
-    </method>
     <method name="GET" id="profile_list">
         <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN" title="List profiles">
             <para role="shortdesc">List profiles.</para>
         </wadl:doc>
         <request>
-            <representation mediaType="application/xml">
+            <representation mediaType="application/json">
                 <param name="limit" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                         <para>
