@@ -23,10 +23,7 @@
                 <wadl:method href="#profile_type_list"/>
             </wadl:resource>
             <wadl:resource href="../wadls/clustering-api/src/v1/clustering-api.wadl#profile_schema">
-                <wadl:method href="#profile_type_get"/>
-            </wadl:resource>
-            <wadl:resource href="../wadls/clustering-api/src/v1/clustering-api.wadl#profile_template">
-                <wadl:method href="#profile_type_template"/>
+                <wadl:method href="#profile_type_schema"/>
             </wadl:resource>
         </wadl:resources>
     </section>
@@ -51,10 +48,7 @@
                 <wadl:method href="#policy_type_list"/>
             </wadl:resource>
             <wadl:resource href="../wadls/clustering-api/src/v1/clustering-api.wadl#policy_schema">
-                <wadl:method href="#policy_type_get"/>
-            </wadl:resource>
-            <wadl:resource href="../wadls/clustering-api/src/v1/clustering-api.wadl#policy_template">
-                <wadl:method href="#policy_type_template"/>
+                <wadl:method href="#policy_type_schema"/>
             </wadl:resource>
         </wadl:resources>
     </section>
@@ -82,6 +76,7 @@
             <wadl:resource href="../wadls/clustering-api/src/v1/clustering-api.wadl#cluster_id">
                 <wadl:method href="#cluster_get"/>
                 <wadl:method href="#cluster_update"/>
+                <wadl:method href="#cluster_action"/>
                 <wadl:method href="#cluster_delete"/>
             </wadl:resource>
         </wadl:resources>
@@ -101,28 +96,14 @@
             </wadl:resource>
         </wadl:resources>
     </section>
-    <section xml:id="cluster_nodes">
-        <title>Cluster Nodes</title>
-        <wadl:resources xmlns:wadl="http://wadl.dev.java.net/2009/02">
-            <wadl:resource href="../wadls/clustering-api/src/v1/clustering-api.wadl#cluster_nodes">
-                <wadl:method href="#cluster_add_node"/>
-            </wadl:resource>
-            <wadl:resource href="../wadls/clustering-api/src/v1/clustering-api.wadl#cluster_node_id">
-                <wadl:method href="#cluster_get_node"/>
-                <wadl:method href="#cluster_del_node"/>
-            </wadl:resource>
-        </wadl:resources>
-    </section>
     <section xml:id="cluster_policies">
         <title>Cluster Policies</title>
         <wadl:resources xmlns:wadl="http://wadl.dev.java.net/2009/02">
             <wadl:resource href="../wadls/clustering-api/src/v1/clustering-api.wadl#cluster_policies">
-                <wadl:method href="#cluster_list_policies"/>
-                <wadl:method href="#cluster_attach_policy"/>
+                <wadl:method href="#cluster_policy_list"/>
             </wadl:resource>
             <wadl:resource href="../wadls/clustering-api/src/v1/clustering-api.wadl#cluster_policy_id">
-                <wadl:method href="#cluster_get_policy"/>
-                <wadl:method href="#cluster_detach_policy"/>
+                <wadl:method href="#cluster_policy_get"/>
             </wadl:resource>
         </wadl:resources>
     </section>
