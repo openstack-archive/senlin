@@ -15,32 +15,32 @@ IRC Channel: #senlin
 
 Installation
 -----
-1. Get senlin code from github
+* Get senlin code from github
 
 ```
 git clone https://github.com/tengqm/senlin.git
 ```
 
-2. Install requirements
+* Install requirements
 
 ```
 pip install -r requirements.txt
 ```
 
-3. Install senlin
+* Install senlin
 
 ```
 ./install.sh
 ```
 
-4. Create keystone service for senlin
+* Create keystone service for senlin
 There is a setup-service script under tools folder to do this for you, you should use the script to automate this step and step 5 for you.
 
 ```
 keystone service-create --type clustering --name senlin
 ```
 
-5. Create keystone endpoint for senlin
+* Create keystone endpoint for senlin
 There is a setup-service script under tools folder to do this for you, you should use the script to automate step 4 and this step for you.
 
 
@@ -48,25 +48,26 @@ There is a setup-service script under tools folder to do this for you, you shoul
 keystone endpoint-create --region RegionOne --service <service_id> --publicurl 'http://<your_ip>:8778/v1/$(tenant_id)s' --adminurl 'http://<your_ip>:8778/v1/$(tenant_id)s' --internalurl 'http://<your_ip>:8778/v1/$(tenant_id)s'
 ```
 
-6. Update configuration file /etc/senlin/senlin.conf according to your system
-* Note that the item policy_dir should be pointed to a folder which include file policy.json
-7. Start senlin engine and api service
+* Update configuration file /etc/senlin/senlin.conf according to your system
+Note that the item policy_dir should be pointed to a folder which include file policy.json
+
+* Start senlin engine and api service
 
 ```
 senlin-engine --config-file /etc/senlin/senlin.conf --log-file /tmp/senlin-api.log --debug
 senlin-api --config-file /etc/senlin/senlin.conf --log-file /tmp/senlin-api.log --debug
 ```
 
-8. Get senlin client code
+* Get senlin client code
 
 ```
 git clone https://github.com/tengqm/python-senlinclient.git
 ```
 
-9. Install senlin client
+* Install senlin client
 
 ```
 python setup.py install
 ```
 
-10. You are ready to play with senlin right now
+* You are ready to play with senlin right now
