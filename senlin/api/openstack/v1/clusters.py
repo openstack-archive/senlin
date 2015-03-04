@@ -70,12 +70,10 @@ class ClusterController(object):
     REQUEST_SCOPE = 'clusters'
 
     SUPPORTED_ACTIONS = (
-        ADD_NODES, DEL_NODES,
-        SCALE_OUT, SCALE_IN,
+        ADD_NODES, DEL_NODES, SCALE_OUT, SCALE_IN,
         POLICY_ATTACH, POLICY_DETACH, POLICY_UPDATE,
     ) = (
-        'add_nodes', 'del_nodes',
-        'scale_out', 'scale_in',
+        'add_nodes', 'del_nodes', 'scale_out', 'scale_in',
         'policy_attach', 'policy_detach', 'policy_update',
     )
 
@@ -239,7 +237,7 @@ class ClusterController(object):
                                                 cast=False)
 
         if action:
-            return {'id': action['target'], 'action_id': action['id']}
+            return {'id': action['target'], 'action_id': action['action']}
 
         raise exc.HTTPNoContent()
 
