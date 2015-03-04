@@ -292,10 +292,10 @@ def cluster_delete(context, cluster_id):
 
     query = session.query(models.Node).filter_by(cluster_id=cluster_id)
     nodes = query.all()
-    
+
     if len(nodes) != 0:
         for node in nodes:
-           session.delete(node)
+            session.delete(node)
 
     # Delete all related cluster_policies records
     for cp in cluster.policies:
@@ -304,8 +304,9 @@ def cluster_delete(context, cluster_id):
     # Do soft delete and set the status
     cluster.update_and_save({'deleted_time': timeutils.utcnow(),
                              'status': 'DELETED',
-                             'status_reason': 'Cluster deletion succeeded'}, 
-                             session=session)
+                             'status_reason': 'Cluster deletion succeeded'
+                             }, session=session)
+
 
 # Nodes
 def node_create(context, values):
