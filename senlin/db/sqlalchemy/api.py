@@ -668,7 +668,6 @@ def cluster_policy_get(context, cluster_id, policy_id):
 
 
 def cluster_policy_get_all(context, cluster_id, filters=None,
-                           limit=None, marker=None,
                            sort_keys=None, sort_dir=None):
     query = model_query(context, models.ClusterPolicies)
     query = query.filter_by(cluster_id=cluster_id)
@@ -686,7 +685,6 @@ def cluster_policy_get_all(context, cluster_id, filters=None,
     query = db_filters.exact_filter(query, models.ClusterPolicies, filters)
 
     return _paginate_query(context, query, models.ClusterPolicies,
-                           limit=limit, marker=marker,
                            sort_keys=keys, sort_dir=sort_dir,
                            default_sort_keys=['priority']).all()
 

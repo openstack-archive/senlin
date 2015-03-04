@@ -205,10 +205,9 @@ def cluster_policy_get(context, cluster_id, policy_id):
     return IMPL.cluster_policy_get(context, cluster_id, policy_id)
 
 
-def cluster_policy_get_all(context, cluster_id, filters=None, limit=None,
-                           marker=None, sort_keys=None, sort_dir=None):
+def cluster_policy_get_all(context, cluster_id, filters=None,
+                           sort_keys=None, sort_dir=None):
     return IMPL.cluster_policy_get_all(context, cluster_id, filters=filters,
-                                       limit=limit, marker=marker,
                                        sort_keys=sort_keys, sort_dir=sort_dir)
 
 

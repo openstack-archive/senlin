@@ -684,7 +684,7 @@ class EngineService(service.Service):
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
 
-        return {'id': action.id, 'target': cluster.id}
+        return {'action': action.id}
 
     def node_find(self, context, identity, show_deleted=False):
         '''Find a cluster with the given identity (could be name or ID).'''
@@ -859,13 +859,10 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_policy_list(self, context, identity, filters=None,
-                            limit=None, marker=None,
                             sort_keys=None, sort_dir=None):
-        limit = utils.parse_int_param('limit', limit)
         db_cluster = self.cluster_find(context, identity)
         bindings = db_api.cluster_policy_get_all(context, db_cluster.id,
                                                  filters=filters,
-                                                 limit=limit, marker=marker,
                                                  sort_keys=sort_keys,
                                                  sort_dir=sort_dir)
         result = []

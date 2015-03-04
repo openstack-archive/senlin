@@ -276,12 +276,10 @@ class EngineClient(object):
                                        show_deleted=show_deleted))
 
     def cluster_policy_list(self, ctxt, cluster_id, filters=None,
-                            limit=None, marker=None,
                             sort_dir=None, sort_keys=None):
         return self.call(ctxt, self.make_msg('cluster_policy_list',
                                              identity=cluster_id,
                                              filters=filters,
-                                             limit=limit, marker=marker,
                                              sort_keys=sort_keys,
                                              sort_dir=sort_dir))
 

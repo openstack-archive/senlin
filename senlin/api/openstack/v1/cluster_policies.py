@@ -44,8 +44,6 @@ class ClusterPolicyController(object):
             'enabled': 'single',
         }
         param_whitelist = {
-            'limit': 'single',
-            'marker': 'single',
             'sort_dir': 'single',
             'sort_keys': 'multi',
         }
