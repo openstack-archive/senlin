@@ -21,6 +21,7 @@ from oslo_config import cfg
 from oslo_db.sqlalchemy import session as db_session
 from oslo_db.sqlalchemy import utils
 from oslo_log import log as logging
+from oslo_utils import timeutils
 
 from sqlalchemy import exc
 from sqlalchemy.orm import session as orm_session
@@ -291,13 +292,20 @@ def cluster_delete(context, cluster_id):
 
     query = session.query(models.Node).filter_by(cluster_id=cluster_id)
     nodes = query.all()
+    
     if len(nodes) != 0:
         for node in nodes:
-            session.delete(node)
+           session.delete(node)
 
-    cluster.soft_delete(session=session)
-    session.flush()
+    # Delete all related cluster_policies records
+    for cp in cluster.policies:
+        session.delete(cp)
 
+    # Do soft delete and set the status
+    cluster.update_and_save({'deleted_time': timeutils.utcnow(),
+                             'status': 'DELETED',
+                             'status_reason': 'Cluster deletion succeeded'}, 
+                             session=session)
 
 # Nodes
 def node_create(context, values):
