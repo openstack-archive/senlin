@@ -21,6 +21,7 @@ from oslo_config import cfg
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import clusters
 from senlin.common import exception as senlin_exc
+from senlin.common.i18n import _
 from senlin.common import policy
 from senlin.rpc import client as rpc_client
 from senlin.tests.apiv1 import shared
@@ -123,7 +124,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.controller.index(req, tenant_id=self.tenant)
 
-        rpc_call_args, _ = mock_call.call_args
+        rpc_call_args, w = mock_call.call_args
         engine_args = rpc_call_args[1][1]
         self.assertEqual(8, len(engine_args))
         self.assertIn('limit', engine_args)
@@ -150,7 +151,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.controller.index(req, tenant_id=self.tenant)
 
-        rpc_call_args, _ = mock_call.call_args
+        rpc_call_args, w = mock_call.call_args
         engine_args = rpc_call_args[1][1]
         self.assertIn('filters', engine_args)
 
@@ -466,7 +467,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_delete(self, mock_enforce):
+    def test_cluster_delete(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         cid = 'aaaa-bbbb-cccc'
         req = self._delete('/clusters/%(cluster_id)s' % {'cluster_id': cid})
@@ -481,7 +482,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_with(req.context,
                                      ('cluster_delete', {'identity': cid}))
 
-    def test_delete_not_found(self, mock_enforce):
+    def test_cluster_delete_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         cid = 'aaaa-bbbb-cccc'
         req = self._delete('/clusters/%(cluster_id)s' % {'cluster_id': cid})
@@ -498,7 +499,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ClusterNotFound', resp.json['error']['type'])
 
-    def test_delete_err_denied_policy(self, mock_enforce):
+    def test_cluster_delete_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', False)
         cid = 'aaaa-bbbb-cccc'
         req = self._delete('/clusters/%(cluster_id)s' % {'cluster_id': cid})
@@ -510,7 +511,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_update(self, mock_enforce):
+    def test_cluster_update(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         cid = 'aaaa-bbbb-cccc'
         body = {
@@ -523,7 +524,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                         json.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        mock_call.return_value = cid
 
         self.assertRaises(exc.HTTPAccepted,
                           self.controller.update,
@@ -531,14 +531,18 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                           cluster_id=cid,
                           body=body)
 
-        mock_call.assert_called_once_with(
-            req.context,
-            ('cluster_update', {
-                'identity': cid, 'profile_id': 'xxxx-yyyy-zzzz',
-            })
-        )
+        args = {
+            'name': None,
+            'parent': None,
+            'tags': None,
+            'profile_id': 'xxxx-yyyy-zzzz',
+            'timeout': None,
+            'identity': cid,
+        }
+        mock_call.assert_called_once_with(req.context,
+                                          ('cluster_update', args))
 
-    def test_update_with_maleformed_request(self, mock_enforce):
+    def test_cluster_update_missing_cluster_key(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
 
         cid = 'aaaa-bbbb-cccc'
@@ -556,6 +560,49 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertIn("Malformed request data, missing 'cluster' key "
                       "in request body.", six.text_type(ex))
+
+        self.assertFalse(mock_call.called)
+
+    def test_cluster_update_reject_size(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+
+        cid = 'aaaa-bbbb-cccc'
+        body = {'cluster': {'size': 10}}
+
+        req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                        json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'cluster_update')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.update,
+                               req, tenant_id=self.tenant,
+                               cluster_id=cid,
+                               body=body)
+
+        self.assertEqual(_("Updating cluster size is not supported, please "
+                           "use cluster scaling operations instead."),
+                         six.text_type(ex))
+
+        self.assertFalse(mock_call.called)
+
+    def test_cluster_update_timeout_non_int(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+
+        cid = 'aaaa-bbbb-cccc'
+        body = {'cluster': {'timeout': '10min'}}
+
+        req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                        json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'cluster_update')
+        ex = self.assertRaises(senlin_exc.InvalidParameter,
+                               self.controller.update,
+                               req, tenant_id=self.tenant,
+                               cluster_id=cid,
+                               body=body)
+
+        self.assertEqual(_("Invalid value '10min' specified for 'timeout'"),
+                         six.text_type(ex))
 
         self.assertFalse(mock_call.called)
 
@@ -579,6 +626,26 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ClusterNotFound', resp.json['error']['type'])
 
+    def test_cluster_update_unsupported_status(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'cluster': {'profile_id': 'xxxx-yyyy-zzzz'}}
+        req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                        json.dumps(body))
+
+        error = senlin_exc.NotSupported(feature='Wrong status')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.update,
+                                              req, tenant_id=self.tenant,
+                                              cluster_id=cid,
+                                              body=body)
+
+        self.assertEqual(400, resp.json['code'])
+        self.assertEqual('NotSupported', resp.json['error']['type'])
+
     def test_cluster_update_profile_notfound(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         cid = 'aaaa-bbbb-cccc'
@@ -598,6 +665,26 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ProfileNotFound', resp.json['error']['type'])
+
+    def test_cluster_update_profile_type_mismatch(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'cluster': {'profile_id': 'profile-of-diff-type'}}
+        req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                        json.dumps(body))
+
+        error = senlin_exc.ProfileTypeNotMatch(message='not matching')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.update,
+                                              req, tenant_id=self.tenant,
+                                              cluster_id=cid,
+                                              body=body)
+
+        self.assertEqual(400, resp.json['code'])
+        self.assertEqual('ProfileTypeNotMatch', resp.json['error']['type'])
 
     def test_update_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', False)
