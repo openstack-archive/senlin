@@ -76,8 +76,10 @@
             <wadl:resource href="../wadls/clustering-api/src/v1/clustering-api.wadl#cluster_id">
                 <wadl:method href="#cluster_get"/>
                 <wadl:method href="#cluster_update"/>
-                <wadl:method href="#cluster_action"/>
                 <wadl:method href="#cluster_delete"/>
+            </wadl:resource>
+            <wadl:resource href="../wadls/clustering-api/src/v1/clustering-api.wadl#cluster_actions">
+                <wadl:method href="#cluster_action"/>
             </wadl:resource>
         </wadl:resources>
     </section>
