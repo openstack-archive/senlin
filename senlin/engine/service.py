@@ -882,6 +882,27 @@ class EngineService(service.Service):
         return result
 
     @request_context
+    def cluster_policy_get(self, context, identity, policy):
+        db_cluster = self.cluster_find(context, identity)
+        db_policy = self.policy_find(context, policy)
+        binding = db_api.cluster_policy_get(context, db_cluster.id,
+                                            db_policy.id)
+        return {
+            'cluster_policy': {
+                'id': binding.id,
+                'cluster_id': binding.cluster_id,
+                'cluster_name': binding.cluster.name,
+                'policy_id': binding.policy_id,
+                'policy_name': binding.policy.name,
+                'policy_type': binding.policy.type,
+                'priority': binding.priority,
+                'level': binding.level,
+                'cooldown': binding.cooldown,
+                'enabled': binding.enabled,
+            }
+        }
+
+    @request_context
     def cluster_policy_attach(self, context, identity, policy, priority=None,
                               level=None, cooldown=None, enabled=True):
         db_cluster = self.cluster_find(context, identity)
