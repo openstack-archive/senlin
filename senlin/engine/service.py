@@ -684,7 +684,7 @@ class EngineService(service.Service):
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
 
-        return {'action': action.id}
+        return {'id': action.id, 'target': cluster.id}
 
     def node_find(self, context, identity, show_deleted=False):
         '''Find a cluster with the given identity (could be name or ID).'''
