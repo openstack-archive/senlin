@@ -249,7 +249,7 @@
                 <param name="sort_dir" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                         <para>The sort direction of the cluster list.  Either <code>asc</code>
-                            (ascending) or <code>desc</code> (descending).
+                            (ascending) or <code>desc</code> (descending) is acceptable.
                         </para>
                     </wadl:doc>
                 </param>
@@ -565,7 +565,7 @@
     </method>
     <method name="DELETE" id="cluster_delete">
         <wadl:doc xml:lang="EN" title="Delete Cluster" xmlns="http://docbook.org/ns/docbook">
-            <para role="shortdesc">Deletes a specified cluster.</para>
+            <para role="shortdesc">Deletes the specified cluster.</para>
         </wadl:doc>
         <response status="204"/>
     </method>
@@ -1161,24 +1161,45 @@
                 <param name="limit" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                         <para>
-                            Limits the number of nodes that appear on a page to this value. The typical pattern of <code>limit</code> and 
-                            <code>marker</code> is to make an initial limited request and then to use the <code>id</code> of the last node
-                            from the response as the <code>marker</code> parameter in a subsequent limited request.
+                            Limits the number of nodes that appear on one invocation to this
+                            value. The typical pattern of <code>limit</code> and <code>marker</code>
+                            is to make an initial limited request and then to use the
+                            <code>id</code> of the last node from the response as the 
+                            <code>marker</code> parameter in a subsequent limited request.
                         </para>
                     </wadl:doc>
                 </param>
                 <param name="marker" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                         <para>
-                            Specifies the <code>id</code> of the last-seen node. The typical pattern of <code>limit</code> and <code>marker</code>
-                            is to make an initial limited request and then to use the <code>id</code> of the last node from the response as
-                            the <code>marker</code> parameter in a subsequent limited request.
+                            Specifies the <code>id</code> of the last-seen node. The typical
+                            pattern of <code>limit</code> and <code>marker</code> is to make
+                            an initial limited request and then to use the <code>id</code> of
+                            the last node from the response as the <code>marker</code>
+                            parameter in a subsequent limited request.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="sort_keys" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook"
+                        xml:lang="EN">
+                        <para>Sorts the node list by one of these attributes: <code>name</code>,
+                            <code>status</code>, <code>created_time</code>, or <code>updated_time
+                            </code>.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="sort_dir" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>The sort direction of the node list.  Either <code>asc</code>
+                            (ascending) or <code>desc</code> (descending) is acceptable.
                         </para>
                     </wadl:doc>
                 </param>
                 <param name="global_tenant" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Indicates whether nodes from tenants(projects) are to be listed.  Operation subject to policy authorization.</para>
+                        <para>Indicates whether nodes from tenants(projects) are to be listed.
+                            Operation subject to access policy enforcement.</para>
                     </wadl:doc>
                 </param>
             </representation>
@@ -1190,10 +1211,11 @@
                 </wadl:doc>
                 <param name="nodes" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>
-                            List of node records where each record contains fields like <code>id</code>, <code>cluster_id</code>, <code>name</code>,
-                            <code>physical_id</code>, <code>profile_id</code>, <code>created_time</code>, <code>index</code>, <code>status</code>,
-                            <code>status_reason</code>, <code>tags</code>, <code>updated_time</code>.
+                        <para>List of node records where each record contains fields like
+                            <code>id</code>, <code>cluster_id</code>, <code>name</code>,
+                            <code>physical_id</code>, <code>profile_id</code>, <code>created_time</code>,
+                            <code>index</code>, <code>status</code>, <code>status_reason</code>,
+                            <code>tags</code>, <code>updated_time</code> etc.
                         </para>
                     </wadl:doc>
                 </param>
