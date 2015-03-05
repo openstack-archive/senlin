@@ -235,12 +235,10 @@ class ClusterController(object):
         action = self.rpc_client.cluster_delete(req.context,
                                                 cluster_id,
                                                 cast=False)
+        if action is not None:
+            raise exc.HTTPNoContent()
 
-        if action:
-            return {'id': action['target'], 'action_id': action['action']}
-
-        raise exc.HTTPNoContent()
-
+        raise exc.HTTPInternalServerError(_('Failed deleting cluster.'))
 
 def create_resource(options):
     '''Clusters resource factory method.'''
