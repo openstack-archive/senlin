@@ -300,7 +300,7 @@ class EngineClient(object):
 
     def cluster_policy_get(self, ctxt, cluster_id, policy_id):
         return self.call(ctxt, self.make_msg('cluster_policy_get',
-                                             cluster_id=cluster_id,
+                                             identity=cluster_id,
                                              policy_id=policy_id))
 
     def cluster_policy_update(self, ctxt, cluster_id, policy_id, priority=None,
