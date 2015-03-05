@@ -163,7 +163,7 @@ class API(wsgi.Router):
             sub_mapper.connect("node_update",
                                "/nodes/{node_id}",
                                action="update",
-                               conditions={'method': 'PUT'})
+                               conditions={'method': 'PATCH'})
             sub_mapper.connect("node_action",
                                "/nodes/{node_id}/action",
                                action="action",
