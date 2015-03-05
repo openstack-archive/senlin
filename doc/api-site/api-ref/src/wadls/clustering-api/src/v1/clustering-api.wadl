@@ -1231,41 +1231,55 @@
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                     <xsdxt:code href="samples/node_create.json"/>
                 </wadl:doc>
-                <param name="name" style="plain" required="true">
+                <param name="node" style="plain" required="true">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Name for the newly created node.</para>
-                    </wadl:doc>
-                </param>
-                <param name="profile_id" style="plain" required="true">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>ID of profile to be used for the specified node.</para>
-                    </wadl:doc>
-                </param>
-                <param name="cluster_id" style="plain" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>ID of the cluster this new node will belong to.  If not specified, the created node becomes a orphan node.</para>
-                    </wadl:doc>
-                </param>
-                <param name="role" style="plain" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A role to be assigned to the node.</para>
-                    </wadl:doc>
-                </param>
-                <param name="tags" style="plain" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A list of key-value pairs to be associated with the node.</para>
+                        <para>A map that contains detailed data for the node to be created.</para>
+                        <itemizedlist xml:id="node_create_body">
+                            <title>Node Create Request Body</title>
+                            <listitem>
+                                <para>
+                                    <code>name</code> Name for the newly created node. [Required].
+                                </para>
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    <code>profile_id</code> ID or name or short ID of the profile
+                                    used by the node for creation. [Required].
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>cluster_id</code> ID or name or short ID of the cluster
+                                    the node lives in. If not specified, the node created will be
+                                    an orphaned node. [Optional].
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>role</code> A string indicating the role this node plays
+                                    in a cluster. [Optional].
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>tags</code> A list of key-value pairs to be attached to
+                                    the newly created node. [Optional].
+                                </para>
+                            </listitem>
+                        </itemizedlist>
                     </wadl:doc>
                 </param>
             </representation>
         </request>
-        <response status="201">
+        <response status="200">
             <representation mediaType="application/json">
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                     <xsdxt:code href="samples/node_create_resp.json" />
                 </wadl:doc>
-                <param name="cluster" style="plain" required="true">
+                <param name="node" style="plain" required="true">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A dictionary containing the <code>id</code> of and <code>link</code> to the node.</para>
+                        <para>A dictionary containing the detailed data of the node created such as
+                            <code>id</code>, <code>name</code>, <code>status</code> etc. .</para>
                     </wadl:doc>
                 </param>
             </representation>

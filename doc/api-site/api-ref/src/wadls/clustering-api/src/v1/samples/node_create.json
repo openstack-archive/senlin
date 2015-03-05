@@ -1,7 +1,9 @@
 {
-    "name": "node-254",
-    "cluster_id": "3095aefc-09fb-4bc7-b1f0-f21a304e864c",
-    "profile_id": "e8d140ba-40de-8abd-4323-3eb7384f9751",
-    "role": "Worker",
-    "tags": {},
+    "node": {
+        "cluster_id": null,
+        "name": "node009",
+        "profile_id": "mystack",
+        "role": "master",
+        "tags": {}
+    }
 }
