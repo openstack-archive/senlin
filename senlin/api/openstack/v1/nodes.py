@@ -113,8 +113,8 @@ class NodeController(object):
 
         key = consts.PARAM_GLOBAL_TENANT
         if key in params:
-            del params[key]
             tenant_safe = not utils.parse_bool_param(key, params[key])
+            del params[key]
             params['tenant_safe'] = tenant_safe
 
         if not filters:
