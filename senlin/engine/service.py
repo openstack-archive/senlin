@@ -729,7 +729,7 @@ class EngineService(service.Service):
             db_cluster = self.cluster_find(context, cluster_id)
             cluster_id = db_cluster.id
 
-            if context.project != db_cluster.project:
+            if context.project_id != db_cluster.project:
                 msg = _('Node and cluster are from different project, '
                         'operation is disallowed.')
                 raise exception.ProjectNotMatch(message=msg)
