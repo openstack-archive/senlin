@@ -226,7 +226,6 @@ class EngineClient(object):
                   limit=None, marker=None,
                   sort_keys=None, sort_dir=None,
                   filters=None, tenant_safe=True):
-        # We keep the tenant_safe param here for the moment
         return self.call(ctxt,
                          self.make_msg('node_list', cluster_id=cluster_id,
                                        show_deleted=show_deleted,

@@ -708,7 +708,7 @@ class EngineService(service.Service):
     def node_list(self, context, cluster_id=None, show_deleted=False,
                   limit=None, marker=None, sort_keys=None, sort_dir=None,
                   filters=None, tenant_safe=True):
-        show_deleted = utils.parse_bool_param('show_deleted', show_deleted)
+        # Maybe the cluster_id is a name or a short ID
         if cluster_id is not None:
             db_cluster = self.cluster_find(context, cluster_id)
             cluster_id = db_cluster.id

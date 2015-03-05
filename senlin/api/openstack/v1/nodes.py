@@ -96,15 +96,26 @@ class NodeController(object):
             'show_deleted': 'single',
             'limit': 'single',
             'marker': 'single',
-            'sort_dir': 'single',
             'sort_keys': 'multi',
+            'sort_dir': 'single',
+            'global_tenant': 'single',
         }
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)
 
+        key = consts.PARAM_LIMIT
+        if key in params:
+            params[key] = utils.parse_int_param(key, params[key])
+
         key = consts.PARAM_SHOW_DELETED
         if key in params:
             params[key] = utils.parse_bool_param(key, params[key])
+
+        key = consts.PARAM_GLOBAL_TENANT
+        if key in params:
+            tenant_safe = not utils.parse_bool_param(key, params[key])
+            del params[key]
+            params['tenant_safe'] = tenant_safe
 
         if not filters:
             filters = None
