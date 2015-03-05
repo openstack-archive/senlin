@@ -747,7 +747,7 @@ class EngineService(service.Service):
 
         # Create a node instance
         tags = tags or {}
-        node = node_mod.Node(name, db_profile.id, cluster_id, role=role,
+        node = node_mod.Node(name, db_profile.id, cluster_id, context, role=role,
                              tags=tags)
         node.store(context)
 

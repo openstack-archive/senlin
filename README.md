@@ -34,6 +34,7 @@ pip install -r requirements.txt
 ```
 
 * Create keystone service for senlin
+
 There is a setup-service script under tools folder to do this for you, you should use the script to automate this step and step 5 for you.
 
 ```
@@ -41,6 +42,7 @@ keystone service-create --type clustering --name senlin
 ```
 
 * Create keystone endpoint for senlin
+
 There is a setup-service script under tools folder to do this for you, you should use the script to automate step 4 and this step for you.
 
 
@@ -49,6 +51,7 @@ keystone endpoint-create --region RegionOne --service <service_id> --publicurl '
 ```
 
 * Update configuration file /etc/senlin/senlin.conf according to your system
+
 Note that the item policy_dir should be pointed to a folder which include file policy.json
 
 * Start senlin engine and api service

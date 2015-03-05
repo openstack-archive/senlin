@@ -272,6 +272,7 @@ class Event(BASE, SenlinBase, SoftDelete):
     cluster_id = sqlalchemy.Column(sqlalchemy.String(36),
                                    sqlalchemy.ForeignKey('cluster.id'),
                                    nullable=True)
+    cluster = relationship(Cluster, backref=backref('events'))
     level = sqlalchemy.Column(sqlalchemy.String(64))
     user = sqlalchemy.Column(sqlalchemy.String(36))
     project = sqlalchemy.Column(sqlalchemy.String(36))

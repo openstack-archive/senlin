@@ -38,11 +38,11 @@ class Cluster(periodic_task.PeriodicTasks):
     '''
 
     STATUSES = (
-        INIT, CREATING, ACTIVE, ERROR, DELETING, DELETED,
+        INIT, CREATING, ACTIVE, ERROR, CRITICAL, DELETING, DELETED, WARNING,
         UPDATING, UPDATE_CANCELLED,
     ) = (
-        'INIT', 'CREATING', 'ACTIVE', 'ERROR', 'DELETING', 'DELETED',
-        'UPDATING', 'UPDATE_CANCELLED',
+        'INIT', 'CREATING', 'ACTIVE', 'ERROR', 'CRITICAL', 'DELETING', 'DELETED',
+        'WARNING', 'UPDATING', 'UPDATE_CANCELLED',
     )
 
     def __init__(self, name, profile_id, size=0, context=None, **kwargs):
