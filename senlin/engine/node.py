@@ -51,7 +51,7 @@ class Node(object):
 
         self.physical_id = kwargs.get('physical_id', '')
         self.profile_id = profile_id
-        self.project = kwargs.get('project', context.project_id)
+        self.project = kwargs.get('project', None)
         self.cluster_id = cluster_id
         self.index = kwargs.get('index', -1)
         self.role = kwargs.get('role', '')
@@ -68,6 +68,7 @@ class Node(object):
         self.rt = {}
 
         if context is not None:
+            self.project = context.project_id
             self._load_runtime_data(context)
 
     def _load_runtime_data(self, context):
@@ -104,7 +105,9 @@ class Node(object):
             db_api.node_update(context, self.id, values)
             # TODO(Qiming): create event/log
         else:
-            values['init_time'] = datetime.datetime.utcnow()
+            init_time = datetime.datetime.utcnow()
+            self.init_time = init_time
+            values['init_time'] = init_time
             node = db_api.node_create(context, values)
             # TODO(Qiming): create event/log
             self.id = node.id
@@ -224,7 +227,8 @@ class Node(object):
             LOG.error(_LE('Node is in status "%s"'), self.status)
             return False
         self.set_status(context, self.CREATING, reason='Creation in progress')
-        event_mod.info(context, self, 'create', self.status, self.status_reason)
+        event_mod.info(context, self, 'create', self.status,
+                       self.status_reason)
         physical_id = profile_base.Profile.create_object(context, self)
         if not physical_id:
             return False
@@ -270,10 +274,10 @@ class Node(object):
         old_profile = db_api.get_profile(context, self.profile_id)
         new_profile = db_api.get_profile(context, new_profile_id)
         if old_profile.type != new_profile.type:
-            events.warning(_LW('Node cannot be updated to a different '
-                               'profile type (%(oldt)s->%(newt)s)'),
-                           {'oldt': old_profile.type,
-                            'newt': new_profile.type})
+            event_mod.warning(_LW('Node cannot be updated to a different '
+                                  'profile type (%(oldt)s->%(newt)s)') %
+                              {'oldt': old_profile.type,
+                               'newt': new_profile.type})
             return False
 
         res = profile_base.update_object(self, new_profile_id)
