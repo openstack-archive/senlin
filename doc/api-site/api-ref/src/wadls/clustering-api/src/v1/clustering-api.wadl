@@ -538,23 +538,27 @@
         <response status="200">
             <representation mediaType="application/json">
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                    <para>A list named <code>cluster_policies</code> that contains records of cluster-policy
-                        bindings. Each record contains fields related to the cluster, the policy and the binding
-                        itself.</para>
-                    <xsdxt:code href="samples/cluster_list_policies.json"/>
+                    <para>A list named <code>cluster_policies</code> that contains records
+                        of cluster-policy bindings. Each record contains fields related to
+                        the cluster, the policy and the binding itself.</para>
+                    <xsdxt:code href="samples/cluster_policy_list_resp.json"/>
                 </wadl:doc>
             </representation>
         </response>
     </method>
-    <!-- TODO: revise this -->
     <method name="GET" id="cluster_policy_get">
-        <wadl:doc xml:lang="EN" title="Get policy" xmlns="http://docbook.org/ns/docbook">
+        <wadl:doc xml:lang="EN" title="Get Policy" xmlns="http://docbook.org/ns/docbook">
             <para role="shortdesc">Show details of a policy attached to a cluster.</para>
         </wadl:doc>
         <response status="200">
             <representation mediaType="application/json">
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                    <xsdxt:code href="samples/cluster_get_policy.json"/>
+                    <para>A map named <code>cluster_policy</code> that contains keys like
+                        <code>cluster_id</code>, <code>policy_id</code>, <code>policy_type
+                        </code>, <code>level</code>, <code>cooldown</code>, <code>priority
+                        </code> etc. The values are attributes of the policy that is attached
+                        to the cluster.
+                    <xsdxt:code href="samples/cluster_policy_get_resp.json"/>
                 </wadl:doc>
             </representation>
         </response>
