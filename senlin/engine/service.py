@@ -512,7 +512,7 @@ class EngineService(service.Service):
         new_profile = self.profile_find(context, profile_id)
         old_profile = self.profile_find(context, cluster.profile_id)
         if new_profile.type != old_profile.type:
-            msg = _('Cannot upgrade a cluster to a different profile type, '
+            msg = _('Cannot update a cluster to a different profile type, '
                     'operation aborted.')
             raise exception.ProfileTypeNotMatch(message=msg)
 
@@ -747,8 +747,8 @@ class EngineService(service.Service):
 
         # Create a node instance
         tags = tags or {}
-        node = node_mod.Node(name, db_profile.id, cluster_id, context, role=role,
-                             tags=tags)
+        node = node_mod.Node(name, db_profile.id, cluster_id, context,
+                             role=role, tags=tags)
         node.store(context)
 
         action = action_mod.Action(context, 'NODE_CREATE',
@@ -772,17 +772,42 @@ class EngineService(service.Service):
         return node.to_dict()
 
     @request_context
-    def node_update(self, context, identity, name, profile_id=None, role=None,
-                    tags=None):
+    def node_update(self, context, identity, name=None, profile_id=None,
+                    role=None, tags=None):
         db_node = self.node_find(context, identity)
-        if profile_id is not None:
-            db_profile = self.profile_find(context, profile_id)
-            profile_id = db_profile.id
+        node = node_mod.Node.load(context, node=db_node)
+
+        changed = False
+        if name is not None and name != node.name:
+            node.name = name
+            changed = True
+
+        if role is not None and role != node.role:
+            node.role = role
+            changed = True
+
+        if tags is not None and tags != node.tags:
+            node.tags = tags
+            changed = True
+
+        if changed is True:
+            node.store(context)
+
+        if profile_id is None:
+            return
+
+        # The profile_id could be a name or a short ID, check it
+        db_profile = self.profile_find(context, profile_id)
+        profile_id = db_profile.id
+
+        # check if profile_type matches
+        node_profile = self.profile_find(context, node.profile_id)
+        if node_profile.type != db_profile.type:
+            msg = _('Cannot update a cluster to a different profile type, '
+                    'operation aborted.')
+            raise exception.ProfileTypeNotMatch(message=msg)
 
         LOG.info(_LI('Updating node %s'), identity)
-
-        # Find the node instance
-        node = node_mod.Node.load(context, node=db_node)
 
         action = action_mod.Action(context, 'NODE_UPDATE',
                                    name='node_update_%s' % node.id[:8],
@@ -793,6 +818,7 @@ class EngineService(service.Service):
         # TODO(someone): uncomment this when it is implemented
         # dispatcher.notify(context, self.dispatcher.NEW_ACTION,
         #                  None, action_id=action.id)
+        return
 
     @request_context
     def node_delete(self, context, identity, force=False):

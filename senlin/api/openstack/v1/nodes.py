@@ -152,16 +152,21 @@ class NodeController(object):
     def update(self, req, node_id, body):
         node_data = body.get('node')
         if node_data is None:
-            raise exc.HTTPBadRequest(_("Malformed request data, missing"
+            raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'node' key in request body."))
+        cluster_id = node_data.get(consts.NODE_CLUSTER_ID)
+        if cluster_id is not None:
+            raise exc.HTTPBadRequest(_("Updating cluster_id is not allowed, "
+                                       "please invoke node join/leave actions "
+                                       "if needed."))
 
-        data = NodeData(node_data)
-        # TODO(Anyone): Need to check which fields are updatable.
-        # The check should consider whether join/leave are considered node
-        # updates
-        self.rpc_client.node_update(req.context, node_id, data.name(),
-                                    data.profile_id(),
-                                    data.role(), data.tags())
+        name = node_data.get(consts.NODE_NAME)
+        profile_id = node_data.get(consts.NODE_PROFILE_ID)
+        role = node_data.get(consts.NODE_ROLE)
+        tags = node_data.get(consts.NODE_TAGS)
+
+        self.rpc_client.node_update(req.context, node_id, name, profile_id,
+                                    role, tags)
 
         raise exc.HTTPAccepted()
 

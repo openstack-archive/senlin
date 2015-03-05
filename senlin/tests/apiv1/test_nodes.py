@@ -463,8 +463,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'action': 'this-is-the-node-update-action',
         }
 
-        req = self._put('/nodes/%(node_id)s' % {'node_id': nid},
-                        json.dumps(body))
+        req = self._patch('/nodes/%(node_id)s' % {'node_id': nid},
+                          json.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
@@ -486,6 +486,23 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             })
         )
 
+    def test_node_update_malformed_request(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        nid = 'aaaa-bbbb-cccc'
+        body = {'name': 'new name'}
+
+        req = self._patch('/nodes/%(node_id)s' % {'node_id': nid},
+                          json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.update, req,
+                               tenant_id=self.tenant,
+                               node_id=nid, body=body)
+        self.assertEqual("Malformed request data, missing 'node' key "
+                         "in request body.", six.text_type(ex))
+        self.assertFalse(mock_call.called)
+
     def test_node_update_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         nid = 'non-exist-node'
@@ -498,8 +515,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
 
-        req = self._put('/nodes/%(node_id)s' % {'node_id': nid},
-                        json.dumps(body))
+        req = self._patch('/nodes/%(node_id)s' % {'node_id': nid},
+                          json.dumps(body))
 
         error = senlin_exc.NodeNotFound(node=nid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -537,8 +554,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
 
-        req = self._put('/nodes/%(node_id)s' % {'node_id': nid},
-                        json.dumps(body))
+        req = self._patch('/nodes/%(node_id)s' % {'node_id': nid},
+                          json.dumps(body))
 
         error = senlin_exc.ProfileNotFound(profile=nid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -562,6 +579,24 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ProfileNotFound', resp.json['error']['type'])
 
+    def test_node_update_cluster_id_specified(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        nid = 'aaaa-bbbb-cccc'
+        body = {'node': {'cluster_id': 'xxxx-yyyy-zzzz'}}
+
+        req = self._patch('/nodes/%(node_id)s' % {'node_id': nid},
+                          json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.update, req,
+                               tenant_id=self.tenant,
+                               node_id=nid, body=body)
+        self.assertEqual('Updating cluster_id is not allowed, please invoke '
+                         'node join/leave actions if needed.',
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
+
     def test_node_update_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', False)
         node_id = 'test-node-1'
@@ -573,8 +608,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'tags': {},
             }
         }
-        req = self._put('/nodes/%(node_id)s' % {'node_id': node_id},
-                        json.dumps(body))
+        req = self._patch('/nodes/%(node_id)s' % {'node_id': node_id},
+                          json.dumps(body))
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,
