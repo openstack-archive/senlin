@@ -473,7 +473,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._delete('/clusters/%(cluster_id)s' % {'cluster_id': cid})
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        mock_call.return_value = None
+        mock_call.return_value = {'action': 'action_id'}
 
         self.assertRaises(webob.exc.HTTPNoContent,
                           self.controller.delete,
@@ -498,6 +498,21 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ClusterNotFound', resp.json['error']['type'])
+
+    def test_cluster_delete_engine_error(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete', True)
+        cid = 'aaaa-bbbb-cccc'
+        req = self._delete('/clusters/%(cluster_id)s' % {'cluster_id': cid})
+
+        self.patchobject(rpc_client.EngineClient, 'cluster_delete',
+                         return_value=None)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.delete,
+                                              req, tenant_id=self.tenant,
+                                              cluster_id=cid)
+        self.assertEqual(500, resp.status_int)
+        self.assertIn('Failed deleting cluster', six.text_type(resp))
 
     def test_cluster_delete_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', False)
