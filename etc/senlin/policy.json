@@ -25,6 +25,7 @@
     "nodes:create": "",
     "nodes:get": "rule:admin_or_owner",
     "nodes:action": "rule:admin_or_owner",
+    "nodes:update": "rule:admin_or_owner",
     "nodes:delete": "rule:admin_or_owner",
     "policies:index": "rule:admin_or_owner",
     "policies:create": "",
