@@ -1,6 +1,8 @@
 {
-
-    "name": "new_name",
-    "profile_id": "e8d140ba-40de-8abd-4323-3eb7384f9751",
-    "role": "Master"
+    "node": {
+        "name": "new_node_name",
+        "profile": null,
+        "role": null,
+        "tags": {}
+    }
 }

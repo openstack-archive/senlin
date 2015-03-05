@@ -553,11 +553,13 @@
         <response status="200">
             <representation mediaType="application/json">
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                    <para>A map named <code>cluster_policy</code> that contains keys like
+                    <para>
+                        A map named <code>cluster_policy</code> that contains keys like
                         <code>cluster_id</code>, <code>policy_id</code>, <code>policy_type
                         </code>, <code>level</code>, <code>cooldown</code>, <code>priority
                         </code> etc. The values are attributes of the policy that is attached
                         to the cluster.
+                    </para>
                     <xsdxt:code href="samples/cluster_policy_get_resp.json"/>
                 </wadl:doc>
             </representation>
@@ -1285,7 +1287,7 @@
             </representation>
         </response>
     </method>
-    <method name="POST" id="node_update">
+    <method name="PATCH" id="node_update">
         <wadl:doc xml:lang="EN" title="Update Node" xmlns="http://docbook.org/ns/docbook">
             <para role="shortdesc">Update the specified node.</para>
         </wadl:doc>
@@ -1294,24 +1296,36 @@
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                     <xsdxt:code href="samples/node_update.json"/>
                 </wadl:doc>
-                <param name="name" style="plain" required="true">
+                <param name="node" style="plain" required="true">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Name for the newly created node.</para>
-                    </wadl:doc>
-                </param>
-                <param name="profile_id" style="plain" required="true">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>ID of profile to be used for the specified node.</para>
-                    </wadl:doc>
-                </param>
-                <param name="role" style="plain" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A role to be assigned to the node.</para>
-                    </wadl:doc>
-                </param>
-                <param name="tags" style="plain" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A list of key-value pairs to be associated with the node.</para>
+                        <para>A map that contains detailed data for the node to be updated.</para>
+                        <itemizedlist xml:id="node_create_body">
+                            <title>Node Update Request Body</title>
+                            <listitem>
+                                <para>
+                                    <code>name</code> New name for the node. [Optional].
+                                </para>
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    <code>profile_id</code> ID or name or short ID of the new
+                                    profile to be used by the node. The new profile has to have
+                                    the same profile type as that of the node. [Optional].
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>role</code> A string indicating the new role this node
+                                    plays in a cluster. [Optional].
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>tags</code> A list of key-value pairs to be attached to
+                                    the updated node. [Optional].
+                                </para>
+                            </listitem>
+                        </itemizedlist>
                     </wadl:doc>
                 </param>
             </representation>
