@@ -1489,48 +1489,101 @@
             <para role="shortdesc">Lists actions.</para>
         </wadl:doc>
         <request>
-            <representation mediaType="application/xml">
-                <param name="target" style="query" required="false">
+            <representation mediaType="application/json">
+               <param name="filters" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>ID of an object for which the actions are to be listed. An object here can be a cluster, a node, a policy etc.</para>
-                    </wadl:doc>
-                </param>
-                <param name="action" style="query" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Filter action list by action name specified.</para>
-                    </wadl:doc>
-                </param>
-                <param name="filters" style="query" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A list of key-value pairs for filtering the actions returned.</para>
-                    </wadl:doc>
-                </param>
-                <param name="sort_keys" style="query" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Sorts the action list by the specified keys.</para>
-                    </wadl:doc>
-                </param>
-                <param name="sort_dir" style="query" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook"
-                        xml:lang="EN">
-                        <para>The sort direction of the action list.  Which is <code>asc</code> (ascending) or <code>desc</code> (descending).</para>
+                        <para>
+                            A list of key-value pairs for filtering the actions returned, where
+                            the key can be one of:
+                        </para>
+                        <itemizedlist>
+                            <listitem>
+                                <para>
+                                    <code>name</code> Name of the action object to filter, can be
+                                    specified more than once.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>target</code> ID of an object for which the actions were
+                                    initiated. An object can be a cluster, a node etc. Can be 
+                                    specified more than once.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>action</code> Action verb to filter on. Can be specified
+                                    more than once.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>created_time</code> Timestamp when action was created.
+                                    Can be specified only once.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>updated_time</code> Timestamp when action was updated.
+                                    Can be specified only once.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>deleted_time</code> Timestamp when action was deleted.
+                                    Can be specified only once.
+                                </para>
+                            </listitem>
+                        </itemizedlist>
                     </wadl:doc>
                 </param>
                 <param name="limit" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                         <para>
-                            Limits the number of actions that appear on a page to this value. The typical pattern of <code>limit</code> and 
-                            <code>marker</code> is to make an initial limited request and then to use the <code>id</code> of the last action
-                            from the response as the <code>marker</code> parameter in a subsequent limited request.
+                            Limits the number of actions that appear on a page to this value.
+                            The typical pattern of <code>limit</code> and <code>marker</code> is
+                            to make an initial limited request and then to use the <code>id</code>
+                            of the last action from the response as the <code>marker</code>
+                            parameter in a subsequent limited request.
                         </para>
                     </wadl:doc>
                 </param>
                 <param name="marker" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                         <para>
-                            Specifies the <code>id</code> of the last-seen action.  The typical pattern of <code>limit</code> and <code>marker</code>
-                            is to make an initial limited request and then to use the <code>id</code> of the last action from the response as the 
-                            <code>marker</code> parameter in a subsequent limited request.
+                            Specifies the <code>id</code> of the last-seen action.  The typical
+                            pattern of <code>limit</code> and <code>marker</code> is to make an
+                            initial limited request and then to use the <code>id</code> of the
+                            last action from the response as the <code>marker</code> parameter
+                            in a subsequent limited request.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="sort_keys" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            Sorts the action list by the specified keys. Default to None. Valid
+                            keys include <code>name</code>, <code>target</code>, <code>action</code>,
+                            <code>interval</code>, <code>start_time</code>, <code>end_time</code>,
+                            <code>status</code>, <code>status_reason</code> etc.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="sort_dir" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook"
+                        xml:lang="EN">
+                        <para>
+                            The sort direction of the action list. Valid values are <code>asc
+                            </code> (ascending) or <code>desc</code> (descending). Default is
+                            <code>asc</code>.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="show_deleted" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            Whether deleted action entries should be included in the list.
+                            Default to False.
                         </para>
                     </wadl:doc>
                 </param>

@@ -75,7 +75,6 @@ class ActionController(object):
             'created_time': 'single',
             'updated_time': 'single',
             'deleted_time': 'single',
-            'permission': 'mixed',
         }
         param_whitelist = {
             'limit': 'single',
@@ -87,6 +86,14 @@ class ActionController(object):
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)
 
+        key = consts.PARAM_LIMIT
+        if key in params:
+            params[key] = utils.parse_int_param(key, params[key])
+
+        key = consts.PARAM_SHOW_DELETED
+        if key in params:
+            params[key] = utils.parse_bool_param(key, params[key])
+
         if not filters:
             filters = None
 
@@ -94,7 +101,6 @@ class ActionController(object):
                                               filters=filters,
                                               **params)
 
-        # TODO(Qiming): Add action_view to handle collection?
         return {'actions': actions}
 
     @util.policy_enforce
