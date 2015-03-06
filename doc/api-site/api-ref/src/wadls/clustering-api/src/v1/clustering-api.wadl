@@ -1346,10 +1346,12 @@
             <representation mediaType="application/json">
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                     <para>
-                        A node record that contains fields like <code>id</code>, <code>cluster_id</code>, <code>name</code>,
-                        <code>physical_id</code>, <code>profile_id</code>, <code>created_time</code>, <code>index</code>,
-                        <code>status</code>, <code>status_reason</code>, <code>tags</code>, <code>updated_time</code> etc.
+                        A node record that contains fields like <code>id</code>, <code>cluster_id</code>,
+                        <code>name</code>, <code>physical_id</code>, <code>profile_id</code>,
+                        <code>created_time</code>, <code>index</code>, <code>status</code>,
+                        <code>status_reason</code>, <code>tags</code>, <code>updated_time</code> etc.
                     </para>
+                    <xsdxt:code href="samples/node_get_resp.json"/>
                 </wadl:doc>
             </representation>
         </response>
