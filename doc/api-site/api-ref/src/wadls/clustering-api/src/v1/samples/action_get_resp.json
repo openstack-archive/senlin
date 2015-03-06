@@ -1,25 +1,20 @@
 {
-    "action": {
-        "id": "dfb0e58c-955d-478e-a512-e8cb17e2d478",
-        "name": "node-create",
-        "context": {},
-        "target": "3c7faa4040-a110-2ecf-a92c-0474bfdf73",
-        "action": "NODE_CREATE",
-        "cause": "Cluster creation",
-        "owner": "admin",
-        "interval": 0,
-        "start_time": "",
-        "end_time": "",
-        "time_out": null,
-        "status": "RUNNING",
-        "status_reason": "",
-        "inputs": {
-            "profile_id": "9dc26f35-9c46-4d7a-88b4-a9ca3b0b68de",
-            "name": "node-001",
-            "timeout": 60
-        }
-        "outputs": {},
-        "depends_on": [],
-        "depended_by": [],
-    }
+    "action": "CLUSTER_DELETE",
+    "cause": "RPC Request",
+    "context": { },
+    "deleted_time": null,
+    "depended_by": [],
+    "depends_on": [],
+    "end_time": 1423570000.0,
+    "id": "ffbb9175-d510-4bc1-b676-c6aba2a4ca81",
+    "inputs": {},
+    "interval": -1,
+    "name": "cluster_delete_fcc9b635",
+    "outputs": {},
+    "owner": null,
+    "start_time": 1423570000.0,
+    "status": "FAILED",
+    "status_reason": "Cluster action FAILED",
+    "target": "fcc9b635-52e3-490b-99f2-87b1640e4e89",
+    "timeout": 3600
 }
