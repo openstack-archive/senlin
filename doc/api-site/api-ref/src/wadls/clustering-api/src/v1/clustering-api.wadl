@@ -118,6 +118,9 @@
                         <method href="#node_get"/>
                         <method href="#node_update"/>
                         <method href="#node_delete"/>
+                        <resource path="action" id="node_actions">
+                            <method href="#node_action"/>
+                        </resource>
                     </resource>
                 </resource>
                 <resource path="actions" id="actions">
@@ -1331,6 +1334,48 @@
             </representation>
         </request>
         <response status="202"/>
+    </method>
+    <method name="PUT" id="node_action">
+        <wadl:doc xml:lang="EN" title="Node Action" xmlns="http://docbook.org/ns/docbook">
+            <para role="shortdesc">Trigger an action on the specified node.</para>
+        </wadl:doc>
+        <request>
+            <representation mediaType="application/json">
+                <param name="action" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            This is the name of the action to be triggered. Supported action names
+                            include:
+                        </para>
+                        <itemizedlist>
+                            <listitem>
+                                <para>
+                                    <code>join</code> Add current node to the specified cluster.
+                                    <xsdxt:code href="samples/node_join.json"/>
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>leave</code> Delete current node from its current cluster.
+                                    <xsdxt:code href="samples/node_leave.json"/>
+                                </para>
+                            </listitem>
+                        </itemizedlist>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <para>
+                        The response is a map that contains the <code>action</code> key
+                        and a UUID as its value.  The UUID is the action that has been
+                        initiated by the request.
+                    </para>
+                </wadl:doc>
+            </representation>
+        </response>
     </method>
     <method name="DELETE" id="node_delete">
         <wadl:doc title="Delete Node" xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
