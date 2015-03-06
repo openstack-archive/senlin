@@ -31,7 +31,8 @@ class RequestContext(context.RequestContext):
     '''
 
     def __init__(self, auth_token=None, auth_token_info=None,
-                 username=None, user_id=None, password=None, is_admin=None,
+                 username=None, user_id=None, password=None,
+                 trusts=None, is_admin=None,
                  tenant=None, tenant_id=None, auth_url=None,
                  domain_id=None, project_id=None, project_domain_id=None,
                  user_domain_id=None,
@@ -58,6 +59,7 @@ class RequestContext(context.RequestContext):
         self.user_id = user_id
         self.username = username
         self.password = password
+        self.trusts = trusts
 
         # To be deprecated
         self.tenant_id = tenant_id
@@ -92,6 +94,7 @@ class RequestContext(context.RequestContext):
             'username': self.username,
             'user_id': self.user_id,
             'password': self.password,
+            'trusts': self.trusts,
             'tenant': self.tenant,
             'tenant_id': self.tenant_id,
             'domain_id': self.domain_id,
