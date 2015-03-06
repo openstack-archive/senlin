@@ -1561,7 +1561,12 @@
                 </param>
                 <param name="sort_keys" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Sorts the action list by the specified keys. Default to None.</para>
+                        <para>
+                            Sorts the action list by the specified keys. Default to None. Valid
+                            keys include <code>name</code>, <code>target</code>, <code>action</code>,
+                            <code>interval</code>, <code>start_time</code>, <code>end_time</code>,
+                            <code>status</code>, <code>status_reason</code> etc.
+                        </para>
                     </wadl:doc>
                 </param>
                 <param name="sort_dir" style="query" required="false">
