@@ -866,7 +866,7 @@ class EngineService(service.Service):
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
 
-        return action.to_dict()
+        return {'action': action.id}
 
     @request_context
     def node_leave(self, context, identity):
@@ -881,7 +881,7 @@ class EngineService(service.Service):
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
 
-        return action.to_dict()
+        return {'action': action.id}
 
     @request_context
     def cluster_policy_list(self, context, identity, filters=None,
