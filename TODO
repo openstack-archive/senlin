@@ -6,7 +6,6 @@ DB
 --
   - Make sure cluster-policy association is deleted when a cluster is deleted
   - Modify node_set_status to check/update cluster status
-  - Add field cluster_id to event table so that query by cluster is easier
 
 ENGINE
 ------
