@@ -74,11 +74,11 @@ class EventController(object):
         if not filters:
             filters = None
 
-        actions = self.rpc_client.event_list(req.context,
-                                             filters=filters,
-                                             **params)
+        events = self.rpc_client.event_list(req.context,
+                                            filters=filters,
+                                            **params)
 
-        return {'events': actions}
+        return {'events': events}
 
     @util.policy_enforce
     def get(self, req, event_id):
@@ -86,7 +86,7 @@ class EventController(object):
         if not event:
             raise exc.HTTPNotFound()
 
-        return event
+        return {'event': event}
 
 
 def create_resource(options):
