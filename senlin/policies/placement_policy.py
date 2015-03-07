@@ -65,7 +65,7 @@ class PlacementPolicy(base.Policy):
     ]
 
     def __init__(self, type_name, name, **kwargs):
-        super(PlacementPolicy, self).__init__(type_name, name, kwargs)
+        super(PlacementPolicy, self).__init__(type_name, name, **kwargs)
 
         self.regions = self.spec.get('regions')
         self.AZs = self.spec.get('AZs')
