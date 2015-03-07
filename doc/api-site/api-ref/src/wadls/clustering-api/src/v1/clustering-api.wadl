@@ -1406,60 +1406,105 @@
             <para role="shortdesc">Lists events.</para>
         </wadl:doc>
         <request>
-            <representation mediaType="application/xml">
-                <param name="obj_id" style="query" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>ID of an object for which the events are to be listed. An object here can be a cluster, a node, a policy etc.</para>
-                    </wadl:doc>
-                </param>
-                <param name="obj_name" style="query" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Filter the events by object names.</para>
-                    </wadl:doc>
-                </param>
-                <param name="obj_type" style="query" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>
-                            The type of objects for which the events are listed. The type here can be <code>CLUSTER</code>, <code>NODE</code>,
-                            <code>PROFILE</code>, <code>POLICY</code> etc.
-                        </para>
-                        <para>Filters the event list by the specified resource_status. You can use this filter multiple times to filter by multiple
-                            resource statuses:
-                            <code>IN_PROGRESS</code>, <code>COMPLETE</code> or <code>FAILED</code>.
-                        </para>
-                    </wadl:doc>
-                </param>
-                <param name="filters" style="query" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A list of key-value pairs for filtering the events returned.</para>
-                    </wadl:doc>
-                </param>
-                <param name="sort_keys" style="query" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Sorts the event list by: <code>resource_type</code> or <code>created_at</code>.</para>
-                    </wadl:doc>
-                </param>
-                <param name="sort_dir" style="query" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook"
-                        xml:lang="EN">
-                        <para>The sort direction of the event list.  Which is <code>asc</code> (ascending) or <code>desc</code> (descending).</para>
-                    </wadl:doc>
-                </param>
+            <representation mediaType="application/json">
                 <param name="limit" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                         <para>
-                            Limits the number of events that appear on a page to this value. The typical pattern of limit and marker is to make an
-                            initial limited request and then to use the ID of the last event from the response as the marker parameter in a subsequent
-                            limited request.
+                            Limits the number of events that appear on a page to this value.
+                            The typical pattern of <code>limit</code> and <code>marker</code>
+                            is to make an initial limited request and then to use the ID of
+                            the last event from the response as the <code>marker</code>
+                            parameter in a subsequent limited request.
                         </para>
                     </wadl:doc>
                 </param>
                 <param name="marker" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                         <para>
-                            Specifies the ID of the last-seen event.  The typical pattern of limit and marker is to make an initial limited request and
-                            then to use the ID of the last event from the response as the marker parameter in a subsequent limited request.
+                            Specifies the ID of the last-seen event.  The typical pattern of
+                            <code>limit</code> and <code>marker</code> is to make an initial
+                            limited request and then to use the ID of the last event from the
+                            response as the marker parameter in a subsequent limited request.
                         </para>
+                    </wadl:doc>
+                </param>
+                <param name="sort_keys" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            Sorts the event list by: <code>timestamp</code>, <code>obj_type
+                            </code>, <code>obj_name</code>, <code>user</code>, <code>action
+                            </code>.
+                    </para>
+                    </wadl:doc>
+                </param>
+                <param name="sort_dir" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            The sort direction of the event list. Valid values include
+                            <code>asc</code> (ascending) or <code>desc</code> (descending).
+                            Default is <code>asc</code>.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="global_tenant" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            Whether events related to all tenants should be returned.
+                            Default is False
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="show_deleted" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            Whether deleted events should be returned as well.
+                            Default is False
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="filters" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            A list of key-value pairs for filtering the events returned.
+                            The key can be one of:
+                        </para>
+                        <itemizedlist>
+                            <listitem>
+                                <para>
+                                    <code>obj_id</code> ID of an object for which the
+                                    events are to be listed. An object here can be a
+                                    cluster, a node, a policy etc. This key can appear
+                                    more than once.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>obj_type</code> Type of an object for which the
+                                    events are to be listed. The type here can be one of
+                                    <code>CLUSTER</code>, <code>NODE</code>, <code>POLICY
+                                    </code> etc. This key can appear more than once.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>obj_name</code> Name of an object for which the
+                                    events are to be listed. This key can appear more than
+                                    once.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>cluster_id</code> ID of the cluster an event is 
+                                    related to. This key can appear more than once.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>action</code> ID of the action to which an event
+                                    is related. This key can appear more than once.
+                                </para>
+                            </listitem>
+                        </itemizedlist>
                     </wadl:doc>
                 </param>
             </representation>
@@ -1479,7 +1524,11 @@
         <response status="200">
             <representation mediaType="application/json">
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                    <para>A dictionary that contains the fields of an event such as <code>TIMESTAMP</code>, <code>LEVEL</code>.</para>
+                    <para>
+                        A map named <code>event</code> that contains the details of an event
+                        such as <code>TIMESTAMP</code>, <code>LEVEL</code> etc.
+                    </para>
+                    <xsdxt:code href="samples/event_get_resp.json"/>
                 </wadl:doc>
             </representation>
         </response>
@@ -1592,6 +1641,11 @@
         <response status="200">
             <representation mediaType="application/json">
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <para>
+                        A list named <code>actions</code> that contains all records that
+                        meet the criteria. Each record is a map that provides detailed data
+                        about an action.
+                    </para>
                     <xsdxt:code href="samples/action_list_resp.json"/>
                 </wadl:doc>
             </representation>
@@ -1604,7 +1658,8 @@
         <response status="200">
             <representation mediaType="application/json">
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                    <para>A dictionary that contains the fields of an action such as <code>id</code>, <code>action</code>.</para>
+                    <para>A map named <code>action</code> that contains the fields of an action
+                        such as <code>id</code>, <code>action</code> etc.</para>
                     <xsdxt:code href="samples/action_get_resp.json"/>
                 </wadl:doc>
             </representation>

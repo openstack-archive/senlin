@@ -1,22 +1,19 @@
 {
     "events": [
         {
-            "obj_name": "node-002",
-            "timestamp": "2014-07-23T08:10:22Z",
-            "obj_id": "3c7faa4040-a110-2ecf-a92c-0474bfdf73",
+            "action": "create",
+            "cluster_id": null,
+            "deleted_time": null,
+            "id": "2d255b9c-8f36-41a2-a137-c0175ccc29c3",
+            "level": "20",
+            "obj_id": "0df0931b-e251-4f2e-8719-4ebfda3627ba",
+            "obj_name": "node009",
             "obj_type": "NODE",
-            "level": "ERROR",
-            "status": "ERROR",
-            "status_reason": "Failed contacting Heat service endpoint",
-        },
-        {
-            "obj_name": "test_cluster",
-            "timestamp": "2014-07-23T08:14:47Z",
-            "obj_id": "474bfdf0-a450-46ec-a78a-0c7faa404073",
-            "obj_type": "CLUSTER",
-            "level": "ERROR",
-            "status": "ERROR",
-            "status_reason": "Only 2 nodes were ACTIVE before timeout",
-        },
+            "project": "6e18cc2bdbeb48a5b3cad2dc499f6804",
+            "status": "CREATING",
+            "status_reason": "Initializing",
+            "timestamp": "2015-03-05T08:53:15.000000",
+            "user": "a21ded6060534d99840658a777c2af5a"
+        } 
     ]
 }
