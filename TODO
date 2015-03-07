@@ -2,10 +2,6 @@
 HIGH PRIORITY
 =============
 
-API
----
-  - Complete the API layer for Senlin service
-
 DB
 --
   - Make sure cluster-policy association is deleted when a cluster is deleted
