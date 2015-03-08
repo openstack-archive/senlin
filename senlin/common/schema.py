@@ -35,7 +35,7 @@ class AnyIndexDict(collections.Mapping):
         return self.value
 
     def __iter__(self):
-        return '*'
+        yield '*'
 
     def __len__(self):
         return 1
@@ -68,11 +68,7 @@ class Schema(collections.Mapping):
                         '"%s"') % self[self.TYPE]
                 raise exception.InvalidSchemaError(message=msg)
 
-        if isinstance(schema, type(self)):
-            if self[self.TYPE] != self.LIST:
-                msg = _('Single schema valid only for List, not '
-                        '"%s"') % self[self.TYPE]
-                raise exception.InvalidSchemaError(message=msg)
+        if self[self.TYPE] == self.LIST:
             self.schema = AnyIndexDict(schema)
         else:
             self.schema = schema
@@ -116,35 +112,6 @@ class Schema(collections.Mapping):
                 for nested_schema in self.schema.values():
                     nested_schema.validate(context)
 
-    def _is_valid_constraint(self, constraint):
-        valid_types = getattr(constraint, 'valid_types', [])
-        return any(self.type == getattr(self, t, None) for t in valid_types)
-
-    def to_schema_type(self, value):
-        """Returns the value in the schema's data type."""
-        try:
-            # We have to be backwards-compatible for Integer and Number
-            # Schema types and try to convert string representations of
-            # number into "real" number types, therefore calling
-            # str_to_num below.
-            if self.type == self.INTEGER:
-                num = Schema.str_to_num(value)
-                if isinstance(num, float):
-                    raise ValueError(_('%s is not an integer.') % num)
-                return num
-            elif self.type == self.NUMBER:
-                return Schema.str_to_num(value)
-            elif self.type == self.STRING:
-                return str(value)
-            elif self.type == self.BOOLEAN:
-                return strutils.bool_from_string(str(value), strict=True)
-        except ValueError:
-            raise ValueError(_('Value "%(val)s" is invalid for data type '
-                               '"%(type)s".')
-                             % {'val': value, 'type': self.type})
-
-        return value
-
     def validate_constraints(self, value, context=None, skipped=None):
         if not skipped:
             skipped = []
@@ -152,9 +119,9 @@ class Schema(collections.Mapping):
         try:
             for constraint in self.constraints:
                 if type(constraint) not in skipped:
-                    constraint.validate(value, self, context)
+                    constraint.validate(value, context)
         except ValueError as ex:
-            raise exception.StackValidationFailed(message=six.text_type(ex))
+            raise exception.SpecValidationFailed(message=six.text_type(ex))
 
     def __getitem__(self, key):
         if key == self.DESCRIPTION:
@@ -196,6 +163,9 @@ class Boolean(Schema):
         else:
             return super(Boolean, self).__getitem__(key)
 
+    def to_schema_type(self, value):
+        return strutils.bool_from_string(str(value), strict=True)
+
     def resolve(self, value):
         if str(value).lower() not in ('true', 'false'):
             msg = _('The value "%s" is not a valid Boolean') % value
@@ -206,6 +176,7 @@ class Boolean(Schema):
     def validate(self, value, context=None):
         if isinstance(value, bool):
             return
+
         self.resolve(value)
 
 
@@ -216,6 +187,16 @@ class Integer(Schema):
         else:
             return super(Integer, self).__getitem__(key)
 
+    def to_schema_type(self, value):
+        if isinstance(value, (int, long)):
+            return value
+        try:
+            num = int(value)
+        except ValueError:
+            raise ValueError(_('%s is not an intger.') % num)
+
+        return num
+
     def resolve(self, value):
         try:
             return int(value)
@@ -225,9 +206,10 @@ class Integer(Schema):
             raise exception.SpecValidationFailed(message=msg)
 
     def validate(self, value, context=None):
-        if isinstance(value, (int, long)):
-            return
-        self.resolve(value)
+        if not isinstance(value, (int, long)):
+            value = self.resolve(value)
+
+        self.validate_constraints(value, self, context)
 
 
 class String(Schema):
@@ -237,18 +219,23 @@ class String(Schema):
         else:
             return super(String, self).__getitem__(key)
 
+    def to_schema_type(self, value):
+        return str(value)
+
     def resolve(self, value):
         try:
             return str(value)
         except (TypeError, ValueError) as ex:
             raise ex
-            # raise exception.SpecValidationFailed(message=six.text_type(ex))
 
     def validate(self, value, context=None):
-        if isinstance(value, six.string_types):
-            return
+        if not isinstance(value, six.string_types):
+            msg = _('The value "%s" cannot be converted into a '
+                    'string.') % value
+            raise exception.SpecValidationFailed(message=msg)
 
         self.resolve(value)
+        self.validate_constraints(value, self, context)
 
 
 class Number(Schema):
@@ -257,6 +244,15 @@ class Number(Schema):
             return self.NUMBER
         else:
             return super(Number, self).__getitem__(key)
+
+    def to_schema_type(self, value):
+        if isinstance(value, numbers.Number):
+            return value
+
+        try:
+            return int(value)
+        except ValueError:
+            return float(value)
 
     def resolve(self, value):
         if isinstance(value, numbers.Number):
@@ -272,6 +268,7 @@ class Number(Schema):
             return
 
         self.resolve(value)
+        self.resolve_constraints(value, self, context)
 
 
 class List(Schema):
