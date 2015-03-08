@@ -43,7 +43,7 @@ DB
 
 ENGINE
 ------
-
+  - Cleanse common/exception module
   - Design and implement dynamical plugin loading mechanism that allows 
     loading plugins from any paths
 
