@@ -29,8 +29,12 @@ class TestRequestContext(base.SenlinTestCase):
         self.ctx = {'username': 'mick',
                     'auth_token': '123',
                     'auth_token_info': {'123info': 'woop'},
+                    'domain_id': 'this domain',
+                    'project_domain_id': 'a project domain',
+                    'project_id': 'a project',
                     'is_admin': False,
                     'user': 'mick',
+                    'user_domain_id': 'user-domain',
                     'password': 'foo',
                     'show_deleted': False,
                     'roles': ['arole', 'notadmin'],
@@ -38,24 +42,30 @@ class TestRequestContext(base.SenlinTestCase):
                     'user_id': 'fooUser',
                     'tenant': 'atenant',
                     'auth_url': 'http://xyz',
+                    'trusts': None,
                     'region_name': 'regionOne'}
 
         super(TestRequestContext, self).setUp()
 
     def test_request_context_init(self):
         ctx = context.RequestContext(
-            auth_token=self.ctx.get('auth_token'),
             username=self.ctx.get('username'),
+            auth_token=self.ctx.get('auth_token'),
+            auth_token_info=self.ctx.get('auth_token_info'),
+            domain_id=self.ctx.get('domain_id'),
+            project_domain_id=self.ctx.get('project_domain_id'),
+            project_id=self.ctx.get('project_id'),
+            is_admin=self.ctx.get('is_admin'),
+            user=self.ctx.get('user'),
+            user_domain_id=self.ctx.get('user_domain_id'),
             password=self.ctx.get('password'),
-            tenant=self.ctx.get('tenant'),
+            show_deleted=self.ctx.get('show_deleted'),
+            roles=self.ctx.get('roles'),
             tenant_id=self.ctx.get('tenant_id'),
             user_id=self.ctx.get('user_id'),
+            tenant=self.ctx.get('tenant'),
             auth_url=self.ctx.get('auth_url'),
-            roles=self.ctx.get('roles'),
-            show_deleted=self.ctx.get('show_deleted'),
-            is_admin=self.ctx.get('is_admin'),
-            auth_token_info=self.ctx.get('auth_token_info'),
-            user=self.ctx.get('user'),
+            trusts=self.ctx.get('trusts'),
             region_name=self.ctx.get('region_name'))
         ctx_dict = ctx.to_dict()
         del(ctx_dict['request_id'])
