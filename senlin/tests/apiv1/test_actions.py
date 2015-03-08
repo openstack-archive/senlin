@@ -31,7 +31,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         # Create WSGI controller instance
         class DummyConfig(object):
-            bind_port = 8004
+            bind_port = 8778
 
         cfgopts = DummyConfig()
         self.controller = actions.ActionController(options=cfgopts)
