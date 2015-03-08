@@ -91,6 +91,7 @@ class RequestContext(context.RequestContext):
             'auth_url': self.auth_url,
             'auth_token': self.auth_token,
             'auth_token_info': self.auth_token_info,
+            'user': self.user,
             'username': self.username,
             'user_id': self.user_id,
             'password': self.password,
