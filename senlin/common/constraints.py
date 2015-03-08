@@ -28,14 +28,9 @@ class BaseConstraint(collections.Mapping):
         '''Utility method for generating schema docs.'''
         return self.desc()
 
-    def validate(self, value, context=None):
-        '''Base entry for validation.
-        :param value: value for validation.
-        :param schema: the schema that may provide customized validation.
-        :param context: optional argument in case validation needs a context.
-        '''
-        # The actual validation is implemented by subclasses
-        if not self._validate(value, context):
+    def validate(self, value, schema=None, context=None):
+        '''Base entry for validation.'''
+        if not self._validate(value, schema, context):
             raise ValueError(self._error(value))
 
     @classmethod
@@ -81,10 +76,15 @@ class AllowedValues(BaseConstraint):
         return _('"%(value)s" must be one of the allowed values: '
                  '%(allowed)s') % dict(value=value, allowed=values)
 
-    def _validate(self, value, context=None):
-        if isinstance(value, collections.Sequence):
+    def _validate(self, value, schema, context=None):
+        if isinstance(value, list):
             return all(v in self.allowed for v in value)
 
+        # try implicit type conversion
+        if schema is not None:
+            _allowed = tuple(schema.to_schema_type(v)
+                             for v in self.allowed)
+            return schema.to_schema_type(value) in _allowed
         return value in self.allowed
 
     def _constraint(self):
