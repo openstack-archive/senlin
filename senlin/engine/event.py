@@ -58,7 +58,10 @@ class Event(object):
     def _infer_entity_data(self, entity):
         self.obj_id = entity.id
         self.obj_name = entity.name
-
+        if self.status is None:
+            self.status = entity.status
+        if self.status_reason is None:
+            self.status_reason = entity.status_reason
         entity_type = entity.__class__.__name__.upper()
         self.obj_type = entity_type
         if entity_type == 'CLUSTER':
