@@ -19,7 +19,7 @@ from senlin.common import exception
 from senlin.common.i18n import _LE
 from senlin.common.i18n import _LW
 from senlin.db import api as db_api
-from senlin.engine import event as events
+from senlin.engine import event as event_mod
 from senlin.engine import node as node_mod
 from senlin.openstack.common import periodic_task
 from senlin.profiles import base as profiles_base
@@ -41,8 +41,8 @@ class Cluster(periodic_task.PeriodicTasks):
         INIT, CREATING, ACTIVE, ERROR, CRITICAL, DELETING, DELETED, WARNING,
         UPDATING, UPDATE_CANCELLED,
     ) = (
-        'INIT', 'CREATING', 'ACTIVE', 'ERROR', 'CRITICAL', 'DELETING', 'DELETED',
-        'WARNING', 'UPDATING', 'UPDATE_CANCELLED',
+        'INIT', 'CREATING', 'ACTIVE', 'ERROR', 'CRITICAL', 'DELETING',
+        'DELETED', 'WARNING', 'UPDATING', 'UPDATE_CANCELLED',
     )
 
     def __init__(self, name, profile_id, size=0, context=None, **kwargs):
@@ -124,12 +124,12 @@ class Cluster(periodic_task.PeriodicTasks):
 
         if self.id:
             db_api.cluster_update(context, self.id, values)
-            # TODO(Qiming): create event/log
+            event_mod.info(context, self, 'update')
         else:
             values['init_time'] = datetime.datetime.utcnow()
             cluster = db_api.cluster_create(context, values)
-            # TODO(Qiming): create event/log
             self.id = cluster.id
+            event_mod.info(context, self, 'create')
 
         self._load_runtime_data(context)
         return self.id
@@ -273,17 +273,19 @@ class Cluster(periodic_task.PeriodicTasks):
 
         new_profile = db_api.get_profile(context, new_profile_id)
         if not new_profile:
-            events.warning(_LW('Cluster cannot be updated to a profile '
-                               'that does not exists'))
+            event_mod.warning(context, self, 'update',
+                              _LW('Cluster cannot be updated to a profile '
+                                  'that does not exists'))
             return False
 
         # Check if profile types match
         old_profile = db_api.get_profile(context, self.profile_id)
         if old_profile.type != new_profile.type:
-            events.warning(_LW('Cluster cannot be updated to a different '
-                               'profile type (%(oldt)s->%(newt)s)'),
-                           {'oldt': old_profile.type,
-                            'newt': new_profile.type})
+            event_mod.warning(context, self, 'update',
+                              _LW('Cluster cannot be updated to a different '
+                                  'profile type (%(oldt)s->%(newt)s)') % {
+                                      'oldt': old_profile.type,
+                                      'newt': new_profile.type})
             return False
 
         self.set_status(self.UPDATING)
