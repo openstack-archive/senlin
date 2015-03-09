@@ -202,7 +202,7 @@ class StackProfile(base.Profile):
             'environment': new_profile.spec_data[new_profile.ENVIRONMENT],
         }
 
-        self.heat().stacks.update(**fields)
+        self.heat().stack_update(**fields)
 
         # Wait for action to complete/fail
         while not self._check_action_complete(obj, 'UPDATE'):
