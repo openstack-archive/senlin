@@ -150,17 +150,6 @@ class EngineClient(object):
                           self.make_msg('policy_delete',
                                         identity=identity))
 
-    def identify_cluster(self, ctxt, cluster_name):
-        '''Get the full cluster identifier for a single, live cluster given
-        the cluster name.
-
-        :param ctxt: RPC context.
-        :param cluster_name: Name of the cluster you want to see,
-                           or None to see all
-        '''
-        return self.call(ctxt, self.make_msg('identify_cluster',
-                                             cluster_name=cluster_name))
-
     def cluster_list(self, ctxt, limit=None, marker=None, sort_keys=None,
                      sort_dir=None, filters=None, tenant_safe=True,
                      show_deleted=False, show_nested=False):
