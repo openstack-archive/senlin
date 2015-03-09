@@ -25,6 +25,7 @@ class Trust(resource.Resource):
     allow_create = True
     allow_delete = True
     allow_list = True
+    allow_retrieve = True
 
     # Properties
     project_id = resource.prop('project_id')
@@ -33,3 +34,4 @@ class Trust(resource.Resource):
     impersonation = resource.prop('impersonation')
     trustee_user_id = resource.prop('trustee_user_id')
     trustor_user_id = resource.prop('trustor_user_id')
+    roles = resource.prop('roles')
