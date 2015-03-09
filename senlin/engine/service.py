@@ -11,7 +11,6 @@
 # under the License.
 
 import functools
-import random
 import six
 
 from oslo_config import cfg
@@ -33,6 +32,7 @@ from senlin.engine import cluster as cluster_mod
 from senlin.engine import dispatcher
 from senlin.engine import environment
 from senlin.engine import event as event_mod
+from senlin.engine import health_manager
 from senlin.engine import node as node_mod
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock
@@ -42,22 +42,7 @@ from senlin.profiles import base as profile_base
 
 LOG = logging.getLogger(__name__)
 
-service_opts = [
-    cfg.IntOpt('periodic_interval_max',
-               default=60,
-               help='Seconds between periodic tasks to be called'),
-    cfg.BoolOpt('periodic_enable',
-                default=True,
-                help='Enable periodic tasks'),
-    cfg.IntOpt('periodic_fuzzy_delay',
-               default=60,
-               help='Range of seconds to randomly delay when starting the'
-                    ' periodic task scheduler to reduce stampeding.'
-                    ' (Disable by setting to 0)'),
-]
-
 CONF = cfg.CONF
-CONF.register_opts(service_opts)
 
 
 def request_context(func):
@@ -83,26 +68,13 @@ class EngineService(service.Service):
     by the RPC caller.
     '''
 
-    def __init__(self, host, topic, manager=None,
-                 periodic_enable=None, periodic_fuzzy_delay=None,
-                 periodic_interval_max=None):
+    def __init__(self, host, topic, manager=None):
 
         super(EngineService, self).__init__()
         self.host = host
         self.topic = topic
         self.dispatcher_topic = consts.ENGINE_DISPATCHER_TOPIC
-
-        #params for periodic running task
-        if periodic_interval_max is None:
-            periodic_interval_max = CONF.periodic_interval_max
-        if periodic_enable is None:
-            periodic_enable = CONF.periodic_enable
-        if periodic_fuzzy_delay is None:
-            periodic_fuzzy_delay = CONF.periodic_fuzzy_delay
-
-        self.periodic_interval_max = periodic_interval_max
-        self.periodic_enable = periodic_enable
-        self.periodic_fuzzy_delay = periodic_fuzzy_delay
+        self.health_mgr_topic = consts.ENGINE_HEALTH_MGR_TOPIC
 
         # The following are initialized here, but assigned in start() which
         # happens after the fork when spawning multiple worker processes
@@ -124,18 +96,18 @@ class EngineService(service.Service):
                                                 self.TG)
         LOG.debug("Starting dispatcher for engine %s" % self.engine_id)
 
-        if self.periodic_enable:
-            if self.periodic_fuzzy_delay:
-                initial_delay = random.randint(0, self.periodic_fuzzy_delay)
-            else:
-                initial_delay = None
-
-            self.tg.add_dynamic_timer(self.periodic_tasks,
-                                      initial_delay=initial_delay,
-                                      periodic_interval_max=
-                                      self.periodic_interval_max)
-
         self.dispatcher.start()
+
+        # create a health manager for this engine thread.
+        # This health manager will run in a greenthread and it will not
+        # stop until being notified or the engine is stopped.
+        self.health_mgr = health_manager.Health_Manager(self,
+                                                        self.health_mgr_topic,
+                                                        consts.RPC_API_VERSION,
+                                                        self.TG)
+        LOG.debug("Starting health manager for engine %s" % self.engine_id)
+
+        self.health_mgr.start()
 
         target = oslo_messaging.Target(version=consts.RPC_API_VERSION,
                                        server=self.host,
@@ -163,14 +135,12 @@ class EngineService(service.Service):
         # Notify dispatcher to stop all action threads it started.
         self.dispatcher.stop()
 
+        # Notify health_manager to stop 
+        self.health_mgr.stop()
+
         # Terminate the engine process
         LOG.info(_LI("All threads were gone, terminating engine"))
         super(EngineService, self).stop()
-
-    def periodic_tasks(self, raise_on_error=False):
-        """Tasks to be run at a periodic interval."""
-        #TODO(anyone): iterate clusters and call their periodic_tasks
-        return self.periodic_interval_max
 
     @request_context
     def get_revision(self, context):
