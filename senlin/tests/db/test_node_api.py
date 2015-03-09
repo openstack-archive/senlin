@@ -387,11 +387,37 @@ class DBAPINodeTest(base.SenlinTestCase):
         self.assertEqual('bad status', node.status)
         self.assertEqual('a new role', node.role)
 
+    def test_node_update_not_found(self):
+        new_attributes = {'name': 'new_name'}
         ex = self.assertRaises(exception.NotFound,
                                db_api.node_update,
                                self.ctx, 'BogusId', new_attributes)
         self.assertEqual('Attempt to update a node with id "BogusId" that '
                          'does not exists failed.', six.text_type(ex))
+
+    def test_node_update_cluster_status_updated(self):
+        cluster = db_api.cluster_get(self.ctx, self.cluster.id)
+        self.assertEqual('INIT', cluster.status)
+
+        node = shared.create_node(self.ctx, self.cluster, self.profile)
+
+        new_attributes = {
+            'name': 'new_name',
+            'status': 'ERROR',
+            'status_reason': 'Something is wrong',
+        }
+
+        db_api.node_update(self.ctx, node.id, new_attributes)
+
+        node = db_api.node_get(self.ctx, node.id)
+        self.assertEqual('new_name', node.name)
+        self.assertEqual('ERROR', node.status)
+        self.assertEqual('Something is wrong', node.status_reason)
+
+        cluster = db_api.cluster_get(self.ctx, self.cluster.id)
+        self.assertEqual('WARNING', cluster.status)
+        reason = 'Node new_name: Something is wrong'
+        self.assertEqual(reason, cluster.status_reason)
 
     def test_node_migrate_from_none(self):
         node_orphan = shared.create_node(self.ctx, None, self.profile)
