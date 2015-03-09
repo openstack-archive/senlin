@@ -216,8 +216,7 @@ class Node(object):
             LOG.error(_LE('Node is in status "%s"'), self.status)
             return False
         self.set_status(context, self.CREATING, reason='Creation in progress')
-        event_mod.info(context, self, 'create', self.status,
-                       self.status_reason)
+        event_mod.info(context, self, 'create')
         physical_id = profile_base.Profile.create_object(context, self)
         if not physical_id:
             return False
