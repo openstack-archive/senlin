@@ -2,10 +2,6 @@
 HIGH PRIORITY
 =============
 
-DB
---
-  - Modify node_set_status to check/update cluster status
-
 ENGINE
 ------
   - cleanse scheduler module [Yanyan Hu]
