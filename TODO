@@ -84,3 +84,7 @@ TEST
   - Add test case to engine/registry
   - Add test case to engine/environment
   - Add test case to db apis that query objects using short ids
+
+DOC
+-----
+  - Provide a sample conf file for customizing senlin options
