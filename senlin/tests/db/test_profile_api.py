@@ -27,7 +27,7 @@ class DBAPIProfileTest(base.SenlinTestCase):
         self.ctx = utils.dummy_context()
 
     def test_profile_create(self):
-        data = parser.parse_profile(shared.sample_profile)
+        data = parser.simple_parse(shared.sample_profile)
         profile = shared.create_profile(self.ctx)
         self.assertIsNotNone(profile.id)
         self.assertEqual(data['name'], profile.name)
