@@ -4,7 +4,6 @@ HIGH PRIORITY
 
 DB
 --
-  - Make sure cluster-policy association is deleted when a cluster is deleted
   - Modify node_set_status to check/update cluster status
 
 ENGINE

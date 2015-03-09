@@ -579,3 +579,43 @@ class DBAPIClusterTest(base.SenlinTestCase):
         # Testing child nodes deletion
         res = db_api.node_get(self.ctx, node.id)
         self.assertIsNone(res)
+
+    def test_cluster_delete_policies_deleted(self):
+        # create cluster
+        cluster = shared.create_cluster(self.ctx, self.profile)
+        cluster_id = cluster.id
+
+        # create policy
+        policy_data = {
+            'name': 'test_policy',
+            'type': 'ScalingPolicy',
+            'spec': {'foo': 'bar'},
+            'level': 50,
+            'cooldown': 60,
+            'data': None,
+        }
+        policy = db_api.policy_create(self.ctx, policy_data)
+        self.assertIsNotNone(policy)
+
+        # attach policy
+        fields = {
+            'enabled': True,
+            'priority': 77,
+        }
+        db_api.cluster_policy_attach(self.ctx, cluster_id, policy.id, fields)
+        binding = db_api.cluster_policy_get(self.ctx, cluster_id, policy.id)
+        self.assertIsNotNone(binding)
+
+        # now we delete the cluster
+        db_api.cluster_delete(self.ctx, cluster_id)
+
+        res = db_api.cluster_get(self.ctx, cluster_id)
+        self.assertIsNone(res)
+
+        # we check the cluster-policy binding
+        binding = db_api.cluster_policy_get(self.ctx, cluster_id, policy.id)
+        self.assertIsNone(binding)
+
+        # but the policy is not deleted
+        result = db_api.policy_get(self.ctx, policy.id)
+        self.assertIsNotNone(result)
