@@ -273,9 +273,7 @@ def cluster_update(context, cluster_id, values):
     cluster = cluster_get(context, cluster_id)
 
     if not cluster:
-        raise exception.NotFound(
-            _('Attempt to update a cluster with id "%s" that does '
-              'not exist failed') % cluster_id)
+        raise exception.ClusterNotFound(cluster=cluster_id)
 
     cluster.update(values)
     cluster.save(_session(context))
