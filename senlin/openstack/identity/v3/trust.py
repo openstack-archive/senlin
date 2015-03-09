@@ -25,6 +25,7 @@ class Trust(resource.Resource):
     allow_create = True
     allow_delete = True
     allow_list = True
+    allow_retrieve = True
 
     # Properties
     project_id = resource.prop('project_id')
