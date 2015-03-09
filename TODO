@@ -36,7 +36,10 @@ MIDDLE PRIORITY
 API
 ---
   - Implement webhook support [Yanyan Hu]
-
+  - Provide support for privilege management [Yanyan Hu]
+    - Implement a middleware for trust handling
+    - Extend policy middleware to support resource sharing between different
+      senlin users
 DB
 --
   - Add test cases for policy_delete with 'force' set to True[Liuh/ZhaiHF]
