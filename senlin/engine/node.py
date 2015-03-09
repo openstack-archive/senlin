@@ -210,17 +210,6 @@ class Node(object):
         if reason:
             values['status_reason'] = reason
         db_api.node_update(context, self.id, values)
-        # Update cluster status
-        if self.cluster_id:
-            values = {}
-            if status == self.ERROR:
-                values['status'] = self.WARNING
-            else:
-                values['status'] = self.ACTIVE
-            if reason:
-                values['status_reason'] = "Node %s: %s" % (self.id, reason)
-            db_api.cluster_update(context, self.cluster_id, values)
-    # TODO(anyone): generate event record
 
     def do_create(self, context):
         if self.status != self.INIT:

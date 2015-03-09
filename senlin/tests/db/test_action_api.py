@@ -21,7 +21,7 @@ from senlin.tests.db import shared
 
 
 def _create_action(context, action=shared.sample_action, **kwargs):
-    data = parser.parse_action(action)
+    data = parser.simple_parse(action)
     data.update(kwargs)
     return db_api.action_create(context, data)
 
@@ -32,7 +32,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.ctx = utils.dummy_context()
 
     def test_action_create(self):
-        data = parser.parse_action(shared.sample_action)
+        data = parser.simple_parse(shared.sample_action)
         action = db_api.action_create(self.ctx, data)
 
         self.assertIsNotNone(action)
@@ -47,7 +47,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.assertIsNone(action.outputs)
 
     def test_action_get(self):
-        data = parser.parse_action(shared.sample_action)
+        data = parser.simple_parse(shared.sample_action)
         action = _create_action(self.ctx)
         retobj = db_api.action_get(self.ctx, action.id)
 

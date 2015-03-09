@@ -20,7 +20,6 @@ import yaml
 from oslo_log import log as logging
 
 from senlin.common.i18n import _
-from senlin.common.i18n import _LE
 
 LOG = logging.getLogger(__name__)
 
@@ -100,46 +99,3 @@ def simple_parse(in_str):
         raise ValueError(msg)
 
     return out_dict
-
-
-def parse_profile(profile_str):
-    '''Parse and validate the specified string as a profile.'''
-
-    data = simple_parse(profile_str)
-
-    # TODO(Qiming):
-    # Construct a profile object based on the type specified
-
-    return data
-
-
-def parse_policy(policy_str):
-    '''Parse and validate the specified string as a policy.'''
-
-    data = simple_parse(policy_str)
-
-    # TODO(Qiming):
-    # Construct a policy object based on the type specified
-
-    return data
-
-
-def parse_action(action):
-    '''Parse and validate the specified string as a action.'''
-
-    if not isinstance(action, six.string_types):
-        # TODO(Qiming): Throw exception
-        return None
-
-    data = {}
-    try:
-        data = yaml.load(action, Loader=Loader)
-    except Exception as ex:
-        # TODO(Qiming): Throw exception
-        LOG.error(_LE('Failed parsing given data as YAML: %s'),
-                  six.text_type(ex))
-        return None
-
-    # TODO(Qiming): Construct a action object based on the type specified
-
-    return data

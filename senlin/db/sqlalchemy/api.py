@@ -412,16 +412,28 @@ def node_update(context, node_id, values):
     :param values: A dictionary of values to be updated on the node.
     :raises NotFound: The specified node does not exist in database.
     '''
-    query = model_query(context, models.Node)
-    node = query.get(node_id)
+    session = _session(context)
+    session.begin()
 
+    node = session.query(models.Node).get(node_id)
     if not node:
+        session.rollback()
         raise exception.NotFound(
             _('Attempt to update a node with id "%s" that does '
               'not exists failed.') % node_id)
 
     node.update(values)
-    node.save(query.session)
+    node.save(session)
+    if 'status' in values and node.cluster_id is not None:
+        cluster = session.query(models.Cluster).get(node.cluster_id)
+        if cluster is not None:
+            if values['status'] == 'ERROR':
+                cluster.status = 'WARNING'
+            if 'status_reason' in values:
+                cluster.status_reason = _('Node %(node)s: %(reason)s') % {
+                    'node': node.name, 'reason': values['status_reason']}
+            cluster.save(session)
+    session.commit()
 
 
 def node_migrate(context, node_id, to_cluster, timestamp):
