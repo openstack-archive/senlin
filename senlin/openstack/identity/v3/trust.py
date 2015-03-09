@@ -34,3 +34,4 @@ class Trust(resource.Resource):
     impersonation = resource.prop('impersonation')
     trustee_user_id = resource.prop('trustee_user_id')
     trustor_user_id = resource.prop('trustor_user_id')
+    roles = resource.prop('roles')
