@@ -19,6 +19,40 @@ from senlin.openstack.identity.v3 import trust
 LOG = logging.getLogger(__name__)
 
 
+class SenlinTrust(object):
+    '''Stores information about the trust of requester.
+       e.g. roles, trustor_user_id, trustee_user_id.
+    '''
+
+    def __init__(self, id=None, project_id=None,
+                 expires_at=None, impersonation=None,
+                 trustee_user_id=None, trustor_user_id=None,
+                 roles=None):
+
+        self.id = id
+        self.project_id = project_id
+        self.expires_at = expires_at
+        self.impersonation = impersonation
+        self.trustee_user_id = trustee_user_id
+        self.trustor_user_id = trustor_user_id
+        self.roles = roles
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'project_id': self.project_id,
+            'expires_at': self.expires_at,
+            'impersonation': self.impersonation,
+            'trustee_user_id': self.trustee_user_id,
+            'trustor_user_id': self.trustor_user_id,
+            'roles': self.roles
+        }
+
+    @classmethod
+    def from_dict(cls, values):
+        return cls(**values)
+
+
 def get_trust(context, trust_id):
     '''Get trust detail information'''
     conn = sdk.create_connection(context)
