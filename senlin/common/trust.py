@@ -19,6 +19,52 @@ from senlin.openstack.identity.v3 import trust
 LOG = logging.getLogger(__name__)
 
 
+def get_trust(context, trust_id):
+    '''Get trust detail information'''
+    conn = sdk.create_connection(context)
+    session = conn.session
+
+    params = {
+        'id': trust_id
+    }
+    obj = trust.Trust.new(**params)
+    result = obj.get(session)
+
+    return result
+
+
+def list_trust(context, trustee_user_id=None, trustor_user_id=None):
+    conn = sdk.create_connection(context)
+    session = conn.session
+
+    trusts = []
+    params = {}
+    if trustee_user_id is not None:
+        params['trustee_user_id'] = trustee_user_id
+
+    if trustor_user_id is not None:
+        params['trustor_user_id'] = trustor_user_id
+
+    result = trust.Trust.list(session, **params)
+    for obj in result:
+        trust_item = {
+            'id': obj.id,
+            'project_id': obj.project_id,
+            'expires_at': obj.expires_at,
+            'impersonation': obj.impersonation,
+            'trustee_user_id': obj.trustee_user_id,
+            'trustor_user_id': obj.trustor_user_id
+        }
+
+        # Get roles information of trust
+        trust_detail = get_trust(context, obj.id)
+        trust_item['roles'] = trust_detail.roles
+
+        trusts.append(trust_item)
+
+    return trusts
+
+
 class TrustMiddleware(wsgi.Middleware):
     """This middleware gets trusts information of the requester
        and fill it into request context. This information will
@@ -26,54 +72,11 @@ class TrustMiddleware(wsgi.Middleware):
        management.
     """
     def process_request(self, req):
-        conn = sdk.create_connection(req.context)
-        session = conn.session
-
         # Query trust list with detail information
-        trusts = self._list_trust(session, req.context.user_id)
+        trusts = list_trust(req.context, req.context.user_id)
         LOG.debug('Trust list of user %s is %s' %
                   (req.context.user_id, str(trusts)))
         req.context.trusts = trusts
-
-    def _list_trust(self, session, trustee_user_id=None,
-                    trustor_user_id=None):
-        trusts = []
-        params = {}
-        if trustee_user_id is not None:
-            params['trustee_user_id'] = trustee_user_id
-
-        if trustor_user_id is not None:
-            params['trustor_user_id'] = trustor_user_id
-
-        result = trust.Trust.list(session, **params)
-        for obj in result:
-            trust_item = {
-                'id': obj.id,
-                'project_id': obj.project_id,
-                'expires_at': obj.expires_at,
-                'impersonation': obj.impersonation,
-                'trustee_user_id': obj.trustee_user_id,
-                'trustor_user_id': obj.trustor_user_id
-            }
-
-            # Get roles information of trust
-            trust_detail = self._get_trust(session, obj.id)
-            trust_item['roles'] = trust_detail.roles
-
-            trusts.append(trust_item)
-
-        return trusts
-
-    def _get_trust(self, session, trust_id):
-        '''Get trust detail information'''
-
-        params = {
-            'id': trust_id
-        }
-        obj = trust.Trust.new(**params)
-        result = obj.get(session)
-
-        return result
 
 
 def TrustMiddleware_filter_factory(global_conf, **local_conf):
