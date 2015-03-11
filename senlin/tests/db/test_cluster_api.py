@@ -459,8 +459,8 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertEqual('update failed', cluster.status_reason)
         self.assertEqual(90, cluster.timeout)
 
-        self.assertRaises(exception.NotFound, db_api.cluster_update, self.ctx,
-                          UUID2, values)
+        self.assertRaises(exception.ClusterNotFound,
+                          db_api.cluster_update, self.ctx, UUID2, values)
 
     def test_get_sort_keys_returns_empty_list_if_no_keys(self):
         sort_keys = None
