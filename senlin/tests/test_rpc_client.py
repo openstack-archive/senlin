@@ -17,7 +17,7 @@ Unit Tests for senlin.rpc.client
 
 import copy
 import mock
-from oslo.messaging._drivers import common as rpc_common
+from oslo_messaging._drivers import common as rpc_common
 
 from senlin.common import exception
 from senlin.common import messaging
