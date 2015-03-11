@@ -16,15 +16,16 @@ import six
 import webob
 
 from oslo_config import cfg
-from oslo.messaging._drivers import common as rpc_common
+from oslo_log import log
+from oslo_messaging._drivers import common as rpc_common
 
 import senlin.api.middleware.fault as fault
-from senlin.common import exception as senlinexc
+from senlin.common import exception as senlin_exc
 from senlin.common.i18n import _
 from senlin.tests.common import base 
 
 
-class ClusterNotFoundChild(senlinexc.ClusterNotFound):
+class ClusterNotFoundChild(senlin_exc.ClusterNotFound):
     pass
 
 
@@ -33,11 +34,14 @@ class ErrorWithNewline(webob.exc.HTTPBadRequest):
 
 
 class FaultMiddlewareTest(base.SenlinTestCase):
+    def setUp(self):
+        super(FaultMiddlewareTest, self).setUp()
+        log.register_options(cfg.CONF)
 
     def test_disguised_http_exception_with_newline(self):
         wrapper = fault.FaultWrapper(None)
         newline_error = ErrorWithNewline('Error with \n newline')
-        msg = wrapper._error(senlinexc.HTTPExceptionDisguise(newline_error))
+        msg = wrapper._error(senlin_exc.HTTPExceptionDisguise(newline_error))
         expected = {
             'code': 400,
             'error': {
@@ -55,7 +59,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
 
     def test_openstack_exception_with_kwargs(self):
         wrapper = fault.FaultWrapper(None)
-        msg = wrapper._error(senlinexc.ClusterNotFound(cluster='a'))
+        msg = wrapper._error(senlin_exc.ClusterNotFound(cluster='a'))
         expected = {
             'code': 404,
             'error': {
@@ -71,7 +75,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
 
     def test_openstack_exception_without_kwargs(self):
         wrapper = fault.FaultWrapper(None)
-        msg = wrapper._error(senlinexc.PolicyNotSpecified())
+        msg = wrapper._error(senlin_exc.PolicyNotSpecified())
         expected = {
             'code': 500,
             'error': {
@@ -91,7 +95,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
         cfg.CONF.set_override('debug', True)
         msg = u'Error with non-ascii chars \x80'
 
-        class TestException(senlinexc.SenlinException):
+        class TestException(senlin_exc.SenlinException):
             msg_fmt = msg
 
         wrapper = fault.FaultWrapper(None)
@@ -113,7 +117,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
     def test_remote_exception(self):
         # We want tracebacks
         cfg.CONF.set_override('debug', True)
-        error = senlinexc.ClusterNotFound(cluster='a')
+        error = senlin_exc.ClusterNotFound(cluster='a')
         exc_info = (type(error), error, None)
         serialized = rpc_common.serialize_remote_exception(exc_info)
         remote_error = rpc_common.deserialize_remote_exception(
@@ -158,20 +162,20 @@ class FaultMiddlewareTest(base.SenlinTestCase):
 
     def test_all_remote_exceptions(self):
         for name, obj in inspect.getmembers(
-                senlinexc, lambda x: inspect.isclass(x) and issubclass(
-                    x, senlinexc.SenlinException)):
+                senlin_exc, lambda x: inspect.isclass(x) and issubclass(
+                    x, senlin_exc.SenlinException)):
 
             if '__init__' in obj.__dict__:
-                if obj == senlinexc.SenlinException:  # manually ignore baseclass
+                if obj == senlin_exc.SenlinException:  # manually ignore baseclass
                     continue
-                elif obj == senlinexc.Error:
+                elif obj == senlin_exc.Error:
                     error = obj('Error')
-                elif obj == senlinexc.NotFound:
+                elif obj == senlin_exc.NotFound:
                     error = obj()
-                elif obj == senlinexc.ResourceFailure:
-                    exc = senlinexc.Error(_('Error'))
+                elif obj == senlin_exc.ResourceFailure:
+                    exc = senlin_exc.Error(_('Error'))
                     error = obj(exc, None, 'CREATE')
-                elif obj == senlinexc.ResourcePropertyConflict:
+                elif obj == senlin_exc.ResourcePropertyConflict:
                     error = obj('%s' % 'a test prop')
                 else:
                     continue
@@ -242,7 +246,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
         exc_info = (type(error), error, None)
         serialized = rpc_common.serialize_remote_exception(exc_info)
         remote_error = rpc_common.deserialize_remote_exception(
-            serialized, ["senlin.tests.test_fault_middleware"])
+            serialized, ["senlin.tests.middleware.test_fault_middleware"])
 
         wrapper = fault.FaultWrapper(None)
         msg = wrapper._error(remote_error)
