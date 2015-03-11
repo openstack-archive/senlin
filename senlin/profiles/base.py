@@ -41,6 +41,7 @@ class Profile(object):
         self.name = name
         self.type = type_name
         self.id = kwargs.get('id', None)
+        self.identifier = kwargs.get('identifier', None)
 
         self.context = kwargs.get('context', None)
 
@@ -65,6 +66,7 @@ class Profile(object):
             'spec': record.spec,
             'permission': record.permission,
             'tags': record.tags,
+            'identifier': record.identifier,
             'created_time': record.created_time,
             'updated_time': record.updated_time,
             'deleted_time': record.deleted_time,

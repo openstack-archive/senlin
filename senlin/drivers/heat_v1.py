@@ -12,6 +12,8 @@
 
 from senlin.common import sdk
 from senlin.drivers import base
+from openstack.auth import service_filter
+from openstack.orchestration import orchestration_service
 from senlin.openstack.orchestration.v1 import stack
 
 
@@ -24,6 +26,13 @@ class HeatClient(base.DriverBase):
         self.auth = self.session.authenticator
 
     def stack_create(self, **params):
+        if params["identifier"]:
+            default = orchestration_service.OrchestrationService()
+            preference = service_filter.ServiceFilter('orchestration', region=params["identifier"])
+            service = preference.join(default)
+        else:
+            service = orchestration_service.OrchestrationService()
+        stack.Stack.service = service
         obj = stack.Stack.new(**params)
         try:
             return obj.create(self.session)

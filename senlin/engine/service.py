@@ -196,7 +196,7 @@ class EngineService(service.Service):
         kwargs = {
             'spec': spec,
             'permission': perm,
-            'tags': tags,
+            'tags': tags
         }
         profile = plugin(type, name, **kwargs)
         profile.validate()

@@ -25,6 +25,7 @@ def upgrade(migrate_engine):
                           primary_key=True, nullable=False),
         sqlalchemy.Column('name', sqlalchemy.String(255)),
         sqlalchemy.Column('type', sqlalchemy.String(255)),
+        sqlalchemy.Column('identifier', sqlalchemy.String(255)),
         sqlalchemy.Column('spec', types.Dict),
         sqlalchemy.Column('permission', sqlalchemy.String(32)),
         sqlalchemy.Column('tags', types.Dict),
