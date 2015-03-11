@@ -9,6 +9,10 @@ ENGINE
   - handle cancel_action() properly. When dispatcher.cancel_action() is called,
     the scheduler should check if the action is still being worked on by someone.
     It should send cancel signal, or help that action remove locks if needed.
+  - Add the support for the multi-region/multi-cloud in profile (Qi Zhang)
+    Need to add one more column in Profile as identifier, if the cloud is openstack,
+    this identifier will be the region name which will be used to get the right service
+     via openstackSDK. If the cloud type is bluemix, this will be the bluemix API address.
 
 DRIVER
 ------
