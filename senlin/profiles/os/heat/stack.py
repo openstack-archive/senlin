@@ -147,7 +147,6 @@ class StackProfile(base.Profile):
 
         kwargs = {
             'stack_name': obj.name,
-            'identifier': self.identifier,
             'template': self.spec_data[self.TEMPLATE],
             'timeout_mins': self.spec_data[self.TIMEOUT],
             'disable_rollback': self.spec_data[self.DISABLE_ROLLBACK],

@@ -14,6 +14,7 @@ import datetime
 
 from oslo_log import log as logging
 
+from senlin.common import context 
 from senlin.common import exception
 from senlin.common import schema
 from senlin.db import api as db_api
@@ -41,7 +42,6 @@ class Profile(object):
         self.name = name
         self.type = type_name
         self.id = kwargs.get('id', None)
-        self.identifier = kwargs.get('identifier', None)
 
         self.context = kwargs.get('context', None)
 
@@ -55,7 +55,7 @@ class Profile(object):
         self.deleted_time = kwargs.get('deleted_time', None)
 
     @classmethod
-    def from_db_record(cls, context, record):
+    def from_db_record(cls, record):
         '''Construct a profile object from database record.
 
         :param context: the context used for DB operations.
@@ -64,13 +64,12 @@ class Profile(object):
         kwargs = {
             'id': record.id,
             'spec': record.spec,
+            'context': context.RequestContext.from_dict(record.context),
             'permission': record.permission,
             'tags': record.tags,
-            'identifier': record.identifier,
             'created_time': record.created_time,
             'updated_time': record.updated_time,
             'deleted_time': record.deleted_time,
-            'context': context,
         }
 
         return cls(record.type, record.name, **kwargs)
@@ -83,7 +82,7 @@ class Profile(object):
             if profile is None:
                 raise exception.ProfileNotFound(profile=profile_id)
 
-        return cls.from_db_record(context, profile)
+        return cls.from_db_record(profile)
 
     @classmethod
     def load_all(cls, context, limit=None, sort_keys=None, marker=None,
@@ -97,7 +96,7 @@ class Profile(object):
                                          show_deleted=show_deleted)
 
         for record in records:
-            yield cls.from_db_record(context, record)
+            yield cls.from_db_record(record)
 
     @classmethod
     def delete(cls, context, profile_id):
@@ -110,6 +109,7 @@ class Profile(object):
         values = {
             'name': self.name,
             'type': self.type,
+            'context': self.context.to_dict(),
             'spec': self.spec,
             'permission': self.permission,
             'tags': self.tags,

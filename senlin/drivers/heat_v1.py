@@ -12,8 +12,7 @@
 
 from senlin.common import sdk
 from senlin.drivers import base
-from openstack.auth import service_filter
-from openstack.orchestration import orchestration_service
+from openstack import user_preference
 from senlin.openstack.orchestration.v1 import stack
 
 
@@ -21,18 +20,13 @@ class HeatClient(base.DriverBase):
     '''Heat V1 driver.'''
 
     def __init__(self, context):
+        # TODO(Qi): construct a proper user_preference object and pass it
+        # to the create_connection call
         conn = sdk.create_connection(context)
         self.session = conn.session
         self.auth = self.session.authenticator
 
     def stack_create(self, **params):
-        if params["identifier"]:
-            default = orchestration_service.OrchestrationService()
-            preference = service_filter.ServiceFilter('orchestration', region=params["identifier"])
-            service = preference.join(default)
-        else:
-            service = orchestration_service.OrchestrationService()
-        stack.Stack.service = service
         obj = stack.Stack.new(**params)
         try:
             return obj.create(self.session)

@@ -218,8 +218,8 @@ class Profile(BASE, SenlinBase, SoftDelete):
     id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
                            default=lambda: str(uuid.uuid4()))
     name = sqlalchemy.Column(sqlalchemy.String(255))
-    identifier = sqlalchemy.Column(sqlalchemy.String(255))
     type = sqlalchemy.Column(sqlalchemy.String(255))
+    context = sqlalchemy.Column(types.Dict)
     spec = sqlalchemy.Column(types.Dict)
     permission = sqlalchemy.Column(sqlalchemy.String(32))
     tags = sqlalchemy.Column(types.Dict)
