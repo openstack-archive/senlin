@@ -57,7 +57,7 @@ class Health_Manager(service.Service, periodic_task.PeriodicTasks):
 
     def __init__(self, engine_service, topic, version, thread_group_mgr):
         super(Health_Manager, self).__init__()
-        self.tg = thread_group_mgr
+        self.threadgroup = thread_group_mgr
         self.engine_id = engine_service.engine_id
         self.topic = topic
         self.version = version
@@ -86,8 +86,8 @@ class Health_Manager(service.Service, periodic_task.PeriodicTasks):
             else:
                 initial_delay = None
 
-            self.tg.add_timer(self.periodic_interval_max,
-                              self.periodic_tasks)
+            self.threadgroup.add_timer(self.periodic_interval_max,
+                                       self.periodic_tasks)
 
     def listening(self, context):
         '''Respond affirmatively to confirm that the engine performing the

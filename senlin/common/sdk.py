@@ -186,7 +186,7 @@ def create_connection(context):
 
     pref = user_preference.UserPreference()
     if context.region_name:
-        pref.set_set_region(pref.ALL, context.region_name)
+        pref.set_region(pref.ALL, context.region_name)
 
     try:
         conn = connection.Connection(preferences=pref, user_agent=USER_AGENT,
