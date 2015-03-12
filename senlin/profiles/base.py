@@ -110,7 +110,7 @@ class Profile(object):
         values = {
             'name': self.name,
             'type': self.type,
-            'context': self.context.to_dict(),
+            'context': self.profile_context,
             'spec': self.spec,
             'permission': self.permission,
             'tags': self.tags,
