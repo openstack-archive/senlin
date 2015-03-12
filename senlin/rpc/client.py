@@ -90,10 +90,9 @@ class EngineClient(object):
                                        sort_dir=sort_dir, filters=filters,
                                        show_deleted=show_deleted))
 
-    def profile_create(self, ctxt, profile_context, name, type, spec, perm, tags):
+    def profile_create(self, ctxt, name, type, spec, perm, tags):
         return self.call(ctxt,
-                         self.make_msg('profile_create',
-                                       profile_context=profile_context, name=name,
+                         self.make_msg('profile_create', name=name,
                                        type=type, spec=spec, perm=perm, tags=tags))
 
     def profile_get(self, ctxt, identity):
