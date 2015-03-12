@@ -44,6 +44,7 @@ class Profile(object):
         self.id = kwargs.get('id', None)
 
         self.context = kwargs.get('context', None)
+        self.profile_context = kwargs.get('profile_context', None)
 
         self.spec = kwargs.get('spec', None)
         self.spec_data = schema.Spec(self.spec_schema, self.spec, self.context)
