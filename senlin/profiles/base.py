@@ -13,8 +13,7 @@
 import datetime
 
 from oslo_log import log as logging
-
-from senlin.common import context 
+from senlin.common import context
 from senlin.common import exception
 from senlin.common import schema
 from senlin.db import api as db_api
@@ -65,7 +64,8 @@ class Profile(object):
         kwargs = {
             'id': record.id,
             'spec': record.spec,
-            'profile_context': context.RequestContext.from_dict(record.context or {}),
+            'profile_context': context.RequestContext.from_dict(
+                record.context or {}),
             'permission': record.permission,
             'tags': record.tags,
             'created_time': record.created_time,
