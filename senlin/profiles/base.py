@@ -64,8 +64,7 @@ class Profile(object):
         kwargs = {
             'id': record.id,
             'spec': record.spec,
-            'profile_context': context.RequestContext.from_dict(
-                record.context or {}),
+            'profile_context': record.context,
             'permission': record.permission,
             'tags': record.tags,
             'created_time': record.created_time,

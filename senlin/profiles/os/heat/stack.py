@@ -92,6 +92,11 @@ class StackProfile(base.Profile):
             ctx.update(stack_context)
             self.context = context.RequestContext.from_dict(ctx)
 
+        if self.profile_context:
+            ctx = self.context.to_dict()
+            ctx.update(self.profile_context)
+            self.context = context.RequestContext.from_dict(ctx)
+
         self.hc = heatclient.HeatClient(self.context)
         return self.hc
 
