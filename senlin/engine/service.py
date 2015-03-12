@@ -87,9 +87,7 @@ class EngineService(service.Service):
         self.engine_id = senlin_lock.BaseLock.generate_engine_id()
         self.TG = scheduler.ThreadGroupManager()
 
-        # TODO(Yanyan): create a dispatcher for this engine thread.
-        # This dispatcher will run in a greenthread and it will not
-        # stop until being notified or the engine is stopped.
+        # create a dispatcher greenthread for this engine.
         self.dispatcher = dispatcher.Dispatcher(self,
                                                 self.dispatcher_topic,
                                                 consts.RPC_API_VERSION,
@@ -98,9 +96,7 @@ class EngineService(service.Service):
 
         self.dispatcher.start()
 
-        # create a health manager for this engine thread.
-        # This health manager will run in a greenthread and it will not
-        # stop until being notified or the engine is stopped.
+        # create a health manager greenthread for this engine.
         self.health_mgr = health_manager.Health_Manager(self,
                                                         self.health_mgr_topic,
                                                         consts.RPC_API_VERSION,
