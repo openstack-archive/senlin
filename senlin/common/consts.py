@@ -80,11 +80,11 @@ NODE_ATTRS = (
 PROFILE_ATTRS = (
     PROFILE_ID, PROFILE_NAME, PROFILE_TYPE, PROFILE_PERMISSION,
     PROFILE_CREATED_TIME, PROFILE_UPDATED_TIME, PROFILE_DELETED_TIME,
-    PROFILE_SPEC, PROFILE_TAGS,
+    PROFILE_SPEC, PROFILE_TAGS, PROFILE_CONTEXT,
 ) = (
     'id', 'name', 'type', 'permission',
     'created_time', 'updated_time', 'deleted_time',
-    'spec', 'tags',
+    'spec', 'tags', 'context',
 )
 
 POLICY_ATTRS = (

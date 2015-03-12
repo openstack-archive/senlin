@@ -29,8 +29,8 @@ class ProfileData(object):
     '''The data accompanying a POST/PUT request to create/update a profile.'''
 
     PARAMS = (consts.PROFILE_NAME, consts.PROFILE_SPEC,
-              consts.PROFILE_TYPE, consts.PROFILE_PERMISSION,
-              consts.PROFILE_TAGS)
+              consts.PROFILE_CONTEXT, consts.PROFILE_TYPE,
+              consts.PROFILE_PERMISSION, consts.PROFILE_TAGS)
 
     def __init__(self, data):
         self.data = data
@@ -55,6 +55,9 @@ class ProfileData(object):
 
     def tags(self):
         return self.data.get(consts.PROFILE_TAGS)
+
+    def context(self):
+        return self.data.get(consts.PROFILE_CONTEXT)
 
 
 class ProfileController(object):
@@ -117,6 +120,7 @@ class ProfileController(object):
 
         data = ProfileData(profile_data)
         result = self.rpc_client.profile_create(req.context,
+                                                data.context(),
                                                 data.name(),
                                                 data.type(),
                                                 data.spec(),
