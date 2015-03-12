@@ -55,7 +55,7 @@ class Profile(object):
         self.deleted_time = kwargs.get('deleted_time', None)
 
     @classmethod
-    def from_db_record(cls, record):
+    def from_db_record(cls, calling_context, record):
         '''Construct a profile object from database record.
 
         :param context: the context used for DB operations.
@@ -64,12 +64,13 @@ class Profile(object):
         kwargs = {
             'id': record.id,
             'spec': record.spec,
-            'context': context.RequestContext.from_dict(record.context),
+            'profile_context': context.RequestContext.from_dict(record.context or {}),
             'permission': record.permission,
             'tags': record.tags,
             'created_time': record.created_time,
             'updated_time': record.updated_time,
             'deleted_time': record.deleted_time,
+            'context': calling_context,
         }
 
         return cls(record.type, record.name, **kwargs)
@@ -82,7 +83,7 @@ class Profile(object):
             if profile is None:
                 raise exception.ProfileNotFound(profile=profile_id)
 
-        return cls.from_db_record(profile)
+        return cls.from_db_record(context, profile)
 
     @classmethod
     def load_all(cls, context, limit=None, sort_keys=None, marker=None,
@@ -96,7 +97,7 @@ class Profile(object):
                                          show_deleted=show_deleted)
 
         for record in records:
-            yield cls.from_db_record(record)
+            yield cls.from_db_record(context, record)
 
     @classmethod
     def delete(cls, context, profile_id):

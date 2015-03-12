@@ -189,7 +189,7 @@ def create_connection(context):
         pref.set_region(pref.ALL, context.region_name)
 
     try:
-        conn = connection.Connection(preferences=pref, user_agent=USER_AGENT,
+        conn = connection.Connection(preference=pref, user_agent=USER_AGENT,
                                      **kwargs)
     except exceptions.HttpException as ex:
         raise ex
