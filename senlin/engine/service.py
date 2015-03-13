@@ -58,14 +58,13 @@ def request_context(func):
 
 
 class EngineService(service.Service):
-    '''Manages the running instances from creation to destruction.
+    '''Lifecycle manager for a running service engine.
 
-    All the methods in here are called from the RPC backend.  This is
-    all done dynamically so if a call is made via RPC that does not
-    have a corresponding method here, an exception will be thrown when
-    it attempts to call into this class.  Arguments to these methods
-    are also dynamically added and will be named as keyword arguments
-    by the RPC caller.
+    - All the methods in here are called from the RPC client.
+    - If a RPC call does not have a corresponding method here, an exception
+      will be thrown.
+    - Arguments to these calls are added dynamically and will be treated as
+      keyword arguments by the RPC client.
     '''
 
     def __init__(self, host, topic, manager=None):
@@ -83,9 +82,15 @@ class EngineService(service.Service):
         self.target = None
         self._rpc_server = None
 
+        # Intialize the global environment
+        environment.initialize()
+
+    def init_tgm(self):
+        self.TG = scheduler.ThreadGroupManager()
+
     def start(self):
         self.engine_id = senlin_lock.BaseLock.generate_engine_id()
-        self.TG = scheduler.ThreadGroupManager()
+        self.init_tgm()
 
         # create a dispatcher greenthread for this engine.
         self.dispatcher = dispatcher.Dispatcher(self,
@@ -111,7 +116,6 @@ class EngineService(service.Service):
         self.target = target
         self._rpc_server = rpc_messaging.get_rpc_server(target, self)
         self._rpc_server.start()
-        environment.initialize()
         super(EngineService, self).start()
 
     def _stop_rpc_server(self):
