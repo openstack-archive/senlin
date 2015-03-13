@@ -189,7 +189,7 @@ class EngineService(service.Service):
         return [p.to_dict() for p in profiles]
 
     @request_context
-    def profile_create(self, context, profile_context, name, type, spec, perm=None, tags=None):
+    def profile_create(self, context, name, type, spec, perm=None, tags=None):
         LOG.info(_LI('Creating profile %s: %s'), type, name)
         plugin = environment.global_env().get_profile(type)
 
@@ -197,7 +197,7 @@ class EngineService(service.Service):
             'spec': spec,
             'permission': perm,
             'tags': tags,
-            'profile_context': profile_context,
+            'profile_context': spec["context"],
         }
         profile = plugin(type, name, **kwargs)
         profile.validate()

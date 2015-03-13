@@ -120,7 +120,6 @@ class ProfileController(object):
 
         data = ProfileData(profile_data)
         result = self.rpc_client.profile_create(req.context,
-                                                data.context(),
                                                 data.name(),
                                                 data.type(),
                                                 data.spec(),

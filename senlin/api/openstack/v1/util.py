@@ -29,9 +29,15 @@ def policy_enforce(handler):
     def handle_cluster_method(controller, req, tenant_id, **kwargs):
         if req.context.tenant_id != tenant_id:
             raise exc.HTTPForbidden()
+
+        # Enable project_id based target check
+        target = {
+            'project_id': tenant_id,
+        }
         allowed = req.context.policy.enforce(context=req.context,
                                              action=handler.__name__,
-                                             scope=controller.REQUEST_SCOPE)
+                                             scope=controller.REQUEST_SCOPE,
+                                             target=target)
         if not allowed:
             raise exc.HTTPForbidden()
         return handler(controller, req, **kwargs)
