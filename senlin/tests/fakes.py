@@ -20,12 +20,12 @@ from senlin.profiles import base as profile_base
 
 class TestProfile(profile_base.Profile):
     spec_schema = {
-        'INT': schema.Int('int property', default=0),
-        'STR': schema.String('a string', default='a string'),
+        'INT': schema.Integer('int property', default=0),
+        'STR': schema.String('string property', default='a string'),
         'MAP': schema.Map(
             'map property',
             schema={
-                'KEY1': schema.Int('key1'),
+                'KEY1': schema.Integer('key1'),
                 'KEY2': schema.String('key2')
             }
         ),
@@ -44,7 +44,7 @@ class TestProfile(profile_base.Profile):
     def do_delete(self, id):
         return True
 
-    def do_update(self, ):
+    def do_update(self):
         return {}
 
     def do_check(self, id):
