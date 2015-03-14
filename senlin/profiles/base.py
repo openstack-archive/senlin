@@ -43,8 +43,6 @@ class Profile(object):
         self.id = kwargs.get('id', None)
 
         self.context = kwargs.get('context', None)
-        self.profile_context = kwargs.get('profile_context', None)
-
         self.spec = kwargs.get('spec', None)
         self.spec_data = schema.Spec(self.spec_schema, self.spec, self.context)
 
@@ -64,7 +62,6 @@ class Profile(object):
         kwargs = {
             'id': record.id,
             'spec': record.spec,
-            'profile_context': record.context,
             'permission': record.permission,
             'tags': record.tags,
             'created_time': record.created_time,
@@ -110,7 +107,7 @@ class Profile(object):
         values = {
             'name': self.name,
             'type': self.type,
-            'context': self.profile_context,
+            'context': self.context,
             'spec': self.spec,
             'permission': self.permission,
             'tags': self.tags,

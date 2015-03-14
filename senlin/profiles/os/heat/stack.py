@@ -77,6 +77,13 @@ class StackProfile(base.Profile):
     def __init__(self, type_name, name, **kwargs):
         super(StackProfile, self).__init__(type_name, name, **kwargs)
 
+        # a stack profile may have its own context customization
+        stack_context = self.spec_data[self.CONTEXT]
+        if stack_context is not None:
+            ctx = self.context.to_dict()
+            ctx.update(stack_context)
+            self.context = context.RequestContext.from_dict(ctx)
+
         self.hc = None
         self.stack_id = None
 
@@ -85,17 +92,6 @@ class StackProfile(base.Profile):
 
         if self.hc:
             return self.hc
-
-        stack_context = self.spec_data[self.CONTEXT]
-        if stack_context is not None:
-            ctx = self.context.to_dict()
-            ctx.update(stack_context)
-            self.context = context.RequestContext.from_dict(ctx)
-
-        if self.profile_context:
-            ctx = self.context.to_dict()
-            ctx.update(self.profile_context)
-            self.context = context.RequestContext.from_dict(ctx)
 
         self.hc = heatclient.HeatClient(self.context)
         return self.hc
