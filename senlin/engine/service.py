@@ -10,13 +10,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
 import functools
-import six
 
 from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
 from oslo_utils import uuidutils
+import six
 
 from senlin.common import consts
 from senlin.common import context
@@ -178,7 +179,7 @@ class EngineService(service.Service):
 
     @request_context
     def profile_list(self, context, limit=None, marker=None, sort_keys=None,
-                     sort_dir=None, filters=None, show_deleted=None):
+                     sort_dir=None, filters=None, show_deleted=False):
         profiles = profile_base.Profile.load_all(context, limit=limit,
                                                  marker=marker,
                                                  sort_keys=sort_keys,
@@ -198,7 +199,7 @@ class EngineService(service.Service):
             'permission': perm,
             'tags': tags,
         }
-        profile = plugin(type, name, **kwargs)
+        profile = plugin(context, type, name, **kwargs)
         profile.validate()
         profile.store(context)
         return profile.to_dict()
@@ -210,7 +211,7 @@ class EngineService(service.Service):
         return profile.to_dict()
 
     @request_context
-    def profile_update(self, context, profile_id, name, spec=None,
+    def profile_update(self, context, profile_id, name=None, spec=None,
                        permission=None, tags=None):
         db_profile = self.profile_find(context, profile_id)
         if spec is None:
@@ -231,14 +232,16 @@ class EngineService(service.Service):
 
         plugin = environment.global_env().get_profile(db_profile.type)
 
-        new_spec = db_profile.spec.update(spec)
+        new_spec = copy.deepcopy(db_profile.spec)
+        new_spec.update(spec)
         kwargs = {
             'spec': new_spec,
             'permission': permission or db_profile.permission,
-            'tags': tags or db_profile.permission,
+            'tags': tags or db_profile.tags,
         }
 
-        profile = plugin(db_profile.type, name, **kwargs)
+        new_name = name or db_profile.name
+        profile = plugin(context, db_profile.type, new_name, **kwargs)
         profile.validate()
         profile.store(context)
         return profile.to_dict()
