@@ -22,7 +22,7 @@ from oslo_messaging._drivers import common as rpc_common
 import senlin.api.middleware.fault as fault
 from senlin.common import exception as senlin_exc
 from senlin.common.i18n import _
-from senlin.tests.common import base 
+from senlin.tests.common import base
 
 
 class ClusterNotFoundChild(senlin_exc.ClusterNotFound):
@@ -166,7 +166,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
                     x, senlin_exc.SenlinException)):
 
             if '__init__' in obj.__dict__:
-                if obj == senlin_exc.SenlinException:  # manually ignore baseclass
+                if obj == senlin_exc.SenlinException:
                     continue
                 elif obj == senlin_exc.Error:
                     error = obj('Error')
