@@ -204,10 +204,6 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual(1, len(result))
         self.assertEqual(p1['id'], result[0]['id'])
 
-        # non boolean will be ignored
-        result = self.eng.profile_list(self.ctx, show_deleted='abc')
-        self.assertEqual(1, len(result))
-
     def test_profile_list_with_filters(self):
         self.eng.profile_create(self.ctx, 'p-B', 'TestProfile', {},
                                 perm='1111')
@@ -226,6 +222,16 @@ class ProfileTest(base.SenlinTestCase):
         filters = {'permission': '1111'}
         result = self.eng.profile_list(self.ctx, filters=filters)
         self.assertEqual(2, len(result))
+
+    def test_profile_list_bad_param(self):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.profile_list, self.ctx, limit='no')
+        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.profile_list, self.ctx,
+                               show_deleted='no')
+        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
 
     def test_profile_list_empty(self):
         result = self.eng.profile_list(self.ctx)
