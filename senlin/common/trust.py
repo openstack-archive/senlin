@@ -54,7 +54,7 @@ class SenlinTrust(object):
 
 
 def get_trust(context, trust_id):
-    '''Get trust detail information'''
+    '''Get trust detail information.'''
     conn = sdk.create_connection(context)
     session = conn.session
 

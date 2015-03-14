@@ -93,7 +93,8 @@ class EngineClient(object):
     def profile_create(self, ctxt, name, type, spec, perm, tags):
         return self.call(ctxt,
                          self.make_msg('profile_create', name=name,
-                                       type=type, spec=spec, perm=perm, tags=tags))
+                                       type=type, spec=spec, perm=perm,
+                                       tags=tags))
 
     def profile_get(self, ctxt, identity):
         return self.call(ctxt,

@@ -13,6 +13,7 @@
 from oslo_log import log as logging
 
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.engine.actions import base
 from senlin.engine import node as node_mod

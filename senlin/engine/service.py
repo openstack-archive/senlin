@@ -135,7 +135,7 @@ class EngineService(service.Service):
         # Notify dispatcher to stop all action threads it started.
         self.dispatcher.stop()
 
-        # Notify health_manager to stop 
+        # Notify health_manager to stop
         self.health_mgr.stop()
 
         # Terminate the engine process

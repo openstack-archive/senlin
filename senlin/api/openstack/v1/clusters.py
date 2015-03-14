@@ -240,6 +240,7 @@ class ClusterController(object):
 
         raise exc.HTTPInternalServerError(_('Failed deleting cluster.'))
 
+
 def create_resource(options):
     '''Clusters resource factory method.'''
 

@@ -15,7 +15,7 @@ Health Manager class.
 
 Health Manager is responsible for monitoring the health of the clusters and
 take corresponding actions to recover the clusters based on the pre-defined
-health policies. 
+health policies.
 '''
 
 import random
@@ -26,7 +26,6 @@ import oslo_messaging
 
 from senlin.common import consts
 from senlin.common import messaging as rpc_messaging
-from senlin.db import api as db_api
 from senlin.openstack.common import periodic_task
 from senlin.openstack.common import service
 
