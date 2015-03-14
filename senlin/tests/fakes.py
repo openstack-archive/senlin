@@ -36,8 +36,8 @@ class TestProfile(profile_base.Profile):
         ),
     }
 
-    def __init__(self, name, type_name='TestProfile', **kwargs):
-        super(TestProfile, self).__init__(name, type_name, kwargs)
+    def __init__(self, ctx, name, type_name='TestProfile', **kwargs):
+        super(TestProfile, self).__init__(ctx, name, type_name, **kwargs)
 
     def do_create(self):
         return {}
