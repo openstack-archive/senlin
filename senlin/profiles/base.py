@@ -25,7 +25,7 @@ LOG = logging.getLogger(__name__)
 class Profile(object):
     '''Base class for profiles.'''
 
-    def __new__(cls, type_name, name, **kwargs):
+    def __new__(cls, ctx, type_name, name, **kwargs):
         '''Create a new profile of the appropriate class.'''
 
         if cls != Profile:
@@ -35,14 +35,14 @@ class Profile(object):
 
         return super(Profile, cls).__new__(ProfileClass)
 
-    def __init__(self, type_name, name, **kwargs):
+    def __init__(self, ctx, type_name, name, **kwargs):
         '''Initialize the profile with given parameters and a JSON object.'''
 
         self.name = name
         self.type = type_name
         self.id = kwargs.get('id', None)
 
-        self.context = kwargs.get('context', None)
+        self.context = ctx
         self.spec = kwargs.get('spec', None)
         self.spec_data = schema.Spec(self.spec_schema, self.spec, self.context)
 
@@ -53,7 +53,7 @@ class Profile(object):
         self.deleted_time = kwargs.get('deleted_time', None)
 
     @classmethod
-    def from_db_record(cls, calling_context, record):
+    def from_db_record(cls, record):
         '''Construct a profile object from database record.
 
         :param context: the context used for DB operations.
@@ -67,10 +67,10 @@ class Profile(object):
             'created_time': record.created_time,
             'updated_time': record.updated_time,
             'deleted_time': record.deleted_time,
-            'context': calling_context,
         }
 
-        return cls(record.type, record.name, **kwargs)
+        ctx = context.RequestContext.from_dict(record.context)
+        return cls(ctx, record.type, record.name, **kwargs)
 
     @classmethod
     def load(cls, context, profile_id=None, profile=None):
@@ -80,7 +80,7 @@ class Profile(object):
             if profile is None:
                 raise exception.ProfileNotFound(profile=profile_id)
 
-        return cls.from_db_record(context, profile)
+        return cls.from_db_record(profile)
 
     @classmethod
     def load_all(cls, context, limit=None, sort_keys=None, marker=None,
@@ -94,7 +94,7 @@ class Profile(object):
                                          show_deleted=show_deleted)
 
         for record in records:
-            yield cls.from_db_record(context, record)
+            yield cls.from_db_record(record)
 
     @classmethod
     def delete(cls, context, profile_id):
@@ -107,7 +107,7 @@ class Profile(object):
         values = {
             'name': self.name,
             'type': self.type,
-            'context': self.context,
+            'context': self.context.to_dict(),
             'spec': self.spec,
             'permission': self.permission,
             'tags': self.tags,
