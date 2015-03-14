@@ -98,7 +98,7 @@ def _paginate_query(context, query, model, limit=None, marker=None,
     if not sort_keys:
         sort_keys = default_sort_keys or []
         if not sort_dir:
-            sort_dir = 'desc'
+            sort_dir = 'asc'
 
     # This assures the order of the clusters will always be the same
     # even for sort_key values that are not unique in the database
@@ -694,6 +694,8 @@ def cluster_policy_get_all(context, cluster_id, filters=None,
     keys = _get_sort_keys(sort_keys, sort_key_map)
     query = db_filters.exact_filter(query, models.ClusterPolicies, filters)
 
+    if sort_dir is None and sort_keys is None:
+        sort_dir = 'desc'
     return _paginate_query(context, query, models.ClusterPolicies,
                            sort_keys=keys, sort_dir=sort_dir,
                            default_sort_keys=['priority']).all()

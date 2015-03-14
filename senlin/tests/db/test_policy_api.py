@@ -223,15 +223,15 @@ class DBAPIPolicyTest(base.SenlinTestCase):
 
         # use marker here
         policies = db_api.policy_get_all(self.ctx, marker='policy1')
-        self.assertEqual(0, len(policies))
+        self.assertEqual(2, len(policies))
 
         policies = db_api.policy_get_all(self.ctx, marker='policy2')
         self.assertEqual(1, len(policies))
 
         policies = db_api.policy_get_all(self.ctx, marker='policy3')
-        self.assertEqual(2, len(policies))
+        self.assertEqual(0, len(policies))
 
-        policies = db_api.policy_get_all(self.ctx, limit=1, marker='policy3')
+        policies = db_api.policy_get_all(self.ctx, limit=1, marker='policy1')
         self.assertEqual(1, len(policies))
 
     def test_policy_get_all_used_sort_keys(self):

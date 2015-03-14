@@ -188,15 +188,15 @@ class DBAPIProfileTest(base.SenlinTestCase):
 
         # use marker here
         profiles = db_api.profile_get_all(self.ctx, marker='profile1')
-        self.assertEqual(0, len(profiles))
+        self.assertEqual(2, len(profiles))
 
         profiles = db_api.profile_get_all(self.ctx, marker='profile2')
         self.assertEqual(1, len(profiles))
 
         profiles = db_api.profile_get_all(self.ctx, marker='profile3')
-        self.assertEqual(2, len(profiles))
+        self.assertEqual(0, len(profiles))
 
-        profiles = db_api.profile_get_all(self.ctx, limit=1, marker='profile3')
+        profiles = db_api.profile_get_all(self.ctx, limit=1, marker='profile1')
         self.assertEqual(1, len(profiles))
 
     def test_profile_get_all_used_sort_keys(self):

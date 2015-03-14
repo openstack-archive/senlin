@@ -343,7 +343,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
                     for x in range(3)]
         cl_db = db_api.cluster_get_all(self.ctx, marker=clusters[1].id)
         self.assertEqual(1, len(cl_db))
-        self.assertEqual(clusters[0].id, cl_db[0].id)
+        self.assertEqual(clusters[2].id, cl_db[0].id)
 
     def test_cluster_get_all_non_existing_marker(self):
         [shared.create_cluster(self.ctx, self.profile) for x in range(3)]
@@ -518,7 +518,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
         model = mock.Mock()
         db_api._paginate_query(self.ctx, query, model, sort_dir=None)
         args, _ = mock_paginate_query.call_args
-        self.assertIn('desc', args)
+        self.assertIn('asc', args)
 
     @mock.patch.object(db_api.utils, 'paginate_query')
     def test_paginate_query_uses_given_sort_plus_id(self,

@@ -209,15 +209,15 @@ class DBAPINodeTest(base.SenlinTestCase):
         self.assertEqual(3, len(nodes))
 
         nodes = db_api.node_get_all(self.ctx, marker='node1')
-        self.assertEqual(0, len(nodes))
+        self.assertEqual(2, len(nodes))
 
         nodes = db_api.node_get_all(self.ctx, marker='node2')
         self.assertEqual(1, len(nodes))
 
         nodes = db_api.node_get_all(self.ctx, marker='node3')
-        self.assertEqual(2, len(nodes))
+        self.assertEqual(0, len(nodes))
 
-        nodes = db_api.node_get_all(self.ctx, limit=1, marker='node3')
+        nodes = db_api.node_get_all(self.ctx, limit=1, marker='node1')
         self.assertEqual(1, len(nodes))
 
     def test_node_get_all_used_sort_keys(self):
