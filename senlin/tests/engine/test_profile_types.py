@@ -82,7 +82,6 @@ class ProfileTypeTest(base.SenlinTestCase):
                         },
                     },
                 },
-
             },
         }
 

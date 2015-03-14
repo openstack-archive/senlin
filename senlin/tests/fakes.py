@@ -15,6 +15,7 @@ A module that contains various fake entities
 '''
 
 from senlin.common import schema
+from senlin.policies import base as policy_base
 from senlin.profiles import base as profile_base
 
 
@@ -49,3 +50,25 @@ class TestProfile(profile_base.Profile):
 
     def do_check(self, id):
         return True
+
+
+class TestPolicy(policy_base.Policy):
+    spec_schema = {
+        'KEY1': schema.String('key1', default='default1'),
+        'KEY2': schema.Integer('key2', default=1),
+    }
+
+    def __init__(self, type_name, name, **kwargs):
+        super(TestPolicy, self).__init__(type_name, name, **kwargs)
+
+    def attach(self, context, cluster, policy_data):
+        return
+
+    def detach(self, context, cluster, policy_data):
+        return
+
+    def pre_op(self, cluster_id, action, policy_data):
+        return policy_data
+
+    def post_op(self, cluster_id, action, policy_data):
+        return policy_data
