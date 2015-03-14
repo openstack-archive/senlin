@@ -74,15 +74,15 @@ class StackProfile(base.Profile):
         )
     }
 
-    def __init__(self, type_name, name, **kwargs):
-        super(StackProfile, self).__init__(type_name, name, **kwargs)
+    def __init__(self, ctx, type_name, name, **kwargs):
+        super(StackProfile, self).__init__(ctx, type_name, name, **kwargs)
 
         # a stack profile may have its own context customization
         stack_context = self.spec_data[self.CONTEXT]
         if stack_context is not None:
-            ctx = self.context.to_dict()
-            ctx.update(stack_context)
-            self.context = context.RequestContext.from_dict(ctx)
+            ctx_dict = ctx.to_dict()
+            ctx_dict.update(stack_context)
+            self.context = context.RequestContext.from_dict(ctx_dict)
 
         self.hc = None
         self.stack_id = None

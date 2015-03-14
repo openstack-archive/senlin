@@ -25,8 +25,9 @@ class LaunchConfigProfile(base.Profile):
     '''
     spec_schema = {}
 
-    def __init__(self, name, type_name=__type_name__, **kwargs):
-        super(LaunchConfigProfile, self).__init__(name, type_name, kwargs)
+    def __init__(self, ctx, name, type_name=__type_name__, **kwargs):
+        super(LaunchConfigProfile, self).__init__(ctx, name, type_name,
+                                                  **kwargs)
 
         self.ImageId = kwargs.get('ImageId')
         self.InstanceType = kwargs.get('InstanceType')

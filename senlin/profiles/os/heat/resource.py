@@ -24,8 +24,8 @@ class ResourceProfile(base.Profile):
     '''
     spec_schema = {}
 
-    def __init__(self, name, type_name=__type_name__, **kwargs):
-        super(ResourceProfile, self).__init__(name, type_name, kwargs)
+    def __init__(self, ctx, name, type_name=__type_name__, **kwargs):
+        super(ResourceProfile, self).__init__(ctx, name, type_name, **kwargs)
 
     def do_create(self):
         return {}
