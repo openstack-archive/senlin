@@ -279,7 +279,7 @@ class List(Schema):
             return super(List, self).__getitem__(key)
 
     def _get_children(self, values, keys, context):
-        sub_schema = self.schema.schema
+        sub_schema = self.schema
         if sub_schema is not None:
             # We have a child schema specified for list elements
             # Fake a dict of array elements, since we have only one schema
