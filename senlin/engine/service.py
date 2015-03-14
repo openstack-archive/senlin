@@ -335,9 +335,11 @@ class EngineService(service.Service):
             policy.name = name
             changed = True
         if level is not None and level != policy.level:
+            level = utils.parse_int_param('level', level)
             policy.level = level
             changed = True
         if cooldown is not None and cooldown != policy.cooldown:
+            cooldown = utils.parse_int_param('cooldown', cooldown)
             policy.cooldown = cooldown
             changed = True
 
