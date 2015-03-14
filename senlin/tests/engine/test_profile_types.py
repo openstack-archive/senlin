@@ -88,7 +88,7 @@ class ProfileTypeTest(base.SenlinTestCase):
         schema = self.eng.profile_type_schema(self.ctx, type_name=type_name)
         self.assertEqual(expected, schema)
 
-    def test_resource_schema_nonexist(self):
+    def test_profile_type_schema_nonexist(self):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.profile_type_schema,
                                self.ctx, type_name='Bogus')
