@@ -34,7 +34,7 @@ from oslo_config import cfg
 from oslo_i18n import _lazy
 from oslo_log import log as logging
 
-from senlin.common import consts 
+from senlin.common import consts
 from senlin.common import messaging
 from senlin.openstack.common import service
 
