@@ -287,8 +287,11 @@ class EngineService(service.Service):
     @request_context
     def policy_list(self, context, limit=None, marker=None, sort_keys=None,
                     sort_dir=None, filters=None, show_deleted=None):
-        limit = utils.parse_int_param('limit', limit)
-        show_deleted = utils.parse_bool_param('show_deleted', show_deleted)
+        if limit is not None:
+            limit = utils.parse_int_param('limit', limit)
+        if show_deleted is not None:
+            show_deleted = utils.parse_bool_param('show_deleted',
+                                                  show_deleted)
         policies = policy_base.Policy.load_all(context, limit=limit,
                                                marker=marker,
                                                sort_keys=sort_keys,
