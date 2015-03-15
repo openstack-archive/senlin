@@ -77,7 +77,7 @@ class PolicyTest(base.SenlinTestCase):
         p = self.eng.policy_create(self.ctx, 'p-1', 'TestPolicy', {})
 
         for identity in [p['id'], p['id'][:6], 'p-1']:
-            result = self.eng.policy_get(self.ctx, p['id'])
+            result = self.eng.policy_get(self.ctx, identity)
             self.assertIsInstance(result, dict)
             self.assertEqual(p['id'], result['id'])
 
