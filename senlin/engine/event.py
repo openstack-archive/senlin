@@ -160,7 +160,7 @@ class Event(object):
         return evt
 
 
-def critical(context, entity, action, status, status_reason='',
+def critical(context, entity, action, status=None, status_reason=None,
              timestamp=None):
     timestamp = timestamp or datetime.datetime.utcnow()
     event = Event(timestamp, logging.CRITICAL, entity,
@@ -172,7 +172,8 @@ def critical(context, entity, action, status, status_reason='',
                   'reason': status_reason})
 
 
-def error(context, entity, action, status, status_reason='', timestamp=None):
+def error(context, entity, action, status=None, status_reason=None,
+          timestamp=None):
     timestamp = timestamp or datetime.datetime.utcnow()
     event = Event(timestamp, logging.ERROR, entity,
                   action=action, status=status, status_reason=status_reason,
@@ -183,7 +184,8 @@ def error(context, entity, action, status, status_reason='', timestamp=None):
                'status': status, 'reason': status_reason})
 
 
-def warning(context, entity, action, status, status_reason='', timestamp=None):
+def warning(context, entity, action, status=None, status_reason=None,
+            timestamp=None):
     timestamp = timestamp or datetime.datetime.utcnow()
     event = Event(timestamp, logging.WARNING, entity,
                   action=action, status=status, status_reason=status_reason,
@@ -194,7 +196,8 @@ def warning(context, entity, action, status, status_reason='', timestamp=None):
                  'status': status, 'reason': status_reason})
 
 
-def info(context, entity, action, status, status_reason='', timestamp=None):
+def info(context, entity, action, status=None, status_reason=None,
+         timestamp=None):
     timestamp = timestamp or datetime.datetime.utcnow()
     event = Event(timestamp, logging.INFO, entity,
                   action=action, status=status, status_reason=status_reason,
@@ -205,7 +208,8 @@ def info(context, entity, action, status, status_reason='', timestamp=None):
               'status': status, 'reason': status_reason})
 
 
-def debug(context, entity, action, status, status_reason='', timestamp=None):
+def debug(context, entity, action, status=None, status_reason=None,
+          timestamp=None):
     timestamp = timestamp or datetime.datetime.utcnow()
     event = Event(timestamp, logging.DEBUG, entity,
                   action=action, status=status, status_reason=status_reason,
