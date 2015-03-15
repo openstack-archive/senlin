@@ -139,6 +139,7 @@ class EngineService(service.Service):
         # Notify health_manager to stop
         self.health_mgr.stop()
 
+        self.TG.stop()
         # Terminate the engine process
         LOG.info(_LI("All threads were gone, terminating engine"))
         super(EngineService, self).stop()
@@ -180,6 +181,11 @@ class EngineService(service.Service):
     @request_context
     def profile_list(self, context, limit=None, marker=None, sort_keys=None,
                      sort_dir=None, filters=None, show_deleted=False):
+        if limit is not None:
+            limit = utils.parse_int_param('limit', limit)
+        if show_deleted is not None:
+            show_deleted = utils.parse_bool_param('show_deleted',
+                                                  show_deleted)
         profiles = profile_base.Profile.load_all(context, limit=limit,
                                                  marker=marker,
                                                  sort_keys=sort_keys,
@@ -410,7 +416,8 @@ class EngineService(service.Service):
         db_profile = self.profile_find(context, profile_id)
 
         size = utils.parse_int_param(consts.CLUSTER_SIZE, size)
-        timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
+        if timeout is not None:
+            timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
 
         LOG.info(_LI('Creating cluster %s'), name)
         ctx = context.to_dict()
