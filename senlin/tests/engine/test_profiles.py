@@ -80,7 +80,7 @@ class ProfileTest(base.SenlinTestCase):
         p = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', {})
 
         for identity in [p['id'], p['id'][:6], 'p-1']:
-            result = self.eng.profile_get(self.ctx, p['id'])
+            result = self.eng.profile_get(self.ctx, identity)
             self.assertIsInstance(result, dict)
             self.assertEqual(p['id'], result['id'])
 
