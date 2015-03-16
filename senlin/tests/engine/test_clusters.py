@@ -15,6 +15,7 @@ from oslo_messaging.rpc import dispatcher as rpc
 import six
 
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.db import api as db_api
 from senlin.engine.actions import base as action_mod
 from senlin.engine import cluster as cluster_mod
@@ -48,11 +49,12 @@ class ClusterTest(base.SenlinTestCase):
             self.ctx, 'policy_1', 'TestPolicy',
             spec={'KEY1': 'string'}, cooldown=60, level=50)
 
-    def _verify_action(self, obj, action, name, target, cause):
+    def _verify_action(self, obj, action, name, target, cause, inputs=None):
         self.assertEqual(action, obj['action'])
         self.assertEqual(name, obj['name'])
         self.assertEqual(target, obj['target'])
         self.assertEqual(cause, obj['cause'])
+        self.assertEqual(inputs, obj['inputs'])
 
     @mock.patch.object(dispatcher, 'notify')
     def test_cluster_create_default(self, notify):
@@ -514,8 +516,107 @@ class ClusterTest(base.SenlinTestCase):
         # two calls: one for create, the other for delete
         notify.assert_has_calls([expected_call] * 2)
 
-    def test_policy_delete_not_found(self):
+    def test_cluster_delete_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_delete, self.ctx, 'Bogus')
 
         self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
+        self.assertEqual('The cluster (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+
+    def _prepare_nodes(self, ctx, count=3, profile_id=None, **kwargs):
+        '''Prepare nodes for add or delete.'''
+        nodes = []
+        for i in range(count):
+            values = {
+                'name': 'test_node_name',
+                'physical_id': 'fake-phy-id-%s' % (i + 1),
+                'cluster_id': None,
+                'profile_id': profile_id or self.profile['id'],
+                'project': ctx.tenant_id,
+                'index': i + 1,
+                'role': None,
+                'created_time': None,
+                'updated_time': None,
+                'deleted_time': None,
+                'status': 'ACTIVE',
+                'status_reason': 'create complete',
+                'tags': {'foo': '123'},
+                'data': {'key1': 'value1'},
+            }
+            values.update(kwargs)
+            db_node = db_api.node_create(ctx, values)
+            nodes.append(six.text_type(db_node.id))
+        return nodes
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_add_nodes(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cid = c['id']
+        nodes = self._prepare_nodes(self.ctx)
+
+        result = self.eng.cluster_add_nodes(self.ctx, cid, nodes)
+
+        # verify action is fired
+        action_id = result['action']
+        action = self.eng.action_get(self.ctx, action_id)
+        self._verify_action(action, 'CLUSTER_ADD_NODES',
+                            'cluster_add_nodes_%s' % cid[:8],
+                            cid, cause=action_mod.CAUSE_RPC,
+                            inputs={'nodes': nodes})
+
+        expected_call = mock.call(self.ctx,
+                                  self.eng.dispatcher.NEW_ACTION,
+                                  None, action_id=mock.ANY)
+
+        # two calls: one for create, the other for adding nodes
+        notify.assert_has_calls([expected_call] * 2)
+
+    def test_cluster_add_nodes_cluster_not_found(self, notify):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_add_nodes,
+                               self.ctx, 'Bogus', ['n1', 'n2'])
+
+        self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
+        self.assertEqual('The cluster (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_add_nodes_empty_list(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cid = c['id']
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_add_nodes,
+                               self.ctx, cid, [])
+
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual('The request is malformed: No nodes to add: []',
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_add_nodes_node_not_found(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cid = c['id']
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_add_nodes,
+                               self.ctx, cid, ['Bogus'])
+
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Nodes not found: "
+                         "['Bogus']", six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_add_nodes_node_not_active(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cid = c['id']
+        nodes = self._prepare_nodes(self.ctx, count=1, status='ERROR')
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_add_nodes,
+                               self.ctx, cid, nodes)
+
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        msg = _("Nodes are not ACTIVE: %s") % nodes
+        self.assertEqual(_("The request is malformed: %(msg)s") % {'msg': msg},
+                         six.text_type(ex.exc_info[1]))
