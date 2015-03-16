@@ -117,7 +117,8 @@ class ControllerTest(object):
             self.mock_enforce.assert_called_with(
                 action=self.action,
                 context=self.context,
-                scope=self.controller.REQUEST_SCOPE)
+                scope=self.controller.REQUEST_SCOPE,
+                target={'project_id': self.context.tenant_id})
             self.assertEqual(self.expected_request_count,
                              len(self.mock_enforce.call_args_list))
         super(ControllerTest, self).tearDown()
