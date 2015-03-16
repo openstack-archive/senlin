@@ -354,6 +354,6 @@ class PolicyTest(base.SenlinTestCase):
 
     def test_policy_delete_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_get, self.ctx, 'Bogus')
+                               self.eng.policy_delete, self.ctx, 'Bogus')
 
         self.assertEqual(exception.PolicyNotFound, ex.exc_info[0])
