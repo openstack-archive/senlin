@@ -469,7 +469,8 @@ class EngineService(service.Service):
                 changed = True
 
             if timeout is not None and timeout != cluster.timeout:
-                cluster.timeout = timeout
+                cluster.timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT,
+                                                        timeout)
                 changed = True
 
             if changed is True:
@@ -480,10 +481,6 @@ class EngineService(service.Service):
         # Get the database representation of the existing cluster
         db_cluster = self.cluster_find(context, identity)
         cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
-
-        if cluster.status == cluster.DELETED:
-            msg = _('Updating a cluster which has been deleted')
-            raise exception.NotSupported(feature=msg)
 
         update_cluster_properties(cluster)
 
