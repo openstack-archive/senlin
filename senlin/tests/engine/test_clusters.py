@@ -17,6 +17,7 @@ import six
 from senlin.common import exception
 from senlin.db import api as db_api
 from senlin.engine.actions import base as action_mod
+from senlin.engine import cluster as cluster_mod
 from senlin.engine import dispatcher
 from senlin.engine import environment
 from senlin.engine import service
@@ -348,3 +349,83 @@ class ClusterTest(base.SenlinTestCase):
         # ID based finding is okay with show_deleted
         result = self.eng.cluster_find(self.ctx, cid, show_deleted=True)
         self.assertIsNotNone(result)
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_update_simple_success(self, notify):
+        c1 = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cid = c1['id']
+
+        # 1. update name
+        self.eng.cluster_update(self.ctx, cid, name='c-2')
+        c = self.eng.cluster_get(self.ctx, cid)
+        self.assertEqual(cid, c['id'])
+        self.assertEqual('c-2', c['name'])
+
+        # 2. update parent
+        p = self.eng.cluster_create(self.ctx, 'parent', 0, self.profile['id'])
+        self.eng.cluster_update(self.ctx, cid, parent=p['id'])
+        c = self.eng.cluster_get(self.ctx, cid)
+        self.assertEqual(cid, c['id'])
+        self.assertEqual(p['id'], c['parent'])
+
+        # 3. update tags
+        self.eng.cluster_update(self.ctx, cid, tags={'k': 'v'})
+        c = self.eng.cluster_get(self.ctx, cid)
+        self.assertEqual(cid, c['id'])
+        self.assertEqual({'k': 'v'}, c['tags'])
+
+        # 4. update timeout
+        self.eng.cluster_update(self.ctx, cid, timeout=119)
+        c = self.eng.cluster_get(self.ctx, cid)
+        self.assertEqual(cid, c['id'])
+        self.assertEqual(119, c['timeout'])
+
+    def test_cluster_update_cluster_not_found(self, notify):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_update, self.ctx, 'Bogus')
+
+        self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_update_cluster_bad_status(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cluster = cluster_mod.Cluster.load(self.ctx, c['id'])
+        cluster.set_status(self.ctx, cluster.DELETED, reason='test')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_update, self.ctx, c['id'],
+                               name='new name')
+
+        self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_update_parent_not_found(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_update, self.ctx, c['id'],
+                               parent='Bogus')
+
+        self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_update_timeout_not_integer(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_update, self.ctx, c['id'],
+                               timeout='Long')
+
+        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_update_cluster_status_error(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cluster = cluster_mod.Cluster.load(self.ctx, c['id'])
+        cluster.set_status(self.ctx, cluster.ERROR, reason='test')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_update, self.ctx, c['id'],
+                               profile_id='good_profile')
+
+        self.assertEqual(exception.NotSupported, ex.exc_info[0])
