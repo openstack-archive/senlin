@@ -380,7 +380,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(cid, c['id'])
         self.assertEqual(119, c['timeout'])
 
-    def test_cluster_update_cluster_not_found(self, notify):
+    def test_cluster_update_cluster_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_update, self.ctx, 'Bogus')
 
@@ -429,3 +429,93 @@ class ClusterTest(base.SenlinTestCase):
                                profile_id='good_profile')
 
         self.assertEqual(exception.NotSupported, ex.exc_info[0])
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_update_update_to_same_profile(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        self.eng.cluster_update(self.ctx, c['id'],
+                                profile_id=self.profile['id'])
+        result = self.eng.cluster_get(self.ctx, c['id'])
+        self.assertEqual(c['id'], result['id'])
+        self.assertEqual(c['profile_id'], result['profile_id'])
+
+        # notify is only called once, because the 'cluster_update' operation
+        # was not causing any new action to be dispatched
+        notify.assert_called_once()
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_update_update_to_diff_profile_type(self, notify):
+        # Register a different profile
+        env = environment.global_env()
+        env.register_profile('DiffProfileType', fakes.TestProfile)
+        new_profile = self.eng.profile_create(
+            self.ctx, 'p-test', 'DiffProfileType',
+            spec={'INT': 10, 'STR': 'string'}, perm='1111')
+
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_update,
+                               self.ctx, c['id'], profile_id=new_profile['id'])
+
+        self.assertEqual(exception.ProfileTypeNotMatch, ex.exc_info[0])
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_update_profile_not_found(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_update,
+                               self.ctx, c['id'], profile_id='Bogus')
+
+        self.assertEqual(exception.ProfileNotFound, ex.exc_info[0])
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_update_profile_normal(self, notify):
+        new_profile = self.eng.profile_create(
+            self.ctx, 'p-new', 'TestProfile',
+            spec={'INT': 20, 'STR': 'string new'})
+
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        self.eng.cluster_update(self.ctx, c['id'],
+                                profile_id=new_profile['id'])
+
+        # TODO(anyone): uncomment the following lines when cluster-update
+        # is implemented
+        # action_id = result['action']
+        # action = self.eng.action_get(self.ctx, action_id)
+        # self._verify_action(action, 'CLUSTER_UPDATE',
+        #                     'cluster_update_%s' % c['id'][:8],
+        #                     result['id'],
+        #                     cause=action_mod.CAUSE_RPC)
+
+        # notify.assert_called_once_with(self.ctx,
+        #                                self.eng.dispatcher.NEW_ACTION,
+        #                                None, action_id=action_id)
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_delete(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cid = c['id']
+
+        result = self.eng.cluster_delete(self.ctx, cid)
+        self.assertIsNotNone(result)
+
+        # verify action is fired
+        action_id = result['action']
+        action = self.eng.action_get(self.ctx, action_id)
+        self._verify_action(action, 'CLUSTER_DELETE',
+                            'cluster_delete_%s' % c['id'][:8],
+                            c['id'],
+                            cause=action_mod.CAUSE_RPC)
+
+        expected_call = mock.call(self.ctx,
+                                  self.eng.dispatcher.NEW_ACTION,
+                                  None, action_id=mock.ANY)
+
+        # two calls: one for create, the other for delete
+        notify.assert_has_calls([expected_call] * 2)
+
+    def test_policy_delete_not_found(self):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_delete, self.ctx, 'Bogus')
+
+        self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
