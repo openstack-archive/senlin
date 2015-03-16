@@ -284,7 +284,7 @@ class PolicyTest(base.SenlinTestCase):
         p = self.eng.policy_get(self.ctx, pid)
         self.assertEqual('p-2', p['name'])
 
-        # 2. update permission
+        # 2. update cooldown 
         p2 = self.eng.policy_update(self.ctx, pid, cooldown=120)
         self.assertEqual(pid, p2['id'])
         self.assertEqual(120, p2['cooldown'])
@@ -293,7 +293,7 @@ class PolicyTest(base.SenlinTestCase):
         p = self.eng.policy_get(self.ctx, pid)
         self.assertEqual(120, p['cooldown'])
 
-        # 3. update tags
+        # 3. update level 
         p2 = self.eng.policy_update(self.ctx, pid, level=50)
         self.assertEqual(pid, p2['id'])
         self.assertEqual(50, p2['level'])
