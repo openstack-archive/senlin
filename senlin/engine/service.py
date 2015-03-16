@@ -476,7 +476,7 @@ class EngineService(service.Service):
             if changed is True:
                 cluster.store(context)
 
-            return
+            return cluster.to_dict()
 
         # Get the database representation of the existing cluster
         db_cluster = self.cluster_find(context, identity)
@@ -485,7 +485,7 @@ class EngineService(service.Service):
         update_cluster_properties(cluster)
 
         if profile_id is None or profile_id == cluster.profile_id:
-            return
+            return cluster.to_dict()
 
         if cluster.status == cluster.ERROR:
             msg = _('Updating a cluster when it is in error state')
@@ -513,7 +513,9 @@ class EngineService(service.Service):
         # dispatcher.notify(context, self.dispatcher.NEW_ACTION,
         #                   None, action_id=action.id)
 
-        return
+        result = cluster.to_dict()
+        result['action'] = action.id
+        return result
 
     @request_context
     def cluster_add_nodes(self, context, identity, nodes):
