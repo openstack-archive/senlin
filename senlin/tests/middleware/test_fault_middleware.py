@@ -100,19 +100,16 @@ class FaultMiddlewareTest(base.SenlinTestCase):
 
         wrapper = fault.FaultWrapper(None)
         msg = wrapper._error(TestException())
-        expected = {
-            'code': 500,
-            'error': {
-                'code': 500,
-                'message': u'Error with non-ascii chars \x80',
-                'traceback': 'None\n',
-                'type': 'TestException'
-            },
-            'explanation': 'The server has either erred or is incapable of '
-                           'performing the requested operation.',
-            'title': 'Internal Server Error'
-        }
-        self.assertEqual(expected, msg)
+
+        self.assertEqual(500, msg['code'])
+        self.assertEqual(500, msg['error']['code'])
+        self.assertEqual(u'Error with non-ascii chars \x80',
+                         msg['error']['message'])
+        self.assertEqual('TestException', msg['error']['type'])
+        self.assertEqual('The server has either erred or is incapable of '
+                         'performing the requested operation.',
+                         msg['explanation'])
+        self.assertEqual('Internal Server Error', msg['title'])
 
     def test_remote_exception(self):
         # We want tracebacks

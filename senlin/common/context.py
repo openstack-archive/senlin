@@ -40,6 +40,7 @@ class RequestContext(context.RequestContext):
                  read_only=False, show_deleted=False,
                  request_id=None, **kwargs):
         '''Initializer of request context.
+
          :param kwargs: Extra arguments that might be present, but we ignore
             because they possibly came in from older rpc messages.
         '''
@@ -134,9 +135,7 @@ class ContextMiddleware(wsgi.Middleware):
         return self.ctxcls(*args, **kwargs)
 
     def process_request(self, req):
-        '''Extract any authentication information in the request and
-        construct an appropriate context from it.
-        '''
+        '''Build context from authentication info extracted from request.'''
 
         headers = req.headers
         environ = req.environ

@@ -10,8 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import io
 import json
 import os
+
+from oslo_utils import encodeutils
 import requests
 import six
 from six.moves import urllib
@@ -37,7 +40,7 @@ else:
 
 class YamlLoader(Loader):
     def __init__(self, stream):
-        if isinstance(stream, file):
+        if isinstance(stream, io.IOBase):
             self._curdir = os.path.split(stream.name)[0]
         else:
             self._curdir = './'
@@ -82,7 +85,7 @@ YamlLoader.add_constructor(u'tag:yaml.org,2002:timestamp',
 
 def simple_parse(in_str):
     try:
-        out_dict = json.loads(in_str)
+        out_dict = json.loads(encodeutils.safe_decode(in_str))
     except ValueError:
         try:
             out_dict = yaml.load(in_str, Loader=YamlLoader)

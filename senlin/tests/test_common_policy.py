@@ -17,7 +17,7 @@ from oslo_config import cfg
 from senlin.common import exception
 from senlin.common import policy
 from senlin.openstack.common import policy as base_policy
-from senlin.tests.common import base 
+from senlin.tests.common import base
 from senlin.tests.common import utils
 
 policy_path = os.path.dirname(os.path.realpath(__file__)) + "/policy/"

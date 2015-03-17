@@ -35,6 +35,7 @@ import eventlet.greenio
 import eventlet.wsgi
 from oslo_config import cfg
 import oslo_i18n
+from oslo_utils import encodeutils
 from oslo_utils import importutils
 from paste import deploy
 import routes
@@ -320,8 +321,9 @@ class Middleware(object):
 
 
 class Debug(Middleware):
-    '''Helper class that can be inserted into any WSGI application chain
-    to get information about the request and response.
+    '''Helper class that can be inserted into any WSGI application chain.
+
+    Use this to get information about the request and response.
     '''
 
     @webob.dec.wsgify
@@ -329,13 +331,13 @@ class Debug(Middleware):
         print(("*" * 40) + " REQUEST ENVIRON")
         for key, value in req.environ.items():
             print(key, "=", value)
-        print
+        print('')
         resp = req.get_response(self.application)
 
         print(("*" * 40) + " RESPONSE HEADERS")
         for (key, value) in six.iteritems(resp.headers):
             print(key, "=", value)
-        print
+        print('')
 
         resp.app_iter = self.print_generator(resp.app_iter)
 
@@ -350,7 +352,7 @@ class Debug(Middleware):
             sys.stdout.write(part)
             sys.stdout.flush()
             yield part
-        print
+        print('')
 
 
 def debug_filter(app, conf, **local_conf):
@@ -400,9 +402,10 @@ class Router(object):
     @staticmethod
     @webob.dec.wsgify
     def _dispatch(req):
-        '''Called by self._router after matching the incoming request to
-        a route and putting the information into req.environ.
+        '''Private dispatcher method.
 
+        Called by self._router() after matching the incoming request to
+        a route and putting the information into req.environ.
         Either returns 404 or the routed WSGI app's response.
         '''
 
@@ -452,16 +455,16 @@ def is_json_content_type(request):
             aws_content_type = request.params.get("ContentType")
         except Exception:
             aws_content_type = None
-        #respect aws_content_type when both available
+        # respect aws_content_type when both available
         content_type = aws_content_type or request.content_type
     else:
         content_type = request.content_type
-    #bug #1887882
-    #for back compatible for null or plain content type
+    # bug #1887882
+    # for back compatible for null or plain content type
     if not content_type or content_type.startswith('text/plain'):
         content_type = 'application/json'
     if content_type in ('JSON', 'application/json')\
-            and request.body.startswith('{'):
+            and request.body.startswith(encodeutils.safe_encode('{')):
         return True
     return False
 
@@ -472,6 +475,8 @@ class JSONRequestDeserializer(object):
 
         :param request:  Webob.Request object
         '''
+        if request is None or request.content_length is None:
+            return False
 
         if request.content_length > 0 and is_json_content_type(request):
             return True
@@ -486,7 +491,7 @@ class JSONRequestDeserializer(object):
                     {'len': len(datastring),
                      'limit': cfg.CONF.max_json_body_size}
                 raise exception.RequestLimitExceeded(message=msg)
-            return json.loads(datastring)
+            return json.loads(encodeutils.safe_decode(datastring))
         except ValueError as ex:
             raise webob.exc.HTTPBadRequest(six.text_type(ex))
 
@@ -515,13 +520,14 @@ class Resource(object):
     '''
 
     def __init__(self, controller, deserializer, serializer=None):
-        """Initializer.
+        '''Initializer.
+
         :param controller: object that implement methods created by routes lib
         :param deserializer: object that supports webob request deserialization
                              through controller-like actions
         :param serializer: object that supports webob response serialization
                            through controller-like actions
-        """
+        '''
         self.controller = controller
         self.deserializer = deserializer
         self.serializer = serializer

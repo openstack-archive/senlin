@@ -12,6 +12,7 @@
 
 import datetime
 
+from oslo_utils import encodeutils
 import webob
 
 from senlin.common import serializers
@@ -45,6 +46,9 @@ class JSONResponseSerializerTest(base.SenlinTestCase):
         self.assertEqual(200, response.status_int)
         content_types = filter(lambda h: h[0] == 'Content-Type',
                                response.headerlist)
-        self.assertEqual(1, len(content_types))
+        # NOTE: filter returns a iterator in python 3.
+        types = [t for t in content_types]
+        self.assertEqual(1, len(types))
         self.assertEqual('application/json', response.content_type)
-        self.assertEqual('{"key": "value"}', response.body)
+        self.assertEqual('{"key": "value"}',
+                         encodeutils.safe_decode(response.body))

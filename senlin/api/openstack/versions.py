@@ -15,8 +15,13 @@
 Controller that returns information on the senlin API versions
 """
 
-import httplib
 import json
+import six
+
+if six.PY2:
+    import httplib
+else:
+    import http.client as httplib
 
 import webob.dec
 

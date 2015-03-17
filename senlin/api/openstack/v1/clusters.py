@@ -184,7 +184,7 @@ class ClusterController(object):
         if len(body) > 1:
             raise exc.HTTPBadRequest(_('Multiple actions specified'))
 
-        this_action = body.keys()[0]
+        this_action = list(body.keys())[0]
         if this_action not in self.SUPPORTED_ACTIONS:
             msg = _("Unrecognized action '%s' specified") % this_action
             raise exc.HTTPBadRequest(msg)

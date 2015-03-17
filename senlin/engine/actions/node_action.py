@@ -13,7 +13,6 @@
 from oslo_log import log as logging
 
 from senlin.common import exception
-from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.engine.actions import base
 from senlin.engine import node as node_mod
@@ -88,8 +87,8 @@ class NodeAction(base.Action):
         try:
             node = node_mod.Node.load(self.context, node_id=self.target)
         except exception.NotFound:
-            reason = _('Node with id (%s) is not found') % self.target
-            LOG.error(_LE(reason))
+            reason = _LE('Node with id (%s) is not found') % self.target
+            LOG.error(reason)
             return self.RES_ERROR, reason
 
         reason = ''

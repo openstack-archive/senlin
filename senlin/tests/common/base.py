@@ -86,9 +86,7 @@ class SenlinTestCase(testscenarios.WithScenarios,
         self.addCleanup(utils.reset_dummy_db)
 
     def stub_wallclock(self):
-        """
-        Overrides scheduler wallclock to speed up tests expecting timeouts.
-        """
+        # Overrides scheduler wallclock to speed up tests expecting timeouts.
         self._wallclock = time.time()
 
         def fake_wallclock():

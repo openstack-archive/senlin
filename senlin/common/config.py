@@ -132,16 +132,19 @@ for group, opts in list_opts():
 
 
 def _get_deployment_flavor():
-    """Retrieve the paste_deploy.flavor config item, formatted appropriately
-    for appending to the application name.
+    """Retrieve paste_deploy.flavor config item.
+
+    The result is formatted appropriately to be appended to the
+    application name.
     """
     flavor = cfg.CONF.paste_deploy.flavor
     return '' if not flavor else ('-' + flavor)
 
 
 def _get_deployment_config_file():
-    """Retrieve the deployment_config_file config item, formatted as an
-    absolute pathname.
+    """Retrieve item from deployment_config_file.
+
+    The retrieved item is formatted as an absolute pathname.
     """
     config_path = cfg.CONF.find_file(
         cfg.CONF.paste_deploy['api_paste_config'])

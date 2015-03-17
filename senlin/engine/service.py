@@ -197,7 +197,8 @@ class EngineService(service.Service):
 
     @request_context
     def profile_create(self, context, name, type, spec, perm=None, tags=None):
-        LOG.info(_LI('Creating profile %s: %s'), type, name)
+        LOG.info(_LI('Creating profile %(type)s: %(name)s'),
+                 {'type': type, 'name': name})
         plugin = environment.global_env().get_profile(type)
 
         kwargs = {
@@ -314,7 +315,8 @@ class EngineService(service.Service):
         cooldown = utils.parse_int_param('cooldown', cooldown)
         plugin = environment.global_env().get_policy(type)
 
-        LOG.info(_LI('Creating policy %s:%s'), type, name)
+        LOG.info(_LI('Creating policy %(type)s: %(name)s'),
+                 {'type': type, 'name': name})
 
         kwargs = {
             'spec': spec,

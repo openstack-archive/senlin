@@ -60,7 +60,7 @@ def wrap_exception(notifier=None, publisher_id=None, event_type=None,
             except Exception as e:
                 # Save exception since it can be clobbered during processing
                 # below before we can re-raise
-                exc_info = sys.exc_info()
+                # exc_info = sys.exc_info()
 
                 if notifier:
                     payload = dict(args=args, exception=e)
@@ -82,7 +82,8 @@ def wrap_exception(notifier=None, publisher_id=None, event_type=None,
                                     payload)
 
                 # re-raise original exception since it may have been clobbered
-                raise exc_info[0], exc_info[1], exc_info[2]
+                # raise exc_info[0], exc_info[1], exc_info[2]
+                raise
 
         return functools.wraps(f)(wrapped)
     return inner
@@ -100,11 +101,12 @@ class SenlinException(Exception):
 
     def __init__(self, **kwargs):
         self.kwargs = kwargs
+        self.__context__ = None
 
         try:
             self.message = self.msg_fmt % kwargs
         except KeyError:
-            exc_info = sys.exc_info()
+            # exc_info = sys.exc_info()
             # if kwargs doesn't match a variable in the message
             # log the issue and the kwargs
             LOG.exception(_LE('Exception in string format operation'))
@@ -112,13 +114,14 @@ class SenlinException(Exception):
                 LOG.error("%s: %s" % (name, value))  # noqa
 
             if _FATAL_EXCEPTION_FORMAT_ERRORS:
-                raise exc_info[0], exc_info[1], exc_info[2]
+                raise
+                # raise exc_info[0], exc_info[1], exc_info[2]
 
     def __str__(self):
-        return unicode(self.message).encode('UTF-8')
+        return six.text_type(self.message)
 
     def __unicode__(self):
-        return unicode(self.message)
+        return six.text_type(self.message)
 
     def __deepcopy__(self, memo):
         return self.__class__(**self.kwargs)
@@ -358,8 +361,10 @@ class DriverFailure(SenlinException):
 
 
 class HTTPExceptionDisguise(Exception):
-    """Disguises HTTP exceptions so they can be handled by the webob fault
-    application in the wsgi pipeline.
+    """Disguises HTTP exceptions.
+
+    The purpose is to let them be handled by the webob fault application
+    in the wsgi pipeline.
     """
 
     def __init__(self, exception):

@@ -18,7 +18,7 @@ def fake_translate_msgid(msgid, domain, desired_locale=None):
 
 oslo_i18n.enable_lazy()
 
-#To ensure messages don't really get translated while running tests.
-#As there are lots of places where matching is expected when comparing
-#exception message(translated) with raw message.
+# To ensure messages don't really get translated while running tests.
+# As there are lots of places where matching is expected when comparing
+# exception message(translated) with raw message.
 oslo_i18n._translate_msgid = fake_translate_msgid

@@ -212,8 +212,7 @@ class StackProfile(base.Profile):
         return True
 
     def do_check(self, obj):
-        #TODO(anyone):
-        #Use heat client to query stack status
+        # TODO(anyone): Use heat client to query stack status
         return True
 
     def get_template(self):

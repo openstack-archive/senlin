@@ -28,14 +28,15 @@ CONF = cfg.CONF
 
 
 def do_db_version():
-    """Print database's current migration level."""
+    '''Print database's current migration level.'''
     print(api.db_version(api.get_engine()))
 
 
 def do_db_sync():
-    """Place a database under migration control and upgrade,
-    creating first if necessary.
-    """
+    '''Place a database under migration control and upgrade.
+
+    DB is created first if necessary.
+    '''
     api.db_sync(api.get_engine(), CONF.command.version)
 
 

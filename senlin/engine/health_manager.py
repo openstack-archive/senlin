@@ -18,8 +18,6 @@ take corresponding actions to recover the clusters based on the pre-defined
 health policies.
 '''
 
-import random
-
 from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
@@ -58,14 +56,14 @@ class Health_Manager(service.Service, periodic_task.PeriodicTasks):
         self.topic = topic
         self.version = version
 
-        #params for periodic running task
+        # params for periodic running task
         self.periodic_interval_max = CONF.periodic_interval_max
         self.periodic_enable = CONF.periodic_enable
         self.periodic_fuzzy_delay = CONF.periodic_fuzzy_delay
 
     def periodic_tasks(self, raise_on_error=False):
         """Tasks to be run at a periodic interval."""
-        #TODO(anyone): iterate clusters and call their periodic_tasks
+        # TODO(anyone): iterate clusters and call their periodic_tasks
         return self.periodic_interval_max
 
     def start(self):
@@ -77,18 +75,16 @@ class Health_Manager(service.Service, periodic_task.PeriodicTasks):
         server.start()
 
         if self.periodic_enable:
-            if self.periodic_fuzzy_delay:
-                initial_delay = random.randint(0, self.periodic_fuzzy_delay)
-            else:
-                initial_delay = None
+            # if self.periodic_fuzzy_delay:
+            #    initial_delay = random.randint(0, self.periodic_fuzzy_delay)
+            # else:
+            #    initial_delay = None
 
             self.threadgroup.add_timer(self.periodic_interval_max,
                                        self.periodic_tasks)
 
     def listening(self, context):
-        '''Respond affirmatively to confirm that the engine performing the
-        action is still alive.
-        '''
+        '''Respond to confirm that the engine is still alive.'''
         return True
 
     def stop(self):

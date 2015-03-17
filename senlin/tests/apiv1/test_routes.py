@@ -90,7 +90,7 @@ class RoutesTest(base.SenlinTestCase):
         self.assertRoute(
             self.m,
             '/aaaa/profiles/bbbb',
-            'PUT',
+            'PATCH',
             'update',
             'ProfileController',
             {
@@ -166,7 +166,7 @@ class RoutesTest(base.SenlinTestCase):
         self.assertRoute(
             self.m,
             '/aaaa/policies/bbbb',
-            'PUT',
+            'PATCH',
             'update',
             'PolicyController',
             {
@@ -220,7 +220,7 @@ class RoutesTest(base.SenlinTestCase):
         self.assertRoute(
             self.m,
             '/aaaa/clusters/bbbb',
-            'PUT',
+            'PATCH',
             'update',
             'ClusterController',
             {
@@ -285,7 +285,7 @@ class RoutesTest(base.SenlinTestCase):
         self.assertRoute(
             self.m,
             '/aaaa/nodes/bbbb',
-            'PUT',
+            'PATCH',
             'update',
             'NodeController',
             {

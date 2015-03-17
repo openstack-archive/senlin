@@ -29,7 +29,7 @@ class AnyIndexDict(collections.Mapping):
         self.value = value
 
     def __getitem__(self, key):
-        if key != '*' and not isinstance(key, (int, long)):
+        if key != '*' and not isinstance(key, six.integer_types):
             raise KeyError(_('Invalid key %s') % str(key))
 
         return self.value
@@ -188,7 +188,7 @@ class Integer(Schema):
             return super(Integer, self).__getitem__(key)
 
     def to_schema_type(self, value):
-        if isinstance(value, (int, long)):
+        if isinstance(value, six.integer_types):
             return value
         try:
             num = int(value)
@@ -206,7 +206,7 @@ class Integer(Schema):
             raise exception.SpecValidationFailed(message=msg)
 
     def validate(self, value, context=None):
-        if not isinstance(value, (int, long)):
+        if not isinstance(value, six.integer_types):
             value = self.resolve(value)
 
         self.validate_constraints(value, self, context)
@@ -389,6 +389,7 @@ class Spec(collections.Mapping):
 
     def __len__(self):
         '''Number of items in the spec.
+
         A spec always contain all keys though some may be not specified.
         '''
         return len(self._schema)

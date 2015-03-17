@@ -283,7 +283,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         for spec in specs:
             action = _create_action(self.ctx, action=shared.sample_action,
                                     **spec)
-            #action.status = db_api.ACTION_INIT
+            # action.status = db_api.ACTION_INIT
             id_of[spec['name']] = action.id
 
         db_api.action_add_dependency(self.ctx,

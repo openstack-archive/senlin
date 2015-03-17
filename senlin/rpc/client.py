@@ -24,10 +24,7 @@ LOG = logging.getLogger(__name__)
 
 
 class EngineClient(object):
-    '''Client side of the senlin engine rpc API.
-    API version history::
-        1.0 - Initial version.
-    '''
+    '''Client side of the senlin engine rpc API.'''
 
     BASE_RPC_API_VERSION = '1.0'
 

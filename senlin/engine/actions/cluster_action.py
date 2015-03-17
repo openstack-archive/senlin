@@ -406,8 +406,8 @@ class ClusterAction(base.Action):
         return result, reason
 
     def do_attach_policy(self, cluster, policy_data):
-        '''Attach policy to the cluster.
-        '''
+        '''Attach policy to the cluster.'''
+
         policy_id = self.inputs.get('policy_id', None)
         if not policy_id:
             raise exception.PolicyNotSpecified()
@@ -506,6 +506,7 @@ class ClusterAction(base.Action):
 
     def execute(self, **kwargs):
         '''Wrapper of action execution.
+
         This is mainly a wrapper that executes an action with cluster lock
         acquired.
         :return: A tuple (res, reason) that indicates whether the execution
@@ -515,8 +516,8 @@ class ClusterAction(base.Action):
         try:
             cluster = cluster_mod.Cluster.load(self.context, self.target)
         except exception.NotFound:
-            reason = _('Cluster %(id)s not found') % {'id': self.target}
-            LOG.error(_LE(reason))
+            reason = _LE('Cluster %(id)s not found') % {'id': self.target}
+            LOG.error(reason)
             return self.RES_ERROR, reason
 
         # Try to lock cluster before do real operation

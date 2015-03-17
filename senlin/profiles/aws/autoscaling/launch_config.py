@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-#from senlin.drivers import heat_v1 as heat
+# from senlin.drivers import heat_v1 as heat
 from senlin.profiles import base
 
 __type_name__ = 'aws.autoscaling.launchconfig'
@@ -59,5 +59,5 @@ class LaunchConfigProfile(base.Profile):
         return True
 
     def do_check(self, id):
-        #TODO(liuh): add actual checking logic
+        # TODO(liuh): add actual checking logic
         return True

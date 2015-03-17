@@ -100,8 +100,9 @@ class ThreadGroupManager(object):
         action.signal(context, action.SIG_RESUME)
 
     def add_timer(self, interval, func, *args, **kwargs):
-        '''Define a periodic task, to be run in a separate thread, in the
-        target threadgroups.
+        '''Define a periodic task to be run in the thread group.
+
+        The task will be executed in a separate green thread.
         Interval is from cfg.CONF.periodic_interval
         '''
 

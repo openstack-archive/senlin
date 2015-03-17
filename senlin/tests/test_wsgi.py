@@ -15,6 +15,7 @@ import json
 import six
 
 from oslo_config import cfg
+from oslo_utils import encodeutils
 import stubout
 import webob
 
@@ -76,27 +77,6 @@ class RequestTest(base.SenlinTestCase):
         request.headers["Accept"] = "application/unsupported1"
         result = request.best_match_content_type()
         self.assertEqual("application/json", result)
-
-    def test_best_match_language(self):
-        # Test that we are actually invoking language negotiation by webop
-        request = wsgi.Request.blank('/')
-        accepted = 'unknown-lang'
-        request.headers = {'Accept-Language': accepted}
-
-        def fake_best_match(self, offers, default_match=None):
-            # Best match on an unknown locale returns None
-            return None
-
-        self.stubs.SmartSet(request.accept_language,
-                            'best_match', fake_best_match)
-
-        self.assertIsNone(request.best_match_language())
-
-        # If Accept-Language is missing or empty, match should be None
-        request.headers = {'Accept-Language': ''}
-        self.assertIsNone(request.best_match_language())
-        request.headers.pop('Accept-Language')
-        self.assertIsNone(request.best_match_language())
 
 
 class ResourceTest(base.SenlinTestCase):
@@ -182,7 +162,7 @@ class ResourceTest(base.SenlinTestCase):
         actions = {'action': 'delete', 'id': 12, 'body': 'data'}
         env = {'wsgiorg.routing_args': [None, actions]}
         request = wsgi.Request.blank('/tests/123', environ=env)
-        request.body = '{"foo" : "value"}'
+        request.body = encodeutils.safe_encode('{"foo" : "value"}')
         resource = wsgi.Resource(Controller(),
                                  wsgi.JSONRequestDeserializer(),
                                  None)
@@ -203,7 +183,7 @@ class ResourceTest(base.SenlinTestCase):
         actions = {'action': 'delete', 'id': 12, 'body': 'data'}
         env = {'wsgiorg.routing_args': [None, actions]}
         request = wsgi.Request.blank('/tests/123', environ=env)
-        request.body = '{"foo" : "value"}'
+        request.body = encodeutils.safe_encode('{"foo" : "value"}')
         message_es = "No Encontrado"
         translated_ex = webob.exc.HTTPBadRequest(message_es)
 
@@ -246,7 +226,7 @@ class ResourceExceptionHandlingTest(base.SenlinTestCase):
         actions = {'action': 'raise_exception', 'body': 'data'}
         env = {'wsgiorg.routing_args': [None, actions]}
         request = wsgi.Request.blank('/tests/123', environ=env)
-        request.body = '{"foo" : "value"}'
+        request.body = encodeutils.safe_encode('{"foo": "value"}')
         resource = wsgi.Resource(Controller(self.exception),
                                  wsgi.JSONRequestDeserializer(),
                                  None)
@@ -260,7 +240,7 @@ class JSONRequestDeserializerTest(base.SenlinTestCase):
     def test_has_body_no_content_length(self):
         request = wsgi.Request.blank('/')
         request.method = 'POST'
-        request.body = 'asdf'
+        request.body = encodeutils.safe_encode('asdf')
         request.headers.pop('Content-Length')
         request.headers['Content-Type'] = 'application/json'
         self.assertFalse(wsgi.JSONRequestDeserializer().has_body(request))
@@ -268,7 +248,7 @@ class JSONRequestDeserializerTest(base.SenlinTestCase):
     def test_has_body_zero_content_length(self):
         request = wsgi.Request.blank('/')
         request.method = 'POST'
-        request.body = 'asdf'
+        request.body = encodeutils.safe_encode('asdf')
         request.headers['Content-Length'] = 0
         request.headers['Content-Type'] = 'application/json'
         self.assertFalse(wsgi.JSONRequestDeserializer().has_body(request))
@@ -276,14 +256,14 @@ class JSONRequestDeserializerTest(base.SenlinTestCase):
     def test_has_body_has_content_length_no_content_type(self):
         request = wsgi.Request.blank('/')
         request.method = 'POST'
-        request.body = '{"key": "value"}'
+        request.body = encodeutils.safe_encode('{"key": "value"}')
         self.assertIn('Content-Length', request.headers)
         self.assertTrue(wsgi.JSONRequestDeserializer().has_body(request))
 
     def test_has_body_has_content_length_plain_content_type(self):
         request = wsgi.Request.blank('/')
         request.method = 'POST'
-        request.body = '{"key": "value"}'
+        request.body = encodeutils.safe_encode('{"key": "value"}')
         self.assertIn('Content-Length', request.headers)
         request.headers['Content-Type'] = 'text/plain'
         self.assertTrue(wsgi.JSONRequestDeserializer().has_body(request))
@@ -291,7 +271,7 @@ class JSONRequestDeserializerTest(base.SenlinTestCase):
     def test_has_body_has_content_type_malformed(self):
         request = wsgi.Request.blank('/')
         request.method = 'POST'
-        request.body = 'asdf'
+        request.body = encodeutils.safe_encode('asdf')
         self.assertIn('Content-Length', request.headers)
         request.headers['Content-Type'] = 'application/json'
         self.assertFalse(wsgi.JSONRequestDeserializer().has_body(request))
@@ -299,7 +279,7 @@ class JSONRequestDeserializerTest(base.SenlinTestCase):
     def test_has_body_has_content_type(self):
         request = wsgi.Request.blank('/')
         request.method = 'POST'
-        request.body = '{"key": "value"}'
+        request.body = encodeutils.safe_encode('{"key": "value"}')
         self.assertIn('Content-Length', request.headers)
         request.headers['Content-Type'] = 'application/json'
         self.assertTrue(wsgi.JSONRequestDeserializer().has_body(request))
@@ -307,7 +287,7 @@ class JSONRequestDeserializerTest(base.SenlinTestCase):
     def test_has_body_has_wrong_content_type(self):
         request = wsgi.Request.blank('/')
         request.method = 'POST'
-        request.body = '{"key": "value"}'
+        request.body = encodeutils.safe_encode('{"key": "value"}')
         self.assertIn('Content-Length', request.headers)
         request.headers['Content-Type'] = 'application/xml'
         self.assertFalse(wsgi.JSONRequestDeserializer().has_body(request))
@@ -315,14 +295,14 @@ class JSONRequestDeserializerTest(base.SenlinTestCase):
     def test_has_body_has_aws_content_type_only(self):
         request = wsgi.Request.blank('/?ContentType=JSON')
         request.method = 'GET'
-        request.body = '{"key": "value"}'
+        request.body = encodeutils.safe_encode('{"key": "value"}')
         self.assertIn('Content-Length', request.headers)
         self.assertTrue(wsgi.JSONRequestDeserializer().has_body(request))
 
     def test_has_body_respect_aws_content_type(self):
         request = wsgi.Request.blank('/?ContentType=JSON')
         request.method = 'GET'
-        request.body = '{"key": "value"}'
+        request.body = encodeutils.safe_encode('{"key": "value"}')
         self.assertIn('Content-Length', request.headers)
         request.headers['Content-Type'] = 'application/xml'
         self.assertTrue(wsgi.JSONRequestDeserializer().has_body(request))
@@ -330,7 +310,7 @@ class JSONRequestDeserializerTest(base.SenlinTestCase):
     def test_has_body_content_type_with_get(self):
         request = wsgi.Request.blank('/')
         request.method = 'GET'
-        request.body = '{"key": "value"}'
+        request.body = encodeutils.safe_encode('{"key": "value"}')
         self.assertIn('Content-Length', request.headers)
         self.assertTrue(wsgi.JSONRequestDeserializer().has_body(request))
 
@@ -358,7 +338,7 @@ class JSONRequestDeserializerTest(base.SenlinTestCase):
     def test_default_with_body(self):
         request = wsgi.Request.blank('/')
         request.method = 'POST'
-        request.body = '{"key": "value"}'
+        request.body = encodeutils.safe_encode('{"key": "value"}')
         actual = wsgi.JSONRequestDeserializer().default(request)
         expected = {"body": {"key": "value"}}
         self.assertEqual(expected, actual)
@@ -366,7 +346,7 @@ class JSONRequestDeserializerTest(base.SenlinTestCase):
     def test_default_with_get_with_body(self):
         request = wsgi.Request.blank('/')
         request.method = 'GET'
-        request.body = '{"key": "value"}'
+        request.body = encodeutils.safe_encode('{"key": "value"}')
         actual = wsgi.JSONRequestDeserializer().default(request)
         expected = {"body": {"key": "value"}}
         self.assertEqual(expected, actual)
@@ -374,7 +354,7 @@ class JSONRequestDeserializerTest(base.SenlinTestCase):
     def test_default_with_get_with_body_with_aws(self):
         request = wsgi.Request.blank('/?ContentType=JSON')
         request.method = 'GET'
-        request.body = '{"key": "value"}'
+        request.body = encodeutils.safe_encode('{"key": "value"}')
         actual = wsgi.JSONRequestDeserializer().default(request)
         expected = {"body": {"key": "value"}}
         self.assertEqual(expected, actual)

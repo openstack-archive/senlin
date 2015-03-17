@@ -71,7 +71,6 @@ class PlacementPolicy(base.Policy):
         self.AZs = self.spec.get('AZs')
 
     def pre_op(self, cluster_id, action, policy_data):
-        '''Call back when new nodes are created for a cluster.
-        '''
+        '''Call back when new nodes are created for a cluster.'''
         # TODO(anyone): calculate available AZs and or regions
         return policy_data

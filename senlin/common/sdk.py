@@ -130,6 +130,7 @@ _EXCEPTION_MAP = {
 
 def parse_exception(ex):
     '''Parse exception code and yield useful information.
+
     :param details: details of the exception.
     '''
     if isinstance(ex, exc.HttpException):

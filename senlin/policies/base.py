@@ -176,23 +176,19 @@ class Policy(object):
         self.spec_data.validate()
 
     def attach(self, context, cluster, policy_data):
-        '''Method to be invoked before the policy is attached to a cluster.
-        '''
+        '''Method to be invoked before policy is attached to a cluster.'''
         return True
 
     def detach(self, context, cluster, policy_data):
-        '''Method to be invoked before the policy is detached from a cluster.
-        '''
+        '''Method to be invoked before policy is detached from a cluster.'''
         return True
 
     def pre_op(self, cluster_id, action, policy_data):
-        '''A method that will be invoked before an action execution.
-        '''
+        '''A method that will be invoked before an action execution.'''
         return policy_data
 
     def post_op(self, cluster_id, action, policy_data):
-        '''A method that will be invoked after an action execution.
-        '''
+        '''A method that will be invoked after an action execution.'''
         return policy_data
 
     def to_dict(self):

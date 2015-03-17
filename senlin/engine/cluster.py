@@ -254,7 +254,7 @@ class Cluster(periodic_task.PeriodicTasks):
 
         Set cluster status to DELETED.
         '''
-        #self.set_status(context, self.DELETED)
+        # self.set_status(context, self.DELETED)
         db_api.cluster_delete(context, self.id)
         return True
 

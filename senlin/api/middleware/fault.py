@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright © 2013 Unitedstack Inc.
-#
-# Author: Jianing YANG (jianingy@unitedstack.com)
-#
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
 # a copy of the License at
@@ -16,9 +12,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-"""A middleware that turns exceptions into parsable string. Inspired by
-Cinder's faultwrapper
-"""
+'''
+A middleware that turns exceptions into parsable string.
+'''
 
 import traceback
 
@@ -92,6 +88,7 @@ class FaultWrapper(wsgi.Middleware):
 
     def _error(self, ex):
         trace = None
+        traceback_marker = 'Traceback (most recent call last)'
         webob_exc = None
         if isinstance(ex, exception.HTTPExceptionDisguise):
             # An HTTP exception was disguised so it could make it here
@@ -108,10 +105,19 @@ class FaultWrapper(wsgi.Middleware):
             ex_type = ex_type[:-len('_Remote')]
 
         full_message = six.text_type(ex)
-        if full_message.find('\n') > -1 and is_remote:
+        if '\n' in full_message and is_remote:
             message, msg_trace = full_message.split('\n', 1)
+        elif traceback_marker in full_message:
+            message, msg_trace = full_message.split(traceback_marker, 1)
+            message = message.rstrip('\n')
+            msg_trace = traceback_marker + msg_trace
         else:
-            msg_trace = traceback.format_exc()
+            if six.PY3:
+                msg_trace = traceback.format_exception(type(ex), ex,
+                                                       ex.__traceback__)
+            else:
+                msg_trace = traceback.format_exc()
+
             message = full_message
 
         if isinstance(ex, exception.SenlinException):

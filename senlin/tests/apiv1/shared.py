@@ -15,6 +15,7 @@ import webob
 from oslo_config import cfg
 from oslo_log import log
 from oslo_messaging._drivers import common as rpc_common
+from oslo_utils import encodeutils
 
 from senlin.common import consts
 from senlin.common import wsgi
@@ -32,8 +33,8 @@ def request_with_middleware(middleware, func, req, *args, **kwargs):
 
 
 def to_remote_error(error):
-    """Converts the given exception to the one with the _Remote suffix.
-    """
+    '''Prepend the given exception with the _Remote suffix.'''
+
     exc_info = (type(error), error, None)
     serialized = rpc_common.serialize_remote_exception(exc_info)
     remote_error = rpc_common.deserialize_remote_exception(
@@ -93,7 +94,7 @@ class ControllerTest(object):
         req = wsgi.Request(environ)
         req.context = utils.dummy_context('api_test_user', self.tenant)
         self.context = req.context
-        req.body = data
+        req.body = encodeutils.safe_encode(data)
         return req
 
     def _post(self, path, data, content_type='application/json'):

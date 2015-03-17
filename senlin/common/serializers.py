@@ -18,6 +18,7 @@ import datetime
 import json
 
 from oslo_log import log as logging
+from oslo_utils import encodeutils
 
 LOG = logging.getLogger(__name__)
 
@@ -36,4 +37,4 @@ class JSONResponseSerializer(object):
 
     def default(self, response, result):
         response.content_type = 'application/json'
-        response.body = self.to_json(result)
+        response.body = encodeutils.safe_encode(self.to_json(result))

@@ -50,9 +50,7 @@ class Dispatcher(service.Service):
         server.start()
 
     def listening(self, context):
-        '''Respond affirmatively to confirm that the engine performing the
-        action is still alive.
-        '''
+        '''Respond affirmatively to confirm that engine is still alive.'''
         return True
 
     def new_action(self, context, action_id=None):

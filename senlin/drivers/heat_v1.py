@@ -12,7 +12,6 @@
 
 from senlin.common import sdk
 from senlin.drivers import base
-from openstack import user_preference
 from senlin.openstack.orchestration.v1 import stack
 
 

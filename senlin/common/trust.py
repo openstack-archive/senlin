@@ -21,7 +21,8 @@ LOG = logging.getLogger(__name__)
 
 class SenlinTrust(object):
     '''Stores information about the trust of requester.
-       e.g. roles, trustor_user_id, trustee_user_id.
+
+    Sample information include roles, trustor_user_id, trustee_user_id.
     '''
 
     def __init__(self, id=None, project_id=None,
@@ -100,11 +101,11 @@ def list_trust(context, trustee_user_id=None, trustor_user_id=None):
 
 
 class TrustMiddleware(wsgi.Middleware):
-    """This middleware gets trusts information of the requester
-       and fill it into request context. This information will
-       be used by senlin engine later to support privilege
-       management.
-    """
+    '''Extract trust info from request.
+
+    The extracted information is filled into the request context.
+    Senlin engine will use this information for access control.
+    '''
     def process_request(self, req):
         # Query trust list with detail information
         trusts = list_trust(req.context, req.context.user_id)
