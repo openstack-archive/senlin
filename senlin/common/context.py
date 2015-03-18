@@ -12,6 +12,7 @@
 
 from oslo_context import context
 from oslo_middleware import request_id as oslo_request_id
+from oslo_utils import encodeutils
 from oslo_utils import importutils
 
 from senlin.common import exception
@@ -48,6 +49,8 @@ class RequestContext(context.RequestContext):
                                              read_only=read_only,
                                              show_deleted=show_deleted,
                                              request_id=request_id)
+
+        self.request_id = encodeutils.safe_decode(self.request_id)
         # Session for DB access
         self._session = None
 
@@ -162,7 +165,11 @@ class ContextMiddleware(wsgi.Middleware):
             roles = headers.get('X-Roles')
             if roles is not None:
                 roles = roles.split(',')
-            request_id = environ.get(oslo_request_id.ENV_REQUEST_ID)
+            env_req_id = environ.get(oslo_request_id.ENV_REQUEST_ID)
+            if env_req_id is None:
+                request_id = None
+            else:
+                request_id = encodeutils.safe_decode(env_req_id)
 
         except Exception:
             raise exception.NotAuthenticated()
