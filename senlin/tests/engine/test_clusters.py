@@ -622,3 +622,34 @@ class ClusterTest(base.SenlinTestCase):
         msg = _("Nodes are not ACTIVE: %s") % nodes
         self.assertEqual(_("The request is malformed: %(msg)s") % {'msg': msg},
                          six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_add_nodes_node_already_owned(self, notify):
+        c1 = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cid1 = c1['id']
+        c2 = self.eng.cluster_create(self.ctx, 'c-2', 0, self.profile['id'])
+        cid2 = c2['id']
+        nodes1 = self._prepare_nodes(self.ctx, count=1, cluster_id=cid1)
+        nodes2 = self._prepare_nodes(self.ctx, count=1, cluster_id=cid2)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_add_nodes,
+                               self.ctx, cid1, nodes1)
+
+        # adding from the same cluster is not allowed
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        msg = _("Nodes %s owned by other cluster, need to delete them from "
+                "those clusters first.") % nodes1
+        self.assertEqual(_("The request is malformed: %(msg)s") % {'msg': msg},
+                         six.text_type(ex.exc_info[1]))
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_add_nodes,
+                               self.ctx, cid1, nodes2)
+
+        # adding from a different cluster is not allowed either
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        msg = _("Nodes %s owned by other cluster, need to delete them from "
+                "those clusters first.") % nodes2
+        self.assertEqual(_("The request is malformed: %(msg)s") % {'msg': msg},
+                         six.text_type(ex.exc_info[1]))
