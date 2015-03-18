@@ -50,6 +50,8 @@ class ClusterTest(base.SenlinTestCase):
             spec={'KEY1': 'string'}, cooldown=60, level=50)
 
     def _verify_action(self, obj, action, name, target, cause, inputs=None):
+        if inputs is None:
+            inputs = {}
         self.assertEqual(action, obj['action'])
         self.assertEqual(name, obj['name'])
         self.assertEqual(target, obj['target'])
@@ -572,7 +574,7 @@ class ClusterTest(base.SenlinTestCase):
         # two calls: one for create, the other for adding nodes
         notify.assert_has_calls([expected_call] * 2)
 
-    def test_cluster_add_nodes_cluster_not_found(self, notify):
+    def test_cluster_add_nodes_cluster_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_add_nodes,
                                self.ctx, 'Bogus', ['n1', 'n2'])
