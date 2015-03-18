@@ -11,7 +11,6 @@
 # under the License.
 
 from oslo_context import context
-from oslo_log import log as logging
 from oslo_middleware import request_id as oslo_request_id
 from oslo_utils import importutils
 
@@ -19,8 +18,6 @@ from senlin.common import exception
 from senlin.common import policy
 from senlin.common import wsgi
 from senlin.db import api as db_api
-
-LOG = logging.getLogger(__name__)
 
 
 class RequestContext(context.RequestContext):
