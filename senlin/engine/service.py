@@ -694,6 +694,11 @@ class EngineService(service.Service):
     def node_list(self, context, cluster_id=None, show_deleted=False,
                   limit=None, marker=None, sort_keys=None, sort_dir=None,
                   filters=None, tenant_safe=True):
+
+        limit = utils.parse_int_param('limit', limit)
+        tenant_safe = utils.parse_bool_param('tenant_safe', tenant_safe)
+        show_deleted = utils.parse_bool_param('show_deleted', show_deleted)
+
         # Maybe the cluster_id is a name or a short ID
         if cluster_id is not None:
             db_cluster = self.cluster_find(context, cluster_id)
@@ -710,18 +715,12 @@ class EngineService(service.Service):
     @request_context
     def node_create(self, context, name, profile_id, cluster_id=None,
                     role=None, tags=None):
-        db_profile = self.profile_find(context, profile_id)
+        node_profile = self.profile_find(context, profile_id)
         if cluster_id is not None:
             db_cluster = self.cluster_find(context, cluster_id)
             cluster_id = db_cluster.id
 
-            if context.project_id != db_cluster.project:
-                msg = _('Node and cluster are from different project, '
-                        'operation is disallowed.')
-                raise exception.ProjectNotMatch(message=msg)
-
             if profile_id != db_cluster.profile_id:
-                node_profile = self.profile_find(context, profile_id)
                 cluster_profile = self.profile_find(context,
                                                     db_cluster.profile_id)
                 if node_profile.type != cluster_profile.type:
@@ -733,7 +732,7 @@ class EngineService(service.Service):
 
         # Create a node instance
         tags = tags or {}
-        node = node_mod.Node(name, db_profile.id, cluster_id, context,
+        node = node_mod.Node(name, node_profile.id, cluster_id, context,
                              role=role, tags=tags)
         node.store(context)
 

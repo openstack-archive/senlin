@@ -70,6 +70,7 @@ def dummy_context(user='test_username', tenant_id='test_tenant_id',
     roles = roles or []
     return context.RequestContext.from_dict({
         'tenant_id': tenant_id,
+        'project_id': tenant_id,
         'tenant': 'test_tenant',
         'username': user,
         'user_id': user_id,
