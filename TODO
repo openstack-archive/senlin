@@ -21,8 +21,6 @@ POLICY
 
 TEST CASES
 ----------
-  - Add test case that profile_update will create a new profile when spec is
-    different.
   - Add test case the profile context can be saved and loaded correctly.
 
 MIDDLE PRIORITY
