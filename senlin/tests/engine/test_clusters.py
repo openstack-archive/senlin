@@ -653,3 +653,243 @@ class ClusterTest(base.SenlinTestCase):
                 "those clusters first.") % nodes2
         self.assertEqual(_("The request is malformed: %(msg)s") % {'msg': msg},
                          six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_del_nodes(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cid = c['id']
+        nodes = self._prepare_nodes(self.ctx, count=1, cluster_id=cid)
+
+        result = self.eng.cluster_del_nodes(self.ctx, cid, nodes)
+
+        # verify action is fired
+        action_id = result['action']
+        action = self.eng.action_get(self.ctx, action_id)
+        self._verify_action(action, 'CLUSTER_DEL_NODES',
+                            'cluster_del_nodes_%s' % cid[:8],
+                            cid, cause=action_mod.CAUSE_RPC,
+                            inputs={'nodes': nodes})
+
+        expected_call = mock.call(self.ctx,
+                                  self.eng.dispatcher.NEW_ACTION,
+                                  None, action_id=mock.ANY)
+
+        # two calls: one for create, the other for adding nodes
+        notify.assert_has_calls([expected_call] * 2)
+
+    def test_cluster_del_nodes_cluster_not_found(self):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_del_nodes,
+                               self.ctx, 'Bogus', ['n1', 'n2'])
+
+        self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
+        self.assertEqual('The cluster (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_del_nodes_empty_list(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cid = c['id']
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_del_nodes,
+                               self.ctx, cid, [])
+
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual('The request is malformed: No nodes specified.',
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_del_nodes_node_not_found(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cid = c['id']
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_del_nodes,
+                               self.ctx, cid, ['Bogus'])
+
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Nodes not found: "
+                         "['Bogus']", six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_del_nodes_node_in_other_cluster(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        c2 = self.eng.cluster_create(self.ctx, 'c-2', 0, self.profile['id'])
+        cid = c['id']
+        nodes = self._prepare_nodes(self.ctx, count=1, cluster_id=c2['id'])
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_del_nodes,
+                               self.ctx, cid, nodes)
+
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Nodes not members of "
+                         "specified cluster: %s" % nodes,
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_del_nodes_orphan_nodes(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cid = c['id']
+
+        nodes = self._prepare_nodes(self.ctx, count=1)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_del_nodes,
+                               self.ctx, cid, nodes)
+
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Nodes not members of "
+                         "specified cluster: %s" % nodes,
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_scale_out(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cid = c['id']
+
+        result = self.eng.cluster_scale_out(self.ctx, cid, count=1)
+
+        # verify action is fired
+        action_id = result['action']
+        action = self.eng.action_get(self.ctx, action_id)
+        self._verify_action(action, 'CLUSTER_SCALE_OUT',
+                            'cluster_scale_out_%s' % cid[:8],
+                            cid, cause=action_mod.CAUSE_RPC,
+                            inputs={'count': 1})
+
+        expected_call = mock.call(self.ctx,
+                                  self.eng.dispatcher.NEW_ACTION,
+                                  None, action_id=mock.ANY)
+
+        # two calls: one for create, the other for scaling operation
+        notify.assert_has_calls([expected_call] * 2)
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_scale_out_cluster_not_found(self, notify):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_scale_out,
+                               self.ctx, 'Bogus')
+
+        self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
+        self.assertEqual('The cluster (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_scale_out_count_is_none(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cid = c['id']
+
+        result = self.eng.cluster_scale_out(self.ctx, cid)
+
+        # verify action is fired
+        action_id = result['action']
+        action = self.eng.action_get(self.ctx, action_id)
+        self._verify_action(action, 'CLUSTER_SCALE_OUT',
+                            'cluster_scale_out_%s' % cid[:8],
+                            cid, cause=action_mod.CAUSE_RPC,
+                            inputs={})
+
+        expected_call = mock.call(self.ctx,
+                                  self.eng.dispatcher.NEW_ACTION,
+                                  None, action_id=mock.ANY)
+
+        # two calls: one for create, the other for scaling operation
+        notify.assert_has_calls([expected_call] * 2)
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_scale_out_count_not_int_or_zero(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cid = c['id']
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_scale_out,
+                               self.ctx, cid, count='one')
+
+        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
+        self.assertEqual("Invalid value 'one' specified for 'count'",
+                         six.text_type(ex.exc_info[1]))
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_scale_out,
+                               self.ctx, cid, count=0)
+
+        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
+        self.assertEqual("Invalid value '0' specified for 'count'",
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_scale_in(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 2, self.profile['id'])
+        cid = c['id']
+
+        result = self.eng.cluster_scale_in(self.ctx, cid, count=1)
+
+        # verify action is fired
+        action_id = result['action']
+        action = self.eng.action_get(self.ctx, action_id)
+        self._verify_action(action, 'CLUSTER_SCALE_IN',
+                            'cluster_scale_in_%s' % cid[:8],
+                            cid, cause=action_mod.CAUSE_RPC,
+                            inputs={'count': 1})
+
+        expected_call = mock.call(self.ctx,
+                                  self.eng.dispatcher.NEW_ACTION,
+                                  None, action_id=mock.ANY)
+
+        # two calls: one for create, the other for scaling operation
+        notify.assert_has_calls([expected_call] * 2)
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_scale_in_cluster_not_found(self, notify):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_scale_in,
+                               self.ctx, 'Bogus')
+
+        self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
+        self.assertEqual('The cluster (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_scale_in_count_is_none(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 2, self.profile['id'])
+        cid = c['id']
+
+        result = self.eng.cluster_scale_in(self.ctx, cid)
+
+        # verify action is fired
+        action_id = result['action']
+        action = self.eng.action_get(self.ctx, action_id)
+        self._verify_action(action, 'CLUSTER_SCALE_IN',
+                            'cluster_scale_in_%s' % cid[:8],
+                            cid, cause=action_mod.CAUSE_RPC,
+                            inputs={})
+
+        expected_call = mock.call(self.ctx,
+                                  self.eng.dispatcher.NEW_ACTION,
+                                  None, action_id=mock.ANY)
+
+        # two calls: one for create, the other for scaling operation
+        notify.assert_has_calls([expected_call] * 2)
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_scale_in_count_not_int_or_zero(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 2, self.profile['id'])
+        cid = c['id']
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_scale_in,
+                               self.ctx, cid, count='one')
+
+        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
+        self.assertEqual("Invalid value 'one' specified for 'count'",
+                         six.text_type(ex.exc_info[1]))
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_scale_in,
+                               self.ctx, cid, count=0)
+
+        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
+        self.assertEqual("Invalid value '0' specified for 'count'",
+                         six.text_type(ex.exc_info[1]))

@@ -585,11 +585,11 @@ class EngineService(service.Service):
 
         error = None
         if len(not_found) > 0:
-            error = _("Nodes %s not found") % nodes
+            error = _("Nodes not found: %s") % nodes
         elif len(bad_nodes) > 0:
-            error = _("Nodes %s not member of specified cluster") % bad_nodes
+            error = _("Nodes not members of specified cluster: %s") % bad_nodes
         elif len(found) == 0:
-            error = _("No nodes specified") % nodes
+            error = _("No nodes specified.")
 
         if error is not None:
             raise exception.SenlinBadRequest(msg=error)
