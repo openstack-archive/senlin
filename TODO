@@ -9,10 +9,6 @@ ENGINE
   - handle cancel_action() properly. When dispatcher.cancel_action() is called,
     the scheduler should check if the action is still being worked on by someone.
     It should send cancel signal, or help that action remove locks if needed.
-  - Add the support for the multi-region/multi-cloud in profile (Qi Zhang)
-    Need to add one more column in Profile as identifier, if the cloud is openstack,
-    this identifier will be the region name which will be used to get the right service
-     via openstackSDK. If the cloud type is bluemix, this will be the bluemix API address.
 
 DRIVER
 ------
@@ -35,10 +31,13 @@ MIDDLE PRIORITY
 API
 ---
   - Implement webhook support [Yanyan Hu]
-  - Provide support for privilege management [Yanyan Hu]
+  - Provide support for access control [Yanyan Hu]
     - Implement a middleware for trust handling
     - Extend policy middleware to support resource sharing between different
       senlin users
+  - Revise the API for sorting, based on the following guideline:
+    https://github.com/openstack/api-wg/blob/master/guidelines/pagination_filter_sort.rst
+
 DB
 --
   - Add test cases for policy_delete with 'force' set to True[Liuh/ZhaiHF]
