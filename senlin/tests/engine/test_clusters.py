@@ -150,7 +150,8 @@ class ClusterTest(base.SenlinTestCase):
         self.assertIsNotNone(result)
         self.assertEqual(self.profile['id'], result['profile_id'])
 
-        self.eng.cluster_create(self.ctx, 'c-2', 0, self.profile['name'])
+        result = self.eng.cluster_create(self.ctx, 'c-2', 0,
+                                         self.profile['name'])
         self.assertIsNotNone(result)
         self.assertEqual(self.profile['id'], result['profile_id'])
 
@@ -176,10 +177,10 @@ class ClusterTest(base.SenlinTestCase):
         self.assertIsInstance(result, list)
         names = [c['name'] for c in result]
         ids = [c['id'] for c in result]
-        self.assertIn(c1['name'], names[0])
-        self.assertIn(c2['name'], names[1])
-        self.assertIn(c1['id'], ids[0])
-        self.assertIn(c2['id'], ids[1])
+        self.assertEqual(c1['name'], names[0])
+        self.assertEqual(c2['name'], names[1])
+        self.assertEqual(c1['id'], ids[0])
+        self.assertEqual(c2['id'], ids[1])
 
     @mock.patch.object(dispatcher, 'notify')
     def test_cluster_list_with_limit_marker(self, notify):
