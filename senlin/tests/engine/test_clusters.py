@@ -284,6 +284,30 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(c['id'], result[0]['id'])
 
     @mock.patch.object(dispatcher, 'notify')
+    def test_cluster_list_tenant_safe(self, notify):
+        c1 = self.eng.cluster_create(self.ctx, 'c1', 0, self.profile['id'])
+        new_ctx = utils.dummy_context(tenant_id='a_diff_tenant')
+        c2 = self.eng.cluster_create(new_ctx, 'c2', 0, self.profile['id'])
+
+        # default is tenant_safe
+        result = self.eng.cluster_list(self.ctx)
+        self.assertIsInstance(result, list)
+        self.assertEqual(1, len(result))
+        self.assertEqual(c1['id'], result[0]['id'])
+
+        result = self.eng.cluster_list(new_ctx)
+        self.assertIsInstance(result, list)
+        self.assertEqual(1, len(result))
+        self.assertEqual(c2['id'], result[0]['id'])
+
+        # try tenant_safe set to False
+        result = self.eng.cluster_list(self.ctx, tenant_safe=False)
+        self.assertIsInstance(result, list)
+        self.assertEqual(2, len(result))
+        self.assertEqual(c1['id'], result[0]['id'])
+        self.assertEqual(c2['id'], result[1]['id'])
+
+    @mock.patch.object(dispatcher, 'notify')
     def test_cluster_list_with_filters(self, notify):
         self.eng.cluster_create(self.ctx, 'BB', 0, self.profile['id'])
         self.eng.cluster_create(self.ctx, 'AA', 0, self.profile['id'])
@@ -309,6 +333,11 @@ class ClusterTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_list, self.ctx,
                                show_nested='no')
+        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_list, self.ctx,
+                               tenant_safe='no')
         self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
 
     def test_cluster_list_empty(self):
