@@ -376,7 +376,7 @@ class ClusterTest(base.SenlinTestCase):
                               self.eng.cluster_find, self.ctx, identity)
 
         # short id and name based finding does not support show_deleted
-        for identity in [cid[:6], 'p-1']:
+        for identity in [cid[:6], 'c-1']:
             self.assertRaises(exception.ClusterNotFound,
                               self.eng.cluster_find, self.ctx, identity)
 

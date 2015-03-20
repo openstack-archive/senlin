@@ -788,7 +788,7 @@ class EngineService(service.Service):
         # check if profile_type matches
         node_profile = self.profile_find(context, node.profile_id)
         if node_profile.type != db_profile.type:
-            msg = _('Cannot update a cluster to a different profile type, '
+            msg = _('Cannot update a node to a different profile type, '
                     'operation aborted.')
             raise exception.ProfileTypeNotMatch(message=msg)
 
@@ -819,17 +819,12 @@ class EngineService(service.Service):
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
 
-        return action.to_dict()
+        return {'action': action.id}
 
     @request_context
     def node_join(self, context, identity, cluster_id):
         db_node = self.node_find(context, identity)
         db_cluster = self.cluster_find(context, cluster_id)
-
-        if db_node.project != db_cluster.project:
-            msg = _('Node and cluster are from different project, operation '
-                    'is not allowed.')
-            raise exception.ProjectNotMatch(message=msg)
 
         if db_node.profile_id != db_cluster.profile_id:
             node_profile = self.profile_find(db_node.profile_id)

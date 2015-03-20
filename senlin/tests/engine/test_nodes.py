@@ -264,6 +264,30 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(node['id'], result[0]['id'])
 
     @mock.patch.object(dispatcher, 'notify')
+    def test_node_list_tenant_safe(self, notify):
+        node1 = self.eng.node_create(self.ctx, 'n1', self.profile['id'])
+        new_ctx = utils.dummy_context(tenant_id='a_diff_tenant')
+        node2 = self.eng.node_create(new_ctx, 'n2', self.profile['id'])
+
+        # default is tenant_safe
+        result = self.eng.node_list(self.ctx)
+        self.assertIsInstance(result, list)
+        self.assertEqual(1, len(result))
+        self.assertEqual(node1['id'], result[0]['id'])
+
+        result = self.eng.node_list(new_ctx)
+        self.assertIsInstance(result, list)
+        self.assertEqual(1, len(result))
+        self.assertEqual(node2['id'], result[0]['id'])
+
+        # try tenant_safe set to False
+        result = self.eng.node_list(self.ctx, tenant_safe=False)
+        self.assertIsInstance(result, list)
+        self.assertEqual(2, len(result))
+        self.assertEqual(node1['id'], result[0]['id'])
+        self.assertEqual(node2['id'], result[1]['id'])
+
+    @mock.patch.object(dispatcher, 'notify')
     def test_node_list_with_cluster_id(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         node = self.eng.node_create(self.ctx, 'n1', self.profile['id'],
@@ -272,6 +296,14 @@ class NodeTest(base.SenlinTestCase):
         result = self.eng.node_list(self.ctx, cluster_id=c['id'])
         self.assertEqual(1, len(result))
         self.assertEqual(node['id'], result[0]['id'])
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_list, self.ctx,
+                               cluster_id='Bogus')
+
+        self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
+        self.assertEqual('The cluster (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'notify')
     def test_node_list_with_filters(self, notify):
@@ -305,3 +337,157 @@ class NodeTest(base.SenlinTestCase):
         result = self.eng.node_list(self.ctx)
         self.assertIsInstance(result, list)
         self.assertEqual(0, len(result))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_node_find(self, notify):
+        node = self.eng.node_create(self.ctx, 'n1', self.profile['id'])
+        nodeid = node['id']
+
+        result = self.eng.node_find(self.ctx, nodeid)
+        self.assertIsNotNone(result)
+
+        # short id
+        result = self.eng.node_find(self.ctx, nodeid[:5])
+        self.assertIsNotNone(result)
+
+        # name
+        result = self.eng.node_find(self.ctx, 'n1')
+        self.assertIsNotNone(result)
+
+        # others
+        self.assertRaises(exception.NodeNotFound,
+                          self.eng.node_find, self.ctx, 'Bogus')
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_node_find_show_deleted(self, notify):
+        node = self.eng.node_create(self.ctx, 'n1', self.profile['id'])
+        nodeid = node['id']
+        db_api.node_delete(self.ctx, nodeid)
+
+        for identity in [nodeid, nodeid[:6], 'n1']:
+            self.assertRaises(exception.NodeNotFound,
+                              self.eng.node_find, self.ctx, identity)
+
+        # short id and name based finding does not support show_deleted
+        for identity in [nodeid[:6], 'n-1']:
+            self.assertRaises(exception.NodeNotFound,
+                              self.eng.node_find, self.ctx, identity)
+
+        # ID based finding is okay with show_deleted
+        result = self.eng.node_find(self.ctx, nodeid, show_deleted=True)
+        self.assertIsNotNone(result)
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_node_update_simple(self, notify):
+        node = self.eng.node_create(self.ctx, 'node-1', self.profile['id'],
+                                    role='Master', tags={'foo': 'bar'})
+        nodeid = node['id']
+
+        # 1. update name
+        self.eng.node_update(self.ctx, nodeid, name='node-2')
+        res = self.eng.node_get(self.ctx, nodeid)
+        self.assertEqual(nodeid, res['id'])
+        self.assertEqual('node-2', res['name'])
+
+        # 2. update role
+        self.eng.node_update(self.ctx, nodeid, role='worker')
+        res = self.eng.node_get(self.ctx, nodeid)
+        self.assertEqual(nodeid, res['id'])
+        self.assertEqual('worker', res['role'])
+
+        # 3. update tags
+        self.eng.node_update(self.ctx, nodeid, tags={'FOO': 'BAR'})
+        res = self.eng.node_get(self.ctx, nodeid)
+        self.assertEqual(nodeid, res['id'])
+        self.assertEqual({'FOO': 'BAR'}, res['tags'])
+
+    def test_node_update_node_not_found(self):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_update, self.ctx, 'Bogus')
+
+        self.assertEqual(exception.NodeNotFound, ex.exc_info[0])
+        self.assertEqual('The node (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_node_update_with_new_profile(self, notify):
+        node = self.eng.node_create(self.ctx, 'node-1', self.profile['id'])
+        new_profile = self.eng.profile_create(
+            self.ctx, 'p-new', 'TestProfile', spec={'INT': 20})
+
+        self.eng.node_update(self.ctx, node['id'],
+                             profile_id=new_profile['id'])
+
+        # TODO(anyone): uncomment the following lines when cluster-update
+        # is implemented
+        # action_id = result['action']
+        # action = self.eng.action_get(self.ctx, action_id)
+        # self._verify_action(action, 'NODE_UPDATE',
+        #                     'node_update_%s' % c['id'][:8],
+        #                     result['id'],
+        #                     cause=action_mod.CAUSE_RPC)
+
+        # notify.assert_called_once_with(self.ctx,
+        #                                self.eng.dispatcher.NEW_ACTION,
+        #                                None, action_id=action_id)
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_node_update_profile_not_found(self, notify):
+        node = self.eng.node_create(self.ctx, 'node-1', self.profile['id'])
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_update, self.ctx, node['id'],
+                               profile_id='Bogus')
+
+        self.assertEqual(exception.ProfileNotFound, ex.exc_info[0])
+        self.assertEqual('The profile (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_node_update_with_diff_profile_type(self, notify):
+        env = environment.global_env()
+        env.register_profile('NewProfileType', fakes.TestProfile)
+        new_profile = self.eng.profile_create(
+            self.ctx, 'p-new', 'NewProfileType', spec={'INT': 20})
+
+        node = self.eng.node_create(self.ctx, 'node-1', self.profile['id'])
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_update,
+                               self.ctx, node['id'],
+                               profile_id=new_profile['id'])
+
+        self.assertEqual(exception.ProfileTypeNotMatch, ex.exc_info[0])
+        self.assertEqual('Cannot update a node to a different profile type, '
+                         'operation aborted.',
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_node_delete(self, notify):
+        node = self.eng.node_create(self.ctx, 'node-1', self.profile['id'])
+        nodeid = node['id']
+
+        result = self.eng.node_delete(self.ctx, nodeid)
+        self.assertIsNotNone(result)
+
+        # verify action is fired
+        action_id = result['action']
+        action = self.eng.action_get(self.ctx, action_id)
+        self._verify_action(action, 'NODE_DELETE',
+                            'node_delete_%s' % node['id'][:8],
+                            node['id'],
+                            cause=action_mod.CAUSE_RPC)
+
+        expected_call = mock.call(self.ctx,
+                                  self.eng.dispatcher.NEW_ACTION,
+                                  None, action_id=mock.ANY)
+
+        # two calls: one for create, the other for delete
+        notify.assert_has_calls([expected_call] * 2)
+
+    def test_node_delete_not_found(self):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_delete, self.ctx, 'Bogus')
+
+        self.assertEqual(exception.NodeNotFound, ex.exc_info[0])
+        self.assertEqual('The node (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
