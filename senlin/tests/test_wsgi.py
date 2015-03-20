@@ -205,8 +205,8 @@ class ResourceTest(base.SenlinTestCase):
 class ResourceExceptionHandlingTest(base.SenlinTestCase):
     scenarios = [
         ('client_exceptions', dict(
-            exception=exception.ClusterNotSpecified,
-            exception_catch=exception.ClusterNotSpecified)),
+            exception=exception.NotAuthenticated,
+            exception_catch=exception.NotAuthenticated)),
         ('webob_bad_request', dict(
             exception=webob.exc.HTTPBadRequest,
             exception_catch=exception.HTTPExceptionDisguise)),

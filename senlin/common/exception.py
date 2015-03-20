@@ -23,27 +23,12 @@ import sys
 
 from oslo_log import log as logging
 import six
-from six.moves.urllib import parse as urlparse
 
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 
 _FATAL_EXCEPTION_FORMAT_ERRORS = False
 LOG = logging.getLogger(__name__)
-
-
-class RedirectException(Exception):
-    def __init__(self, url):
-        self.url = urlparse.urlparse(url)
-
-
-class KeystoneError(Exception):
-    def __init__(self, code, message):
-        self.code = code
-        self.message = message
-
-    def __str__(self):
-        return "Code: %s, message: %s" % (self.code, self.message)
 
 
 def wrap_exception(notifier=None, publisher_id=None, event_type=None,
@@ -127,27 +112,6 @@ class SenlinException(Exception):
         return self.__class__(**self.kwargs)
 
 
-class MissingCredentialError(SenlinException):
-    msg_fmt = _("Missing required credential: %(required)s")
-
-
-class BadAuthStrategy(SenlinException):
-    msg_fmt = _("Incorrect auth strategy, expected \"%(expected)s\" but "
-                "received \"%(received)s\"")
-
-
-class AuthBadRequest(SenlinException):
-    msg_fmt = _("Connect error/bad request to Auth service at URL %(url)s.")
-
-
-class AuthUrlNotFound(SenlinException):
-    msg_fmt = _("Auth service at URL %(url)s not found.")
-
-
-class AuthorizationFailure(SenlinException):
-    msg_fmt = _("Authorization failed.")
-
-
 class NotAuthenticated(SenlinException):
     msg_fmt = _("You are not authenticated.")
 
@@ -156,38 +120,8 @@ class Forbidden(SenlinException):
     msg_fmt = _("You are not authorized to complete this action.")
 
 
-class NotAuthorized(Forbidden):
-    msg_fmt = _("You are not authorized to complete this action.")
-
-
-class Invalid(SenlinException):
-    msg_fmt = _("Data supplied was not valid: %(reason)s")
-
-
-class AuthorizationRedirect(SenlinException):
-    msg_fmt = _("Redirecting to %(uri)s for authorization.")
-
-
-class RequestUriTooLong(SenlinException):
-    msg_fmt = _("The URI was too long.")
-
-
 class SenlinBadRequest(SenlinException):
     msg_fmt = _("The request is malformed: %(msg)s")
-
-
-class MaxRedirectsExceeded(SenlinException):
-    msg_fmt = _("Maximum redirects (%(redirects)s) was exceeded.")
-
-
-class InvalidRedirect(SenlinException):
-    msg_fmt = _("Received invalid HTTP redirect.")
-
-
-class RegionAmbiguity(SenlinException):
-    msg_fmt = _("Multiple 'image' service matches for region %(region)s. This "
-                "generally means that a region is required and you have not "
-                "supplied one.")
 
 
 class ProjectNotMatch(SenlinException):
@@ -199,29 +133,12 @@ class MultipleChoices(SenlinException):
                 "Please be more specific.")
 
 
-class UserParameterMissing(SenlinException):
-    msg_fmt = _("The Parameter (%(key)s) was not provided.")
-
-
 class InvalidParameter(SenlinException):
     msg_fmt = _("Invalid value '%(value)s' specified for '%(name)s'")
 
 
-class InvalidTenant(SenlinException):
-    msg_fmt = _("Searching Tenant %(target)s "
-                "from Tenant %(actual)s forbidden.")
-
-
 class ClusterNotFound(SenlinException):
     msg_fmt = _("The cluster (%(cluster)s) could not be found.")
-
-
-class ClusterExists(SenlinException):
-    msg_fmt = _("The cluster (%(cluster_name)s) already exists.")
-
-
-class ClusterNotSpecified(SenlinException):
-    msg_fmt = _("The cluster was not specified.")
 
 
 class NodeNotFound(SenlinException):
@@ -284,10 +201,6 @@ class NotSupported(SenlinException):
     msg_fmt = _("%(feature)s is not supported.")
 
 
-class ClusterActionNotSupported(SenlinException):
-    msg_fmt = _("%(action)s is not supported for Cluster.")
-
-
 class Error(SenlinException):
     msg_fmt = "%(message)s"
 
@@ -342,22 +255,8 @@ class ActionBeingWorked(SenlinException):
     msg_fmt = _("Worker %(owner)s is working on this action.")
 
 
-class StopActionFailed(SenlinException):
-    msg_fmt = _("Failed to stop cluster (%(cluster_name)s) on other engine "
-                "(%(engine_id)s)")
-
-
 class EventNotFound(SenlinException):
     msg_fmt = _("The event (%(event)s) could not be found.")
-
-
-class EventSendFailed(SenlinException):
-    msg_fmt = _("Failed to send message to cluster (%(cluster_name)s) "
-                "on other engine (%(engine_id)s)")
-
-
-class DriverFailure(SenlinException):
-    msg_fmt = _("Driver '%(driver)s' failed creation: %(exc)s")
 
 
 class HTTPExceptionDisguise(Exception):
