@@ -80,7 +80,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(exception.ProfileNotFound, ex.exc_info[0])
 
     @mock.patch.object(dispatcher, 'notify')
-    def test_cluster_create_with_role_and_tags(self, notify):
+    def test_node_create_with_role_and_tags(self, notify):
         node = self.eng.node_create(self.ctx, 'n-1', self.profile['id'],
                                     role='master', tags={'k': 'v'})
 
@@ -264,7 +264,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(node['id'], result[0]['id'])
 
     @mock.patch.object(dispatcher, 'notify')
-    def test_cluster_list_with_cluster_id(self, notify):
+    def test_node_list_with_cluster_id(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         node = self.eng.node_create(self.ctx, 'n1', self.profile['id'],
                                     cluster_id=c['id'])
@@ -286,22 +286,22 @@ class NodeTest(base.SenlinTestCase):
         result = self.eng.node_list(self.ctx, filters={'name': 'DD'})
         self.assertEqual(0, len(result))
 
-    def test_cluster_list_bad_param(self):
+    def test_node_list_bad_param(self):
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_list, self.ctx, limit='no')
+                               self.eng.node_list, self.ctx, limit='no')
         self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_list, self.ctx,
+                               self.eng.node_list, self.ctx,
                                show_deleted='no')
         self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_list, self.ctx,
+                               self.eng.node_list, self.ctx,
                                tenant_safe='no')
         self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
 
-    def test_cluster_list_empty(self):
+    def test_node_list_empty(self):
         result = self.eng.node_list(self.ctx)
         self.assertIsInstance(result, list)
         self.assertEqual(0, len(result))
