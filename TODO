@@ -35,6 +35,7 @@ API
       senlin users
   - Revise the API for sorting, based on the following guideline:
     https://github.com/openstack/api-wg/blob/master/guidelines/pagination_filter_sort.rst
+  - Add support to replace a cluster node with another node
 
 DB
 --
