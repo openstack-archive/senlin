@@ -851,6 +851,10 @@ class EngineService(service.Service):
     @request_context
     def node_leave(self, context, identity):
         db_node = self.node_find(context, identity)
+        if db_node.cluster_id is None:
+            msg = _('Node is already an orphan node: %s.') % identity
+            raise exception.SenlinBadRequest(msg=msg)
+
         LOG.info(_LI('Node %(node)s leaving cluster'), {'node': identity})
 
         action = action_mod.Action(context, 'NODE_LEAVE',

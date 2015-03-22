@@ -491,3 +491,142 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(exception.NodeNotFound, ex.exc_info[0])
         self.assertEqual('The node (Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_node_join(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cluster_id = c['id']
+
+        node = self.eng.node_create(self.ctx, 'node1', self.profile['id'])
+        node_id = node['id']
+
+        result = self.eng.node_join(self.ctx, node_id, cluster_id)
+
+        action_id = result['action']
+        action = db_api.action_get(self.ctx, result['action'])
+        self.assertIsNotNone(action)
+        self._verify_action(action, 'NODE_JOIN',
+                            'node_join_%s' % node_id[:8], node_id,
+                            cause=action_mod.CAUSE_RPC,
+                            inputs={'cluster_id': cluster_id})
+        notify.assert_called_with(self.ctx,
+                                  self.eng.dispatcher.NEW_ACTION,
+                                  None, action_id=action_id)
+        # Two creations plus one join
+        self.assertEqual(3, notify.call_count)
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_node_join_from_other_cluster(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cluster_id = c['id']
+        new_cluster = self.eng.cluster_create(self.ctx, 'c-new', 0,
+                                              self.profile['id'])
+        new_cluster_id = new_cluster['id']
+
+        node = self.eng.node_create(self.ctx, 'node1', self.profile['id'],
+                                    cluster_id=cluster_id)
+        node_id = node['id']
+
+        result = self.eng.node_join(self.ctx, node_id, new_cluster_id)
+
+        action = db_api.action_get(self.ctx, result['action'])
+        self.assertIsNotNone(action)
+        self._verify_action(action, 'NODE_JOIN',
+                            'node_join_%s' % node_id[:8], node_id,
+                            cause=action_mod.CAUSE_RPC,
+                            inputs={'cluster_id': new_cluster_id})
+        notify.assert_called_with(self.ctx, self.eng.dispatcher.NEW_ACTION,
+                                  mock.ANY, action_id=mock.ANY)
+        # Three creations plus one join
+        self.assertEqual(4, notify.call_count)
+
+    def test_node_join_node_not_found(self):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_join,
+                               self.ctx, 'BogusNode', 'a-cluster')
+
+        self.assertEqual(exception.NodeNotFound, ex.exc_info[0])
+        self.assertEqual('The node (BogusNode) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_node_join_cluster_not_found(self, notify):
+        node = self.eng.node_create(self.ctx, 'node1', self.profile['id'])
+        node_id = node['id']
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_join,
+                               self.ctx, node_id, 'BogusCluster')
+
+        self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
+        self.assertEqual('The cluster (BogusCluster) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_node_join_profile_type_not_match(self, notify):
+        # prepare a cluster with different profile type
+        env = environment.global_env()
+        env.register_profile('OtherProfileType', fakes.TestProfile)
+        other_profile = self.eng.profile_create(
+            self.ctx, 'new-profile', 'OtherProfileType',
+            spec={'INT': 20, 'STR': 'okay'})
+
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, other_profile['id'])
+        cluster_id = c['id']
+
+        node = self.eng.node_create(self.ctx, 'node1', self.profile['id'])
+        node_id = node['id']
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_join,
+                               self.ctx, node_id, cluster_id)
+
+        self.assertEqual(exception.ProfileTypeNotMatch, ex.exc_info[0])
+        self.assertEqual('Node and cluster have different profile type, '
+                         'operation aborted.',
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_node_leave(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cluster_id = c['id']
+
+        node = self.eng.node_create(self.ctx, 'node1', self.profile['id'],
+                                    cluster_id=cluster_id)
+        node_id = node['id']
+
+        result = self.eng.node_leave(self.ctx, node_id)
+
+        action = db_api.action_get(self.ctx, result['action'])
+        self.assertIsNotNone(action)
+        self._verify_action(action, 'NODE_LEAVE',
+                            'node_leave_%s' % node_id[:8], node_id,
+                            cause=action_mod.CAUSE_RPC)
+        notify.assert_called_with(self.ctx,
+                                  self.eng.dispatcher.NEW_ACTION,
+                                  None, action_id=mock.ANY)
+        # Two creations plus one leave
+        self.assertEqual(3, notify.call_count)
+
+    def test_node_leave_node_not_found(self):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_leave,
+                               self.ctx, 'BogusNode')
+
+        self.assertEqual(exception.NodeNotFound, ex.exc_info[0])
+        self.assertEqual('The node (BogusNode) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'notify')
+    def test_node_leave_already_orphan(self, notify):
+        node = self.eng.node_create(self.ctx, 'node1', self.profile['id'])
+        node_id = node['id']
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_leave,
+                               self.ctx, node_id)
+
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual('The request is malformed: Node is already an '
+                         'orphan node: %s.' % node_id,
+                         six.text_type(ex.exc_info[1]))
