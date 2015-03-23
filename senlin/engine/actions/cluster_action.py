@@ -515,7 +515,7 @@ class ClusterAction(base.Action):
 
         try:
             cluster = cluster_mod.Cluster.load(self.context, self.target)
-        except exception.NotFound:
+        except exception.ClusterNotFound:
             reason = _LE('Cluster %(id)s not found') % {'id': self.target}
             LOG.error(reason)
             return self.RES_ERROR, reason

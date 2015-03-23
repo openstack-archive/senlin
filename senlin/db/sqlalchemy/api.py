@@ -283,9 +283,7 @@ def cluster_delete(context, cluster_id):
 
     cluster = session.query(models.Cluster).get(cluster_id)
     if cluster is None or cluster.deleted_time is not None:
-        raise exception.NotFound(
-            _('Attempt to delete a cluster with id "%s" that does '
-              'not exist failed') % cluster_id)
+        raise exception.ClusterNotFound(cluster=cluster_id)
 
     query = session.query(models.Node).filter_by(cluster_id=cluster_id)
     nodes = query.all()
@@ -407,7 +405,7 @@ def node_update(context, node_id, values):
 
     :param node_id: ID of the node to be updated.
     :param values: A dictionary of values to be updated on the node.
-    :raises NotFound: The specified node does not exist in database.
+    :raises ClusterNotFound: The specified node does not exist in database.
     '''
     session = _session(context)
     session.begin()
@@ -415,9 +413,7 @@ def node_update(context, node_id, values):
     node = session.query(models.Node).get(node_id)
     if not node:
         session.rollback()
-        raise exception.NotFound(
-            _('Attempt to update a node with id "%s" that does '
-              'not exists failed.') % node_id)
+        raise exception.NodeNotFound(node=node_id)
 
     node.update(values)
     node.save(session)
@@ -961,9 +957,8 @@ def action_create(context, values):
 
 def action_get(context, action_id):
     action = model_query(context, models.Action).get(action_id)
-    if not action:
-        msg = _('Action with id "%s" not found') % action_id
-        raise exception.NotFound(msg)
+    if action is None:
+        raise exception.ActionNotFound(action=action_id)
     return action
 
 
@@ -1027,9 +1022,8 @@ def _action_dependency_add(context, action_id, field, adds):
         add_list = adds
 
     action = model_query(context, models.Action).get(action_id)
-    if not action:
-        msg = _('Action with id "%s" not found') % action_id
-        raise exception.NotFound(msg)
+    if action is None:
+        raise exception.ActionNotFound(action=action_id)
 
     if action[field] is None:
         d = add_list
@@ -1133,8 +1127,7 @@ def action_mark_succeeded(context, action_id, timestamp):
     query = model_query(context, models.Action)
     action = query.get(action_id)
     if not action:
-        raise exception.NotFound(
-            _('Action with id "%s" not found') % action_id)
+        raise exception.ActionNotFound(action=action_id)
 
     session = query.session
     session.begin()
@@ -1211,8 +1204,7 @@ def action_mark_cancelled(context, action_id, timestamp):
     query = model_query(context, models.Action)
     action = query.get(action_id)
     if not action:
-        raise exception.NotFound(
-            _('Action with id "%s" not found') % action_id)
+        raise exception.ActionNotFound(action=action_id)
 
     session = query.session
     session.begin()
@@ -1279,8 +1271,7 @@ def action_abandon(context, action_id):
 def action_lock_check(context, action_id, owner=None):
     action = model_query(context, models.Action).get(action_id)
     if not action:
-        raise exception.NotFound(
-            _('Action with id "%s" not found') % action_id)
+        raise exception.ActionNotFound(action=action_id)
 
     if owner:
         return owner if owner == action.owner else action.owner
@@ -1311,9 +1302,7 @@ def action_delete(context, action_id, force=False):
     action = query.get(action_id)
 
     if not action:
-        msg = _('Attempt to delete a action with id "%s" that does not'
-                ' exist') % action_id
-        raise exception.NotFound(msg)
+        raise exception.ActionNotFound(action=action_id)
 
     # TODO(liuh): Need check if and how an action can be safety deleted
     action.delete()

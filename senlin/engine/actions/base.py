@@ -103,8 +103,6 @@ class Action(object):
 
         # Target is the ID of a cluster, a node, a profile
         self.target = kwargs.get('target', None)
-        if self.target is None:
-            raise exception.ActionMissingTarget(action=action)
 
         self.action = action
 

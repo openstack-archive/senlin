@@ -566,7 +566,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
                                              show_deleted=False))
         res = db_api.node_get(self.ctx, node.id)
         self.assertIsNone(res)
-        self.assertRaises(exception.NotFound, db_api.cluster_delete,
+        self.assertRaises(exception.ClusterNotFound, db_api.cluster_delete,
                           self.ctx, cluster_id)
 
         # Testing soft delete

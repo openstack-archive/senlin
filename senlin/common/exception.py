@@ -124,10 +124,6 @@ class SenlinBadRequest(SenlinException):
     msg_fmt = _("The request is malformed: %(msg)s")
 
 
-class ProjectNotMatch(SenlinException):
-    msg_fmt = _("%(message)s")
-
-
 class MultipleChoices(SenlinException):
     msg_fmt = _("Multiple results found matching the query criteria %(arg)s. "
                 "Please be more specific.")
@@ -213,12 +209,6 @@ class Error(SenlinException):
         super(Error, self).__init__(message=msg)
 
 
-class NotFound(SenlinException):
-    def __init__(self, msg_fmt=_('Not found')):
-        self.msg_fmt = msg_fmt
-        super(NotFound, self).__init__()
-
-
 class InvalidContentType(SenlinException):
     msg_fmt = _("Invalid content type %(content_type)s")
 
@@ -229,14 +219,6 @@ class RequestLimitExceeded(SenlinException):
 
 class ActionNotFound(SenlinException):
     msg_fmt = _("The action (%(action)s) could not be found.")
-
-
-class ActionMissingTarget(SenlinException):
-    msg_fmt = _('Action "%(action)s" must have target specified')
-
-
-class ActionMissingPolicy(SenlinException):
-    msg_fmt = _('Action "%(action)s" must have policy specified')
 
 
 class ActionNotSupported(SenlinException):

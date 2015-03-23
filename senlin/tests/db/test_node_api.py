@@ -389,11 +389,11 @@ class DBAPINodeTest(base.SenlinTestCase):
 
     def test_node_update_not_found(self):
         new_attributes = {'name': 'new_name'}
-        ex = self.assertRaises(exception.NotFound,
+        ex = self.assertRaises(exception.NodeNotFound,
                                db_api.node_update,
                                self.ctx, 'BogusId', new_attributes)
-        self.assertEqual('Attempt to update a node with id "BogusId" that '
-                         'does not exists failed.', six.text_type(ex))
+        self.assertEqual('The node (BogusId) could not be found.',
+                         six.text_type(ex))
 
     def test_node_update_cluster_status_updated(self):
         cluster = db_api.cluster_get(self.ctx, self.cluster.id)

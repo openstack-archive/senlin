@@ -86,7 +86,7 @@ class NodeAction(base.Action):
     def execute(self, **kwargs):
         try:
             node = node_mod.Node.load(self.context, node_id=self.target)
-        except exception.NotFound:
+        except exception.NodeNotFound:
             reason = _LE('Node with id (%s) is not found') % self.target
             LOG.error(reason)
             return self.RES_ERROR, reason

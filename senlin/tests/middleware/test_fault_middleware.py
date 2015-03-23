@@ -167,7 +167,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
                     continue
                 elif obj == senlin_exc.Error:
                     error = obj('Error')
-                elif obj == senlin_exc.NotFound:
+                elif obj == senlin_exc.NodeNotFound:
                     error = obj()
                 elif obj == senlin_exc.ResourceFailure:
                     exc = senlin_exc.Error(_('Error'))

@@ -46,22 +46,22 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         return remote_error
 
     def test_local_error_name(self):
-        ex = exception.NotFound()
-        self.assertEqual('NotFound', self.rpcapi.local_error_name(ex))
+        ex = exception.NodeNotFound(node='A')
+        self.assertEqual('NodeNotFound', self.rpcapi.local_error_name(ex))
 
         exr = self._to_remote_error(ex)
-        self.assertEqual('NotFound_Remote', exr.__class__.__name__)
-        self.assertEqual('NotFound', self.rpcapi.local_error_name(exr))
+        self.assertEqual('NodeNotFound_Remote', exr.__class__.__name__)
+        self.assertEqual('NodeNotFound', self.rpcapi.local_error_name(exr))
 
     def test_ignore_error_named(self):
-        ex = exception.NotFound()
+        ex = exception.NodeNotFound(node='A')
         exr = self._to_remote_error(ex)
 
-        self.rpcapi.ignore_error_named(ex, 'NotFound')
-        self.rpcapi.ignore_error_named(exr, 'NotFound')
-        self.assertRaises(exception.NotFound,
+        self.rpcapi.ignore_error_named(ex, 'NodeNotFound')
+        self.rpcapi.ignore_error_named(exr, 'NodeNotFound')
+        self.assertRaises(exception.NodeNotFound,
                           self.rpcapi.ignore_error_named, ex, 'NotSupported')
-        self.assertRaises(exception.NotFound,
+        self.assertRaises(exception.NodeNotFound,
                           self.rpcapi.ignore_error_named, exr, 'NotSupported')
 
     def _test_engine_api(self, method, rpc_method, **kwargs):

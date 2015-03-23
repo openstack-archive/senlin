@@ -392,5 +392,5 @@ class DBAPIActionTest(base.SenlinTestCase):
         action_id = action.id
         db_api.action_delete(self.ctx, action.id)
 
-        self.assertRaises(exception.NotFound, db_api.action_get,
+        self.assertRaises(exception.ActionNotFound, db_api.action_get,
                           self.ctx, action_id)

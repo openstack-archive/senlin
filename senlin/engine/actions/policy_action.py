@@ -14,7 +14,6 @@ import datetime
 
 from oslo_log import log as logging
 
-from senlin.common import exception
 from senlin.db import api as db_api
 from senlin.engine.actions import base
 
@@ -37,12 +36,7 @@ class PolicyAction(base.Action):
     def __init__(self, context, action, **kwargs):
         super(PolicyAction, self).__init__(context, action, **kwargs)
         self.cluster_id = kwargs.get('cluster_id', None)
-        if self.cluster_id is None:
-            raise exception.ActionMissingTarget(action)
-
         self.policy_id = kwargs.get('policy_id', None)
-        if self.policy_id is None:
-            raise exception.ActionMissingPolicy(action)
 
         # get policy associaton using the cluster id and policy id
 
