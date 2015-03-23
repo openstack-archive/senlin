@@ -897,6 +897,10 @@ class EngineService(service.Service):
         db_policy = self.policy_find(context, policy_id)
         binding = db_api.cluster_policy_get(context, db_cluster.id,
                                             db_policy.id)
+        if binding is None:
+            raise exception.PolicyNotAttached(policy=policy_id,
+                                              cluster=identity)
+
         return {
             'id': binding.id,
             'cluster_id': binding.cluster_id,
@@ -918,7 +922,7 @@ class EngineService(service.Service):
         priority = utils.parse_int_param('priority', priority) or 50
         level = utils.parse_int_param('level', level) or 50
         cooldown = utils.parse_int_param('cooldown', cooldown) or 0
-        enabled = utils.parse_bool_param('cooldown', enabled)
+        enabled = utils.parse_bool_param('enabled', enabled)
 
         LOG.info(_LI('Attaching policy %(policy)s to cluster %(cluster)s'),
                  {'policy': policy, 'cluster': identity})
@@ -968,6 +972,12 @@ class EngineService(service.Service):
         db_cluster = self.cluster_find(context, identity)
         db_policy = self.policy_find(context, policy)
 
+        binding = db_api.cluster_policy_get(context, db_cluster.id,
+                                            db_policy.id)
+        if binding is None:
+            raise exception.PolicyNotAttached(policy=policy,
+                                              cluster=identity)
+
         inputs = {'policy_id': db_policy.id}
         if priority is not None:
             inputs['priority'] = utils.parse_int_param('priority', priority)
@@ -976,7 +986,7 @@ class EngineService(service.Service):
         if cooldown is not None:
             inputs['cooldown'] = utils.parse_int_param('cooldown', cooldown)
         if enabled is not None:
-            inputs['enabled'] = utils.parse_bool_param('cooldown', enabled)
+            inputs['enabled'] = utils.parse_bool_param('enabled', enabled)
 
         LOG.info(_LI('Updating policy %(policy)s on cluster %(cluster)s'),
                  {'policy': policy, 'cluster': identity})

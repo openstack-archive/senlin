@@ -265,11 +265,16 @@ class PolicyValidationFailed(SenlinException):
 
 
 class PolicyNotFound(SenlinException):
-    msg_fmt = _("The Policy (%(policy)s) could not be found.")
+    msg_fmt = _("The policy (%(policy)s) could not be found.")
 
 
 class PolicyExists(SenlinException):
     msg_fmt = _("The policy type (%(policy_type)s) already exists.")
+
+
+class PolicyNotAttached(SenlinException):
+    msg_fmt = _("The policy (%(policy)s) is not attached to the specified "
+                "cluster (%(cluster)s).")
 
 
 class InvalidSchemaError(SenlinException):
