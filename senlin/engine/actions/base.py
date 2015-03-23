@@ -22,6 +22,7 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LI
 from senlin.db import api as db_api
+from senlin.engine import event as event_mod
 from senlin.policies import base as policy_mod
 
 wallclock = time.time
@@ -54,10 +55,10 @@ class Action(object):
     #  FAILED:    Completed with failure.
     #  CANCELLED: Action cancelled because worker thread was cancelled.
     STATUSES = (
-        INIT, WAITING, READY, RUNNING,
+        INIT, WAITING, READY, RUNNING, SUSPENDED,
         SUCCEEDED, FAILED, CANCELLED
     ) = (
-        'INIT', 'WAITING', 'READY', 'RUNNING',
+        'INIT', 'WAITING', 'READY', 'RUNNING', 'SUSPENDED',
         'SUCCEEDED', 'FAILED', 'CANCELLED',
     )
 
@@ -103,6 +104,8 @@ class Action(object):
 
         # Target is the ID of a cluster, a node, a profile
         self.target = kwargs.get('target', None)
+        if self.target is None:
+            raise exception.ActionMissingTarget(action=action)
 
         self.action = action
 
@@ -241,7 +244,27 @@ class Action(object):
         db_api.action_delete(context, action_id, force)
 
     def signal(self, context, cmd):
-        '''Cancel an action execution progress.'''
+        '''Send a signal to the action.'''
+        if cmd not in self.COMMANDS:
+            return
+
+        if cmd == self.CANCEL:
+            expected_statuses = (self.INIT, self.WAITING, self.READY,
+                                 self.RUNNING)
+        elif cmd == self.SUSPEND:
+            expected_statuses = (self.RUNNING)
+        else:     # RESUME
+            expected_statuses = (self.SUSPENDED)
+
+        if self.status not in expected_statuses:
+            reason = _("Action (%(action)s) is in unexpected status "
+                       "(%(actual)s) while expected status should be one of "
+                       "(%(expected)s).") % dict(action=self.id,
+                                                 expected=expected_statuses,
+                                                 actual=self.status)
+            event_mod.error(context, self, cmd, status_reason=reason)
+            return
+
         db_api.action_signal(context, self.id, cmd)
 
     def execute(self, **kwargs):

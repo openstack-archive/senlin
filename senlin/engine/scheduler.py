@@ -83,9 +83,6 @@ class ThreadGroupManager(object):
 
     def cancel_action(self, context, action_id):
         '''Cancel an action execution progress.'''
-        # TODO(yanyan): The action might have been deleted, or it is not
-        #               running. We have to trace back to scheduler to know if
-        #               there is any thread working on it.
         action = action_mod.Action.load(context, action_id)
         action.signal(context, action.SIG_CANCEL)
 
