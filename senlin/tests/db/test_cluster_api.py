@@ -491,7 +491,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
         model = mock.Mock()
 
         mock_paginate_query.side_effect = db_api.utils.InvalidSortKey()
-        self.assertRaises(exception.Invalid, db_api._paginate_query,
+        self.assertRaises(exception.InvalidParameter, db_api._paginate_query,
                           self.ctx, query, model, sort_keys=['foo'])
 
     @mock.patch.object(db_api.utils, 'paginate_query')

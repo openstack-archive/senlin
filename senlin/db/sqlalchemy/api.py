@@ -110,9 +110,8 @@ def _paginate_query(context, query, model, limit=None, marker=None,
     try:
         query = utils.paginate_query(query, model, limit, sort_keys,
                                      model_marker, sort_dir)
-    except utils.InvalidSortKey as ex:
-        # TODO(Qiming): Catch this exception and return to user
-        raise exception.Invalid(reason=ex.message)
+    except utils.InvalidSortKey:
+        raise exception.InvalidParameter(name='sort_keys', value=sort_keys)
     return query
 
 
