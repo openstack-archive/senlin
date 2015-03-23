@@ -6,9 +6,6 @@ ENGINE
 ------
   - cleanse scheduler module [Yanyan Hu]
     - Using python threading to replace greenthread(long term).
-  - handle cancel_action() properly. When dispatcher.cancel_action() is called,
-    the scheduler should check if the action is still being worked on by someone.
-    It should send cancel signal, or help that action remove locks if needed.
 
 DRIVER
 ------
@@ -62,7 +59,7 @@ ENGINE
 
 OSLO
 ----
-
+  - Add support to oslo_versionedobjects
   - Migrate to oslo.policy 
   - Default logging formatter is not compatible with new version of oslo_log/oslo_config
 
