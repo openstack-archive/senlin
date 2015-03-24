@@ -146,6 +146,25 @@ def upgrade(migrate_engine):
         mysql_charset='utf8'
     )
 
+    webhook = sqlalchemy.Table(
+        'webhook', meta,
+        sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
+                          nullable=False),
+        sqlalchemy.Column('name', sqlalchemy.String(255)),
+        sqlalchemy.Column('user', sqlalchemy.String(36)),
+        sqlalchemy.Column('project', sqlalchemy.String(36)),
+        sqlalchemy.Column('domain', sqlalchemy.String(36)),
+        sqlalchemy.Column('created_time', sqlalchemy.DateTime),
+        sqlalchemy.Column('deleted_time', sqlalchemy.DateTime),
+        sqlalchemy.Column('obj_id', sqlalchemy.String(36), nullable=False),
+        sqlalchemy.Column('obj_type', sqlalchemy.String(36), nullable=False),
+        sqlalchemy.Column('action', sqlalchemy.String(36), nullable=False),
+        sqlalchemy.Column('credential', types.Dict),
+        sqlalchemy.Column('params', types.Dict),
+        mysql_engine='InnoDB',
+        mysql_charset='utf8'
+    )
+
     action = sqlalchemy.Table(
         'action', meta,
         sqlalchemy.Column('id', sqlalchemy.String(36),
@@ -203,6 +222,7 @@ def upgrade(migrate_engine):
         node_lock,
         policy,
         cluster_policy,
+        webhook,
         action,
         event,
     )

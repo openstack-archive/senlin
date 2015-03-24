@@ -228,6 +228,28 @@ class Profile(BASE, SenlinBase, SoftDelete):
     deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
 
 
+class Webhook(BASE, SenlinBase, SoftDelete):
+    """Represents a webhook bonded with Senlin resource entity."""
+
+    __tablename__ = 'webhook'
+
+    id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
+                           default=lambda: str(uuid.uuid4()))
+    name = sqlalchemy.Column('name', sqlalchemy.String(255))
+    user = sqlalchemy.Column(sqlalchemy.String(36))
+    domain = sqlalchemy.Column(sqlalchemy.String(36))
+    project = sqlalchemy.Column(sqlalchemy.String(36))
+
+    created_time = sqlalchemy.Column(sqlalchemy.DateTime)
+    deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
+
+    obj_id = sqlalchemy.Column(sqlalchemy.String(36))
+    obj_type = sqlalchemy.Column(sqlalchemy.String(36))
+    action = sqlalchemy.Column(sqlalchemy.String(36))
+    credential = sqlalchemy.Column(types.Dict)
+    params = sqlalchemy.Column(types.Dict)
+
+
 class Action(BASE, SenlinBase, SoftDelete):
     '''An action persisted in the Senlin database.'''
 
