@@ -291,6 +291,37 @@ def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
                                          filters=filters)
 
 
+# Webhooks
+def webhook_create(context, values):
+    return IMPL.webhook_create(context, values)
+
+
+def webhook_get(context, webhook_id, show_deleted=False):
+    return IMPL.webhook_get(context, webhook_id, show_deleted=show_deleted)
+
+
+def webhook_get_by_name(context, name, show_deleted=False):
+    return IMPL.webhook_get_by_name(context, name, show_deleted=show_deleted)
+
+
+def webhook_get_all(context, show_deleted=False, limit=None,
+                    marker=None, sort_keys=None, sort_dir=None,
+                    filters=None, tenant_safe=True):
+    return IMPL.webhook_get_all(context, show_deleted=show_deleted,
+                                limit=limit, marker=marker,
+                                sort_keys=sort_keys, sort_dir=sort_dir,
+                                filters=filters, tenant_safe=tenant_safe)
+
+
+def webhook_get_by_short_id(context, short_id, show_deleted=False):
+    return IMPL.webhook_get_by_short_id(context, short_id,
+                                        show_deleted=show_deleted)
+
+
+def webhook_delete(context, webhook_id, force=False):
+    return IMPL.webhook_delete(context, webhook_id, force)
+
+
 # Actions
 def action_create(context, values):
     return IMPL.action_create(context, values)
