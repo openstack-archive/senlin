@@ -100,6 +100,24 @@ def create_node(ctx, cluster, profile, **kwargs):
     return db_api.node_create(ctx, values)
 
 
+def create_webhook(ctx, obj_id, obj_type, action, **kwargs):
+    values = {
+        'name': 'test_webhook_name',
+        'user': ctx.user,
+        'project': ctx.tenant_id,
+        'domain': ctx.domain,
+        'created_time': None,
+        'deleted_time': None,
+        'obj_id': obj_id,
+        'obj_type': obj_type,
+        'action': action,
+        'credential': None,
+        'params': None,
+    }
+    values.update(kwargs)
+    return db_api.webhook_create(ctx, values)
+
+
 def create_action(ctx, **kwargs):
     values = {
         'context': kwargs.get('context'),

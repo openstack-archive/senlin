@@ -103,6 +103,13 @@ CLUSTER_POLICY_ATTRS = (
     'policy_id', 'priority', 'level', 'cooldown', 'enabled',
 )
 
+WEBHOOK_ATTRS = (
+    WEBHOOK_NAME, WEBHOOK_OBJ_ID, WEBHOOK_OBJ_TYPE,
+    WEBHOOK_CREATED_TIME, WEBHOOK_DELETED_TIME,
+) = (
+    'name', 'obj_id', 'obj_type', 'created_time', 'deleted_time',
+)
+
 EVENT_ATTRS = (
     EVENT_TIMESTAMP, EVENT_OBJ_ID, EVENT_OBJ_NAME, EVENT_OBJ_TYPE,
     EVENT_USER, EVENT_ACTION, EVENT_STATUS, EVENT_STATUS_REASON,
