@@ -61,7 +61,7 @@ def create_cluster(ctx, profile, **kwargs):
     values = {
         'name': 'db_test_cluster_name',
         'profile_id': profile.id,
-        'user': ctx.user,
+        'user': ctx.user_id,
         'project': ctx.tenant_id,
         'domain': 'unknown',
         'parent': None,
@@ -103,7 +103,7 @@ def create_node(ctx, cluster, profile, **kwargs):
 def create_webhook(ctx, obj_id, obj_type, action, **kwargs):
     values = {
         'name': 'test_webhook_name',
-        'user': ctx.user,
+        'user': ctx.user_id,
         'project': ctx.tenant_id,
         'domain': ctx.domain,
         'created_time': None,

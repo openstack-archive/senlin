@@ -424,7 +424,7 @@ class EngineService(service.Service):
         LOG.info(_LI('Creating cluster %s'), name)
         ctx = context.to_dict()
         kwargs = {
-            'user': ctx.get('username', ''),
+            'user': ctx.get('user_id', ''),
             'project': ctx.get('tenant_id', ''),
             'parent': parent,
             'timeout': timeout,

@@ -33,7 +33,6 @@ class TestRequestContext(base.SenlinTestCase):
                     'project_domain_id': 'a project domain',
                     'project_id': 'a project',
                     'is_admin': False,
-                    'user': 'mick',
                     'user_domain_id': 'user-domain',
                     'password': 'foo',
                     'show_deleted': False,
@@ -56,7 +55,6 @@ class TestRequestContext(base.SenlinTestCase):
             project_domain_id=self.ctx.get('project_domain_id'),
             project_id=self.ctx.get('project_id'),
             is_admin=self.ctx.get('is_admin'),
-            user=self.ctx.get('user'),
             user_domain_id=self.ctx.get('user_domain_id'),
             password=self.ctx.get('password'),
             show_deleted=self.ctx.get('show_deleted'),
@@ -129,7 +127,6 @@ class RequestContextMiddlewareTest(base.SenlinTestCase):
                 'show_deleted': False,
                 'tenant': None,
                 'tenant_id': None,
-                'user': None,
                 'user_id': None,
                 'username': None
             })
@@ -158,7 +155,6 @@ class RequestContextMiddlewareTest(base.SenlinTestCase):
                 'show_deleted': False,
                 'tenant': 'my_tenant',
                 'tenant_id': 'db6808c8-62d0-4d92-898c-d644a6af20e9',
-                'user': 'my_username',
                 'user_id': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
                 'username': 'my_username'
             })
@@ -185,7 +181,6 @@ class RequestContextMiddlewareTest(base.SenlinTestCase):
                 'show_deleted': False,
                 'tenant': 'my_tenant2',
                 'tenant_id': 'bb9108c8-62d0-4d92-898c-d644a6af20e9',
-                'user': None,
                 'user_id': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
                 'username': None
             })

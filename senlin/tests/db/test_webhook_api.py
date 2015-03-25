@@ -38,7 +38,7 @@ class DBAPIWebhookTest(base.SenlinTestCase):
         self.assertIsNotNone(webhook)
         self.assertEqual(UUID1, webhook.obj_id)
         self.assertEqual('test_webhook_name', webhook.name)
-        self.assertEqual(self.ctx.user, webhook.user)
+        self.assertEqual(self.ctx.user_id, webhook.user)
         self.assertEqual(self.ctx.domain, webhook.domain)
         self.assertEqual(self.ctx.tenant_id, webhook.project)
         self.assertIsNone(webhook.created_time)

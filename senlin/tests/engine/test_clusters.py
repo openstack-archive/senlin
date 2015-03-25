@@ -66,7 +66,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual('c-1', result['name'])
         self.assertEqual(0, result['size'])
         self.assertEqual(self.profile['id'], result['profile_id'])
-        self.assertEqual(self.ctx.user, result['user'])
+        self.assertEqual(self.ctx.user_id, result['user'])
         self.assertEqual('cluster_test_tenant', result['project'])
         self.assertIsNone(result['parent'])
         self.assertIsNone(result['timeout'])
