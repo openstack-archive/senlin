@@ -51,7 +51,6 @@ if __name__ == '__main__':
         logging.register_options(cfg.CONF)
         cfg.CONF(project='senlin', prog='senlin-api')
         logging.setup(cfg.CONF, 'senlin-api')
-        logging.set_defaults()
         messaging.setup()
 
         app = config.load_paste_app()
