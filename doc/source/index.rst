@@ -49,6 +49,7 @@ Getting Started
     getting_started/index
     policies/index
     profiles/index
+    testing
     glossary
 
 Man Pages
