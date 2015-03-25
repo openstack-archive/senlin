@@ -46,10 +46,10 @@ class Schema(collections.Mapping):
 
     KEYS = (
         TYPE, DESCRIPTION, DEFAULT, REQUIRED, SCHEMA, UPDATABLE,
-        CONSTRAINTS,
+        CONSTRAINTS, READONLY,
     ) = (
         'type', 'description', 'default', 'required', 'schema', 'updatable',
-        'constraints',
+        'constraints', 'readonly',
     )
 
     TYPES = (
@@ -60,7 +60,7 @@ class Schema(collections.Mapping):
 
     def __init__(self, description=None, default=None,
                  required=False, schema=None, updatable=False,
-                 constraints=None):
+                 readonly=False, constraints=None):
 
         if schema is not None:
             if type(self) not in (List, Map):
@@ -78,6 +78,7 @@ class Schema(collections.Mapping):
         self.required = required
         self.updatable = updatable
         self.constraints = constraints or []
+        self.readonly = readonly
         self._len = None
 
     def has_default(self):
@@ -135,6 +136,8 @@ class Schema(collections.Mapping):
                 return dict((n, dict(s)) for n, s in self.schema.items())
         elif key == self.REQUIRED:
             return self.required
+        elif key == self.READONLY:
+            return self.readonly
         elif key == self.CONSTRAINTS:
             if self.constraints:
                 return [dict(c) for c in self.constraints]

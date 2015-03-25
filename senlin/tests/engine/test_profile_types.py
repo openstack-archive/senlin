@@ -42,12 +42,14 @@ class ProfileTypeTest(base.SenlinTestCase):
             'spec': {
                 'INT': {
                     'type': 'Integer',
+                    'readonly': False,
                     'required': False,
                     'description': 'int property',
                     'default': 0,
                 },
                 'STR': {
                     'type': 'String',
+                    'readonly': False,
                     'required': False,
                     'description': 'string property',
                     'default': 'a string',
@@ -55,11 +57,13 @@ class ProfileTypeTest(base.SenlinTestCase):
                 'LIST': {
                     'type': 'List',
                     'description': 'list property',
+                    'readonly': False,
                     'required': False,
                     'schema': {
                         '*': {
                             'type': 'String',
                             'description': 'list item',
+                            'readonly': False,
                             'required': False,
                         },
                     },
@@ -68,16 +72,19 @@ class ProfileTypeTest(base.SenlinTestCase):
                 'MAP': {
                     'type': 'Map',
                     'description': 'map property',
+                    'readonly': False,
                     'required': False,
                     'schema': {
                         'KEY1': {
                             'type': 'Integer',
                             'description': 'key1',
+                            'readonly': False,
                             'required': False,
                         },
                         'KEY2': {
                             'type': 'String',
                             'description': 'key2',
+                            'readonly': False,
                             'required': False,
                         },
                     },
