@@ -34,6 +34,7 @@ class SchemaTest(testtools.TestCase):
             'type': 'String',
             'description': 'A string',
             'default': 'wibble',
+            'readonly': False,
             'required': True,
             'constraints': [{
                 'constraint': ['foo', 'bar'],
@@ -54,6 +55,7 @@ class SchemaTest(testtools.TestCase):
                     'type': 'String',
                     'description': 'A string',
                     'default': 'wibble',
+                    'readonly': False,
                     'required': True,
                     'constraints': [{
                         'constraint': ['foo', 'bar'],
@@ -61,6 +63,7 @@ class SchemaTest(testtools.TestCase):
                     }]
                 }
             },
+            'readonly': False,
             'required': False,
         }
         c = constraints.AllowedValues(['foo', 'bar'])
@@ -78,6 +81,7 @@ class SchemaTest(testtools.TestCase):
                     'type': 'String',
                     'description': 'A string',
                     'default': 'wibble',
+                    'readonly': False,
                     'required': True,
                     'constraints': [{
                         'type': 'AllowedValues',
@@ -85,6 +89,7 @@ class SchemaTest(testtools.TestCase):
                     }]
                 }
             },
+            'readonly': False,
             'required': False,
         }
         c = constraints.AllowedValues(['foo', 'bar'])
@@ -106,6 +111,7 @@ class SchemaTest(testtools.TestCase):
                             'type': 'String',
                             'description': 'A string',
                             'default': 'wibble',
+                            'readonly': False,
                             'required': True,
                             'constraints': [{
                                 'type': 'AllowedValues',
@@ -113,9 +119,11 @@ class SchemaTest(testtools.TestCase):
                             }]
                         }
                     },
+                    'readonly': False,
                     'required': False,
                 }
             },
+            'readonly': False,
             'required': False,
         }
         c = constraints.AllowedValues(['foo', 'bar'])

@@ -42,13 +42,14 @@ class PolicyTypeTest(base.SenlinTestCase):
             'spec': {
                 'KEY1': {
                     'type': 'String',
-                    'required': False,
+                    'readonly': False,
                     'required': False,
                     'description': 'key1',
                     'default': 'default1',
                 },
                 'KEY2': {
                     'type': 'Integer',
+                    'readonly': False,
                     'required': False,
                     'description': 'key2',
                     'default': 1,
