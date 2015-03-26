@@ -63,6 +63,10 @@ OSLO
   - Migrate to oslo.policy 
   - Default logging formatter is not compatible with new version of oslo_log/oslo_config
 
+POLICY
+------
+  - Scaling policy allowng a cluster to scale to existing nodes 
+
 LOW PRIORITY
 ============
 
