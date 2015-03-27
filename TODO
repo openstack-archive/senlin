@@ -26,6 +26,9 @@ MIDDLE PRIORITY
 API
 ---
   - Implement webhook support [Yanyan Hu]
+    - Add DB model and API for webhook (done)
+    - Implement Webhook Class and credential logic based on keystone trust
+    - Implement API interface
   - Provide support for access control [Yanyan Hu]
     - Implement a middleware for trust handling
     - Extend policy middleware to support resource sharing between different
