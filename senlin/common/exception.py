@@ -145,6 +145,14 @@ class NodeStatusError(SenlinException):
     msg_fmt = _("Node in error status - '%(status)s' due to '%(reason)s'.")
 
 
+class ProfileTypeNotFound(SenlinException):
+    msg_fmt = _("Profile type (%(profile_type)s) is not found.")
+
+
+class ProfileTypeNotMatch(SenlinException):
+    msg_fmt = _("%(message)s")
+
+
 class ProfileNotFound(SenlinException):
     msg_fmt = _("The profile (%(profile)s) could not be found.")
 
@@ -153,15 +161,15 @@ class ProfileNotSpecified(SenlinException):
     msg_fmt = _("Profile not specified.")
 
 
-class ProfileTypeNotFound(SenlinException):
-    msg_fmt = _("Profile type (%(profile_type)s) is not found.")
-
-
 class ProfileValidationFailed(SenlinException):
     msg_fmt = _("%(message)s")
 
 
-class ProfileTypeNotMatch(SenlinException):
+class ProfileOperationFailed(SenlinException):
+    msg_fmt = _("%(message)s")
+
+
+class ProfileOperationTimeout(SenlinException):
     msg_fmt = _("%(message)s")
 
 
