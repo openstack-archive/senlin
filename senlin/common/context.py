@@ -10,7 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_config import cfg
 from oslo_context import context
+from oslo_log import log as logging
 from oslo_middleware import request_id as oslo_request_id
 from oslo_utils import encodeutils
 from oslo_utils import importutils
@@ -19,6 +21,9 @@ from senlin.common import exception
 from senlin.common import policy
 from senlin.common import wsgi
 from senlin.db import api as db_api
+
+LOG = logging.getLogger(__name__)
+CONF = cfg.CONF
 
 
 class RequestContext(context.RequestContext):
@@ -59,6 +64,7 @@ class RequestContext(context.RequestContext):
 
         self.user_id = user_id
         self.username = username
+        LOG.error('context password=%s' % password)
         self.password = password
         self.trusts = trusts
 
@@ -113,9 +119,15 @@ class RequestContext(context.RequestContext):
     def from_dict(cls, values):
         return cls(**values)
 
-
-def get_admin_context(show_deleted=False):
-    return RequestContext(is_admin=True, show_deleted=show_deleted)
+    @classmethod
+    def get_service_context(cls):
+        params = {
+            'username': CONF.keystone_authtoken.admin_user,
+            'password': CONF.keystone_authtoken.admin_password,
+            'auth_url': CONF.keystone_authtoken.auth_uri,
+            'project_name': CONF.keystone_authtoken.admin_tenant_name
+        }
+        return cls(**params)
 
 
 class ContextMiddleware(wsgi.Middleware):
