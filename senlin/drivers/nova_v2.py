@@ -10,6 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import time
+
+from oslo_config import cfg
+
 from openstack.compute.v2 import flavor
 from openstack.compute.v2 import image
 from openstack.compute.v2 import keypair
@@ -19,6 +23,7 @@ from openstack.compute.v2 import server_ip
 from openstack.compute.v2 import server_meta
 from openstack.compute.v2 import server_metadata
 
+from senlin.common import exception
 from senlin.common import sdk
 from senlin.drivers import base
 
@@ -139,11 +144,25 @@ class NovaClient(base.DriverBase):
             sdk.ignore_not_found(ex)
 
     def server_create(self, **params):
+        timeout = cfg.CONF.default_action_timeout
+        if 'timeout' in params:
+            timeout = params.pop('timeout')
+
         obj = server.Server.new(**params)
+        server_obj = None
         try:
-            return obj.create(self.session)
+            server_obj = obj.create(self.session)
         except sdk.exc.HttpException as ex:
             raise ex
+
+        try:
+            server_obj.wait_for_status(self.session, wait=timeout)
+        except sdk.exc.ResourceFailure as ex:
+            raise exception.ProfileOperationFailed(ex.message)
+        except sdk.exc.ResourceTimeout as ex:
+            raise exception.ProfileOperationTimeout(ex.message)
+
+        return server_obj
 
     def server_get(self, **params):
         obj = server.Server.new(**params)
@@ -166,11 +185,29 @@ class NovaClient(base.DriverBase):
             raise ex
 
     def server_delete(self, **params):
+        timeout = cfg.CONF.default_action_timeout
+        if 'timeout' in params:
+            timeout = params.pop('timeout')
+
         obj = server.Server.new(**params)
         try:
             obj.delete(self.session)
         except sdk.exc.HttpException as ex:
             sdk.ignore_not_found(ex)
+
+        total_sleep = 0
+        while total_sleep < timeout:
+            try:
+                obj.get(self.session)
+            except sdk.exc.HttpException as ex:
+                parsed = sdk.exc.parse_exception(ex)
+                if isinstance(parsed, sdk.exc.HTTPNotFound):
+                    return
+                raise ex
+            time.sleep(5)
+            total_sleep += 5
+
+        raise exception.ProfileOperationTimeout(ex.message)
 
     def server_details_list(self, **params):
         try:
