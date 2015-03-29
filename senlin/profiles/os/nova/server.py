@@ -61,7 +61,7 @@ class ServerProfile(base.Profile):
         ADMIN_PASS: schema.String(
             _('Password for the administrator account.'),
         ),
-        AUTO_DISK_CONFIG: schema.Bool(
+        AUTO_DISK_CONFIG: schema.Boolean(
             _('Whether the disk partition is done automatically.'),
             default=True,
         ),
@@ -84,17 +84,17 @@ class ServerProfile(base.Profile):
                 }
             ),
         ),
-        CONFIG_DRIVE: schema.Bool(
+        CONFIG_DRIVE: schema.Boolean(
             _('Whether config drive should be enabled for the server.'),
         ),
         FLAVOR: schema.String(
-            _('Flavor ID or name used for the server.'),
+            _('ID of flavor used for the server.'),
             required=True,
         ),
         IMAGE: schema.String(
             # IMAGE is not required, because there could be BDM or BDMv2
             # support and the corresponding settings effective
-            _('Name or ID of image to be used for the new server.'),
+            _('ID of image to be used for the new server.'),
         ),
         KEY_NAME: schema.String(
             _('Name of Nova keypair to be injected to server.'),
@@ -163,7 +163,7 @@ class ServerProfile(base.Profile):
     def nova(self):
         '''Construct heat client using the combined context.'''
 
-        if self._nc:
+        if self._nc is not None:
             return self._nc
 
         self._nc = novaclient.NovaClient(self.context)
@@ -178,8 +178,19 @@ class ServerProfile(base.Profile):
     def do_create(self, obj):
         '''Create a server using the given profile.'''
 
-        kwargs = dict((k, self.spec_data[k]) for k in self.KEYS
-                      if k in self.spec_data)
+        kwargs = {}
+        for k in self.KEYS:
+            if k in self.spec_data:
+                if self.spec_data[k] is not None:
+                    kwargs[k] = self.spec_data[k]
+
+        if self.IMAGE in self.spec_data:
+            image = self.nova().image_get(id=self.spec_data[self.IMAGE])
+            kwargs[self.IMAGE] = image
+
+        if self.FLAVOR in self.spec_data:
+            flavor = self.nova().flavor_get(id=self.spec_data[self.FLAVOR])
+            kwargs[self.FLAVOR] = flavor
 
         if obj.name is not None:
             kwargs[self.NAME] = obj.name
