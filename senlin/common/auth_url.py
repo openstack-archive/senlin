@@ -14,12 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from webob import exc
-
 from oslo_config import cfg
 from oslo_utils import importutils
 
-from senlin.common.i18n import _
 from senlin.common import wsgi
 
 
@@ -28,23 +25,14 @@ class AuthUrlFilter(wsgi.Middleware):
     def __init__(self, app, conf):
         super(AuthUrlFilter, self).__init__(app)
         self.conf = conf
-        self.auth_url = self._get_auth_url()
 
-    def _get_auth_url(self):
         if 'auth_uri' in self.conf:
-            return self.conf['auth_uri']
-
-        # Import auth_token to have keystone_authtoken settings setup.
-        auth_token_module = 'keystonemiddleware.auth_token'
-        importutils.import_module(auth_token_module)
-        return cfg.CONF.keystone_authtoken.auth_uri
-
-    def _validate_auth_url(self, auth_url):
-        """Validate auth_url to ensure it can be used."""
-        if not auth_url:
-            raise exc.HTTPBadRequest(_('Request missing required header '
-                                       'X-Auth-Url'))
-        return True
+            self.auth_url = self.conf['auth_uri']
+        else:
+            # Import auth_token to have keystone_authtoken settings setup.
+            auth_token_module = 'keystonemiddleware.auth_token'
+            importutils.import_module(auth_token_module)
+            self.auth_url = cfg.CONF.keystone_authtoken.auth_uri
 
     def process_request(self, req):
         req.headers['X-Auth-Url'] = self.auth_url
