@@ -204,7 +204,7 @@ class NodeController(object):
         action = self.rpc_client.node_delete(req.context, node_id, force=force,
                                              cast=False)
         if action:
-            return {'id': action['target'], 'action_id': action['id']}
+            return action
 
         raise exc.HTTPNoContent()
 
