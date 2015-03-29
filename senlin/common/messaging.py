@@ -18,15 +18,8 @@ from oslo_serialization import jsonutils
 
 from senlin.common import context
 
-
 TRANSPORT = None
 NOTIFIER = None
-
-_ALIASES = {
-    'senlin.openstack.common.rpc.impl_kombu': 'rabbit',
-    'senlin.openstack.common.rpc.impl_qpid': 'qpid',
-    'senlin.openstack.common.rpc.impl_zmq': 'zmq',
-}
 
 
 class RequestContextSerializer(oslo_messaging.Serializer):
@@ -72,7 +65,7 @@ def setup(url=None, optional=False):
         exmods = ['senlin.common.exception']
         try:
             TRANSPORT = oslo_messaging.get_transport(
-                cfg.CONF, url, allowed_remote_exmods=exmods, aliases=_ALIASES)
+                cfg.CONF, url, allowed_remote_exmods=exmods)
         except oslo_messaging.InvalidTransportURL as e:
             TRANSPORT = None
             if not optional or e.url:
