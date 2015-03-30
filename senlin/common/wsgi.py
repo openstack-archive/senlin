@@ -59,26 +59,20 @@ URL_LENGTH_LIMIT = 50000
 api_opts = [
     cfg.StrOpt('bind_host', default='0.0.0.0',
                help=_('Address to bind the server. Useful when '
-                      'selecting a particular network interface.'),
-               deprecated_group='DEFAULT'),
+                      'selecting a particular network interface.')),
     cfg.IntOpt('bind_port', default=8778,
-               help=_('The port on which the server will listen.'),
-               deprecated_group='DEFAULT'),
+               help=_('The port on which the server will listen.')),
     cfg.IntOpt('backlog', default=4096,
                help=_("Number of backlog requests "
-                      "to configure the socket with."),
-               deprecated_group='DEFAULT'),
+                      "to configure the socket with.")),
     cfg.StrOpt('cert_file',
                help=_("Location of the SSL certificate file "
-                      "to use for SSL mode."),
-               deprecated_group='DEFAULT'),
+                      "to use for SSL mode.")),
     cfg.StrOpt('key_file',
                help=_("Location of the SSL key file to use "
-                      "for enabling SSL mode."),
-               deprecated_group='DEFAULT'),
+                      "for enabling SSL mode.")),
     cfg.IntOpt('workers', default=0,
-               help=_("Number of workers for Senlin service."),
-               deprecated_group='DEFAULT'),
+               help=_("Number of workers for Senlin service.")),
 ]
 api_group = cfg.OptGroup('senlin_api')
 cfg.CONF.register_group(api_group)
