@@ -17,7 +17,6 @@
 import mock
 from oslo_utils import encodeutils
 import webob
-from webob import exc
 
 from senlin.common import auth_url
 from senlin.tests.common import base
@@ -63,18 +62,3 @@ class AuthUrlFilterTest(base.SenlinTestCase):
         self.middleware(req)
         self.assertIn('X-Auth-Url', req.headers)
         self.assertEqual('foobar', req.headers['X-Auth-Url'])
-
-    def test_validate_auth_url_with_missing_url(self):
-        self.assertRaises(exc.HTTPBadRequest,
-                          self.middleware._validate_auth_url,
-                          auth_url='')
-
-        self.assertRaises(exc.HTTPBadRequest,
-                          self.middleware._validate_auth_url,
-                          auth_url=None)
-
-    @mock.patch.object(auth_url.cfg, 'CONF')
-    def test_validate_auth_url_with_valid_url(self, mock_cfg):
-        mock_cfg.auth_password.allowed_auth_uris = ['foobar']
-
-        self.assertTrue(self.middleware._validate_auth_url('foobar'))
