@@ -1,19 +1,29 @@
 #!/bin/bash
 
-OS_TOKEN=$1 # Put your token here
+if [ $# -ne 2 ]; then
+  echo "Usage: `basename $0` <HOST_IP>"
+  exit -1
+fi
+
 PORT=8778
-HOST=$2 # Put your host IP here
+HOST=$1 # Put your host IP here
 
 SERVICE_ID=$(openstack service show senlin -f value -cid 2>/dev/null)
 if [[ -z $SERVICE_ID ]]; then
   SERVICE_ID=$(openstack service create \
-    --type clustering \
+    --name senlin \
     --description 'Senlin Clustering Service V1' \
-    -f value -cid senlin)
+    -f value -cid \
+    clustering)
 fi
 
 if [[ -z $SERVICE_ID ]]; then
   exit
 fi
 
-openstack endpoint create --region RegionOne $SERVICE_ID --adminurl "http://$HOST:$PORT/v1/\$(tenant_id)s" --publicurl "http://$HOST:$PORT/v1/\$(tenant_id)s" --internalurl "http://$HOST:$PORT/v1/\$(tenant_id)s"
+openstack endpoint create \
+  --adminurl "http://$HOST:$PORT/v1/\$(tenant_id)s" \
+  --publicurl "http://$HOST:$PORT/v1/\$(tenant_id)s" \
+  --internalurl "http://$HOST:$PORT/v1/\$(tenant_id)s" \
+  --region RegionOne \
+  senlin
