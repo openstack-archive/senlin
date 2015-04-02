@@ -12,7 +12,6 @@
 
 from oslo_config import cfg
 from oslo_context import context
-from oslo_log import log as logging
 from oslo_middleware import request_id as oslo_request_id
 from oslo_utils import encodeutils
 from oslo_utils import importutils
@@ -22,7 +21,6 @@ from senlin.common import policy
 from senlin.common import wsgi
 from senlin.db import api as db_api
 
-LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
 
@@ -64,7 +62,6 @@ class RequestContext(context.RequestContext):
 
         self.user_id = user_id
         self.username = username
-        LOG.error('context password=%s' % password)
         self.password = password
         self.trusts = trusts
 
