@@ -14,12 +14,14 @@
 SDK Client
 '''
 
-from oslo_serialization import jsonutils
-
 from openstack import connection
 from openstack import exceptions
+from openstack import transport
 from openstack import user_preference
+from oslo_serialization import jsonutils
 from requests import exceptions as reqexc
+
+from senlin.common import context
 from senlin.common.i18n import _
 
 USER_AGENT = 'senlin'
@@ -196,3 +198,19 @@ def create_connection(context):
     except exceptions.HttpException as ex:
         raise ex
     return conn
+
+
+def authenticate(**kwargs):
+    '''Authenticate using openstack sdk based on user credential'''
+
+    # Build a context based on credential for sdk connection
+    cnxt = context.RequestContext.from_dict(**kwargs)
+
+    try:
+        auth = create_connection(cnxt).session.authenticator
+        xport = transport.Transport()
+        access_info = auth.authorize(xport)
+    except exceptions.HttpException as ex:
+        raise ex
+
+    return access_info
