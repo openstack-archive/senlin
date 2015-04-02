@@ -178,6 +178,7 @@ def create_connection(context):
         'project_id': context.project_id,
         'project_domain_id': context.project_domain_id,
         'user_domain_id': context.user_domain_id,
+        'username': context.username,
         'user_id': context.user_id,
         'password': context.password,
         'token': context.auth_token,
