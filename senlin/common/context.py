@@ -149,6 +149,11 @@ class ContextMiddleware(wsgi.Middleware):
         environ = req.environ
         try:
             auth_url = headers.get('X-Auth-Url')
+            if not auth_url:
+                # Use auth_url defined in senlin.conf
+                importutils.import_module('keystonemiddleware.auth_token')
+                auth_url = cfg.CONF.keystone_authtoken.auth_uri
+
             auth_token = headers.get('X-Auth-Token')
             auth_token_info = environ.get('keystone.token_info')
 
