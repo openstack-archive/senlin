@@ -148,15 +148,15 @@ class EngineClient(object):
                                         identity=identity))
 
     def cluster_list(self, ctxt, limit=None, marker=None, sort_keys=None,
-                     sort_dir=None, filters=None, tenant_safe=True,
+                     sort_dir=None, filters=None, project_safe=True,
                      show_deleted=False, show_nested=False):
-        # We keep the tenant_safe param here for the moment
+        # We keep the project_safe param here for the moment
         return self.call(ctxt,
                          self.make_msg('cluster_list',
                                        limit=limit, marker=marker,
                                        sort_keys=sort_keys, sort_dir=sort_dir,
                                        filters=filters,
-                                       tenant_safe=tenant_safe,
+                                       project_safe=project_safe,
                                        show_deleted=show_deleted,
                                        show_nested=show_nested))
 
@@ -211,14 +211,14 @@ class EngineClient(object):
     def node_list(self, ctxt, cluster_id=None, show_deleted=False,
                   limit=None, marker=None,
                   sort_keys=None, sort_dir=None,
-                  filters=None, tenant_safe=True):
+                  filters=None, project_safe=True):
         return self.call(ctxt,
                          self.make_msg('node_list', cluster_id=cluster_id,
                                        show_deleted=show_deleted,
                                        limit=limit, marker=marker,
                                        sort_keys=sort_keys, sort_dir=sort_dir,
                                        filters=filters,
-                                       tenant_safe=tenant_safe))
+                                       project_safe=project_safe))
 
     def node_create(self, ctxt, name, cluster_id, profile_id, role, tags):
         return self.call(ctxt,
@@ -309,13 +309,13 @@ class EngineClient(object):
                          self.make_msg('action_get', identity=identity))
 
     def event_list(self, ctxt, filters=None, limit=None, marker=None,
-                   sort_keys=None, sort_dir=None, tenant_safe=True,
+                   sort_keys=None, sort_dir=None, project_safe=True,
                    show_deleted=False):
         return self.call(ctxt,
                          self.make_msg('event_list', filters=filters,
                                        limit=limit, marker=marker,
                                        sort_keys=sort_keys, sort_dir=sort_dir,
-                                       tenant_safe=tenant_safe,
+                                       project_safe=project_safe,
                                        show_deleted=show_deleted))
 
     def event_get(self, ctxt, identity):

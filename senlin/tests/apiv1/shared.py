@@ -51,7 +51,7 @@ class ControllerTest(object):
         cfg.CONF.set_default('host', 'server.test')
         self.topic = consts.ENGINE_TOPIC
         self.api_version = '1.0'
-        self.tenant = 't'
+        self.project = 'PROJ'
         self.mock_enforce = None
         log.register_options(cfg.CONF)
 
@@ -60,7 +60,7 @@ class ControllerTest(object):
             'SERVER_NAME': 'server.test',
             'SERVER_PORT': 8004,
             'SCRIPT_NAME': '/v1',
-            'PATH_INFO': '/%s' % self.tenant + path,
+            'PATH_INFO': '/%s' % self.project + path,
             'wsgi.url_scheme': 'http',
         }
 
@@ -73,7 +73,7 @@ class ControllerTest(object):
             environ['QUERY_STRING'] = qs
 
         req = wsgi.Request(environ)
-        req.context = utils.dummy_context('api_test_user', self.tenant)
+        req.context = utils.dummy_context('api_test_user', self.project)
         self.context = req.context
         return req
 
@@ -92,7 +92,7 @@ class ControllerTest(object):
         environ['REQUEST_METHOD'] = method
 
         req = wsgi.Request(environ)
-        req.context = utils.dummy_context('api_test_user', self.tenant)
+        req.context = utils.dummy_context('api_test_user', self.project)
         self.context = req.context
         req.body = encodeutils.safe_encode(data)
         return req
@@ -106,11 +106,6 @@ class ControllerTest(object):
     def _patch(self, path, data, content_type='application/json'):
         return self._data_request(path, data, content_type, method='PATCH')
 
-    def _url(self, cid):
-        host = 'server.test:8778'
-        path = ('/v1/%(tenant)s/clusters/%(cluster_id)s%(path)s') % cid
-        return 'http://%s%s' % (host, path)
-
     def tearDown(self):
         # Common tearDown to assert that policy enforcement happens for all
         # controller actions
@@ -119,7 +114,7 @@ class ControllerTest(object):
                 action=self.action,
                 context=self.context,
                 scope=self.controller.REQUEST_SCOPE,
-                target={'project_id': self.context.tenant_id})
+                target={'project': self.context.project})
             self.assertEqual(self.expected_request_count,
                              len(self.mock_enforce.call_args_list))
         super(ControllerTest, self).tearDown()

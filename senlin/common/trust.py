@@ -108,9 +108,9 @@ class TrustMiddleware(wsgi.Middleware):
     '''
     def process_request(self, req):
         # Query trust list with detail information
-        trusts = list_trust(req.context, req.context.user_id)
+        trusts = list_trust(req.context, req.context.user)
         LOG.debug('Trust list of user %s is %s' %
-                  (req.context.user_id, str(trusts)))
+                  (req.context.user, str(trusts)))
         req.context.trusts = trusts
 
 

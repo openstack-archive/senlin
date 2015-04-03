@@ -31,51 +31,46 @@ class RequestContext(context.RequestContext):
     accesses the system, as well as additional request information.
     '''
 
-    def __init__(self, auth_token=None, auth_token_info=None,
-                 username=None, user_id=None, password=None,
-                 trusts=None, is_admin=None,
-                 tenant=None, tenant_id=None, auth_url=None,
-                 domain_id=None, project_id=None, project_domain_id=None,
-                 user_domain_id=None,
-                 region_name=None, roles=None,
-                 read_only=False, show_deleted=False,
-                 request_id=None, **kwargs):
-        '''Initializer of request context.
+    def __init__(self, auth_token=None, user=None, project=None,
+                 domain=None, user_domain=None, project_domain=None,
+                 is_admin=None, read_only=False, show_deleted=False,
+                 request_id=None, auth_url=None, trusts=None,
+                 user_name=None, project_name=None, domain_name=None,
+                 user_domain_name=None, project_domain_name=None,
+                 auth_token_info=None, region_name=None, roles=None,
+                 password=None, **kwargs):
+        '''Initializer of request context.'''
 
-         :param kwargs: Extra arguments that might be present, but we ignore
-            because they possibly came in from older rpc messages.
-        '''
-        super(RequestContext, self).__init__(auth_token=auth_token,
-                                             user=username,
-                                             tenant=tenant,
-                                             is_admin=is_admin,
-                                             read_only=read_only,
-                                             show_deleted=show_deleted,
-                                             request_id=request_id)
+        # We still have 'tenant' param because oslo_context still use it.
+        super(RequestContext, self).__init__(
+            auth_token=auth_token, user=user, tenant=project,
+            domain=domain, user_domain=user_domain,
+            project_domain=project_domain,
+            read_only=read_only, show_deleted=show_deleted,
+            request_id=request_id)
 
+        # request_id might be a byte array
         self.request_id = encodeutils.safe_decode(self.request_id)
+
+        # we save an additional 'project' internally for use
+        self.project = project
+
         # Session for DB access
         self._session = None
 
         self.auth_url = auth_url
-        self.auth_token_info = auth_token_info
-
-        self.user_id = user_id
-        self.username = username
-        self.password = password
         self.trusts = trusts
 
-        # To be deprecated
-        self.tenant_id = tenant_id
+        self.user_name = user_name
+        self.project_name = project_name
+        self.domain_name = domain_name
+        self.user_domain_name = user_domain_name
+        self.project_domain_name = project_domain_name
 
-        self.domain_id = domain_id
-        self.project_id = project_id
-        self.project_domain_id = project_domain_id
-        self.user_domain_id = user_domain_id
-
+        self.auth_token_info = auth_token_info
         self.region_name = region_name
-
         self.roles = roles or []
+        self.password = password
 
         # Check user is admin or not
         self.policy = policy.Enforcer()
@@ -84,6 +79,8 @@ class RequestContext(context.RequestContext):
         else:
             self.is_admin = is_admin
 
+        self.tenant = kwargs.get('tenant', project)
+
     @property
     def session(self):
         if self._session is None:
@@ -91,25 +88,29 @@ class RequestContext(context.RequestContext):
         return self._session
 
     def to_dict(self):
+        # 'tenant' is here only to make oslo_log happy
         return {
             'auth_url': self.auth_url,
             'auth_token': self.auth_token,
             'auth_token_info': self.auth_token_info,
-            'username': self.username,
-            'user_id': self.user_id,
-            'password': self.password,
+            'user': self.user,
+            'user_name': self.user_name,
+            'user_domain': self.user_domain,
+            'user_domain_name': self.user_domain_name,
+            'project': self.project,
+            'project_name': self.project_name,
+            'project_domain': self.project_domain,
+            'project_domain_name': self.project_domain_name,
+            'domain': self.domain,
+            'domain_name': self.domain_name,
             'trusts': self.trusts,
-            'tenant': self.tenant,
-            'tenant_id': self.tenant_id,
-            'domain_id': self.domain_id,
-            'project_id': self.project_id,
-            'project_domain_id': self.project_domain_id,
-            'user_domain_id': self.user_domain_id,
             'region_name': self.region_name,
             'roles': self.roles,
             'show_deleted': self.show_deleted,
             'is_admin': self.is_admin,
-            'request_id': self.request_id
+            'request_id': self.request_id,
+            'password': self.password,
+            'tenant': self.tenant,
         }
 
     @classmethod
@@ -119,7 +120,7 @@ class RequestContext(context.RequestContext):
     @classmethod
     def get_service_context(cls):
         params = {
-            'username': CONF.keystone_authtoken.admin_user,
+            'user_name': CONF.keystone_authtoken.admin_user,
             'password': CONF.keystone_authtoken.admin_password,
             'auth_url': CONF.keystone_authtoken.auth_uri,
             'project_name': CONF.keystone_authtoken.admin_tenant_name
@@ -157,27 +158,25 @@ class ContextMiddleware(wsgi.Middleware):
             auth_token = headers.get('X-Auth-Token')
             auth_token_info = environ.get('keystone.token_info')
 
-            tenant_id = headers.get('X-Tenant-Id')
-            tenant_name = headers.get('X-Tenant-Name')
+            project = headers.get('X-Project-Id')
+            project_name = headers.get('X-Project-Name')
+            project_domain = headers.get('X-Project-Domain-Id')
+            project_domain_name = headers.get('X-Project-Domain-Name')
 
-            domain_id = headers.get('X-Domain-Id')
-            project_id = headers.get('X-Project-Id')
-            project_domain_id = headers.get('X-Project-Domain-Id')
+            user = headers.get('X-User-Id')
+            user_name = headers.get('X-User-Name')
+            user_domain = headers.get('X-User-Domain-Id')
+            user_domain_name = headers.get('X-User-Domain-Name')
 
-            user_id = headers.get('X-User-Id')
-            username = headers.get('X-User-Name')
-            password = None
-
-            user_domain_id = headers.get('X-User-Domain-Id')
-
-            if headers.get('X-Auth-User') is not None:
-                username = headers.get('X-Auth-User')
-                password = headers.get('X-Auth-Key')
+            domain = headers.get('X-Domain-Id')
+            domain_name = headers.get('X-Domain-Name')
 
             region_name = headers.get('X-Region-Name')
+
             roles = headers.get('X-Roles')
             if roles is not None:
                 roles = roles.split(',')
+
             env_req_id = environ.get(oslo_request_id.ENV_REQUEST_ID)
             if env_req_id is None:
                 request_id = None
@@ -188,14 +187,22 @@ class ContextMiddleware(wsgi.Middleware):
             raise exception.NotAuthenticated()
 
         req.context = self.make_context(
-            auth_token=auth_token, auth_token_info=auth_token_info,
-            username=username, user_id=user_id, password=password,
-            tenant=tenant_name, tenant_id=tenant_id,
-            auth_url=auth_url, domain_id=domain_id,
-            project_id=project_id, project_domain_id=project_domain_id,
-            user_domain_id=user_domain_id,
-            region_name=region_name, roles=roles,
-            request_id=request_id)
+            auth_token=auth_token,
+            user=user,
+            project=project,
+            domain=domain,
+            user_domain=user_domain,
+            project_domain=project_domain,
+            request_id=request_id,
+            auth_url=auth_url,
+            user_name=user_name,
+            project_name=project_name,
+            domain_name=domain_name,
+            user_domain_name=user_domain_name,
+            project_domain_name=project_domain_name,
+            auth_token_info=auth_token_info,
+            region_name=region_name,
+            roles=roles)
 
 
 def ContextMiddleware_filter_factory(global_conf, **local_conf):

@@ -23,9 +23,9 @@ RPC_ATTRS = (
 )
 
 RPC_PARAMS = (
-    PARAM_SHOW_DELETED, PARAM_SHOW_NESTED, PARAM_LIMIT, PARAM_GLOBAL_TENANT,
+    PARAM_SHOW_DELETED, PARAM_SHOW_NESTED, PARAM_LIMIT, PARAM_GLOBAL_PROJECT,
 ) = (
-    'show_deleted', 'show_nested', 'limit', 'global_tenant',
+    'show_deleted', 'show_nested', 'limit', 'global_project',
 )
 
 ACTION_NAMES = (

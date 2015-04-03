@@ -65,7 +65,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
 
-        result = self.controller.index(req, tenant_id=self.tenant)
+        result = self.controller.index(req, tenant_id=self.project)
 
         default_args = {'limit': None, 'marker': None, 'sort_keys': None,
                         'sort_dir': None, 'filters': None,
@@ -92,7 +92,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/actions', params=params)
         mock_call.return_value = []
 
-        self.controller.index(req, tenant_id=self.tenant)
+        self.controller.index(req, tenant_id=self.project)
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
@@ -114,7 +114,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         ex = self.assertRaises(senlin_exc.InvalidParameter,
                                self.controller.index, req,
-                               tenant_id=self.tenant)
+                               tenant_id=self.project)
 
         self.assertEqual("Invalid value 'not-int' specified for 'limit'",
                          six.text_type(ex))
@@ -132,7 +132,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/actions', params=params)
         mock_call.return_value = []
 
-        self.controller.index(req, tenant_id=self.tenant)
+        self.controller.index(req, tenant_id=self.project)
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
@@ -150,7 +150,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {'show_deleted': 'False'}
         req = self._get('/actions', params=params)
 
-        self.controller.index(req, tenant_id=self.tenant)
+        self.controller.index(req, tenant_id=self.project)
         call_args, w = mock_call.call_args
         call_args = call_args[1][1]
         self.assertIn('show_deleted', call_args)
@@ -162,7 +162,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {'show_deleted': 'True'}
         req = self._get('/actions', params=params)
 
-        self.controller.index(req, tenant_id=self.tenant)
+        self.controller.index(req, tenant_id=self.project)
 
         call_args, w = mock_call.call_args
         call_args = call_args[1][1]
@@ -177,7 +177,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         ex = self.assertRaises(senlin_exc.InvalidParameter,
                                self.controller.index, req,
-                               tenant_id=self.tenant)
+                               tenant_id=self.project)
 
         self.assertEqual("Invalid value 'Okay' specified for 'show_deleted'",
                          six.text_type(ex))
@@ -189,7 +189,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.index,
-                                              req, tenant_id=self.tenant)
+                                              req, tenant_id=self.project)
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
@@ -220,7 +220,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
-        response = self.controller.get(req, tenant_id=self.tenant,
+        response = self.controller.get(req, tenant_id=self.project,
                                        action_id=action_id)
 
         mock_call.assert_called_once_with(
@@ -239,7 +239,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,
-                                              req, tenant_id=self.tenant,
+                                              req, tenant_id=self.project,
                                               action_id=action_id)
 
         self.assertEqual(404, resp.json['code'])
@@ -252,7 +252,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,
-                                              req, tenant_id=self.tenant,
+                                              req, tenant_id=self.project,
                                               action_id=action_id)
 
         self.assertEqual(403, resp.status_int)

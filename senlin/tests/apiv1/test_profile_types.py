@@ -43,7 +43,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 
-        response = self.controller.index(req, tenant_id=self.tenant)
+        response = self.controller.index(req, tenant_id=self.project)
         self.assertEqual({'profile_types': engine_response}, response)
 
         mock_call.assert_called_once_with(req.context,
@@ -54,7 +54,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/profile_types')
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.index,
-                                              req, tenant_id=self.tenant)
+                                              req, tenant_id=self.project)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
@@ -75,7 +75,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 
-        response = self.controller.schema(req, tenant_id=self.tenant,
+        response = self.controller.schema(req, tenant_id=self.project,
                                           type_name=type_name)
 
         mock_call.assert_called_once_with(
@@ -95,7 +95,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.schema,
-                                              req, tenant_id=self.tenant,
+                                              req, tenant_id=self.project,
                                               type_name=type_name)
 
         mock_call.assert_called_once_with(
@@ -112,7 +112,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.schema,
-                                              req, tenant_id=self.tenant,
+                                              req, tenant_id=self.project,
                                               type_name=type_name)
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))

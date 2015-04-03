@@ -25,45 +25,54 @@ policy_path = os.path.dirname(os.path.realpath(__file__)) + "/policy/"
 class TestRequestContext(base.SenlinTestCase):
 
     def setUp(self):
-        self.ctx = {'username': 'mick',
-                    'auth_token': '123',
-                    'auth_token_info': {'123info': 'woop'},
-                    'domain_id': 'this domain',
-                    'project_domain_id': 'a project domain',
-                    'project_id': 'a project',
-                    'is_admin': False,
-                    'user_domain_id': 'user-domain',
-                    'password': 'foo',
-                    'show_deleted': False,
-                    'roles': ['arole', 'notadmin'],
-                    'tenant_id': '456tenant',
-                    'user_id': 'fooUser',
-                    'tenant': 'atenant',
-                    'auth_url': 'http://xyz',
-                    'trusts': None,
-                    'region_name': 'regionOne'}
+        self.ctx = {
+            'auth_token': '123',
+            'auth_token_info': {'123info': 'woop'},
+            'user': 'fooUser',
+            'user_name': 'mick',
+            'user_domain': 'user-domain',
+            'user_domain_name': 'user-domain-name',
+            'domain': 'domain-id',
+            'domain_name': 'this domain',
+            'project': 'project-id',
+            'project_name': 'a project',
+            'project_domain': 'project-domain-id',
+            'project_domain_name': 'a project domain',
+            'tenant': 'project-id',
+            'is_admin': False,
+            'password': 'foo',
+            'show_deleted': False,
+            'roles': ['arole', 'notadmin'],
+            'auth_url': 'http://xyz',
+            'trusts': None,
+            'region_name': 'regionOne'
+        }
 
         super(TestRequestContext, self).setUp()
 
     def test_request_context_init(self):
         ctx = context.RequestContext(
-            username=self.ctx.get('username'),
             auth_token=self.ctx.get('auth_token'),
             auth_token_info=self.ctx.get('auth_token_info'),
-            domain_id=self.ctx.get('domain_id'),
-            project_domain_id=self.ctx.get('project_domain_id'),
-            project_id=self.ctx.get('project_id'),
+            user=self.ctx.get('user'),
+            user_name=self.ctx.get('user_name'),
+            user_domain=self.ctx.get('user_domain'),
+            user_domain_name=self.ctx.get('user_domain_name'),
+            domain=self.ctx.get('domain'),
+            domain_name=self.ctx.get('domain_name'),
+            project_domain=self.ctx.get('project_domain'),
+            project_domain_name=self.ctx.get('project_domain_name'),
+            project=self.ctx.get('project'),
+            project_name=self.ctx.get('project_name'),
             is_admin=self.ctx.get('is_admin'),
-            user_domain_id=self.ctx.get('user_domain_id'),
             password=self.ctx.get('password'),
             show_deleted=self.ctx.get('show_deleted'),
             roles=self.ctx.get('roles'),
-            tenant_id=self.ctx.get('tenant_id'),
-            user_id=self.ctx.get('user_id'),
             tenant=self.ctx.get('tenant'),
             auth_url=self.ctx.get('auth_url'),
             trusts=self.ctx.get('trusts'),
             region_name=self.ctx.get('region_name'))
+
         ctx_dict = ctx.to_dict()
         del(ctx_dict['request_id'])
         self.assertEqual(self.ctx, ctx_dict)
@@ -100,38 +109,9 @@ class RequestContextMiddlewareTest(base.SenlinTestCase):
                 'password': None,
                 'roles': [],
                 'show_deleted': False,
-                'tenant': None,
-                'tenant_id': None,
-                'user_id': None,
-                'username': None
-            })
-    ), (
-        'username_password',
-        dict(
-            environ=None,
-            headers={
-                'X-Auth-User': 'my_username',
-                'X-Auth-Key': 'my_password',
-                'X-Auth-EC2-Creds': '{"ec2Credentials": {}}',
-                'X-User-Id': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
-                'X-Auth-Token': 'atoken',
-                'X-Tenant-Name': 'my_tenant',
-                'X-Tenant-Id': 'db6808c8-62d0-4d92-898c-d644a6af20e9',
-                'X-Auth-Url': 'http://192.0.2.1:5000/v1',
-                'X-Roles': 'role1,role2,role3'
-            },
-            expected_exception=None,
-            context_dict={
-                'auth_token': 'atoken',
-                'auth_url': 'http://192.0.2.1:5000/v1',
-                'is_admin': False,
-                'password': 'my_password',
-                'roles': ['role1', 'role2', 'role3'],
-                'show_deleted': False,
-                'tenant': 'my_tenant',
-                'tenant_id': 'db6808c8-62d0-4d92-898c-d644a6af20e9',
-                'user_id': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
-                'username': 'my_username'
+                'project': None,
+                'user': None,
+                'user_name': None
             })
     ), (
         'token_creds',
@@ -140,8 +120,8 @@ class RequestContextMiddlewareTest(base.SenlinTestCase):
             headers={
                 'X-User-Id': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
                 'X-Auth-Token': 'atoken2',
-                'X-Tenant-Name': 'my_tenant2',
-                'X-Tenant-Id': 'bb9108c8-62d0-4d92-898c-d644a6af20e9',
+                'X-Project-Name': 'my_project2',
+                'X-Project-Id': 'bb9108c8-62d0-4d92-898c-d644a6af20e9',
                 'X-Auth-Url': 'http://192.0.2.1:5000/v1',
                 'X-Roles': 'role1,role2,role3',
             },
@@ -154,10 +134,10 @@ class RequestContextMiddlewareTest(base.SenlinTestCase):
                 'password': None,
                 'roles': ['role1', 'role2', 'role3'],
                 'show_deleted': False,
-                'tenant': 'my_tenant2',
-                'tenant_id': 'bb9108c8-62d0-4d92-898c-d644a6af20e9',
-                'user_id': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
-                'username': None
+                'tenant': 'bb9108c8-62d0-4d92-898c-d644a6af20e9',
+                'project': 'bb9108c8-62d0-4d92-898c-d644a6af20e9',
+                'user': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
+                'user_name': None
             })
     ), (
         'malformed_roles',

@@ -140,13 +140,13 @@ def query_by_short_id(context, model, short_id, show_deleted=False):
         raise exception.MultipleChoices(arg=short_id)
 
 
-def query_by_name(context, model, name, tenant_safe=False,
+def query_by_name(context, model, name, project_safe=False,
                   show_deleted=False):
     q = soft_delete_aware_query(context, model, show_deleted=show_deleted)
     q = q.filter_by(name=name)
 
-    if tenant_safe:
-        q = q.filter_by(project=context.tenant_id)
+    if project_safe:
+        q = q.filter_by(project=context.project)
 
     if q.count() == 1:
         return q.first()
@@ -170,7 +170,7 @@ def cluster_create(context, values):
     return cluster_ref
 
 
-def cluster_get(context, cluster_id, show_deleted=False, tenant_safe=True):
+def cluster_get(context, cluster_id, show_deleted=False, project_safe=True):
     query = model_query(context, models.Cluster)
     cluster = query.get(cluster_id)
 
@@ -178,8 +178,8 @@ def cluster_get(context, cluster_id, show_deleted=False, tenant_safe=True):
     if cluster is None or cluster.deleted_time is not None and not deleted_ok:
         return None
 
-    if tenant_safe and (cluster is not None):
-        if (context is not None) and (context.tenant_id != cluster.project):
+    if project_safe and (cluster is not None):
+        if (context is not None) and (context.project != cluster.project):
             return None
     return cluster
 
@@ -217,13 +217,13 @@ def cluster_get_all_by_parent(context, parent):
 
 def cluster_get_by_name_and_parent(context, cluster_name, parent):
     query = soft_delete_aware_query(context, models.Cluster).\
-        filter_by(project=context.tenant_id).\
+        filter_by(project=context.project).\
         filter_by(name=cluster_name).\
         filter_by(parent=parent)
     return query.first()
 
 
-def _query_cluster_get_all(context, tenant_safe=True, show_deleted=False,
+def _query_cluster_get_all(context, project_safe=True, show_deleted=False,
                            show_nested=False):
     query = soft_delete_aware_query(context, models.Cluster,
                                     show_deleted=show_deleted)
@@ -231,15 +231,15 @@ def _query_cluster_get_all(context, tenant_safe=True, show_deleted=False,
     if not show_nested:
         query = query.filter_by(parent=None)
 
-    if tenant_safe:
-        query = query.filter_by(project=context.tenant_id)
+    if project_safe:
+        query = query.filter_by(project=context.project)
     return query
 
 
 def cluster_get_all(context, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None, tenant_safe=True,
+                    sort_dir=None, filters=None, project_safe=True,
                     show_deleted=False, show_nested=False):
-    query = _query_cluster_get_all(context, tenant_safe=tenant_safe,
+    query = _query_cluster_get_all(context, project_safe=project_safe,
                                    show_deleted=show_deleted,
                                    show_nested=show_nested)
     if filters is None:
@@ -259,9 +259,9 @@ def cluster_get_all(context, limit=None, marker=None, sort_keys=None,
                            default_sort_keys=['init_time']).all()
 
 
-def cluster_count_all(context, filters=None, tenant_safe=True,
+def cluster_count_all(context, filters=None, project_safe=True,
                       show_deleted=False, show_nested=False):
-    query = _query_cluster_get_all(context, tenant_safe=tenant_safe,
+    query = _query_cluster_get_all(context, project_safe=project_safe,
                                    show_deleted=show_deleted,
                                    show_nested=show_nested)
     query = db_filters.exact_filter(query, models.Cluster, filters)
@@ -354,15 +354,15 @@ def _query_node_get_all(context, show_deleted=False, cluster_id=None):
 
 def node_get_all(context, cluster_id=None, show_deleted=False,
                  limit=None, marker=None, sort_keys=None, sort_dir=None,
-                 filters=None, tenant_safe=True):
+                 filters=None, project_safe=True):
     if cluster_id is None:
         query = _query_node_get_all(context, show_deleted=show_deleted)
     else:
         query = _query_node_get_all(context, show_deleted=show_deleted,
                                     cluster_id=cluster_id)
 
-    if tenant_safe:
-        query = query.filter_by(project=context.tenant_id)
+    if project_safe:
+        query = query.filter_by(project=context.project)
 
     if filters is None:
         filters = {}
@@ -493,12 +493,12 @@ def webhook_get_by_name(context, name, show_deleted=False):
 
 def webhook_get_all(context, show_deleted=False, limit=None,
                     marker=None, sort_keys=None, sort_dir=None,
-                    filters=None, tenant_safe=True):
+                    filters=None, project_safe=True):
     query = soft_delete_aware_query(context, models.Webhook,
                                     show_deleted=show_deleted)
 
-    if tenant_safe:
-        query = query.filter_by(project=context.tenant_id)
+    if project_safe:
+        query = query.filter_by(project=context.project)
 
     if filters is None:
         filters = {}
@@ -935,12 +935,12 @@ def _event_filter_paginate_query(context, query, filters=None,
 
 
 def event_get_all(context, limit=None, marker=None, sort_keys=None,
-                  sort_dir=None, filters=None, tenant_safe=True,
+                  sort_dir=None, filters=None, project_safe=True,
                   show_deleted=False):
     query = soft_delete_aware_query(context, models.Event,
                                     show_deleted=show_deleted)
-    if tenant_safe:
-        query = query.filter_by(project=context.tenant_id)
+    if project_safe:
+        query = query.filter_by(project=context.project)
 
     return _event_filter_paginate_query(context, query, filters=filters,
                                         limit=limit, marker=marker,

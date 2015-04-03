@@ -89,7 +89,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
 
-        result = self.controller.index(req, tenant_id=self.tenant)
+        result = self.controller.index(req, tenant_id=self.project)
 
         default_args = {'limit': None, 'marker': None,
                         'sort_keys': None, 'sort_dir': None,
@@ -117,7 +117,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.return_value = []
 
-        self.controller.index(req, tenant_id=self.tenant)
+        self.controller.index(req, tenant_id=self.project)
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
@@ -144,7 +144,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.return_value = []
 
-        self.controller.index(req, tenant_id=self.tenant)
+        self.controller.index(req, tenant_id=self.project)
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
@@ -162,7 +162,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         params = {'show_deleted': 'False'}
         req = self._get('/profiles', params=params)
-        self.controller.index(req, tenant_id=self.tenant)
+        self.controller.index(req, tenant_id=self.project)
         mock_call.assert_called_once_with(mock.ANY,
                                           filters=mock.ANY,
                                           show_deleted=False)
@@ -173,7 +173,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         params = {'show_deleted': 'True'}
         req = self._get('/profiles', params=params)
-        self.controller.index(req, tenant_id=self.tenant)
+        self.controller.index(req, tenant_id=self.project)
         mock_call.assert_called_once_with(mock.ANY,
                                           filters=mock.ANY,
                                           show_deleted=True)
@@ -186,7 +186,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/profiles', params=params)
         ex = self.assertRaises(senlin_exc.InvalidParameter,
                                self.controller.index, req,
-                               tenant_id=self.tenant)
+                               tenant_id=self.project)
         self.assertIn("Invalid value 'yes' specified for 'show_deleted'",
                       six.text_type(ex))
         self.assertFalse(mock_call.called)
@@ -199,7 +199,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/profiles', params=params)
         ex = self.assertRaises(senlin_exc.InvalidParameter,
                                self.controller.index, req,
-                               tenant_id=self.tenant)
+                               tenant_id=self.project)
         self.assertIn("Invalid value 'abc' specified for 'limit'",
                       six.text_type(ex))
         self.assertFalse(mock_call.called)
@@ -210,7 +210,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.index,
-                                              req, tenant_id=self.tenant)
+                                              req, tenant_id=self.project)
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
@@ -245,7 +245,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 
-        resp = self.controller.create(req, tenant_id=self.tenant, body=body)
+        resp = self.controller.create(req, tenant_id=self.project, body=body)
 
         mock_call.assert_called_with(
             req.context,
@@ -269,7 +269,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
-                               req, tenant_id=self.tenant,
+                               req, tenant_id=self.project,
                                body=body)
 
         self.assertEqual("Malformed request data, missing 'profile' key "
@@ -297,7 +297,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create,
-                                              req, tenant_id=self.tenant,
+                                              req, tenant_id=self.project,
                                               body=body)
 
         mock_call.assert_called_once()
@@ -325,7 +325,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create,
-                                              req, tenant_id=self.tenant,
+                                              req, tenant_id=self.project,
                                               body=body)
 
         mock_call.assert_called_once()
@@ -346,7 +346,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._post('/profiles', json.dumps(body))
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create,
-                                              req, tenant_id=self.tenant)
+                                              req, tenant_id=self.project)
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
@@ -373,7 +373,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
 
-        result = self.controller.get(req, tenant_id=self.tenant,
+        result = self.controller.get(req, tenant_id=self.project,
                                      profile_id=pid)
 
         mock_call.assert_called_with(req.context,
@@ -393,7 +393,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,
-                                              req, tenant_id=self.tenant,
+                                              req, tenant_id=self.project,
                                               profile_id=pid)
 
         self.assertEqual(404, resp.json['code'])
@@ -406,7 +406,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,
-                                              req, tenant_id=self.tenant,
+                                              req, tenant_id=self.project,
                                               profile_id=pid)
 
         self.assertEqual(403, resp.status_int)
@@ -447,7 +447,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
-        result = self.controller.update(req, tenant_id=self.tenant,
+        result = self.controller.update(req, tenant_id=self.project,
                                         profile_id=pid,
                                         body=body)
 
@@ -471,7 +471,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                         json.dumps(body))
 
         self.patchobject(rpc_client.EngineClient, 'call', return_value={})
-        result = self.controller.update(req, tenant_id=self.tenant,
+        result = self.controller.update(req, tenant_id=self.project,
                                         profile_id=pid, body=body)
         self.assertEqual({'profile': {}}, result)
 
@@ -505,7 +505,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
-        result = self.controller.update(req, tenant_id=self.tenant,
+        result = self.controller.update(req, tenant_id=self.project,
                                         profile_id=pid, body=body)
 
         args = copy.deepcopy(body['profile'])
@@ -535,7 +535,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,
-                                              req, tenant_id=self.tenant,
+                                              req, tenant_id=self.project,
                                               profile_id=pid,
                                               body=body)
 
@@ -561,7 +561,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,
-                                              req, tenant_id=self.tenant,
+                                              req, tenant_id=self.project,
                                               profile_id=pid,
                                               body=body)
         mock_call.assert_called_once()
@@ -580,7 +580,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,
-                                              req, tenant_id=self.tenant,
+                                              req, tenant_id=self.project,
                                               profile_id=pid,
                                               body=body)
 
@@ -596,7 +596,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                      return_value=None)
 
         self.assertRaises(exc.HTTPNoContent, self.controller.delete,
-                          req, tenant_id=self.tenant, profile_id=pid)
+                          req, tenant_id=self.project, profile_id=pid)
 
         mock_call.assert_called_with(
             req.context, ('profile_delete', {'identity': pid}))
@@ -612,7 +612,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.delete,
-                                              req, tenant_id=self.tenant,
+                                              req, tenant_id=self.project,
                                               profile_id=pid)
 
         self.assertEqual(404, resp.json['code'])
@@ -625,7 +625,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.delete,
-                                              req, tenant_id=self.tenant,
+                                              req, tenant_id=self.project,
                                               profile_id=pid)
 
         self.assertEqual(403, resp.status_int)

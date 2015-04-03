@@ -61,8 +61,8 @@ def create_cluster(ctx, profile, **kwargs):
     values = {
         'name': 'db_test_cluster_name',
         'profile_id': profile.id,
-        'user': ctx.user_id,
-        'project': ctx.tenant_id,
+        'user': ctx.user,
+        'project': ctx.project,
         'domain': 'unknown',
         'parent': None,
         'next_index': 1,
@@ -74,8 +74,8 @@ def create_cluster(ctx, profile, **kwargs):
         'tags': {},
     }
     values.update(kwargs)
-    if 'tenant_id' in kwargs:
-        values.update({'project': kwargs.get('tenant_id')})
+    if 'project' in kwargs:
+        values.update({'project': kwargs.get('project')})
     return db_api.cluster_create(ctx, values)
 
 
@@ -85,7 +85,7 @@ def create_node(ctx, cluster, profile, **kwargs):
         'physical_id': UUID1,
         'cluster_id': cluster.id if cluster else None,
         'profile_id': profile.id,
-        'project': ctx.tenant_id,
+        'project': ctx.project,
         'index': 0,
         'role': None,
         'created_time': None,
@@ -103,8 +103,8 @@ def create_node(ctx, cluster, profile, **kwargs):
 def create_webhook(ctx, obj_id, obj_type, action, **kwargs):
     values = {
         'name': 'test_webhook_name',
-        'user': ctx.user_id,
-        'project': ctx.tenant_id,
+        'user': ctx.user,
+        'project': ctx.project,
         'domain': ctx.domain,
         'created_time': None,
         'deleted_time': None,

@@ -175,13 +175,17 @@ class Cluster(periodic_task.PeriodicTasks):
 
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort_keys=None,
-                 sort_dir=None, filters=None, tenant_safe=True,
+                 sort_dir=None, filters=None, project_safe=True,
                  show_deleted=False, show_nested=False):
         '''Retrieve all clusters from database.'''
 
-        records = db_api.cluster_get_all(context, limit, marker, sort_keys,
-                                         sort_dir, filters, tenant_safe,
-                                         show_deleted, show_nested)
+        records = db_api.cluster_get_all(context, limit=limit, marker=marker,
+                                         sort_keys=sort_keys,
+                                         sort_dir=sort_dir,
+                                         filters=filters,
+                                         project_safe=project_safe,
+                                         show_deleted=show_deleted,
+                                         show_nested=show_nested)
 
         for record in records:
             cluster = cls._from_db_record(context, record)

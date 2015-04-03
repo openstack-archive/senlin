@@ -68,7 +68,7 @@ class Node(object):
         self.rt = {}
 
         if context is not None:
-            self.project = context.project_id
+            self.project = context.project
             self._load_runtime_data(context)
 
     def _load_runtime_data(self, context):
@@ -154,7 +154,7 @@ class Node(object):
     @classmethod
     def load_all(cls, context, cluster_id=None, show_deleted=False,
                  limit=None, marker=None, sort_keys=None, sort_dir=None,
-                 filters=None, tenant_safe=True):
+                 filters=None, project_safe=True):
         '''Retrieve all nodes of from database.'''
 
         records = db_api.node_get_all(context, cluster_id=cluster_id,
@@ -162,7 +162,7 @@ class Node(object):
                                       limit=limit, marker=marker,
                                       sort_keys=sort_keys, sort_dir=sort_dir,
                                       filters=filters,
-                                      tenant_safe=tenant_safe)
+                                      project_safe=project_safe)
 
         return [cls._from_db_record(context, record) for record in records]
 

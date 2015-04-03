@@ -29,7 +29,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
     def setUp(self):
         super(ClusterPolicyTest, self).setUp()
-        self.ctx = utils.dummy_context(tenant_id='cluster_policy_test_tenant')
+        self.ctx = utils.dummy_context(project='cluster_policy_test_project')
         self.eng = service.EngineService('host-a', 'topic-a')
         self.eng.init_tgm()
 

@@ -64,16 +64,14 @@ def reset_dummy_db():
         engine.execute(table.delete())
 
 
-def dummy_context(user='test_username', tenant_id='test_tenant_id',
+def dummy_context(user='test_username', project='test_project_id',
                   password='password', roles=None, user_id='test_user_id',
                   trust_id=None, region_name=None):
     roles = roles or []
     return context.RequestContext.from_dict({
-        'tenant_id': tenant_id,
-        'project_id': tenant_id,
-        'tenant': 'test_tenant',
-        'username': user,
-        'user_id': user_id,
+        'project': project,
+        'user': user_id,
+        'user_name': user,
         'password': password,
         'roles': roles,
         'is_admin': False,

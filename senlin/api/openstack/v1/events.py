@@ -51,7 +51,7 @@ class EventController(object):
             'marker': 'single',
             'sort_dir': 'single',
             'sort_keys': 'multi',
-            'global_tenant': 'single',
+            'global_project': 'single',
             'show_deleted': 'single',
         }
         params = util.get_allowed_params(req.params, param_whitelist)
@@ -61,11 +61,11 @@ class EventController(object):
         if key in params:
             params[key] = utils.parse_bool_param(key, params[key])
 
-        key = consts.PARAM_GLOBAL_TENANT
+        key = consts.PARAM_GLOBAL_PROJECT
         if key in params:
-            global_tenant = utils.parse_bool_param(key, params[key])
+            global_project = utils.parse_bool_param(key, params[key])
             params.pop(key)
-            params['tenant_safe'] = not global_tenant
+            params['project_safe'] = not global_project
 
         key = consts.PARAM_LIMIT
         if key in params:

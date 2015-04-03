@@ -24,7 +24,7 @@ class ProfileTypeTest(base.SenlinTestCase):
 
     def setUp(self):
         super(ProfileTypeTest, self).setUp()
-        self.ctx = utils.dummy_context(tenant_id='profile_type_test_tenant')
+        self.ctx = utils.dummy_context(project='profile_type_test_project')
         self.eng = service.EngineService('host-a', 'topic-a')
         self.eng.init_tgm()
         environment.global_env().register_profile('TestProfile',

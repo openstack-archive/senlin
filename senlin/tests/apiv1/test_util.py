@@ -86,7 +86,7 @@ class TestPolicyEnforce(base.SenlinTestCase):
     def setUp(self):
         super(TestPolicyEnforce, self).setUp()
         self.req = wsgi.Request({})
-        self.req.context = context.RequestContext(tenant_id='foo',
+        self.req.context = context.RequestContext(project='foo',
                                                   is_admin=False)
 
         class DummyController(object):
@@ -99,7 +99,7 @@ class TestPolicyEnforce(base.SenlinTestCase):
         self.controller = DummyController()
 
     @mock.patch.object(policy.Enforcer, 'enforce')
-    def test_policy_enforce_tenant_mismatch(self, mock_enforce):
+    def test_policy_enforce_project_mismatch(self, mock_enforce):
         mock_enforce.return_value = True
 
         self.assertEqual('woot',

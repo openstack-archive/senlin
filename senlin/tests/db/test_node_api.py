@@ -306,19 +306,19 @@ class DBAPINodeTest(base.SenlinTestCase):
         results = db_api.node_get_all(self.ctx, filters=filters)
         self.assertEqual(2, len(results))
 
-    def test_node_get_all_with_tenant_safe(self):
+    def test_node_get_all_with_project_safe(self):
         shared.create_node(self.ctx, None, self.profile, name='node1')
         shared.create_node(self.ctx, None, self.profile, name='node2')
 
-        self.ctx.tenant_id = 'a-different-tenant'
-        results = db_api.node_get_all(self.ctx, tenant_safe=False)
+        self.ctx.project = 'a-different-project'
+        results = db_api.node_get_all(self.ctx, project_safe=False)
         self.assertEqual(2, len(results))
 
-        self.ctx.tenant_id = 'a-different-tenant'
+        self.ctx.project = 'a-different-project'
         results = db_api.node_get_all(self.ctx)
         self.assertEqual(0, len(results))
 
-        results = db_api.node_get_all(self.ctx, tenant_safe=True)
+        results = db_api.node_get_all(self.ctx, project_safe=True)
         self.assertEqual(0, len(results))
 
     def test_node_get_by_cluster(self):

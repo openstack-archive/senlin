@@ -176,12 +176,12 @@ def ignore_not_found(ex):
 def create_connection(context):
     kwargs = {
         'auth_url': context.auth_url,
-        'domain_id': context.domain_id,
-        'project_id': context.project_id,
-        'project_domain_id': context.project_domain_id,
-        'user_domain_id': context.user_domain_id,
-        'username': context.username,
-        'user_id': context.user_id,
+        'domain_id': context.domain,
+        'project_id': context.project,
+        'project_domain_id': context.project_domain,
+        'user_domain_id': context.user_domain,
+        'username': context.user_name,
+        'user_id': context.user,
         'password': context.password,
         'token': context.auth_token,
         #  'auth_plugin': args.auth_plugin,

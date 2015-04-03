@@ -59,8 +59,8 @@ class DBAPIEventTest(base.SenlinTestCase):
             'action': action or '',
             'status': status or '',
             'status_reason': status_reason or '',
-            'user': ctx.user_id,
-            'project': ctx.tenant_id,
+            'user': ctx.user,
+            'project': ctx.project,
             'deleted_time': deleted_time,
         }
 
@@ -81,8 +81,8 @@ class DBAPIEventTest(base.SenlinTestCase):
         self.assertEqual('', ret_event.action)
         self.assertEqual('', ret_event.status)
         self.assertEqual('', ret_event.status_reason)
-        self.assertEqual(self.ctx.user_id, ret_event.user)
-        self.assertEqual(self.ctx.tenant_id, ret_event.project)
+        self.assertEqual(self.ctx.user, ret_event.user)
+        self.assertEqual(self.ctx.project, ret_event.project)
 
     def test_event_get_by_short_id(self):
         event = self.create_event(self.ctx)
@@ -105,7 +105,7 @@ class DBAPIEventTest(base.SenlinTestCase):
         self.create_event(self.ctx, entity=cluster1)
         self.create_event(self.ctx, entity=cluster2)
 
-        # Default tenant_safe
+        # Default project_safe
         events = db_api.event_get_all(self.ctx)
         self.assertEqual(3, len(events))
 
@@ -117,8 +117,8 @@ class DBAPIEventTest(base.SenlinTestCase):
         self.assertIn(cluster2.id, cluster_ids)
         self.assertIn(cluster2.name, obj_names)
 
-        # Set tenant_safe to false
-        events = db_api.event_get_all(self.ctx, tenant_safe=False)
+        # Set project_safe to false
+        events = db_api.event_get_all(self.ctx, project_safe=False)
         self.assertEqual(3, len(events))
 
     def test_event_get_all_with_limit(self):
@@ -216,18 +216,18 @@ class DBAPIEventTest(base.SenlinTestCase):
         events = db_api.event_get_all(self.ctx, show_deleted=True)
         self.assertEqual(3, len(events))
 
-    def test_event_get_all_tenant_safe(self):
-        self.ctx.tenant_id = 'tenant_1'
+    def test_event_get_all_project_safe(self):
+        self.ctx.project = 'project_1'
         cluster1 = shared.create_cluster(self.ctx, self.profile,
                                          name='cluster1')
         self.create_event(self.ctx, entity=cluster1)
-        self.ctx.tenant_id = 'tenant_2'
+        self.ctx.project = 'project_2'
         cluster2 = shared.create_cluster(self.ctx, self.profile,
                                          name='cluster2')
         self.create_event(self.ctx, entity=cluster2, action='CLUSTER_CREATE')
         self.create_event(self.ctx, entity=cluster2, action='CLUSTER_DELETE')
 
-        # Default tenant_safe to true, only the last two events are visible
+        # Default project_safe to true, only the last two events are visible
         events = db_api.event_get_all(self.ctx)
         self.assertEqual(2, len(events))
 
@@ -238,8 +238,8 @@ class DBAPIEventTest(base.SenlinTestCase):
         self.assertIn(cluster2.id, obj_ids)
         self.assertIn(cluster2.name, obj_names)
 
-        # Set tenant_safe to false, we should get all three events
-        events = db_api.event_get_all(self.ctx, tenant_safe=False)
+        # Set project_safe to false, we should get all three events
+        events = db_api.event_get_all(self.ctx, project_safe=False)
         self.assertEqual(3, len(events))
 
         obj_ids = [event.obj_id for event in events]

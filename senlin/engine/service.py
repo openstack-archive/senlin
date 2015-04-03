@@ -368,10 +368,10 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_list(self, context, limit=None, marker=None, sort_keys=None,
-                     sort_dir=None, filters=None, tenant_safe=True,
+                     sort_dir=None, filters=None, project_safe=True,
                      show_deleted=False, show_nested=False):
         limit = utils.parse_int_param('limit', limit)
-        tenant_safe = utils.parse_bool_param('tenant_safe', tenant_safe)
+        project_safe = utils.parse_bool_param('project_safe', project_safe)
         show_deleted = utils.parse_bool_param('show_deleted', show_deleted)
         show_nested = utils.parse_bool_param('show_nested', show_nested)
         clusters = cluster_mod.Cluster.load_all(context, limit=limit,
@@ -379,7 +379,7 @@ class EngineService(service.Service):
                                                 sort_keys=sort_keys,
                                                 sort_dir=sort_dir,
                                                 filters=filters,
-                                                tenant_safe=tenant_safe,
+                                                project_safe=project_safe,
                                                 show_deleted=show_deleted,
                                                 show_nested=show_nested)
 
@@ -424,8 +424,8 @@ class EngineService(service.Service):
         LOG.info(_LI('Creating cluster %s'), name)
         ctx = context.to_dict()
         kwargs = {
-            'user': ctx.get('user_id', ''),
-            'project': ctx.get('tenant_id', ''),
+            'user': ctx.get('user', ''),
+            'project': ctx.get('project', ''),
             'parent': parent,
             'timeout': timeout,
             'tags': tags
@@ -693,10 +693,10 @@ class EngineService(service.Service):
     @request_context
     def node_list(self, context, cluster_id=None, show_deleted=False,
                   limit=None, marker=None, sort_keys=None, sort_dir=None,
-                  filters=None, tenant_safe=True):
+                  filters=None, project_safe=True):
 
         limit = utils.parse_int_param('limit', limit)
-        tenant_safe = utils.parse_bool_param('tenant_safe', tenant_safe)
+        project_safe = utils.parse_bool_param('project_safe', project_safe)
         show_deleted = utils.parse_bool_param('show_deleted', show_deleted)
 
         # Maybe the cluster_id is a name or a short ID
@@ -708,7 +708,7 @@ class EngineService(service.Service):
                                        limit=limit, marker=marker,
                                        sort_keys=sort_keys, sort_dir=sort_dir,
                                        filters=filters,
-                                       tenant_safe=tenant_safe)
+                                       project_safe=project_safe)
 
         return [node.to_dict() for node in nodes]
 
@@ -1076,13 +1076,13 @@ class EngineService(service.Service):
 
     @request_context
     def event_list(self, context, filters=None, limit=None, marker=None,
-                   sort_keys=None, sort_dir=None, tenant_safe=True,
+                   sort_keys=None, sort_dir=None, project_safe=True,
                    show_deleted=False):
         all_actions = event_mod.Event.load_all(context, filters=filters,
                                                limit=limit, marker=marker,
                                                sort_keys=sort_keys,
                                                sort_dir=sort_dir,
-                                               tenant_safe=tenant_safe,
+                                               project_safe=project_safe,
                                                show_deleted=show_deleted)
 
         results = [action.to_dict() for action in all_actions]

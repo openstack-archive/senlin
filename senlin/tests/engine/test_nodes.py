@@ -29,7 +29,7 @@ class NodeTest(base.SenlinTestCase):
 
     def setUp(self):
         super(NodeTest, self).setUp()
-        self.ctx = utils.dummy_context(tenant_id='node_test_tenant')
+        self.ctx = utils.dummy_context(project='node_test_project')
         self.eng = service.EngineService('host-a', 'topic-a')
         self.eng.init_tgm()
 
@@ -111,7 +111,7 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(dispatcher, 'notify')
     def test_node_create_project_not_match(self, notify):
-        ctx_cluster = utils.dummy_context(tenant_id='a-different-tenant')
+        ctx_cluster = utils.dummy_context(project='a-different-project')
         cluster = self.eng.cluster_create(ctx_cluster, 'c-1', 0,
                                           self.profile['id'])
 
@@ -264,12 +264,12 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(node['id'], result[0]['id'])
 
     @mock.patch.object(dispatcher, 'notify')
-    def test_node_list_tenant_safe(self, notify):
+    def test_node_list_project_safe(self, notify):
         node1 = self.eng.node_create(self.ctx, 'n1', self.profile['id'])
-        new_ctx = utils.dummy_context(tenant_id='a_diff_tenant')
+        new_ctx = utils.dummy_context(project='a_diff_project')
         node2 = self.eng.node_create(new_ctx, 'n2', self.profile['id'])
 
-        # default is tenant_safe
+        # default is project_safe
         result = self.eng.node_list(self.ctx)
         self.assertIsInstance(result, list)
         self.assertEqual(1, len(result))
@@ -280,8 +280,8 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(1, len(result))
         self.assertEqual(node2['id'], result[0]['id'])
 
-        # try tenant_safe set to False
-        result = self.eng.node_list(self.ctx, tenant_safe=False)
+        # try project_safe set to False
+        result = self.eng.node_list(self.ctx, project_safe=False)
         self.assertIsInstance(result, list)
         self.assertEqual(2, len(result))
         self.assertEqual(node1['id'], result[0]['id'])
@@ -330,7 +330,7 @@ class NodeTest(base.SenlinTestCase):
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_list, self.ctx,
-                               tenant_safe='no')
+                               project_safe='no')
         self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
 
     def test_node_list_empty(self):

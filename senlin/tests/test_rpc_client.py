@@ -197,7 +197,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'sort_keys': mock.ANY,
             'sort_dir': mock.ANY,
             'filters': mock.ANY,
-            'tenant_safe': mock.ANY,
+            'project_safe': mock.ANY,
             'show_deleted': mock.ANY,
             'show_nested': mock.ANY,
         }
@@ -264,7 +264,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'sort_keys': mock.ANY,
             'sort_dir': mock.ANY,
             'filters': mock.ANY,
-            'tenant_safe': mock.ANY,
+            'project_safe': mock.ANY,
         }
         self._test_engine_api('node_list', 'call', **default_args)
 
@@ -389,7 +389,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'marker': mock.ANY,
             'sort_keys': mock.ANY,
             'sort_dir': mock.ANY,
-            'tenant_safe': mock.ANY,
+            'project_safe': mock.ANY,
             'show_deleted': mock.ANY,
         }
         self._test_engine_api('event_list', 'call', **default_args)

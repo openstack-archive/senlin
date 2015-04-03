@@ -40,9 +40,9 @@ def cluster_create(context, values):
     return IMPL.cluster_create(context, values)
 
 
-def cluster_get(context, cluster_id, show_deleted=False, tenant_safe=True):
+def cluster_get(context, cluster_id, show_deleted=False, project_safe=True):
     return IMPL.cluster_get(context, cluster_id, show_deleted=show_deleted,
-                            tenant_safe=tenant_safe)
+                            project_safe=project_safe)
 
 
 def cluster_get_by_name(context, cluster_name):
@@ -62,21 +62,23 @@ def cluster_get_by_name_and_parent(context, cluster_name, parent):
 
 
 def cluster_get_all(context, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None, tenant_safe=True,
+                    sort_dir=None, filters=None, project_safe=True,
                     show_deleted=False, show_nested=False):
-    return IMPL.cluster_get_all(context, limit, marker, sort_keys, sort_dir,
-                                filters, tenant_safe, show_deleted,
-                                show_nested)
+    return IMPL.cluster_get_all(context, limit=limit, marker=marker,
+                                sort_keys=sort_keys, sort_dir=sort_dir,
+                                filters=filters, project_safe=project_safe,
+                                show_deleted=show_deleted,
+                                show_nested=show_nested)
 
 
 def cluster_get_all_by_parent(context, parent):
     return IMPL.cluster_get_all_by_parent(context, parent)
 
 
-def cluster_count_all(context, filters=None, tenant_safe=True,
+def cluster_count_all(context, filters=None, project_safe=True,
                       show_deleted=False, show_nested=False):
     return IMPL.cluster_count_all(context, filters=filters,
-                                  tenant_safe=tenant_safe,
+                                  project_safe=project_safe,
                                   show_deleted=show_deleted,
                                   show_nested=show_nested)
 
@@ -109,12 +111,12 @@ def node_get_by_short_id(context, short_id, show_deleted=False):
 
 def node_get_all(context, cluster_id=None, show_deleted=False,
                  limit=None, marker=None, sort_keys=None, sort_dir=None,
-                 filters=None, tenant_safe=True):
+                 filters=None, project_safe=True):
     return IMPL.node_get_all(context, cluster_id=cluster_id,
                              show_deleted=show_deleted,
                              limit=limit, marker=marker,
                              sort_keys=sort_keys, sort_dir=sort_dir,
-                             filters=filters, tenant_safe=tenant_safe)
+                             filters=filters, project_safe=project_safe)
 
 
 def node_get_all_by_cluster(context, cluster_id):
@@ -269,12 +271,12 @@ def event_get_by_short_id(context, short_id):
 
 
 def event_get_all(context, limit=None, marker=None, sort_keys=None,
-                  sort_dir=None, filters=None, tenant_safe=True,
+                  sort_dir=None, filters=None, project_safe=True,
                   show_deleted=False):
 
     return IMPL.event_get_all(context, limit=limit, marker=marker,
                               sort_keys=sort_keys, sort_dir=sort_dir,
-                              filters=filters, tenant_safe=tenant_safe,
+                              filters=filters, project_safe=project_safe,
                               show_deleted=show_deleted)
 
 
@@ -306,11 +308,11 @@ def webhook_get_by_name(context, name, show_deleted=False):
 
 def webhook_get_all(context, show_deleted=False, limit=None,
                     marker=None, sort_keys=None, sort_dir=None,
-                    filters=None, tenant_safe=True):
+                    filters=None, project_safe=True):
     return IMPL.webhook_get_all(context, show_deleted=show_deleted,
                                 limit=limit, marker=marker,
                                 sort_keys=sort_keys, sort_dir=sort_dir,
-                                filters=filters, tenant_safe=tenant_safe)
+                                filters=filters, project_safe=project_safe)
 
 
 def webhook_get_by_short_id(context, short_id, show_deleted=False):

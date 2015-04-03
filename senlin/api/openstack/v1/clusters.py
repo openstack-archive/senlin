@@ -117,7 +117,7 @@ class ClusterController(object):
 
         clusters = self.rpc_client.cluster_list(req.context,
                                                 filters=filters,
-                                                tenant_safe=True,
+                                                project_safe=True,
                                                 **params)
         return {'clusters': clusters}
 

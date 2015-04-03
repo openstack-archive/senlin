@@ -27,12 +27,12 @@ def policy_enforce(handler):
     """
     @functools.wraps(handler)
     def handle_cluster_method(controller, req, tenant_id, **kwargs):
-        if req.context.tenant_id != tenant_id:
+        if req.context.project != tenant_id:
             raise exc.HTTPForbidden()
 
         # Enable project_id based target check
         target = {
-            'project_id': tenant_id,
+            'project': tenant_id,
         }
         allowed = req.context.policy.enforce(context=req.context,
                                              action=handler.__name__,

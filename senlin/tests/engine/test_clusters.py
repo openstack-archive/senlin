@@ -31,7 +31,7 @@ class ClusterTest(base.SenlinTestCase):
 
     def setUp(self):
         super(ClusterTest, self).setUp()
-        self.ctx = utils.dummy_context(tenant_id='cluster_test_tenant')
+        self.ctx = utils.dummy_context(project='cluster_test_project')
         self.eng = service.EngineService('host-a', 'topic-a')
         self.eng.init_tgm()
 
@@ -66,8 +66,8 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual('c-1', result['name'])
         self.assertEqual(0, result['size'])
         self.assertEqual(self.profile['id'], result['profile_id'])
-        self.assertEqual(self.ctx.user_id, result['user'])
-        self.assertEqual('cluster_test_tenant', result['project'])
+        self.assertEqual(self.ctx.user, result['user'])
+        self.assertEqual('cluster_test_project', result['project'])
         self.assertIsNone(result['parent'])
         self.assertIsNone(result['timeout'])
         self.assertIsNone(result['tags'])
@@ -284,12 +284,12 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(c['id'], result[0]['id'])
 
     @mock.patch.object(dispatcher, 'notify')
-    def test_cluster_list_tenant_safe(self, notify):
+    def test_cluster_list_project_safe(self, notify):
         c1 = self.eng.cluster_create(self.ctx, 'c1', 0, self.profile['id'])
-        new_ctx = utils.dummy_context(tenant_id='a_diff_tenant')
+        new_ctx = utils.dummy_context(project='a_diff_project')
         c2 = self.eng.cluster_create(new_ctx, 'c2', 0, self.profile['id'])
 
-        # default is tenant_safe
+        # default is project_safe
         result = self.eng.cluster_list(self.ctx)
         self.assertIsInstance(result, list)
         self.assertEqual(1, len(result))
@@ -300,8 +300,8 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(1, len(result))
         self.assertEqual(c2['id'], result[0]['id'])
 
-        # try tenant_safe set to False
-        result = self.eng.cluster_list(self.ctx, tenant_safe=False)
+        # try project_safe set to False
+        result = self.eng.cluster_list(self.ctx, project_safe=False)
         self.assertIsInstance(result, list)
         self.assertEqual(2, len(result))
         self.assertEqual(c1['id'], result[0]['id'])
@@ -337,7 +337,7 @@ class ClusterTest(base.SenlinTestCase):
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_list, self.ctx,
-                               tenant_safe='no')
+                               project_safe='no')
         self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
 
     def test_cluster_list_empty(self):
@@ -565,7 +565,7 @@ class ClusterTest(base.SenlinTestCase):
                 'physical_id': 'fake-phy-id-%s' % (i + 1),
                 'cluster_id': None,
                 'profile_id': profile_id or self.profile['id'],
-                'project': ctx.tenant_id,
+                'project': ctx.project,
                 'index': i + 1,
                 'role': None,
                 'created_time': None,

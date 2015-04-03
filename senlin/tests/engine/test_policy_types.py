@@ -24,7 +24,7 @@ class PolicyTypeTest(base.SenlinTestCase):
 
     def setUp(self):
         super(PolicyTypeTest, self).setUp()
-        self.ctx = utils.dummy_context(tenant_id='policy_type_test_tenant')
+        self.ctx = utils.dummy_context(project='policy_type_test_project')
         self.eng = service.EngineService('host-a', 'topic-a')
         self.eng.init_tgm()
         environment.global_env().register_policy('TestPolicy',

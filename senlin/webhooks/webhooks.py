@@ -122,12 +122,12 @@ class Webhook(object):
 
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort_keys=None,
-                 sort_dir=None, filters=None, tenant_safe=True,
+                 sort_dir=None, filters=None, project_safe=True,
                  show_deleted=False, show_nested=False):
         '''Retrieve all webhooks from database.'''
 
         records = db_api.webhook_get_all(context, limit, marker, sort_keys,
-                                         sort_dir, filters, tenant_safe,
+                                         sort_dir, filters, project_safe,
                                          show_deleted, show_nested)
 
         for record in records:

@@ -38,9 +38,9 @@ class DBAPIWebhookTest(base.SenlinTestCase):
         self.assertIsNotNone(webhook)
         self.assertEqual(UUID1, webhook.obj_id)
         self.assertEqual('test_webhook_name', webhook.name)
-        self.assertEqual(self.ctx.user_id, webhook.user)
+        self.assertEqual(self.ctx.user, webhook.user)
         self.assertEqual(self.ctx.domain, webhook.domain)
-        self.assertEqual(self.ctx.tenant_id, webhook.project)
+        self.assertEqual(self.ctx.project, webhook.project)
         self.assertIsNone(webhook.created_time)
         self.assertIsNone(webhook.deleted_time)
         self.assertEqual('test_obj_type', webhook.obj_type)
@@ -308,21 +308,21 @@ class DBAPIWebhookTest(base.SenlinTestCase):
         results = db_api.webhook_get_all(self.ctx, filters=filters)
         self.assertEqual(2, len(results))
 
-    def test_webhook_get_all_with_tenant_safe(self):
+    def test_webhook_get_all_with_project_safe(self):
         shared.create_webhook(self.ctx, self.obj_id,
                               self.obj_type, self.action, name='webhook1')
         shared.create_webhook(self.ctx, self.obj_id,
                               self.obj_type, self.action, name='webhook2')
 
-        self.ctx.tenant_id = 'a-different-tenant'
-        results = db_api.webhook_get_all(self.ctx, tenant_safe=False)
+        self.ctx.project = 'a-different-project'
+        results = db_api.webhook_get_all(self.ctx, project_safe=False)
         self.assertEqual(2, len(results))
 
-        self.ctx.tenant_id = 'a-different-tenant'
+        self.ctx.project = 'a-different-project'
         results = db_api.webhook_get_all(self.ctx)
         self.assertEqual(0, len(results))
 
-        results = db_api.webhook_get_all(self.ctx, tenant_safe=True)
+        results = db_api.webhook_get_all(self.ctx, project_safe=True)
         self.assertEqual(0, len(results))
 
     def test_webhook_delete(self):

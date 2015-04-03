@@ -106,9 +106,3 @@ class SenlinTestCase(testscenarios.WithScenarios,
     def patch(self, target, **kwargs):
         mockfixture = self.useFixture(mockpatch.Patch(target, **kwargs))
         return mockfixture.mock
-
-#    def stub_keystoneclient(self, fake_client=None, **kwargs):
-#        client = self.patchobject(keystone.KeystoneClientPlugin, "_create")
-#        fkc = fake_client or fakes.FakeKeystoneClient(**kwargs)
-#        client.return_value = fkc
-#        return fkc

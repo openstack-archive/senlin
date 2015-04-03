@@ -98,7 +98,7 @@ class NodeController(object):
             'marker': 'single',
             'sort_keys': 'multi',
             'sort_dir': 'single',
-            'global_tenant': 'single',
+            'global_project': 'single',
         }
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)
@@ -111,11 +111,11 @@ class NodeController(object):
         if key in params:
             params[key] = utils.parse_bool_param(key, params[key])
 
-        key = consts.PARAM_GLOBAL_TENANT
+        key = consts.PARAM_GLOBAL_PROJECT
         if key in params:
-            tenant_safe = not utils.parse_bool_param(key, params[key])
+            project_safe = not utils.parse_bool_param(key, params[key])
             del params[key]
-            params['tenant_safe'] = tenant_safe
+            params['project_safe'] = project_safe
 
         if not filters:
             filters = None

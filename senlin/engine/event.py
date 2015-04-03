@@ -102,14 +102,14 @@ class Event(object):
 
     @classmethod
     def load_all(cls, context, filters=None, limit=None, marker=None,
-                 sort_keys=None, sort_dir=None, tenant_safe=True,
+                 sort_keys=None, sort_dir=None, project_safe=True,
                  show_deleted=False):
         '''Retrieve all events from database.'''
 
         records = db_api.event_get_all(context, limit=limit, marker=marker,
                                        sort_keys=sort_keys, sort_dir=sort_dir,
                                        filters=filters,
-                                       tenant_safe=tenant_safe,
+                                       project_safe=project_safe,
                                        show_deleted=show_deleted)
 
         for record in records:
@@ -201,7 +201,7 @@ def info(context, entity, action, status=None, status_reason=None,
     timestamp = timestamp or datetime.datetime.utcnow()
     event = Event(timestamp, logging.INFO, entity,
                   action=action, status=status, status_reason=status_reason,
-                  user=context.user_id, project=context.project_id)
+                  user=context.user, project=context.project)
     event.store(context)
     LOG.info(_LI('%(name)s[%(id)s] %(action)s - %(status)s: %(reason)s') %
              {'name': entity.name, 'id': entity.id, 'action': action,
