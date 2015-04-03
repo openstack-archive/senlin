@@ -21,6 +21,7 @@ from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.common.i18n import _LI
 from senlin.common import sdk
+from senlin.common import utils
 from senlin.common import wsgi
 from senlin.db import api as db_api
 
@@ -42,8 +43,8 @@ class Webhook(object):
     def __init__(self, obj_id, obj_type, action, context, **kwargs):
         self.name = kwargs.get('name', None)
         self.user = context.user
-        self.project = context.project_id
-        self.domain = context.domain_id
+        self.project = context.project
+        self.domain = context.domain
 
         self.created_time = datetime.datetime.utcnow()
         self.deleted_time = None
@@ -164,13 +165,14 @@ class Webhook(object):
         basic_url = 'http://%s:%s/%s/webhooks/%s/trigger' % \
             (senlin_host, senlin_port, self.project_id, self.id)
 
-        # TODO(Yanyan Hu): add parameters list if needed?
-        webhook_url = "%s" % basic_url
-        LOG.info(_LI("Generate url %(url)s"
-                     "for webhook %(id)s") % {'url': webhook_url,
-                                              'id': self.id})
+        # Encryt the password of credential
+        password, key = utils.encrypt(self.credential['password'])
+        self.credential['password'] = password
 
-        return webhook_url
+        webhook_url = "%s?key=%s" % (basic_url, key)
+        LOG.info(_LI("Generate url for webhook %(id)s") % {'id': self.id})
+
+        return webhook_url, key
 
 
 class WebhookMiddleware(wsgi.Middleware):
@@ -199,7 +201,7 @@ class WebhookMiddleware(wsgi.Middleware):
             url_bottom = req.url.rsplit('webhooks')[1]
             webhook_id = url_bottom.rsplit('/')[1]
             trigger = url_bottom.rsplit('/')[2].startswith('trigger')
-            if trigger is not True:
+            if trigger is not True or 'key' not in req.params:
                 raise Exception()
         except Exception:
             LOG.debug(_("%(url)s is not a webhook trigger url,"
@@ -223,6 +225,17 @@ class WebhookMiddleware(wsgi.Middleware):
         credential = webhook_obj.credential
         credential['webhook_id'] = webhook_id
 
+        # Decrypt the credential password with key embedded in req params
+        try:
+            password = str(utils.decrypt(str(credential['password']),
+                                         str(req.params['key'])))
+            credential['password'] = password
+        except Exception:
+            msg = 'Invalid key for webhook(%s) credential decryption' % \
+                webhook_id
+            LOG.error(msg)
+            raise exception.SenlinBadRequest(msg=msg)
+
         return credential
 
     def _get_token(self, credential):
@@ -232,7 +245,7 @@ class WebhookMiddleware(wsgi.Middleware):
             access_info = sdk.authenticate(**credential)
             token_id = access_info.auth_token
         except Exception as ex:
-            msg = "Webhook get token failed: %s" % ex.message
+            msg = 'Webhook get token failed: %s' % ex.message
             LOG.error(msg)
             raise exception.WebhookCredentialInvalid(
                 webhook=credential['webhook_id'])

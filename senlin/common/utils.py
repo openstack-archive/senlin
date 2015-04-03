@@ -14,6 +14,7 @@
 Utilities module.
 '''
 
+from cryptography.fernet import Fernet
 import requests
 from requests import exceptions
 from six.moves import urllib
@@ -104,3 +105,28 @@ def url_fetch(url, allowed_schemes=('http', 'https')):
 
     except exceptions.RequestException as ex:
         raise URLFetchError(_('Failed to retrieve data: %s') % ex)
+
+
+def encrypt(msg):
+    '''Encrypt message with random key
+
+    :param msg: message string to be encrypted
+    :returns: encrypted msg and key to decrypt
+    '''
+    password = Fernet.generate_key()
+    f = Fernet(password)
+    key = f.encrypt(msg)
+    return str(password), str(key)
+
+
+def decrypt(password, key):
+    '''Decrypt message using provided key
+
+    :param password: encrypted message string
+    :param key: key used to decrypt
+    :returns: decrypted message string
+    '''
+    f = Fernet(password)
+    msg = f.decrypt(key)
+
+    return str(msg)
