@@ -16,6 +16,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 
 from senlin.common import context
+from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.common.i18n import _LI
@@ -116,8 +117,7 @@ class Webhook(object):
         if webhook is None:
             msg = "Webhook %s is not found" % webhook_id
             LOG.warn(msg)
-            # TODO(Yanyan Hu): raise a WebhookNotFound exception here.
-            raise Exception(msg)
+            raise exception.WebhookNotFound(webhook=webhook_id)
 
         LOG.error(_LE("Webhook %(id)s found,"), {'id': webhook_id})
         return cls._from_db_record(context, webhook)
@@ -221,6 +221,7 @@ class WebhookMiddleware(wsgi.Middleware):
         senlin_context = context.RequestContext.get_service_context()
         webhook_obj = Webhook.load(senlin_context, webhook_id)
         credential = webhook_obj.credential
+        credential['webhook_id'] = webhook_id
 
         return credential
 
@@ -233,9 +234,8 @@ class WebhookMiddleware(wsgi.Middleware):
         except Exception as ex:
             msg = "Webhook get token failed: %s" % ex.message
             LOG.error(msg)
-            # TODO(Yanyan Hu): raise WebhookUnauthenticated
-            # exception here.
-            raise Exception(msg)
+            raise exception.WebhookCredentialInvalid(
+                webhook=credential['webhook_id'])
 
         # Get token successfully!
         return token_id
