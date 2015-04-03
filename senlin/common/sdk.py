@@ -204,7 +204,7 @@ def authenticate(**kwargs):
     '''Authenticate using openstack sdk based on user credential'''
 
     # Build a context based on credential for sdk connection
-    cnxt = context.RequestContext.from_dict(**kwargs)
+    cnxt = context.RequestContext.from_dict(kwargs)
 
     try:
         auth = create_connection(cnxt).session.authenticator

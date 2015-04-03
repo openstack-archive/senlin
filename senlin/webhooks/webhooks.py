@@ -12,16 +12,14 @@
 
 import datetime
 
-from oslo.serialization import jsonutils as json
 from oslo_config import cfg
 from oslo_log import log as logging
-import requests
 
 from senlin.common import context
-from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.common.i18n import _LI
+from senlin.common import sdk
 from senlin.common import wsgi
 from senlin.db import api as db_api
 
@@ -53,6 +51,10 @@ class Webhook(object):
         self.obj_type = obj_type
         self.action = action
 
+        # A credential should include either userid or username
+        # and user_domain_id to identify a unique user. It also
+        # contains the password and auth_url for WebhookMiddleware
+        # to do authentication.
         self.credential = kwargs.get('credential', None)
         self.params = kwargs.get('params', None)
 
@@ -179,11 +181,9 @@ class WebhookMiddleware(wsgi.Middleware):
     request header.
     '''
     def process_request(self, req):
-        auth_uri = ''.join([cfg.CONF.keystone_authtoken.auth_uri,
-                            '/auth/tokens'])
-        self._authorize(req, auth_uri)
+        self._authenticate(req)
 
-    def _authorize(self, req, auth_uri):
+    def _authenticate(self, req):
         LOG.debug("Checking credentials of webhook request")
         credential = self._get_credential(req)
         if not credential:
@@ -191,7 +191,7 @@ class WebhookMiddleware(wsgi.Middleware):
 
         # Get a valid token based on credential
         # and fill into the request header
-        token_id = self._get_token(credential, auth_uri)
+        token_id = self._get_token(credential)
         req.headers['X-Auth-Token'] = token_id
 
     def _get_credential(self, req):
@@ -224,51 +224,18 @@ class WebhookMiddleware(wsgi.Middleware):
 
         return credential
 
-    def _get_token(self, credential, auth_uri):
+    def _get_token(self, credential):
         '''Get a valid token based on credential'''
 
-        # TODO(Yanyan Hu): Using sdk rather then
-        # requests to get token from keystone.
-        if 'userid' in credential:
-            user_info = {
-                'id': credential['userid'],
-                'password': credential['password']
-            }
-        elif 'username' in credential and 'domain' in credential:
-            user_info = {
-                'domain': {"id": credential['domain']},
-                'name': credential['username'],
-                'password': credential['password']
-            }
-        else:
-            msg = "Either userid or both username and domain" + \
-                "have to be specified in webhook credential."
-            # TODO(Yanyan Hu): raise webhook credential exception
-            raise Exception(msg)
-
-        creds = {
-            'auth': {
-                'identity': {
-                    "methods": ["password"],
-                    "password": {
-                        "user": user_info
-                        }
-                    }
-                }
-            }
-
-        creds_json = json.dumps(creds)
-        headers = {'Content-Type': 'application/json'}
-
-        LOG.debug(_('Authenticating with %s for webhook req'), auth_uri)
         try:
-            response = requests.post(auth_uri, data=creds_json,
-                                     headers=headers)
-            headers = response.headers
-            token_id = headers['x-subject-token']
-        except Exception:
-            LOG.error(_LE("Webhook get token failed %s."), response.json())
-            raise exception.AuthorizationFailure()
+            access_info = sdk.authenticate(**credential)
+            token_id = access_info.auth_token
+        except Exception as ex:
+            msg = "Webhook get token failed: %s" % ex.message
+            LOG.error(msg)
+            # TODO(Yanyan Hu): raise WebhookUnauthenticated
+            # exception here.
+            raise Exception(msg)
 
         # Get token successfully!
         return token_id
