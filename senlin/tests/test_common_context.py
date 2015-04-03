@@ -38,7 +38,6 @@ class TestRequestContext(base.SenlinTestCase):
             'project_name': 'a project',
             'project_domain': 'project-domain-id',
             'project_domain_name': 'a project domain',
-            'tenant': 'project-id',
             'is_admin': False,
             'password': 'foo',
             'show_deleted': False,
@@ -68,7 +67,6 @@ class TestRequestContext(base.SenlinTestCase):
             password=self.ctx.get('password'),
             show_deleted=self.ctx.get('show_deleted'),
             roles=self.ctx.get('roles'),
-            tenant=self.ctx.get('tenant'),
             auth_url=self.ctx.get('auth_url'),
             trusts=self.ctx.get('trusts'),
             region_name=self.ctx.get('region_name'))
@@ -134,7 +132,6 @@ class RequestContextMiddlewareTest(base.SenlinTestCase):
                 'password': None,
                 'roles': ['role1', 'role2', 'role3'],
                 'show_deleted': False,
-                'tenant': 'bb9108c8-62d0-4d92-898c-d644a6af20e9',
                 'project': 'bb9108c8-62d0-4d92-898c-d644a6af20e9',
                 'user': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
                 'user_name': None

@@ -79,8 +79,6 @@ class RequestContext(context.RequestContext):
         else:
             self.is_admin = is_admin
 
-        self.tenant = kwargs.get('tenant', project)
-
     @property
     def session(self):
         if self._session is None:
@@ -88,7 +86,6 @@ class RequestContext(context.RequestContext):
         return self._session
 
     def to_dict(self):
-        # 'tenant' is here only to make oslo_log happy
         return {
             'auth_url': self.auth_url,
             'auth_token': self.auth_token,
@@ -110,7 +107,6 @@ class RequestContext(context.RequestContext):
             'is_admin': self.is_admin,
             'request_id': self.request_id,
             'password': self.password,
-            'tenant': self.tenant,
         }
 
     @classmethod
