@@ -41,6 +41,7 @@ class Webhook(object):
     '''
 
     def __init__(self, obj_id, obj_type, action, context, **kwargs):
+        self.id = None
         self.name = kwargs.get('name', None)
         self.user = context.user
         self.project = context.project
@@ -163,7 +164,7 @@ class Webhook(object):
         senlin_host = cfg.CONF.senlin_api.bind_host
         senlin_port = cfg.CONF.senlin_api.bind_port
         basic_url = 'http://%s:%s/%s/webhooks/%s/trigger' % \
-            (senlin_host, senlin_port, self.project_id, self.id)
+            (senlin_host, senlin_port, self.project, self.id)
 
         # Encryt the password of credential
         password, key = utils.encrypt(self.credential['password'])
