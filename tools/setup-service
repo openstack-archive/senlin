@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ $# -ne 2 ]; then
+if [ $# -ne 1 ]; then
   echo "Usage: `basename $0` <HOST_IP>"
   exit -1
 fi
