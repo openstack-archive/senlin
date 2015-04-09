@@ -55,7 +55,7 @@ class NodeDataTest(base.SenlinTestCase):
         self.assertEqual('my-stack', data.profile_id())
 
 
-@mock.patch.object(policy.Enforcer, 'enforce')
+@mock.patch.object(policy, 'enforce')
 class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     def setUp(self):

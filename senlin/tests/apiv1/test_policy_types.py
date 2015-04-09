@@ -22,7 +22,7 @@ from senlin.tests.apiv1 import shared
 from senlin.tests.common import base
 
 
-@mock.patch.object(policy.Enforcer, 'enforce')
+@mock.patch.object(policy, 'enforce')
 class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def setUp(self):
         super(PolicyTypeControllerTest, self).setUp()

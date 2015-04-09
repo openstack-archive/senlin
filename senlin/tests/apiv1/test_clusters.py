@@ -56,7 +56,7 @@ class ClusterDataTest(base.SenlinTestCase):
         self.assertEqual(cfg.CONF.default_action_timeout, data.timeout())
 
 
-@mock.patch.object(policy.Enforcer, 'enforce')
+@mock.patch.object(policy, 'enforce')
 class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     '''Test case for the cluster controoler.'''
 

@@ -73,9 +73,10 @@ class RequestContext(context.RequestContext):
         self.password = password
 
         # Check user is admin or not
-        self.policy = policy.Enforcer()
         if is_admin is None:
-            self.is_admin = self.policy.check_is_admin(self)
+            self.is_admin = policy.enforce(self, 'context_is_admin',
+                                           target={'project': self.project},
+                                           do_raise=False)
         else:
             self.is_admin = is_admin
 

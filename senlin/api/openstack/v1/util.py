@@ -16,6 +16,8 @@ import functools
 import six
 from webob import exc
 
+from senlin.common import policy
+
 
 def policy_enforce(handler):
     """Decorator that enforces policies.
@@ -26,7 +28,7 @@ def policy_enforce(handler):
     This is a handler method decorator.
     """
     @functools.wraps(handler)
-    def handle_cluster_method(controller, req, tenant_id, **kwargs):
+    def policy_checker(controller, req, tenant_id, **kwargs):
         if req.context.project != tenant_id:
             raise exc.HTTPForbidden()
 
@@ -34,15 +36,16 @@ def policy_enforce(handler):
         target = {
             'project': tenant_id,
         }
-        allowed = req.context.policy.enforce(context=req.context,
-                                             action=handler.__name__,
-                                             scope=controller.REQUEST_SCOPE,
-                                             target=target)
+        rule = "%s:%s" % (controller.REQUEST_SCOPE,
+                          handler.__name__)
+        allowed = policy.enforce(context=req.context,
+                                 rule=rule,
+                                 target=target)
         if not allowed:
             raise exc.HTTPForbidden()
         return handler(controller, req, **kwargs)
 
-    return handle_cluster_method
+    return policy_checker
 
 
 def get_allowed_params(params, whitelist):
