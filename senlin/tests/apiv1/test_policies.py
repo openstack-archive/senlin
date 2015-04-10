@@ -57,7 +57,7 @@ class PolicyDataTest(base.SenlinTestCase):
         self.assertIsNone(data.cooldown())
 
 
-@mock.patch.object(policy.Enforcer, 'enforce')
+@mock.patch.object(policy, 'enforce')
 class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def setUp(self):
         super(PolicyControllerTest, self).setUp()

@@ -13,6 +13,7 @@
 import os
 from oslo_config import cfg
 from oslo_middleware import request_id
+from oslo_policy import opts as policy_opts
 import webob
 
 from senlin.common import context
@@ -154,7 +155,9 @@ class RequestContextMiddlewareTest(base.SenlinTestCase):
             cfg.StrOpt('project', default='senlin'),
         ]
         cfg.CONF.register_opts(opts)
-        cfg.CONF.set_override('policy_file', 'check_admin.json')
+        policy_opts.set_defaults(cfg.CONF)
+        cfg.CONF.set_override('policy_file', 'check_admin.json',
+                              group='oslo_policy')
 
     def test_context_middleware(self):
 

@@ -217,21 +217,6 @@
 # of port numbers.  The chosen port is displayed in the service's log file. (string value)
 #backdoor_port = <None>
 
-#
-# From senlin.openstack.common.policy
-#
-
-# The JSON file that defines policies. (string value)
-#policy_file = policy.json
-
-# Default rule. Enforced when a requested rule is not found. (string value)
-#policy_default_rule = default
-
-# Directories where policy configuration files are stored. They can be relative to any directory in the search path
-# defined by the config_dir option, or absolute paths. The file defined by policy_file must exist for these directories
-# to be searched. (multi valued)
-#policy_dirs = policy.d
-
 
 [database]
 
@@ -702,6 +687,27 @@
 # Deprecated, use rpc_backend=kombu+memory or rpc_backend=fake (boolean value)
 # Deprecated group/name - [DEFAULT]/fake_rabbit
 #fake_rabbit = false
+
+
+[oslo_policy]
+
+#
+# From oslo.policy
+#
+
+# The JSON file that defines policies. (string value)
+# Deprecated group/name - [DEFAULT]/policy_file
+#policy_file = policy.json
+
+# Default rule. Enforced when a requested rule is not found. (string value)
+# Deprecated group/name - [DEFAULT]/policy_default_rule
+#policy_default_rule = default
+
+# Directories where policy configuration files are stored. They can be relative to any directory in the search path
+# defined by the config_dir option, or absolute paths. The file defined by policy_file must exist for these directories
+# to be searched.  Missing or empty directories are ignored. (multi valued)
+# Deprecated group/name - [DEFAULT]/policy_dirs
+#policy_dirs = policy.d
 
 
 [paste_deploy]

@@ -14,71 +14,36 @@
 Policy Engine For Senlin
 """
 
+# from oslo_concurrency import lockutils
 from oslo_config import cfg
+from oslo_policy import policy
 
 from senlin.common import exception
-from senlin.openstack.common import policy
 
-
+POLICY_ENFORCER = None
 CONF = cfg.CONF
 
-DEFAULT_RULES = {
-    'default': policy.FalseCheck(),
-}
+
+# @lockutils.synchronized('policy_enforcer', 'senlin-')
+def _get_enforcer(policy_file=None, rules=None, default_rule=None):
+
+    global POLICY_ENFORCER
+
+    if POLICY_ENFORCER is None:
+        POLICY_ENFORCER = policy.Enforcer(CONF,
+                                          policy_file=policy_file,
+                                          rules=rules,
+                                          default_rule=default_rule)
+    return POLICY_ENFORCER
 
 
-class Enforcer(object):
-    """Responsible for loading and enforcing rules."""
+def enforce(context, rule, target, do_raise=True, *args, **kwargs):
 
-    def __init__(self, scope='senlin', exc=exception.Forbidden,
-                 default_rule=DEFAULT_RULES['default'],
-                 policy_file=None):
-        self.scope = scope
-        self.exc = exc
-        self.default_rule = default_rule
-        self.enforcer = policy.Enforcer(default_rule=default_rule,
-                                        policy_file=policy_file)
+    enforcer = _get_enforcer()
+    credentials = context.to_dict()
+    target = target or {}
+    if do_raise:
+        kwargs.update(exc=exception.Forbidden)
 
-    def set_rules(self, rules, overwrite=True):
-        """Create a new Rules object based on the provided dict of rules."""
-        rules_obj = policy.Rules(rules, self.default_rule)
-        self.enforcer.set_rules(rules_obj, overwrite)
-
-    def load_rules(self, force_reload=False):
-        """Set the rules found in the json file on disk."""
-        self.enforcer.load_rules(force_reload)
-
-    def _check(self, context, rule, target, exc, *args, **kwargs):
-        """Verifies that the action is valid on the target in this context.
-
-           :param context: Senlin request context
-           :param rule: String representing the action to be checked
-           :param target: Dictionary representing the object of the action.
-           :raises: self.exc (defaults to senlin.common.exception.Forbidden)
-           :returns: A non-False value if access is allowed.
-        """
-        do_raise = False if not exc else True
-        credentials = context.to_dict()
-        return self.enforcer.enforce(rule, target, credentials,
-                                     do_raise, exc=exc, *args, **kwargs)
-
-    def enforce(self, context, action, scope=None, target=None):
-        """Verifies that the action is valid on the target in this context.
-
-           :param context: Senlin request context
-           :param action: String representing the action to be checked
-           :param target: Dictionary representing the object of the action.
-           :raises: self.exc (defaults to senlin.common.exception.Forbidden)
-           :returns: A non-False value if access is allowed.
-        """
-        _action = '%s:%s' % (scope or self.scope, action)
-        _target = target or {}
-        return self._check(context, _action, _target, self.exc, action=action)
-
-    def check_is_admin(self, context):
-        """Whether or not roles contains 'admin' role according to policy.json
-
-           :param context: Senlin request context
-           :returns: A non-False value if the user is admin according to policy
-        """
-        return self._check(context, 'context_is_admin', target={}, exc=None)
+    return enforcer.enforce(rule, target, credentials, do_raise,
+                            *args, **kwargs)

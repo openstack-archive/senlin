@@ -110,11 +110,11 @@ class ControllerTest(object):
         # Common tearDown to assert that policy enforcement happens for all
         # controller actions
         if self.mock_enforce:
+            rule = "%s:%s" % (self.controller.REQUEST_SCOPE, self.action)
             self.mock_enforce.assert_called_with(
-                action=self.action,
                 context=self.context,
-                scope=self.controller.REQUEST_SCOPE,
-                target={'project': self.context.project})
+                target={'project': self.context.project},
+                rule=rule)
             self.assertEqual(self.expected_request_count,
                              len(self.mock_enforce.call_args_list))
         super(ControllerTest, self).tearDown()

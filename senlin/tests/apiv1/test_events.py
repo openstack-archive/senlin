@@ -22,7 +22,7 @@ from senlin.tests.apiv1 import shared
 from senlin.tests.common import base
 
 
-@mock.patch.object(policy.Enforcer, 'enforce')
+@mock.patch.object(policy, 'enforce')
 class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
     '''Tests the API class which acts as the WSGI controller.'''
 

@@ -54,7 +54,7 @@ class ProfileDataTest(base.SenlinTestCase):
         self.assertIsNone(data.tags())
 
 
-@mock.patch.object(policy.Enforcer, 'enforce')
+@mock.patch.object(policy, 'enforce')
 class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def setUp(self):
         super(ProfileControllerTest, self).setUp()
