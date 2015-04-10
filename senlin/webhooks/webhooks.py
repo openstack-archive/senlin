@@ -40,8 +40,8 @@ class Webhook(object):
     when the webhook is triggered later.
     '''
 
-    def __init__(self, obj_id, obj_type, action, context, **kwargs):
-        self.id = None
+    def __init__(self, context, obj_id, obj_type, action, **kwargs):
+        self.id = kwargs.get('id', None)
         self.name = kwargs.get('name', None)
         self.user = context.user
         self.project = context.project
@@ -84,7 +84,6 @@ class Webhook(object):
         else:
             # The webhook has already existed, return directly
             # since webhook doesn't support updating.
-            LOG.warning("Try to update webhook %(id)s" % {'id': self.id})
             return self.id
 
         return self.id
@@ -108,8 +107,8 @@ class Webhook(object):
             'params': record.params,
         }
 
-        return cls(record.obj_id, record.obj_type, record.action,
-                   context=context, **kwargs)
+        return cls(context, record.obj_id, record.obj_type,
+                   record.action, **kwargs)
 
     @classmethod
     def load(cls, context, webhook_id=None, show_deleted=False):
@@ -127,12 +126,15 @@ class Webhook(object):
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort_keys=None,
                  sort_dir=None, filters=None, project_safe=True,
-                 show_deleted=False, show_nested=False):
+                 show_deleted=False):
         '''Retrieve all webhooks from database.'''
 
-        records = db_api.webhook_get_all(context, limit, marker, sort_keys,
-                                         sort_dir, filters, project_safe,
-                                         show_deleted, show_nested)
+        records = db_api.webhook_get_all(context, show_deleted=show_deleted,
+                                         limit=limit, marker=marker,
+                                         sort_keys=sort_keys,
+                                         sort_dir=sort_dir,
+                                         filters=filters,
+                                         project_safe=project_safe)
 
         for record in records:
             webhook = cls._from_db_record(context, record)
@@ -174,6 +176,10 @@ class Webhook(object):
         LOG.info(_LI("Generate url for webhook %(id)s") % {'id': self.id})
 
         return webhook_url, key
+
+    @classmethod
+    def delete(cls, context, webhook_id):
+        db_api.webhook_delete(context, webhook_id)
 
 
 class WebhookMiddleware(wsgi.Middleware):
@@ -228,8 +234,8 @@ class WebhookMiddleware(wsgi.Middleware):
 
         # Decrypt the credential password with key embedded in req params
         try:
-            password = str(utils.decrypt(str(credential['password']),
-                                         str(req.params['key'])))
+            password = utils.decrypt(credential['password'],
+                                     req.params['key'])
             credential['password'] = password
         except Exception:
             msg = 'Invalid key for webhook(%s) credential decryption' % \

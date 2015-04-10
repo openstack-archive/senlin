@@ -110,6 +110,13 @@ WEBHOOK_ATTRS = (
     'name', 'obj_id', 'obj_type', 'created_time', 'deleted_time',
 )
 
+WEBHOOK_OBJ_TYPES = (
+    WEBHOOK_OBJ_TYPE_CLUSTER, WEBHOOK_OBJ_TYPE_NODE,
+    WEBHOOK_OBJ_TYPE_POLICY,
+) = (
+    'cluster', 'node', 'policy',
+)
+
 EVENT_ATTRS = (
     EVENT_TIMESTAMP, EVENT_OBJ_ID, EVENT_OBJ_NAME, EVENT_OBJ_TYPE,
     EVENT_USER, EVENT_ACTION, EVENT_STATUS, EVENT_STATUS_REASON,
