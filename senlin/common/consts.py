@@ -104,10 +104,12 @@ CLUSTER_POLICY_ATTRS = (
 )
 
 WEBHOOK_ATTRS = (
-    WEBHOOK_NAME, WEBHOOK_OBJ_ID, WEBHOOK_OBJ_TYPE,
+    WEBHOOK_NAME, WEBHOOK_OBJ_ID, WEBHOOK_OBJ_TYPE, WEBHOOK_ACTION,
+    WEBHOOK_CREDENTIAL, WEBHOOK_PARAMS,
     WEBHOOK_CREATED_TIME, WEBHOOK_DELETED_TIME,
 ) = (
-    'name', 'obj_id', 'obj_type', 'created_time', 'deleted_time',
+    'name', 'obj_id', 'obj_type', 'action', 'credential',
+    'params', 'created_time', 'deleted_time',
 )
 
 WEBHOOK_OBJ_TYPES = (
