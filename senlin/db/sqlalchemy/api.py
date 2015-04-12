@@ -871,6 +871,25 @@ def profile_delete(context, profile_id, force=False):
     session.flush()
 
 
+# Credentials
+def cred_create(context, values):
+    cred = models.Credential()
+    cred.update(values)
+    cred.save(_session(context))
+    return cred
+
+
+def cred_get(context, cred_id):
+    return model_query(context, models.Credential).get(cred_id)
+
+
+def cred_delete(context, cred_id):
+    cred = model_query(context, models.Credential).get(cred_id)
+    if cred is None:
+        return None
+    cred.delete()
+
+
 # Events
 def _delete_event_rows(context, cluster_id, limit):
     # MySQL does not support LIMIT in subqueries,
