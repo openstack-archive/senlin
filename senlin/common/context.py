@@ -12,13 +12,9 @@
 
 from oslo_config import cfg
 from oslo_context import context
-from oslo_middleware import request_id as oslo_request_id
 from oslo_utils import encodeutils
-from oslo_utils import importutils
 
-from senlin.common import exception
 from senlin.common import policy
-from senlin.common import wsgi
 from senlin.db import api as db_api
 
 CONF = cfg.CONF
@@ -27,8 +23,8 @@ CONF = cfg.CONF
 class RequestContext(context.RequestContext):
     '''Stores information about the security context.
 
-    The context encapsulates information related to the user
-    accesses the system, as well as additional request information.
+    The context encapsulates information related to the user accessing the
+    the system, as well as additional request information.
     '''
 
     def __init__(self, auth_token=None, user=None, project=None,
@@ -39,8 +35,8 @@ class RequestContext(context.RequestContext):
                  user_domain_name=None, project_domain_name=None,
                  auth_token_info=None, region_name=None, roles=None,
                  password=None, **kwargs):
-        '''Initializer of request context.'''
 
+        '''Initializer of request context.'''
         # We still have 'tenant' param because oslo_context still use it.
         super(RequestContext, self).__init__(
             auth_token=auth_token, user=user, tenant=project,
@@ -123,92 +119,3 @@ class RequestContext(context.RequestContext):
             'project_name': CONF.keystone_authtoken.admin_tenant_name
         }
         return cls(**params)
-
-
-class ContextMiddleware(wsgi.Middleware):
-
-    def __init__(self, app, conf, **local_conf):
-        # Determine the context class to use
-        self.ctxcls = RequestContext
-        if 'context_class' in local_conf:
-            self.ctxcls = importutils.import_class(local_conf['context_class'])
-
-        super(ContextMiddleware, self).__init__(app)
-
-    def make_context(self, *args, **kwargs):
-        '''Create a context with the given arguments.'''
-
-        return self.ctxcls(*args, **kwargs)
-
-    def process_request(self, req):
-        '''Build context from authentication info extracted from request.'''
-
-        headers = req.headers
-        environ = req.environ
-        try:
-            auth_url = headers.get('X-Auth-Url')
-            if not auth_url:
-                # Use auth_url defined in senlin.conf
-                importutils.import_module('keystonemiddleware.auth_token')
-                auth_url = cfg.CONF.keystone_authtoken.auth_uri
-
-            auth_token = headers.get('X-Auth-Token')
-            auth_token_info = environ.get('keystone.token_info')
-
-            project = headers.get('X-Project-Id')
-            project_name = headers.get('X-Project-Name')
-            project_domain = headers.get('X-Project-Domain-Id')
-            project_domain_name = headers.get('X-Project-Domain-Name')
-
-            user = headers.get('X-User-Id')
-            user_name = headers.get('X-User-Name')
-            user_domain = headers.get('X-User-Domain-Id')
-            user_domain_name = headers.get('X-User-Domain-Name')
-
-            domain = headers.get('X-Domain-Id')
-            domain_name = headers.get('X-Domain-Name')
-
-            region_name = headers.get('X-Region-Name')
-
-            roles = headers.get('X-Roles')
-            if roles is not None:
-                roles = roles.split(',')
-
-            env_req_id = environ.get(oslo_request_id.ENV_REQUEST_ID)
-            if env_req_id is None:
-                request_id = None
-            else:
-                request_id = encodeutils.safe_decode(env_req_id)
-
-        except Exception:
-            raise exception.NotAuthenticated()
-
-        req.context = self.make_context(
-            auth_token=auth_token,
-            user=user,
-            project=project,
-            domain=domain,
-            user_domain=user_domain,
-            project_domain=project_domain,
-            request_id=request_id,
-            auth_url=auth_url,
-            user_name=user_name,
-            project_name=project_name,
-            domain_name=domain_name,
-            user_domain_name=user_domain_name,
-            project_domain_name=project_domain_name,
-            auth_token_info=auth_token_info,
-            region_name=region_name,
-            roles=roles)
-
-
-def ContextMiddleware_filter_factory(global_conf, **local_conf):
-    '''Factory method for paste.deploy.'''
-
-    conf = global_conf.copy()
-    conf.update(local_conf)
-
-    def filter(app):
-        return ContextMiddleware(app, conf)
-
-    return filter

@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from senlin.api.middleware import context
 from senlin.api.middleware import fault
 from senlin.api.middleware import ssl
 from senlin.api.middleware import version_negotiation as vn
@@ -28,3 +29,7 @@ def faultwrap_filter(app, conf, **local_conf):
 
 def sslmiddleware_filter(app, conf, **local_conf):
     return ssl.SSLMiddleware(app)
+
+
+def contextmiddleware_filter(app, conf, **local_conf):
+    return context.ContextMiddleware(app)
