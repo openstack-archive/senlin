@@ -1,14 +1,14 @@
-# Translations template for PROJECT.
+# Translations template for senlin.
 # Copyright (C) 2015 ORGANIZATION
-# This file is distributed under the same license as the PROJECT project.
+# This file is distributed under the same license as the senlin project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2015.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PROJECT VERSION\n"
+"Project-Id-Version: senlin 2015.1.dev1419\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-21 18:57+0800\n"
+"POT-Creation-Date: 2015-04-13 04:23-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -157,10 +157,6 @@ msgstr ""
 msgid "Granularity to use for age argument, defaults to days."
 msgstr ""
 
-#: senlin/common/auth_url.py:45
-msgid "Request missing required header X-Auth-Url"
-msgstr ""
-
 #: senlin/common/config.py:30
 msgid "The flavor to use."
 msgstr ""
@@ -173,99 +169,91 @@ msgstr ""
 msgid "Seconds between running periodic tasks."
 msgstr ""
 
-#: senlin/common/config.py:41
-msgid "Instance connection to API via https."
-msgstr ""
-
-#: senlin/common/config.py:44
-msgid "Instance connection to API validate certs if SSL is used."
-msgstr ""
-
-#: senlin/common/config.py:47
+#: senlin/common/config.py:40
 msgid "Default region name used to get services endpoints."
 msgstr ""
 
-#: senlin/common/config.py:50
+#: senlin/common/config.py:43
 msgid "Maximum raw byte size of data from web response."
 msgstr ""
 
-#: senlin/common/config.py:53
+#: senlin/common/config.py:46
 msgid "Maximum depth allowed when using nested clusters."
 msgstr ""
 
-#: senlin/common/config.py:56
+#: senlin/common/config.py:49
 msgid "Number of senlin-engine processes to fork and run."
 msgstr ""
 
-#: senlin/common/config.py:62
+#: senlin/common/config.py:55
 msgid "Select deferred auth method, stored password or trusts."
 msgstr ""
 
-#: senlin/common/config.py:66
+#: senlin/common/config.py:59
 msgid ""
 "Subset of trustor roles to be delegated to senlin. If left unset, all "
 "roles of a user will be delegated to senlin when creating a cluster."
 msgstr ""
 
-#: senlin/common/config.py:71
+#: senlin/common/config.py:64
 msgid "The directory to search for environment files."
 msgstr ""
 
-#: senlin/common/config.py:74
+#: senlin/common/config.py:67
 msgid "Maximum members allowed per top-level cluster."
 msgstr ""
 
-#: senlin/common/config.py:77
+#: senlin/common/config.py:70
 msgid "Maximum number of clusters any one project may have active at one time."
 msgstr ""
 
-#: senlin/common/config.py:81
+#: senlin/common/config.py:74
 msgid ""
 "Maximum events per cluster. Older events will be deleted when this is "
 "reached.  Set to 0 for unlimited events per cluster."
 msgstr ""
 
-#: senlin/common/config.py:86
+#: senlin/common/config.py:79
 msgid "Timeout in seconds for actions."
 msgstr ""
 
-#: senlin/common/config.py:89
+#: senlin/common/config.py:82
 msgid "Number of times trying to grab a lock."
 msgstr ""
 
-#: senlin/common/config.py:92
+#: senlin/common/config.py:85
 msgid "Number of seconds between lock retries."
 msgstr ""
 
-#: senlin/common/config.py:95
+#: senlin/common/config.py:88
 msgid "Error wait time in seconds for cluster action (ie. create or update)."
 msgstr ""
 
-#: senlin/common/config.py:99
+#: senlin/common/config.py:92
 msgid ""
 "RPC timeout for the engine liveness check that is used for cluster "
 "locking."
 msgstr ""
 
-#: senlin/common/config.py:105
+#: senlin/common/config.py:98
 msgid ""
 "Name of the engine node. This can be an opaque identifier. It is not "
 "necessarily a hostname, FQDN, or IP address."
 msgstr ""
 
-#: senlin/common/config.py:114
+#: senlin/common/config.py:107
 msgid "Senlin API revision."
 msgstr ""
 
-#: senlin/common/config.py:116
+#: senlin/common/config.py:109
 msgid "Senlin engine revision."
 msgstr ""
 
-#: senlin/common/config.py:177
+#: senlin/common/config.py:170
 msgid "Unable to locate config file"
 msgstr ""
 
-#: senlin/common/config.py:189
+#: senlin/common/config.py:182
 #, python-format
 msgid ""
 "Unable to load %(app_name)s from configuration file %(conf_file)s.\n"
@@ -286,246 +274,153 @@ msgstr ""
 msgid "\"%(value)s\" must be one of the allowed values: %(allowed)s"
 msgstr ""
 
-#: senlin/common/exception.py:100
+#: senlin/common/exception.py:85
 msgid "An unknown exception occurred."
 msgstr ""
 
-#: senlin/common/exception.py:131
-#, python-format
-msgid "Missing required credential: %(required)s"
-msgstr ""
-
-#: senlin/common/exception.py:135
-#, python-format
-msgid ""
-"Incorrect auth strategy, expected \"%(expected)s\" but received "
-"\"%(received)s\""
-msgstr ""
-
-#: senlin/common/exception.py:140
-#, python-format
-msgid "Connect error/bad request to Auth service at URL %(url)s."
-msgstr ""
-
-#: senlin/common/exception.py:144
-#, python-format
-msgid "Auth service at URL %(url)s not found."
-msgstr ""
-
-#: senlin/common/exception.py:148
-msgid "Authorization failed."
-msgstr ""
-
-#: senlin/common/exception.py:152
+#: senlin/common/exception.py:116
 msgid "You are not authenticated."
 msgstr ""
 
-#: senlin/common/exception.py:156 senlin/common/exception.py:160
+#: senlin/common/exception.py:120
 msgid "You are not authorized to complete this action."
 msgstr ""
 
-#: senlin/common/exception.py:164
-#, python-format
-msgid "Data supplied was not valid: %(reason)s"
-msgstr ""
-
-#: senlin/common/exception.py:168
-#, python-format
-msgid "Redirecting to %(uri)s for authorization."
-msgstr ""
-
-#: senlin/common/exception.py:172
-msgid "The URI was too long."
-msgstr ""
-
-#: senlin/common/exception.py:176 senlin/tests/engine/test_clusters.py:653
+#: senlin/common/exception.py:124 senlin/tests/engine/test_clusters.py:653
 #: senlin/tests/engine/test_clusters.py:673
 #: senlin/tests/engine/test_clusters.py:684
 #, python-format
 msgid "The request is malformed: %(msg)s"
 msgstr ""
 
-#: senlin/common/exception.py:180
-#, python-format
-msgid "Maximum redirects (%(redirects)s) was exceeded."
-msgstr ""
-
-#: senlin/common/exception.py:184
-msgid "Received invalid HTTP redirect."
-msgstr ""
-
-#: senlin/common/exception.py:188
-#, python-format
-msgid ""
-"Multiple 'image' service matches for region %(region)s. This generally "
-"means that a region is required and you have not supplied one."
-msgstr ""
-
-#: senlin/common/exception.py:194 senlin/common/exception.py:248
-#: senlin/common/exception.py:252 senlin/common/exception.py:264
-#: senlin/common/exception.py:276 senlin/common/exception.py:280
-#, python-format
-msgid "%(message)s"
-msgstr ""
-
-#: senlin/common/exception.py:198
+#: senlin/common/exception.py:128
 #, python-format
 msgid ""
 "Multiple results found matching the query criteria %(arg)s. Please be "
 "more specific."
 msgstr ""
 
-#: senlin/common/exception.py:203
-#, python-format
-msgid "The Parameter (%(key)s) was not provided."
-msgstr ""
-
-#: senlin/common/exception.py:207
+#: senlin/common/exception.py:133
 #, python-format
 msgid "Invalid value '%(value)s' specified for '%(name)s'"
 msgstr ""
 
-#: senlin/common/exception.py:211
-#, python-format
-msgid "Searching Tenant %(target)s from Tenant %(actual)s forbidden."
-msgstr ""
-
-#: senlin/common/exception.py:216
+#: senlin/common/exception.py:137
 #, python-format
 msgid "The cluster (%(cluster)s) could not be found."
 msgstr ""
 
-#: senlin/common/exception.py:220
-#, python-format
-msgid "The cluster (%(cluster_name)s) already exists."
-msgstr ""
-
-#: senlin/common/exception.py:224
-msgid "The cluster was not specified."
-msgstr ""
-
-#: senlin/common/exception.py:228
+#: senlin/common/exception.py:141
 #, python-format
 msgid "The node (%(node)s) could not be found."
 msgstr ""
 
-#: senlin/common/exception.py:232
+#: senlin/common/exception.py:145
 #, python-format
 msgid "Node in error status - '%(status)s' due to '%(reason)s'."
 msgstr ""
 
-#: senlin/common/exception.py:236
-#, python-format
-msgid "The profile (%(profile)s) could not be found."
-msgstr ""
-
-#: senlin/common/exception.py:240
-msgid "Profile not specified."
-msgstr ""
-
-#: senlin/common/exception.py:244
+#: senlin/common/exception.py:149
 #, python-format
 msgid "Profile type (%(profile_type)s) is not found."
 msgstr ""
 
-#: senlin/common/exception.py:256
+#: senlin/common/exception.py:153 senlin/common/exception.py:165
+#: senlin/common/exception.py:169 senlin/common/exception.py:173
+#: senlin/common/exception.py:185 senlin/common/exception.py:202
+#: senlin/common/exception.py:206
+#, python-format
+msgid "%(message)s"
+msgstr ""
+
+#: senlin/common/exception.py:157
+#, python-format
+msgid "The profile (%(profile)s) could not be found."
+msgstr ""
+
+#: senlin/common/exception.py:161
+msgid "Profile not specified."
+msgstr ""
+
+#: senlin/common/exception.py:177
 msgid "Policy not specified."
 msgstr ""
 
-#: senlin/common/exception.py:260
+#: senlin/common/exception.py:181
 #, python-format
 msgid "Policy type (%(policy_type)s) is not found."
 msgstr ""
 
-#: senlin/common/exception.py:268
+#: senlin/common/exception.py:189
 #, python-format
-msgid "The Policy (%(policy)s) could not be found."
+msgid "The policy (%(policy)s) could not be found."
 msgstr ""
 
-#: senlin/common/exception.py:272
+#: senlin/common/exception.py:193
 #, python-format
 msgid "The policy type (%(policy_type)s) already exists."
 msgstr ""
 
-#: senlin/common/exception.py:284
+#: senlin/common/exception.py:197
+#, python-format
+msgid ""
+"The policy (%(policy)s) is not attached to the specified cluster "
+"(%(cluster)s)."
+msgstr ""
+
+#: senlin/common/exception.py:210
 #, python-format
 msgid "%(feature)s is not supported."
 msgstr ""
 
-#: senlin/common/exception.py:288
-#, python-format
-msgid "%(action)s is not supported for Cluster."
-msgstr ""
-
-#: senlin/common/exception.py:299
-msgid "Not found"
-msgstr ""
-
-#: senlin/common/exception.py:305
+#: senlin/common/exception.py:221
 #, python-format
 msgid "Invalid content type %(content_type)s"
 msgstr ""
 
-#: senlin/common/exception.py:309
+#: senlin/common/exception.py:225
 #, python-format
 msgid "Request limit exceeded: %(message)s"
 msgstr ""
 
-#: senlin/common/exception.py:313
+#: senlin/common/exception.py:229
+#, python-format
+msgid "The webhook (%(webhook)s) could not be found."
+msgstr ""
+
+#: senlin/common/exception.py:233
+#, python-format
+msgid "Webhook (%(webhook)s) credential is invalid."
+msgstr ""
+
+#: senlin/common/exception.py:237
 #, python-format
 msgid "The action (%(action)s) could not be found."
 msgstr ""
 
-#: senlin/common/exception.py:317
-#, python-format
-msgid "Action \"%(action)s\" must have target specified"
-msgstr ""
-
-#: senlin/common/exception.py:321
-#, python-format
-msgid "Action \"%(action)s\" must have policy specified"
-msgstr ""
-
-#: senlin/common/exception.py:325
+#: senlin/common/exception.py:241
 #, python-format
 msgid "Action \"%(action)s\" not supported by %(object)s"
 msgstr ""
 
-#: senlin/common/exception.py:329
+#: senlin/common/exception.py:245
 #, python-format
 msgid "Cluster %(cluster_name)s already has an action (%(action)s) in progress."
 msgstr ""
 
-#: senlin/common/exception.py:334 senlin/common/exception.py:342
+#: senlin/common/exception.py:250 senlin/common/exception.py:258
 #, python-format
 msgid "Worker %(owner)s is working on this action."
 msgstr ""
 
-#: senlin/common/exception.py:338
+#: senlin/common/exception.py:254
 #, python-format
 msgid "Worker %(owner)s has stolen the action."
 msgstr ""
 
-#: senlin/common/exception.py:346
-#, python-format
-msgid "Failed to stop cluster (%(cluster_name)s) on other engine (%(engine_id)s)"
-msgstr ""
-
-#: senlin/common/exception.py:351
+#: senlin/common/exception.py:262
 #, python-format
 msgid "The event (%(event)s) could not be found."
-msgstr ""
-
-#: senlin/common/exception.py:355
-#, python-format
-msgid ""
-"Failed to send message to cluster (%(cluster_name)s) on other engine "
-"(%(engine_id)s)"
-msgstr ""
-
-#: senlin/common/exception.py:360
-#, python-format
-msgid "Driver '%(driver)s' failed creation: %(exc)s"
 msgstr ""
 
 #: senlin/common/schema.py:33
@@ -538,110 +433,110 @@ msgstr ""
 msgid "Schema valid only for List or Map, not \"%s\""
 msgstr ""
 
-#: senlin/common/schema.py:97
+#: senlin/common/schema.py:98
 #, python-format
 msgid "Invalid default %(default)s (%(exc)s)"
 msgstr ""
 
-#: senlin/common/schema.py:171
+#: senlin/common/schema.py:174
 #, python-format
 msgid "The value \"%s\" is not a valid Boolean"
 msgstr ""
 
-#: senlin/common/schema.py:196
+#: senlin/common/schema.py:199
 #, python-format
 msgid "%s is not an intger."
 msgstr ""
 
-#: senlin/common/schema.py:204
+#: senlin/common/schema.py:207
 #, python-format
 msgid "The value \"%s\" cannot be converted into an integer."
 msgstr ""
 
-#: senlin/common/schema.py:233
+#: senlin/common/schema.py:236
 #, python-format
 msgid "The value \"%s\" cannot be converted into a string."
 msgstr ""
 
-#: senlin/common/schema.py:296
+#: senlin/common/schema.py:299
 #, python-format
 msgid "\"%s\" is not a List"
 msgstr ""
 
-#: senlin/common/schema.py:304 senlin/common/schema.py:336
-#: senlin/common/schema.py:342
+#: senlin/common/schema.py:307 senlin/common/schema.py:339
+#: senlin/common/schema.py:345
 #, python-format
 msgid "\"%s\" is not a Map"
 msgstr ""
 
-#: senlin/common/schema.py:364
+#: senlin/common/schema.py:367
 #, python-format
 msgid "Spec validation error (%(key)s): %(err)s"
 msgstr ""
 
-#: senlin/common/schema.py:370
+#: senlin/common/schema.py:373
 #, python-format
 msgid "Unrecognizable spec item \"%s\""
 msgstr ""
 
-#: senlin/common/schema.py:375
+#: senlin/common/schema.py:378
 #, python-format
 msgid "Invalid spec item: \"%s\""
 msgstr ""
 
-#: senlin/common/schema.py:384
+#: senlin/common/schema.py:387
 #, python-format
 msgid "Required spec item \"%s\" not assigned"
 msgstr ""
 
-#: senlin/common/sdk.py:49
+#: senlin/common/sdk.py:51
 msgid "Key \"error\" not exists"
 msgstr ""
 
-#: senlin/common/sdk.py:63
+#: senlin/common/sdk.py:65
 #, python-format
 msgid ""
 "ERROR: %(message)s\n"
 "%(traceback)s"
 msgstr ""
 
-#: senlin/common/sdk.py:67
+#: senlin/common/sdk.py:69
 #, python-format
 msgid "ERROR(%(code)s): %(message)s"
 msgstr ""
 
-#: senlin/common/sdk.py:148
+#: senlin/common/sdk.py:150
 #, python-format
 msgid "Unknown exception: %s"
 msgstr ""
 
-#: senlin/common/sdk.py:157
+#: senlin/common/sdk.py:159
 #, python-format
 msgid "Malformed exception record, missing field \"%s\""
 msgstr ""
 
-#: senlin/common/sdk.py:158
+#: senlin/common/sdk.py:160
 #, python-format
 msgid "Original error record: %s"
 msgstr ""
 
-#: senlin/common/utils.py:77
+#: senlin/common/utils.py:79
 #, python-format
 msgid "Invalid URL scheme %s"
 msgstr ""
 
-#: senlin/common/utils.py:83 senlin/common/utils.py:106
+#: senlin/common/utils.py:85 senlin/common/utils.py:108
 #, python-format
 msgid "Failed to retrieve data: %s"
 msgstr ""
 
-#: senlin/common/wsgi.py:59
+#: senlin/common/wsgi.py:61
 msgid ""
 "Address to bind the server. Useful when selecting a particular network "
 "interface."
 msgstr ""
 
-#: senlin/common/wsgi.py:63
+#: senlin/common/wsgi.py:64
 msgid "The port on which the server will listen."
 msgstr ""
 
@@ -649,111 +544,94 @@ msgstr ""
 msgid "Number of backlog requests to configure the socket with."
 msgstr ""
 
-#: senlin/common/wsgi.py:70
+#: senlin/common/wsgi.py:69
 msgid "Location of the SSL certificate file to use for SSL mode."
 msgstr ""
 
-#: senlin/common/wsgi.py:74
+#: senlin/common/wsgi.py:72
 msgid "Location of the SSL key file to use for enabling SSL mode."
 msgstr ""
 
-#: senlin/common/wsgi.py:78
+#: senlin/common/wsgi.py:75
 msgid "Number of workers for Senlin service."
 msgstr ""
 
-#: senlin/common/wsgi.py:139
+#: senlin/common/wsgi.py:124
 msgid ""
 "When running server in SSL mode, you must specify both a cert_file and "
 "key_file option value in your configuration file"
 msgstr ""
 
-#: senlin/common/wsgi.py:157
+#: senlin/common/wsgi.py:142
 #, python-format
 msgid "Could not bind to %(bind_addr)safter trying for 30 seconds"
 msgstr ""
 
-#: senlin/common/wsgi.py:489
+#: senlin/common/wsgi.py:476
 #, python-format
 msgid ""
 "JSON body size (%(len)s bytes) exceeds maximum allowed size (%(limit)s "
 "bytes)."
 msgstr ""
 
-#: senlin/common/wsgi.py:555
+#: senlin/common/wsgi.py:541
 msgid ""
 "The server could not comply with the request since it is either malformed"
 " or otherwise incorrect."
 msgstr ""
 
-#: senlin/db/sqlalchemy/api.py:288
-#, python-format
-msgid "Attempt to delete a cluster with id \"%s\" that does not exist failed"
-msgstr ""
-
-#: senlin/db/sqlalchemy/api.py:420
-#, python-format
-msgid "Attempt to update a node with id \"%s\" that does not exists failed."
-msgstr ""
-
-#: senlin/db/sqlalchemy/api.py:431
+#: senlin/db/sqlalchemy/api.py:426
 #, python-format
 msgid "Node %(node)s: %(reason)s"
 msgstr ""
 
-#: senlin/db/sqlalchemy/api.py:966 senlin/db/sqlalchemy/api.py:1032
-#: senlin/db/sqlalchemy/api.py:1056 senlin/db/sqlalchemy/api.py:1138
-#: senlin/db/sqlalchemy/api.py:1159 senlin/db/sqlalchemy/api.py:1199
-#: senlin/db/sqlalchemy/api.py:1216 senlin/db/sqlalchemy/api.py:1284
-#, python-format
-msgid "Action with id \"%s\" not found"
-msgstr ""
-
-#: senlin/db/sqlalchemy/api.py:1044
+#: senlin/db/sqlalchemy/api.py:1103
 msgid ""
 "The action is waiting for its dependancy"
 "                                    being completed."
 msgstr ""
 
-#: senlin/db/sqlalchemy/api.py:1065
+#: senlin/db/sqlalchemy/api.py:1115 senlin/db/sqlalchemy/api.py:1217
+#: senlin/db/sqlalchemy/api.py:1257
+#, python-format
+msgid "Action with id \"%s\" not found"
+msgstr ""
+
+#: senlin/db/sqlalchemy/api.py:1124
 msgid "The action becomes ready due to all dependencies have been satisfied."
 msgstr ""
 
-#: senlin/db/sqlalchemy/api.py:1072 senlin/db/sqlalchemy/api.py:1104
+#: senlin/db/sqlalchemy/api.py:1131 senlin/db/sqlalchemy/api.py:1163
 msgid "Multiple dependencies between lists not support"
 msgstr ""
 
-#: senlin/db/sqlalchemy/api.py:1145
+#: senlin/db/sqlalchemy/api.py:1203
 msgid "Action completed successfully."
 msgstr ""
 
-#: senlin/db/sqlalchemy/api.py:1184
+#: senlin/db/sqlalchemy/api.py:1242
 msgid "Action execution failed"
 msgstr ""
 
-#: senlin/db/sqlalchemy/api.py:1188
+#: senlin/db/sqlalchemy/api.py:1246
 #, python-format
 msgid "Action %(id)s failed: %(reason)s"
 msgstr ""
 
-#: senlin/db/sqlalchemy/api.py:1204
+#: senlin/db/sqlalchemy/api.py:1262
 msgid "Dependent action was cancelled"
 msgstr ""
 
-#: senlin/db/sqlalchemy/api.py:1223
+#: senlin/db/sqlalchemy/api.py:1280
 msgid "Action execution was cancelled"
 msgstr ""
 
-#: senlin/db/sqlalchemy/api.py:1250
+#: senlin/db/sqlalchemy/api.py:1307
 msgid "The action is being processed."
 msgstr ""
 
-#: senlin/db/sqlalchemy/api.py:1275
+#: senlin/db/sqlalchemy/api.py:1332
 msgid "The action was abandoned."
-msgstr ""
-
-#: senlin/db/sqlalchemy/api.py:1315
-#, python-format
-msgid "Attempt to delete a action with id \"%s\" that does not exist"
 msgstr ""
 
 #: senlin/engine/environment.py:85
@@ -791,24 +669,24 @@ msgstr ""
 msgid "The input is not a JSON object or YAML mapping."
 msgstr ""
 
-#: senlin/engine/service.py:124
+#: senlin/engine/service.py:125
 msgid "Attempting to stop engine service..."
 msgstr ""
 
-#: senlin/engine/service.py:493
+#: senlin/engine/service.py:494
 msgid "Updating a cluster when it is in error state"
 msgstr ""
 
-#: senlin/engine/service.py:499 senlin/engine/service.py:791
+#: senlin/engine/service.py:500
 msgid "Cannot update a cluster to a different profile type, operation aborted."
 msgstr ""
 
-#: senlin/engine/service.py:545 senlin/tests/engine/test_clusters.py:652
+#: senlin/engine/service.py:546 senlin/tests/engine/test_clusters.py:652
 #, python-format
 msgid "Nodes are not ACTIVE: %s"
 msgstr ""
 
-#: senlin/engine/service.py:547 senlin/tests/engine/test_clusters.py:671
+#: senlin/engine/service.py:548 senlin/tests/engine/test_clusters.py:671
 #: senlin/tests/engine/test_clusters.py:682
 #, python-format
 msgid ""
@@ -816,44 +694,75 @@ msgid ""
 "first."
 msgstr ""
 
-#: senlin/engine/service.py:550 senlin/engine/service.py:588
+#: senlin/engine/service.py:551 senlin/engine/service.py:589
 #, python-format
 msgid "Nodes not found: %s"
 msgstr ""
 
-#: senlin/engine/service.py:552
+#: senlin/engine/service.py:553
 #, python-format
 msgid "No nodes to add: %s"
 msgstr ""
 
-#: senlin/engine/service.py:590
+#: senlin/engine/service.py:591
 #, python-format
 msgid "Nodes not members of specified cluster: %s"
 msgstr ""
 
-#: senlin/engine/service.py:592
+#: senlin/engine/service.py:593
 msgid "No nodes specified."
 msgstr ""
 
-#: senlin/engine/service.py:727 senlin/engine/service.py:838
+#: senlin/engine/service.py:728 senlin/engine/service.py:834
 msgid "Node and cluster have different profile type, operation aborted."
 msgstr ""
 
-#: senlin/engine/service.py:830
-msgid "Node and cluster are from different project, operation is not allowed."
+#: senlin/engine/service.py:792
+msgid "Cannot update a node to a different profile type, operation aborted."
 msgstr ""
 
-#: senlin/engine/actions/base.py:96
+#: senlin/engine/service.py:856
+#, python-format
+msgid "Node is already an orphan node: %s."
+msgstr ""
+
+#: senlin/engine/service.py:1057
+#, python-format
+msgid "webhook obj_type %s is unsupported"
+msgstr ""
+
+#: senlin/engine/service.py:1071
+#, python-format
+msgid "illegal action name %s"
+msgstr ""
+
+#: senlin/engine/service.py:1075
+#, python-format
+msgid "Action %(action)s is not applicable to object %(obj_type)s"
+msgstr ""
+
+#: senlin/engine/service.py:1084
+msgid "The credential parameter is missing"
+msgstr ""
+
+#: senlin/engine/actions/base.py:97
 #, python-format
 msgid "target %s"
 msgstr ""
 
-#: senlin/engine/actions/base.py:356
+#: senlin/engine/actions/base.py:260
+#, python-format
+msgid ""
+"Action (%(action)s) is in unexpected status (%(actual)s) while expected "
+"status should be one of (%(expected)s)."
+msgstr ""
+
+#: senlin/engine/actions/base.py:377
 #, python-format
 msgid "Failed policy checking: %s"
 msgstr ""
 
-#: senlin/engine/actions/base.py:397
+#: senlin/engine/actions/base.py:418
 #, python-format
 msgid "Failed locking action \"%s\" for execution"
 msgstr ""
@@ -894,32 +803,6 @@ msgstr ""
 #: senlin/openstack/common/periodic_task.py:46
 #, python-format
 msgid "Unexpected argument for periodic task creation: %(arg)s."
-msgstr ""
-
-#: senlin/openstack/common/policy.py:111
-msgid "The JSON file that defines policies."
-msgstr ""
-
-#: senlin/openstack/common/policy.py:114
-msgid "Default rule. Enforced when a requested rule is not found."
-msgstr ""
-
-#: senlin/openstack/common/policy.py:118
-msgid ""
-"Directories where policy configuration files are stored. They can be "
-"relative to any directory in the search path defined by the config_dir "
-"option, or absolute paths. The file defined by policy_file must exist for"
-" these directories to be searched."
-msgstr ""
-
-#: senlin/openstack/common/policy.py:142
-#, python-format
-msgid "Policy doesn't allow %s to be performed."
-msgstr ""
-
-#: senlin/openstack/common/policy.py:239
-#, python-format
-msgid "Rules must be an instance of dict or Rules, got %s instead"
 msgstr ""
 
 #: senlin/policies/deletion_policy.py:79
@@ -1133,3 +1016,134 @@ msgstr ""
 #, python-format
 msgid "Node action mismatch detected: expected=%(expected)s actual=%(actual)s"
 msgstr ""
+
+#: senlin/profiles/os/nova/server.py:62
+msgid "Password for the administrator account."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:65
+msgid "Whether the disk partition is done automatically."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:69
+msgid "Name of availability zone for running the server."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:72
+msgid ""
+"A list specifying the properties of block devices to be used for this "
+"server."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:75
+msgid ""
+"A map specifying the properties of a block device to be used by the "
+"server."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:79
+msgid "Block device name, should be <=255 chars."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:82
+msgid "Block device size in GB."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:88
+msgid "Whether config drive should be enabled for the server."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:91
+msgid "ID of flavor used for the server."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:97
+msgid "ID of image to be used for the new server."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:100
+msgid "Name of Nova keypair to be injected to server."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:103
+msgid ""
+"A collection of key/value pairs to be associated with the server created."
+" Both key and value should be <=255 chars."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:107
+msgid "Name of the server."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:111
+msgid "List of networks for the server."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:113
+msgid "A map specifying the properties of a network for uses."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:116 senlin/profiles/os/nova/server.py:119
+msgid "Port ID to be used by the network."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:125
+msgid "List of files to be injected into the server, where each."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:127
+msgid "A map specifying the path & contents for an injected file."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:131
+msgid "In-instance path for the file to be injected."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:135
+msgid "Contents of the file to be injected."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:142
+msgid "List of security groups."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:144
+msgid "Name of a security group"
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:149
+msgid "Time out threshold for server operations."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:153
+msgid "User data to be exposed by the metadata server."
+msgstr ""
+
+#: senlin/tests/test_common_exception.py:26
+#, python-format
+msgid "Testing message %(text)s"
+msgstr ""
+
+#: senlin/tests/apiv1/test_clusters.py:619
+msgid "Invalid value '10min' specified for 'timeout'"
+msgstr ""
+
+#: senlin/tests/middleware/test_fault_middleware.py:173
+msgid "Error"
+msgstr ""
+
+#: senlin/webhooks/webhooks.py:214
+#, python-format
+msgid "%(url)s is not a webhook trigger url, pass."
+msgstr ""
+
+#: senlin/webhooks/webhooks.py:219
+#, python-format
+msgid "Not a post request to webhook trigger url %(url)s, pass."
+msgstr ""
+
+#: senlin/webhooks/webhooks.py:229
+#, python-format
+msgid "Get credential of webhook %(id)s"
+msgstr ""
+
