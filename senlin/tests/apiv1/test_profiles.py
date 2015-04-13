@@ -601,7 +601,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_with(
             req.context, ('profile_delete', {'identity': pid}))
 
-    def test_node_delete_not_found(self, mock_enforce):
+    def test_profile_delete_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         pid = 'aaaa-bbbb-cccc'
         req = self._delete('/profiles/%(profile_id)s' % {'profile_id': pid})
@@ -618,7 +618,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ProfileNotFound', resp.json['error']['type'])
 
-    def test_node_delete_err_denied_policy(self, mock_enforce):
+    def test_profile_delete_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', False)
         pid = 'aaaa-bbbb-cccc'
         req = self._delete('/profiles/%(profile_id)s' % {'profile_id': pid})
