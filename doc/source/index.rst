@@ -66,7 +66,7 @@ Developers Documentation
    :maxdepth: 1
 
    architecture
-   pluginguide
+   plugin_guide
 
 API Documentation
 ========================
@@ -75,19 +75,6 @@ API Documentation
 
    .. _`Senlin REST API Reference (OpenStack API Complete Reference - Clustering)`: http://api.openstack.org/api-ref-clustering-v1.html
 
-Operations Documentation
-========================
-.. toctree::
-   :maxdepth: 1
-
-   scale_deployment
-
-Code Documentation
-==================
-.. toctree::
-   :maxdepth: 3
-
-   sourcecode/autoindex
 
 Indices and tables
 ==================

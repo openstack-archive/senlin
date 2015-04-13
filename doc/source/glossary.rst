@@ -20,7 +20,7 @@
 
    Action
      An action is an operation that can be performed on a :term:`Cluster`, a
-     :term:`Node, a :term:`Policy`, etc. Different types of objects support
+     :term:`Node`, a :term:`Policy`, etc. Different types of objects support
      different set of actions. An action is executed by a :term:`Worker` thread
      when the action becomes ready. Most Senlin APIs create actions in database
      for worker threads to execute asynchronously. An action, when executed,
@@ -31,7 +31,7 @@
      HTTP REST API service for Senlin.
 
    Cluster
-     A cluster is a group of homogeneous objects (i.e. :term:`Node`s). A
+     A cluster is a group of homogeneous objects (i.e. :term:`Node`). A
      cluster consists of 0 or more nodes and it can be associated with 0 or
      more :term:`Policy` objects. It is associated with a :term:`Profile Type`
      when created.
@@ -46,9 +46,13 @@
      usually used to create, destroy, update the objects exposed by those
      services.
 
+   Engine
+     The daemon that actually perform the operations requested by users. It
+     provides RPC interfaces to RPC clients.
+
    Environment
      Used to specify user provided :term:`Plugin` that implement a
-     :term:`Profile Type` or a :term:`Policy Type'. User can provide plugins
+     :term:`Profile Type` or a :term:`Policy Type`. User can provide plugins
      that override the default plugins by customizing an environment.
 
    Event
@@ -105,9 +109,9 @@
 
    Profile Type
      A profile type is an abstraction of objects that are backed by some
-     :term:`Driver`s. The implementation of a profile type calls the driver(s)
+     :term:`Driver`. The implementation of a profile type calls the driver(s)
      to create objects that are managed by Senlin. The implementation also
-     serves a factory that can 'produce' objects given a profile. All profile
+     serves a factory that can "produce" objects given a profile. All profile
      types are provided as Senlin plugins.
 
    Role
