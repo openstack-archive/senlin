@@ -24,8 +24,8 @@ from openstack.compute.v2 import server_meta
 from openstack.compute.v2 import server_metadata
 
 from senlin.common import exception
-from senlin.common import sdk
 from senlin.drivers import base
+from senlin.drivers.openstack import sdk
 
 
 class NovaClient(base.DriverBase):

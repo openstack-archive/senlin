@@ -20,10 +20,10 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.common.i18n import _LI
-from senlin.common import sdk
 from senlin.common import utils
 from senlin.common import wsgi
 from senlin.db import api as db_api
+from senlin.drivers.openstack import sdk
 
 LOG = logging.getLogger(__name__)
 

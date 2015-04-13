@@ -18,7 +18,7 @@ from senlin.common import context
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import schema
-from senlin.drivers import heat_v1 as heatclient
+from senlin.drivers.openstack import heat_v1 as heatclient
 from senlin.engine import scheduler
 from senlin.profiles import base
 

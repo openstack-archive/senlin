@@ -10,7 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from senlin.common import sdk
+
+from senlin.drivers.openstack import sdk
 from senlin.openstack.identity.v3 import trust
 
 

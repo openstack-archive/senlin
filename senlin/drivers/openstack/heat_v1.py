@@ -10,8 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from senlin.common import sdk
 from senlin.drivers import base
+from senlin.drivers.openstack import sdk
 from senlin.openstack.orchestration.v1 import stack
 
 
