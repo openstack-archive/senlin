@@ -10,13 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo_log import log as logging
-
 from senlin.common import sdk
-from senlin.common import wsgi
 from senlin.openstack.identity.v3 import trust
-
-LOG = logging.getLogger(__name__)
 
 
 class SenlinTrust(object):
@@ -98,29 +93,3 @@ def list_trust(context, trustee_user_id=None, trustor_user_id=None):
         trusts.append(trust_item)
 
     return trusts
-
-
-class TrustMiddleware(wsgi.Middleware):
-    '''Extract trust info from request.
-
-    The extracted information is filled into the request context.
-    Senlin engine will use this information for access control.
-    '''
-    def process_request(self, req):
-        # Query trust list with detail information
-        trusts = list_trust(req.context, req.context.user)
-        LOG.debug('Trust list of user %s is %s' %
-                  (req.context.user, str(trusts)))
-        req.context.trusts = trusts
-
-
-def TrustMiddleware_filter_factory(global_conf, **local_conf):
-    '''Factory method for paste.deploy.'''
-
-    conf = global_conf.copy()
-    conf.update(local_conf)
-
-    def filter(app):
-        return TrustMiddleware(app)
-
-    return filter

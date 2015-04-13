@@ -14,6 +14,7 @@
 from senlin.api.middleware import context
 from senlin.api.middleware import fault
 from senlin.api.middleware import ssl
+from senlin.api.middleware import trust
 from senlin.api.middleware import version_negotiation as vn
 from senlin.api.openstack import versions
 
@@ -33,3 +34,7 @@ def sslmiddleware_filter(app, conf, **local_conf):
 
 def contextmiddleware_filter(app, conf, **local_conf):
     return context.ContextMiddleware(app)
+
+
+def trustmiddleware_filter(app, conf, **local_conf):
+    return trust.TrustMiddleware(app)
