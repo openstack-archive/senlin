@@ -250,6 +250,17 @@ class Webhook(BASE, SenlinBase, SoftDelete):
     params = sqlalchemy.Column(types.Dict)
 
 
+class Credential(BASE, SenlinBase):
+    '''A table for storing user credentials.'''
+
+    __tablename__ = 'credential'
+
+    user = sqlalchemy.Column(sqlalchemy.String(36), primary_key=True,
+                             nullable=False)
+    cred = sqlalchemy.Column(types.Dict, nullable=False)
+    data = sqlalchemy.Column(types.Dict)
+
+
 class Action(BASE, SenlinBase, SoftDelete):
     '''An action persisted in the Senlin database.'''
 

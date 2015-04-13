@@ -165,6 +165,16 @@ def upgrade(migrate_engine):
         mysql_charset='utf8'
     )
 
+    credential = sqlalchemy.Table(
+        'credential', meta,
+        sqlalchemy.Column('user', sqlalchemy.String(36), primary_key=True,
+                          nullable=False),
+        sqlalchemy.Column('cred', types.Dict, nullable=False),
+        sqlalchemy.Column('data', types.Dict),
+        mysql_engine='InnoDB',
+        mysql_charset='utf8'
+    )
+
     action = sqlalchemy.Table(
         'action', meta,
         sqlalchemy.Column('id', sqlalchemy.String(36),
@@ -223,6 +233,7 @@ def upgrade(migrate_engine):
         policy,
         cluster_policy,
         webhook,
+        credential,
         action,
         event,
     )
