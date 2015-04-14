@@ -62,6 +62,8 @@ class FaultWrapper(wsgi.Middleware):
         'ProfileNotFound': webob.exc.HTTPNotFound,
         'ProfileValidationFailed': webob.exc.HTTPBadRequest,
         'ProfileTypeNotMatch': webob.exc.HTTPBadRequest,
+        'WebhookNotFound': webob.exc.HTTPNotFound,
+        'WebhookCredentialInvalid': webob.exc.HTTPBadRequest,
         'RequestLimitExceeded': webob.exc.HTTPBadRequest,
         'SenlinBadRequest': webob.exc.HTTPBadRequest,
         'SpecValidationFailed': webob.exc.HTTPBadRequest,

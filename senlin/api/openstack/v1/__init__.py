@@ -23,6 +23,7 @@ from senlin.api.openstack.v1 import policies
 from senlin.api.openstack.v1 import policy_types
 from senlin.api.openstack.v1 import profile_types
 from senlin.api.openstack.v1 import profiles
+from senlin.api.openstack.v1 import webhooks
 from senlin.common import wsgi
 
 
@@ -204,6 +205,28 @@ class API(wsgi.Router):
                                "/actions/{action_id}",
                                action="get",
                                conditions={'method': 'GET'})
+
+        # Webhooks
+        webhooks_resource = webhooks.create_resource(conf)
+        with mapper.submapper(controller=webhooks_resource,
+                              path_prefix="/{tenant_id}") as sub_mapper:
+
+            sub_mapper.connect("webhook_index",
+                               "/webhooks",
+                               action="index",
+                               conditions={'method': 'GET'})
+            sub_mapper.connect("webhook_create",
+                               "/webhooks",
+                               action="create",
+                               conditions={'method': 'POST'})
+            sub_mapper.connect("webhook_get",
+                               "/webhooks/{webhook_id}",
+                               action="get",
+                               conditions={'method': 'GET'})
+            sub_mapper.connect("webhook_delete",
+                               "/webhooks/{webhook_id}",
+                               action="delete",
+                               conditions={'method': 'DELETE'})
 
         # Events
         events_resource = events.create_resource(conf)
