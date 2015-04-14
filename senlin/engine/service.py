@@ -1102,7 +1102,7 @@ class EngineService(service.Service):
         return webhook.to_dict()
 
     @request_context
-    def webhook_delete(self, context, identity):
+    def webhook_delete(self, context, identity, force=False):
         db_webhook = self.webhook_find(context, identity)
         LOG.info(_LI('Deleting webhook: %s'), identity)
         webhook_mod.Webhook.delete(context, db_webhook.id)

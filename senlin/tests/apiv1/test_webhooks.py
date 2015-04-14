@@ -549,7 +549,7 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call.assert_called_with(
             req.context,
-            ('webhook_delete', {'identity': wid, 'force': False}))
+            ('webhook_delete', {'identity': wid}))
 
     def test_webhook_delete_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)

@@ -153,10 +153,8 @@ class WebhookController(object):
 
     @util.policy_enforce
     def delete(self, req, webhook_id):
-        force = 'force' in req.params
         res = self.rpc_client.webhook_delete(req.context,
                                              webhook_id,
-                                             force=force,
                                              cast=False)
         if res is not None:
             raise exc.HTTPBadRequest(res['Error'])

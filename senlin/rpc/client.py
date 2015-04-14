@@ -334,11 +334,10 @@ class EngineClient(object):
         return self.call(ctxt,
                          self.make_msg('webhook_get', identity=identity))
 
-    def webhook_delete(self, ctxt, identity, force=False, cast=True):
+    def webhook_delete(self, ctxt, identity, cast=True):
         rpc_method = self.cast if cast else self.call
         return rpc_method(ctxt,
-                          self.make_msg('webhook_delete', identity=identity,
-                                        force=force))
+                          self.make_msg('webhook_delete', identity=identity))
 
     def event_list(self, ctxt, filters=None, limit=None, marker=None,
                    sort_keys=None, sort_dir=None, project_safe=True,
