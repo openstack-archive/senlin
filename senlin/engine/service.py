@@ -1087,8 +1087,9 @@ class EngineService(service.Service):
         webhook = webhook_mod.Webhook(context, obj_id, obj_type,
                                       action, credential=credential,
                                       params=params, name=name)
+        key = webhook.encrypt_credential(context)
         webhook.store(context)
-        url, token = webhook.generate_url()
+        url, token = webhook.generate_url(context, key)
 
         result = webhook.to_dict()
         result['url'] = url

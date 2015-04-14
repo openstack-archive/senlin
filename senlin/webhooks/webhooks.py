@@ -157,16 +157,17 @@ class Webhook(object):
     def from_dict(cls, **kwargs):
         return cls(**kwargs)
 
-    def generate_url(self):
+    def encrypt_credential(self, context):
+        password, key = utils.encrypt(self.credential['password'])
+        self.credential['password'] = password
+        return key
+
+    def generate_url(self, context, key):
         '''Generate webhook URL with proper format.'''
         senlin_host = cfg.CONF.senlin_api.bind_host
         senlin_port = cfg.CONF.senlin_api.bind_port
-        basic_url = 'http://%s:%s/%s/webhooks/%s/trigger' % \
+        basic_url = 'http://%s:%s/v1/%s/webhooks/%s/trigger' % \
             (senlin_host, senlin_port, self.project, self.id)
-
-        # Encryt the password of credential
-        password, key = utils.encrypt(self.credential['password'])
-        self.credential['password'] = password
 
         webhook_url = "%s?key=%s" % (basic_url, key)
         LOG.info(_LI("Generate url for webhook %(id)s") % {'id': self.id})

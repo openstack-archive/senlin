@@ -72,6 +72,10 @@ class WebhookMiddleware(wsgi.Middleware):
         webhook_obj = webhooks.Webhook.load(senlin_context, webhook_id)
         credential = webhook_obj.credential
         credential['webhook_id'] = webhook_id
+        if 'auth_url' not in credential:
+            # If no auth_url is provided in credential, use
+            # auth_url of senlin service context
+            credential['auth_url'] = senlin_context.auth_url
 
         # Decrypt the credential password with key embedded in req params
         try:
