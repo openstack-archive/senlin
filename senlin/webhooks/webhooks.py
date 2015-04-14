@@ -15,15 +15,11 @@ import datetime
 from oslo_config import cfg
 from oslo_log import log as logging
 
-from senlin.common import context
 from senlin.common import exception
-from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.common.i18n import _LI
 from senlin.common import utils
-from senlin.common import wsgi
 from senlin.db import api as db_api
-from senlin.drivers.openstack import sdk
 
 LOG = logging.getLogger(__name__)
 
@@ -180,94 +176,3 @@ class Webhook(object):
     @classmethod
     def delete(cls, context, webhook_id):
         db_api.webhook_delete(context, webhook_id)
-
-
-class WebhookMiddleware(wsgi.Middleware):
-    '''Middleware to do authentication for webhook triggering
-
-    This middleware gets authentication for request to a webhook
-    based on information embedded inside url and then rebuild the
-    request header.
-    '''
-    def process_request(self, req):
-        self._authenticate(req)
-
-    def _authenticate(self, req):
-        LOG.debug("Checking credentials of webhook request")
-        credential = self._get_credential(req)
-        if not credential:
-            return
-
-        # Get a valid token based on credential
-        # and fill into the request header
-        token_id = self._get_token(credential)
-        req.headers['X-Auth-Token'] = token_id
-
-    def _get_credential(self, req):
-        try:
-            url_bottom = req.url.rsplit('webhooks')[1]
-            webhook_id = url_bottom.rsplit('/')[1]
-            trigger = url_bottom.rsplit('/')[2].startswith('trigger')
-            if trigger is not True or 'key' not in req.params:
-                raise Exception()
-        except Exception:
-            LOG.debug(_("%(url)s is not a webhook trigger url,"
-                        " pass."), {'url': req.url})
-            return
-
-        if req.method != 'POST':
-            LOG.debug(_("Not a post request to webhook trigger url"
-                        " %(url)s, pass."), {'url': req.url})
-            return
-
-        # This is a webhook triggering, we need to fill in valid
-        # credential info into the http headers to ensure this
-        # request can pass keystone auth_token validation.
-        #
-        # Get the credential stored in DB based on webhook ID.
-        # TODO(Anyone): Use Barbican to store these credential.
-        LOG.debug(_("Get credential of webhook %(id)s"), webhook_id)
-        senlin_context = context.RequestContext.get_service_context()
-        webhook_obj = Webhook.load(senlin_context, webhook_id)
-        credential = webhook_obj.credential
-        credential['webhook_id'] = webhook_id
-
-        # Decrypt the credential password with key embedded in req params
-        try:
-            password = utils.decrypt(credential['password'],
-                                     req.params['key'])
-            credential['password'] = password
-        except Exception:
-            msg = 'Invalid key for webhook(%s) credential decryption' % \
-                webhook_id
-            LOG.error(msg)
-            raise exception.SenlinBadRequest(msg=msg)
-
-        return credential
-
-    def _get_token(self, credential):
-        '''Get a valid token based on credential'''
-
-        try:
-            access_info = sdk.authenticate(**credential)
-            token_id = access_info.auth_token
-        except Exception as ex:
-            msg = 'Webhook get token failed: %s' % ex.message
-            LOG.error(msg)
-            raise exception.WebhookCredentialInvalid(
-                webhook=credential['webhook_id'])
-
-        # Get token successfully!
-        return token_id
-
-
-def WebhookMiddleware_filter_factory(global_conf, **local_conf):
-    '''Factory method for paste.deploy.'''
-
-    conf = global_conf.copy()
-    conf.update(local_conf)
-
-    def filter(app):
-        return WebhookMiddleware(app)
-
-    return filter
