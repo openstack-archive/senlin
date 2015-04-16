@@ -257,6 +257,8 @@ class Credential(BASE, SenlinBase):
 
     user = sqlalchemy.Column(sqlalchemy.String(36), primary_key=True,
                              nullable=False)
+    project = sqlalchemy.Column(sqlalchemy.String(32), primary_key=True,
+                                nullable=False)
     cred = sqlalchemy.Column(types.Dict, nullable=False)
     data = sqlalchemy.Column(types.Dict)
 

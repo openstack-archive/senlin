@@ -16,11 +16,15 @@ from senlin.tests.common import base
 from senlin.tests.common import utils
 from senlin.tests.db import shared
 
-UUID1 = shared.UUID1
+USER_ID = shared.UUID1
+PROJECT_ID = '26e4df6952b144e5823aae7ce463a240'
 values = {
-    'user': UUID1,
+    'user': USER_ID,
+    'project': PROJECT_ID,
     'cred': {
-        'trust': '01234567890123456789012345678901',
+        'openstack': {
+            'trust': '01234567890123456789012345678901',
+        },
     },
     'data': {}
 }
@@ -35,28 +39,32 @@ class DBAPICredentialTest(base.SenlinTestCase):
     def test_cred_create(self):
         cred = db_api.cred_create(self.ctx, values)
         self.assertIsNotNone(cred)
-        self.assertEqual(UUID1, cred.user)
-        self.assertEqual({'trust': '01234567890123456789012345678901'},
-                         cred.cred)
+        self.assertEqual(USER_ID, cred.user)
+        self.assertEqual(PROJECT_ID, cred.project)
+        self.assertEqual(
+            {'openstack': {'trust': '01234567890123456789012345678901'}},
+            cred.cred)
         self.assertEqual({}, cred.data)
 
     def test_cred_get(self):
-        cred = db_api.cred_get(self.ctx, UUID1)
+        cred = db_api.cred_get(self.ctx, USER_ID, PROJECT_ID)
         self.assertIsNone(cred)
 
         db_api.cred_create(self.ctx, values)
 
-        cred = db_api.cred_get(self.ctx, UUID1)
+        cred = db_api.cred_get(self.ctx, USER_ID, PROJECT_ID)
         self.assertIsNotNone(cred)
-        self.assertEqual(UUID1, cred.user)
-        self.assertEqual({'trust': '01234567890123456789012345678901'},
-                         cred.cred)
+        self.assertEqual(USER_ID, cred.user)
+        self.assertEqual(PROJECT_ID, cred.project)
+        self.assertEqual(
+            {'openstack': {'trust': '01234567890123456789012345678901'}},
+            cred.cred)
         self.assertEqual({}, cred.data)
 
     def test_cred_delete(self):
-        cred = db_api.cred_delete(self.ctx, UUID1)
+        cred = db_api.cred_delete(self.ctx, USER_ID, PROJECT_ID)
         self.assertIsNone(cred)
 
         db_api.cred_create(self.ctx, values)
-        cred = db_api.cred_delete(self.ctx, UUID1)
+        cred = db_api.cred_delete(self.ctx, USER_ID, PROJECT_ID)
         self.assertIsNone(cred)

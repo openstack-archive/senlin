@@ -169,6 +169,8 @@ def upgrade(migrate_engine):
         'credential', meta,
         sqlalchemy.Column('user', sqlalchemy.String(36), primary_key=True,
                           nullable=False),
+        sqlalchemy.Column('project', sqlalchemy.String(36), primary_key=True,
+                          nullable=False),
         sqlalchemy.Column('cred', types.Dict, nullable=False),
         sqlalchemy.Column('data', types.Dict),
         mysql_engine='InnoDB',

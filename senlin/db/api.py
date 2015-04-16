@@ -257,6 +257,19 @@ def profile_delete(context, profile_id):
     return IMPL.profile_delete(context, profile_id)
 
 
+# Credential
+def cred_create(context, values):
+    return IMPL.cred_create(context, values)
+
+
+def cred_get(context, user, project):
+    return IMPL.cred_get(context, user, project)
+
+
+def cred_delete(context, user, project):
+    return IMPL.cred_delete(context, user, project)
+
+
 # Events
 def event_create(context, values):
     return IMPL.event_create(context, values)
