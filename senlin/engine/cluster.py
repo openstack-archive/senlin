@@ -320,13 +320,13 @@ class Cluster(periodic_task.PeriodicTasks):
         '''Attach specified policy instance to this cluster.'''
 
         # TODO(Qiming): check conflicts with existing policies
-        self.rt.policies.append(policy)
+        self.rt['policies'].append(policy)
 
     def remove_policy(self, policy):
         # TODO(Qiming): check if actions of specified policies are ongoing
-        for p in self.rt.policies:
+        for p in self.rt['policies']:
             if(p.id == policy.id):
-                self.rt.policies.remove(policy)
+                self.rt['policies'].remove(policy)
 
     def heathy_check_enable(self):
         self.detect_enabled = True
@@ -352,7 +352,7 @@ class Cluster(periodic_task.PeriodicTasks):
         self.detect_counter = 0
 
         fails = 0
-        for nd in self.rt.nodes:
+        for nd in self.rt['nodes']:
             if(nd.rt.profile.do_check(nd)):
                 continue
 
