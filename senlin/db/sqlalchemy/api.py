@@ -879,12 +879,12 @@ def cred_create(context, values):
     return cred
 
 
-def cred_get(context, cred_id):
-    return model_query(context, models.Credential).get(cred_id)
+def cred_get(context, user, project):
+    return model_query(context, models.Credential).get((user, project))
 
 
-def cred_delete(context, cred_id):
-    cred = model_query(context, models.Credential).get(cred_id)
+def cred_delete(context, user, project):
+    cred = model_query(context, models.Credential).get((user, project))
     if cred is None:
         return None
     cred.delete()
