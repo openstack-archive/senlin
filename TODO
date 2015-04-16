@@ -31,10 +31,8 @@ API
     - Add DB model and API for webhook (done)
     - Implement Webhook Class and credential logic based on keystone trust
     - Implement API interface
-  - Provide support for access control [Yanyan Hu]
-    - Implement a middleware for trust handling
-    - Extend policy middleware to support resource sharing between different
-      senlin users
+  - Implement senlin authorization control [Qiming]
+    - http://git.openstack.org/cgit/stackforge/senlin/tree/doc/source/authorization.rst
   - Revise the API for sorting, based on the following guideline:
     https://github.com/openstack/api-wg/blob/master/guidelines/pagination_filter_sort.rst
   - Add support to replace a cluster node with another node
