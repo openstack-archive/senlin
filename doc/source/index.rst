@@ -67,6 +67,7 @@ Developers Documentation
 
    architecture
    plugin_guide
+   authorization
 
 API Documentation
 ========================
