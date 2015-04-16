@@ -11,8 +11,16 @@
 # under the License.
 
 
-from senlin.common import trust
+from oslo_config import cfg
+from oslo_utils import importutils
+import six
+import webob
+
+from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.common import wsgi
+from senlin.db import api as db_api
+from senlin.drivers.openstack import keystone_v3
 
 
 class TrustMiddleware(wsgi.Middleware):
@@ -21,6 +29,73 @@ class TrustMiddleware(wsgi.Middleware):
     The extracted information is filled into the request context.
     Senlin engine will use this information for access control.
     '''
+    def _get_trust(self, ctx):
+        '''List trusts with current user as the trustor.'''
+
+        # DB table is used as a cache for the trusts.
+        cred_exists = False
+        res = db_api.cred_get(ctx, ctx.user, ctx.project)
+        if res is not None:
+            try:
+                trust_id = res.cred['openstack']['trust']
+                return trust_id
+            except KeyError:
+                # Garbage in the store, ignore it
+                cred_exists = True
+                pass
+
+        params = {
+            'auth_url': ctx.auth_url,
+            'auth_token': ctx.auth_token,
+            'project': ctx.project,
+            'user': ctx.user,
+        }
+
+        kc = keystone_v3.KeystoneClient(params)
+
+        # Convert user name to user ID first
+        importutils.import_module('keystonemiddleware.auth_token')
+        admin_user = cfg.CONF.keystone_authtoken.admin_user
+
+        try:
+            admin_id = kc.user_get_by_name(admin_user)
+        except exception.UserNotFound:
+            # This is unacceptable, treat it as a server error
+            msg = _("Failed Senlin user checking.")
+            raise webob.exc.HTTPInternalServerError(msg)
+
+        try:
+            trusts = kc.trust_get_by_trustor(ctx.user, admin_id, ctx.project)
+        except exception.TrustNotFound:
+            # No trust found is okay
+            pass
+
+        if len(trusts) > 0:
+            trust = trusts[0]
+        else:
+            # Create a trust if no existing one found
+            try:
+                trust = kc.trust_create(ctx.user, admin_id, ctx.project,
+                                        ctx.roles)
+            except exception.Error as ex:
+                msg = _("Failed building trust from user: "
+                        "%s.") % six.text_type(ex)
+                raise webob.exc.HTTPInternalServerError(msg)
+
+        # update cache
+        if cred_exists:
+            db_api.cred_update(ctx.user, ctx.project,
+                               {'cred': {'openstack': {'trust': trust.id}}})
+        else:
+            values = {
+                'user': ctx.user,
+                'project': ctx.project,
+                'cred': {'openstack': {'trust': trust.id}}
+            }
+            db_api.cred_create(ctx, values)
+
+        return trust.id
+
     def process_request(self, req):
-        trusts = trust.list_trust(req.context, req.context.user)
-        req.context.trusts = trusts
+        trust_id = self._get_trust(req.context)
+        req.context.trusts = trust_id

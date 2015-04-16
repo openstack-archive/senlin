@@ -173,24 +173,26 @@ def ignore_not_found(ex):
         raise parsed
 
 
-def create_connection(context):
+def create_connection(ctx):
+    if isinstance(ctx, dict):
+        ctx = context.RequestContext.from_dict(ctx)
     kwargs = {
-        'auth_url': context.auth_url,
-        'domain_id': context.domain,
-        'project_id': context.project,
-        'project_domain_id': context.project_domain,
-        'user_domain_id': context.user_domain,
-        'username': context.user_name,
-        'user_id': context.user,
-        'password': context.password,
-        'token': context.auth_token,
+        'auth_url': ctx.auth_url,
+        'domain_id': ctx.domain,
+        'project_id': ctx.project,
+        'project_domain_id': ctx.project_domain,
+        'user_domain_id': ctx.user_domain,
+        'username': ctx.user_name,
+        'user_id': ctx.user,
+        'password': ctx.password,
+        'token': ctx.auth_token,
         #  'auth_plugin': args.auth_plugin,
         #  'verify': OS_CACERT, TLS certificate to verify remote server
     }
 
     pref = user_preference.UserPreference()
-    if context.region_name:
-        pref.set_region(pref.ALL, context.region_name)
+    if ctx.region_name:
+        pref.set_region(pref.ALL, ctx.region_name)
 
     try:
         conn = connection.Connection(preference=pref, user_agent=USER_AGENT,

@@ -61,6 +61,21 @@ class DBAPICredentialTest(base.SenlinTestCase):
             cred.cred)
         self.assertEqual({}, cred.data)
 
+    def test_cred_update(self):
+        db_api.cred_create(self.ctx, values)
+        new_values = {
+            'cred': {
+                'openstack': {
+                    'trust': 'newtrust'
+                }
+            }
+        }
+        db_api.cred_update(self.ctx, USER_ID, PROJECT_ID, new_values)
+        cred = db_api.cred_get(self.ctx, USER_ID, PROJECT_ID)
+        self.assertIsNotNone(cred)
+        self.assertEqual({'openstack': {'trust': 'newtrust'}},
+                         cred.cred)
+
     def test_cred_delete(self):
         cred = db_api.cred_delete(self.ctx, USER_ID, PROJECT_ID)
         self.assertIsNone(cred)
