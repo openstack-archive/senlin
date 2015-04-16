@@ -16,6 +16,7 @@ import six
 
 from senlin.common import consts
 from senlin.common import exception
+from senlin.engine.actions import base as action_mod
 from senlin.engine import dispatcher
 from senlin.engine import environment
 from senlin.engine import service
@@ -39,6 +40,15 @@ class WebhookTest(base.SenlinTestCase):
         self.profile = self.eng.profile_create(
             self.ctx, 'p-test', 'TestProfile',
             spec={'INT': 10, 'STR': 'string'}, perm='1111')
+
+    def _verify_action(self, obj, action, name, target, cause, inputs=None):
+        if inputs is None:
+            inputs = {}
+        self.assertEqual(action, obj['action'])
+        self.assertEqual(name, obj['name'])
+        self.assertEqual(target, obj['target'])
+        self.assertEqual(cause, obj['cause'])
+        self.assertEqual(inputs, obj['inputs'])
 
     @mock.patch.object(dispatcher, 'notify')
     def _create_cluster(self, name, notify):
@@ -389,6 +399,75 @@ class WebhookTest(base.SenlinTestCase):
                                sort_dir='Bogus')
         self.assertEqual("Unknown sort direction, must be "
                          "'desc' or 'asc'", six.text_type(ex))
+
+    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_webhook_trigger(self, cluster_find, notify):
+        obj_id = 'obj-id-1'
+        obj_type = 'cluster'
+        action = consts.CLUSTER_SCALE_OUT
+
+        credential = {'userid': 'test-user-id', 'password': 'test-pass'}
+        params = {'p1': 'v1', 'p2': 'v2'}
+        webhook = self.eng.webhook_create(
+            self.ctx, obj_id, obj_type,
+            action,
+            credential=credential,
+            params=params, name='test-webhook-name')
+
+        self.assertIsNotNone(webhook)
+
+        res = self.eng.webhook_trigger(self.ctx, webhook['id'])
+
+        # verify action is fired
+        action_id = res['action']
+        action = self.eng.action_get(self.ctx, action_id)
+        self._verify_action(action, 'CLUSTER_SCALE_OUT',
+                            'webhook_action_%s' % webhook['id'],
+                            obj_id, cause=action_mod.CAUSE_RPC,
+                            inputs=params)
+
+        expected_call = mock.call(self.ctx,
+                                  self.eng.dispatcher.NEW_ACTION,
+                                  None, action_id=mock.ANY)
+
+        # two calls: one for create, the other for scaling operation
+        notify.assert_has_calls([expected_call] * 1)
+
+    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_webhook_trigger_with_params(self, cluster_find, notify):
+        obj_id = 'obj-id-1'
+        obj_type = 'cluster'
+        action = consts.CLUSTER_SCALE_OUT
+
+        credential = {'userid': 'test-user-id', 'password': 'test-pass'}
+        params = {'p1': 'v1', 'p2': 'v2'}
+        webhook = self.eng.webhook_create(
+            self.ctx, obj_id, obj_type,
+            action,
+            credential=credential,
+            params=params, name='test-webhook-name')
+
+        self.assertIsNotNone(webhook)
+
+        params2 = {'p1': 'v3', 'p2': 'v4'}
+        res = self.eng.webhook_trigger(self.ctx, webhook['id'], params2)
+
+        # verify action is fired
+        action_id = res['action']
+        action = self.eng.action_get(self.ctx, action_id)
+        self._verify_action(action, 'CLUSTER_SCALE_OUT',
+                            'webhook_action_%s' % webhook['id'],
+                            obj_id, cause=action_mod.CAUSE_RPC,
+                            inputs=params2)
+
+        expected_call = mock.call(self.ctx,
+                                  self.eng.dispatcher.NEW_ACTION,
+                                  None, action_id=mock.ANY)
+
+        # two calls: one for create, the other for scaling operation
+        notify.assert_has_calls([expected_call] * 1)
 
     def test_webhook_delete(self):
         cluster = self._create_cluster('c1')

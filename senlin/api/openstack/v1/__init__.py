@@ -223,6 +223,10 @@ class API(wsgi.Router):
                                "/webhooks/{webhook_id}",
                                action="get",
                                conditions={'method': 'GET'})
+            sub_mapper.connect("webhook_trigger",
+                               "/webhooks/{webhook_id}/trigger",
+                               action="trigger",
+                               conditions={'method': 'POST'})
             sub_mapper.connect("webhook_delete",
                                "/webhooks/{webhook_id}",
                                action="delete",

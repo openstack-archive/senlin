@@ -334,6 +334,11 @@ class EngineClient(object):
         return self.call(ctxt,
                          self.make_msg('webhook_get', identity=identity))
 
+    def webhook_trigger(self, ctxt, identity, params=None):
+        return self.call(ctxt,
+                         self.make_msg('webhook_trigger', identity=identity,
+                                       params=params))
+
     def webhook_delete(self, ctxt, identity, cast=True):
         rpc_method = self.cast if cast else self.call
         return rpc_method(ctxt,
