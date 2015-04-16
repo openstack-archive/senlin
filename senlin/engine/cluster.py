@@ -316,17 +316,17 @@ class Cluster(periodic_task.PeriodicTasks):
                 deleted.append(node_id)
         return deleted
 
-    def attach_policy(self, policy):
+    def add_policy(self, policy):
         '''Attach specified policy instance to this cluster.'''
 
         # TODO(Qiming): check conflicts with existing policies
         self.rt.policies.append(policy)
 
-    def detach_policy(self, policy_id):
+    def remove_policy(self, policy):
         # TODO(Qiming): check if actions of specified policies are ongoing
         for p in self.rt.policies:
-            if(p.policy_id == policy_id):
-                self.rt.policies.remove(policy_id)
+            if(p.id == policy.id):
+                self.rt.policies.remove(policy)
 
     def heathy_check_enable(self):
         self.detect_enabled = True
