@@ -262,6 +262,16 @@ class EventNotFound(SenlinException):
     msg_fmt = _("The event (%(event)s) could not be found.")
 
 
+class UserNotFound(SenlinException):
+    # Internal exception, not to be exposed to end user.
+    msg_fmt = _("The user (%(user)s) could not be found.")
+
+
+class TrustNotFound(SenlinException):
+    # Internal exception, not to be exposed to end user.
+    msg_fmt = _("The trust for trustor (%(trustor)s) could not be found.")
+
+
 class HTTPExceptionDisguise(Exception):
     """Disguises HTTP exceptions.
 

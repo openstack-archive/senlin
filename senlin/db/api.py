@@ -266,6 +266,10 @@ def cred_get(context, user, project):
     return IMPL.cred_get(context, user, project)
 
 
+def cred_update(context, user, project, values):
+    return IMPL.cred_update(context, user, project, values)
+
+
 def cred_delete(context, user, project):
     return IMPL.cred_delete(context, user, project)
 

@@ -883,6 +883,13 @@ def cred_get(context, user, project):
     return model_query(context, models.Credential).get((user, project))
 
 
+def cred_update(context, user, project, values):
+    cred = model_query(context, models.Credential).get((user, project))
+    cred.update(values)
+    cred.save(_session(context))
+    return cred
+
+
 def cred_delete(context, user, project):
     cred = model_query(context, models.Credential).get((user, project))
     if cred is None:
