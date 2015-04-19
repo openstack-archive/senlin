@@ -14,7 +14,6 @@ import six
 
 from oslo_log import log as logging
 
-from senlin.common import context
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import schema
@@ -77,23 +76,16 @@ class StackProfile(base.Profile):
     def __init__(self, ctx, type_name, name, **kwargs):
         super(StackProfile, self).__init__(ctx, type_name, name, **kwargs)
 
-        # a stack profile may have its own context customization
-        stack_context = self.spec_data[self.CONTEXT]
-        if stack_context is not None:
-            ctx_dict = ctx.to_dict()
-            ctx_dict.update(stack_context)
-            self.context = context.RequestContext.from_dict(ctx_dict)
-
         self.hc = None
         self.stack_id = None
 
-    def heat(self):
+    def heat(self, obj):
         '''Construct heat client using the combined context.'''
 
         if self.hc:
             return self.hc
-
-        self.hc = heatclient.HeatClient(self.context)
+        params = self._get_connection_params(obj)
+        self.hc = heatclient.HeatClient(params)
         return self.hc
 
     def do_validate(self, obj):
@@ -109,7 +101,7 @@ class StackProfile(base.Profile):
             'environment': self.spec_data[self.ENVIRONMENT],
         }
         try:
-            self.heat().stacks.validate(**kwargs)
+            self.heat(obj).stacks.validate(**kwargs)
         except Exception as ex:
             msg = _('Failed validate stack template due to '
                     '"%s"') % six.text_type(ex)
@@ -118,7 +110,7 @@ class StackProfile(base.Profile):
         return True
 
     def _check_action_complete(self, obj, action):
-        stack = self.heat().stack_get(id=self.stack_id)
+        stack = self.heat(obj).stack_get(id=self.stack_id)
         status = stack.stack_status.split('_', 1)
 
         if status[0] == action:
@@ -157,7 +149,7 @@ class StackProfile(base.Profile):
         }
 
         LOG.info('Creating stack: %s' % kwargs)
-        stack = self.heat().stack_create(**kwargs)
+        stack = self.heat(obj).stack_create(**kwargs)
         self.stack_id = stack.id
 
         # Wait for action to complete/fail
@@ -170,7 +162,7 @@ class StackProfile(base.Profile):
         self.stack_id = obj.physical_id
 
         try:
-            self.heat().stack_delete(id=self.stack_id)
+            self.heat(obj).stack_delete(id=self.stack_id)
         except Exception as ex:
             raise ex
 
@@ -203,7 +195,7 @@ class StackProfile(base.Profile):
             'environment': new_profile.spec_data[new_profile.ENVIRONMENT],
         }
 
-        self.heat().stack_update(**fields)
+        self.heat(obj).stack_update(**fields)
 
         # Wait for action to complete/fail
         while not self._check_action_complete(obj, 'UPDATE'):

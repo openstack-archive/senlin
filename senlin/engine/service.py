@@ -423,10 +423,10 @@ class EngineService(service.Service):
             timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
 
         LOG.info(_LI('Creating cluster %s'), name)
-        ctx = context.to_dict()
         kwargs = {
-            'user': ctx.get('user', ''),
-            'project': ctx.get('project', ''),
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
             'parent': parent,
             'timeout': timeout,
             'tags': tags
@@ -732,9 +732,16 @@ class EngineService(service.Service):
         LOG.info(_LI('Creating node %s'), name)
 
         # Create a node instance
-        tags = tags or {}
+        kwargs = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'role': role,
+            'tags': tags or {}
+        }
+
         node = node_mod.Node(name, node_profile.id, cluster_id, context,
-                             role=role, tags=tags)
+                             **kwargs)
         node.store(context)
 
         action = action_mod.Action(context, 'NODE_CREATE',

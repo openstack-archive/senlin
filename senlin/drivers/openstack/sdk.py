@@ -25,9 +25,7 @@ from senlin.common import context
 from senlin.common.i18n import _
 
 USER_AGENT = 'senlin'
-
 exc = exceptions
-verbose = False
 
 
 class BaseException(Exception):
@@ -60,14 +58,9 @@ class HTTPException(BaseException):
 
     def __str__(self):
         message = self.error['error'].get('message', 'Internal Error')
-        if verbose:
-            traceback = self.error['error'].get('traceback', '')
-            return (_('ERROR: %(message)s\n%(traceback)s') %
-                    {'message': message, 'traceback': traceback})
-        else:
-            code = self.error['error'].get('code', 'Unknown')
-            return _('ERROR(%(code)s): %(message)s') % {'code': code,
-                                                        'message': message}
+        code = self.error['error'].get('code', 'Unknown')
+        return _('ERROR(%(code)s): %(message)s') % {'code': code,
+                                                    'message': message}
 
 
 class ClientError(HTTPException):
@@ -135,36 +128,41 @@ def parse_exception(ex):
 
     :param details: details of the exception.
     '''
-    if isinstance(ex, exc.HttpException):
-        record = jsonutils.loads(ex.details)
+    code = 500
+    message = _('Unknown exception: %s') % ex
+
+    if isinstance(ex, exceptions.HttpException):
+        try:
+            data = jsonutils.loads(ex.details)
+            code = data['error'].get('code', None)
+            if code is None:
+                code = data['code']
+            message = data['error']['message']
+        except ValueError:
+            # Some exceptions don't have details record, we try make a guess
+            code = ex.status_code
+            message = ex.message
     elif isinstance(ex, reqexc.RequestException):
         # Exceptions that are not captured by SDK
+        if isinstance(ex.message, list):
+            msg = ex.message[0]
+        else:
+            msg = ex.message
         code = ex.message[1].errno
-        record = {
-            'error': {
-                'code': code,
-                'message': ex.message[0],
-            }
-        }
-    else:
-        print(_('Unknown exception: %s') % ex)
-        return
+        message = msg
 
-    try:
-        code = record['error'].get('code', None)
-        if code is None:
-            code = record['code']
-            record['error']['code'] = code
-    except KeyError as err:
-        print(_('Malformed exception record, missing field "%s"') % err)
-        print(_('Original error record: %s') % record)
-        return
+    body = {
+        'error': {
+            'code': code,
+            'message': message,
+        }
+    }
 
     if code in _EXCEPTION_MAP:
         inst = _EXCEPTION_MAP.get(code)
-        return inst(record)
+        return inst(body)
     else:
-        return HTTPException(record)
+        return HTTPException(body)
 
 
 def ignore_not_found(ex):
@@ -180,11 +178,12 @@ def create_connection(ctx):
         'auth_url': ctx.auth_url,
         'domain_id': ctx.domain,
         'project_id': ctx.project,
-        'project_domain_id': ctx.project_domain,
-        'user_domain_id': ctx.user_domain,
+        'project_domain_name': ctx.project_domain_name,
+        'user_domain_name': ctx.user_domain_name,
         'username': ctx.user_name,
         'user_id': ctx.user,
         'password': ctx.password,
+        'trust_id': ctx.trusts,
         'token': ctx.auth_token,
         #  'auth_plugin': args.auth_plugin,
         #  'verify': OS_CACERT, TLS certificate to verify remote server

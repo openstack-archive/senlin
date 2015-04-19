@@ -272,6 +272,11 @@ class TrustNotFound(SenlinException):
     msg_fmt = _("The trust for trustor (%(trustor)s) could not be found.")
 
 
+class ResourceNotFound(SenlinException):
+    # Used when retrieving resources from other services
+    msg_fmt = _("The resource (%(resource)s) could not be found.")
+
+
 class HTTPExceptionDisguise(Exception):
     """Disguises HTTP exceptions.
 

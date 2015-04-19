@@ -17,6 +17,7 @@ from senlin.common import context
 from senlin.common import exception
 from senlin.common import schema
 from senlin.db import api as db_api
+from senlin.drivers.openstack import keystone_v3 as keystoneclient
 from senlin.engine import environment
 
 LOG = logging.getLogger(__name__)
@@ -144,6 +145,28 @@ class Profile(object):
     def validate(self):
         '''Validate the schema and the data provided.'''
         self.spec_data.validate()
+
+    def _get_connection_params(self, obj):
+        cred = db_api.cred_get(self.context, obj.user, obj.project)
+        if cred is None:
+            raise exception.TrustNotFound(trustor=obj.user)
+
+        trust_id = cred.cred['openstack']['trust']
+        ctx = keystoneclient.get_service_credentials()
+        params = {
+            'auth_url': ctx['auth_url'],
+            'user_name': ctx['user_name'],
+            'user_domain_name': ctx['user_domain_name'],
+            'password': ctx['password'],
+            'project_id': obj.project,
+            'trusts': trust_id,
+        }
+
+        profile_context = self.spec_data[self.CONTEXT]
+        if profile_context is not None and len(profile_context) > 0:
+            # We don't know what will happen, it is completely left to users.
+            params.update(profile_context)
+        return params
 
     def do_create(self, obj):
         '''For subclass to override.'''
