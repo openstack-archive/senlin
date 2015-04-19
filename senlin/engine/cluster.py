@@ -87,6 +87,12 @@ class Cluster(periodic_task.PeriodicTasks):
         self.rt = {}
 
         if context is not None:
+            if self.user == '':
+                self.user = context.user
+            if self.project == '':
+                self.project = context.project
+            if self.domain == '':
+                self.domain = context.domain
             self._load_runtime_data(context)
 
     def _load_runtime_data(self, context):

@@ -51,7 +51,9 @@ class Node(object):
 
         self.physical_id = kwargs.get('physical_id', '')
         self.profile_id = profile_id
-        self.project = kwargs.get('project', None)
+        self.user = kwargs.get('user', '')
+        self.project = kwargs.get('project', '')
+        self.domain = kwargs.get('domain', '')
         self.cluster_id = cluster_id
         self.index = kwargs.get('index', -1)
         self.role = kwargs.get('role', '')
@@ -68,7 +70,12 @@ class Node(object):
         self.rt = {}
 
         if context is not None:
-            self.project = context.project
+            if self.user == '':
+                self.user = context.user
+            if self.project == '':
+                self.project = context.project
+            if self.domain == '':
+                self.domain = context.domain
             self._load_runtime_data(context)
 
     def _load_runtime_data(self, context):
@@ -88,7 +95,9 @@ class Node(object):
             'physical_id': self.physical_id,
             'cluster_id': self.cluster_id,
             'profile_id': self.profile_id,
+            'user': self.user,
             'project': self.project,
+            'domain': self.domain,
             'index': self.index,
             'role': self.role,
             'init_time': self.init_time,
@@ -125,7 +134,9 @@ class Node(object):
         kwargs = {
             'id': record.id,
             'physical_id': record.physical_id,
+            'user': record.user,
             'project': record.project,
+            'domain': record.domain,
             'index': record.index,
             'role': record.role,
             'init_time': record.init_time,
@@ -173,7 +184,9 @@ class Node(object):
             'cluster_id': self.cluster_id,
             'physical_id': self.physical_id,
             'profile_id': self.profile_id,
+            'user': self.user,
             'project': self.project,
+            'domain': self.domain,
             'index': self.index,
             'role': self.role,
             'init_time': self.init_time,

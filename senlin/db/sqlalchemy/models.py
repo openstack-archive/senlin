@@ -93,9 +93,9 @@ class Cluster(BASE, SenlinBase, SoftDelete):
     profile_id = sqlalchemy.Column(sqlalchemy.String(36),
                                    sqlalchemy.ForeignKey('profile.id'),
                                    nullable=False)
-    user = sqlalchemy.Column(sqlalchemy.String(36))
-    domain = sqlalchemy.Column(sqlalchemy.String(36))
-    project = sqlalchemy.Column(sqlalchemy.String(36))
+    user = sqlalchemy.Column(sqlalchemy.String(32), nullable=False)
+    project = sqlalchemy.Column(sqlalchemy.String(32), nullable=False)
+    domain = sqlalchemy.Column(sqlalchemy.String(32))
     parent = sqlalchemy.Column(sqlalchemy.String(36))
 
     init_time = sqlalchemy.Column(sqlalchemy.DateTime)
@@ -126,7 +126,9 @@ class Node(BASE, SenlinBase, SoftDelete):
                                    sqlalchemy.ForeignKey('cluster.id'))
     profile_id = sqlalchemy.Column(sqlalchemy.String(36),
                                    sqlalchemy.ForeignKey('profile.id'))
-    project = sqlalchemy.Column(sqlalchemy.String(36))
+    user = sqlalchemy.Column(sqlalchemy.String(32), nullable=False)
+    project = sqlalchemy.Column(sqlalchemy.String(32), nullable=False)
+    domain = sqlalchemy.Column(sqlalchemy.String(32))
     index = sqlalchemy.Column(sqlalchemy.Integer)
     role = sqlalchemy.Column(sqlalchemy.String(64))
 
@@ -236,9 +238,9 @@ class Webhook(BASE, SenlinBase, SoftDelete):
     id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
                            default=lambda: str(uuid.uuid4()))
     name = sqlalchemy.Column('name', sqlalchemy.String(255))
-    user = sqlalchemy.Column(sqlalchemy.String(36))
-    domain = sqlalchemy.Column(sqlalchemy.String(36))
-    project = sqlalchemy.Column(sqlalchemy.String(36))
+    user = sqlalchemy.Column(sqlalchemy.String(32))
+    domain = sqlalchemy.Column(sqlalchemy.String(32))
+    project = sqlalchemy.Column(sqlalchemy.String(32))
 
     created_time = sqlalchemy.Column(sqlalchemy.DateTime)
     deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
@@ -255,7 +257,7 @@ class Credential(BASE, SenlinBase):
 
     __tablename__ = 'credential'
 
-    user = sqlalchemy.Column(sqlalchemy.String(36), primary_key=True,
+    user = sqlalchemy.Column(sqlalchemy.String(32), primary_key=True,
                              nullable=False)
     project = sqlalchemy.Column(sqlalchemy.String(32), primary_key=True,
                                 nullable=False)
@@ -310,8 +312,8 @@ class Event(BASE, SenlinBase, SoftDelete):
                                    nullable=True)
     cluster = relationship(Cluster, backref=backref('events'))
     level = sqlalchemy.Column(sqlalchemy.String(64))
-    user = sqlalchemy.Column(sqlalchemy.String(36))
-    project = sqlalchemy.Column(sqlalchemy.String(36))
+    user = sqlalchemy.Column(sqlalchemy.String(32))
+    project = sqlalchemy.Column(sqlalchemy.String(32))
     action = sqlalchemy.Column(sqlalchemy.String(36))
     status = sqlalchemy.Column(sqlalchemy.String(255))
     status_reason = sqlalchemy.Column(sqlalchemy.String(255))
