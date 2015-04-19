@@ -68,14 +68,14 @@ class WebhookMiddleware(wsgi.Middleware):
         # Get the credential stored in DB based on webhook ID.
         # TODO(Anyone): Use Barbican to store these credential.
         LOG.debug(_("Get credential of webhook %(id)s"), webhook_id)
-        senlin_context = context.RequestContext.get_service_context()
+        senlin_context = context.get_service_context()
         webhook_obj = webhooks.Webhook.load(senlin_context, webhook_id)
         credential = webhook_obj.credential
         credential['webhook_id'] = webhook_id
         if 'auth_url' not in credential:
             # If no auth_url is provided in credential, use
             # auth_url of senlin service context
-            credential['auth_url'] = senlin_context.auth_url
+            credential['auth_url'] = senlin_context['auth_url']
 
         # Decrypt the credential password with key embedded in req params
         try:

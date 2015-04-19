@@ -10,17 +10,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo_config import cfg
-from oslo_context import context
+from oslo_context import context as base_context
 from oslo_utils import encodeutils
 
 from senlin.common import policy
 from senlin.db import api as db_api
 
-CONF = cfg.CONF
 
-
-class RequestContext(context.RequestContext):
+class RequestContext(base_context.RequestContext):
     '''Stores information about the security context.
 
     The context encapsulates information related to the user accessing the
@@ -110,12 +107,16 @@ class RequestContext(context.RequestContext):
     def from_dict(cls, values):
         return cls(**values)
 
-    @classmethod
-    def get_service_context(cls):
-        params = {
-            'user_name': CONF.keystone_authtoken.admin_user,
-            'password': CONF.keystone_authtoken.admin_password,
-            'auth_url': CONF.keystone_authtoken.auth_uri,
-            'project_name': CONF.keystone_authtoken.admin_tenant_name
-        }
-        return cls(**params)
+
+def get_service_context(**args):
+    '''An abstraction layer for getting service context.
+
+    There could be multiple cloud backends for senlin to use. This
+    abstraction layer provides an indirection for senlin to get the
+    credentials of 'senlin' user on the specific cloud. By default,
+    this credential refers to the credentials built for keystone middleware
+    in an OpenStack cloud.
+    '''
+
+    from senlin.drivers.openstack import keystone_v3
+    return keystone_v3.get_service_credentials(**args)

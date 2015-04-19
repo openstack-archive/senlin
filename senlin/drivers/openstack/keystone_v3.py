@@ -13,11 +13,18 @@
 import six
 
 from openstack.identity.v3 import user
+from oslo_config import cfg
+from oslo_utils import importutils
 
 from senlin.common import exception
 from senlin.drivers import base
 from senlin.drivers.openstack import sdk
 from senlin.openstack.identity.v3 import trust
+
+CONF = cfg.CONF
+
+# Ensure keystonemiddleware options are imported
+importutils.import_module('keystonemiddleware.auth_token')
 
 
 class KeystoneClient(base.DriverBase):
@@ -110,3 +117,20 @@ class KeystoneClient(base.DriverBase):
             raise exception.Error(message=six.text_type(ex))
 
         return result
+
+
+def get_service_credentials(**args):
+    '''Senlin service credential to use with Keystone.
+
+    :param args: An additional keyword argument list that can be used
+                 for customizing the default settings.
+    '''
+
+    creds = {
+        'user_name': CONF.keystone_authtoken.admin_user,
+        'password': CONF.keystone_authtoken.admin_password,
+        'auth_url': CONF.keystone_authtoken.auth_uri,
+        'project_name': CONF.keystone_authtoken.admin_tenant_name
+    }
+    creds.update(**args)
+    return creds
