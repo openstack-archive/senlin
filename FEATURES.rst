@@ -109,6 +109,15 @@ express their requirements in an abstract manner.
 Low Priority
 ------------
 
+Replace Green Threads with Python Threading
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Senlin is now using green threads (eventlets) for async executions. The
+eventlets execution model is not making the use of multi-processing platforms
+in an efficient way. Senlin needs a scalable execution engine, so native
+multi-threading is needed.
+
+
 Metrics Collection
 ^^^^^^^^^^^^^^^^^^
 
