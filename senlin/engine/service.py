@@ -1084,6 +1084,9 @@ class EngineService(service.Service):
             msg = _('The credential parameter is missing')
             raise exception.SenlinBadRequest(msg=msg)
 
+        if not params:
+            params = {}
+
         webhook = webhook_mod.Webhook(context, obj_id, obj_type,
                                       action, credential=credential,
                                       params=params, name=name)
@@ -1101,6 +1104,41 @@ class EngineService(service.Service):
         db_webhook = self.webhook_find(context, identity)
         webhook = webhook_mod.Webhook.load(context, webhook_id=db_webhook.id)
         return webhook.to_dict()
+
+    @request_context
+    def webhook_trigger(self, context, identity, params=None):
+        webhook = self.webhook_get(context, identity)
+
+        # Check whether target obj exists
+        obj_id = webhook['obj_id']
+        obj_type = webhook['obj_type']
+
+        if obj_type == consts.WEBHOOK_OBJ_TYPE_CLUSTER:
+            self.cluster_find(context, obj_id)
+        elif obj_type == consts.WEBHOOK_OBJ_TYPE_NODE:
+            self.node_find(context, obj_id)
+        else:
+            self.policy_find(context, obj_id)
+
+        # If input parameters are provided when webhook is
+        # triggered, it will replace the params stored in
+        # webhook and be used as the action input.
+        if params:
+            input_params = params
+        else:
+            input_params = webhook['params']
+
+        action_name = 'webhook_action_%s' % webhook['id']
+        action = action_mod.Action(context, webhook['action'],
+                                   name=action_name,
+                                   target=obj_id,
+                                   inputs=input_params,
+                                   cause=action_mod.CAUSE_RPC)
+        action.store(context)
+        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
+                          None, action_id=action.id)
+
+        return {'action': action.id}
 
     @request_context
     def webhook_delete(self, context, identity, force=False):

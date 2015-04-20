@@ -55,7 +55,7 @@ class Webhook(object):
         # contains the password and auth_url for WebhookMiddleware
         # to do authentication.
         self.credential = kwargs.get('credential', None)
-        self.params = kwargs.get('params', None)
+        self.params = kwargs.get('params', {})
 
     def store(self, context):
         '''Store the webhook in database and return its ID.'''

@@ -536,6 +536,36 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
+    def test_webhook_trigger(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'trigger', True)
+        body = None
+        webhook_id = 'test_webhook_id'
+        action_id = 'test_action_id'
+
+        engine_response = {
+            'action': action_id,
+        }
+
+        req = self._post('/webhooks/test_webhook_id/trigger',
+                         json.dumps(body))
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=engine_response)
+
+        resp = self.controller.trigger(req, tenant_id=self.project,
+                                       webhook_id=webhook_id,
+                                       body=None)
+
+        mock_call.assert_called_with(
+            req.context,
+            ('webhook_trigger', {
+                'params': None,
+                'identity': webhook_id,
+            })
+        )
+
+        expected = engine_response
+        self.assertEqual(expected, resp)
+
     def test_webhook_delete_success(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         wid = 'aaaa-bbbb-cccc'
