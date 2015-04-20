@@ -12,3 +12,4 @@ GRANT ALL ON senlin.* TO 'senlin'@'%' IDENTIFIED BY '${MYSQL_SENLIN_PW}';
 flush privileges;
 EOF
 
+senlin-manage db_sync
