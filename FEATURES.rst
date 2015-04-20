@@ -57,6 +57,14 @@ tools into the whole picture. One of the option is to provide a easy way for
 Senlin to work with Ansible, for example.
 
 
+CoreOS based Container Support
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To Senlin, CoreOS is just another VM image. However, CoreOS provides some
+builtin support to Container/Docker and it provides clustering facility for
+user applications.
+
+
 Define and Enforce Quotas
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
