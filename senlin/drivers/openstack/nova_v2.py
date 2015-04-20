@@ -13,6 +13,7 @@
 import time
 
 from oslo_config import cfg
+from oslo_log import log
 
 from openstack.compute.v2 import flavor
 from openstack.compute.v2 import image
@@ -27,13 +28,15 @@ from senlin.common import exception
 from senlin.drivers import base
 from senlin.drivers.openstack import sdk
 
+LOG = log.getLogger(__name__)
+
 
 class NovaClient(base.DriverBase):
     '''Nova V2 driver.'''
 
-    def __init__(self, context):
+    def __init__(self, params):
         # TODO(anyone): Need to make the user_preferences work here.
-        conn = sdk.create_connection(context)
+        conn = sdk.create_connection(params)
         self.session = conn.session
         self.auth = self.session.authenticator
 
@@ -87,14 +90,18 @@ class NovaClient(base.DriverBase):
         except sdk.exc.HttpException as ex:
             raise ex
 
+    def image_get_by_name(self, name):
+        imgs = [img for img in self.image_list(name=name)]
+        if len(imgs) == 0:
+            raise exception.ResourceNotFound(resource=name)
+
+        return imgs[0]
+
     def image_list(self, **params):
         try:
             return image.Image.list(self.session, **params)
         except sdk.exc.HttpException as ex:
             raise ex
-
-    def image_update(self, **params):
-        raise NotImplemented
 
     def image_delete(self, **params):
         obj = image.Image.new(**params)
@@ -185,6 +192,10 @@ class NovaClient(base.DriverBase):
             raise ex
 
     def server_delete(self, **params):
+        def _is_not_found(ex):
+            parsed = sdk.parse_exception(ex)
+            return isinstance(parsed, sdk.HTTPNotFound)
+
         timeout = cfg.CONF.default_action_timeout
         if 'timeout' in params:
             timeout = params.pop('timeout')
@@ -193,17 +204,16 @@ class NovaClient(base.DriverBase):
         try:
             obj.delete(self.session)
         except sdk.exc.HttpException as ex:
-            sdk.ignore_not_found(ex)
+            if _is_not_found(ex):
+                return
 
         total_sleep = 0
         while total_sleep < timeout:
             try:
                 obj.get(self.session)
             except sdk.exc.HttpException as ex:
-                parsed = sdk.exc.parse_exception(ex)
-                if isinstance(parsed, sdk.exc.HTTPNotFound):
-                    return
-                raise ex
+                if not _is_not_found(ex):
+                    raise ex
             time.sleep(5)
             total_sleep += 5
 

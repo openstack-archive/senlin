@@ -11,7 +11,9 @@
 # under the License.
 
 from oslo_log import log as logging
+import six
 
+from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.drivers.openstack import nova_v2 as novaclient
@@ -24,13 +26,13 @@ class ServerProfile(base.Profile):
     '''Profile for an OpenStack Nova server.'''
 
     KEYS = (
-        ADMIN_PASS, AUTO_DISK_CONFIG, AVAILABILITY_ZONE,
+        CONTEXT, ADMIN_PASS, AUTO_DISK_CONFIG, AVAILABILITY_ZONE,
         BLOCK_DEVICE_MAPPING,  # BLOCK_DEVICE_MAPPING_V2,
         CONFIG_DRIVE, FLAVOR, IMAGE, KEY_NAME, METADATA,
         NAME, NETWORKS, PERSONALITY, SECURITY_GROUPS,
         TIMEOUT, USER_DATA,
     ) = (
-        'adminPass', 'auto_disk_config', 'availability_zone',
+        'context', 'adminPass', 'auto_disk_config', 'availability_zone',
         'block_device_mapping',
         # 'block_device_mapping_v2',
         'config_drive', 'flavor', 'image', 'key_name', 'metadata',
@@ -58,6 +60,9 @@ class ServerProfile(base.Profile):
     )
 
     spec_schema = {
+        CONTEXT: schema.Map(
+            _('Customized security context for operating servers.'),
+        ),
         ADMIN_PASS: schema.String(
             _('Password for the administrator account.'),
         ),
@@ -160,13 +165,18 @@ class ServerProfile(base.Profile):
         self._nc = None
         self.server_id = None
 
-    def nova(self):
-        '''Construct heat client using the combined context.'''
+    def nova(self, obj):
+        '''Construct nova client based on object.
+
+        :param obj: Object for which the client is created. It is expected to
+                    be None when retrieving an existing client. When creating
+                    a client, it contains the user and project to be used.
+        '''
 
         if self._nc is not None:
             return self._nc
-
-        self._nc = novaclient.NovaClient(self.context)
+        params = self._get_connection_params(obj)
+        self._nc = novaclient.NovaClient(params)
         return self._nc
 
     def do_validate(self, obj):
@@ -177,7 +187,6 @@ class ServerProfile(base.Profile):
 
     def do_create(self, obj):
         '''Create a server using the given profile.'''
-
         kwargs = {}
         for k in self.KEYS:
             if k in self.spec_data:
@@ -185,18 +194,29 @@ class ServerProfile(base.Profile):
                     kwargs[k] = self.spec_data[k]
 
         if self.IMAGE in self.spec_data:
-            image = self.nova().image_get(id=self.spec_data[self.IMAGE])
+            name_or_id = self.spec_data[self.IMAGE]
+            try:
+                image = self.nova(obj).image_get(id=name_or_id)
+            except Exception:
+                # could be a image name
+                pass
+
+            try:
+                image = self.nova(obj).image_get_by_name(name_or_id)
+            except Exception:
+                raise exception.ResourceNotFound(resource=name_or_id)
+
             kwargs[self.IMAGE] = image
 
         if self.FLAVOR in self.spec_data:
-            flavor = self.nova().flavor_get(id=self.spec_data[self.FLAVOR])
+            flavor = self.nova(obj).flavor_get(id=self.spec_data[self.FLAVOR])
             kwargs[self.FLAVOR] = flavor
 
         if obj.name is not None:
             kwargs[self.NAME] = obj.name
 
         LOG.info('Creating server: %s' % kwargs)
-        server = self.nova().server_create(**kwargs)
+        server = self.nova(obj).server_create(**kwargs)
         self.server_id = server.id
 
         return server.id
@@ -205,8 +225,9 @@ class ServerProfile(base.Profile):
         self.server_id = obj.physical_id
 
         try:
-            self.nova().server_delete(id=self.server_id)
+            self.nova(obj).server_delete(id=self.server_id)
         except Exception as ex:
+            LOG.error('error: %s' % six.text_type(ex))
             raise ex
 
         return True
@@ -224,7 +245,7 @@ class ServerProfile(base.Profile):
         # TODO(anyone): Validate the new profile
         # TODO(anyone): Do update based on the fields provided.
 
-        # self.nova().server_update(**fields)
+        # self.nova(obj).server_update(**fields)
         return True
 
     def do_check(self, obj):

@@ -107,6 +107,7 @@ class KeystoneClient(base.DriverBase):
             'trustee_user_id': trustee,
             'project_id': project,
             'impersonation': impersonation,
+            'allow_redelegation': True,
             'roles': [{'name': role} for role in roles]
         }
 
@@ -119,7 +120,7 @@ class KeystoneClient(base.DriverBase):
         return result
 
 
-def get_service_credentials(**args):
+def get_service_credentials(**kwargs):
     '''Senlin service credential to use with Keystone.
 
     :param args: An additional keyword argument list that can be used
@@ -130,7 +131,9 @@ def get_service_credentials(**args):
         'user_name': CONF.keystone_authtoken.admin_user,
         'password': CONF.keystone_authtoken.admin_password,
         'auth_url': CONF.keystone_authtoken.auth_uri,
-        'project_name': CONF.keystone_authtoken.admin_tenant_name
+        'project_name': CONF.keystone_authtoken.admin_tenant_name,
+        'user_domain_name': 'Default',
+        'project_domain_name': 'Default',
     }
-    creds.update(**args)
+    creds.update(**kwargs)
     return creds
