@@ -68,8 +68,13 @@ class WebhookMiddleware(wsgi.Middleware):
         # Get the credential stored in DB based on webhook ID.
         # TODO(Anyone): Use Barbican to store these credential.
         LOG.debug(_("Get credential of webhook %(id)s"), webhook_id)
-        senlin_context = context.get_service_context()
-        webhook_obj = webhooks.Webhook.load(senlin_context, webhook_id)
+        senlin_context = context.RequestContext.get_service_context()
+        # Build a RequestContext from senlin_context since DB API
+        # needs the session parameter.
+        # TODO(Anyone): This converting is not needed any more after
+        # the context redesign is finally complete.
+        ctx = context.RequestContext(**senlin_context)
+        webhook_obj = webhooks.Webhook.load(ctx, webhook_id)
         credential = webhook_obj.credential
         credential['webhook_id'] = webhook_id
         if 'auth_url' not in credential:
