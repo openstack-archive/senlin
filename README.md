@@ -13,6 +13,11 @@ Developers will decide when to contribute it to OpenStack community.
 
 IRC Channel: #senlin
 
+Install via Devstack
+-----
+
+Please refer to devstack/README.rst
+
 Installation
 -----
 * Get senlin code from github

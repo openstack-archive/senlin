@@ -166,9 +166,9 @@ function create_senlin_accounts {
                 "clustering" "Senlin Clustering Service")
         get_or_create_endpoint $senlin_service \
             "$REGION_NAME" \
-            "$SERVICE_PROTOCOL://$SENLIN_API_HOST:$SENLIN_API_PORT/v1" \
-            "$SERVICE_PROTOCOL://$SENLIN_API_HOST:$SENLIN_API_PORT/v1" \
-            "$SERVICE_PROTOCOL://$SENLIN_API_HOST:$SENLIN_API_PORT/v1"
+            "$SERVICE_PROTOCOL://$SENLIN_API_HOST:$SENLIN_API_PORT/v1/\$(tenant_id)s" \
+            "$SERVICE_PROTOCOL://$SENLIN_API_HOST:$SENLIN_API_PORT/v1/\$(tenant_id)s" \
+            "$SERVICE_PROTOCOL://$SENLIN_API_HOST:$SENLIN_API_PORT/v1/\$(tenant_id)s"
     fi
 
     # senlin_stack_user role is for users created by Senlin
