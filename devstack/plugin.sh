@@ -9,15 +9,9 @@ source $DEST/senlin/devstack/lib/senlin
 (set -o posix; set)
 
 if is_service_enabled sl-api sl-eng; then
-    if [[ "$1" == "stack" && "$2" == "pre-install" ]]; then
-        echo_summary "Before Installing senlin"
-        mkdir -p $SCREEN_LOGDIR
-    elif [[ "$1" == "stack" && "$2" == "install" ]]; then
+    if [[ "$1" == "stack" && "$2" == "install" ]]; then
         echo_summary "Installing senlin"
         install_senlin
-
-#        LIBS_FROM_GIT="${LIBS_FROM_GIT},python-senlinclient"
-
         install_senlinclient
         cleanup_senlin
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then

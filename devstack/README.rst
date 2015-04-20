@@ -9,7 +9,7 @@ Refer the quickstart guide for more information on using devstack and senlin.
 To install senlin into devstack, add the following settings to enable senlin plugin: ::
 
      [[local|localrc]]
-     enable_plugin senlin https://github.com/openstack/senlin master
+     enable_plugin senlin https://github.com/stackforge/senlin master
      enable_service sl-api sl-eng
 
 Run devstack as normal: ::
