@@ -5,7 +5,6 @@ HIGH PRIORITY
 ENGINE
 ------
   - cleanse scheduler module [Yanyan Hu]
-    - Using python threading to replace greenthread(long term).
   - add support to get node details from the profile layer, e.g. Nova server
     attributes or Heat stack outputs etc.
 
@@ -27,12 +26,6 @@ MIDDLE PRIORITY
 
 API
 ---
-  - Implement webhook support [Yanyan Hu]
-    - Add DB model and API for webhook (done)
-    - Implement Webhook Class and credential logic based on keystone trust
-    - Implement API interface
-  - Implement senlin authorization control [Qiming]
-    - http://git.openstack.org/cgit/stackforge/senlin/tree/doc/source/authorization.rst
   - Revise the API for sorting, based on the following guideline:
     https://github.com/openstack/api-wg/blob/master/guidelines/pagination_filter_sort.rst
   - Add support to replace a cluster node with another node
@@ -44,6 +37,10 @@ DB
 ENGINE
 ------
   - Cleanse common/exception module
+
+  - Revise spec parser so that 'type' and 'version' are parts of the spec file
+    This could be a client-only fix, or a client/server fix.
+
   - Design and implement dynamical plugin loading mechanism that allows 
     loading plugins from any paths
 
@@ -58,13 +55,10 @@ ENGINE
     Note: if template and template_url are both specified, use template
     Need to refer to heat api test for testing heat profile
 
-  - Add support to periodically prune events/actions table
-
 OSLO
 ----
   - Add support to oslo_versionedobjects
-  - Migrate to oslo.policy 
-  - Default logging formatter is not compatible with new version of oslo_log/oslo_config
+  - Check if pre-context middleware needs logging and add special supports.
 
 POLICY
 ------
