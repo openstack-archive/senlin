@@ -54,6 +54,16 @@ class NovaClient(base.DriverBase):
         except sdk.exc.HttpException as ex:
             raise ex
 
+    def flavor_get_by_name(self, name):
+        flavors = [f for f in self.flavor_list(name=name)]
+        if len(flavors) == 0:
+            raise exception.ResourceNotFound(resource=name)
+        elif len(flavors) > 1:
+            arg = 'flavor=%s' % name
+            raise exception.MultipleChoices(arg=arg)
+
+        return flavors[0]
+
     def flavor_list(self, **params):
         try:
             return flavor.Flavor.list(self.session, **params)
@@ -94,6 +104,9 @@ class NovaClient(base.DriverBase):
         imgs = [img for img in self.image_list(name=name)]
         if len(imgs) == 0:
             raise exception.ResourceNotFound(resource=name)
+        elif len(imgs) > 1:
+            arg = 'image=%s' % name
+            raise exception.MultipleChoices(arg=arg)
 
         return imgs[0]
 
