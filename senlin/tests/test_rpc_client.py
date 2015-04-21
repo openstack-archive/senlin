@@ -280,7 +280,8 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         self._test_engine_api('node_create', 'call', **kwargs)
 
     def test_node_get(self):
-        self._test_engine_api('node_get', 'call', identity='a-node')
+        self._test_engine_api('node_get', 'call', identity='a-node',
+                              show_details=mock.ANY)
 
     def test_node_join(self):
         self._test_engine_api('node_join', 'call',

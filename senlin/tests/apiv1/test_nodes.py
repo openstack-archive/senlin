@@ -398,6 +398,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'status_reason': u'Node successfully created',
             u'data': {},
             u'tags': {},
+            u'details': {}
         }
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -407,10 +408,28 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                        node_id=node_id)
 
         mock_call.assert_called_once_with(
-            req.context, ('node_get', {'identity': node_id}))
+            req.context, ('node_get', {'identity': node_id,
+                                       'show_details': False}))
 
         expected = {'node': engine_resp}
         self.assertEqual(expected, response)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_node_get_show_details_not_bool(self, mock_call, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'get', True)
+        node_id = 'aaaa-bbbb-cccc'
+        params = {'show_details': 'Okay'}
+        req = self._get('/nodes/%(node_id)s' % {'node_id': node_id},
+                        params=params)
+
+        ex = self.assertRaises(senlin_exc.InvalidParameter,
+                               self.controller.get, req,
+                               node_id=node_id,
+                               tenant_id=self.project)
+
+        self.assertEqual("Invalid value 'Okay' specified for 'show_details'",
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     def test_node_get_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)

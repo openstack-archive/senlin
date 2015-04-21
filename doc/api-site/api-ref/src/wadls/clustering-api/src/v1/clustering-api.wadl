@@ -1387,6 +1387,18 @@
         <wadl:doc xml:lang="EN" title="Show Node Data" xmlns="http://docbook.org/ns/docbook">
             <para role="shortdesc">Shows data for a specified node.</para>
         </wadl:doc>
+        <request>
+            <representation mediaType="application/json">
+                <param name="show_details" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            A boolean indicating whether the node details should be returned.
+                            Default is False.
+                        </para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
         <response status="200">
             <representation mediaType="application/json">
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">

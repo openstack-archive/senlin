@@ -227,9 +227,10 @@ class EngineClient(object):
                                        cluster_id=cluster_id,
                                        role=role, tags=tags))
 
-    def node_get(self, ctxt, identity):
+    def node_get(self, ctxt, identity, show_details=False):
         return self.call(ctxt,
-                         self.make_msg('node_get', identity=identity))
+                         self.make_msg('node_get', identity=identity,
+                                       show_details=show_details))
 
     def node_update(self, ctxt, identity, name, profile_id, role, tags):
         return self.call(ctxt,
