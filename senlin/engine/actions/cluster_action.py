@@ -87,9 +87,17 @@ class ClusterAction(base.Action):
         placement = policy_data.get('placement', None)
 
         for m in range(count):
-            name = 'node-%s-%003d' % (cluster.id[:8], cluster.size + m + 1)
+            index = cluster.size + m + 1
+            kwargs = {
+                'user': cluster.user,
+                'project': cluster.project,
+                'domain': cluster.domain,
+                'index': index,
+                'tags': {}
+            }
+            name = 'node-%s-%003d' % (cluster.id[:8], index)
             node = node_mod.Node(name, cluster.profile_id, cluster.id,
-                                 context=self.context)
+                                 context=self.context, **kwargs)
 
             if placement is not None:
                 # We assume placement is a list

@@ -211,9 +211,10 @@ class NovaClient(base.DriverBase):
         while total_sleep < timeout:
             try:
                 obj.get(self.session)
-            except sdk.exc.HttpException as ex:
+            except Exception as ex:
                 if not _is_not_found(ex):
                     raise ex
+
             time.sleep(5)
             total_sleep += 5
 
