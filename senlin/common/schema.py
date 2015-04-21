@@ -299,7 +299,7 @@ class List(Schema):
             raise TypeError(_('"%s" is not a List') % value)
 
         return [v[1] for v in self._get_children(enumerate(value),
-                                                 range(len(value)),
+                                                 list(range(len(value))),
                                                  context)]
 
     def validate(self, value, context=None):

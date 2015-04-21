@@ -16,13 +16,7 @@ Controller that returns information on the senlin API versions
 """
 
 import json
-import six
-
-if six.PY2:
-    import httplib
-else:
-    import http.client as httplib
-
+from six.moves import http_client
 import webob.dec
 
 
@@ -49,7 +43,7 @@ class Controller(object):
         body = json.dumps(dict(versions=version_objs))
 
         response = webob.Response(request=req,
-                                  status=httplib.MULTIPLE_CHOICES,
+                                  status=http_client.MULTIPLE_CHOICES,
                                   content_type='application/json')
         response.body = body
 
