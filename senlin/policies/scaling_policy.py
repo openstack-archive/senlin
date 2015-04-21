@@ -15,7 +15,6 @@ from oslo_log import log as logging
 from senlin.common import constraints
 from senlin.common import consts
 from senlin.common.i18n import _
-from senlin.common.i18n import _LW
 from senlin.common import schema
 from senlin.db import api as db_api
 from senlin.policies import base
@@ -117,26 +116,30 @@ class ScalingPolicy(base.Policy):
             count = int((self.adjustment_number * current_size) / 100.0)
             if count < self.adjustment_min_step:
                 count = self.adjustment_min_step
+
+        # Sanity check
         if current_size + count > self.max_size:
             policy_data.status = base.CHECK_ERROR
             policy_data.reason = _('Attempted scaling exceeds maximum size')
         elif current_size + count < self.min_size:
             policy_data.status = base.CHECK_ERROR
             policy_data.reason = _('Attempted scaling exceeds minimum size')
+        elif action.action == consts.CLUSTER_SCALE_OUT and count < 0:
+            policy_data.status = base.CHECK_ERROR
+            policy_data.reason = _('Scaling policy generates a negative '
+                                   'count for scaling out operation.')
+        elif action.action == consts.CLUSTER_SCALE_IN and count > 0:
+            policy_data.status = base.CHECK_ERROR
+            policy_data.reason = _('Scaling policy generates a positive '
+                                   'count for scaling in operation.')
         else:
             policy_data.status = base.CHECK_OK
             policy_data.reason = _('Scaling request validated')
 
-        pd = {'count': count}
+        pd = {'count': abs(count)}
         if action.action == consts.CLUSTER_SCALE_OUT:
-            if count < 0:
-                LOG.warning(_LW('Requesting a scale out operation but scaling '
-                                'policy generates a negative count.'))
             policy_data['creation'] = pd
         elif action.action == consts.CLUSTER_SCALE_IN:
-            if count > 0:
-                LOG.warning(_LW('Requesting a scale out operation but scaling '
-                                'policy generates a negative count.'))
             policy_data['deletion'] = pd
 
         return policy_data
