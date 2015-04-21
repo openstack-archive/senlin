@@ -224,6 +224,11 @@ class Node(object):
             values['status_reason'] = reason
         db_api.node_update(context, self.id, values)
 
+    def get_details(self, context):
+        if self.physical_id is None or self.physical_id == '':
+            return {}
+        return profile_base.Profile.get_details(context, self)
+
     def do_create(self, context):
         if self.status != self.INIT:
             LOG.error(_LE('Node is in status "%s"'), self.status)

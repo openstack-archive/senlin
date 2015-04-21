@@ -759,10 +759,16 @@ class EngineService(service.Service):
         return result
 
     @request_context
-    def node_get(self, context, identity):
+    def node_get(self, context, identity, show_details=False):
         db_node = self.node_find(context, identity)
         node = node_mod.Node.load(context, node=db_node)
-        return node.to_dict()
+        res = node.to_dict()
+        if node.physical_id is not None and node.physical_id != '':
+            if show_details:
+                res['details'] = node.get_details(context)
+            else:
+                res['details'] = {}
+        return res
 
     @request_context
     def node_update(self, context, identity, name=None, profile_id=None,

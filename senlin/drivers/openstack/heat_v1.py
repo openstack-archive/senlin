@@ -19,8 +19,6 @@ class HeatClient(base.DriverBase):
     '''Heat V1 driver.'''
 
     def __init__(self, context):
-        # TODO(Qi): construct a proper user_preference object and pass it
-        # to the create_connection call
         conn = sdk.create_connection(context)
         self.session = conn.session
         self.auth = self.session.authenticator
@@ -32,8 +30,8 @@ class HeatClient(base.DriverBase):
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def stack_get(self, **params):
-        obj = stack.Stack.new(**params)
+    def stack_get(self, stack_id):
+        obj = stack.Stack.new(id=stack_id)
         try:
             return obj.get(self.session)
         except sdk.exc.HttpException as ex:

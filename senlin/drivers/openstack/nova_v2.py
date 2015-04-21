@@ -35,7 +35,6 @@ class NovaClient(base.DriverBase):
     '''Nova V2 driver.'''
 
     def __init__(self, params):
-        # TODO(anyone): Need to make the user_preferences work here.
         conn = sdk.create_connection(params)
         self.session = conn.session
         self.auth = self.session.authenticator
@@ -232,12 +231,6 @@ class NovaClient(base.DriverBase):
             total_sleep += 5
 
         raise exception.ProfileOperationTimeout(ex.message)
-
-    def server_details_list(self, **params):
-        try:
-            return server.ServerDetail.list(self.session, **params)
-        except sdk.exc.HttpException as ex:
-            raise ex
 
     def server_interface_create(self, **params):
         obj = server_interface.ServerInterface.new(**params)

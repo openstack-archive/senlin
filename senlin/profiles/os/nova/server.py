@@ -251,3 +251,30 @@ class ServerProfile(base.Profile):
     def do_check(self, obj):
         # TODO(anyone): Check server status
         return True
+
+    def do_get_details(self, obj):
+        if obj.physical_id is None or obj.physical_id == '':
+            return {}
+
+        server = self.nova(obj).server_get(id=obj.physical_id)
+        if server is None:
+            return {}
+        details = {
+            'id': server.id,
+            'name': server.name,
+            'access_ipv4': server.access_ipv4,
+            'access_ipv6': server.access_ipv6,
+            'addresses': server.addresses,
+            'created': server.created,
+            'flavor': server.flavor,
+            'host_id': server.host_id,
+            'image': server.image,
+            'links': server.links,
+            'metadata': server.metadata,
+            'project_id': server.project_id,
+            'status': server.status,
+            'updated': server.updated,
+            'user_id': server.user_id,
+        }
+
+        return details
