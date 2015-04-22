@@ -142,7 +142,13 @@ class NodeController(object):
 
     @util.policy_enforce
     def get(self, req, node_id):
-        node = self.rpc_client.node_get(req.context, node_id)
+        key = consts.PARAM_SHOW_DETAILS
+        show_details = False
+        if key in req.params:
+            show_details = utils.parse_bool_param(key, req.params[key])
+
+        node = self.rpc_client.node_get(req.context, node_id,
+                                        show_details=show_details)
         if not node:
             raise exc.HTTPNotFound()
 
