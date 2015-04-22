@@ -212,3 +212,9 @@ class StackProfile(base.Profile):
 
     def get_schema(self):
         return {}
+
+    def do_get_details(self, obj):
+        if obj.physical_id is None or obj.physical_id == '':
+            return {}
+
+        return self.heat(obj).stack_get(obj.physical_id)

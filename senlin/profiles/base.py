@@ -142,6 +142,11 @@ class Profile(object):
         new_profile = cls.load(context, new_profile_id)
         return profile.do_update(obj, new_profile)
 
+    @classmethod
+    def get_details(cls, context, obj):
+        profile = cls.load(context, obj.profile_id)
+        return profile.do_get_details(obj)
+
     def validate(self):
         '''Validate the schema and the data provided.'''
         self.spec_data.validate()
@@ -184,6 +189,10 @@ class Profile(object):
         return NotImplemented
 
     def do_check(self, obj):
+        '''For subclass to override.'''
+        return NotImplemented
+
+    def do_get_details(self, obj):
         '''For subclass to override.'''
         return NotImplemented
 
