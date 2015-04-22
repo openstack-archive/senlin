@@ -45,7 +45,7 @@ def wrap_exception(notifier=None, publisher_id=None, event_type=None,
             except Exception as e:
                 # Save exception since it can be clobbered during processing
                 # below before we can re-raise
-                # exc_info = sys.exc_info()
+                exc_info = sys.exc_info()
 
                 if notifier:
                     payload = dict(args=args, exception=e)
@@ -59,16 +59,14 @@ def wrap_exception(notifier=None, publisher_id=None, event_type=None,
                     temp_type = event_type
                     if not temp_type:
                         # If f has multiple decorators, they must use
-                        # functools.wraps to ensure the name is
-                        # propagated.
+                        # functools.wraps to ensure the name is propagated.
                         temp_type = f.__name__
 
                     notifier.notify(publisher_id, temp_type, temp_level,
                                     payload)
 
                 # re-raise original exception since it may have been clobbered
-                # raise exc_info[0], exc_info[1], exc_info[2]
-                raise
+                six.reraise(exc_info[0], exc_info[1], exc_info[2])
 
         return functools.wraps(f)(wrapped)
     return inner
