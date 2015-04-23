@@ -239,10 +239,6 @@ class Node(object):
         if not physical_id:
             return False
 
-        if self.cluster_id is not None:
-            self.index = db_api.cluster_get_next_index(context,
-                                                       self.cluster_id)
-
         self.physical_id = physical_id
         self.created_time = datetime.datetime.utcnow()
         self.status = self.ACTIVE

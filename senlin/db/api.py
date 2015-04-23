@@ -53,10 +53,6 @@ def cluster_get_by_short_id(context, short_id):
     return IMPL.cluster_get_by_short_id(context, short_id)
 
 
-def cluster_get_next_index(context, cluster_id):
-    return IMPL.cluster_get_next_index(context, cluster_id)
-
-
 def cluster_get_by_name_and_parent(context, cluster_name, parent):
     return IMPL.cluster_get_by_name_and_parent(context, cluster_name, parent)
 

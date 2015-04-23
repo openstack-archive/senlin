@@ -87,7 +87,9 @@ class ClusterAction(base.Action):
         placement = policy_data.get('placement', None)
 
         for m in range(count):
-            index = cluster.size + m + 1
+            db_cluster = db_api.cluster_get(self.context, cluster.id)
+            index = db_cluster.next_index
+
             kwargs = {
                 'user': cluster.user,
                 'project': cluster.project,

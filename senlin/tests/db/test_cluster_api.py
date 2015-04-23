@@ -164,22 +164,6 @@ class DBAPIClusterTest(base.SenlinTestCase):
         res = db_api.cluster_get_by_short_id(self.ctx, 'non-existent')
         self.assertIsNone(res)
 
-    def test_cluster_get_next_index(self):
-        cluster = shared.create_cluster(self.ctx, self.profile,
-                                        name='cluster_next_index')
-
-        index = db_api.cluster_get_next_index(self.ctx, cluster.id)
-        self.assertEqual(1, index)
-
-        index = db_api.cluster_get_next_index(self.ctx, cluster.id)
-        self.assertEqual(2, index)
-
-        cluster = db_api.cluster_get(self.ctx, cluster.id)
-        self.assertEqual(3, cluster.next_index)
-
-        index = db_api.cluster_get_next_index(self.ctx, 'bad-id')
-        self.assertIsNone(index)
-
     def test_cluster_get_by_name_and_parent(self):
         cluster1 = shared.create_cluster(self.ctx, self.profile,
                                          name='cluster1')
