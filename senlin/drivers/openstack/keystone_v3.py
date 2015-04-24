@@ -12,10 +12,13 @@
 
 import six
 
+from openstack.identity.v3 import endpoint
+from openstack.identity.v3 import service
 from oslo_config import cfg
 from oslo_utils import importutils
 
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.drivers import base
 from senlin.drivers.openstack import sdk
 from senlin.openstack.identity.v3 import trust
@@ -54,6 +57,44 @@ class KeystoneClient(base.DriverBase):
             raise exception.UserNotFound(user=user_name)
 
         return user.id
+
+    def endpoint_get(self, service_id, region=None, interface=None):
+        '''Utility function to get endpoints of a service.'''
+        params = {
+            'service_id': service_id,
+            'region': region,
+            'interface': interface
+        }
+        endpoints = [e for e in endpoint.Endpoint.list(self.session,
+                                                       **params)]
+        if len(endpoints) == 0:
+            msg = _('Endpoint was not found for service %(service)s '
+                    'in region %(region)s with visibility '
+                    '%(interface)s.') % {'service': service_id,
+                                         'region': region,
+                                         'interface': interface}
+            raise exception.SenlinException(msg)
+
+        return endpoints
+
+    def service_get(self, service_type, name=None):
+        '''Utility function to get service detail based on name and type.'''
+        params = {
+            'type': service_type,
+            'name': name
+        }
+        services = [s for s in service.Service.list(self.session, **params)]
+        if len(services) == 0:
+            if name:
+                msg = _('Service was not found for service_type %(type)s '
+                        'with name %(name)s.') % {'type': service_type,
+                                                  'name': name}
+            else:
+                msg = _('Service was not found for service_type '
+                        '%(type)s.') % {'type': service_type}
+            raise exception.SenlinException(msg)
+
+        return services
 
     def trust_get_by_trustor(self, trustor, trustee=None, project=None):
         '''Get trust by trustor.

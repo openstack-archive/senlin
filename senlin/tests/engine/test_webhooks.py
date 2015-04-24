@@ -23,6 +23,7 @@ from senlin.engine import service
 from senlin.tests.common import base
 from senlin.tests.common import utils
 from senlin.tests import fakes
+from senlin.webhooks import webhooks as webhook_mod
 
 
 class WebhookTest(base.SenlinTestCase):
@@ -58,6 +59,9 @@ class WebhookTest(base.SenlinTestCase):
         return cluster
 
     def test_webhook_create(self):
+        mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
+        mock_call.return_value = 'test-url', 'test-key'
+
         cluster = self._create_cluster('c1')
         obj_id = cluster['id']
         obj_type = 'cluster'
@@ -165,6 +169,9 @@ class WebhookTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
 
     def test_webhook_get(self):
+        mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
+        mock_call.return_value = 'test-url', 'test-key'
+
         cluster = self._create_cluster('c1')
         obj_id = cluster['id']
         obj_type = 'cluster'
@@ -189,6 +196,9 @@ class WebhookTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_webhook_list(self, cluster_find):
+        mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
+        mock_call.return_value = 'test-url', 'test-key'
+
         credential = {'userid': 'test-user-id', 'password': 'test-pass'}
         params = None
 
@@ -220,6 +230,9 @@ class WebhookTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_webhook_list_with_filters(self, cluster_find):
+        mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
+        mock_call.return_value = 'test-url', 'test-key'
+
         credential = {'userid': 'test-user-id', 'password': 'test-pass'}
         params = None
 
@@ -264,6 +277,9 @@ class WebhookTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_webhook_list_with_limit_marker(self, cluster_find):
+        mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
+        mock_call.return_value = 'test-url', 'test-key'
+
         credential = {'userid': 'test-user-id', 'password': 'test-pass'}
         params = None
 
@@ -313,6 +329,9 @@ class WebhookTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_webhook_list_with_sort_keys(self, cluster_find):
+        mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
+        mock_call.return_value = 'test-url', 'test-key'
+
         credential = {'userid': 'test-user-id', 'password': 'test-pass'}
         params = None
 
@@ -367,6 +386,9 @@ class WebhookTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_webhook_list_with_sort_dir(self, cluster_find):
+        mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
+        mock_call.return_value = 'test-url', 'test-key'
+
         credential = {'userid': 'test-user-id', 'password': 'test-pass'}
         params = None
 
@@ -403,6 +425,9 @@ class WebhookTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'notify')
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_webhook_trigger(self, cluster_find, notify):
+        mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
+        mock_call.return_value = 'test-url', 'test-key'
+
         obj_id = 'obj-id-1'
         obj_type = 'cluster'
         action = consts.CLUSTER_SCALE_OUT
@@ -437,6 +462,9 @@ class WebhookTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'notify')
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_webhook_trigger_with_params(self, cluster_find, notify):
+        mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
+        mock_call.return_value = 'test-url', 'test-key'
+
         obj_id = 'obj-id-1'
         obj_type = 'cluster'
         action = consts.CLUSTER_SCALE_OUT
@@ -470,6 +498,9 @@ class WebhookTest(base.SenlinTestCase):
         notify.assert_has_calls([expected_call] * 1)
 
     def test_webhook_delete(self):
+        mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
+        mock_call.return_value = 'test-url', 'test-key'
+
         cluster = self._create_cluster('c1')
         obj_id = cluster['id']
         obj_type = 'cluster'
