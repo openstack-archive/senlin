@@ -196,21 +196,18 @@ class ServerProfile(base.Profile):
         if self.IMAGE in self.spec_data:
             name_or_id = self.spec_data[self.IMAGE]
             try:
-                image = self.nova(obj).image_get(id=name_or_id)
-            except Exception:
-                # could be a image name
-                pass
-
-            try:
                 image = self.nova(obj).image_get_by_name(name_or_id)
             except Exception:
                 raise exception.ResourceNotFound(resource=name_or_id)
-
-            kwargs[self.IMAGE] = image
+            # wait for new version of openstacksdk to fix this
+            kwargs.pop(self.IMAGE)
+            kwargs['imageRef'] = image.id
 
         if self.FLAVOR in self.spec_data:
             flavor = self.nova(obj).flavor_get(id=self.spec_data[self.FLAVOR])
-            kwargs[self.FLAVOR] = flavor
+            # wait for new verson of openstacksdk to fix this
+            kwargs.pop(self.FLAVOR)
+            kwargs['flavorRef'] = flavor.id
 
         if obj.name is not None:
             kwargs[self.NAME] = obj.name
@@ -223,6 +220,9 @@ class ServerProfile(base.Profile):
 
     def do_delete(self, obj):
         self.server_id = obj.physical_id
+
+        if not obj.physical_id:
+            return True
 
         try:
             self.nova(obj).server_delete(id=self.server_id)

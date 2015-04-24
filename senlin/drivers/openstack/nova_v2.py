@@ -15,11 +15,6 @@ import time
 from oslo_config import cfg
 from oslo_log import log
 
-from openstack.compute.v2 import flavor
-from openstack.compute.v2 import image
-from openstack.compute.v2 import keypair
-from openstack.compute.v2 import server
-from openstack.compute.v2 import server_interface
 from openstack.compute.v2 import server_ip
 from openstack.compute.v2 import server_meta
 from openstack.compute.v2 import server_metadata
@@ -35,130 +30,103 @@ class NovaClient(base.DriverBase):
     '''Nova V2 driver.'''
 
     def __init__(self, params):
-        conn = sdk.create_connection(params)
-        self.session = conn.session
+        self.conn = sdk.create_connection(params)
+        self.session = self.conn.session
         self.auth = self.session.authenticator
 
     def flavor_create(self, **params):
-        obj = flavor.Flavor.new(**params)
         try:
-            return obj.create(self.session)
+            return self.conn.compute.create_flavor(**params)
         except sdk.exc.HttpException as ex:
             raise ex
 
     def flavor_get(self, **params):
-        obj = flavor.Flavor.new(**params)
         try:
-            return obj.get(self.session)
+            return self.conn.compute.get_flavor(**params)
         except sdk.exc.HttpException as ex:
             raise ex
 
     def flavor_get_by_name(self, name):
-        flavors = [f for f in self.flavor_list(name=name)]
-        if len(flavors) == 0:
-            raise exception.ResourceNotFound(resource=name)
-        elif len(flavors) > 1:
-            arg = 'flavor=%s' % name
-            raise exception.MultipleChoices(arg=arg)
-
-        return flavors[0]
-
-    def flavor_list(self, **params):
         try:
-            return flavor.Flavor.list(self.session, **params)
+            return self.conn.compute.find_flavor(name_or_id=name)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def flavor_update(self, **params):
-        obj = flavor.Flavor.new(**params)
+    def flavor_list(self, details=False, **params):
         try:
-            return obj.update(self.session)
+            return self.conn.compute.list_flavors(details=details, **params)
+        except sdk.exc.HttpException as ex:
+            raise ex
+
+    def flavor_update(self, flavor):
+        # flavor here can be the ID of flavor or flavor class
+        try:
+            return self.conn.compute.update_flavor(value=flavor)
         except sdk.exc.HttpException as ex:
             raise ex
 
     def flavor_delete(self, **params):
-        obj = flavor.Flavor.new(**params)
         try:
-            obj.delete(self.session)
+            self.conn.compute.delete_flavor(**params)
         except sdk.exc.HttpException as ex:
             sdk.ignore_not_found(ex)
-
-    def flavor_detail_list(self, **params):
-        try:
-            return flavor.FlavorDetail.list(self.session, **params)
-        except sdk.exc.HttpException as ex:
-            raise ex
 
     def image_create(self, **params):
         raise NotImplemented
 
     def image_get(self, **params):
-        obj = image.Image.new(**params)
         try:
-            return obj.get(self.session)
+            return self.conn.compute.get_image(**params)
         except sdk.exc.HttpException as ex:
             raise ex
 
     def image_get_by_name(self, name):
-        imgs = [img for img in self.image_list(name=name)]
-        if len(imgs) == 0:
-            raise exception.ResourceNotFound(resource=name)
-        elif len(imgs) > 1:
-            arg = 'image=%s' % name
-            raise exception.MultipleChoices(arg=arg)
-
-        return imgs[0]
-
-    def image_list(self, **params):
         try:
-            return image.Image.list(self.session, **params)
+            return self.conn.compute.find_image(name_or_id=name)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def image_delete(self, **params):
-        obj = image.Image.new(**params)
+    def image_list(self, details=False):
         try:
-            obj.delete(self.session)
+            return self.conn.compute.list_images(details=details)
         except sdk.exc.HttpException as ex:
-            sdk.ignore_not_found(ex)
+            raise ex
 
-    def image_detail_list(self, **params):
+    def image_delete(self, image):
+        # image here can be a ID of image or a image class
         try:
-            return image.ImageDetail.list(self.session, **params)
+            return self.conn.compute.delete_image(value=image)
         except sdk.exc.HttpException as ex:
             raise ex
 
     def keypair_create(self, **params):
-        obj = keypair.Keypair.new(**params)
         try:
-            return obj.create(self.session)
+            return self.conn.compute.create_keypair(**params)
         except sdk.exc.HttpException as ex:
             raise ex
 
     def keypair_get(self, **params):
-        obj = keypair.Keypair.new(**params)
         try:
-            return obj.get(self.session)
+            return self.conn.compute.get_keypair(**params)
         except sdk.exc.HttpException as ex:
             raise ex
 
     def keypair_list(self, **params):
         try:
-            return keypair.Keypair.list(self.session, **params)
+            return self.conn.compute.list_keypairs(**params)
         except sdk.exc.HttpException as ex:
             raise ex
 
     def keypair_update(self, **params):
-        obj = keypair.Keypair.new(**params)
         try:
-            return obj.update(self.session)
+            return self.conn.compute.update_keypair(**params)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def keypair_delete(self, **params):
-        obj = keypair.Keypair.new(**params)
+    def keypair_delete(self, keypair):
+        # keypair here can be the ID of keypair or a keypair class
         try:
-            obj.delete(self.session)
+            self.conn.compute.delete_keypair(value=keypair)
         except sdk.exc.HttpException as ex:
             sdk.ignore_not_found(ex)
 
@@ -167,14 +135,15 @@ class NovaClient(base.DriverBase):
         if 'timeout' in params:
             timeout = params.pop('timeout')
 
-        obj = server.Server.new(**params)
         server_obj = None
         try:
-            server_obj = obj.create(self.session)
+            server_obj = self.conn.compute.create_server(**params)
         except sdk.exc.HttpException as ex:
             raise ex
 
         try:
+            # wait for new version of openstacksdk to fix this,
+            # then use self.conn.compute.wait_for_status() instead
             server_obj.wait_for_status(self.session, wait=timeout)
         except sdk.exc.ResourceFailure as ex:
             raise exception.ProfileOperationFailed(ex.message)
@@ -184,22 +153,20 @@ class NovaClient(base.DriverBase):
         return server_obj
 
     def server_get(self, **params):
-        obj = server.Server.new(**params)
         try:
-            return obj.get(self.session)
+            return self.conn.compute.get_server(**params)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def server_list(self, **params):
+    def server_list(self, details=False):
         try:
-            return server.Server.list(self.session, **params)
+            return self.conn.compute.list_servers(details=details)
         except sdk.exc.HttpException as ex:
             raise ex
 
     def server_update(self, **params):
-        obj = server.Server.new(**params)
         try:
-            return obj.update(self.session)
+            return self.conn.compute.update_server(**params)
         except sdk.exc.HttpException as ex:
             raise ex
 
@@ -212,9 +179,8 @@ class NovaClient(base.DriverBase):
         if 'timeout' in params:
             timeout = params.pop('timeout')
 
-        obj = server.Server.new(**params)
         try:
-            obj.delete(self.session)
+            self.conn.compute.delete_server(**params)
         except sdk.exc.HttpException as ex:
             if _is_not_found(ex):
                 return
@@ -222,7 +188,7 @@ class NovaClient(base.DriverBase):
         total_sleep = 0
         while total_sleep < timeout:
             try:
-                obj.get(self.session)
+                self.server_get(**params)
             except Exception as ex:
                 if not _is_not_found(ex):
                     raise ex
@@ -233,33 +199,32 @@ class NovaClient(base.DriverBase):
         raise exception.ProfileOperationTimeout(ex.message)
 
     def server_interface_create(self, **params):
-        obj = server_interface.ServerInterface.new(**params)
         try:
-            return obj.create(self.session)
+            return self.conn.compute.create_server_interface(**params)
         except sdk.exc.HttpException as ex:
             raise ex
 
     def server_interface_get(self, **params):
-        obj = server_interface.ServerInterface.new(**params)
         try:
-            return obj.get(self.session)
+            return self.conn.compute.get_server_interface(**params)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def server_interface_list(self, **params):
+    def server_interface_list(self):
         try:
-            return server_interface.ServerInterface.list(self.session,
-                                                         **params)
+            return self.conn.compute.list_server_interfaces()
         except sdk.exc.HttpException as ex:
             raise ex
 
     def server_interface_update(self, **params):
-        raise NotImplemented
-
-    def server_interface_delete(self, **params):
-        obj = server_interface.ServerInterface.new(**params)
         try:
-            obj.delete(self.session)
+            return self.conn.compute.update_server_interface(**params)
+        except sdk.exc.HttpException as ex:
+            raise ex
+
+    def server_interface_delete(self, interface):
+        try:
+            self.conn.compute.delete_server_interface(value=interface)
         except sdk.exc.HttpException as ex:
             sdk.ignore_not_found(ex)
 
