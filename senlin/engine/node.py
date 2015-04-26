@@ -13,6 +13,7 @@
 import datetime
 
 from oslo_log import log as logging
+from oslo_utils import timeutils
 
 from senlin.common import exception
 from senlin.common.i18n import _LE
@@ -178,6 +179,9 @@ class Node(object):
         return [cls._from_db_record(context, record) for record in records]
 
     def to_dict(self):
+        def _fmt_time(value):
+            return value and timeutils.isotime(value)
+
         node_dict = {
             'id': self.id,
             'name': self.name,
@@ -189,10 +193,10 @@ class Node(object):
             'domain': self.domain,
             'index': self.index,
             'role': self.role,
-            'init_time': self.init_time,
-            'created_time': self.created_time,
-            'updated_time': self.updated_time,
-            'deleted_time': self.deleted_time,
+            'init_time': _fmt_time(self.init_time),
+            'created_time': _fmt_time(self.created_time),
+            'updated_time': _fmt_time(self.updated_time),
+            'deleted_time': _fmt_time(self.deleted_time),
             'status': self.status,
             'status_reason': self.status_reason,
             'data': self.data,

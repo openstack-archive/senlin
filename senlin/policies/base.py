@@ -13,6 +13,8 @@
 import collections
 import datetime
 
+from oslo_utils import timeutils
+
 from senlin.common import exception
 from senlin.common import schema
 from senlin.db import api as db_api
@@ -192,6 +194,9 @@ class Policy(object):
         return policy_data
 
     def to_dict(self):
+        def _fmt_time(value):
+            return value and timeutils.isotime(value)
+
         pb_dict = {
             'id': self.id,
             'name': self.name,
@@ -199,9 +204,9 @@ class Policy(object):
             'spec': self.spec,
             'level': self.level,
             'cooldown': self.cooldown,
-            'created_time': self.created_time,
-            'updated_time': self.updated_time,
-            'deleted_time': self.deleted_time,
+            'created_time': _fmt_time(self.created_time),
+            'updated_time': _fmt_time(self.updated_time),
+            'deleted_time': _fmt_time(self.deleted_time),
             'data': self.data,
         }
         return pb_dict
