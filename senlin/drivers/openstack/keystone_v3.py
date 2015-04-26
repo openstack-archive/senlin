@@ -12,7 +12,6 @@
 
 import six
 
-from openstack.identity.v3 import user
 from oslo_config import cfg
 from oslo_utils import importutils
 
@@ -31,22 +30,9 @@ class KeystoneClient(base.DriverBase):
     '''Keystone V3 driver.'''
 
     def __init__(self, context):
-        conn = sdk.create_connection(context)
-        self.session = conn.session
+        self.conn = sdk.create_connection(context)
+        self.session = self.conn.session
         self.auth = self.session.authenticator
-
-    def user_get(self, **params):
-        obj = user.User.new(**params)
-        try:
-            return obj.get(self.session)
-        except sdk.exc.HttpException as ex:
-            raise ex
-
-    def user_list(self, **params):
-        try:
-            return user.User.list(self.session, **params)
-        except sdk.exc.HttpException as ex:
-            raise ex
 
     def trust_list(self, **params):
         try:
@@ -62,13 +48,12 @@ class KeystoneClient(base.DriverBase):
             raise ex
 
     def user_get_by_name(self, user_name):
-        '''Utility function to convert user name to ID.'''
-        params = {'name': user_name}
-        users = [u for u in self.user_list(**params)]
-        if len(users) == 0:
+        try:
+            user = self.conn.identity.find_user(user_name)
+        except sdk.exc.HttpException:
             raise exception.UserNotFound(user=user_name)
 
-        return users[0].id
+        return user.id
 
     def trust_get_by_trustor(self, trustor, trustee=None, project=None):
         '''Get trust by trustor.
