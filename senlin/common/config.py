@@ -49,22 +49,12 @@ service_opts = [
                help=_('Number of senlin-engine processes to fork and run.'))]
 
 engine_opts = [
-    cfg.StrOpt('deferred_auth_method',
-               choices=['password', 'trusts'],
-               default='password',
-               help=_('Select deferred auth method, '
-                      'stored password or trusts.')),
-    cfg.ListOpt('trusts_delegated_roles',
-                default=[],
-                help=_('Subset of trustor roles to be delegated to senlin.'
-                       ' If left unset, all roles of a user will be'
-                       ' delegated to senlin when creating a cluster.')),
     cfg.StrOpt('environment_dir',
                default='/etc/senlin/environments',
                help=_('The directory to search for environment files.')),
-    cfg.IntOpt('max_members_per_cluster',
+    cfg.IntOpt('max_nodes_per_cluster',
                default=1000,
-               help=_('Maximum members allowed per top-level cluster.')),
+               help=_('Maximum nodes allowed per top-level cluster.')),
     cfg.IntOpt('max_clusters_per_project',
                default=100,
                help=_('Maximum number of clusters any one project may have'
