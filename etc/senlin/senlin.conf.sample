@@ -708,9 +708,6 @@
 # From senlin.common.config
 #
 
-# The flavor to use. (string value)
-#flavor = <None>
-
 # The API paste config file to use. (string value)
 #api_paste_config = api-paste.ini
 

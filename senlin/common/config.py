@@ -26,8 +26,6 @@ from senlin.common import wsgi
 
 paste_deploy_group = cfg.OptGroup('paste_deploy')
 paste_deploy_opts = [
-    cfg.StrOpt('flavor',
-               help=_("The flavor to use.")),
     cfg.StrOpt('api_paste_config', default="api-paste.ini",
                help=_("The API paste config file to use."))]
 
@@ -114,16 +112,6 @@ for group, opts in list_opts():
     cfg.CONF.register_opts(opts, group=group)
 
 
-def _get_deployment_flavor():
-    """Retrieve paste_deploy.flavor config item.
-
-    The result is formatted appropriately to be appended to the
-    application name.
-    """
-    flavor = cfg.CONF.paste_deploy.flavor
-    return '' if not flavor else ('-' + flavor)
-
-
 def _get_deployment_config_file():
     """Retrieve item from deployment_config_file.
 
@@ -150,10 +138,6 @@ def load_paste_app(app_name=None):
     """
     if app_name is None:
         app_name = cfg.CONF.prog
-
-    # append the deployment flavor to the application name,
-    # in order to identify the appropriate paste pipeline
-    app_name += _get_deployment_flavor()
 
     conf_file = _get_deployment_config_file()
     if conf_file is None:
