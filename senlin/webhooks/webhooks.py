@@ -21,6 +21,7 @@ from senlin.common.i18n import _LE
 from senlin.common.i18n import _LI
 from senlin.common import utils
 from senlin.db import api as db_api
+from senlin.drivers.openstack import keystone_v3
 
 LOG = logging.getLogger(__name__)
 
@@ -168,10 +169,22 @@ class Webhook(object):
 
     def generate_url(self, context, key):
         '''Generate webhook URL with proper format.'''
-        senlin_host = cfg.CONF.senlin_api.bind_host
-        senlin_port = cfg.CONF.senlin_api.bind_port
-        basic_url = 'http://%s:%s/v1/%s/webhooks/%s/trigger' % \
-            (senlin_host, senlin_port, self.project, self.id)
+        senlin_creds = keystone_v3.get_service_credentials()
+        kc = keystone_v3.KeystoneClient(senlin_creds)
+        senlin_service = kc.service_get('clustering',
+                                        'senlin')
+        if senlin_service:
+            senlin_service_id = senlin_service[0]['id']
+        else:
+            raise exception.SenlinException('Senlin service was not found')
+        region = cfg.CONF.region_name_for_services
+        endpoints = kc.endpoint_get(senlin_service_id,
+                                    region,
+                                    'public')
+        url_endpoint = endpoints[0]['url'].replace('$(tenant_id)s',
+                                                   self.project)
+        webhook_part = '/webhooks/%s/trigger' % self.id
+        basic_url = ''.join([url_endpoint, webhook_part])
 
         webhook_url = "%s?key=%s" % (basic_url, key)
         LOG.info(_LI("Generate url for webhook %(id)s") % {'id': self.id})
