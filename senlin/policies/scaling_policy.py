@@ -117,6 +117,9 @@ class ScalingPolicy(base.Policy):
             if count < self.adjustment_min_step:
                 count = self.adjustment_min_step
 
+        # If action has input count, use it in prior
+        count = action.inputs.get('count', count)
+
         # Sanity check
         if current_size + count > self.max_size:
             policy_data.status = base.CHECK_ERROR
