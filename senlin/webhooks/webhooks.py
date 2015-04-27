@@ -16,7 +16,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 
 from senlin.common import exception
-from senlin.common.i18n import _LE
+from senlin.common.i18n import _
 from senlin.common.i18n import _LI
 from senlin.common import utils
 from senlin.db import api as db_api
@@ -116,7 +116,7 @@ class Webhook(object):
             LOG.warn(msg)
             raise exception.WebhookNotFound(webhook=webhook_id)
 
-        LOG.error(_LE("Webhook %(id)s found,"), {'id': webhook_id})
+        LOG.debug(_("Webhook %(id)s found,"), {'id': webhook_id})
         return cls._from_db_record(context, webhook)
 
     @classmethod
