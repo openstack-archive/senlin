@@ -330,7 +330,6 @@ class DBAPINodeTest(base.SenlinTestCase):
         node3 = shared.create_node(self.ctx, cluster1, self.profile)
 
         nodes = db_api.node_get_all_by_cluster(self.ctx, self.cluster.id)
-
         self.assertEqual(2, len(nodes))
         self.assertEqual(set([node1.id, node2.id]),
                          set([nodes[0].id, nodes[1].id]))
@@ -342,6 +341,29 @@ class DBAPINodeTest(base.SenlinTestCase):
         nodes = db_api.node_get_all_by_cluster(self.ctx, cluster1.id)
         self.assertEqual(1, len(nodes))
         self.assertEqual(node3.id, nodes[0].id)
+
+    def test_node_get_by_cluster_show_deleted(self):
+        node0 = shared.create_node(self.ctx, self.cluster, self.profile)
+        node1 = shared.create_node(self.ctx, self.cluster, self.profile)
+
+        nodes = db_api.node_get_all_by_cluster(self.ctx,
+                                               self.cluster.id)
+        self.assertEqual(2, len(nodes))
+        self.assertEqual(set([node0.id, node1.id]),
+                         set([nodes[0].id, nodes[1].id]))
+
+        db_api.node_delete(self.ctx, node1.id)
+        nodes = db_api.node_get_all_by_cluster(self.ctx,
+                                               self.cluster.id)
+        self.assertEqual(1, len(nodes))
+        self.assertEqual(node0.id, nodes[0].id)
+
+        nodes = db_api.node_get_all_by_cluster(self.ctx,
+                                               self.cluster.id,
+                                               show_deleted=True)
+        self.assertEqual(2, len(nodes))
+        self.assertEqual(set([node0.id, node1.id]),
+                         set([nodes[0].id, nodes[1].id]))
 
     def test_node_get_by_name_and_cluster(self):
         node_name = 'test_node_007'

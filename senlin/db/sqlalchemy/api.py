@@ -366,9 +366,16 @@ def node_get_all(context, cluster_id=None, show_deleted=False,
                            default_sort_keys=['init_time']).all()
 
 
-def node_get_all_by_cluster(context, cluster_id):
-    query = model_query(context, models.Node).filter_by(cluster_id=cluster_id)
+def node_get_all_by_cluster(context, cluster_id, show_deleted=False):
+    if show_deleted:
+        query = model_query(context,
+                            models.Node).filter_by(cluster_id=cluster_id)
+    else:
+        query = model_query(context,
+                            models.Node).filter_by(cluster_id=cluster_id,
+                                                   deleted_time=None)
     nodes = query.all()
+
     return nodes
 
 
