@@ -313,19 +313,6 @@ class Cluster(periodic_task.PeriodicTasks):
         '''Get all policies associated with the cluster.'''
         return self.rt.get('policies', [])
 
-    def add_nodes(self, node_ids):
-        return
-
-    def del_nodes(self, node_ids):
-        '''Remove nodes from current cluster.'''
-
-        deleted = []
-        for node_id in node_ids:
-            node = db_api.node_get(node_id)
-            if node and node.leave(self):
-                deleted.append(node_id)
-        return deleted
-
     def add_policy(self, policy):
         '''Attach specified policy instance to this cluster.'''
 
