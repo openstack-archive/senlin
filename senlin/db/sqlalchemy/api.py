@@ -453,7 +453,10 @@ def node_delete(context, node_id, force=False):
         cluster.size -= 1
         cluster.save(session)
 
-    node.soft_delete(session=session)
+    node.update_and_save({'deleted_time': timeutils.utcnow(),
+                          'status': 'DELETED',
+                          'status_reason': 'Node deletion succeeded'},
+                         session=session)
     session.flush()
 
 

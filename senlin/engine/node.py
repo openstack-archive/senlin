@@ -212,9 +212,6 @@ class Node(object):
         now = datetime.datetime.utcnow()
         if status == self.ACTIVE and self.status == self.CREATING:
             values['created_time'] = now
-        elif status == self.DELETED:
-            LOG.error('Don\'t do this!!!! call db_api.node_delete()')
-            values['physical_id'] = ''
         elif status == self.ACTIVE and self.status == self.UPDATING:
             values['updated_time'] = now
 
