@@ -145,19 +145,11 @@
 # From senlin.common.config
 #
 
-# Select deferred auth method, stored password or trusts. (string value)
-# Allowed values: password, trusts
-#deferred_auth_method = password
-
-# Subset of trustor roles to be delegated to senlin. If left unset, all roles of a user will be delegated to senlin
-# when creating a cluster. (list value)
-#trusts_delegated_roles =
-
 # The directory to search for environment files. (string value)
 #environment_dir = /etc/senlin/environments
 
-# Maximum members allowed per top-level cluster. (integer value)
-#max_members_per_cluster = 1000
+# Maximum nodes allowed per top-level cluster. (integer value)
+#max_nodes_per_cluster = 1000
 
 # Maximum number of clusters any one project may have active at one time. (integer value)
 #max_clusters_per_project = 100
