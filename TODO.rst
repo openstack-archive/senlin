@@ -5,8 +5,6 @@ HIGH PRIORITY
 ENGINE
 ------
   - cleanse scheduler module [Yanyan Hu]
-  - add support to get node details from the profile layer, e.g. Nova server
-    attributes or Heat stack outputs etc.
 
 DRIVER
 ------
