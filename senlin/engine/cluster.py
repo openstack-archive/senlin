@@ -14,6 +14,7 @@ import datetime
 
 from oslo_config import cfg
 from oslo_log import log as logging
+from oslo_utils import timeutils
 
 from senlin.common import exception
 from senlin.common.i18n import _LE
@@ -198,6 +199,9 @@ class Cluster(periodic_task.PeriodicTasks):
             yield cluster
 
     def to_dict(self):
+        def _fmt_time(value):
+            return value and timeutils.isotime(value)
+
         info = {
             'id': self.id,
             'name': self.name,
@@ -206,10 +210,10 @@ class Cluster(periodic_task.PeriodicTasks):
             'project': self.project,
             'domain': self.domain,
             'parent': self.parent,
-            'init_time': self.init_time,
-            'created_time': self.created_time,
-            'updated_time': self.updated_time,
-            'deleted_time': self.deleted_time,
+            'init_time': _fmt_time(self.init_time),
+            'created_time': _fmt_time(self.created_time),
+            'updated_time': _fmt_time(self.updated_time),
+            'deleted_time': _fmt_time(self.deleted_time),
             'size': self.size,
             'timeout': self.timeout,
             'status': self.status,

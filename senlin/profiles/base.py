@@ -13,6 +13,8 @@
 import datetime
 
 from oslo_log import log as logging
+from oslo_utils import timeutils
+
 from senlin.common import context
 from senlin.common import exception
 from senlin.common import schema
@@ -197,6 +199,9 @@ class Profile(object):
         return NotImplemented
 
     def to_dict(self):
+        def _fmt_time(value):
+            return value and timeutils.isotime(value)
+
         pb_dict = {
             'id': self.id,
             'name': self.name,
@@ -204,9 +209,9 @@ class Profile(object):
             'permission': self.permission,
             'spec': self.spec,
             'tags': self.tags,
-            'created_time': self.created_time,
-            'updated_time': self.updated_time,
-            'deleted_time': self.deleted_time,
+            'created_time': _fmt_time(self.created_time),
+            'updated_time': _fmt_time(self.updated_time),
+            'deleted_time': _fmt_time(self.deleted_time),
         }
         return pb_dict
 
