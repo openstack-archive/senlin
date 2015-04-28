@@ -334,15 +334,16 @@ class ClusterAction(base.Action):
         return result, reason
 
     def do_scale_out(self, cluster, policy_data):
-        # We may get a scale count from the request directly, if that is the
-        # case, we will use it for scaling. Or else, we check if we have got
-        # hints from policy checking. We use policy output if any, or else
-        # the count is set to 1 as default.
-        count = self.inputs.get('count', 0)
-        if count == 0:
-            pd = policy_data.get('creation', None)
-            if pd is not None:
-                count = pd.get('count', 1)
+        # We use policy output if any, or else the count is
+        # set to 1 as default.
+        count = 0
+        pd = policy_data.get('creation', None)
+        if pd is not None:
+            count = pd.get('count', 1)
+        else:
+            # If no scaling policy is attached, use the
+            # input count directly
+            count = self.inputs.get('count', 0)
 
         if count == 0:
             return self.RES_OK, 'No scaling needed based on policy checking'
@@ -374,20 +375,20 @@ class ClusterAction(base.Action):
         return result, reason
 
     def do_scale_in(self, cluster, policy_data):
-        # We may get a scale count from the request directly, if that is the
-        # case, we will use it for scaling. Or else, we check if we have got
-        # hints from policy checking. We use policy output if any, or else
-        # the count is set to 1 as default.
-        count = self.inputs.get('count', 0)
-        candidates = []
-        if count == 0:
-            pd = policy_data.get('deletion', None)
-            if pd is not None:
-                count = pd.get('count', 1)
-                # Try get candidates (set by deletion policy if attached)
-                candidates = policy_data.get('candidates')
-                if not candidates:
-                    candidates = []
+        # We use policy output if any, or else the count is
+        # set to 1 as default.
+        pd = policy_data.get('deletion', None)
+        if pd is not None:
+            count = pd.get('count', 1)
+            # Try get candidates (set by deletion policy if attached)
+            candidates = policy_data.get('candidates')
+            if not candidates:
+                candidates = []
+        else:
+            # If no scaling policy is attached, use the
+            # input count directly
+            count = self.inputs.get('count', 0)
+            candidates = []
 
         if count == 0:
             return self.RES_OK, 'No scaling needed based on policy checking'
