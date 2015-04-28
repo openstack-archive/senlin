@@ -37,6 +37,15 @@ must be customizable because users may want the old records to be removed or
 to be archived in a certain way.
 
 
+Fault Tolerance
+^^^^^^^^^^^^^^^
+
+Senlin in most cases will be managing clusters with nodes distributed
+somewhere. One problems inherent to such a distributed architecture is about
+partial failures, communication latencies, concurrency, consistency etc. There
+are hardware/software failures expected. Senlin must remain operational in the
+face of such failures.
+
 ---------------
 Middle Priority
 ---------------
