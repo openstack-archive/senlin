@@ -41,7 +41,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertIsNone(cluster.parent)
         self.assertEqual(1, cluster.next_index)
         self.assertEqual(60, cluster.timeout)
-        self.assertEqual(0, cluster.size)
+        self.assertEqual(0, cluster.desired_capacity)
         self.assertEqual('INIT', cluster.status)
         self.assertEqual('Just Initialized', cluster.status_reason)
         self.assertIsNone(cluster.created_time)

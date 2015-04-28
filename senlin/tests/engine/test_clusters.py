@@ -64,7 +64,7 @@ class ClusterTest(base.SenlinTestCase):
                                          self.profile['id'])
         self.assertIsNotNone(result)
         self.assertEqual('c-1', result['name'])
-        self.assertEqual(0, result['size'])
+        self.assertEqual(0, result['desired_capacity'])
         self.assertEqual(self.profile['id'], result['profile_id'])
         self.assertEqual(self.ctx.user, result['user'])
         self.assertEqual('cluster_test_project', result['project'])
@@ -102,13 +102,13 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
 
     @mock.patch.object(dispatcher, 'notify')
-    def test_cluster_create_with_size(self, notify):
+    def test_cluster_create_with_desired_capacity(self, notify):
         result = self.eng.cluster_create(self.ctx, 'c-1', 2,
                                          self.profile['id'])
 
         self.assertIsNotNone(result)
         self.assertEqual('c-1', result['name'])
-        self.assertEqual(2, result['size'])
+        self.assertEqual(2, result['desired_capacity'])
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_create,

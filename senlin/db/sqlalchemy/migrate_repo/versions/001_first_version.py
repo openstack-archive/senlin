@@ -53,7 +53,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('created_time', sqlalchemy.DateTime),
         sqlalchemy.Column('updated_time', sqlalchemy.DateTime),
         sqlalchemy.Column('deleted_time', sqlalchemy.DateTime),
-        sqlalchemy.Column('size', sqlalchemy.Integer),
+        sqlalchemy.Column('desired_capacity', sqlalchemy.Integer),
         sqlalchemy.Column('next_index', sqlalchemy.Integer),
         sqlalchemy.Column('timeout', sqlalchemy.Integer),
         sqlalchemy.Column('status', sqlalchemy.String(255)),

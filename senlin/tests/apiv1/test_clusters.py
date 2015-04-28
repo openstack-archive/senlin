@@ -38,13 +38,13 @@ class ClusterDataTest(base.SenlinTestCase):
         body = {'not the cluster name': 'wibble'}
         data = clusters.ClusterData(body)
         self.assertRaises(exc.HTTPBadRequest, data.name)
-        self.assertRaises(exc.HTTPBadRequest, data.size)
+        self.assertRaises(exc.HTTPBadRequest, data.desired_capacity)
         self.assertRaises(exc.HTTPBadRequest, data.profile)
 
-    def test_cluster_size(self):
-        body = {'size': 0}
+    def test_cluster_desired_capacity(self):
+        body = {'desired_capacity': 0}
         data = clusters.ClusterData(body)
-        self.assertEqual(0, data.size())
+        self.assertEqual(0, data.desired_capacity())
 
     def test_cluster_timeout(self):
         body = {'timeout': 33}
@@ -86,7 +86,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'created_time': u'2015-01-09T09:16:45Z',
             u'updated_time': None,
             u'deleted_time': None,
-            u'size': 0,
+            u'desired_capacity': 0,
             u'timeout': 60,
             u'status': u'ACTIVE',
             u'status_reason': u'Cluster successfully created.',
@@ -263,7 +263,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'cluster': {
                 'name': 'test_cluster',
                 'profile_id': 'xxxx-yyyy',
-                'size': 0,
+                'desired_capacity': 0,
                 'parent': None,
                 'tags': {},
                 'timeout': None,
@@ -275,7 +275,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         engine_response = {
             'name': 'test_cluster',
             'profile_id': 'xxxx-yyyy',
-            'size': 0,
+            'desired_capacity': 0,
             'parent': None,
             'tags': {},
             'timeout': 60,
@@ -291,7 +291,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             ('cluster_create', {
                 'name': 'test_cluster',
                 'profile_id': 'xxxx-yyyy',
-                'size': 0,
+                'desired_capacity': 0,
                 'parent': None,
                 'tags': {},
                 'timeout': None
@@ -306,7 +306,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {
             'name': 'test_cluster',
             'profile_id': 'xxxx-yyyy',
-            'size': 0,
+            'desired_capacity': 0,
             'parent': None,
             'tags': {},
             'timeout': None,
@@ -330,7 +330,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'cluster': {
                 'name': 'test_cluster',
                 'profile_id': 'xxxx-yyyy',
-                'size': 0,
+                'desired_capacity': 0,
                 'parent': None,
                 'tags': {},
                 'timeout': None,
@@ -352,7 +352,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'cluster': {
                 'name': 'test_cluster',
                 'profile_id': 'xxxx-yyyy',
-                'size': -1,
+                'desired_capacity': -1,
                 'parent': None,
                 'tags': {},
                 'timeout': None,
@@ -360,7 +360,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
         req = self._post('/clusters', json.dumps(body))
 
-        error = senlin_exc.InvalidParameter(name='size', value=-1)
+        error = senlin_exc.InvalidParameter(name='desired_capacity', value=-1)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      side_effect=error)
 
@@ -379,7 +379,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'cluster': {
                 'name': 'test_cluster',
                 'profile_id': 'xxxx-yyyy',
-                'size': 0,
+                'desired_capacity': 0,
                 'parent': None,
                 'tags': {},
                 'timeout': None,
@@ -415,7 +415,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'created_time': u'2015-01-09T09:16:45Z',
             u'updated_time': None,
             u'deleted_time': None,
-            u'size': 0,
+            u'desired_capacity': 0,
             u'timeout': 60,
             u'status': u'ACTIVE',
             u'status_reason': u'Cluster successfully created.',
@@ -578,11 +578,11 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertFalse(mock_call.called)
 
-    def test_cluster_update_reject_size(self, mock_enforce):
+    def test_cluster_update_reject_desired_capacity(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
 
         cid = 'aaaa-bbbb-cccc'
-        body = {'cluster': {'size': 10}}
+        body = {'cluster': {'desired_capacity': 10}}
 
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
                         json.dumps(body))
@@ -594,8 +594,9 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                cluster_id=cid,
                                body=body)
 
-        self.assertEqual(_("Updating cluster size is not supported, please "
-                           "use cluster scaling operations instead."),
+        self.assertEqual(_("Updating cluster desired capacity is not "
+                           "supported, please use cluster scaling "
+                           "operations instead."),
                          six.text_type(ex))
 
         self.assertFalse(mock_call.called)

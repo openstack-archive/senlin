@@ -414,11 +414,13 @@ class EngineService(service.Service):
         return cluster.to_dict()
 
     @request_context
-    def cluster_create(self, context, name, size, profile_id, parent=None,
-                       tags=None, timeout=None):
+    def cluster_create(self, context, name, desired_capacity, profile_id,
+                       parent=None, tags=None, timeout=None):
         db_profile = self.profile_find(context, profile_id)
 
-        size = utils.parse_int_param(consts.CLUSTER_SIZE, size)
+        desired_capacity =\
+            utils.parse_int_param(consts.CLUSTER_DESIRED_CAPACITY,
+                                  desired_capacity)
         if timeout is not None:
             timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
 
@@ -432,7 +434,8 @@ class EngineService(service.Service):
             'tags': tags
         }
 
-        cluster = cluster_mod.Cluster(name, db_profile.id, size, **kwargs)
+        cluster = cluster_mod.Cluster(name, db_profile.id,
+                                      desired_capacity, **kwargs)
         cluster.store(context)
 
         # Build an Action for cluster creation

@@ -206,7 +206,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
     def test_cluster_create(self):
         kwargs = {
             'name': 'mycluster',
-            'size': 0,
+            'desired_capacity': 0,
             'profile_id': 'aaaa-bbbb-cccc',
             'parent': None,
             'tags': None,

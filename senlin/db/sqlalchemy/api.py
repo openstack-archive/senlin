@@ -296,7 +296,6 @@ def node_create(context, values):
     cluster_id = values.get('cluster_id', None)
     if cluster_id is not None:
         cluster = session.query(models.Cluster).get(cluster_id)
-        cluster.size += 1
         cluster.next_index += 1
         cluster.save(session)
 
@@ -425,12 +424,9 @@ def node_migrate(context, node_id, to_cluster, timestamp):
     node = session.query(models.Node).get(node_id)
     from_cluster = node.cluster_id
     if from_cluster is not None:
-        cluster1 = session.query(models.Cluster).get(from_cluster)
-        cluster1.size -= 1
         node.index = -1
     if to_cluster is not None:
         cluster2 = session.query(models.Cluster).get(to_cluster)
-        cluster2.size += 1
         index = cluster2.next_index
         cluster2.next_index += 1
         node.index = index
@@ -449,7 +445,6 @@ def node_delete(context, node_id, force=False):
 
     if node.cluster_id is not None:
         cluster = session.query(models.Cluster).get(node.cluster_id)
-        cluster.size -= 1
         cluster.save(session)
 
     node.update_and_save({'deleted_time': timeutils.utcnow(),
