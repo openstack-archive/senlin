@@ -387,7 +387,7 @@ class ClusterAction(base.Action):
         else:
             # If no scaling policy is attached, use the
             # input count directly
-            count = self.inputs.get('count', 0)
+            count = abs(self.inputs.get('count', 0))
             candidates = []
 
         if count == 0:
