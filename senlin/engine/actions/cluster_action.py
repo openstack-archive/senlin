@@ -136,7 +136,8 @@ class ClusterAction(base.Action):
             cluster.set_status(cluster.ERROR, reason)
             return self.RES_ERROR, reason
 
-        result, reason = self._create_nodes(cluster, cluster.size, policy_data)
+        result, reason = self._create_nodes(cluster, cluster.desired_capacity,
+                                            policy_data)
 
         if result == self.RES_OK:
             reason = 'Cluster creation succeeded'
@@ -180,7 +181,7 @@ class ClusterAction(base.Action):
 
         # Wait for cluster updating complete
         result = self.RES_OK
-        if cluster.size > 0:
+        if cluster.desired_capacity > 0:
             result, reason = self._wait_for_dependents()
 
         if result == self.RES_OK:

@@ -42,10 +42,11 @@ class ClusterData(object):
             raise exc.HTTPBadRequest(_("No cluster name specified."))
         return self.data[consts.CLUSTER_NAME]
 
-    def size(self):
-        if consts.CLUSTER_SIZE not in self.data:
-            raise exc.HTTPBadRequest(_("No cluster size provided."))
-        return self.data.get(consts.CLUSTER_SIZE, None)
+    def desired_capacity(self):
+        if consts.CLUSTER_DESIRED_CAPACITY not in self.data:
+            raise exc.HTTPBadRequest(_("No cluster desired "
+                                       "capacity provided."))
+        return self.data.get(consts.CLUSTER_DESIRED_CAPACITY, None)
 
     def profile(self):
         if consts.CLUSTER_PROFILE not in self.data:
@@ -133,7 +134,8 @@ class ClusterController(object):
         data = ClusterData(cluster_data)
 
         cluster = self.rpc_client.cluster_create(req.context, data.name(),
-                                                 data.size(), data.profile(),
+                                                 data.desired_capacity(),
+                                                 data.profile(),
                                                  data.parent(), data.tags(),
                                                  data.timeout())
 
@@ -155,10 +157,10 @@ class ClusterController(object):
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'cluster' key in request body."))
 
-        size = cluster_data.get(consts.CLUSTER_SIZE)
-        if size is not None:
-            msg = _("Updating cluster size is not supported, please use "
-                    "cluster scaling operations instead.")
+        desired_capacity = cluster_data.get(consts.CLUSTER_DESIRED_CAPACITY)
+        if desired_capacity is not None:
+            msg = _("Updating cluster desired capacity is not supported, "
+                    "please use cluster scaling operations instead.")
             raise exc.HTTPBadRequest(msg)
 
         name = cluster_data.get(consts.CLUSTER_NAME)

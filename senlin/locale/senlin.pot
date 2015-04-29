@@ -35,7 +35,7 @@ msgid "No cluster name specified."
 msgstr ""
 
 #: senlin/api/openstack/v1/clusters.py:47
-msgid "No cluster size provided."
+msgid "No cluster desired capacity provided."
 msgstr ""
 
 #: senlin/api/openstack/v1/clusters.py:52
@@ -50,8 +50,8 @@ msgstr ""
 #: senlin/api/openstack/v1/clusters.py:160
 #: senlin/tests/apiv1/test_clusters.py:597
 msgid ""
-"Updating cluster size is not supported, please use cluster scaling "
-"operations instead."
+"Updating cluster desired capacity is not supported, please use cluster "
+"scaling operations instead."
 msgstr ""
 
 #: senlin/api/openstack/v1/clusters.py:185 senlin/api/openstack/v1/nodes.py:181

@@ -46,7 +46,8 @@ class Cluster(periodic_task.PeriodicTasks):
         'DELETED', 'WARNING', 'UPDATING', 'UPDATE_CANCELLED',
     )
 
-    def __init__(self, name, profile_id, size=0, context=None, **kwargs):
+    def __init__(self, name, profile_id, desired_capacity=0,
+                 context=None, **kwargs):
         '''Intialize a cluster object.
 
         The cluster defaults to have 0 nodes with no profile assigned.
@@ -67,9 +68,7 @@ class Cluster(periodic_task.PeriodicTasks):
         self.updated_time = kwargs.get('updated_time', None)
         self.deleted_time = kwargs.get('deleted_time', None)
 
-        # size is only the 'desired capacity', which many not be the real
-        # size of the cluster at a moment.
-        self.size = size
+        self.desired_capacity = desired_capacity
         self.next_index = kwargs.get('next_index', 1)
         self.timeout = kwargs.get('timeout', cfg.CONF.default_action_timeout)
 
@@ -120,7 +119,7 @@ class Cluster(periodic_task.PeriodicTasks):
             'created_time': self.created_time,
             'updated_time': self.updated_time,
             'deleted_time': self.deleted_time,
-            'size': self.size,
+            'desired_capacity': self.desired_capacity,
             'next_index': self.next_index,
             'timeout': self.timeout,
             'status': self.status,
@@ -166,7 +165,7 @@ class Cluster(periodic_task.PeriodicTasks):
             'tags': record.tags,
         }
 
-        return cls(record.name, record.profile_id, record.size,
+        return cls(record.name, record.profile_id, record.desired_capacity,
                    context=context, **kwargs)
 
     @classmethod
@@ -214,7 +213,7 @@ class Cluster(periodic_task.PeriodicTasks):
             'created_time': _fmt_time(self.created_time),
             'updated_time': _fmt_time(self.updated_time),
             'deleted_time': _fmt_time(self.deleted_time),
-            'size': self.size,
+            'desired_capacity': self.desired_capacity,
             'timeout': self.timeout,
             'status': self.status,
             'status_reason': self.status_reason,
