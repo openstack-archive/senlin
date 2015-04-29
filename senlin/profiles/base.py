@@ -149,6 +149,16 @@ class Profile(object):
         profile = cls.load(context, obj.profile_id)
         return profile.do_get_details(obj)
 
+    @classmethod
+    def join_cluster(cls, context, obj, cluster_id):
+        profile = cls.load(context, obj.profile_id)
+        return profile.do_join(obj, cluster_id)
+
+    @classmethod
+    def leave_cluster(cls, context, obj):
+        profile = cls.load(context, obj.profile_id)
+        return profile.do_leave(obj)
+
     def validate(self):
         '''Validate the schema and the data provided.'''
         self.spec_data.validate()
@@ -195,6 +205,14 @@ class Profile(object):
         return NotImplemented
 
     def do_get_details(self, obj):
+        '''For subclass to override.'''
+        return NotImplemented
+
+    def do_join(self, obj, cluster_id):
+        '''For subclass to override.'''
+        return NotImplemented
+
+    def do_leave(self, obj):
         '''For subclass to override.'''
         return NotImplemented
 

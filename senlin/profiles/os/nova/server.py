@@ -212,6 +212,11 @@ class ServerProfile(base.Profile):
         if obj.name is not None:
             kwargs[self.NAME] = obj.name
 
+        metadata = self.spec_data[self.METADATA] or {}
+        if obj.cluster_id is not None:
+            metadata['cluster'] = obj.cluster_id
+        kwargs['metadata'] = metadata
+
         LOG.info('Creating server: %s' % kwargs)
         server = self.nova(obj).server_create(**kwargs)
         self.server_id = server.id
@@ -278,3 +283,20 @@ class ServerProfile(base.Profile):
         }
 
         return details
+
+    def do_join(self, obj, cluster_id):
+        if not obj.physical_id:
+            return {}
+
+        metadata = self.nova(obj).server_metadata_get() or {}
+        metadata['cluster'] = cluster_id
+        return self.nova(obj).server_metadata_update(**metadata)
+
+    def do_leave(self, obj):
+        if not obj.physical_id:
+            return
+
+        metadata = self.nova(obj).server_metadata_get() or {}
+        if 'cluster' in metadata:
+            del metadata['cluster']
+        return self.nova(obj).server_metadata_update(**metadata)

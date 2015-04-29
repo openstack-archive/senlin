@@ -218,3 +218,11 @@ class StackProfile(base.Profile):
             return {}
 
         return self.heat(obj).stack_get(obj.physical_id)
+
+    def do_join(self, obj, cluster_id):
+        # Metadata is not supported by Heat stacks
+        return {}
+
+    def do_leave(self, obj):
+        # Metadata is not supported by Heat stacks
+        return
