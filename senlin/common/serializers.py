@@ -31,7 +31,7 @@ class JSONResponseSerializer(object):
                 return obj.isoformat()
             return obj
 
-        response = json.dumps(data, default=sanitizer)
+        response = json.dumps(data, default=sanitizer, sort_keys=True)
         LOG.debug("JSON response : %s" % response)
         return response
 
