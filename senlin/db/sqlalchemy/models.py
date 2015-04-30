@@ -103,6 +103,8 @@ class Cluster(BASE, SenlinBase, SoftDelete):
     updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
     deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
 
+    min_size = sqlalchemy.Column(sqlalchemy.Integer)
+    max_size = sqlalchemy.Column(sqlalchemy.Integer)
     desired_capacity = sqlalchemy.Column(sqlalchemy.Integer)
     next_index = sqlalchemy.Column(sqlalchemy.Integer)
     timeout = sqlalchemy.Column(sqlalchemy.Integer)

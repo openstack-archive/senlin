@@ -414,7 +414,8 @@ class EngineService(service.Service):
         return cluster.to_dict()
 
     @request_context
-    def cluster_create(self, context, name, desired_capacity, profile_id,
+    def cluster_create(self, context, name, desired_capacity,
+                       profile_id, min_size=None, max_size=None,
                        parent=None, tags=None, timeout=None):
         db_profile = self.profile_find(context, profile_id)
 
@@ -434,8 +435,8 @@ class EngineService(service.Service):
             'tags': tags
         }
 
-        cluster = cluster_mod.Cluster(name, db_profile.id,
-                                      desired_capacity, **kwargs)
+        cluster = cluster_mod.Cluster(name, desired_capacity, db_profile.id,
+                                      min_size, max_size, **kwargs)
         cluster.store(context)
 
         # Build an Action for cluster creation
@@ -455,7 +456,9 @@ class EngineService(service.Service):
         return result
 
     @request_context
-    def cluster_update(self, context, identity, name=None, profile_id=None,
+    def cluster_update(self, context, identity, name=None,
+                       desired_capacity=None, profile_id=None,
+                       min_size=None, max_size=None,
                        parent=None, tags=None, timeout=None):
         def update_cluster_properties(cluster):
             changed = False
@@ -484,13 +487,32 @@ class EngineService(service.Service):
 
             return cluster.to_dict()
 
+        def cluster_size_need_adjust(cluster):
+            # Check out if cluster size properties need to be adjusted
+            if min_size is not None and min_size != cluster.min_size:
+                return True
+
+            if max_size is not None and max_size != cluster.max_size:
+                return True
+
+            if desired_capacity is not None and\
+                    desired_capacity != cluster.desired_capacity:
+                return True
+
+            return False
+
         # Get the database representation of the existing cluster
         db_cluster = self.cluster_find(context, identity)
         cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
 
         update_cluster_properties(cluster)
 
-        if profile_id is None or profile_id == cluster.profile_id:
+        if profile_id is not None and profile_id != cluster.profile_id:
+            pass
+        elif cluster_size_need_adjust(cluster):
+            pass
+        else:
+            # Both profile and size don't need adjustment
             return cluster.to_dict()
 
         if cluster.status == cluster.ERROR:
@@ -511,13 +533,15 @@ class EngineService(service.Service):
         action = action_mod.Action(context, 'CLUSTER_UPDATE',
                                    target=cluster.id,
                                    cause=action_mod.CAUSE_RPC,
-                                   inputs={'profile_id': new_profile.id})
+                                   inputs={'new_profile_id': new_profile.id,
+                                           'min_size': min_size,
+                                           'max_size': max_size,
+                                           'desired_capacity': desired_capacity
+                                           })
         action.store(context)
 
-        # TODO(anyone): Uncomment the following line when update action
-        # is implemented.
-        # dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-        #                   None, action_id=action.id)
+        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
+                          None, action_id=action.id)
 
         result = cluster.to_dict()
         result['action'] = action.id

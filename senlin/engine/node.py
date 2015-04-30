@@ -274,8 +274,8 @@ class Node(object):
             return False
 
         # Check if profile types match
-        old_profile = db_api.get_profile(context, self.profile_id)
-        new_profile = db_api.get_profile(context, new_profile_id)
+        old_profile = db_api.profile_get(context, self.profile_id)
+        new_profile = db_api.profile_get(context, new_profile_id)
         if old_profile.type != new_profile.type:
             event_mod.warning(_LW('Node cannot be updated to a different '
                                   'profile type (%(oldt)s->%(newt)s)') %
@@ -283,7 +283,7 @@ class Node(object):
                                'newt': new_profile.type})
             return False
 
-        res = profile_base.update_object(self, new_profile_id)
+        res = profile_base.Profile.update_object(context, self, new_profile_id)
         if res:
             self.rt['profile'] = profile_base.load(context,
                                                    new_profile_id)

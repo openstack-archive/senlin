@@ -133,7 +133,7 @@ class ClusterAction(base.Action):
 
         if not res:
             reason = 'Cluster creation failed.'
-            cluster.set_status(cluster.ERROR, reason)
+            cluster.set_status(self.context, cluster.ERROR, reason)
             return self.RES_ERROR, reason
 
         result, reason = self._create_nodes(cluster, cluster.desired_capacity,
@@ -152,20 +152,49 @@ class ClusterAction(base.Action):
 
     def do_update(self, cluster, policy_data):
         reason = 'Cluster update succeeded'
+        result = self.RES_OK
+
         new_profile_id = self.inputs.get('new_profile_id')
-        res = cluster.do_update(self.context, profile_id=new_profile_id)
+        min_size = int(self.inputs.get('min_size'))
+        max_size = int(self.inputs.get('max_size'))
+        desired_capacity = int(self.inputs.get('desired_capacity'))
+
+        res = cluster.do_update(self.context, desired_capacity,
+                                new_profile_id, min_size, max_size)
         if not res:
             reason = 'Cluster object cannot be updated.'
             # Reset status to active
-            cluster.set_status(cluster.ACTIVE, reason)
-            return self.RES_ERROR
+            cluster.set_status(self.context, cluster.ACTIVE, reason)
+            return self.RES_ERROR, reason
 
-        # Create NodeActions for all nodes
+        # Start to update nodes of cluster
         node_list = cluster.get_nodes()
-        for node_id in node_list:
+
+        # Delete some nodes if desired_capacity decreased
+        current_size = len(node_list)
+        if desired_capacity < current_size:
+            adjustment = current_size - desired_capacity
+            candidates = []
+            # Choose victims randomly
+            i = adjustment
+            while i > 0:
+                r = random.randrange(len(node_list))
+                candidates.append(node_list[r].id)
+                node_list.remove(node_list[r])
+                i = i - 1
+
+            result, new_reason = self._delete_nodes(cluster, candidates,
+                                                    policy_data)
+
+        if result != self.RES_OK:
+            reason = 'Cluster updating failed for size shrink failure.'
+            return result, reason
+
+        # Create NodeActions for existed nodes if profile is updated
+        for node in node_list:
             kwargs = {
-                'name': 'node_update_%s' % node_id[:8],
-                'target': node_id,
+                'name': 'node_update_%s' % node.id[:8],
+                'target': node.id,
                 'cause': base.CAUSE_DERIVED,
                 'inputs': {
                     'new_profile_id': new_profile_id,
@@ -174,19 +203,31 @@ class ClusterAction(base.Action):
             action = base.Action(self.context, 'NODE_UPDATE', **kwargs)
             action.store(self.context)
 
-            db_api.action_add_dependency(action, self)
+            db_api.action_add_dependency(self.context, action.id, self.id)
             action.set_status(self.READY)
             dispatcher.notify(self.context, dispatcher.Dispatcher.NEW_ACTION,
                               None, action_id=action.id)
 
-        # Wait for cluster updating complete
+        # Wait for existed node updating complete
         result = self.RES_OK
-        if cluster.desired_capacity > 0:
+        if current_size > 0:
             result, reason = self._wait_for_dependents()
 
-        if result == self.RES_OK:
-            cluster.set_status(self.context, cluster.ACTIVE, reason)
+        if result != self.RES_OK:
+            reason = 'Cluster updating failed for profile updating failure.'
+            return result, reason
 
+        # Create new nodes if desired_capacity increased
+        if desired_capacity > current_size:
+            adjustment = desired_capacity - current_size
+            result, reason = self._create_nodes(cluster,
+                                                adjustment,
+                                                policy_data)
+        if result != self.RES_OK:
+            reason = 'Cluster updating failed for size expend failure.'
+            return result, reason
+
+        cluster.set_status(self.context, cluster.ACTIVE, reason)
         return result, reason
 
     def _delete_nodes(self, cluster, nodes, policy_data):

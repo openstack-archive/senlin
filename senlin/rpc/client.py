@@ -164,12 +164,15 @@ class EngineClient(object):
         return self.call(ctxt,
                          self.make_msg('cluster_get', identity=identity))
 
-    def cluster_create(self, ctxt, name, desired_capacity, profile_id,
+    def cluster_create(self, ctxt, name, desired_capacity,
+                       profile_id, min_size, max_size,
                        parent=None, tags=None, timeout=0):
         return self.call(ctxt, self.make_msg('cluster_create',
                                              name=name,
                                              desired_capacity=desired_capacity,
                                              profile_id=profile_id,
+                                             min_size=min_size,
+                                             max_size=max_size,
                                              parent=parent,
                                              tags=tags,
                                              timeout=timeout))
@@ -194,12 +197,16 @@ class EngineClient(object):
                                              identity=identity,
                                              count=count))
 
-    def cluster_update(self, ctxt, identity, name=None, profile_id=None,
+    def cluster_update(self, ctxt, identity, name=None, desired_capacity=None,
+                       profile_id=None, min_size=None, max_size=None,
                        parent=None, tags=None, timeout=None):
         return self.call(ctxt, self.make_msg('cluster_update',
                                              identity=identity,
                                              name=name,
+                                             desired_capacity=desired_capacity,
                                              profile_id=profile_id,
+                                             min_size=min_size,
+                                             max_size=max_size,
                                              parent=parent, tags=tags,
                                              timeout=timeout))
 

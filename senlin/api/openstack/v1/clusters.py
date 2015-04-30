@@ -48,6 +48,12 @@ class ClusterData(object):
                                        "capacity provided."))
         return self.data.get(consts.CLUSTER_DESIRED_CAPACITY, None)
 
+    def min_size(self):
+        return self.data.get(consts.CLUSTER_MIN_SIZE, None)
+
+    def max_size(self):
+        return self.data.get(consts.CLUSTER_MAX_SIZE, None)
+
     def profile(self):
         if consts.CLUSTER_PROFILE not in self.data:
             raise exc.HTTPBadRequest(_("No cluster profile provided."))
@@ -136,6 +142,8 @@ class ClusterController(object):
         cluster = self.rpc_client.cluster_create(req.context, data.name(),
                                                  data.desired_capacity(),
                                                  data.profile(),
+                                                 data.min_size(),
+                                                 data.max_size(),
                                                  data.parent(), data.tags(),
                                                  data.timeout())
 
@@ -157,11 +165,9 @@ class ClusterController(object):
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'cluster' key in request body."))
 
+        min_size = cluster_data.get(consts.CLUSTER_MIN_SIZE)
+        max_size = cluster_data.get(consts.CLUSTER_MAX_SIZE)
         desired_capacity = cluster_data.get(consts.CLUSTER_DESIRED_CAPACITY)
-        if desired_capacity is not None:
-            msg = _("Updating cluster desired capacity is not supported, "
-                    "please use cluster scaling operations instead.")
-            raise exc.HTTPBadRequest(msg)
 
         name = cluster_data.get(consts.CLUSTER_NAME)
         profile_id = cluster_data.get(consts.CLUSTER_PROFILE)
@@ -172,7 +178,9 @@ class ClusterController(object):
             timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
 
         self.rpc_client.cluster_update(req.context, cluster_id, name,
-                                       profile_id, parent, tags, timeout)
+                                       desired_capacity, profile_id,
+                                       min_size, max_size, parent,
+                                       tags, timeout)
 
         raise exc.HTTPAccepted()
 
