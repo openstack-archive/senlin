@@ -16,7 +16,6 @@ from oslo_config import cfg
 from oslo_log import log
 
 from openstack.compute.v2 import server_ip
-from openstack.compute.v2 import server_meta
 from openstack.compute.v2 import server_metadata
 
 from senlin.common import exception
@@ -233,40 +232,6 @@ class NovaClient(base.DriverBase):
             return server_ip.ServerIP.list(self.session, **params)
         except sdk.exc.HttpException as ex:
             raise ex
-
-    def server_meta_create(self, **params):
-        obj = server_meta.ServerMeta.new(**params)
-        try:
-            return obj.create(self.session)
-        except sdk.exc.HttpException as ex:
-            raise ex
-
-    def server_meta_get(self, **params):
-        obj = server_meta.ServerMeta.new(**params)
-        try:
-            return obj.get(self.session)
-        except sdk.exc.HttpException as ex:
-            raise ex
-
-    def server_meta_list(self, **params):
-        try:
-            return server_meta.ServerMeta.list(self.session, **params)
-        except sdk.exc.HttpException as ex:
-            raise ex
-
-    def server_meta_update(self, **params):
-        obj = server_meta.ServerMeta.new(**params)
-        try:
-            return obj.update(self.session)
-        except sdk.exc.HttpException as ex:
-            raise ex
-
-    def server_meta_delete(self, **params):
-        obj = server_meta.ServerMeta.new(**params)
-        try:
-            obj.delete(self.session)
-        except sdk.exc.HttpException as ex:
-            sdk.ignore_not_found(ex)
 
     def server_metadata_create(self, **params):
         obj = server_metadata.ServerMetadata.new(**params)

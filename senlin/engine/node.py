@@ -302,6 +302,8 @@ class Node(object):
         self.cluster_id = cluster_id
         self.updated_time = timestamp
         self.index = db_node.index
+
+        profile_base.join_cluster(self, cluster_id)
         return True
 
     def do_leave(self, context):
@@ -314,4 +316,5 @@ class Node(object):
         self.updated_time = timestamp
         self.index = -1
 
+        profile_base.leave_cluster(self)
         return True
