@@ -46,8 +46,8 @@ class Cluster(periodic_task.PeriodicTasks):
         'DELETED', 'WARNING', 'UPDATING', 'UPDATE_CANCELLED',
     )
 
-    def __init__(self, name, profile_id, desired_capacity=0,
-                 context=None, **kwargs):
+    def __init__(self, name, desired_capacity, profile_id,
+                 min_size=0, max_size=0, context=None, **kwargs):
         '''Intialize a cluster object.
 
         The cluster defaults to have 0 nodes with no profile assigned.
@@ -68,6 +68,8 @@ class Cluster(periodic_task.PeriodicTasks):
         self.updated_time = kwargs.get('updated_time', None)
         self.deleted_time = kwargs.get('deleted_time', None)
 
+        self.min_size = min_size
+        self.max_size = max_size
         self.desired_capacity = desired_capacity
         self.next_index = kwargs.get('next_index', 1)
         self.timeout = kwargs.get('timeout', cfg.CONF.default_action_timeout)
@@ -119,6 +121,8 @@ class Cluster(periodic_task.PeriodicTasks):
             'created_time': self.created_time,
             'updated_time': self.updated_time,
             'deleted_time': self.deleted_time,
+            'min_size': self.min_size,
+            'max_size': self.max_size,
             'desired_capacity': self.desired_capacity,
             'next_index': self.next_index,
             'timeout': self.timeout,
@@ -165,8 +169,8 @@ class Cluster(periodic_task.PeriodicTasks):
             'tags': record.tags,
         }
 
-        return cls(record.name, record.profile_id, record.desired_capacity,
-                   context=context, **kwargs)
+        return cls(record.name, record.desired_capacity, record.profile_id,
+                   record.min_size, record.max_size, context=context, **kwargs)
 
     @classmethod
     def load(cls, context, cluster_id=None, cluster=None, show_deleted=False):
@@ -213,6 +217,8 @@ class Cluster(periodic_task.PeriodicTasks):
             'created_time': _fmt_time(self.created_time),
             'updated_time': _fmt_time(self.updated_time),
             'deleted_time': _fmt_time(self.deleted_time),
+            'min_size': self.min_size,
+            'max_size': self.max_size,
             'desired_capacity': self.desired_capacity,
             'timeout': self.timeout,
             'status': self.status,
@@ -250,6 +256,33 @@ class Cluster(periodic_task.PeriodicTasks):
         # TODO(anyone): generate event record
         return
 
+    def _validate_size(self, context, min_size=None, max_size=None,
+                       desired_capacity=None, update=False):
+        res = False
+
+        if min_size is None:
+            min_size = self.min_size
+        if max_size is None:
+            max_size = self.max_size
+        if desired_capacity is None:
+            desired_capacity = self.desired_capacity
+
+        if min_size > max_size:
+            res = False
+        elif desired_capacity < min_size:
+            res = False
+        elif max_size != 0 and desired_capacity > max_size:
+            res = False
+        else:
+            res = True
+            if update:
+                self.min_size = min_size
+                self.max_size = max_size
+                self.desired_capacity = desired_capacity
+                self.store(context)
+
+        return res
+
     def do_create(self, context, **kwargs):
         '''Additional logic at the beginning of cluster creation process.
 
@@ -257,6 +290,10 @@ class Cluster(periodic_task.PeriodicTasks):
         '''
         if self.status != self.INIT:
             LOG.error(_LE('Cluster is in status "%s"'), self.status)
+            return False
+
+        if not self._validate_size(context):
+            LOG.error(_LE('Cluster size validation failed'))
             return False
 
         self.set_status(context, self.CREATING, reason='Creation in progress')
@@ -271,11 +308,22 @@ class Cluster(periodic_task.PeriodicTasks):
         db_api.cluster_delete(context, self.id)
         return True
 
-    def do_update(self, context, new_profile_id, **kwargs):
+    def do_update(self, context, desired_capacity, new_profile_id,
+                  min_size, max_size, **kwargs):
         '''Additional logic at the beginning of cluster updating progress.
 
-        Check profile and set cluster status to UPDATING.
+        Check size properties and profile and set cluster status to UPDATING.
         '''
+        # Check whether size related updating is sanity
+        if not self._validate_size(context, min_size, max_size,
+                                   desired_capacity, update=True):
+            msg = _LW('Cluster cannot be updated since size validation failed'
+                      ': min_size %(min)s, max_size %(max)s, desired_capacity'
+                      ' %(des)s') % {'min': min_size, 'max': max_size,
+                                     'des': desired_capacity}
+            LOG.warning(msg)
+            return False
+
         # Profile type checking is done here because the do_update logic can
         # be triggered from API or Webhook
         if not new_profile_id:
@@ -284,7 +332,7 @@ class Cluster(periodic_task.PeriodicTasks):
         if new_profile_id == self.profile_id:
             return True
 
-        new_profile = db_api.get_profile(context, new_profile_id)
+        new_profile = db_api.profile_get(context, new_profile_id)
         if not new_profile:
             event_mod.warning(context, self, 'update',
                               _LW('Cluster cannot be updated to a profile '
@@ -292,7 +340,7 @@ class Cluster(periodic_task.PeriodicTasks):
             return False
 
         # Check if profile types match
-        old_profile = db_api.get_profile(context, self.profile_id)
+        old_profile = db_api.profile_get(context, self.profile_id)
         if old_profile.type != new_profile.type:
             event_mod.warning(context, self, 'update',
                               _LW('Cluster cannot be updated to a different '
@@ -301,7 +349,7 @@ class Cluster(periodic_task.PeriodicTasks):
                                       'newt': new_profile.type})
             return False
 
-        self.set_status(self.UPDATING)
+        self.set_status(context, self.UPDATING, reason='Updating in progress')
         return True
 
     def get_nodes(self):

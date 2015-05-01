@@ -55,14 +55,14 @@ ACTION_NAMES = (
 
 CLUSTER_ATTRS = (
     CLUSTER_NAME, CLUSTER_PROFILE, CLUSTER_DESIRED_CAPACITY,
-    CLUSTER_ID, CLUSTER_PARENT,
+    CLUSTER_MIN_SIZE, CLUSTER_MAX_SIZE, CLUSTER_ID, CLUSTER_PARENT,
     CLUSTER_DOMAIN, CLUSTER_PROJECT, CLUSTER_USER,
     CLUSTER_CREATED_TIME, CLUSTER_UPDATED_TIME, CLUSTER_DELETED_TIME,
     CLUSTER_STATUS, CLUSTER_STATUS_REASON, CLUSTER_TIMEOUT,
     CLUSTER_TAGS,
 ) = (
     'name', 'profile_id', 'desired_capacity',
-    'id', 'parent',
+    'min_size', 'max_size', 'id', 'parent',
     'domain', 'project', 'user',
     'created_time', 'updated_time', 'deleted_time',
     'status', 'status_reason', 'timeout',
