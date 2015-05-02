@@ -47,7 +47,7 @@ class Cluster(periodic_task.PeriodicTasks):
     )
 
     def __init__(self, name, desired_capacity, profile_id,
-                 min_size=0, max_size=0, context=None, **kwargs):
+                 context=None, **kwargs):
         '''Intialize a cluster object.
 
         The cluster defaults to have 0 nodes with no profile assigned.
@@ -68,8 +68,8 @@ class Cluster(periodic_task.PeriodicTasks):
         self.updated_time = kwargs.get('updated_time', None)
         self.deleted_time = kwargs.get('deleted_time', None)
 
-        self.min_size = min_size
-        self.max_size = max_size
+        self.min_size = kwargs.get('min_size', 0)
+        self.max_size = kwargs.get('max_size', -1)
         self.desired_capacity = desired_capacity
         self.next_index = kwargs.get('next_index', 1)
         self.timeout = kwargs.get('timeout', cfg.CONF.default_action_timeout)
@@ -89,12 +89,6 @@ class Cluster(periodic_task.PeriodicTasks):
         self.rt = {}
 
         if context is not None:
-            if self.user == '':
-                self.user = context.user
-            if self.project == '':
-                self.project = context.project
-            if self.domain == '':
-                self.domain = context.domain
             self._load_runtime_data(context)
 
     def _load_runtime_data(self, context):
@@ -161,6 +155,8 @@ class Cluster(periodic_task.PeriodicTasks):
             'created_time': record.created_time,
             'updated_time': record.updated_time,
             'deleted_time': record.deleted_time,
+            'min_size': record.min_size,
+            'max_size': record.max_size,
             'next_index': record.next_index,
             'timeout': record.timeout,
             'status': record.status,
@@ -170,7 +166,7 @@ class Cluster(periodic_task.PeriodicTasks):
         }
 
         return cls(record.name, record.desired_capacity, record.profile_id,
-                   record.min_size, record.max_size, context=context, **kwargs)
+                   context=context, **kwargs)
 
     @classmethod
     def load(cls, context, cluster_id=None, cluster=None, show_deleted=False):

@@ -164,9 +164,9 @@ class EngineClient(object):
         return self.call(ctxt,
                          self.make_msg('cluster_get', identity=identity))
 
-    def cluster_create(self, ctxt, name, desired_capacity,
-                       profile_id, min_size, max_size,
-                       parent=None, tags=None, timeout=0):
+    def cluster_create(self, ctxt, name, desired_capacity, profile_id,
+                       min_size=None, max_size=None, parent=None, tags=None,
+                       timeout=None):
         return self.call(ctxt, self.make_msg('cluster_create',
                                              name=name,
                                              desired_capacity=desired_capacity,

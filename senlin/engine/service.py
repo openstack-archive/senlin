@@ -413,15 +413,50 @@ class EngineService(service.Service):
         cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
         return cluster.to_dict()
 
+    def _validate_cluster_size_params(self, desired_capacity, min_size,
+                                      max_size):
+        # validate data type first
+        if desired_capacity is not None:
+            desired_capacity = utils.parse_int_param(
+                consts.CLUSTER_DESIRED_CAPACITY, desired_capacity)
+        if min_size is not None:
+            min_size = utils.parse_int_param(consts.CLUSTER_MIN_SIZE, min_size)
+        if max_size is not None:
+            max_size = utils.parse_int_param(consts.CLUSTER_MAX_SIZE, max_size,
+                                             allow_negative=True)
+
+        # validate parameter range
+        if min_size is not None and desired_capacity is not None:
+            if min_size > desired_capacity:
+                msg = _("Cluster min_size, if specified, must be lesser than "
+                        "or equal to its desired_capacity.")
+                raise exception.SenlinBadRequest(msg=msg)
+
+        if max_size is not None and desired_capacity is not None:
+            if max_size >= 0 and max_size < desired_capacity:
+                msg = _("Cluster max_size, if specified, must be greater than"
+                        " or equal to its desired_capacity. Setting max_size"
+                        " to -1 means no upper limit on cluster size.")
+                raise exception.SenlinBadRequest(msg=msg)
+
+        if min_size is not None and max_size is not None:
+            if max_size >= 0 and max_size < min_size:
+                msg = _("Cluster max_size, if specified, must be greater than"
+                        " or equal to its min_size. Setting max_size to -1"
+                        " means no upper limit on cluster size.")
+                raise exception.SenlinBadRequest(msg=msg)
+
+        return (desired_capacity, min_size, max_size)
+
     @request_context
-    def cluster_create(self, context, name, desired_capacity,
-                       profile_id, min_size=None, max_size=None,
-                       parent=None, tags=None, timeout=None):
+    def cluster_create(self, context, name, desired_capacity, profile_id,
+                       min_size=None, max_size=None, parent=None, tags=None,
+                       timeout=None):
         db_profile = self.profile_find(context, profile_id)
 
-        desired_capacity =\
-            utils.parse_int_param(consts.CLUSTER_DESIRED_CAPACITY,
-                                  desired_capacity)
+        (init_size, min_size, max_size) = self._validate_cluster_size_params(
+            desired_capacity, min_size, max_size)
+
         if timeout is not None:
             timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
 
@@ -431,12 +466,13 @@ class EngineService(service.Service):
             'project': context.project,
             'domain': context.domain,
             'parent': parent,
+            'min_size': min_size,
+            'max_size': max_size,
             'timeout': timeout,
             'tags': tags
         }
 
-        cluster = cluster_mod.Cluster(name, desired_capacity, db_profile.id,
-                                      min_size, max_size, **kwargs)
+        cluster = cluster_mod.Cluster(name, init_size, db_profile.id, **kwargs)
         cluster.store(context)
 
         # Build an Action for cluster creation
@@ -446,7 +482,6 @@ class EngineService(service.Service):
                                    cause=action_mod.CAUSE_RPC)
         action.store(context)
 
-        # Notify Dispatchers that a new action has been ready.
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
 
@@ -460,9 +495,10 @@ class EngineService(service.Service):
                        desired_capacity=None, profile_id=None,
                        min_size=None, max_size=None,
                        parent=None, tags=None, timeout=None):
+
         def update_cluster_properties(cluster):
+            # Check if fields other than profile_id need update
             changed = False
-            # Check out if fields other than profile_id have to be changed
             if name is not None and name != cluster.name:
                 cluster.name = name
                 changed = True
@@ -477,29 +513,35 @@ class EngineService(service.Service):
                 cluster.tags = tags
                 changed = True
 
-            if timeout is not None and timeout != cluster.timeout:
-                cluster.timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT,
-                                                        timeout)
-                changed = True
+            if timeout is not None:
+                val = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
+                if val != cluster.timeout:
+                    cluster.timeout = val
+                    changed = True
 
             if changed is True:
                 cluster.store(context)
 
-            return cluster.to_dict()
-
-        def cluster_size_need_adjust(cluster):
-            # Check out if cluster size properties need to be adjusted
+        def may_need_resize(cluster, new_size, min_size, max_size):
+            # Check if cluster may need a resize
+            # This is a rough guess, the action will do a more accurate
+            # evaluation when cluster is locked
             if min_size is not None and min_size != cluster.min_size:
                 return True
 
             if max_size is not None and max_size != cluster.max_size:
                 return True
 
-            if desired_capacity is not None and\
-                    desired_capacity != cluster.desired_capacity:
+            if new_size is not None and new_size != cluster.desired_capacity:
                 return True
 
             return False
+
+        def profile_is_new(cluster):
+            return profile_id is not None and profile_id != cluster.profile_id
+
+        (new_size, min_size, max_size) = self._validate_cluster_size_params(
+            desired_capacity, min_size, max_size)
 
         # Get the database representation of the existing cluster
         db_cluster = self.cluster_find(context, identity)
@@ -507,16 +549,13 @@ class EngineService(service.Service):
 
         update_cluster_properties(cluster)
 
-        if profile_id is not None and profile_id != cluster.profile_id:
-            pass
-        elif cluster_size_need_adjust(cluster):
-            pass
-        else:
-            # Both profile and size don't need adjustment
+        if not any((may_need_resize(cluster, new_size, min_size, max_size),
+                    profile_is_new(cluster))):
+            # return if neither profile nor size needs an update
             return cluster.to_dict()
 
         if cluster.status == cluster.ERROR:
-            msg = _('Updating a cluster when it is in error state')
+            msg = _('Cannot update a cluster when it is in error state.')
             raise exception.NotSupported(feature=msg)
 
         new_profile = self.profile_find(context, profile_id)
@@ -526,20 +565,26 @@ class EngineService(service.Service):
                     'operation aborted.')
             raise exception.ProfileTypeNotMatch(message=msg)
 
-        LOG.info(_LI("Updating cluster '%(cluster)s' to profile "
-                     "'%(profile)s'.") % {'cluster': identity,
-                                          'profile': profile_id})
+        fmt = _LI("Updating cluster '%(cluster)s': profile='%(profile)s', "
+                  "desired_capacity=%(new_size)s, min_size=%(min_size)s, "
+                  "max_size=%(max_size)s.")
+        LOG.info(fmt % {'cluster': identity, 'profile': profile_id,
+                        'new_size': new_size, 'min_size': min_size,
+                        'max_size': max_size})
+
+        inputs = {
+            'new_profile_id': new_profile.id,
+            'min_size': min_size,
+            'max_size': max_size,
+            'desired_capacity': new_size
+        }
 
         action = action_mod.Action(context, 'CLUSTER_UPDATE',
+                                   name='cluster_update_%s' % cluster.id[:8],
                                    target=cluster.id,
                                    cause=action_mod.CAUSE_RPC,
-                                   inputs={'new_profile_id': new_profile.id,
-                                           'min_size': min_size,
-                                           'max_size': max_size,
-                                           'desired_capacity': desired_capacity
-                                           })
+                                   inputs=inputs)
         action.store(context)
-
         dispatcher.notify(context, self.dispatcher.NEW_ACTION,
                           None, action_id=action.id)
 
