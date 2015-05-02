@@ -30,30 +30,188 @@ from senlin.tests.common import base
 
 class ClusterDataTest(base.SenlinTestCase):
     def test_cluster_name(self):
-        body = {'name': 'test_cluster'}
-        data = clusters.ClusterData(body)
-        self.assertEqual('test_cluster', data.name())
+        body = {
+            'name': 'test_cluster',
+            'profile_id': 'some_profile',
+            'parent': 'another_cluster',
+            'tags': {'tag_key': 'tag_value'},
+            'desired_capacity': 5,
+            'max_size': 10,
+            'min_size': 0,
+            'timeout': 60,
+        }
 
-    def test_cluster_name_missing(self):
-        body = {'not the cluster name': 'wibble'}
         data = clusters.ClusterData(body)
-        self.assertRaises(exc.HTTPBadRequest, data.name)
-        self.assertRaises(exc.HTTPBadRequest, data.desired_capacity)
-        self.assertRaises(exc.HTTPBadRequest, data.profile)
+        self.assertEqual('test_cluster', data.name)
+        self.assertEqual('some_profile', data.profile)
+        self.assertEqual('another_cluster', data.parent)
+        self.assertEqual({'tag_key': 'tag_value'}, data.tags)
+        self.assertEqual(5, data.desired_capacity)
+        self.assertEqual(10, data.max_size)
+        self.assertEqual(0, data.min_size)
+        self.assertEqual(60, data.timeout)
 
-    def test_cluster_desired_capacity(self):
-        body = {'desired_capacity': 0}
-        data = clusters.ClusterData(body)
-        self.assertEqual(0, data.desired_capacity())
-
-    def test_cluster_timeout(self):
-        body = {'timeout': 33}
-        data = clusters.ClusterData(body)
-        self.assertEqual(33, data.timeout())
-
+    def test_timeout_use_default(self):
         body = {}
         data = clusters.ClusterData(body)
-        self.assertEqual(cfg.CONF.default_action_timeout, data.timeout())
+        self.assertEqual(cfg.CONF.default_action_timeout, data.timeout)
+
+    def _test_data_type_errors(self, func_name):
+        for key in ['desired_capacity', 'min_size', 'timeout']:
+            for value in [' ', 'big', {}, '3.3', '-3']:
+                body = {key: value}
+                data = clusters.ClusterData(body)
+                func = getattr(data, func_name)
+                ex = self.assertRaises(senlin_exc.InvalidParameter, func)
+                d = {'k': key, 'v': value}
+                msg = "Invalid value '%(v)s' specified for '%(k)s'" % d
+                self.assertEqual(msg, six.text_type(ex))
+
+        # negative numbers are allowed for max_size
+        key = 'max_size'
+        for value in [' ', 'big', {}, '3.3']:
+            body = {key: value}
+            data = clusters.ClusterData(body)
+            func = getattr(data, func_name)
+            ex = self.assertRaises(senlin_exc.InvalidParameter, func)
+            d = {'k': key, 'v': value}
+            msg = "Invalid value '%(v)s' specified for '%(k)s'" % d
+            self.assertEqual(msg, six.text_type(ex))
+
+    def test_data_type_errors_for_create(self):
+        self._test_data_type_errors('validate_for_create')
+
+    def test_data_type_errors_for_update(self):
+        self._test_data_type_errors('validate_for_update')
+
+    def test_name_missing_for_create(self):
+        body = {'not the cluster name': 'wibble'}
+        data = clusters.ClusterData(body)
+        ex = self.assertRaises(exc.HTTPBadRequest, data.validate_for_create)
+        self.assertIn('No cluster name specified.', six.text_type(ex))
+
+    def test_desired_capacity_missing_for_create(self):
+        body = {'name': 'blahblah'}
+        data = clusters.ClusterData(body)
+        ex = self.assertRaises(exc.HTTPBadRequest, data.validate_for_create)
+        self.assertIn('No cluster desired capacity provided.',
+                      six.text_type(ex))
+
+    def test_profile_missing_for_create(self):
+        body = {'name': 'blahblah', 'desired_capacity': 3}
+        data = clusters.ClusterData(body)
+        ex = self.assertRaises(exc.HTTPBadRequest, data.validate_for_create)
+        self.assertIn('No cluster profile provided.', six.text_type(ex))
+
+    def test_min_size_vs_desired_capacity_for_create(self):
+        body = {
+            'name': 'FOO',
+            'desired_capacity': 3,
+            'profile_id': 'xx-yy',
+            'min_size': 1,
+        }
+        data = clusters.ClusterData(body)
+        self.assertIsNone(data.validate_for_create())
+
+        body['min_size'] = 3
+        data = clusters.ClusterData(body)
+        self.assertIsNone(data.validate_for_create())
+
+        body['min_size'] = 4
+        data = clusters.ClusterData(body)
+        ex = self.assertRaises(exc.HTTPBadRequest, data.validate_for_create)
+        self.assertIn('Cluster min_size, if specified, must be less than or '
+                      'equal to its desired capacity.', six.text_type(ex))
+
+    def test_max_size_vs_desired_capacity_for_create(self):
+        body = {
+            'name': 'FOO',
+            'desired_capacity': 3,
+            'profile_id': 'xx-yy',
+        }
+
+        body['max_size'] = 3
+        data = clusters.ClusterData(body)
+        self.assertIsNone(data.validate_for_create())
+
+        # -1 means unconstrained
+        body['max_size'] = -1
+        data = clusters.ClusterData(body)
+        self.assertIsNone(data.validate_for_create())
+
+        body['max_size'] = 2
+        data = clusters.ClusterData(body)
+        ex = self.assertRaises(exc.HTTPBadRequest, data.validate_for_create)
+        self.assertEqual('Cluster max_size, if specified, must be greater '
+                         'than or equal to its desired capacity. Setting '
+                         'max_size to -1 means no upper limit on cluster '
+                         'size.',
+                         six.text_type(ex))
+
+    def test_simple_keys_for_update(self):
+        body = {}
+        data = clusters.ClusterData(body)
+        self.assertIsNone(data.validate_for_update())
+
+        body = {'min_size': 0}
+        data = clusters.ClusterData(body)
+        self.assertIsNone(data.validate_for_update())
+
+        body = {'max_size': 0}
+        data = clusters.ClusterData(body)
+        self.assertIsNone(data.validate_for_update())
+
+        body = {'desired_capacity': 0}
+        data = clusters.ClusterData(body)
+        self.assertIsNone(data.validate_for_update())
+
+    def test_min_size_vs_desired_capacity_for_update(self):
+        body = {'min_size': 0, 'desired_capacity': 0}
+        data = clusters.ClusterData(body)
+        self.assertIsNone(data.validate_for_update())
+
+        body = {'min_size': 3, 'desired_capacity': 2}
+        data = clusters.ClusterData(body)
+        ex = self.assertRaises(exc.HTTPBadRequest, data.validate_for_update)
+        self.assertEqual('Cluster min_size, if specified, must be less than '
+                         'or equal to its desired capacity.',
+                         six.text_type(ex))
+
+    def test_max_size_vs_desired_capacity_for_update(self):
+        body = {'max_size': 0, 'desired_capacity': 0}
+        data = clusters.ClusterData(body)
+        self.assertIsNone(data.validate_for_update())
+
+        # -1 means no upper limit
+        body = {'max_size': -1, 'desired_capacity': 0}
+        data = clusters.ClusterData(body)
+        self.assertIsNone(data.validate_for_update())
+
+        body = {'max_size': 0, 'desired_capacity': 1}
+        data = clusters.ClusterData(body)
+        ex = self.assertRaises(exc.HTTPBadRequest, data.validate_for_update)
+        self.assertEqual('Cluster max_size, if specified, must be greater '
+                         'than or equal to its desired capacity. Setting '
+                         'max_size to -1 means no upper limit on cluster '
+                         'size.', six.text_type(ex))
+
+    def test_min_size_vs_max_size_for_update(self):
+        body = {'min_size': 0, 'max_size': 0}
+        data = clusters.ClusterData(body)
+        self.assertIsNone(data.validate_for_update())
+
+        # -1 means no upper limit
+        body = {'min_size': 1000, 'max_size': -1}
+        data = clusters.ClusterData(body)
+        self.assertIsNone(data.validate_for_update())
+
+        body = {'min_size': 6, 'max_size': 5}
+        data = clusters.ClusterData(body)
+        ex = self.assertRaises(exc.HTTPBadRequest, data.validate_for_update)
+        self.assertEqual('Cluster max_size, if specified, must be greater '
+                         'than or equal to its min_size. Setting max_size to '
+                         '-1 means no upper limit on cluster size.',
+                         six.text_type(ex))
 
 
 @mock.patch.object(policy, 'enforce')
@@ -575,7 +733,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'profile_id': 'xxxx-yyyy-zzzz',
             'min_size': 0,
             'max_size': 0,
-            'timeout': None,
+            'timeout': cfg.CONF.default_action_timeout,
             'identity': cid,
         }
         mock_call.assert_called_once_with(req.context,
