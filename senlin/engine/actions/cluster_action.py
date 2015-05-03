@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
 import random
 
 from oslo_log import log as logging
@@ -150,30 +151,96 @@ class ClusterAction(base.Action):
 
         return result, reason
 
-    def do_update(self, cluster, policy_data):
-        reason = 'Cluster update succeeded'
-        result = self.RES_OK
+    def _check_size_params(self, cluster, desired, min_size, max_size):
+        # sanity checking: the desired_capacity must be within the existing
+        # range of the cluster, if new range is not provided
+        if desired is not None:
+            if min_size is None and desired < cluster.min_size:
+                reason = _("The specified desired_capacity is less than the "
+                           "min_size of the cluster.")
+                return self.RES_ERROR, reason
 
-        new_profile_id = self.inputs.get('new_profile_id')
-        min_size = int(self.inputs.get('min_size'))
-        max_size = int(self.inputs.get('max_size'))
-        desired_capacity = int(self.inputs.get('desired_capacity'))
+            if max_size is None and cluster.max_size >= 0:
+                if (desired > cluster.max_size):
+                    reason = _("The specified desired_capacity is greater "
+                               "than the max_size of the cluster.")
+                    return self.RES_ERROR, reason
 
-        res = cluster.do_update(self.context, desired_capacity,
-                                new_profile_id, min_size, max_size)
+        if min_size is not None:
+            if max_size is None and min_size > cluster.max_size:
+                reason = _("The specified min_size is greater than the "
+                           "current max_size of the cluster.")
+                return self.RES_ERROR, reason
+            if desired is None and min_size > cluster.desired_capacity:
+                reason = _("The specified min_size is greater than the "
+                           "current desired_capacity of the cluster.")
+                return self.RES_ERROR, reason
+
+        if max_size is not None:
+            if (min_size is None and max_size >= 0
+                    and max_size < cluster.min_size):
+                reason = _("The specified max_size is less than the "
+                           "current min_size of the cluster.")
+                return self.RES_ERROR, reason
+            if desired is None and max_size < cluster.desired_capacity:
+                reason = _("The specified max_size is less than the "
+                           "current desired_capacity of the cluster.")
+                return self.RES_ERROR, reason
+
+        return self.RES_OK, ''
+
+    def _update_cluster_properties(self, cluster, desired, min_size, max_size):
+        # update cluster properties related to size and profile
+        need_store = False
+        if min_size is not None and min_size != cluster.min_size:
+            cluster.min_size = min_size
+            need_store = True
+        if max_size is not None and max_size != cluster.max_size:
+            cluster.max_size = max_size
+            need_store = True
+        if desired is not None and desired != cluster.desired_capacity:
+            cluster.desired_capacity = desired
+            need_store = True
+
+        if need_store is False:
+            # ensure node list is up to date
+            cluster._load_runtime_data(self.context)
+            return self.RES_OK, ''
+
+        cluster.updated_time = datetime.datetime.utcnow()
+        cluster.status_reason = 'Cluster properties updated'
+        res = cluster.store(self.context)
         if not res:
             reason = 'Cluster object cannot be updated.'
             # Reset status to active
             cluster.set_status(self.context, cluster.ACTIVE, reason)
             return self.RES_ERROR, reason
 
-        # Start to update nodes of cluster
-        node_list = cluster.get_nodes()
+    def do_update(self, cluster, policy_data):
+        profile_id = self.inputs.get('new_profile_id')
+        min_size = self.inputs.get('min_size')
+        max_size = self.inputs.get('max_size')
+        desired = self.inputs.get('desired_capacity')
 
-        # Delete some nodes if desired_capacity decreased
+        # check provided params against current properties
+        result, reason = self._check_size_params(
+            cluster, desired, min_size, max_size)
+        if result != self.RES_OK:
+            return result, reason
+
+        # save sanitized properties
+        result, reason = self._update_cluster_properties(
+            cluster, desired, min_size, max_size)
+        if result != self.RES_OK:
+            return result, reason
+
+        node_list = cluster.get_nodes()
         current_size = len(node_list)
-        if desired_capacity < current_size:
-            adjustment = current_size - desired_capacity
+        desired = cluster.desired_capacity
+
+        # delete nodes if necessary
+        if desired < current_size:
+            adjustment = current_size - desired
             candidates = []
             # Choose victims randomly
             i = adjustment
@@ -183,52 +250,52 @@ class ClusterAction(base.Action):
                 node_list.remove(node_list[r])
                 i = i - 1
 
-            result, new_reason = self._delete_nodes(cluster, candidates,
-                                                    policy_data)
+            result, reason = self._delete_nodes(cluster, candidates,
+                                                policy_data)
+            if result != self.RES_OK:
+                return result, reason
 
-        if result != self.RES_OK:
-            reason = 'Cluster updating failed for size shrink failure.'
-            return result, reason
-
-        # Create NodeActions for existed nodes if profile is updated
-        for node in node_list:
-            kwargs = {
-                'name': 'node_update_%s' % node.id[:8],
-                'target': node.id,
-                'cause': base.CAUSE_DERIVED,
-                'inputs': {
-                    'new_profile_id': new_profile_id,
+        # update profile for nodes left if needed
+        if profile_id is not None and profile_id != cluster.profile_id:
+            for node in node_list:
+                kwargs = {
+                    'name': 'node_update_%s' % node.id[:8],
+                    'target': node.id,
+                    'cause': base.CAUSE_DERIVED,
+                    'inputs': {
+                        'new_profile_id': profile_id,
+                    }
                 }
-            }
-            action = base.Action(self.context, 'NODE_UPDATE', **kwargs)
-            action.store(self.context)
+                action = base.Action(self.context, 'NODE_UPDATE', **kwargs)
+                action.store(self.context)
 
-            db_api.action_add_dependency(self.context, action.id, self.id)
-            action.set_status(self.READY)
-            dispatcher.notify(self.context, dispatcher.Dispatcher.NEW_ACTION,
-                              None, action_id=action.id)
+                db_api.action_add_dependency(self.context, action.id, self.id)
+                action.set_status(self.READY)
+                dispatcher.notify(self.context,
+                                  dispatcher.Dispatcher.NEW_ACTION,
+                                  None, action_id=action.id)
 
-        # Wait for existed node updating complete
-        result = self.RES_OK
-        if current_size > 0:
-            result, reason = self._wait_for_dependents()
+            # Wait for nodes to complete update
+            result = self.RES_OK
+            if current_size > 0:
+                result, reason = self._wait_for_dependents()
 
-        if result != self.RES_OK:
-            reason = 'Cluster updating failed for profile updating failure.'
-            return result, reason
+            if result != self.RES_OK:
+                return result, reason
+
+            cluster.profile_id = profile_id
+            cluster.updated_time = datetime.datetime.utcnow()
+            cluster.store()
 
         # Create new nodes if desired_capacity increased
-        if desired_capacity > current_size:
-            adjustment = desired_capacity - current_size
-            result, reason = self._create_nodes(cluster,
-                                                adjustment,
-                                                policy_data)
-        if result != self.RES_OK:
-            reason = 'Cluster updating failed for size expend failure.'
-            return result, reason
+        if desired > current_size:
+            delta = desired - current_size
+            result, reason = self._create_nodes(cluster, delta, policy_data)
+            if result != self.RES_OK:
+                return result, reason
 
         cluster.set_status(self.context, cluster.ACTIVE, reason)
-        return result, reason
+        return self.RES_OK, _('Cluster update succeeded')
 
     def _delete_nodes(self, cluster, nodes, policy_data):
         action_name = consts.NODE_DELETE
