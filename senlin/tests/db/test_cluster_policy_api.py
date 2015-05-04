@@ -98,6 +98,28 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
                                            {})
         self.assertIsNone(res)
 
+    def test_policy_update_with_data(self):
+        policy = self.create_policy()
+
+        db_api.cluster_policy_attach(self.ctx, self.cluster.id, policy.id, {})
+        bindings = db_api.cluster_policy_get_all(self.ctx, self.cluster.id)
+        self.assertEqual(1, len(bindings))
+        self.assertIsNone(bindings[0].data)
+
+        fields = {'data': {'foo': 'bar'}}
+        db_api.cluster_policy_update(self.ctx, self.cluster.id, policy.id,
+                                     fields)
+        bindings = db_api.cluster_policy_get_all(self.ctx, self.cluster.id)
+        self.assertEqual(1, len(bindings))
+        self.assertEqual({'foo': 'bar'}, bindings[0].data)
+
+        fields = {'data': {'foo': 'BAR'}}
+        db_api.cluster_policy_update(self.ctx, self.cluster.id, policy.id,
+                                     fields)
+        bindings = db_api.cluster_policy_get_all(self.ctx, self.cluster.id)
+        self.assertEqual(1, len(bindings))
+        self.assertEqual({'foo': 'BAR'}, bindings[0].data)
+
     def test_policy_get_all_prioritized(self):
         policy = self.create_policy()
 
