@@ -212,6 +212,7 @@ class ClusterPolicies(BASE, SenlinBase):
     priority = sqlalchemy.Column(sqlalchemy.Integer)
     level = sqlalchemy.Column(sqlalchemy.Integer)
     enabled = sqlalchemy.Column(sqlalchemy.Boolean)
+    data = sqlalchemy.Column(types.Dict)
 
 
 class Profile(BASE, SenlinBase, SoftDelete):
