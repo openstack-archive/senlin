@@ -18,7 +18,6 @@ from oslo_utils import timeutils
 
 from senlin.common import exception
 from senlin.common.i18n import _LE
-from senlin.common.i18n import _LW
 from senlin.db import api as db_api
 from senlin.engine import event as event_mod
 from senlin.engine import node as node_mod
@@ -252,33 +251,6 @@ class Cluster(periodic_task.PeriodicTasks):
         # TODO(anyone): generate event record
         return
 
-    def _validate_size(self, context, min_size=None, max_size=None,
-                       desired_capacity=None, update=False):
-        res = False
-
-        if min_size is None:
-            min_size = self.min_size
-        if max_size is None:
-            max_size = self.max_size
-        if desired_capacity is None:
-            desired_capacity = self.desired_capacity
-
-        if min_size > max_size:
-            res = False
-        elif desired_capacity < min_size:
-            res = False
-        elif max_size != 0 and desired_capacity > max_size:
-            res = False
-        else:
-            res = True
-            if update:
-                self.min_size = min_size
-                self.max_size = max_size
-                self.desired_capacity = desired_capacity
-                self.store(context)
-
-        return res
-
     def do_create(self, context, **kwargs):
         '''Additional logic at the beginning of cluster creation process.
 
@@ -286,10 +258,6 @@ class Cluster(periodic_task.PeriodicTasks):
         '''
         if self.status != self.INIT:
             LOG.error(_LE('Cluster is in status "%s"'), self.status)
-            return False
-
-        if not self._validate_size(context):
-            LOG.error(_LE('Cluster size validation failed'))
             return False
 
         self.set_status(context, self.CREATING, reason='Creation in progress')
@@ -300,52 +268,19 @@ class Cluster(periodic_task.PeriodicTasks):
 
         Set cluster status to DELETED.
         '''
-        # self.set_status(context, self.DELETED)
         db_api.cluster_delete(context, self.id)
         return True
 
-    def do_update(self, context, desired_capacity, new_profile_id,
-                  min_size, max_size, **kwargs):
+    def do_update(self, context, **kwargs):
         '''Additional logic at the beginning of cluster updating progress.
 
-        Check size properties and profile and set cluster status to UPDATING.
+        This method is intended to be called only from an action.
         '''
-        # Check whether size related updating is sanity
-        if not self._validate_size(context, min_size, max_size,
-                                   desired_capacity, update=True):
-            msg = _LW('Cluster cannot be updated since size validation failed'
-                      ': min_size %(min)s, max_size %(max)s, desired_capacity'
-                      ' %(des)s') % {'min': min_size, 'max': max_size,
-                                     'des': desired_capacity}
-            LOG.warning(msg)
-            return False
-
-        # Profile type checking is done here because the do_update logic can
-        # be triggered from API or Webhook
-        if not new_profile_id:
-            raise exception.ProfileNotSpecified()
-
-        if new_profile_id == self.profile_id:
-            return True
-
-        new_profile = db_api.profile_get(context, new_profile_id)
-        if not new_profile:
-            event_mod.warning(context, self, 'update',
-                              _LW('Cluster cannot be updated to a profile '
-                                  'that does not exists'))
-            return False
-
-        # Check if profile types match
-        old_profile = db_api.profile_get(context, self.profile_id)
-        if old_profile.type != new_profile.type:
-            event_mod.warning(context, self, 'update',
-                              _LW('Cluster cannot be updated to a different '
-                                  'profile type (%(oldt)s->%(newt)s)') % {
-                                      'oldt': old_profile.type,
-                                      'newt': new_profile.type})
-            return False
-
-        self.set_status(context, self.UPDATING, reason='Updating in progress')
+        kwargs['status_reason'] = 'Updating in progress'
+        kwargs['status'] = self.UPDATING
+        kwargs['updated_time'] = datetime.datetime.utcnow()
+        db_api.cluster_update(context, self.id, kwargs)
+        # TODO(anyone): generate event record
         return True
 
     def get_nodes(self):
