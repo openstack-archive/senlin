@@ -30,6 +30,7 @@ from senlin.common import utils
 from senlin.db import api as db_api
 from senlin.engine.actions import base as action_mod
 from senlin.engine import cluster as cluster_mod
+from senlin.engine import cluster_policy
 from senlin.engine import dispatcher
 from senlin.engine import environment
 from senlin.engine import event as event_mod
@@ -960,69 +961,45 @@ class EngineService(service.Service):
     def cluster_policy_list(self, context, identity, filters=None,
                             sort_keys=None, sort_dir=None):
         db_cluster = self.cluster_find(context, identity)
-        bindings = db_api.cluster_policy_get_all(context, db_cluster.id,
-                                                 filters=filters,
-                                                 sort_keys=sort_keys,
-                                                 sort_dir=sort_dir)
-        result = []
-        for binding in bindings:
-            result.append({
-                'id': binding.id,
-                'cluster_id': binding.cluster_id,
-                'cluster_name': binding.cluster.name,
-                'policy_id': binding.policy_id,
-                'policy_name': binding.policy.name,
-                'policy_type': binding.policy.type,
-                'priority': binding.priority,
-                'level': binding.level,
-                'cooldown': binding.cooldown,
-                'enabled': binding.enabled,
-            })
-        return result
+
+        bindings = cluster_policy.ClusterPolicy.load_all(
+            context, db_cluster.id, filters=filters,
+            sort_keys=sort_keys, sort_dir=sort_dir)
+
+        return [binding.to_dict() for binding in bindings]
 
     @request_context
     def cluster_policy_get(self, context, identity, policy_id):
         db_cluster = self.cluster_find(context, identity)
         db_policy = self.policy_find(context, policy_id)
-        binding = db_api.cluster_policy_get(context, db_cluster.id,
-                                            db_policy.id)
-        if binding is None:
-            raise exception.PolicyNotAttached(policy=policy_id,
-                                              cluster=identity)
 
-        return {
-            'id': binding.id,
-            'cluster_id': binding.cluster_id,
-            'cluster_name': binding.cluster.name,
-            'policy_id': binding.policy_id,
-            'policy_name': binding.policy.name,
-            'policy_type': binding.policy.type,
-            'priority': binding.priority,
-            'level': binding.level,
-            'cooldown': binding.cooldown,
-            'enabled': binding.enabled,
-        }
+        binding = cluster_policy.ClusterPolicy.load(
+            context, db_cluster.id, db_policy.id)
+
+        return binding.to_dict()
 
     @request_context
     def cluster_policy_attach(self, context, identity, policy, priority=None,
                               level=None, cooldown=None, enabled=True):
+        '''Attach policy to cluster.
+
+        This is done via an action because a cluster lock is needed.
+        '''
+
         db_cluster = self.cluster_find(context, identity)
         db_policy = self.policy_find(context, policy)
-        priority = utils.parse_int_param('priority', priority) or 50
-        level = utils.parse_int_param('level', level) or 50
-        cooldown = utils.parse_int_param('cooldown', cooldown) or 0
-        enabled = utils.parse_bool_param('enabled', enabled)
 
         LOG.info(_LI('Attaching policy %(policy)s to cluster %(cluster)s'),
                  {'policy': policy, 'cluster': identity})
 
         inputs = {
             'policy_id': db_policy.id,
-            'priority': priority,
-            'level': level,
-            'cooldown': cooldown,
-            'enabled': enabled,
+            'priority': utils.parse_int_param('priority', priority) or 50,
+            'level': utils.parse_int_param('level', level) or 50,
+            'cooldown': utils.parse_int_param('cooldown', cooldown) or 0,
+            'enabled': utils.parse_bool_param('enabled', enabled),
         }
+
         action_name = 'cluster_attach_policy_%s' % db_cluster.id[:8]
         action = action_mod.Action(context, consts.CLUSTER_ATTACH_POLICY,
                                    name=action_name,
@@ -1037,6 +1014,11 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_policy_detach(self, context, identity, policy):
+        '''Detach policy from cluster.
+
+        This is done via an action because cluster lock is needed.
+        '''
+
         db_cluster = self.cluster_find(context, identity)
         db_policy = self.policy_find(context, policy)
 
@@ -1058,6 +1040,10 @@ class EngineService(service.Service):
     @request_context
     def cluster_policy_update(self, context, identity, policy, priority=None,
                               level=None, cooldown=None, enabled=None):
+        '''Update an existing policy binding on a cluster.
+
+        This is done via an action because cluster lock is needed.
+        '''
         db_cluster = self.cluster_find(context, identity)
         db_policy = self.policy_find(context, policy)
 
