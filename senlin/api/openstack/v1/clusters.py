@@ -35,39 +35,85 @@ class ClusterData(object):
     '''The data accompanying a POST/PUT request to create/update a cluster.'''
 
     def __init__(self, data):
-        self.data = data
+        self.name = data.get(consts.CLUSTER_NAME, None)
+        self.profile = data.get(consts.CLUSTER_PROFILE, None)
+        self.parent = data.get(consts.CLUSTER_PARENT, None)
+        self.tags = data.get(consts.CLUSTER_TAGS, None)
 
-    def name(self):
-        if consts.CLUSTER_NAME not in self.data:
+        self.desired_capacity = data.get(consts.CLUSTER_DESIRED_CAPACITY, None)
+        self.min_size = data.get(consts.CLUSTER_MIN_SIZE, None)
+        self.max_size = data.get(consts.CLUSTER_MAX_SIZE, None)
+        self.timeout = data.get(consts.CLUSTER_TIMEOUT,
+                                cfg.CONF.default_action_timeout)
+
+    def _enforce_data_types(self):
+        if self.desired_capacity is not None:
+            self.desired_capacity = utils.parse_int_param(
+                consts.CLUSTER_DESIRED_CAPACITY, self.desired_capacity,
+                allow_zero=True)
+
+        if self.min_size is not None:
+            self.min_size = utils.parse_int_param(
+                consts.CLUSTER_MIN_SIZE, self.min_size, allow_zero=True)
+
+        if self.max_size is not None:
+            self.max_size = utils.parse_int_param(
+                consts.CLUSTER_MAX_SIZE, self.max_size, allow_zero=True,
+                allow_negative=True)
+
+        if self.timeout is not None:
+            self.timeout = utils.parse_int_param(
+                consts.CLUSTER_TIMEOUT, self.timeout, allow_zero=True)
+
+    def validate_for_create(self):
+        self._enforce_data_types()
+
+        if self.name is None:
             raise exc.HTTPBadRequest(_("No cluster name specified."))
-        return self.data[consts.CLUSTER_NAME]
 
-    def desired_capacity(self):
-        if consts.CLUSTER_DESIRED_CAPACITY not in self.data:
-            raise exc.HTTPBadRequest(_("No cluster desired "
-                                       "capacity provided."))
-        return self.data.get(consts.CLUSTER_DESIRED_CAPACITY, None)
+        if self.desired_capacity is None:
+            raise exc.HTTPBadRequest(_("No cluster desired capacity "
+                                       "provided."))
 
-    def min_size(self):
-        return self.data.get(consts.CLUSTER_MIN_SIZE, None)
-
-    def max_size(self):
-        return self.data.get(consts.CLUSTER_MAX_SIZE, None)
-
-    def profile(self):
-        if consts.CLUSTER_PROFILE not in self.data:
+        if self.profile is None:
             raise exc.HTTPBadRequest(_("No cluster profile provided."))
-        return self.data[consts.CLUSTER_PROFILE]
 
-    def parent(self):
-        return self.data.get(consts.CLUSTER_PARENT, None)
+        if self.min_size is not None and self.min_size > self.desired_capacity:
+            msg = _("Cluster min_size, if specified, must be less than or "
+                    "equal to its desired capacity.")
+            raise exc.HTTPBadRequest(msg)
 
-    def tags(self):
-        return self.data.get(consts.CLUSTER_TAGS, None)
+        if self.max_size is not None and self.max_size >= 0:
+            if self.max_size < self.desired_capacity:
+                msg = _("Cluster max_size, if specified, must be greater than "
+                        "or equal to its desired capacity. Setting max_size "
+                        "to -1 means no upper limit on cluster size.")
+                raise exc.HTTPBadRequest(msg)
 
-    def timeout(self):
-        return self.data.get(consts.CLUSTER_TIMEOUT,
-                             cfg.CONF.default_action_timeout)
+    def validate_for_update(self):
+        self._enforce_data_types()
+
+        if self.min_size is not None and self.desired_capacity is not None:
+            if self.min_size > self.desired_capacity:
+                msg = _("Cluster min_size, if specified, must be less than"
+                        " or equal to its desired capacity.")
+                raise exc.HTTPBadRequest(msg)
+
+        if self.max_size is not None and self.desired_capacity is not None:
+            if self.max_size >= 0 and self.max_size < self.desired_capacity:
+                msg = _("Cluster max_size, if specified, must be greater than "
+                        "or equal to its desired capacity. Setting max_size "
+                        "to -1 means no upper limit on cluster size.")
+                raise exc.HTTPBadRequest(msg)
+
+        # The following checking is necessary because desired_capacity may
+        # be not specified in an update request
+        if self.min_size is not None and self.max_size is not None:
+            if self.max_size >= 0 and self.max_size < self.min_size:
+                msg = _("Cluster max_size, if specified, must be greater than "
+                        "or equal to its min_size. Setting max_size to -1 "
+                        "means no upper limit on cluster size.")
+                raise exc.HTTPBadRequest(msg)
 
 
 class ClusterController(object):
@@ -138,14 +184,12 @@ class ClusterController(object):
                                        "'cluster' key in request body."))
 
         data = ClusterData(cluster_data)
+        data.validate_for_create()
 
-        cluster = self.rpc_client.cluster_create(req.context, data.name(),
-                                                 data.desired_capacity(),
-                                                 data.profile(),
-                                                 data.min_size(),
-                                                 data.max_size(),
-                                                 data.parent(), data.tags(),
-                                                 data.timeout())
+        cluster = self.rpc_client.cluster_create(
+            req.context, data.name, data.desired_capacity, data.profile,
+            data.min_size, data.max_size, data.parent, data.tags,
+            data.timeout)
 
         return {'cluster': cluster}
 
@@ -165,22 +209,13 @@ class ClusterController(object):
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'cluster' key in request body."))
 
-        min_size = cluster_data.get(consts.CLUSTER_MIN_SIZE)
-        max_size = cluster_data.get(consts.CLUSTER_MAX_SIZE)
-        desired_capacity = cluster_data.get(consts.CLUSTER_DESIRED_CAPACITY)
+        data = ClusterData(cluster_data)
+        data.validate_for_update()
 
-        name = cluster_data.get(consts.CLUSTER_NAME)
-        profile_id = cluster_data.get(consts.CLUSTER_PROFILE)
-        parent = cluster_data.get(consts.CLUSTER_PARENT)
-        tags = cluster_data.get(consts.CLUSTER_TAGS)
-        timeout = cluster_data.get(consts.CLUSTER_TIMEOUT)
-        if timeout is not None:
-            timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
-
-        self.rpc_client.cluster_update(req.context, cluster_id, name,
-                                       desired_capacity, profile_id,
-                                       min_size, max_size, parent,
-                                       tags, timeout)
+        self.rpc_client.cluster_update(
+            req.context, cluster_id, data.name, data.desired_capacity,
+            data.profile, data.min_size, data.max_size, data.parent,
+            data.tags, data.timeout)
 
         raise exc.HTTPAccepted()
 
