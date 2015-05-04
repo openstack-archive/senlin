@@ -558,23 +558,15 @@ class EngineService(service.Service):
             msg = _('Cannot update a cluster when it is in error state.')
             raise exception.NotSupported(feature=msg)
 
-        new_profile_id = None
+        old_profile = self.profile_find(context, cluster.profile_id)
         if profile_id is not None:
             new_profile = self.profile_find(context, profile_id)
-            old_profile = self.profile_find(context, cluster.profile_id)
             if new_profile.type != old_profile.type:
                 msg = _('Cannot update a cluster to a different profile type, '
                         'operation aborted.')
                 raise exception.ProfileTypeNotMatch(message=msg)
-            else:
-                new_profile_id = new_profile.id
 
-        inputs = {
-            'new_profile_id': new_profile_id,
-            'min_size': min_size,
-            'max_size': max_size,
-            'desired_capacity': new_size
-        }
+            profile_id = new_profile.id
 
         fmt = _LI("Updating cluster '%(cluster)s': profile='%(profile)s', "
                   "desired_capacity=%(new_size)s, min_size=%(min_size)s, "
@@ -582,6 +574,13 @@ class EngineService(service.Service):
         LOG.info(fmt % {'cluster': identity, 'profile': profile_id,
                         'new_size': new_size, 'min_size': min_size,
                         'max_size': max_size})
+
+        inputs = {
+            'new_profile_id': profile_id,
+            'min_size': min_size,
+            'max_size': max_size,
+            'desired_capacity': new_size
+        }
 
         action = action_mod.Action(context, 'CLUSTER_UPDATE',
                                    name='cluster_update_%s' % cluster.id[:8],
