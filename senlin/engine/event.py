@@ -165,7 +165,7 @@ def critical(context, entity, action, status=None, status_reason=None,
     timestamp = timestamp or datetime.datetime.utcnow()
     event = Event(timestamp, logging.CRITICAL, entity,
                   action=action, status=status, status_reason=status_reason,
-                  user=context.user_id, project=context.project_id)
+                  user=context.user, project=context.project)
     event.store(context)
     LOG.critical(_LC('%(name)s[%(id)s] - %(status)s: %(reason)s') %
                  {'name': entity.name, 'id': entity.id, 'status': status,
@@ -177,7 +177,7 @@ def error(context, entity, action, status=None, status_reason=None,
     timestamp = timestamp or datetime.datetime.utcnow()
     event = Event(timestamp, logging.ERROR, entity,
                   action=action, status=status, status_reason=status_reason,
-                  user=context.user_id, project=context.project_id)
+                  user=context.user, project=context.project)
     event.store(context)
     LOG.error(_LE('%(name)s[%(id)s] %(action)s - %(status)s: %(reason)s') %
               {'name': entity.name, 'id': entity.id, 'action': action,
@@ -189,7 +189,7 @@ def warning(context, entity, action, status=None, status_reason=None,
     timestamp = timestamp or datetime.datetime.utcnow()
     event = Event(timestamp, logging.WARNING, entity,
                   action=action, status=status, status_reason=status_reason,
-                  user=context.user_id, project=context.project_id)
+                  user=context.user, project=context.project)
     event.store(context)
     LOG.warning(_LW('%(name)s[%(id)s] %(action)s - %(status)s: %(reason)s') %
                 {'name': entity.name, 'id': entity.id, 'action': action,
@@ -213,7 +213,7 @@ def debug(context, entity, action, status=None, status_reason=None,
     timestamp = timestamp or datetime.datetime.utcnow()
     event = Event(timestamp, logging.DEBUG, entity,
                   action=action, status=status, status_reason=status_reason,
-                  user=context.user_id, project=context.project_id)
+                  user=context.user, project=context.project)
     event.store(context)
     LOG.debug(_('%(name)s[%(id)s] %(action)s - %(status)s: %(reason)s') %
               {'name': entity.name, 'id': entity.id, 'action': action,
