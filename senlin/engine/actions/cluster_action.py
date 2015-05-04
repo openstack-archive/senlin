@@ -216,6 +216,8 @@ class ClusterAction(base.Action):
             cluster.set_status(self.context, cluster.ACTIVE, reason)
             return self.RES_ERROR, reason
 
+        return self.RES_OK, ''
+
     def do_update(self, cluster, policy_data):
         profile_id = self.inputs.get('new_profile_id')
         min_size = self.inputs.get('min_size')
