@@ -459,20 +459,19 @@ class ClusterAction(base.Action):
         if count == 0:
             return self.RES_OK, 'No scaling needed based on policy checking'
 
-        if count > 0:
-            result, reason = self._create_nodes(cluster, count, policy_data)
-        else:
-            candidates = []
-            nodes = db_api.node_get_all_by_cluster(self.context, cluster.id)
-            i = count
-            while i > 0:
-                r = random.randrange(len(nodes))
-                candidates.append(nodes[r].id)
-                nodes.remove(nodes[r])
-                i = i - 1
+        # Update desired_capacity of cluster
+        nodes = db_api.node_get_all_by_cluster(self.context, cluster.id)
+        current_size = len(nodes)
+        desired_capacity = current_size + count
+        result, reason = self._update_cluster_properties(
+            cluster, desired_capacity, None, None)
+        if result != self.RES_OK:
+            return result, reason
 
-            result, reason = self._delete_nodes(cluster, candidates,
-                                                policy_data)
+        # Create new nodes to meet desired_capacity
+        # TODO(Anyone): Use unified interface(e.g. do_cluster_update)
+        # to do cluster resizing.
+        result, reason = self._create_nodes(cluster, count, policy_data)
 
         if result == self.RES_OK:
             reason = 'Cluster scaling succeeded'
@@ -504,6 +503,15 @@ class ClusterAction(base.Action):
         if count == 0:
             return self.RES_OK, 'No scaling needed based on policy checking'
 
+        # Update desired_capacity of cluster
+        nodes = db_api.node_get_all_by_cluster(self.context, cluster.id)
+        current_size = len(nodes)
+        desired_capacity = current_size - count
+        result, reason = self._update_cluster_properties(
+            cluster, desired_capacity, None, None)
+        if result != self.RES_OK:
+            return result, reason
+
         # Choose victims randomly
         if len(candidates) == 0:
             nodes = db_api.node_get_all_by_cluster(self.context, cluster.id)
@@ -515,6 +523,8 @@ class ClusterAction(base.Action):
                 i = i - 1
 
         # The policy data may contain destroy flag and grace period option
+        # TODO(Anyone): Use unified interface(e.g. do_cluster_update)
+        # to do cluster resizing.
         result, new_reason = self._delete_nodes(cluster, candidates,
                                                 policy_data)
 
