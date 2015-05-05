@@ -2,6 +2,11 @@
 HIGH PRIORITY
 =============
 
+TOOLS
+-----
+  - add logic that will create the senlin user and assign it suitable
+    roles (admin?) in the service project
+
 ENGINE
 ------
   - cleanse scheduler module [Yanyan Hu]
