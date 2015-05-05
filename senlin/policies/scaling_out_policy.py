@@ -52,9 +52,9 @@ class ScalingOutPolicy(base.Policy):
     )
 
     _ADJUSTMENT_KEYS = (
-        ADJUSTMENT_TYPE, ADJUSTMENT_NUMBER, MIN_STEP,
+        ADJUSTMENT_TYPE, ADJUSTMENT_NUMBER, MIN_STEP, BEST_EFFORT,
     ) = (
-        'type', 'number', 'min_step',
+        'type', 'number', 'min_step', 'best_effort',
     )
 
     spec_schema = {
@@ -78,6 +78,11 @@ class ScalingOutPolicy(base.Policy):
                       'at least this number of nodes.'),
                     default=1,
                 ),
+                BEST_EFFORT: schema.Boolean(
+                    _('Whether do best effort scaling when new size of '
+                      'cluster will break the size limitation'),
+                    default=False,
+                ),
             }
         ),
     }
@@ -90,6 +95,7 @@ class ScalingOutPolicy(base.Policy):
         self.adjustment_type = adjustment[self.ADJUSTMENT_TYPE]
         self.adjustment_number = adjustment[self.ADJUSTMENT_NUMBER]
         self.adjustment_min_step = adjustment[self.MIN_STEP]
+        self.best_effort = adjustment[self.BEST_EFFORT]
 
         # TODO(anyone): Make sure the default cooldown can be used if
         # not specified. Need support from ClusterPolicy.
@@ -117,13 +123,14 @@ class ScalingOutPolicy(base.Policy):
             policy_data.reason = _('ScalingOutPolicy generates a negative '
                                    'count for scaling out operation.')
         elif current_size + count > cluster.max_size:
-            # TODO(YanyanHu): Provide an optiaon in spec to allow user to
-            # decide whether they want a best-effort scaling in this case.
-            # If so, the size of cluster will be increased to the max_size
-            # and a warning will be sent back to user. If not, just reject
-            # this scaling request directly.
-            policy_data.status = base.CHECK_ERROR
-            policy_data.reason = _('Attempted scaling exceeds maximum size')
+            if not self.best_effort:
+                policy_data.status = base.CHECK_ERROR
+                policy_data.reason = _('Attempted scaling exceeds '
+                                       'maximum size')
+            else:
+                policy_data.status = base.CHECK_OK
+                count = cluster.max_size - current_size
+                policy_data.reason = _('Do best effort scaling')
         else:
             policy_data.status = base.CHECK_OK
             policy_data.reason = _('Scaling request validated')
