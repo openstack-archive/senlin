@@ -22,18 +22,17 @@ from senlin.policies import base
 LOG = logging.getLogger(__name__)
 
 
-class ScalingPolicy(base.Policy):
-    '''Policy for changing the size of a cluster.
+class ScalingOutPolicy(base.Policy):
+    '''Policy for increasing the size of a cluster.
 
-    This policy is expected to be enforced before the node list of a cluster
-    is changed.
+    This policy is expected to be enforced before the node count of a cluster
+    is increased.
     '''
 
-    __type_name__ = 'ScalingPolicy'
+    __type_name__ = 'ScalingOutPolicy'
 
     TARGET = [
         ('BEFORE', consts.CLUSTER_SCALE_OUT),
-        ('BEFORE', consts.CLUSTER_SCALE_IN),
     ]
 
     PROFILE_TYPE = [
@@ -41,9 +40,9 @@ class ScalingPolicy(base.Policy):
     ]
 
     KEYS = (
-        MIN_SIZE, MAX_SIZE, ADJUSTMENT,
+        ADJUSTMENT,
     ) = (
-        'min_size', 'max_size', 'adjustment',
+        'adjustment',
     )
 
     ADJUSTMENT_TYPES = (
@@ -59,13 +58,6 @@ class ScalingPolicy(base.Policy):
     )
 
     spec_schema = {
-        MIN_SIZE: schema.Integer(
-            _('Minumum size for the cluster.'),
-            default=0,
-        ),
-        MAX_SIZE: schema.Integer(
-            _('Maximum size for the cluster.'),
-        ),
         ADJUSTMENT: schema.Map(
             _('Detailed specification for scaling adjustments.'),
             schema={
@@ -91,10 +83,8 @@ class ScalingPolicy(base.Policy):
     }
 
     def __init__(self, type_name, name, **kwargs):
-        super(ScalingPolicy, self).__init__(type_name, name, **kwargs)
+        super(ScalingOutPolicy, self).__init__(type_name, name, **kwargs)
 
-        self.min_size = self.spec_data[self.MIN_SIZE]
-        self.max_size = self.spec_data[self.MAX_SIZE]
         adjustment = self.spec_data[self.ADJUSTMENT]
 
         self.adjustment_type = adjustment[self.ADJUSTMENT_TYPE]
@@ -102,9 +92,10 @@ class ScalingPolicy(base.Policy):
         self.adjustment_min_step = adjustment[self.MIN_STEP]
 
         # TODO(anyone): Make sure the default cooldown can be used if
-        # not specified
+        # not specified. Need support from ClusterPolicy.
 
     def pre_op(self, cluster_id, action, policy_data):
+        cluster = db_api.cluster_get(action.context, cluster_id)
         nodes = db_api.node_get_all_by_cluster(action.context, cluster_id)
         current_size = len(nodes)
 
@@ -121,28 +112,23 @@ class ScalingPolicy(base.Policy):
         count = action.inputs.get('count', count)
 
         # Sanity check
-        if current_size + count > self.max_size:
+        if count < 0:
+            policy_data.status = base.CHECK_ERROR
+            policy_data.reason = _('ScalingOutPolicy generates a negative '
+                                   'count for scaling out operation.')
+        elif current_size + count > cluster.max_size:
+            # TODO(YanyanHu): Provide an optiaon in spec to allow user to
+            # decide whether they want a best-effort scaling in this case.
+            # If so, the size of cluster will be increased to the max_size
+            # and a warning will be sent back to user. If not, just reject
+            # this scaling request directly.
             policy_data.status = base.CHECK_ERROR
             policy_data.reason = _('Attempted scaling exceeds maximum size')
-        elif current_size + count < self.min_size:
-            policy_data.status = base.CHECK_ERROR
-            policy_data.reason = _('Attempted scaling exceeds minimum size')
-        elif action.action == consts.CLUSTER_SCALE_OUT and count < 0:
-            policy_data.status = base.CHECK_ERROR
-            policy_data.reason = _('Scaling policy generates a negative '
-                                   'count for scaling out operation.')
-        elif action.action == consts.CLUSTER_SCALE_IN and count > 0:
-            policy_data.status = base.CHECK_ERROR
-            policy_data.reason = _('Scaling policy generates a positive '
-                                   'count for scaling in operation.')
         else:
             policy_data.status = base.CHECK_OK
             policy_data.reason = _('Scaling request validated')
 
         pd = {'count': abs(count)}
-        if action.action == consts.CLUSTER_SCALE_OUT:
-            policy_data['creation'] = pd
-        elif action.action == consts.CLUSTER_SCALE_IN:
-            policy_data['deletion'] = pd
+        policy_data['creation'] = pd
 
         return policy_data
