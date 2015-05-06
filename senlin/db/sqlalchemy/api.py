@@ -709,10 +709,13 @@ def policy_delete(context, policy_id, force=False):
     if not policy:
         return
 
+    query = model_query(context, models.ClusterPolicies)
+    bindings = query.filter_by(policy_id=policy_id)
+    if bindings.count():
+        raise exception.PolicyInUse(policy=policy_id)
+
     session = orm_session.Session.object_session(policy)
 
-    # TODO(Qiming): Check if a policy is still in use, raise an exception
-    # if so
     policy.soft_delete(session=session)
     session.flush()
 

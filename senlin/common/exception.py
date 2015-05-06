@@ -191,6 +191,10 @@ class PolicyExists(SenlinException):
     msg_fmt = _("The policy type (%(policy_type)s) already exists.")
 
 
+class PolicyInUse(SenlinException):
+    msg_fmt = _("The policy (%(policy)s) is still attached to cluster(s).")
+
+
 class PolicyNotAttached(SenlinException):
     msg_fmt = _("The policy (%(policy)s) is not attached to the specified "
                 "cluster (%(cluster)s).")

@@ -16,6 +16,7 @@ from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
 from senlin.tests.common import base
 from senlin.tests.common import utils
+from senlin.tests.db import shared
 
 sample_spec = {
     'min_size': 1,
@@ -28,6 +29,8 @@ class DBAPIPolicyTest(base.SenlinTestCase):
     def setUp(self):
         super(DBAPIPolicyTest, self).setUp()
         self.ctx = utils.dummy_context()
+        self.profile = shared.create_profile(self.ctx)
+        self.cluster = shared.create_cluster(self.ctx, self.profile)
 
     def new_policy_data(self, **kwargs):
         data = {
@@ -368,3 +371,22 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         # not found in delete is okay
         res = db_api.policy_delete(self.ctx, policy_id)
         self.assertIsNone(res)
+
+    def test_policy_delete_in_use(self):
+        policy = db_api.policy_create(self.ctx, self.new_policy_data())
+        self.assertIsNotNone(policy)
+
+        fields = {
+            'enabled': True,
+            'level': 50
+        }
+        db_api.cluster_policy_attach(self.ctx, self.cluster.id, policy.id,
+                                     fields)
+        self.assertRaises(exception.PolicyInUse,
+                          db_api.policy_delete,
+                          self.ctx, policy.id)
+
+        db_api.cluster_policy_detach(self.ctx, self.cluster.id, policy.id)
+        db_api.policy_delete(self.ctx, policy.id)
+        policy = db_api.policy_get(self.ctx, policy.id)
+        self.assertIsNone(policy)
