@@ -60,7 +60,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(self.profile['id'], node['profile_id'])
         self.assertIsNone(node['cluster_id'])
         self.assertIsNone(node['role'])
-        self.assertEqual({}, node['tags'])
+        self.assertEqual({}, node['metadata'])
 
         action_id = node['action']
         action = db_api.action_get(self.ctx, action_id)
@@ -80,14 +80,14 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(exception.ProfileNotFound, ex.exc_info[0])
 
     @mock.patch.object(dispatcher, 'notify')
-    def test_node_create_with_role_and_tags(self, notify):
+    def test_node_create_with_role_and_metadata(self, notify):
         node = self.eng.node_create(self.ctx, 'n-1', self.profile['id'],
-                                    role='master', tags={'k': 'v'})
+                                    role='master', metadata={'k': 'v'})
 
         self.assertIsNotNone(node)
         self.assertEqual('n-1', node['name'])
         self.assertEqual('master', node['role'])
-        self.assertEqual({'k': 'v'}, node['tags'])
+        self.assertEqual({'k': 'v'}, node['metadata'])
 
     @mock.patch.object(dispatcher, 'notify')
     def test_node_create_with_profile_name_or_short_id(self, notify):
@@ -380,7 +380,7 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'notify')
     def test_node_update_simple(self, notify):
         node = self.eng.node_create(self.ctx, 'node-1', self.profile['id'],
-                                    role='Master', tags={'foo': 'bar'})
+                                    role='Master', metadata={'foo': 'bar'})
         nodeid = node['id']
 
         # 1. update name
@@ -395,11 +395,11 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(nodeid, res['id'])
         self.assertEqual('worker', res['role'])
 
-        # 3. update tags
-        self.eng.node_update(self.ctx, nodeid, tags={'FOO': 'BAR'})
+        # 3. update metadata
+        self.eng.node_update(self.ctx, nodeid, metadata={'FOO': 'BAR'})
         res = self.eng.node_get(self.ctx, nodeid)
         self.assertEqual(nodeid, res['id'])
-        self.assertEqual({'FOO': 'BAR'}, res['tags'])
+        self.assertEqual({'FOO': 'BAR'}, res['metadata'])
 
     def test_node_update_node_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,

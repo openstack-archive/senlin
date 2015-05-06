@@ -1,8 +1,8 @@
 {
     "node": {
+        "metadata": {},
         "name": "new_node_name",
         "profile": null,
-        "role": null,
-        "tags": {}
+        "role": null
     }
 }

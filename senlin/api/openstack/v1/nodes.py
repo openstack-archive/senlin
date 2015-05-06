@@ -34,7 +34,7 @@ class NodeData(object):
 
     PARAMS = (consts.NODE_NAME, consts.NODE_CLUSTER_ID,
               consts.NODE_PROFILE_ID, consts.NODE_ROLE,
-              consts.NODE_TAGS,)
+              consts.NODE_METADATA)
 
     def __init__(self, data):
         self.data = data
@@ -61,10 +61,10 @@ class NodeData(object):
             return None
         return self.data[consts.NODE_ROLE]
 
-    def tags(self):
-        if consts.NODE_TAGS not in self.data:
+    def metadata(self):
+        if consts.NODE_METADATA not in self.data:
             return {}
-        return self.data[consts.NODE_TAGS]
+        return self.data[consts.NODE_METADATA]
 
 
 class NodeController(object):
@@ -137,7 +137,7 @@ class NodeController(object):
         result = self.rpc_client.node_create(req.context, data.name(),
                                              data.cluster_id(),
                                              data.profile_id(),
-                                             data.role(), data.tags())
+                                             data.role(), data.metadata())
         return {'node': result}
 
     @util.policy_enforce
@@ -169,10 +169,10 @@ class NodeController(object):
         name = node_data.get(consts.NODE_NAME)
         profile_id = node_data.get(consts.NODE_PROFILE_ID)
         role = node_data.get(consts.NODE_ROLE)
-        tags = node_data.get(consts.NODE_TAGS)
+        metadata = node_data.get(consts.NODE_METADATA)
 
         self.rpc_client.node_update(req.context, node_id, name, profile_id,
-                                    role, tags)
+                                    role, metadata)
 
         raise exc.HTTPAccepted()
 

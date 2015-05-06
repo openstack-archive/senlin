@@ -198,7 +198,8 @@ class EngineService(service.Service):
         return [p.to_dict() for p in profiles]
 
     @request_context
-    def profile_create(self, context, name, type, spec, perm=None, tags=None):
+    def profile_create(self, context, name, type, spec, perm=None,
+                       metadata=None):
         LOG.info(_LI('Creating profile %(type)s: %(name)s'),
                  {'type': type, 'name': name})
         plugin = environment.global_env().get_profile(type)
@@ -206,7 +207,7 @@ class EngineService(service.Service):
         kwargs = {
             'spec': spec,
             'permission': perm,
-            'tags': tags,
+            'metadata': metadata,
         }
         profile = plugin(context, type, name, **kwargs)
         profile.validate()
@@ -221,7 +222,7 @@ class EngineService(service.Service):
 
     @request_context
     def profile_update(self, context, profile_id, name=None, spec=None,
-                       permission=None, tags=None):
+                       permission=None, metadata=None):
         db_profile = self.profile_find(context, profile_id)
         if spec is None:
             profile = profile_base.Profile.load(context, profile=db_profile)
@@ -232,8 +233,8 @@ class EngineService(service.Service):
             if permission is not None and permission != profile.permission:
                 profile.permission = permission
                 changed = True
-            if tags is not None and tags != profile.tags:
-                profile.tags = tags
+            if metadata is not None and metadata != profile.metadata:
+                profile.metadata = metadata
                 changed = True
             if changed:
                 profile.store(context)
@@ -246,7 +247,7 @@ class EngineService(service.Service):
         kwargs = {
             'spec': new_spec,
             'permission': permission or db_profile.permission,
-            'tags': tags or db_profile.tags,
+            'metadata': metadata or db_profile.meta_data,
         }
 
         new_name = name or db_profile.name
@@ -451,8 +452,8 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_create(self, context, name, desired_capacity, profile_id,
-                       min_size=None, max_size=None, parent=None, tags=None,
-                       timeout=None):
+                       min_size=None, max_size=None, parent=None,
+                       metadata=None, timeout=None):
         db_profile = self.profile_find(context, profile_id)
 
         (init_size, min_size, max_size) = self._validate_cluster_size_params(
@@ -470,7 +471,7 @@ class EngineService(service.Service):
             'min_size': min_size,
             'max_size': max_size,
             'timeout': timeout,
-            'tags': tags
+            'metadata': metadata,
         }
 
         cluster = cluster_mod.Cluster(name, init_size, db_profile.id, **kwargs)
@@ -495,7 +496,7 @@ class EngineService(service.Service):
     def cluster_update(self, context, identity, name=None,
                        desired_capacity=None, profile_id=None,
                        min_size=None, max_size=None,
-                       parent=None, tags=None, timeout=None):
+                       parent=None, metadata=None, timeout=None):
 
         def update_cluster_properties(cluster):
             # Check if fields other than profile_id need update
@@ -510,8 +511,8 @@ class EngineService(service.Service):
                     cluster.parent = db_parent.id
                     changed = True
 
-            if tags is not None and tags != cluster.tags:
-                cluster.tags = tags
+            if metadata is not None and metadata != cluster.metadata:
+                cluster.metadata = metadata
                 changed = True
 
             if timeout is not None:
@@ -791,7 +792,7 @@ class EngineService(service.Service):
 
     @request_context
     def node_create(self, context, name, profile_id, cluster_id=None,
-                    role=None, tags=None):
+                    role=None, metadata=None):
         node_profile = self.profile_find(context, profile_id)
         if cluster_id is not None:
             db_cluster = self.cluster_find(context, cluster_id)
@@ -813,7 +814,7 @@ class EngineService(service.Service):
             'project': context.project,
             'domain': context.domain,
             'role': role,
-            'tags': tags or {}
+            'metadata': metadata or {}
         }
 
         node = node_mod.Node(name, node_profile.id, cluster_id, context,
@@ -848,7 +849,7 @@ class EngineService(service.Service):
 
     @request_context
     def node_update(self, context, identity, name=None, profile_id=None,
-                    role=None, tags=None):
+                    role=None, metadata=None):
         db_node = self.node_find(context, identity)
         node = node_mod.Node.load(context, node=db_node)
 
@@ -861,8 +862,8 @@ class EngineService(service.Service):
             node.role = role
             changed = True
 
-        if tags is not None and tags != node.tags:
-            node.tags = tags
+        if metadata is not None and metadata != node.metadata:
+            node.metadata = metadata
             changed = True
 
         if changed is True:

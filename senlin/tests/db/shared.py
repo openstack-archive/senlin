@@ -71,7 +71,7 @@ def create_cluster(ctx, profile, **kwargs):
         'init_time': datetime.datetime.utcnow(),
         'status': 'INIT',
         'status_reason': 'Just Initialized',
-        'tags': {},
+        'metadata': {},
     }
     values.update(kwargs)
     if 'project' in kwargs:
@@ -93,7 +93,7 @@ def create_node(ctx, cluster, profile, **kwargs):
         'deleted_time': None,
         'status': 'ACTIVE',
         'status_reason': 'create complete',
-        'tags': json.loads('{"foo": "123"}'),
+        'metadata': json.loads('{"foo": "123"}'),
         'data': json.loads('{"key1": "value1"}'),
     }
     values.update(kwargs)

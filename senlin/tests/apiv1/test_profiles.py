@@ -35,14 +35,14 @@ class ProfileDataTest(base.SenlinTestCase):
             },
             'type': 'test_profile_type',
             'permission': None,
-            'tags': {}
+            'metadata': {}
         }
         data = profiles.ProfileData(body)
         self.assertEqual('test_profile', data.name())
         self.assertEqual({'param1': 'value1', 'param2': 'value2'}, data.spec())
         self.assertEqual('test_profile_type', data.type())
         self.assertIsNone(data.permission())
-        self.assertEqual({}, data.tags())
+        self.assertEqual({}, data.metadata())
 
     def test_required_fields_missing(self):
         body = {'not a profile name': 'wibble'}
@@ -51,7 +51,7 @@ class ProfileDataTest(base.SenlinTestCase):
         self.assertRaises(exc.HTTPBadRequest, data.spec)
         self.assertRaises(exc.HTTPBadRequest, data.type)
         self.assertIsNone(data.permission())
-        self.assertIsNone(data.tags())
+        self.assertIsNone(data.metadata())
 
 
 @mock.patch.object(policy, 'enforce')
@@ -82,7 +82,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 u'created_time': u'2015-02-24T19:17:22Z',
                 u'updated_time': None,
                 u'deleted_time': None,
-                u'tags': {},
+                u'metadata': {},
             }
         ]
 
@@ -225,7 +225,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                     'param_2': 2,
                 },
                 'permission': None,
-                'tags': {},
+                'metadata': {},
             }
         }
 
@@ -238,7 +238,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                     'param_2': 2,
             },
             'permission': None,
-            'tags': {},
+            'metadata': {},
         }
 
         req = self._post('/profiles', json.dumps(body))
@@ -254,7 +254,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'type': 'test_profile_type',
                 'spec': {'param_1': 'value1', 'param_2': 2},
                 'perm': None,
-                'tags': {},
+                'metadata': {},
             })
         )
 
@@ -286,7 +286,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'type': type_name,
                 'spec': {'param': 'value'},
                 'permission': None,
-                'tags': {},
+                'metadata': {},
             }
         }
         req = self._post('/profiles', json.dumps(body))
@@ -313,7 +313,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'type': 'test_profile_type',
                 'spec': {'param': 'value'},
                 'permission': None,
-                'tags': {},
+                'metadata': {},
             }
         }
         req = self._post('/profiles', json.dumps(body))
@@ -367,7 +367,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'created_time': u'2015-02-24T19:17:22Z',
             u'updated_time': None,
             u'deleted_time': None,
-            u'tags': {},
+            u'metadata': {},
         }
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -421,7 +421,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'spec': {
                     'param_2': 'value3',
                 },
-                'tags': {
+                'metadata': {
                     'author': 'thomas j',
                 }
             }
@@ -442,7 +442,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'created_time': u'2015-02-25T16:20:13Z',
             u'updated_time': None,
             u'deleted_time': None,
-            u'tags': {u'author': u'thomas j'},
+            u'metadata': {u'author': u'thomas j'},
         }
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -464,7 +464,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         pid = 'aaaa-bbbb-cccc'
         body = {
             'profile': {'spec': {'param_2': 'value3'},
-                        'tags': {'author': 'thomas j'}}
+                        'metadata': {'author': 'thomas j'}}
         }
 
         req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
@@ -481,7 +481,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {
             'profile': {
                 'name': 'new_profile',
-                'tags': {'author': 'john d'},
+                'metadata': {'author': 'john d'},
                 'permission': 'xxx',
             }
         }
@@ -500,7 +500,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'created_time': u'2015-02-25T16:20:13Z',
             u'updated_time': u'2015-02-25T16:50:22Z',
             u'deleted_time': None,
-            u'tags': {u'author': u'john d'},
+            u'metadata': {u'author': u'john d'},
         }
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -522,7 +522,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {
             'profile': {
                 'name': 'new_profile',
-                'tags': {'author': 'john d'},
+                'metadata': {'author': 'john d'},
                 'permission': 'xxx',
             }
         }

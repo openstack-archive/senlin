@@ -50,7 +50,7 @@ class Profile(object):
         self.spec_data = schema.Spec(self.spec_schema, self.spec, self.context)
 
         self.permission = kwargs.get('permission', '')
-        self.tags = kwargs.get('tags', {})
+        self.metadata = kwargs.get('metadata', {})
         self.created_time = kwargs.get('created_time', None)
         self.updated_time = kwargs.get('updated_time', None)
         self.deleted_time = kwargs.get('deleted_time', None)
@@ -66,7 +66,7 @@ class Profile(object):
             'id': record.id,
             'spec': record.spec,
             'permission': record.permission,
-            'tags': record.tags,
+            'metadata': record.meta_data,
             'created_time': record.created_time,
             'updated_time': record.updated_time,
             'deleted_time': record.deleted_time,
@@ -113,7 +113,7 @@ class Profile(object):
             'context': self.context.to_dict(),
             'spec': self.spec,
             'permission': self.permission,
-            'tags': self.tags,
+            'meta_data': self.metadata,
         }
 
         if self.id:
@@ -226,7 +226,7 @@ class Profile(object):
             'type': self.type,
             'permission': self.permission,
             'spec': self.spec,
-            'tags': self.tags,
+            'metadata': self.metadata,
             'created_time': _fmt_time(self.created_time),
             'updated_time': _fmt_time(self.updated_time),
             'deleted_time': _fmt_time(self.deleted_time),

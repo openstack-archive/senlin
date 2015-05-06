@@ -59,34 +59,34 @@ CLUSTER_ATTRS = (
     CLUSTER_DOMAIN, CLUSTER_PROJECT, CLUSTER_USER,
     CLUSTER_CREATED_TIME, CLUSTER_UPDATED_TIME, CLUSTER_DELETED_TIME,
     CLUSTER_STATUS, CLUSTER_STATUS_REASON, CLUSTER_TIMEOUT,
-    CLUSTER_TAGS,
+    CLUSTER_METADATA,
 ) = (
     'name', 'profile_id', 'desired_capacity',
     'min_size', 'max_size', 'id', 'parent',
     'domain', 'project', 'user',
     'created_time', 'updated_time', 'deleted_time',
     'status', 'status_reason', 'timeout',
-    'tags',
+    'metadata',
 )
 
 NODE_ATTRS = (
     NODE_INDEX, NODE_NAME, NODE_PROFILE_ID, NODE_CLUSTER_ID,
     NODE_CREATED_TIME, NODE_UPDATED_TIME, NODE_DELETED_TIME,
-    NODE_STATUS, NODE_ROLE, NODE_TAGS,
+    NODE_STATUS, NODE_ROLE, NODE_METADATA,
 ) = (
     'index', 'name', 'profile_id', 'cluster_id',
     'created_time', 'updated_time', 'deleted_time',
-    'status', 'role', 'tags',
+    'status', 'role', 'metadata',
 )
 
 PROFILE_ATTRS = (
     PROFILE_ID, PROFILE_NAME, PROFILE_TYPE, PROFILE_PERMISSION,
     PROFILE_CREATED_TIME, PROFILE_UPDATED_TIME, PROFILE_DELETED_TIME,
-    PROFILE_SPEC, PROFILE_TAGS, PROFILE_CONTEXT,
+    PROFILE_SPEC, PROFILE_METADATA, PROFILE_CONTEXT,
 ) = (
     'id', 'name', 'type', 'permission',
     'created_time', 'updated_time', 'deleted_time',
-    'spec', 'tags', 'context',
+    'spec', 'metadata', 'context',
 )
 
 POLICY_ATTRS = (

@@ -7,6 +7,7 @@
         "domain": "", 
         "id": "45edadcb-c73b-4920-87e1-518b2f29f54b", 
         "init_time": null, 
+        "metadata": {},
         "name": "test_cluster", 
         "nodes": [], 
         "parent": null, 
@@ -17,7 +18,6 @@
         "size": 1, 
         "status": "INIT", 
         "status_reason": "Initializing", 
-        "tags": {}, 
         "timeout": null, 
         "updated_time": null, 
         "user": "admin"

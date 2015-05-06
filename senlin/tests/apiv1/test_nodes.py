@@ -40,7 +40,7 @@ class NodeDataTest(base.SenlinTestCase):
         self.assertRaises(exc.HTTPBadRequest, data.profile_id)
         self.assertIsNone(data.cluster_id())
         self.assertIsNone(data.role())
-        self.assertEqual({}, data.tags())
+        self.assertEqual({}, data.metadata())
 
     def test_with_cluster_id(self):
         body = {'cluster_id': 'cluster-1', 'name': 'test_node'}
@@ -88,7 +88,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 u'status': u'ACTIVE',
                 u'status_reason': u'Node successfully created',
                 u'data': {},
-                u'tags': {},
+                u'metadata': {},
             }
         ]
 
@@ -289,7 +289,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'profile_id': 'xxxx-yyyy',
                 'cluster_id': None,
                 'role': None,
-                'tags': {},
+                'metadata': {},
             }
         }
 
@@ -298,7 +298,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'profile_id': 'xxxx-yyyy',
             'cluster_id': None,
             'role': None,
-            'tags': {},
+            'metadata': {},
             'action': 'this-is-the-node-create-action',
         }
 
@@ -315,7 +315,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'profile_id': 'xxxx-yyyy',
                 'cluster_id': None,
                 'role': None,
-                'tags': {},
+                'metadata': {},
             })
         )
 
@@ -330,7 +330,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'profile_id': 'bad-profile',
                 'cluster_id': None,
                 'role': None,
-                'tags': {},
+                'metadata': {},
             }
         }
         req = self._post('/nodes', json.dumps(body))
@@ -357,7 +357,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'profile_id': 'xxxx-yyyy-zzzz',
                 'cluster_id': 'non-existent-cluster',
                 'role': None,
-                'tags': {},
+                'metadata': {},
             }
         }
         req = self._post('/nodes', json.dumps(body))
@@ -397,7 +397,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'status': u'ACTIVE',
             u'status_reason': u'Node successfully created',
             u'data': {},
-            u'tags': {},
+            u'metadata': {},
             u'details': {}
         }
 
@@ -469,7 +469,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'name': 'test_node',
                 'profile_id': 'xxxx-yyyy',
                 'role': None,
-                'tags': {},
+                'metadata': {},
             }
         }
 
@@ -478,7 +478,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'profile_id': 'xxxx-yyyy',
             'cluster_id': None,
             'role': None,
-            'tags': {},
+            'metadata': {},
             'action': 'this-is-the-node-update-action',
         }
 
@@ -501,7 +501,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'name': 'test_node',
                 'profile_id': 'xxxx-yyyy',
                 'role': None,
-                'tags': {},
+                'metadata': {},
             })
         )
 
@@ -530,7 +530,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'name': 'test_node',
                 'profile_id': 'xxxx-yyyy',
                 'role': None,
-                'tags': {},
+                'metadata': {},
             }
         }
 
@@ -554,7 +554,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'name': 'test_node',
                 'profile_id': 'xxxx-yyyy',
                 'role': None,
-                'tags': {},
+                'metadata': {},
             })
         )
 
@@ -569,7 +569,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'name': 'test_node',
                 'profile_id': 'profile-not-exist',
                 'role': None,
-                'tags': {},
+                'metadata': {},
             }
         }
 
@@ -592,7 +592,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'name': 'test_node',
                 'profile_id': 'profile-not-exist',
                 'role': None,
-                'tags': {},
+                'metadata': {},
             })
         )
         self.assertEqual(404, resp.json['code'])
@@ -624,7 +624,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'name': 'test_node',
                 'profile_id': 'xxxx-yyyy',
                 'role': None,
-                'tags': {},
+                'metadata': {},
             }
         }
         req = self._patch('/nodes/%(node_id)s' % {'node_id': node_id},

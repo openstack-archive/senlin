@@ -205,14 +205,14 @@ class DBAPIProfileTest(base.SenlinTestCase):
             shared.create_profile(self.ctx, id=pid)
 
         mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
-        sort_keys = ['type', 'name', 'permission', 'tags',
+        sort_keys = ['type', 'name', 'permission', 'metadata',
                      'created_time', 'updated_time', 'deleted_time']
 
         db_api.profile_get_all(self.ctx, sort_keys=sort_keys)
 
         args = mock_paginate.call_args[0]
         used_sort_keys = set(args[3])
-        expected_keys = set(['id', 'type', 'name', 'permission', 'tags',
+        expected_keys = set(['id', 'type', 'name', 'permission',
                              'created_time', 'updated_time', 'deleted_time'])
         self.assertEqual(expected_keys, used_sort_keys)
 

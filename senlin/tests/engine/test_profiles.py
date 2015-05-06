@@ -53,15 +53,15 @@ class ProfileTest(base.SenlinTestCase):
         result = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', spec)
         self.assertEqual(spec, result['spec'])
 
-    def test_profile_create_with_perm_and_tags(self):
+    def test_profile_create_with_perm_and_metadata(self):
         spec = {'INT': 1}
         perm = 'fake perm'
-        tags = {'group': 'mars'}
+        metadata = {'group': 'mars'}
         result = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', spec,
-                                         perm=perm, tags=tags)
+                                         perm=perm, metadata=metadata)
         self.assertEqual(spec, result['spec'])
         self.assertEqual(perm, result['permission'])
-        self.assertEqual(tags, result['tags'])
+        self.assertEqual(metadata, result['metadata'])
 
     def test_profile_create_type_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,
@@ -279,7 +279,7 @@ class ProfileTest(base.SenlinTestCase):
 
     def test_profile_update_fields(self):
         p1 = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', {},
-                                     perm='1111', tags={'foo': 'bar'})
+                                     perm='1111', metadata={'foo': 'bar'})
         pid = p1['id']
         self.assertEqual({}, p1['spec'])
 
@@ -301,19 +301,19 @@ class ProfileTest(base.SenlinTestCase):
         p = self.eng.profile_get(self.ctx, pid)
         self.assertEqual('1100', p['permission'])
 
-        # 3. update tags
-        p2 = self.eng.profile_update(self.ctx, pid, tags={'bar': 'foo'})
+        # 3. update metadata
+        p2 = self.eng.profile_update(self.ctx, pid, metadata={'bar': 'foo'})
         self.assertEqual(pid, p2['id'])
-        self.assertEqual({'bar': 'foo'}, p2['tags'])
+        self.assertEqual({'bar': 'foo'}, p2['metadata'])
 
         # check persisted into db
         p = self.eng.profile_get(self.ctx, pid)
-        self.assertEqual({'bar': 'foo'}, p['tags'])
+        self.assertEqual({'bar': 'foo'}, p['metadata'])
 
     def test_profile_update_new_spec(self):
         spec = {'INT': 1}
         p1 = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', spec,
-                                     perm='1111', tags={'foo': 'bar'})
+                                     perm='1111', metadata={'foo': 'bar'})
         pid = p1['id']
 
         # update spec only
@@ -323,13 +323,13 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual({'INT': 2}, p2['spec'])
         self.assertEqual('p-1', p2['name'])
         self.assertEqual('1111', p2['permission'])
-        self.assertEqual({'foo': 'bar'}, p2['tags'])
+        self.assertEqual({'foo': 'bar'}, p2['metadata'])
 
         p = self.eng.profile_get(self.ctx, p2['id'])
         self.assertEqual({'INT': 2}, p['spec'])
         self.assertEqual('p-1', p['name'])
         self.assertEqual('1111', p['permission'])
-        self.assertEqual({'foo': 'bar'}, p['tags'])
+        self.assertEqual({'foo': 'bar'}, p['metadata'])
 
         # update spec with other fields
         p2 = self.eng.profile_update(self.ctx, pid, name='p-2',
@@ -340,7 +340,7 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual({'INT': 2}, p2['spec'])
         self.assertEqual('p-2', p2['name'])
         self.assertEqual('1100', p2['permission'])
-        self.assertEqual({'foo': 'bar'}, p2['tags'])
+        self.assertEqual({'foo': 'bar'}, p2['metadata'])
 
     def test_profile_update_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,
@@ -351,7 +351,7 @@ class ProfileTest(base.SenlinTestCase):
 
     def test_profile_update_using_find(self):
         p1 = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', {},
-                                     perm='1111', tags={'foo': 'bar'})
+                                     perm='1111', metadata={'foo': 'bar'})
         pid = p1['id']
 
         p2 = self.eng.profile_update(self.ctx, pid, name='p-2')
@@ -369,7 +369,7 @@ class ProfileTest(base.SenlinTestCase):
 
     def test_profile_update_err_validate(self):
         p1 = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', {},
-                                     perm='1111', tags={'foo': 'bar'})
+                                     perm='1111', metadata={'foo': 'bar'})
         pid = p1['id']
 
         ex = self.assertRaises(rpc.ExpectedException,
@@ -380,7 +380,7 @@ class ProfileTest(base.SenlinTestCase):
 
     def test_profile_delete(self):
         p1 = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', {},
-                                     perm='1111', tags={'foo': 'bar'})
+                                     perm='1111', metadata={'foo': 'bar'})
         pid = p1['id']
         result = self.eng.profile_delete(self.ctx, pid)
         self.assertIsNone(result)

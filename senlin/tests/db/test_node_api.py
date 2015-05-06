@@ -47,7 +47,7 @@ class DBAPINodeTest(base.SenlinTestCase):
         self.assertIsNone(node.deleted_time)
         self.assertEqual('ACTIVE', node.status)
         self.assertEqual('create complete', node.status_reason)
-        self.assertEqual('{"foo": "123"}', json.dumps(node.tags))
+        self.assertEqual('{"foo": "123"}', json.dumps(node.metadata))
         self.assertEqual('{"key1": "value1"}', json.dumps(node.data))
         self.assertEqual(self.cluster.id, node.cluster_id)
         self.assertEqual(self.profile.id, node.profile_id)
