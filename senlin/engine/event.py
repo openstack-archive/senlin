@@ -49,6 +49,7 @@ class Event(object):
         self.obj_type = kwargs.get('obj_type', None)
         self.obj_name = kwargs.get('obj_name', None)
         self.cluster_id = kwargs.get('cluster_id', None)
+        self.metadata = kwargs.get('metadata', {})
 
         # entity not None implies an initial creation of event object,
         # not a deserialization, so we try make an inference here
@@ -85,6 +86,7 @@ class Event(object):
             'status': record.status,
             'status_reason': record.status_reason,
             'deleted_time': record.deleted_time,
+            'metadata': record.meta_data,
         }
         return cls(record.timestamp, record.level, **kwargs)
 
@@ -130,6 +132,7 @@ class Event(object):
             'status': self.status,
             'status_reason': self.status_reason,
             'deleted_time': self.deleted_time,
+            'meta_data': self.metadata,
         }
 
         event = db_api.event_create(context, values)
@@ -156,6 +159,7 @@ class Event(object):
             'status': self.status,
             'status_reason': self.status_reason,
             'deleted_time': self.deleted_time,
+            'metadata': self.metadata,
         }
         return evt
 

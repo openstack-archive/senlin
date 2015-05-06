@@ -3,6 +3,7 @@
         "created_time": "2015-03-01T14:28:25.000000",
         "deleted_time": null,
         "id": "7fa885cd-fa39-4531-a42d-780af95c84a4",
+        "metadata": {},
         "name": "test_prof1",
         "permission": "010101",
         "spec": {
@@ -47,7 +48,6 @@
             },
             "timeout": 60
         },
-        "tags": {},
         "type": "os.heat.stack",
         "updated_time": "2015-03-02T06:16:01.050516"
     }

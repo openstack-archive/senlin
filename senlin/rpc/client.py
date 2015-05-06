@@ -87,22 +87,24 @@ class EngineClient(object):
                                        sort_dir=sort_dir, filters=filters,
                                        show_deleted=show_deleted))
 
-    def profile_create(self, ctxt, name, type, spec, perm, tags):
+    def profile_create(self, ctxt, name, type, spec, perm, metadata):
         return self.call(ctxt,
                          self.make_msg('profile_create', name=name,
                                        type=type, spec=spec, perm=perm,
-                                       tags=tags))
+                                       metadata=metadata))
 
     def profile_get(self, ctxt, identity):
         return self.call(ctxt,
                          self.make_msg('profile_get', identity=identity))
 
-    def profile_update(self, ctxt, profile_id, name, spec, permission, tags):
+    def profile_update(self, ctxt, profile_id, name, spec, permission,
+                       metadata):
         return self.call(ctxt,
                          self.make_msg('profile_update',
                                        profile_id=profile_id,
                                        name=name, spec=spec,
-                                       permission=permission, tags=tags))
+                                       permission=permission,
+                                       metadata=metadata))
 
     def profile_delete(self, ctxt, identity, cast=True):
         rpc_method = self.cast if cast else self.call
@@ -165,8 +167,8 @@ class EngineClient(object):
                          self.make_msg('cluster_get', identity=identity))
 
     def cluster_create(self, ctxt, name, desired_capacity, profile_id,
-                       min_size=None, max_size=None, parent=None, tags=None,
-                       timeout=None):
+                       min_size=None, max_size=None, parent=None,
+                       metadata=None, timeout=None):
         return self.call(ctxt, self.make_msg('cluster_create',
                                              name=name,
                                              desired_capacity=desired_capacity,
@@ -174,7 +176,7 @@ class EngineClient(object):
                                              min_size=min_size,
                                              max_size=max_size,
                                              parent=parent,
-                                             tags=tags,
+                                             metadata=metadata,
                                              timeout=timeout))
 
     def cluster_add_nodes(self, ctxt, identity, nodes):
@@ -199,7 +201,7 @@ class EngineClient(object):
 
     def cluster_update(self, ctxt, identity, name=None, desired_capacity=None,
                        profile_id=None, min_size=None, max_size=None,
-                       parent=None, tags=None, timeout=None):
+                       parent=None, metadata=None, timeout=None):
         return self.call(ctxt, self.make_msg('cluster_update',
                                              identity=identity,
                                              name=name,
@@ -207,7 +209,7 @@ class EngineClient(object):
                                              profile_id=profile_id,
                                              min_size=min_size,
                                              max_size=max_size,
-                                             parent=parent, tags=tags,
+                                             parent=parent, metadata=metadata,
                                              timeout=timeout))
 
     def cluster_delete(self, ctxt, identity, cast=True):
@@ -228,23 +230,23 @@ class EngineClient(object):
                                        filters=filters,
                                        project_safe=project_safe))
 
-    def node_create(self, ctxt, name, cluster_id, profile_id, role, tags):
+    def node_create(self, ctxt, name, cluster_id, profile_id, role, metadata):
         return self.call(ctxt,
                          self.make_msg('node_create', name=name,
                                        profile_id=profile_id,
                                        cluster_id=cluster_id,
-                                       role=role, tags=tags))
+                                       role=role, metadata=metadata))
 
     def node_get(self, ctxt, identity, show_details=False):
         return self.call(ctxt,
                          self.make_msg('node_get', identity=identity,
                                        show_details=show_details))
 
-    def node_update(self, ctxt, identity, name, profile_id, role, tags):
+    def node_update(self, ctxt, identity, name, profile_id, role, metadata):
         return self.call(ctxt,
                          self.make_msg('node_update', identity=identity,
                                        name=name, profile_id=profile_id,
-                                       role=role, tags=tags))
+                                       role=role, metadata=metadata))
 
     def node_join(self, ctxt, identity, cluster_id):
         return self.call(ctxt,

@@ -1,5 +1,6 @@
 {
-    "type": "os.heat.stack",
+    "metadata": {},
+    "permission": "",
     "spec": {
         "context": {},
         "environment": {},
@@ -7,6 +8,5 @@
         "parameters": [],
         "template": {}
     },
-    "permission": "",
-    "tags": {}
+    "type": "os.heat.stack"
 }

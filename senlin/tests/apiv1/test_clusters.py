@@ -34,7 +34,7 @@ class ClusterDataTest(base.SenlinTestCase):
             'name': 'test_cluster',
             'profile_id': 'some_profile',
             'parent': 'another_cluster',
-            'tags': {'tag_key': 'tag_value'},
+            'metadata': {'tag_key': 'tag_value'},
             'desired_capacity': 5,
             'max_size': 10,
             'min_size': 0,
@@ -45,7 +45,7 @@ class ClusterDataTest(base.SenlinTestCase):
         self.assertEqual('test_cluster', data.name)
         self.assertEqual('some_profile', data.profile)
         self.assertEqual('another_cluster', data.parent)
-        self.assertEqual({'tag_key': 'tag_value'}, data.tags)
+        self.assertEqual({'tag_key': 'tag_value'}, data.metadata)
         self.assertEqual(5, data.desired_capacity)
         self.assertEqual(10, data.max_size)
         self.assertEqual(0, data.min_size)
@@ -250,7 +250,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'timeout': 60,
             u'status': u'ACTIVE',
             u'status_reason': u'Cluster successfully created.',
-            u'tags': {},
+            u'metadata': {},
             u'data': {},
             u'nodes': [],
             u'policies': [],
@@ -427,7 +427,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'min_size': 0,
                 'max_size': 0,
                 'parent': None,
-                'tags': {},
+                'metadata': {},
                 'timeout': None,
             }
         }
@@ -441,7 +441,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'min_size': 0,
             'max_size': 0,
             'parent': None,
-            'tags': {},
+            'metadata': {},
             'timeout': 60,
         }
 
@@ -459,7 +459,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'min_size': 0,
                 'max_size': 0,
                 'parent': None,
-                'tags': {},
+                'metadata': {},
                 'timeout': None
             })
         )
@@ -476,7 +476,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'max_size': 0,
             'desired_capacity': 0,
             'parent': None,
-            'tags': {},
+            'metadata': {},
             'timeout': None,
         }
 
@@ -502,7 +502,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'max_size': 0,
                 'desired_capacity': 0,
                 'parent': None,
-                'tags': {},
+                'metadata': {},
                 'timeout': None,
             }
         }
@@ -526,7 +526,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'max_size': 0,
                 'desired_capacity': -1,
                 'parent': None,
-                'tags': {},
+                'metadata': {},
                 'timeout': None,
             }
         }
@@ -555,7 +555,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'max_size': 0,
                 'desired_capacity': 0,
                 'parent': None,
-                'tags': {},
+                'metadata': {},
                 'timeout': None,
             }
         }
@@ -595,7 +595,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'timeout': 60,
             u'status': u'ACTIVE',
             u'status_reason': u'Cluster successfully created.',
-            u'tags': {},
+            u'metadata': {},
             u'data': {},
             u'nodes': [],
             u'policies': [],
@@ -728,7 +728,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         args = {
             'name': None,
             'parent': None,
-            'tags': None,
+            'metadata': None,
             'desired_capacity': 0,
             'profile_id': 'xxxx-yyyy-zzzz',
             'min_size': 0,

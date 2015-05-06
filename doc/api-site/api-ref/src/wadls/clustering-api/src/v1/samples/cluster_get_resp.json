@@ -6,6 +6,7 @@
         "domain": "",
         "id": "45edadcb-c73b-4920-87e1-518b2f29f54b",
         "init_time": "2015-03-03T06:24:27.000000",
+        "metadata": {},
         "name": "test_cluster",
         "nodes": [
             "a0d91878-9154-4c7e-b6af-82bba7772b5e"
@@ -18,7 +19,6 @@
         "size": 2,
         "status": "ACTIVE",
         "status_reason": "Cluster creation succeeded",
-        "tags": {},
         "timeout": null,
         "updated_time": null,
         "user": "admin"

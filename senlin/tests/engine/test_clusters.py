@@ -70,7 +70,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual('cluster_test_project', result['project'])
         self.assertIsNone(result['parent'])
         self.assertIsNone(result['timeout'])
-        self.assertIsNone(result['tags'])
+        self.assertIsNone(result['metadata'])
 
         action_id = result['action']
         action = db_api.action_get(self.ctx, result['action'])
@@ -128,14 +128,14 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual('fake id', result['parent'])
 
     @mock.patch.object(dispatcher, 'notify')
-    def test_cluster_create_with_tags(self, notify):
+    def test_cluster_create_with_metadata(self, notify):
         result = self.eng.cluster_create(self.ctx, 'c-1', 2,
                                          self.profile['id'],
-                                         tags={'k': 'v'})
+                                         metadata={'k': 'v'})
 
         self.assertIsNotNone(result)
         self.assertEqual('c-1', result['name'])
-        self.assertEqual({'k': 'v'}, result['tags'])
+        self.assertEqual({'k': 'v'}, result['metadata'])
 
     def test_cluster_create_profile_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,
@@ -402,11 +402,11 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(cid, c['id'])
         self.assertEqual(p['id'], c['parent'])
 
-        # 3. update tags
-        self.eng.cluster_update(self.ctx, cid, tags={'k': 'v'})
+        # 3. update metadata
+        self.eng.cluster_update(self.ctx, cid, metadata={'k': 'v'})
         c = self.eng.cluster_get(self.ctx, cid)
         self.assertEqual(cid, c['id'])
-        self.assertEqual({'k': 'v'}, c['tags'])
+        self.assertEqual({'k': 'v'}, c['metadata'])
 
         # 4. update timeout
         self.eng.cluster_update(self.ctx, cid, timeout=119)
@@ -573,7 +573,7 @@ class ClusterTest(base.SenlinTestCase):
                 'deleted_time': None,
                 'status': 'ACTIVE',
                 'status_reason': 'create complete',
-                'tags': {'foo': '123'},
+                'metadata': {'foo': '123'},
                 'data': {'key1': 'value1'},
             }
             values.update(kwargs)

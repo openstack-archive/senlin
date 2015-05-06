@@ -76,7 +76,7 @@ class Cluster(periodic_task.PeriodicTasks):
         self.status = kwargs.get('status', self.INIT)
         self.status_reason = kwargs.get('status_reason', 'Initializing')
         self.data = kwargs.get('data', {})
-        self.tags = kwargs.get('tags', {})
+        self.metadata = kwargs.get('metadata', {})
 
         # heathy checking
         self.detect_enabled = False
@@ -121,7 +121,7 @@ class Cluster(periodic_task.PeriodicTasks):
             'timeout': self.timeout,
             'status': self.status,
             'status_reason': self.status_reason,
-            'tags': self.tags,
+            'meta_data': self.metadata,
             'data': self.data,
         }
 
@@ -161,7 +161,7 @@ class Cluster(periodic_task.PeriodicTasks):
             'status': record.status,
             'status_reason': record.status_reason,
             'data': record.data,
-            'tags': record.tags,
+            'metadata': record.meta_data,
         }
 
         return cls(record.name, record.desired_capacity, record.profile_id,
@@ -218,7 +218,7 @@ class Cluster(periodic_task.PeriodicTasks):
             'timeout': self.timeout,
             'status': self.status,
             'status_reason': self.status_reason,
-            'tags': self.tags,
+            'metadata': self.metadata,
             'data': self.data,
             'nodes': [node.id for node in self.rt['nodes']],
             'policies': [policy.id for policy in self.rt['policies']],

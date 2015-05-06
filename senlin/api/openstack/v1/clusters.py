@@ -38,7 +38,7 @@ class ClusterData(object):
         self.name = data.get(consts.CLUSTER_NAME, None)
         self.profile = data.get(consts.CLUSTER_PROFILE, None)
         self.parent = data.get(consts.CLUSTER_PARENT, None)
-        self.tags = data.get(consts.CLUSTER_TAGS, None)
+        self.metadata = data.get(consts.CLUSTER_METADATA, None)
 
         self.desired_capacity = data.get(consts.CLUSTER_DESIRED_CAPACITY, None)
         self.min_size = data.get(consts.CLUSTER_MIN_SIZE, None)
@@ -188,7 +188,7 @@ class ClusterController(object):
 
         cluster = self.rpc_client.cluster_create(
             req.context, data.name, data.desired_capacity, data.profile,
-            data.min_size, data.max_size, data.parent, data.tags,
+            data.min_size, data.max_size, data.parent, data.metadata,
             data.timeout)
 
         return {'cluster': cluster}
@@ -215,7 +215,7 @@ class ClusterController(object):
         self.rpc_client.cluster_update(
             req.context, cluster_id, data.name, data.desired_capacity,
             data.profile, data.min_size, data.max_size, data.parent,
-            data.tags, data.timeout)
+            data.metadata, data.timeout)
 
         raise exc.HTTPAccepted()
 

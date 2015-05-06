@@ -827,7 +827,6 @@ def profile_get_all(context, limit=None, marker=None, sort_keys=None,
         consts.PROFILE_CREATED_TIME: models.Profile.created_time.key,
         consts.PROFILE_UPDATED_TIME: models.Profile.updated_time.key,
         consts.PROFILE_DELETED_TIME: models.Profile.deleted_time.key,
-        consts.PROFILE_TAGS: models.Profile.tags.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 

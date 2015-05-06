@@ -111,7 +111,7 @@ class Cluster(BASE, SenlinBase, SoftDelete):
 
     status = sqlalchemy.Column(sqlalchemy.String(255))
     status_reason = sqlalchemy.Column(sqlalchemy.String(255))
-    tags = sqlalchemy.Column(types.Dict)
+    meta_data = sqlalchemy.Column(types.Dict)
     data = sqlalchemy.Column(types.Dict)
 
 
@@ -141,7 +141,7 @@ class Node(BASE, SenlinBase, SoftDelete):
 
     status = sqlalchemy.Column(sqlalchemy.String(255))
     status_reason = sqlalchemy.Column(sqlalchemy.String(255))
-    tags = sqlalchemy.Column(types.Dict)
+    meta_data = sqlalchemy.Column(types.Dict)
     data = sqlalchemy.Column(types.Dict)
 
 
@@ -227,7 +227,7 @@ class Profile(BASE, SenlinBase, SoftDelete):
     context = sqlalchemy.Column(types.Dict)
     spec = sqlalchemy.Column(types.Dict)
     permission = sqlalchemy.Column(sqlalchemy.String(32))
-    tags = sqlalchemy.Column(types.Dict)
+    meta_data = sqlalchemy.Column(types.Dict)
     created_time = sqlalchemy.Column(sqlalchemy.DateTime)
     updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
     deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
@@ -320,3 +320,4 @@ class Event(BASE, SenlinBase, SoftDelete):
     action = sqlalchemy.Column(sqlalchemy.String(36))
     status = sqlalchemy.Column(sqlalchemy.String(255))
     status_reason = sqlalchemy.Column(sqlalchemy.String(255))
+    meta_data = sqlalchemy.Column(types.Dict)

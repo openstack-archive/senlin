@@ -30,7 +30,7 @@ class ProfileData(object):
 
     PARAMS = (consts.PROFILE_NAME, consts.PROFILE_SPEC,
               consts.PROFILE_CONTEXT, consts.PROFILE_TYPE,
-              consts.PROFILE_PERMISSION, consts.PROFILE_TAGS)
+              consts.PROFILE_PERMISSION, consts.PROFILE_METADATA)
 
     def __init__(self, data):
         self.data = data
@@ -53,8 +53,8 @@ class ProfileData(object):
     def permission(self):
         return self.data.get(consts.PROFILE_PERMISSION)
 
-    def tags(self):
-        return self.data.get(consts.PROFILE_TAGS)
+    def metadata(self):
+        return self.data.get(consts.PROFILE_METADATA)
 
     def context(self):
         return self.data.get(consts.PROFILE_CONTEXT)
@@ -82,7 +82,7 @@ class ProfileController(object):
             'updated_time': 'single',
             'deleted_time': 'single',
             'permission': 'mixed',
-            'tags': 'mixed',
+            'metadata': 'mixed',
         }
         param_whitelist = {
             'limit': 'single',
@@ -124,7 +124,7 @@ class ProfileController(object):
                                                 data.type(),
                                                 data.spec(),
                                                 data.permission(),
-                                                data.tags())
+                                                data.metadata())
 
         return {'profile': result}
 
@@ -146,11 +146,11 @@ class ProfileController(object):
         name = profile_data.get(consts.PROFILE_NAME)
         spec = profile_data.get(consts.PROFILE_SPEC)
         permission = profile_data.get(consts.PROFILE_PERMISSION)
-        tags = profile_data.get(consts.PROFILE_TAGS)
+        metadata = profile_data.get(consts.PROFILE_METADATA)
         # We don't check if type is specified or not
         profile = self.rpc_client.profile_update(req.context, profile_id,
                                                  name, spec, permission,
-                                                 tags)
+                                                 metadata)
 
         return {'profile': profile}
 

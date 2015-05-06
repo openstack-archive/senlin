@@ -1,9 +1,9 @@
 {
     "cluster": {
+        "metadata": {},
         "name": null,
         "parent": null,
         "profile_id": null,
-        "tags": {},
         "timeout": "30"
     }
 }

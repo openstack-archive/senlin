@@ -67,7 +67,7 @@ class Node(object):
         self.status = kwargs.get('status', self.INIT)
         self.status_reason = kwargs.get('status_reason', 'Initializing')
         self.data = kwargs.get('data', {})
-        self.tags = kwargs.get('tags', {})
+        self.metadata = kwargs.get('metadata', {})
         self.rt = {}
 
         if context is not None:
@@ -107,8 +107,8 @@ class Node(object):
             'deleted_time': self.deleted_time,
             'status': self.status,
             'status_reason': self.status_reason,
+            'meta_data': self.metadata,
             'data': self.data,
-            'tags': self.tags,
         }
 
         if self.id:
@@ -147,7 +147,7 @@ class Node(object):
             'status': record.status,
             'status_reason': record.status_reason,
             'data': record.data,
-            'tags': record.tags,
+            'metadata': record.meta_data,
         }
 
         return cls(record.name, record.profile_id, record.cluster_id,
@@ -200,7 +200,7 @@ class Node(object):
             'status': self.status,
             'status_reason': self.status_reason,
             'data': self.data,
-            'tags': self.tags,
+            'metadata': self.metadata,
             'profile_name': self.rt['profile'].name,
         }
         return node_dict

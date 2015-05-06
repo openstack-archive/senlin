@@ -96,7 +96,7 @@ class ClusterAction(base.Action):
                 'project': cluster.project,
                 'domain': cluster.domain,
                 'index': index,
-                'tags': {}
+                'metadata': {}
             }
             name = 'node-%s-%003d' % (cluster.id[:8], index)
             node = node_mod.Node(name, cluster.profile_id, cluster.id,

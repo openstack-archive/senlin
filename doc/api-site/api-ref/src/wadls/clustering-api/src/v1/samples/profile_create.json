@@ -1,5 +1,6 @@
 {
     "profile": {
+        "metadata": {},
         "name": "test_prof1",
         "permission": "xxx",
         "spec": {
@@ -44,7 +45,6 @@
             },
             "timeout": 60
         },
-        "tags": {},
         "type": "os.heat.stack"
     }
 }

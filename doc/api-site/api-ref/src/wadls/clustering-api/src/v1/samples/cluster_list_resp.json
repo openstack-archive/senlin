@@ -7,6 +7,7 @@
             "domain": "",
             "id": "7d85f602-a948-4a30-afd4-e84f47471c15",
             "init_time": "2015-02-10T14:26:11.000000",
+            "metadata": {},
             "name": "cluster1",
             "nodes": [
                 "b07c57c8-7ab2-47bf-bdf8-e894c0c601b9",
@@ -21,7 +22,6 @@
             "size": 11,
             "status": "ACTIVE",
             "status_reason": "Cluster scale-in succeeded",
-            "tags": {},
             "timeout": null,
             "updated_time": null,
             "user": "admin"

@@ -8,6 +8,7 @@
             "id": "573aa1ba-bf45-49fd-907d-6b5d6e6adfd3",
             "index": -1,
             "init_time": "2015-02-27T04:39:18.000000",
+            "metadata": {},
             "name": "node00a",
             "physical_id": "cc028275-d078-4729-bf3e-154b7359814b",
             "profile_id": "edc63d0a-2ca4-48fa-9854-27926da76a4a",
@@ -16,7 +17,6 @@
             "role": null,
             "status": "ACTIVE",
             "status_reason": "Creation succeeded",
-            "tags": {},
             "updated_time": null
         },
     ]

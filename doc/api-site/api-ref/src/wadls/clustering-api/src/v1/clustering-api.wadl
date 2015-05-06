@@ -319,7 +319,7 @@
                             </listitem>
                             <listitem>
                                 <para>
-                                    <code>tags</code> List of key-value pairs that will be associated with
+                                    <code>metadata</code> List of key-value pairs that will be associated with
                                     the cluster. (optional).
                                 </para>
                             </listitem>
@@ -389,7 +389,7 @@
                             </listitem>
                             <listitem>
                                 <para>
-                                    <code>tags</code> New tags to be associated to the cluster being
+                                    <code>metadata</code> New metadata to be associated to the cluster being
                                     updated, if provided. The value should be a list of key-value pairs.
                                 </para>
                             </listitem>
@@ -662,7 +662,7 @@
                             <code>name</code>, <code>type</code>,
                             <code>created_time</code>, <code>updated_time</code>,
                             <code>deleted_time</code>, <code>permission</code> and
-                            <code>tags</code>.
+                            <code>metadata</code>.
                         </para>
                     </wadl:doc>
                 </param>
@@ -681,7 +681,7 @@
                             key can be one of <code>name</code>, <code>type</code>,
                             <code>created_time</code>, <code>updated_time</code>,
                             <code>deleted_time</code>, <code>permission</code> or
-                            <code>tags</code>.
+                            <code>metadata</code>.
                         </para>
                     </wadl:doc>
                 </param>
@@ -702,7 +702,7 @@
                         <para>List of profile records where each record contains
                             fields like <code>id</code>, <code>name</code>,
                             <code>type</code>, <code>spec</code>,
-                            <code>permission</code>, <code>tags</code> values etc.
+                            <code>permission</code>, <code>metadata</code> values etc.
                         </para>
                     </wadl:doc>
                 </param>
@@ -745,7 +745,7 @@
                             </listitem>
                             <listitem>
                                 <para>
-                                    <code>tags</code> A list of key-value pairs to be associated with the profile. (optional).
+                                    <code>metadata</code> A list of key-value pairs to be associated with the profile. (optional).
                                 </para>
                             </listitem>
                         </itemizedlist>
@@ -790,7 +790,7 @@
                             </listitem>
                             <listitem>
                                 <para>
-                                    <code>tags</code> A list of key-value pairs attached to the profile.
+                                    <code>metadata</code> A list of key-value pairs attached to the profile.
                                 </para>
                             </listitem>
                             <listitem>
@@ -823,7 +823,7 @@
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                     <para>A profile record that contains fields like <code>id</code>,
                         <code>name</code>, <code>type</code>, <code>spec</code>,
-                        <code>permission</code>, <code>tags</code> etc.
+                        <code>permission</code>, <code>metadata</code> etc.
                     </para>
                     <xsdxt:code href="samples/profile_get_resp.json"/>
                 </wadl:doc>
@@ -854,7 +854,7 @@
                         <para>A string to be interpreted as new permission.</para>
                     </wadl:doc>
                 </param>
-                <param name="tags" style="plain" required="false">
+                <param name="metadata" style="plain" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                         <para>A list of key-value pairs to be associated with the target
                             profile.</para>
@@ -867,7 +867,7 @@
                 <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                     <para>A profile record that contains fields like <code>id</code>,
                         <code>name</code>, <code>type</code>, <code>spec</code>,
-                        <code>permission</code>, <code>tags</code> etc.
+                        <code>permission</code>, <code>metadata</code> etc.
                     </para>
                     <xsdxt:code href="samples/profile_update_resp.json"/>
                 </wadl:doc>
@@ -1220,7 +1220,7 @@
                             <code>id</code>, <code>cluster_id</code>, <code>name</code>,
                             <code>physical_id</code>, <code>profile_id</code>, <code>created_time</code>,
                             <code>index</code>, <code>status</code>, <code>status_reason</code>,
-                            <code>tags</code>, <code>updated_time</code> etc.
+                            <code>metadata</code>, <code>updated_time</code> etc.
                         </para>
                     </wadl:doc>
                 </param>
@@ -1267,7 +1267,7 @@
                             </listitem>
                             <listitem>
                                 <para>
-                                    <code>tags</code> A list of key-value pairs to be attached to
+                                    <code>metadata</code> A list of key-value pairs to be attached to
                                     the newly created node. [Optional].
                                 </para>
                             </listitem>
@@ -1324,7 +1324,7 @@
                             </listitem>
                             <listitem>
                                 <para>
-                                    <code>tags</code> A list of key-value pairs to be attached to
+                                    <code>metadata</code> A list of key-value pairs to be attached to
                                     the updated node. [Optional].
                                 </para>
                             </listitem>
@@ -1406,7 +1406,7 @@
                         A node record that contains fields like <code>id</code>, <code>cluster_id</code>,
                         <code>name</code>, <code>physical_id</code>, <code>profile_id</code>,
                         <code>created_time</code>, <code>index</code>, <code>status</code>,
-                        <code>status_reason</code>, <code>tags</code>, <code>updated_time</code> etc.
+                        <code>status_reason</code>, <code>metadata</code>, <code>updated_time</code> etc.
                     </para>
                     <xsdxt:code href="samples/node_get_resp.json"/>
                 </wadl:doc>

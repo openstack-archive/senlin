@@ -121,7 +121,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'type': mock.ANY,
             'spec': mock.ANY,
             'perm': mock.ANY,
-            'tags': mock.ANY,
+            'metadata': mock.ANY,
         }
         self._test_engine_api('profile_create', 'call', **default_args)
 
@@ -134,7 +134,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'name': mock.ANY,
             'spec': mock.ANY,
             'permission': mock.ANY,
-            'tags': mock.ANY,
+            'metadata': mock.ANY,
         }
         self._test_engine_api('profile_update', 'call', **default_args)
 
@@ -211,7 +211,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'min_size': 0,
             'max_size': 0,
             'parent': None,
-            'tags': None,
+            'metadata': None,
             'timeout': None
         }
 
@@ -249,7 +249,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'min_size': 0,
             'max_size': 0,
             'parent': 'another-cluster',
-            'tags': {'key': 'value'},
+            'metadata': {'key': 'value'},
             'timeout': 120
         }
         self._test_engine_api('cluster_update', 'call', **kwargs)
@@ -279,7 +279,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'profile_id': 'aaaa-bbbb-cccc',
             'cluster_id': 'xxxx-yyyy-zzzz',
             'role': None,
-            'tags': None
+            'metadata': None
         }
 
         self._test_engine_api('node_create', 'call', **kwargs)
@@ -302,7 +302,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'name': 'new-name',
             'profile_id': 'new_profile',
             'role': 'master',
-            'tags': {'key': 'value'}
+            'metadata': {'key': 'value'}
         }
         self._test_engine_api('node_update', 'call', **kwargs)
 
