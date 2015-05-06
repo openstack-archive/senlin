@@ -1,12 +1,13 @@
 #!/bin/bash
 
-if [ $# -ne 1 ]; then
-  echo "Usage: `basename $0` <HOST_IP>"
+if [ $# -ne 2 ]; then
+  echo "Usage: `basename $0` <HOST_IP> <SERVICE_PASSWORD>"
   exit -1
 fi
 
 PORT=8778
 HOST=$1 # Put your host IP here
+SVC_PASSWD=$2
 
 SERVICE_ID=$(openstack service show senlin -f value -cid 2>/dev/null)
 if [[ -z $SERVICE_ID ]]; then
@@ -27,3 +28,14 @@ openstack endpoint create \
   --internalurl "http://$HOST:$PORT/v1/\$(tenant_id)s" \
   --region RegionOne \
   senlin
+
+openstack user create \
+  --password "$SVC_PASSWD" \
+  --project service \
+  --domain "default" \
+  senlin
+
+openstack role add \
+  service \
+  --user senlin \
+  --project service
