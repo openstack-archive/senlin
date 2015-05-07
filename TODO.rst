@@ -74,6 +74,7 @@ LOW PRIORITY
 DRIVER
 ------
   - add Heat resource driver
+  - add exception translation in driver
 
 TEST
 ----
