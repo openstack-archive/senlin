@@ -2,11 +2,6 @@
 HIGH PRIORITY
 =============
 
-TOOLS
------
-  - add logic that will create the senlin user and assign it suitable
-    roles (admin?) in the service project
-
 ENGINE
 ------
   - cleanse scheduler module [Yanyan Hu]
@@ -32,6 +27,12 @@ API
   - Revise the API for sorting, based on the following guideline:
     https://github.com/openstack/api-wg/blob/master/guidelines/pagination_filter_sort.rst
   - Add support to replace a cluster node with another node
+  - Make object creation requests return code 202, since most creation
+    are done asynchronously in Senlin.
+  - Make object creation requests return a location header set to the URI
+    of the resource to be created. This is a requirement from API WG.
+  - API resource names should not include underscores. A guideline from API
+    WG.
 
 DB
 --
