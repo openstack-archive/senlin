@@ -1,0 +1,3 @@
+#!/bin/sh
+
+python setup.py extract_messages --input-dirs "senlin/api,senlin/cmd,senlin/common,senlin/db,senlin/drivers,senlin/engine,senlin/policies,senlin/profiles,senlint/webhooks,senlin/openstack"
