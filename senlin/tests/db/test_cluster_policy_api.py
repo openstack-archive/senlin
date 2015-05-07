@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
+
 from senlin.db.sqlalchemy import api as db_api
 from senlin.tests.common import base
 from senlin.tests.common import utils
@@ -119,6 +121,22 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
         bindings = db_api.cluster_policy_get_all(self.ctx, self.cluster.id)
         self.assertEqual(1, len(bindings))
         self.assertEqual({'foo': 'BAR'}, bindings[0].data)
+
+    def test_policy_update_last_op(self):
+        policy = self.create_policy()
+
+        db_api.cluster_policy_attach(self.ctx, self.cluster.id, policy.id, {})
+        bindings = db_api.cluster_policy_get_all(self.ctx, self.cluster.id)
+        self.assertEqual(1, len(bindings))
+        self.assertIsNone(bindings[0].last_op)
+
+        timestamp = datetime.datetime.utcnow()
+        fields = {'last_op': timestamp}
+        db_api.cluster_policy_update(self.ctx, self.cluster.id, policy.id,
+                                     fields)
+        bindings = db_api.cluster_policy_get_all(self.ctx, self.cluster.id)
+        self.assertEqual(1, len(bindings))
+        self.assertEqual(timestamp, bindings[0].last_op)
 
     def test_policy_get_all_prioritized(self):
         policy = self.create_policy()

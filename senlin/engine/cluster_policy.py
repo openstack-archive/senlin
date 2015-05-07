@@ -36,6 +36,7 @@ class ClusterPolicy(object):
         self.level = kwargs.get('level', 50)
         self.enabled = kwargs.get('enabled', True)
         self.data = kwargs.get('data', {})
+        self.last_op = kwargs.get('last_op', None)
 
         # derived data from binding, put here for convenience
         self.cluster_name = kwargs.get('cluster_name', '')
@@ -50,6 +51,7 @@ class ClusterPolicy(object):
             'level': self.level,
             'enabled': self.enabled,
             'data': self.data,
+            'last_op': self.last_op,
         }
 
         if self.id:
@@ -75,6 +77,7 @@ class ClusterPolicy(object):
             'level': record.level,
             'enabled': record.enabled,
             'data': record.data,
+            'last_op': record.last_op,
 
             # derived data
             'cluster_name': record.cluster.name,
@@ -117,6 +120,7 @@ class ClusterPolicy(object):
             'level': self.level,
             'enabled': self.enabled,
             'data': self.data,
+            'last_op': self.last_op,
             # below are derived data for user's convenience
             'cluster_name': self.cluster_name,
             'policy_name': self.policy_name,

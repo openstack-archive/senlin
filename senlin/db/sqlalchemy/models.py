@@ -213,6 +213,7 @@ class ClusterPolicies(BASE, SenlinBase):
     level = sqlalchemy.Column(sqlalchemy.Integer)
     enabled = sqlalchemy.Column(sqlalchemy.Boolean)
     data = sqlalchemy.Column(types.Dict)
+    last_op = sqlalchemy.Column(sqlalchemy.DateTime)
 
 
 class Profile(BASE, SenlinBase, SoftDelete):

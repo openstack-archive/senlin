@@ -147,6 +147,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('level', sqlalchemy.Integer),
         sqlalchemy.Column('enabled', sqlalchemy.Boolean),
         sqlalchemy.Column('data', types.Dict),
+        sqlalchemy.Column('last_op', sqlalchemy.DateTime),
         mysql_engine='InnoDB',
         mysql_charset='utf8'
     )

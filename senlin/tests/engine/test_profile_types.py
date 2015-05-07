@@ -33,7 +33,7 @@ class ProfileTypeTest(base.SenlinTestCase):
     def test_profile_type_list(self):
         types = self.eng.profile_type_list(self.ctx)
         self.assertIsInstance(types, list)
-        self.assertIn({'name': 'os.heat.stack'}, types)
+        self.assertIn({'name': 'TestProfile'}, types)
         self.assertNotIn({'name': 'some-weird-stuff'}, types)
 
     def test_profile_type_schema(self):
