@@ -170,10 +170,6 @@ class NovaClient(base.DriverBase):
             raise ex
 
     def server_delete(self, **params):
-        def _is_not_found(ex):
-            parsed = sdk.parse_exception(ex)
-            return isinstance(parsed, sdk.HTTPNotFound)
-
         timeout = cfg.CONF.default_action_timeout
         if 'timeout' in params:
             timeout = params.pop('timeout')
@@ -181,16 +177,16 @@ class NovaClient(base.DriverBase):
         try:
             self.conn.compute.delete_server(**params)
         except sdk.exc.HttpException as ex:
-            if _is_not_found(ex):
-                return
+            sdk.ignore_not_found(ex)
+            return
 
         total_sleep = 0
         while total_sleep < timeout:
             try:
                 self.server_get(**params)
             except Exception as ex:
-                if not _is_not_found(ex):
-                    raise ex
+                sdk.ignore_not_found(ex)
+                return
 
             time.sleep(5)
             total_sleep += 5
