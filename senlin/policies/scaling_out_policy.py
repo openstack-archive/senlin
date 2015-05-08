@@ -91,9 +91,6 @@ class ScalingOutPolicy(base.Policy):
         self.adjustment_min_step = adjustment[self.MIN_STEP]
         self.best_effort = adjustment[self.BEST_EFFORT]
 
-        # TODO(anyone): Make sure the default cooldown can be used if
-        # not specified. Need support from ClusterPolicy.
-
     def pre_op(self, cluster_id, action):
         cluster = db_api.cluster_get(action.context, cluster_id)
         nodes = db_api.node_get_all_by_cluster(action.context, cluster_id)

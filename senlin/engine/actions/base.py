@@ -366,7 +366,13 @@ class Action(object):
 
         for p in bindings:
             policy = policy_mod.Policy.load(self.context, p.policy_id)
-            if (target, self.action) not in policy.TARGET:
+            # If the policy doesn't target on both 'BEFORE' and 'AFTER'
+            # stages of current action, just ignore it.
+            policy_target_before = True if (
+                'BEFORE', self.action) in policy.TARGET else False
+            policy_target_after = True if (
+                'AFTER', self.action) in policy.TARGET else False
+            if not policy_target_before and not policy_target_after:
                 continue
 
             if target == 'BEFORE':
@@ -374,7 +380,20 @@ class Action(object):
             else:  # target == 'AFTER'
                 method = getattr(policy, 'post_op')
 
+            # Check policy cooldown before doing policy check
+            if (policy_target_before and target == 'BEFORE') or (
+                    policy_target_after and target == 'AFTER'):
+                if policy.cooldown_inprogress(self.context, cluster_id):
+                    self.data['status'] = policy_mod.CHECK_ERROR
+                    self.data['reason'] = _('Policy %(id)s cooldown is still '
+                                            'in progress.') % {'id': policy.id}
+                    return
+
             method(cluster_id, self)
+
+            # Reset policy cooldown after action execution
+            if target == 'AFTER':
+                policy.reset_last_op(self.context, cluster_id)
 
             # Abort policy checking if failures found
             if self.data['status'] == policy_mod.CHECK_ERROR:
