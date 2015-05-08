@@ -36,6 +36,12 @@ openstack user create \
   senlin
 
 openstack role add \
-  service \
+  admin \
   --user senlin \
   --project service
+
+# make sure 'senlin' has 'service' role in 'demo' project
+openstack role add \
+  service \
+  --user senlin \
+  --project demo

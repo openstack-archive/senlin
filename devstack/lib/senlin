@@ -171,8 +171,8 @@ function create_senlin_accounts {
             "$SERVICE_PROTOCOL://$SENLIN_API_HOST:$SENLIN_API_PORT/v1/\$(tenant_id)s"
     fi
 
-    # senlin_stack_user role is for users created by Senlin
-    # get_or_create_role "senlin_cluster_user"
+    # get or adds 'service' role to 'senlin' on 'demo' project
+    get_or_add_user_project_role "service" "senlin" "demo"
 }
 
 # Restore xtrace
