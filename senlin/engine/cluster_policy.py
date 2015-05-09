@@ -47,7 +47,7 @@ class ClusterPolicy(object):
         '''Store the binding record into database table.'''
         values = {
             'cooldown': self.cooldown,
-            'prirority': self.priority,
+            'priority': self.priority,
             'level': self.level,
             'enabled': self.enabled,
             'data': self.data,
@@ -127,7 +127,3 @@ class ClusterPolicy(object):
             'policy_type': self.policy_type,
         }
         return binding_dict
-
-    @classmethod
-    def from_dict(cls, **kwargs):
-        return cls(**kwargs)
