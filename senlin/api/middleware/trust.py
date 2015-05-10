@@ -29,6 +29,31 @@ class TrustMiddleware(wsgi.Middleware):
     The extracted information is filled into the request context.
     Senlin engine will use this information for access control.
     '''
+    def _get_service_user_id(self, ctx):
+        # Convert user name to user ID first
+        importutils.import_module('keystonemiddleware.auth_token')
+        admin_user = cfg.CONF.keystone_authtoken.admin_user
+        admin_passwd = cfg.CONF.keystone_authtoken.admin_password
+
+        params = {
+            'auth_url': ctx.auth_url,
+            'user_name': admin_user,
+            'password': admin_passwd,
+            # This is a hack, we need to know the domain name somehow
+            'user_domain_name': 'Default',
+        }
+
+        kc = keystone_v3.KeystoneClient(params)
+
+        try:
+            admin_id = kc.user_get_by_name(admin_user)
+        except exception.UserNotFound:
+            # This is unacceptable, treat it as a server error
+            msg = _("Failed Senlin user checking.")
+            raise webob.exc.HTTPInternalServerError(msg)
+
+        return admin_id
+
     def _get_trust(self, ctx):
         '''List trusts with current user as the trustor.'''
 
@@ -44,25 +69,15 @@ class TrustMiddleware(wsgi.Middleware):
                 cred_exists = True
                 pass
 
+        admin_id = self._get_service_user_id(ctx)
+
         params = {
             'auth_url': ctx.auth_url,
             'auth_token': ctx.auth_token,
             'project': ctx.project,
             'user': ctx.user,
         }
-
         kc = keystone_v3.KeystoneClient(params)
-
-        # Convert user name to user ID first
-        importutils.import_module('keystonemiddleware.auth_token')
-        admin_user = cfg.CONF.keystone_authtoken.admin_user
-
-        try:
-            admin_id = kc.user_get_by_name(admin_user)
-        except exception.UserNotFound:
-            # This is unacceptable, treat it as a server error
-            msg = _("Failed Senlin user checking.")
-            raise webob.exc.HTTPInternalServerError(msg)
 
         try:
             trusts = kc.trust_get_by_trustor(ctx.user, admin_id, ctx.project)
