@@ -40,8 +40,6 @@ DB
 
 ENGINE
 ------
-  - Cleanse common/exception module
-
   - Revise spec parser so that 'type' and 'version' are parts of the spec file
     This could be a client-only fix, or a client/server fix.
 
