@@ -1,0 +1,24 @@
+# Sample scaling policy that can be attached to a cluster
+# This policy scales out a cluster when a threshold alarm on monasca 
+# reaches alarm state
+# This is just an example, need monasca alarm driver to work
+
+type: ScalingPolicy
+version: 1.0
+
+alarm:
+  type: SENLIN::ALARM::MONASCA
+  properties:
+    expression: "cpu<10"
+    match_by: "match_condition"
+    severity: medium
+
+handlers:
+  - type: webhook
+    action: SENLIN::ACTION::RESIZE
+    params:
+      type: CHANGE_IN_CAPACITY
+      number: -1
+    credentials:
+      user: john
+      password: secrete
