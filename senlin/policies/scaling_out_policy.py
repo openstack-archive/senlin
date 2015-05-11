@@ -45,12 +45,6 @@ class ScalingOutPolicy(base.Policy):
         'adjustment',
     )
 
-    ADJUSTMENT_TYPES = (
-        EXACT_CAPACITY, CHANGE_IN_CAPACITY, CHANGE_IN_PERCENTAGE,
-    ) = (
-        'EXACT_CAPACITY', 'CHANGE_IN_CAPACITY', 'CHANGE_IN_PERCENTAGE',
-    )
-
     _ADJUSTMENT_KEYS = (
         ADJUSTMENT_TYPE, ADJUSTMENT_NUMBER, MIN_STEP, BEST_EFFORT,
     ) = (
@@ -64,9 +58,9 @@ class ScalingOutPolicy(base.Policy):
                 ADJUSTMENT_TYPE: schema.String(
                     _('Type of adjustment when scaling is triggered.'),
                     constraints=[
-                        constraints.AllowedValues(ADJUSTMENT_TYPES),
+                        constraints.AllowedValues(consts.ADJUSTMENT_TYPES),
                     ],
-                    default=CHANGE_IN_CAPACITY,
+                    default=consts.CHANGE_IN_CAPACITY,
                 ),
                 ADJUSTMENT_NUMBER: schema.Number(
                     _('A number specifying the amount of adjustment.'),
@@ -105,11 +99,11 @@ class ScalingOutPolicy(base.Policy):
         nodes = db_api.node_get_all_by_cluster(action.context, cluster_id)
         current_size = len(nodes)
 
-        if self.adjustment_type == self.EXACT_CAPACITY:
+        if self.adjustment_type == consts.EXACT_CAPACITY:
             count = self.adjustment_number - current_size
-        elif self.adjustment_type == self.CHANGE_IN_CAPACITY:
+        elif self.adjustment_type == consts.CHANGE_IN_CAPACITY:
             count = self.adjustment_number
-        elif self.adjustment_type == self.CHANGE_IN_PERCENTAGE:
+        elif self.adjustment_type == consts.CHANGE_IN_PERCENTAGE:
             count = int((self.adjustment_number * current_size) / 100.0)
             if count < self.adjustment_min_step:
                 count = self.adjustment_min_step
