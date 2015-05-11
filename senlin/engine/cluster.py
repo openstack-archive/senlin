@@ -10,8 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
-
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import timeutils
@@ -78,7 +76,7 @@ class Cluster(periodic_task.PeriodicTasks):
         self.data = kwargs.get('data', {})
         self.metadata = kwargs.get('metadata', {})
 
-        # heathy checking
+        # TODO(anyone): Move these to health policy
         self.detect_enabled = False
         self.detect_interval = 1  # times of global periodic task interval.
         self.detect_counter = 0
@@ -129,7 +127,9 @@ class Cluster(periodic_task.PeriodicTasks):
             db_api.cluster_update(context, self.id, values)
             event_mod.info(context, self, 'update')
         else:
-            values['init_time'] = datetime.datetime.utcnow()
+            timestamp = timeutils.utcnow()
+            self.init_time = timestamp
+            values['init_time'] = timestamp
             cluster = db_api.cluster_create(context, values)
             self.id = cluster.id
             event_mod.info(context, self, 'create')
@@ -226,25 +226,25 @@ class Cluster(periodic_task.PeriodicTasks):
         }
         return info
 
-    @classmethod
-    def from_dict(cls, **kwargs):
-        return cls(**kwargs)
-
     def set_status(self, context, status, reason=None):
         '''Set status of the cluster.'''
 
         values = {}
-        now = datetime.datetime.utcnow()
+        now = timeutils.utcnow()
         if status == self.ACTIVE and self.status == self.CREATING:
+            self.created_time = now
             values['created_time'] = now
         elif status == self.DELETED:
+            self.deleted_time = now
             values['deleted_time'] = now
         elif status == self.ACTIVE and self.status == self.UPDATING:
+            self.updated_time = now
             values['updated_time'] = now
 
         self.status = status
         values['status'] = status
         if reason:
+            self.status_reason = reason
             values['status_reason'] = reason
 
         db_api.cluster_update(context, self.id, values)
@@ -268,7 +268,8 @@ class Cluster(periodic_task.PeriodicTasks):
 
         Set cluster status to DELETED.
         '''
-        db_api.cluster_delete(context, self.id)
+
+        self.set_status(context, self.DELETING, reason='Deletion in progress')
         return True
 
     def do_update(self, context, **kwargs):
@@ -276,10 +277,7 @@ class Cluster(periodic_task.PeriodicTasks):
 
         This method is intended to be called only from an action.
         '''
-        kwargs['status_reason'] = 'Updating in progress'
-        kwargs['status'] = self.UPDATING
-        kwargs['updated_time'] = datetime.datetime.utcnow()
-        db_api.cluster_update(context, self.id, kwargs)
+        self.set_status(context, self.UPDATING, reason='Update in progress')
         # TODO(anyone): generate event record
         return True
 
