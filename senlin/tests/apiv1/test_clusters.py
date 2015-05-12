@@ -729,10 +729,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'name': None,
             'parent': None,
             'metadata': None,
-            'desired_capacity': 0,
             'profile_id': 'xxxx-yyyy-zzzz',
-            'min_size': 0,
-            'max_size': 0,
             'timeout': cfg.CONF.default_action_timeout,
             'identity': cid,
         }

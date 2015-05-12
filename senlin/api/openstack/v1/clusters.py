@@ -213,8 +213,7 @@ class ClusterController(object):
         data.validate_for_update()
 
         self.rpc_client.cluster_update(
-            req.context, cluster_id, data.name, data.desired_capacity,
-            data.profile, data.min_size, data.max_size, data.parent,
+            req.context, cluster_id, data.name, data.profile, data.parent,
             data.metadata, data.timeout)
 
         raise exc.HTTPAccepted()

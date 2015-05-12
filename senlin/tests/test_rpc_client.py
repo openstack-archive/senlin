@@ -244,10 +244,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         kwargs = {
             'identity': 'a-cluster',
             'name': 'new-name',
-            'desired_capacity': 0,
             'profile_id': 'new_profile',
-            'min_size': 0,
-            'max_size': 0,
             'parent': 'another-cluster',
             'metadata': {'key': 'value'},
             'timeout': 120

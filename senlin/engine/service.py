@@ -493,9 +493,7 @@ class EngineService(service.Service):
         return result
 
     @request_context
-    def cluster_update(self, context, identity, name=None,
-                       desired_capacity=None, profile_id=None,
-                       min_size=None, max_size=None,
+    def cluster_update(self, context, identity, name=None, profile_id=None,
                        parent=None, metadata=None, timeout=None):
 
         def update_cluster_properties(cluster):
@@ -524,36 +522,13 @@ class EngineService(service.Service):
             if changed is True:
                 cluster.store(context)
 
-        def may_need_resize(cluster, new_size, min_size, max_size):
-            # Check if cluster may need a resize
-            # This is a rough guess, the action will do a more accurate
-            # evaluation when cluster is locked
-            if min_size is not None and min_size != cluster.min_size:
-                return True
-
-            if max_size is not None and max_size != cluster.max_size:
-                return True
-
-            if new_size is not None and new_size != cluster.desired_capacity:
-                return True
-
-            return False
-
-        def profile_is_new(cluster):
-            return profile_id is not None and profile_id != cluster.profile_id
-
-        (new_size, min_size, max_size) = self._validate_cluster_size_params(
-            desired_capacity, min_size, max_size)
-
         # Get the database representation of the existing cluster
         db_cluster = self.cluster_find(context, identity)
         cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
 
         update_cluster_properties(cluster)
-
-        if not any((may_need_resize(cluster, new_size, min_size, max_size),
-                    profile_is_new(cluster))):
-            # return if neither profile nor size needs an update
+        if profile_id is None or profile_id == cluster.profile_id:
+            # return if profile update is not needed
             return cluster.to_dict()
 
         if cluster.status == cluster.ERROR:
@@ -561,29 +536,18 @@ class EngineService(service.Service):
             raise exception.NotSupported(feature=msg)
 
         old_profile = self.profile_find(context, cluster.profile_id)
-        if profile_id is not None:
-            new_profile = self.profile_find(context, profile_id)
-            if new_profile.type != old_profile.type:
-                msg = _('Cannot update a cluster to a different profile type, '
-                        'operation aborted.')
-                raise exception.ProfileTypeNotMatch(message=msg)
+        new_profile = self.profile_find(context, profile_id)
+        if new_profile.type != old_profile.type:
+            msg = _('Cannot update a cluster to a different profile type, '
+                    'operation aborted.')
+            raise exception.ProfileTypeNotMatch(message=msg)
 
-            profile_id = new_profile.id
+        profile_id = new_profile.id
 
-        fmt = _LI("Updating cluster '%(cluster)s': profile='%(profile)s', "
-                  "desired_capacity=%(new_size)s, min_size=%(min_size)s, "
-                  "max_size=%(max_size)s.")
-        LOG.info(fmt % {'cluster': identity, 'profile': profile_id,
-                        'new_size': new_size, 'min_size': min_size,
-                        'max_size': max_size})
+        fmt = _LI("Updating cluster '%(cluster)s': profile='%(profile)s'.")
+        LOG.info(fmt % {'cluster': identity, 'profile': profile_id})
 
-        inputs = {
-            'new_profile_id': profile_id,
-            'min_size': min_size,
-            'max_size': max_size,
-            'desired_capacity': new_size
-        }
-
+        inputs = {'new_profile_id': profile_id}
         action = action_mod.Action(context, 'CLUSTER_UPDATE',
                                    name='cluster_update_%s' % cluster.id[:8],
                                    target=cluster.id,
@@ -683,6 +647,105 @@ class EngineService(service.Service):
                           None, action_id=action.id)
 
         return {'action': action.id}
+
+    @request_context
+    def cluster_resize(self, context, identity, adj_type=None, number=None,
+                       min_size=None, max_size=None, min_step=None,
+                       strict=True):
+        '''Adjust cluster size parameters.
+
+        :param identity: cluster dentity which can be name, id or short ID;
+        :param adj_type: optional; if specified, must be one of the strings
+                         defined in consts.ADJUSTMENT_TYPES;
+        :param number: number for adjustment. It is interpreted as the new
+                       desired_capacity of the cluster if `adj_type` is set
+                       to `EXACT_CAPACITY`; it is interpreted as the relative
+                       number of nodes to add/remove when `adj_type` is set
+                       to `CHANGE_IN_CAPACITY`; it is treated as a percentage
+                       when `adj_type` is set to `CHANGE_IN_PERCENTAGE`.
+                       This parameter is optional.
+        :param min_size: new lower bound of the cluster size, if specified.
+                         This parameter is optional.
+        :param max_size: new upper bound of the cluster size, if specified;
+                         A value of negative means no upper limit is imposed.
+                         This parameter is optional.
+        :param min_step: optional. It specifies the number of nodes to be
+                         added or removed when `adj_type` is set to value
+                         `CHANGE_IN_PERCENTAGE` and the number calculated is
+                         less than 1 or so.
+        :param strict: optional boolean value. It specifies whether Senlin
+                       should try a best-effort style resizing or just
+                       reject the request when scaling beyond its current
+                       size constraint.
+        '''
+
+        # check adj_type
+        if adj_type is not None:
+            if adj_type not in consts.ADJUSTMENT_TYPES:
+                raise exception.InvalidParameter(
+                    name=consts.ADJUSTMENT_TYPE, value=adj_type)
+            if number is None:
+                msg = _('Missing number value for size adjustment.')
+                raise exception.SenlinBadRequest(msg=msg)
+        else:
+            if number is not None:
+                msg = _('Missing adjustment_type value for size adjustment.')
+                raise exception.SenlinBadRequest(msg=msg)
+
+        if adj_type == consts.EXACT_CAPACITY:
+            number = utils.parse_int_param(consts.ADJUSTMENT_NUMBER, number)
+        elif adj_type == consts.CHANGE_IN_CAPACITY:
+            number = utils.parse_int_param(consts.ADJUSTMENT_NUMBER, number,
+                                           allow_negative=True)
+        elif adj_type == consts.CHANGE_IN_PERCENTAGE:
+            try:
+                number = float(number)
+            except ValueError:
+                raise exception.InvalidParameter(name=consts.ADJUSTMENT_NUMBER,
+                                                 value=number)
+            # min_step is only used (so checked) for this case
+            if min_step is not None:
+                min_step = utils.parse_int_param(consts.ADJUSTMENT_MIN_STEP,
+                                                 min_step)
+
+        # validate min_size and max_size
+        (_d, min_size, max_size) = self._validate_cluster_size_params(
+            None, min_size, max_size)
+
+        # Get the database representation of the existing cluster
+        db_cluster = self.cluster_find(context, identity)
+        cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
+
+        fmt = _LI("Resizing cluster '%(cluster)s': type=%(adj_type)s, "
+                  "number=%(number)s, min_size=%(min_size)s, "
+                  "max_size=%(max_size)s, min_step=%(min_step)s, "
+                  "strict=%(strict)s.")
+        LOG.info(fmt % {'cluster': identity, 'adj_type': adj_type,
+                        'number': number, 'min_size': min_size,
+                        'max_size': max_size, 'min_step': min_step,
+                        'strict': strict})
+
+        inputs = {
+            'adjustment_type': adj_type,
+            'number': number,
+            'min_size': min_size,
+            'max_size': max_size,
+            'min_step': min_step,
+            'strict': strict
+        }
+
+        action = action_mod.Action(context, 'CLUSTER_RESIZE',
+                                   name='cluster_resize_%s' % cluster.id[:8],
+                                   target=cluster.id,
+                                   cause=action_mod.CAUSE_RPC,
+                                   inputs=inputs)
+        action.store(context)
+        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
+                          None, action_id=action.id)
+
+        result = cluster.to_dict()
+        result['action'] = action.id
+        return result
 
     @request_context
     def cluster_scale_out(self, context, identity, count=None):

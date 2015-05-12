@@ -189,6 +189,18 @@ class EngineClient(object):
                                              identity=identity,
                                              nodes=nodes))
 
+    def cluster_resize(self, ctxt, identity, adj_type=None, number=None,
+                       min_size=None, max_size=None, min_step=None,
+                       strict=True):
+        return self.call(ctxt, self.make_msg('cluster_resize',
+                                             identity=identity,
+                                             adj_type=adj_type,
+                                             number=number,
+                                             min_size=min_size,
+                                             max_size=max_size,
+                                             min_step=min_step,
+                                             strict=strict))
+
     def cluster_scale_out(self, ctxt, identity, count=None):
         return self.call(ctxt, self.make_msg('cluster_scale_out',
                                              identity=identity,
@@ -199,16 +211,11 @@ class EngineClient(object):
                                              identity=identity,
                                              count=count))
 
-    def cluster_update(self, ctxt, identity, name=None, desired_capacity=None,
-                       profile_id=None, min_size=None, max_size=None,
+    def cluster_update(self, ctxt, identity, name=None, profile_id=None,
                        parent=None, metadata=None, timeout=None):
         return self.call(ctxt, self.make_msg('cluster_update',
-                                             identity=identity,
-                                             name=name,
-                                             desired_capacity=desired_capacity,
+                                             identity=identity, name=name,
                                              profile_id=profile_id,
-                                             min_size=min_size,
-                                             max_size=max_size,
                                              parent=parent, metadata=metadata,
                                              timeout=timeout))
 
