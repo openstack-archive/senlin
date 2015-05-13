@@ -89,6 +89,16 @@ events sent from Senlin when interesting things happen. One option is to use
 the messaging service provided by the Zaqar project.
 
 
+Customizable Batch Processing
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+An important non-functional requirement for Senlin is the scale of clusters it
+can handle. We will strive to make it handle large scale ones, however that
+indicates that we need to improve DB accesses in case of heavy loads. One
+potential tradeoff is to introduce an option for users to customize the size
+of batches when large number of DB requests pouring in.
+
+
 Use Barbican to Store Secrets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
