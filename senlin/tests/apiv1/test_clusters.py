@@ -11,12 +11,12 @@
 # under the License.
 
 import json
+
 import mock
+from oslo_config import cfg
 import six
 import webob
 from webob import exc
-
-from oslo_config import cfg
 
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import clusters
@@ -1054,6 +1054,266 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('SenlinBadRequest', resp.json['error']['type'])
         self.assertIn('Nodes not found: bad-node-1',
                       resp.json['error']['message'])
+
+    def _test_cluster_action_resize_with_types(self, adj_type, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+
+        cid = 'aaaa-bbbb-cccc'
+        body = {
+            'resize': {
+                'adjustment_type': adj_type,
+                'number': 1,
+                'min_size': 0,
+                'max_size': 10,
+                'min_step': 1,
+                'strict': True
+            }
+        }
+        eng_resp = {'action': {'id': 'action-id', 'target': cid}}
+
+        req = self._put('/clusters/%(cluster_id)s/action' % {
+                        'cluster_id': cid}, json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=eng_resp)
+
+        resp = self.controller.action(req, tenant_id=self.project,
+                                      cluster_id=cid,
+                                      body=body)
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('cluster_resize', {
+                'identity': cid,
+                'adj_type': adj_type,
+                'number': 1,
+                'min_size': 0,
+                'max_size': 10,
+                'min_step': 1,
+                'strict': True
+            })
+        )
+        self.assertEqual(eng_resp, resp)
+
+    def test_cluster_action_resize_with_exact_capacity(self, mock_enforce):
+        self._test_cluster_action_resize_with_types('EXACT_CAPACITY',
+                                                    mock_enforce)
+
+    def test_cluster_action_resize_with_change_capacity(self, mock_enforce):
+        self._test_cluster_action_resize_with_types('CHANGE_IN_CAPACITY',
+                                                    mock_enforce)
+
+    def test_cluster_action_resize_with_change_percentage(self, mock_enforce):
+        self._test_cluster_action_resize_with_types('CHANGE_IN_PERCENTAGE',
+                                                    mock_enforce)
+
+    def test_cluster_action_resize_with_bad_type(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {
+            'resize': {
+                'adjustment_type': 'NOT_QUITE_SURE',
+                'number': 1
+            }
+        }
+        req = self._put('/clusters/%(cluster_id)s/action' % {
+                        'cluster_id': cid}, json.dumps(body))
+
+        error = senlin_exc.InvalidParameter(name='adjustment_type',
+                                            value='NOT_QUITE_SURE')
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.action,
+                                              req, tenant_id=self.project,
+                                              cluster_id=cid,
+                                              body=body)
+        self.assertEqual(400, resp.json['code'])
+        self.assertEqual('InvalidParameter', resp.json['error']['type'])
+        self.assertIn("Invalid value 'NOT_QUITE_SURE' specified for "
+                      "'adjustment_type'", resp.json['error']['message'])
+
+    def test_cluster_action_resize_missing_number(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+
+        cid = 'aaaa-bbbb-cccc'
+        body = {
+            'resize': {
+                'adjustment_type': 'EXACT_CAPACITY',
+            }
+        }
+        req = self._put('/clusters/%s/action' % cid, json.dumps(body))
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, tenant_id=self.project,
+                               cluster_id=cid,
+                               body=body)
+        self.assertEqual('Missing number value for resize operation.',
+                         six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
+
+    def test_cluster_action_resize_missing_type(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+
+        cid = 'aaaa-bbbb-cccc'
+        body = {'resize': {'number': 2}}
+        req = self._put('/clusters/%s/action' % cid, json.dumps(body))
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, tenant_id=self.project,
+                               cluster_id=cid,
+                               body=body)
+        self.assertEqual('Missing adjustment_type value for resize operation.',
+                         six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
+
+    def _test_cluster_resize_param_not_int(self, param, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+
+        cid = 'aaaa-bbbb-cccc'
+        body = {
+            'resize': {
+                'adjustment_type': 'CHANGE_IN_CAPACITY',
+                'number': 1,
+            }
+        }
+        body['resize'][param] = 'BOGUS'
+        req = self._put('/clusters/%s/action' % cid, json.dumps(body))
+
+        ex = self.assertRaises(senlin_exc.InvalidParameter,
+                               self.controller.action,
+                               req, tenant_id=self.project,
+                               cluster_id=cid,
+                               body=body)
+        self.assertEqual("Invalid value 'BOGUS' specified for '%s'" %
+                         param, six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
+
+    def test_cluster_action_resize_number_not_int(self, mock_enforce):
+        self._test_cluster_resize_param_not_int('number', mock_enforce)
+
+    def test_cluster_action_resize_min_size_not_int(self, mock_enforce):
+        self._test_cluster_resize_param_not_int('min_size', mock_enforce)
+
+    def test_cluster_action_resize_max_size_not_int(self, mock_enforce):
+        self._test_cluster_resize_param_not_int('max_size', mock_enforce)
+
+    def test_cluster_action_resize_min_step_not_int(self, mock_enforce):
+        self._test_cluster_resize_param_not_int('min_step', mock_enforce)
+
+    def test_cluster_action_resize_min_size_non_neg(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+
+        cid = 'aaaa-bbbb-cccc'
+        body = {'resize': {'min_size': -1}}
+        req = self._put('/clusters/%s/action' % cid, json.dumps(body))
+
+        ex = self.assertRaises(senlin_exc.InvalidParameter,
+                               self.controller.action,
+                               req, tenant_id=self.project,
+                               cluster_id=cid,
+                               body=body)
+        self.assertEqual("Invalid value '-1' specified for 'min_size'",
+                         six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
+
+    def test_cluster_action_resize_max_size_neg_ok(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+
+        cid = 'aaaa-bbbb-cccc'
+        body = {'resize': {'max_size': -1}}
+        req = self._put('/clusters/%s/action' % cid, json.dumps(body))
+
+        eng_resp = {'action': {'id': 'action-id', 'target': cid}}
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=eng_resp)
+
+        resp = self.controller.action(req, tenant_id=self.project,
+                                      cluster_id=cid, body=body)
+        mock_call.assert_called_once_with(
+            req.context,
+            ('cluster_resize', {
+                'identity': cid,
+                'adj_type': None,
+                'number': None,
+                'min_size': None,
+                'max_size': -1,
+                'min_step': None,
+                'strict': None
+            })
+        )
+        self.assertEqual(eng_resp, resp)
+
+    def test_cluster_action_resize_max_size_too_small(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+
+        cid = 'aaaa-bbbb-cccc'
+        body = {'resize': {'min_size': 2, 'max_size': 1}}
+        req = self._put('/clusters/%s/action' % cid, json.dumps(body))
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, tenant_id=self.project,
+                               cluster_id=cid,
+                               body=body)
+        self.assertEqual("The specified min_size (2) is greater than "
+                         "the specified max_size (1).", six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
+
+    def test_cluster_action_resize_min_with_max_neg(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+
+        cid = 'aaaa-bbbb-cccc'
+        body = {'resize': {'min_size': 2, 'max_size': -1}}
+        req = self._put('/clusters/%s/action' % cid, json.dumps(body))
+
+        eng_resp = {'action': {'id': 'action-id', 'target': cid}}
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=eng_resp)
+
+        resp = self.controller.action(req, tenant_id=self.project,
+                                      cluster_id=cid,
+                                      body=body)
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('cluster_resize', {
+                'identity': cid,
+                'adj_type': None,
+                'number': None,
+                'min_size': 2,
+                'max_size': -1,
+                'min_step': None,
+                'strict': None
+            })
+        )
+        self.assertEqual(eng_resp, resp)
+
+    def test_cluster_action_resize_strict_non_bool(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+
+        cid = 'aaaa-bbbb-cccc'
+        body = {'resize': {'strict': 'yes'}}
+        req = self._put('/clusters/%s/action' % cid, json.dumps(body))
+
+        ex = self.assertRaises(senlin_exc.InvalidParameter,
+                               self.controller.action,
+                               req, tenant_id=self.project,
+                               cluster_id=cid,
+                               body=body)
+        self.assertEqual("Invalid value 'yes' specified for 'strict'",
+                         six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
 
     def test_cluster_action_scale_out(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)

@@ -15,13 +15,13 @@
 Cluster endpoint for Senlin v1 ReST API.
 """
 
-from webob import exc
-
 from oslo_config import cfg
 from oslo_log import log as logging
+from webob import exc
 
 from senlin.api.openstack.v1 import util
 from senlin.common import consts
+from senlin.common import exception as senlin_exc
 from senlin.common.i18n import _
 from senlin.common import serializers
 from senlin.common import utils
@@ -123,10 +123,10 @@ class ClusterController(object):
     REQUEST_SCOPE = 'clusters'
 
     SUPPORTED_ACTIONS = (
-        ADD_NODES, DEL_NODES, SCALE_OUT, SCALE_IN,
+        ADD_NODES, DEL_NODES, SCALE_OUT, SCALE_IN, RESIZE,
         POLICY_ATTACH, POLICY_DETACH, POLICY_UPDATE,
     ) = (
-        'add_nodes', 'del_nodes', 'scale_out', 'scale_in',
+        'add_nodes', 'del_nodes', 'scale_out', 'scale_in', 'resize',
         'policy_attach', 'policy_detach', 'policy_update',
     )
 
@@ -218,6 +218,50 @@ class ClusterController(object):
 
         raise exc.HTTPAccepted()
 
+    def _do_resize(self, req, cluster_id, this_action, body):
+        data = body.get(this_action)
+        adj_type = data.get('adjustment_type')
+        number = data.get('number')
+        min_size = data.get('min_size')
+        max_size = data.get('max_size')
+        min_step = data.get('min_step')
+        strict = data.get('strict')
+        if adj_type is not None:
+            if adj_type not in consts.ADJUSTMENT_TYPES:
+                raise senlin_exc.InvalidParameter(name='adjustment_type',
+                                                  value=adj_type)
+            if number is None:
+                msg = _("Missing number value for resize operation.")
+                raise exc.HTTPBadRequest(msg)
+
+        if number is not None:
+            if adj_type is None:
+                msg = _("Missing adjustment_type value for resize "
+                        "operation.")
+                raise exc.HTTPBadRequest(msg)
+            number = utils.parse_int_param('number', number)
+
+        if min_size is not None:
+            min_size = utils.parse_int_param('min_size', min_size)
+        if max_size is not None:
+            max_size = utils.parse_int_param('max_size', max_size,
+                                             allow_negative=True)
+        if (min_size is not None and max_size is not None and
+                max_size > 0 and min_size > max_size):
+            msg = _("The specified min_size (%(n)s) is greater than the "
+                    "specified max_size (%(m)s).") % {'m': max_size,
+                                                      'n': min_size}
+            raise exc.HTTPBadRequest(msg)
+
+        if min_step is not None:
+            min_step = utils.parse_int_param('min_step', min_step)
+        if strict is not None:
+            strict = utils.parse_bool_param('strict', strict)
+
+        return self.rpc_client.cluster_resize(req.context, cluster_id,
+                                              adj_type, number, min_size,
+                                              max_size, min_step, strict)
+
     @util.policy_enforce
     def action(self, req, cluster_id, body=None):
         '''Perform specified action on a cluster.'''
@@ -245,6 +289,8 @@ class ClusterController(object):
                 raise exc.HTTPBadRequest(_('No node to delete'))
             res = self.rpc_client.cluster_del_nodes(
                 req.context, cluster_id, nodes)
+        elif this_action == self.RESIZE:
+            return self._do_resize(req, cluster_id, this_action, body)
         elif this_action == self.SCALE_OUT:
             count = body.get(this_action).get('count')
             res = self.rpc_client.cluster_scale_out(req.context, cluster_id,
