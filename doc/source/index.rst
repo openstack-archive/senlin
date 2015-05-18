@@ -68,6 +68,7 @@ Developers Documentation
    architecture
    plugin_guide
    authorization
+   webhook
 
 API Documentation
 ========================
