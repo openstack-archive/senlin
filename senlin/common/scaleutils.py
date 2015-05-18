@@ -44,7 +44,7 @@ def calculate_desired(current, adj_type, number, min_step):
             adjust = min_step if rounded > 0 else -min_step
             desired = current + adjust
         else:
-            desired = rounded
+            desired = current + rounded
 
     return desired
 

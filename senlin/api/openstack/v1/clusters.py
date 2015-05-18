@@ -239,7 +239,8 @@ class ClusterController(object):
                 msg = _("Missing adjustment_type value for resize "
                         "operation.")
                 raise exc.HTTPBadRequest(msg)
-            number = utils.parse_int_param('number', number)
+            number = utils.parse_int_param('number', number,
+                                           allow_negative=True)
 
         if min_size is not None:
             min_size = utils.parse_int_param('min_size', min_size)
