@@ -693,18 +693,20 @@ class EngineService(service.Service):
                 raise exception.SenlinBadRequest(msg=msg)
 
         if adj_type == consts.EXACT_CAPACITY:
-            number = utils.parse_int_param('number', number)
+            number = utils.parse_int_param(consts.ADJUSTMENT_NUMBER, number)
         elif adj_type == consts.CHANGE_IN_CAPACITY:
-            number = utils.parse_int_param('number', number,
+            number = utils.parse_int_param(consts.ADJUSTMENT_NUMBER, number,
                                            allow_negative=True)
         elif adj_type == consts.CHANGE_IN_PERCENTAGE:
             try:
                 number = float(number)
             except ValueError:
-                raise exception.InvalidParameter(name='number', value=number)
+                raise exception.InvalidParameter(name=consts.ADJUSTMENT_NUMBER,
+                                                 value=number)
             # min_step is only used (so checked) for this case
             if min_step is not None:
-                min_step = utils.parse_int_param('min_step', min_step)
+                min_step = utils.parse_int_param(consts.ADJUSTMENT_MIN_STEP,
+                                                 min_step)
 
         # validate min_size and max_size
         (_d, min_size, max_size) = self._validate_cluster_size_params(
@@ -724,12 +726,12 @@ class EngineService(service.Service):
                         'strict': strict})
 
         inputs = {
-            'adjustment_type': adj_type,
-            'number': number,
-            'min_size': min_size,
-            'max_size': max_size,
-            'min_step': min_step,
-            'strict': strict
+            consts.ADJUSTMENT_TYPE: adj_type,
+            consts.ADJUSTMENT_NUMBER: number,
+            consts.ADJUSTMENT_MIN_SIZE: min_size,
+            consts.ADJUSTMENT_MAX_SIZE: max_size,
+            consts.ADJUSTMENT_MIN_STEP: min_step,
+            consts.ADJUSTMENT_STRICT: strict
         }
 
         action = action_mod.Action(context, 'CLUSTER_RESIZE',

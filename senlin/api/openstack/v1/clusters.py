@@ -220,12 +220,12 @@ class ClusterController(object):
 
     def _do_resize(self, req, cluster_id, this_action, body):
         data = body.get(this_action)
-        adj_type = data.get('adjustment_type')
-        number = data.get('number')
-        min_size = data.get('min_size')
-        max_size = data.get('max_size')
-        min_step = data.get('min_step')
-        strict = data.get('strict')
+        adj_type = data.get(consts.ADJUSTMENT_TYPE)
+        number = data.get(consts.ADJUSTMENT_NUMBER)
+        min_size = data.get(consts.ADJUSTMENT_MIN_SIZE)
+        max_size = data.get(consts.ADJUSTMENT_MAX_SIZE)
+        min_step = data.get(consts.ADJUSTMENT_MIN_STEP)
+        strict = data.get(consts.ADJUSTMENT_STRICT)
         if adj_type is not None:
             if adj_type not in consts.ADJUSTMENT_TYPES:
                 raise senlin_exc.InvalidParameter(name='adjustment_type',
