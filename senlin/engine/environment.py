@@ -177,7 +177,7 @@ def initialize():
         mgr = extension.ExtensionManager(
             namespace=namespace,
             invoke_on_load=False,
-            verify_requirements=True)
+            verify_requirements=False)
         return [[name, mgr[name].plugin] for name in mgr.names()]
 
     if _environment is not None:
