@@ -68,7 +68,15 @@ OSLO
 
 POLICY
 ------
-  - Scaling policy allowng a cluster to scale to existing nodes 
+  - Scaling policy allowng a cluster to scale to existing nodes
+
+DRIVER
+------
+  - Add another abstract layer which hides interface differentiation between
+    multiple drivers of the same type and provides unified interface for
+    profile, e.g. alarm interfaces for scaling policy which can be mapped to
+    both Ceilometer or Monasca driver; loadblancer interfaces for lb policy
+    which can be mapped to both Neutron LBaaS or AWS LBaaS driver.
 
 LOW PRIORITY
 ============
