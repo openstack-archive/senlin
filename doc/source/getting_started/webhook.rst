@@ -13,41 +13,70 @@
 
 Webhook
 =======
-Webhook is used to trigger a specific action of  a senlin entity, typically
-scaling out/in action of a cluster.
+
+Webhook is used to trigger a specific action on a senlin entity, for instance
+the actions that change the size of a specified cluster.
 
 How to use
 ----------
 
-1. Create a cluster, e.g.:
-       senlin cluster-create -p $PROFILE_ID -c 2 -i 1 -a 5 test-cluster
-2. Attach a ScalingPolicy to the cluster;
-       senlin cluster-policy-attach -p $POLICY_ID $CLUSTER_ID
-3. Create a webhook and specify the `CLUSTER_ID` as obj_id, `cluster` as
-   obj_type and `CLUSTER_SCALE_OUT` or `CLUSTER_SCALE_IN` as the action.
+1. Create a cluster, e.g.
+
+::
+
+  senlin cluster-create -p $PROFILE_ID -c 2 -i 1 -a 5 test-cluster
+
+2. Attach a ScalingPolicy to the cluster:
+
+::
+
+  senlin cluster-policy-attach -p $POLICY_ID test-cluster
+
+3. Create a webhook and specify `test-cluster` as the `obj_id`, `cluster` as
+   the `obj_type` and `CLUSTER_SCALE_OUT` or `CLUSTER_SCALE_IN` as the action.
    Senlin service will return the webhook information with its webhook_url.
-   User can use this url to trigger cluster scale_out or scale_in action;
-       senlin webhook-create -t cluster -i $CLUSTER_ID -a CLUSTER_SCALE_OUT
-       -c 'user=$USER_ID;password=$PASS' test-webhook
-4. Trigger the webhook by sending a POST request to its url;
+   User can use this url to trigger cluster scale_out or scale_in action.
+
+::
+
+  senlin webhook-create -t cluster -i test-cluster \
+      -a CLUSTER_SCALE_OUT \
+      -c 'user=$USER_ID;password=$PASSWORD' \
+      test-webhook
+
+4. Trigger the webhook by sending a POST request to its URL, for example:
+
+::
+
+  curl http://<webhook_url>
 
 The webhook url can be used in two different ways:
 
--  Simply sending a POST request to this url without any headers and body. e.g.
-       curl -i -X 'POST' $WEBHOOK_URL.
-   This will directly trigger a cluster scaling operation and the scaling
-   result depends on the ScalingPolicy that attached to the cluster; If no
-   ScalingPolicy is attached to the cluster, by default 1 node will be
-   added/deleted;
+- Sending a simple `POST` request to the url (no headers or body).
+  For example:
 
--  Take some extra parameters in the request body for the action execution
-   when triggering the webhook. e.g.
-       curl -i -X 'POST' $WEBHOOK_URL -H 'Content-type: application/json' --data 
-       '{"params": {"count": 2}}'
-   Using this way, user can specify the exact number of nodes they want to
-   add/delete during this scaling progress. If a ScalingPolicy has been
-   attached to this cluster and also generated a `count` result, that result
-   will be overrided.
+::
+
+  curl -i -X 'POST' $WEBHOOK_URL.
+
+This will directly trigger a cluster scaling operation and the scaling
+behavior is determined by the ScalingPolicy attached to the cluster. If no
+ScalingPolicy is attached to the cluster, by default 1 node will be
+added/deleted;
+
+- Pass extra parameters in the request body for the action execution
+  when triggering the webhook. e.g.
+
+::
+
+  curl -i -X 'POST' $WEBHOOK_URL \
+      -H 'Content-type: application/json' \
+      --data '{"params": {"count": 2}}'
+
+Using this approach, users can specify more details for controlling the
+scaling behavior. If a ScalingPolicy has been attached to this cluster,
+parameters passed in from the request will override the outcome from the
+scaling policy.
 
 Note: The webhook_url can only be got at the first time the webhook is created.
 Anyone who has the webhook_url can trigger the cluster scaling action.
