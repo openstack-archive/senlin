@@ -433,12 +433,12 @@ class ClusterAction(base.Action):
         return self.RES_OK, ''
 
     def do_resize(self, cluster, policy_data):
-        adj_type = self.inputs.get('adjustment_type')
-        number = self.inputs.get('number')
-        min_size = self.inputs.get('min_size')
-        max_size = self.inputs.get('max_size')
-        min_step = self.inputs.get('min_step')
-        strict = self.inputs.get('strict', False)
+        adj_type = self.inputs.get(consts.ADJUSTMENT_TYPE)
+        number = self.inputs.get(consts.ADJUSTMENT_NUMBER)
+        min_size = self.inputs.get(consts.ADJUSTMENT_MIN_SIZE)
+        max_size = self.inputs.get(consts.ADJUSTMENT_MAX_SIZE)
+        min_step = self.inputs.get(consts.ADJUSTMENT_MIN_STEP)
+        strict = self.inputs.get(consts.ADJUSTMENT_STRICT, False)
 
         desired = None
         if adj_type is not None:
