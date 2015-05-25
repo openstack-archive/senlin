@@ -59,9 +59,9 @@ Install Senlin Server
   $ cd /opt/stack/senlin
   $ tools/gen-config
   $ sudo mkdir /etc/senlin
-  $ cp etc/senlin/api-paste.ini /etc/senlin
-  $ cp etc/senlin/policy.json /etc/senlin
-  $ cp etc/senlin/senlin.conf.sample
+  $ sudo cp etc/senlin/api-paste.ini /etc/senlin
+  $ sudo cp etc/senlin/policy.json /etc/senlin
+  $ sudo cp etc/senlin/senlin.conf.sample /etc/senlin/senlin.conf
 
 Edit file `/etc/senlin/senlin.conf` according to your system settings. The
 most common options to be customized include::
@@ -79,7 +79,8 @@ most common options to be customized include::
   admin_tenant_name = service
 
   [oslo_messaging_rabbit]
-  rabbit_host = <HOST>
+  rabbit_userid = <RABBIT USER ID>
+  rabbit_hosts = <HOST>
   rabbit_password = <RABBIT PASSWORD>
 
 5. Create Senlin Database
@@ -118,6 +119,6 @@ Install Senlin Client
 ::
 
   $ cd python-senlinclient
-  $ python setup.py install
+  $ sudo python setup.py install
 
 You are ready to begin your journey (aka. adventure) with Senlin, now.
