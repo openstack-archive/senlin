@@ -50,7 +50,7 @@ Install Senlin Server
 ::
 
   $ cd /opt/stack/senlin/tools
-  $ ./setup-service <HOST IP>
+  $ ./setup-service <HOST IP> <SERVICE_PASSWORD>
 
 4. Generate configuration file for the Senlin service
 
@@ -67,7 +67,7 @@ Edit file `/etc/senlin/senlin.conf` according to your system settings. The
 most common options to be customized include::
 
   [database]
-  connection = mysql://senlin:<DB PASSWORD>.0.0.1/senlin?charset=utf8
+  connection = mysql://senlin:<DB PASSWORD>@127.0.0.1/senlin?charset=utf8
 
   [keystone_authtoken]
   auth_uri = http://<HOST>:5000/v3
