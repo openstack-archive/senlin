@@ -16,8 +16,8 @@ SDK Client
 
 from openstack import connection
 from openstack import exceptions
+from openstack import profile
 from openstack import transport
-from openstack import user_preference
 from oslo_serialization import jsonutils
 from requests import exceptions as reqexc
 
@@ -189,12 +189,12 @@ def create_connection(ctx):
         #  'verify': OS_CACERT, TLS certificate to verify remote server
     }
 
-    pref = user_preference.UserPreference()
+    prof = profile.Profile()
     if ctx.region_name:
-        pref.set_region(pref.ALL, ctx.region_name)
+        prof.set_region(prof.ALL, ctx.region_name)
 
     try:
-        conn = connection.Connection(preference=pref, user_agent=USER_AGENT,
+        conn = connection.Connection(profile=prof, user_agent=USER_AGENT,
                                      **kwargs)
     except exceptions.HttpException as ex:
         raise ex
