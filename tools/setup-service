@@ -32,7 +32,6 @@ openstack endpoint create \
 openstack user create \
   --password "$SVC_PASSWD" \
   --project service \
-  --domain "default" \
   senlin
 
 openstack role add \
