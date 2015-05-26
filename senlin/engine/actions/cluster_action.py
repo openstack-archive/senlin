@@ -610,15 +610,18 @@ class ClusterAction(base.Action):
             if curr.type == policy.type:
                 raise exception.PolicyExists(policy_type=policy.type)
 
-        res = policy.attach(self.context, cluster, policy_data)
+        res, data = policy.attach(self.context, cluster, policy_data)
         if not res:
             return self.RES_ERROR, 'Failed attaching policy'
 
+        # Initialize data field of cluster_policy object with information
+        # generated during policy attaching
         values = {
             'cooldown': self.inputs.get('cooldown', policy.cooldown),
             'level': self.inputs.get('level', policy.level),
             'priority': self.inputs.get('priority', 50),
             'enabled': self.inputs.get('enabled', True),
+            'data': data,
         }
 
         db_api.cluster_policy_attach(self.context, cluster.id, policy_id,
