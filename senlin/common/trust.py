@@ -11,6 +11,9 @@
 # under the License.
 
 
+from senlin.common import exception
+from senlin.db import api as db_api
+from senlin.drivers.openstack import keystone_v3 as keystoneclient
 from senlin.drivers.openstack import sdk
 from senlin.openstack.identity.v3 import trust
 
@@ -94,3 +97,21 @@ def list_trust(context, trustee_user_id=None, trustor_user_id=None):
         trusts.append(trust_item)
 
     return trusts
+
+
+def get_connection_params(context):
+    cred = db_api.cred_get(context, context.user, context.project)
+    if cred is None:
+        raise exception.TrustNotFound(trustor=context.user)
+
+    trust_id = cred.cred['openstack']['trust']
+    ctx = keystoneclient.get_service_credentials()
+    params = {
+        'auth_url': ctx['auth_url'],
+        'user_name': ctx['user_name'],
+        'user_domain_name': ctx['user_domain_name'],
+        'password': ctx['password'],
+        'trusts': trust_id,
+    }
+
+    return params
