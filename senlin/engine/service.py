@@ -483,9 +483,7 @@ class EngineService(service.Service):
                                    target=cluster.id,
                                    cause=action_mod.CAUSE_RPC)
         action.store(context)
-
-        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-                          None, action_id=action.id)
+        dispatcher.start_action(context, action_id=action.id)
 
         # We return a cluster dictionary with an additional key carried
         result = cluster.to_dict()
@@ -554,8 +552,7 @@ class EngineService(service.Service):
                                    cause=action_mod.CAUSE_RPC,
                                    inputs=inputs)
         action.store(context)
-        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-                          None, action_id=action.id)
+        dispatcher.start_action(context, action_id=action.id)
 
         result = cluster.to_dict()
         result['action'] = action.id
@@ -603,8 +600,7 @@ class EngineService(service.Service):
                                    cause=action_mod.CAUSE_RPC,
                                    inputs={'nodes': found})
         action.store(context)
-        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-                          None, action_id=action.id)
+        dispatcher.start_action(context, action_id=action.id)
 
         return {'action': action.id}
 
@@ -643,8 +639,7 @@ class EngineService(service.Service):
                                    cause=action_mod.CAUSE_RPC,
                                    inputs={'nodes': found})
         action.store(context)
-        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-                          None, action_id=action.id)
+        dispatcher.start_action(context, action_id=action.id)
 
         return {'action': action.id}
 
@@ -740,8 +735,7 @@ class EngineService(service.Service):
                                    cause=action_mod.CAUSE_RPC,
                                    inputs=inputs)
         action.store(context)
-        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-                          None, action_id=action.id)
+        dispatcher.start_action(context, action_id=action.id)
 
         result = cluster.to_dict()
         result['action'] = action.id
@@ -768,8 +762,7 @@ class EngineService(service.Service):
                                    inputs=inputs,
                                    cause=action_mod.CAUSE_RPC)
         action.store(context)
-        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-                          None, action_id=action.id)
+        dispatcher.start_action(context, action_id=action.id)
 
         return {'action': action.id}
 
@@ -793,8 +786,7 @@ class EngineService(service.Service):
                                    inputs=inputs,
                                    cause=action_mod.CAUSE_RPC)
         action.store(context)
-        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-                          None, action_id=action.id)
+        dispatcher.start_action(context, action_id=action.id)
 
         return {'action': action.id}
 
@@ -808,8 +800,7 @@ class EngineService(service.Service):
                                    target=cluster.id,
                                    cause=action_mod.CAUSE_RPC)
         action.store(context)
-        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-                          None, action_id=action.id)
+        dispatcher.start_action(context, action_id=action.id)
 
         return {'action': action.id}
 
@@ -889,9 +880,7 @@ class EngineService(service.Service):
                                    target=node.id,
                                    cause=action_mod.CAUSE_RPC)
         action.store(context)
-
-        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-                          None, action_id=action.id)
+        dispatcher.start_action(context, action_id=action.id)
 
         # We return a node dictionary with an additional key (action) carried
         result = node.to_dict()
@@ -955,8 +944,7 @@ class EngineService(service.Service):
         action.store(context)
 
         # TODO(someone): uncomment this when it is implemented
-        # dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-        #                  None, action_id=action.id)
+        # dispatcher.start_action(context, action_id=action.id)
         return
 
     @request_context
@@ -970,8 +958,7 @@ class EngineService(service.Service):
                                    target=node.id,
                                    cause=action_mod.CAUSE_RPC)
         action.store(context)
-        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-                          None, action_id=action.id)
+        dispatcher.start_action(context, action_id=action.id)
 
         return {'action': action.id}
 
@@ -997,8 +984,7 @@ class EngineService(service.Service):
                                    cause=action_mod.CAUSE_RPC,
                                    inputs={'cluster_id': db_cluster.id})
         action.store(context)
-        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-                          None, action_id=action.id)
+        dispatcher.start_action(context, action_id=action.id)
 
         return {'action': action.id}
 
@@ -1016,8 +1002,7 @@ class EngineService(service.Service):
                                    target=db_node.id,
                                    cause=action_mod.CAUSE_RPC)
         action.store(context)
-        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-                          None, action_id=action.id)
+        dispatcher.start_action(context, action_id=action.id)
 
         return {'action': action.id}
 
@@ -1071,8 +1056,7 @@ class EngineService(service.Service):
                                    inputs=inputs,
                                    cause=action_mod.CAUSE_RPC)
         action.store(context)
-        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-                          None, action_id=action.id)
+        dispatcher.start_action(context, action_id=action.id)
 
         return {'action': action.id}
 
@@ -1096,8 +1080,7 @@ class EngineService(service.Service):
                                    inputs={'policy_id': db_policy.id},
                                    cause=action_mod.CAUSE_RPC)
         action.store(context)
-        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-                          None, action_id=action.id)
+        dispatcher.start_action(context, action_id=action.id)
 
         return {'action': action.id}
 
@@ -1137,8 +1120,7 @@ class EngineService(service.Service):
                                    inputs=inputs,
                                    cause=action_mod.CAUSE_RPC)
         action.store(context)
-        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-                          None, action_id=action.id)
+        dispatcher.start_action(context, action_id=action.id)
 
         return {'action': action.id}
 
@@ -1273,8 +1255,7 @@ class EngineService(service.Service):
                                    inputs=input_params,
                                    cause=action_mod.CAUSE_RPC)
         action.store(context)
-        dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-                          None, action_id=action.id)
+        dispatcher.start_action(context, action_id=action.id)
 
         return {'action': action.id}
 
@@ -1331,8 +1312,7 @@ class EngineService(service.Service):
         act.store(context)
 
         # TODO(Anyone): Uncomment this to notify the dispatcher
-        # dispatcher.notify(context, self.dispatcher.NEW_ACTION,
-        #                   None, action_id=action.id)
+        # dispatcher.start_action(context, action_id=action.id)
 
         return act.to_dict()
 

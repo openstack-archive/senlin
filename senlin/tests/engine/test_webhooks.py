@@ -51,7 +51,7 @@ class WebhookTest(base.SenlinTestCase):
         self.assertEqual(cause, obj['cause'])
         self.assertEqual(inputs, obj['inputs'])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def _create_cluster(self, name, notify):
         cluster = self.eng.cluster_create(self.ctx, name, 0,
                                           self.profile['id'])
@@ -422,7 +422,7 @@ class WebhookTest(base.SenlinTestCase):
         self.assertEqual("Unknown sort direction, must be "
                          "'desc' or 'asc'", six.text_type(ex))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_webhook_trigger(self, cluster_find, notify):
         mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
@@ -452,14 +452,9 @@ class WebhookTest(base.SenlinTestCase):
                             obj_id, cause=action_mod.CAUSE_RPC,
                             inputs=params)
 
-        expected_call = mock.call(self.ctx,
-                                  self.eng.dispatcher.NEW_ACTION,
-                                  None, action_id=mock.ANY)
+        notify.assert_called_once_with(self.ctx, action_id=mock.ANY)
 
-        # two calls: one for create, the other for scaling operation
-        notify.assert_has_calls([expected_call] * 1)
-
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_webhook_trigger_with_params(self, cluster_find, notify):
         mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
@@ -490,12 +485,7 @@ class WebhookTest(base.SenlinTestCase):
                             obj_id, cause=action_mod.CAUSE_RPC,
                             inputs=params2)
 
-        expected_call = mock.call(self.ctx,
-                                  self.eng.dispatcher.NEW_ACTION,
-                                  None, action_id=mock.ANY)
-
-        # two calls: one for create, the other for scaling operation
-        notify.assert_has_calls([expected_call] * 1)
+        notify.assert_called_once_with(self.ctx, action_id=mock.ANY)
 
     def test_webhook_delete(self):
         mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')

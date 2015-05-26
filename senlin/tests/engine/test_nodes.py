@@ -51,7 +51,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(cause, obj['cause'])
         self.assertEqual(inputs, obj['inputs'])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_create_default(self, notify):
         node = self.eng.node_create(self.ctx, 'n-1', self.profile['id'])
         self.assertIsNotNone(node)
@@ -69,9 +69,7 @@ class NodeTest(base.SenlinTestCase):
                             'node_create_%s' % node['id'][:8],
                             node['id'],
                             cause=action_mod.CAUSE_RPC)
-        notify.assert_called_once_with(self.ctx,
-                                       self.eng.dispatcher.NEW_ACTION,
-                                       None, action_id=action_id)
+        notify.assert_called_once_with(self.ctx, action_id=action_id)
 
     def test_node_create_profile_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,
@@ -79,7 +77,7 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, 'n-1', 'Bogus')
         self.assertEqual(exception.ProfileNotFound, ex.exc_info[0])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_create_with_role_and_metadata(self, notify):
         node = self.eng.node_create(self.ctx, 'n-1', self.profile['id'],
                                     role='master', metadata={'k': 'v'})
@@ -89,7 +87,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual('master', node['role'])
         self.assertEqual({'k': 'v'}, node['metadata'])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_create_with_profile_name_or_short_id(self, notify):
         node = self.eng.node_create(self.ctx, 'n-1', self.profile['id'][:8])
         self.assertIsNotNone(node)
@@ -109,7 +107,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual("The cluster (Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_create_project_not_match(self, notify):
         ctx_cluster = utils.dummy_context(project='a-different-project')
         cluster = self.eng.cluster_create(ctx_cluster, 'c-1', 0,
@@ -125,7 +123,7 @@ class NodeTest(base.SenlinTestCase):
                          "" % cluster['id'],
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_create_profile_type_not_match(self, notify):
         env = environment.global_env()
         env.register_profile('SecondProfile', fakes.TestProfile)
@@ -146,7 +144,7 @@ class NodeTest(base.SenlinTestCase):
                          "operation aborted.",
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_get(self, notify):
         node = self.eng.node_create(self.ctx, 'n-1', self.profile['id'])
 
@@ -159,7 +157,7 @@ class NodeTest(base.SenlinTestCase):
                                self.eng.node_get, self.ctx, 'Bogus')
         self.assertEqual(exception.NodeNotFound, ex.exc_info[0])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_list(self, notify):
         node1 = self.eng.node_create(self.ctx, 'n1', self.profile['id'])
         node2 = self.eng.node_create(self.ctx, 'n2', self.profile['id'])
@@ -173,7 +171,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(node1['id'], ids[0])
         self.assertEqual(node2['id'], ids[1])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_list_with_limit_marker(self, notify):
         node1 = self.eng.node_create(self.ctx, 'n1', self.profile['id'])
         node2 = self.eng.node_create(self.ctx, 'n2', self.profile['id'])
@@ -199,7 +197,7 @@ class NodeTest(base.SenlinTestCase):
         result = self.eng.node_list(self.ctx, limit=2, marker=node1['id'])
         self.assertEqual(2, len(result))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_list_with_sort_keys(self, notify):
         node1 = self.eng.node_create(self.ctx, 'CC', self.profile['id'])
         node2 = self.eng.node_create(self.ctx, 'BB', self.profile['id'])
@@ -218,7 +216,7 @@ class NodeTest(base.SenlinTestCase):
         result = self.eng.node_list(self.ctx, sort_keys=['duang'])
         self.assertIsNotNone(result)
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_list_with_sort_dir(self, notify):
         node1 = self.eng.node_create(self.ctx, 'BB', self.profile['id'])
         node2 = self.eng.node_create(self.ctx, 'AA', self.profile['id'])
@@ -247,7 +245,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual("Unknown sort direction, must be "
                          "'desc' or 'asc'", six.text_type(ex))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_list_show_deleted(self, notify):
         node = self.eng.node_create(self.ctx, 'n1', self.profile['id'])
         result = self.eng.node_list(self.ctx)
@@ -263,7 +261,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(1, len(result))
         self.assertEqual(node['id'], result[0]['id'])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_list_project_safe(self, notify):
         node1 = self.eng.node_create(self.ctx, 'n1', self.profile['id'])
         new_ctx = utils.dummy_context(project='a_diff_project')
@@ -287,7 +285,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(node1['id'], result[0]['id'])
         self.assertEqual(node2['id'], result[1]['id'])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_list_with_cluster_id(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         node = self.eng.node_create(self.ctx, 'n1', self.profile['id'],
@@ -305,7 +303,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual('The cluster (Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_list_with_filters(self, notify):
         self.eng.node_create(self.ctx, 'BB', self.profile['id'])
         self.eng.node_create(self.ctx, 'AA', self.profile['id'])
@@ -338,7 +336,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertIsInstance(result, list)
         self.assertEqual(0, len(result))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_find(self, notify):
         node = self.eng.node_create(self.ctx, 'n1', self.profile['id'])
         nodeid = node['id']
@@ -358,7 +356,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertRaises(exception.NodeNotFound,
                           self.eng.node_find, self.ctx, 'Bogus')
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_find_show_deleted(self, notify):
         node = self.eng.node_create(self.ctx, 'n1', self.profile['id'])
         nodeid = node['id']
@@ -377,7 +375,7 @@ class NodeTest(base.SenlinTestCase):
         result = self.eng.node_find(self.ctx, nodeid, show_deleted=True)
         self.assertIsNotNone(result)
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_update_simple(self, notify):
         node = self.eng.node_create(self.ctx, 'node-1', self.profile['id'],
                                     role='Master', metadata={'foo': 'bar'})
@@ -409,7 +407,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual('The node (Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_update_with_new_profile(self, notify):
         node = self.eng.node_create(self.ctx, 'node-1', self.profile['id'])
         new_profile = self.eng.profile_create(
@@ -427,11 +425,9 @@ class NodeTest(base.SenlinTestCase):
         #                     result['id'],
         #                     cause=action_mod.CAUSE_RPC)
 
-        # notify.assert_called_once_with(self.ctx,
-        #                                self.eng.dispatcher.NEW_ACTION,
-        #                                None, action_id=action_id)
+        # notify.assert_called_once_with(self.ctx, action_id=action_id)
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_update_profile_not_found(self, notify):
         node = self.eng.node_create(self.ctx, 'node-1', self.profile['id'])
         ex = self.assertRaises(rpc.ExpectedException,
@@ -442,7 +438,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual('The profile (Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_update_with_diff_profile_type(self, notify):
         env = environment.global_env()
         env.register_profile('NewProfileType', fakes.TestProfile)
@@ -461,7 +457,7 @@ class NodeTest(base.SenlinTestCase):
                          'operation aborted.',
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_delete(self, notify):
         node = self.eng.node_create(self.ctx, 'node-1', self.profile['id'])
         nodeid = node['id']
@@ -477,9 +473,7 @@ class NodeTest(base.SenlinTestCase):
                             node['id'],
                             cause=action_mod.CAUSE_RPC)
 
-        expected_call = mock.call(self.ctx,
-                                  self.eng.dispatcher.NEW_ACTION,
-                                  None, action_id=mock.ANY)
+        expected_call = mock.call(self.ctx, action_id=mock.ANY)
 
         # two calls: one for create, the other for delete
         notify.assert_has_calls([expected_call] * 2)
@@ -492,7 +486,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual('The node (Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_join(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cluster_id = c['id']
@@ -509,13 +503,11 @@ class NodeTest(base.SenlinTestCase):
                             'node_join_%s' % node_id[:8], node_id,
                             cause=action_mod.CAUSE_RPC,
                             inputs={'cluster_id': cluster_id})
-        notify.assert_called_with(self.ctx,
-                                  self.eng.dispatcher.NEW_ACTION,
-                                  None, action_id=action_id)
+        notify.assert_called_with(self.ctx, action_id=action_id)
         # Two creations plus one join
         self.assertEqual(3, notify.call_count)
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_join_from_other_cluster(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cluster_id = c['id']
@@ -535,8 +527,7 @@ class NodeTest(base.SenlinTestCase):
                             'node_join_%s' % node_id[:8], node_id,
                             cause=action_mod.CAUSE_RPC,
                             inputs={'cluster_id': new_cluster_id})
-        notify.assert_called_with(self.ctx, self.eng.dispatcher.NEW_ACTION,
-                                  mock.ANY, action_id=mock.ANY)
+        notify.assert_called_with(self.ctx, action_id=mock.ANY)
         # Three creations plus one join
         self.assertEqual(4, notify.call_count)
 
@@ -549,7 +540,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual('The node (BogusNode) could not be found.',
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_join_cluster_not_found(self, notify):
         node = self.eng.node_create(self.ctx, 'node1', self.profile['id'])
         node_id = node['id']
@@ -562,7 +553,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual('The cluster (BogusCluster) could not be found.',
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_join_profile_type_not_match(self, notify):
         # prepare a cluster with different profile type
         env = environment.global_env()
@@ -586,7 +577,7 @@ class NodeTest(base.SenlinTestCase):
                          'operation aborted.',
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_leave(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cluster_id = c['id']
@@ -602,9 +593,7 @@ class NodeTest(base.SenlinTestCase):
         self._verify_action(action, 'NODE_LEAVE',
                             'node_leave_%s' % node_id[:8], node_id,
                             cause=action_mod.CAUSE_RPC)
-        notify.assert_called_with(self.ctx,
-                                  self.eng.dispatcher.NEW_ACTION,
-                                  None, action_id=mock.ANY)
+        notify.assert_called_with(self.ctx, action_id=mock.ANY)
         # Two creations plus one leave
         self.assertEqual(3, notify.call_count)
 
@@ -617,7 +606,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual('The node (BogusNode) could not be found.',
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_node_leave_already_orphan(self, notify):
         node = self.eng.node_create(self.ctx, 'node1', self.profile['id'])
         node_id = node['id']

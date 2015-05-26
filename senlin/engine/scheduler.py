@@ -10,9 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import eventlet
 import time
 
+import eventlet
 from oslo_config import cfg
 from oslo_log import log as logging
 
@@ -67,8 +67,7 @@ class ThreadGroupManager(object):
             action = action_mod.Action.load(context, action_id)
             # This is for actions with RETRY
             if action.status == action.READY:
-                dispatcher.notify(context, dispatcher.Dispatcher.NEW_ACTION,
-                                  None, action_id=action_id)
+                dispatcher.start_action(context, action_id=action_id)
 
         def release(gt, context, action_id):
             '''Callback function that will be passed to GreenThread.link().'''

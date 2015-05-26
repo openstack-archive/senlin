@@ -60,7 +60,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual(cause, obj['cause'])
         self.assertEqual(inputs, obj['inputs'])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_policy_attach(self, notify):
         cluster_id = self.cluster['id']
         policy_id = self.policy['id']
@@ -81,9 +81,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                             'cluster_attach_policy_%s' % cluster_id[:8],
                             cluster_id, cause=action_mod.CAUSE_RPC,
                             inputs=inputs)
-        notify.assert_called_with(self.ctx,
-                                  self.eng.dispatcher.NEW_ACTION,
-                                  None, action_id=action_id)
+        notify.assert_called_with(self.ctx, action_id=action_id)
 
         self.assertEqual(1, notify.call_count)
 
@@ -105,7 +103,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual("The policy (Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_policy_attach_priority_not_int(self, notify):
         cluster_id = self.cluster['id']
         policy_id = self.policy['id']
@@ -118,7 +116,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual("Invalid value 'High' specified for 'priority'",
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_policy_attach_level_not_int(self, notify):
         cluster_id = self.cluster['id']
         policy_id = self.policy['id']
@@ -131,7 +129,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual("Invalid value 'High' specified for 'level'",
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_policy_attach_cooldown_not_int(self, notify):
         cluster_id = self.cluster['id']
         policy_id = self.policy['id']
@@ -144,7 +142,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual("Invalid value '1min' specified for 'cooldown'",
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_policy_attach_enabled_not_boolean(self, notify):
         cluster_id = self.cluster['id']
         policy_id = self.policy['id']
@@ -157,7 +155,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual("Invalid value 'No' specified for 'enabled'",
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_policy_detach(self, notify):
         cluster_id = self.cluster['id']
         policy_id = self.policy['id']
@@ -173,9 +171,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                             'cluster_detach_policy_%s' % cluster_id[:8],
                             cluster_id, cause=action_mod.CAUSE_RPC,
                             inputs={'policy_id': policy_id})
-        notify.assert_called_with(self.ctx,
-                                  self.eng.dispatcher.NEW_ACTION,
-                                  None, action_id=action_id)
+        notify.assert_called_with(self.ctx, action_id=action_id)
 
         # called twice: attach and detach
         self.assertEqual(2, notify.call_count)
@@ -401,7 +397,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.assertIn(policy1['id'], policy_ids[1])
         self.assertIn(policy3['id'], policy_ids[2])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_policy_update(self, notify):
         cluster_id = self.cluster['id']
         policy_id = self.policy['id']
@@ -429,9 +425,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                 'level': 10,
                                 'cooldown': 60,
                                 'enabled': False})
-        notify.assert_called_once_with(self.ctx,
-                                       self.eng.dispatcher.NEW_ACTION,
-                                       None, action_id=action_id)
+        notify.assert_called_once_with(self.ctx, action_id=action_id)
 
     def test_cluster_policy_update_cluster_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,

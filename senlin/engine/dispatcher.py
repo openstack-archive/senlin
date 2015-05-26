@@ -10,7 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
 
@@ -21,19 +20,18 @@ from senlin.openstack.common import service
 
 LOG = logging.getLogger(__name__)
 
+OPERATIONS = (
+    START_ACTION, CANCEL_ACTION, STOP
+) = (
+    'start_action', 'cancel_action', 'stop'
+)
+
 
 class Dispatcher(service.Service):
     '''Listen on an AMQP queue named for the engine.
 
     Receive notification from engine services and schedule actions.
     '''
-
-    OPERATIONS = (
-        NEW_ACTION, CANCEL_ACTION, STOP
-    ) = (
-        'new_action', 'cancel_action', 'stop'
-    )
-
     def __init__(self, engine_service, topic, version, thread_group_mgr):
         super(Dispatcher, self).__init__()
         self.TG = thread_group_mgr
@@ -53,7 +51,7 @@ class Dispatcher(service.Service):
         '''Respond affirmatively to confirm that engine is still alive.'''
         return True
 
-    def new_action(self, context, action_id=None):
+    def start_action(self, context, action_id=None):
         self.TG.start_action(context, action_id, self.engine_id)
 
     def cancel_action(self, context, action_id):
@@ -78,33 +76,34 @@ class Dispatcher(service.Service):
         LOG.info(_LI("All action threads have been finished"))
 
 
-def notify(context, call, engine_id, *args, **kwargs):
+def notify(context, method, engine_id=None, **kwargs):
     '''Send notification to dispatcher
 
     :param context: rpc request context
-    :param call: remote method want to call
-    :param engine_id: dispatcher want to notify, if None, broadcast
+    :param method: remote method to call
+    :param engine_id: dispatcher to notify; None implies broadcast
     '''
 
-    timeout = cfg.CONF.engine_life_check_timeout
     client = rpc_messaging.get_rpc_client(version=consts.RPC_API_VERSION)
 
     if engine_id:
         # Notify specific dispatcher identified by engine_id
         call_context = client.prepare(
             version=consts.RPC_API_VERSION,
-            timeout=timeout,
             topic=consts.ENGINE_DISPATCHER_TOPIC,
             server=engine_id)
     else:
         # Broadcast to all disptachers
         call_context = client.prepare(
             version=consts.RPC_API_VERSION,
-            timeout=timeout,
             topic=consts.ENGINE_DISPATCHER_TOPIC)
 
     try:
-        call_context.call(context, call, *args, **kwargs)
+        call_context.call(context, method, **kwargs)
         return True
     except oslo_messaging.MessagingTimeout:
         return False
+
+
+def start_action(context, engine_id=None, **kwargs):
+    return notify(context, START_ACTION, engine_id, **kwargs)

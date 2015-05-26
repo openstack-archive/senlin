@@ -58,7 +58,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(cause, obj['cause'])
         self.assertEqual(inputs, obj['inputs'])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_create_default(self, notify):
         result = self.eng.cluster_create(self.ctx, 'c-1', 0,
                                          self.profile['id'])
@@ -79,11 +79,9 @@ class ClusterTest(base.SenlinTestCase):
                             'cluster_create_%s' % result['id'][:8],
                             result['id'],
                             cause=action_mod.CAUSE_RPC)
-        notify.assert_called_once_with(self.ctx,
-                                       self.eng.dispatcher.NEW_ACTION,
-                                       None, action_id=action_id)
+        notify.assert_called_once_with(self.ctx, action_id=action_id)
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_create_with_timeout(self, notify):
         result = self.eng.cluster_create(self.ctx, 'c-1', 0,
                                          self.profile['id'],
@@ -101,7 +99,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_create_with_desired_capacity(self, notify):
         result = self.eng.cluster_create(self.ctx, 'c-1', 2,
                                          self.profile['id'])
@@ -117,7 +115,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_create_with_parent(self, notify):
         result = self.eng.cluster_create(self.ctx, 'c-1', 2,
                                          self.profile['id'],
@@ -127,7 +125,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual('c-1', result['name'])
         self.assertEqual('fake id', result['parent'])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_create_with_metadata(self, notify):
         result = self.eng.cluster_create(self.ctx, 'c-1', 2,
                                          self.profile['id'],
@@ -143,7 +141,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, 'c-1', 0, 'Bogus')
         self.assertEqual(exception.ProfileNotFound, ex.exc_info[0])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_create_with_profile_name_or_short_id(self, notify):
         result = self.eng.cluster_create(self.ctx, 'c-1', 0,
                                          self.profile['id'][:8])
@@ -228,7 +226,7 @@ class ClusterTest(base.SenlinTestCase):
             self.assertEqual("The request is malformed: %s" % expected,
                              six.text_type(ex))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_get(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0,
                                     self.profile['id'])
@@ -242,7 +240,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.eng.cluster_get, self.ctx, 'Bogus')
         self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_list(self, notify):
         c1 = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         c2 = self.eng.cluster_create(self.ctx, 'c-2', 0, self.profile['id'])
@@ -255,7 +253,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(c1['id'], ids[0])
         self.assertEqual(c2['id'], ids[1])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_list_with_limit_marker(self, notify):
         c1 = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         c2 = self.eng.cluster_create(self.ctx, 'c-2', 0, self.profile['id'])
@@ -281,7 +279,7 @@ class ClusterTest(base.SenlinTestCase):
         result = self.eng.cluster_list(self.ctx, limit=2, marker=c1['id'])
         self.assertEqual(2, len(result))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_list_with_sort_keys(self, notify):
         c1 = self.eng.cluster_create(self.ctx, 'CC', 0, self.profile['id'])
         c2 = self.eng.cluster_create(self.ctx, 'BB', 0, self.profile['id'])
@@ -300,7 +298,7 @@ class ClusterTest(base.SenlinTestCase):
         result = self.eng.cluster_list(self.ctx, sort_keys=['duang'])
         self.assertIsNotNone(result)
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_list_with_sort_dir(self, notify):
         c1 = self.eng.cluster_create(self.ctx, 'BB', 0, self.profile['id'])
         c2 = self.eng.cluster_create(self.ctx, 'AA', 0, self.profile['id'])
@@ -329,7 +327,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual("Unknown sort direction, must be "
                          "'desc' or 'asc'", six.text_type(ex))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_list_show_deleted(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         result = self.eng.cluster_list(self.ctx)
@@ -345,7 +343,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(1, len(result))
         self.assertEqual(c['id'], result[0]['id'])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_list_show_nested(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'],
                                     parent='other-cluster')
@@ -356,7 +354,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(1, len(result))
         self.assertEqual(c['id'], result[0]['id'])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_list_project_safe(self, notify):
         c1 = self.eng.cluster_create(self.ctx, 'c1', 0, self.profile['id'])
         new_ctx = utils.dummy_context(project='a_diff_project')
@@ -380,7 +378,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(c1['id'], result[0]['id'])
         self.assertEqual(c2['id'], result[1]['id'])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_list_with_filters(self, notify):
         self.eng.cluster_create(self.ctx, 'BB', 0, self.profile['id'])
         self.eng.cluster_create(self.ctx, 'AA', 0, self.profile['id'])
@@ -418,7 +416,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertIsInstance(result, list)
         self.assertEqual(0, len(result))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_find(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cid = c['id']
@@ -438,7 +436,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertRaises(exception.ClusterNotFound,
                           self.eng.cluster_find, self.ctx, 'Bogus')
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_find_show_deleted(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cid = c['id']
@@ -457,7 +455,7 @@ class ClusterTest(base.SenlinTestCase):
         result = self.eng.cluster_find(self.ctx, cid, show_deleted=True)
         self.assertIsNotNone(result)
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_simple_success(self, notify):
         c1 = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cid = c1['id']
@@ -493,7 +491,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_cluster_bad_status(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cluster = cluster_mod.Cluster.load(self.ctx, c['id'])
@@ -505,7 +503,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_parent_not_found(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
 
@@ -515,7 +513,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_timeout_not_integer(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
 
@@ -525,7 +523,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_cluster_status_error(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cluster = cluster_mod.Cluster.load(self.ctx, c['id'])
@@ -537,7 +535,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exception.NotSupported, ex.exc_info[0])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_update_to_same_profile(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         self.eng.cluster_update(self.ctx, c['id'],
@@ -550,7 +548,7 @@ class ClusterTest(base.SenlinTestCase):
         # was not causing any new action to be dispatched
         notify.assert_called_once()
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_update_to_diff_profile_type(self, notify):
         # Register a different profile
         env = environment.global_env()
@@ -566,7 +564,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exception.ProfileTypeNotMatch, ex.exc_info[0])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_profile_not_found(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         ex = self.assertRaises(rpc.ExpectedException,
@@ -575,7 +573,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exception.ProfileNotFound, ex.exc_info[0])
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_profile_normal(self, notify):
         new_profile = self.eng.profile_create(
             self.ctx, 'p-new', 'TestProfile',
@@ -594,11 +592,9 @@ class ClusterTest(base.SenlinTestCase):
         #                     result['id'],
         #                     cause=action_mod.CAUSE_RPC)
 
-        # notify.assert_called_once_with(self.ctx,
-        #                                self.eng.dispatcher.NEW_ACTION,
-        #                                None, action_id=action_id)
+        # notify.assert_called_once_with(self.ctx, action_id=action_id)
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_delete(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cid = c['id']
@@ -614,9 +610,7 @@ class ClusterTest(base.SenlinTestCase):
                             c['id'],
                             cause=action_mod.CAUSE_RPC)
 
-        expected_call = mock.call(self.ctx,
-                                  self.eng.dispatcher.NEW_ACTION,
-                                  None, action_id=mock.ANY)
+        expected_call = mock.call(self.ctx, action_id=mock.ANY)
 
         # two calls: one for create, the other for delete
         notify.assert_has_calls([expected_call] * 2)
@@ -654,7 +648,7 @@ class ClusterTest(base.SenlinTestCase):
             nodes.append(six.text_type(db_node.id))
         return nodes
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_add_nodes(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cid = c['id']
@@ -670,9 +664,7 @@ class ClusterTest(base.SenlinTestCase):
                             cid, cause=action_mod.CAUSE_RPC,
                             inputs={'nodes': nodes})
 
-        expected_call = mock.call(self.ctx,
-                                  self.eng.dispatcher.NEW_ACTION,
-                                  None, action_id=mock.ANY)
+        expected_call = mock.call(self.ctx, action_id=mock.ANY)
 
         # two calls: one for create, the other for adding nodes
         notify.assert_has_calls([expected_call] * 2)
@@ -686,7 +678,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual('The cluster (Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_add_nodes_empty_list(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cid = c['id']
@@ -699,7 +691,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual('The request is malformed: No nodes to add: []',
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_add_nodes_node_not_found(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cid = c['id']
@@ -712,7 +704,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual("The request is malformed: Nodes not found: "
                          "['Bogus']", six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_add_nodes_node_not_active(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cid = c['id']
@@ -726,7 +718,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(_("The request is malformed: %(msg)s") % {'msg': msg},
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_add_nodes_node_already_owned(self, notify):
         c1 = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cid1 = c1['id']
@@ -757,7 +749,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(_("The request is malformed: %(msg)s") % {'msg': msg},
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_del_nodes(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cid = c['id']
@@ -773,9 +765,7 @@ class ClusterTest(base.SenlinTestCase):
                             cid, cause=action_mod.CAUSE_RPC,
                             inputs={'nodes': nodes})
 
-        expected_call = mock.call(self.ctx,
-                                  self.eng.dispatcher.NEW_ACTION,
-                                  None, action_id=mock.ANY)
+        expected_call = mock.call(self.ctx, action_id=mock.ANY)
 
         # two calls: one for create, the other for adding nodes
         notify.assert_has_calls([expected_call] * 2)
@@ -789,7 +779,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual('The cluster (Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_del_nodes_empty_list(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cid = c['id']
@@ -802,7 +792,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual('The request is malformed: No nodes specified.',
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_del_nodes_node_not_found(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cid = c['id']
@@ -815,7 +805,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual("The request is malformed: Nodes not found: "
                          "['Bogus']", six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_del_nodes_node_in_other_cluster(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         c2 = self.eng.cluster_create(self.ctx, 'c-2', 0, self.profile['id'])
@@ -831,7 +821,7 @@ class ClusterTest(base.SenlinTestCase):
                          "specified cluster: %s" % nodes,
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_del_nodes_orphan_nodes(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cid = c['id']
@@ -847,7 +837,7 @@ class ClusterTest(base.SenlinTestCase):
                          "specified cluster: %s" % nodes,
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_scale_out(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cid = c['id']
@@ -862,14 +852,12 @@ class ClusterTest(base.SenlinTestCase):
                             cid, cause=action_mod.CAUSE_RPC,
                             inputs={'count': 1})
 
-        expected_call = mock.call(self.ctx,
-                                  self.eng.dispatcher.NEW_ACTION,
-                                  None, action_id=mock.ANY)
+        expected_call = mock.call(self.ctx, action_id=mock.ANY)
 
         # two calls: one for create, the other for scaling operation
         notify.assert_has_calls([expected_call] * 2)
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_scale_out_cluster_not_found(self, notify):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_scale_out,
@@ -879,7 +867,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual('The cluster (Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_scale_out_count_is_none(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cid = c['id']
@@ -894,14 +882,12 @@ class ClusterTest(base.SenlinTestCase):
                             cid, cause=action_mod.CAUSE_RPC,
                             inputs={})
 
-        expected_call = mock.call(self.ctx,
-                                  self.eng.dispatcher.NEW_ACTION,
-                                  None, action_id=mock.ANY)
+        expected_call = mock.call(self.ctx, action_id=mock.ANY)
 
         # two calls: one for create, the other for scaling operation
         notify.assert_has_calls([expected_call] * 2)
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_scale_out_count_not_int_or_zero(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cid = c['id']
@@ -922,7 +908,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual("Invalid value '0' specified for 'count'",
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_scale_in(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 2, self.profile['id'])
         cid = c['id']
@@ -937,14 +923,12 @@ class ClusterTest(base.SenlinTestCase):
                             cid, cause=action_mod.CAUSE_RPC,
                             inputs={'count': 1})
 
-        expected_call = mock.call(self.ctx,
-                                  self.eng.dispatcher.NEW_ACTION,
-                                  None, action_id=mock.ANY)
+        expected_call = mock.call(self.ctx, action_id=mock.ANY)
 
         # two calls: one for create, the other for scaling operation
         notify.assert_has_calls([expected_call] * 2)
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_scale_in_cluster_not_found(self, notify):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_scale_in,
@@ -954,7 +938,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual('The cluster (Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_scale_in_count_is_none(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 2, self.profile['id'])
         cid = c['id']
@@ -969,14 +953,12 @@ class ClusterTest(base.SenlinTestCase):
                             cid, cause=action_mod.CAUSE_RPC,
                             inputs={})
 
-        expected_call = mock.call(self.ctx,
-                                  self.eng.dispatcher.NEW_ACTION,
-                                  None, action_id=mock.ANY)
+        expected_call = mock.call(self.ctx, action_id=mock.ANY)
 
         # two calls: one for create, the other for scaling operation
         notify.assert_has_calls([expected_call] * 2)
 
-    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_scale_in_count_not_int_or_zero(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 2, self.profile['id'])
         cid = c['id']

@@ -91,12 +91,12 @@ class Health_Manager(service.Service, periodic_task.PeriodicTasks):
         super(Health_Manager, self).stop()
 
 
-def notify(context, call, engine_id, *args, **kwargs):
+def notify(context, method, engine_id, *args, **kwargs):
     '''Send notification to dispatcher
 
     :param context: rpc request context
-    :param call: remote method want to call
-    :param engine_id: dispatcher want to notify, if None, broadcast
+    :param method: remote method to call
+    :param engine_id: dispatcher to notify; broadcast if value is None
     '''
 
     timeout = cfg.CONF.engine_life_check_timeout
@@ -117,7 +117,7 @@ def notify(context, call, engine_id, *args, **kwargs):
             topic=consts.ENGINE_DISPATCHER_TOPIC)
 
     try:
-        call_context.call(context, call, *args, **kwargs)
+        call_context.call(context, method, *args, **kwargs)
         return True
     except oslo_messaging.MessagingTimeout:
         return False

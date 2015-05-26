@@ -123,8 +123,7 @@ class ClusterAction(base.Action):
             db_api.action_add_dependency(self.context, action.id, self.id)
             action.set_status(self.READY)
 
-            dispatcher.notify(self.context, dispatcher.Dispatcher.NEW_ACTION,
-                              None, action_id=action.id)
+            dispatcher.start_action(self.context, action_id=action.id)
 
         if count > 0:
             # Wait for cluster creation to complete
@@ -172,9 +171,7 @@ class ClusterAction(base.Action):
 
             db_api.action_add_dependency(self.context, action.id, self.id)
             action.set_status(self.READY)
-            dispatcher.notify(self.context,
-                              dispatcher.Dispatcher.NEW_ACTION,
-                              None, action_id=action.id)
+            dispatcher.start_action(self.context, action_id=action.id)
 
         # Wait for nodes to complete update
         result = self.RES_OK
@@ -211,8 +208,7 @@ class ClusterAction(base.Action):
             db_api.action_add_dependency(self.context, action.id, self.id)
             action.set_status(self.READY)
 
-            dispatcher.notify(self.context, dispatcher.Dispatcher.NEW_ACTION,
-                              None, action_id=action.id)
+            dispatcher.start_action(self.context, action_id=action.id)
 
         if len(nodes) > 0:
             return self._wait_for_dependents()
@@ -292,8 +288,7 @@ class ClusterAction(base.Action):
             action.store(self.context)
             db_api.action_add_dependency(self.context, action.id, self.id)
             action.set_status(self.READY)
-            dispatcher.notify(self.context, dispatcher.Dispatcher.NEW_ACTION,
-                              None, action_id=action.id)
+            dispatcher.start_action(self.context, action_id=action.id)
 
         # Wait for dependent action if any
         result, new_reason = self._wait_for_dependents()
