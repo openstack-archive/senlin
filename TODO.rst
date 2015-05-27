@@ -61,6 +61,10 @@ ENGINE
     Note: if template and template_url are both specified, use template
     Need to refer to heat api test for testing heat profile
 
+  - Revise start_action() in scheduler module so that it can handle cases when
+    action_id specified is None. When ``action_id`` parameter is None, it
+    means that the scheduler will pick a suitable READY action for execution.
+
 OSLO
 ----
   - Add support to oslo_versionedobjects
