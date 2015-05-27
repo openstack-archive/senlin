@@ -178,6 +178,7 @@ def create_connection(ctx):
         'auth_url': ctx.auth_url,
         'domain_id': ctx.domain,
         'project_id': ctx.project,
+        'project_name': ctx.project_name,
         'project_domain_name': ctx.project_domain_name,
         'user_domain_name': ctx.user_domain_name,
         'username': ctx.user_name,
