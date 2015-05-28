@@ -270,11 +270,6 @@ class TestCluster(base.SenlinTestCase):
 
         # Delete
         cluster.do_delete(self.context)
-        self.assertEqual(cluster.DELETING, cluster.status)
-        self.assertEqual('Deletion in progress', cluster.status_reason)
-        self.assertIsNone(cluster.deleted_time)
-
-        cluster.set_status(self.context, cluster.DELETED, 'Deletion succeeded')
         self.assertEqual(cluster.DELETED, cluster.status)
         self.assertEqual('Deletion succeeded', cluster.status_reason)
         self.assertIsNotNone(cluster.created_time)
