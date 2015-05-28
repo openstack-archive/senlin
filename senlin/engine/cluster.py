@@ -269,7 +269,7 @@ class Cluster(periodic_task.PeriodicTasks):
         Set cluster status to DELETED.
         '''
 
-        self.set_status(context, self.DELETING, reason='Deletion in progress')
+        self.set_status(context, self.DELETED, reason='Deletion succeeded')
         return True
 
     def do_update(self, context, **kwargs):
