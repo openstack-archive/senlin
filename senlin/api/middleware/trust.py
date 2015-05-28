@@ -34,17 +34,19 @@ class TrustMiddleware(wsgi.Middleware):
         importutils.import_module('keystonemiddleware.auth_token')
         admin_user = cfg.CONF.keystone_authtoken.admin_user
         admin_passwd = cfg.CONF.keystone_authtoken.admin_password
+        project_name = cfg.CONF.keystone_authtoken.admin_tenant_name
 
         params = {
             'auth_url': ctx.auth_url,
             'user_name': admin_user,
             'password': admin_passwd,
+            'project_name': project_name,
             # This is a hack, we need to know the domain name somehow
             'user_domain_name': 'Default',
+            'project_domain_name': 'Default',
         }
 
         kc = keystone_v3.KeystoneClient(params)
-
         try:
             admin_id = kc.user_get_by_name(admin_user)
         except exception.UserNotFound:
