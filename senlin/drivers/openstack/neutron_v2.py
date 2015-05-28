@@ -29,6 +29,28 @@ class NeutronClient(base.DriverBase):
         self.session = self.conn.session
         self.auth = self.session.authenticator
 
+    def network_get(self, name_or_id):
+        try:
+            network = self.conn.network.find_network(name_or_id)
+        except sdk.exc.HttpException as ex:
+            msg = _('Failed in getting network %(value)s: %(ex)s'
+                    ) % {'value': name_or_id, 'ex': six.text_type(ex)}
+            raise exception.Error(msg=msg)
+
+        return network
+
+    def subnet_get(self, name_or_id):
+        try:
+            subnet = self.conn.network.find_subnet(name_or_id)
+        except sdk.exc.HttpException as ex:
+            msg = _('Failed in getting subnet %(value)s: %(ex)s'
+                    ) % {'value': name_or_id, 'ex': six.text_type(ex)}
+            # TODO(Yanyan Hu): choose more proper exception type,
+            # e.g. ResourceNotFound.
+            raise exception.Error(msg=msg)
+
+        return subnet
+
     def loadbalancer_get(self, name_or_id):
         try:
             lb = self.conn.network.find_load_balancer(name_or_id)

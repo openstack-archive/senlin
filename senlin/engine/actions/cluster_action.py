@@ -476,6 +476,8 @@ class ClusterAction(base.Action):
         # delete nodes if necessary
         if desired < current_size:
             adjustment = current_size - desired
+            if 'deletion' not in self.data:
+                self.data['deletion'] = {'count': adjustment}
             candidates = []
             # Choose victims randomly
             i = adjustment
@@ -492,6 +494,8 @@ class ClusterAction(base.Action):
         # Create new nodes if desired_capacity increased
         if desired > current_size:
             delta = desired - current_size
+            if 'creation' not in self.data:
+                self.data['creation'] = {'count': delta}
             result, reason = self._create_nodes(cluster, delta)
             if result != self.RES_OK:
                 return result, reason
