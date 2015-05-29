@@ -50,7 +50,7 @@ class PluginInfo(object):
     def __lt__(self, other):
         if self.user_provided != other.user_provided:
             # user provided ones must be sorted above system ones.
-            return self.user_provided > other.user_provided_
+            return self.user_provided > other.user_provided
         if len(self.name) != len(other.name):
             # more specific (longer) name must be sorted above system ones.
             return len(self.name) > len(other.name)
@@ -76,8 +76,7 @@ class Registry(object):
     def _register_info(self, name, info):
         '''place the new info in the correct location in the registry.
 
-        :param path: a list of keys ['profiles', 'my_stack', 'os.heat.stack'],
-                     or ['policies', 'my_policy', 'ScalingPolicy']
+        :param path: a string of plugin name.
         :param info: reference to a PluginInfo data structure, deregister a
                      PluginInfo if specified as None.
         '''
@@ -108,19 +107,12 @@ class Registry(object):
         pi = PluginInfo(self, name, plugin)
         self._register_info(name, pi)
 
-    def _load_registry(self, path, registry):
-        for k, v in iter(registry.items()):
-            path = path + [k]
-            if v is None:
-                self._register_info(path, None)
-            elif isinstance(v, dict):
-                self._load_registry(path, v)
-            else:
-                info = PluginInfo(self, path, v)
-                self._register_info(path, info)
-
     def load(self, json_snippet):
-        self._load_registry([], json_snippet)
+        for k, v in iter(json_snippet.items()):
+            if v is None:
+                self._register_info(k, None)
+            else:
+                self.register_plugin(k, v)
 
     def iterable_by(self, name):
         plugin = self._registry.get(name)
@@ -143,12 +135,12 @@ class Registry(object):
             for k, v in iter(level.items()):
                 if isinstance(v, dict):
                     tmp[k] = _as_dict(v)
-                elif v.user_provided:
-                    tmp[k] = v.value
+                else:
+                    tmp[k] = v.plugin
             return tmp
 
         return _as_dict(self._registry)
 
     def get_types(self):
-        '''Return a list of valid profile types.'''
+        '''Return a list of valid plugin types.'''
         return [{'name': name} for name in six.iterkeys(self._registry)]
