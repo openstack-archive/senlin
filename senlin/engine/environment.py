@@ -57,13 +57,11 @@ class Environment(object):
             self.policy_registry = registry.Registry('policies')
         else:
             self.profile_registry = registry.Registry(
-                'profiles', global_env.profile_registry)
+                'profiles', global_env().profile_registry)
             self.policy_registry = registry.Registry(
-                'policies', global_env.policy_registry)
+                'policies', global_env().policy_registry)
 
-        if env is None:
-            env = {}
-        else:
+        if env is not None:
             # Merge user specified keys with current environment
             self.params = env.get(self.PARAMETERS, {})
             custom_profiles = env.get(self.CUSTOM_PROFILES, {})
@@ -100,7 +98,7 @@ class Environment(object):
         self.policy_registry.load(env_dict.get(self.CUSTOM_POLICIES, {}))
 
     def _check_profile_type_name(self, name):
-        if name == "" or name is None:
+        if name is None or name == "":
             msg = _('Profile type name not specified')
             raise exception.ProfileValidationFailed(message=msg)
         elif not isinstance(name, six.string_types):
@@ -122,7 +120,7 @@ class Environment(object):
         return self.profile_registry.get_types()
 
     def _check_policy_type_name(self, name):
-        if name == "" or name is None:
+        if name is None or name == "":
             msg = _('Policy type name not specified')
             raise exception.PolicyValidationFailed(message=msg)
         elif not isinstance(name, six.string_types):
@@ -163,13 +161,13 @@ class Environment(object):
                     self.load(self.parse(f.read()))
             except ValueError as vex:
                 LOG.error(_LE('Failed to parse %s'), fname)
-                LOG.exception(vex)
+                LOG.exception(six.text_type(vex))
             except IOError as ioex:
                 LOG.error(_LE('Failed to read %s'), fname)
-                LOG.exception(ioex)
+                LOG.exception(six.text_type(ioex))
 
 
-def initialize():
+def initialize(mapping_func=None):
 
     global _environment
 
@@ -185,12 +183,18 @@ def initialize():
 
     env = Environment(is_global=True)
 
+    # NOTE: This is for unit test's convenience
+    if mapping_func is None:
+        get_mapping = _get_mapping
+    else:
+        get_mapping = mapping_func
+
     # Register global plugins when initialized
-    entries = _get_mapping('senlin.profiles')
+    entries = get_mapping('senlin.profiles')
     for name, plugin in entries:
         env.register_profile(name, plugin)
 
-    entries = _get_mapping('senlin.policies')
+    entries = get_mapping('senlin.policies')
     for name, plugin in entries:
         env.register_policy(name, plugin)
 
