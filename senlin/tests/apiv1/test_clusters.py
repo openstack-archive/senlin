@@ -29,8 +29,10 @@ from senlin.tests.common import base
 
 
 class ClusterDataTest(base.SenlinTestCase):
-    def test_cluster_name(self):
-        body = {
+
+    def setUp(self):
+        super(ClusterDataTest, self).setUp()
+        self.body = {
             'name': 'test_cluster',
             'profile_id': 'some_profile',
             'parent': 'another_cluster',
@@ -41,7 +43,8 @@ class ClusterDataTest(base.SenlinTestCase):
             'timeout': 60,
         }
 
-        data = clusters.ClusterData(body)
+    def test_cluster_name(self):
+        data = clusters.ClusterData(self.body)
         self.assertEqual('test_cluster', data.name)
         self.assertEqual('some_profile', data.profile)
         self.assertEqual('another_cluster', data.parent)
@@ -85,20 +88,23 @@ class ClusterDataTest(base.SenlinTestCase):
         self._test_data_type_errors('validate_for_update')
 
     def test_name_missing_for_create(self):
-        body = {'not the cluster name': 'wibble'}
+        body = self.body
+        del body['name']
         data = clusters.ClusterData(body)
         ex = self.assertRaises(exc.HTTPBadRequest, data.validate_for_create)
-        self.assertIn('No cluster name specified.', six.text_type(ex))
+        self.assertEqual('No cluster name specified.', six.text_type(ex))
 
     def test_desired_capacity_missing_for_create(self):
-        body = {'name': 'blahblah'}
+        body = self.body
+        del body['desired_capacity']
         data = clusters.ClusterData(body)
         ex = self.assertRaises(exc.HTTPBadRequest, data.validate_for_create)
-        self.assertIn('No cluster desired capacity provided.',
-                      six.text_type(ex))
+        self.assertEqual('No cluster desired capacity provided.',
+                         six.text_type(ex))
 
     def test_profile_missing_for_create(self):
-        body = {'name': 'blahblah', 'desired_capacity': 3}
+        body = self.body
+        del body['profile_id']
         data = clusters.ClusterData(body)
         ex = self.assertRaises(exc.HTTPBadRequest, data.validate_for_create)
         self.assertIn('No cluster profile provided.', six.text_type(ex))
@@ -166,6 +172,10 @@ class ClusterDataTest(base.SenlinTestCase):
         self.assertIsNone(data.validate_for_update())
 
     def test_min_size_vs_desired_capacity_for_update(self):
+        body = {'min_size': 0, 'desired_capacity': 1}
+        data = clusters.ClusterData(body)
+        self.assertIsNone(data.validate_for_update())
+
         body = {'min_size': 0, 'desired_capacity': 0}
         data = clusters.ClusterData(body)
         self.assertIsNone(data.validate_for_update())
@@ -178,6 +188,10 @@ class ClusterDataTest(base.SenlinTestCase):
                          six.text_type(ex))
 
     def test_max_size_vs_desired_capacity_for_update(self):
+        body = {'max_size': 1, 'desired_capacity': 0}
+        data = clusters.ClusterData(body)
+        self.assertIsNone(data.validate_for_update())
+
         body = {'max_size': 0, 'desired_capacity': 0}
         data = clusters.ClusterData(body)
         self.assertIsNone(data.validate_for_update())
