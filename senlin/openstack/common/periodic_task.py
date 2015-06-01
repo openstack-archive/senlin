@@ -19,7 +19,7 @@ import time
 from oslo_config import cfg
 import six
 
-from senlin.openstack.common._i18n import _, _LE, _LI
+from senlin.common.i18n import _, _LE, _LI
 
 
 periodic_opts = [
@@ -222,11 +222,11 @@ class PeriodicTasks(object):
 
             try:
                 task(self, context)
-            except Exception as e:
+            except Exception:
                 if raise_on_error:
                     raise
-                LOG.exception(_LE("Error during %(full_task_name)s: %(e)s"),
-                              {"full_task_name": full_task_name, "e": e})
+                LOG.exception(_LE("Error during %(full_task_name)s"),
+                              {"full_task_name": full_task_name})
             time.sleep(0)
 
         return idle_for
