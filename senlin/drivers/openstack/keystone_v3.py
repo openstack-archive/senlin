@@ -75,7 +75,7 @@ class KeystoneClient(base.DriverBase):
                               'interface': interface}
             raise exception.ResourceNotFound(resource=resource)
 
-        return endpoints
+        return endpoints[0]
 
     def service_get(self, service_type, name=None):
         '''Utility function to get service detail based on name and type.'''
@@ -90,7 +90,7 @@ class KeystoneClient(base.DriverBase):
                               'name': ',name=%s' % name if name else ''}
             raise exception.ResourceNotFound(resource=resource)
 
-        return services
+        return services[0]
 
     def trust_get_by_trustor(self, trustor, trustee=None, project=None):
         '''Get trust by trustor.

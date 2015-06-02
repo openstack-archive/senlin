@@ -14,13 +14,12 @@ import datetime
 
 from oslo_config import cfg
 from oslo_log import log as logging
+from six.moves.urllib import parse
 
 from senlin.common import exception
-from senlin.common.i18n import _
-from senlin.common.i18n import _LI
 from senlin.common import utils
 from senlin.db import api as db_api
-from senlin.drivers.openstack import keystone_v3
+from senlin.drivers.openstack import keystone_v3 as ksdriver
 
 LOG = logging.getLogger(__name__)
 
@@ -28,70 +27,70 @@ CONF = cfg.CONF
 
 
 class Webhook(object):
-    '''Create a Webhook which is used to trigger an object action
+    """Create a Webhook which is used to trigger an object action.
 
     Note: we enforce user to include a persistent credential,
     e.g. password into the request when creating Webhook.
     This credential info will be stored in DB and then be used
     to generate the API request to object action(e.g. cluster scaleout)
     when the webhook is triggered later.
-    '''
+    """
 
     def __init__(self, context, obj_id, obj_type, action, **kwargs):
+
         self.id = kwargs.get('id', None)
         self.name = kwargs.get('name', None)
-        self.user = context.user
-        self.project = context.project
-        self.domain = context.domain
+        self.user = kwargs.get('user', context.user)
+        self.project = kwargs.get('project', context.project)
+        self.domain = kwargs.get('domain', context.domain)
 
-        self.created_time = datetime.datetime.utcnow()
-        self.deleted_time = None
+        self.created_time = kwargs.get('created_time', None)
+        self.deleted_time = kwargs.get('deleted_time', None)
 
         self.obj_id = obj_id
         self.obj_type = obj_type
         self.action = action
 
-        # A credential should include either userid or username
-        # and user_domain_id to identify a unique user. It also
-        # contains the password and auth_url for WebhookMiddleware
-        # to do authentication.
+        # A credential should include the user identity, which could be a user
+        # id or a username accompanied by a user_domain_id. A credential also
+        # contains the password and the auth_url for WebhookMiddleware to do
+        # authentication.
         self.credential = kwargs.get('credential', None)
         self.params = kwargs.get('params', {})
 
     def store(self, context):
-        '''Store the webhook in database and return its ID.'''
+        """Store the webhook in database and return its ID.
 
-        values = {
-            'name': self.name,
-            'user': self.user,
-            'project': self.project,
-            'domain': self.domain,
-            'created_time': self.created_time,
-            'deleted_time': self.deleted_time,
-            'obj_id': self.obj_id,
-            'obj_type': self.obj_type,
-            'action': self.action,
-            'credential': self.credential,
-            'params': self.params
-        }
-
+        :param context: Security context for DB operations.
+        """
         if not self.id:
+            self.created_time = datetime.datetime.utcnow()
+            values = {
+                'name': self.name,
+                'user': self.user,
+                'project': self.project,
+                'domain': self.domain,
+                'created_time': self.created_time,
+                'deleted_time': self.deleted_time,
+                'obj_id': self.obj_id,
+                'obj_type': self.obj_type,
+                'action': self.action,
+                'credential': self.credential,
+                'params': self.params
+            }
+
             webhook = db_api.webhook_create(context, values)
             self.id = webhook.id
-        else:
-            # The webhook has already existed, return directly
-            # since webhook doesn't support updating.
-            return self.id
 
         return self.id
 
     @classmethod
     def _from_db_record(cls, context, record):
-        '''Construct a webhook object from database record.
+        """Construct a webhook object from database record.
 
-        :param context: the context used for DB operations;
-        :param record: a DB cluster object that will receive all fields;
-        '''
+        :param context: the security context used for DB operations.
+        :param record: a DB webhook object that will receive all fields.
+        """
         kwargs = {
             'id': record.id,
             'name': record.name,
@@ -108,23 +107,26 @@ class Webhook(object):
                    record.action, **kwargs)
 
     @classmethod
-    def load(cls, context, webhook_id=None, show_deleted=False):
-        '''Retrieve a webhook from database.'''
+    def load(cls, context, webhook_id, show_deleted=False):
+        """Retrieve a webhook from database.
+
+        :param context: the security context for db operations.
+        :param webhook_id: the unique ID of the webhook to retrieve.
+        :param show_deleted: boolean indicating whether deleted objects
+                             should be returned or not. Default is False.
+        """
         webhook = db_api.webhook_get(context, webhook_id,
                                      show_deleted=show_deleted)
         if webhook is None:
-            msg = "Webhook %s is not found" % webhook_id
-            LOG.warn(msg)
             raise exception.WebhookNotFound(webhook=webhook_id)
 
-        LOG.debug(_("Webhook %(id)s found,"), {'id': webhook_id})
         return cls._from_db_record(context, webhook)
 
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort_keys=None,
                  sort_dir=None, filters=None, project_safe=True,
                  show_deleted=False):
-        '''Retrieve all webhooks from database.'''
+        """Retrieve all webhooks from database."""
 
         records = db_api.webhook_get_all(context, show_deleted=show_deleted,
                                          limit=limit, marker=marker,
@@ -168,28 +170,21 @@ class Webhook(object):
 
     def generate_url(self, context, key):
         '''Generate webhook URL with proper format.'''
-        senlin_creds = keystone_v3.get_service_credentials()
-        kc = keystone_v3.KeystoneClient(senlin_creds)
-        senlin_service = kc.service_get('clustering',
-                                        'senlin')
+        senlin_creds = ksdriver.get_service_credentials()
+        kc = ksdriver.KeystoneClient(senlin_creds)
+        senlin_service = kc.service_get('clustering', 'senlin')
         if senlin_service:
-            senlin_service_id = senlin_service[0]['id']
+            senlin_service_id = senlin_service['id']
         else:
             raise exception.ResourceNotFound(resource='service:senlin')
 
         region = cfg.CONF.region_name_for_services
-        endpoints = kc.endpoint_get(senlin_service_id,
-                                    region,
-                                    'public')
-        url_endpoint = endpoints[0]['url'].replace('$(tenant_id)s',
-                                                   self.project)
-        webhook_part = '/webhooks/%s/trigger' % self.id
-        basic_url = ''.join([url_endpoint, webhook_part])
+        endpoint = kc.endpoint_get(senlin_service_id, region, 'public')
+        endpoint_url = endpoint['url'] % {'tenant_id': self.project}
+        location = endpoint_url + '/webhooks/%s/trigger' % self.id
+        location += "?%s" % parse.urlencode({'key': key})
 
-        webhook_url = "%s?key=%s" % (basic_url, key)
-        LOG.info(_LI("Generate url for webhook %(id)s") % {'id': self.id})
-
-        return webhook_url, key
+        return location, key
 
     @classmethod
     def delete(cls, context, webhook_id):
