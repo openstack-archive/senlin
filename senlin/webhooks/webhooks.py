@@ -176,7 +176,8 @@ class Webhook(object):
         if senlin_service:
             senlin_service_id = senlin_service[0]['id']
         else:
-            raise exception.SenlinException('Senlin service was not found')
+            raise exception.ResourceNotFound(resource='service:senlin')
+
         region = cfg.CONF.region_name_for_services
         endpoints = kc.endpoint_get(senlin_service_id,
                                     region,

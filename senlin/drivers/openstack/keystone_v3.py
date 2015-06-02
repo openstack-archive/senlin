@@ -68,12 +68,12 @@ class KeystoneClient(base.DriverBase):
         endpoints = [e for e in endpoint.Endpoint.list(self.session,
                                                        **params)]
         if len(endpoints) == 0:
-            msg = _('Endpoint was not found for service %(service)s '
-                    'in region %(region)s with visibility '
-                    '%(interface)s.') % {'service': service_id,
-                                         'region': region,
-                                         'interface': interface}
-            raise exception.SenlinException(msg)
+            resource = _('endpoint: service=%(service)s,region='
+                         '%(region)s,visibility=%(interface)s.'
+                         ) % {'service': service_id,
+                              'region': region,
+                              'interface': interface}
+            raise exception.ResourceNotFound(resource=resource)
 
         return endpoints
 
@@ -85,14 +85,10 @@ class KeystoneClient(base.DriverBase):
         }
         services = [s for s in service.Service.list(self.session, **params)]
         if len(services) == 0:
-            if name:
-                msg = _('Service was not found for service_type %(type)s '
-                        'with name %(name)s.') % {'type': service_type,
-                                                  'name': name}
-            else:
-                msg = _('Service was not found for service_type '
-                        '%(type)s.') % {'type': service_type}
-            raise exception.SenlinException(msg)
+            resource = _('service:type=%(type)s%(name)s'
+                         ) % {'type': service_type,
+                              'name': ',name=%s' % name if name else ''}
+            raise exception.ResourceNotFound(resource=resource)
 
         return services
 
