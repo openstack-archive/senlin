@@ -76,8 +76,20 @@ api_opts = [
 ]
 api_group = cfg.OptGroup('senlin_api')
 cfg.CONF.register_group(api_group)
-cfg.CONF.register_opts(api_opts,
-                       group=api_group)
+cfg.CONF.register_opts(api_opts, group=api_group)
+
+wsgi_eventlet_opts = [
+    cfg.BoolOpt('wsgi_keep_alive', default=True,
+                help=_("If false, closes the client socket explicitly.")),
+    cfg.IntOpt('client_socket_timeout', default=900,
+               help=_("Timeout for client connections' socket operations. "
+                      "If an incoming connection is idle for this number of "
+                      "seconds it will be closed. A value of '0' indicates "
+                      "waiting forever.")),
+]
+wsgi_eventlet_group = cfg.OptGroup('eventlet_opts')
+cfg.CONF.register_group(wsgi_eventlet_group)
+cfg.CONF.register_opts(wsgi_eventlet_opts, group=wsgi_eventlet_group)
 
 json_size_opt = cfg.IntOpt('max_json_body_size',
                            default=1048576,
@@ -89,6 +101,7 @@ cfg.CONF.register_opt(json_size_opt)
 def list_opts():
     yield None, [json_size_opt]
     yield 'senlin_api', api_opts
+    yield 'eventlet_opts', wsgi_eventlet_opts
 
 
 def get_bind_addr(conf, default_port=None):
@@ -251,13 +264,17 @@ class Server(object):
         eventlet.hubs.use_hub('poll')
         eventlet.patcher.monkey_patch(all=False, socket=True)
         self.pool = eventlet.GreenPool(size=self.threads)
+        socket_timeout = cfg.CONF.eventlet_opts.client_socket_timeout or None
+
         try:
-            eventlet.wsgi.server(self.sock,
-                                 self.application,
-                                 custom_pool=self.pool,
-                                 url_length_limit=URL_LENGTH_LIMIT,
-                                 log=self._wsgi_logger,
-                                 debug=cfg.CONF.debug)
+            eventlet.wsgi.server(
+                self.sock, self.application,
+                custom_pool=self.pool,
+                url_length_limit=URL_LENGTH_LIMIT,
+                log=self._wsgi_logger,
+                debug=cfg.CONF.debug,
+                keepalive=cfg.CONF.eventlet_opts.wsgi_keep_alive,
+                socket_timeout=socket_timeout)
         except socket.error as err:
             if err[0] != errno.EINVAL:
                 raise
