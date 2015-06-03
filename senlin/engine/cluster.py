@@ -198,7 +198,7 @@ class Cluster(periodic_task.PeriodicTasks):
 
     def to_dict(self):
         def _fmt_time(value):
-            return value and timeutils.isotime(value)
+            return value and value.isoformat()
 
         info = {
             'id': self.id,
