@@ -12,47 +12,49 @@
 
 from senlin.drivers import base
 from senlin.drivers.openstack import sdk
-from senlin.openstack.orchestration.v1 import stack
 
 
 class HeatClient(base.DriverBase):
     '''Heat V1 driver.'''
 
     def __init__(self, context):
-        conn = sdk.create_connection(context)
-        self.session = conn.session
-        self.auth = self.session.authenticator
+        self.conn = sdk.create_connection(context)
 
     def stack_create(self, **params):
-        obj = stack.Stack.new(**params)
         try:
-            return obj.create(self.session)
+            return self.conn.orchestration.create_stack(**params)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def stack_get(self, stack_id):
-        obj = stack.Stack.new(id=stack_id)
+    def stack_get(self, **params):
         try:
-            return obj.get(self.session)
+            return self.conn.orchestration.get_stack(**params)
+        except sdk.exc.HttpException as ex:
+            raise ex
+
+    def stack_find(self, name_or_id):
+        try:
+            return self.conn.orchestration.find_stack(name_or_id)
         except sdk.exc.HttpException as ex:
             raise ex
 
     def stack_list(self, **params):
         try:
-            return stack.Stack.list(self.session, **params)
+            return self.conn.orchestration.list_stacks(**params)
         except sdk.exc.HttpException as ex:
             raise ex
 
     def stack_update(self, **params):
-        obj = stack.Stack.new(**params)
+        # NOTE: This still doesn't work because sdk is not supporting
+        # stack update yet
         try:
-            return obj.update(self.session)
+            return self.conn.orchestration.update_stack(**params)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def stack_delete(self, **params):
-        obj = stack.Stack.new(**params)
+    def stack_delete(self, value, ignore_missing=True):
         try:
-            obj.delete(self.session)
+            return self.conn.orchestration.delete_stack(value,
+                                                        ignore_missing)
         except sdk.exc.HttpException as ex:
-            sdk.ignore_not_found(ex)
+            raise ex

@@ -110,8 +110,9 @@ class StackProfile(base.Profile):
         return True
 
     def _check_action_complete(self, obj, action):
-        stack = self.heat(obj).stack_get(self.stack_id)
-        status = stack.stack_status.split('_', 1)
+        params = {'id': self.stack_id}
+        stack = self.heat(obj).stack_get(**params)
+        status = stack.status.split('_', 1)
 
         if status[0] == action:
             if status[1] == 'IN_PROGRESS':
@@ -120,20 +121,13 @@ class StackProfile(base.Profile):
             if status[1] == 'COMPLETE':
                 return True
 
-            if status[1] == 'FAILED':
-                raise exception.NodeStatusError(
-                    status=stack.stack_status,
-                    reason=stack.stack_status_reason)
-            else:
-                raise exception.NodeStatusError(
-                    status=stack.stack_status,
-                    reason=stack.stack_status_reason)
+            raise exception.NodeStatusError(status=stack.status,
+                                            reason=stack.status_reason)
         else:
             msg = _('Node action mismatch detected: expected=%(expected)s '
                     'actual=%(actual)s') % dict(expected=action,
                                                 actual=status[0])
-            raise exception.NodeStatusError(status=stack.stack_status,
-                                            reason=msg)
+            raise exception.NodeStatusError(status=stack.status, reason=msg)
 
     def do_create(self, obj):
         '''Create a stack using the given profile.'''
@@ -162,7 +156,7 @@ class StackProfile(base.Profile):
         self.stack_id = obj.physical_id
 
         try:
-            self.heat(obj).stack_delete(id=self.stack_id)
+            self.heat(obj).stack_delete(self.stack_id, True)
         except Exception as ex:
             raise ex
 
