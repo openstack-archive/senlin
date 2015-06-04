@@ -194,6 +194,61 @@ class NeutronClient(base.DriverBase):
 
         return
 
+    def pool_member_get(self, pool_id, member_identity):
+        try:
+            member = self.conn.network.find_pool_member(member_identity,
+                                                        pool_id)
+        except sdk.exc.HttpException as ex:
+            msg = _('Failed in getting lb pool_member %(value)s: %(ex)s'
+                    ) % {'value': member_identity, 'ex': six.text_type(ex)}
+            raise exception.Error(msg=msg)
+
+        return member
+
+    def pool_member_list(self, pool_id):
+        try:
+            members = [m for m in self.conn.network.pool_members(pool_id)]
+        except sdk.exc.HttpException as ex:
+            msg = _('Failed in listing lb members of pool %(id)s: %(ex)s'
+                    ) % {'id': pool_id, 'ex': six.text_type(ex)}
+            raise exception.Error(msg=msg)
+
+        return members
+
+    def pool_member_create(self, pool_id, address, protocol_port, subnet_id,
+                           weight=None, admin_state_up=True):
+
+        kwargs = {
+            'pool_id': pool_id,
+            'address': address,
+            'protocol_port': protocol_port,
+            'admin_state_up': admin_state_up,
+            'subnet_id': subnet_id,
+        }
+
+        if weight is not None:
+            kwargs['weight'] = weight
+
+        try:
+            res = self.conn.network.create_pool_member(**kwargs)
+        except sdk.exc.HttpException as ex:
+            msg = _('Failed in adding member to lb pool %(id)s: %(ex)s'
+                    ) % {'id': pool_id, 'ex': six.text_type(ex)}
+            raise exception.Error(msg=msg)
+
+        return res
+
+    def pool_member_delete(self, pool_id, member_id):
+        try:
+            self.conn.network.delete_pool_member(member_id, pool_id)
+        except sdk.exc.HttpException as ex:
+            msg = _('Failed in deleting lb member %(id)s from pool %(pool)s: '
+                    '%(ex)s') % {'id': member_id, 'pool': pool_id,
+                                 'ex': six.text_type(ex)}
+            raise exception.Error(msg=msg)
+
+        return
+
     def healthmonitor_get(self, hm_identity):
         try:
             hm = self.conn.network.find_health_monitor(hm_identity)
