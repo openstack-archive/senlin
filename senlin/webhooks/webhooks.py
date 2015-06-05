@@ -14,7 +14,6 @@ import datetime
 
 from oslo_config import cfg
 from oslo_log import log as logging
-from oslo_utils import timeutils
 
 from senlin.common import exception
 from senlin.common.i18n import _
@@ -140,7 +139,7 @@ class Webhook(object):
 
     def to_dict(self):
         def _fmt_time(value):
-            return value and timeutils.isotime(value)
+            return value and value.isoformat()
 
         info = {
             'id': self.id,

@@ -13,8 +13,6 @@
 import collections
 import datetime
 
-from oslo_utils import timeutils
-
 from senlin.common import exception
 from senlin.common import schema
 from senlin.db import api as db_api
@@ -195,7 +193,7 @@ class Policy(object):
 
     def to_dict(self):
         def _fmt_time(value):
-            return value and timeutils.isotime(value)
+            return value and value.isoformat()
 
         pb_dict = {
             'id': self.id,
