@@ -30,7 +30,7 @@ import eventlet.backdoor
 import greenlet
 from oslo_config import cfg
 
-from senlin.openstack.common._i18n import _LI
+from senlin.common.i18n import _LI
 
 help_for_backdoor_port = (
     "Acceptable values are 0, <port>, and <start>:<end>, where 0 results "
@@ -143,7 +143,7 @@ def initialize_if_enabled():
     # listen().  In any case, pull the port number out here.
     port = sock.getsockname()[1]
     LOG.info(
-        _LI('Eventlet backdoor listening on %(port)s for process %(pid)d') %
+        _LI('Eventlet backdoor listening on %(port)s for process %(pid)d'),
         {'port': port, 'pid': os.getpid()}
     )
     eventlet.spawn_n(eventlet.backdoor.backdoor_server, sock,
