@@ -11,9 +11,9 @@
 # under the License.
 
 import datetime
+import six
 
 from senlin.common import exception
-
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import parser
 from senlin.tests.common import base
@@ -331,3 +331,29 @@ class DBAPIProfileTest(base.SenlinTestCase):
         # not found in delete is okay
         res = db_api.profile_delete(self.ctx, profile_id)
         self.assertIsNone(res)
+
+    def test_profile_delete_profile_used_by_cluster(self):
+        profile = shared.create_profile(self.ctx)
+        cluster = shared.create_cluster(self.ctx, profile)
+
+        profile_id = profile.id
+        ex = self.assertRaises(exception.ProfileInUse,
+                               db_api.profile_delete, self.ctx, profile_id)
+        self.assertEqual('The profile (%s) is still in use.' % profile_id,
+                         six.text_type(ex))
+
+        db_api.cluster_delete(self.ctx, cluster.id)
+        db_api.profile_delete(self.ctx, profile_id)
+
+    def test_profile_delete_profile_used_by_node(self):
+        profile = shared.create_profile(self.ctx)
+        node = shared.create_node(self.ctx, None, profile)
+
+        profile_id = profile.id
+        ex = self.assertRaises(exception.ProfileInUse,
+                               db_api.profile_delete, self.ctx, profile_id)
+        self.assertEqual('The profile (%s) is still in use.' % profile_id,
+                         six.text_type(ex))
+
+        db_api.node_delete(self.ctx, node.id)
+        db_api.profile_delete(self.ctx, profile_id)

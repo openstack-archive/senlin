@@ -155,6 +155,10 @@ class ProfileNotFound(SenlinException):
     msg_fmt = _("The profile (%(profile)s) could not be found.")
 
 
+class ProfileInUse(SenlinException):
+    msg_fmt = _("The profile (%(profile)s) is still in use.")
+
+
 class ProfileNotSpecified(SenlinException):
     msg_fmt = _("Profile not specified.")
 
