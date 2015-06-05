@@ -41,7 +41,6 @@ class NodeData(object):
 
     def name(self):
         if consts.NODE_NAME not in self.data:
-            # TODO(Anyone): Generate a random name for the node
             raise exc.HTTPBadRequest(_("No node name specified."))
         return self.data[consts.NODE_NAME]
 
