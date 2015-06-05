@@ -11,10 +11,12 @@
 # under the License.
 
 from oslo_log import log as logging
+import six
 
 from senlin.common import context
-from senlin.common import exception
+from senlin.common import exception as exc
 from senlin.common.i18n import _
+from senlin.common.i18n import _LE
 from senlin.common import utils
 from senlin.common import wsgi
 from senlin.drivers.openstack import sdk
@@ -24,88 +26,96 @@ LOG = logging.getLogger(__name__)
 
 
 class WebhookMiddleware(wsgi.Middleware):
-    '''Middleware to do authentication for webhook triggering
+    """Middleware for authenticating webhook triggering requests.
 
-    This middleware gets authentication for request to a webhook
-    based on information embedded inside url and then rebuild the
-    request header.
-    '''
+    This middleware authenticates the webhook trigger requests and then
+    rebuild the request header so that the request will successfully pass
+    the verification of keystone auth_token middleware.
+    """
     def process_request(self, req):
-        self._authenticate(req)
+        # We only handle POST requests
+        if req.method != 'POST':
+            return
 
-    def _authenticate(self, req):
-        LOG.debug("Checking credentials of webhook request")
-        credential = self._get_credential(req)
+        # Extract webhook ID
+        webhook_id = self._extract_webhook_id(req.url)
+        if not webhook_id:
+            return
+
+        # The request must have a 'key' parameter
+        if 'key' not in req.params:
+            return
+        key = req.params['key']
+
+        credential = self._get_credential(webhook_id, key)
         if not credential:
             return
 
-        # Get a valid token based on credential
-        # and fill into the request header
-        token_id = self._get_token(credential)
-        req.headers['X-Auth-Token'] = token_id
+        # Get token based on credential and fill it into the request header
+        token = self._get_token(credential)
+        req.headers['X-Auth-Token'] = token
 
-    def _get_credential(self, req):
-        try:
-            url_bottom = req.url.rsplit('webhooks')[1]
-            webhook_id = url_bottom.rsplit('/')[1]
-            trigger = url_bottom.rsplit('/')[2].startswith('trigger')
-            if trigger is not True or 'key' not in req.params:
-                raise Exception()
-        except Exception:
-            LOG.debug(_("%(url)s is not a webhook trigger url,"
-                        " pass."), {'url': req.url})
+    def _extract_webhook_id(self, url):
+        """Extract webhook ID from the request URL.
+
+        :param url: The URL from which the request is received.
+        """
+        if 'webhooks' not in url:
             return
 
-        if req.method != 'POST':
-            LOG.debug(_("Not a post request to webhook trigger url"
-                        " %(url)s, pass."), {'url': req.url})
+        url_bottom = url.split('webhooks')[1]
+        if 'trigger' not in url_bottom:
             return
 
-        # This is a webhook triggering, we need to fill in valid
-        # credential info into the http headers to ensure this
-        # request can pass keystone auth_token validation.
-        #
-        # Get the credential stored in DB based on webhook ID.
-        # TODO(Anyone): Use Barbican to store these credential.
-        LOG.debug(_("Get credential of webhook %(id)s"), {'id': webhook_id})
-        senlin_context = context.get_service_context()
-        # Build a RequestContext from senlin_context since DB API
-        # needs the session parameter.
-        # TODO(Anyone): This converting is not needed any more after
-        # the context redesign is finally complete.
-        ctx = context.RequestContext(**senlin_context)
+        # /<webhook_id>/trigger?key=value
+        parts = url_bottom.split('/')
+        if len(parts) < 3:
+            return
+
+        webhook_id = parts[1]
+        if not parts[2].startswith('trigger'):
+            return
+
+        return webhook_id
+
+    def _get_credential(self, webhook_id, key):
+        """Get credential for the given webhook using the provided key.
+
+        :param webhook_id: ID of the webhook.
+        :param key: The key string to be used for decryption.
+        """
+        # Build a RequestContext from service context for DB APIs
+        ctx = context.RequestContext.from_dict(context.get_service_context())
         webhook_obj = webhooks.Webhook.load(ctx, webhook_id)
         credential = webhook_obj.credential
         credential['webhook_id'] = webhook_id
         if 'auth_url' not in credential:
-            # If no auth_url is provided in credential, use
-            # auth_url of senlin service context
-            credential['auth_url'] = senlin_context['auth_url']
+            # Default to auth_url from service context if not provided
+            credential['auth_url'] = ctx.auth_url
 
         # Decrypt the credential password with key embedded in req params
         try:
-            password = utils.decrypt(credential['password'],
-                                     req.params['key'])
-            credential['password'] = password
-        except Exception:
-            msg = 'Invalid key for webhook(%s) credential decryption' % \
-                webhook_id
-            LOG.error(msg)
-            raise exception.SenlinBadRequest(msg=msg)
+            clear_text = utils.decrypt(credential['password'], key)
+            credential['password'] = clear_text
+        except Exception as ex:
+            msg = _('Invalid key for webhook (%s) triggering.') % webhook_id
+            LOG.error(six.text_type(ex))
+            raise exc.SenlinBadRequest(msg=msg)
 
         return credential
 
-    def _get_token(self, credential):
-        '''Get a valid token based on credential'''
+    def _get_token(self, cred):
+        """Get a valid token based on the credential provided.
 
+        :param cred: Rebuilt credential dictionary for authentication.
+        """
         try:
-            access_info = sdk.authenticate(**credential)
-            token_id = access_info.auth_token
+            access_info = sdk.authenticate(**cred)
+            token = access_info.auth_token
         except Exception as ex:
-            msg = 'Webhook get token failed: %s' % ex.message
+            msg = _LE('Webhook trigger failed in getting token: %s'
+                      ) % six.text_type(ex)
             LOG.error(msg)
-            raise exception.WebhookCredentialInvalid(
-                webhook=credential['webhook_id'])
+            raise exc.WebhookCredentialInvalid(webhook=cred['webhook_id'])
 
-        # Get token successfully!
-        return token_id
+        return token
