@@ -12,13 +12,16 @@
   under the License.
 
 
-Policy Types and Policies
-=========================
+Policies
+========
 
-Policy
+Concept
 -------
 
 A policy is a ...
 
+
+How To Use
+----------
 
 [TBC]

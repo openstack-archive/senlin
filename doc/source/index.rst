@@ -44,31 +44,29 @@ Getting Started
 ===============
 
 .. toctree::
-    :maxdepth: 1
+   :maxdepth: 2
 
-    getting_started/index
-    policies/index
-    profiles/index
-    testing
-    glossary
+   getting_started/index
+   glossary
 
 Man Pages
 =========
 
 .. toctree::
-    :maxdepth: 2
+   :maxdepth: 2
 
-    man/index
+   man/index
 
 Developers Documentation
 ========================
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   architecture
-   plugin_guide
-   authorization
-   webhook
+   developer/authorization
+   developer/plugin_guide
+   developer/profile_type
+   developer/testing
+   developer/webhook
 
 API Documentation
 ========================

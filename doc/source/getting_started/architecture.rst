@@ -14,7 +14,7 @@
 Senlin Architecture
 ===================
 
-Senlin is a service to create and manage clusters of homogeneous resources in
+Senlin is a service to create and manage clusters of homogeneous resources on
 an OpenStack cloud. Senlin provides an OpenStack-native ReST API.
 
 
@@ -24,25 +24,26 @@ Detailed Description
 
 What is the purpose of the project and vision for it?
 
-*Senlin provides a clustering service for OpenStack that manages a collection
-of nodes that are of the same type.*
+Senlin provides a clustering service for OpenStack that manages a collection
+of nodes that are of the same type.
 
 Describe the relevance of the project to other OpenStack projects and the
 OpenStack mission to provide a ubiquitous cloud computing platform:
 
-*The Senlin service aggregates resources exposed by other components of
+The Senlin service aggregates resources exposed by other components of
 OpenStack into a cluster. Such a cluster can be associated with different
 policies that can be checked/enforced at varying enforcement levels. Through
 service APIs, a user can dynamically add nodes to and remove nodes from a
 cluster, attach and detach policies, such as creation policy, deletion policy,
 load-balancing policy, scaling policy, health checking policy etc. Through
 integration with other OpenStack projects, users will be enabled to manage
-deployments and orchestrations large scale resource pools much easier.*
-*Currently no other clustering service exists for OpenStack. The developers
+deployments and orchestrations large scale resource pools much easier.
+
+Currently no other clustering service exists for OpenStack. The developers
 believe cloud developers have a strong desire to create and operate resource
 clusters on OpenStack deployments. The Heat project provides a preliminary
 support to resource groups but Heat developers have achieved a consensus that
-such kind of a service should stand on its own feet.*
+such kind of a service should stand on its own feet.
 
 ---------------
 Senlin Services

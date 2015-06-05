@@ -12,28 +12,16 @@
   under the License.
 
 
-Getting Started with Senlin
-===========================
+Actions
+=======
 
-Before You Begin
-----------------
+Concept
+-------
 
-You will need to make sure you have a suitable environment for deploying
-Senlin.
+An action is a ...
+
 
 How To Use
-----------------
-.. toctree::
-   :maxdepth: 1
+----------
 
-   architecture
-   profile_types
-   profiles
-   clusters
-   nodes
-   policy_types
-   policies
-   actions
-   events
-   webhooks
-   glossary
+[TBC]

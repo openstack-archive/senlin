@@ -13,14 +13,24 @@
 
 Webhook
 =======
-Webhook is used to trigger a specific action of  a senlin entity, typically
-scaling out/in action of a cluster.
+
+A webhook is an URI that encodes a tuple (entity, action, params), where:
+
+ - the ``entity`` can be a cluster, a node, a policy object;
+ - ``action`` is the name of a built-in action supported by the object;
+ - ``params`` is a dictionary feeding values as arguments to the action.
+
+Webhooks are used to trigger a specific action on a senlin entity, typically
+scaling out/in action on a cluster. In the long term, senlin may support
+user-provided actions where ``action`` will be interpreted as the UUID or name
+of a user-provided action.
 
 Design
 ------
 
 Workflow
 ++++++++
+
 1. User creates a webhook through webhook API. User needs to specify what action
    and which senlin entity this webhook is bound to. Also for some specific
    actions, user can define the parameters they want to use when invoking the
