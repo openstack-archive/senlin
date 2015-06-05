@@ -515,8 +515,6 @@ class ClusterAction(base.Action):
             return result, reason
 
         # Create new nodes to meet desired_capacity
-        # TODO(Anyone): Use unified interface(e.g. do_cluster_update)
-        # to do cluster resizing.
         result, reason = self._create_nodes(cluster, count, policy_data)
 
         if result == self.RES_OK:
@@ -569,8 +567,6 @@ class ClusterAction(base.Action):
                 i = i - 1
 
         # The policy data may contain destroy flag and grace period option
-        # TODO(Anyone): Use unified interface(e.g. do_cluster_update)
-        # to do cluster resizing.
         result, new_reason = self._delete_nodes(cluster, candidates,
                                                 policy_data)
 
