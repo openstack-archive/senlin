@@ -175,11 +175,11 @@ class Policy(object):
         '''Validate the schema and the data provided.'''
         self.spec_data.validate()
 
-    def attach(self, context, cluster, policy_data):
+    def attach(self, cluster_id, action, policy_data):
         '''Method to be invoked before policy is attached to a cluster.'''
         return True
 
-    def detach(self, context, cluster, policy_data):
+    def detach(self, cluster_id, action, policy_data):
         '''Method to be invoked before policy is detached from a cluster.'''
         return True
 

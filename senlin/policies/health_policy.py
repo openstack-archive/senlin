@@ -14,6 +14,7 @@ from senlin.common import constraints
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import schema
+from senlin.engine import cluster as cluster_mod
 from senlin.policies import base
 
 
@@ -118,21 +119,25 @@ class HealthPolicy(base.Policy):
         self.check_type = self.spec_data[self.DETECTION][self.DETECTION_TYPE]
         self.interval = self.spec_data[self.DETECTION][self.CHECK_INTERVAL]
 
-    def attach(self, ctx, cluster, data):
+    def attach(self, cluster_id, action, data):
         '''Hook for policy attach.
 
         Initialize the health check mechanism for existing nodes in cluster.
         '''
+        cluster = cluster_mod.Cluster.load(action.context,
+                                           cluster_id=cluster_id)
         cluster.heathy_check_enable()
         cluster.heathy_check_set_interval(self.interval)
 
         return True
 
-    def detach(self, ctx, cluster, data):
+    def detach(self, cluster_id, action, data):
         '''Hook for policy detach.
 
         Deinitialize the health check mechanism (for the cluster).
         '''
+        cluster = cluster_mod.Cluster.load(action.context,
+                                           cluster_id=cluster_id)
         cluster.heathy_check_disable()
         return True
 

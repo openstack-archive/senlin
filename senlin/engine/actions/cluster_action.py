@@ -601,7 +601,7 @@ class ClusterAction(base.Action):
             if curr.type == policy.type:
                 raise exception.PolicyExists(policy_type=policy.type)
 
-        res, data = policy.attach(self.context, cluster, policy_data)
+        res, data = policy.attach(cluster.id, self, policy_data)
         if not res:
             return self.RES_ERROR, 'Failed attaching policy'
 
@@ -627,7 +627,7 @@ class ClusterAction(base.Action):
             raise exception.PolicyNotSpecified()
 
         policy = policy_mod.Policy.load(self.context, policy_id)
-        res = policy.detach(self.context, cluster, policy_data)
+        res = policy.detach(cluster.id, self, policy_data)
         if not res:
             return self.RES_ERROR, 'Failed detaching policy'
 
