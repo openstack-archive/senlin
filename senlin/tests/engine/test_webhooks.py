@@ -99,7 +99,7 @@ class WebhookTest(base.SenlinTestCase):
                                credential=credential)
         self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
         self.assertEqual('The request is malformed: '
-                         'webhook obj_type %s is unsupported'
+                         'Webhook obj_type %s is unsupported.'
                          '' % obj_type,
                          six.text_type(ex.exc_info[1]))
 
@@ -131,7 +131,7 @@ class WebhookTest(base.SenlinTestCase):
                                credential=credential)
         self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
         self.assertEqual('The request is malformed: '
-                         'illegal action name %s'
+                         'Illegal action name (%s) specified.'
                          '' % action,
                          six.text_type(ex.exc_info[1]))
 
@@ -148,7 +148,7 @@ class WebhookTest(base.SenlinTestCase):
                                credential=credential)
         self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
         self.assertEqual('The request is malformed: '
-                         'Action %s is not applicable to object %s'
+                         'Action %s is not applicable to object of type %s.'
                          '' % (action, obj_type),
                          six.text_type(ex.exc_info[1]))
 
@@ -165,7 +165,7 @@ class WebhookTest(base.SenlinTestCase):
                                credential=credential)
         self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
         self.assertEqual('The request is malformed: '
-                         'The credential parameter is missing',
+                         'The credential parameter is missing.',
                          six.text_type(ex.exc_info[1]))
 
     def test_webhook_get(self):
