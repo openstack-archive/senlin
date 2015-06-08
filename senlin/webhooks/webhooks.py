@@ -163,13 +163,16 @@ class Webhook(object):
     def from_dict(cls, **kwargs):
         return cls(**kwargs)
 
-    def encrypt_credential(self, context):
-        password, key = utils.encrypt(self.credential['password'])
-        self.credential['password'] = password
+    def encrypt_credential(self):
+        cipher, key = utils.encrypt(self.credential['password'])
+        self.credential['password'] = cipher
         return key
 
-    def generate_url(self, context, key):
-        '''Generate webhook URL with proper format.'''
+    def generate_url(self, key):
+        """Generate webhook URL with proper format.
+
+        :param key: Key string to be used for decrypt the credentials.
+        """
         senlin_creds = ksdriver.get_service_credentials()
         kc = ksdriver.KeystoneClient(senlin_creds)
         senlin_service = kc.service_get('clustering', 'senlin')

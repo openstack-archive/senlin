@@ -1149,11 +1149,10 @@ class EngineService(service.Service):
         if limit is not None:
             limit = utils.parse_int_param('limit', limit)
         if project_safe is not None:
-            project_safe = utils.parse_bool_param('project_safe',
-                                                  project_safe)
+            project_safe = utils.parse_bool_param('project_safe', project_safe)
         if show_deleted is not None:
-            show_deleted = utils.parse_bool_param('show_deleted',
-                                                  show_deleted)
+            show_deleted = utils.parse_bool_param('show_deleted', show_deleted)
+
         webhooks = webhook_mod.Webhook.load_all(context, limit=limit,
                                                 marker=marker,
                                                 sort_keys=sort_keys,
@@ -1167,17 +1166,14 @@ class EngineService(service.Service):
     @request_context
     def webhook_create(self, context, obj_id, obj_type, action,
                        credential=None, params=None, name=None):
-        LOG.info(_LI("Creating webhook %(name)s, %(obj_id)s, %(obj_type)s,"
-                     " %(action)s"),
-                 {'name': name, 'obj_id': obj_id,
-                  'obj_type': obj_type, 'action': action})
+        LOG.info(_LI("Creating webhook %(n)s, %(i)s, %(t)s, %(a)s."),
+                 {'n': name, 'i': obj_id, 't': obj_type, 'a': action})
 
-        # Check whether obj_type is supported
         if obj_type not in consts.WEBHOOK_OBJ_TYPES:
-            msg = _('webhook obj_type %s is unsupported') % obj_type
+            msg = _('Webhook obj_type %s is unsupported.') % obj_type
             raise exception.SenlinBadRequest(msg=msg)
 
-        # Check whether target identified by obj_id exist
+        # Check whether object identified by obj_id does exists
         if obj_type == consts.WEBHOOK_OBJ_TYPE_CLUSTER:
             self.cluster_find(context, obj_id)
         elif obj_type == consts.WEBHOOK_OBJ_TYPE_NODE:
@@ -1185,23 +1181,18 @@ class EngineService(service.Service):
         else:
             self.policy_find(context, obj_id)
 
-        # Check whether action name is legal
+        # Check action name
         if action not in consts.ACTION_NAMES:
-            # Illegal action name
-            msg = _('illegal action name %s') % action
+            msg = _('Illegal action name (%s) specified.') % action
             raise exception.SenlinBadRequest(msg=msg)
         elif action.lower().rsplit('_')[0] != obj_type:
             # Action is unavailable for target obj_type
-            msg = _('Action %(action)s is not applicable to '
-                    'object %(obj_type)s') % {'action': action,
-                                              'obj_type': obj_type}
+            msg = _('Action %(a)s is not applicable to object of type %(t)s.'
+                    ) % {'a': action, 't': obj_type}
             raise exception.SenlinBadRequest(msg=msg)
-        else:
-            pass
 
-        # Check whether credential is provided
         if not credential:
-            msg = _('The credential parameter is missing')
+            msg = _('The credential parameter is missing.')
             raise exception.SenlinBadRequest(msg=msg)
 
         if not params:
@@ -1210,9 +1201,9 @@ class EngineService(service.Service):
         webhook = webhook_mod.Webhook(context, obj_id, obj_type,
                                       action, credential=credential,
                                       params=params, name=name)
-        key = webhook.encrypt_credential(context)
+        key = webhook.encrypt_credential()
         webhook.store(context)
-        url, token = webhook.generate_url(context, key)
+        url, token = webhook.generate_url(key)
 
         result = webhook.to_dict()
         result['url'] = url
@@ -1240,9 +1231,7 @@ class EngineService(service.Service):
         else:
             self.policy_find(context, obj_id)
 
-        # If input parameters are provided when webhook is
-        # triggered, it will replace the params stored in
-        # webhook and be used as the action input.
+        # If params are provided, they will override the default params
         if params:
             input_params = params
         else:
