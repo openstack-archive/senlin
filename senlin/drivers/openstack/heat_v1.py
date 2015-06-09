@@ -26,9 +26,9 @@ class HeatClient(base.DriverBase):
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def stack_get(self, **params):
+    def stack_get(self, value):
         try:
-            return self.conn.orchestration.get_stack(**params)
+            return self.conn.orchestration.get_stack(value)
         except sdk.exc.HttpException as ex:
             raise ex
 

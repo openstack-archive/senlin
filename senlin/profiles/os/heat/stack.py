@@ -110,8 +110,7 @@ class StackProfile(base.Profile):
         return True
 
     def _check_action_complete(self, obj, action):
-        params = {'id': self.stack_id}
-        stack = self.heat(obj).stack_get(**params)
+        stack = self.heat(obj).stack_get(self.stack_id)
         status = stack.status.split('_', 1)
 
         if status[0] == action:
