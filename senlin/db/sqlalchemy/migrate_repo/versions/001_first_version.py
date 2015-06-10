@@ -207,6 +207,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('created_time', sqlalchemy.DateTime),
         sqlalchemy.Column('updated_time', sqlalchemy.DateTime),
         sqlalchemy.Column('deleted_time', sqlalchemy.DateTime),
+        sqlalchemy.Column('data', types.Dict),
         mysql_engine='InnoDB',
         mysql_charset='utf8'
     )

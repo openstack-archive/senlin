@@ -150,6 +150,8 @@ class Action(object):
         self.updated_time = kwargs.get('updated_time', None)
         self.deleted_time = kwargs.get('deleted_time', None)
 
+        self.data = kwargs.get('data', {})
+
     def store(self, context):
         '''Store the action record into database table.'''
 
@@ -173,16 +175,17 @@ class Action(object):
             'created_time': datetime.datetime.utcnow(),
             'updated_time': self.updated_time,
             'deleted_time': self.deleted_time,
+            'data': self.data,
         }
 
         if self.id:
             values['updated_time'] = datetime.datetime.utcnow()
-            action = db_api.action_update(context, values)
+            db_api.action_update(context, self.id, values)
         else:
             values['created_time'] = datetime.datetime.utcnow()
             action = db_api.action_create(context, values)
+            self.id = action.id
 
-        self.id = action.id
         return self.id
 
     @classmethod
@@ -210,6 +213,7 @@ class Action(object):
             'depends_on': record.depends_on,
             'depended_by': record.depended_by,
             'deleted_time': record.deleted_time,
+            'data': record.data,
         }
 
         return cls(context, record.action, **kwargs)
@@ -348,11 +352,12 @@ class Action(object):
         :param target: A tuple of ('when', action_name)
         :return: A dictionary that contains the check result.
         """
-        # Initialize an empty dict for policy check result
-        data = policy_mod.PolicyData()
+
+        # Initialize the status to CHECK_OK before starting policy check
+        self.data['status'] = policy_mod.CHECK_OK
 
         if target not in ['BEFORE', 'AFTER']:
-            return data
+            return
 
         # Get list of policy IDs attached to cluster
         bindings = db_api.cluster_policy_get_all(self.context, cluster_id,
@@ -369,15 +374,15 @@ class Action(object):
             else:  # target == 'AFTER'
                 method = getattr(policy, 'post_op')
 
-            # Pass data from one policy to another
-            data = method(cluster_id, self, data)
+            method(cluster_id, self)
 
             # Abort policy checking if failures found
-            if data.status == policy_mod.CHECK_ERROR:
-                LOG.warning(_('Failed policy checking: %s'), data.reason)
-                return data
+            if self.data['status'] == policy_mod.CHECK_ERROR:
+                LOG.warning(_('Failed policy checking: %s'),
+                            self.data['reason'])
+                return
 
-        return data
+        return
 
     def to_dict(self):
         action_dict = {
@@ -400,6 +405,7 @@ class Action(object):
             'depends_on': self.depends_on,
             'depended_by': self.depended_by,
             'deleted_time': self.deleted_time,
+            'data': self.data,
         }
         return action_dict
 

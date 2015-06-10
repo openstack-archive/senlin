@@ -18,12 +18,12 @@ Policy for deleting node(s) from a cluster.
 NOTE: How deletion policy works
 Input:
   cluster: cluster whose nodes can be deleted
-  policy_data.deletion:
+  action.data['deletion']:
     - count: number of nodes to delete; it can be customized by a
              scaling policy for example. If no scaling policy is in
              effect, deletion count is assumed to be 1
   self.criteria: list of criteria for sorting nodes
-Output: policy_data
+Output: stored in action.data
   {
     'status': 'OK',
     'deletion': {
@@ -150,10 +150,10 @@ class DeletionPolicy(base.Policy):
 
         return []
 
-    def pre_op(self, cluster_id, action, policy_data):
+    def pre_op(self, cluster_id, action):
         '''Choose victims that can be deleted.'''
 
-        pd = policy_data.get('deletion', None)
+        pd = action.data.get('deletion', None)
         if pd is not None:
             count = pd.get('count', 1)
             candidates = pd.get('candidates', [])
@@ -170,5 +170,7 @@ class DeletionPolicy(base.Policy):
         pd['candidates'] = candidates
         pd['destroy_after_deletion'] = self.destroy_after_deletion
         pd['grace_period'] = self.grace_period
-        policy_data.update({'deletion': pd})
-        return policy_data
+        action.data.update({'deletion': pd})
+        action.store(action.context)
+
+        return

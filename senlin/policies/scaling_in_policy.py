@@ -94,7 +94,7 @@ class ScalingInPolicy(base.Policy):
         # TODO(anyone): Make sure the default cooldown can be used if
         # not specified. Need support from ClusterPolicy.
 
-    def pre_op(self, cluster_id, action, policy_data):
+    def pre_op(self, cluster_id, action):
         cluster = db_api.cluster_get(action.context, cluster_id)
         nodes = db_api.node_get_all_by_cluster(action.context, cluster_id)
         current_size = len(nodes)
@@ -113,23 +113,24 @@ class ScalingInPolicy(base.Policy):
 
         # Sanity check
         if count > 0:
-            policy_data.status = base.CHECK_ERROR
-            policy_data.reason = _('ScalingInPolicy generates a positive '
-                                   'count for scaling in operation.')
+            action.data['status'] = base.CHECK_ERROR
+            action.data['reason'] = _('ScalingInPolicy generates a positive '
+                                      'count for scaling in operation.')
         elif current_size + count < cluster.min_size:
             if not self.best_effort:
-                policy_data.status = base.CHECK_ERROR
-                policy_data.reason = _('Attempted scaling exceeds '
-                                       'minimum size')
+                action.data['status'] = base.CHECK_ERROR
+                action.data['reason'] = _('Attempted scaling exceeds '
+                                          'minimum size')
             else:
-                policy_data.status = base.CHECK_OK
+                action.data['status'] = base.CHECK_OK
                 count = current_size - cluster.min_size
-                policy_data.reason = _('Do best effort scaling')
+                action.data['reason'] = _('Do best effort scaling')
         else:
-            policy_data.status = base.CHECK_OK
-            policy_data.reason = _('Scaling request validated')
+            action.data['status'] = base.CHECK_OK
+            action.data['reason'] = _('Scaling request validated')
 
         pd = {'count': abs(count)}
-        policy_data['deletion'] = pd
+        action.data['deletion'] = pd
+        action.store(action.context)
 
-        return policy_data
+        return

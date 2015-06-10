@@ -86,10 +86,11 @@ class ClusterAction(base.Action):
 
         return self.RES_OK, 'All dependents ended with success'
 
-    def _create_nodes(self, cluster, count, policy_data):
+    def _create_nodes(self, cluster, count):
         '''Utility method for node creation.'''
-        placement = policy_data.get('placement', None)
+        placement = self.data.get('placement', None)
 
+        nodes = []
         for m in range(count):
             db_cluster = db_api.cluster_get(self.context, cluster.id)
             index = db_cluster.next_index
@@ -109,6 +110,7 @@ class ClusterAction(base.Action):
                 # We assume placement is a list
                 node.data['placement'] = placement[m]
             node.store(self.context)
+            nodes.append(node.id)
 
             kwargs = {
                 'name': 'node_create_%s' % node.id[:8],
@@ -127,11 +129,14 @@ class ClusterAction(base.Action):
 
         if count > 0:
             # Wait for cluster creation to complete
-            return self._wait_for_dependents()
+            res, reason = self._wait_for_dependents()
+            if res == self.RES_OK:
+                self.data['nodes'] = nodes
+            return res, reason
 
         return self.RES_OK, ''
 
-    def do_create(self, cluster, policy_data):
+    def do_create(self, cluster):
         res = cluster.do_create(self.context)
 
         if not res:
@@ -139,8 +144,7 @@ class ClusterAction(base.Action):
             cluster.set_status(self.context, cluster.ERROR, reason)
             return self.RES_ERROR, reason
 
-        result, reason = self._create_nodes(cluster, cluster.desired_capacity,
-                                            policy_data)
+        result, reason = self._create_nodes(cluster, cluster.desired_capacity)
 
         if result == self.RES_OK:
             reason = 'Cluster creation succeeded'
@@ -153,7 +157,7 @@ class ClusterAction(base.Action):
 
         return result, reason
 
-    def do_update(self, cluster, policy_data):
+    def do_update(self, cluster):
         profile_id = self.inputs.get('new_profile_id')
 
         node_list = cluster.get_nodes()
@@ -188,10 +192,10 @@ class ClusterAction(base.Action):
         cluster.set_status(self.context, cluster.ACTIVE, reason)
         return self.RES_OK, _('Cluster update succeeded')
 
-    def _delete_nodes(self, cluster, nodes, policy_data):
+    def _delete_nodes(self, cluster, nodes):
         action_name = consts.NODE_DELETE
 
-        pd = policy_data.get('deletion', None)
+        pd = self.data.get('deletion', None)
         if pd is not None:
             destroy = pd.get('destroy_after_delete', True)
             if not destroy:
@@ -211,11 +215,14 @@ class ClusterAction(base.Action):
             dispatcher.start_action(self.context, action_id=action.id)
 
         if len(nodes) > 0:
-            return self._wait_for_dependents()
+            res, reason = self._wait_for_dependents()
+            if res == self.RES_OK:
+                self.data['nodes'] = nodes
+            return res, reason
 
         return self.RES_OK, ''
 
-    def do_delete(self, cluster, policy_data):
+    def do_delete(self, cluster):
         reason = 'Deletion in progress'
         cluster.set_status(self.context, cluster.DELETING, reason)
         nodes = [node.id for node in cluster.get_nodes()]
@@ -226,8 +233,8 @@ class ClusterAction(base.Action):
                 'destroy_after_delete': True
             }
         }
-        policy_data.update(data)
-        result, reason = self._delete_nodes(cluster, nodes, policy_data)
+        self.data.update(data)
+        result, reason = self._delete_nodes(cluster, nodes)
 
         if result == self.RES_OK:
             res = cluster.do_delete(self.context)
@@ -241,7 +248,7 @@ class ClusterAction(base.Action):
 
         return result, reason
 
-    def do_add_nodes(self, cluster, policy_data):
+    def do_add_nodes(self, cluster):
         nodes = self.inputs.get('nodes')
 
         # NOTE: node states might have changed before we lock the cluster
@@ -294,9 +301,12 @@ class ClusterAction(base.Action):
         result, new_reason = self._wait_for_dependents()
         if result != self.RES_OK:
             reason = new_reason
+        else:
+            self.data['nodes'] = nodes
+
         return result, reason
 
-    def do_del_nodes(self, cluster, policy_data):
+    def do_del_nodes(self, cluster):
         nodes = self.inputs.get('nodes')
 
         # NOTE: node states might have changed before we lock the cluster
@@ -324,8 +334,8 @@ class ClusterAction(base.Action):
                 'destroy_after_delete': False,
             }
         }
-        policy_data.update(data)
-        result, new_reason = self._delete_nodes(cluster, nodes, policy_data)
+        self.data.update(data)
+        result, new_reason = self._delete_nodes(cluster, nodes)
 
         if result != self.RES_OK:
             reason = new_reason
@@ -427,7 +437,7 @@ class ClusterAction(base.Action):
 
         return self.RES_OK, ''
 
-    def do_resize(self, cluster, policy_data):
+    def do_resize(self, cluster):
         adj_type = self.inputs.get(consts.ADJUSTMENT_TYPE)
         number = self.inputs.get(consts.ADJUSTMENT_NUMBER)
         min_size = self.inputs.get(consts.ADJUSTMENT_MIN_SIZE)
@@ -475,26 +485,25 @@ class ClusterAction(base.Action):
                 node_list.remove(node_list[r])
                 i = i - 1
 
-            result, reason = self._delete_nodes(cluster, candidates,
-                                                policy_data)
+            result, reason = self._delete_nodes(cluster, candidates)
             if result != self.RES_OK:
                 return result, reason
 
         # Create new nodes if desired_capacity increased
         if desired > current_size:
             delta = desired - current_size
-            result, reason = self._create_nodes(cluster, delta, policy_data)
+            result, reason = self._create_nodes(cluster, delta)
             if result != self.RES_OK:
                 return result, reason
 
         cluster.set_status(self.context, cluster.ACTIVE, reason)
         return self.RES_OK, _('Cluster resize succeeded')
 
-    def do_scale_out(self, cluster, policy_data):
+    def do_scale_out(self, cluster):
         # We use policy output if any, or else the count is
         # set to 1 as default.
         count = 0
-        pd = policy_data.get('creation', None)
+        pd = self.data.get('creation', None)
         if pd is not None:
             count = pd.get('count', 1)
         else:
@@ -515,7 +524,7 @@ class ClusterAction(base.Action):
             return result, reason
 
         # Create new nodes to meet desired_capacity
-        result, reason = self._create_nodes(cluster, count, policy_data)
+        result, reason = self._create_nodes(cluster, count)
 
         if result == self.RES_OK:
             reason = 'Cluster scaling succeeded'
@@ -528,14 +537,14 @@ class ClusterAction(base.Action):
 
         return result, reason
 
-    def do_scale_in(self, cluster, policy_data):
+    def do_scale_in(self, cluster):
         # We use policy output if any, or else the count is
         # set to 1 as default.
-        pd = policy_data.get('deletion', None)
+        pd = self.data.get('deletion', None)
         if pd is not None:
             count = pd.get('count', 1)
             # Try get candidates (set by deletion policy if attached)
-            candidates = policy_data.get('candidates')
+            candidates = self.data.get('candidates')
             if not candidates:
                 candidates = []
         else:
@@ -567,8 +576,7 @@ class ClusterAction(base.Action):
                 i = i - 1
 
         # The policy data may contain destroy flag and grace period option
-        result, new_reason = self._delete_nodes(cluster, candidates,
-                                                policy_data)
+        result, new_reason = self._delete_nodes(cluster, candidates)
 
         if result == self.RES_OK:
             reason = 'Cluster scaling succeeded'
@@ -581,7 +589,7 @@ class ClusterAction(base.Action):
 
         return result, reason
 
-    def do_attach_policy(self, cluster, policy_data):
+    def do_attach_policy(self, cluster):
         '''Attach policy to the cluster.'''
 
         policy_id = self.inputs.get('policy_id', None)
@@ -601,9 +609,12 @@ class ClusterAction(base.Action):
             if curr.type == policy.type:
                 raise exception.PolicyExists(policy_type=policy.type)
 
-        res, data = policy.attach(cluster.id, self, policy_data)
+        res, data = policy.attach(cluster.id, self)
         if not res:
             return self.RES_ERROR, 'Failed attaching policy'
+        if res == self.RES_CANCEL:
+            # Action is canceled during progress, reason is stored in data
+            return res, data
 
         # Initialize data field of cluster_policy object with information
         # generated during policy attaching
@@ -621,22 +632,25 @@ class ClusterAction(base.Action):
         cluster.add_policy(policy)
         return self.RES_OK, 'Policy attached'
 
-    def do_detach_policy(self, cluster, policy_data):
+    def do_detach_policy(self, cluster):
         policy_id = self.inputs.get('policy_id', None)
         if not policy_id:
             raise exception.PolicyNotSpecified()
 
         policy = policy_mod.Policy.load(self.context, policy_id)
-        res = policy.detach(cluster.id, self, policy_data)
+        res, data = policy.detach(cluster.id, self)
         if not res:
             return self.RES_ERROR, 'Failed detaching policy'
+        if res == self.RES_CANCEL:
+            # Action is canceled during progress, reason is stored in data
+            return res, data
 
         db_api.cluster_policy_detach(self.context, cluster.id, policy_id)
 
         cluster.remove_policy(policy)
         return self.RES_OK, 'Policy detached'
 
-    def do_update_policy(self, cluster, policy_data):
+    def do_update_policy(self, cluster):
         policy_id = self.inputs.get('policy_id', None)
         if not policy_id:
             raise exception.PolicyNotSpecified()
@@ -662,9 +676,10 @@ class ClusterAction(base.Action):
 
     def _execute(self, cluster):
         # do pre-action policy checking
-        pd = self.policy_check(cluster.id, 'BEFORE')
-        if pd.status != policy_mod.CHECK_OK:
-            return self.RES_ERROR, _('Policy failure: %s') % pd.reason
+        self.policy_check(cluster.id, 'BEFORE')
+        if self.data['status'] != policy_mod.CHECK_OK:
+            return self.RES_ERROR, _('Policy failure: %s') %\
+                self.data['reason']
 
         result = self.RES_OK
         action_name = self.action.lower()
@@ -673,13 +688,13 @@ class ClusterAction(base.Action):
         if method is None:
             raise exception.ActionNotSupported(action=self.action)
 
-        result, reason = method(cluster, policy_data=pd)
+        result, reason = method(cluster)
 
         # do post-action policy checking
         if result == self.RES_OK:
-            pd = self.policy_check(cluster.id, 'AFTER')
-            if pd.status != policy_mod.CHECK_OK:
-                return self.RES_ERROR, pd.reason
+            self.policy_check(cluster.id, 'AFTER')
+            if self.data['status'] != policy_mod.CHECK_OK:
+                return self.RES_ERROR, self.data['reason']
 
         return result, reason
 
