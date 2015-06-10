@@ -30,7 +30,7 @@ class ThreadGroupManager(object):
 
     def __init__(self):
         super(ThreadGroupManager, self).__init__()
-        self.threads = {}
+        self.workers = {}
         self.group = threadgroup.ThreadGroup()
 
         # Create dummy service task, because when there is nothing queued
@@ -51,7 +51,7 @@ class ThreadGroupManager(object):
         pass
 
     def start(self, func, *args, **kwargs):
-        '''Run the given method in a sub-thread.'''
+        '''Run the given method in a thread.'''
 
         return self.group.add_thread(func, *args, **kwargs)
 
@@ -61,22 +61,21 @@ class ThreadGroupManager(object):
         Release the action lock when the thread finishes?
 
         :param context: The context of rpc request.
-        :param action_id: ID of the action to run in thread.
+        :param action_id: ID of the action to be executed.
+        :param workder_id: ID of the worker thread; we fake workers using
+                           senlin engines at the moment.
         '''
-        def check_and_notify_retry():
+        def release(thread, context, action_id):
+            '''Callback function that will be passed to GreenThread.link().'''
+            # Remove action thread from thread list
+            self.workers.pop(action_id)
             action = action_mod.Action.load(context, action_id)
             # This is for actions with RETRY
             if action.status == action.READY:
                 dispatcher.start_action(context, action_id=action_id)
 
-        def release(gt, context, action_id):
-            '''Callback function that will be passed to GreenThread.link().'''
-            # Remove action thread from thread list
-            self.threads.pop(action_id)
-            check_and_notify_retry()
-
         th = self.start(action_mod.ActionProc, context, action_id, worker_id)
-        self.threads[action_id] = th
+        self.workers[action_id] = th
         th.link(release, context, action_id)
         return th
 
@@ -102,7 +101,7 @@ class ThreadGroupManager(object):
         Interval is from cfg.CONF.periodic_interval
         '''
 
-        self.group.add_timer(cfg.CONF.periodic_interval, func, *args, **kwargs)
+        self.group.add_timer(interval, func, *args, **kwargs)
 
     def stop_timers(self):
         self.group.stop_timers()
@@ -132,20 +131,11 @@ def reschedule(action, sleep_time=1):
 
     :param sleep_time: seconds to sleep; if None, no sleep;
     '''
-
+    # TODO(Qiming): Don't use rich object here!!!
     if sleep_time is not None:
         LOG.debug('Action %s sleep for %s seconds' % (
             action.id, sleep_time))
         eventlet.sleep(sleep_time)
-
-
-def action_wait(action):
-    '''Keep waiting util action resume control flag is set.'''
-
-    # TODO(Yanyan): This may not be correct!!!
-    while not action.is_resumed():
-        reschedule(action, sleep_time=1)
-        continue
 
 
 def sleep(sleep_time):
