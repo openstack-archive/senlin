@@ -342,6 +342,10 @@ def action_create(context, values):
     return IMPL.action_create(context, values)
 
 
+def action_update(context, action_id, values):
+    return IMPL.action_update(context, action_id, values)
+
+
 def action_get(context, action_id):
     return IMPL.action_get(context, action_id)
 

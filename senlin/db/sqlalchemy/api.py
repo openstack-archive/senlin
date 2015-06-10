@@ -1046,6 +1046,16 @@ def action_create(context, values):
     return action
 
 
+def action_update(context, action_id, values):
+    action = action_get(context, action_id)
+
+    if not action:
+        raise exception.ActionNotFound(action=action_id)
+
+    action.update(values)
+    action.save(_session(context))
+
+
 def action_get(context, action_id):
     action = model_query(context, models.Action).get(action_id)
     if action is None:

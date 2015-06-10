@@ -46,6 +46,21 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.assertEqual(10, action.inputs['max_size'])
         self.assertIsNone(action.outputs)
 
+    def test_action_update(self):
+        data = parser.simple_parse(shared.sample_action)
+        action = db_api.action_create(self.ctx, data)
+        values = {
+            'status': 'ERROR',
+            'status_reason': "Cluster creation failed",
+        }
+        db_api.action_update(self.ctx, action.id, values)
+        action = db_api.action_get(self.ctx, action.id)
+        self.assertEqual('ERROR', action.status)
+        self.assertEqual('Cluster creation failed', action.status_reason)
+
+        self.assertRaises(exception.ActionNotFound,
+                          db_api.action_update, self.ctx, 'fake-uuid', values)
+
     def test_action_get(self):
         data = parser.simple_parse(shared.sample_action)
         action = _create_action(self.ctx)
