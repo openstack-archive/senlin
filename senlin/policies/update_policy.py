@@ -19,7 +19,7 @@ NOTE: How update policy works
 Input:
   cluster: the cluste whose nodes are to be updated.
 Output:
-  policy_data: A dictionary containing a detailed update schedule.
+  stored in action.data: A dictionary containing a detailed update schedule.
   {
     'status': 'OK',
     'update': {
@@ -89,11 +89,13 @@ class UpdatePolicy(base.Policy):
         self.max_batch_size = self.spec.get('max_batch_size')
         self.pause_time = self.spec.get('pause_time')
 
-    def pre_op(self, cluster_id, action, policy_data):
+    def pre_op(self, cluster_id, action):
         # TODO(anyone): compute batches
-        policy_data['candidates'] = []
+        action.data['candidates'] = []
+        action.store(action.context)
+
         return True
 
-    def post_op(self, cluster_id, action, policy_data):
+    def post_op(self, cluster_id, action):
         # TODO(anyone): handle pause_time here
         return True

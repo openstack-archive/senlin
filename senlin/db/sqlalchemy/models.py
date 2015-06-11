@@ -296,6 +296,7 @@ class Action(BASE, SenlinBase, SoftDelete):
     created_time = sqlalchemy.Column(sqlalchemy.DateTime)
     updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
     deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
+    data = sqlalchemy.Column(types.Dict)
 
 
 class Event(BASE, SenlinBase, SoftDelete):

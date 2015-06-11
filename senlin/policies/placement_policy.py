@@ -18,12 +18,12 @@ Policy for placing nodes across AZs and/or regions.
 NOTE: How placement policy works
 Input:
   cluster: cluster whose nodes are to be manipulated.
-  policy_data.placement:
+  action.data['placement']:
     - count: number of nodes to create; it can be decision from a scaling
              policy. If no scaling policy is in effect, the count will be
              assumed to be 1.
 Output:
-  policy_data: A dictionary containing scheduling decisions made.
+  stored in action.data: A dictionary containing scheduling decisions made.
   {
     'status': 'OK',
     'placement': {
@@ -70,7 +70,7 @@ class PlacementPolicy(base.Policy):
         self.regions = self.spec.get('regions')
         self.AZs = self.spec.get('AZs')
 
-    def pre_op(self, cluster_id, action, policy_data):
+    def pre_op(self, cluster_id, action):
         '''Call back when new nodes are created for a cluster.'''
         # TODO(anyone): calculate available AZs and or regions
-        return policy_data
+        return

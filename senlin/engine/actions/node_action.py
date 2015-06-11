@@ -99,15 +99,15 @@ class NodeAction(base.Action):
                 if not res:
                     return self.RES_RETRY, 'Failed locking cluster'
 
-            policy_data = self.policy_check(node.cluster_id, 'BEFORE')
-            if policy_data.status != policy_mod.CHECK_OK:
+            self.policy_check(node.cluster_id, 'BEFORE')
+            if self.data['status'] != policy_mod.CHECK_OK:
                 # Don't emit message here since policy_check should have
                 # done it
                 if self.cause == base.CAUSE_RPC:
                     senlin_lock.cluster_lock_release(
                         node.cluster_id, self.id, senlin_lock.NODE_SCOPE)
 
-                return self.RES_ERROR, 'Policy check:' + policy_data.reason
+                return self.RES_ERROR, 'Policy check:' + self.data['reason']
 
         try:
             res = senlin_lock.node_lock_acquire(node.id, self.id, False)
@@ -116,10 +116,10 @@ class NodeAction(base.Action):
             else:
                 res, reason = self._execute(node)
                 if res == self.RES_OK and node.cluster_id is not None:
-                    policy_data = self.policy_check(node.cluster_id, 'AFTER')
-                    if policy_data.status != policy_mod.CHECK_OK:
+                    self.policy_check(node.cluster_id, 'AFTER')
+                    if self.data['status'] != policy_mod.CHECK_OK:
                         res = self.RES_ERROR
-                        reason = 'Policy check:' + policy_data.reason
+                        reason = 'Policy check:' + self.data['reason']
                     else:
                         res = self.RES_OK
         finally:

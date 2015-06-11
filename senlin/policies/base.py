@@ -175,21 +175,21 @@ class Policy(object):
         '''Validate the schema and the data provided.'''
         self.spec_data.validate()
 
-    def attach(self, cluster_id, action, policy_data):
+    def attach(self, cluster_id, action):
         '''Method to be invoked before policy is attached to a cluster.'''
         return True
 
-    def detach(self, cluster_id, action, policy_data):
+    def detach(self, cluster_id, action):
         '''Method to be invoked before policy is detached from a cluster.'''
         return True
 
-    def pre_op(self, cluster_id, action, policy_data):
+    def pre_op(self, cluster_id, action):
         '''A method that will be invoked before an action execution.'''
-        return policy_data
+        return
 
-    def post_op(self, cluster_id, action, policy_data):
+    def post_op(self, cluster_id, action):
         '''A method that will be invoked after an action execution.'''
-        return policy_data
+        return
 
     def to_dict(self):
         def _fmt_time(value):

@@ -172,7 +172,7 @@ class LoadBalancingPolicy(base.Policy):
         self.pool_need_delete = True
         self.vip_need_delete = True
 
-    def attach(self, cluster_id, action, policy_data):
+    def attach(self, cluster_id, action):
         pool_id = self.pool_spec.get('pool')
         if pool_id is not None:
             self.pool = neutron.get_pool(pool_id)
@@ -191,7 +191,7 @@ class LoadBalancingPolicy(base.Policy):
 
         return True
 
-    def detach(self, cluster_id, action, policy_data):
+    def detach(self, cluster_id, action):
         if self.vip_need_delete:
             neutron.delete_vip(self.vip)
         if self.pool_need_delete:
@@ -199,21 +199,21 @@ class LoadBalancingPolicy(base.Policy):
 
         return True
 
-    def pre_op(self, cluster_id, action, policy_data):
+    def pre_op(self, cluster_id, action):
         if action not in (consts.CLUSTER_DEL_NODES, consts.CLUSTER_SCALE_IN):
-            return policy_data
-        nodes = policy_data.get('nodes', [])
+            return
+        nodes = action.data.get('nodes', [])
         for node in nodes:
             member_id = node.data.get('lb_member')
             neutron.delete_member(member_id)
 
-        return policy_data
+        return
 
-    def post_op(self, cluster_id, action, policy_data):
+    def post_op(self, cluster_id, action):
         if action not in (consts.CLUSTER_ADD_NODES, consts.CLUSTER_SCALE_OUT):
-            return policy_data
+            return
 
-        nodes = policy_data.get('nodes', [])
+        nodes = action.data.get('nodes', [])
         for node in nodes:
             params = {
                 'pool_id': self.pool,
@@ -224,4 +224,4 @@ class LoadBalancingPolicy(base.Policy):
             member = neutron.create_member({'member': params})['member']
             node.data.update('lb_member', member['id'])
 
-        return policy_data
+        return
