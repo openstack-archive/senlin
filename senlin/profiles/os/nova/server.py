@@ -204,7 +204,7 @@ class ServerProfile(base.Profile):
             kwargs['imageRef'] = image.id
 
         if self.FLAVOR in self.spec_data:
-            flavor = self.nova(obj).flavor_get(id=self.spec_data[self.FLAVOR])
+            flavor = self.nova(obj).flavor_get(self.spec_data[self.FLAVOR])
             # wait for new verson of openstacksdk to fix this
             kwargs.pop(self.FLAVOR)
             kwargs['flavorRef'] = flavor.id
@@ -230,7 +230,7 @@ class ServerProfile(base.Profile):
             return True
 
         try:
-            self.nova(obj).server_delete(id=self.server_id)
+            self.nova(obj).server_delete(self.server_id)
         except Exception as ex:
             LOG.error('error: %s' % six.text_type(ex))
             raise ex
@@ -261,7 +261,7 @@ class ServerProfile(base.Profile):
         if obj.physical_id is None or obj.physical_id == '':
             return {}
 
-        server = self.nova(obj).server_get(id=obj.physical_id)
+        server = self.nova(obj).server_get(obj.physical_id)
         if server is None:
             return {}
         details = {

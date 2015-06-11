@@ -15,7 +15,6 @@ import time
 from oslo_config import cfg
 from oslo_log import log
 
-from openstack.compute.v2 import server_ip
 from openstack.compute.v2 import server_metadata
 
 from senlin.common import exception
@@ -39,62 +38,61 @@ class NovaClient(base.DriverBase):
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def flavor_get(self, **params):
+    def flavor_get(self, flavor_id):
         try:
-            return self.conn.compute.get_flavor(**params)
+            return self.conn.compute.get_flavor(flavor_id)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def flavor_get_by_name(self, name):
+    def flavor_get_by_name(self, flavor_name):
         try:
-            return self.conn.compute.find_flavor(name_or_id=name)
+            return self.conn.compute.find_flavor(flavor_name)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def flavor_list(self, details=False, **params):
+    def flavor_list(self, details=False, **query):
         try:
-            return self.conn.compute.list_flavors(details=details, **params)
+            return self.conn.compute.flavors(details=details, **query)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def flavor_update(self, flavor):
-        # flavor here can be the ID of flavor or flavor class
+    def flavor_update(self, flavor_id, **params):
         try:
-            return self.conn.compute.update_flavor(value=flavor)
+            return self.conn.compute.update_flavor(flavor_id, **params)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def flavor_delete(self, **params):
+    def flavor_delete(self, flavor_id):
         try:
-            self.conn.compute.delete_flavor(**params)
+            self.conn.compute.delete_flavor(flavor_id, ignore_missing=True)
         except sdk.exc.HttpException as ex:
-            sdk.ignore_not_found(ex)
+            raise ex
 
     def image_create(self, **params):
         raise NotImplemented
 
-    def image_get(self, **params):
+    def image_get(self, image_id):
         try:
-            return self.conn.compute.get_image(**params)
+            return self.conn.compute.get_image(image_id)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def image_get_by_name(self, name):
+    def image_get_by_name(self, image_name):
         try:
-            return self.conn.compute.find_image(name_or_id=name)
+            return self.conn.compute.find_image(image_name)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def image_list(self, details=False):
+    def image_list(self, details=False, **query):
         try:
-            return self.conn.compute.list_images(details=details)
+            return self.conn.compute.images(details=details, **query)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def image_delete(self, image):
-        # image here can be a ID of image or a image class
+    def image_delete(self, image_id):
         try:
-            return self.conn.compute.delete_image(value=image)
+            return self.conn.compute.delete_image(image_id,
+                                                  ignore_missing=True)
         except sdk.exc.HttpException as ex:
             raise ex
 
@@ -104,30 +102,35 @@ class NovaClient(base.DriverBase):
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def keypair_get(self, **params):
+    def keypair_get(self, keypair_id):
         try:
-            return self.conn.compute.get_keypair(**params)
+            return self.conn.compute.get_keypair(keypair_id)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def keypair_list(self, **params):
+    def keypair_get_by_name(self, keypair_name):
         try:
-            return self.conn.compute.list_keypairs(**params)
+            return self.conn.compute.find_keypair(keypair_name)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def keypair_update(self, **params):
+    def keypair_list(self, details=False, **query):
         try:
-            return self.conn.compute.update_keypair(**params)
+            return self.conn.compute.keypairs(details=details, **query)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def keypair_delete(self, keypair):
-        # keypair here can be the ID of keypair or a keypair class
+    def keypair_update(self, keypair_id, **params):
         try:
-            self.conn.compute.delete_keypair(value=keypair)
+            return self.conn.compute.update_keypair(keypair_id, **params)
         except sdk.exc.HttpException as ex:
-            sdk.ignore_not_found(ex)
+            raise ex
+
+    def keypair_delete(self, keypair_id):
+        try:
+            self.conn.compute.delete_keypair(keypair_id, ignore_missing=True)
+        except sdk.exc.HttpException as ex:
+            raise ex
 
     def server_create(self, **params):
         timeout = cfg.CONF.default_action_timeout
@@ -141,9 +144,7 @@ class NovaClient(base.DriverBase):
             raise ex
 
         try:
-            # wait for new version of openstacksdk to fix this,
-            # then use self.conn.compute.wait_for_status() instead
-            server_obj.wait_for_status(self.session, wait=timeout)
+            self.conn.compute.wait_for_server(server_obj, wait=timeout)
         except sdk.exc.ResourceFailure as ex:
             raise exception.ProfileOperationFailed(ex.message)
         except sdk.exc.ResourceTimeout as ex:
@@ -151,39 +152,36 @@ class NovaClient(base.DriverBase):
 
         return server_obj
 
-    def server_get(self, **params):
+    def server_get(self, server_id):
         try:
-            return self.conn.compute.get_server(**params)
+            return self.conn.compute.get_server(server_id)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def server_list(self, details=False):
+    def server_list(self, details=False, **query):
         try:
-            return self.conn.compute.list_servers(details=details)
+            return self.conn.compute.servers(details=details, **query)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def server_update(self, **params):
+    def server_update(self, server_id, **params):
         try:
-            return self.conn.compute.update_server(**params)
+            return self.conn.compute.update_server(server_id, **params)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def server_delete(self, **params):
+    def server_delete(self, server_id):
         timeout = cfg.CONF.default_action_timeout
-        if 'timeout' in params:
-            timeout = params.pop('timeout')
 
         try:
-            self.conn.compute.delete_server(**params)
+            self.conn.compute.delete_server(server_id, ignore_missing=True)
         except sdk.exc.HttpException as ex:
-            sdk.ignore_not_found(ex)
-            return
+            raise ex
 
         total_sleep = 0
         while total_sleep < timeout:
             try:
-                self.server_get(**params)
+                self.server_get(server_id)
             except Exception as ex:
                 sdk.ignore_not_found(ex)
                 return
@@ -199,33 +197,35 @@ class NovaClient(base.DriverBase):
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def server_interface_get(self, **params):
+    def server_interface_get(self, interface_id):
         try:
-            return self.conn.compute.get_server_interface(**params)
+            return self.conn.compute.get_server_interface(interface_id)
         except sdk.exc.HttpException as ex:
             raise ex
 
     def server_interface_list(self):
         try:
-            return self.conn.compute.list_server_interfaces()
+            return self.conn.compute.server_interfaces()
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def server_interface_update(self, **params):
+    def server_interface_update(self, interface_id, **params):
         try:
-            return self.conn.compute.update_server_interface(**params)
+            return self.conn.compute.update_server_interface(interface_id,
+                                                             **params)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def server_interface_delete(self, interface):
+    def server_interface_delete(self, interface_id):
         try:
-            self.conn.compute.delete_server_interface(value=interface)
+            self.conn.compute.delete_server_interface(interface_id,
+                                                      ignore_missing=True)
         except sdk.exc.HttpException as ex:
-            sdk.ignore_not_found(ex)
+            raise ex
 
     def server_ip_list(self, **params):
         try:
-            return server_ip.ServerIP.list(self.session, **params)
+            return self.conn.compute.server_ips()
         except sdk.exc.HttpException as ex:
             raise ex
 
