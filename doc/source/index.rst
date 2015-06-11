@@ -63,10 +63,12 @@ Developers Documentation
    :maxdepth: 2
 
    developer/authorization
-   developer/plugin_guide
    developer/profile_type
-   developer/testing
+   developer/cluster
+   developer/node
    developer/webhook
+   developer/testing
+   developer/plugin_guide
 
 API Documentation
 ========================
