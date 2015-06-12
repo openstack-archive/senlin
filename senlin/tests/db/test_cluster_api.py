@@ -332,7 +332,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
 
     def test_cluster_get_all_non_existing_marker(self):
         [shared.create_cluster(self.ctx, self.profile) for x in range(3)]
-        uuid = 'this cluster doesnt exist'
+        uuid = "this cluster doesn't exist"
         st_db = db_api.cluster_get_all(self.ctx, marker=uuid)
         self.assertEqual(3, len(st_db))
 

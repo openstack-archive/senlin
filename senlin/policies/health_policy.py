@@ -126,8 +126,8 @@ class HealthPolicy(base.Policy):
         '''
         cluster = cluster_mod.Cluster.load(action.context,
                                            cluster_id=cluster_id)
-        cluster.heathy_check_enable()
-        cluster.heathy_check_set_interval(self.interval)
+        cluster.healthy_check_enable()
+        cluster.healthy_check_set_interval(self.interval)
 
         return True
 
@@ -138,7 +138,7 @@ class HealthPolicy(base.Policy):
         '''
         cluster = cluster_mod.Cluster.load(action.context,
                                            cluster_id=cluster_id)
-        cluster.heathy_check_disable()
+        cluster.healthy_check_disable()
         return True
 
     def pre_op(self, cluster_id, action, **args):

@@ -301,13 +301,13 @@ class Cluster(periodic_task.PeriodicTasks):
             if(p.id == policy.id):
                 self.rt['policies'].remove(policy)
 
-    def heathy_check_enable(self):
+    def healthy_check_enable(self):
         self.detect_enabled = True
 
-    def heathy_check_disable(self):
+    def healthy_check_disable(self):
         self.detect_enabled = False
 
-    def heathy_check_set_interval(self, policy_interval):
+    def healthy_check_set_interval(self, policy_interval):
         detection_interval = (policy_interval +
                               CONF.periodic_interval_max)
 
@@ -315,7 +315,7 @@ class Cluster(periodic_task.PeriodicTasks):
                                   CONF.periodic_interval_max)
 
     @periodic_task.periodic_task
-    def heathy_check(self):
+    def healthy_check(self):
         if(not self.detect_enabled):
             return
 

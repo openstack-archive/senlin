@@ -174,7 +174,7 @@ Support to Scheduled Actions
 
 This is a request to trigger some actions at a specified time. One typical use
 case is to scale up a cluster before weekend or promotion season as a
-preparation for the comming burst of workloads.
+preparation for the coming burst of workloads.
 
 
 Interaction with Congress

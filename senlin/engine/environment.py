@@ -142,7 +142,7 @@ class Environment(object):
         return self.policy_registry.get_types()
 
     def read_global_environment(self):
-        '''Read and parse global enviroment files.'''
+        '''Read and parse global environment files.'''
 
         cfg.CONF.import_opt('environment_dir', 'senlin.common.config')
         env_dir = cfg.CONF.environment_dir

@@ -91,7 +91,7 @@ def url_fetch(url, allowed_schemes=('http', 'https')):
         # We cannot use resp.text here because it would download the entire
         # file, and a large enough file would bring down the engine.  The
         # 'Content-Length' header could be faked, so it's necessary to
-        # download the content in chunks to until max_reponse_size is reached.
+        # download the content in chunks to until max_response_size is reached.
         # The chunk_size we use needs to balance CPU-intensive string
         # concatenation with accuracy (eg. it's possible to fetch 1000 bytes
         # greater than max_response_size with a chunk_size of 1000).

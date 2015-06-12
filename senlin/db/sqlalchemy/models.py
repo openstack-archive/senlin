@@ -193,7 +193,7 @@ class Policy(BASE, SenlinBase, SoftDelete):
 
 
 class ClusterPolicies(BASE, SenlinBase):
-    '''Association betwen clusters and policies.'''
+    '''Association between clusters and policies.'''
 
     __tablename__ = 'cluster_policy'
 
