@@ -793,6 +793,13 @@ class EngineService(service.Service):
     @request_context
     def cluster_delete(self, context, identity):
         cluster = self.cluster_find(context, identity)
+
+        policies = db_api.cluster_policy_get_all(context, cluster.id)
+        if len(policies) > 0:
+            msg = _('Cluster %(id)s is not allowed to be deleted without '
+                    'detaching all policies.') % {'id': cluster.id}
+            raise exception.SenlinBadRequest(msg=msg)
+
         LOG.info(_LI('Deleting cluster %s'), cluster.name)
 
         action = action_mod.Action(context, 'CLUSTER_DELETE',

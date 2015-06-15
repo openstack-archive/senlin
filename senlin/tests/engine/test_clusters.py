@@ -615,6 +615,20 @@ class ClusterTest(base.SenlinTestCase):
         # two calls: one for create, the other for delete
         notify.assert_has_calls([expected_call] * 2)
 
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_delete_policy_attached(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cid = c['id']
+        db_api.cluster_policy_attach(self.ctx, cid, self.policy['id'], {})
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_delete, self.ctx, cid)
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(_('The request is malformed: Cluster %(id)s is not '
+                           'allowed to be deleted without detaching all '
+                           'policies.') % {'id': cid},
+                         six.text_type(ex.exc_info[1]))
+
     def test_cluster_delete_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_delete, self.ctx, 'Bogus')
