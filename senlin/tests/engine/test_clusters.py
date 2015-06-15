@@ -473,11 +473,17 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(cid, c['id'])
         self.assertEqual(p['id'], c['parent'])
 
-        # 3. update metadata
+        # 3.1 update metadata
         self.eng.cluster_update(self.ctx, cid, metadata={'k': 'v'})
         c = self.eng.cluster_get(self.ctx, cid)
         self.assertEqual(cid, c['id'])
         self.assertEqual({'k': 'v'}, c['metadata'])
+
+        # 3.2 update existing metadata
+        self.eng.cluster_update(self.ctx, cid, metadata={'k': 'v1'})
+        c = self.eng.cluster_get(self.ctx, cid)
+        self.assertEqual(cid, c['id'])
+        self.assertEqual({'k': 'v1'}, c['metadata'])
 
         # 4. update timeout
         self.eng.cluster_update(self.ctx, cid, timeout=119)
