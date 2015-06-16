@@ -54,6 +54,7 @@ class FaultWrapper(wsgi.Middleware):
         'Forbidden': webob.exc.HTTPForbidden,
         'InvalidParameter': webob.exc.HTTPBadRequest,
         'InvalidSchemaError': webob.exc.HTTPBadRequest,
+        'MultipleChoices': webob.exc.HTTPBadRequest,
         'NodeNotFound': webob.exc.HTTPNotFound,
         'NotSupported': webob.exc.HTTPBadRequest,
         'PolicyInUse': webob.exc.HTTPBadRequest,
