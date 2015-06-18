@@ -270,15 +270,16 @@ class ServerProfile(base.Profile):
             'access_ipv4': server.access_ipv4,
             'access_ipv6': server.access_ipv6,
             'addresses': server.addresses,
-            'created': server.created,
+            'created_at': server.created_at,
             'flavor': server.flavor,
             'host_id': server.host_id,
             'image': server.image,
             'links': server.links,
             'metadata': server.metadata,
+            'progress': server.progress,
             'project_id': server.project_id,
             'status': server.status,
-            'updated': server.updated,
+            'updated_at': server.updated_at,
             'user_id': server.user_id,
         }
 
