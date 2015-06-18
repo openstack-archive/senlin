@@ -5,17 +5,20 @@ HIGH PRIORITY
 ENGINE
 ------
   - cleanse scheduler module [Yanyan Hu]
+  - Node 'role' update may need to be propagated to the profile layer, because
+    the profile may use it for changing the underlying physical object, e.g.
+    the nova server that backs the node.
 
 DRIVER
 ------
-  - Handle Heat stack operation exception handling [Qiming]
+  - Handle Heat stack operation exceptions [Qiming]
 
 POLICY
 ------
-  - healthy policy[Liuh]
   - Formalize policy enforcement levels [Qiming]
   - Enable placement policy and deletion policy to handle CLUSTER_RESIZE
     action.
+  - Investigate the impact of node-create and node-delete on certain policies.
 
 TEST CASES
 ----------
@@ -28,6 +31,8 @@ API
 ---
   - Revise the API for sorting, based on the following guideline:
     https://github.com/openstack/api-wg/blob/master/guidelines/pagination_filter_sort.rst
+  - According to the guidelines from API WG, we need to support `page_reverse`
+    as a pagination parameter. https://review.openstack.org/190743
   - Add support to replace a cluster node with another node
   - Make object creation requests return code 202, since most creation
     are done asynchronously in Senlin.
@@ -37,13 +42,20 @@ API
     WG.
   - Add API doc for CLUSTER_RESIZE operation.
   - Add API doc for webhook APIs operation.
+  - Add support to have Senlin API run under Apache.
 
 DB
 --
   - Add test cases for policy_delete with 'force' set to True[Liuh/ZhaiHF]
+  - The action data model is missing 'scheduled_start' and 'scheduled_stop'
+    fields, we will need these fields for scheduled action execution.
 
 ENGINE
 ------
+  - Add configuration option to enforce name uniqueness. There are reasonable
+    requirements for cluster/node names to be unique within a project. This
+    should be supported, maybe with the help from a name generator?
+
   - Revise spec parser so that 'type' and 'version' are parts of the spec file
     This could be a client-only fix, or a client/server fix.
 
@@ -65,6 +77,9 @@ ENGINE
     action_id specified is None. When ``action_id`` parameter is None, it
     means that the scheduler will pick a suitable READY action for execution.
 
+  - Add event logs wherever needed. Before that, we need a design on the
+    criteria for events to be emitted.
+
 OSLO
 ----
   - Add support to oslo_versionedobjects
@@ -73,6 +88,7 @@ OSLO
 POLICY
 ------
   - Scaling policy allowng a cluster to scale to existing nodes
+  - Healthy policy[Liuh]
 
 DRIVER
 ------
@@ -84,6 +100,13 @@ DRIVER
 
 LOW PRIORITY
 ============
+
+API
+---
+
+  - Allow forced deletion of objects (cluster, node, policy, profile). The
+    current problem is due to the limitations of the HTTP DELETE requests. We
+    need to investigate whether a DELETE verb can carry query strings.
 
 DRIVER
 ------
