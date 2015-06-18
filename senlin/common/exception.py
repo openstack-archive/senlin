@@ -252,18 +252,6 @@ class ActionInProgress(SenlinException):
                 "in progress.")
 
 
-class ActionIsOwned(SenlinException):
-    msg_fmt = _("Worker %(owner)s is working on this action.")
-
-
-class ActionIsStolen(SenlinException):
-    msg_fmt = _("Worker %(owner)s has stolen the action.")
-
-
-class ActionBeingWorked(SenlinException):
-    msg_fmt = _("Worker %(owner)s is working on this action.")
-
-
 class EventNotFound(SenlinException):
     msg_fmt = _("The event (%(event)s) could not be found.")
 
