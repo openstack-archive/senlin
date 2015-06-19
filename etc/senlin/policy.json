@@ -40,5 +40,10 @@
     "actions:index": "rule:admin_or_owner",
     "actions:get": "rule:admin_or_owner",
     "events:index": "rule:admin_or_owner",
-    "events:get": "rule:admin_or_owner"
+    "events:get": "rule:admin_or_owner",
+    "webhooks:create": "",
+    "webhooks:index": "rule:admin_or_owner",
+    "webhooks:get": "rule:admin_or_owner",
+    "webhooks:trigger": "",
+    "webhooks:delete": "rule:admin_or_owner"
 }
