@@ -64,8 +64,10 @@ Developers Documentation
 
    developer/authorization
    developer/profile_type
+   developer/profile
    developer/cluster
    developer/node
+   developer/action
    developer/webhook
    developer/testing
    developer/plugin_guide

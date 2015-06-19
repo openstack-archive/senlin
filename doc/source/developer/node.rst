@@ -154,7 +154,7 @@ Getting A Node
 --------------
 
 When a user wants to check the details about a specific node, he or she can
-specify one of the following keys for query:
+specify one of the following values for query:
 
 - Node UUID: Query is performed strictly based on the UUID value given. This
   is the most precise query supported.
