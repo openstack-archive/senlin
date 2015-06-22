@@ -21,7 +21,6 @@ from oslo_messaging._drivers import common as rpc_common
 
 import senlin.api.middleware.fault as fault
 from senlin.common import exception as senlin_exc
-from senlin.common.i18n import _
 from senlin.tests.common import base
 
 
@@ -169,11 +168,6 @@ class FaultMiddlewareTest(base.SenlinTestCase):
                     error = obj('Error')
                 elif obj == senlin_exc.NodeNotFound:
                     error = obj()
-                elif obj == senlin_exc.ResourceFailure:
-                    exc = senlin_exc.Error(_('Error'))
-                    error = obj(exc, None, 'CREATE')
-                elif obj == senlin_exc.ResourcePropertyConflict:
-                    error = obj('%s' % 'a test prop')
                 else:
                     continue
                 self.remote_exception_helper(name, error)

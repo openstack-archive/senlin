@@ -712,7 +712,8 @@ def policy_delete(context, policy_id, force=False):
     query = model_query(context, models.ClusterPolicies)
     bindings = query.filter_by(policy_id=policy_id)
     if bindings.count():
-        raise exception.PolicyInUse(policy=policy_id)
+        raise exception.ResourceBusyError(resource_type='policy',
+                                          resource_id=policy_id)
 
     session = orm_session.Session.object_session(policy)
 

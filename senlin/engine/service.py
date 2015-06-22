@@ -366,7 +366,11 @@ class EngineService(service.Service):
     def policy_delete(self, context, identity):
         db_policy = self.policy_find(context, identity)
         LOG.info(_LI('Delete policy: %s'), identity)
-        policy_base.Policy.delete(context, db_policy.id)
+        try:
+            policy_base.Policy.delete(context, db_policy.id)
+        except exception.ResourceBusyError:
+            raise exception.ResourceInUse(resource_type='policy',
+                                          resource_id=db_policy.id)
         return None
 
     @request_context
