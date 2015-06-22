@@ -10,7 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import collections
 import datetime
 
 from senlin.common import exception
@@ -23,46 +22,6 @@ CHECK_RESULTS = (
 ) = (
     'OK', 'ERROR'
 )
-
-
-class PolicyData(collections.Mapping):
-    '''An object wrapping the policy check result.'''
-
-    def __init__(self, status=CHECK_OK, reason='Check succeeded'):
-        self.status = status
-        self.reason = reason
-        self.data = {}
-
-    def __setitem__(self, key, value):
-        self.data[key] = value
-
-    def __getitem__(self, key):
-        return self.data.get(key, None)
-
-    def __len__(self):
-        return len(self.data)
-
-    def __contains__(self, key):
-        return key in self.data
-
-    def __iter__(self):
-        return iter(self.data)
-
-    def update(self, newdata):
-        return self.data.update(newdata)
-
-    def __repr__(self):
-        return ("Check Result: %s (%s)\n\t" % (self.status, self.reason) +
-                "\n\t".join(self.data.values()))
-
-    def to_dict(self):
-        result = {
-            'status': self.status,
-            'reason': self.reason,
-            'data': self.data,
-        }
-
-        return result
 
 
 class Policy(object):
