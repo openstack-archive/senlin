@@ -27,12 +27,6 @@ CHECK_RESULTS = (
 class Policy(object):
     '''Base class for policies.'''
 
-    ENFORCEMENT_LEVELS = (
-        CRITICAL, ERROR, WARNING, INFO, DEBUG,
-    ) = (
-        'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG',
-    )
-
     def __new__(cls, type_name, name, **kwargs):
         '''Create a new policy of the appropriate class.'''
 
@@ -48,7 +42,8 @@ class Policy(object):
         self.type = type_name
 
         self.id = kwargs.get('id', None)
-        self.level = kwargs.get('level', self.DEBUG)
+        # TODO(Qiming): make this default level a WOULD?
+        self.level = kwargs.get('level', 0)
         self.cooldown = kwargs.get('cooldown', 0)
         self.spec = kwargs.get('spec', {})
         self.context = kwargs.get('context', {})
