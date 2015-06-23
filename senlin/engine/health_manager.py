@@ -21,11 +21,10 @@ health policies.
 from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
+from oslo_service import service
 
 from senlin.common import consts
 from senlin.common import messaging as rpc_messaging
-from senlin.openstack.common import periodic_task
-from senlin.openstack.common import service
 
 health_mgr_opts = [
     cfg.IntOpt('periodic_interval_max',
@@ -47,7 +46,7 @@ CONF.register_opts(health_mgr_opts)
 LOG = logging.getLogger(__name__)
 
 
-class Health_Manager(service.Service, periodic_task.PeriodicTasks):
+class Health_Manager(service.Service):
 
     def __init__(self, engine_service, topic, version, thread_group_mgr):
         super(Health_Manager, self).__init__()

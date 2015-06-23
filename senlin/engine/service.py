@@ -16,6 +16,7 @@ import functools
 from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
+from oslo_service import service
 from oslo_utils import uuidutils
 import six
 
@@ -38,7 +39,6 @@ from senlin.engine import health_manager
 from senlin.engine import node as node_mod
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock
-from senlin.openstack.common import service
 from senlin.policies import base as policy_base
 from senlin.profiles import base as profile_base
 from senlin.webhooks import webhooks as webhook_mod

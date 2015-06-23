@@ -12,6 +12,7 @@
 
 from oslo_config import cfg
 from oslo_log import log as logging
+from oslo_service import periodic_task
 from oslo_utils import timeutils
 
 from senlin.common import exception
@@ -19,7 +20,6 @@ from senlin.common.i18n import _LE
 from senlin.db import api as db_api
 from senlin.engine import event as event_mod
 from senlin.engine import node as node_mod
-from senlin.openstack.common import periodic_task
 from senlin.profiles import base as profiles_base
 
 LOG = logging.getLogger(__name__)

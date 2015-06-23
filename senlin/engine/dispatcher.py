@@ -12,11 +12,11 @@
 
 from oslo_log import log as logging
 import oslo_messaging
+from oslo_service import service
 
 from senlin.common import consts
 from senlin.common.i18n import _LI
 from senlin.common import messaging as rpc_messaging
-from senlin.openstack.common import service
 
 LOG = logging.getLogger(__name__)
 
