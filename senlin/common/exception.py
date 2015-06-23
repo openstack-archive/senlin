@@ -195,10 +195,6 @@ class PolicyExists(SenlinException):
     msg_fmt = _("The policy type (%(policy_type)s) already exists.")
 
 
-class PolicyInUse(SenlinException):
-    msg_fmt = _("The policy (%(policy)s) is still attached to cluster(s).")
-
-
 class PolicyNotAttached(SenlinException):
     msg_fmt = _("The policy (%(policy)s) is not attached to the specified "
                 "cluster (%(cluster)s).")
@@ -221,6 +217,25 @@ class Error(SenlinException):
 
     def __init__(self, msg):
         super(Error, self).__init__(message=msg)
+
+
+class InternalError(SenlinException):
+    '''A base class for internal exceptions in senlin.
+
+    The internal exception classes which inherit from InternalError
+    class should be translated to a user facing exception.
+    '''
+
+    def __init__(self, **kwargs):
+        super(InternalError, self).__init__(**kwargs)
+
+
+class ResourceBusyError(InternalError):
+    msg_fmt = _("%(resource_type)s (%(resource_id)s) is busy now.")
+
+
+class ResourceInUse(SenlinException):
+    msg_fmt = _("%(resource_type)s (%(resource_id)s) is in use now.")
 
 
 class InvalidContentType(SenlinException):
