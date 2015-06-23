@@ -198,18 +198,18 @@ class EngineService(service.Service):
         return [p.to_dict() for p in profiles]
 
     @request_context
-    def profile_create(self, context, name, type, spec, perm=None,
+    def profile_create(self, context, name, profile_type, spec, perm=None,
                        metadata=None):
         LOG.info(_LI('Creating profile %(type)s: %(name)s'),
-                 {'type': type, 'name': name})
-        plugin = environment.global_env().get_profile(type)
+                 {'type': profile_type, 'name': name})
+        plugin = environment.global_env().get_profile(profile_type)
 
         kwargs = {
             'spec': spec,
             'permission': perm,
             'metadata': metadata,
         }
-        profile = plugin(context, type, name, **kwargs)
+        profile = plugin(context, profile_type, name, **kwargs)
         profile.validate()
         profile.store(context)
         return profile.to_dict()
@@ -312,21 +312,21 @@ class EngineService(service.Service):
         return [p.to_dict() for p in policies]
 
     @request_context
-    def policy_create(self, context, name, type, spec, level=None,
+    def policy_create(self, context, name, policy_type, spec, level=None,
                       cooldown=None):
         level = utils.parse_int_param('level', level)
         cooldown = utils.parse_int_param('cooldown', cooldown)
-        plugin = environment.global_env().get_policy(type)
+        plugin = environment.global_env().get_policy(policy_type)
 
         LOG.info(_LI('Creating policy %(type)s: %(name)s'),
-                 {'type': type, 'name': name})
+                 {'type': policy_type, 'name': name})
 
         kwargs = {
             'spec': spec,
             'level': level,
             'cooldown': cooldown,
         }
-        policy = plugin(type, name, **kwargs)
+        policy = plugin(policy_type, name, **kwargs)
         policy.validate()
         policy.store(context)
         return policy.to_dict()
