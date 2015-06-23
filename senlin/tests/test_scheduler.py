@@ -13,10 +13,10 @@
 import eventlet
 import mock
 from oslo_config import cfg
+from oslo_service import threadgroup
 
 from senlin.engine.actions import base as actionm
 from senlin.engine import scheduler
-from senlin.openstack.common import threadgroup
 from senlin.tests.common import base
 from senlin.tests.common import utils
 

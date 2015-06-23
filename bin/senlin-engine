@@ -33,10 +33,10 @@ if os.path.exists(os.path.join(POSSIBLE_TOPDIR, 'senlin', '__init__.py')):
 from oslo_config import cfg
 from oslo_i18n import _lazy
 from oslo_log import log as logging
+from oslo_service import service
 
 from senlin.common import consts
 from senlin.common import messaging
-from senlin.openstack.common import service
 
 _lazy.enable_lazy()
 
@@ -52,7 +52,8 @@ if __name__ == '__main__':
     from senlin.engine import service as engine
 
     srv = engine.EngineService(cfg.CONF.host, consts.ENGINE_TOPIC)
-    launcher = service.launch(srv, workers=cfg.CONF.num_engine_workers)
+    launcher = service.launch(cfg.CONF, srv,
+                              workers=cfg.CONF.num_engine_workers)
     # the following periodic tasks are intended serve as HA checking
     # srv.create_periodic_tasks()
     launcher.wait()
