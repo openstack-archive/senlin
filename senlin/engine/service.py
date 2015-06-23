@@ -260,7 +260,11 @@ class EngineService(service.Service):
     def profile_delete(self, context, identity):
         db_profile = self.profile_find(context, identity)
         LOG.info(_LI('Deleting profile: %s'), identity)
-        profile_base.Profile.delete(context, db_profile.id)
+        try:
+            profile_base.Profile.delete(context, db_profile.id)
+        except exception.ResourceBusyError:
+            raise exception.ResourceInUse(resource_type='profile',
+                                          resource_id=db_profile.id)
         return None
 
     @request_context

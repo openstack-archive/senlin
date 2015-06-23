@@ -155,10 +155,6 @@ class ProfileNotFound(SenlinException):
     msg_fmt = _("The profile (%(profile)s) could not be found.")
 
 
-class ProfileInUse(SenlinException):
-    msg_fmt = _("The profile (%(profile)s) is still in use.")
-
-
 class ProfileNotSpecified(SenlinException):
     msg_fmt = _("Profile not specified.")
 
@@ -231,7 +227,7 @@ class InternalError(SenlinException):
 
 
 class ResourceBusyError(InternalError):
-    msg_fmt = _("%(resource_type)s (%(resource_id)s) is busy now.")
+    msg_fmt = _("The %(resource_type)s (%(resource_id)s) is busy now.")
 
 
 class PolicyNotAttached(InternalError):
@@ -240,7 +236,7 @@ class PolicyNotAttached(InternalError):
 
 
 class ResourceInUse(SenlinException):
-    msg_fmt = _("%(resource_type)s (%(resource_id)s) is in use now.")
+    msg_fmt = _("The %(resource_type)s (%(resource_id)s) is still in use.")
 
 
 class InvalidContentType(SenlinException):

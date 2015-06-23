@@ -857,13 +857,15 @@ def profile_delete(context, profile_id, force=False):
     query = model_query(context, models.Cluster)
     clusters = query.filter_by(profile_id=profile_id, deleted_time=None)
     if clusters.count() > 0:
-        raise exception.ProfileInUse(profile=profile_id)
+        raise exception.ResourceBusyError(resource_type='profile',
+                                          resource_id=profile_id)
 
     # used by any nodes?
     query = model_query(context, models.Node)
     nodes = query.filter_by(profile_id=profile_id, deleted_time=None)
     if nodes.count() > 0:
-        raise exception.ProfileInUse(profile=profile_id)
+        raise exception.ResourceBusyError(resource_type='profile',
+                                          resource_id=profile_id)
 
     session = orm_session.Session.object_session(profile)
 
