@@ -196,8 +196,8 @@ class PolicyBindingNotFound(SenlinException):
                 "specified cluster (%(identity)s).")
 
 
-class PolicyExists(SenlinException):
-    msg_fmt = _("The policy type (%(policy_type)s) already exists.")
+class PolicyTypeConflict(SenlinException):
+    msg_fmt = _("The policy with type (%(policy_type)s) already exists.")
 
 
 class InvalidSchemaError(SenlinException):

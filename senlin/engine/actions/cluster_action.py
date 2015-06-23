@@ -607,7 +607,7 @@ class ClusterAction(base.Action):
             # Detect policy type conflicts
             curr = policy_mod.Policy.load(self.context, existing.policy_id)
             if curr.type == policy.type:
-                raise exception.PolicyExists(policy_type=policy.type)
+                raise exception.PolicyTypeConflict(policy_type=policy.type)
 
         res, data = policy.attach(cluster.id, self)
         if not res:
