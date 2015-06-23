@@ -191,13 +191,13 @@ class PolicyNotFound(SenlinException):
     msg_fmt = _("The policy (%(policy)s) could not be found.")
 
 
+class PolicyBindingNotFound(SenlinException):
+    msg_fmt = _("The policy (%(policy)s) is not found attached to the "
+                "specified cluster (%(identity)s).")
+
+
 class PolicyExists(SenlinException):
     msg_fmt = _("The policy type (%(policy_type)s) already exists.")
-
-
-class PolicyNotAttached(SenlinException):
-    msg_fmt = _("The policy (%(policy)s) is not attached to the specified "
-                "cluster (%(cluster)s).")
 
 
 class InvalidSchemaError(SenlinException):
@@ -232,6 +232,11 @@ class InternalError(SenlinException):
 
 class ResourceBusyError(InternalError):
     msg_fmt = _("%(resource_type)s (%(resource_id)s) is busy now.")
+
+
+class PolicyNotAttached(InternalError):
+    msg_fmt = _("The policy (%(policy)s) is not attached to the specified "
+                "cluster (%(cluster)s).")
 
 
 class ResourceInUse(SenlinException):

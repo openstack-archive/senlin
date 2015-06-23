@@ -236,9 +236,9 @@ class ClusterPolicyTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_policy_get,
                                self.ctx, self.cluster['id'], self.policy['id'])
-        self.assertEqual(exception.PolicyNotAttached, ex.exc_info[0])
-        self.assertEqual(("The policy (%(policy)s) is not attached to the "
-                          "specified cluster (%(cluster)s)." %
+        self.assertEqual(exception.PolicyBindingNotFound, ex.exc_info[0])
+        self.assertEqual(("The policy (%(policy)s) is not found attached to "
+                          "the specified cluster (%(cluster)s)." %
                           dict(policy=self.policy['id'],
                                cluster=self.cluster['id'])),
                          six.text_type(ex.exc_info[1]))
@@ -451,9 +451,9 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.ctx,
                                self.cluster['id'], self.policy['id'],
                                priority=10)
-        self.assertEqual(exception.PolicyNotAttached, ex.exc_info[0])
-        self.assertEqual(("The policy (%(policy)s) is not attached to the "
-                          "specified cluster (%(cluster)s)." %
+        self.assertEqual(exception.PolicyBindingNotFound, ex.exc_info[0])
+        self.assertEqual(("The policy (%(policy)s) is not found attached to "
+                          "the specified cluster (%(cluster)s)." %
                           dict(policy=self.policy['id'],
                                cluster=self.cluster['id'])),
                          six.text_type(ex.exc_info[1]))

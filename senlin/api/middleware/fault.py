@@ -57,6 +57,7 @@ class FaultWrapper(wsgi.Middleware):
         'MultipleChoices': webob.exc.HTTPBadRequest,
         'NodeNotFound': webob.exc.HTTPNotFound,
         'NotSupported': webob.exc.HTTPBadRequest,
+        'PolicyBindingNotFound': webob.exc.HTTPNotFound,
         'PolicyNotFound': webob.exc.HTTPNotFound,
         'PolicyTypeNotFound': webob.exc.HTTPNotFound,
         'ProfileInUse': webob.exc.HTTPBadRequest,

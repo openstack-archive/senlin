@@ -1033,8 +1033,12 @@ class EngineService(service.Service):
         db_cluster = self.cluster_find(context, identity)
         db_policy = self.policy_find(context, policy_id)
 
-        binding = cluster_policy.ClusterPolicy.load(
-            context, db_cluster.id, db_policy.id)
+        try:
+            binding = cluster_policy.ClusterPolicy.load(
+                context, db_cluster.id, db_policy.id)
+        except exception.PolicyNotAttached:
+            raise exception.PolicyBindingNotFound(policy=policy_id,
+                                                  identity=identity)
 
         return binding.to_dict()
 
@@ -1108,8 +1112,8 @@ class EngineService(service.Service):
         binding = db_api.cluster_policy_get(context, db_cluster.id,
                                             db_policy.id)
         if binding is None:
-            raise exception.PolicyNotAttached(policy=policy,
-                                              cluster=identity)
+            raise exception.PolicyBindingNotFound(policy=policy,
+                                                  identity=identity)
 
         inputs = {'policy_id': db_policy.id}
         if priority is not None:
