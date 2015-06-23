@@ -126,7 +126,7 @@ individually or combined:
 - ``limit``: a number that restricts the maximum number of records to be
   returned from the query. It is useful for displaying the records in pages
   where the page size can be specified as the limit.
-- ``marker``: A string that represents the last seen UUID of stacks in previous
+- ``marker``: A string that represents the last seen UUID of nodes in previous
   queries. This query will only return results appearing after the
   specified UUID. This is useful for displaying records in pages.
 - ``sort_dir``: A string to enforce sorting of the results. It can accept
