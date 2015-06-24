@@ -2,6 +2,11 @@
 HIGH PRIORITY
 =============
 
+WIKI
+----
+  - add contents to https://wiki.openstack.org/wiki/Senlin, this is the first
+    page for all newcomers. [Qiming]
+
 ENGINE
 ------
   - cleanse scheduler module [Yanyan Hu]
