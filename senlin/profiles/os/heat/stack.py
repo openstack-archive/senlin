@@ -12,6 +12,7 @@
 
 import six
 
+from oslo_context import context
 from oslo_log import log as logging
 
 from senlin.common import exception
@@ -73,8 +74,8 @@ class StackProfile(base.Profile):
         )
     }
 
-    def __init__(self, ctx, type_name, name, **kwargs):
-        super(StackProfile, self).__init__(ctx, type_name, name, **kwargs)
+    def __init__(self, type_name, name, **kwargs):
+        super(StackProfile, self).__init__(type_name, name, **kwargs)
 
         self.hc = None
         self.stack_id = None
@@ -84,7 +85,7 @@ class StackProfile(base.Profile):
 
         if self.hc:
             return self.hc
-        params = self._get_connection_params(obj)
+        params = self._get_connection_params(context.get_current(), obj)
         self.hc = heatclient.HeatClient(params)
         return self.hc
 

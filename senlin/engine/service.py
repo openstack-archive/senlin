@@ -209,7 +209,7 @@ class EngineService(service.Service):
             'permission': perm,
             'metadata': metadata,
         }
-        profile = plugin(context, profile_type, name, **kwargs)
+        profile = plugin(profile_type, name, **kwargs)
         profile.validate()
         profile.store(context)
         return profile.to_dict()
@@ -251,7 +251,7 @@ class EngineService(service.Service):
         }
 
         new_name = name or db_profile.name
-        profile = plugin(context, db_profile.type, new_name, **kwargs)
+        profile = plugin(db_profile.type, new_name, **kwargs)
         profile.validate()
         profile.store(context)
         return profile.to_dict()

@@ -251,7 +251,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context,
             ('profile_create', {
                 'name': 'test_profile',
-                'type': 'test_profile_type',
+                'profile_type': 'test_profile_type',
                 'spec': {'param_1': 'value1', 'param_2': 2},
                 'perm': None,
                 'metadata': {},

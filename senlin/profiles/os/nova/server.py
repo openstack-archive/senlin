@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_context import context
 from oslo_log import log as logging
 import six
 
@@ -159,8 +160,8 @@ class ServerProfile(base.Profile):
         ),
     }
 
-    def __init__(self, ctx, type_name, name, **kwargs):
-        super(ServerProfile, self).__init__(ctx, type_name, name, **kwargs)
+    def __init__(self, type_name, name, **kwargs):
+        super(ServerProfile, self).__init__(type_name, name, **kwargs)
 
         self._nc = None
         self.server_id = None
@@ -175,7 +176,7 @@ class ServerProfile(base.Profile):
 
         if self._nc is not None:
             return self._nc
-        params = self._get_connection_params(obj)
+        params = self._get_connection_params(context.get_current(), obj)
         self._nc = novaclient.NovaClient(params)
         return self._nc
 
