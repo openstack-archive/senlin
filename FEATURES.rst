@@ -128,6 +128,16 @@ express their requirements in an abstract manner.
 Low Priority
 ------------
 
+Vertical Scaling
+^^^^^^^^^^^^^^^^
+
+Though Senlin is mainly concerns about the horizontal scaling in/out support,
+there are possibilities/requirements to scale nodes in the vertical direction.
+Vertical scaling means automatically adding compute/storage/network resources
+to cluster nodes. Depending on the support from corresponding services, this
+could be explored.
+
+
 Replace Green Threads with Python Threading
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
