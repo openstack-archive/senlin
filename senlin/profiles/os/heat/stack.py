@@ -197,8 +197,26 @@ class StackProfile(base.Profile):
         return True
 
     def do_check(self, obj):
-        # TODO(anyone): Use heat client to query stack status
-        return True
+        """Check stack status."""
+        hc = self.heat(obj)
+        try:
+            stack = hc.stack_get(obj.physical_id)
+        except Exception as ex:
+            raise ex
+        # When the stack is in a status which can't be checked(
+        # CREATE_IN_PROGRESS, DELETE_IN_PROGRESS, etc), return False.
+        try:
+            stack.check(hc.session)
+        except Exception:
+            return False
+
+        status = stack.status
+        while status == 'CHECK_IN_PROGRESS':
+            status = hc.stack_get(obj.physical_id).status
+        if status == 'CHECK_COMPLETE':
+            return True
+        else:
+            return False
 
     def get_template(self):
         return {}

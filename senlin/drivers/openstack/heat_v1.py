@@ -19,6 +19,7 @@ class HeatClient(base.DriverBase):
 
     def __init__(self, context):
         self.conn = sdk.create_connection(context)
+        self.session = self.conn.session
 
     def stack_create(self, **params):
         try:
