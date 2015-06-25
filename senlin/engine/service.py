@@ -515,9 +515,12 @@ class EngineService(service.Service):
                     cluster.parent = db_parent.id
                     changed = True
 
-            if metadata is not None and metadata != cluster.metadata:
-                cluster.metadata = metadata
-                changed = True
+            if metadata is not None:
+                old = cluster.metadata or {}
+                if metadata != old:
+                    old.update(metadata)
+                    cluster.metadata = old
+                    changed = True
 
             if timeout is not None:
                 val = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
