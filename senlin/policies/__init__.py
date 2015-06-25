@@ -12,47 +12,44 @@
 
 
 # Default enforcement levels and level names.
-# These levels map directly to logging levels but have slightly different
-# intentions and interpretations:
 #
-#  - CRITICAL: a cluster is in inconsistent state that cannot be recovered
-#              using Senlin API calls, thus a manual intervention is needed.
-#              Violating a policy at this level means the cluster should
-#              not be treated functional any more.
+#  - MUST: A policy of this enforcement level must be strictly checked. A
+#          violation of such a policy will lead a cluster to ``CRITICAL``
+#          status, which means that the cluster is in a problematic status
+#          that cannot be recovered using Senlin APIs. A manual intervention
+#          is needed. Such a cluster should not be treated as funtional any
+#          more.
 #
-#  - ERROR:    a cluster is in consistent state that can be recovered using
-#              Senlin API calls, for example, the cluster can be destroyed.
-#              Violating a policy at this level will render the cluster to an
-#              'ERROR' status.
+#  - SHOULD: A violation of a policy at this enforcement level will render a
+#            cluster into an ``ERROR`` status. A manual intervention is needed
+#            to recover the cluster. The cluster may and may not be providing
+#            services in the ``ERROR`` status.
 #
-#  - WARNING:  the cluster as a whole is still functional, but the violation
-#              of a policy at this level needs attention.
+#  - WOULD: A policy of this enforcement level is usually about some
+#           operations that would be done when the policy is enforced. A
+#           violation of the policy will leave the cluster in a ``WARNING``
+#           status, which means that the cluster is still operational, but
+#           there are unsucessful operations attempted.
 #
-#  - INFO:     the cluster is functioning healthily, the violation of a policy
-#              at this level will be logged as events generated above this
-#              level.
+#  - MIGHT: A policy of this enforcement level is usually associated with
+#           certain operations that may or may not be done. A violation of
+#           this policy will not cause any negative impact to the cluster.
 #
-#  - DEBUG:    a policy at this level is only used for debugging's purpose.
-#              It cannot affect the normal operation of a cluster. A log
-#              entry is generated only when the DEBUG mode is turned on.
 
-CRITICAL = 50
-ERROR = 40
-WARNING = 30
-INFO = 20
-DEBUG = 10
+MUST = 50
+SHOULD = 40
+WOULD = 30
+MIGHT = 20
 
 _levelNames = {
-    CRITICAL: 'CRITICAL',
-    ERROR: 'ERROR',
-    WARNING: 'WARNING',
-    INFO: 'INFO',
-    DEBUG: 'DEBUG',
-    'CRITICAL': CRITICAL,
-    'ERROR': ERROR,
-    'WARNING': WARNING,
-    'INFO': INFO,
-    'DEBUG': DEBUG,
+    MUST: 'MUST',
+    SHOULD: 'SHOULD',
+    WOULD: 'WOULD',
+    MIGHT: 'MIGHT',
+    'MUST': MUST,
+    'SHOULD': SHOULD,
+    'WOULD': WOULD,
+    'MIGHT': MIGHT,
 }
 
 

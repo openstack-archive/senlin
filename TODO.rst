@@ -20,7 +20,6 @@ DRIVER
 
 POLICY
 ------
-  - Formalize policy enforcement levels [Qiming]
   - Enable placement policy and deletion policy to handle CLUSTER_RESIZE
     action.
   - Investigate the impact of node-create and node-delete on certain policies.
