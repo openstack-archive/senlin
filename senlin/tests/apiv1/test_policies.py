@@ -253,7 +253,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context,
             ('policy_create', {
                 'name': 'test_policy',
-                'type': 'test_policy_type',
+                'policy_type': 'test_policy_type',
                 'spec': {'param_1': 'value1', 'param_2': 2},
                 'level': 30,
                 'cooldown': 60

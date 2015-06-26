@@ -52,7 +52,7 @@ class Policy(object):
         self.updated_time = kwargs.get('updated_time', None)
         self.deleted_time = kwargs.get('deleted_time', None)
 
-        self.spec_data = schema.Spec(self.spec_schema, self.spec, self.context)
+        self.spec_data = schema.Spec(self.spec_schema, self.spec)
 
     @classmethod
     def _from_db_record(cls, context, record):

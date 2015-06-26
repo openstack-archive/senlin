@@ -287,7 +287,7 @@ class List(Schema):
             # We have a child schema specified for list elements
             # Fake a dict of array elements, since we have only one schema
             schema_arr = dict((k, sub_schema[k]) for k in keys)
-            subspec = Spec(schema_arr, dict(values), context)
+            subspec = Spec(schema_arr, dict(values))
             subspec.validate()
 
             return ((k, subspec[k]) for k in keys)
@@ -327,7 +327,7 @@ class Map(Schema):
         sub_schema = self.schema
         if sub_schema is not None:
             # sub_schema shoud be a dict here
-            subspec = Spec(sub_schema, dict(values), context)
+            subspec = Spec(sub_schema, dict(values))
             subspec.validate()
 
             return ((k, subspec[k]) for k in sub_schema)
@@ -351,10 +351,9 @@ class Map(Schema):
 
 class Spec(collections.Mapping):
     '''A class that contains all spec items.'''
-    def __init__(self, schema, data, context):
+    def __init__(self, schema, data):
         self._schema = schema
         self._data = data
-        self.context = context
 
     def validate(self):
         '''Validate the schema.'''

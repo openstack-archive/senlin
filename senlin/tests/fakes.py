@@ -20,6 +20,7 @@ from senlin.profiles import base as profile_base
 
 
 class TestProfile(profile_base.Profile):
+    CONTEXT = 'context'
     spec_schema = {
         'INT': schema.Integer('int property', default=0),
         'STR': schema.String('string property', default='a string'),
@@ -36,8 +37,8 @@ class TestProfile(profile_base.Profile):
         ),
     }
 
-    def __init__(self, ctx, name, type_name='TestProfile', **kwargs):
-        super(TestProfile, self).__init__(ctx, name, type_name, **kwargs)
+    def __init__(self, type_name, name, **kwargs):
+        super(TestProfile, self).__init__(type_name, name, **kwargs)
 
     def do_create(self):
         return {}

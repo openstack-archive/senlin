@@ -50,6 +50,7 @@ class ProfileTest(base.SenlinTestCase):
             'LIST': ['v1', 'v2'],
             'MAP': {'KEY1': 1, 'KEY2': 'v2'},
         }
+
         result = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', spec)
         self.assertEqual(spec, result['spec'])
 
