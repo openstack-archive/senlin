@@ -139,10 +139,6 @@ class NodeNotFound(SenlinException):
     msg_fmt = _("The node (%(node)s) could not be found.")
 
 
-class NodeStatusError(SenlinException):
-    msg_fmt = _("Node in error status - '%(status)s' due to '%(reason)s'.")
-
-
 class ProfileTypeNotFound(SenlinException):
     msg_fmt = _("Profile type (%(profile_type)s) is not found.")
 
@@ -228,6 +224,11 @@ class InternalError(SenlinException):
 
 class ResourceBusyError(InternalError):
     msg_fmt = _("The %(resource_type)s (%(resource_id)s) is busy now.")
+
+
+class ResourceStatusError(InternalError):
+    msg_fmt = _("The resource %(resource_id)s is in error status "
+                "- '%(status)s' due to '%(reason)s'.")
 
 
 class PolicyNotAttached(InternalError):

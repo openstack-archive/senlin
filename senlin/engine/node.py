@@ -11,10 +11,12 @@
 # under the License.
 
 import datetime
+import six
 
 from oslo_log import log as logging
 
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.common.i18n import _LW
 from senlin.db import api as db_api
@@ -235,14 +237,23 @@ class Node(object):
             return False
         self.set_status(context, self.CREATING, reason='Creation in progress')
         event_mod.info(context, self, 'create')
-        physical_id = profile_base.Profile.create_object(context, self)
+        try:
+            physical_id = profile_base.Profile.create_object(context, self)
+        except exception.ResourceStatusError as ex:
+            msg = six.text_type(ex)
+            event_mod.warning(context, self, 'create', self.ERROR, msg)
+            physical_id = ex.kwargs.get('resource_id')
+            # TODO(xuhaiwei)Trim the error message, in case it is too long.
+            reason = _('Profile failed in creating resource (%(id)s) due to: '
+                       '%(msg)s') % {'id': physical_id, 'msg': msg}
+            self.set_status(context, self.ERROR, reason)
+            return False
         if not physical_id:
             return False
 
+        status_reason = 'Creation succeeded'
+        self.set_status(context, self.ACTIVE, status_reason)
         self.physical_id = physical_id
-        self.created_time = datetime.datetime.utcnow()
-        self.status = self.ACTIVE
-        self.status_reason = 'Creation succeeded'
         self.store(context)
         return True
 
