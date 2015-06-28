@@ -159,8 +159,24 @@ class ClusterPolicyTest(base.SenlinTestCase):
     def test_cluster_policy_detach(self, notify):
         cluster_id = self.cluster['id']
         policy_id = self.policy['id']
-        self.eng.cluster_policy_attach(self.ctx, cluster_id, policy_id)
 
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_policy_detach,
+                               self.ctx, self.cluster['id'], self.policy['id'])
+        self.assertEqual(exception.PolicyBindingNotFound, ex.exc_info[0])
+        self.assertEqual(("The policy (%(policy)s) is not found attached to "
+                          "the specified cluster (%(cluster)s)." %
+                          dict(policy=self.policy['id'],
+                               cluster=self.cluster['id'])),
+                         six.text_type(ex.exc_info[1]))
+
+        values = {
+            'priority': 50,
+            'level': 50,
+            'cooldown': 0,
+            'enabled': True
+        }
+        db_api.cluster_policy_attach(self.ctx, cluster_id, policy_id, values)
         action = self.eng.cluster_policy_detach(self.ctx, cluster_id,
                                                 policy_id)
 
@@ -174,7 +190,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         notify.assert_called_with(self.ctx, action_id=action_id)
 
         # called twice: attach and detach
-        self.assertEqual(2, notify.call_count)
+        self.assertEqual(1, notify.call_count)
 
     def test_cluster_policy_detach_cluster_not_found(self):
         policy_id = self.policy['id']

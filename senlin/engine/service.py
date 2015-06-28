@@ -1091,6 +1091,11 @@ class EngineService(service.Service):
 
         db_cluster = self.cluster_find(context, identity)
         db_policy = self.policy_find(context, policy)
+        binding = db_api.cluster_policy_get(context, db_cluster.id,
+                                            db_policy.id)
+        if binding is None:
+            raise exception.PolicyBindingNotFound(policy=policy,
+                                                  identity=identity)
 
         LOG.info(_LI('Detaching policy %(policy)s from cluster %(cluster)s'),
                  {'policy': policy, 'cluster': identity})
