@@ -11,10 +11,12 @@
 # under the License.
 
 import datetime
+from oslo_utils import timeutils
 
 from senlin.common import exception
 from senlin.common import schema
 from senlin.db import api as db_api
+from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import environment
 
 CHECK_RESULTS = (
@@ -44,7 +46,7 @@ class Policy(object):
         self.id = kwargs.get('id', None)
         # TODO(Qiming): make this default level a WOULD?
         self.level = kwargs.get('level', 0)
-        self.cooldown = kwargs.get('cooldown', 0)
+        self.cooldown = kwargs.get('cooldown', None)
         self.spec = kwargs.get('spec', {})
         self.context = kwargs.get('context', {})
         self.data = kwargs.get('data', {})
@@ -168,3 +170,24 @@ class Policy(object):
         type_name = kwargs.get('type', '')
         name = kwargs.get('name', '')
         return cls(type_name, name, **kwargs)
+
+    def cooldown_inprogress(self, context, cluster_id):
+        cluster_policy = cp_mod.ClusterPolicy.load(context,
+                                                   cluster_id,
+                                                   self.id)
+
+        if cluster_policy.cooldown is None or cluster_policy.last_op is None:
+            return False
+        elif timeutils.is_older_than(cluster_policy.last_op,
+                                     cluster_policy.cooldown):
+            return False
+        else:
+            return True
+
+    def reset_last_op(self, context, cluster_id):
+        cluster_policy = cp_mod.ClusterPolicy.load(context,
+                                                   cluster_id,
+                                                   self.id)
+
+        cluster_policy.last_op = timeutils.utcnow()
+        cluster_policy.store(context)

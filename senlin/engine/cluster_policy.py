@@ -31,7 +31,7 @@ class ClusterPolicy(object):
 
         self.cluster_id = cluster_id
         self.policy_id = policy_id
-        self.cooldown = kwargs.get('cooldown', 0)
+        self.cooldown = kwargs.get('cooldown', None)
         self.priority = kwargs.get('priority', 50)
         self.level = kwargs.get('level', 50)
         self.enabled = kwargs.get('enabled', True)
