@@ -11,6 +11,7 @@
 # under the License.
 
 from oslo_log import log as logging
+from oslo_utils import timeutils
 
 from senlin.common import exception
 from senlin.db import api as db_api
@@ -31,7 +32,7 @@ class ClusterPolicy(object):
 
         self.cluster_id = cluster_id
         self.policy_id = policy_id
-        self.cooldown = kwargs.get('cooldown', None)
+        self.cooldown = kwargs.get('cooldown', 0)
         self.priority = kwargs.get('priority', 50)
         self.level = kwargs.get('level', 50)
         self.enabled = kwargs.get('enabled', True)
@@ -109,6 +110,17 @@ class ClusterPolicy(object):
                                                  sort_dir=sort_dir)
 
         return [cls._from_db_record(context, b) for b in bindings]
+
+    def cooldown_inprogress(self):
+        if self.cooldown and self.last_op:
+            if timeutils.is_older_than(self.last_op, self.cooldown):
+                return True
+
+        return False
+
+    def record_last_op(self, context):
+        self.last_op = timeutils.utcnow()
+        self.store(context)
 
     def to_dict(self):
         binding_dict = {

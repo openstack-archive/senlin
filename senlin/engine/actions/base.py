@@ -22,6 +22,7 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LI
 from senlin.db import api as db_api
+from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import event as event_mod
 from senlin.policies import base as policy_mod
 
@@ -344,30 +345,30 @@ class Action(object):
     def policy_check(self, cluster_id, target):
         """Check all policies attached to cluster and give result.
 
+        :param cluster_id: The ID of the cluster to which the policy is
+            attached.
         :param target: A tuple of ('when', action_name)
         :return: A dictionary that contains the check result.
         """
 
-        # Initialize the status to CHECK_OK before starting policy check
-        self.data['status'] = policy_mod.CHECK_OK
-
         if target not in ['BEFORE', 'AFTER']:
             return
 
-        # Get list of policy IDs attached to cluster
-        bindings = db_api.cluster_policy_get_all(self.context, cluster_id,
+        self.data['status'] = policy_mod.CHECK_OK
+        # TODO(Anyone): This could use the cluster's runtime data
+        bindings = cp_mod.ClusterPolicy.load_all(self.context, cluster_id,
                                                  sort_keys=['priority'],
                                                  filters={'enabled': True})
 
-        for p in bindings:
-            policy = policy_mod.Policy.load(self.context, p.policy_id)
-            # If the policy doesn't target on both 'BEFORE' and 'AFTER'
-            # stages of current action, just ignore it.
-            policy_target_before = True if (
-                'BEFORE', self.action) in policy.TARGET else False
-            policy_target_after = True if (
-                'AFTER', self.action) in policy.TARGET else False
-            if not policy_target_before and not policy_target_after:
+        for pb in bindings:
+            policy = policy_mod.Policy.load(self.context, pb.policy_id)
+            # We record the last operation time for all policies bound to the
+            # cluster, no matter that policy is only interested in the
+            # "BEFORE" or "AFTER" or both.
+            if target == 'AFTER':
+                pb.record_last_op(self.context)
+
+            if (target, self.action) not in policy.TARGET:
                 continue
 
             if target == 'BEFORE':
@@ -375,20 +376,13 @@ class Action(object):
             else:  # target == 'AFTER'
                 method = getattr(policy, 'post_op')
 
-            # Check policy cooldown before doing policy check
-            if (policy_target_before and target == 'BEFORE') or (
-                    policy_target_after and target == 'AFTER'):
-                if policy.cooldown_inprogress(self.context, cluster_id):
-                    self.data['status'] = policy_mod.CHECK_ERROR
-                    self.data['reason'] = _('Policy %(id)s cooldown is still '
-                                            'in progress.') % {'id': policy.id}
-                    return
+            if pb.cooldown_inprogress(self.context):
+                self.data['status'] = policy_mod.CHECK_ERROR
+                self.data['reason'] = _('Policy %(id)s cooldown is still '
+                                        'in progress.') % {'id': policy.id}
+                break
 
             method(cluster_id, self)
-
-            # Reset policy cooldown after action execution
-            if target == 'AFTER':
-                policy.reset_last_op(self.context, cluster_id)
 
             # Abort policy checking if failures found
             if self.data['status'] == policy_mod.CHECK_ERROR:

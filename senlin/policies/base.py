@@ -15,7 +15,6 @@ from oslo_utils import timeutils
 from senlin.common import exception
 from senlin.common import schema
 from senlin.db import api as db_api
-from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import environment
 
 CHECK_RESULTS = (
@@ -169,24 +168,3 @@ class Policy(object):
         type_name = kwargs.get('type', '')
         name = kwargs.get('name', '')
         return cls(type_name, name, **kwargs)
-
-    def cooldown_inprogress(self, context, cluster_id):
-        cluster_policy = cp_mod.ClusterPolicy.load(context,
-                                                   cluster_id,
-                                                   self.id)
-
-        if cluster_policy.cooldown is None or cluster_policy.last_op is None:
-            return False
-        elif timeutils.is_older_than(cluster_policy.last_op,
-                                     cluster_policy.cooldown):
-            return False
-        else:
-            return True
-
-    def reset_last_op(self, context, cluster_id):
-        cluster_policy = cp_mod.ClusterPolicy.load(context,
-                                                   cluster_id,
-                                                   self.id)
-
-        cluster_policy.last_op = timeutils.utcnow()
-        cluster_policy.store(context)

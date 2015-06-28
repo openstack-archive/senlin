@@ -32,7 +32,7 @@ class TestClusterPolicy(base.SenlinTestCase):
         self.assertIsNone(cp.id)
         self.assertEqual('fake-cluster', cp.cluster_id)
         self.assertEqual('fake-policy', cp.policy_id)
-        self.assertEqual(None, cp.cooldown)
+        self.assertEqual(0, cp.cooldown)
         self.assertEqual(50, cp.priority)
         self.assertEqual(50, cp.level)
         self.assertTrue(True, cp.enabled)
@@ -52,7 +52,7 @@ class TestClusterPolicy(base.SenlinTestCase):
                                            'fake-policy')
 
         self.assertIsNotNone(result)
-        self.assertEqual(None, result.cooldown)
+        self.assertEqual(0, result.cooldown)
         self.assertEqual(50, result.priority)
         self.assertEqual(50, result.level)
         self.assertTrue(result.enabled)
@@ -119,7 +119,7 @@ class TestClusterPolicy(base.SenlinTestCase):
         self.assertEqual(cp_id, result.id)
         self.assertEqual(cluster.id, result.cluster_id)
         self.assertEqual(policy.id, result.policy_id)
-        self.assertEqual(None, result.cooldown)
+        self.assertEqual(0, result.cooldown)
         self.assertEqual(50, result.priority)
         self.assertEqual(50, result.level)
         self.assertTrue(True, result.enabled)
@@ -158,7 +158,7 @@ class TestClusterPolicy(base.SenlinTestCase):
             'id': None,
             'cluster_id': 'fake-cluster',
             'policy_id': 'fake-policy',
-            'cooldown': None,
+            'cooldown': 0,
             'priority': 50,
             'level': 50,
             'enabled': True,
