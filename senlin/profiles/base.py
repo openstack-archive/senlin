@@ -196,8 +196,8 @@ class Profile(object):
         trust_id = cred.cred['openstack']['trust']
 
         params = copy.deepcopy(self.context)
-        params['project_id'] = obj.project,
-        params['trusts'] = trust_id,
+        params['project_id'] = obj.project
+        params['trusts'] = trust_id
 
         return params
 
