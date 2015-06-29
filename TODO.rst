@@ -20,6 +20,8 @@ DRIVER
 
 POLICY
 ------
+  - Ensure cluster_policy objects are initialized with the default property
+    values from the policy objects.
   - Enable placement policy and deletion policy to handle CLUSTER_RESIZE
     action.
   - Investigate the impact of node-create and node-delete on certain policies.
