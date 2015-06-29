@@ -345,11 +345,6 @@ class DBAPIEventTest(base.SenlinTestCase):
         self.assertEqual(1, db_api.event_count_by_cluster(self.ctx,
                                                           cluster2.id))
 
-    def test_event_node_status_reason_truncate(self):
-        event = self.create_event(self.ctx, status_reason='a' * 1024)
-        ret_event = db_api.event_get(self.ctx, event.id)
-        self.assertEqual('a' * 255, ret_event.status_reason)
-
     def test_event_get_all_filtered(self):
         cluster1 = shared.create_cluster(self.ctx, self.profile,
                                          name='cluster1')

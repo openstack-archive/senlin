@@ -162,8 +162,6 @@ def _session(context):
 # Clusters
 def cluster_create(context, values):
     cluster_ref = models.Cluster()
-    if 'status_reason' in values:
-        values['status_reason'] = values['status_reason'][:255]
     cluster_ref.update(values)
     cluster_ref.save(_session(context))
     return cluster_ref
@@ -290,8 +288,6 @@ def node_create(context, values):
     # This operation is always called with cluster and node locked
     session = _session(context)
     node = models.Node()
-    if 'status_reason' in values:
-        values['status_reason'] = values['status_reason'][:255]
     node.update(values)
     cluster_id = values.get('cluster_id', None)
     if cluster_id is not None:
@@ -925,8 +921,6 @@ def event_prune(context, cluster_id):
 
 def event_create(context, values):
     event = models.Event()
-    if 'status_reason' in values:
-        values['status_reason'] = values['status_reason'][:255]
     event.update(values)
     event.save(_session(context))
     return event

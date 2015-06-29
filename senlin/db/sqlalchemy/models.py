@@ -110,7 +110,7 @@ class Cluster(BASE, SenlinBase, SoftDelete):
     timeout = sqlalchemy.Column(sqlalchemy.Integer)
 
     status = sqlalchemy.Column(sqlalchemy.String(255))
-    status_reason = sqlalchemy.Column(sqlalchemy.String(255))
+    status_reason = sqlalchemy.Column(sqlalchemy.Text)
     meta_data = sqlalchemy.Column(types.Dict)
     data = sqlalchemy.Column(types.Dict)
 
@@ -140,7 +140,7 @@ class Node(BASE, SenlinBase, SoftDelete):
     deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
 
     status = sqlalchemy.Column(sqlalchemy.String(255))
-    status_reason = sqlalchemy.Column(sqlalchemy.String(255))
+    status_reason = sqlalchemy.Column(sqlalchemy.Text)
     meta_data = sqlalchemy.Column(types.Dict)
     data = sqlalchemy.Column(types.Dict)
 
@@ -287,7 +287,7 @@ class Action(BASE, SenlinBase, SoftDelete):
     end_time = sqlalchemy.Column(sqlalchemy.Float)
     timeout = sqlalchemy.Column(sqlalchemy.Integer)
     status = sqlalchemy.Column(sqlalchemy.String(255))
-    status_reason = sqlalchemy.Column(sqlalchemy.String(255))
+    status_reason = sqlalchemy.Column(sqlalchemy.Text)
     control = sqlalchemy.Column(sqlalchemy.String(255))
     inputs = sqlalchemy.Column(types.Dict)
     outputs = sqlalchemy.Column(types.Dict)
@@ -321,5 +321,5 @@ class Event(BASE, SenlinBase, SoftDelete):
     project = sqlalchemy.Column(sqlalchemy.String(32))
     action = sqlalchemy.Column(sqlalchemy.String(36))
     status = sqlalchemy.Column(sqlalchemy.String(255))
-    status_reason = sqlalchemy.Column(sqlalchemy.String(255))
+    status_reason = sqlalchemy.Column(sqlalchemy.Text)
     meta_data = sqlalchemy.Column(types.Dict)

@@ -55,12 +55,6 @@ class DBAPINodeTest(base.SenlinTestCase):
         nodes = db_api.node_get_all_by_cluster(self.ctx, self.cluster.id)
         self.assertEqual(1, len(nodes))
 
-    def test_node_status_reason_truncate(self):
-        node = shared.create_node(self.ctx, self.cluster, self.profile,
-                                  status_reason='a' * 1024)
-        ret_node = db_api.node_get(self.ctx, node.id)
-        self.assertEqual('a' * 255, ret_node.status_reason)
-
     def test_node_get(self):
         res = shared.create_node(self.ctx, self.cluster, self.profile)
         node = db_api.node_get(self.ctx, res.id)

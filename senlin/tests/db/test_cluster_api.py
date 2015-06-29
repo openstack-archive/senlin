@@ -536,11 +536,6 @@ class DBAPIClusterTest(base.SenlinTestCase):
             self.assertIsNone(db_api.cluster_get(ctx, clusters[s].id,
                                                  show_deleted=True))
 
-    def test_cluster_status_reason_truncate(self):
-        cluster = shared.create_cluster(self.ctx, self.profile,
-                                        status_reason='a' * 1024)
-        self.assertEqual('a' * 255, cluster.status_reason)
-
     def test_cluster_delete(self):
         cluster = shared.create_cluster(self.ctx, self.profile)
         cluster_id = cluster.id

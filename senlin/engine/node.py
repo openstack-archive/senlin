@@ -242,7 +242,6 @@ class Node(object):
             msg = six.text_type(ex)
             event_mod.warning(context, self, 'create', self.ERROR, msg)
             self.physical_id = ex.kwargs.get('resource_id')
-            # TODO(xuhaiwei)Trim the error message, in case it is too long.
             reason = _('Profile failed in creating resource (%(id)s) due to: '
                        '%(msg)s') % {'id': self.physical_id, 'msg': msg}
             self.set_status(context, self.ERROR, reason)
