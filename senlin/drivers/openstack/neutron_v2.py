@@ -29,12 +29,12 @@ class NeutronClient(base.DriverBase):
         self.session = self.conn.session
         self.auth = self.session.authenticator
 
-    def loadbalancer_get(self, lb_identity):
+    def loadbalancer_get(self, name_or_id):
         try:
-            lb = self.conn.network.find_load_balancer(lb_identity)
+            lb = self.conn.network.find_load_balancer(name_or_id)
         except sdk.exc.HttpException as ex:
             msg = _('Failed in getting loadbalancer %(value)s: %(ex)s'
-                    ) % {'value': lb_identity, 'ex': six.text_type(ex)}
+                    ) % {'value': name_or_id, 'ex': six.text_type(ex)}
             raise exception.Error(msg=msg)
 
         return lb
@@ -73,9 +73,10 @@ class NeutronClient(base.DriverBase):
 
         return res
 
-    def loadbalancer_delete(self, lb_id):
+    def loadbalancer_delete(self, lb_id, ignore_missing=True):
         try:
-            self.conn.network.delete_load_balancer(lb_id)
+            self.conn.network.delete_load_balancer(
+                lb_id, ignore_missing=ignore_missing)
         except sdk.exc.HttpException as ex:
             msg = _('Failed in deleting loadbalancer %(id)s: %(ex)s'
                     ) % {'id': lb_id, 'ex': six.text_type(ex)}
@@ -83,12 +84,12 @@ class NeutronClient(base.DriverBase):
 
         return
 
-    def listener_get(self, listener_identity):
+    def listener_get(self, name_or_id):
         try:
-            listener = self.conn.network.find_listener(listener_identity)
+            listener = self.conn.network.find_listener(name_or_id)
         except sdk.exc.HttpException as ex:
             msg = _('Failed in getting lb listener %(value)s: %(ex)s'
-                    ) % {'value': listener_identity, 'ex': six.text_type(ex)}
+                    ) % {'value': name_or_id, 'ex': six.text_type(ex)}
             raise exception.Error(msg=msg)
 
         return listener
@@ -130,9 +131,10 @@ class NeutronClient(base.DriverBase):
 
         return res
 
-    def listener_delete(self, listener_id):
+    def listener_delete(self, listener_id, ignore_missing=True):
         try:
-            self.conn.network.delete_listener(listener_id)
+            self.conn.network.delete_listener(listener_id,
+                                              ignore_missing=ignore_missing)
         except sdk.exc.HttpException as ex:
             msg = _('Failed in deleting lb listener %(id)s: %(ex)s'
                     ) % {'id': listener_id, 'ex': six.text_type(ex)}
@@ -140,12 +142,12 @@ class NeutronClient(base.DriverBase):
 
         return
 
-    def pool_get(self, pool_identity):
+    def pool_get(self, name_or_id):
         try:
-            pool = self.conn.network.find_pool(pool_identity)
+            pool = self.conn.network.find_pool(name_or_id)
         except sdk.exc.HttpException as ex:
             msg = _('Failed in getting lb pool %(value)s: %(ex)s'
-                    ) % {'value': pool_identity, 'ex': six.text_type(ex)}
+                    ) % {'value': name_or_id, 'ex': six.text_type(ex)}
             raise exception.Error(msg=msg)
 
         return pool
@@ -184,9 +186,10 @@ class NeutronClient(base.DriverBase):
 
         return res
 
-    def pool_delete(self, pool_id):
+    def pool_delete(self, pool_id, ignore_missing=True):
         try:
-            self.conn.network.delete_pool(pool_id)
+            self.conn.network.delete_pool(pool_id,
+                                          ignore_missing=ignore_missing)
         except sdk.exc.HttpException as ex:
             msg = _('Failed in deleting lb pool %(id)s: %(ex)s'
                     ) % {'id': pool_id, 'ex': six.text_type(ex)}
@@ -194,13 +197,13 @@ class NeutronClient(base.DriverBase):
 
         return
 
-    def pool_member_get(self, pool_id, member_identity):
+    def pool_member_get(self, pool_id, name_or_id):
         try:
-            member = self.conn.network.find_pool_member(member_identity,
+            member = self.conn.network.find_pool_member(name_or_id,
                                                         pool_id)
         except sdk.exc.HttpException as ex:
             msg = _('Failed in getting lb pool_member %(value)s: %(ex)s'
-                    ) % {'value': member_identity, 'ex': six.text_type(ex)}
+                    ) % {'value': name_or_id, 'ex': six.text_type(ex)}
             raise exception.Error(msg=msg)
 
         return member
@@ -238,9 +241,10 @@ class NeutronClient(base.DriverBase):
 
         return res
 
-    def pool_member_delete(self, pool_id, member_id):
+    def pool_member_delete(self, pool_id, member_id, ignore_missing=True):
         try:
-            self.conn.network.delete_pool_member(member_id, pool_id)
+            self.conn.network.delete_pool_member(
+                member_id, pool_id, ignore_missing=ignore_missing)
         except sdk.exc.HttpException as ex:
             msg = _('Failed in deleting lb member %(id)s from pool %(pool)s: '
                     '%(ex)s') % {'id': member_id, 'pool': pool_id,
@@ -249,12 +253,12 @@ class NeutronClient(base.DriverBase):
 
         return
 
-    def healthmonitor_get(self, hm_identity):
+    def healthmonitor_get(self, name_or_id):
         try:
-            hm = self.conn.network.find_health_monitor(hm_identity)
+            hm = self.conn.network.find_health_monitor(name_or_id)
         except sdk.exc.HttpException as ex:
             msg = _('Failed in getting lb healthmonitor %(value)s: %(ex)s'
-                    ) % {'value': hm_identity, 'ex': six.text_type(ex)}
+                    ) % {'value': name_or_id, 'ex': six.text_type(ex)}
             raise exception.Error(msg=msg)
 
         return hm
@@ -299,9 +303,10 @@ class NeutronClient(base.DriverBase):
 
         return res
 
-    def healthmonitor_delete(self, hm_id):
+    def healthmonitor_delete(self, hm_id, ignore_missing=True):
         try:
-            self.conn.network.delete_health_monitor(hm_id)
+            self.conn.network.delete_health_monitor(
+                hm_id, ignore_missing=ignore_missing)
         except sdk.exc.HttpException as ex:
             msg = _('Failed in deleting lb healthmonitor %(id)s: %(ex)s'
                     ) % {'id': hm_id, 'ex': six.text_type(ex)}

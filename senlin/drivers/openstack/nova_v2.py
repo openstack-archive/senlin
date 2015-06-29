@@ -62,9 +62,10 @@ class NovaClient(base.DriverBase):
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def flavor_delete(self, flavor_id):
+    def flavor_delete(self, flavor_id, ignore_missing=True):
         try:
-            self.conn.compute.delete_flavor(flavor_id, ignore_missing=True)
+            self.conn.compute.delete_flavor(flavor_id,
+                                            ignore_missing=ignore_missing)
         except sdk.exc.HttpException as ex:
             raise ex
 
@@ -89,10 +90,10 @@ class NovaClient(base.DriverBase):
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def image_delete(self, image_id):
+    def image_delete(self, image_id, ignore_missing=True):
         try:
-            return self.conn.compute.delete_image(image_id,
-                                                  ignore_missing=True)
+            return self.conn.compute.delete_image(
+                image_id, ignore_missing=ignore_missing)
         except sdk.exc.HttpException as ex:
             raise ex
 
@@ -126,9 +127,10 @@ class NovaClient(base.DriverBase):
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def keypair_delete(self, keypair_id):
+    def keypair_delete(self, keypair_id, ignore_missing=True):
         try:
-            self.conn.compute.delete_keypair(keypair_id, ignore_missing=True)
+            self.conn.compute.delete_keypair(keypair_id,
+                                             ignore_missing=ignore_missing)
         except sdk.exc.HttpException as ex:
             raise ex
 
@@ -170,11 +172,12 @@ class NovaClient(base.DriverBase):
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def server_delete(self, server_id):
+    def server_delete(self, server_id, ignore_missing=True):
         timeout = cfg.CONF.default_action_timeout
 
         try:
-            self.conn.compute.delete_server(server_id, ignore_missing=True)
+            self.conn.compute.delete_server(server_id,
+                                            ignore_missing=ignore_missing)
         except sdk.exc.HttpException as ex:
             raise ex
 
@@ -216,10 +219,10 @@ class NovaClient(base.DriverBase):
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def server_interface_delete(self, interface_id):
+    def server_interface_delete(self, interface_id, ignore_missing=True):
         try:
-            self.conn.compute.delete_server_interface(interface_id,
-                                                      ignore_missing=True)
+            self.conn.compute.delete_server_interface(
+                interface_id, ignore_missing=ignore_missing)
         except sdk.exc.HttpException as ex:
             raise ex
 
