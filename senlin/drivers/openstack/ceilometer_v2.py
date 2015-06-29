@@ -26,33 +26,34 @@ class CeilometerClient(base.DriverBase):
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def alarm_delete(self, value, ignore_not_found=True):
+    def alarm_delete(self, value, ignore_missing=True):
         try:
-            return self.conn.telemetry.delete_alarm(value, ignore_not_found)
+            return self.conn.telemetry.delete_alarm(
+                value, ignore_missing=ignore_missing)
         except sdk.exc.HttpException as ex:
             raise ex
 
     def alarm_find(self, name_or_id):
         try:
-            return self.conn.telemetry.find(name_or_id)
+            return self.conn.telemetry.find_alarm(name_or_id)
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def alarm_get(self, **params):
+    def alarm_get(self, value):
         try:
-            return self.conn.telemetry.get_alarm(**params)
+            return self.conn.telemetry.get_alarm(value)
         except sdk.exc.HttpException as ex:
             raise ex
 
     def alarm_list(self):
         try:
-            return self.conn.telemetry.list_alarms()
+            return self.conn.telemetry.alarms()
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def alarm_update(self, **params):
+    def alarm_update(self, value, **params):
         try:
-            return self.conn.telemetry.update_alarm(**params)
+            return self.conn.telemetry.update_alarm(value, **params)
         except sdk.exc.HttpException as ex:
             raise ex
 
