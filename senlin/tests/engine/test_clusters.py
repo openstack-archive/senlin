@@ -539,7 +539,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.eng.cluster_update, self.ctx, c['id'],
                                profile_id='good_profile')
 
-        self.assertEqual(exception.NotSupported, ex.exc_info[0])
+        self.assertEqual(exception.FeatureNotSupported, ex.exc_info[0])
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_update_to_same_profile(self, notify):

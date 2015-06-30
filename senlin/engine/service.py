@@ -542,7 +542,7 @@ class EngineService(service.Service):
 
         if cluster.status == cluster.ERROR:
             msg = _('Cannot update a cluster when it is in error state.')
-            raise exception.NotSupported(feature=msg)
+            raise exception.FeatureNotSupported(feature=msg)
 
         old_profile = self.profile_find(context, cluster.profile_id)
         new_profile = self.profile_find(context, profile_id)

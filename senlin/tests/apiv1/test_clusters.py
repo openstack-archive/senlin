@@ -819,7 +819,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
                         json.dumps(body))
 
-        error = senlin_exc.NotSupported(feature='Wrong status')
+        error = senlin_exc.FeatureNotSupported(feature='Wrong status')
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -829,8 +829,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               cluster_id=cid,
                                               body=body)
 
-        self.assertEqual(400, resp.json['code'])
-        self.assertEqual('NotSupported', resp.json['error']['type'])
+        self.assertEqual(409, resp.json['code'])
+        self.assertEqual('FeatureNotSupported', resp.json['error']['type'])
 
     def test_cluster_update_profile_notfound(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)

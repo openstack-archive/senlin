@@ -200,7 +200,7 @@ class SpecValidationFailed(SenlinException):
     msg_fmt = _("%(message)s")
 
 
-class NotSupported(SenlinException):
+class FeatureNotSupported(SenlinException):
     msg_fmt = _("%(feature)s is not supported.")
 
 
