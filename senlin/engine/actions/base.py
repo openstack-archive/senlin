@@ -454,16 +454,15 @@ def ActionProc(context, action_id, worker_id):
         # Step 3: execute the action
         result, reason = action.execute()
 
-        # NOTE: The following exception report is not giving useful
-        # information for some reasons.
-        # except Exception as ex:
+    except Exception as ex:
         # We catch exception here to make sure the following logics are
         # executed.
-        # result = action.RES_ERROR
-        # reason = six.text_type(ex)
-        # LOG.error(_('Exception occurred in action execution[%(action)s]: '
-        #            '%(reason)s'), {'action': action.action,
-        #                            'reason': reason})
+        result = action.RES_ERROR
+        reason = six.text_type(ex)
+        LOG.error(_('Unexpected exception occurred during %(action)s action '
+                    '%(id)s execution: %(reason)s'), {'action': action.action,
+                                                      'id': action.id,
+                                                      'reason': reason})
     finally:
         # NOTE: locks on action is eventually released here by status update
         action.set_status(result, reason)
