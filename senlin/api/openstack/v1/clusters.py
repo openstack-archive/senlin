@@ -310,15 +310,13 @@ class ClusterController(object):
             res = self.rpc_client.cluster_policy_detach(req.context,
                                                         cluster_id,
                                                         data.get('policy_id'))
-        elif this_action == self.POLICY_UPDATE:
+        else:
+            # this_action == self.POLICY_UPDATE:
             # Note the POLICY_UPDATE action includes policy-enable/disable
             data = body.get(this_action)
             res = self.rpc_client.cluster_policy_update(req.context,
                                                         cluster_id,
                                                         **data)
-        else:
-            raise exc.HTTPInternalServerError(_('Unexpected action "%s"'),
-                                              this_action)
         return res
 
     @util.policy_enforce
