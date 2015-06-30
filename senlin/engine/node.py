@@ -216,14 +216,13 @@ class Node(object):
         values = {}
         now = datetime.datetime.utcnow()
         if status == self.ACTIVE and self.status == self.CREATING:
-            values['created_time'] = now
+            self.created_time = values['created_time'] = now
         elif status == self.ACTIVE and self.status == self.UPDATING:
-            values['updated_time'] = now
+            self.updated_time = values['updated_time'] = now
 
-        self.status = status
-        values['status'] = status
+        self.status = values['status'] = status
         if reason:
-            values['status_reason'] = reason
+            self.status_reason = values['status_reason'] = reason
         db_api.node_update(context, self.id, values)
 
     def get_details(self, context):
@@ -242,11 +241,12 @@ class Node(object):
         except exception.ResourceStatusError as ex:
             msg = six.text_type(ex)
             event_mod.warning(context, self, 'create', self.ERROR, msg)
-            physical_id = ex.kwargs.get('resource_id')
+            self.physical_id = ex.kwargs.get('resource_id')
             # TODO(xuhaiwei)Trim the error message, in case it is too long.
             reason = _('Profile failed in creating resource (%(id)s) due to: '
-                       '%(msg)s') % {'id': physical_id, 'msg': msg}
+                       '%(msg)s') % {'id': self.physical_id, 'msg': msg}
             self.set_status(context, self.ERROR, reason)
+            self.store(context)
             return False
         if not physical_id:
             return False
