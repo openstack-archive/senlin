@@ -230,6 +230,16 @@ class Node(object):
             return {}
         return profile_base.Profile.get_details(context, self)
 
+    def _handle_exception(self, context, action, status, exception):
+        msg = six.text_type(exception)
+        event_mod.warning(context, self, action, status, msg)
+        self.physical_id = exception.kwargs.get('resource_id')
+        reason = _('Profile failed in %(action)s resource (%(id)s) due to: '
+                   '%(msg)s') % {'action': action[:-1] + 'ing',
+                                 'id': self.physical_id, 'msg': msg}
+        self.set_status(context, self.ERROR, reason)
+        self.store(context)
+
     def do_create(self, context):
         if self.status != self.INIT:
             LOG.error(_LE('Node is in status "%s"'), self.status)
@@ -239,13 +249,7 @@ class Node(object):
         try:
             physical_id = profile_base.Profile.create_object(context, self)
         except exception.ResourceStatusError as ex:
-            msg = six.text_type(ex)
-            event_mod.warning(context, self, 'create', self.ERROR, msg)
-            self.physical_id = ex.kwargs.get('resource_id')
-            reason = _('Profile failed in creating resource (%(id)s) due to: '
-                       '%(msg)s') % {'id': self.physical_id, 'msg': msg}
-            self.set_status(context, self.ERROR, reason)
-            self.store(context)
+            self._handle_exception(context, 'create', self.ERROR, ex)
             return False
         if not physical_id:
             return False
@@ -264,7 +268,11 @@ class Node(object):
         # TODO(Qiming): check if actions are working on it and can be canceled
         # TODO(Qiming): log events
         self.set_status(context, self.DELETING, reason='Deletion in progress')
-        res = profile_base.Profile.delete_object(context, self)
+        try:
+            res = profile_base.Profile.delete_object(context, self)
+        except exception.ResourceStatusError as ex:
+            self._handle_exception(context, 'delete', self.ERROR, ex)
+
         if res:
             db_api.node_delete(context, self.id)
             return True
@@ -292,7 +300,12 @@ class Node(object):
                                'newt': new_profile.type})
             return False
 
-        res = profile_base.Profile.update_object(context, self, new_profile_id)
+        try:
+            res = profile_base.Profile.update_object(context, self,
+                                                     new_profile_id)
+        except exception.ResourceStatusError as ex:
+            self._handle_exception(context, 'update', self.ERROR, ex)
+
         if res:
             self.rt['profile'] = profile_base.load(context,
                                                    new_profile_id)
