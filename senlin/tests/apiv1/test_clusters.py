@@ -241,6 +241,9 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cfgopts = DummyConfig()
         self.controller = clusters.ClusterController(options=cfgopts)
 
+    def test_default(self, mock_enforce):
+        self.assertRaises(exc.HTTPNotFound, self.controller.default, None)
+
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
