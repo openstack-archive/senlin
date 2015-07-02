@@ -67,6 +67,8 @@ Developers Documentation
    developer/profile
    developer/cluster
    developer/node
+   developer/policy_type
+   developer/policy
    developer/action
    developer/webhook
    developer/testing
