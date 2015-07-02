@@ -211,31 +211,6 @@ class Error(SenlinException):
         super(Error, self).__init__(message=msg)
 
 
-class InternalError(SenlinException):
-    '''A base class for internal exceptions in senlin.
-
-    The internal exception classes which inherit from InternalError
-    class should be translated to a user facing exception.
-    '''
-
-    def __init__(self, **kwargs):
-        super(InternalError, self).__init__(**kwargs)
-
-
-class ResourceBusyError(InternalError):
-    msg_fmt = _("The %(resource_type)s (%(resource_id)s) is busy now.")
-
-
-class ResourceStatusError(InternalError):
-    msg_fmt = _("The resource %(resource_id)s is in error status "
-                "- '%(status)s' due to '%(reason)s'.")
-
-
-class PolicyNotAttached(InternalError):
-    msg_fmt = _("The policy (%(policy)s) is not attached to the specified "
-                "cluster (%(cluster)s).")
-
-
 class ResourceInUse(SenlinException):
     msg_fmt = _("The %(resource_type)s (%(resource_id)s) is still in use.")
 
@@ -273,19 +248,44 @@ class EventNotFound(SenlinException):
     msg_fmt = _("The event (%(event)s) could not be found.")
 
 
-class UserNotFound(SenlinException):
+class InternalError(SenlinException):
+    '''A base class for internal exceptions in senlin.
+
+    The internal exception classes which inherit from InternalError
+    class should be translated to a user facing exception.
+    '''
+
+    def __init__(self, **kwargs):
+        super(InternalError, self).__init__(**kwargs)
+
+
+class ResourceBusyError(InternalError):
+    msg_fmt = _("The %(resource_type)s (%(resource_id)s) is busy now.")
+
+
+class UserNotFound(InternalError):
     # Internal exception, not to be exposed to end user.
     msg_fmt = _("The user (%(user)s) could not be found.")
 
 
-class TrustNotFound(SenlinException):
+class TrustNotFound(InternalError):
     # Internal exception, not to be exposed to end user.
     msg_fmt = _("The trust for trustor (%(trustor)s) could not be found.")
 
 
-class ResourceNotFound(SenlinException):
+class ResourceNotFound(InternalError):
     # Used when retrieving resources from other services
     msg_fmt = _("The resource (%(resource)s) could not be found.")
+
+
+class ResourceStatusError(InternalError):
+    msg_fmt = _("The resource %(resource_id)s is in error status "
+                "- '%(status)s' due to '%(reason)s'.")
+
+
+class PolicyNotAttached(InternalError):
+    msg_fmt = _("The policy (%(policy)s) is not attached to the specified "
+                "cluster (%(cluster)s).")
 
 
 class HTTPExceptionDisguise(Exception):
