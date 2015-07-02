@@ -16,11 +16,12 @@ import testtools
 
 from senlin.common import constraints
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.common import schema
 
 
-class SchemaTest(testtools.TestCase):
-    def test_allowed_values_schema(self):
+class TestConstraintsSchema(testtools.TestCase):
+    def test_allowed_values(self):
         d = {
             'constraint': ['foo', 'bar'],
             'type': 'AllowedValues'
@@ -28,6 +29,89 @@ class SchemaTest(testtools.TestCase):
         r = constraints.AllowedValues(['foo', 'bar'])
 
         self.assertEqual(d, dict(r))
+
+    def test_allowed_values_numeric_int(self):
+        '''Test AllowedValues constraint for numeric integer values.
+
+        Test if the AllowedValues constraint works for numeric values in any
+        combination of numeric strings or numbers in the constraint and
+        numeric strings or numbers as value.
+        '''
+
+        # Allowed values defined as integer numbers
+        s = schema.Integer(
+            constraints=[constraints.AllowedValues([1, 2, 4])]
+        )
+        # ... and value as number or string
+        self.assertIsNone(s.validate(1))
+
+        err = self.assertRaises(exception.SpecValidationFailed,
+                                s.validate, 3)
+        self.assertEqual('"3" must be one of the allowed values: 1, 2, 4',
+                         six.text_type(err))
+
+        self.assertIsNone(s.validate('1'))
+        err = self.assertRaises(exception.SpecValidationFailed,
+                                s.validate, '3')
+        self.assertEqual('"3" must be one of the allowed values: 1, 2, 4',
+                         six.text_type(err))
+
+        # Allowed values defined as integer strings
+        s = schema.Integer(
+            constraints=[constraints.AllowedValues(['1', '2', '4'])]
+        )
+        # ... and value as number or string
+        self.assertIsNone(s.validate(1))
+        err = self.assertRaises(exception.SpecValidationFailed,
+                                s.validate, 3)
+        self.assertEqual('"3" must be one of the allowed values: 1, 2, 4',
+                         six.text_type(err))
+
+        self.assertIsNone(s.validate('1'))
+        err = self.assertRaises(exception.SpecValidationFailed,
+                                s.validate, '3')
+        self.assertEqual('"3" must be one of the allowed values: 1, 2, 4',
+                         six.text_type(err))
+
+    def test_allowed_values_numeric_float(self):
+        '''Test AllowedValues constraint for numeric floating point values.
+
+        Test if the AllowedValues constraint works for numeric values in any
+        combination of numeric strings or numbers in the constraint and
+        numeric strings or numbers as value.
+        '''
+
+        # Allowed values defined as numbers
+        s = schema.Number(
+            constraints=[constraints.AllowedValues([1.1, 2.2, 4.4])]
+        )
+        # ... and value as number or string
+        self.assertIsNone(s.validate_constraints(1.1))
+        err = self.assertRaises(exception.SpecValidationFailed,
+                                s.validate_constraints, 3.3)
+        self.assertEqual('"3.3" must be one of the allowed values: '
+                         '1.1, 2.2, 4.4', six.text_type(err))
+        self.assertIsNone(s.validate_constraints('1.1', s))
+        err = self.assertRaises(exception.SpecValidationFailed,
+                                s.validate_constraints, '3.3')
+        self.assertEqual('"3.3" must be one of the allowed values: '
+                         '1.1, 2.2, 4.4', six.text_type(err))
+
+        # Allowed values defined as strings
+        s = schema.Number(
+            constraints=[constraints.AllowedValues(['1.1', '2.2', '4.4'])]
+        )
+        # ... and value as number or string
+        self.assertIsNone(s.validate_constraints(1.1, s))
+        err = self.assertRaises(exception.SpecValidationFailed,
+                                s.validate_constraints, 3.3, s)
+        self.assertEqual('"3.3" must be one of the allowed values: '
+                         '1.1, 2.2, 4.4', six.text_type(err))
+        self.assertIsNone(s.validate_constraints('1.1', s))
+        err = self.assertRaises(exception.SpecValidationFailed,
+                                s.validate_constraints, '3.3', s)
+        self.assertEqual('"3.3" must be one of the allowed values: '
+                         '1.1, 2.2, 4.4', six.text_type(err))
 
     def test_schema_all(self):
         d = {
@@ -172,85 +256,55 @@ class SchemaTest(testtools.TestCase):
         self.assertIn('"zoo" must be one of the allowed values: foo, bar',
                       six.text_type(err))
 
-    def test_allowed_values_numeric_int(self):
-        '''Test AllowedValues constraint for numeric integer values.
+    def test_spec_validate_good(self):
+        spec_schema = {
+            'key1': schema.String('first key', default='value1'),
+            'key2': schema.Integer('second key', required=True),
+        }
 
-        Test if the AllowedValues constraint works for numeric values in any
-        combination of numeric strings or numbers in the constraint and
-        numeric strings or numbers as value.
-        '''
+        data = {'key1': 'value1', 'key2': 2}
+        spec = schema.Spec(spec_schema, data)
+        self.assertEqual(None, spec.validate())
 
-        # Allowed values defined as integer numbers
-        s = schema.Integer(
-            constraints=[constraints.AllowedValues([1, 2, 4])]
-        )
-        # ... and value as number or string
-        self.assertIsNone(s.validate(1))
+        data = {'key2': 2}
+        spec = schema.Spec(spec_schema, data)
+        self.assertEqual(None, spec.validate())
 
-        err = self.assertRaises(exception.SpecValidationFailed,
-                                s.validate, 3)
-        self.assertEqual('"3" must be one of the allowed values: 1, 2, 4',
-                         six.text_type(err))
+    def test_spec_validate_fail_value_type_incorrect(self):
+        spec_schema = {
+            'key1': schema.String('first key', default='value1'),
+            'key2': schema.Integer('second key', required=True),
+        }
 
-        self.assertIsNone(s.validate('1'))
-        err = self.assertRaises(exception.SpecValidationFailed,
-                                s.validate, '3')
-        self.assertEqual('"3" must be one of the allowed values: 1, 2, 4',
-                         six.text_type(err))
+        data = {'key1': 'value1', 'key2': 'abc'}
+        spec = schema.Spec(spec_schema, data)
+        ex = self.assertRaises(exception.SpecValidationFailed,
+                               spec.validate)
+        msg = _('The value "%s" cannot be converted into an '
+                'integer.') % data['key2']
+        self.assertTrue(six.text_type(ex.message).find(msg) != -1)
 
-        # Allowed values defined as integer strings
-        s = schema.Integer(
-            constraints=[constraints.AllowedValues(['1', '2', '4'])]
-        )
-        # ... and value as number or string
-        self.assertIsNone(s.validate(1))
-        err = self.assertRaises(exception.SpecValidationFailed,
-                                s.validate, 3)
-        self.assertEqual('"3" must be one of the allowed values: 1, 2, 4',
-                         six.text_type(err))
+    def test_policy_validate_fail_unrecognizable_key(self):
+        spec_schema = {
+            'key1': schema.String('first key', default='value1'),
+        }
 
-        self.assertIsNone(s.validate('1'))
-        err = self.assertRaises(exception.SpecValidationFailed,
-                                s.validate, '3')
-        self.assertEqual('"3" must be one of the allowed values: 1, 2, 4',
-                         six.text_type(err))
+        data = {'key1': 'value1', 'key2': 2}
+        spec = schema.Spec(spec_schema, data)
+        ex = self.assertRaises(exception.SpecValidationFailed,
+                               spec.validate)
+        msg = _('Unrecognizable spec item "%s"') % 'key2'
+        self.assertTrue(six.text_type(ex.message).find(msg) != -1)
 
-    def test_allowed_values_numeric_float(self):
-        '''Test AllowedValues constraint for numeric floating point values.
+    def test_policy_validate_fail_required_key_missing(self):
+        spec_schema = {
+            'key1': schema.String('first key', default='value1'),
+            'key2': schema.Integer('second key', required=True),
+        }
 
-        Test if the AllowedValues constraint works for numeric values in any
-        combination of numeric strings or numbers in the constraint and
-        numeric strings or numbers as value.
-        '''
-
-        # Allowed values defined as numbers
-        s = schema.Number(
-            constraints=[constraints.AllowedValues([1.1, 2.2, 4.4])]
-        )
-        # ... and value as number or string
-        self.assertIsNone(s.validate_constraints(1.1))
-        err = self.assertRaises(exception.SpecValidationFailed,
-                                s.validate_constraints, 3.3)
-        self.assertEqual('"3.3" must be one of the allowed values: '
-                         '1.1, 2.2, 4.4', six.text_type(err))
-        self.assertIsNone(s.validate_constraints('1.1', s))
-        err = self.assertRaises(exception.SpecValidationFailed,
-                                s.validate_constraints, '3.3')
-        self.assertEqual('"3.3" must be one of the allowed values: '
-                         '1.1, 2.2, 4.4', six.text_type(err))
-
-        # Allowed values defined as strings
-        s = schema.Number(
-            constraints=[constraints.AllowedValues(['1.1', '2.2', '4.4'])]
-        )
-        # ... and value as number or string
-        self.assertIsNone(s.validate_constraints(1.1, s))
-        err = self.assertRaises(exception.SpecValidationFailed,
-                                s.validate_constraints, 3.3, s)
-        self.assertEqual('"3.3" must be one of the allowed values: '
-                         '1.1, 2.2, 4.4', six.text_type(err))
-        self.assertIsNone(s.validate_constraints('1.1', s))
-        err = self.assertRaises(exception.SpecValidationFailed,
-                                s.validate_constraints, '3.3', s)
-        self.assertEqual('"3.3" must be one of the allowed values: '
-                         '1.1, 2.2, 4.4', six.text_type(err))
+        data = {'key1': 'value1'}
+        spec = schema.Spec(spec_schema, data)
+        ex = self.assertRaises(exception.SpecValidationFailed,
+                               spec.validate)
+        msg = _('Required spec item "%s" not assigned') % 'key2'
+        self.assertTrue(six.text_type(ex.message).find(msg) != -1)

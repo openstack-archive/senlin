@@ -358,14 +358,13 @@ class Spec(collections.Mapping):
     def validate(self):
         '''Validate the schema.'''
         for (k, s) in self._schema.items():
-            if k in self._data:
-                try:
-                    # validate through resolve
-                    self.resolve_value(k)
-                except (TypeError, ValueError) as err:
-                    msg = _('Spec validation error (%(key)s): %(err)s') % dict(
-                        key=k, err=six.text_type(err))
-                    raise exception.SpecValidationFailed(message=msg)
+            try:
+                # validate through resolve
+                self.resolve_value(k)
+            except (TypeError, ValueError) as err:
+                msg = _('Spec validation error (%(key)s): %(err)s') % dict(
+                    key=k, err=six.text_type(err))
+                raise exception.SpecValidationFailed(message=msg)
 
         for key in self._data:
             if key not in self._schema:
