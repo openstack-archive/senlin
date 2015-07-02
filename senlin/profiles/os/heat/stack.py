@@ -10,7 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import random
 import six
+import string
 
 from oslo_context import context
 from oslo_log import log as logging
@@ -135,8 +137,10 @@ class StackProfile(base.Profile):
     def do_create(self, obj):
         '''Create a stack using the given profile.'''
 
+        random_str = '-' + ''.join(random.choice(string.ascii_lowercase)
+                                   for i in range(8))
         kwargs = {
-            'stack_name': obj.name,
+            'stack_name': obj.name + random_str,
             'template': self.spec_data[self.TEMPLATE],
             'timeout_mins': self.spec_data[self.TIMEOUT],
             'disable_rollback': self.spec_data[self.DISABLE_ROLLBACK],
