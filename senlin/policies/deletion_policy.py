@@ -101,12 +101,12 @@ class DeletionPolicy(base.Policy):
     def __init__(self, type_name, name, **kwargs):
         super(DeletionPolicy, self).__init__(type_name, name, **kwargs)
 
-        self.criteria = kwargs.get('criteria', self.RANDOM)
-        self.grace_period = kwargs.get('grace_period', 0)
-        self.destroy_after_deletion = kwargs.get('destroy_after_deletion',
-                                                 True)
-        self.reduce_desired_capacity = kwargs.get('reduce_desired_capacity',
-                                                  False)
+        self.criteria = self.spec_data[self.CRITERIA]
+        self.grace_period = self.spec_data[self.GRACE_PERIOD]
+        self.destroy_after_deletion = self.spec_data[
+            self.DESTROY_AFTER_DELETION]
+        self.reduce_desired_capacity = self.spec_data[
+            self.REDUCE_DESIRED_CAPACITY]
         random.seed()
 
     def _select_candidates(self, context, cluster_id, count):
@@ -120,7 +120,7 @@ class DeletionPolicy(base.Policy):
             i = count
             while i > 0:
                 rand = random.randrange(i)
-                candidates.append(nodes[rand])
+                candidates.append(nodes[rand].id)
                 nodes.remove(nodes[rand])
                 i = i - 1
 
@@ -131,20 +131,21 @@ class DeletionPolicy(base.Policy):
             sorted_list = sorted(nodes, key=lambda r: (r.created_time, r.name))
             for i in range(count):
                 if self.criteria == self.OLDEST_FIRST:
-                    candidates.append(sorted_list[i])
+                    candidates.append(sorted_list[i].id)
                 else:  # YOUNGEST_FIRST
-                    candidates.append(sorted_list[-i])
+                    candidates.append(sorted_list[-1-i].id)
             return candidates
 
         # Node profile based selection
-        if self.criterial == self.OLDEST_PROFILE_FIRST:
-            map = []
+        if self.criteria == self.OLDEST_PROFILE_FIRST:
+            node_map = []
             for node in nodes:
-                created_at = db_api.profile_get(node.profile_id).created_time
-                map.append({'id': node.id, 'created_at': created_at})
-            sorted_map = sorted(map, key=lambda m: m['created_at'])
+                profile = db_api.profile_get(context, node.profile_id)
+                created_at = profile.created_time
+                node_map.append({'id': node.id, 'created_at': created_at})
+            sorted_map = sorted(node_map, key=lambda m: m['created_at'])
             for i in range(count):
-                candidates.append(sorted_map[i])
+                candidates.append(sorted_map[i]['id'])
 
             return candidates
 
