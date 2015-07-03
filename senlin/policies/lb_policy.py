@@ -10,12 +10,17 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_context import context as oslo_context
 from oslo_log import log as logging
 
 from senlin.common import constraints
 from senlin.common import consts
+from senlin.common import context
+from senlin.common import exception
 from senlin.common.i18n import _
+from senlin.common.i18n import _LW
 from senlin.common import schema
+from senlin.db import api as db_api
 from senlin.drivers.openstack import lbaas
 from senlin.engine import cluster_policy
 from senlin.engine import node as node_mod
@@ -51,10 +56,10 @@ class LoadBalancingPolicy(base.Policy):
     )
 
     _POOL_KEYS = (
-        POOL_ID, POOL_PROTOCOL, POOL_PROTOCOL_PORT, POOL_SUBNET,
+        POOL_PROTOCOL, POOL_PROTOCOL_PORT, POOL_SUBNET,
         POOL_LB_METHOD, POOL_ADMIN_STATE_UP, POOL_SESSION_PERSISTENCE,
     ) = (
-        'id', 'protocol', 'protocol_port', 'subnet',
+        'protocol', 'protocol_port', 'subnet',
         'lb_method', 'admin_state_up', 'session_persistence',
     )
 
@@ -94,9 +99,6 @@ class LoadBalancingPolicy(base.Policy):
         POOL: schema.Map(
             _('LB pool properties.'),
             schema={
-                POOL_ID: schema.String(
-                    _('ID of an existing load-balanced pool.'),
-                ),
                 POOL_PROTOCOL: schema.String(
                     _('Protocol used for load balancing.'),
                     constraints=[
@@ -154,6 +156,7 @@ class LoadBalancingPolicy(base.Policy):
                 ),
                 VIP_ADDRESS: schema.String(
                     _('IP address of the VIP.'),
+                    default=None,
                 ),
                 VIP_CONNECTION_LIMIT: schema.Integer(
                     _('Maximum number of connections per second allowed for '
@@ -185,74 +188,98 @@ class LoadBalancingPolicy(base.Policy):
         self.validate()
         self.lb = None
 
-    def attach(self, cluster_id, action):
-        self.action = action
-        pool_id = self.pool_spec.get(self.POOL_ID, None)
-        if pool_id is not None:
-            data = {
-                'pool': self.pool_id,
-                'pool_need_delete': False
-            }
-        else:
-            res, data = self.lb_driver.lb_create(self.vip_spec,
-                                                 self.pool_spec)
-            if res is not True:
-                return res, data
-            else:
-                data['pool_need_delete'] = True
+    def validate(self):
+        super(LoadBalancingPolicy, self).validate()
+
+        # validate subnet's exists
+        # subnet = self.nc.subnet_get(vip[self.VIP_SUBNET])
+
+    def attach(self, cluster_id):
+        """Routine to be invoked when policy is to be attached to a cluster.
+
+        :param cluster_id: The ID of the target cluster to be attached to;
+        :param action: The action that triggered this operation.
+        :returns: When the operation was successful, returns a tuple of
+            (True, data) where the data contains references to the resources
+            created; otherwise returns a tuple of (False, err) where the err
+            contains a error message.
+        """
+        ctx = self._build_context(cluster_id)
+        lb_driver = lbaas.LoadBalancerDriver(ctx)
+
+        # TODO(Anyone): check cluster profile type matches self.PROFILE or not
+        res, data = lb_driver.lb_create(self.vip_spec, self.pool_spec)
+        if res is False:
+            return res, data
 
         port = self.pool_spec.get(self.POOL_PROTOCOL_PORT)
         subnet = self.pool_spec.get(self.POOL_SUBNET)
-        nodes = node_mod.Node.load_all(action.context, cluster_id=cluster_id)
 
+        nodes = node_mod.Node.load_all(context.get_current(),
+                                       cluster_id=cluster_id)
         for node in nodes:
-            params = {
-                'pool_id': data['pool'],
-                'node': node,
-                'port': port,
-                'subnet': subnet
-            }
-            member_id = self.lb_driver.member_add(**params)
+            member_id = lb_driver.member_add(node, data['loadbalancer'],
+                                             data['pool'], port, subnet)
             if member_id is None:
-                # Adding member failed, remove all lb resources that
-                # have been created and return failure reason.
+                # When failed in adding member, remove all lb resources that
+                # were created and return the failure reason.
                 # TODO(Yanyan Hu): Maybe we should tolerate member adding
                 # failure and allow policy attaching to succeed without
                 # all nodes being added into lb pool?
-                self.lb_driver.lb_delete(**data)
-                return False, 'Failed in adding existed node into lb pool'
-            else:
-                node.data.update({'lb_member': member_id})
-                node.store(action.context)
+                lb_driver.lb_delete(**data)
+                return False, 'Failed in adding node into lb pool'
+
+            node.data.update({'lb_member': member_id})
+            node.store(context.get_current())
 
         return True, data
 
-    def detach(self, cluster_id, action):
-        res = True
-        self.action = action
-        cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
-                                               self.id)
+    def detach(self, cluster_id):
+        """Routine to be called when the policy is detached from a cluster.
 
-        if cp.data['pool_need_delete']:
-            res, reason = self.lb_driver.lb_delete(**cp.data)
+        :param cluster_id: The ID of the cluster from which the policy is to
+            be detached.
+        :returns: When the operation was successful, returns a tuple of
+            (True, data) where the data contains references to the resources
+            created; otherwise returns a tuple of (False, err) where the err
+            contains a error message.
+        """
+        ctx = self._build_context(cluster_id)
+        lb_driver = lbaas.LoadBalancerDriver(ctx)
 
-        if res is not True:
-            return res, reason
-        else:
-            return res, 'lb resources deleting succeeded'
+        cp = cluster_policy.ClusterPolicy.load(context.get_current(),
+                                               cluster_id, self.id)
+
+        res, reason = lb_driver.lb_delete(**cp.data)
+        if res is False:
+            return False, reason
+
+        return True, 'LB resources deletion succeeded.'
 
     def post_op(self, cluster_id, action):
-        """Add new created node(s) to lb pool"""
+        """Routine to be called after an action has been executed.
+
+        For this particular policy, we take this chance to update the pool
+        maintained by the load-balancer.
+
+        :param cluster_id: The ID of the cluster on which a relevant action
+            has been executed.
+        :param action: The action object that triggered this operation.
+        :returns: Nothing.
+        """
+        ctx = self._build_context(cluster_id)
+        lb_driver = lbaas.LoadBalancerDriver(ctx)
 
         self.action = action
         cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
                                                self.id)
+        lb_id = cp.data['loadbalancer']
         pool_id = cp.data['pool']
         port = self.pool_spec.get(self.POOL_PROTOCOL_PORT)
         subnet = self.pool_spec.get(self.POOL_SUBNET)
 
-        nodes = action.data.get('nodes')
-        if nodes is None:
+        nodes = action.data.get('nodes', [])
+        if len(nodes) == 0:
             return
 
         for node_id in nodes:
@@ -263,61 +290,64 @@ class LoadBalancingPolicy(base.Policy):
                                   consts.CLUSTER_SCALE_IN))\
                     or (action.action == consts.CLUSTER_RESIZE and
                         action.data.get('deletion')):
-                if member_id:
-                    # Remove nodes that have been deleted from lb pool
-                    params = {
-                        'pool_id': pool_id,
-                        'member_id': member_id,
-                    }
-                    res = self.lb_driver.member_remove(**params)
-                    if res is not True:
-                        action.data['status'] = base.CHECK_ERROR
-                        action.data['reason'] = _('Failed in removing deleted '
-                                                  'node from lb pool')
-                        return
-                else:
-                    msg = _('Node %(node)s is not in loadbalancer pool '
-                            '%(pool)s when being deleted from cluster '
-                            '%(cluster)s.') % {'node': node_id,
-                                               'pool': pool_id,
-                                               'cluster': node.cluster_id}
-                    LOG.warning(msg)
+
+                if member_id is None:
+                    LOG.warning(_LW('Node %(node)s not found in loadbalancer '
+                                    'pool %(pool)s.'),
+                                {'node': node_id, 'pool': pool_id})
+                    return
+
+                # Remove nodes that have been deleted from lb pool
+                res = lb_driver.member_remove(lb_id, pool_id, member_id)
+                if res is not True:
+                    action.data['status'] = base.CHECK_ERROR
+                    action.data['reason'] = _('Failed in removing deleted '
+                                              'node from lb pool')
+                    return
 
             if (action.action in (consts.CLUSTER_ADD_NODES,
                                   consts.CLUSTER_SCALE_OUT))\
                     or (action.action == consts.CLUSTER_RESIZE and
                         action.data.get('creation')):
-                if member_id is None:
-                    # Add new created nodes into lb pool
-                    params = {
-                        'pool_id': pool_id,
-                        'node': node,
-                        'port': port,
-                        'subnet': subnet
-                    }
-                    member_id = self.lb_driver.member_add(**params)
-                    if member_id is None:
-                        action.data['status'] = base.CHECK_ERROR
-                        action.data['reason'] = _('Failed in adding new node '
-                                                  'into lb pool')
-                        return
 
-                    node.data.update({'lb_member': member_id})
-                    node.store(action.context)
-                else:
-                    msg = _('Node %(node)s has been in a loadbalancer pool as'
-                            'member %(member)s before being added to cluster '
-                            '%(cluster)s.') % {'node': node_id,
-                                               'member': member_id,
-                                               'cluster': node.cluster_id}
-                    LOG.warning(msg)
+                if member_id:
+                    LOG.warning(_LW('Node %(node)s already in loadbalancer '
+                                    'pool %(pool)s.'),
+                                {'node': node_id, 'pool': pool_id})
+                    return
+
+                res = lb_driver.member_add(node, lb_id, pool_id, port, subnet)
+                if res is None:
+                    action.data['status'] = base.CHECK_ERROR
+                    action.data['reason'] = _('Failed in adding new node '
+                                              'into lb pool')
+                    return
+
+                node.data.update({'lb_member': res})
+                node.store(action.context)
 
         return
 
-    @property
-    def lb_driver(self):
-        if self.lb is None:
-            self.lb = lbaas.LoadBalancerDriver(self.action.context)
-            return self.lb
-        else:
-            return self.lb
+    def _build_context(self, cluster_id):
+        """Build a trust-based context for connection parameters.
+
+        :param cluster_id: the ID of the cluste for which the trust will be
+                           checked.
+        """
+        ctx = context.get_service_context()
+        params = {
+            'auth_url': ctx['auth_url'],
+            'user_name': ctx['user_name'],
+            'user_domain_name': ctx['user_domain_name'],
+            'password': ctx['password'],
+        }
+
+        cluster = db_api.cluster_get(oslo_context.get_current(), cluster_id)
+        cred = db_api.cred_get(oslo_context.get_current(),
+                               cluster.user, cluster.project)
+        if cred is None:
+            raise exception.TrustNotFound(trustor=cluster.user)
+        params['trusts'] = cred.cred['openstack']['trust']
+        params['project_id'] = cluster.project
+
+        return context.from_dict(params)

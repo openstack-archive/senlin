@@ -1,14 +1,7 @@
 # load-balancing policy spec using Neutron LBaaS service
-# NOTE: properties are combined from LB and Pool
-# Each Pool member has its own 'address', 'protocol_port, 'weight',
-# and 'admin_state_up' property
-
 
 #### Pool properties
 pool:
-  # Pool ID/name, if given can use an existing pool
-  # pool: <ID>
-
   # Protocol used for load balancing
   protocol: HTTP
 
