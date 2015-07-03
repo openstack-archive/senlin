@@ -127,12 +127,7 @@ class StackProfile(base.Profile):
                                                 status=stack.status,
                                                 reason=stack.status_reason)
         else:
-            msg = _('Node action mismatch detected: expected=%(expected)s '
-                    'actual=%(actual)s') % dict(expected=action,
-                                                actual=status[0])
-            raise exception.ResourceStatusError(resource_id=self.stack_id,
-                                                status=stack.status,
-                                                reason=msg)
+            return False
 
     def do_create(self, obj):
         '''Create a stack using the given profile.'''
