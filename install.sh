@@ -73,7 +73,7 @@ basic_configuration() {
     if echo $conf_path | grep ".conf$" >/dev/null 2>&1
     then
         iniset $target DEFAULT auth_encryption_key `hexdump -n 16 -v -e '/1 "%02x"' /dev/random`
-        iniset $target database connection "mysql://senlin:senlin@localhost/senlin?charset=utf8"
+        iniset $target database connection "mysql+pymysql://senlin:senlin@localhost/senlin?charset=utf8"
 
         BRIDGE_IP=127.0.0.1
 
