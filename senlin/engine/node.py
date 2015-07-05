@@ -307,8 +307,8 @@ class Node(object):
             self._handle_exception(context, 'update', self.ERROR, ex)
 
         if res:
-            self.rt['profile'] = profile_base.load(context,
-                                                   new_profile_id)
+            self.rt['profile'] = profile_base.Profile.load(context,
+                                                           new_profile_id)
             self.profile_id = new_profile_id
             self.updated_time = datetime.datetime.utcnow()
             self.store()
@@ -325,7 +325,7 @@ class Node(object):
         self.updated_time = timestamp
         self.index = db_node.index
 
-        profile_base.join_cluster(self, cluster_id)
+        profile_base.Profile.join_cluster(context, self, cluster_id)
         return True
 
     def do_leave(self, context):
@@ -338,5 +338,5 @@ class Node(object):
         self.updated_time = timestamp
         self.index = -1
 
-        profile_base.leave_cluster(self)
+        profile_base.Profile.leave_cluster(self)
         return True
