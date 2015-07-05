@@ -11,11 +11,13 @@
   License for the specific language governing permissions and limitations
   under the License.
 
+.. _guide-webhooks:
+
 Webhook
 =======
 
-Webhook is used to trigger a specific action on a senlin entity, for instance
-the actions that change the size of a specified cluster.
+A :term:`Webhook` is used to trigger a specific :term:`Action` on a senlin
+object, for instance the actions that change the size of a specified cluster.
 
 How to use
 ----------

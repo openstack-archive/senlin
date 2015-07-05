@@ -12,16 +12,54 @@
   under the License.
 
 
+.. _guide-nodes:
+
 Nodes
 =====
 
 Concept
 -------
 
-A node is a ...
+A :term:`Node` is a logical object managed by the Senlin service.
 
 
-How To Use
-----------
+Listing Nodes
+-------------
 
-[TBC]
+(TBC)
+
+
+Creating a Node
+---------------
+
+(TBC)
+
+Updating a Node
+---------------
+
+(TBC)
+
+Showing Details of a Node
+-------------------------
+
+(TBC)
+
+This includes the ``-details`` argument that shows the physical object
+details.
+
+Deleting a Node
+---------------
+
+(TBC)
+
+
+See Also
+--------
+
+Below are links to documents related to node management:
+
+- :doc:`Managing Profile Objects <profiles>`
+- :doc:`Creating Clusters <clusters>`
+- :doc:`Managing Cluster Membership <membership>`
+- :doc:`Examining Actions <actions>`
+- :doc:`Browsing Events <events>`

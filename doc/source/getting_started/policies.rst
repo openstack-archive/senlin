@@ -12,16 +12,51 @@
   under the License.
 
 
+.. _guide-policies:
+
 Policies
 ========
 
 Concept
 -------
 
-A policy is a ...
+A :term:`Policy` is an object instantiated from a :term:`Policy Type`.
 
 
-How To Use
-----------
+Listing Policies
+----------------
 
-[TBC]
+(TBC)
+
+
+Creating a Policy
+-----------------
+
+(TBC)
+
+
+Updating a Policy
+-----------------
+
+(TBC)
+
+Showing the Details of a Policy
+-------------------------------
+
+(TBC)
+
+Deleting a Policy
+-----------------
+
+(TBC)
+
+
+See Also
+--------
+
+The list below provides links to documents related to the creation and usage
+of policy objects.
+
+* :doc:`Working with Policy Types <policy_types>`
+* :doc:`Managing the Bindings between Clusters and Policies <bindings>`
+* :doc:`Browsing Events <events>`

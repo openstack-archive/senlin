@@ -12,20 +12,35 @@
   under the License.
 
 
-.. _guide-events:
+.. _guide-bindings:
 
-Events
-======
+Cluster-Policy Bindings
+=======================
 
-An :term:`Event` is a record generated during engine execution.
+Concept
+-------
+
+A :term:`Policy` object can attached to at least one :term:`Cluster` at the
+same time. A cluster at any time can have more than one Policy objects
+attached to it.
 
 
-Listing Events
---------------
+Listing Policies Attached to a Cluster
+--------------------------------------
 
 (TBC)
 
-Showing Details about an Event
--------------------------------
+Attach a Policy to a Cluster
+----------------------------
+
+(TBC)
+
+Detach a Policy from a Cluster
+------------------------------
+
+(TBC)
+
+Update Policy Properties on a Cluster
+-------------------------------------
 
 (TBC)
