@@ -292,6 +292,7 @@ def node_create(context, values):
     cluster_id = values.get('cluster_id', None)
     if cluster_id is not None:
         cluster = session.query(models.Cluster).get(cluster_id)
+        node.index = cluster.next_index
         cluster.next_index += 1
         cluster.save(session)
 
