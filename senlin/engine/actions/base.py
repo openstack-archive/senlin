@@ -92,9 +92,6 @@ class Action(object):
     def __init__(self, context, action, **kwargs):
         # context will be persisted into database so that any worker thread
         # can pick the action up and execute it on behalf of the initiator
-        if action not in self.ACTIONS:
-            raise exception.ActionNotSupported(
-                action=action, object=_('target %s') % self.target)
 
         self.id = kwargs.get('id', '')
         self.name = kwargs.get('name', '')
@@ -103,9 +100,7 @@ class Action(object):
         self.description = kwargs.get('description', '')
 
         # Target is the ID of a cluster, a node, a profile
-        self.target = kwargs.get('target', None)
-        if self.target is None:
-            raise exception.ActionMissingTarget(action=action)
+        self.target = kwargs.get('target')
 
         self.action = action
 
