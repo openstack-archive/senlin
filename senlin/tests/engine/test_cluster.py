@@ -39,9 +39,9 @@ class TestCluster(base.SenlinTestCase):
 
         return db_api.cluster_create(self.context, values)
 
-    def _create_profile(self, policy_id):
+    def _create_profile(self, profile_id):
         values = {
-            'id': policy_id,
+            'id': profile_id,
             'type': 'os.heat.stack',
             'name': 'test-profile',
             'context': self.context.to_dict()
