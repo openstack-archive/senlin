@@ -40,7 +40,7 @@ class DBAPINodeTest(base.SenlinTestCase):
         self.assertIsNotNone(node)
         self.assertEqual('test_node_name', node.name)
         self.assertEqual(UUID1, node.physical_id)
-        self.assertEqual(0, node.index)
+        self.assertEqual(1, node.index)
         self.assertIsNone(node.role)
         self.assertIsNone(node.created_time)
         self.assertIsNone(node.updated_time)
