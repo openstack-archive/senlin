@@ -12,20 +12,34 @@
   under the License.
 
 
-.. _guide-events:
+.. _guide-membership:
 
-Events
-======
+Cluster Membership
+==================
 
-An :term:`Event` is a record generated during engine execution.
+Concept
+-------
+
+A :term:`Node` can belong to at most one :term:`Cluster` at any time. A node
+is referred to as an *orphan node* when it doesn belong to any cluster.
 
 
-Listing Events
---------------
+Listing Nodes in a Cluster
+--------------------------
 
 (TBC)
 
-Showing Details about an Event
+Specify the Cluster When Creating a Node
+----------------------------------------
+
+(TBC)
+
+Adding Node(s) to A Cluster
+--------------------------
+
+(TBC)
+
+Removing Node(s) from a Cluster
 -------------------------------
 
 (TBC)

@@ -1,124 +1,74 @@
-senlin
+Senlin
 ======
 
-Senlin is a clustering service for OpenStack cloud. It creates and operates
-clusters of homogenous objects exposed by other OpenStack services. The
-goal is to make orchestration of collections of similar objects easier.
+--------
+Overview
+--------
 
-Senlin provides ReSTful APIs to users so that they can associate various
+Senlin is a clustering service for OpenStack clouds. It creates and operates
+clusters of homogenous objects exposed by other OpenStack services. The goal
+is to make the orchestration of collections of similar objects easier.
+
+Senlin provides RESTful APIs to users so that they can associate various
 policies to a cluster.  Sample policies include placement policy, load
-balancing policy, failover policy, scaling policy, ... and so on.
+balancing policy, health policy, scaling policy, update policy and so on.
 
-IRC Channel: #senlin
+Senlin is designed to be capable of managing different types of objects. An
+object's lifecycle is managed using profile type implementations, which are
+themselves plugins.
 
---------------------
-Install via Devstack
---------------------
+---------
+For Users
+---------
 
-This is the recommended way to install Senlin service. Please refer to
-`devstack/README.rst` for detailed instructions.
+If you want to install Senlin for a try out, please refer to the documents
+under the ``doc/source/getting_started/`` subdirectory.
 
-Note that Senlin client is also installed when following the instructions
-it the above mentioned document.
+--------------
+For Developers
+--------------
 
--------------------
-Manual Installation
--------------------
+There are many ways to help improve the software, for example, filing a bug,
+submitting or reviewing a patch, writing or reviewing some documents. There
+are documents under the ``doc/source/developer/`` subdirectory.
+
+---------
+Resources
+---------
+
+Launchpad Projects
+------------------
+- Server: https://launchpad.net/senlin
+- Client: https://launchpad.net/python-senlinclient
+
+Code Repository
+---------------
+- Server: https://git.openstack.org/cgit/stackforge/senlin
+- Client: https://git.openstack.org/cgit/stackforge/python-senlinclient
+
+Blueprints
+----------
+- Blueprints: https://blueprints.launchpad.net/senlin
+
+Bug Tracking
+------------
+- Bugs: https://bugs.launchpad.net/senlin
+
+Weekly Meetings
+---------------
+- Schedule: every Tuesday at 1300 UTC, on #openstack-meeting channel
+- Agenda: http://wiki.openstack.org/wiki/Meetings/SenlinAgenda
+- Archive: http://eavesdrop.openstack.org/meetings/senlin/2015/
+
+IRC
+---
+IRC Channel: #senlin on `Freenode`_.
+
+Mailinglist
+-----------
+Project use http://lists.openstack.org/cgi-bin/mailman/listinfo/openstack-dev
+as the mailinglist. Please use tag ``[Senlin]`` in the subject for new
+threads.
 
 
-Install Senlin Server
----------------------
-
-1. Get Senlin source code from OpenStack git repository
-
-::
-
-  $ cd /opt/stack
-  $ git clone http://git.openstack.org/stackforge/senlin.git
-
-2. Install Senlin with required packages
-
-::
-
-  $ cd /opt/stack/senlin
-  $ sudo pip install -e .
-
-3. Register Senlin clustering service with keystone.
-
-   This can be done using the `setup-service` script under `tools` folder.
-
-::
-
-  $ cd /opt/stack/senlin/tools
-  $ ./setup-service <HOST IP> <SERVICE_PASSWORD>
-
-4. Generate configuration file for the Senlin service
-
-::
-
-  $ cd /opt/stack/senlin
-  $ tools/gen-config
-  $ sudo mkdir /etc/senlin
-  $ sudo cp etc/senlin/api-paste.ini /etc/senlin
-  $ sudo cp etc/senlin/policy.json /etc/senlin
-  $ sudo cp etc/senlin/senlin.conf.sample /etc/senlin/senlin.conf
-
-Edit file `/etc/senlin/senlin.conf` according to your system settings. The
-most common options to be customized include::
-
-  [database]
-  connection = mysql://senlin:<DB PASSWORD>@127.0.0.1/senlin?charset=utf8
-
-  [keystone_authtoken]
-  auth_uri = http://<HOST>:5000/v3
-  auth_version = 3
-  cafile = /opt/stack/data/ca-bundle.pem
-  identity_uri = http://<HOST>:35357
-  admin_user = senlin
-  admin_password = <SENLIN PASSWORD>
-  admin_tenant_name = service
-
-  [oslo_messaging_rabbit]
-  rabbit_userid = <RABBIT USER ID>
-  rabbit_hosts = <HOST>
-  rabbit_password = <RABBIT PASSWORD>
-
-5. Create Senlin Database
-
- Create Senlin database using the `senlin-db-recreate` script under the `tools`
- subdirectory. Before calling the script, you need edit it to customize the
- password you will use for the `senlin` user.
-
-::
-
-  $ cd /opt/stack/senlin/tools
-  $ ./senlin-db-recreate
-
-6. Start senlin engine and api service.
-
- You may need two consoles for the services each.
-
-::
-
-  $ senlin-engine --config-file /etc/senlin/senlin.conf
-  $ senlin-api --config-file /etc/senlin/senlin.conf
-
----------------------
-Install Senlin Client
----------------------
-
-1. Get Senlin client code from OpenStack git repository.
-
-::
-
-  $ cd /opt/stack
-  $ git clone http://git.openstack.org/stackforge/python-senlinclient.git
-
-2. Install senlin client.
-
-::
-
-  $ cd python-senlinclient
-  $ sudo python setup.py install
-
-You are ready to begin your journey (aka. adventure) with Senlin, now.
+.. _Freenode: http://freenode.net/

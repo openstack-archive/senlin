@@ -12,16 +12,37 @@
   under the License.
 
 
+.. _guide-policy-types:
+
 Policy Types
 ============
 
 Concept
 -------
 
-A policy type is a ...
+A :term:`Policy Type` is an abstract specification of the rules to be checked
+and/or enforced when certain :term:`Action` is performed on a cluster that
+contains nodes of certain :term:`Profile Type`.
 
 
-How To Use
-----------
+Listing Policy Types
+--------------------
 
-[TBC]
+(TBC)
+
+
+Showing Policy Schema
+---------------------
+
+(TBC)
+
+
+See Also
+--------
+
+Check the list below for documents related to the creation and usage of
+:term:`Policy` objects.
+
+* :doc:`Creating Your Own Policy Objects <policies>`
+* :doc:`Managing the Binding between Cluster and Policy <bindings>`
+* :doc:`Browsing Events <events>`

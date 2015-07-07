@@ -12,16 +12,32 @@
   under the License.
 
 
+.. _guide-actions:
+
+
 Actions
 =======
 
 Concept
 -------
 
-An action is a ...
+An :term:`Action` is a ...
 
 
-How To Use
-----------
+Listing Actions
+---------------
 
-[TBC]
+(TBC)
+
+
+Showing Details of an Action
+----------------------------
+
+(TBC)
+
+
+See Also
+--------
+
+* :doc:`Creating Webooks <webhooks>`
+* :doc:`Browsing Events <events>`
