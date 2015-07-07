@@ -331,7 +331,13 @@ class EngineService(service.Service):
             'cooldown': cooldown,
         }
         policy = plugin(policy_type, name, **kwargs)
-        policy.validate()
+
+        try:
+            policy.validate()
+        except exception.PolicyValidationFailed as ex:
+            msg = _('Policy validation failed for reason: %(reason)s'
+                    ) % {'reason': six.text_type(ex)}
+            raise exception.SenlinBadRequest(msg=msg)
         policy.store(context)
         return policy.to_dict()
 
