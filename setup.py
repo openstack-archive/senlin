@@ -15,6 +15,7 @@
 
 # THIS FILE IS MANAGED BY THE GLOBAL REQUIREMENTS REPO - DO NOT EDIT
 import setuptools
+import sys
 
 # In python < 2.7.4, a lazy loading of package `pbr` will break
 # setuptools if some other modules registered functions in `atexit`.
@@ -24,6 +25,13 @@ try:
 except ImportError:
     pass
 
+extra_require={}
+if sys.version_info < (2, 7):
+    extra_require['Routes'] = ['Routes!=2.0,!=2.1,>=1.12.3']
+else:
+    extra_require['Routes'] = ['Routes!=2.0,>=1.12.3']
+
 setuptools.setup(
     setup_requires=['pbr'],
+    extra_require=extra_require,
     pbr=True)
