@@ -145,8 +145,8 @@ class KeystoneClient(base.DriverBase):
 def get_service_credentials(**kwargs):
     '''Senlin service credential to use with Keystone.
 
-    :param args: An additional keyword argument list that can be used
-                 for customizing the default settings.
+    :param kwargs: An additional keyword argument list that can be used
+                   for customizing the default settings.
     '''
 
     creds = {
