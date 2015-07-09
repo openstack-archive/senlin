@@ -10,10 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
 import random
 
 from oslo_log import log as logging
+from oslo_utils import timeutils
 
 from senlin.common import consts
 from senlin.common import exception
@@ -426,7 +426,7 @@ class ClusterAction(base.Action):
             cluster._load_runtime_data(self.context)
             return self.RES_OK, ''
 
-        cluster.updated_time = datetime.datetime.utcnow()
+        cluster.updated_time = timeutils.utcnow()
         cluster.status_reason = _('Cluster properties updated.')
         res = cluster.store(self.context)
         if not res:

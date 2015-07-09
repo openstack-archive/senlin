@@ -10,8 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
 import six
+
+from oslo_utils import timeutils as tu
 
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
@@ -172,7 +173,7 @@ class DBAPIProfileTest(base.SenlinTestCase):
     def test_profile_get_all_with_limit_marker(self):
         ids = ['profile1', 'profile2', 'profile3']
         for pid in ids:
-            timestamp = datetime.datetime.utcnow()
+            timestamp = tu.utcnow()
             shared.create_profile(self.ctx, id=pid, created_time=timestamp)
 
         # different limit settings
@@ -254,10 +255,9 @@ class DBAPIProfileTest(base.SenlinTestCase):
         self.assertEqual('003', profiles[2].id)
 
     def test_profile_get_all_default_sort_dir(self):
-        dt = datetime.datetime
         profiles = []
         for x in range(3):
-            profile = shared.create_profile(self.ctx, created_time=dt.utcnow())
+            profile = shared.create_profile(self.ctx, created_time=tu.utcnow())
             profiles.append(profile)
 
         results = db_api.profile_get_all(self.ctx, sort_dir='asc')

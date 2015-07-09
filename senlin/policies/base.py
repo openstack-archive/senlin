@@ -10,7 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
 from oslo_utils import timeutils
 
 from senlin.common import exception
@@ -104,7 +103,7 @@ class Policy(object):
 
     def store(self, context):
         '''Store the policy object into database table.'''
-        timestamp = datetime.datetime.utcnow()
+        timestamp = timeutils.utcnow()
 
         values = {
             'name': self.name,

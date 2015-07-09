@@ -10,8 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
 import mock
+
+from oslo_utils import timeutils as tu
 
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
@@ -286,9 +287,8 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertEqual(2, len(results))
 
     def test_cluster_get_all_default_sort_dir(self):
-        dt = datetime.datetime
         clusters = [shared.create_cluster(self.ctx, self.profile,
-                                          init_time=dt.utcnow())
+                                          init_time=tu.utcnow())
                     for x in range(3)]
 
         st_db = db_api.cluster_get_all(self.ctx, sort_dir='asc')
@@ -298,9 +298,8 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertEqual(clusters[2].id, st_db[2].id)
 
     def test_cluster_get_all_str_sort_keys(self):
-        dt = datetime.datetime
         clusters = [shared.create_cluster(self.ctx, self.profile,
-                                          created_time=dt.utcnow())
+                                          created_time=tu.utcnow())
                     for x in range(3)]
 
         st_db = db_api.cluster_get_all(self.ctx, sort_keys='created_time')
@@ -322,9 +321,8 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertEqual(expected_keys, used_sort_keys)
 
     def test_cluster_get_all_marker(self):
-        dt = datetime.datetime
         clusters = [shared.create_cluster(self.ctx, self.profile,
-                                          created_time=dt.utcnow())
+                                          created_time=tu.utcnow())
                     for x in range(3)]
         cl_db = db_api.cluster_get_all(self.ctx, marker=clusters[1].id)
         self.assertEqual(1, len(cl_db))

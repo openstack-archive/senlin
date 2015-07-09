@@ -10,8 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
 import logging
+
+from oslo_utils import timeutils as tu
 
 from senlin.db.sqlalchemy import api as db_api
 from senlin.tests.common import base
@@ -34,7 +35,7 @@ class DBAPIEventTest(base.SenlinTestCase):
                      entity=None, action=None, status=None,
                      status_reason=None, deleted_time=None):
 
-        fake_timestamp = datetime.datetime.strptime(
+        fake_timestamp = tu.parse_strtime(
             '2014-12-19 11:51:54.670244', '%Y-%m-%d %H:%M:%S.%f')
 
         if entity:
@@ -71,9 +72,9 @@ class DBAPIEventTest(base.SenlinTestCase):
         event = self.create_event(self.ctx)
         ret_event = db_api.event_get(self.ctx, event.id)
         self.assertIsNotNone(ret_event)
-        timestamp = datetime.datetime.strftime(ret_event.timestamp,
-                                               '%Y-%m-%d %H:%M:%S.%f')
-        self.assertEqual('2014-12-19 11:51:54.670244', timestamp)
+        tst_timestamp = tu.parse_strtime('2014-12-19 11:51:54.670244',
+                                         '%Y-%m-%d %H:%M:%S.%f')
+        self.assertEqual(tst_timestamp, ret_event.timestamp)
         self.assertEqual(logging.INFO, ret_event.level)
         self.assertEqual('', ret_event.obj_id)
         self.assertEqual('', ret_event.obj_type)
@@ -168,13 +169,13 @@ class DBAPIEventTest(base.SenlinTestCase):
         cluster1 = shared.create_cluster(self.ctx, self.profile)
 
         event1 = self.create_event(self.ctx, entity=cluster1,
-                                   timestamp=datetime.datetime.utcnow(),
+                                   timestamp=tu.utcnow(),
                                    action='action2')
         event2 = self.create_event(self.ctx, entity=cluster1,
-                                   timestamp=datetime.datetime.utcnow(),
+                                   timestamp=tu.utcnow(),
                                    action='action3')
         event3 = self.create_event(self.ctx, entity=cluster1,
-                                   timestamp=datetime.datetime.utcnow(),
+                                   timestamp=tu.utcnow(),
                                    action='action1')
 
         events = db_api.event_get_all(self.ctx, sort_keys=['timestamp'])
@@ -204,7 +205,7 @@ class DBAPIEventTest(base.SenlinTestCase):
         cluster2 = shared.create_cluster(self.ctx, self.profile)
 
         # Simulate deleted events by setting 'deleted_time' to not-None
-        now = datetime.datetime.utcnow()
+        now = tu.utcnow()
         self.create_event(self.ctx, entity=cluster1, deleted_time=now)
         self.create_event(self.ctx, entity=cluster1)
         self.create_event(self.ctx, entity=cluster2, deleted_time=now)

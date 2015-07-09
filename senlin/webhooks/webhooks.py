@@ -10,10 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
-
 from oslo_config import cfg
 from oslo_log import log as logging
+from oslo_utils import timeutils
 from six.moves.urllib import parse
 
 from senlin.common import exception
@@ -64,7 +63,7 @@ class Webhook(object):
         :param context: Security context for DB operations.
         """
         if not self.id:
-            self.created_time = datetime.datetime.utcnow()
+            self.created_time = timeutils.utcnow()
             values = {
                 'name': self.name,
                 'user': self.user,

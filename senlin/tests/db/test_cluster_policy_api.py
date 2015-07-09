@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
+from oslo_utils import timeutils as tu
 
 from senlin.db.sqlalchemy import api as db_api
 from senlin.tests.common import base
@@ -130,7 +130,7 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual(1, len(bindings))
         self.assertIsNone(bindings[0].last_op)
 
-        timestamp = datetime.datetime.utcnow()
+        timestamp = tu.utcnow()
         fields = {'last_op': timestamp}
         db_api.cluster_policy_update(self.ctx, self.cluster.id, policy.id,
                                      fields)

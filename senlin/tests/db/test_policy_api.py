@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
+from oslo_utils import timeutils as tu
 
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
@@ -209,7 +209,7 @@ class DBAPIPolicyTest(base.SenlinTestCase):
     def test_policy_get_all_with_limit_marker(self):
         ids = ['policy1', 'policy2', 'policy3']
         for pid in ids:
-            timestamp = datetime.datetime.utcnow()
+            timestamp = tu.utcnow()
             data = self.new_policy_data(id=pid, created_time=timestamp)
             db_api.policy_create(self.ctx, data)
 
@@ -294,10 +294,9 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         self.assertEqual('002', policies[2].id)
 
     def test_policy_get_all_default_sort_dir(self):
-        dt = datetime.datetime
         policies = []
         for x in range(3):
-            data = self.new_policy_data(created_time=dt.utcnow())
+            data = self.new_policy_data(created_time=tu.utcnow())
             policies.append(db_api.policy_create(self.ctx, data))
 
         results = db_api.policy_get_all(self.ctx, sort_dir='asc')
