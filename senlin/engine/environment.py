@@ -31,6 +31,8 @@ _environment = None
 
 
 def global_env():
+    global _environment
+
     if _environment is None:
         initialize()
     return _environment
