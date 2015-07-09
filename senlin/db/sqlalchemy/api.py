@@ -1099,11 +1099,8 @@ def action_get_all(context, filters=None, limit=None, marker=None,
         consts.ACTION_NAME: models.Action.name.key,
         consts.ACTION_TARGET: models.Action.target.key,
         consts.ACTION_ACTION: models.Action.action.key,
-        consts.ACTION_INTERVAL: models.Action.interval.key,
-        consts.ACTION_START_TIME: models.Action.start_time.key,
-        consts.ACTION_END_TIME: models.Action.end_time.key,
+        consts.ACTION_CREATED_TIME: models.Action.created_time.key,
         consts.ACTION_STATUS: models.Action.status.key,
-        consts.ACTION_STATUS_REASON: models.Action.status_reason.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
