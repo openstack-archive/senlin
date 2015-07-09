@@ -10,10 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
 import six
 
 from oslo_log import log as logging
+from oslo_utils import timeutils
 
 from senlin.common import exception
 from senlin.common.i18n import _
@@ -116,7 +116,7 @@ class Node(object):
             db_api.node_update(context, self.id, values)
             # TODO(Qiming): create event/log
         else:
-            init_time = datetime.datetime.utcnow()
+            init_time = timeutils.utcnow()
             self.init_time = init_time
             values['init_time'] = init_time
             node = db_api.node_create(context, values)
@@ -214,7 +214,7 @@ class Node(object):
         '''Set status of the node.'''
 
         values = {}
-        now = datetime.datetime.utcnow()
+        now = timeutils.utcnow()
         if status == self.ACTIVE and self.status == self.CREATING:
             self.created_time = values['created_time'] = now
         elif status == self.ACTIVE and self.status == self.UPDATING:
@@ -310,7 +310,7 @@ class Node(object):
             self.rt['profile'] = profile_base.Profile.load(context,
                                                            new_profile_id)
             self.profile_id = new_profile_id
-            self.updated_time = datetime.datetime.utcnow()
+            self.updated_time = timeutils.utcnow()
             self.store()
 
         return res
@@ -318,7 +318,7 @@ class Node(object):
     def do_join(self, context, cluster_id):
         if self.cluster_id == cluster_id:
             return True
-        timestamp = datetime.datetime.utcnow()
+        timestamp = timeutils.utcnow()
         db_node = db_api.node_migrate(context, self.id, cluster_id,
                                       timestamp)
         self.cluster_id = cluster_id
@@ -332,7 +332,7 @@ class Node(object):
         if self.cluster_id is None:
             return True
 
-        timestamp = datetime.datetime.utcnow()
+        timestamp = timeutils.utcnow()
         db_api.node_migrate(context, self.id, None, timestamp)
         self.cluster_id = None
         self.updated_time = timestamp

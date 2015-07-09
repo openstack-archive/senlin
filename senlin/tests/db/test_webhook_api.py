@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
+from oslo_utils import timeutils as tu
 
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
@@ -180,7 +180,7 @@ class DBAPIWebhookTest(base.SenlinTestCase):
         for v in webhook_ids:
             shared.create_webhook(self.ctx, self.obj_id, self.obj_type,
                                   self.action, id=v,
-                                  created_time=datetime.datetime.utcnow())
+                                  created_time=tu.utcnow())
 
         webhooks = db_api.webhook_get_all(self.ctx, limit=1)
         self.assertEqual(1, len(webhooks))

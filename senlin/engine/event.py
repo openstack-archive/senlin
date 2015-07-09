@@ -10,10 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
 import logging
 
 from oslo_log import log
+from oslo_utils import timeutils
 
 from senlin.common import exception
 from senlin.common import i18n
@@ -166,7 +166,7 @@ class Event(object):
 
 def critical(context, entity, action, status=None, status_reason=None,
              timestamp=None):
-    timestamp = timestamp or datetime.datetime.utcnow()
+    timestamp = timestamp or timeutils.utcnow()
     event = Event(timestamp, logging.CRITICAL, entity,
                   action=action, status=status, status_reason=status_reason,
                   user=context.user, project=context.project)
@@ -178,7 +178,7 @@ def critical(context, entity, action, status=None, status_reason=None,
 
 def error(context, entity, action, status=None, status_reason=None,
           timestamp=None):
-    timestamp = timestamp or datetime.datetime.utcnow()
+    timestamp = timestamp or timeutils.utcnow()
     event = Event(timestamp, logging.ERROR, entity,
                   action=action, status=status, status_reason=status_reason,
                   user=context.user, project=context.project)
@@ -190,7 +190,7 @@ def error(context, entity, action, status=None, status_reason=None,
 
 def warning(context, entity, action, status=None, status_reason=None,
             timestamp=None):
-    timestamp = timestamp or datetime.datetime.utcnow()
+    timestamp = timestamp or timeutils.utcnow()
     event = Event(timestamp, logging.WARNING, entity,
                   action=action, status=status, status_reason=status_reason,
                   user=context.user, project=context.project)
@@ -202,7 +202,7 @@ def warning(context, entity, action, status=None, status_reason=None,
 
 def info(context, entity, action, status=None, status_reason=None,
          timestamp=None):
-    timestamp = timestamp or datetime.datetime.utcnow()
+    timestamp = timestamp or timeutils.utcnow()
     event = Event(timestamp, logging.INFO, entity,
                   action=action, status=status, status_reason=status_reason,
                   user=context.user, project=context.project)
@@ -214,7 +214,7 @@ def info(context, entity, action, status=None, status_reason=None,
 
 def debug(context, entity, action, status=None, status_reason=None,
           timestamp=None):
-    timestamp = timestamp or datetime.datetime.utcnow()
+    timestamp = timestamp or timeutils.utcnow()
     event = Event(timestamp, logging.DEBUG, entity,
                   action=action, status=status, status_reason=status_reason,
                   user=context.user, project=context.project)

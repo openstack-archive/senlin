@@ -10,9 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
 import json
 import six
+
+from oslo_utils import timeutils as tu
 
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
@@ -193,7 +194,7 @@ class DBAPINodeTest(base.SenlinTestCase):
         node_ids = ['node1', 'node2', 'node3']
         for v in node_ids:
             shared.create_node(self.ctx, self.cluster, self.profile,
-                               id=v, init_time=datetime.datetime.utcnow())
+                               id=v, init_time=tu.utcnow())
 
         nodes = db_api.node_get_all(self.ctx, limit=1)
         self.assertEqual(1, len(nodes))
@@ -269,9 +270,8 @@ class DBAPINodeTest(base.SenlinTestCase):
         self.assertEqual('001', nodes[2].id)
 
     def test_node_get_all_default_sort_dir(self):
-        dt = datetime.datetime
         nodes = [shared.create_node(self.ctx, None, self.profile,
-                                    init_time=dt.utcnow())
+                                    init_time=tu.utcnow())
                  for x in range(3)]
 
         results = db_api.node_get_all(self.ctx, sort_dir='asc')
@@ -439,7 +439,7 @@ class DBAPINodeTest(base.SenlinTestCase):
 
     def test_node_migrate_from_none(self):
         node_orphan = shared.create_node(self.ctx, None, self.profile)
-        timestamp = datetime.datetime.utcnow()
+        timestamp = tu.utcnow()
 
         node = db_api.node_migrate(self.ctx, node_orphan.id, self.cluster.id,
                                    timestamp)
@@ -452,7 +452,7 @@ class DBAPINodeTest(base.SenlinTestCase):
 
     def test_node_migrate_to_none(self):
         node = shared.create_node(self.ctx, self.cluster, self.profile)
-        timestamp = datetime.datetime.utcnow()
+        timestamp = tu.utcnow()
 
         node_new = db_api.node_migrate(self.ctx, node.id, None, timestamp)
         self.assertEqual(timestamp, node_new.updated_time)
@@ -472,7 +472,7 @@ class DBAPINodeTest(base.SenlinTestCase):
         self.assertEqual(2, cluster1.next_index)
         self.assertEqual(1, cluster2.next_index)
 
-        timestamp = datetime.datetime.utcnow()
+        timestamp = tu.utcnow()
 
         node_new = db_api.node_migrate(self.ctx, node.id, cluster2.id,
                                        timestamp)
@@ -488,7 +488,7 @@ class DBAPINodeTest(base.SenlinTestCase):
         self.assertEqual(2, cluster2.next_index)
 
         # Migrate it back!
-        timestamp = datetime.datetime.utcnow()
+        timestamp = tu.utcnow()
 
         node_new = db_api.node_migrate(self.ctx, node.id, cluster1.id,
                                        timestamp)

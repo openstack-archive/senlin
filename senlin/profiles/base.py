@@ -11,9 +11,9 @@
 # under the License.
 
 import copy
-import datetime
 
 from oslo_log import log as logging
+from oslo_utils import timeutils
 
 from senlin.common import exception
 from senlin.common import schema
@@ -112,7 +112,7 @@ class Profile(object):
 
     def store(self, ctx):
         '''Store the profile into database and return its ID.'''
-        timestamp = datetime.datetime.utcnow()
+        timestamp = timeutils.utcnow()
 
         values = {
             'name': self.name,

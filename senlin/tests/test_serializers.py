@@ -10,10 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
+import webob
 
 from oslo_utils import encodeutils
-import webob
+from oslo_utils import timeutils as tu
 
 from senlin.common import serializers
 from senlin.tests.common import base
@@ -28,7 +28,9 @@ class JSONResponseSerializerTest(base.SenlinTestCase):
         self.assertEqual(expected, actual)
 
     def test_to_json_with_date_format_value(self):
-        fixture = {"date": datetime.datetime(1, 3, 8, 2)}
+        test_date = tu.parse_strtime("0001-03-08T02:00:00",
+                                     '%Y-%m-%dT%H:%M:%S')
+        fixture = {"date": test_date}
         expected = '{"date": "0001-03-08T02:00:00"}'
         actual = serializers.JSONResponseSerializer().to_json(fixture)
         self.assertEqual(expected, actual)

@@ -10,9 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
-
 from oslo_log import log as logging
+from oslo_utils import timeutils
 
 from senlin.db import api as db_api
 from senlin.engine.actions import base
@@ -44,7 +43,7 @@ class PolicyAction(base.Action):
         if self.action not in self.ACTIONS:
             return self.RES_ERROR
 
-        self.store(start_time=datetime.datetime.utcnow(),
+        self.store(start_time=timeutils.utcnow(),
                    status=self.RUNNING)
 
         cluster_id = kwargs.get('cluster_id')
@@ -63,12 +62,12 @@ class PolicyAction(base.Action):
 
             # TODO(Qiming): Add DB API complete this.
 
-        self.store(end_time=datetime.datetime.utcnow(),
+        self.store(end_time=timeutils.utcnow(),
                    status=self.SUCCEEDED)
 
         return self.RES_OK
 
     def cancel(self):
-        self.store(end_time=datetime.datetime.utcnow(),
+        self.store(end_time=timeutils.utcnow(),
                    status=self.CANCELLED)
         return self.RES_OK

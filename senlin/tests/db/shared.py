@@ -10,9 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
 import json
 import uuid
+
+from oslo_utils import timeutils as tu
 
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import parser
@@ -68,7 +69,7 @@ def create_cluster(ctx, profile, **kwargs):
         'next_index': 1,
         'timeout': 60,
         'desired_capacity': 0,
-        'init_time': datetime.datetime.utcnow(),
+        'init_time': tu.utcnow(),
         'status': 'INIT',
         'status_reason': 'Just Initialized',
         'metadata': {},

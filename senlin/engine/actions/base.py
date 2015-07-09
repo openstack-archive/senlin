@@ -10,12 +10,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
 import six
 import time
 
 from oslo_config import cfg
 from oslo_log import log as logging
+from oslo_utils import timeutils
 
 from senlin.common import context as req_context
 from senlin.common import exception
@@ -167,17 +167,17 @@ class Action(object):
             'outputs': self.outputs,
             'depends_on': self.depends_on,
             'depended_by': self.depended_by,
-            'created_time': datetime.datetime.utcnow(),
+            'created_time': timeutils.utcnow(),
             'updated_time': self.updated_time,
             'deleted_time': self.deleted_time,
             'data': self.data,
         }
 
         if self.id:
-            values['updated_time'] = datetime.datetime.utcnow()
+            values['updated_time'] = timeutils.utcnow()
             db_api.action_update(context, self.id, values)
         else:
-            values['created_time'] = datetime.datetime.utcnow()
+            values['created_time'] = timeutils.utcnow()
             action = db_api.action_create(context, values)
             self.id = action.id
 
