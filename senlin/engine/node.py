@@ -338,5 +338,5 @@ class Node(object):
         self.updated_time = timestamp
         self.index = -1
 
-        profile_base.Profile.leave_cluster(self)
+        profile_base.Profile.leave_cluster(context, self)
         return True
