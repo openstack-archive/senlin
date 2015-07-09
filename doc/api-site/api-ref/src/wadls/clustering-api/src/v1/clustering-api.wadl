@@ -1625,8 +1625,7 @@
                         <para>
                             Sorts the action list by the specified keys. Default to None. Valid
                             keys include <code>name</code>, <code>target</code>, <code>action</code>,
-                            <code>interval</code>, <code>start_time</code>, <code>end_time</code>,
-                            <code>status</code>, <code>status_reason</code> etc.
+                            <code>created_time</code>, <code>status</code> etc.
                         </para>
                     </wadl:doc>
                 </param>

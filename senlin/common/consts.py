@@ -147,9 +147,11 @@ ACTION_ATTRS = (
     ACTION_INTERVAL, ACTION_START_TIME, ACTION_END_TIME,
     ACTION_TIMEOUT, ACTION_STATUS, ACTION_STATUS_REASON,
     ACTION_INPUTS, ACTION_OUTPUTS, ACTION_DEPENDS_ON, ACTION_DEPENDED_BY,
+    ACTION_CREATED_TIME, ACTION_UPDATED_TIME, ACTION_DELETED_TIME,
 ) = (
     'name', 'target', 'action', 'cause',
     'interval', 'start_time', 'end_time',
     'timeout', 'status', 'status_reason',
     'inputs', 'outputs', 'depends_on', 'depended_by',
+    'created_time', 'updated_time', 'deleted_time',
 )
