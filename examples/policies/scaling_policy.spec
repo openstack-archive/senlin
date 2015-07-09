@@ -5,12 +5,10 @@ adjustment:
   # EXACT_CAPACITY, CHANGE_IN_CAPACITY, CHANGE_IN_PERCENTAGE
   type: CHANGE_IN_CAPACITY
 
-  # A number that will be interpreted based on the type setting
-  # Define negative number for scaling in policy and positive
-  # number for scaling out policy.
+  # A number that will be interpreted based on the type setting.
   number: 1
  
-  # When type is set CHNAGE_IN_PERCENTAGE, min_step specifies
+  # When type is set CHANGE_IN_PERCENTAGE, min_step specifies
   # that the cluster size will be changed by at least the number
   # of nodes specified here.
   min_step: 1
