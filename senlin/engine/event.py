@@ -142,7 +142,9 @@ class Event(object):
 
     @classmethod
     def from_dict(cls, **kwargs):
-        return cls(kwargs)
+        timestamp = kwargs.pop('timestamp')
+        level = kwargs.pop('level')
+        return cls(timestamp, level, kwargs)
 
     def to_dict(self):
         evt = {

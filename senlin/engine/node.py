@@ -207,8 +207,11 @@ class Node(object):
         return node_dict
 
     @classmethod
-    def from_dict(cls, **kwargs):
-        return cls(**kwargs)
+    def from_dict(cls, context=None, **kwargs):
+        name = kwargs.pop('name')
+        profile_id = kwargs.pop('profile_id')
+        cluster_id = kwargs.pop('cluster_id')
+        return cls(name, profile_id, cluster_id, context, **kwargs)
 
     def set_status(self, context, status, reason=None):
         '''Set status of the node.'''
