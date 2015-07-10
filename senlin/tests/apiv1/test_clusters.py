@@ -550,15 +550,13 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._post('/clusters', json.dumps(body))
 
         error = senlin_exc.InvalidParameter(name='desired_capacity', value=-1)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
-                                     side_effect=error)
+        self.patchobject(rpc_client.EngineClient, 'call', side_effect=error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create,
                                               req, tenant_id=self.project,
                                               body=body)
 
-        mock_call.assert_called_once()
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('InvalidParameter', resp.json['error']['type'])
 

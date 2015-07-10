@@ -328,7 +328,9 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, tenant_id=self.project,
                                               body=body)
 
-        mock_call.assert_called_once()
+        expected_args = body['webhook']
+        mock_call.assert_called_once_with(req.context,
+                                          ('webhook_create', expected_args))
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('SenlinBadRequest', resp.json['error']['type'])
         self.assertIsNone(resp.json['error']['traceback'])
@@ -362,7 +364,9 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, tenant_id=self.project,
                                               body=body)
 
-        mock_call.assert_called_once()
+        expected_args = body['webhook']
+        mock_call.assert_called_once_with(req.context,
+                                          ('webhook_create', expected_args))
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ClusterNotFound', resp.json['error']['type'])
         self.assertIsNone(resp.json['error']['traceback'])
@@ -397,7 +401,9 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, tenant_id=self.project,
                                               body=body)
 
-        mock_call.assert_called_once()
+        expected_args = body['webhook']
+        mock_call.assert_called_once_with(req.context,
+                                          ('webhook_create', expected_args))
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('SenlinBadRequest', resp.json['error']['type'])
         self.assertIsNone(resp.json['error']['traceback'])
@@ -435,7 +441,9 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, tenant_id=self.project,
                                               body=body)
 
-        mock_call.assert_called_once()
+        expected_args = body['webhook']
+        mock_call.assert_called_once_with(req.context,
+                                          ('webhook_create', expected_args))
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('SenlinBadRequest', resp.json['error']['type'])
         self.assertIsNone(resp.json['error']['traceback'])
@@ -466,7 +474,9 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, tenant_id=self.project,
                                               body=body)
 
-        mock_call.assert_called_once()
+        expected_args = body['webhook']
+        mock_call.assert_called_once_with(req.context,
+                                          ('webhook_create', expected_args))
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('SenlinBadRequest', resp.json['error']['type'])
         self.assertIsNone(resp.json['error']['traceback'])

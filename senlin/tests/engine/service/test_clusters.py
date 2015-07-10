@@ -544,15 +544,14 @@ class ClusterTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_update_to_same_profile(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
-        self.eng.cluster_update(self.ctx, c['id'],
-                                profile_id=self.profile['id'])
-        result = self.eng.cluster_get(self.ctx, c['id'])
-        self.assertEqual(c['id'], result['id'])
-        self.assertEqual(c['profile_id'], result['profile_id'])
+        result = self.eng.cluster_update(self.ctx, c['id'],
+                                         profile_id=self.profile['id'])
+        cluster = self.eng.cluster_get(self.ctx, c['id'])
+        self.assertEqual(c['id'], cluster['id'])
+        self.assertEqual(c['profile_id'], cluster['profile_id'])
 
-        # notify is only called once, because the 'cluster_update' operation
-        # was not causing any new action to be dispatched
-        notify.assert_called_once()
+        # No new action is generated during 'cluster_update' progress
+        self.assertTrue('action' not in result)
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_update_to_diff_profile_type(self, notify):

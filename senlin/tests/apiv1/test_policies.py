@@ -300,7 +300,12 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, tenant_id=self.project,
                                               body=body)
 
-        mock_call.assert_called_once()
+        expected_args = body['policy']
+        expected_args['cooldown'] = None
+        expected_args['level'] = None
+        expected_args['policy_type'] = expected_args.pop('type')
+        mock_call.assert_called_once_with(req.context,
+                                          ('policy_create', expected_args))
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('PolicyTypeNotFound', resp.json['error']['type'])
         self.assertIsNone(resp.json['error']['traceback'])
@@ -326,7 +331,12 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, tenant_id=self.project,
                                               body=body)
 
-        mock_call.assert_called_once()
+        expected_args = body['policy']
+        expected_args['cooldown'] = None
+        expected_args['level'] = None
+        expected_args['policy_type'] = expected_args.pop('type')
+        mock_call.assert_called_once_with(req.context,
+                                          ('policy_create', expected_args))
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('SpecValidationFailed', resp.json['error']['type'])
         self.assertIsNone(resp.json['error']['traceback'])

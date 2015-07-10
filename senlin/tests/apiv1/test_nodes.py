@@ -343,8 +343,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               self.controller.create,
                                               req, tenant_id=self.project,
                                               body=body)
-
-        mock_call.assert_called_once()
+        mock_call.assert_called_once_with(req.context,
+                                          ('node_create', body['node']))
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ProfileNotFound', resp.json['error']['type'])
         self.assertIsNone(resp.json['error']['traceback'])
@@ -371,7 +371,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, tenant_id=self.project,
                                               body=body)
 
-        mock_call.assert_called_once()
+        mock_call.assert_called_once_with(req.context,
+                                          ('node_create', body['node']))
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ClusterNotFound', resp.json['error']['type'])
         self.assertIsNone(resp.json['error']['traceback'])

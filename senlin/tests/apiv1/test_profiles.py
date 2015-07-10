@@ -300,7 +300,11 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, tenant_id=self.project,
                                               body=body)
 
-        mock_call.assert_called_once()
+        expected_args = body['profile']
+        expected_args['perm'] = expected_args.pop('permission')
+        expected_args['profile_type'] = expected_args.pop('type')
+        mock_call.assert_called_once_with(req.context,
+                                          ('profile_create', expected_args))
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ProfileTypeNotFound', resp.json['error']['type'])
         self.assertIsNone(resp.json['error']['traceback'])
@@ -328,7 +332,11 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, tenant_id=self.project,
                                               body=body)
 
-        mock_call.assert_called_once()
+        expected_args = body['profile']
+        expected_args['perm'] = expected_args.pop('permission')
+        expected_args['profile_type'] = expected_args.pop('type')
+        mock_call.assert_called_once_with(req.context,
+                                          ('profile_create', expected_args))
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('SpecValidationFailed', resp.json['error']['type'])
         self.assertIsNone(resp.json['error']['traceback'])
@@ -564,7 +572,13 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, tenant_id=self.project,
                                               profile_id=pid,
                                               body=body)
-        mock_call.assert_called_once()
+
+        expected_args = body['profile']
+        expected_args['permission'] = None
+        expected_args['metadata'] = None
+        expected_args['profile_id'] = pid
+        mock_call.assert_called_once_with(req.context,
+                                          ('profile_update', expected_args))
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('SpecValidationFailed', resp.json['error']['type'])
         self.assertIsNone(resp.json['error']['traceback'])
