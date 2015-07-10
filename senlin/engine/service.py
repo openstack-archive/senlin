@@ -1231,9 +1231,17 @@ class EngineService(service.Service):
         if not params:
             params = {}
 
-        webhook = webhook_mod.Webhook(context, obj_id, obj_type,
-                                      action, credential=credential,
-                                      params=params, name=name)
+        kwargs = {
+            'name': name,
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'credential': credential,
+            'params': params
+        }
+
+        webhook = webhook_mod.Webhook(obj_id, obj_type, action,
+                                      context=context, **kwargs)
         key = webhook.encrypt_credential()
         webhook.store(context)
         url, token = webhook.generate_url(key)
