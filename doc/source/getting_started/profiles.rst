@@ -62,7 +62,7 @@ to the command::
   +--------------------------------------+----------+----------------+---------------------+
 
 By default, the command :command:`profile-list` filters out profile objects
-that have been soft deleted. However, you can add the option :option:`-d`
+that have been soft deleted. However, you can add the option :option:`-D`
 (or :option:`--show-deleted`) to the command to indicate that soft-deleted
 profiles should be included in the list.
 
