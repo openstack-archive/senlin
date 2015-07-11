@@ -46,7 +46,7 @@ The following command shows the clusters managed by the Senlin service::
 
 The :program:`senlin` command line supports various options for the command
 :command:`cluster-list`. You can specify the option :option:`--show-deleted`
-(or :option:`-d`) to indicate that soft-deleted clusters be included in the
+(or :option:`-D`) to indicate that soft-deleted clusters be included in the
 list result.
 
 Note that the first column in the output table is a *short ID* of a cluster
@@ -67,8 +67,8 @@ to the command::
 Sorting the List
 ^^^^^^^^^^^^^^^^
 
-You specify the sorting keys and sorting directions for the cluster list,
-using the option :option:`--sort-keys` (or :option:`-k`) and the option
+You can specify the sorting keys and sorting direction for the cluster list,
+using the option :option:`--sort-keys` (or :option:`-k`) and/or the option
 :option:`--sort-dir` (or :option:`-s`). For example, the following command
 instructs the :program:`senlin` command line to sort clusters using the
 ``name`` property in descending order::
