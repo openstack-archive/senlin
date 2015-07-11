@@ -104,13 +104,13 @@ class ScalingInPolicy(base.Policy):
         current_size = len(nodes)
         count = self._calculate_adjustment_count(current_size)
 
-        # If action has input count, use it in prior
+        # Use action input if count is provided
         count = action.inputs.get('count', count)
 
-        # Check size limitation
+        # Check size constraints
         if count < 0:
             status = base.CHECK_ERROR
-            reason = _('Negative adjustment count is generated.')
+            reason = _('Negative number is invalid for scaling in policy.')
         elif current_size - count < cluster.min_size:
             if not self.best_effort:
                 status = base.CHECK_ERROR

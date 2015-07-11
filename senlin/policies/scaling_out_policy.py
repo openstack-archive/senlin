@@ -14,6 +14,7 @@ from oslo_log import log as logging
 
 from senlin.common import constraints
 from senlin.common import consts
+from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.db import api as db_api
@@ -68,7 +69,7 @@ class ScalingOutPolicy(base.Policy):
                 ),
                 MIN_STEP: schema.Integer(
                     _('When adjustment type is set to "CHANGE_IN_PERCENTAGE",'
-                      ' this specifies the cluster size will be changed by '
+                      ' this specifies the cluster size will be increased by '
                       'at least this number of nodes.'),
                     default=1,
                 ),
@@ -91,10 +92,52 @@ class ScalingOutPolicy(base.Policy):
         self.adjustment_min_step = adjustment[self.MIN_STEP]
         self.best_effort = adjustment[self.BEST_EFFORT]
 
+    def validate(self):
+        super(ScalingOutPolicy, self).validate()
+
+        if self.adjustment_number < 0:
+            msg = _('Adjustment number is not allowed to be negative.')
+            raise exception.PolicyValidationFailed(message=msg)
+
     def pre_op(self, cluster_id, action):
         cluster = db_api.cluster_get(action.context, cluster_id)
         nodes = db_api.node_get_all_by_cluster(action.context, cluster_id)
         current_size = len(nodes)
+        count = self._calculate_adjustment_count(current_size)
+
+        # Use action input if count is provided
+        count = action.inputs.get('count', count)
+
+        # Check cluster size constraints
+        if count < 0:
+            status = base.CHECK_ERROR
+            reason = _('Negative number is invalid for scaling out policy.')
+        elif current_size + count > cluster.max_size:
+            if not self.best_effort:
+                status = base.CHECK_ERROR
+                reason = _('Attempted scaling exceeds maximum size.')
+            else:
+                status = base.CHECK_OK
+                count = cluster.max_size - current_size
+                reason = _('Do best effort scaling.')
+        else:
+            status = base.CHECK_OK
+            reason = _('Scaling request validated.')
+
+        pd = {
+            'creation': {
+                'count': count,
+            },
+            'status': status,
+            'reason': reason,
+        }
+        action.data.update(pd)
+        action.store(action.context)
+
+        return
+
+    def _calculate_adjustment_count(self, current_size):
+        '''Calculate adjustment count based on current_size'''
 
         if self.adjustment_type == consts.EXACT_CAPACITY:
             count = self.adjustment_number - current_size
@@ -105,29 +148,4 @@ class ScalingOutPolicy(base.Policy):
             if count < self.adjustment_min_step:
                 count = self.adjustment_min_step
 
-        # If action has input count, use it in prior
-        count = action.inputs.get('count', count)
-
-        # Sanity check
-        if count < 0:
-            action.data['status'] = base.CHECK_ERROR
-            action.data['reason'] = _('ScalingOutPolicy generates a negative '
-                                      'count for scaling out operation.')
-        elif current_size + count > cluster.max_size:
-            if not self.best_effort:
-                action.data['status'] = base.CHECK_ERROR
-                action.data['reason'] = _('Attempted scaling exceeds '
-                                          'maximum size')
-            else:
-                action.data['status'] = base.CHECK_OK
-                count = cluster.max_size - current_size
-                action.data['reason'] = _('Do best effort scaling')
-        else:
-            action.data['status'] = base.CHECK_OK
-            action.data['reason'] = _('Scaling request validated')
-
-        pd = {'count': abs(count)}
-        action.data['creation'] = pd
-        action.store(action.context)
-
-        return
+        return count
