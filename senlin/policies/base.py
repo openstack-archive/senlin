@@ -165,6 +165,6 @@ class Policy(object):
 
     @classmethod
     def from_dict(cls, **kwargs):
-        type_name = kwargs.get('type', '')
-        name = kwargs.get('name', '')
+        type_name = kwargs.pop('type')
+        name = kwargs.pop('name')
         return cls(type_name, name, **kwargs)

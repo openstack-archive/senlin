@@ -419,7 +419,8 @@ class Action(object):
 
     @classmethod
     def from_dict(cls, context=None, **kwargs):
-        return cls(context=context, **kwargs)
+        action = kwargs.pop('action')
+        return cls(context, action, **kwargs)
 
 
 def ActionProc(context, action_id, worker_id):

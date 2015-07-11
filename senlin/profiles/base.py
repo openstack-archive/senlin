@@ -251,4 +251,6 @@ class Profile(object):
 
     @classmethod
     def from_dict(cls, **kwargs):
-        return cls(kwargs)
+        type_name = kwargs.pop('type')
+        name = kwargs.pop('name')
+        return cls(type_name, name, kwargs)
