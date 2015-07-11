@@ -35,13 +35,13 @@ class Webhook(object):
     when the webhook is triggered later.
     """
 
-    def __init__(self, context, obj_id, obj_type, action, **kwargs):
+    def __init__(self, obj_id, obj_type, action, context=None, **kwargs):
 
         self.id = kwargs.get('id', None)
         self.name = kwargs.get('name', None)
-        self.user = kwargs.get('user', context.user)
-        self.project = kwargs.get('project', context.project)
-        self.domain = kwargs.get('domain', context.domain)
+        self.user = kwargs.get('user', '')
+        self.project = kwargs.get('project', '')
+        self.domain = kwargs.get('domain', '')
 
         self.created_time = kwargs.get('created_time', None)
         self.deleted_time = kwargs.get('deleted_time', None)
@@ -56,6 +56,14 @@ class Webhook(object):
         # authentication.
         self.credential = kwargs.get('credential', None)
         self.params = kwargs.get('params', {})
+
+        if context is not None:
+            if self.user == '':
+                self.user = context.user
+            if self.project == '':
+                self.project = context.project
+            if self.domain == '':
+                self.domain = context.domain
 
     def store(self, context):
         """Store the webhook in database and return its ID.
@@ -84,10 +92,9 @@ class Webhook(object):
         return self.id
 
     @classmethod
-    def _from_db_record(cls, context, record):
+    def _from_db_record(cls, record):
         """Construct a webhook object from database record.
 
-        :param context: the security context used for DB operations.
         :param record: a DB webhook object that will receive all fields.
         """
         kwargs = {
@@ -102,8 +109,7 @@ class Webhook(object):
             'params': record.params,
         }
 
-        return cls(context, record.obj_id, record.obj_type,
-                   record.action, **kwargs)
+        return cls(record.obj_id, record.obj_type, record.action, **kwargs)
 
     @classmethod
     def load(cls, context, webhook_id, show_deleted=False):
@@ -119,7 +125,7 @@ class Webhook(object):
         if webhook is None:
             raise exception.WebhookNotFound(webhook=webhook_id)
 
-        return cls._from_db_record(context, webhook)
+        return cls._from_db_record(webhook)
 
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort_keys=None,
@@ -135,7 +141,7 @@ class Webhook(object):
                                          project_safe=project_safe)
 
         for record in records:
-            webhook = cls._from_db_record(context, record)
+            webhook = cls._from_db_record(record)
             yield webhook
 
     def to_dict(self):
@@ -159,8 +165,11 @@ class Webhook(object):
         return info
 
     @classmethod
-    def from_dict(cls, **kwargs):
-        return cls(**kwargs)
+    def from_dict(cls, context=None, **kwargs):
+        obj_id = kwargs.pop('obj_id')
+        obj_type = kwargs.pop('obj_type')
+        action = kwargs.pop('action')
+        return cls(obj_id, obj_type, action, context, **kwargs)
 
     def encrypt_credential(self):
         cipher, key = utils.encrypt(self.credential['password'])
