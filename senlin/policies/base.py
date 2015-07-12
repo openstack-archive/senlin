@@ -13,6 +13,7 @@
 from oslo_utils import timeutils
 
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.db import api as db_api
 from senlin.engine import environment
@@ -26,6 +27,7 @@ CHECK_RESULTS = (
 
 class Policy(object):
     '''Base class for policies.'''
+    PROFILE_TYPE = 'ANY'
 
     def __new__(cls, type_name, name, **kwargs):
         '''Create a new policy of the appropriate class.'''
@@ -129,13 +131,48 @@ class Policy(object):
         '''Validate the schema and the data provided.'''
         self.spec_data.validate()
 
-    def attach(self, cluster_id):
-        '''Method to be invoked before policy is attached to a cluster.'''
-        return True
+    def _build_policy_data(self, data):
+        clsname = self.__class__.__name__
+        version = self.VERSION
+        result = {
+            clsname: {
+                'version': version,
+                'data': data,
+            }
+        }
+        return result
 
-    def detach(self, cluster_id):
+    def _extract_policy_data(self, policy_data):
+        clsname = self.__class__.__name__
+        if clsname not in policy_data:
+            return None
+        data = policy_data.get(clsname)
+        if 'version' not in data or data['version'] != self.VERSION:
+            return None
+
+        return data.get('data', None)
+
+    def attach(self, cluster):
+        '''Method to be invoked before policy is attached to a cluster.
+
+        :param cluster: the cluster to which the policy is being attached to.
+        :returns: (True, message) if the operation is successful, or (False,
+                 error) otherwise.
+        '''
+        if self.PROFILE_TYPE == 'ANY':
+            return True, None
+
+        profile = cluster.rt['profile']
+        if profile.type not in self.PROFILE_TYPE:
+            error = _('Policy not applicable on profile type:'
+                      '%s') % profile.type
+            return False, error
+
+        return True, None
+
+    def detach(self, cluster):
         '''Method to be invoked before policy is detached from a cluster.'''
-        return True
+        return True, None
 
     def pre_op(self, cluster_id, action):
         '''A method that will be invoked before an action execution.'''

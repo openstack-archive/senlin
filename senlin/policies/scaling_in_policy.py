@@ -30,7 +30,7 @@ class ScalingInPolicy(base.Policy):
     is decreased.
     '''
 
-    __type_name__ = 'ScalingInPolicy'
+    VERSION = '1.0'
 
     TARGET = [
         ('BEFORE', consts.CLUSTER_SCALE_IN),

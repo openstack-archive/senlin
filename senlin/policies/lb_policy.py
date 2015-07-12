@@ -36,6 +36,7 @@ class LoadBalancingPolicy(base.Policy):
     is changed. We need to reload the load-balancer specified (or internally
     created) when these actions are performed.
     '''
+    VERSION = '1.0'
 
     TARGET = [
         ('AFTER', consts.CLUSTER_ADD_NODES),
@@ -194,29 +195,30 @@ class LoadBalancingPolicy(base.Policy):
         # validate subnet's exists
         # subnet = self.nc.subnet_get(vip[self.VIP_SUBNET])
 
-    def attach(self, cluster_id):
+    def attach(self, cluster):
         """Routine to be invoked when policy is to be attached to a cluster.
 
-        :param cluster_id: The ID of the target cluster to be attached to;
-        :param action: The action that triggered this operation.
-        :returns: When the operation was successful, returns a tuple of
-            (True, data) where the data contains references to the resources
-            created; otherwise returns a tuple of (False, err) where the err
-            contains a error message.
+        :param cluster: The target cluster to be attached to;
+        :returns: When the operation was successful, returns a tuple (True,
+                  message); otherwise, return a tuple (False, error).
         """
-        ctx = self._build_context(cluster_id)
+        res, data = super(LoadBalancingPolicy, self).attach(cluster)
+        if res is False:
+            return False, data
+
+        ctx = self._build_context(cluster)
         lb_driver = lbaas.LoadBalancerDriver(ctx)
 
         # TODO(Anyone): check cluster profile type matches self.PROFILE or not
         res, data = lb_driver.lb_create(self.vip_spec, self.pool_spec)
         if res is False:
-            return res, data
+            return False, data
 
         port = self.pool_spec.get(self.POOL_PROTOCOL_PORT)
         subnet = self.pool_spec.get(self.POOL_SUBNET)
 
         nodes = node_mod.Node.load_all(context.get_current(),
-                                       cluster_id=cluster_id)
+                                       cluster_id=cluster.id)
         for node in nodes:
             member_id = lb_driver.member_add(node, data['loadbalancer'],
                                              data['pool'], port, subnet)
@@ -232,7 +234,9 @@ class LoadBalancingPolicy(base.Policy):
             node.data.update({'lb_member': member_id})
             node.store(context.get_current())
 
-        return True, data
+        policy_data = self._build_policy_data(data)
+
+        return True, policy_data
 
     def detach(self, cluster_id):
         """Routine to be called when the policy is detached from a cluster.
@@ -244,17 +248,22 @@ class LoadBalancingPolicy(base.Policy):
             created; otherwise returns a tuple of (False, err) where the err
             contains a error message.
         """
+        reason = _('LB resources deletion succeeded.')
         ctx = self._build_context(cluster_id)
         lb_driver = lbaas.LoadBalancerDriver(ctx)
 
         cp = cluster_policy.ClusterPolicy.load(context.get_current(),
                                                cluster_id, self.id)
 
-        res, reason = lb_driver.lb_delete(**cp.data)
+        policy_data = self._extract_policy_data(cp.data)
+        if policy_data is None:
+            return True, reason
+
+        res, reason = lb_driver.lb_delete(**policy_data)
         if res is False:
             return False, reason
 
-        return True, 'LB resources deletion succeeded.'
+        return True, reason
 
     def post_op(self, cluster_id, action):
         """Routine to be called after an action has been executed.
@@ -328,11 +337,10 @@ class LoadBalancingPolicy(base.Policy):
 
         return
 
-    def _build_context(self, cluster_id):
+    def _build_context(self, cluster):
         """Build a trust-based context for connection parameters.
 
-        :param cluster_id: the ID of the cluste for which the trust will be
-                           checked.
+        :param cluster: the cluste for which the trust will be checked.
         """
         ctx = context.get_service_context()
         params = {
@@ -342,7 +350,6 @@ class LoadBalancingPolicy(base.Policy):
             'password': ctx['password'],
         }
 
-        cluster = db_api.cluster_get(oslo_context.get_current(), cluster_id)
         cred = db_api.cred_get(oslo_context.get_current(),
                                cluster.user, cluster.project)
         if cred is None:

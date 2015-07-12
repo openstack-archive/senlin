@@ -29,7 +29,7 @@ class ScalingOutPolicy(base.Policy):
     is increased.
     '''
 
-    __type_name__ = 'ScalingOutPolicy'
+    VERSION = '1.0'
 
     TARGET = [
         ('BEFORE', consts.CLUSTER_SCALE_OUT),
