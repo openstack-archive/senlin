@@ -448,10 +448,10 @@ def ActionProc(context, action_id, worker_id):
         # executed.
         result = action.RES_ERROR
         reason = six.text_type(ex)
-        LOG.error(_('Unexpected exception occurred during %(action)s action '
-                    '%(id)s execution: %(reason)s'), {'action': action.action,
-                                                      'id': action.id,
-                                                      'reason': reason})
+        LOG.exception(_('Unexpected exception occurred during action '
+                        '%(action)s (%(id)s) execution: %(reason)s'),
+                      {'action': action.action, 'id': action.id,
+                       'reason': reason})
     finally:
         # NOTE: locks on action is eventually released here by status update
         action.set_status(result, reason)
