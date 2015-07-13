@@ -48,8 +48,14 @@ from senlin.policies import base
 
 
 class DeletionPolicy(base.Policy):
+    '''Policy for deleting nodes from a cluster.
 
-    __type_name__ = 'DeletionPolicy'
+    This policy is enforced when nodes are to be removed from a cluster.
+    It will yield the list of candidates for deletion based on user specified
+    criteria.
+    '''
+
+    VERSION = '1.0'
 
     KEYS = (
         CRITERIA, DESTROY_AFTER_DELETION, GRACE_PERIOD,

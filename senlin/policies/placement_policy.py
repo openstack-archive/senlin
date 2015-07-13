@@ -53,7 +53,7 @@ class PlacementPolicy(base.Policy):
     existing cluster.
     '''
 
-    __type_name__ = 'PlacementPolicy'
+    VERSION = '1.0'
 
     TARGET = [
         ('BEFORE', consts.CLUSTER_SCALE_OUT),

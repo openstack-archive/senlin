@@ -597,13 +597,10 @@ class ClusterAction(base.Action):
         '''Attach policy to the cluster.'''
 
         policy_id = self.inputs.get('policy_id', None)
-        if not policy_id:
-            raise exception.PolicyNotSpecified()
-
         policy = policy_mod.Policy.load(self.context, policy_id)
         # Check if policy has already been attached
-        all = db_api.cluster_policy_get_all(self.context, cluster.id)
-        for existing in all:
+        all_policies = db_api.cluster_policy_get_all(self.context, cluster.id)
+        for existing in all_policies:
             # Policy already attached
             if existing.policy_id == policy_id:
                 return self.RES_OK, 'Policy already attached'
@@ -613,12 +610,9 @@ class ClusterAction(base.Action):
             if curr.type == policy.type:
                 raise exception.PolicyTypeConflict(policy_type=policy.type)
 
-        res, data = policy.attach(cluster.id, self)
+        res, data = policy.attach(cluster)
         if not res:
-            return self.RES_ERROR, 'Failed attaching policy'
-        if res == self.RES_CANCEL:
-            # Action is canceled during progress, reason is stored in data
-            return res, data
+            return self.RES_ERROR, _('Failed attaching policy.')
 
         # Initialize data field of cluster_policy object with information
         # generated during policy attaching

@@ -22,7 +22,7 @@ from senlin.policies import base
 class HealthPolicy(base.Policy):
     '''Policy for health checking for members of a cluster.'''
 
-    __type_name__ = 'HealthPolicy'
+    VERSION = '1.0'
 
     TARGET = [
         ('AFTER', consts.CLUSTER_ADD_NODES),
