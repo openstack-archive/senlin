@@ -87,11 +87,14 @@ class EngineClient(object):
                                        sort_dir=sort_dir, filters=filters,
                                        show_deleted=show_deleted))
 
-    def profile_create(self, ctxt, name, profile_type, spec, perm, metadata):
+    def profile_create(self, ctxt, name, profile_type, spec, permission,
+                       metadata):
         return self.call(ctxt,
                          self.make_msg('profile_create', name=name,
-                                       profile_type=profile_type, spec=spec,
-                                       perm=perm, metadata=metadata))
+                                       profile_type=profile_type,
+                                       spec=spec,
+                                       permission=permission,
+                                       metadata=metadata))
 
     def profile_get(self, ctxt, identity):
         return self.call(ctxt,

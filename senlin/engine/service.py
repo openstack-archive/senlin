@@ -198,15 +198,15 @@ class EngineService(service.Service):
         return [p.to_dict() for p in profiles]
 
     @request_context
-    def profile_create(self, context, name, profile_type, spec, perm=None,
-                       metadata=None):
+    def profile_create(self, context, name, profile_type, spec,
+                       permission=None, metadata=None):
         LOG.info(_LI('Creating profile %(type)s: %(name)s'),
                  {'type': profile_type, 'name': name})
         plugin = environment.global_env().get_profile(profile_type)
 
         kwargs = {
             'spec': spec,
-            'permission': perm,
+            'permission': permission,
             'metadata': metadata,
         }
         profile = plugin(profile_type, name, **kwargs)

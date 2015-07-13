@@ -42,7 +42,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
         self.profile = self.eng.profile_create(
             self.ctx, 'p-test', 'TestProfile',
-            spec={'INT': 10, 'STR': 'string'}, perm='1111')
+            spec={'INT': 10, 'STR': 'string'}, permission='1111')
 
         self.policy = self.eng.policy_create(
             self.ctx, 'policy_1', 'TestPolicy',

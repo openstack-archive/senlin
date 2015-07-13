@@ -253,7 +253,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'name': 'test_profile',
                 'profile_type': 'test_profile_type',
                 'spec': {'param_1': 'value1', 'param_2': 2},
-                'perm': None,
+                'permission': None,
                 'metadata': {},
             })
         )
@@ -301,7 +301,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               body=body)
 
         expected_args = body['profile']
-        expected_args['perm'] = expected_args.pop('permission')
         expected_args['profile_type'] = expected_args.pop('type')
         mock_call.assert_called_once_with(req.context,
                                           ('profile_create', expected_args))
@@ -333,7 +332,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               body=body)
 
         expected_args = body['profile']
-        expected_args['perm'] = expected_args.pop('permission')
         expected_args['profile_type'] = expected_args.pop('type')
         mock_call.assert_called_once_with(req.context,
                                           ('profile_create', expected_args))

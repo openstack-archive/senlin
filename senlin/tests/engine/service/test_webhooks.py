@@ -40,7 +40,7 @@ class WebhookTest(base.SenlinTestCase):
 
         self.profile = self.eng.profile_create(
             self.ctx, 'p-test', 'TestProfile',
-            spec={'INT': 10, 'STR': 'string'}, perm='1111')
+            spec={'INT': 10, 'STR': 'string'}, permission='1111')
 
     def _verify_action(self, obj, action, name, target, cause, inputs=None):
         if inputs is None:

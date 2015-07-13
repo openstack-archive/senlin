@@ -120,7 +120,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'name': mock.ANY,
             'profile_type': mock.ANY,
             'spec': mock.ANY,
-            'perm': mock.ANY,
+            'permission': mock.ANY,
             'metadata': mock.ANY,
         }
         self._test_engine_api('profile_create', 'call', **default_args)

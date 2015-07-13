@@ -43,7 +43,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.profile = self.eng.profile_create(
             self.ctx, 'p-test', 'TestProfile',
-            spec={'INT': 10, 'STR': 'string'}, perm='1111')
+            spec={'INT': 10, 'STR': 'string'}, permission='1111')
 
         self.policy = self.eng.policy_create(
             self.ctx, 'policy_1', 'TestPolicy',
@@ -560,7 +560,7 @@ class ClusterTest(base.SenlinTestCase):
         env.register_profile('DiffProfileType', fakes.TestProfile)
         new_profile = self.eng.profile_create(
             self.ctx, 'p-test', 'DiffProfileType',
-            spec={'INT': 10, 'STR': 'string'}, perm='1111')
+            spec={'INT': 10, 'STR': 'string'}, permission='1111')
 
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         ex = self.assertRaises(rpc.ExpectedException,
