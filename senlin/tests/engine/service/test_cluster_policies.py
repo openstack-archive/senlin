@@ -11,6 +11,7 @@
 # under the License.
 
 import mock
+from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher as rpc
 import six
 
@@ -46,7 +47,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
         self.policy = self.eng.policy_create(
             self.ctx, 'policy_1', 'TestPolicy',
-            spec={'KEY1': 'string'}, cooldown=60, level=50)
+            spec={'KEY1': 'string'}, cooldown=6, level=5)
 
         self.cluster = self.eng.cluster_create(self.ctx, 'c-1', 0,
                                                self.profile['id'])
@@ -64,8 +65,8 @@ class ClusterPolicyTest(base.SenlinTestCase):
     def test_cluster_policy_attach(self, notify):
         cluster_id = self.cluster['id']
         policy_id = self.policy['id']
-        action = self.eng.cluster_policy_attach(self.ctx, cluster_id,
-                                                policy_id)
+        action = self.eng.cluster_policy_attach(
+            self.ctx, cluster_id, policy_id, 50, 50, 40, False)
 
         action_id = action['action']
         action = db_api.action_get(self.ctx, action_id)
@@ -74,7 +75,32 @@ class ClusterPolicyTest(base.SenlinTestCase):
             'policy_id': policy_id,
             'priority': 50,
             'level': 50,
-            'cooldown': 0,
+            'cooldown': 40,
+            'enabled': True
+        }
+        self._verify_action(action, 'CLUSTER_ATTACH_POLICY',
+                            'cluster_attach_policy_%s' % cluster_id[:8],
+                            cluster_id, cause=action_mod.CAUSE_RPC,
+                            inputs=inputs)
+        notify.assert_called_with(self.ctx, action_id=action_id)
+
+        self.assertEqual(1, notify.call_count)
+
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_policy_attach_using_default(self, notify):
+        cluster_id = self.cluster['id']
+        policy_id = self.policy['id']
+        action = self.eng.cluster_policy_attach(self.ctx, cluster_id,
+                                                policy_id)
+
+        action_id = action['action']
+        action = db_api.action_get(self.ctx, action_id)
+        self.assertIsNotNone(action)
+        inputs = {
+            'policy_id': policy_id,
+            'priority': cfg.CONF.default_policy_priority,
+            'level': self.policy['level'],
+            'cooldown': self.policy['cooldown'],
             'enabled': True
         }
         self._verify_action(action, 'CLUSTER_ATTACH_POLICY',

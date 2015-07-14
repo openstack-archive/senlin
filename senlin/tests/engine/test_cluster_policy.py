@@ -27,14 +27,20 @@ class TestClusterPolicy(base.SenlinTestCase):
         self.context = utils.dummy_context()
 
     def test_cluster_policy_init(self):
-        cp = cpm.ClusterPolicy('fake-cluster', 'fake-policy')
+        values = {
+            'priority': 12,
+            'cooldown': 34,
+            'level': 56,
+            'enabled': True,
+        }
+        cp = cpm.ClusterPolicy('fake-cluster', 'fake-policy', **values)
 
         self.assertIsNone(cp.id)
         self.assertEqual('fake-cluster', cp.cluster_id)
         self.assertEqual('fake-policy', cp.policy_id)
-        self.assertEqual(0, cp.cooldown)
-        self.assertEqual(50, cp.priority)
-        self.assertEqual(50, cp.level)
+        self.assertEqual(12, cp.priority)
+        self.assertEqual(34, cp.cooldown)
+        self.assertEqual(56, cp.level)
         self.assertTrue(True, cp.enabled)
         self.assertEqual({}, cp.data)
         self.assertIsNone(cp.last_op)
@@ -43,7 +49,15 @@ class TestClusterPolicy(base.SenlinTestCase):
         self.assertEqual('', cp.policy_name)
 
     def test_cluster_policy_store(self):
-        cp = cpm.ClusterPolicy('fake-cluster', 'fake-policy')
+        cluster = self._create_cluster('fake-cluster')
+        policy = self._create_policy('fake-policy')
+        values = {
+            'priority': 12,
+            'cooldown': 34,
+            'level': 56,
+            'enabled': True,
+        }
+        cp = cpm.ClusterPolicy(cluster.id, policy.id, **values)
         self.assertIsNone(cp.id)
         cp_id = cp.store(self.context)
         self.assertIsNotNone(cp_id)
@@ -52,9 +66,9 @@ class TestClusterPolicy(base.SenlinTestCase):
                                            'fake-policy')
 
         self.assertIsNotNone(result)
-        self.assertEqual(0, result.cooldown)
-        self.assertEqual(50, result.priority)
-        self.assertEqual(50, result.level)
+        self.assertEqual(12, result.priority)
+        self.assertEqual(34, result.cooldown)
+        self.assertEqual(56, result.level)
         self.assertTrue(result.enabled)
         self.assertEqual({}, result.data)
         self.assertIsNone(result.last_op)
@@ -110,7 +124,14 @@ class TestClusterPolicy(base.SenlinTestCase):
 
         cluster = self._create_cluster('CLUSTER_ID')
         policy = self._create_policy('POLICY_ID')
-        cp = cpm.ClusterPolicy(cluster.id, policy.id)
+
+        values = {
+            'priority': 12,
+            'cooldown': 34,
+            'level': 56,
+            'enabled': True,
+        }
+        cp = cpm.ClusterPolicy(cluster.id, policy.id, **values)
         cp_id = cp.store(self.context)
 
         result = cpm.ClusterPolicy.load(self.context, 'CLUSTER_ID',
@@ -119,9 +140,9 @@ class TestClusterPolicy(base.SenlinTestCase):
         self.assertEqual(cp_id, result.id)
         self.assertEqual(cluster.id, result.cluster_id)
         self.assertEqual(policy.id, result.policy_id)
-        self.assertEqual(0, result.cooldown)
-        self.assertEqual(50, result.priority)
-        self.assertEqual(50, result.level)
+        self.assertEqual(12, result.priority)
+        self.assertEqual(34, result.cooldown)
+        self.assertEqual(56, result.level)
         self.assertTrue(True, result.enabled)
         self.assertEqual({}, result.data)
         self.assertIsNone(result.last_op)
@@ -152,15 +173,21 @@ class TestClusterPolicy(base.SenlinTestCase):
         self.assertEqual('CLUSTER', result[1].cluster_id)
 
     def test_cluster_policy_to_dict(self):
-        cp = cpm.ClusterPolicy('fake-cluster', 'fake-policy')
+        values = {
+            'priority': 12,
+            'cooldown': 34,
+            'level': 56,
+            'enabled': True,
+        }
+        cp = cpm.ClusterPolicy('fake-cluster', 'fake-policy', **values)
         self.assertIsNone(cp.id)
         expected = {
             'id': None,
             'cluster_id': 'fake-cluster',
             'policy_id': 'fake-policy',
-            'cooldown': 0,
-            'priority': 50,
-            'level': 50,
+            'priority': 12,
+            'cooldown': 34,
+            'level': 56,
             'enabled': True,
             'data': {},
             'last_op': None,

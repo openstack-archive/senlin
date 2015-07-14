@@ -23,6 +23,7 @@ from senlin.common import scaleutils
 from senlin.db import api as db_api
 from senlin.engine.actions import base
 from senlin.engine import cluster as cluster_mod
+from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import dispatcher
 from senlin.engine import node as node_mod
 from senlin.engine import scheduler
@@ -617,18 +618,18 @@ class ClusterAction(base.Action):
         # Initialize data field of cluster_policy object with information
         # generated during policy attaching
         values = {
-            'cooldown': self.inputs.get('cooldown', policy.cooldown),
-            'level': self.inputs.get('level', policy.level),
-            'priority': self.inputs.get('priority', 50),
-            'enabled': self.inputs.get('enabled', True),
+            'priority': self.inputs['priority'],
+            'cooldown': self.inputs['cooldown'],
+            'level': self.inputs['level'],
+            'enabled': self.inputs['enabled'],
             'data': data,
         }
 
-        db_api.cluster_policy_attach(self.context, cluster.id, policy_id,
-                                     values)
+        cp = cp_mod.ClusterPolicy(cluster.id, policy_id, **values)
+        cp.store(self.context)
 
         cluster.add_policy(policy)
-        return self.RES_OK, 'Policy attached'
+        return self.RES_OK, _('Policy attached.')
 
     def do_detach_policy(self, cluster):
         policy_id = self.inputs.get('policy_id', None)
@@ -638,15 +639,12 @@ class ClusterAction(base.Action):
         policy = policy_mod.Policy.load(self.context, policy_id)
         res, data = policy.detach(cluster.id, self)
         if not res:
-            return self.RES_ERROR, 'Failed detaching policy'
-        if res == self.RES_CANCEL:
-            # Action is canceled during progress, reason is stored in data
-            return res, data
+            return self.RES_ERROR, _('Failed detaching policy.')
 
         db_api.cluster_policy_detach(self.context, cluster.id, policy_id)
 
         cluster.remove_policy(policy)
-        return self.RES_OK, 'Policy detached'
+        return self.RES_OK, _('Policy detached.')
 
     def do_update_policy(self, cluster):
         policy_id = self.inputs.get('policy_id', None)
@@ -670,7 +668,7 @@ class ClusterAction(base.Action):
         db_api.cluster_policy_update(self.context, cluster.id, policy_id,
                                      values)
 
-        return self.RES_OK, 'Policy updated'
+        return self.RES_OK, _('Policy updated.')
 
     def _execute(self, cluster):
         # do pre-action policy checking
@@ -718,7 +716,7 @@ class ClusterAction(base.Action):
                                                senlin_lock.CLUSTER_SCOPE,
                                                forced)
         if not res:
-            return self.RES_ERROR, _('Failed locking cluster')
+            return self.RES_ERROR, _('Failed in locking cluster.')
 
         try:
             res, reason = self._execute(cluster)
