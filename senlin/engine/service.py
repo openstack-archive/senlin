@@ -1071,10 +1071,16 @@ class EngineService(service.Service):
 
         inputs = {
             'policy_id': db_policy.id,
-            'priority': utils.parse_int_param('priority', priority) or 50,
-            'level': utils.parse_int_param('level', level) or 50,
-            'cooldown': utils.parse_int_param('cooldown', cooldown) or 0,
-            'enabled': utils.parse_bool_param('enabled', enabled),
+            'priority':
+                utils.parse_int_param('priority', priority) or
+                cfg.CONF.default_policy_priority,
+            'level':
+                utils.parse_int_param('level', level) or db_policy.level,
+            'cooldown':
+                utils.parse_int_param('cooldown', cooldown) or
+                db_policy.cooldown,
+            'enabled':
+                utils.parse_bool_param('enabled', enabled) or True,
         }
 
         action_name = 'cluster_attach_policy_%s' % db_cluster.id[:8]

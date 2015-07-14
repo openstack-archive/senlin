@@ -18,24 +18,21 @@ from senlin.db import api as db_api
 
 LOG = logging.getLogger(__name__)
 
-# TODO(Qiming): expose configuration options for default values for
-# policy attachments, i.e. cooldown, priority, level, enabled
-
 
 class ClusterPolicy(object):
     '''Object representing a binding between a cluster and a policy.
 
     This object also records the runtime data of a policy, if any.
     '''
-    def __init__(self, cluster_id, policy_id, context=None, **kwargs):
+    def __init__(self, cluster_id, policy_id, **kwargs):
         self.id = kwargs.get('id', None)
 
         self.cluster_id = cluster_id
         self.policy_id = policy_id
-        self.cooldown = kwargs.get('cooldown', 0)
-        self.priority = kwargs.get('priority', 50)
-        self.level = kwargs.get('level', 50)
-        self.enabled = kwargs.get('enabled', True)
+        self.priority = kwargs.get('priority')
+        self.cooldown = kwargs.get('cooldown')
+        self.level = kwargs.get('level')
+        self.enabled = kwargs.get('enabled')
         self.data = kwargs.get('data', {})
         self.last_op = kwargs.get('last_op', None)
 
@@ -47,8 +44,8 @@ class ClusterPolicy(object):
     def store(self, context):
         '''Store the binding record into database table.'''
         values = {
-            'cooldown': self.cooldown,
             'priority': self.priority,
+            'cooldown': self.cooldown,
             'level': self.level,
             'enabled': self.enabled,
             'data': self.data,
@@ -61,7 +58,11 @@ class ClusterPolicy(object):
         else:
             binding = db_api.cluster_policy_attach(context, self.cluster_id,
                                                    self.policy_id, values)
+            self.cluster_name = binding.cluster.name
+            self.policy_name = binding.policy.name
+            self.policy_type = binding.policy.type
             self.id = binding.id
+
         return self.id
 
     @classmethod
@@ -73,8 +74,8 @@ class ClusterPolicy(object):
         '''
         kwargs = {
             'id': record.id,
-            'cooldown': record.cooldown,
             'priority': record.priority,
+            'cooldown': record.cooldown,
             'level': record.level,
             'enabled': record.enabled,
             'data': record.data,
