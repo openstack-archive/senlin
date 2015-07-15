@@ -567,6 +567,8 @@ class DBAPIClusterTest(base.SenlinTestCase):
         policy_data = {
             'name': 'test_policy',
             'type': 'ScalingPolicy',
+            'user': self.ctx.user,
+            'project': self.ctx.project,
             'spec': {'foo': 'bar'},
             'level': 50,
             'cooldown': 60,

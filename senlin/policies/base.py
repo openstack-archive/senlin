@@ -44,11 +44,12 @@ class Policy(object):
         self.type = type_name
 
         self.id = kwargs.get('id', None)
-        # TODO(Qiming): make this default level a WOULD?
+        self.user = kwargs.get('user')
+        self.project = kwargs.get('project')
+        self.domain = kwargs.get('domain')
         self.level = kwargs.get('level', 0)
         self.cooldown = kwargs.get('cooldown', None)
         self.spec = kwargs.get('spec', {})
-        self.context = kwargs.get('context', {})
         self.data = kwargs.get('data', {})
         self.created_time = kwargs.get('created_time', None)
         self.updated_time = kwargs.get('updated_time', None)
@@ -57,11 +58,14 @@ class Policy(object):
         self.spec_data = schema.Spec(self.spec_schema, self.spec)
 
     @classmethod
-    def _from_db_record(cls, context, record):
+    def _from_db_record(cls, record):
         '''Construct a policy object from a database record.'''
 
         kwargs = {
             'id': record.id,
+            'user': record.user,
+            'project': record.project,
+            'domain': record.domain,
             'spec': record.spec,
             'level': record.level,
             'cooldown': record.cooldown,
@@ -69,7 +73,6 @@ class Policy(object):
             'updated_time': record.updated_time,
             'deleted_time': record.deleted_time,
             'data': record.data,
-            'context': context,
         }
 
         return cls(record.type, record.name, **kwargs)
@@ -82,7 +85,7 @@ class Policy(object):
             if policy is None:
                 raise exception.PolicyNotFound(policy=policy_id)
 
-        return cls._from_db_record(context, policy)
+        return cls._from_db_record(policy)
 
     @classmethod
     def load_all(cls, context, limit=None, sort_keys=None, marker=None,
@@ -96,7 +99,7 @@ class Policy(object):
                                         show_deleted=show_deleted)
 
         for record in records:
-            yield cls._from_db_record(context, record)
+            yield cls._from_db_record(record)
 
     @classmethod
     def delete(cls, context, policy_id):
@@ -109,6 +112,9 @@ class Policy(object):
         values = {
             'name': self.name,
             'type': self.type,
+            'user': self.user,
+            'project': self.project,
+            'domain': self.domain,
             'spec': self.spec,
             'level': self.level,
             'cooldown': self.cooldown,
@@ -118,11 +124,11 @@ class Policy(object):
         if self.id is not None:
             self.updated_time = timestamp
             values['updated_time'] = timestamp
-            db_api.policy_update(self.context, self.id, values)
+            db_api.policy_update(context, self.id, values)
         else:
             self.created_time = timestamp
             values['created_time'] = timestamp
-            policy = db_api.policy_create(self.context, values)
+            policy = db_api.policy_create(context, values)
             self.id = policy.id
 
         return self.id

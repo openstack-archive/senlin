@@ -181,6 +181,9 @@ class Policy(BASE, SenlinBase, SoftDelete):
 
     id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
                            default=lambda: str(uuid.uuid4()))
+    user = sqlalchemy.Column(sqlalchemy.String(32), nullable=False)
+    project = sqlalchemy.Column(sqlalchemy.String(32), nullable=False)
+    domain = sqlalchemy.Column(sqlalchemy.String(32))
     name = sqlalchemy.Column(sqlalchemy.String(255))
     type = sqlalchemy.Column(sqlalchemy.String(255))
     cooldown = sqlalchemy.Column(sqlalchemy.Integer)
