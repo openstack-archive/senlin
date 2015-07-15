@@ -35,7 +35,6 @@ class KeystoneClient(base.DriverBase):
     def __init__(self, context):
         self.conn = sdk.create_connection(context)
         self.session = self.conn.session
-        self.auth = self.session.authenticator
 
     def trust_list(self, **params):
         try:
