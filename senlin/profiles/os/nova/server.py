@@ -201,7 +201,9 @@ class ServerProfile(base.Profile):
             name_or_id = self.spec_data[self.IMAGE]
             try:
                 image = self.nova(obj).image_get_by_name(name_or_id)
-            except Exception:
+            except Exception as ex:
+                LOG.exception(_('Failed in getting image: %s'),
+                              six.text_type(ex))
                 raise exception.ResourceNotFound(resource=name_or_id)
             # wait for new version of openstacksdk to fix this
             kwargs.pop(self.IMAGE)
