@@ -12,8 +12,6 @@
 
 import six
 
-from openstack.identity.v3 import endpoint
-from openstack.identity.v3 import service
 from oslo_config import cfg
 from oslo_utils import importutils
 
@@ -21,7 +19,6 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.drivers import base
 from senlin.drivers.openstack import sdk
-from senlin.openstack.identity.v3 import trust
 
 CONF = cfg.CONF
 
@@ -35,20 +32,22 @@ class KeystoneClient(base.DriverBase):
     def __init__(self, context):
         self.conn = sdk.create_connection(context)
         self.session = self.conn.session
-        self.auth = self.session.authenticator
 
-    def trust_list(self, **params):
+    def trust_list(self, **query):
         try:
-            return trust.Trust.list(self.session, **params)
+            trusts = [t for t in self.conn.identity.trusts(**query)]
         except sdk.exc.HttpException as ex:
             raise ex
 
-    def trust_delete(self, **params):
-        obj = trust.Trust.new(**params)
+        return trusts
+
+    def trust_delete(self, trust_id):
         try:
-            return obj.delete(self.session)
+            self.conn.identity.delete_trust(trust_id, ignore_missing=True)
         except sdk.exc.HttpException as ex:
             raise ex
+
+        return
 
     def user_get_by_name(self, user_name):
         try:
@@ -60,13 +59,15 @@ class KeystoneClient(base.DriverBase):
 
     def endpoint_get(self, service_id, region=None, interface=None):
         '''Utility function to get endpoints of a service.'''
-        params = {
+        filters = {
             'service_id': service_id,
-            'region': region,
-            'interface': interface
         }
-        endpoints = [e for e in endpoint.Endpoint.list(self.session,
-                                                       **params)]
+        if region:
+            filters['region'] = region
+        if interface:
+            filters['interface'] = interface
+
+        endpoints = [e for e in self.conn.identity.endpoints(filters=filters)]
         if len(endpoints) == 0:
             resource = _('endpoint: service=%(service)s,region='
                          '%(region)s,visibility=%(interface)s.'
@@ -79,11 +80,13 @@ class KeystoneClient(base.DriverBase):
 
     def service_get(self, service_type, name=None):
         '''Utility function to get service detail based on name and type.'''
-        params = {
+        filters = {
             'type': service_type,
-            'name': name
         }
-        services = [s for s in service.Service.list(self.session, **params)]
+        if name:
+            filters['name'] = name
+
+        services = [s for s in self.conn.identity.services(filters=filters)]
         if len(services) == 0:
             resource = _('service:type=%(type)s%(name)s'
                          ) % {'type': service_type,
@@ -99,18 +102,20 @@ class KeystoneClient(base.DriverBase):
         :param trustee: ID of the user who is the trustee;
         :param project: ID of the project to which the trust is scoped.
         '''
+        filters = {
+            'trustor_user_id': trustor
+        }
+        if trustee:
+            filters['trustee_user_id'] = trustee
+        if project:
+            filters['project'] = project
+
         try:
-            trusts = trust.Trust.list(self.session, trustor_user_id=trustor)
+            trusts = [t for t in self.conn.identity.trusts(filters=filters)]
         except sdk.exc.HttpException:
             raise exception.TrustNotFound(trustor=trustor)
 
-        results = []
-        for t in trusts:
-            if trustee is not None and trustee == t.trustee_user_id:
-                if project is not None and project == t.project_id:
-                    results.append(t)
-
-        return results
+        return trusts
 
     def trust_create(self, trustor, trustee, project, roles,
                      impersonation=True):
@@ -127,15 +132,14 @@ class KeystoneClient(base.DriverBase):
         params = {
             'trustor_user_id': trustor,
             'trustee_user_id': trustee,
-            'project_id': project,
+            'project': project,
             'impersonation': impersonation,
             'allow_redelegation': True,
             'roles': [{'name': role} for role in roles]
         }
 
-        obj = trust.Trust.new(**params)
         try:
-            result = obj.create(self.session)
+            result = self.conn.identity.create_trust(**params)
         except sdk.exc.HttpException as ex:
             raise exception.Error(message=six.text_type(ex))
 
