@@ -26,8 +26,6 @@ class NeutronClient(base.DriverBase):
 
     def __init__(self, params):
         self.conn = sdk.create_connection(params)
-        self.session = self.conn.session
-        self.auth = self.session.authenticator
 
     def network_get(self, name_or_id):
         try:
