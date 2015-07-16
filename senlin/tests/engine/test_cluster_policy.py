@@ -110,6 +110,9 @@ class TestClusterPolicy(base.SenlinTestCase):
         values = {
             'id': policy_id,
             'type': 'policy-type',
+            'user': self.context.user,
+            'project': self.context.project,
+            'domain': self.context.domain,
             'name': 'test_policy',
         }
         return db_api.policy_create(self.context, values)

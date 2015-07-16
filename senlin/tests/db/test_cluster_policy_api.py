@@ -29,6 +29,9 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
         data = {
             'name': 'test_policy',
             'type': 'ScalingPolicy',
+            'user': self.ctx.user,
+            'project': self.ctx.project,
+            'domain': self.ctx.domain,
             'spec': {
                 'min_size': 1,
                 'max_size': 10,

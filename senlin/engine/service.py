@@ -326,6 +326,9 @@ class EngineService(service.Service):
                  {'type': policy_type, 'name': name})
 
         kwargs = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
             'spec': spec,
             'level': level,
             'cooldown': cooldown,
