@@ -91,6 +91,12 @@ The most common options to be customized include:
   admin_password = <SENLIN PASSWORD>
   admin_tenant_name = service
 
+  [authentication]
+  auth_url = http://<HOST>:5000/v3
+  service_username = senlin
+  service_password = <SENLIN PASSWORD>
+  service_project_name = service
+
   [oslo_messaging_rabbit]
   rabbit_userid = <RABBIT USER ID>
   rabbit_hosts = <HOST>

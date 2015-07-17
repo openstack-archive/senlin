@@ -12,7 +12,6 @@
 
 
 from oslo_config import cfg
-from oslo_utils import importutils
 import six
 import webob
 
@@ -31,10 +30,9 @@ class TrustMiddleware(wsgi.Middleware):
     '''
     def _get_service_user_id(self, ctx):
         # Convert user name to user ID first
-        importutils.import_module('keystonemiddleware.auth_token')
-        admin_user = cfg.CONF.keystone_authtoken.admin_user
-        admin_passwd = cfg.CONF.keystone_authtoken.admin_password
-        project_name = cfg.CONF.keystone_authtoken.admin_tenant_name
+        admin_user = cfg.CONF.authentication.service_username
+        admin_passwd = cfg.CONF.authentication.service_password
+        project_name = cfg.CONF.authentication.service_project_name
 
         params = {
             'auth_url': ctx.auth_url,

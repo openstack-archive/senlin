@@ -29,7 +29,6 @@ paste_deploy_opts = [
     cfg.StrOpt('api_paste_config', default="api-paste.ini",
                help=_("The API paste config file to use."))]
 
-
 service_opts = [
     cfg.IntOpt('periodic_interval',
                default=60,
@@ -86,15 +85,29 @@ engine_opts = [
 rpc_opts = [
     cfg.StrOpt('host',
                default=socket.gethostname(),
-               help=_('Name of the engine node. '
-                      'This can be an opaque identifier. '
-                      'It is not necessarily a hostname, FQDN, '
+               help=_('Name of the engine node. This can be an opaque '
+                      'identifier. It is not necessarily a hostname, FQDN, '
                       'or IP address.'))]
+
+authentication_group = cfg.OptGroup('authentication')
+authentication_opts = [
+    cfg.StrOpt('auth_url', default='',
+               help=_('Complete public identity V3 API endpoint.')),
+    cfg.StrOpt('service_username', default='senlin',
+               help=_('Senlin service user name')),
+    cfg.StrOpt('service_password', default='',
+               help=_('Password specified for the Senlin service user.')),
+    cfg.StrOpt('service_project_name', default='service',
+               help=_('Name of the service project.')),
+    cfg.StrOpt('service_user_domain', default='Default',
+               help=_('Name of the domain for the service user.')),
+    cfg.StrOpt('service_project_domain', default='Default',
+               help=_('Name of the domain for the service project.')),
+    ]
 
 revision_group = cfg.OptGroup('revision')
 revision_opts = [
-    cfg.StrOpt('senlin_api_revision',
-               default='1.0',
+    cfg.StrOpt('senlin_api_revision', default='1.0',
                help=_('Senlin API revision.')),
     cfg.StrOpt('senlin_engine_revision', default='1.0',
                help=_('Senlin engine revision.'))]
@@ -105,10 +118,12 @@ def list_opts():
     yield None, engine_opts
     yield None, service_opts
     yield paste_deploy_group.name, paste_deploy_opts
+    yield authentication_group.name, authentication_opts
     yield revision_group.name, revision_opts
 
 
 cfg.CONF.register_group(paste_deploy_group)
+cfg.CONF.register_group(authentication_group)
 cfg.CONF.register_group(revision_group)
 
 for group, opts in list_opts():

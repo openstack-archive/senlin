@@ -13,7 +13,6 @@
 from oslo_config import cfg
 from oslo_middleware import request_id as oslo_request_id
 from oslo_utils import encodeutils
-from oslo_utils import importutils
 
 from senlin.common import context
 from senlin.common import exception
@@ -31,8 +30,7 @@ class ContextMiddleware(wsgi.Middleware):
             auth_url = headers.get('X-Auth-Url')
             if not auth_url:
                 # Use auth_url defined in senlin.conf
-                importutils.import_module('keystonemiddleware.auth_token')
-                auth_url = cfg.CONF.keystone_authtoken.auth_uri
+                auth_url = cfg.CONF.authentication.auth_url
 
             auth_token = headers.get('X-Auth-Token')
             auth_token_info = environ.get('keystone.token_info')

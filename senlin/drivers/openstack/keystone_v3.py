@@ -13,7 +13,6 @@
 import six
 
 from oslo_config import cfg
-from oslo_utils import importutils
 
 from senlin.common import exception
 from senlin.common.i18n import _
@@ -21,9 +20,6 @@ from senlin.drivers import base
 from senlin.drivers.openstack import sdk
 
 CONF = cfg.CONF
-
-# Ensure keystonemiddleware options are imported
-importutils.import_module('keystonemiddleware.auth_token')
 
 
 class KeystoneClient(base.DriverBase):
@@ -158,10 +154,10 @@ def get_service_credentials(**kwargs):
     '''
 
     creds = {
-        'user_name': CONF.keystone_authtoken.admin_user,
-        'password': CONF.keystone_authtoken.admin_password,
-        'auth_url': CONF.keystone_authtoken.auth_uri,
-        'project_name': CONF.keystone_authtoken.admin_tenant_name,
+        'user_name': CONF.authentication.service_username,
+        'password': CONF.authentication.service_password,
+        'auth_url': CONF.authentication.auth_url,
+        'project_name': CONF.authentication.service_project_name,
         'user_domain_name': 'Default',
         'project_domain_name': 'Default',
     }

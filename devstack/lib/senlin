@@ -99,7 +99,7 @@ function configure_senlin {
     # Database connection
     iniset $SENLIN_CONF database connection `database_connection_url senlin`
 
-    # Keystone authtoken
+    # Keystone authtoken middleware
     #configure_auth_token_middleware $SENLIN_CONF senlin $SENLIN_AUTH_CACHE_DIR
     iniset $SENLIN_CONF keystone_authtoken identity_uri $KEYSTONE_AUTH_URI
     iniset $SENLIN_CONF keystone_authtoken cafile $SSL_BUNDLE_FILE
@@ -109,6 +109,11 @@ function configure_senlin {
     iniset $SENLIN_CONF keystone_authtoken admin_password $SERVICE_PASSWORD
     iniset $SENLIN_CONF keystone_authtoken admin_tenant_name $SERVICE_TENANT_NAME
 
+    # Senlin service credentials
+    iniset $SENLIN_CONF authentication auth_url $KEYSTONE_AUTH_URI/v3
+    iniset $SENLIN_CONF authentication service_username senlin
+    iniset $SENLIN_CONF authentication service_password $SERVICE_PASSWORD
+    iniset $SENLIN_CONF authentication service_project_name $SERVICE_TENANT_NAME
 }
 
 # init_senlin() - Initialize database
