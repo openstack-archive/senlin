@@ -108,7 +108,7 @@ class KeystoneClient(base.DriverBase):
         if trustee:
             filters['trustee_user_id'] = trustee
         if project:
-            filters['project'] = project
+            filters['project_id'] = project
 
         try:
             trusts = [t for t in self.conn.identity.trusts(**filters)]
@@ -136,7 +136,7 @@ class KeystoneClient(base.DriverBase):
         params = {
             'trustor_user_id': trustor,
             'trustee_user_id': trustee,
-            'project': project,
+            'project_id': project,
             'impersonation': impersonation,
             'allow_redelegation': True,
             'roles': role_list
