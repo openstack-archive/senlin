@@ -84,7 +84,7 @@ class TrustMiddleware(wsgi.Middleware):
         try:
             trusts = kc.trust_get_by_trustor(ctx.user, admin_id, ctx.project)
         except exception.TrustNotFound:
-            # No trust found is okay
+            # Trust not found is okay
             trusts = []
 
         if len(trusts) > 0:
@@ -92,12 +92,9 @@ class TrustMiddleware(wsgi.Middleware):
         else:
             # Create a trust if no existing one found
             try:
-                trust = kc.trust_create(ctx.user, admin_id, ctx.project,
-                                        ctx.roles)
-            except exception.Error as ex:
-                msg = _("Failed building trust from user: "
-                        "%s.") % six.text_type(ex)
-                raise webob.exc.HTTPInternalServerError(msg)
+                trust = kc.trust_create(ctx.user, admin_id, ctx.project)
+            except exception.TrustCreationFailure as ex:
+                raise webob.exc.HTTPInternalServerError(six.text_type(ex))
 
         # update cache
         if cred_exists:

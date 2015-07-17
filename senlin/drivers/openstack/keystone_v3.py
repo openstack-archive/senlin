@@ -67,7 +67,7 @@ class KeystoneClient(base.DriverBase):
         if interface:
             filters['interface'] = interface
 
-        endpoints = [e for e in self.conn.identity.endpoints(filters=filters)]
+        endpoints = [e for e in self.conn.identity.endpoints(**filters)]
         if len(endpoints) == 0:
             resource = _('endpoint: service=%(service)s,region='
                          '%(region)s,visibility=%(interface)s.'
@@ -86,7 +86,7 @@ class KeystoneClient(base.DriverBase):
         if name:
             filters['name'] = name
 
-        services = [s for s in self.conn.identity.services(filters=filters)]
+        services = [s for s in self.conn.identity.services(**filters)]
         if len(services) == 0:
             resource = _('service:type=%(type)s%(name)s'
                          ) % {'type': service_type,
@@ -111,13 +111,13 @@ class KeystoneClient(base.DriverBase):
             filters['project'] = project
 
         try:
-            trusts = [t for t in self.conn.identity.trusts(filters=filters)]
+            trusts = [t for t in self.conn.identity.trusts(**filters)]
         except sdk.exc.HttpException:
             raise exception.TrustNotFound(trustor=trustor)
 
         return trusts
 
-    def trust_create(self, trustor, trustee, project, roles,
+    def trust_create(self, trustor, trustee, project, roles=None,
                      impersonation=True):
         '''Create trust between two users.
 
@@ -129,19 +129,23 @@ class KeystoneClient(base.DriverBase):
                               the trustor.
         '''
 
+        if roles:
+            role_list = [{'name': role} for role in roles]
+        else:
+            role_list = []
         params = {
             'trustor_user_id': trustor,
             'trustee_user_id': trustee,
             'project': project,
             'impersonation': impersonation,
             'allow_redelegation': True,
-            'roles': [{'name': role} for role in roles]
+            'roles': role_list
         }
 
         try:
             result = self.conn.identity.create_trust(**params)
         except sdk.exc.HttpException as ex:
-            raise exception.Error(message=six.text_type(ex))
+            raise exception.TrustCreationFailure(reason=six.text_type(ex))
 
         return result
 

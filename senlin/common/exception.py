@@ -251,11 +251,12 @@ class EventNotFound(SenlinException):
 class InternalError(SenlinException):
     '''A base class for internal exceptions in senlin.
 
-    The internal exception classes which inherit from InternalError
-    class should be translated to a user facing exception.
+    The internal exception classes which inherit from :class:`InternalError`
+    class should be translated to a user facing exception type if need to be
+    made user visible.
     '''
 
-    def __init__(self, **kwargs):
+    def __init__(self, message=None, **kwargs):
         super(InternalError, self).__init__(**kwargs)
 
 
@@ -271,6 +272,10 @@ class UserNotFound(InternalError):
 class TrustNotFound(InternalError):
     # Internal exception, not to be exposed to end user.
     msg_fmt = _("The trust for trustor (%(trustor)s) could not be found.")
+
+
+class TrustCreationFailure(InternalError):
+    msg_fmt = _("Failed in creating trust: %(reason)s.")
 
 
 class ResourceNotFound(InternalError):
