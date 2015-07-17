@@ -85,7 +85,7 @@ class TrustMiddleware(wsgi.Middleware):
             trusts = kc.trust_get_by_trustor(ctx.user, admin_id, ctx.project)
         except exception.TrustNotFound:
             # No trust found is okay
-            pass
+            trusts = []
 
         if len(trusts) > 0:
             trust = trusts[0]
