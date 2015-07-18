@@ -20,7 +20,7 @@ from senlin.common.i18n import _LE
 from senlin.common import utils
 from senlin.common import wsgi
 from senlin.drivers.openstack import sdk
-from senlin.webhooks import webhooks
+from senlin.engine import webhook as webhook_mod
 
 LOG = logging.getLogger(__name__)
 
@@ -86,7 +86,7 @@ class WebhookMiddleware(wsgi.Middleware):
         """
         # Build a RequestContext from service context for DB APIs
         ctx = context.RequestContext.from_dict(context.get_service_context())
-        webhook_obj = webhooks.Webhook.load(ctx, webhook_id)
+        webhook_obj = webhook_mod.Webhook.load(ctx, webhook_id)
         credential = webhook_obj.credential
         credential['webhook_id'] = webhook_id
         if 'auth_url' not in credential:

@@ -20,10 +20,10 @@ from senlin.engine.actions import base as action_mod
 from senlin.engine import dispatcher
 from senlin.engine import environment
 from senlin.engine import service
+from senlin.engine import webhook as webhook_mod
 from senlin.tests.common import base
 from senlin.tests.common import utils
 from senlin.tests import fakes
-from senlin.webhooks import webhooks as webhook_mod
 
 
 class WebhookTest(base.SenlinTestCase):

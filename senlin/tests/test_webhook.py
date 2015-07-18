@@ -19,9 +19,9 @@ from senlin.common.i18n import _
 from senlin.common import utils as encrypt_utils
 from senlin.db.sqlalchemy import api as db_api
 from senlin.drivers.openstack import keystone_v3 as ksdriver
+from senlin.engine import webhook as webhook_mod
 from senlin.tests.common import base
 from senlin.tests.common import utils
-from senlin.webhooks import webhooks as webhook_mod
 
 
 class TestWebhook(base.SenlinTestCase):

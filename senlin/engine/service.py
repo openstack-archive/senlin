@@ -39,9 +39,9 @@ from senlin.engine import health_manager
 from senlin.engine import node as node_mod
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock
+from senlin.engine import webhook as webhook_mod
 from senlin.policies import base as policy_base
 from senlin.profiles import base as profile_base
-from senlin.webhooks import webhooks as webhook_mod
 
 LOG = logging.getLogger(__name__)
 
