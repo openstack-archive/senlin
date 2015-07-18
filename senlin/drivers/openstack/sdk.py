@@ -13,6 +13,9 @@
 '''
 SDK Client
 '''
+from oslo_config import cfg
+from oslo_log import log as logging
+import six
 
 from openstack import connection
 from openstack import exceptions
@@ -26,6 +29,7 @@ from senlin.common.i18n import _
 
 USER_AGENT = 'senlin'
 exc = exceptions
+LOG = logging.getLogger(__name__)
 
 
 class BaseException(Exception):
@@ -216,3 +220,24 @@ def authenticate(**kwargs):
         raise ex
 
     return access_info
+
+
+def get_service_user_id():
+    # Convert user name to user ID
+    params = {
+        'auth_url': cfg.CONF.authentication.auth_url,
+        'user_name': cfg.CONF.authentication.service_username,
+        'password': cfg.CONF.authentication.service_password,
+        'project_name': cfg.CONF.authentication.project_name,
+        'user_domain_name': 'Default',
+        'project_domain_name': 'Default',
+    }
+
+    user_id = None
+    try:
+        access_info = authenticate(**params)
+        user_id = access_info.user_id
+    except Exception as ex:
+        LOG.exception(_('Authentication failure: %s'), six.text_type(ex))
+
+    return user_id

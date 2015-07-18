@@ -13,6 +13,7 @@
 import six
 
 from oslo_config import cfg
+from oslo_log import log as logging
 
 from senlin.common import exception
 from senlin.common.i18n import _
@@ -20,6 +21,7 @@ from senlin.drivers import base
 from senlin.drivers.openstack import sdk
 
 CONF = cfg.CONF
+LOG = logging.getLogger(__name__)
 
 
 class KeystoneClient(base.DriverBase):
@@ -94,24 +96,32 @@ class KeystoneClient(base.DriverBase):
     def trust_get_by_trustor(self, trustor, trustee=None, project=None):
         '''Get trust by trustor.
 
-        :param trustor: ID of the user who is the trustor, not None;
-        :param trustee: ID of the user who is the trustee;
+        Note we cannot provide two or more filters to keystone due to
+        constraints in keystone implementation. We do additional filtering
+        after the results are returned.
+
+        :param trustor: ID of the trustor;
+        :param trustee: ID of the trustee;
         :param project: ID of the project to which the trust is scoped.
+        :returns: The trust object or None if no matching trust is found.
         '''
-        filters = {
-            'trustor_user_id': trustor
-        }
-        if trustee:
-            filters['trustee_user_id'] = trustee
-        if project:
-            filters['project_id'] = project
+        filters = {'trustor_user_id': trustor}
 
         try:
             trusts = [t for t in self.conn.identity.trusts(**filters)]
-        except sdk.exc.HttpException:
-            raise exception.TrustNotFound(trustor=trustor)
+        except sdk.exc.HttpException as ex:
+            LOG.exception(six.text_type(ex))
+            return None
 
-        return trusts
+        for trust in trusts:
+            if (trustee and trust.trustee_user_id != trustee):
+                del trusts[trust]
+                continue
+
+            if (project and trust.project_id != project):
+                del trusts[trust]
+
+        return trusts[0] if trusts else None
 
     def trust_create(self, trustor, trustee, project, roles=None,
                      impersonation=True):
