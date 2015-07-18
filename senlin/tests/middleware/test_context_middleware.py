@@ -35,7 +35,7 @@ class RequestContextMiddlewareTest(base.SenlinTestCase):
             context_dict={
                 'auth_token': None,
                 'auth_token_info': None,
-                'auth_url': None,
+                'auth_url': '',
                 'is_admin': False,
                 'password': None,
                 'roles': [],

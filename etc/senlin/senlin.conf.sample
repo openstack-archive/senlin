@@ -31,14 +31,16 @@
 # Deprecated group/name - [DEFAULT]/logdir
 #log_dir = <None>
 
-# Use syslog for logging. Existing syslog format is DEPRECATED during I, and will change in J to honor RFC5424.
-# (boolean value)
+# Use syslog for logging. Existing syslog format is DEPRECATED and will be changed later to honor RFC5424. (boolean
+# value)
 #use_syslog = false
 
 # (Optional) Enables or disables syslog rfc5424 format for logging. If enabled, prefixes the MSG part of the syslog
-# message with APP-NAME (RFC5424). The format without the APP-NAME is deprecated in I, and will be removed in J.
-# (boolean value)
-#use_syslog_rfc_format = false
+# message with APP-NAME (RFC5424). The format without the APP-NAME is deprecated in K, and will be removed in M, along
+# with this option. (boolean value)
+# This option is deprecated for removal.
+# Its value may be silently ignored in the future.
+#use_syslog_rfc_format = true
 
 # Syslog facility to receive log lines. (string value)
 #syslog_log_facility = LOG_USER
@@ -56,7 +58,7 @@
 #logging_debug_format_suffix = %(funcName)s %(pathname)s:%(lineno)d
 
 # Prefix each line of exception output with this format. (string value)
-#logging_exception_prefix = %(asctime)s.%(msecs)03d %(process)d TRACE %(name)s %(instance)s
+#logging_exception_prefix = %(asctime)s.%(msecs)03d %(process)d ERROR %(name)s %(instance)s
 
 # List of logger=LEVEL pairs. (list value)
 #default_log_levels = amqp=WARN,amqplib=WARN,boto=WARN,qpid=WARN,sqlalchemy=WARN,suds=INFO,oslo.messaging=INFO,iso8601=WARN,requests.packages.urllib3.connectionpool=WARN,urllib3.connectionpool=WARN,websocket=WARN,requests.packages.urllib3.util.retry=WARN,urllib3.util.retry=WARN,keystonemiddleware=WARN,routes.middleware=WARN,stevedore=WARN
@@ -64,25 +66,29 @@
 # Enables or disables publication of error events. (boolean value)
 #publish_errors = false
 
-# Enables or disables fatal status of deprecations. (boolean value)
-#fatal_deprecations = false
-
 # The format for an instance that is passed with the log message. (string value)
 #instance_format = "[instance: %(uuid)s] "
 
 # The format for an instance UUID that is passed with the log message. (string value)
 #instance_uuid_format = "[instance: %(uuid)s] "
 
+# Enables or disables fatal status of deprecations. (boolean value)
+#fatal_deprecations = false
+
 #
 # From oslo.messaging
 #
+
+# Size of RPC connection pool. (integer value)
+# Deprecated group/name - [DEFAULT]/rpc_conn_pool_size
+#rpc_conn_pool_size = 30
 
 # ZeroMQ bind address. Should be a wildcard (*), an ethernet interface, or IP. The "host" option should point or
 # resolve to this address. (string value)
 #rpc_zmq_bind_address = *
 
 # MatchMaker driver. (string value)
-#rpc_zmq_matchmaker = oslo_messaging._drivers.matchmaker.MatchMakerLocalhost
+#rpc_zmq_matchmaker = local
 
 # ZeroMQ receiver listening port. (integer value)
 #rpc_zmq_port = 9501
@@ -112,7 +118,8 @@
 # Size of RPC thread pool. (integer value)
 #rpc_thread_pool_size = 64
 
-# Driver or drivers to handle sending notifications. (multi valued)
+# The Drivers(s) to handle sending notifications. Possible values are messaging, messagingv2, routing, log, test, noop
+# (multi valued)
 #notification_driver =
 
 # AMQP topic used for OpenStack notifications. (list value)
@@ -132,6 +139,27 @@
 # The default exchange under which topics are scoped. May be overridden by an exchange name specified in the
 # transport_url option. (string value)
 #control_exchange = openstack
+
+#
+# From oslo.service.periodic_task
+#
+
+# Some periodic tasks can be run in a separate process. Should we run them here? (boolean value)
+#run_external_periodic_tasks = true
+
+#
+# From oslo.service.service
+#
+
+# Enable eventlet backdoor.  Acceptable values are 0, <port>, and <start>:<end>, where 0 results in listening on a
+# random tcp port number; <port> results in listening on the specified port number (and not enabling backdoor if that
+# port is in use); and <start>:<end> results in listening on the smallest unused port number within the specified range
+# of port numbers.  The chosen port is displayed in the service's log file. (string value)
+#backdoor_port = <None>
+
+# Enables or disables logging values of all registered options when starting a service (at DEBUG level). (boolean
+# value)
+#log_options = true
 
 #
 # From senlin.common.config
@@ -160,6 +188,9 @@
 
 # Timeout in seconds for actions. (integer value)
 #default_action_timeout = 3600
+
+# Default priority for policies attached to a cluster. (integer value)
+#default_policy_priority = 50
 
 # Number of times trying to grab a lock. (integer value)
 #lock_retry_times = 3
@@ -199,15 +230,30 @@
 # Maximum raw byte size of JSON request body. Should be larger than max_template_size. (integer value)
 #max_json_body_size = 1048576
 
+
+[authentication]
+
 #
-# From senlin.openstack.common.eventlet_backdoor
+# From senlin.common.config
 #
 
-# Enable eventlet backdoor.  Acceptable values are 0, <port>, and <start>:<end>, where 0 results in listening on a
-# random tcp port number; <port> results in listening on the specified port number (and not enabling backdoor if that
-# port is in use); and <start>:<end> results in listening on the smallest unused port number within the specified range
-# of port numbers.  The chosen port is displayed in the service's log file. (string value)
-#backdoor_port = <None>
+# Complete public identity V3 API endpoint. (string value)
+#auth_url =
+
+# Senlin service user name (string value)
+#service_username = senlin
+
+# Password specified for the Senlin service user. (string value)
+#service_password =
+
+# Name of the service project. (string value)
+#service_project_name = service
+
+# Name of the domain for the service user. (string value)
+#service_user_domain = Default
+
+# Name of the domain for the service project. (string value)
+#service_project_domain = Default
 
 
 [database]
@@ -303,6 +349,20 @@
 #db_max_retries = 20
 
 
+[eventlet_opts]
+
+#
+# From senlin.common.wsgi
+#
+
+# If false, closes the client socket explicitly. (boolean value)
+#wsgi_keep_alive = true
+
+# Timeout for client connections' socket operations. If an incoming connection is idle for this number of seconds it
+# will be closed. A value of '0' indicates waiting forever. (integer value)
+#client_socket_timeout = 900
+
+
 [keystone_authtoken]
 
 #
@@ -372,18 +432,18 @@
 # (Optional) Maximum total number of open connections to every memcached server. (integer value)
 #memcache_pool_maxsize = 10
 
-# (Optional) Socket timeout in seconds for communicating with a memcache server. (integer value)
+# (Optional) Socket timeout in seconds for communicating with a memcached server. (integer value)
 #memcache_pool_socket_timeout = 3
 
 # (Optional) Number of seconds a connection to memcached is held unused in the pool before it is closed. (integer
 # value)
 #memcache_pool_unused_timeout = 60
 
-# (Optional) Number of seconds that an operation will wait to get a memcache client connection from the pool. (integer
+# (Optional) Number of seconds that an operation will wait to get a memcached client connection from the pool. (integer
 # value)
 #memcache_pool_conn_get_timeout = 10
 
-# (Optional) Use the advanced (eventlet safe) memcache client pool. The advanced pool will only work under python 2.x.
+# (Optional) Use the advanced (eventlet safe) memcached client pool. The advanced pool will only work under python 2.x.
 # (boolean value)
 #memcache_use_advanced_pool = false
 
@@ -496,7 +556,7 @@
 # Deprecated group/name - [amqp1]/trace
 #trace = false
 
-# CA certificate PEM file for verifing server certificate (string value)
+# CA certificate PEM file to verify server certificate (string value)
 # Deprecated group/name - [amqp1]/ssl_ca_file
 #ssl_ca_file =
 
@@ -524,6 +584,7 @@
 #
 
 # Use durable queues in AMQP. (boolean value)
+# Deprecated group/name - [DEFAULT]/amqp_durable_queues
 # Deprecated group/name - [DEFAULT]/rabbit_durable_queues
 #amqp_durable_queues = false
 
@@ -531,9 +592,12 @@
 # Deprecated group/name - [DEFAULT]/amqp_auto_delete
 #amqp_auto_delete = false
 
-# Size of RPC connection pool. (integer value)
-# Deprecated group/name - [DEFAULT]/rpc_conn_pool_size
-#rpc_conn_pool_size = 30
+# Send a single AMQP reply to call message. The current behaviour since oslo-incubator is to send two AMQP replies -
+# first one with the payload, a second one to ensure the other have finish to send the payload. We are going to remove
+# it in the N release, but we must keep backward compatible at the same time. This option provides such compatibility -
+# it defaults to False in Liberty and can be turned on for early adopters with a new installations or for testing.
+# Please note, that this option will be removed in M release. (boolean value)
+#send_single_reply = false
 
 # Qpid broker hostname. (string value)
 # Deprecated group/name - [DEFAULT]/qpid_hostname
@@ -589,6 +653,7 @@
 #
 
 # Use durable queues in AMQP. (boolean value)
+# Deprecated group/name - [DEFAULT]/amqp_durable_queues
 # Deprecated group/name - [DEFAULT]/rabbit_durable_queues
 #amqp_durable_queues = false
 
@@ -596,9 +661,12 @@
 # Deprecated group/name - [DEFAULT]/amqp_auto_delete
 #amqp_auto_delete = false
 
-# Size of RPC connection pool. (integer value)
-# Deprecated group/name - [DEFAULT]/rpc_conn_pool_size
-#rpc_conn_pool_size = 30
+# Send a single AMQP reply to call message. The current behaviour since oslo-incubator is to send two AMQP replies -
+# first one with the payload, a second one to ensure the other have finish to send the payload. We are going to remove
+# it in the N release, but we must keep backward compatible at the same time. This option provides such compatibility -
+# it defaults to False in Liberty and can be turned on for early adopters with a new installations or for testing.
+# Please note, that this option will be removed in M release. (boolean value)
+#send_single_reply = false
 
 # SSL version to use (valid only if SSL enabled). Valid values are TLSv1 and SSLv23. SSLv2, SSLv3, TLSv1_1, and TLSv1_2
 # may be available on some distributions. (string value)
@@ -620,6 +688,10 @@
 # How long to wait before reconnecting in response to an AMQP consumer cancel notification. (floating point value)
 # Deprecated group/name - [DEFAULT]/kombu_reconnect_delay
 #kombu_reconnect_delay = 1.0
+
+# How long to wait before considering a reconnect attempt to have failed. This value should not be longer than
+# rpc_response_timeout. (integer value)
+#kombu_reconnect_timeout = 60
 
 # The RabbitMQ broker address where a single node is used. (string value)
 # Deprecated group/name - [DEFAULT]/rabbit_host
@@ -670,7 +742,7 @@
 #rabbit_ha_queues = false
 
 # Number of seconds after which the Rabbit broker is considered down if heartbeat's keep-alive fails (0 disable the
-# heartbeat). (integer value)
+# heartbeat). EXPERIMENTAL (integer value)
 #heartbeat_timeout_threshold = 60
 
 # How often times during the heartbeat_timeout_threshold we check the heartbeat. (integer value)
@@ -699,6 +771,8 @@
 # defined by the config_dir option, or absolute paths. The file defined by policy_file must exist for these directories
 # to be searched.  Missing or empty directories are ignored. (multi valued)
 # Deprecated group/name - [DEFAULT]/policy_dirs
+# This option is deprecated for removal.
+# Its value may be silently ignored in the future.
 #policy_dirs = policy.d
 
 
@@ -748,3 +822,19 @@
 
 # Number of workers for Senlin service. (integer value)
 #workers = 0
+
+
+[ssl]
+
+#
+# From oslo.service.sslutils
+#
+
+# CA certificate file to use to verify connecting clients. (string value)
+#ca_file = <None>
+
+# Certificate file to use when starting the server securely. (string value)
+#cert_file = <None>
+
+# Private key file to use when starting the server securely. (string value)
+#key_file = <None>
