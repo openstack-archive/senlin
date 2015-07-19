@@ -172,8 +172,8 @@ class Webhook(object):
         return cls(obj_id, obj_type, action, context, **kwargs)
 
     def encrypt_credential(self):
-        cipher, key = utils.encrypt(self.credential['password'])
-        self.credential['password'] = cipher
+        cipher, key = utils.encrypt(self.credential)
+        self.credential = cipher
         return key
 
     def generate_url(self, key):

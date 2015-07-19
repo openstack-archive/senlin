@@ -11,12 +11,12 @@
 # under the License.
 
 from oslo_log import log as logging
+from oslo_serialization import jsonutils
 import six
 
 from senlin.common import context
 from senlin.common import exception as exc
 from senlin.common.i18n import _
-from senlin.common.i18n import _LE
 from senlin.common import utils
 from senlin.common import wsgi
 from senlin.drivers.openstack import sdk
@@ -61,16 +61,17 @@ class WebhookMiddleware(wsgi.Middleware):
         :param url: The URL from which the request is received.
         """
         if 'webhooks' not in url:
-            return
+            return None
 
+        # TODO(Qiming): use urlparse to process the URL
         url_bottom = url.split('webhooks')[1]
         if 'trigger' not in url_bottom:
-            return
+            return None
 
         # /<webhook_id>/trigger?key=value
         parts = url_bottom.split('/')
         if len(parts) < 3:
-            return
+            return None
 
         webhook_id = parts[1]
         if not parts[2].startswith('trigger'):
@@ -88,19 +89,18 @@ class WebhookMiddleware(wsgi.Middleware):
         ctx = context.RequestContext.from_dict(context.get_service_context())
         webhook_obj = webhook_mod.Webhook.load(ctx, webhook_id)
         credential = webhook_obj.credential
-        credential['webhook_id'] = webhook_id
+
+        # Decrypt the credential using provided key
+        try:
+            cdata = utils.decrypt(credential, key)
+            credential = jsonutils.loads(cdata)
+        except Exception as ex:
+            LOG.exception(six.text_type(ex))
+            raise exc.Forbidden()
+
         if 'auth_url' not in credential:
             # Default to auth_url from service context if not provided
             credential['auth_url'] = ctx.auth_url
-
-        # Decrypt the credential password with key embedded in req params
-        try:
-            clear_text = utils.decrypt(credential['password'], key)
-            credential['password'] = clear_text
-        except Exception as ex:
-            msg = _('Invalid key for webhook (%s) triggering.') % webhook_id
-            LOG.error(six.text_type(ex))
-            raise exc.SenlinBadRequest(msg=msg)
 
         return credential
 
@@ -113,9 +113,8 @@ class WebhookMiddleware(wsgi.Middleware):
             access_info = sdk.authenticate(**cred)
             token = access_info.auth_token
         except Exception as ex:
-            msg = _LE('Webhook trigger failed in getting token: %s'
-                      ) % six.text_type(ex)
-            LOG.error(msg)
-            raise exc.WebhookCredentialInvalid(webhook=cred['webhook_id'])
+            LOG.exception(_('Webhook failed authentication: %s.'),
+                          six.text_type(ex))
+            raise exc.Forbidden()
 
         return token

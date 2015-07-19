@@ -255,7 +255,7 @@ class Webhook(BASE, SenlinBase, SoftDelete):
     obj_id = sqlalchemy.Column(sqlalchemy.String(36))
     obj_type = sqlalchemy.Column(sqlalchemy.String(36))
     action = sqlalchemy.Column(sqlalchemy.String(36))
-    credential = sqlalchemy.Column(types.Dict)
+    credential = sqlalchemy.Column(sqlalchemy.Text)
     params = sqlalchemy.Column(types.Dict)
 
 

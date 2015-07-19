@@ -11,7 +11,8 @@
 # under the License.
 
 import mock
-from oslo.utils import timeutils
+from oslo_serialization import jsonutils
+from oslo_utils import timeutils
 import six
 
 from senlin.common import exception
@@ -29,11 +30,12 @@ class TestWebhook(base.SenlinTestCase):
     def setUp(self):
         super(TestWebhook, self).setUp()
         self.context = utils.dummy_context()
-        self.credential = {
+        cdata = {
             'auth_url': 'TEST_URL',
             'user_id': '123',
             'password': 'abc'
         }
+        self.credential = jsonutils.dumps(cdata)
         self.params = {
             'key1': 'value1',
             'key2': 'value2',
@@ -280,9 +282,9 @@ class TestWebhook(base.SenlinTestCase):
                                       'test-action', **kwargs)
 
         key = webhook.encrypt_credential()
-        msg = webhook.credential['password']
-        password = encrypt_utils.decrypt(msg, key)
-        self.assertEqual('abc', password)
+        cdata = encrypt_utils.decrypt(webhook.credential, key)
+        credential = jsonutils.loads(cdata)
+        self.assertEqual('abc', credential['password'])
 
     @mock.patch.object(ksdriver.KeystoneClient, '__init__')
     @mock.patch.object(ksdriver.KeystoneClient, 'endpoint_get')

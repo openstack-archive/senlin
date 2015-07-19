@@ -12,10 +12,12 @@
 
 import mock
 from oslo_messaging.rpc import dispatcher as rpc
+from oslo_serialization import jsonutils
 import six
 
 from senlin.common import consts
 from senlin.common import exception
+from senlin.common import utils as common_utils
 from senlin.engine.actions import base as action_mod
 from senlin.engine import dispatcher
 from senlin.engine import environment
@@ -58,21 +60,24 @@ class WebhookTest(base.SenlinTestCase):
 
         return cluster
 
-    def test_webhook_create(self):
-        mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
-        mock_call.return_value = 'test-url', 'test-key'
+    @mock.patch.object(webhook_mod.Webhook, 'generate_url')
+    @mock.patch.object(common_utils, 'encrypt')
+    def test_webhook_create(self, mock_encrypt, mock_url):
+        mock_url.return_value = 'test-url', 'test-key'
+        mock_encrypt.return_value = 'secret text', 'test-key'
 
         cluster = self._create_cluster('c1')
         obj_id = cluster['id']
         obj_type = 'cluster'
         action = consts.CLUSTER_SCALE_OUT
 
-        credential = {'userid': 'test-user-id', 'password': 'test-pass'}
+        credential = {'user_id': 'test_user_id', 'password': 'test-pass'}
+        cdata = jsonutils.dumps(credential)
         params = {'p1': 'v1', 'p2': 'v2'}
         webhook = self.eng.webhook_create(
             self.ctx, obj_id, obj_type,
             action,
-            credential=credential,
+            credential=cdata,
             params=params, name='test-webhook-name')
 
         self.assertIsNotNone(webhook)
@@ -80,7 +85,7 @@ class WebhookTest(base.SenlinTestCase):
         self.assertEqual(obj_id, webhook['obj_id'])
         self.assertEqual(obj_type, webhook['obj_type'])
         self.assertEqual(action, webhook['action'])
-        self.assertEqual(credential, webhook['credential'])
+        self.assertEqual('secret text', webhook['credential'])
         self.assertEqual(params, webhook['params'])
         self.assertIsNone(webhook['deleted_time'])
         self.assertIsNotNone(webhook['id'])
@@ -99,7 +104,7 @@ class WebhookTest(base.SenlinTestCase):
                                credential=credential)
         self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
         self.assertEqual('The request is malformed: '
-                         'Webhook obj_type %s is unsupported.'
+                         'Webhook obj_type %s is not supported.'
                          '' % obj_type,
                          six.text_type(ex.exc_info[1]))
 
@@ -124,7 +129,7 @@ class WebhookTest(base.SenlinTestCase):
         obj_type = 'cluster'
         action = 'fake-action'
 
-        credential = {'userid': 'test-user-id', 'password': 'test-pass'}
+        credential = {'user_id': 'test-user-id', 'password': 'test-pass'}
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.webhook_create,
                                self.ctx, obj_id, obj_type, action,
@@ -152,38 +157,58 @@ class WebhookTest(base.SenlinTestCase):
                          '' % (action, obj_type),
                          six.text_type(ex.exc_info[1]))
 
-    def test_webhook_create_credential_not_provided(self):
-        cluster = self._create_cluster('c1')
-        obj_id = cluster['id']
-        obj_type = 'cluster'
-        action = consts.CLUSTER_SCALE_OUT
+    @mock.patch.object(webhook_mod.Webhook, 'generate_url')
+    @mock.patch.object(common_utils, 'encrypt')
+    def test_webhook_create_as_admin(self, mock_encrypt, mock_url):
+        mock_encrypt.return_value = 'secret text', 'test-key'
+        mock_url.return_value = 'test-url', 'test-key'
 
-        credential = None
+        self.ctx.is_admin = True
+        cluster = self._create_cluster('c1')
+        webhook = self.eng.webhook_create(self.ctx, cluster['id'], 'cluster',
+                                          consts.CLUSTER_SCALE_OUT)
+        self.assertIsNotNone(webhook)
+
+        # an admin with different user ID is okay
+        diff_ctx = utils.dummy_context(project='webhook_test_project',
+                                       user_id='I am admin')
+        diff_ctx.is_admin = True
+        webhook = self.eng.webhook_create(self.ctx, cluster['id'], 'cluster',
+                                          consts.CLUSTER_SCALE_OUT)
+        self.assertIsNotNone(webhook)
+
+    @mock.patch.object(webhook_mod.Webhook, 'generate_url')
+    @mock.patch.object(common_utils, 'encrypt')
+    def test_webhook_create_default_user(self, mock_encrypt, mock_url):
+        mock_encrypt.return_value = 'secret text', 'test-key'
+        mock_url.return_value = 'test-url', 'test-key'
+
+        self.ctx.is_admin = False
+        cluster = self._create_cluster('c1')
+
+        webhook = self.eng.webhook_create(self.ctx, cluster['id'], 'cluster',
+                                          consts.CLUSTER_SCALE_OUT)
+        self.assertIsNotNone(webhook)
+
+        diff_ctx = utils.dummy_context(project='webhook_test_project',
+                                       user_id='others')
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.webhook_create,
-                               self.ctx, obj_id, obj_type, action,
-                               credential=credential)
-        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
-        self.assertEqual('The request is malformed: '
-                         'The credential parameter is missing.',
-                         six.text_type(ex.exc_info[1]))
+                               diff_ctx, cluster['id'], 'cluster',
+                               consts.CLUSTER_SCALE_OUT)
+        self.assertEqual(exception.Forbidden, ex.exc_info[0])
 
-    def test_webhook_get(self):
-        mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
-        mock_call.return_value = 'test-url', 'test-key'
+    @mock.patch.object(webhook_mod.Webhook, 'generate_url')
+    @mock.patch.object(common_utils, 'encrypt')
+    def test_webhook_get(self, mock_encrypt, mock_url):
+        mock_encrypt.return_value = 'encoded text', 'test-key'
+        mock_url.return_value = 'test-url', 'test-key'
 
         cluster = self._create_cluster('c1')
         obj_id = cluster['id']
-        obj_type = 'cluster'
-        action = consts.CLUSTER_SCALE_OUT
 
-        credential = {'userid': 'test-user-id', 'password': 'test-pass'}
-        params = {'p1': 'v1', 'p2': 'v2'}
-        w = self.eng.webhook_create(
-            self.ctx, obj_id, obj_type,
-            action,
-            credential=credential,
-            params=params, name='w-1')
+        w = self.eng.webhook_create(self.ctx, obj_id, 'cluster',
+                                    consts.CLUSTER_SCALE_OUT, name='w-1')
 
         for identity in [w['id'], w['id'][:6], 'w-1']:
             result = self.eng.webhook_get(self.ctx, identity)
@@ -195,29 +220,19 @@ class WebhookTest(base.SenlinTestCase):
         self.assertEqual(exception.WebhookNotFound, ex.exc_info[0])
 
     @mock.patch.object(service.EngineService, 'cluster_find')
-    def test_webhook_list(self, cluster_find):
-        mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
-        mock_call.return_value = 'test-url', 'test-key'
+    @mock.patch.object(webhook_mod.Webhook, 'generate_url')
+    @mock.patch.object(common_utils, 'encrypt')
+    def test_webhook_list(self, mock_encrypt, mock_url, mock_find):
+        mock_encrypt.return_value = 'secret text', 'test-key'
+        mock_url.return_value = 'test-url', 'test-key'
+        fake_cluster = mock.Mock()
+        fake_cluster.user = self.ctx.user
+        mock_find.return_value = fake_cluster
 
-        credential = {'userid': 'test-user-id', 'password': 'test-pass'}
-        params = None
-
-        obj_id = 'obj-id-1'
-        obj_type = 'cluster'
-        action = consts.CLUSTER_SCALE_OUT
-        w1 = self.eng.webhook_create(
-            self.ctx, obj_id, obj_type,
-            action,
-            credential=credential,
-            params=params, name='w1')
-        obj_id = 'obj-id-2'
-        obj_type = 'cluster'
-        action = consts.CLUSTER_SCALE_IN
-        w2 = self.eng.webhook_create(
-            self.ctx, obj_id, obj_type,
-            action,
-            credential=credential,
-            params=params, name='w2')
+        w1 = self.eng.webhook_create(self.ctx, 'cid-1', 'cluster',
+                                     consts.CLUSTER_SCALE_OUT, name='w1')
+        w2 = self.eng.webhook_create(self.ctx, 'cid-2', 'cluster',
+                                     consts.CLUSTER_SCALE_IN, name='w2')
 
         result = self.eng.webhook_list(self.ctx)
         self.assertIsInstance(result, list)
@@ -229,29 +244,20 @@ class WebhookTest(base.SenlinTestCase):
         self.assertIn(w2['id'], ids)
 
     @mock.patch.object(service.EngineService, 'cluster_find')
-    def test_webhook_list_with_filters(self, cluster_find):
-        mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
-        mock_call.return_value = 'test-url', 'test-key'
+    @mock.patch.object(webhook_mod.Webhook, 'generate_url')
+    @mock.patch.object(common_utils, 'encrypt')
+    def test_webhook_list_with_filters(self, mock_encrypt, mock_url,
+                                       mock_find):
+        mock_encrypt.return_value = 'secret text', 'test-key'
+        mock_url.return_value = 'test-url', 'test-key'
+        fake_cluster = mock.Mock()
+        fake_cluster.user = self.ctx.user
+        mock_find.return_value = fake_cluster
 
-        credential = {'userid': 'test-user-id', 'password': 'test-pass'}
-        params = None
-
-        obj_id = 'obj-id-1'
-        obj_type = 'cluster'
-        action = consts.CLUSTER_SCALE_OUT
-        w1 = self.eng.webhook_create(
-            self.ctx, obj_id, obj_type,
-            action,
-            credential=credential,
-            params=params, name='w1')
-        obj_id = 'obj-id-2'
-        obj_type = 'cluster'
-        action = consts.CLUSTER_SCALE_IN
-        w2 = self.eng.webhook_create(
-            self.ctx, obj_id, obj_type,
-            action,
-            credential=credential,
-            params=params, name='w2')
+        w1 = self.eng.webhook_create(self.ctx, 'cid-1', 'cluster',
+                                     consts.CLUSTER_SCALE_OUT, name='w1')
+        w2 = self.eng.webhook_create(self.ctx, 'cid-2', 'cluster',
+                                     consts.CLUSTER_SCALE_IN, name='w2')
 
         result = self.eng.webhook_list(self.ctx,
                                        filters={'obj_type': 'cluster'})
@@ -260,45 +266,36 @@ class WebhookTest(base.SenlinTestCase):
                                        filters={'obj_type': 'node'})
         self.assertEqual(0, len(result))
         result = self.eng.webhook_list(self.ctx,
-                                       filters={'obj_id': 'obj-id-1'})
+                                       filters={'obj_id': 'cid-1'})
         self.assertEqual(1, len(result))
         self.assertEqual(w1['id'], result[0]['id'])
         result = self.eng.webhook_list(self.ctx,
                                        filters={'obj_id': 'fake-id'})
         self.assertEqual(0, len(result))
         result = self.eng.webhook_list(
-            self.ctx,
-            filters={'action': consts.CLUSTER_SCALE_IN})
+            self.ctx, filters={'action': consts.CLUSTER_SCALE_IN})
         self.assertEqual(1, len(result))
         self.assertEqual(w2['id'], result[0]['id'])
+
         result = self.eng.webhook_list(self.ctx,
                                        filters={'action': 'fake-action'})
         self.assertEqual(0, len(result))
 
     @mock.patch.object(service.EngineService, 'cluster_find')
-    def test_webhook_list_with_limit_marker(self, cluster_find):
-        mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
-        mock_call.return_value = 'test-url', 'test-key'
+    @mock.patch.object(webhook_mod.Webhook, 'generate_url')
+    @mock.patch.object(common_utils, 'encrypt')
+    def test_webhook_list_with_limit_marker(self, mock_encrypt, mock_url,
+                                            mock_find):
+        mock_encrypt.return_value = 'secret text', 'test-key'
+        mock_url.return_value = 'test-url', 'test-key'
+        fake_cluster = mock.Mock()
+        fake_cluster.user = self.ctx.user
+        mock_find.return_value = fake_cluster
 
-        credential = {'userid': 'test-user-id', 'password': 'test-pass'}
-        params = None
-
-        obj_id = 'obj-id-1'
-        obj_type = 'cluster'
-        action = consts.CLUSTER_SCALE_OUT
-        w1 = self.eng.webhook_create(
-            self.ctx, obj_id, obj_type,
-            action,
-            credential=credential,
-            params=params, name='w1')
-        obj_id = 'obj-id-2'
-        obj_type = 'cluster'
-        action = consts.CLUSTER_SCALE_IN
-        w2 = self.eng.webhook_create(
-            self.ctx, obj_id, obj_type,
-            action,
-            credential=credential,
-            params=params, name='w2')
+        w1 = self.eng.webhook_create(self.ctx, 'cid1', 'cluster',
+                                     consts.CLUSTER_SCALE_OUT, name='w1')
+        w2 = self.eng.webhook_create(self.ctx, 'cid2', 'cluster',
+                                     consts.CLUSTER_SCALE_IN, name='w2')
 
         result = self.eng.webhook_list(self.ctx, limit=0)
         self.assertEqual(0, len(result))
@@ -312,14 +309,9 @@ class WebhookTest(base.SenlinTestCase):
         result = self.eng.webhook_list(self.ctx, marker=w2['id'])
         self.assertEqual(0, len(result))
 
-        obj_id = 'obj-id-3'
-        obj_type = 'cluster'
-        action = consts.CLUSTER_SCALE_IN
-        w3 = self.eng.webhook_create(
-            self.ctx, obj_id, obj_type,
-            action,
-            credential=credential,
-            params=params, name='w3')
+        w3 = self.eng.webhook_create(self.ctx, 'cid3', 'cluster',
+                                     consts.CLUSTER_SCALE_IN, name='w3')
+
         result = self.eng.webhook_list(self.ctx, limit=1, marker=w1['id'])
         self.assertEqual(1, len(result))
         result = self.eng.webhook_list(self.ctx, limit=2, marker=w1['id'])
@@ -328,37 +320,25 @@ class WebhookTest(base.SenlinTestCase):
         self.assertEqual(0, len(result))
 
     @mock.patch.object(service.EngineService, 'cluster_find')
-    def test_webhook_list_with_sort_keys(self, cluster_find):
-        mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
-        mock_call.return_value = 'test-url', 'test-key'
+    @mock.patch.object(webhook_mod.Webhook, 'generate_url')
+    @mock.patch.object(common_utils, 'encrypt')
+    def test_webhook_list_with_sort_keys(self, mock_encrypt, mock_url,
+                                         mock_find):
+        mock_encrypt.return_value = 'secret text', 'test-key'
+        mock_url.return_value = 'test-url', 'test-key'
+        fake_cluster = mock.Mock()
+        fake_cluster.user = self.ctx.user
+        mock_find.return_value = fake_cluster
 
-        credential = {'userid': 'test-user-id', 'password': 'test-pass'}
-        params = None
-
-        obj_id = 'obj-id-1'
-        obj_type = 'cluster'
-        action = consts.CLUSTER_SCALE_OUT
-        w1 = self.eng.webhook_create(
-            self.ctx, obj_id, obj_type,
-            action,
-            credential=credential,
-            params=params, name='w3')
-        obj_id = 'obj-id-2'
-        obj_type = 'cluster'
-        action = consts.CLUSTER_SCALE_IN
-        w2 = self.eng.webhook_create(
-            self.ctx, obj_id, obj_type,
-            action,
-            credential=credential,
-            params=params, name='w2')
-        obj_id = 'obj-id-1'
-        obj_type = 'cluster'
-        action = consts.CLUSTER_SCALE_IN
-        w3 = self.eng.webhook_create(
-            self.ctx, obj_id, obj_type,
-            action,
-            credential=credential,
-            params=params, name='w1')
+        w1 = self.eng.webhook_create(self.ctx, 'obj-id-1', 'cluster',
+                                     consts.CLUSTER_SCALE_OUT,
+                                     name='w3')
+        w2 = self.eng.webhook_create(self.ctx, 'obj-id-2', 'cluster',
+                                     consts.CLUSTER_SCALE_IN,
+                                     name='w2')
+        w3 = self.eng.webhook_create(self.ctx, 'obj-id-1', 'cluster',
+                                     consts.CLUSTER_SCALE_IN,
+                                     name='w1')
 
         # default by obj_id
         result = self.eng.webhook_list(self.ctx)
@@ -385,29 +365,20 @@ class WebhookTest(base.SenlinTestCase):
         self.assertEqual(w3['id'], result[1]['id'])
 
     @mock.patch.object(service.EngineService, 'cluster_find')
-    def test_webhook_list_with_sort_dir(self, cluster_find):
-        mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
-        mock_call.return_value = 'test-url', 'test-key'
+    @mock.patch.object(webhook_mod.Webhook, 'generate_url')
+    @mock.patch.object(common_utils, 'encrypt')
+    def test_webhook_list_with_sort_dir(self, mock_encrypt, mock_url,
+                                        mock_find):
+        mock_encrypt.return_value = 'secret text', 'test-key'
+        mock_url.return_value = 'test-url', 'test-key'
+        fake_cluster = mock.Mock()
+        fake_cluster.user = self.ctx.user
+        mock_find.return_value = fake_cluster
 
-        credential = {'userid': 'test-user-id', 'password': 'test-pass'}
-        params = None
-
-        obj_id = 'obj-id-1'
-        obj_type = 'cluster'
-        action = consts.CLUSTER_SCALE_OUT
-        w1 = self.eng.webhook_create(
-            self.ctx, obj_id, obj_type,
-            action,
-            credential=credential,
-            params=params, name='w1')
-        obj_id = 'obj-id-2'
-        obj_type = 'cluster'
-        action = consts.CLUSTER_SCALE_IN
-        w2 = self.eng.webhook_create(
-            self.ctx, obj_id, obj_type,
-            action,
-            credential=credential,
-            params=params, name='w2')
+        w1 = self.eng.webhook_create(self.ctx, 'cid-1', 'cluster',
+                                     consts.CLUSTER_SCALE_OUT, name='w1')
+        w2 = self.eng.webhook_create(self.ctx, 'cid-2', 'cluster',
+                                     consts.CLUSTER_SCALE_IN, name='w2')
 
         # use name for sorting, descending
         result = self.eng.webhook_list(self.ctx, sort_keys=['name'],
@@ -424,21 +395,19 @@ class WebhookTest(base.SenlinTestCase):
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(service.EngineService, 'cluster_find')
-    def test_webhook_trigger(self, cluster_find, notify):
-        mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
-        mock_call.return_value = 'test-url', 'test-key'
+    @mock.patch.object(webhook_mod.Webhook, 'generate_url')
+    @mock.patch.object(common_utils, 'encrypt')
+    def test_webhook_trigger(self, mock_encrypt, mock_url, mock_find, notify):
+        mock_encrypt.return_value = 'secret text', 'test-key'
+        mock_url.return_value = 'test-url', 'test-key'
+        fake_cluster = mock.Mock()
+        fake_cluster.user = self.ctx.user
+        mock_find.return_value = fake_cluster
 
-        obj_id = 'obj-id-1'
-        obj_type = 'cluster'
-        action = consts.CLUSTER_SCALE_OUT
-
-        credential = {'userid': 'test-user-id', 'password': 'test-pass'}
-        params = {'p1': 'v1', 'p2': 'v2'}
-        webhook = self.eng.webhook_create(
-            self.ctx, obj_id, obj_type,
-            action,
-            credential=credential,
-            params=params, name='test-webhook-name')
+        obj_id = 'cluster-id-1'
+        webhook = self.eng.webhook_create(self.ctx, obj_id, 'cluster',
+                                          consts.CLUSTER_SCALE_OUT,
+                                          name='test-webhook-name')
 
         self.assertIsNotNone(webhook)
 
@@ -447,31 +416,30 @@ class WebhookTest(base.SenlinTestCase):
         # verify action is fired
         action_id = res['action']
         action = self.eng.action_get(self.ctx, action_id)
-        self._verify_action(action, 'CLUSTER_SCALE_OUT',
+        self._verify_action(action, consts.CLUSTER_SCALE_OUT,
                             'webhook_action_%s' % webhook['id'],
                             obj_id, cause=action_mod.CAUSE_RPC,
-                            inputs=params)
+                            inputs={})
 
         notify.assert_called_once_with(self.ctx, action_id=mock.ANY)
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(service.EngineService, 'cluster_find')
-    def test_webhook_trigger_with_params(self, cluster_find, notify):
-        mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
-        mock_call.return_value = 'test-url', 'test-key'
+    @mock.patch.object(webhook_mod.Webhook, 'generate_url')
+    @mock.patch.object(common_utils, 'encrypt')
+    def test_webhook_trigger_with_params(self, mock_encrypt, mock_url,
+                                         mock_find, notify):
+        mock_url.return_value = 'test-url', 'test-key'
+        fake_cluster = mock.Mock()
+        fake_cluster.user = self.ctx.user
+        mock_find.return_value = fake_cluster
+        mock_encrypt.return_value = 'secret text', 'test-key'
 
-        obj_id = 'obj-id-1'
-        obj_type = 'cluster'
-        action = consts.CLUSTER_SCALE_OUT
-
-        credential = {'userid': 'test-user-id', 'password': 'test-pass'}
+        obj_id = 'cluster-id-1'
         params = {'p1': 'v1', 'p2': 'v2'}
-        webhook = self.eng.webhook_create(
-            self.ctx, obj_id, obj_type,
-            action,
-            credential=credential,
-            params=params, name='test-webhook-name')
-
+        webhook = self.eng.webhook_create(self.ctx, obj_id, 'cluster',
+                                          consts.CLUSTER_SCALE_OUT,
+                                          params=params)
         self.assertIsNotNone(webhook)
 
         params2 = {'p1': 'v3', 'p2': 'v4'}
@@ -480,29 +448,22 @@ class WebhookTest(base.SenlinTestCase):
         # verify action is fired
         action_id = res['action']
         action = self.eng.action_get(self.ctx, action_id)
-        self._verify_action(action, 'CLUSTER_SCALE_OUT',
+        self._verify_action(action, consts.CLUSTER_SCALE_OUT,
                             'webhook_action_%s' % webhook['id'],
                             obj_id, cause=action_mod.CAUSE_RPC,
                             inputs=params2)
 
         notify.assert_called_once_with(self.ctx, action_id=mock.ANY)
 
-    def test_webhook_delete(self):
-        mock_call = self.patchobject(webhook_mod.Webhook, 'generate_url')
-        mock_call.return_value = 'test-url', 'test-key'
+    @mock.patch.object(webhook_mod.Webhook, 'generate_url')
+    @mock.patch.object(common_utils, 'encrypt')
+    def test_webhook_delete(self, mock_encrypt, mock_url):
+        mock_url.return_value = 'test-url', 'test-key'
+        mock_encrypt.return_value = 'encrypted text', 'test-key'
 
         cluster = self._create_cluster('c1')
-        obj_id = cluster['id']
-        obj_type = 'cluster'
-        action = consts.CLUSTER_SCALE_OUT
-
-        credential = {'userid': 'test-user-id', 'password': 'test-pass'}
-        params = {'p1': 'v1', 'p2': 'v2'}
-        webhook = self.eng.webhook_create(
-            self.ctx, obj_id, obj_type,
-            action,
-            credential=credential,
-            params=params, name='test-webhook-name')
+        webhook = self.eng.webhook_create(self.ctx, cluster['id'], 'cluster',
+                                          consts.CLUSTER_SCALE_OUT)
 
         webhook_id = webhook['id']
         result = self.eng.webhook_delete(self.ctx, webhook_id)
@@ -510,7 +471,6 @@ class WebhookTest(base.SenlinTestCase):
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.webhook_get, self.ctx, webhook_id)
-
         self.assertEqual(exception.WebhookNotFound, ex.exc_info[0])
 
     def test_webhook_delete_not_found(self):

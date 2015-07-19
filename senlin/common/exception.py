@@ -227,10 +227,6 @@ class WebhookNotFound(SenlinException):
     msg_fmt = _("The webhook (%(webhook)s) could not be found.")
 
 
-class WebhookCredentialInvalid(SenlinException):
-    msg_fmt = _("Webhook (%(webhook)s) credential is invalid.")
-
-
 class ActionNotFound(SenlinException):
     msg_fmt = _("The action (%(action)s) could not be found.")
 
