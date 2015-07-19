@@ -168,7 +168,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('obj_id', sqlalchemy.String(36), nullable=False),
         sqlalchemy.Column('obj_type', sqlalchemy.String(36), nullable=False),
         sqlalchemy.Column('action', sqlalchemy.String(36), nullable=False),
-        sqlalchemy.Column('credential', types.Dict),
+        sqlalchemy.Column('credential', sqlalchemy.Text),
         sqlalchemy.Column('params', types.Dict),
         mysql_engine='InnoDB',
         mysql_charset='utf8'

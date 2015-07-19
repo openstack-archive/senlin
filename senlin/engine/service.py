@@ -16,6 +16,7 @@ import functools
 from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
+from oslo_serialization import jsonutils
 from oslo_service import service
 from oslo_utils import uuidutils
 import six
@@ -1208,34 +1209,54 @@ class EngineService(service.Service):
     @request_context
     def webhook_create(self, context, obj_id, obj_type, action,
                        credential=None, params=None, name=None):
-        LOG.info(_LI("Creating webhook %(n)s, %(i)s, %(t)s, %(a)s."),
+        LOG.info(_LI("Creating webhook %(n)s, %(t)s:%(i)s:%(a)s."),
                  {'n': name, 'i': obj_id, 't': obj_type, 'a': action})
-
+        obj_type = obj_type.lower()
         if obj_type not in consts.WEBHOOK_OBJ_TYPES:
-            msg = _('Webhook obj_type %s is unsupported.') % obj_type
+            msg = _('Webhook obj_type %s is not supported.') % obj_type
             raise exception.SenlinBadRequest(msg=msg)
 
         # Check whether object identified by obj_id does exists
         if obj_type == consts.WEBHOOK_OBJ_TYPE_CLUSTER:
-            self.cluster_find(context, obj_id)
+            obj = self.cluster_find(context, obj_id)
         elif obj_type == consts.WEBHOOK_OBJ_TYPE_NODE:
-            self.node_find(context, obj_id)
+            obj = self.node_find(context, obj_id)
         else:
-            self.policy_find(context, obj_id)
+            obj = self.policy_find(context, obj_id)
+
+        # permission checking
+        if not context.is_admin and context.user != obj.user:
+            LOG.error(_LE('Failed in permission checking'))
+            raise exception.Forbidden()
 
         # Check action name
         if action not in consts.ACTION_NAMES:
             msg = _('Illegal action name (%s) specified.') % action
+            LOG.error(msg)
             raise exception.SenlinBadRequest(msg=msg)
-        elif action.lower().rsplit('_')[0] != obj_type:
-            # Action is unavailable for target obj_type
+
+        if action.lower().split('_')[0] != obj_type:
             msg = _('Action %(a)s is not applicable to object of type %(t)s.'
                     ) % {'a': action, 't': obj_type}
+            LOG.error(msg)
             raise exception.SenlinBadRequest(msg=msg)
 
         if not credential:
-            msg = _('The credential parameter is missing.')
-            raise exception.SenlinBadRequest(msg=msg)
+            if context.is_admin:
+                # use object owner if request is from admin
+                cdata = {
+                    'user_id': obj.user,
+                    'trust_id': db_api.cred_get(context, obj.user, obj.project)
+                }
+            else:
+                # otherwise, use context user
+                cdata = {
+                    'user_id': context.user,
+                    'trust_id': context.trusts,
+                }
+            credential = jsonutils.dumps(cdata)
+        else:
+            credential = jsonutils.dumps(credential)
 
         if not params:
             params = {}
