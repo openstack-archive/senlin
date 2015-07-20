@@ -295,7 +295,7 @@ class NeutronClient(base.DriverBase):
 
     def healthmonitor_list(self):
         try:
-            hms = [hm for hm in self.conn.network.list_health_monitors()]
+            hms = [hm for hm in self.conn.network.health_monitors()]
         except sdk.exc.HttpException as ex:
             LOG.exception(_('Failed in listing lb health-monitor: %s.'),
                           six.text_type(ex))
@@ -325,7 +325,7 @@ class NeutronClient(base.DriverBase):
                 kwargs['expected_codes'] = expected_codes
 
         try:
-            res = self.conn.network.create_pool(**kwargs)
+            res = self.conn.network.create_health_monitor(**kwargs)
         except sdk.exc.HttpException as ex:
             LOG.exception(_('Failed in creating lb health-monitor: %s.'),
                           six.text_type(ex))
