@@ -158,9 +158,8 @@ class EngineService(service.Service):
     @request_context
     def profile_type_schema(self, context, type_name):
         profile = environment.global_env().get_profile(type_name)
+        data = profile.get_schema()
 
-        data = dict((name, dict(schema))
-                    for name, schema in profile.spec_schema.items())
         return {'spec': data}
 
     @request_context
@@ -275,9 +274,8 @@ class EngineService(service.Service):
     @request_context
     def policy_type_schema(self, context, type_name):
         policy_type = environment.global_env().get_policy(type_name)
+        data = policy_type.get_schema()
 
-        data = dict((name, dict(schema))
-                    for name, schema in policy_type.spec_schema.items())
         return {'spec': data}
 
     @request_context

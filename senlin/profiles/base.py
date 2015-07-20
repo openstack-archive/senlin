@@ -170,6 +170,11 @@ class Profile(object):
         '''Validate the schema and the data provided.'''
         self.spec_data.validate()
 
+    @classmethod
+    def get_schema(cls):
+        return dict((name, dict(schema))
+                    for name, schema in cls.spec_schema.items())
+
     def _init_context(self):
         cred = keystoneclient.get_service_credentials()
         cntx = {

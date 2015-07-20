@@ -137,6 +137,11 @@ class Policy(object):
         '''Validate the schema and the data provided.'''
         self.spec_data.validate()
 
+    @classmethod
+    def get_schema(cls):
+        return dict((name, dict(schema))
+                    for name, schema in cls.spec_schema.items())
+
     def _build_policy_data(self, data):
         clsname = self.__class__.__name__
         version = self.VERSION
