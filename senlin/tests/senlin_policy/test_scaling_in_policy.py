@@ -135,8 +135,7 @@ class TestScalingInPolicy(base.SenlinTestCase):
                                                    'test-policy',
                                                    **kwargs)
 
-        self.assertRaises(exception.PolicyValidationFailed,
-                          policy.validate)
+        self.assertRaises(exception.InvalidSpec, policy.validate)
 
     def test_calculate_adjustment_count(self):
         kwargs = {

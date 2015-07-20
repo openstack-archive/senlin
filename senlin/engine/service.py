@@ -338,10 +338,9 @@ class EngineService(service.Service):
 
         try:
             policy.validate()
-        except exception.PolicyValidationFailed as ex:
-            msg = _('Policy validation failed for reason: %(reason)s'
-                    ) % {'reason': six.text_type(ex)}
-            raise exception.SenlinBadRequest(msg=msg)
+        except exception.InvalidSpec as ex:
+            raise exception.SenlinBadRequest(msg=six.text_type(ex))
+
         policy.store(context)
         return policy.to_dict()
 

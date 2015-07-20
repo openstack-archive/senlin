@@ -124,10 +124,10 @@ class Environment(object):
     def _check_policy_type_name(self, name):
         if name is None or name == "":
             msg = _('Policy type name not specified')
-            raise exception.PolicyValidationFailed(message=msg)
+            raise exception.InvalidPolicyType(message=msg)
         elif not isinstance(name, six.string_types):
             msg = _('Policy type name is not a string')
-            raise exception.PolicyValidationFailed(message=msg)
+            raise exception.InvalidPolicyType(message=msg)
 
     def register_policy(self, name, plugin):
         self._check_policy_type_name(name)

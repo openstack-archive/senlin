@@ -174,15 +174,15 @@ class TestEnvironment(base.SenlinTestCase):
         env = environment.Environment()
         env._check_policy_type_name('abc')
 
-        ex = self.assertRaises(exception.PolicyValidationFailed,
+        ex = self.assertRaises(exception.InvalidPolicyType,
                                env._check_policy_type_name, '')
         self.assertEqual('Policy type name not specified', six.text_type(ex))
-        ex = self.assertRaises(exception.PolicyValidationFailed,
+        ex = self.assertRaises(exception.InvalidPolicyType,
                                env._check_policy_type_name, None)
         self.assertEqual('Policy type name not specified', six.text_type(ex))
 
         for v in [123, {}, ['a'], ('b', 'c'), True]:
-            ex = self.assertRaises(exception.PolicyValidationFailed,
+            ex = self.assertRaises(exception.InvalidPolicyType,
                                    env._check_policy_type_name, v)
             self.assertEqual('Policy type name is not a string',
                              six.text_type(ex))

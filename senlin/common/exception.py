@@ -175,10 +175,6 @@ class PolicyTypeNotFound(SenlinException):
     msg_fmt = _("Policy type (%(policy_type)s) is not found.")
 
 
-class PolicyValidationFailed(SenlinException):
-    msg_fmt = _("%(message)s")
-
-
 class PolicyNotFound(SenlinException):
     msg_fmt = _("The policy (%(policy)s) could not be found.")
 
@@ -193,6 +189,10 @@ class PolicyTypeConflict(SenlinException):
 
 
 class InvalidSchemaError(SenlinException):
+    msg_fmt = _("%(message)s")
+
+
+class InvalidPolicyType(SenlinException):
     msg_fmt = _("%(message)s")
 
 
@@ -252,7 +252,7 @@ class InternalError(SenlinException):
     made user visible.
     '''
 
-    def __init__(self, message=None, **kwargs):
+    def __init__(self, **kwargs):
         super(InternalError, self).__init__(**kwargs)
 
 
@@ -283,6 +283,10 @@ class ResourceNotFound(InternalError):
 class ResourceStatusError(InternalError):
     msg_fmt = _("The resource %(resource_id)s is in error status "
                 "- '%(status)s' due to '%(reason)s'.")
+
+
+class InvalidSpec(InternalError):
+    msg_fmt = _("%(message)s")
 
 
 class PolicyNotAttached(InternalError):

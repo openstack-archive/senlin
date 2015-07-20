@@ -96,8 +96,8 @@ class ScalingOutPolicy(base.Policy):
         super(ScalingOutPolicy, self).validate()
 
         if self.adjustment_number < 0:
-            msg = _('Adjustment number is not allowed to be negative.')
-            raise exception.PolicyValidationFailed(message=msg)
+            msg = _('Adjustment number cannot be negative value.')
+            raise exception.InvalidSpec(message=msg)
 
     def pre_op(self, cluster_id, action):
         cluster = db_api.cluster_get(action.context, cluster_id)
