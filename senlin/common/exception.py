@@ -260,18 +260,19 @@ class ResourceBusyError(InternalError):
     msg_fmt = _("The %(resource_type)s (%(resource_id)s) is busy now.")
 
 
-class UserNotFound(InternalError):
-    # Internal exception, not to be exposed to end user.
-    msg_fmt = _("The user (%(user)s) could not be found.")
-
-
 class TrustNotFound(InternalError):
     # Internal exception, not to be exposed to end user.
     msg_fmt = _("The trust for trustor (%(trustor)s) could not be found.")
 
 
-class TrustCreationFailure(InternalError):
-    msg_fmt = _("Failed in creating trust: %(reason)s.")
+class ResourceCreationFailure(InternalError):
+    # Used when creating resources in other services
+    msg_fmt = _("Failed in creating %(rtype)s.")
+
+
+class ResourceDeletionFailure(InternalError):
+    # Used when deleting resources from other services
+    msg_fmt = _("Failed in deleting %(resource)s.")
 
 
 class ResourceNotFound(InternalError):

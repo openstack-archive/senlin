@@ -38,60 +38,56 @@ class TestNeutronV2Driver(base.SenlinTestCase):
         mock_create_connection.assert_called_once_with(params)
 
     def test_network_get(self):
-        name_or_id = 'network_identifier'
+        net_id = 'network_identifier'
         network_obj = mock.Mock()
 
         self.conn.network.find_network.return_value = network_obj
-        res = self.nc.network_get(name_or_id)
-        self.conn.network.find_network.assert_called_once_with(
-            name_or_id)
+        res = self.nc.network_get(net_id)
+        self.conn.network.find_network.assert_called_once_with(net_id)
         self.assertEqual(network_obj, res)
 
         exception_info = 'Exception happened when getting network.'
         fake_exception = sdk.exc.HttpException(exception_info)
         self.conn.network.find_network.side_effect = fake_exception
-        ex = self.assertRaises(exception.Error, self.nc.network_get,
-                               name_or_id)
-        msg = _('Failed in getting network %(value)s: HttpException: '
-                '%(ex)s') % {'value': name_or_id, 'ex': exception_info}
+        ex = self.assertRaises(exception.ResourceNotFound,
+                               self.nc.network_get, net_id)
+
+        msg = _('The resource (network:%s) could not be found.') % net_id
         self.assertEqual(msg, six.text_type(ex))
 
     def test_subnet_get(self):
-        name_or_id = 'subnet_identifier'
+        subnet_id = 'subnet_identifier'
         subnet_obj = mock.Mock()
 
         self.conn.network.find_subnet.return_value = subnet_obj
-        res = self.nc.subnet_get(name_or_id)
-        self.conn.network.find_subnet.assert_called_once_with(
-            name_or_id)
+        res = self.nc.subnet_get(subnet_id)
+        self.conn.network.find_subnet.assert_called_once_with(subnet_id)
         self.assertEqual(subnet_obj, res)
 
         exception_info = 'Exception happened when getting subnet.'
         fake_exception = sdk.exc.HttpException(exception_info)
         self.conn.network.find_subnet.side_effect = fake_exception
-        ex = self.assertRaises(exception.Error, self.nc.subnet_get,
-                               name_or_id)
-        msg = _('Failed in getting subnet %(value)s: HttpException: '
-                '%(ex)s') % {'value': name_or_id, 'ex': exception_info}
+        ex = self.assertRaises(exception.ResourceNotFound,
+                               self.nc.subnet_get, subnet_id)
+        msg = _('The resource (subnet:%s) could not be found.') % subnet_id
         self.assertEqual(msg, six.text_type(ex))
 
     def test_loadbalancer_get(self):
-        name_or_id = 'loadbalancer_identifier'
+        lb_id = 'loadbalancer_identifier'
         loadbalancer_obj = mock.Mock()
 
         self.conn.network.find_load_balancer.return_value = loadbalancer_obj
-        res = self.nc.loadbalancer_get(name_or_id)
-        self.conn.network.find_load_balancer.assert_called_once_with(
-            name_or_id)
+        res = self.nc.loadbalancer_get(lb_id)
+        self.conn.network.find_load_balancer.assert_called_once_with(lb_id)
         self.assertEqual(loadbalancer_obj, res)
 
         exception_info = 'Exception happened when getting loadbalancer.'
         fake_exception = sdk.exc.HttpException(exception_info)
         self.conn.network.find_load_balancer.side_effect = fake_exception
-        ex = self.assertRaises(exception.Error, self.nc.loadbalancer_get,
-                               name_or_id)
-        msg = _('Failed in getting loadbalancer %(value)s: HttpException: '
-                '%(ex)s') % {'value': name_or_id, 'ex': exception_info}
+        ex = self.assertRaises(exception.ResourceNotFound,
+                               self.nc.loadbalancer_get, lb_id)
+
+        msg = _('The resource (loadbalancer:%s) could not be found.') % lb_id
         self.assertEqual(msg, six.text_type(ex))
 
     def test_loadbalancer_list(self):
@@ -104,9 +100,9 @@ class TestNeutronV2Driver(base.SenlinTestCase):
         exception_info = 'Exception happened when listing loadbalancer.'
         fake_exception = sdk.exc.HttpException(exception_info)
         self.conn.network.load_balancers.side_effect = fake_exception
-        ex = self.assertRaises(exception.Error, self.nc.loadbalancer_list)
-        msg = _('Failed in listing loadbalancer: HttpException: %(ex)s'
-                ) % {'ex': exception_info}
+        ex = self.assertRaises(exception.ResourceNotFound,
+                               self.nc.loadbalancer_list)
+        msg = _('The resource (loadbalancer:*) could not be found.')
         self.assertEqual(msg, six.text_type(ex))
 
     def test_loadbalancer_create(self):
@@ -139,10 +135,9 @@ class TestNeutronV2Driver(base.SenlinTestCase):
         exception_info = 'Exception happened when creating loadbalancer.'
         fake_exception = sdk.exc.HttpException(exception_info)
         self.conn.network.create_load_balancer.side_effect = fake_exception
-        ex = self.assertRaises(exception.Error, self.nc.loadbalancer_create,
-                               vip_subnet_id)
-        msg = _('Failed in creating loadbalancer: HttpException: %(ex)s'
-                ) % {'ex': exception_info}
+        ex = self.assertRaises(exception.ResourceCreationFailure,
+                               self.nc.loadbalancer_create, vip_subnet_id)
+        msg = _('Failed in creating loadbalancer.')
         self.assertEqual(msg, six.text_type(ex))
 
     def test_loadbalancer_delete(self):

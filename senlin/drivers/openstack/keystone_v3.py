@@ -50,8 +50,10 @@ class KeystoneClient(base.DriverBase):
     def user_get_by_name(self, user_name):
         try:
             user = self.conn.identity.find_user(user_name)
-        except sdk.exc.HttpException:
-            raise exception.UserNotFound(user=user_name)
+        except sdk.exc.HttpException as ex:
+            LOG.exception(_('Failed in getting user: %s'), six.text_type(ex))
+            res = _('user:%s') % user_name
+            raise exception.ResourceNotFound(resource=res)
 
         return user.id
 
@@ -151,7 +153,9 @@ class KeystoneClient(base.DriverBase):
         try:
             result = self.conn.identity.create_trust(**params)
         except sdk.exc.HttpException as ex:
-            raise exception.TrustCreationFailure(reason=six.text_type(ex))
+            LOG.exception(_('Failed in creating trust: %s'),
+                          six.text_type(ex))
+            raise exception.ResourceCreationFailure(rtype='trust')
 
         return result
 
