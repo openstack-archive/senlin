@@ -263,11 +263,12 @@ class TestEnvironment(base.SenlinTestCase):
         mock_dir.assert_called_once_with(env_dir + '/*')
         mock_open.assert_called_once_with('%s/e.yaml' % env_dir)
 
-    def test_global_initialize(self):
-        mock_mapping = mock.Mock(return_value=[['aaa', mock.Mock()]])
+    @mock.patch.object(environment, '_get_mapping')
+    def test_global_initialize(self, mock_mapping):
+        mock_mapping.return_value = [['aaa', mock.Mock()]]
 
         environment._environment = None
-        environment.initialize(mapping_func=mock_mapping)
+        environment.initialize()
 
         expected = [mock.call('senlin.profiles'),
                     mock.call('senlin.policies')]
@@ -276,3 +277,5 @@ class TestEnvironment(base.SenlinTestCase):
         self.assertEqual(expected, mock_mapping.call_args_list)
         self.assertIsNotNone(environment.global_env().get_profile('aaa'))
         self.assertIsNotNone(environment.global_env().get_policy('aaa'))
+
+        environment._environment = None
