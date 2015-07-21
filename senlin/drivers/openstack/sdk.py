@@ -228,9 +228,9 @@ def get_service_user_id():
         'auth_url': cfg.CONF.authentication.auth_url,
         'user_name': cfg.CONF.authentication.service_username,
         'password': cfg.CONF.authentication.service_password,
-        'project_name': cfg.CONF.authentication.project_name,
-        'user_domain_name': 'Default',
-        'project_domain_name': 'Default',
+        'project_name': cfg.CONF.authentication.service_project_name,
+        'user_domain_name': cfg.CONF.authentication.service_user_domain,
+        'project_domain_name': cfg.CONF.authentication.service_project_domain,
     }
 
     user_id = None
