@@ -222,6 +222,8 @@ class Node(object):
             self.created_time = values['created_time'] = now
         elif status == self.ACTIVE and self.status == self.UPDATING:
             self.updated_time = values['updated_time'] = now
+        elif status == self.DELETED:
+            self.deleted_time = values['deleted_time'] = now
 
         self.status = values['status'] = status
         if reason:
@@ -275,6 +277,7 @@ class Node(object):
             res = profile_base.Profile.delete_object(context, self)
         except exception.ResourceStatusError as ex:
             self._handle_exception(context, 'delete', self.ERROR, ex)
+            res = False
 
         if res:
             db_api.node_delete(context, self.id)
@@ -303,18 +306,22 @@ class Node(object):
                                'newt': new_profile.type})
             return False
 
+        self.set_status(context, self.UPDATING,
+                        reason='Update in progress')
         try:
             res = profile_base.Profile.update_object(context, self,
                                                      new_profile_id)
         except exception.ResourceStatusError as ex:
             self._handle_exception(context, 'update', self.ERROR, ex)
+            res = False
 
         if res:
             self.rt['profile'] = profile_base.Profile.load(context,
                                                            new_profile_id)
             self.profile_id = new_profile_id
-            self.updated_time = timeutils.utcnow()
-            self.store()
+            self.set_status(context, self.ACTIVE,
+                            reason='Update succeeded')
+            self.store(context)
 
         return res
 

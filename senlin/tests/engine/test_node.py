@@ -10,12 +10,17 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import mock
 import six
 
+from oslo_utils import timeutils
+
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import event as eventm
 from senlin.engine import node as nodem
+from senlin.profiles import base as profiles_base
 from senlin.tests.common import base
 from senlin.tests.common import utils
 
@@ -160,3 +165,326 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual(2, len(nodes))
         self.assertEqual(node1.id, nodes[0].id)
         self.assertEqual(node2.id, nodes[1].id)
+
+    def test_node_to_dict(self):
+        def _fmt_time(value):
+            return value and value.isoformat()
+
+        node = self._create_node('NODE1')
+        self.assertIsNotNone(node.id)
+        expected = {
+            'id': node.id,
+            'name': node.name,
+            'cluster_id': node.cluster_id,
+            'physical_id': node.physical_id,
+            'profile_id': node.profile_id,
+            'user': node.user,
+            'project': node.project,
+            'domain': node.domain,
+            'index': node.index,
+            'role': node.role,
+            'init_time': _fmt_time(node.init_time),
+            'created_time': _fmt_time(node.created_time),
+            'updated_time': _fmt_time(node.updated_time),
+            'deleted_time': _fmt_time(node.deleted_time),
+            'status': node.status,
+            'status_reason': node.status_reason,
+            'data': node.data,
+            'metadata': node.meta_data,
+        }
+        result = nodem.Node.load(self.context, 'NODE1')
+        dt = result.to_dict()
+        del dt['profile_name']
+        self.assertEqual(expected, dt)
+
+    def test_node_set_status(self):
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        node.store(self.context)
+        self.assertEqual(nodem.Node.INIT, node.status)
+        self.assertIsNotNone(node.init_time)
+        self.assertIsNone(node.created_time)
+        self.assertIsNone(node.updated_time)
+
+        # create
+        node.set_status(self.context, node.CREATING,
+                        reason='Creation in progress')
+        self.assertEqual('CREATING', node.status)
+        self.assertEqual('Creation in progress', node.status_reason)
+        self.assertIsNone(node.created_time)
+        self.assertIsNone(node.updated_time)
+        self.assertIsNone(node.deleted_time)
+
+        node.set_status(self.context, node.ACTIVE,
+                        reason='Creation succeeded')
+        self.assertEqual('ACTIVE', node.status)
+        self.assertEqual('Creation succeeded', node.status_reason)
+        self.assertIsNotNone(node.created_time)
+        self.assertIsNone(node.updated_time)
+        self.assertIsNone(node.deleted_time)
+
+        # update
+        node.set_status(self.context, node.UPDATING,
+                        reason='Update in progress')
+        self.assertEqual('UPDATING', node.status)
+        self.assertEqual('Update in progress', node.status_reason)
+        self.assertIsNotNone(node.created_time)
+        self.assertIsNone(node.deleted_time)
+        self.assertIsNone(node.updated_time)
+
+        node.set_status(self.context, node.ACTIVE,
+                        reason='Update succeeded')
+        self.assertEqual('ACTIVE', node.status)
+        self.assertEqual('Update succeeded', node.status_reason)
+        self.assertIsNotNone(node.created_time)
+        self.assertIsNone(node.deleted_time)
+        self.assertIsNotNone(node.updated_time)
+
+        # delete
+        node.set_status(self.context, node.DELETING,
+                        reason='Deletion in progress')
+        self.assertEqual('DELETING', node.status)
+        self.assertEqual('Deletion in progress', node.status_reason)
+        self.assertIsNotNone(node.created_time)
+        self.assertIsNone(node.deleted_time)
+
+        node.set_status(self.context, node.DELETED,
+                        reason='Deletion succeeded')
+        self.assertEqual('DELETED', node.status)
+        self.assertEqual('Deletion succeeded', node.status_reason)
+        self.assertIsNotNone(node.created_time)
+        self.assertIsNotNone(node.deleted_time)
+
+    @mock.patch.object(eventm, 'info')
+    @mock.patch.object(nodem.Node, 'store')
+    @mock.patch.object(nodem.Node, 'set_status')
+    @mock.patch.object(profiles_base.Profile, 'create_object')
+    def test_node_create(self, mock_create, mock_status, mock_store,
+                         mock_event):
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        physical_id = 'fake_id'
+        mock_create.return_value = physical_id
+        res = node.do_create(self.context)
+        self.assertTrue(res)
+        mock_status.assert_any_call(self.context, node.CREATING,
+                                    reason='Creation in progress')
+        mock_status.assert_any_call(self.context, node.ACTIVE,
+                                    'Creation succeeded')
+        mock_store.assert_called_once_with(self.context)
+        mock_event.assert_called_once_with(self.context, node, 'create')
+        self.assertEqual(physical_id, node.physical_id)
+
+    def test_node_create_not_init(self):
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        node.status = 'NOT_INIT'
+        res = node.do_create(self.context)
+        self.assertFalse(res)
+
+    @mock.patch.object(eventm, 'info')
+    @mock.patch.object(nodem.Node, 'set_status')
+    @mock.patch.object(profiles_base.Profile, 'create_object')
+    def test_node_create_not_created(self, mock_create, mock_status,
+                                     mock_event):
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        mock_create.return_value = None
+        res = node.do_create(self.context)
+        self.assertFalse(res)
+        mock_status.assert_called_once_with(self.context, node.CREATING,
+                                            reason='Creation in progress')
+        mock_event.assert_called_once_with(self.context, node, 'create')
+
+    @mock.patch.object(eventm, 'info')
+    @mock.patch.object(nodem.Node, '_handle_exception')
+    @mock.patch.object(nodem.Node, 'set_status')
+    @mock.patch.object(profiles_base.Profile, 'create_object')
+    def test_node_create_resource_status_error(self, mock_create, mock_status,
+                                               mock_handle_exception,
+                                               mock_event):
+        ex = exception.ResourceStatusError(resource_id='id', status='ERROR',
+                                           reason='some reason')
+        mock_create.side_effect = ex
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        res = node.do_create(self.context)
+        self.assertFalse(res)
+        mock_handle_exception.assert_called_once_with(self.context,
+                                                      'create', 'ERROR', ex)
+        mock_event.assert_called_once_with(self.context, node, 'create')
+
+    @mock.patch.object(eventm, 'info')
+    @mock.patch.object(db_api, 'node_delete')
+    @mock.patch.object(nodem.Node, 'set_status')
+    @mock.patch.object(profiles_base.Profile, 'delete_object')
+    def test_node_delete(self, mock_delete, mock_status, mock_db_delete,
+                         mock_event):
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        node.physical_id = 'fake_id'
+        res = node.do_delete(self.context)
+        self.assertTrue(res)
+        mock_delete.assert_called_once_with(mock.ANY, node)
+        mock_db_delete.assert_called_once_with(mock.ANY, node.id, False)
+        mock_status.assert_called_once_with(self.context, node.DELETING,
+                                            reason='Deletion in progress')
+        mock_event.assert_called_once_with(self.context, node, 'delete')
+
+    @mock.patch.object(db_api, 'node_delete')
+    @mock.patch.object(profiles_base.Profile, 'delete_object')
+    def test_node_delete_not_created(self, mock_delete, mock_db_delete):
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        self.assertEqual('', node.physical_id)
+        res = node.do_delete(self.context)
+        self.assertTrue(res)
+        self.assertFalse(mock_delete.called)
+        self.assertTrue(mock_db_delete.called)
+
+    @mock.patch.object(eventm, 'info')
+    @mock.patch.object(nodem.Node, '_handle_exception')
+    @mock.patch.object(nodem.Node, 'set_status')
+    @mock.patch.object(profiles_base.Profile, 'delete_object')
+    def test_node_delete_resource_status_error(self, mock_delete, mock_status,
+                                               mock_handle_exception,
+                                               mock_event):
+        ex = exception.ResourceStatusError(resource_id='id', status='ERROR',
+                                           reason='some reason')
+        mock_delete.side_effect = ex
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        node.physical_id = 'fake_id'
+        res = node.do_delete(self.context)
+        self.assertFalse(res)
+        mock_delete.assert_called_once_with(self.context, node)
+        mock_handle_exception.assert_called_once_with(self.context, 'delete',
+                                                      'ERROR', ex)
+        mock_status.assert_any_call(self.context, 'ERROR',
+                                    reason='Deletion failed')
+        mock_event.assert_called_once_with(self.context, node, 'delete')
+
+    @mock.patch.object(nodem.Node, 'set_status')
+    @mock.patch.object(profiles_base.Profile, 'update_object')
+    def test_node_update(self, mock_update, mock_status):
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        new_profile = self._create_profile('NEW_PROFILE_ID')
+        node.physical_id = 'fake_id'
+        res = node.do_update(self.context, new_profile.id)
+        self.assertTrue(res)
+        mock_update.assert_called_once_with(self.context, node,
+                                            new_profile.id)
+        self.assertEqual('NEW_PROFILE_ID', node.profile_id)
+        self.assertEqual('NEW_PROFILE_ID', node.rt['profile'].id)
+        mock_status.assert_any_call(self.context, 'UPDATING',
+                                    reason='Update in progress')
+        mock_status.assert_any_call(self.context, 'ACTIVE',
+                                    reason='Update succeeded')
+
+    def test_node_update_no_profile(self):
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        self.assertRaises(exception.ProfileNotSpecified,
+                          node.do_update, self.context, None)
+
+    def test_node_update_same_profile(self):
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        res = node.do_update(self.context, self.profile.id)
+        self.assertTrue(res)
+
+    def test_node_update_not_created(self):
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        self.assertEqual('', node.physical_id)
+        res = node.do_update(self.context, 'new_profile_id')
+        self.assertFalse(res)
+
+    @mock.patch.object(eventm, 'warning')
+    @mock.patch.object(profiles_base.Profile, 'update_object')
+    def test_node_update_diff_profile_type(self, mock_update, mock_event):
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        node.physical_id = 'fake_id'
+        new_profile_values = {
+            'id': 'NEW_PROFILE_ID',
+            'type': 'os.heat.stack',
+            'name': 'test-profile',
+        }
+        new_profile = db_api.profile_create(self.context, new_profile_values)
+        res = node.do_update(self.context, new_profile.id)
+        self.assertFalse(res)
+        msg = _('Node cannot be updated to a different profile type '
+                '(%(oldt)s->%(newt)s)') % {'oldt': 'os.nova.server',
+                                           'newt': 'os.heat.stack'}
+        mock_event.assert_called_once_with(msg)
+        self.assertFalse(mock_update.called)
+
+    @mock.patch.object(nodem.Node, '_handle_exception')
+    @mock.patch.object(nodem.Node, 'set_status')
+    @mock.patch.object(profiles_base.Profile, 'update_object')
+    def test_node_update_resource_status_error(self, mock_update, mock_status,
+                                               mock_handle_exception):
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        ex = exception.ResourceStatusError(resource_id='id', status='ERROR',
+                                           reason='some reason')
+        mock_update.side_effect = ex
+        new_profile = self._create_profile('NEW_PROFILE_ID')
+        node.physical_id = 'fake_id'
+        res = node.do_update(self.context, new_profile.id)
+        self.assertFalse(res)
+        mock_handle_exception.assert_called_once_with(self.context, 'update',
+                                                      'ERROR', ex)
+        self.assertNotEqual('NEW_PROFILE_ID', node.profile_id)
+
+    @mock.patch.object(db_api, 'node_migrate')
+    def test_node_join_same_cluster(self, mock_migrate):
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        node.index = 1
+        res = node.do_join(self.context, self.cluster.id)
+        self.assertTrue(res)
+        self.assertEqual(1, node.index)
+        self.assertIsNone(node.updated_time)
+        self.assertFalse(mock_migrate.called)
+
+    @mock.patch.object(timeutils, 'utcnow')
+    @mock.patch.object(profiles_base.Profile, 'join_cluster')
+    @mock.patch.object(db_api, 'node_migrate')
+    def test_node_join(self, mock_migrate, mock_join_cluster, mock_time):
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        res = node.do_join(self.context, 'NEW_CLUSTER_ID')
+        self.assertTrue(res)
+        mock_migrate.assert_called_once_with(self.context, node.id,
+                                             'NEW_CLUSTER_ID', mock_time())
+        mock_join_cluster.assert_called_once_with(self.context, node,
+                                                  'NEW_CLUSTER_ID')
+        self.assertEqual('NEW_CLUSTER_ID', node.cluster_id)
+        self.assertEqual(mock_migrate.return_value.index, node.index)
+        self.assertIsNotNone(node.updated_time)
+
+    @mock.patch.object(db_api, 'node_migrate')
+    def test_node_leave_no_cluster(self, mock_migrate):
+        node = nodem.Node('node1', self.profile.id, None, self.context)
+        self.assertTrue(node.do_leave(self.context))
+        self.assertFalse(mock_migrate.called)
+        self.assertIsNone(node.cluster_id)
+        self.assertIsNone(node.updated_time)
+
+    @mock.patch.object(timeutils, 'utcnow')
+    @mock.patch.object(profiles_base.Profile, 'leave_cluster')
+    @mock.patch.object(db_api, 'node_migrate')
+    def test_node_leave(self, mock_migrate, mock_leave_cluster, mock_time):
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        res = node.do_leave(self.context)
+        self.assertTrue(res)
+        self.assertIsNone(node.cluster_id)
+        self.assertIsNotNone(node.updated_time)
+        self.assertEqual(-1, node.index)
+        mock_migrate.assert_called_once_with(self.context, node.id,
+                                             None, mock_time())
+        mock_leave_cluster.assert_called_once_with(self.context, node)
