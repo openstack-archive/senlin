@@ -169,34 +169,28 @@ class Environment(object):
                 LOG.exception(six.text_type(ioex))
 
 
-def initialize(mapping_func=None):
+def _get_mapping(namespace):
+    mgr = extension.ExtensionManager(
+        namespace=namespace,
+        invoke_on_load=False)
+    return [[name, mgr[name].plugin] for name in mgr.names()]
+
+
+def initialize():
 
     global _environment
-
-    def _get_mapping(namespace):
-        mgr = extension.ExtensionManager(
-            namespace=namespace,
-            invoke_on_load=False,
-            verify_requirements=False)
-        return [[name, mgr[name].plugin] for name in mgr.names()]
 
     if _environment is not None:
         return
 
     env = Environment(is_global=True)
 
-    # NOTE: This is for unit test's convenience
-    if mapping_func is None:
-        get_mapping = _get_mapping
-    else:
-        get_mapping = mapping_func
-
     # Register global plugins when initialized
-    entries = get_mapping('senlin.profiles')
+    entries = _get_mapping('senlin.profiles')
     for name, plugin in entries:
         env.register_profile(name, plugin)
 
-    entries = get_mapping('senlin.policies')
+    entries = _get_mapping('senlin.policies')
     for name, plugin in entries:
         env.register_policy(name, plugin)
 
