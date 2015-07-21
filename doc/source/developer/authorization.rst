@@ -122,7 +122,7 @@ Trusts: Dealing with Token Expiration
 
 In some cases, the solution above may be impractical because after the
 client-side processing and/or the front-end middleware filtering, Senlin
-cannot get the original user credentials (e.g. user name and password). 
+cannot get the original user credentials (e.g. user name and password).
 Senlin can only get a "token", which expires in an hour by default. This means
 that after no more than one hour, Senlin won't be able to use this token for
 authentication/authorization.
@@ -155,7 +155,7 @@ problem. There are two ways to do this as shown below.
    delegated to Barbican as well in future.
 
 
-Precedence Consideration 
+Precedence Consideration
 ------------------------
 
 Since there now exist more than one place for Senlin to get the credentials
@@ -193,51 +193,6 @@ may be removed in future when there are better ways to handle this sensitive
 information.
 
 
-----------------------
-Webhook Authentication
-----------------------
-
-Senlin provides a group of APIs for the creation and management "Webhooks".
-A "Webhook" is a URI that can be accessed from any users or programs, provided
-they possess some credentials that can be authenticated.
-
-Webhook Creation
-----------------
-
-Webhooks are provided as a shortcut to trigger an action on an object on
-behalf of a user. A webhook can be seen as a tuple (`object`, `action`,
-`credentials`, `params`), where:
-
-- `object`: an object which could be, e.g. a cluster, a node or a policy,
-  (In implementation, this field is represented by the `obj_type` and the
-  `obj_id` fields together);
-- `action`: an action that will be performed;
-- `credential`: on whom's behalf should the action be performed;
-- `params`: optional parameters that will be used as inputs to the action.
-
-When creating a webhook, a user has to specify an `object` and an `action`.
-Optionally, the user can specify the `credential` to use when the action is
-executed as a result of the webhook gets triggered.  When omitted, Senlin will
-use the `user` of the `object` and its associated trust saved in Senlin DB.
-The only restriction is that the requester must be either the owner or the
-project admin.
-
-If the user does specify a `credential` for use, Senlin webhook middleware
-will use the fields contained in `credential` to get a token from Keystone.
-The newly created token will then be used for creating the webhook, as if the
-request was from the user represented by the `credential` rather than the real
-requester.
-
-One special case is that the requester wants to use its own credential (which
-is barely a token when arriving at Senlin API middleware) for the webhook. In
-this case, the `credential` is specially formed by the client side.
-
-In summary, the "requested user" can be one of 1) the requester; 2) the user
-represented by the `credential`; 3) the owner of the object.  In all cases, 
-the "requested user" must be either the owner of the object or the project
-admin. In other words, the requests are still subject to policy checkings.
-
-
 Encryption of Credentials
 -------------------------
 
@@ -250,19 +205,3 @@ As of now, Senlin utilizes the `cryptography` package to do an encryption of
 the data. The encrypted data can be decrypted only using the generated key.
 Senlin will return the key to the requester, along with the UUID of the
 generated webhook.
-
-
-Triggering of Webhooks
-----------------------
-
-When a user wants to trigger a webhook, Senlin webhook middleware will first
-verify if the referenced webook does exists. The middleware then use the key
-provided by the user to decrypt the stored credential, i.e. the trust info.
-By the way, the "key" data can appear as parameters on URI or data in the
-request body. Senlin supports both ways. Senlin API will also extract any
-parameters from the request for instantiating the action to execute.
-
-When Senlin middleware has successfully decrypted the trust info, it will
-try obtain a trust-scoped token using the `senlin` user's credential along
-with the decrpted trust data. The returned trust-scoped token will then be
-used to eventually trigger the creation on an action.

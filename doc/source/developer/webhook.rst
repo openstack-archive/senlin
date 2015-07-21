@@ -14,86 +14,137 @@
 Webhook
 =======
 
-A webhook is an URI that encodes a tuple (entity, action, params), where:
+--------
+Concepts
+--------
 
- - the ``entity`` can be a cluster, a node, a policy object;
- - ``action`` is the name of a built-in action supported by the object;
- - ``params`` is a dictionary feeding values as arguments to the action.
+A "Webhook" is a URI that can be accessed from any users or programs, provided
+they possess some credentials that can be authenticated.
 
-Webhooks are used to trigger a specific action on a senlin entity, typically
-scaling out/in action on a cluster. In the long term, senlin may support
-user-provided actions where ``action`` will be interpreted as the UUID or name
-of a user-provided action.
+Webhooks are used to trigger a specific action on a senlin entity on behalf of
+a user. A webhook is an URI that encodes a tuple (``user``, ``entity``,
+``action``, ``params``), where:
 
-Design
-------
+* The ``user`` is the credential of a user on whose behalf the action will be
+  triggered. This is usually the use who created the webhook, but it can be
+  any other valid user explicitly specified when the webhook is created.
+* The ``entity`` can be a cluster, a node or a policy object;
+* The ``action`` is the name of a built-in action supported by the object;
+* The ``params`` is a dictionary feeding argument values (if any) to the
+  action.
 
-Workflow
-++++++++
-
-1. User creates a webhook through webhook API. User needs to specify what action
-   and which senlin entity this webhook is bound to. Also for some specific
-   actions, user can define the parameters they want to use when invoking the
-   cluster action API, e.g. the adjustment of scaling operation; User also
-   `HAVE TO` specify the credential(usually a user_id and its password)
-   explicitly/implicitly. This credential will be used by Senlin service later
-   to execute the real action, e.g. cluster scaling, when webhook is triggered
-   later.
-
-2. Senlin service receives the request and does three things:
-
-   - Creating a webhook object that contains all necessary information used
-     to trigger specific action of a senlin entity;
-   - Encrypting the credential information to ensure it won't be hacked and
-     then storing the encrypted password into DB;
-   - Generating a webhook url with the following format and return it to user:
-       http://{server_ip:port}/v1/{tenant_id}/webhooks/{webhook_id}/trigger?key=$KEY
-     NOTE: `$KEY` is the key to decrypted the password so user has to keep
-     it safely. Also the webhook_url can only be got at the first time the
-     webhook is created, so user also need to record it carefully.
-
-3. User triggers the webhook by sending a post request to its url. No any extra
-   credential is needed here, e.g.
-       curl -i -X 'POST' $WEBHOOK_URL
-   Also user can choose to take some extra parameters for the action execution
-   when triggering the webhook, e.g.
-       curl -i -X 'POST' $WEBHOOK_URL -H 'Content-type: application/json' --data
-       '{"params": {"count": 2}}'
-
-4. Webhook middleware of Senlin service handles this post request and decrypt
-   the credential. Then it tries to validate the credential by querying a
-   token based on it from keystone. If succeed, the token will be added to this
-   post request and then send to next middleware in pipeline, usually keystone
-   auth_token. If not, an exception will be raised and this webhook triggering
-   fail.
-
-5. Senlin engine receives the webhook triggering request and generates action
-   based on the information stored in webhook object, e.g. obj_type, obj_id
-   and action name;
-
-6. Action is dispatched and scheduled by Senlin scheduler to finish the expected
-   operation, e.g. cluster scaling in/out.
+In the long term, senlin may support user-defined actions where ``action``
+will be interpreted as the UUID or name of a user-defined action.
 
 
-Implementation
---------------
+------------------
+Creating A Webhook
+------------------
 
-DB model
-++++++++
-A webhook DB object includes the following properties:
+When a user requests the creation of a webhook by invoking :program:`senlin`
+command line tool, the request comes with at least two parameters: the
+targeted entity and the intended action to invoke when the webhook is
+triggered. Optionally, the user can provide some additional parameters to use
+and/or the credentials of a different user.
 
- - id: the uuid of webhook
- - name: the name of webhook (optional)
- - user: the id of user who created the webhook
- - project: the project id of user who created the webhook.
- - domain: the domain of the user who created the webhook
- - created_time: time of webhook was created
- - deleted_time: time of webhook was deleted
- - obj_id: the id of senlin entity(e.g. cluster) that the webhook bound to
- - obj_type: the type of senlin entity that the webhook bound to
- - action: action(e.g. scalingin, scalingout) of the target the webhook
-   bound to
- - credential: credential that will be used to invoke target action API, e.g.
-   clusters/$cluster_id/action when webhook is triggered
- - params: parameters that will be included when invoke the target action API,
-   e.g. adjustment of scaling operation
+When the Senlin API service receives the request, it does three things:
+
+* Validate the request and rejects it if any of the following conditions is
+  met:
+
+  - the targeted entity could not be found;
+  - the targeted entity is not owned by the requester and the requester does
+    not have an "``admin``" role in the project;
+  - the provided action is not supported by the type of the targeted entity;
+
+* Create a webhook object that contains all necessary information that will
+  be used to trigger the specified action on the specified entity;
+
+  - Encrypt the user credentials to ensure it won't get leaked and then store
+    the encrypted data into the database;
+  - Generate a webhook URL with the following format and return it to user::
+
+       http://{host:port}/v1/{tenant_id}/webhooks/{webhook_id}/trigger?key=$KEY
+
+    **NOTE**: The ``$KEY`` above is used to decrypt the password. The user
+    have to keep it safe.
+
+Finally, Senlin engine returns a dictionary containing the properties of the
+webhook object.
+
+
+--------------------
+Triggering A Webhook
+--------------------
+
+When triggering a webhook, a user or a software sends a ``POST`` request to
+the webhook URL. This request is first processed by the ``webhook`` middleware
+before arriving at the Senlin API service.
+
+The ``webhook`` middleware checks this request and the ``key`` value provided.
+The middleware attempts to find the webhook record from Senlin database and see
+if the named webhook does exist. If the webhook is found, it then tries to
+decipher the the saved credentials using the provided ``key``. An error code
+404 will be returned if the webhook is not found.
+
+If the credentials are decrypted successfully, the middleware will proceed to
+get a Keystone token using the decrypted credentials. Using this token, the
+triggering request can pass the token checking by the keystone ``auth_token``
+middleware. An exception will be thrown when the authentication operation fails.
+
+When the senlin engine service finally receives the webhook triggering request
+it creates an action based on the information stored in webhook object.
+The newly created action is then dispatched and scheduled by a scheduler to
+perform the expected operation.
+
+
+-----------
+Credentials
+-----------
+
+When requesting the creation of a webhook, the requester need to provide some
+credentials for invoking the webhook in future. There are several options to
+provide these credentials.
+
+If the ``credentials`` to use is explicitly specified, Senlin will save it in
+the webhook DB record in an encrypted format. A ``key`` is returned and
+appended to the webhook URL. When the webhook is invoked in the future, the
+saved credentials will be used for authentication with Keystone. Senlin engine
+won't check if the provided credentials actually works when creating the
+webhook. The check is postponed to the moment when the webhook is triggered.
+
+If the ``credentials`` to use is not explicitly provided, Senlin will assume
+that the webhook will be triggered in future using the the requester's
+credential. To make sure the future authentication succeeds, Senlin engine
+will extract the ``user`` ID from the invoking context and create a trust
+between the user and the the ``senlin`` service account, just like the way how
+Senlin deals with other operations.
+
+The requester must be either the owner of the targeted object or he/she has
+the ``admin`` role in the project. This is enforced by the policy middleware.
+If the requester is the ``admin`` of the project, Senlin engine will use the
+object owner's credentials (i.e. a trust with the Senlin user in this case).
+
+--------
+DB Model
+--------
+
+A webhook DB object has the following properties:
+
+* ``id``: the UUID of the webhook object;
+* ``name``: the name of the webhook (optional);
+* ``user``: the ID of the user who created the webhook;
+* ``project``: the project ID of the user who created the webhook;
+* ``domain``: the domain of the user who created the webhook;
+* ``created_time``: timestamp of webhook creation;
+* ``deleted_time``: timestamp of webhook deletion;
+* ``obj_id``: the ``id`` of a senlin entity (e.g. cluster) to which the
+   webhook is associated;
+* ``obj_type``: the type of senlin entity to which the webhook is associated;
+* ``action``: the name of the action (e.g. ``CLUSTER_RESIZE``) which will be
+   created when the webhook is triggered;
+* ``credential``: the credential that will be used to invoke the targeted
+   action.
+* ``params``: the extra parameters that will be passed to the target action
+   when the webhook is triggered. This can be overriden when a webhook
+   triggering request comes in.
