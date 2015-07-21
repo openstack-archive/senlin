@@ -172,3 +172,35 @@ class TestEncrypt(base.SenlinTestCase):
         invalid_msg = fernet.Fernet.generate_key()
         self.assertRaises(fernet.InvalidToken, utils.decrypt,
                           invalid_msg, key)
+
+
+class TestRandomName(base.SenlinTestCase):
+
+    def test_default(self):
+        result = utils.random_name()
+        self.assertIsNotNone(result)
+        self.assertEqual(8, len(result))
+
+        result1 = utils.random_name()
+        self.assertIsNotNone(result1)
+        self.assertEqual(8, len(result1))
+
+        self.assertNotEqual(result, result1)
+
+    def test_with_length(self):
+        result = utils.random_name(12)
+        self.assertIsNotNone(result)
+        self.assertEqual(12, len(result))
+
+        result1 = utils.random_name(12)
+        self.assertIsNotNone(result1)
+        self.assertEqual(12, len(result1))
+
+        self.assertNotEqual(result, result1)
+
+    def test_with_bad_length(self):
+        result = utils.random_name(0)
+        self.assertEqual('', result)
+
+        result = utils.random_name(-9)
+        self.assertEqual('', result)
