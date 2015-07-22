@@ -66,7 +66,7 @@ def reset_dummy_db():
 
 def dummy_context(user='test_username', project='test_project_id',
                   password='password', roles=None, user_id='test_user_id',
-                  trust_id=None, region_name=None):
+                  trust_id=None, region_name=None, domain=None):
     roles = roles or []
     return context.RequestContext.from_dict({
         'project': project,
@@ -78,7 +78,8 @@ def dummy_context(user='test_username', project='test_project_id',
         'auth_url': 'http://server.test:5000/v2.0',
         'auth_token': 'abcd1234',
         'trust_id': trust_id,
-        'region_name': region_name
+        'region_name': region_name,
+        'domain': domain
     })
 
 

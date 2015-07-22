@@ -114,13 +114,13 @@ class Node(object):
 
         if self.id:
             db_api.node_update(context, self.id, values)
-            # TODO(Qiming): create event/log
+            event_mod.info(context, self, 'update')
         else:
             init_time = timeutils.utcnow()
             self.init_time = init_time
             values['init_time'] = init_time
             node = db_api.node_create(context, values)
-            # TODO(Qiming): create event/log
+            event_mod.info(context, self, 'create')
             self.id = node.id
 
         self._load_runtime_data(context)
@@ -269,8 +269,8 @@ class Node(object):
             return True
 
         # TODO(Qiming): check if actions are working on it and can be canceled
-        # TODO(Qiming): log events
         self.set_status(context, self.DELETING, reason='Deletion in progress')
+        event_mod.info(context, self, 'delete')
         try:
             res = profile_base.Profile.delete_object(context, self)
         except exception.ResourceStatusError as ex:
