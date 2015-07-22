@@ -270,6 +270,11 @@ class ResourceCreationFailure(InternalError):
     msg_fmt = _("Failed in creating %(rtype)s.")
 
 
+class ResourceUpdateFailure(InternalError):
+    # Used when updating resources from other services
+    msg_fmt = _("Failed in updating %(resource)s.")
+
+
 class ResourceDeletionFailure(InternalError):
     # Used when deleting resources from other services
     msg_fmt = _("Failed in deleting %(resource)s.")
