@@ -294,6 +294,12 @@ class List(Schema):
         else:
             return values
 
+    def get_default(self):
+        if not isinstance(self.default, collections.Sequence):
+            raise TypeError(_('"%s" is not a List') % self.default)
+
+        return self.default
+
     def resolve(self, value, context=None):
         if not isinstance(value, collections.Sequence):
             raise TypeError(_('"%s" is not a List') % value)
@@ -333,6 +339,12 @@ class Map(Schema):
             return ((k, subspec[k]) for k in sub_schema)
         else:
             return values
+
+    def get_default(self):
+        if not isinstance(self.default, collections.Mapping):
+            raise TypeError(_('"%s" is not a Map') % self.default)
+
+        return self.default
 
     def resolve(self, value, context=None):
         if not isinstance(value, collections.Mapping):
