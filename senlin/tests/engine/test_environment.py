@@ -215,7 +215,7 @@ class TestEnvironment(base.SenlinTestCase):
         mock_dir.return_value = ['/etc/senlin/environments/e.yaml']
         env_dir = '/etc/senlin/environments'
         env_contents = 'parameters:\n  p1: v1'
-        env = environment.Environment()
+        env = environment.Environment(is_global=True)
         with mock.patch('senlin.engine.environment.open',
                         mock.mock_open(read_data=env_contents),
                         create=True) as mock_open:
