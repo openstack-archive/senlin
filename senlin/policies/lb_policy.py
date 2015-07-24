@@ -238,22 +238,22 @@ class LoadBalancingPolicy(base.Policy):
 
         return True, policy_data
 
-    def detach(self, cluster_id):
+    def detach(self, cluster):
         """Routine to be called when the policy is detached from a cluster.
 
-        :param cluster_id: The ID of the cluster from which the policy is to
-            be detached.
+        :param cluster_id: The cluster from which the policy is to be
+                           detached.
         :returns: When the operation was successful, returns a tuple of
             (True, data) where the data contains references to the resources
             created; otherwise returns a tuple of (False, err) where the err
             contains a error message.
         """
         reason = _('LB resources deletion succeeded.')
-        ctx = self._build_context(cluster_id)
+        ctx = self._build_context(cluster)
         lb_driver = lbaas.LoadBalancerDriver(ctx)
 
         cp = cluster_policy.ClusterPolicy.load(context.get_current(),
-                                               cluster_id, self.id)
+                                               cluster.id, self.id)
 
         policy_data = self._extract_policy_data(cp.data)
         if policy_data is None:

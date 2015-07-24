@@ -637,7 +637,7 @@ class ClusterAction(base.Action):
             raise exception.PolicyNotSpecified()
 
         policy = policy_mod.Policy.load(self.context, policy_id)
-        res, data = policy.detach(cluster.id, self)
+        res, data = policy.detach(cluster)
         if not res:
             return self.RES_ERROR, _('Failed detaching policy.')
 

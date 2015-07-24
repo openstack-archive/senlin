@@ -120,25 +120,25 @@ class HealthPolicy(base.Policy):
         self.check_type = self.spec_data[self.DETECTION][self.DETECTION_TYPE]
         self.interval = self.spec_data[self.DETECTION][self.CHECK_INTERVAL]
 
-    def attach(self, cluster_id):
+    def attach(self, cluster):
         '''Hook for policy attach.
 
         Initialize the health check mechanism for existing nodes in cluster.
         '''
         cluster = cluster_mod.Cluster.load(context.get_current(),
-                                           cluster_id=cluster_id)
+                                           cluster_id=cluster.id)
         cluster.healthy_check_enable()
         cluster.healthy_check_set_interval(self.interval)
 
         return True
 
-    def detach(self, cluster_id):
+    def detach(self, cluster):
         '''Hook for policy detach.
 
         Deinitialize the health check mechanism (for the cluster).
         '''
         cluster = cluster_mod.Cluster.load(context.get_current(),
-                                           cluster_id=cluster_id)
+                                           cluster_id=cluster.id)
         cluster.healthy_check_disable()
         return True
 
