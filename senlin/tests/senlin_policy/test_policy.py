@@ -14,6 +14,7 @@ import mock
 import six
 
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.db.sqlalchemy import api as db_api
 from senlin.policies import base as policy_base
@@ -284,3 +285,106 @@ class TestPolicy(base.SenlinTestCase):
     def test_policy_delete_not_found(self):
         result = policy_base.Policy.delete(self.context, 'fake-policy-id')
         self.assertEqual(None, result)
+
+    def test_policy_build_policy_data(self):
+        kwargs = {
+            'user': 'test-user',
+            'project': 'test-project',
+            'domain': 'test-domain'
+        }
+        policy = policy_base.Policy('DeletionPolicy', 'test-policy', **kwargs)
+
+        data = {'key1': 'value1'}
+        res = policy._build_policy_data(data)
+        expect_result = {
+            'DeletionPolicy': {
+                'version': '1.0',
+                'data': data
+            }
+        }
+        self.assertEqual(expect_result, res)
+
+    def test_policy_extract_policy_data(self):
+        kwargs = {
+            'user': 'test-user',
+            'project': 'test-project',
+            'domain': 'test-domain'
+        }
+        policy = policy_base.Policy('DeletionPolicy', 'test-policy', **kwargs)
+
+        # Extract data correctly
+        data = {'key1': 'value1'}
+        policy_data = {
+            'DeletionPolicy': {
+                'version': '1.0',
+                'data': data
+            }
+        }
+        res = policy._extract_policy_data(policy_data)
+        self.assertEqual(data, res)
+
+        # Policy class name unmatch
+        data = {'key1': 'value1'}
+        policy_data = {
+            'FakePolicy': {
+                'version': '1.0',
+                'data': data
+            }
+        }
+        res = policy._extract_policy_data(policy_data)
+        self.assertIsNone(res)
+
+        # Policy version unmatch
+        data = {'key1': 'value1'}
+        policy_data = {
+            'DeletionPolicy': {
+                'version': '2.0',
+                'data': data
+            }
+        }
+        res = policy._extract_policy_data(policy_data)
+        self.assertIsNone(res)
+
+    def test_policy_attach(self):
+        cluster = mock.Mock()
+        kwargs = {
+            'user': 'test-user',
+            'project': 'test-project',
+            'domain': 'test-domain'
+        }
+        policy = policy_base.Policy('DeletionPolicy', 'test-policy', **kwargs)
+
+        # Policy targets on ANY profile types
+        policy.PROFILE_TYPE = ['ANY']
+        res, data = policy.attach(cluster)
+        self.assertTrue(res)
+        self.assertIsNone(data)
+
+        # Profile type of cluster is not in policy's target scope
+        profile = mock.Mock()
+        profile.type = 'os.nova.server'
+        cluster.rt = {'profile': profile}
+        policy.PROFILE_TYPE = ['os.heat.resource']
+        msg = _('Policy not applicable on profile type:%s') % 'os.nova.server'
+        res, data = policy.attach(cluster)
+        self.assertFalse(res)
+        self.assertEqual(msg, data)
+
+        # Attaching succeed
+        policy.PROFILE_TYPE = ['os.nova.server', 'os.heat.resource']
+        res, data = policy.attach(cluster)
+        self.assertTrue(res)
+        self.assertIsNone(data)
+
+    def test_policy_detach(self):
+        cluster = mock.Mock()
+        kwargs = {
+            'user': 'test-user',
+            'project': 'test-project',
+            'domain': 'test-domain'
+        }
+        policy = policy_base.Policy('DeletionPolicy', 'test-policy', **kwargs)
+
+        res, data = policy.detach(cluster)
+        self.assertTrue(res)
+        self.assertIsNone(data)

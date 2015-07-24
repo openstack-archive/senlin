@@ -170,7 +170,7 @@ class Policy(object):
         :returns: (True, message) if the operation is successful, or (False,
                  error) otherwise.
         '''
-        if self.PROFILE_TYPE == 'ANY':
+        if self.PROFILE_TYPE == ['ANY']:
             return True, None
 
         profile = cluster.rt['profile']
