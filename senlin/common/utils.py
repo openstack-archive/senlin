@@ -14,6 +14,9 @@
 Utilities module.
 '''
 
+import random
+import string
+
 from cryptography.fernet import Fernet
 import requests
 from requests import exceptions
@@ -131,3 +134,13 @@ def decrypt(msg, key):
     msg = f.decrypt(encodeutils.safe_encode(key))
 
     return encodeutils.safe_decode(msg)
+
+
+def random_name(length=8):
+    if length <= 0:
+        return ''
+
+    lead = random.choice(string.ascii_letters)
+    tail = ''.join(random.choice(string.ascii_letters + string.digits)
+                   for i in range(length-1))
+    return lead + tail

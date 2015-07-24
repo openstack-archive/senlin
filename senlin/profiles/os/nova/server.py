@@ -10,9 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import random
-import string
-
 from oslo_context import context
 from oslo_log import log as logging
 import six
@@ -20,6 +17,7 @@ import six
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import schema
+from senlin.common import utils
 from senlin.drivers.openstack import nova_v2 as novaclient
 from senlin.profiles import base
 
@@ -216,9 +214,7 @@ class ServerProfile(base.Profile):
             kwargs['flavorRef'] = flavor.id
 
         if obj.name is not None:
-            random_str = '-' + ''.join(random.choice(string.ascii_lowercase)
-                                       for i in range(8))
-            kwargs[self.NAME] = obj.name + random_str
+            kwargs[self.NAME] = obj.name + '-' + utils.random_name(8)
 
         metadata = self.spec_data[self.METADATA] or {}
         if obj.cluster_id is not None:
