@@ -32,14 +32,14 @@ class ServerProfile(base.Profile):
         BLOCK_DEVICE_MAPPING,  # BLOCK_DEVICE_MAPPING_V2,
         CONFIG_DRIVE, FLAVOR, IMAGE, KEY_NAME, METADATA,
         NAME, NETWORKS, PERSONALITY, SECURITY_GROUPS,
-        TIMEOUT, USER_DATA,
+        TIMEOUT, USER_DATA, SCHEDULER_HINTS,
     ) = (
         'context', 'adminPass', 'auto_disk_config', 'availability_zone',
         'block_device_mapping',
         # 'block_device_mapping_v2',
         'config_drive', 'flavor', 'image', 'key_name', 'metadata',
         'name', 'networks', 'personality', 'security_groups',
-        'timeout', 'user_data',
+        'timeout', 'user_data', 'scheduler_hints',
     )
 
     BDM_KEYS = (
@@ -59,6 +59,12 @@ class ServerProfile(base.Profile):
         PATH, CONTENTS,
     ) = (
         'path', 'contents',
+    )
+
+    SCHEDULER_HINTS_KEYS = (
+        GROUP,
+    ) = (
+        'group',
     )
 
     spec_schema = {
@@ -145,6 +151,12 @@ class ServerProfile(base.Profile):
                 },
             ),
         ),
+
+        SCHEDULER_HINTS: schema.Map(
+            _('A collection of key/value pairs to be associated with the '
+              'Scheduler hints. Both key and value should be <=255 chars.'),
+        ),
+
         SECURITY_GROUPS: schema.List(
             _('List of security groups.'),
             schema=schema.String(
@@ -220,6 +232,9 @@ class ServerProfile(base.Profile):
         if obj.cluster_id is not None:
             metadata['cluster'] = obj.cluster_id
         kwargs['metadata'] = metadata
+
+        if self.SCHEDULER_HINTS in self.spec_data:
+            kwargs['scheduler_hints'] = self.spec_data[self.SCHEDULER_HINTS]
 
         LOG.info('Creating server: %s' % kwargs)
         server = self.nova(obj).server_create(**kwargs)
