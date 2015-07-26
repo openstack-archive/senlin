@@ -14,8 +14,6 @@
 A fake server that "responds" to API methods with pre-canned responses.
 """
 
-from keystoneclient import exceptions
-
 
 class FakeClient(object):
     def assert_called(self, method, url, body=None, pos=-1):
@@ -85,12 +83,3 @@ class FakeKeystoneClient(object):
         self.creds = FakeCred()
 
         self.auth_token = auth_token
-
-    def url_for(self, **kwargs):
-        if self.only_services is not None:
-            if 'service_type' in kwargs and \
-                    kwargs['service_type'] not in self.only_services:
-                # keystone client throws keystone exceptions, not cinder
-                # exceptions.
-                raise exceptions.EndpointNotFound()
-        return 'http://example.com:1234/v1'
