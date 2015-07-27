@@ -60,7 +60,8 @@ class TrustMiddleware(wsgi.Middleware):
         if not trust:
             # Create a trust if no existing one found
             try:
-                trust = kc.trust_create(ctx.user, admin_id, ctx.project)
+                trust = kc.trust_create(ctx.user, admin_id, ctx.project,
+                                        ctx.roles)
             except exception.ResourceCreationFailure as ex:
                 raise webob.exc.HTTPInternalServerError(six.text_type(ex))
 
