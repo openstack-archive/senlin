@@ -236,7 +236,7 @@ class TestEnvironment(base.SenlinTestCase):
         mock_dir = self.patchobject(glob, 'glob')
         mock_dir.return_value = ['/etc/senlin/environments/e.yaml']
         env_dir = '/etc/senlin/environments'
-        env = environment.Environment()
+        env = environment.Environment(is_global=True)
         env_contents = ''
 
         with mock.patch('senlin.engine.environment.open',
@@ -253,7 +253,7 @@ class TestEnvironment(base.SenlinTestCase):
         mock_dir.return_value = ['/etc/senlin/environments/e.yaml']
         env_dir = '/etc/senlin/environments'
         env_contents = 'aii$%@@$#7'
-        env = environment.Environment()
+        env = environment.Environment(is_global=True)
 
         with mock.patch('senlin.engine.environment.open',
                         mock.mock_open(read_data=env_contents),
