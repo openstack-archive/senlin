@@ -117,13 +117,14 @@ class KeystoneClient(base.DriverBase):
 
         for trust in trusts:
             if (trustee and trust.trustee_user_id != trustee):
-                del trusts[trust]
                 continue
 
             if (project and trust.project_id != project):
-                del trusts[trust]
+                continue
 
-        return trusts[0] if trusts else None
+            return trust
+
+        return None
 
     def trust_create(self, trustor, trustee, project, roles=None,
                      impersonation=True):
