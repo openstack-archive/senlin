@@ -9,7 +9,6 @@ WIKI
 
 ENGINE
 ------
-  - cleanse scheduler module [Yanyan Hu]
   - Node 'role' update may need to be propagated to the profile layer, because
     the profile may use it for changing the underlying physical object, e.g.
     the nova server that backs the node.
@@ -25,6 +24,8 @@ POLICY
   - Enable placement policy and deletion policy to handle CLUSTER_RESIZE
     action.
   - Investigate the impact of node-create and node-delete on certain policies.
+  - Implement a placement policy which supports cross-az/region node creation
+    with some simple algorithms, e.g. ROUND_ROBIN, FIXED_PRIORITY.
 
 TEST CASES
 ----------
