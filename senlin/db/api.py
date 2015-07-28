@@ -140,6 +140,38 @@ def node_delete(context, node_id, force=False):
     return IMPL.node_delete(context, node_id, force)
 
 
+# Triggers
+def trigger_create(context, values):
+    return IMPL.trigger_create(context, values)
+
+
+def trigger_get(context, trigger_id, show_deleted=False):
+    return IMPL.trigger_get(context, trigger_id, show_deleted=show_deleted)
+
+
+def trigger_get_by_name(context, name, show_deleted=False):
+    return IMPL.trigger_get_by_name(context, name, show_deleted=show_deleted)
+
+
+def trigger_get_by_short_id(context, short_id):
+    return IMPL.trigger_get_by_short_id(context, short_id)
+
+
+def trigger_get_all(context, limit=None, marker=None, sort_keys=None,
+                    sort_dir=None, filters=None, show_deleted=False):
+    return IMPL.trigger_get_all(context, limit=limit, marker=marker,
+                                sort_keys=sort_keys, sort_dir=sort_dir,
+                                filters=filters, show_deleted=show_deleted)
+
+
+def trigger_update(context, trigger_id, values):
+    return IMPL.trigger_update(context, trigger_id, values)
+
+
+def trigger_delete(context, trigger_id):
+    return IMPL.trigger_delete(context, trigger_id)
+
+
 # Locks
 def cluster_lock_acquire(cluster_id, action_id, scope):
     return IMPL.cluster_lock_acquire(cluster_id, action_id, scope)
