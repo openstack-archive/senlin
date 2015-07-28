@@ -12,7 +12,6 @@
 
 import logging
 import os
-# import sys
 import time
 
 import fixtures
@@ -72,9 +71,6 @@ class SenlinTestCase(testscenarios.WithScenarios,
             scheduler.ENABLE_SLEEP = True
 
         self.addCleanup(enable_sleep)
-
-        # mod_dir = os.path.dirname(sys.modules[__name__].__file__)
-        # project_dir = os.path.abspath(os.path.join(mod_dir, '../../'))
 
         cfg.CONF.set_override('error_wait_time', None)
         self.addCleanup(cfg.CONF.reset)

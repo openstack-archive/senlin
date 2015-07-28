@@ -25,7 +25,6 @@ import json
 import os
 import signal
 import sys
-import time
 
 import eventlet
 from eventlet.green import socket
@@ -38,6 +37,7 @@ from oslo_log import log as logging
 from oslo_log import loggers
 from oslo_utils import encodeutils
 from oslo_utils import importutils
+from oslo_utils import timeutils
 from paste import deploy
 import routes
 import routes.middleware
@@ -139,8 +139,9 @@ def get_socket(conf, default_port):
                              "option value in your configuration file"))
 
     sock = None
-    retry_until = time.time() + 30
-    while not sock and time.time() < retry_until:
+    stopwatch = timeutils.StopWatch(30)
+    stopwatch.start()
+    while not sock and not stopwatch.expired():
         try:
             sock = eventlet.listen(bind_addr, backlog=conf.backlog,
                                    family=address_family)
