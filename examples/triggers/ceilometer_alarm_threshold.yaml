@@ -1,0 +1,24 @@
+# Sample trigger using ceilometer threshold alarm
+
+trigger_type: CeilometerThresholdAlarm
+version: 1.0
+
+time_constraints:
+  - name: a_time_constraint
+    start: '* * * * * *'
+    duration: 3600
+    description: a time constraint
+    timezone: 'Asia/Shanghai'
+
+rule:
+  meter_name: cpu_util
+  comparison_operator: lt
+  threshold: 15
+  period: 60
+  evaluation_periods: 1
+  statistic: avg
+  query:
+    - field: resource_metadata.cluster
+      op: eq
+      type: ''
+      value: cluster1

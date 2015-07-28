@@ -1,0 +1,10 @@
+# Sample trigger using ceilometer combination alarms
+
+trigger_type: CeilometerCombinationAlarm
+version: 1.0
+
+combination_rule:
+  operator: and
+  alarm_ids:
+    - 01e3656a-252d-4308-a454-cd5fd1f0a56f
+    - d2ee61f9-c946-4368-a260-ae204fa36fb6 

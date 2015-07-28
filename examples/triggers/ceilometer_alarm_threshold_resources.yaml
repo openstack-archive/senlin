@@ -1,0 +1,15 @@
+# Sample trigger using ceilometer gnocchi resources threshold alarm
+
+trigger_type: CeilometerThresholdResourcesAlarm
+version: 1.0
+
+rule:
+  metric: cpu_util
+  comparison_operator: lt
+  threshold: 15
+  granularity: 60
+  evaluation_periods: 1
+  aggregation_method: avg
+  repeat_actions: True
+  resource_type: instance
+  resource_id: fcb66ae3-ac0e-4357-b337-d201accced35-hdd
