@@ -10,9 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import random
 import six
-import string
 
 from oslo_context import context
 from oslo_log import log as logging
@@ -20,6 +18,7 @@ from oslo_log import log as logging
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import schema
+from senlin.common import utils
 from senlin.drivers.openstack import heat_v1 as heatclient
 from senlin.engine import scheduler
 from senlin.profiles import base
@@ -132,10 +131,8 @@ class StackProfile(base.Profile):
     def do_create(self, obj):
         '''Create a stack using the given profile.'''
 
-        random_str = '-' + ''.join(random.choice(string.ascii_lowercase)
-                                   for i in range(8))
         kwargs = {
-            'stack_name': obj.name + random_str,
+            'stack_name': obj.name + '-' + utils.random_name(8),
             'template': self.spec_data[self.TEMPLATE],
             'timeout_mins': self.spec_data[self.TIMEOUT],
             'disable_rollback': self.spec_data[self.DISABLE_ROLLBACK],
