@@ -79,7 +79,8 @@ class NovaClient(base.DriverBase):
 
     def image_get_by_name(self, image_name):
         try:
-            return self.conn.compute.find_image(image_name)
+            return self.conn.compute.find_image(image_name,
+                                                ignore_missing=False)
         except sdk.exc.HttpException as ex:
             raise ex
 
