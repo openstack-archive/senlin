@@ -446,7 +446,7 @@ class ClusterAction(base.Action):
         min_step = self.inputs.get(consts.ADJUSTMENT_MIN_STEP)
         strict = self.inputs.get(consts.ADJUSTMENT_STRICT, False)
 
-        desired = None
+        desired = cluster.desired_capacity
         if adj_type is not None:
             # number must be not None according to previous tests
             desired = scaleutils.calculate_desired(
