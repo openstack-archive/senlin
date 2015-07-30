@@ -14,6 +14,7 @@ import time
 
 from oslo_config import cfg
 from oslo_log import log
+from oslo_utils import timeutils
 
 from openstack.compute.v2 import server_metadata
 
@@ -181,16 +182,15 @@ class NovaClient(base.DriverBase):
         except sdk.exc.HttpException as ex:
             raise ex
 
-        total_sleep = 0
-        while total_sleep < timeout:
+        stopwatch = timeutils.StopWatch(timeout)
+        stopwatch.start()
+        while not stopwatch.expired():
             try:
                 self.server_get(server_id)
             except Exception as ex:
                 sdk.ignore_not_found(ex)
                 return
-
-            time.sleep(5)
-            total_sleep += 5
+            time.sleep(1)
 
         raise exception.ProfileOperationTimeout(ex.message)
 
