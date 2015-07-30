@@ -62,8 +62,6 @@ class FaultWrapper(wsgi.Middleware):
         'PolicyTypeNotFound': webob.exc.HTTPNotFound,
         'ProfileInUse': webob.exc.HTTPBadRequest,
         'ProfileNotFound': webob.exc.HTTPNotFound,
-        # TODO(Anyone): Maybe this should be an internal exception type?
-        'ProfileValidationFailed': webob.exc.HTTPBadRequest,
         'ProfileTypeNotFound': webob.exc.HTTPNotFound,
         'ProfileTypeNotMatch': webob.exc.HTTPBadRequest,
         'WebhookNotFound': webob.exc.HTTPNotFound,

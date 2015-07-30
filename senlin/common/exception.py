@@ -155,10 +155,6 @@ class ProfileNotSpecified(SenlinException):
     msg_fmt = _("Profile not specified.")
 
 
-class ProfileValidationFailed(SenlinException):
-    msg_fmt = _("%(message)s")
-
-
 class ProfileOperationFailed(SenlinException):
     msg_fmt = _("%(message)s")
 
@@ -189,10 +185,6 @@ class PolicyTypeConflict(SenlinException):
 
 
 class InvalidSchemaError(SenlinException):
-    msg_fmt = _("%(message)s")
-
-
-class InvalidPolicyType(SenlinException):
     msg_fmt = _("%(message)s")
 
 
@@ -288,6 +280,10 @@ class ResourceNotFound(InternalError):
 class ResourceStatusError(InternalError):
     msg_fmt = _("The resource %(resource_id)s is in error status "
                 "- '%(status)s' due to '%(reason)s'.")
+
+
+class InvalidPlugin(InternalError):
+    msg_fmt = _("%(message)s")
 
 
 class InvalidSpec(InternalError):

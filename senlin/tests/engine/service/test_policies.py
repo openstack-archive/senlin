@@ -66,12 +66,21 @@ class PolicyTest(base.SenlinTestCase):
                                self.ctx, 'p-2', 'Bogus', {})
         self.assertEqual(exception.PolicyTypeNotFound, ex.exc_info[0])
 
-    def test_policy_create_err_validate(self):
+    def test_policy_create_invalid_spec(self):
         spec = {'KEY3': 'value3'}
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.policy_create,
                                self.ctx, 'p-2', 'TestPolicy', spec)
         self.assertEqual(exception.SpecValidationFailed, ex.exc_info[0])
+
+    def test_policy_create_failed_validation(self):
+        spec = {'KEY2': 1}
+        self.patchobject(fakes.TestPolicy, 'validate',
+                         side_effect=exception.InvalidSpec(message='BOOM'))
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.policy_create,
+                               self.ctx, 'p-2', 'TestPolicy', spec)
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
 
     def test_policy_get(self):
         p = self.eng.policy_create(self.ctx, 'p-1', 'TestPolicy', {})

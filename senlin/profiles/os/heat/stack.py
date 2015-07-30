@@ -107,7 +107,7 @@ class StackProfile(base.Profile):
         except Exception as ex:
             msg = _('Failed validate stack template due to '
                     '"%s"') % six.text_type(ex)
-            raise exception.ProfileValidationFailed(message=msg)
+            raise exception.InvalidSpec(message=msg)
 
         return True
 

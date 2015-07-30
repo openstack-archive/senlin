@@ -71,12 +71,21 @@ class ProfileTest(base.SenlinTestCase):
                                self.ctx, 'p-2', 'Bogus', {})
         self.assertEqual(exception.ProfileTypeNotFound, ex.exc_info[0])
 
-    def test_profile_create_err_validate(self):
+    def test_profile_create_invalid_spec(self):
         spec = {'KEY3': 'value3'}
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.profile_create,
                                self.ctx, 'p-2', 'TestProfile', spec)
         self.assertEqual(exception.SpecValidationFailed, ex.exc_info[0])
+
+    def test_profile_create_failed_validation(self):
+        spec = {'INT': 1}
+        self.patchobject(fakes.TestProfile, 'validate',
+                         side_effect=exception.InvalidSpec(message='BOOM'))
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.profile_create,
+                               self.ctx, 'p-2', 'TestProfile', spec)
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
 
     def test_profile_get(self):
         p = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', {})

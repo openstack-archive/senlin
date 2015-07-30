@@ -210,7 +210,11 @@ class EngineService(service.Service):
             'metadata': metadata,
         }
         profile = plugin(profile_type, name, **kwargs)
-        profile.validate()
+        try:
+            profile.validate()
+        except exception.InvalidSpec as ex:
+            raise exception.SenlinBadRequest(msg=six.text_type(ex))
+
         profile.store(context)
         return profile.to_dict()
 

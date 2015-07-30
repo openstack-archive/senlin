@@ -130,21 +130,27 @@ class TestEnvironment(base.SenlinTestCase):
         self.assertEqual('class1', env.get_profile('C1'))
         self.assertEqual('class2', env.get_policy('C2'))
 
-    def test_check_profile_type_name(self):
+    def test_check_plugin_name(self):
         env = environment.Environment()
-        env._check_profile_type_name('abc')
 
-        ex = self.assertRaises(exception.ProfileValidationFailed,
-                               env._check_profile_type_name, '')
-        self.assertEqual('Profile type name not specified', six.text_type(ex))
-        ex = self.assertRaises(exception.ProfileValidationFailed,
-                               env._check_profile_type_name, None)
-        self.assertEqual('Profile type name not specified', six.text_type(ex))
+        for pt in ['Profile', 'Policy', 'Trigger']:
+            res = env._check_plugin_name(pt, 'abc')
+            self.assertIsNone(res)
 
-        for v in [123, {}, ['a'], ('b', 'c'), True]:
-            ex = self.assertRaises(exception.ProfileValidationFailed,
-                                   env._check_profile_type_name, v)
-            self.assertEqual('Profile type name is not a string',
+            ex = self.assertRaises(exception.InvalidPlugin,
+                                   env._check_plugin_name, pt, '')
+            self.assertEqual('%s type name not specified' % pt,
+                             six.text_type(ex))
+
+            ex = self.assertRaises(exception.InvalidPlugin,
+                                   env._check_plugin_name, pt, None)
+            self.assertEqual('%s type name not specified' % pt,
+                             six.text_type(ex))
+
+            for v in [123, {}, ['a'], ('b', 'c'), True]:
+                ex = self.assertRaises(exception.InvalidPlugin,
+                                       env._check_plugin_name, pt, v)
+            self.assertEqual('%s type name is not a string' % pt,
                              six.text_type(ex))
 
     def test_register_and_get_profile(self):
@@ -169,23 +175,6 @@ class TestEnvironment(base.SenlinTestCase):
         actual = env.get_profile_types()
         self.assertIn({'name': 'foo'}, actual)
         self.assertIn({'name': 'bar'}, actual)
-
-    def test_check_policy_type_name(self):
-        env = environment.Environment()
-        env._check_policy_type_name('abc')
-
-        ex = self.assertRaises(exception.InvalidPolicyType,
-                               env._check_policy_type_name, '')
-        self.assertEqual('Policy type name not specified', six.text_type(ex))
-        ex = self.assertRaises(exception.InvalidPolicyType,
-                               env._check_policy_type_name, None)
-        self.assertEqual('Policy type name not specified', six.text_type(ex))
-
-        for v in [123, {}, ['a'], ('b', 'c'), True]:
-            ex = self.assertRaises(exception.InvalidPolicyType,
-                                   env._check_policy_type_name, v)
-            self.assertEqual('Policy type name is not a string',
-                             six.text_type(ex))
 
     def test_register_and_get_policy(self):
         plugin = mock.Mock()
