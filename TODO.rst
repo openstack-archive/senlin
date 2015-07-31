@@ -2,11 +2,6 @@
 HIGH PRIORITY
 =============
 
-WIKI
-----
-  - add contents to https://wiki.openstack.org/wiki/Senlin, this is the first
-    page for all newcomers. [Qiming]
-
 ENGINE
 ------
   - Node 'role' update may need to be propagated to the profile layer, because
@@ -19,8 +14,6 @@ DRIVER
 
 POLICY
 ------
-  - Ensure cluster_policy objects are initialized with the default property
-    values from the policy objects.
   - Enable placement policy and deletion policy to handle CLUSTER_RESIZE
     action.
   - Investigate the impact of node-create and node-delete on certain policies.
@@ -29,7 +22,10 @@ POLICY
 
 TEST CASES
 ----------
+
   - Add test case the profile context can be saved and loaded correctly.
+
+  - Functional tests set up [Yanyan]
 
 MIDDLE PRIORITY
 ===============
@@ -95,15 +91,17 @@ OSLO
 POLICY
 ------
   - Scaling policy allowng a cluster to scale to existing nodes
-  - Healthy policy[Liuh]
+  - Health policy
 
 DRIVER
 ------
+
   - Add another abstract layer which hides interface differentiation between
     multiple drivers of the same type and provides unified interface for
     profile, e.g. alarm interfaces for scaling policy which can be mapped to
     both Ceilometer or Monasca driver; loadblancer interfaces for lb policy
     which can be mapped to both Neutron LBaaS or AWS LBaaS driver.
+
 
 LOW PRIORITY
 ============
