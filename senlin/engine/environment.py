@@ -99,20 +99,20 @@ class Environment(object):
         self.profile_registry.load(env_dict.get(self.CUSTOM_PROFILES, {}))
         self.policy_registry.load(env_dict.get(self.CUSTOM_POLICIES, {}))
 
-    def _check_profile_type_name(self, name):
+    def _check_plugin_name(self, plugin_type, name):
         if name is None or name == "":
-            msg = _('Profile type name not specified')
-            raise exception.ProfileValidationFailed(message=msg)
+            msg = _('%s type name not specified') % plugin_type
+            raise exception.InvalidPlugin(message=msg)
         elif not isinstance(name, six.string_types):
-            msg = _('Profile type name is not a string')
-            raise exception.ProfileValidationFailed(message=msg)
+            msg = _('%s type name is not a string') % plugin_type
+            raise exception.InvalidPlugin(message=msg)
 
     def register_profile(self, name, plugin):
-        self._check_profile_type_name(name)
+        self._check_plugin_name('Profile', name)
         self.profile_registry.register_plugin(name, plugin)
 
     def get_profile(self, name):
-        self._check_profile_type_name(name)
+        self._check_plugin_name('Profile', name)
         plugin = self.profile_registry.get_plugin(name)
         if plugin is None:
             raise exception.ProfileTypeNotFound(profile_type=name)
@@ -121,20 +121,12 @@ class Environment(object):
     def get_profile_types(self):
         return self.profile_registry.get_types()
 
-    def _check_policy_type_name(self, name):
-        if name is None or name == "":
-            msg = _('Policy type name not specified')
-            raise exception.InvalidPolicyType(message=msg)
-        elif not isinstance(name, six.string_types):
-            msg = _('Policy type name is not a string')
-            raise exception.InvalidPolicyType(message=msg)
-
     def register_policy(self, name, plugin):
-        self._check_policy_type_name(name)
+        self._check_plugin_name('Policy', name)
         self.policy_registry.register_plugin(name, plugin)
 
     def get_policy(self, name):
-        self._check_policy_type_name(name)
+        self._check_plugin_name('Policy', name)
         plugin = self.policy_registry.get_plugin(name)
         if plugin is None:
             raise exception.PolicyTypeNotFound(policy_type=name)
