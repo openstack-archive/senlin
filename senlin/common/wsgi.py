@@ -568,8 +568,11 @@ class Resource(object):
             if not isinstance(err, webob.exc.HTTPError):
                 # Some HTTPException are actually not errors, they are
                 # responses ready to be sent back to the users, so we don't
-                # error log, disguise or translate those
-                raise
+                # create error log, but disguise and translate them to meet
+                # openstacksdk's need.
+                http_exc = translate_exception(err,
+                                               request.best_match_language())
+                raise exception.HTTPExceptionDisguise(http_exc)
             if isinstance(err, webob.exc.HTTPServerError):
                 LOG.error(
                     _LE("Returning %(code)s to user: %(explanation)s"),
