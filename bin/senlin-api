@@ -40,16 +40,18 @@ from senlin.common import config
 from senlin.common.i18n import _LI
 from senlin.common import messaging
 from senlin.common import wsgi
+from senlin import version
 
 _lazy.enable_lazy()
 
-LOG = logging.getLogger('senlin_api')
+LOG = logging.getLogger('senlin.api')
 
 if __name__ == '__main__':
     try:
         logging.register_options(cfg.CONF)
-        cfg.CONF(project='senlin', prog='senlin-api')
-        logging.setup(cfg.CONF, 'senlin_api')
+        cfg.CONF(project='senlin', prog='senlin-api',
+                 version=version.version_info.version_string())
+        logging.setup(cfg.CONF, 'senlin-api')
         messaging.setup()
 
         app = config.load_paste_app()
@@ -58,8 +60,8 @@ if __name__ == '__main__':
         port = cfg.CONF.senlin_api.bind_port
         LOG.info(_LI('Starting Senlin API on %(host)s:%(port)s'),
                  {'host': host, 'port': port})
-        server = wsgi.Server()
-        server.start(app, cfg.CONF.senlin_api, default_port=port)
+        server = wsgi.Server('senlin-api', cfg.CONF.senlin_api)
+        server.start(app, default_port=port)
         systemd.notify_once()
         server.wait()
     except RuntimeError as ex:
