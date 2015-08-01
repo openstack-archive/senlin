@@ -249,7 +249,7 @@ class LoadBalancingPolicy(base.Policy):
         ctx = self._build_context(cluster)
         lb_driver = lbaas.LoadBalancerDriver(ctx)
 
-        cp = cluster_policy.ClusterPolicy.load(context.get_current(),
+        cp = cluster_policy.ClusterPolicy.load(oslo_context.get_current(),
                                                cluster.id, self.id)
 
         policy_data = self._extract_policy_data(cp.data)
@@ -273,20 +273,19 @@ class LoadBalancingPolicy(base.Policy):
         :param action: The action object that triggered this operation.
         :returns: Nothing.
         """
-        ctx = self._build_context(cluster_id)
-        lb_driver = lbaas.LoadBalancerDriver(ctx)
-
-        self.action = action
-        cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
-                                               self.id)
-        lb_id = cp.data['loadbalancer']
-        pool_id = cp.data['pool']
-        port = self.pool_spec.get(self.POOL_PROTOCOL_PORT)
-        subnet = self.pool_spec.get(self.POOL_SUBNET)
-
         nodes = action.data.get('nodes', [])
         if len(nodes) == 0:
             return
+
+        ctx = self._build_context(cluster_id)
+        lb_driver = lbaas.LoadBalancerDriver(ctx)
+        cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
+                                               self.id)
+        policy_data = self._extract_policy_data(cp.data)
+        lb_id = policy_data['loadbalancer']
+        pool_id = policy_data['pool']
+        port = self.pool_spec.get(self.POOL_PROTOCOL_PORT)
+        subnet = self.pool_spec.get(self.POOL_SUBNET)
 
         for node_id in nodes:
             node = node_mod.Node.load(action.context, node_id=node_id,
@@ -301,7 +300,7 @@ class LoadBalancingPolicy(base.Policy):
                     LOG.warning(_LW('Node %(node)s not found in loadbalancer '
                                     'pool %(pool)s.'),
                                 {'node': node_id, 'pool': pool_id})
-                    return
+                    continue
 
                 # Remove nodes that have been deleted from lb pool
                 res = lb_driver.member_remove(lb_id, pool_id, member_id)
@@ -320,7 +319,7 @@ class LoadBalancingPolicy(base.Policy):
                     LOG.warning(_LW('Node %(node)s already in loadbalancer '
                                     'pool %(pool)s.'),
                                 {'node': node_id, 'pool': pool_id})
-                    return
+                    continue
 
                 res = lb_driver.member_add(node, lb_id, pool_id, port, subnet)
                 if res is None:

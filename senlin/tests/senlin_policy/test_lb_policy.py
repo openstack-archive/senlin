@@ -14,10 +14,12 @@ import mock
 from oslo_context import context as oslo_context
 import six
 
+from senlin.common import consts
 from senlin.common import context
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
 from senlin.drivers.openstack import lbaas as lb_driver
+from senlin.engine import cluster_policy
 from senlin.engine import node as node_mod
 from senlin.policies import base as policy_base
 from senlin.policies import lb_policy
@@ -309,3 +311,410 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         self.assertFalse(res)
         self.assertEqual('Failed in adding node into lb pool', data)
         lb_driver.lb_delete.assert_called_once_with(**lb_data)
+
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_extract_policy_data')
+    @mock.patch.object(cluster_policy.ClusterPolicy, 'load')
+    def test_lb_policy_detach_succeeded_no_policy_data(
+            self, mock_policy_load, mock_extract_policy_data):
+
+        cluster = mock.Mock()
+        cp = mock.Mock()
+        mock_policy_load.return_value = cp
+        mock_extract_policy_data.return_value = None
+        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        self.patchobject(lb_driver, 'LoadBalancerDriver')
+        self.patchobject(oslo_context, 'get_current')
+
+        kwargs = {
+            'spec': self.spec
+        }
+        policy = lb_policy.LoadBalancingPolicy('LoadBalancingPolicy',
+                                               'test-policy', **kwargs)
+
+        res, data = policy.detach(cluster)
+        self.assertTrue(res)
+        self.assertEqual('LB resources deletion succeeded.', data)
+
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_extract_policy_data')
+    @mock.patch.object(cluster_policy.ClusterPolicy, 'load')
+    @mock.patch.object(lb_driver, 'LoadBalancerDriver')
+    def test_lb_policy_detach_succeeded_lb_delete_succeeded(
+            self, mock_lb_driver, mock_cluster_policy_load,
+            mock_extract_policy_data):
+
+        cluster = mock.Mock()
+        cluster.id = 'CLUSTER_ID'
+        lb_driver = mock.Mock()
+        mock_lb_driver.return_value = lb_driver
+        cp = mock.Mock()
+        policy_data = {
+            'loadbalancer': 'LB_ID',
+            'listener': 'LISTENER_ID',
+            'pool': 'POOL_ID',
+            'healthmonitor': 'HM_ID'
+        }
+        cp_data = {
+            'LoadBalancingPolicy': {
+                'version': '1.0',
+                'data': policy_data
+            }
+        }
+        cp.data = cp_data
+        mock_cluster_policy_load.return_value = cp
+        mock_extract_policy_data.return_value = policy_data
+        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        self.patchobject(oslo_context, 'get_current')
+        lb_driver.lb_delete.return_value = (True, 'lb_delete succeeded.')
+
+        kwargs = {
+            'spec': self.spec
+        }
+        policy = lb_policy.LoadBalancingPolicy('LoadBalancingPolicy',
+                                               'test-policy', **kwargs)
+
+        res, data = policy.detach(cluster)
+        self.assertTrue(res)
+        self.assertEqual('lb_delete succeeded.', data)
+        mock_cluster_policy_load.assert_called_once_with(mock.ANY,
+                                                         'CLUSTER_ID',
+                                                         policy.id)
+        mock_extract_policy_data.assert_called_once_with(cp_data)
+        lb_driver.lb_delete.assert_called_once_with(**policy_data)
+
+    @mock.patch.object(lb_driver, 'LoadBalancerDriver')
+    def test_lb_policy_detach_failed_lb_delete_failed(self, mock_lb_driver):
+
+        cluster = mock.Mock()
+        lb_driver = mock.Mock()
+        mock_lb_driver.return_value = lb_driver
+        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        self.patchobject(oslo_context, 'get_current')
+        self.patchobject(cluster_policy.ClusterPolicy, 'load')
+        self.patchobject(lb_policy.LoadBalancingPolicy,
+                         '_extract_policy_data')
+        lb_driver.lb_delete.return_value = (False, 'lb_delete failed.')
+
+        kwargs = {
+            'spec': self.spec
+        }
+        policy = lb_policy.LoadBalancingPolicy('LoadBalancingPolicy',
+                                               'test-policy', **kwargs)
+
+        res, data = policy.detach(cluster)
+        self.assertFalse(res)
+        self.assertEqual('lb_delete failed.', data)
+
+    def test_lb_policy_post_op_no_nodes(self):
+
+        cluster_id = 'CLUSTER_ID'
+        action = mock.Mock()
+        action.data = {'nodes': []}
+
+        kwargs = {
+            'spec': self.spec
+        }
+        policy = lb_policy.LoadBalancingPolicy('LoadBalancingPolicy',
+                                               'test-policy', **kwargs)
+
+        res = policy.post_op(cluster_id, action)
+        self.assertIsNone(res)
+
+    @mock.patch.object(node_mod.Node, 'load')
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_extract_policy_data')
+    @mock.patch.object(cluster_policy.ClusterPolicy, 'load')
+    @mock.patch.object(lb_driver, 'LoadBalancerDriver')
+    def test_lb_policy_post_op_add_nodes_succeeded(self, mock_lb_driver,
+                                                   mock_cluster_policy_load,
+                                                   mock_extract_policy_data,
+                                                   mock_node_load):
+
+        lb_driver = mock.Mock()
+        mock_lb_driver.return_value = lb_driver
+        cluster_id = 'CLUSTER_ID'
+        node1 = mock.Mock()
+        node2 = mock.Mock()
+        node1.data = {}
+        node2.data = {}
+        action = mock.Mock()
+        action.data = {
+            'nodes': ['NODE1_ID', 'NODE2_ID'],
+            'creation': {'count': 2}
+        }
+        action.context = 'action_context'
+        action.action = consts.CLUSTER_RESIZE
+        cp = mock.Mock()
+        policy_data = {
+            'loadbalancer': 'LB_ID',
+            'listener': 'LISTENER_ID',
+            'pool': 'POOL_ID',
+            'healthmonitor': 'HM_ID'
+        }
+        cp_data = {
+            'LoadBalancingPolicy': {
+                'version': '1.0',
+                'data': policy_data
+            }
+        }
+        cp.data = cp_data
+        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        lb_driver.member_add.side_effect = ['MEMBER1_ID', 'MEMBER2_ID']
+        mock_node_load.side_effect = [node1, node2]
+        mock_cluster_policy_load.return_value = cp
+        mock_extract_policy_data.return_value = policy_data
+
+        kwargs = {
+            'spec': self.spec
+        }
+        policy = lb_policy.LoadBalancingPolicy('LoadBalancingPolicy',
+                                               'test-policy', **kwargs)
+        res = policy.post_op(cluster_id, action)
+        self.assertIsNone(res)
+        mock_cluster_policy_load.assert_called_once_with('action_context',
+                                                         'CLUSTER_ID',
+                                                         policy.id)
+        mock_extract_policy_data.assert_called_once_with(cp_data)
+        calls_node_load = [mock.call('action_context', node_id=n,
+                                     show_deleted=True
+                                     ) for n in ['NODE1_ID', 'NODE2_ID']]
+        mock_node_load.assert_has_calls(calls_node_load)
+        calls_member_add = [mock.call(n, 'LB_ID', 'POOL_ID', 80, 'test-subnet'
+                                      ) for n in [node1, node2]]
+        lb_driver.member_add.assert_has_calls(calls_member_add)
+        node1.store.assert_called_once_with('action_context')
+        node2.store.assert_called_once_with('action_context')
+        self.assertEqual({'lb_member': 'MEMBER1_ID'}, node1.data)
+        self.assertEqual({'lb_member': 'MEMBER2_ID'}, node2.data)
+
+    @mock.patch.object(node_mod.Node, 'load')
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_extract_policy_data')
+    @mock.patch.object(lb_driver, 'LoadBalancerDriver')
+    def test_lb_policy_post_op_add_nodes_already_in_pool(
+            self, mock_lb_driver, mock_extract_policy_data, mock_node_load):
+
+        lb_driver = mock.Mock()
+        mock_lb_driver.return_value = lb_driver
+        cluster_id = 'CLUSTER_ID'
+        node1 = mock.Mock()
+        node2 = mock.Mock()
+        node1.data = {'lb_member': 'MEMBER1_ID'}
+        node2.data = {}
+        action = mock.Mock()
+        action.data = {
+            'nodes': ['NODE1_ID', 'NODE2_ID'],
+            'creation': {'count': 2}
+        }
+        action.context = 'action_context'
+        action.action = consts.CLUSTER_RESIZE
+        policy_data = {
+            'loadbalancer': 'LB_ID',
+            'listener': 'LISTENER_ID',
+            'pool': 'POOL_ID',
+            'healthmonitor': 'HM_ID'
+        }
+        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        self.patchobject(cluster_policy.ClusterPolicy, 'load')
+        lb_driver.member_add.side_effect = ['MEMBER2_ID']
+        mock_node_load.side_effect = [node1, node2]
+        mock_extract_policy_data.return_value = policy_data
+
+        kwargs = {
+            'spec': self.spec
+        }
+        policy = lb_policy.LoadBalancingPolicy('LoadBalancingPolicy',
+                                               'test-policy', **kwargs)
+        res = policy.post_op(cluster_id, action)
+        self.assertIsNone(res)
+        lb_driver.member_add.assert_called_once_with(node2, 'LB_ID', 'POOL_ID',
+                                                     80, 'test-subnet')
+
+    @mock.patch.object(node_mod.Node, 'load')
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_extract_policy_data')
+    @mock.patch.object(lb_driver, 'LoadBalancerDriver')
+    def test_lb_policy_post_op_add_nodes_failed(self, mock_lb_driver,
+                                                mock_extract_policy_data,
+                                                mock_node_load):
+
+        lb_driver = mock.Mock()
+        mock_lb_driver.return_value = lb_driver
+        cluster_id = 'CLUSTER_ID'
+        node1 = mock.Mock()
+        node1.data = {}
+        action = mock.Mock()
+        action.data = {
+            'nodes': ['NODE1_ID'],
+            'creation': {'count': 1}
+        }
+        action.context = 'action_context'
+        action.action = consts.CLUSTER_RESIZE
+        policy_data = {
+            'loadbalancer': 'LB_ID',
+            'listener': 'LISTENER_ID',
+            'pool': 'POOL_ID',
+            'healthmonitor': 'HM_ID'
+        }
+        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        self.patchobject(cluster_policy.ClusterPolicy, 'load')
+        lb_driver.member_add.return_value = None
+        mock_node_load.side_effect = [node1]
+        mock_extract_policy_data.return_value = policy_data
+
+        kwargs = {
+            'spec': self.spec
+        }
+        policy = lb_policy.LoadBalancingPolicy('LoadBalancingPolicy',
+                                               'test-policy', **kwargs)
+        res = policy.post_op(cluster_id, action)
+        self.assertIsNone(res)
+        self.assertEqual(policy_base.CHECK_ERROR, action.data['status'])
+        self.assertEqual('Failed in adding new node into lb pool',
+                         action.data['reason'])
+        lb_driver.member_add.assert_called_once_with(node1, 'LB_ID', 'POOL_ID',
+                                                     80, 'test-subnet')
+
+    @mock.patch.object(node_mod.Node, 'load')
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_extract_policy_data')
+    @mock.patch.object(cluster_policy.ClusterPolicy, 'load')
+    @mock.patch.object(lb_driver, 'LoadBalancerDriver')
+    def test_lb_policy_post_op_del_nodes_succeeded(self, mock_lb_driver,
+                                                   mock_cluster_policy_load,
+                                                   mock_extract_policy_data,
+                                                   mock_node_load):
+
+        lb_driver = mock.Mock()
+        mock_lb_driver.return_value = lb_driver
+        cluster_id = 'CLUSTER_ID'
+        node1 = mock.Mock()
+        node2 = mock.Mock()
+        node1.data = {'lb_member': 'MEMBER1_ID'}
+        node2.data = {'lb_member': 'MEMBER2_ID'}
+        action = mock.Mock()
+        action.data = {
+            'nodes': ['NODE1_ID', 'NODE2_ID'],
+            'deletion': {'count': 2}
+        }
+        action.context = 'action_context'
+        action.action = consts.CLUSTER_RESIZE
+        cp = mock.Mock()
+        policy_data = {
+            'loadbalancer': 'LB_ID',
+            'listener': 'LISTENER_ID',
+            'pool': 'POOL_ID',
+            'healthmonitor': 'HM_ID'
+        }
+        cp_data = {
+            'LoadBalancingPolicy': {
+                'version': '1.0',
+                'data': policy_data
+            }
+        }
+        cp.data = cp_data
+        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        lb_driver.member_remove.return_value = True
+        mock_node_load.side_effect = [node1, node2]
+        mock_cluster_policy_load.return_value = cp
+        mock_extract_policy_data.return_value = policy_data
+
+        kwargs = {
+            'spec': self.spec
+        }
+        policy = lb_policy.LoadBalancingPolicy('LoadBalancingPolicy',
+                                               'test-policy', **kwargs)
+        res = policy.post_op(cluster_id, action)
+        self.assertIsNone(res)
+        mock_cluster_policy_load.assert_called_once_with('action_context',
+                                                         'CLUSTER_ID',
+                                                         policy.id)
+        mock_extract_policy_data.assert_called_once_with(cp_data)
+        calls_node_load = [mock.call('action_context', node_id=n,
+                                     show_deleted=True
+                                     ) for n in ['NODE1_ID', 'NODE2_ID']]
+        mock_node_load.assert_has_calls(calls_node_load)
+        calls_member_del = [mock.call('LB_ID', 'POOL_ID', m
+                                      ) for m in ['MEMBER1_ID', 'MEMBER2_ID']]
+        lb_driver.member_remove.assert_has_calls(calls_member_del)
+
+    @mock.patch.object(node_mod.Node, 'load')
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_extract_policy_data')
+    @mock.patch.object(lb_driver, 'LoadBalancerDriver')
+    def test_lb_policy_post_op_remove_nodes_not_in_pool(
+            self, mock_lb_driver, mock_extract_policy_data, mock_node_load):
+
+        lb_driver = mock.Mock()
+        mock_lb_driver.return_value = lb_driver
+        cluster_id = 'CLUSTER_ID'
+        node1 = mock.Mock()
+        node2 = mock.Mock()
+        node1.data = {}
+        node2.data = {'lb_member': 'MEMBER2_ID'}
+        action = mock.Mock()
+        action.data = {
+            'nodes': ['NODE1_ID', 'NODE2_ID'],
+            'deletion': {'count': 2}
+        }
+        action.context = 'action_context'
+        action.action = consts.CLUSTER_RESIZE
+        policy_data = {
+            'loadbalancer': 'LB_ID',
+            'listener': 'LISTENER_ID',
+            'pool': 'POOL_ID',
+            'healthmonitor': 'HM_ID'
+        }
+        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        self.patchobject(cluster_policy.ClusterPolicy, 'load')
+        lb_driver.member_remove.return_value = True
+        mock_node_load.side_effect = [node1, node2]
+        mock_extract_policy_data.return_value = policy_data
+
+        kwargs = {
+            'spec': self.spec
+        }
+        policy = lb_policy.LoadBalancingPolicy('LoadBalancingPolicy',
+                                               'test-policy', **kwargs)
+        res = policy.post_op(cluster_id, action)
+        self.assertIsNone(res)
+        lb_driver.member_remove.assert_called_once_with('LB_ID', 'POOL_ID',
+                                                        'MEMBER2_ID')
+
+    @mock.patch.object(node_mod.Node, 'load')
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_extract_policy_data')
+    @mock.patch.object(lb_driver, 'LoadBalancerDriver')
+    def test_lb_policy_post_op_remove_nodes_failed(self, mock_lb_driver,
+                                                   mock_extract_policy_data,
+                                                   mock_node_load):
+
+        lb_driver = mock.Mock()
+        mock_lb_driver.return_value = lb_driver
+        cluster_id = 'CLUSTER_ID'
+        node1 = mock.Mock()
+        node1.data = {'lb_member': 'MEMBER1_ID'}
+        action = mock.Mock()
+        action.data = {
+            'nodes': ['NODE1_ID'],
+            'deletion': {'count': 1}
+        }
+        action.context = 'action_context'
+        action.action = consts.CLUSTER_RESIZE
+        policy_data = {
+            'loadbalancer': 'LB_ID',
+            'listener': 'LISTENER_ID',
+            'pool': 'POOL_ID',
+            'healthmonitor': 'HM_ID'
+        }
+        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        self.patchobject(cluster_policy.ClusterPolicy, 'load')
+        lb_driver.member_remove.return_value = False
+        mock_node_load.side_effect = [node1]
+        mock_extract_policy_data.return_value = policy_data
+
+        kwargs = {
+            'spec': self.spec
+        }
+        policy = lb_policy.LoadBalancingPolicy('LoadBalancingPolicy',
+                                               'test-policy', **kwargs)
+        res = policy.post_op(cluster_id, action)
+        self.assertIsNone(res)
+        self.assertEqual(policy_base.CHECK_ERROR, action.data['status'])
+        self.assertEqual('Failed in removing deleted node from lb pool',
+                         action.data['reason'])
+        lb_driver.member_remove.assert_called_once_with('LB_ID', 'POOL_ID',
+                                                        'MEMBER1_ID')
