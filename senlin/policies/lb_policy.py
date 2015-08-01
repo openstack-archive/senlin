@@ -65,9 +65,9 @@ class LoadBalancingPolicy(base.Policy):
     )
 
     PROTOCOLS = (
-        HTTP, HTTPS,
+        HTTP, HTTPS, TCP,
     ) = (
-        'HTTP', 'HTTPS',
+        'HTTP', 'HTTPS', 'TCP',
     )
 
     LB_METHODS = (
@@ -77,10 +77,10 @@ class LoadBalancingPolicy(base.Policy):
     )
 
     _VIP_KEYS = (
-        VIP_ID, VIP_SUBNET, VIP_ADDRESS, VIP_CONNECTION_LIMIT, VIP_PROTOCOL,
+        VIP_SUBNET, VIP_ADDRESS, VIP_CONNECTION_LIMIT, VIP_PROTOCOL,
         VIP_PROTOCOL_PORT, VIP_ADMIN_STATE_UP,
     ) = (
-        'id', 'subnet', 'address', 'connection_limit', 'protocol',
+        'subnet', 'address', 'connection_limit', 'protocol',
         'protocol_port', 'admin_state_up',
     )
 
@@ -135,21 +135,18 @@ class LoadBalancingPolicy(base.Policy):
                             constraints=[
                                 constraints.AllowedValues(PERSISTENCE_TYPES),
                             ],
-                            default=PERSIST_SOURCE_IP,
                         ),
                         COOKIE_NAME: schema.String(
                             _('Name of cookie if type set to APP_COOKIE.'),
                         ),
                     },
+                    default={},
                 ),
             },
         ),
         VIP: schema.Map(
             _('VIP address and port of the pool.'),
             schema={
-                VIP_ID: schema.String(
-                    _('ID of an existing VIP object.'),
-                ),
                 VIP_SUBNET: schema.String(
                     _('Name or ID of Subnet on which the VIP address will be '
                       'allocated.'),
@@ -162,6 +159,7 @@ class LoadBalancingPolicy(base.Policy):
                 VIP_CONNECTION_LIMIT: schema.Integer(
                     _('Maximum number of connections per second allowed for '
                       'this VIP'),
+                    default=-1,
                 ),
                 VIP_PROTOCOL: schema.String(
                     _('Protocol used for VIP.'),
@@ -217,7 +215,7 @@ class LoadBalancingPolicy(base.Policy):
         port = self.pool_spec.get(self.POOL_PROTOCOL_PORT)
         subnet = self.pool_spec.get(self.POOL_SUBNET)
 
-        nodes = node_mod.Node.load_all(context.get_current(),
+        nodes = node_mod.Node.load_all(oslo_context.get_current(),
                                        cluster_id=cluster.id)
         for node in nodes:
             member_id = lb_driver.member_add(node, data['loadbalancer'],
@@ -232,7 +230,7 @@ class LoadBalancingPolicy(base.Policy):
                 return False, 'Failed in adding node into lb pool'
 
             node.data.update({'lb_member': member_id})
-            node.store(context.get_current())
+            node.store(oslo_context.get_current())
 
         policy_data = self._build_policy_data(data)
 
@@ -241,8 +239,7 @@ class LoadBalancingPolicy(base.Policy):
     def detach(self, cluster):
         """Routine to be called when the policy is detached from a cluster.
 
-        :param cluster_id: The cluster from which the policy is to be
-                           detached.
+        :param cluster: The cluster from which the policy is to be detached.
         :returns: When the operation was successful, returns a tuple of
             (True, data) where the data contains references to the resources
             created; otherwise returns a tuple of (False, err) where the err
@@ -354,7 +351,7 @@ class LoadBalancingPolicy(base.Policy):
                                cluster.user, cluster.project)
         if cred is None:
             raise exception.TrustNotFound(trustor=cluster.user)
-        params['trusts'] = cred.cred['openstack']['trust']
+        params['trusts'] = [cred.cred['openstack']['trust']]
         params['project_id'] = cluster.project
 
-        return context.from_dict(params)
+        return context.RequestContext.from_dict(params)
