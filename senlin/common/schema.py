@@ -412,3 +412,19 @@ class Spec(collections.Mapping):
 
     def __iter__(self):
         return iter(self._schema)
+
+
+def get_spec_version(spec):
+    if not isinstance(spec, dict):
+        msg = _('The provided spec is not a map.')
+        raise exception.SpecValidationFailed(message=msg)
+
+    if 'type' not in spec:
+        msg = _("The 'type' key is missing from the provided spec map.")
+        raise exception.SpecValidationFailed(message=msg)
+
+    if 'version' not in spec:
+        msg = _("The 'version' key is missing from the provided spec map.")
+        raise exception.SpecValidationFailed(message=msg)
+
+    return (spec['type'], spec['version'])
