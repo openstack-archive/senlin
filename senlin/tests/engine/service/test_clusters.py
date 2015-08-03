@@ -769,6 +769,28 @@ class ClusterTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_add_nodes_node_profile_type_not_match(self, notify):
+        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        # Register a different profile
+        env = environment.global_env()
+        env.register_profile('DiffProfileType', fakes.TestProfile)
+        new_profile = self.eng.profile_create(
+            self.ctx, 'p-test', 'DiffProfileType',
+            spec={'INT': 10, 'STR': 'string'}, permission='1111')
+        nodes = self._prepare_nodes(self.ctx, count=1,
+                                    profile_id=new_profile['id'])
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_add_nodes,
+                               self.ctx, c['id'], nodes)
+
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        msg = _("Profile type of nodes %s does not match with "
+                "cluster") % nodes
+        self.assertEqual(_("The request is malformed: %(msg)s") % {'msg': msg},
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_del_nodes(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cid = c['id']

@@ -579,10 +579,15 @@ class EngineService(service.Service):
     @request_context
     def cluster_add_nodes(self, context, identity, nodes):
         db_cluster = self.cluster_find(context, identity)
+        db_cluster_profile = self.profile_find(context,
+                                               db_cluster.profile_id)
+        cluster_profile_type = db_cluster_profile.type
+
         found = []
         not_found = []
         bad_nodes = []
         owned_nodes = []
+        not_match_nodes = []
         for node in nodes:
             try:
                 db_node = self.node_find(context, node)
@@ -592,7 +597,14 @@ class EngineService(service.Service):
                 elif db_node.cluster_id is not None:
                     owned_nodes.append(node)
                 else:
-                    found.append(db_node.id)
+                    # check profile type matching
+                    db_node_profile = self.profile_find(context,
+                                                        db_node.profile_id)
+                    node_profile_type = db_node_profile.type
+                    if node_profile_type != cluster_profile_type:
+                        not_match_nodes.append(db_node.id)
+                    else:
+                        found.append(db_node.id)
             except exception.NodeNotFound:
                 not_found.append(node)
                 pass
@@ -605,6 +617,9 @@ class EngineService(service.Service):
                       "them from those clusters first.") % owned_nodes
         elif len(not_found) > 0:
             error = _("Nodes not found: %s") % not_found
+        elif len(not_match_nodes) > 0:
+            error = _("Profile type of nodes %s does not match with "
+                      "cluster") % not_match_nodes
         elif len(found) == 0:
             error = _("No nodes to add: %s") % nodes
 

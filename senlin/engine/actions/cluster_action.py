@@ -273,13 +273,6 @@ class ClusterAction(base.Action):
                 failures[node_id] = _('Node not in ACTIVE status')
                 continue
 
-            # check profile type matching
-            node_profile_type = node.rt['profile'].type
-            cluster_profile_type = cluster.rt['profile'].type
-            if node_profile_type != cluster_profile_type:
-                failures[node.id] = 'Profile type does not match'
-                continue
-
         if len(failures) > 0:
             return self.RES_ERROR, str(failures)
 
