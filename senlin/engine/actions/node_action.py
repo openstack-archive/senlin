@@ -48,8 +48,8 @@ class NodeAction(base.Action):
             return self.RES_ERROR, 'Node deletion failed'
 
     def do_update(self, node):
-        new_profile_id = self.inputs.get('new_profile_id')
-        res = node.do_update(self.context, new_profile_id)
+        params = self.inputs
+        res = node.do_update(self.context, params)
         if res:
             return self.RES_OK, 'Node updated successfully'
         else:

@@ -16,7 +16,6 @@ import six
 from oslo_utils import timeutils
 
 from senlin.common import exception
-from senlin.common.i18n import _
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import event as eventm
 from senlin.engine import node as nodem
@@ -371,7 +370,7 @@ class TestNode(base.SenlinTestCase):
                           self.context)
         new_profile = self._create_profile('NEW_PROFILE_ID')
         node.physical_id = 'fake_id'
-        res = node.do_update(self.context, new_profile.id)
+        res = node.do_update(self.context, {'new_profile_id': new_profile.id})
         self.assertTrue(res)
         mock_update.assert_called_once_with(self.context, node,
                                             new_profile.id)
@@ -382,44 +381,12 @@ class TestNode(base.SenlinTestCase):
         mock_status.assert_any_call(self.context, 'ACTIVE',
                                     reason='Update succeeded')
 
-    def test_node_update_no_profile(self):
-        node = nodem.Node('node1', self.profile.id, self.cluster.id,
-                          self.context)
-        self.assertRaises(exception.ProfileNotSpecified,
-                          node.do_update, self.context, None)
-
-    def test_node_update_same_profile(self):
-        node = nodem.Node('node1', self.profile.id, self.cluster.id,
-                          self.context)
-        res = node.do_update(self.context, self.profile.id)
-        self.assertTrue(res)
-
     def test_node_update_not_created(self):
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
                           self.context)
         self.assertEqual('', node.physical_id)
         res = node.do_update(self.context, 'new_profile_id')
         self.assertFalse(res)
-
-    @mock.patch.object(eventm, 'warning')
-    @mock.patch.object(profiles_base.Profile, 'update_object')
-    def test_node_update_diff_profile_type(self, mock_update, mock_event):
-        node = nodem.Node('node1', self.profile.id, self.cluster.id,
-                          self.context)
-        node.physical_id = 'fake_id'
-        new_profile_values = {
-            'id': 'NEW_PROFILE_ID',
-            'type': 'os.heat.stack',
-            'name': 'test-profile',
-        }
-        new_profile = db_api.profile_create(self.context, new_profile_values)
-        res = node.do_update(self.context, new_profile.id)
-        self.assertFalse(res)
-        msg = _('Node cannot be updated to a different profile type '
-                '(%(oldt)s->%(newt)s)') % {'oldt': 'os.nova.server',
-                                           'newt': 'os.heat.stack'}
-        mock_event.assert_called_once_with(msg)
-        self.assertFalse(mock_update.called)
 
     @mock.patch.object(nodem.Node, '_handle_exception')
     @mock.patch.object(nodem.Node, 'set_status')
@@ -433,7 +400,7 @@ class TestNode(base.SenlinTestCase):
         mock_update.side_effect = ex
         new_profile = self._create_profile('NEW_PROFILE_ID')
         node.physical_id = 'fake_id'
-        res = node.do_update(self.context, new_profile.id)
+        res = node.do_update(self.context, {'new_profile_id': new_profile.id})
         self.assertFalse(res)
         mock_handle_exception.assert_called_once_with(self.context, 'update',
                                                       'ERROR', ex)

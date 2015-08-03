@@ -256,11 +256,12 @@ class ServerProfile(base.Profile):
 
         return True
 
-    def do_update(self, obj, new_profile):
+    def do_update(self, obj, new_profile, **params):
         '''Perform update on the server.
 
         :param obj: the server to operate on
         :param new_profile: the new profile for the server.
+        :param params: a dictionary of optional parameters.
         '''
         self.server_id = obj.physical_id
         if not self.server_id:

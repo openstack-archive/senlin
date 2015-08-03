@@ -934,41 +934,33 @@ class EngineService(service.Service):
         db_node = self.node_find(context, identity)
         node = node_mod.Node.load(context, node=db_node)
 
-        changed = False
-        if name is not None and name != node.name:
-            node.name = name
-            changed = True
+        if profile_id:
+            db_profile = self.profile_find(context, profile_id)
+            profile_id = db_profile.id
 
-        if role is not None and role != node.role:
-            node.role = role
-            changed = True
-
-        if metadata is not None and metadata != node.metadata:
-            node.metadata = metadata
-            changed = True
-
-        if changed is True:
-            node.store(context)
-
-        if profile_id is None:
-            return
-
-        # The profile_id could be a name or a short ID, check it
-        db_profile = self.profile_find(context, profile_id)
-        profile_id = db_profile.id
-
-        # check if profile_type matches
-        node_profile = self.profile_find(context, node.profile_id)
-        if node_profile.type != db_profile.type:
-            msg = _('Cannot update a node to a different profile type, '
-                    'operation aborted.')
-            raise exception.ProfileTypeNotMatch(message=msg)
+            # check if profile_type matches
+            old_profile = self.profile_find(context, node.profile_id)
+            if old_profile.type != db_profile.type:
+                msg = _('Cannot update a node to a different profile type, '
+                        'operation aborted.')
+                raise exception.ProfileTypeNotMatch(message=msg)
 
         LOG.info(_LI('Updating node %s'), identity)
+
+        inputs = {
+            'new_profile_id': profile_id,
+        }
+        if name is not None and name != node.name:
+            inputs['name'] = name
+        if role is not None and role != node.role:
+            inputs['role'] = role
+        if metadata is not None and metadata != node.metadata:
+            inputs['metadata'] = metadata
 
         action = action_mod.Action(context, 'NODE_UPDATE',
                                    name='node_update_%s' % node.id[:8],
                                    target=node.id,
+                                   inputs=inputs,
                                    cause=action_mod.CAUSE_RPC)
         action.store(context)
 

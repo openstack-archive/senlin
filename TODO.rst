@@ -2,12 +2,6 @@
 HIGH PRIORITY
 =============
 
-ENGINE
-------
-  - Node 'role' update may need to be propagated to the profile layer, because
-    the profile may use it for changing the underlying physical object, e.g.
-    the nova server that backs the node.
-
 DRIVER
 ------
   - Handle Heat stack operation exceptions [Qiming]

@@ -376,28 +376,48 @@ class NodeTest(base.SenlinTestCase):
         self.assertIsNotNone(result)
 
     @mock.patch.object(dispatcher, 'start_action')
-    def test_node_update_simple(self, notify):
+    @mock.patch.object(action_mod, 'Action')
+    def test_node_update_simple(self, mock_action, notify):
         node = self.eng.node_create(self.ctx, 'node-1', self.profile['id'],
                                     role='Master', metadata={'foo': 'bar'})
         nodeid = node['id']
 
         # 1. update name
+        mock_action.reset_mock()
         self.eng.node_update(self.ctx, nodeid, name='node-2')
-        res = self.eng.node_get(self.ctx, nodeid)
-        self.assertEqual(nodeid, res['id'])
-        self.assertEqual('node-2', res['name'])
+        action_name = 'node_update_%s' % nodeid[:8]
+        mock_action.assert_called_once_with(self.ctx, 'NODE_UPDATE',
+                                            name=action_name,
+                                            target=nodeid,
+                                            inputs={
+                                                'new_profile_id': None,
+                                                'name': 'node-2'
+                                            },
+                                            cause=action_mod.CAUSE_RPC)
 
         # 2. update role
+        mock_action.reset_mock()
         self.eng.node_update(self.ctx, nodeid, role='worker')
-        res = self.eng.node_get(self.ctx, nodeid)
-        self.assertEqual(nodeid, res['id'])
-        self.assertEqual('worker', res['role'])
+        mock_action.assert_called_once_with(self.ctx, 'NODE_UPDATE',
+                                            name=action_name,
+                                            target=nodeid,
+                                            inputs={
+                                                'new_profile_id': None,
+                                                'role': 'worker'
+                                            },
+                                            cause=action_mod.CAUSE_RPC)
 
         # 3. update metadata
+        mock_action.reset_mock()
         self.eng.node_update(self.ctx, nodeid, metadata={'FOO': 'BAR'})
-        res = self.eng.node_get(self.ctx, nodeid)
-        self.assertEqual(nodeid, res['id'])
-        self.assertEqual({'FOO': 'BAR'}, res['metadata'])
+        mock_action.assert_called_once_with(self.ctx, 'NODE_UPDATE',
+                                            name=action_name,
+                                            target=nodeid,
+                                            inputs={
+                                                'new_profile_id': None,
+                                                'metadata': {'FOO': 'BAR'},
+                                            },
+                                            cause=action_mod.CAUSE_RPC)
 
     def test_node_update_node_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,

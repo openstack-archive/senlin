@@ -146,10 +146,12 @@ class Profile(object):
         return profile.do_delete(obj)
 
     @classmethod
-    def update_object(cls, ctx, obj, new_profile_id):
+    def update_object(cls, ctx, obj, new_profile_id=None, **params):
         profile = cls.load(ctx, obj.profile_id)
-        new_profile = cls.load(ctx, new_profile_id)
-        return profile.do_update(obj, new_profile)
+        new_profile = None
+        if new_profile_id:
+            new_profile = cls.load(ctx, new_profile_id)
+        return profile.do_update(obj, new_profile, **params)
 
     @classmethod
     def get_details(cls, ctx, obj):
@@ -216,7 +218,7 @@ class Profile(object):
 
         return NotImplemented
 
-    def do_update(self, obj, new_profile):
+    def do_update(self, obj, new_profile, **params):
         '''For subclass to override.'''
 
         return NotImplemented
