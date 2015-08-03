@@ -376,7 +376,7 @@ class Action(object):
             else:  # target == 'AFTER'
                 method = getattr(policy, 'post_op')
 
-            if pb.cooldown_inprogress(self.context):
+            if pb.cooldown_inprogress():
                 self.data['status'] = policy_mod.CHECK_ERROR
                 self.data['reason'] = _('Policy %(id)s cooldown is still '
                                         'in progress.') % {'id': policy.id}
