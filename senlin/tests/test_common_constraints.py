@@ -308,3 +308,36 @@ class TestConstraintsSchema(testtools.TestCase):
                                spec.validate)
         msg = _('Required spec item "%s" not assigned') % 'key2'
         self.assertTrue(six.text_type(ex.message).find(msg) != -1)
+
+
+class TestSpecVersionChecking(testtools.TestCase):
+
+    def test_spec_version_okay(self):
+        spec = {'type': 'Foo', 'version': 'version string'}
+        res = schema.get_spec_version(spec)
+        self.assertEqual(('Foo', 'version string'), res)
+
+        spec = {'type': 'Foo', 'version': 1.5}
+        res = schema.get_spec_version(spec)
+        self.assertEqual(('Foo', 1.5), res)
+
+    def test_spec_version_not_dict(self):
+        spec = 'a string'
+        ex = self.assertRaises(exception.SpecValidationFailed,
+                               schema.get_spec_version, spec)
+        self.assertEqual('The provided spec is not a map.',
+                         six.text_type(ex))
+
+    def test_spec_version_no_type_key(self):
+        spec = {'tpye': 'a string'}
+        ex = self.assertRaises(exception.SpecValidationFailed,
+                               schema.get_spec_version, spec)
+        self.assertEqual("The 'type' key is missing from the provided "
+                         "spec map.", six.text_type(ex))
+
+    def test_spec_version_no_version_key(self):
+        spec = {'type': 'a string', 'ver': '123'}
+        ex = self.assertRaises(exception.SpecValidationFailed,
+                               schema.get_spec_version, spec)
+        self.assertEqual("The 'version' key is missing from the provided "
+                         "spec map.", six.text_type(ex))
