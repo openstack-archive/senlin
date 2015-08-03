@@ -158,10 +158,12 @@ def trigger_get_by_short_id(context, short_id):
 
 
 def trigger_get_all(context, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None, show_deleted=False):
+                    sort_dir=None, filters=None, project_safe=True,
+                    show_deleted=False):
     return IMPL.trigger_get_all(context, limit=limit, marker=marker,
                                 sort_keys=sort_keys, sort_dir=sort_dir,
-                                filters=filters, show_deleted=show_deleted)
+                                filters=filters, project_safe=project_safe,
+                                show_deleted=show_deleted)
 
 
 def trigger_update(context, trigger_id, values):

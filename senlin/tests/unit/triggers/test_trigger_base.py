@@ -133,7 +133,8 @@ class TestTriggerBase(test_base.SenlinTestCase):
         self.assertEqual([], res)
         mock_get.assert_called_once_with(self.ctx, limit=None, marker=None,
                                          sort_keys=None, sort_dir=None,
-                                         filters=None, show_deleted=False)
+                                         filters=None, project_safe=True,
+                                         show_deleted=False)
 
         mock_get.reset_mock()
 
@@ -145,6 +146,7 @@ class TestTriggerBase(test_base.SenlinTestCase):
         mock_get.assert_called_once_with(self.ctx, limit=1, marker='MARKER',
                                          sort_keys=['K1'], sort_dir='asc',
                                          filters={'enabled': True},
+                                         project_safe=True,
                                          show_deleted=False)
 
     def test_delete(self):

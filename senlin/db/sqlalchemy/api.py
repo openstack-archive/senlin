@@ -477,10 +477,12 @@ def trigger_get_by_short_id(context, short_id, show_deleted=False):
 
 
 def trigger_get_all(context, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None, show_deleted=False):
+                    sort_dir=None, filters=None, project_safe=True,
+                    show_deleted=False):
     query = soft_delete_aware_query(context, models.Trigger,
                                     show_deleted=show_deleted)
 
+    # TODO(Qiming): Add support to project safe query
     if filters is None:
         filters = {}
 
@@ -488,6 +490,7 @@ def trigger_get_all(context, limit=None, marker=None, sort_keys=None,
         consts.TRIGGER_NAME: models.Trigger.name.key,
         consts.TRIGGER_TYPE: models.Trigger.type.key,
         consts.TRIGGER_STATE: models.Trigger.state.key,
+        consts.TRIGGER_SEVERITY: models.Trigger.severity.key,
         consts.TRIGGER_ENABLED: models.Trigger.enabled.key,
         consts.TRIGGER_CREATED_TIME: models.Trigger.created_time.key,
         consts.TRIGGER_UPDATED_TIME: models.Trigger.updated_time.key,

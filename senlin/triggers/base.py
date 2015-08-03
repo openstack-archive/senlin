@@ -135,7 +135,8 @@ class Trigger(object):
 
     @classmethod
     def load_all(cls, ctx, limit=None, marker=None, sort_keys=None,
-                 sort_dir=None, filters=None, show_deleted=False):
+                 sort_dir=None, filters=None, project_safe=True,
+                 show_deleted=False):
         """Retrieve all trigger objects from database.
 
         Optionally, you can use some parameters to fine tune the query.
@@ -155,6 +156,7 @@ class Trigger(object):
         records = db_api.trigger_get_all(ctx, limit=limit, marker=marker,
                                          sort_keys=sort_keys,
                                          sort_dir=sort_dir, filters=filters,
+                                         project_safe=project_safe,
                                          show_deleted=show_deleted)
 
         for record in records:
