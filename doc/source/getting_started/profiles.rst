@@ -246,7 +246,7 @@ In general, a profile object should not be updated after creation. This is a
 restriction to keep cluster and node status consistent at any time. However,
 considering that there are cases where a user may want to change some
 properties of a profile, :program:`senlin` command line does support the
-:command:`profile-update` command. For example, the folowing command changes
+:command:`profile-update` command. For example, the following command changes
 the name of a profile to ``new_server``::
 
   $ senlin profile-update -n new_server -t os.nova.server myserver

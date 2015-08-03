@@ -19,7 +19,7 @@ when Senlin performs some operations on the objects it manages. The design
 goals of policy support in Senlin are flexibility and customizability. We
 strive to make the policies flexible so that we can accommodate diverse types
 of policies for various usage scenarios. We also want to make policy type
-developement an easier task for developers to introduce new policies and/or
+development an easier task for developers to introduce new policies and/or
 customize existing ones for their needs.
 
 

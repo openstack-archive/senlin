@@ -29,7 +29,7 @@
 #           operations that would be done when the policy is enforced. A
 #           violation of the policy will leave the cluster in a ``WARNING``
 #           status, which means that the cluster is still operational, but
-#           there are unsucessful operations attempted.
+#           there are unsuccessful operations attempted.
 #
 #  - MIGHT: A policy of this enforcement level is usually associated with
 #           certain operations that may or may not be done. A violation of
