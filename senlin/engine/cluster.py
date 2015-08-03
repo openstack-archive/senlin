@@ -12,7 +12,6 @@
 
 from oslo_config import cfg
 from oslo_log import log as logging
-from oslo_service import periodic_task
 from oslo_utils import timeutils
 
 from senlin.common import exception
@@ -27,7 +26,7 @@ LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
 
-class Cluster(periodic_task.PeriodicTasks):
+class Cluster(object):
     '''A cluster is a set of homogeneous objects of the same profile.
 
     All operations are performed without further checking because the
@@ -75,11 +74,6 @@ class Cluster(periodic_task.PeriodicTasks):
         self.status_reason = kwargs.get('status_reason', 'Initializing')
         self.data = kwargs.get('data', {})
         self.metadata = kwargs.get('metadata', {})
-
-        # TODO(anyone): Move these to health policy
-        self.detect_enabled = False
-        self.detect_interval = 1  # times of global periodic task interval.
-        self.detect_counter = 0
 
         # rt is a dict for runtime data
         # TODO(Qiming): nodes have to be reloaded when membership changes
@@ -300,42 +294,3 @@ class Cluster(periodic_task.PeriodicTasks):
         for p in self.rt['policies']:
             if(p.id == policy.id):
                 self.rt['policies'].remove(policy)
-
-    def healthy_check_enable(self):
-        self.detect_enabled = True
-
-    def healthy_check_disable(self):
-        self.detect_enabled = False
-
-    def healthy_check_set_interval(self, policy_interval):
-        detection_interval = (policy_interval +
-                              CONF.periodic_interval_max)
-
-        self.detection_inteval = (detection_interval /
-                                  CONF.periodic_interval_max)
-
-    @periodic_task.periodic_task
-    def healthy_check(self):
-        if(not self.detect_enabled):
-            return
-
-        if(self.detect_counter < self.detect_interval):
-            self.detect_counter += 1
-            return
-        self.detect_counter = 0
-
-        fails = 0
-        for nd in self.rt['nodes']:
-            if(nd.rt.profile.do_check(nd)):
-                continue
-
-            fails += 1
-
-        # TODO(Anyone):
-        # How to enforce the HA policy?
-        pass
-
-    def periodic_tasks(self, context, raise_on_error=False):
-        '''Tasks to be run at a periodic interval.'''
-
-        return self.run_periodic_tasks(context, raise_on_error=raise_on_error)

@@ -10,12 +10,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_service import periodic_task
+
 from senlin.common import constraints
 from senlin.common import consts
-from senlin.common import context
 from senlin.common.i18n import _
 from senlin.common import schema
-from senlin.engine import cluster as cluster_mod
 from senlin.policies import base
 
 
@@ -53,18 +53,18 @@ class HealthPolicy(base.Policy):
     )
 
     _RECOVERY_KEYS = (
-        RECOVERY_ACTIONS_KEY, RECOVERY_FENCING_KEY
+        RECOVERY_ACTIONS, RECOVERY_FENCING
     ) = (
         'actions', 'fencing'
     )
 
-    RECOVERY_ACTIONS = (
+    RECOVERY_ACTION_VALUES = (
         REBOOT, REBUILD, MIGRATE, EVACUATE, RECREATE, NOP
     ) = (
         'REBOOT', 'REBUILD', 'MIGRATE', 'EVACUATE', 'RECREATE', 'NOP',
     )
 
-    FENCING_OPTIONS = (
+    FENCING_OPTION_VALUES = (
         COMPUTE, STORAGE, NETWORK,
     ) = (
         'COMPUTE', 'STORAGE', 'NETWORK'
@@ -92,21 +92,21 @@ class HealthPolicy(base.Policy):
         RECOVERY: schema.Map(
             _('Policy aspect for node failure recovery.'),
             schema={
-                RECOVERY_ACTIONS_KEY: schema.List(
+                RECOVERY_ACTIONS: schema.List(
                     _('List of actions to try for node recovery.'),
                     schema=schema.String(
                         _('Action to try for node recovery.'),
                         constraints=[
-                            constraints.AllowedValues(RECOVERY_ACTIONS),
+                            constraints.AllowedValues(RECOVERY_ACTION_VALUES),
                         ]
                     ),
                 ),
-                RECOVERY_FENCING_KEY: schema.List(
+                RECOVERY_FENCING: schema.List(
                     _('List of services to be fenced.'),
                     schema=schema.String(
                         _('Service to be fenced.'),
                         constraints=[
-                            constraints.AllowedValues(FENCING_OPTIONS),
+                            constraints.AllowedValues(FENCING_OPTION_VALUES),
                         ],
                     ),
                 ),
@@ -125,22 +125,22 @@ class HealthPolicy(base.Policy):
 
         Initialize the health check mechanism for existing nodes in cluster.
         '''
-        cluster = cluster_mod.Cluster.load(context.get_current(),
-                                           cluster_id=cluster.id)
-        cluster.healthy_check_enable()
-        cluster.healthy_check_set_interval(self.interval)
+        data = {
+            'type': self.check_type,
+            'interval': self.interval,
+            'counter': 0,
+        }
 
-        return True
+        # TODO(anyone): register cluster for periodic checking
+        return True, self._build_policy_data(data)
 
     def detach(self, cluster):
         '''Hook for policy detach.
 
         Deinitialize the health check mechanism (for the cluster).
         '''
-        cluster = cluster_mod.Cluster.load(context.get_current(),
-                                           cluster_id=cluster.id)
-        cluster.healthy_check_disable()
-        return True
+        # TODO(anyone): deregister cluster from periodic checking
+        return True, ''
 
     def pre_op(self, cluster_id, action, **args):
         # Ignore actions that are not required to be processed at this stage
@@ -159,5 +159,25 @@ class HealthPolicy(base.Policy):
             return True
 
         # TODO(anyone): subscribe to vm-lifecycle-events for the specified VM
-        #                or add vm to the list of VM status polling
+        #               or add vm to the list of VM status polling
         return True
+
+    @periodic_task.periodic_task
+    def health_check(self):
+        if not self.detect_enabled:
+            return
+
+        if (self.detect_counter < self.detect_interval):
+            self.detect_counter += 1
+            return
+        self.detect_counter = 0
+
+        failures = 0
+        for n in self.rt['nodes']:
+            if(n.rt.profile.do_check(n)):
+                continue
+
+            failures += 1
+
+        # TODO(Anyone): How to enforce the HA policy?
+        pass
