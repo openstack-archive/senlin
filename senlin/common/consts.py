@@ -118,6 +118,16 @@ CLUSTER_POLICY_ATTRS = (
     'policy_id', 'priority', 'level', 'cooldown', 'enabled',
 )
 
+TRIGGER_ATTRS = (
+    TRIGGER_NAME, TRIGGER_TYPE, TRIGGER_DESC, TRIGGER_STATE,
+    TRIGGER_ENABLED, TRIGGER_SEVERITY, TRIGGER_SPEC,
+    TRIGGER_CREATED_TIME, TRIGGER_UPDATED_TIME, TRIGGER_DELETED_TIME,
+) = (
+    'name', 'type', 'desc', 'state',
+    'enabled', 'severity', 'spec',
+    'created_time', 'updated_time', 'deleted_time',
+)
+
 WEBHOOK_ATTRS = (
     WEBHOOK_NAME, WEBHOOK_OBJ_ID, WEBHOOK_OBJ_TYPE, WEBHOOK_ACTION,
     WEBHOOK_CREDENTIAL, WEBHOOK_PARAMS,

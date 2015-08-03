@@ -451,6 +451,76 @@ def node_delete(context, node_id, force=False):
     session.flush()
 
 
+# Triggers
+def trigger_create(context, values):
+    trigger = models.Trigger()
+    trigger.update(values)
+    trigger.save(_session(context))
+    return trigger
+
+
+def trigger_get(context, trigger_id, show_deleted=False):
+    query = soft_delete_aware_query(context, models.Trigger,
+                                    show_deleted=show_deleted)
+    trigger = query.filter_by(id=trigger_id).first()
+    return trigger
+
+
+def trigger_get_by_name(context, name, show_deleted=False):
+    return query_by_name(context, models.Trigger, name,
+                         show_deleted=show_deleted)
+
+
+def trigger_get_by_short_id(context, short_id, show_deleted=False):
+    return query_by_short_id(context, models.Trigger, short_id,
+                             show_deleted=show_deleted)
+
+
+def trigger_get_all(context, limit=None, marker=None, sort_keys=None,
+                    sort_dir=None, filters=None, show_deleted=False):
+    query = soft_delete_aware_query(context, models.Trigger,
+                                    show_deleted=show_deleted)
+
+    if filters is None:
+        filters = {}
+
+    sort_key_map = {
+        consts.TRIGGER_NAME: models.Trigger.name.key,
+        consts.TRIGGER_TYPE: models.Trigger.type.key,
+        consts.TRIGGER_STATE: models.Trigger.state.key,
+        consts.TRIGGER_ENABLED: models.Trigger.enabled.key,
+        consts.TRIGGER_CREATED_TIME: models.Trigger.created_time.key,
+        consts.TRIGGER_UPDATED_TIME: models.Trigger.updated_time.key,
+    }
+    keys = _get_sort_keys(sort_keys, sort_key_map)
+
+    query = db_filters.exact_filter(query, models.Trigger, filters)
+    return _paginate_query(context, query, models.Trigger,
+                           limit=limit, marker=marker,
+                           sort_keys=keys, sort_dir=sort_dir,
+                           default_sort_keys=['created_time']).all()
+
+
+def trigger_update(context, trigger_id, values):
+    trigger = model_query(context, models.Trigger).get(trigger_id)
+    if not trigger:
+        raise exception.TriggerNotFound(trigger=trigger_id)
+
+    trigger.update(values)
+    trigger.save(_session(context))
+    return trigger
+
+
+def trigger_delete(context, trigger_id, force=False):
+    session = _session(context)
+    trigger = session.query(models.Trigger).get(trigger_id)
+    if not trigger:
+        return
+
+    trigger.soft_delete(session=session)
+    session.flush()
+
+
 # Webhooks
 def webhook_create(context, values):
     webhook = models.Webhook()

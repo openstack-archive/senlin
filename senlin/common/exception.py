@@ -192,6 +192,10 @@ class SpecValidationFailed(SenlinException):
     msg_fmt = _("%(message)s")
 
 
+class TriggerNotFound(SenlinException):
+    msg_fmt = _("The trigger (%(trigger)s) could not be found.")
+
+
 class FeatureNotSupported(SenlinException):
     msg_fmt = _("%(feature)s is not supported.")
 
