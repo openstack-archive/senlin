@@ -308,7 +308,8 @@ class ServerProfile(base.Profile):
         if not obj.physical_id:
             return {}
 
-        metadata = self.nova(obj).server_metadata_get() or {}
+        metadata = self.nova(obj).server_metadata_get(
+            server_id=obj.physical_id) or {}
         metadata['cluster'] = cluster_id
         return self.nova(obj).server_metadata_update(**metadata)
 
@@ -316,7 +317,8 @@ class ServerProfile(base.Profile):
         if not obj.physical_id:
             return
 
-        metadata = self.nova(obj).server_metadata_get() or {}
+        metadata = self.nova(obj).server_metadata_get(
+            server_id=obj.physical_id) or {}
         if 'cluster' in metadata:
             del metadata['cluster']
         return self.nova(obj).server_metadata_update(**metadata)
