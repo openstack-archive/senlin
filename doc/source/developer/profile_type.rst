@@ -156,7 +156,7 @@ elements in the list, which can be a ``String``, a ``Boolean``, an
     ...
   }
 
-If a profile property is a ``Map``, you can futher define the "schema" of that
+If a profile property is a ``Map``, you can further define the "schema" of that
 map, which itself is another Python dictionary containing property
 definitions. For example:
 
