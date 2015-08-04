@@ -143,7 +143,7 @@ class LoadBalancerDriver(base.DriverBase):
             self._wait_for_lb_ready(lb_id)
 
         self.nc().loadbalancer_delete(lb_id)
-        self._wait_for_lb_ready(lb_id, True)
+        self._wait_for_lb_ready(lb_id, ignore_not_found=True)
 
         return True, _('LB deletion succeeded')
 
