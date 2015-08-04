@@ -155,6 +155,8 @@ def parse_exception(ex):
             msg = ex.message
         code = ex.message[1].errno
         message = msg
+    elif isinstance(ex, Exception):
+        message = six.text_type(ex)
 
     body = {
         'error': {
