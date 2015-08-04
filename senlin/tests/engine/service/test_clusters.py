@@ -751,22 +751,20 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, cid1, nodes1)
 
         # adding from the same cluster is not allowed
-        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exception.NodeNotOrphan, ex.exc_info[0])
         msg = _("Nodes %s owned by other cluster, need to delete them from "
                 "those clusters first.") % nodes1
-        self.assertEqual(_("The request is malformed: %(msg)s") % {'msg': msg},
-                         six.text_type(ex.exc_info[1]))
+        self.assertEqual(msg, six.text_type(ex.exc_info[1]))
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_add_nodes,
                                self.ctx, cid1, nodes2)
 
         # adding from a different cluster is not allowed either
-        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exception.NodeNotOrphan, ex.exc_info[0])
         msg = _("Nodes %s owned by other cluster, need to delete them from "
                 "those clusters first.") % nodes2
-        self.assertEqual(_("The request is malformed: %(msg)s") % {'msg': msg},
-                         six.text_type(ex.exc_info[1]))
+        self.assertEqual(msg, six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_add_nodes_node_profile_type_not_match(self, notify):
@@ -784,11 +782,10 @@ class ClusterTest(base.SenlinTestCase):
                                self.eng.cluster_add_nodes,
                                self.ctx, c['id'], nodes)
 
-        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exception.ProfileTypeNotMatch, ex.exc_info[0])
         msg = _("Profile type of nodes %s does not match with "
                 "cluster") % nodes
-        self.assertEqual(_("The request is malformed: %(msg)s") % {'msg': msg},
-                         six.text_type(ex.exc_info[1]))
+        self.assertEqual(msg, six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_del_nodes(self, notify):

@@ -614,16 +614,18 @@ class EngineService(service.Service):
                 pass
 
         error = None
-        if len(bad_nodes) > 0:
-            error = _("Nodes are not ACTIVE: %s") % bad_nodes
+        if len(not_match_nodes) > 0:
+            error = _("Profile type of nodes %s does not match with "
+                      "cluster") % not_match_nodes
+            raise exception.ProfileTypeNotMatch(message=error)
         elif len(owned_nodes) > 0:
             error = _("Nodes %s owned by other cluster, need to delete "
                       "them from those clusters first.") % owned_nodes
+            raise exception.NodeNotOrphan(message=error)
+        elif len(bad_nodes) > 0:
+            error = _("Nodes are not ACTIVE: %s") % bad_nodes
         elif len(not_found) > 0:
             error = _("Nodes not found: %s") % not_found
-        elif len(not_match_nodes) > 0:
-            error = _("Profile type of nodes %s does not match with "
-                      "cluster") % not_match_nodes
         elif len(found) == 0:
             error = _("No nodes to add: %s") % nodes
 

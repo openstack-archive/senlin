@@ -57,6 +57,7 @@ class FaultWrapper(wsgi.Middleware):
         'InvalidSchemaError': webob.exc.HTTPBadRequest,
         'MultipleChoices': webob.exc.HTTPBadRequest,
         'NodeNotFound': webob.exc.HTTPNotFound,
+        'NodeNotOrphan': webob.exc.HTTPConflict,
         'PolicyBindingNotFound': webob.exc.HTTPNotFound,
         'PolicyNotFound': webob.exc.HTTPNotFound,
         'PolicyTypeNotFound': webob.exc.HTTPNotFound,
