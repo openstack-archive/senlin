@@ -26,6 +26,8 @@ custom_profiles:
   prof_1: plugin_1
 custom_policies:
   policy_2: plugin_2
+custom_triggers:
+  trigger_3: plugin_3
 """
 
 
@@ -73,6 +75,10 @@ class TestEnvironment(base.SenlinTestCase):
             'custom_policies': {
                 'POLICY_Alpha': 'package.alpha',
                 'POLICY_Beta': 'package.beta',
+            },
+            'custom_triggers': {
+                'TRIGGER_1': 'module.1',
+                'TRIGGER_2': 'module.2',
             }
         }
 
@@ -84,6 +90,8 @@ class TestEnvironment(base.SenlinTestCase):
         self.assertEqual('other.class', e.get_profile('PROFILE_BAR'))
         self.assertEqual('package.alpha', e.get_policy('POLICY_Alpha'))
         self.assertEqual('package.beta', e.get_policy('POLICY_Beta'))
+        self.assertEqual('module.1', e.get_trigger('TRIGGER_1'))
+        self.assertEqual('module.2', e.get_trigger('TRIGGER_2'))
 
     def test_parse(self):
         env = environment.Environment()
@@ -93,6 +101,7 @@ class TestEnvironment(base.SenlinTestCase):
         self.assertEqual('vb', result['parameters']['pb'])
         self.assertEqual('plugin_1', result['custom_profiles']['prof_1'])
         self.assertEqual('plugin_2', result['custom_policies']['policy_2'])
+        self.assertEqual('plugin_3', result['custom_triggers']['trigger_3'])
 
         # unknown sections
         env_str = "variables:\n  p1: v1"
@@ -106,6 +115,7 @@ class TestEnvironment(base.SenlinTestCase):
         self.assertEqual('v1', result['parameters']['p1'])
         self.assertEqual({}, result['custom_profiles'])
         self.assertEqual({}, result['custom_policies'])
+        self.assertEqual({}, result['custom_triggers'])
 
     def test_load(self):
         env = environment.Environment()
@@ -123,12 +133,17 @@ class TestEnvironment(base.SenlinTestCase):
             },
             'custom_policies': {
                 'C2': 'class2',
+            },
+            'custom_triggers': {
+                'C3': 'class3',
             }
+
         }
         env.load(env_dict)
         self.assertEqual('V', env.params['P'])
         self.assertEqual('class1', env.get_profile('C1'))
         self.assertEqual('class2', env.get_policy('C2'))
+        self.assertEqual('class3', env.get_trigger('C3'))
 
     def test_check_plugin_name(self):
         env = environment.Environment()
@@ -199,6 +214,29 @@ class TestEnvironment(base.SenlinTestCase):
         self.assertIn({'name': 'foo'}, actual)
         self.assertIn({'name': 'bar'}, actual)
 
+    def test_register_and_get_trigger_types(self):
+        plugin = mock.Mock()
+        env = environment.Environment()
+
+        ex = self.assertRaises(exception.TriggerTypeNotFound,
+                               env.get_trigger, 'foo')
+        self.assertEqual('Trigger type (foo) is not found.',
+                         six.text_type(ex))
+
+        env.register_trigger('foo', plugin)
+        self.assertEqual(plugin, env.get_trigger('foo'))
+
+    def test_get_trigger_types(self):
+        env = environment.Environment()
+        plugin1 = mock.Mock()
+        env.register_trigger('foo', plugin1)
+        plugin2 = mock.Mock()
+        env.register_trigger('bar', plugin2)
+
+        actual = env.get_trigger_types()
+        self.assertIn({'name': 'foo'}, actual)
+        self.assertIn({'name': 'bar'}, actual)
+
     def test_read_global_environment(self):
         mock_dir = self.patchobject(glob, 'glob')
         mock_dir.return_value = ['/etc/senlin/environments/e.yaml']
@@ -260,7 +298,8 @@ class TestEnvironment(base.SenlinTestCase):
         environment.initialize()
 
         expected = [mock.call('senlin.profiles'),
-                    mock.call('senlin.policies')]
+                    mock.call('senlin.policies'),
+                    mock.call('senlin.triggers')]
 
         self.assertIsNotNone(environment._environment)
         self.assertEqual(expected, mock_mapping.call_args_list)
