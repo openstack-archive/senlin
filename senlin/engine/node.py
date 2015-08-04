@@ -18,7 +18,6 @@ from oslo_utils import timeutils
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
-from senlin.common.i18n import _LW
 from senlin.db import api as db_api
 from senlin.engine import event as event_mod
 from senlin.profiles import base as profile_base
@@ -225,9 +224,11 @@ class Node(object):
         elif status == self.DELETED:
             self.deleted_time = values['deleted_time'] = now
 
-        self.status = values['status'] = status
+        self.status = status
+        values['status'] = status
         if reason:
-            self.status_reason = values['status_reason'] = reason
+            self.status_reason = reason
+            values['status_reason'] = reason
         db_api.node_update(context, self.id, values)
 
     def get_details(self, context):
@@ -286,42 +287,40 @@ class Node(object):
             self.set_status(context, self.ERROR, reason='Deletion failed')
             return False
 
-    def do_update(self, context, new_profile_id):
-        if not new_profile_id:
-            raise exception.ProfileNotSpecified()
+    def do_update(self, context, params):
+        """Update a node's property.
 
-        if new_profile_id == self.profile_id:
-            return True
-
+        This function is supposed to be invoked from a NODE_UPDATE action.
+        :param dict params: parameters in a dictionary that may contain keys
+                            like 'new_profile_id', 'name', 'role', 'metadata'.
+        """
         if not self.physical_id:
-            return False
-
-        # Check if profile types match
-        old_profile = db_api.profile_get(context, self.profile_id)
-        new_profile = db_api.profile_get(context, new_profile_id)
-        if old_profile.type != new_profile.type:
-            event_mod.warning(_LW('Node cannot be updated to a different '
-                                  'profile type (%(oldt)s->%(newt)s)') %
-                              {'oldt': old_profile.type,
-                               'newt': new_profile.type})
             return False
 
         self.set_status(context, self.UPDATING,
                         reason='Update in progress')
+
+        new_profile_id = params.pop('new_profile_id', None)
         try:
-            res = profile_base.Profile.update_object(context, self,
-                                                     new_profile_id)
+            res = profile_base.Profile.update_object(
+                context, self, new_profile_id, **params)
         except exception.ResourceStatusError as ex:
             self._handle_exception(context, 'update', self.ERROR, ex)
             res = False
 
         if res:
-            self.rt['profile'] = profile_base.Profile.load(context,
-                                                           new_profile_id)
-            self.profile_id = new_profile_id
-            self.set_status(context, self.ACTIVE,
-                            reason='Update succeeded')
+            if 'name' in params:
+                self.name = params['name']
+            if 'role' in params:
+                self.role = params['role']
+            if 'metadata' in params:
+                self.metadata = params['metadata']
+
+            if new_profile_id:
+                self.profile_id = new_profile_id
             self.store(context)
+
+            self.set_status(context, self.ACTIVE, reason='Update succeeded')
 
         return res
 
