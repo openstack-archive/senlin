@@ -240,6 +240,10 @@ class EventNotFound(SenlinException):
     msg_fmt = _("The event (%(event)s) could not be found.")
 
 
+class NodeNotOrphan(SenlinException):
+    msg_fmt = _("%(message)s")
+
+
 class InternalError(SenlinException):
     '''A base class for internal exceptions in senlin.
 
