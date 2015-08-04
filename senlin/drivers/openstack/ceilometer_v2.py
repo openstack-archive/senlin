@@ -17,48 +17,33 @@ from senlin.drivers.openstack import sdk
 class CeilometerClient(base.DriverBase):
     '''Ceilometer V2 driver.'''
 
-    def __init__(self, context):
-        self.conn = sdk.create_connection(context)
+    def __init__(self, ctx):
+        self.conn = sdk.create_connection(ctx)
 
-    def alarm_create(self, **params):
-        try:
-            return self.conn.telemetry.create_alarm(**params)
-        except sdk.exc.HttpException as ex:
-            raise ex
+    @sdk.translate_exception
+    def alarm_create(self, **attrs):
+        return self.conn.telemetry.create_alarm(**attrs)
 
-    def alarm_delete(self, alarm_id, ignore_missing=True):
-        try:
-            return self.conn.telemetry.delete_alarm(
-                alarm_id, ignore_missing=ignore_missing)
-        except sdk.exc.HttpException as ex:
-            raise ex
+    @sdk.translate_exception
+    def alarm_delete(self, value, ignore_missing=True):
+        return self.conn.telemetry.delete_alarm(value, ignore_missing)
 
-    def alarm_find(self, name_or_id):
-        try:
-            return self.conn.telemetry.find_alarm(name_or_id)
-        except sdk.exc.HttpException as ex:
-            raise ex
+    @sdk.translate_exception
+    def alarm_find(self, name_or_id, ignore_missing=True):
+        return self.conn.telemetry.find_alarm(name_or_id, ignore_missing)
 
-    def alarm_get(self, alarm_id):
-        try:
-            return self.conn.telemetry.get_alarm(alarm_id)
-        except sdk.exc.HttpException as ex:
-            raise ex
+    @sdk.translate_exception
+    def alarm_get(self, value):
+        return self.conn.telemetry.get_alarm(value)
 
-    def alarm_list(self):
-        try:
-            return self.conn.telemetry.alarms()
-        except sdk.exc.HttpException as ex:
-            raise ex
+    @sdk.translate_exception
+    def alarm_list(self, **query):
+        return self.conn.telemetry.alarms(**query)
 
-    def alarm_update(self, alarm_id, **params):
-        try:
-            return self.conn.telemetry.update_alarm(alarm_id, **params)
-        except sdk.exc.HttpException as ex:
-            raise ex
+    @sdk.translate_exception
+    def alarm_update(self, value, **attrs):
+        return self.conn.telemetry.update_alarm(value, **attrs)
 
-    def sample_create(self, **params):
-        try:
-            return self.conn.telemetry.create_sample(**params)
-        except sdk.exc.HttpException as ex:
-            raise ex
+    @sdk.translate_exception
+    def sample_create(self, **attrs):
+        return self.conn.telemetry.create_sample(**attrs)

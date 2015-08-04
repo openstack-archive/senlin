@@ -13,6 +13,7 @@
 '''
 SDK Client
 '''
+import functools
 from oslo_config import cfg
 from oslo_log import log as logging
 import six
@@ -167,6 +168,19 @@ def parse_exception(ex):
         return inst(body)
     else:
         return HTTPException(body)
+
+
+def translate_exception(func):
+    """Decorator for exception translation."""
+
+    @functools.wraps(func)
+    def invoke_with_catch(driver, *args, **kwargs):
+        try:
+            return func(driver, *args, **kwargs)
+        except Exception as ex:
+            raise parse_exception(ex)
+
+    return invoke_with_catch
 
 
 def ignore_not_found(ex):
