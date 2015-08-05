@@ -21,7 +21,7 @@ from senlin.api.middleware import context
 from senlin.common import exception
 from senlin.tests.unit.common import base
 
-policy_path = os.path.dirname(os.path.realpath(__file__)) + "/../policy/"
+policy_path = os.path.dirname(os.path.realpath(__file__)) + "/policy/"
 
 
 class RequestContextMiddlewareTest(base.SenlinTestCase):
