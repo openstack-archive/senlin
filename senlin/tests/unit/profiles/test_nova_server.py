@@ -49,7 +49,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         kwargs = {
             'spec': self.spec
         }
-        profile = server.ServerProfile('StackProfile',
+        profile = server.ServerProfile('os.nova.server',
                                        'test-profile',
                                        **kwargs)
 
@@ -60,7 +60,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         kwargs = {
             'spec': self.spec
         }
-        profile = server.ServerProfile('StackProfile',
+        profile = server.ServerProfile('os.nova.server',
                                        'test-profile',
                                        **kwargs)
 
@@ -85,7 +85,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         kwargs = {
             'spec': self.spec
         }
-        profile = server.ServerProfile('StackProfile',
+        profile = server.ServerProfile('os.nova.server',
                                        'test-profile',
                                        **kwargs)
 
@@ -115,7 +115,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         kwargs = {
             'spec': self.spec
         }
-        profile = server.ServerProfile('StackProfile',
+        profile = server.ServerProfile('os.nova.server',
                                        'test-profile',
                                        **kwargs)
 
@@ -145,7 +145,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         kwargs = {
             'spec': self.spec
         }
-        profile = server.ServerProfile('StackProfile',
+        profile = server.ServerProfile('os.nova.server',
                                        'test-profile',
                                        **kwargs)
 
@@ -168,7 +168,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         kwargs = {
             'spec': self.spec
         }
-        profile = server.ServerProfile('StackProfile',
+        profile = server.ServerProfile('os.nova.server',
                                        'test-profile',
                                        **kwargs)
 
@@ -210,7 +210,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         kwargs = {
             'spec': self.spec
         }
-        profile = server.ServerProfile('StackProfile',
+        profile = server.ServerProfile('os.nova.server',
                                        'test-profile',
                                        **kwargs)
 
@@ -234,7 +234,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         kwargs = {
             'spec': self.spec
         }
-        profile = server.ServerProfile('StackProfile',
+        profile = server.ServerProfile('os.nova.server',
                                        'test-profile',
                                        **kwargs)
 

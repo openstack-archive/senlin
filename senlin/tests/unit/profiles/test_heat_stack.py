@@ -37,7 +37,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         kwargs = {
             'spec': self.spec
         }
-        profile = stack.StackProfile('StackProfile',
+        profile = stack.StackProfile('os.heat.stack',
                                      'test-profile',
                                      **kwargs)
 
@@ -48,7 +48,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         kwargs = {
             'spec': self.spec
         }
-        profile = stack.StackProfile('StackProfile',
+        profile = stack.StackProfile('os.heat.stack',
                                      'test-profile',
                                      **kwargs)
 
@@ -69,7 +69,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         kwargs = {
             'spec': self.spec
         }
-        profile = stack.StackProfile('StackProfile',
+        profile = stack.StackProfile('os.heat.stack',
                                      'test-profile',
                                      **kwargs)
 
@@ -83,7 +83,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         kwargs = {
             'spec': self.spec
         }
-        profile = stack.StackProfile('StackProfile',
+        profile = stack.StackProfile('os.heat.stack',
                                      'test-profile',
                                      **kwargs)
 
@@ -108,7 +108,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         kwargs = {
             'spec': self.spec
         }
-        profile = stack.StackProfile('StackProfile',
+        profile = stack.StackProfile('os.heat.stack',
                                      'test-profile',
                                      **kwargs)
 
@@ -127,7 +127,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         kwargs = {
             'spec': self.spec
         }
-        profile = stack.StackProfile('StackProfile',
+        profile = stack.StackProfile('os.heat.stack',
                                      'test-profile',
                                      **kwargs)
 
@@ -144,7 +144,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         kwargs = {
             'spec': self.spec
         }
-        profile = stack.StackProfile('StackProfile',
+        profile = stack.StackProfile('os.heat.stack',
                                      'test-profile',
                                      **kwargs)
 
@@ -167,7 +167,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         kwargs = {
             'spec': update_spec
         }
-        new_profile = stack.StackProfile('StackProfile',
+        new_profile = stack.StackProfile('os.heat.stack',
                                          'update-profile',
                                          **kwargs)
 
@@ -184,7 +184,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         kwargs = {
             'spec': self.spec
         }
-        profile = stack.StackProfile('StackProfile',
+        profile = stack.StackProfile('os.heat.stack',
                                      'test-profile',
                                      **kwargs)
         heat_client = mock.Mock()
@@ -220,7 +220,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         kwargs = {
             'spec': self.spec
         }
-        profile = stack.StackProfile('StackProfile',
+        profile = stack.StackProfile('os.heat.stack',
                                      'test-profile',
                                      **kwargs)
 
