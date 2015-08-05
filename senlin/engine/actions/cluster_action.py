@@ -180,6 +180,7 @@ class ClusterAction(base.Action):
 
         # Wait for nodes to complete update
         result = self.RES_OK
+        reason = 'Update completed'
         if len(node_list) > 0:
             result, reason = self._wait_for_dependents()
 
