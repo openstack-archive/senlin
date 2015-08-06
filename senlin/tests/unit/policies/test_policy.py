@@ -17,10 +17,15 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.db.sqlalchemy import api as db_api
+from senlin.engine import environment
 from senlin.policies import base as policy_base
 from senlin.policies import deletion_policy
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
+
+
+class DummyPolicy(policy_base.Policy):
+    spec_schema = {}
 
 
 class TestPolicy(base.SenlinTestCase):
@@ -343,6 +348,18 @@ class TestPolicy(base.SenlinTestCase):
             }
         }
         res = policy._extract_policy_data(policy_data)
+        self.assertIsNone(res)
+
+    def test_policy_default_pre_op(self):
+        environment.global_env().register_policy('DummyPolicy', DummyPolicy)
+        policy = policy_base.Policy('DummyPolicy', 'test-policy')
+        res = policy.pre_op('CLUSTER_ID', 'FOO')
+        self.assertIsNone(res)
+
+    def test_policy_default_post_op(self):
+        environment.global_env().register_policy('DummyPolicy', DummyPolicy)
+        policy = policy_base.Policy('DummyPolicy', 'test-policy')
+        res = policy.post_op('CLUSTER_ID', 'FOO')
         self.assertIsNone(res)
 
     def test_policy_attach(self):
