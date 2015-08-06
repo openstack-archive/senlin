@@ -144,6 +144,13 @@ class TestWebhook(base.SenlinTestCase):
         self.assertIsNotNone(result.created_time)
         self.assertIsNone(result.deleted_time)
 
+    def test_webhook_store_already_created(self):
+        webhook = webhook_mod.Webhook('test-obj-id', 'test-obj-type',
+                                      'test-action')
+        webhook.id = 'FAKE_ID'
+        webhook_id = webhook.store(self.context)
+        self.assertEqual('FAKE_ID', webhook_id)
+
     def test_webhook_load(self):
         ex = self.assertRaises(exception.WebhookNotFound,
                                webhook_mod.Webhook.load,
