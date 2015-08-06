@@ -128,7 +128,7 @@ class Alarm(base.Trigger):
 
     def validate(self):
         # validate cron expression if specified
-        if TIME_CONSTRAINTS in self.alarm_properties:
+        if TIME_CONSTRAINTS in self.spec:
             tc = self.alarm_properties[TIME_CONSTRAINTS]
             exp = tc.get(TC_START, '')
             try:
@@ -141,7 +141,7 @@ class Alarm(base.Trigger):
                 raise exc.InvalidSpec(message=msg)
 
         # validate timezone if specified.
-        if TIME_CONSTRAINTS in self.alarm_properties:
+        if TIME_CONSTRAINTS in self.spec:
             tc = self.alarm_properties[TIME_CONSTRAINTS]
             tz = tc.get(TC_TIMEZONE, '')
             try:
