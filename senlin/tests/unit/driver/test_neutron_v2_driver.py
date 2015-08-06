@@ -484,21 +484,31 @@ class TestNeutronV2Driver(base.SenlinTestCase):
         }
 
         self.conn.network.create_health_monitor.return_value = hm_obj
-        self.assertEqual(hm_obj, self.nc.healthmonitor_create(
-            hm_type, delay, timeout, max_retries, pool_id, **kwargs))
+        res = self.nc.healthmonitor_create(hm_type, delay, timeout,
+                                           max_retries, pool_id, **kwargs)
+        self.assertEqual(hm_obj, res)
         self.conn.network.create_health_monitor.assert_called_once_with(
             type=hm_type, delay=delay, timeout=timeout,
             max_retries=max_retries, pool_id=pool_id, **kwargs)
 
         # Use default input parameters
-        kwargs = {
-            'admin_state_up': True
-        }
-        self.assertEqual(hm_obj, self.nc.healthmonitor_create(
-            hm_type, delay, timeout, max_retries, pool_id))
+        res = self.nc.healthmonitor_create(hm_type, delay, timeout,
+                                           max_retries, pool_id,
+                                           admin_state_up=True)
+        self.assertEqual(hm_obj, res)
         self.conn.network.create_health_monitor.assert_called_with(
             type=hm_type, delay=delay, timeout=timeout,
-            max_retries=max_retries, pool_id=pool_id, **kwargs)
+            max_retries=max_retries, pool_id=pool_id,
+            admin_state_up=True)
+
+        # hm_type other than HTTP, then other params ignored
+        res = self.nc.healthmonitor_create('TCP', delay, timeout,
+                                           max_retries, pool_id, **kwargs)
+        self.assertEqual(hm_obj, res)
+        self.conn.network.create_health_monitor.assert_called_with(
+            type='TCP', delay=delay, timeout=timeout,
+            max_retries=max_retries, pool_id=pool_id,
+            admin_state_up=True)
 
         # Exception happened during creating progress
         exception_info = 'Exception happened when creating healthmonitor.'
