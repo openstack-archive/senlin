@@ -10,11 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import time
-
 import mock
 from oslo_config import cfg
-import six
 
 from senlin.drivers.openstack import nova_v2
 from senlin.drivers.openstack import sdk
@@ -242,46 +239,8 @@ class TestNovaV2(base.SenlinTestCase):
 
     def test_server_delete(self):
         d = nova_v2.NovaClient(self.ctx)
-        ex = sdk.exc.NotFoundException('message', details='boom',
-                                       status_code=404)
-        self.patchobject(d, 'server_get', side_effect=ex)
         d.server_delete('foo', True)
         self.compute.delete_server.assert_called_once_with('foo', True)
-
-    @mock.patch.object(time, 'sleep')
-    def test_server_delete_with_sleep(self, mock_sleep):
-        cfg.CONF.set_override('default_action_timeout', 15)
-
-        d = nova_v2.NovaClient(self.ctx)
-        effects = [
-            mock.Mock(),
-            mock.Mock(),
-            sdk.exc.NotFoundException('message', details='boom',
-                                      status_code=404)
-        ]
-        self.patchobject(d, 'server_get', side_effect=effects)
-        d.server_delete('foo', True)
-        self.compute.delete_server.assert_called_once_with('foo', True)
-
-        self.assertEqual(2, mock_sleep.call_count)
-
-    @mock.patch.object(time, 'sleep')
-    def test_server_delete_with_sleep_timeout(self, mock_sleep):
-        cfg.CONF.set_override('default_action_timeout', 2)
-
-        d = nova_v2.NovaClient(self.ctx)
-        effects = [
-            mock.Mock(),
-            mock.Mock(),
-            sdk.exc.NotFoundException('message', details='boom',
-                                      status_code=404)
-        ]
-        self.patchobject(d, 'server_get', side_effect=effects)
-        ex = self.assertRaises(sdk.HTTPInternalServerError,
-                               d.server_delete, 'foo', True)
-        self.assertEqual('ERROR(500): Server deletion timeout.',
-                         six.text_type(ex))
-        self.assertEqual(2, mock_sleep.call_count)
 
     def test_server_interface_create(self):
         d = nova_v2.NovaClient(self.ctx)

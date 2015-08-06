@@ -10,11 +10,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import time
+
 import mock
+from oslo_config import cfg
 import six
 
 from senlin.common import exception
 from senlin.drivers.openstack import nova_v2 as novaclient
+from senlin.drivers.openstack import sdk
 from senlin.profiles.os.nova import server
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -179,8 +183,53 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         self.assertTrue(profile.do_delete(test_server))
 
+    @mock.patch.object(time, 'sleep')
+    def test_wait_for_deletion_with_sleep(self, mock_sleep):
+        nc = mock.Mock()
+        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile._nc = nc
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+
+        nc.server_get.side_effect = [
+            mock.Mock(),
+            mock.Mock(),
+            sdk.HTTPNotFound(error='Boom')
+        ]
+
+        res = profile._wait_for_deletion(obj)
+        self.assertIsNone(res)
+        mock_calls = [mock.call('FAKE_ID')]
+        nc.server_get.assert_has_calls(mock_calls * 2)
+        self.assertEqual(2, mock_sleep.call_count)
+
+    @mock.patch.object(time, 'sleep')
+    def test_wait_for_deletion_with_sleep_timeout(self, mock_sleep):
+        cfg.CONF.set_override('default_action_timeout', 2)
+
+        nc = mock.Mock()
+        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile._nc = nc
+
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+
+        nc.server_get.side_effect = [
+            mock.Mock(),
+            mock.Mock(),
+            sdk.HTTPNotFound(error='Boom')
+        ]
+
+        ex = self.assertRaises(exception.ProfileOperationTimeout,
+                               profile._wait_for_deletion, obj)
+        self.assertEqual('Server deletion timeout.', six.text_type(ex))
+        mock_calls = [mock.call('FAKE_ID')]
+        nc.server_get.assert_has_calls(mock_calls * 2)
+        self.assertEqual(2, mock_sleep.call_count)
+
     def test_do_delete_successful(self):
         profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        self.patchobject(profile, '_wait_for_deletion')
 
         nc = mock.Mock()
         nc.server_delete.return_value = None
@@ -192,11 +241,12 @@ class TestNovaServerProfile(base.SenlinTestCase):
         res = profile.do_delete(test_server)
         self.assertTrue(res)
 
-    def test_do_delete_with_exception(self):
-        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
-
+    def test_do_delete_with_delete_exception(self):
         nc = mock.Mock()
+        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
         profile._nc = nc
+        self.patchobject(profile, '_wait_for_deletion')
+
         err = exception.ProfileOperationTimeout(message='timeout')
         nc.server_delete.side_effect = err
 
@@ -204,10 +254,25 @@ class TestNovaServerProfile(base.SenlinTestCase):
         obj.physical_id = 'FAKE_ID'
 
         # Test specific exception path
-        ex = self.assertRaises(exception.ProfileOperationTimeout,
-                               profile.do_delete, obj)
+        res = profile.do_delete(obj)
+        self.assertFalse(res)
         nc.server_delete.assert_called_once_with('FAKE_ID')
-        self.assertEqual('timeout', six.text_type(ex))
+
+    def test_do_delete_with_wait_exception(self):
+        nc = mock.Mock()
+        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile._nc = nc
+
+        err = exception.ProfileOperationTimeout(message='timeout')
+        self.patchobject(profile, '_wait_for_deletion', side_effect=err)
+
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+
+        # Test specific exception path
+        res = profile.do_delete(obj)
+        self.assertFalse(res)
+        nc.server_delete.assert_called_once_with('FAKE_ID')
 
     def test_do_update_successful(self):
         profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
