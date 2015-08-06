@@ -151,7 +151,6 @@ class ServerProfile(base.Profile):
                 },
             ),
         ),
-
         SCHEDULER_HINTS: schema.Map(
             _('A collection of key/value pairs to be associated with the '
               'Scheduler hints. Both key and value should be <=255 chars.'),
@@ -203,6 +202,8 @@ class ServerProfile(base.Profile):
         '''Create a server using the given profile.'''
         kwargs = {}
         for k in self.KEYS:
+            if k == self.CONTEXT:
+                continue
             if k in self.spec_data:
                 if self.spec_data[k] is not None:
                     kwargs[k] = self.spec_data[k]
