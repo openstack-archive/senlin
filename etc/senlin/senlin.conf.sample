@@ -169,6 +169,9 @@
 # (string value)
 #host = node1
 
+# Default cloud backend to use. (string value)
+#cloud_backend = openstack
+
 #
 # From senlin.common.config
 #
