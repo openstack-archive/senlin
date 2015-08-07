@@ -143,7 +143,7 @@ class ScalingOutPolicy(base.Policy):
             count = self.adjustment_number - current_size
         elif self.adjustment_type == consts.CHANGE_IN_CAPACITY:
             count = self.adjustment_number
-        elif self.adjustment_type == consts.CHANGE_IN_PERCENTAGE:
+        else:    # consts.CHANGE_IN_PERCENTAGE:
             count = int((self.adjustment_number * current_size) / 100.0)
             if count < self.adjustment_min_step:
                 count = self.adjustment_min_step
