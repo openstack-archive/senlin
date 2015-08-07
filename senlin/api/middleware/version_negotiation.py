@@ -38,13 +38,9 @@ class VersionNegotiationFilter(wsgi.Middleware):
     def process_request(self, req):
         """Process WSGI requests.
 
-        If there is a version identifier in the URI, simply
-        return the correct API controller, otherwise, if we
-        find an Accept: header, process it
+        If there is a version identifier in the URI, simply return the correct
+        API controller, otherwise, if we find an Accept: header, process it
         """
-        # See if a version identifier is in the URI passed to
-        # us already. If so, simply return the right version
-        # API controller
         msg = ("Processing request: %(method)s %(path)s Accept: "
                "%(accept)s" % {'method': req.method,
                                'path': req.path, 'accept': req.accept})
@@ -76,8 +72,8 @@ class VersionNegotiationFilter(wsgi.Middleware):
                 return self.versions_app
 
         accept = str(req.accept)
-        if accept.startswith('application/vnd.openstack.orchestration-'):
-            token_loc = len('application/vnd.openstack.orchestration-')
+        if accept.startswith('application/vnd.openstack.clustering-'):
+            token_loc = len('application/vnd.openstack.clustering-')
             accept_version = accept[token_loc:]
             match = self._match_version_string(accept_version, req)
             if match:
@@ -98,9 +94,10 @@ class VersionNegotiationFilter(wsgi.Middleware):
                     return self.versions_app
         else:
             if req.accept not in ('*/*', ''):
-                LOG.debug("Unknown accept header: %s..."
-                          "returning HTTP not found.", req.accept)
+                LOG.debug("Returning HTTP 404 due to unknown Accept header: "
+                          "%s ", req.accept)
             return webob.exc.HTTPNotFound()
+
         return None
 
     def _match_version_string(self, subject, req):
@@ -110,10 +107,9 @@ class VersionNegotiationFilter(wsgi.Middleware):
         number. If found, sets the api.major_version and api.minor_version
         environ variables.
 
-        Returns True if there was a match, false otherwise.
-
         :param subject: The string to check
         :param req: Webob.Request object
+        :returns: True if there was a match, false otherwise.
         """
         match = self.version_uri_regex.match(subject)
         if match:
@@ -122,4 +118,5 @@ class VersionNegotiationFilter(wsgi.Middleware):
             minor_version = int(minor_version)
             req.environ['api.major_version'] = major_version
             req.environ['api.minor_version'] = minor_version
+
         return match is not None

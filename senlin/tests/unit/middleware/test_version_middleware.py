@@ -105,8 +105,7 @@ class VersionNegotiationMiddlewareTest(base.SenlinTestCase):
         major_version = 1
         minor_version = 0
         request = webob.Request({'PATH_INFO': 'resource'})
-        request.headers['Accept'] = 'application/vnd.openstack.' \
-            'orchestration-v{0}.{1}'.format(major_version, minor_version)
+        request.headers['Accept'] = 'application/vnd.openstack.clustering-v1.0'
 
         response = version_negotiation.process_request(request)
 
@@ -118,19 +117,24 @@ class VersionNegotiationMiddlewareTest(base.SenlinTestCase):
         version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
         request = webob.Request({'PATH_INFO': 'resource'})
-        request.headers['Accept'] = 'application/vnd.openstack.' \
-            'orchestration-v2.0'
+        request.headers['Accept'] = 'application/vnd.openstack.clustering-v2.0'
 
         response = version_negotiation.process_request(request)
 
         self.assertIsInstance(response, VersionController)
+
+        request.headers['Accept'] = 'application/vnd.openstack.clustering-vab'
+        response = version_negotiation.process_request(request)
+        self.assertIsNone(response)
 
     def test_no_URI_version_accept_header_contains_invalid_MIME_type(self):
         version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
         request = webob.Request({'PATH_INFO': 'resource'})
         request.headers['Accept'] = 'application/invalidMIMEType'
-
         response = version_negotiation.process_request(request)
+        self.assertIsInstance(response, webob.exc.HTTPNotFound)
 
+        request.headers['Accept'] = ''
+        response = version_negotiation.process_request(request)
         self.assertIsInstance(response, webob.exc.HTTPNotFound)
