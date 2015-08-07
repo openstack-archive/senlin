@@ -22,7 +22,6 @@ from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.common import utils
 from senlin.drivers.openstack import nova_v2 as novaclient
-from senlin.drivers.openstack import sdk
 from senlin.profiles import base
 
 LOG = logging.getLogger(__name__)
@@ -254,7 +253,7 @@ class ServerProfile(base.Profile):
             try:
                 self.nova(obj).server_get(obj.physical_id)
             except Exception as ex:
-                if isinstance(ex, sdk.HTTPNotFound):
+                if ex.code == 404:
                     return
                 raise
             time.sleep(1)

@@ -26,6 +26,7 @@ from oslo_serialization import jsonutils
 from requests import exceptions as reqexc
 
 from senlin.common import context
+from senlin.common import exception
 from senlin.common.i18n import _
 
 USER_AGENT = 'senlin'
@@ -156,20 +157,10 @@ def parse_exception(ex):
         code = ex.message[1].errno
         message = msg
     elif isinstance(ex, Exception):
+        code = ex.message[1].errno
         message = six.text_type(ex)
 
-    body = {
-        'error': {
-            'code': code,
-            'message': message,
-        }
-    }
-
-    if code in _EXCEPTION_MAP:
-        inst = _EXCEPTION_MAP.get(code)
-        return inst(body)
-    else:
-        return HTTPException(body)
+    raise exception.InternalError(code=code, message=message)
 
 
 def translate_exception(func):

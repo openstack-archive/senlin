@@ -194,7 +194,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         nc.server_get.side_effect = [
             mock.Mock(),
             mock.Mock(),
-            sdk.HTTPNotFound(error='Boom')
+            exception.InternalError(code=404, message='Not found')
         ]
 
         res = profile._wait_for_deletion(obj)

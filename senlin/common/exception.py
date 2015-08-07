@@ -255,9 +255,14 @@ class InternalError(SenlinException):
     class should be translated to a user facing exception type if need to be
     made user visible.
     '''
+    msg_fmt = _('ERROR %(code)s happens for %(message)s.')
+    message = _('Internal error happens')
 
     def __init__(self, **kwargs):
         super(InternalError, self).__init__(**kwargs)
+        if 'code' in kwargs.keys():
+            self.code = kwargs.get('code', 500)
+            self.message = kwargs.get('message')
 
 
 class ResourceBusyError(InternalError):
