@@ -546,9 +546,9 @@ class EngineService(service.Service):
         db_cluster = self.cluster_find(context, identity)
         cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
 
-        update_cluster_properties(cluster)
         if profile_id is None or profile_id == cluster.profile_id:
-            # return if profile update is not needed
+            # Only update the other properties except profile
+            update_cluster_properties(cluster)
             return cluster.to_dict()
 
         if cluster.status == cluster.ERROR:
@@ -575,6 +575,9 @@ class EngineService(service.Service):
                                    inputs=inputs)
         action.store(context)
         dispatcher.start_action(context, action_id=action.id)
+        # Update the other properties after profile's update
+        # TODO(xuhaiwei): move the other properties update into start_action
+        update_cluster_properties(cluster)
 
         result = cluster.to_dict()
         result['action'] = action.id
