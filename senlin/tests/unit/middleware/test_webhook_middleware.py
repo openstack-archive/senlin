@@ -24,13 +24,6 @@ from senlin.engine import webhook as webhook_mod
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
-'''
-A valid webhook_url looks like this:
-
-    http://172.16.100.85:8778/v1/<TENANT_ID>/webhooks/<WEBHOOK_ID>/trigger?\
-    key=<KEY>
-'''
-
 
 class TestWebhookMiddleware(base.SenlinTestCase):
 
@@ -55,39 +48,37 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         }
 
     def _generate_url(self):
-        url_slices = sorted(self.url_slices.items(), key=lambda d: d[0],
-                            reverse=False)
-        return ''.join([s[1] for s in url_slices])
+        slices = sorted(self.url_slices.items(), key=lambda d: d[0])
+        return ''.join(s[1] for s in slices)
 
-    def test_extract_webhook_id(self):
-
+    def test_extract_webhook_id_okay(self):
         # Get webhook_id correctly
         res = self.middleware._extract_webhook_id(self._generate_url())
         self.assertEqual(self.url_slices['03_webhook_id'], res)
 
+    def test_extract_webhook_id_webhookid_not_found(self):
         # String 'webhooks' is not found in url
         self.url_slices['02_webhook_str'] = '/foo/'
         res = self.middleware._extract_webhook_id(self._generate_url())
         self.assertIsNone(res)
-        self.url_slices['02_webhook_str'] = '/webhooks/'
 
+    def test_extract_webhook_id_trigger_not_found(self):
         # String 'trigger' is not found in url
         self.url_slices['04_trigger_str'] = '/foo?'
         res = self.middleware._extract_webhook_id(self._generate_url())
         self.assertIsNone(res)
-        self.url_slices['04_trigger_str'] = '/trigger?'
 
-        # The structure /<webhook_id>/trigger?key=value is not matched
+    def test_extract_webhook_id_illegal_format(self):
+        # The structure /<webhook_id>?key=value is not matched
         self.url_slices['02_webhook_str'] = '/webhook'
         res = self.middleware._extract_webhook_id(self._generate_url())
         self.assertIsNone(res)
-        self.url_slices['02_webhook_str'] = '/webhooks/'
 
+    def test_extract_webhook_id_no_trigger_word(self):
         # Bottom string of the url does not start with 'trigger'
         self.url_slices['04_trigger_str'] = '/foo-trigger?'
         res = self.middleware._extract_webhook_id(self._generate_url())
         self.assertIsNone(res)
-        self.url_slices['04_trigger_str'] = '/trigger?'
 
     @mock.patch.object(policy, 'enforce')
     def test_get_credential_succeed(self, mock_enforce):
@@ -175,47 +166,75 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         self.assertRaises(exception.Forbidden, self.middleware._get_token,
                           self.credential)
 
-    @mock.patch.object(webhook_middleware.WebhookMiddleware, '_get_token')
-    @mock.patch.object(policy, 'enforce')
-    def test_process_request(self, mock_enforce, mock_get_token):
-        mock_get_token.return_value = 'TEST_TOKEN'
-        kwargs = {
-            'id': None,
-            'name': 'test-webhook',
-            'created_time': timeutils.utcnow(),
-            'deleted_time': None,
-            'credential': jsonutils.dumps(self.credential),
-            'params': {}
-        }
-        webhook = webhook_mod.Webhook('test-obj-id', 'test-obj-type',
-                                      'test-action', context=self.context,
-                                      **kwargs)
-        key = webhook.encrypt_credential()
-        webhook.store(self.context)
+    def test_process_request(self):
         req = mock.Mock()
+        req.method = 'POST'
+        req.url = 'http://url1'
+        req.params = {'key': 'FAKE_KEY'}
+        req.headers = {}
 
+        mock_extract = self.patchobject(self.middleware, '_extract_webhook_id',
+                                        return_value='FAKE_ID')
+        mock_cred = self.patchobject(self.middleware, '_get_credential',
+                                     return_value='FAKE_CREDENTIAL')
+        mock_token = self.patchobject(self.middleware, '_get_token',
+                                      return_value='FAKE_TOKEN')
+
+        res = self.middleware.process_request(req)
+        self.assertIsNone(res)
+        self.assertEqual('FAKE_TOKEN', req.headers['X-Auth-Token'])
+        mock_extract.assert_called_once_with('http://url1')
+        mock_cred.assert_called_once_with('FAKE_ID', 'FAKE_KEY')
+        mock_token.assert_called_once_with('FAKE_CREDENTIAL')
+
+    def test_process_request_method_not_post(self):
         # Request method is not POST
+        req = mock.Mock()
         req.method = 'GET'
-        req.params = {'key': key}
-        req.headers = {}
-        req.url = self._generate_url().replace('TEST_WEBHOOK_ID', webhook.id)
         res = self.middleware.process_request(req)
         self.assertIsNone(res)
         self.assertNotIn('X-Auth-Token', req.headers)
 
-        # Parameter 'key' is not provided
+    def test_process_request_no_webhook_id(self):
+        # no webhook_id extracted
+        req = mock.Mock()
         req.method = 'POST'
+        req.url = 'http://url1'
+        mock_extract = self.patchobject(self.middleware, '_extract_webhook_id',
+                                        return_value=None)
+
+        res = self.middleware.process_request(req)
+        self.assertIsNone(res)
+        mock_extract.assert_called_once_with(req.url)
+        self.assertNotIn('X-Auth-Token', req.headers)
+
+    def test_process_request_no_key(self):
+        # no key found
+        req = mock.Mock()
+        req.method = 'POST'
+        req.url = 'http://url1'
         req.params = {}
-        req.headers = {}
-        req.url = self._generate_url().replace('TEST_WEBHOOK_ID', webhook.id)
+        mock_extract = self.patchobject(self.middleware, '_extract_webhook_id',
+                                        return_value='FAKE_ID')
+
         res = self.middleware.process_request(req)
         self.assertIsNone(res)
+        mock_extract.assert_called_once_with(req.url)
         self.assertNotIn('X-Auth-Token', req.headers)
 
-        # Get token successfully
+    def test_process_request_no_credential(self):
+        req = mock.Mock()
         req.method = 'POST'
-        req.params = {'key': key}
+        req.url = 'http://url1'
+        req.params = {'key': 'FAKE_KEY'}
         req.headers = {}
-        req.url = self._generate_url().replace('TEST_WEBHOOK_ID', webhook.id)
+        mock_extract = self.patchobject(self.middleware, '_extract_webhook_id',
+                                        return_value='FAKE_ID')
+        mock_cred = self.patchobject(self.middleware, '_get_credential',
+                                     return_value=None)
+
         res = self.middleware.process_request(req)
-        self.assertEqual('TEST_TOKEN', req.headers['X-Auth-Token'])
+        self.assertIsNone(res)
+        mock_extract.assert_called_once_with(req.url)
+        mock_cred.assert_called_once_with('FAKE_ID', 'FAKE_KEY')
+        self.assertNotIn('X-Auth-Token', req.headers)
