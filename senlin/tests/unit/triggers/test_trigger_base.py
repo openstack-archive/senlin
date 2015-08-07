@@ -12,7 +12,9 @@
 
 import mock
 from oslo_utils import timeutils
+import six
 
+from senlin.common import exception
 from senlin.common import schema
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import environment
@@ -94,7 +96,7 @@ class TestTriggerBase(test_base.SenlinTestCase):
                                              updated_time=timestamp)
 
         self.assertIsNotNone(db_trigger)
-        res = base.Trigger.load(self.ctx, db_trigger.id)
+        res = base.Trigger.load(self.ctx, trigger_id=db_trigger.id)
 
         self.assertIsInstance(res, base.Trigger)
         self.assertEqual('FAKE_ID', res.id)
@@ -113,6 +115,18 @@ class TestTriggerBase(test_base.SenlinTestCase):
         self.assertEqual(spec['type'], res.spec_data['type'])
         self.assertEqual(str(spec['version']), res.spec_data['version'])
         self.assertEqual(spec['rule'], res.spec_data['rule'])
+
+        # load trigger via db trigger object
+        res = base.Trigger.load(self.ctx, db_trigger=db_trigger)
+        self.assertIsInstance(res, base.Trigger)
+        self.assertEqual('FAKE_ID', res.id)
+
+    def test_load_not_found(self):
+        ex = self.assertRaises(exception.TriggerNotFound,
+                               base.Trigger.load,
+                               self.ctx, trigger_id='Bogus')
+        self.assertEqual('The trigger (Bogus) could not be found.',
+                         six.text_type(ex))
 
     def test_load_all(self):
         self._create_db_trigger('ID_1')
