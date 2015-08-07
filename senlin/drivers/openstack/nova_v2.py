@@ -10,11 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import time
-
 from oslo_config import cfg
 
-from senlin.common.i18n import _
 from senlin.drivers import base
 from senlin.drivers.openstack import sdk
 
@@ -115,21 +112,7 @@ class NovaClient(base.DriverBase):
 
     @sdk.translate_exception
     def server_delete(self, value, ignore_missing=True):
-        # TODO(Qiming): Need to find a better way to handle not found
-        #               exception, maybe the wait is not necessary
-        timeout = cfg.CONF.default_action_timeout
-
-        self.conn.compute.delete_server(value, ignore_missing)
-        sleep_count = 0
-        while sleep_count < timeout:
-            try:
-                self.server_get(value)
-            except sdk.exc.NotFoundException:
-                return
-            time.sleep(1)
-            sleep_count += 1
-
-        raise Exception(_('Server deletion timeout.'))
+        return self.conn.compute.delete_server(value, ignore_missing)
 
     @sdk.translate_exception
     def server_interface_create(self, **attrs):

@@ -10,6 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import time
+
+from oslo_config import cfg
 from oslo_context import context
 from oslo_log import log as logging
 import six
@@ -19,6 +22,7 @@ from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.common import utils
 from senlin.drivers.openstack import nova_v2 as novaclient
+from senlin.drivers.openstack import sdk
 from senlin.profiles import base
 
 LOG = logging.getLogger(__name__)
@@ -243,6 +247,22 @@ class ServerProfile(base.Profile):
 
         return server.id
 
+    def _wait_for_deletion(self, obj):
+        timeout = cfg.CONF.default_action_timeout
+        sleep_count = 0
+        while sleep_count < timeout:
+            try:
+                self.nova(obj).server_get(obj.physical_id)
+            except Exception as ex:
+                if isinstance(ex, sdk.HTTPNotFound):
+                    return
+                raise
+            time.sleep(1)
+            sleep_count += 1
+
+        raise exception.ProfileOperationTimeout(
+            message='Server deletion timeout.')
+
     def do_delete(self, obj):
         self.server_id = obj.physical_id
 
@@ -251,9 +271,10 @@ class ServerProfile(base.Profile):
 
         try:
             self.nova(obj).server_delete(self.server_id)
+            self._wait_for_deletion(obj)
         except Exception as ex:
-            LOG.error('error: %s' % six.text_type(ex))
-            raise ex
+            LOG.error('Error: %s' % six.text_type(ex))
+            return False
 
         return True
 
