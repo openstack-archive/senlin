@@ -68,6 +68,10 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cfgopts = DummyConfig()
         self.controller = policies.PolicyController(options=cfgopts)
 
+    def test_policy_default(self, mock_enforce):
+        req = self._get('/policies')
+        self.assertRaises(exc.HTTPNotFound, self.controller.default, req)
+
     def test_policy_index_normal(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/policies')
@@ -427,6 +431,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'policy': {
                 'name': 'policy-2',
                 'level': 20,
+                'cooldown': 70,
             }
         }
 
@@ -445,7 +450,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'created_time': u'2015-02-25T16:20:13Z',
             u'updated_time': None,
             u'deleted_time': None,
-            u'cooldown': 60,
+            u'cooldown': 70,
         }
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -457,11 +462,51 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         args = copy.deepcopy(body['policy'])
         args['identity'] = pid
         args['level'] = 20
-        args['cooldown'] = None
+        args['cooldown'] = 70
         mock_call.assert_called_with(req.context, ('policy_update', args))
 
         expected = {'policy': engine_resp}
         self.assertEqual(expected, result)
+
+    def test_policy_update_with_no_level(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        pid = 'aaaa-bbbb-cccc'
+        body = {'policy': {'cooldown': 70}}
+
+        req = self._put('/policies/%(pid)s' % {'pid': pid}, json.dumps(body))
+
+        engine_resp = mock.Mock()
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=engine_resp)
+        result = self.controller.update(req, tenant_id=self.project,
+                                        policy_id=pid, body=body)
+
+        args = {
+            'identity': pid,
+            'name': None,
+            'level': None,
+            'cooldown': 70,
+        }
+        mock_call.assert_called_with(req.context, ('policy_update', args))
+
+        expected = {'policy': engine_resp}
+        self.assertEqual(expected, result)
+
+    def test_policy_update_with_bad_body(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        pid = 'aaaa-bbbb-cccc'
+        body = {'foo': 'bar'}
+        req = self._patch('/policies/%(pid)s' % {'pid': pid}, json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.update,
+                               req, tenant_id=self.project, policy_id=pid,
+                               body=body)
+
+        self.assertEqual("Malformed request data, missing 'policy' key in "
+                         "request body.", six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     def test_policy_update_with_spec(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
