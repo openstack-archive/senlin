@@ -10,10 +10,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import base64
 import time
 
 import mock
 from oslo_config import cfg
+from oslo_utils import encodeutils
 import six
 
 from senlin.common import exception
@@ -158,6 +160,9 @@ class TestNovaServerProfile(base.SenlinTestCase):
                      security_groups=['HIGH_SECURITY_GROUP'],
                      timeout=120,
                      user_data='FAKE_USER_DATA')
+
+        ud = encodeutils.safe_encode('FAKE_USER_DATA')
+        attrs['user_data'] = encodeutils.safe_decode(base64.b64encode(ud))
 
         nc.server_create.assert_called_once_with(**attrs)
         self.assertEqual(nova_server.id, server_id)

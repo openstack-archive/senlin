@@ -10,11 +10,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import base64
 import time
 
 from oslo_config import cfg
 from oslo_context import context
 from oslo_log import log as logging
+from oslo_utils import encodeutils
 import six
 
 from senlin.common import exception
@@ -239,6 +241,10 @@ class ServerProfile(base.Profile):
 
         if self.SCHEDULER_HINTS in self.spec_data:
             kwargs['scheduler_hints'] = self.spec_data[self.SCHEDULER_HINTS]
+
+        if self.USER_DATA in self.spec_data:
+            ud = encodeutils.safe_encode(self.spec_data[self.USER_DATA])
+            kwargs['user_data'] = encodeutils.safe_decode(base64.b64encode(ud))
 
         LOG.info('Creating server: %s' % kwargs)
         server = self.nova(obj).server_create(**kwargs)
