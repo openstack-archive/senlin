@@ -28,6 +28,9 @@ from senlin.tests.unit.common import base
 class ProfileDataTest(base.SenlinTestCase):
     def test_profile_data(self):
         body = {
+            'context': {
+                'region': 'region1',
+            },
             'name': 'test_profile',
             'spec': {
                 'param1': 'value1',
@@ -43,6 +46,7 @@ class ProfileDataTest(base.SenlinTestCase):
         self.assertEqual('test_profile_type', data.type())
         self.assertIsNone(data.permission())
         self.assertEqual({}, data.metadata())
+        self.assertEqual({'region': 'region1'}, data.context())
 
     def test_required_fields_missing(self):
         body = {'not a profile name': 'wibble'}
@@ -52,6 +56,7 @@ class ProfileDataTest(base.SenlinTestCase):
         self.assertRaises(exc.HTTPBadRequest, data.type)
         self.assertIsNone(data.permission())
         self.assertIsNone(data.metadata())
+        self.assertIsNone(data.context())
 
 
 @mock.patch.object(policy, 'enforce')
@@ -64,6 +69,10 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         cfgopts = DummyConfig()
         self.controller = profiles.ProfileController(options=cfgopts)
+
+    def test_profile_default(self, mock_enforce):
+        req = self._get('/profiles')
+        self.assertRaises(exc.HTTPNotFound, self.controller.default, req)
 
     def test_profile_index_normal(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -465,6 +474,20 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         expected = {'profile': engine_resp}
         self.assertEqual(expected, result)
 
+    def test_profile_update_no_body(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        pid = 'aaaa-bbbb-cccc'
+        body = {'foo': 'bar'}
+        req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
+                        json.dumps(body))
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.update, req,
+                               tenant_id=self.project, profile_id=pid,
+                               body=body)
+        self.assertEqual("Malformed request data, missing 'profile' key in "
+                         "request body.", six.text_type(ex))
+
     def test_profile_update_no_name(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         pid = 'aaaa-bbbb-cccc'
@@ -629,6 +652,24 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ProfileNotFound', resp.json['error']['type'])
+
+    def test_profile_delete_resource_in_use(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete', True)
+        pid = 'aaaa-bbbb-cccc'
+        req = self._delete('/profiles/%(profile_id)s' % {'profile_id': pid})
+
+        error = senlin_exc.ResourceInUse(resource_type='profile',
+                                         resource_id=pid)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.delete,
+                                              req, tenant_id=self.project,
+                                              profile_id=pid)
+
+        self.assertEqual(409, resp.json['code'])
+        self.assertEqual('ResourceInUse', resp.json['error']['type'])
 
     def test_profile_delete_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', False)
