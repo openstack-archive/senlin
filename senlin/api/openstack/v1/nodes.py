@@ -45,10 +45,7 @@ class NodeData(object):
         return self.data[consts.NODE_NAME]
 
     def cluster_id(self):
-        # cluster_id can be empty, which means the node is an orphaned node
-        if consts.NODE_CLUSTER_ID not in self.data:
-            return None
-        return self.data[consts.NODE_CLUSTER_ID]
+        return self.data.get(consts.NODE_CLUSTER_ID, None)
 
     def profile_id(self):
         if consts.NODE_PROFILE_ID not in self.data:
@@ -56,14 +53,10 @@ class NodeData(object):
         return self.data[consts.NODE_PROFILE_ID]
 
     def role(self):
-        if consts.NODE_ROLE not in self.data:
-            return None
-        return self.data[consts.NODE_ROLE]
+        return self.data.get(consts.NODE_ROLE, None)
 
     def metadata(self):
-        if consts.NODE_METADATA not in self.data:
-            return {}
-        return self.data[consts.NODE_METADATA]
+        return self.data.get(consts.NODE_METADATA, None)
 
 
 class NodeController(object):
@@ -128,7 +121,7 @@ class NodeController(object):
     def create(self, req, body):
         node_data = body.get('node')
         if node_data is None:
-            raise exc.HTTPBadRequest(_("Malformed request data, missing"
+            raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'node' key in request body."))
 
         data = NodeData(node_data)
@@ -148,9 +141,6 @@ class NodeController(object):
 
         node = self.rpc_client.node_get(req.context, node_id,
                                         show_details=show_details)
-        if not node:
-            raise exc.HTTPNotFound()
-
         return {'node': node}
 
     @util.policy_enforce
@@ -165,10 +155,10 @@ class NodeController(object):
                                        "please invoke node join/leave actions "
                                        "if needed."))
 
-        name = node_data.get(consts.NODE_NAME)
-        profile_id = node_data.get(consts.NODE_PROFILE_ID)
-        role = node_data.get(consts.NODE_ROLE)
-        metadata = node_data.get(consts.NODE_METADATA)
+        name = node_data.get(consts.NODE_NAME, None)
+        profile_id = node_data.get(consts.NODE_PROFILE_ID, None)
+        role = node_data.get(consts.NODE_ROLE, None)
+        metadata = node_data.get(consts.NODE_METADATA, None)
 
         self.rpc_client.node_update(req.context, node_id, name, profile_id,
                                     role, metadata)
@@ -180,10 +170,10 @@ class NodeController(object):
         '''Perform specified action on a node.'''
         body = body or {}
         if len(body) == 0:
-            raise exc.HTTPBadRequest(_('No action specified'))
+            raise exc.HTTPBadRequest(_('No action specified.'))
 
         if len(body) > 1:
-            raise exc.HTTPBadRequest(_('Multiple actions specified'))
+            raise exc.HTTPBadRequest(_('Multiple actions specified.'))
 
         this_action = list(body.keys())[0]
         if this_action not in self.SUPPORTED_ACTIONS:
@@ -193,13 +183,10 @@ class NodeController(object):
         if this_action == self.NODE_JOIN:
             cluster_id = body.get(this_action).get('cluster_id')
             if cluster_id is None:
-                raise exc.HTTPBadRequest(_('No cluster specified'))
+                raise exc.HTTPBadRequest(_('No cluster specified.'))
             res = self.rpc_client.node_join(req.context, node_id, cluster_id)
-        elif this_action == self.NODE_LEAVE:
+        else:    # self.NODE_LEAVE
             res = self.rpc_client.node_leave(req.context, node_id)
-        else:
-            raise exc.HTTPInternalServerError(_('Unexpected action "%s"'),
-                                              this_action)
 
         return res
 
@@ -208,10 +195,7 @@ class NodeController(object):
         force = 'force' in req.params
         action = self.rpc_client.node_delete(req.context, node_id, force=force,
                                              cast=False)
-        if action:
-            return action
-
-        raise exc.HTTPNoContent()
+        return action
 
 
 def create_resource(options):
