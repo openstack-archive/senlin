@@ -98,6 +98,20 @@ class ScalingInPolicy(base.Policy):
             msg = _('Adjustment number cannot be negative value.')
             raise exception.InvalidSpec(message=msg)
 
+    def _calculate_adjustment_count(self, current_size):
+        '''Calculate adjustment count based on current_size'''
+
+        if self.adjustment_type == consts.EXACT_CAPACITY:
+            count = current_size - self.adjustment_number
+        elif self.adjustment_type == consts.CHANGE_IN_CAPACITY:
+            count = self.adjustment_number
+        else:   # consts.CHANGE_IN_PERCENTAGE:
+            count = int((self.adjustment_number * current_size) / 100.0)
+            if count < self.adjustment_min_step:
+                count = self.adjustment_min_step
+
+        return count
+
     def pre_op(self, cluster_id, action):
         cluster = db_api.cluster_get(action.context, cluster_id)
         nodes = db_api.node_get_all_by_cluster(action.context, cluster_id)
@@ -134,17 +148,3 @@ class ScalingInPolicy(base.Policy):
         action.store(action.context)
 
         return
-
-    def _calculate_adjustment_count(self, current_size):
-        '''Calculate adjustment count based on current_size'''
-
-        if self.adjustment_type == consts.EXACT_CAPACITY:
-            count = current_size - self.adjustment_number
-        elif self.adjustment_type == consts.CHANGE_IN_CAPACITY:
-            count = self.adjustment_number
-        elif self.adjustment_type == consts.CHANGE_IN_PERCENTAGE:
-            count = int((self.adjustment_number * current_size) / 100.0)
-            if count < self.adjustment_min_step:
-                count = self.adjustment_min_step
-
-        return count

@@ -19,7 +19,7 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.db.sqlalchemy import api as db_api
 from senlin.policies import base as policy_base
-from senlin.policies import scaling_in_policy
+from senlin.policies import scaling_in_policy as sip
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -92,15 +92,10 @@ class TestScalingInPolicy(base.SenlinTestCase):
         return nodes
 
     def test_policy_init(self):
-        kwargs = {
-            'spec': self.spec
-        }
-        policy = scaling_in_policy.ScalingInPolicy('ScalingInPolicy',
-                                                   'test-policy',
-                                                   **kwargs)
+        policy = sip.ScalingInPolicy('ScalingInPolicy', 'p1', spec=self.spec)
 
         self.assertIsNone(policy.id)
-        self.assertEqual('test-policy', policy.name)
+        self.assertEqual('p1', policy.name)
         self.assertEqual('ScalingInPolicy', policy.type)
         adjustment = self.spec['adjustment']
         self.assertEqual(adjustment['type'], policy.adjustment_type)
@@ -111,53 +106,42 @@ class TestScalingInPolicy(base.SenlinTestCase):
         self.assertEqual(adjustment['best_effort'], policy.best_effort)
 
     def test_policy_init_default_value(self):
-        kwargs = {
-            'spec': {'adjustment': {}}
-        }
-        policy = scaling_in_policy.ScalingInPolicy('ScalingInPolicy',
-                                                   'test-policy',
-                                                   **kwargs)
+        spec = {'adjustment': {}}
+        policy = sip.ScalingInPolicy('ScalingInPolicy', 'p1', spec=spec)
 
         self.assertIsNone(policy.id)
-        self.assertEqual('test-policy', policy.name)
         self.assertEqual('ScalingInPolicy', policy.type)
+        self.assertEqual('p1', policy.name)
         self.assertEqual(consts.CHANGE_IN_CAPACITY, policy.adjustment_type)
         self.assertEqual(1, policy.adjustment_number)
         self.assertEqual(1, policy.adjustment_min_step)
         self.assertEqual(False, policy.best_effort)
 
     def test_policy_validate(self):
-        self.spec['adjustment']['number'] = -1
-        kwargs = {
-            'spec': self.spec
-        }
-        policy = scaling_in_policy.ScalingInPolicy('ScalingInPolicy',
-                                                   'test-policy',
-                                                   **kwargs)
+        policy = sip.ScalingInPolicy('ScalingInPolicy', 'p', spec=self.spec)
+        self.assertIsNone(policy.validate())
 
-        self.assertRaises(exception.InvalidSpec, policy.validate)
+        # negative number not acceptable
+        self.spec['adjustment']['number'] = -1
+        policy = sip.ScalingInPolicy('ScalingInPolicy', 'p', spec=self.spec)
+
+        ex = self.assertRaises(exception.InvalidSpec, policy.validate)
+        self.assertEqual('Adjustment number cannot be negative value.',
+                         six.text_type(ex))
 
     def test_calculate_adjustment_count(self):
-        kwargs = {
-            'spec': self.spec
-        }
-
         # adjustment_type as EXACT_CAPACITY
         current_size = 3
         self.spec['adjustment']['type'] = consts.EXACT_CAPACITY
         self.spec['adjustment']['number'] = 1
-        policy = scaling_in_policy.ScalingInPolicy('ScalingInPolicy',
-                                                   'test-policy',
-                                                   **kwargs)
+        policy = sip.ScalingInPolicy('ScalingInPolicy', 'p1', spec=self.spec)
         count = policy._calculate_adjustment_count(current_size)
         self.assertEqual(2, count)
 
         # adjustment_type is CHANGE_IN_CAPACITY
         self.spec['adjustment']['type'] = consts.CHANGE_IN_CAPACITY
         self.spec['adjustment']['number'] = 1
-        policy = scaling_in_policy.ScalingInPolicy('ScalingInPolicy',
-                                                   'test-policy',
-                                                   **kwargs)
+        policy = sip.ScalingInPolicy('ScalingInPolicy', 'p1', spec=self.spec)
         count = policy._calculate_adjustment_count(current_size)
         self.assertEqual(1, count)
 
@@ -165,9 +149,7 @@ class TestScalingInPolicy(base.SenlinTestCase):
         current_size = 10
         self.spec['adjustment']['type'] = consts.CHANGE_IN_PERCENTAGE
         self.spec['adjustment']['number'] = 50
-        policy = scaling_in_policy.ScalingInPolicy('ScalingInPolicy',
-                                                   'test-policy',
-                                                   **kwargs)
+        policy = sip.ScalingInPolicy('ScalingInPolicy', 'p1', spec=self.spec)
         count = policy._calculate_adjustment_count(current_size)
         self.assertEqual(5, count)
 
@@ -175,9 +157,7 @@ class TestScalingInPolicy(base.SenlinTestCase):
         self.spec['adjustment']['type'] = consts.CHANGE_IN_PERCENTAGE
         self.spec['adjustment']['number'] = 1
         self.spec['adjustment']['min_step'] = 2
-        policy = scaling_in_policy.ScalingInPolicy('ScalingInPolicy',
-                                                   'test-policy',
-                                                   **kwargs)
+        policy = sip.ScalingInPolicy('ScalingInPolicy', 'p1', spec=self.spec)
         count = policy._calculate_adjustment_count(current_size)
         self.assertEqual(2, count)
 
@@ -185,14 +165,10 @@ class TestScalingInPolicy(base.SenlinTestCase):
         action = mock.Mock()
         action.context = self.context
         action.inputs = {}
-        kwargs = {
-            'spec': self.spec
-        }
+
         self.spec['adjustment']['type'] = consts.EXACT_CAPACITY
         self.spec['adjustment']['number'] = 1
-        policy = scaling_in_policy.ScalingInPolicy('ScalingInPolicy',
-                                                   'test-policy',
-                                                   **kwargs)
+        policy = sip.ScalingInPolicy('ScalingInPolicy', 'p1', spec=self.spec)
 
         policy.pre_op(self.cluster['id'], action)
         pd = {
@@ -209,14 +185,10 @@ class TestScalingInPolicy(base.SenlinTestCase):
         action = mock.Mock()
         action.context = self.context
         action.inputs = {'count': 1}
-        kwargs = {
-            'spec': self.spec
-        }
+
         self.spec['adjustment']['type'] = consts.CHANGE_IN_CAPACITY
         self.spec['adjustment']['number'] = 2
-        policy = scaling_in_policy.ScalingInPolicy('ScalingInPolicy',
-                                                   'test-policy',
-                                                   **kwargs)
+        policy = sip.ScalingInPolicy('ScalingInPolicy', 'p1', spec=self.spec)
 
         policy.pre_op(self.cluster['id'], action)
         pd = {
@@ -233,14 +205,10 @@ class TestScalingInPolicy(base.SenlinTestCase):
         action = mock.Mock()
         action.context = self.context
         action.inputs = {}
-        kwargs = {
-            'spec': self.spec
-        }
+
         self.spec['adjustment']['type'] = consts.EXACT_CAPACITY
         self.spec['adjustment']['number'] = 5
-        policy = scaling_in_policy.ScalingInPolicy('ScalingInPolicy',
-                                                   'test-policy',
-                                                   **kwargs)
+        policy = sip.ScalingInPolicy('ScalingInPolicy', 'p1', spec=self.spec)
 
         policy.pre_op(self.cluster['id'], action)
         reason = _('Negative number is invalid for scaling in policy.')
@@ -259,14 +227,10 @@ class TestScalingInPolicy(base.SenlinTestCase):
         action = mock.Mock()
         action.context = self.context
         action.inputs = {}
-        kwargs = {
-            'spec': self.spec
-        }
+
         self.spec['adjustment']['type'] = consts.CHANGE_IN_CAPACITY
         self.spec['adjustment']['number'] = 3
-        policy = scaling_in_policy.ScalingInPolicy('ScalingInPolicy',
-                                                   'test-policy',
-                                                   **kwargs)
+        policy = sip.ScalingInPolicy('ScalingInPolicy', 'p1', spec=self.spec)
 
         policy.pre_op(self.cluster['id'], action)
         reason = _('Attempted scaling exceeds minimum size.')
@@ -285,15 +249,11 @@ class TestScalingInPolicy(base.SenlinTestCase):
         action = mock.Mock()
         action.context = self.context
         action.inputs = {}
+
         self.spec['adjustment']['best_effort'] = True
-        kwargs = {
-            'spec': self.spec
-        }
         self.spec['adjustment']['type'] = consts.CHANGE_IN_CAPACITY
         self.spec['adjustment']['number'] = 3
-        policy = scaling_in_policy.ScalingInPolicy('ScalingInPolicy',
-                                                   'test-policy',
-                                                   **kwargs)
+        policy = sip.ScalingInPolicy('ScalingInPolicy', 'p1', spec=self.spec)
 
         policy.pre_op(self.cluster['id'], action)
         reason = _('Do best effort scaling.')
