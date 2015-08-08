@@ -83,9 +83,6 @@ class EventController(object):
     @util.policy_enforce
     def get(self, req, event_id):
         event = self.rpc_client.event_get(req.context, event_id)
-        if not event:
-            raise exc.HTTPNotFound()
-
         return {'event': event}
 
 
