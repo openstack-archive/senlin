@@ -316,6 +316,7 @@ class NeutronClient(base.DriverBase):
             'admin_state_up': admin_state_up,
         }
 
+        # TODO(anyone): verify if this is correct
         if hm_type == 'HTTP':
             if http_method is not None:
                 kwargs['http_method'] = http_method
