@@ -134,6 +134,22 @@
                         <method href="#action_get"/>
                     </resource>
                 </resource>
+                <resource path="webhooks" id="webhooks">
+                    <method href="#webhook_list"/>
+                    <method href="#webhook_create"/>
+                    <resource path="{webhook_id}" id="webhook_id">
+                        <param name="webhook_id" style="template" required="true">
+                            <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                                <para>The unique ID of a webhook.</para>
+                            </wadl:doc>
+                        </param>
+                        <method href="#webhook_get"/>
+                        <method href="#webhook_delete"/>
+                        <resource path="trigger" id="webhook_trigger">
+                            <method href="#webhook_trigger"/>
+                        </resource>
+                    </resource>
+                </resource>
                 <resource path="events" id="events">
                     <method href="#event_list"/>
                     <resource path="{event_id}" id="event_id">
@@ -323,7 +339,7 @@
                                     the cluster. (optional).
                                 </para>
                             </listitem>
-                        </itemizedlist> 
+                        </itemizedlist>
                     </wadl:doc>
                 </param>
             </representation>
@@ -1016,7 +1032,7 @@
                 </wadl:doc>
                 <param name="policy" style="plain" required="true">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>A map that contains the following keys and values that provides the 
+                        <para>A map that contains the following keys and values that provides the
                             details of the policy that is created:</para>
                         <itemizedlist xml:id="policy_response_body">
                             <title>Policy Create Response</title>
@@ -1169,7 +1185,7 @@
                             Limits the number of nodes that appear on one invocation to this
                             value. The typical pattern of <code>limit</code> and <code>marker</code>
                             is to make an initial limited request and then to use the
-                            <code>id</code> of the last node from the response as the 
+                            <code>id</code> of the last node from the response as the
                             <code>marker</code> parameter in a subsequent limited request.
                         </para>
                     </wadl:doc>
@@ -1413,6 +1429,222 @@
             </representation>
         </response>
     </method>
+    <method name="GET" id="webhook_list">
+        <wadl:doc xml:lang="EN" title="List Webhooks" xmlns="http://docbook.org/ns/docbook">
+            <para role="shortdesc">List webhooks.</para>
+        </wadl:doc>
+        <request>
+            <representation mediaType="application/xml">
+                <param name="show_deleted" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Specifies whether deleted webhooks are to be listed.</para>
+                    </wadl:doc>
+                </param>
+                <param name="filters" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            A list of key-value pairs for filtering the returned nodes.
+                            The valid filter keys are <code>name</name>, <code>user</name>,
+                            <code>obj_type</code>, <code>obj_id</code>, <code>action</action>.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="limit" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            Limits the number of webhooks that appear on one invocation to this
+                            value. The typical pattern of <code>limit</code> and <code>marker</code>
+                            is to make an initial limited request and then to use the
+                            <code>id</code> of the last webhook from the response as the
+                            <code>marker</code> parameter in a subsequent limited request.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="marker" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            Specifies the <code>id</code> of the last-seen webhook. The typical
+                            pattern of <code>limit</code> and <code>marker</code> is to make
+                            an initial limited request and then to use the <code>id</code> of
+                            the last-seen webhook from the response as the <code>marker</code>
+                            parameter in a subsequent limited request.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="sort_keys" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook"
+                        xml:lang="EN">
+                        <para>Sorts the webhook list by one of these attributes: <code>name</code>,
+                            <code>obj_id</code>, <code>obj_type</code>, <code>created_time </code>
+                            and <code>deleted_time</code>.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="sort_dir" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>The sort direction of the webhook list.  Either <code>asc</code>
+                            (ascending) or <code>desc</code> (descending) is acceptable.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="global_tenant" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Indicates whether webhooks from all tenants(projects) are listed.
+                            This operation is subject to access privilege constraints.</para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/webhook_list_resp.json"/>
+                </wadl:doc>
+                <param name="nodes" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>List of webhook records where each record contains fields like
+                            <code>id</code>, <code>name</code>, <code>user</code>, <code>project></code>,
+                            <code>domain</code>, <code>obj_id</code>, <code>obj_type</code>,
+                            <code>action</code>, <code>credential</code>, <code>params</code>,
+                            <code>created_time</code> and <code>deleted_time</code> etc.
+                        </para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </response>
+    </method>
+    <method name="POST" id="webhook_create">
+        <wadl:doc xml:lang="EN" title="Create Webhook" xmlns="http://docbook.org/ns/docbook">
+            <para role="shortdesc">Creates a new webhook.</para>
+        </wadl:doc>
+        <request>
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/webhook_create.json"/>
+                </wadl:doc>
+                <param name="webhook" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A map that contains detailed data for the webhook to be created.</para>
+                        <itemizedlist xml:id="webhook_create_body">
+                            <title>Webhook Create Request Body</title>
+                            <listitem>
+                                <para>
+                                    <code>name</code> Name for the newly created webhook. [Optional].
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>obj_id</code> ID or name or short ID of the object targeted
+                                    by the webhook created. [Required].
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>obj_type</code> The type of the object to be operated. Valid
+                                    values include <code>cluster</code>, <code>node</code> and <code>
+                                    policy</code>. [Required].
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>action</code> A string indicating the action to be initiated
+                                    when the webhook is triggered. Valid values are dependent on the
+                                    <code>obj_type</code> specified. [Required].
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>credential</code> A map of key-value pairs to be used for
+                                    authentication. If omitted, the requester's credential will be
+                                    used. [Optional].
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <code>params</code> A map of key-value pairs to be used for
+                                    action creation. Some actions may require certain input parameters.
+                                    [Optional].
+                                </para>
+                            </listitem>
+                        </itemizedlist>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <xsdxt:code href="samples/webhook_create_resp.json" />
+                </wadl:doc>
+                <param name="webhook" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>A dictionary containing the details of the webhook created such as
+                            <code>id</code>, <code>name</code>, <code>action</code> etc. .</para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </response>
+    </method>
+    <method name="GET" id="webhook_get">
+        <wadl:doc xml:lang="EN" title="Show Webhook Data" xmlns="http://docbook.org/ns/docbook">
+            <para role="shortdesc">Shows data for a specified webhook.</para>
+        </wadl:doc>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <para>
+                        A webhook record that contains fields like <code>id</code>, <code>name</code>,
+                        <code>obj_id</code>, <code>obj_type</code>, <code>action</code>,
+                        <code>credential</code>, <code>params</code>, <code>created_time</code>,
+                        <code>created_time</code>, <code>deleted_time</code>, <code>user</code>,
+                        <code>project</code> and <code>domain</code> etc.
+                    </para>
+                    <xsdxt:code href="samples/webhook_get_resp.json"/>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
+    <method name="DELETE" id="webhook_delete">
+        <wadl:doc title="Delete Webhook" xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+            <para role="shortdesc">Deletes a specified webhook.</para>
+        </wadl:doc>
+        <response status="204"/>
+    </method>
+    <method name="POST" id="webhook_trigger">
+        <wadl:doc xml:lang="EN" title="Webhook Trigger" xmlns="http://docbook.org/ns/docbook">
+            <para role="shortdesc">Trigger the execution of a webhook.</para>
+        </wadl:doc>
+        <request>
+            <representation mediaType="application/json">
+                <param name="key" style="query" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            This is the key used to decipher the credentials stored in database.
+                            Senlin will use the decrypted data for authentication.
+                        </para>
+                    </wadl:doc>
+                </param>
+                <param name="params" style="plain" required="true">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>
+                            This is the json body used as inputs for the targeted action.
+                        </para>
+                    </wadl:doc>
+                </param>
+            </representation>
+        </request>
+        <response status="200">
+            <representation mediaType="application/json">
+                <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                    <para>
+                        The response is a map that contains the <code>action</code> key
+                        and a UUID as its value.  The UUID is the action that has been
+                        initiated by the request.
+                    </para>
+                </wadl:doc>
+            </representation>
+        </response>
+    </method>
     <method name="GET" id="event_list">
         <wadl:doc xml:lang="EN" title="List Events" xmlns="http://docbook.org/ns/docbook">
             <para role="shortdesc">Lists events.</para>
@@ -1506,7 +1738,7 @@
                             </listitem>
                             <listitem>
                                 <para>
-                                    <code>cluster_id</code> ID of the cluster an event is 
+                                    <code>cluster_id</code> ID of the cluster an event is
                                     related to. This key can appear more than once.
                                 </para>
                             </listitem>
@@ -1567,7 +1799,7 @@
                             <listitem>
                                 <para>
                                     <code>target</code> ID of an object for which the actions were
-                                    initiated. An object can be a cluster, a node etc. Can be 
+                                    initiated. An object can be a cluster, a node etc. Can be
                                     specified more than once.
                                 </para>
                             </listitem>
