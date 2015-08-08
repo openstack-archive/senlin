@@ -110,6 +110,10 @@ class SenlinException(Exception):
         return self.__class__(**self.kwargs)
 
 
+class SIGHUPInterrupt(SenlinException):
+    msg_fmt = _("System SIGHUP signal received.")
+
+
 class NotAuthenticated(SenlinException):
     msg_fmt = _("You are not authenticated.")
 

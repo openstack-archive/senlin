@@ -10,14 +10,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-
+import fixtures
 import json
+import mock
 import six
+import socket
+import stubout
+import webob
 
 from oslo_config import cfg
 from oslo_utils import encodeutils
-import stubout
-import webob
 
 from senlin.common import exception
 from senlin.common import wsgi
@@ -299,14 +301,6 @@ class JSONRequestDeserializerTest(base.SenlinTestCase):
         self.assertIn('Content-Length', request.headers)
         self.assertTrue(wsgi.JSONRequestDeserializer().has_body(request))
 
-    def test_has_body_respect_aws_content_type(self):
-        request = wsgi.Request.blank('/?ContentType=JSON')
-        request.method = 'GET'
-        request.body = encodeutils.safe_encode('{"key": "value"}')
-        self.assertIn('Content-Length', request.headers)
-        request.headers['Content-Type'] = 'application/xml'
-        self.assertTrue(wsgi.JSONRequestDeserializer().has_body(request))
-
     def test_has_body_content_type_with_get(self):
         request = wsgi.Request.blank('/')
         request.method = 'GET'
@@ -370,3 +364,75 @@ class JSONRequestDeserializerTest(base.SenlinTestCase):
               '(%s bytes) exceeds maximum allowed size (%s bytes).' % \
               (len(body), cfg.CONF.max_json_body_size)
         self.assertEqual(msg, six.text_type(error))
+
+
+class GetSocketTestCase(base.SenlinTestCase):
+
+    def setUp(self):
+        super(GetSocketTestCase, self).setUp()
+        self.useFixture(fixtures.MonkeyPatch(
+            "senlin.common.wsgi.get_bind_addr",
+            lambda x, y: ('192.168.0.13', 1234)))
+        addr_info_list = [(2, 1, 6, '', ('192.168.0.13', 80)),
+                          (2, 2, 17, '', ('192.168.0.13', 80)),
+                          (2, 3, 0, '', ('192.168.0.13', 80))]
+        self.useFixture(fixtures.MonkeyPatch(
+            "senlin.common.wsgi.socket.getaddrinfo",
+            lambda *x: addr_info_list))
+        self.useFixture(fixtures.MonkeyPatch(
+            "senlin.common.wsgi.time.time",
+            mock.Mock(side_effect=[0, 1, 5, 10, 20, 35])))
+        wsgi.cfg.CONF.senlin_api.cert_file = '/etc/ssl/cert'
+        wsgi.cfg.CONF.senlin_api.key_file = '/etc/ssl/key'
+        wsgi.cfg.CONF.senlin_api.ca_file = '/etc/ssl/ca_cert'
+        wsgi.cfg.CONF.senlin_api.tcp_keepidle = 600
+
+    def test_correct_configure_socket(self):
+        mock_socket = mock.Mock()
+        self.useFixture(fixtures.MonkeyPatch(
+            'senlin.common.wsgi.ssl.wrap_socket',
+            mock_socket))
+        self.useFixture(fixtures.MonkeyPatch(
+            'senlin.common.wsgi.eventlet.listen',
+            lambda *x, **y: mock_socket))
+        server = wsgi.Server(name='senlin-api', conf=cfg.CONF.senlin_api)
+        server.default_port = 1234
+        server.configure_socket()
+        self.assertIn(mock.call.setsockopt(socket.SOL_SOCKET,
+                                           socket.SO_REUSEADDR, 1),
+                      mock_socket.mock_calls)
+        self.assertIn(mock.call.setsockopt(socket.SOL_SOCKET,
+                                           socket.SO_KEEPALIVE, 1),
+                      mock_socket.mock_calls)
+        if hasattr(socket, 'TCP_KEEPIDLE'):
+            self.assertIn(mock.call().setsockopt(
+                socket.IPPROTO_TCP,
+                socket.TCP_KEEPIDLE,
+                wsgi.cfg.CONF.senlin_api.tcp_keepidle), mock_socket.mock_calls)
+
+    def test_get_socket_without_all_ssl_reqs(self):
+        wsgi.cfg.CONF.senlin_api.key_file = None
+        self.assertRaises(RuntimeError,
+                          wsgi.get_socket, wsgi.cfg.CONF.senlin_api, 1234)
+
+    def test_get_socket_with_bind_problems(self):
+        self.useFixture(fixtures.MonkeyPatch(
+            'senlin.common.wsgi.eventlet.listen',
+            mock.Mock(side_effect=(
+                [wsgi.socket.error(socket.errno.EADDRINUSE)] * 3 + [None]))))
+        self.useFixture(fixtures.MonkeyPatch(
+            'senlin.common.wsgi.ssl.wrap_socket',
+            lambda *x, **y: None))
+
+        self.assertRaises(RuntimeError,
+                          wsgi.get_socket, wsgi.cfg.CONF.senlin_api, 1234)
+
+    def test_get_socket_with_unexpected_socket_errno(self):
+        self.useFixture(fixtures.MonkeyPatch(
+            'senlin.common.wsgi.eventlet.listen',
+            mock.Mock(side_effect=wsgi.socket.error(socket.errno.ENOMEM))))
+        self.useFixture(fixtures.MonkeyPatch(
+            'senlin.common.wsgi.ssl.wrap_socket',
+            lambda *x, **y: None))
+        self.assertRaises(wsgi.socket.error, wsgi.get_socket,
+                          wsgi.cfg.CONF.senlin_api, 1234)
