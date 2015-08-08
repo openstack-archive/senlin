@@ -143,19 +143,16 @@ class DeletionPolicy(base.Policy):
             return candidates
 
         # Node profile based selection
-        if self.criteria == self.OLDEST_PROFILE_FIRST:
-            node_map = []
-            for node in nodes:
-                profile = db_api.profile_get(context, node.profile_id)
-                created_at = profile.created_time
-                node_map.append({'id': node.id, 'created_at': created_at})
-            sorted_map = sorted(node_map, key=lambda m: m['created_at'])
-            for i in range(count):
-                candidates.append(sorted_map[i]['id'])
+        node_map = []
+        for node in nodes:
+            profile = db_api.profile_get(context, node.profile_id)
+            created_at = profile.created_time
+            node_map.append({'id': node.id, 'created_at': created_at})
+        sorted_map = sorted(node_map, key=lambda m: m['created_at'])
+        for i in range(count):
+            candidates.append(sorted_map[i]['id'])
 
-            return candidates
-
-        return []
+        return candidates
 
     def pre_op(self, cluster_id, action):
         '''Choose victims that can be deleted.'''
