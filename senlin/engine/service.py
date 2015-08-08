@@ -12,6 +12,7 @@
 
 import copy
 import functools
+import uuid
 
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -40,7 +41,6 @@ from senlin.engine import event as event_mod
 from senlin.engine import health_manager
 from senlin.engine import node as node_mod
 from senlin.engine import scheduler
-from senlin.engine import senlin_lock
 from senlin.engine import webhook as webhook_mod
 from senlin.policies import base as policy_base
 from senlin.profiles import base as profile_base
@@ -95,7 +95,7 @@ class EngineService(service.Service):
         self.TG = scheduler.ThreadGroupManager()
 
     def start(self):
-        self.engine_id = senlin_lock.BaseLock.generate_engine_id()
+        self.engine_id = str(uuid.uuid4())
         self.init_tgm()
 
         # create a dispatcher greenthread for this engine.

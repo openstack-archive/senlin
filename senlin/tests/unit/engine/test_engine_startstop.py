@@ -10,11 +10,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import uuid
+
 import mock
 
 from senlin.common import consts
 from senlin.common import messaging as rpc_messaging
-from senlin.engine import senlin_lock
 from senlin.engine import service
 from senlin.tests.unit.common import base
 
@@ -28,9 +29,7 @@ class EngineBasicTest(base.SenlinTestCase):
 
         super(EngineBasicTest, self).setUp()
         self.eng = service.EngineService('host-a', 'topic-a')
-        self.gen_id = self.patchobject(senlin_lock.BaseLock,
-                                       'generate_engine_id',
-                                       return_value='1234')
+        self.gen_id = self.patchobject(uuid, 'uuid4', return_value='1234')
 
         self.fake_rpc_server = mock.Mock()
         self.get_rpc = self.patchobject(rpc_messaging, 'get_rpc_server',
