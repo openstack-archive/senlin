@@ -16,6 +16,7 @@ Controller that returns information on the senlin API versions
 """
 
 import json
+from oslo_utils import encodeutils
 from six.moves import http_client
 import webob.dec
 
@@ -45,7 +46,7 @@ class Controller(object):
         response = webob.Response(request=req,
                                   status=http_client.MULTIPLE_CHOICES,
                                   content_type='application/json')
-        response.body = body
+        response.body = encodeutils.safe_encode(body)
 
         return response
 
