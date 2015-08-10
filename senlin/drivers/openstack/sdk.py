@@ -14,7 +14,6 @@
 SDK Client
 '''
 import functools
-from oslo_config import cfg
 from oslo_log import log as logging
 import six
 
@@ -227,24 +226,3 @@ def authenticate(**kwargs):
         raise ex
 
     return access_info
-
-
-def get_service_user_id():
-    # Convert user name to user ID
-    params = {
-        'auth_url': cfg.CONF.authentication.auth_url,
-        'user_name': cfg.CONF.authentication.service_username,
-        'password': cfg.CONF.authentication.service_password,
-        'project_name': cfg.CONF.authentication.service_project_name,
-        'user_domain_name': cfg.CONF.authentication.service_user_domain,
-        'project_domain_name': cfg.CONF.authentication.service_project_domain,
-    }
-
-    user_id = None
-    try:
-        access_info = authenticate(**params)
-        user_id = access_info.user_id
-    except Exception as ex:
-        LOG.exception(_('Authentication failure: %s'), six.text_type(ex))
-
-    return user_id
