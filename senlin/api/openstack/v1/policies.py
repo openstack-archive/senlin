@@ -46,10 +46,10 @@ class PolicyData(object):
         return self.data[consts.POLICY_TYPE]
 
     def level(self):
-        return self.data.get(consts.POLICY_LEVEL)
+        return self.data.get(consts.POLICY_LEVEL, None)
 
     def cooldown(self):
-        return self.data.get(consts.POLICY_COOLDOWN)
+        return self.data.get(consts.POLICY_COOLDOWN, None)
 
 
 class PolicyController(object):
@@ -105,7 +105,7 @@ class PolicyController(object):
 
     @util.policy_enforce
     def create(self, req, body):
-        policy_data = body.get('policy')
+        policy_data = body.get('policy', None)
         if policy_data is None:
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'policy' key in request body."))
@@ -124,7 +124,7 @@ class PolicyController(object):
 
     @util.policy_enforce
     def update(self, req, policy_id, body):
-        policy_data = body.get('policy')
+        policy_data = body.get('policy', None)
         if policy_data is None:
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'policy' key in request body."))
@@ -135,13 +135,13 @@ class PolicyController(object):
                     "it may cause state conflicts in engine.")
             raise exc.HTTPBadRequest(msg)
 
-        name = policy_data.get(consts.POLICY_NAME)
+        name = policy_data.get(consts.POLICY_NAME, None)
 
-        level = policy_data.get(consts.POLICY_LEVEL)
+        level = policy_data.get(consts.POLICY_LEVEL, None)
         if level is not None:
             level = utils.parse_int_param(consts.POLICY_LEVEL, level)
 
-        cooldown = policy_data.get(consts.POLICY_COOLDOWN)
+        cooldown = policy_data.get(consts.POLICY_COOLDOWN, None)
         if cooldown is not None:
             cooldown = utils.parse_int_param(consts.POLICY_COOLDOWN, cooldown)
 
@@ -152,12 +152,7 @@ class PolicyController(object):
 
     @util.policy_enforce
     def delete(self, req, policy_id):
-        res = self.rpc_client.policy_delete(req.context,
-                                            policy_id,
-                                            cast=False)
-
-        if res is not None:
-            raise exc.HTTPBadRequest(res['Error'])
+        self.rpc_client.policy_delete(req.context, policy_id, cast=False)
 
         raise exc.HTTPNoContent()
 
