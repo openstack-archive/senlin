@@ -384,7 +384,7 @@ class Spec(collections.Mapping):
                 raise exception.SpecValidationFailed(message=msg)
 
     def resolve_value(self, key):
-        if key not in self:
+        if key not in self._schema:
             raise KeyError(_('Invalid spec item: "%s"') % key)
 
         schema_item = self._schema[key]

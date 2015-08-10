@@ -213,8 +213,8 @@ class ServerProfile(base.Profile):
                 if self.spec_data[k] is not None:
                     kwargs[k] = self.spec_data[k]
 
-        if self.IMAGE in self.spec_data:
-            name_or_id = self.spec_data[self.IMAGE]
+        name_or_id = self.spec_data[self.IMAGE]
+        if name_or_id is not None:
             try:
                 image = self.nova(obj).image_get_by_name(name_or_id)
             except Exception as ex:
@@ -225,8 +225,9 @@ class ServerProfile(base.Profile):
             kwargs.pop(self.IMAGE)
             kwargs['imageRef'] = image.id
 
-        if self.FLAVOR in self.spec_data:
-            flavor = self.nova(obj).flavor_get(self.spec_data[self.FLAVOR])
+        flavor = self.spec_data[self.FLAVOR]
+        if flavor is not None:
+            flavor = self.nova(obj).flavor_get(flavor)
             # wait for new verson of openstacksdk to fix this
             kwargs.pop(self.FLAVOR)
             kwargs['flavorRef'] = flavor.id
@@ -239,11 +240,13 @@ class ServerProfile(base.Profile):
             metadata['cluster'] = obj.cluster_id
         kwargs['metadata'] = metadata
 
-        if self.SCHEDULER_HINTS in self.spec_data:
-            kwargs['scheduler_hints'] = self.spec_data[self.SCHEDULER_HINTS]
+        scheduler_hint = self.spec_data[self.SCHEDULER_HINTS]
+        if scheduler_hint is not None:
+            kwargs['scheduler_hints'] = scheduler_hint
 
-        if self.USER_DATA in self.spec_data:
-            ud = encodeutils.safe_encode(self.spec_data[self.USER_DATA])
+        user_data = self.spec_data[self.USER_DATA]
+        if user_data is not None:
+            ud = encodeutils.safe_encode(user_data)
             kwargs['user_data'] = encodeutils.safe_decode(base64.b64encode(ud))
 
         LOG.info('Creating server: %s' % kwargs)
