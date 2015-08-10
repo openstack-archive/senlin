@@ -56,7 +56,7 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         res = self.middleware._extract_webhook_id(self._generate_url())
         self.assertEqual(self.url_slices['03_webhook_id'], res)
 
-    def test_extract_webhook_id_webhookid_not_found(self):
+    def test_extract_webhook_id_webhooks_not_found(self):
         # String 'webhooks' is not found in url
         self.url_slices['02_webhook_str'] = '/foo/'
         res = self.middleware._extract_webhook_id(self._generate_url())
@@ -69,8 +69,8 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         self.assertIsNone(res)
 
     def test_extract_webhook_id_illegal_format(self):
-        # The structure /<webhook_id>?key=value is not matched
-        self.url_slices['02_webhook_str'] = '/webhook'
+        # The structure /<webhook_id>/trigger?key=value is not matched
+        self.url_slices['04_trigger_str'] = 'trigger?'
         res = self.middleware._extract_webhook_id(self._generate_url())
         self.assertIsNone(res)
 
