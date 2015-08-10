@@ -19,7 +19,7 @@ from oslo_utils import encodeutils
 import six
 
 from senlin.common import exception
-from senlin.drivers.openstack import nova_v2 as novaclient
+from senlin.drivers import base as driver_base
 from senlin.drivers.openstack import sdk
 from senlin.profiles.os.nova import server
 from senlin.tests.unit.common import base
@@ -74,11 +74,13 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertIsNone(profile._nc)
         self.assertIsNone(profile.server_id)
 
-    @mock.patch.object(novaclient, 'NovaClient')
-    def test_nova_client(self, mock_nc):
+    @mock.patch.object(driver_base, 'SenlinDriver')
+    def test_nova_client(self, mock_senlindriver):
         test_server = mock.Mock()
+        sd = mock.Mock()
         nc = mock.Mock()
-        mock_nc.return_value = nc
+        sd.compute.return_value = nc
+        mock_senlindriver.return_value = sd
 
         kwargs = {
             'spec': self.spec
@@ -100,7 +102,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertEqual(nc, res)
         self.assertEqual(nc, profile._nc)
         mock_param.assert_called_once_with(mock.ANY, test_server)
-        mock_nc.assert_called_once_with(params)
+        sd.compute.assert_called_once_with(params)
 
     def test_do_validate(self):
         profile = server.ServerProfile('os.nova.server', 't', spec=self.spec)
