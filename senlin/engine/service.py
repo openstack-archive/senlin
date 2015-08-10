@@ -323,7 +323,10 @@ class EngineService(service.Service):
     @request_context
     def policy_create(self, context, name, policy_type, spec, level=None,
                       cooldown=None):
-        level = utils.parse_int_param('level', level)
+        if level is None:
+            level = policy_base.SHOULD
+        else:
+            level = utils.parse_int_param('level', level)
         cooldown = utils.parse_int_param('cooldown', cooldown)
         plugin = environment.global_env().get_policy(policy_type)
 

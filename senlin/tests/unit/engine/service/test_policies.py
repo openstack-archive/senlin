@@ -16,9 +16,23 @@ import six
 from senlin.common import exception
 from senlin.engine import environment
 from senlin.engine import service
+from senlin.policies import base as policy_base
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 from senlin.tests.unit import fakes
+
+
+class PolicyLevelNameTest(base.SenlinTestCase):
+
+    def test_level_name(self):
+        names = []
+        for level in policy_base.POLICY_LEVELS:
+            name = policy_base.getLevelName(level)
+            names.append(name)
+
+        for name in names:
+            level = policy_base.getLevelName(name)
+            self.assertIn(level, policy_base.POLICY_LEVELS)
 
 
 class PolicyTest(base.SenlinTestCase):
@@ -37,7 +51,7 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual('p-1', result['name'])
         self.assertEqual('TestPolicy', result['type'])
         self.assertEqual({}, result['spec'])
-        self.assertIsNone(result['level'])
+        self.assertEqual(policy_base.SHOULD, result['level'])
         self.assertIsNone(result['cooldown'])
         self.assertIsNone(result['updated_time'])
         self.assertIsNone(result['deleted_time'])
