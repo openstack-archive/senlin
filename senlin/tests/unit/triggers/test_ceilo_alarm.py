@@ -142,6 +142,13 @@ class TestCeilometerAlarm(base.SenlinTestCase):
                     "(Moon/Back): 'Moon/Back'")
         self.assertEqual(expected, six.text_type(ex))
 
+    def test_validate_no_time_constraints(self):
+        spec = parser.simple_parse(threshold_alarm)
+        spec.pop('time_constraints')
+        a = alarm.Alarm('A1', spec)
+        res = a.validate()
+        self.assertIsNone(res)
+
     @mock.patch.object(ceilometer_v2, 'CeilometerClient')
     def test_create(self, mock_cc):
         cc = mock.Mock()
