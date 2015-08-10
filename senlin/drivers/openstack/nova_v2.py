@@ -12,6 +12,8 @@
 
 from oslo_config import cfg
 
+from openstack.compute.v2 import server_metadata
+
 from senlin.drivers import base
 from senlin.drivers.openstack import sdk
 
@@ -137,3 +139,13 @@ class NovaClient(base.DriverBase):
     @sdk.translate_exception
     def server_ip_list(self, **query):
         return self.conn.compute.server_ips(**query)
+
+    @sdk.translate_exception
+    def server_metadata_get(self, **params):
+        obj = server_metadata.ServerMetadata.new(**params)
+        return obj.get(self.session)
+
+    @sdk.translate_exception
+    def server_metadata_update(self, **params):
+        obj = server_metadata.ServerMetadata.new(**params)
+        return obj.update(self.session)
