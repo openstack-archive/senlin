@@ -51,13 +51,13 @@ class ProfileData(object):
         return self.data[consts.PROFILE_TYPE]
 
     def permission(self):
-        return self.data.get(consts.PROFILE_PERMISSION)
+        return self.data.get(consts.PROFILE_PERMISSION, None)
 
     def metadata(self):
-        return self.data.get(consts.PROFILE_METADATA)
+        return self.data.get(consts.PROFILE_METADATA, None)
 
     def context(self):
-        return self.data.get(consts.PROFILE_CONTEXT)
+        return self.data.get(consts.PROFILE_CONTEXT, None)
 
 
 class ProfileController(object):
@@ -138,15 +138,15 @@ class ProfileController(object):
     @util.policy_enforce
     def update(self, req, profile_id, body):
         '''The update operation actually creates a new profile.'''
-        profile_data = body.get('profile')
+        profile_data = body.get('profile', None)
         if profile_data is None:
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'profile' key in request body."))
         # spec can be empty in an update request
-        name = profile_data.get(consts.PROFILE_NAME)
-        spec = profile_data.get(consts.PROFILE_SPEC)
-        permission = profile_data.get(consts.PROFILE_PERMISSION)
-        metadata = profile_data.get(consts.PROFILE_METADATA)
+        name = profile_data.get(consts.PROFILE_NAME, None)
+        spec = profile_data.get(consts.PROFILE_SPEC, None)
+        permission = profile_data.get(consts.PROFILE_PERMISSION, None)
+        metadata = profile_data.get(consts.PROFILE_METADATA, None)
         # We don't check if type is specified or not
         profile = self.rpc_client.profile_update(req.context, profile_id,
                                                  name, spec, permission,
@@ -156,12 +156,7 @@ class ProfileController(object):
 
     @util.policy_enforce
     def delete(self, req, profile_id):
-        res = self.rpc_client.profile_delete(req.context,
-                                             profile_id,
-                                             cast=False)
-
-        if res is not None:
-            raise exc.HTTPBadRequest(res['Error'])
+        self.rpc_client.profile_delete(req.context, profile_id, cast=False)
 
         raise exc.HTTPNoContent()
 
