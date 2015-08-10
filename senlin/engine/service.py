@@ -1478,7 +1478,7 @@ class EngineService(service.Service):
     @request_context
     def action_get(self, context, identity):
         db_action = self.action_find(context, identity)
-        action = action_mod.Action.load(context, action=db_action)
+        action = action_mod.Action.load(context, db_action=db_action)
         return action.to_dict()
 
     def event_find(self, context, identity, show_deleted=False):
