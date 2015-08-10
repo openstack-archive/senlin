@@ -40,7 +40,7 @@ class NodeDataTest(base.SenlinTestCase):
         self.assertRaises(exc.HTTPBadRequest, data.profile_id)
         self.assertIsNone(data.cluster_id())
         self.assertIsNone(data.role())
-        self.assertEqual({}, data.metadata())
+        self.assertIsNone(data.metadata())
 
     def test_with_cluster_id(self):
         body = {'cluster_id': 'cluster-1', 'name': 'test_node'}
@@ -66,6 +66,10 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         cfgopts = DummyConfig()
         self.controller = nodes.NodeController(options=cfgopts)
+
+    def test_node_default(self, mock_enforce):
+        req = self._get('/nodes')
+        self.assertRaises(exc.HTTPNotFound, self.controller.default, req)
 
     def test_node_index(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -321,6 +325,17 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         expected = {'node': engine_response}
         self.assertEqual(expected, resp)
+
+    def test_node_create_with_bad_body(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'create', True)
+        body = {'foo': 'bar'}
+        req = self._post('/nodes', json.dumps(body))
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.create, req,
+                               tenant_id=self.project, body=body)
+        self.assertEqual("Malformed request data, missing 'node' key in "
+                         "request body.", six.text_type(ex))
 
     def test_node_create_with_bad_profile(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -697,6 +712,22 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('NodeNotFound', resp.json['error']['type'])
 
+    def test_node_action_join_cluster_id_not_specified(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        node_id = 'test-node-1'
+        body = {'join': {}}
+        req = self._put('/nodes/%(node_id)s/action' % {'node_id': node_id},
+                        json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action, req,
+                               tenant_id=self.project, node_id=node_id,
+                               body=body)
+
+        self.assertFalse(mock_call.called)
+        self.assertEqual('No cluster specified.', six.text_type(ex))
+
     def test_node_action_join_cluster_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         node_id = 'test-node-1'
@@ -763,7 +794,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertFalse(mock_call.called)
         self.assertEqual(400, ex.code)
-        self.assertIn('No action specified', six.text_type(ex))
+        self.assertIn('No action specified.', six.text_type(ex))
 
     def test_node_action_multiple_action(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -781,7 +812,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertFalse(mock_call.called)
         self.assertEqual(400, ex.code)
-        self.assertIn('Multiple actions specified', six.text_type(ex))
+        self.assertIn('Multiple actions specified.', six.text_type(ex))
 
     def test_node_action_unknown_action(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -851,12 +882,10 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._delete('/node/%(node_id)s' % {'node_id': nid})
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        mock_call.return_value = None
+        mock_call.return_value = {'action': 'ACTIONID'}
 
-        self.assertRaises(webob.exc.HTTPNoContent,
-                          self.controller.delete,
-                          req, tenant_id=self.project,
-                          node_id=nid)
+        res = self.controller.delete(req, tenant_id=self.project, node_id=nid)
+        self.assertIsNotNone(res)
         mock_call.assert_called_with(
             req.context, ('node_delete', {'identity': nid, 'force': False}))
 
