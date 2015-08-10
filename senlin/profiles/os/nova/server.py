@@ -23,7 +23,7 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.common import utils
-from senlin.drivers.openstack import nova_v2 as novaclient
+from senlin.drivers import base as driver_base
 from senlin.profiles import base
 
 LOG = logging.getLogger(__name__)
@@ -194,7 +194,7 @@ class ServerProfile(base.Profile):
         if self._nc is not None:
             return self._nc
         params = self._get_connection_params(context.get_current(), obj)
-        self._nc = novaclient.NovaClient(params)
+        self._nc = driver_base.SenlinDriver().compute(params)
         return self._nc
 
     def do_validate(self, obj):
