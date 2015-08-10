@@ -19,7 +19,7 @@ from senlin.api.middleware import webhook as webhook_middleware
 from senlin.common import context
 from senlin.common import exception
 from senlin.common import policy
-from senlin.drivers.openstack import sdk
+from senlin.drivers.openstack import keystone_v3
 from senlin.engine import webhook as webhook_mod
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -155,22 +155,21 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         res = self.middleware._get_credential(webhook.id, key)
         self.assertEqual(expected_auth_url, res['auth_url'])
 
-    @mock.patch.object(sdk, 'authenticate')
-    def test_get_token_succeeded(self, mock_authenticate):
+    @mock.patch.object(keystone_v3, 'get_token')
+    def test_get_token_succeeded(self, mock_get_token):
         class FakeAccessInfo(object):
             def __init__(self, auth_token):
                 self.auth_token = auth_token
 
-        access_info = FakeAccessInfo('TEST_TOKEN')
-        mock_authenticate.return_value = access_info
+        mock_get_token.return_value = 'TEST_TOKEN'
 
         token = self.middleware._get_token(self.credential)
         self.assertEqual('TEST_TOKEN', token)
 
-    @mock.patch.object(sdk, 'authenticate')
-    def test_get_token_failed(self, mock_authenticate):
+    @mock.patch.object(keystone_v3, 'get_token')
+    def test_get_token_failed(self, mock_get_token):
         self.credential['webhook_id'] = 'WEBHOOK_ID'
-        mock_authenticate.side_effect = Exception()
+        mock_get_token.side_effect = Exception()
 
         self.assertRaises(exception.Forbidden, self.middleware._get_token,
                           self.credential)

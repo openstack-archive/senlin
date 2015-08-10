@@ -19,7 +19,6 @@ from senlin.common.i18n import _
 from senlin.common import wsgi
 from senlin.db import api as db_api
 from senlin.drivers.openstack import keystone_v3
-from senlin.drivers.openstack import sdk
 
 
 class TrustMiddleware(wsgi.Middleware):
@@ -43,7 +42,7 @@ class TrustMiddleware(wsgi.Middleware):
                 cred_exists = True
                 pass
 
-        admin_id = sdk.get_service_user_id()
+        admin_id = keystone_v3.get_service_user_id()
         if admin_id is None:
             msg = _('Failed checking service user checking.')
             raise webob.exc.HTTPInternalServerError(msg)

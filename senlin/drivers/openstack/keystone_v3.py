@@ -173,8 +173,33 @@ def get_service_credentials(**kwargs):
         'password': CONF.authentication.service_password,
         'auth_url': CONF.authentication.auth_url,
         'project_name': CONF.authentication.service_project_name,
-        'user_domain_name': 'Default',
-        'project_domain_name': 'Default',
+        'user_domain_name': cfg.CONF.authentication.service_user_domain,
+        'project_domain_name': cfg.CONF.authentication.service_project_domain,
     }
     creds.update(**kwargs)
     return creds
+
+
+def get_service_user_id():
+    '''Get ID of senlin service user'''
+    creds = get_service_credentials()
+
+    try:
+        access_info = sdk.authenticate(**creds)
+        user_id = access_info.user_id
+    except Exception as ex:
+        LOG.exception(_('Authentication failure: %s'), six.text_type(ex))
+
+    return user_id
+
+
+def get_token(**creds):
+    '''Get token using given credential'''
+
+    try:
+        access_info = sdk.authenticate(**creds)
+        token = access_info.auth_token
+    except Exception as ex:
+        LOG.exception(_('Authentication failure: %s'), six.text_type(ex))
+
+    return token
