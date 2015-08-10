@@ -31,7 +31,7 @@ def calculate_desired(current, adj_type, number, min_step):
         desired = number
     elif adj_type == consts.CHANGE_IN_CAPACITY:
         desired = current + number
-    elif adj_type == consts.CHANGE_IN_PERCENTAGE:
+    else:   # consts.CHANGE_IN_PERCENTAGE:
         delta = (number * current) / 100.0
         if delta > 0.0:
             rounded = int(math.ceil(delta) if math.fabs(delta) < 1.0
