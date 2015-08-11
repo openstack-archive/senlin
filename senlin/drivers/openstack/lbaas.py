@@ -13,9 +13,9 @@
 import eventlet
 import six
 
+from oslo_context import context as oslo_context
 from oslo_log import log as logging
 
-from senlin.common import context
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.drivers import base
@@ -174,7 +174,8 @@ class LoadBalancerDriver(base.DriverBase):
             return None
 
         address = addresses[net_name]
-        member = self.nc().pool_member_create(pool_id, address, port, subnet)
+        member = self.nc().pool_member_create(pool_id, address, port,
+                                              subnet_obj['id'])
         self._wait_for_lb_ready(lb_id)
 
         return member.id
@@ -201,10 +202,11 @@ class LoadBalancerDriver(base.DriverBase):
     def _get_node_address(self, node, version=4):
         """Get IP address of node with specific version"""
 
-        node_detail = node.get_details(context.get_current())
-        node_addresses = node_detail.get('addresses')
+        node_detail = node.get_details(oslo_context.get_current())
+        node_addresses = node_detail.get('addresses', {})
 
         address = {}
+
         for network in node_addresses:
             for addr in node_addresses[network]:
                 if addr['version'] == version:
