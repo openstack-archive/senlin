@@ -41,3 +41,4 @@ class SenlinDriver(object):
         # TODO(Yanyan Hu): Use openstack compute driver(nova_v2)
         # as the start point of using senlin generic driver.
         self.compute = cloud_backend_plugin.ComputeClient
+        self.orchestration = cloud_backend_plugin.OrchestrationClient

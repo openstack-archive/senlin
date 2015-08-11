@@ -19,7 +19,7 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.common import utils
-from senlin.drivers.openstack import heat_v1 as heatclient
+from senlin.drivers import base as driver_base
 from senlin.engine import scheduler
 from senlin.profiles import base
 
@@ -87,7 +87,7 @@ class StackProfile(base.Profile):
         if self.hc:
             return self.hc
         params = self._get_connection_params(context.get_current(), obj)
-        self.hc = heatclient.HeatClient(params)
+        self.hc = driver_base.SenlinDriver().orchestration(params)
         return self.hc
 
     def do_validate(self, obj):
