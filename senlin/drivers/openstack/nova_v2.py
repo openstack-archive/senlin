@@ -32,7 +32,7 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.get_flavor(value)
 
     @sdk.translate_exception
-    def flavor_get_by_name(self, name_or_id, ignore_missing=True):
+    def flavor_get_by_name(self, name_or_id, ignore_missing=False):
         return self.conn.compute.find_flavor(name_or_id, ignore_missing)
 
     @sdk.translate_exception
@@ -52,7 +52,7 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.get_image(value)
 
     @sdk.translate_exception
-    def image_get_by_name(self, name_or_id, ignore_missing=True):
+    def image_get_by_name(self, name_or_id, ignore_missing=False):
         return self.conn.compute.find_image(name_or_id, ignore_missing)
 
     @sdk.translate_exception
@@ -72,7 +72,7 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.get_keypair(value)
 
     @sdk.translate_exception
-    def keypair_get_by_name(self, name_or_id, ignore_missing=True):
+    def keypair_get_by_name(self, name_or_id, ignore_missing=False):
         return self.conn.compute.find_keypair(name_or_id, ignore_missing)
 
     @sdk.translate_exception

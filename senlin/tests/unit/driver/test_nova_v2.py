@@ -49,7 +49,7 @@ class TestNovaV2(base.SenlinTestCase):
     def test_flavor_get_by_name(self):
         d = nova_v2.NovaClient(self.ctx)
         d.flavor_get_by_name('foo')
-        self.compute.find_flavor.assert_called_once_with('foo', True)
+        self.compute.find_flavor.assert_called_once_with('foo', False)
         self.compute.find_flavor.reset_mock()
 
         d.flavor_get_by_name('foo', True)
@@ -103,7 +103,7 @@ class TestNovaV2(base.SenlinTestCase):
     def test_image_get_by_name(self):
         d = nova_v2.NovaClient(self.ctx)
         d.image_get_by_name('foo')
-        self.compute.find_image.assert_called_once_with('foo', True)
+        self.compute.find_image.assert_called_once_with('foo', False)
         self.compute.find_image.reset_mock()
 
         d.image_get_by_name('foo', True)
@@ -156,7 +156,7 @@ class TestNovaV2(base.SenlinTestCase):
     def test_keypair_get_by_name(self):
         d = nova_v2.NovaClient(self.ctx)
         d.keypair_get_by_name('foo')
-        self.compute.find_keypair.assert_called_once_with('foo', True)
+        self.compute.find_keypair.assert_called_once_with('foo', False)
         self.compute.find_keypair.reset_mock()
 
         d.keypair_get_by_name('foo', True)
