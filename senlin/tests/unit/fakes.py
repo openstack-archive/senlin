@@ -60,20 +60,24 @@ class TestPolicy(policy_base.Policy):
         'KEY2': schema.Integer('key2', default=1),
     }
 
+    TARGET = [
+        ('BEFORE', 'CLUSTER_ADD_NODES')
+    ]
+
     def __init__(self, type_name, name, **kwargs):
         super(TestPolicy, self).__init__(type_name, name, **kwargs)
 
-    def attach(self, context, cluster, policy_data):
+    def attach(self, cluster):
+        return True, {}
+
+    def detach(self, cluster):
+        return True, 'OK'
+
+    def pre_op(self, cluster_id, action):
         return
 
-    def detach(self, context, cluster, policy_data):
+    def post_op(self, cluster_id, action):
         return
-
-    def pre_op(self, cluster_id, action, policy_data):
-        return policy_data
-
-    def post_op(self, cluster_id, action, policy_data):
-        return policy_data
 
 
 class TestTrigger(trigger_base.Trigger):

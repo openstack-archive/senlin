@@ -1461,7 +1461,7 @@ def action_delete(context, action_id, force=False):
     action = query.get(action_id)
 
     if not action:
-        raise exception.ActionNotFound(action=action_id)
+        return
 
     # TODO(liuh): Need check if and how an action can be safety deleted
     action.delete()

@@ -94,13 +94,17 @@ class Action(object):
         # context will be persisted into database so that any worker thread
         # can pick the action up and execute it on behalf of the initiator
 
-        self.id = kwargs.get('id', '')
+        self.id = kwargs.get('id', None)
         self.name = kwargs.get('name', '')
+
+        # TODO(Qiming): rework the context initialization logic
         self.context = req_context.RequestContext.from_dict(context.to_dict())
 
+        # TODO(Qiming): make description a db column
         self.description = kwargs.get('description', '')
 
-        # Target is the ID of a cluster, a node, a profile
+        # TODO(Qiming): make this a positional argument
+        # Target is the ID of a cluster, a node or a policy
         self.target = kwargs.get('target')
 
         self.action = action
@@ -151,6 +155,8 @@ class Action(object):
     def store(self, context):
         '''Store the action record into database table.'''
 
+        timestamp = timeutils.utcnow()
+
         values = {
             'name': self.name,
             'context': self.context.to_dict(),
@@ -168,17 +174,19 @@ class Action(object):
             'outputs': self.outputs,
             'depends_on': self.depends_on,
             'depended_by': self.depended_by,
-            'created_time': timeutils.utcnow(),
+            'created_time': self.created_time,
             'updated_time': self.updated_time,
             'deleted_time': self.deleted_time,
             'data': self.data,
         }
 
         if self.id:
-            values['updated_time'] = timeutils.utcnow()
+            self.updated_time = timestamp
+            values['updated_time'] = timestamp
             db_api.action_update(context, self.id, values)
         else:
-            values['created_time'] = timeutils.utcnow()
+            self.created_time = timestamp
+            values['created_time'] = timestamp
             action = db_api.action_create(context, values)
             self.id = action.id
 
@@ -208,6 +216,8 @@ class Action(object):
             'outputs': record.outputs,
             'depends_on': record.depends_on,
             'depended_by': record.depended_by,
+            'created_time': record.created_time,
+            'updated_time': record.updated_time,
             'deleted_time': record.deleted_time,
             'data': record.data,
         }
@@ -215,15 +225,15 @@ class Action(object):
         return cls(context, record.action, **kwargs)
 
     @classmethod
-    def load(cls, context, action_id=None, action=None):
+    def load(cls, context, action_id=None, db_action=None):
         '''Retrieve an action from database.'''
-        if action is None:
-            action = db_api.action_get(context, action_id)
+        if db_action is None:
+            db_action = db_api.action_get(context, action_id)
 
-            if action is None:
+            if db_action is None:
                 raise exception.ActionNotFound(action=action_id)
 
-        return cls._from_db_record(action)
+        return cls._from_db_record(db_action)
 
     @classmethod
     def load_all(cls, context, filters=None, limit=None, marker=None,
@@ -248,12 +258,12 @@ class Action(object):
         if cmd not in self.COMMANDS:
             return
 
-        if cmd == self.CANCEL:
+        if cmd == self.SIG_CANCEL:
             expected_statuses = (self.INIT, self.WAITING, self.READY,
                                  self.RUNNING)
-        elif cmd == self.SUSPEND:
+        elif cmd == self.SIG_SUSPEND:
             expected_statuses = (self.RUNNING)
-        else:     # RESUME
+        else:     # SIG_RESUME
             expected_statuses = (self.SUSPENDED)
 
         if self.status not in expected_statuses:
@@ -354,7 +364,6 @@ class Action(object):
         if target not in ['BEFORE', 'AFTER']:
             return
 
-        self.data['status'] = policy_mod.CHECK_OK
         # TODO(Anyone): This could use the cluster's runtime data
         bindings = cp_mod.ClusterPolicy.load_all(self.context, cluster_id,
                                                  sort_keys=['priority'],
@@ -380,16 +389,20 @@ class Action(object):
                 self.data['status'] = policy_mod.CHECK_ERROR
                 self.data['reason'] = _('Policy %(id)s cooldown is still '
                                         'in progress.') % {'id': policy.id}
-                break
+                return
 
             method(cluster_id, self)
 
             # Abort policy checking if failures found
-            if self.data['status'] == policy_mod.CHECK_ERROR:
+            if ('status' in self.data and
+                    self.data['status'] == policy_mod.CHECK_ERROR):
                 LOG.warning(_('Failed policy checking: %s'),
                             self.data['reason'])
+                self.data['reason'] = _('Policy checking failed at policy '
+                                        '%(id)s.') % {'id': policy.id}
                 return
 
+        self.data['status'] = policy_mod.CHECK_OK
         return
 
     def to_dict(self):
@@ -412,15 +425,12 @@ class Action(object):
             'outputs': self.outputs,
             'depends_on': self.depends_on,
             'depended_by': self.depended_by,
+            'created_time': self.created_time,
+            'updated_time': self.updated_time,
             'deleted_time': self.deleted_time,
             'data': self.data,
         }
         return action_dict
-
-    @classmethod
-    def from_dict(cls, context=None, **kwargs):
-        action = kwargs.pop('action')
-        return cls(context, action, **kwargs)
 
 
 def ActionProc(context, action_id, worker_id):
@@ -428,18 +438,19 @@ def ActionProc(context, action_id, worker_id):
 
     # Step 1: lock the action for execution
     timestamp = wallclock()
-    result = db_api.action_acquire(context, action_id, worker_id, timestamp)
-    if result is None:
+    db_action = db_api.action_acquire(context, action_id, worker_id, timestamp)
+    if db_action is None:
         LOG.debug(_('Failed locking action "%s" for execution'), action_id)
         return False
 
     # Step 2: materialize the action object
-    action = Action.load(context, action_id=action_id)
+    action = Action.load(context, db_action=db_action)
 
     LOG.info(_LI('Action %(name)s [%(id)s] started'),
              {'name': six.text_type(action.action), 'id': action.id})
 
     reason = 'Action completed'
+    success = True
     try:
         # Step 3: execute the action
         result, reason = action.execute()
@@ -453,6 +464,9 @@ def ActionProc(context, action_id, worker_id):
                         '%(action)s (%(id)s) execution: %(reason)s'),
                       {'action': action.action, 'id': action.id,
                        'reason': reason})
+        success = False
     finally:
         # NOTE: locks on action is eventually released here by status update
         action.set_status(result, reason)
+
+    return success
