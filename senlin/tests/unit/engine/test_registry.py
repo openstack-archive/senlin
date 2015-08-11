@@ -51,6 +51,8 @@ class PluginInfoTest(base.SenlinTestCase):
         self.assertTrue(pi1 != pi4)
         self.assertTrue(pi2 != pi4)
         self.assertTrue(pi3 != pi4)
+        nothing = None
+        self.assertFalse(pi1 == nothing)
 
     def test_ordering(self):
         plugin1 = mock.Mock()
@@ -65,6 +67,7 @@ class PluginInfoTest(base.SenlinTestCase):
 
         pi4 = registry.PluginInfo(self.reg, 'BAR', plugin2)
         self.assertTrue(pi4 < pi1)
+        self.assertFalse(pi4 > pi1)
 
     def test_str(self):
         plugin = mock.Mock()
@@ -112,6 +115,10 @@ class RegistryTest(base.SenlinTestCase):
         # additional check: this is a global registry
         self.assertFalse(new_pi.user_provided)
 
+        # removal
+        reg._register_info('FOO', None)
+        self.assertEqual(0, len(reg._registry))
+
     def test_register_plugin(self):
         reg = registry.Registry('SENLIN', None)
         plugin = mock.Mock()
@@ -143,6 +150,14 @@ class RegistryTest(base.SenlinTestCase):
         self.assertIsInstance(pi5, registry.PluginInfo)
         self.assertEqual('K5', pi5.name)
         self.assertEqual('Class5', pi5.plugin)
+
+        # load with None
+        snippet = {
+            'K5': None
+        }
+        reg.load(snippet)
+        res = reg._registry.get('K5')
+        self.assertIsNone(res)
 
     def test_iterable_by(self):
         reg = registry.Registry('GLOBAL', None)
