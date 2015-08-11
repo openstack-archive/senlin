@@ -287,10 +287,13 @@ class Cluster(object):
         '''Attach specified policy instance to this cluster.'''
 
         # TODO(Qiming): check conflicts with existing policies
+        if 'policies' not in self.rt:
+            self.rt['policies'] = []
+
         self.rt['policies'].append(policy)
 
     def remove_policy(self, policy):
         # TODO(Qiming): check if actions of specified policies are ongoing
-        for p in self.rt['policies']:
+        for p in self.rt.get('policies', []):
             if(p.id == policy.id):
                 self.rt['policies'].remove(policy)
