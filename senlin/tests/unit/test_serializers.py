@@ -36,8 +36,9 @@ class JSONResponseSerializerTest(base.SenlinTestCase):
         self.assertEqual(expected, actual)
 
     def test_to_json_with_more_deep_format(self):
-        fixture = {"is_public": True, "name": [{"name1": "test"}]}
-        expected = '{"is_public": true, "name": [{"name1": "test"}]}'
+        val = complex(1, 2)
+        fixture = {"is_public": True, "v": val}
+        expected = '{"is_public": true, "v": "(1+2j)"}'
         actual = serializers.JSONResponseSerializer().to_json(fixture)
         self.assertEqual(expected, actual)
 

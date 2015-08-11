@@ -15,10 +15,11 @@ Utility methods for serializing responses
 """
 
 import datetime
-import json
 
 from oslo_log import log as logging
+from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
+import six
 
 LOG = logging.getLogger(__name__)
 
@@ -29,9 +30,9 @@ class JSONResponseSerializer(object):
         def sanitizer(obj):
             if isinstance(obj, datetime.datetime):
                 return obj.isoformat()
-            return obj
+            return six.text_type(obj)
 
-        response = json.dumps(data, default=sanitizer, sort_keys=True)
+        response = jsonutils.dumps(data, default=sanitizer, sort_keys=True)
         LOG.debug("JSON response : %s" % response)
         return response
 
