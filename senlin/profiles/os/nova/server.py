@@ -209,9 +209,8 @@ class ServerProfile(base.Profile):
         for k in self.KEYS:
             if k == self.CONTEXT:
                 continue
-            if k in self.spec_data:
-                if self.spec_data[k] is not None:
-                    kwargs[k] = self.spec_data[k]
+            if self.spec_data[k] is not None:
+                kwargs[k] = self.spec_data[k]
 
         name_or_id = self.spec_data[self.IMAGE]
         if name_or_id is not None:
@@ -225,12 +224,24 @@ class ServerProfile(base.Profile):
             kwargs.pop(self.IMAGE)
             kwargs['imageRef'] = image.id
 
-        flavor = self.spec_data[self.FLAVOR]
-        if flavor is not None:
-            flavor = self.nova(obj).flavor_get(flavor)
-            # wait for new verson of openstacksdk to fix this
-            kwargs.pop(self.FLAVOR)
-            kwargs['flavorRef'] = flavor.id
+        flavor_id = self.spec_data[self.FLAVOR]
+        try:
+            flavor = self.nova(obj).flavor_get(flavor_id)
+        except Exception as ex:
+            flavor = None
+
+        if flavor is None:
+            # Try again using flavor_id as flavor name
+            try:
+                flavor = self.nova(obj).flavor_get_by_name(
+                    flavor_id, ignore_missing=False)
+            except Exception as ex:
+                LOG.exception(_('Failed in getting flavor: %s'),
+                              six.text_type(ex))
+                raise exception.ResourceNotFound(resource=flavor_id)
+        # wait for new verson of openstacksdk to fix this
+        kwargs.pop(self.FLAVOR)
+        kwargs['flavorRef'] = flavor.id
 
         if obj.name is not None:
             kwargs[self.NAME] = obj.name + '-' + utils.random_name(8)
