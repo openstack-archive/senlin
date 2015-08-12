@@ -181,7 +181,12 @@ creating it. This data is referred to as the *metadata* for the profile::
 
   $ senlin profile-create -t os.heat.stack \
     -s heat_stack_random_string.spec \
-    -d author=Tom;version=1.0 \
+    -M "author=Tom;version=1.0" \
+    my_stack
+
+  $ senlin profile-create -t os.heat.stack \
+    -s heat_stack_random_string.spec \
+    -M author=Tom -M version=1.0 \
     my_stack
 
 
@@ -254,7 +259,7 @@ the name of a profile to ``new_server``::
 The following command creates or updates the metadata associated with the given
 profile::
 
-  $ senlin profile-update -d version=2.2 -t os.nova.server myserver
+  $ senlin profile-update -M version=2.2 -t os.nova.server myserver
 
 **NOTE**: The option :option:`-t <profile_type>` will be removed in future.
 

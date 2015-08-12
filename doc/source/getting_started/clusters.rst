@@ -208,7 +208,7 @@ immediately after the cluster object is created.
 Other Properties
 ^^^^^^^^^^^^^^^^
 
-You can use the option :option:`--metadata` (or :option:`-d`) to associate
+You can use the option :option:`--metadata` (or :option:`-M`) to associate
 some key-value pairs to the cluster to be created. These data are referred to
 as the "metadata" for the cluster.
 
@@ -280,7 +280,7 @@ you can use the following command::
 
 You can change the ``timeout`` property using option :option:`--timeout` (or
 :option:`-t`) for the ``cluster-update`` command. You can change the metadata
-associated with cluster using option :option:`--metadata` (or :option:`-d`).
+associated with cluster using option :option:`--metadata` (or :option:`-M`).
 When cluster nesting is implemented, you will be able to change the parent
 cluster using the option :option:`--parent` (or :option:`-o`).
 
