@@ -131,6 +131,11 @@ class TestEnvironment(base.SenlinTestCase):
         self.assertEqual({}, result['custom_policies'])
         self.assertEqual({}, result['custom_triggers'])
 
+    def test_parse_empty(self):
+        env = environment.Environment()
+        result = env.parse(None)
+        self.assertEqual({}, result)
+
     def test_load(self):
         env = environment.Environment()
         env.load({})
@@ -294,6 +299,16 @@ class TestEnvironment(base.SenlinTestCase):
         mock_dir = self.patchobject(glob, 'glob', return_value=[])
         env_dir = '/etc/senlin/environments'
         env = environment.Environment()
+        env.read_global_environment()
+
+        mock_dir.assert_called_once_with(env_dir + '/*')
+
+    def test_read_global_environment_oserror(self):
+        mock_dir = self.patchobject(glob, 'glob')
+        mock_dir.side_effect = OSError
+
+        env = environment.Environment(is_global=True)
+        env_dir = '/etc/senlin/environments'
         env.read_global_environment()
 
         mock_dir.assert_called_once_with(env_dir + '/*')
