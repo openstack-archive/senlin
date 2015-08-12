@@ -46,17 +46,17 @@ class TestNovaV2(base.SenlinTestCase):
         d.flavor_get('foo')
         self.compute.get_flavor.assert_called_once_with('foo')
 
-    def test_flavor_get_by_name(self):
+    def test_flavor_find(self):
         d = nova_v2.NovaClient(self.ctx)
-        d.flavor_get_by_name('foo')
+        d.flavor_find('foo')
         self.compute.find_flavor.assert_called_once_with('foo', False)
         self.compute.find_flavor.reset_mock()
 
-        d.flavor_get_by_name('foo', True)
+        d.flavor_find('foo', True)
         self.compute.find_flavor.assert_called_once_with('foo', True)
         self.compute.find_flavor.reset_mock()
 
-        d.flavor_get_by_name('foo', False)
+        d.flavor_find('foo', False)
         self.compute.find_flavor.assert_called_once_with('foo', False)
 
     def test_flavor_list(self):

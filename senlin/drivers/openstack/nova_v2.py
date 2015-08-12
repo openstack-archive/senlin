@@ -32,7 +32,7 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.get_flavor(value)
 
     @sdk.translate_exception
-    def flavor_get_by_name(self, name_or_id, ignore_missing=False):
+    def flavor_find(self, name_or_id, ignore_missing=False):
         return self.conn.compute.find_flavor(name_or_id, ignore_missing)
 
     @sdk.translate_exception
