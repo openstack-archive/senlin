@@ -365,6 +365,35 @@ class EngineClient(object):
         return rpc_method(ctxt,
                           self.make_msg('webhook_delete', identity=identity))
 
+    def trigger_list(self, ctxt, limit=None, marker=None, sort_keys=None,
+                     sort_dir=None, filters=None, project_safe=True,
+                     show_deleted=False):
+        return self.call(ctxt,
+                         self.make_msg('trigger_list',
+                                       limit=limit, marker=marker,
+                                       sort_keys=sort_keys, sort_dir=sort_dir,
+                                       filters=filters,
+                                       project_safe=project_safe,
+                                       show_deleted=show_deleted))
+
+    def trigger_create(self, ctxt, name, spec, description=None, enabled=None,
+                       state=None, severity=None):
+        return self.call(ctxt,
+                         self.make_msg('trigger_create', name=name, spec=spec,
+                                       description=description,
+                                       enabled=enabled, state=state,
+                                       severity=severity))
+
+    def trigger_get(self, ctxt, identity):
+        return self.call(ctxt,
+                         self.make_msg('trigger_get', identity=identity))
+
+    def trigger_delete(self, ctxt, identity, force=False, cast=True):
+        rpc_method = self.cast if cast else self.call
+        return rpc_method(ctxt,
+                          self.make_msg('trigger_delete', identity=identity,
+                                        force=force))
+
     def event_list(self, ctxt, filters=None, limit=None, marker=None,
                    sort_keys=None, sort_dir=None, project_safe=True,
                    show_deleted=False):
