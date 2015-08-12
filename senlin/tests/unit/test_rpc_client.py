@@ -37,6 +37,58 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         self.rpcapi = rpc_client.EngineClient()
         super(EngineRpcAPITestCase, self).setUp()
 
+    @mock.patch.object(messaging, 'get_rpc_client')
+    def test_call(self, mock_client):
+        client = mock.Mock()
+        mock_client.return_value = client
+
+        method = 'fake_method'
+        kwargs = {'key': 'value'}
+        rpcapi = rpc_client.EngineClient()
+        msg = rpcapi.make_msg(method, **kwargs)
+
+        # with no version
+        res = rpcapi.call(self.context, msg)
+
+        self.assertEqual(client, rpcapi._client)
+        client.call.assert_called_once_with(self.context, 'fake_method',
+                                            key='value')
+        self.assertEqual(res, client.call.return_value)
+
+        # with version
+        res = rpcapi.call(self.context, msg, version='123')
+        client.prepare.assert_called_once_with(version='123')
+        new_client = client.prepare.return_value
+        new_client.call.assert_called_once_with(self.context, 'fake_method',
+                                                key='value')
+        self.assertEqual(res, new_client.call.return_value)
+
+    @mock.patch.object(messaging, 'get_rpc_client')
+    def test_cast(self, mock_client):
+        client = mock.Mock()
+        mock_client.return_value = client
+
+        method = 'fake_method'
+        kwargs = {'key': 'value'}
+        rpcapi = rpc_client.EngineClient()
+        msg = rpcapi.make_msg(method, **kwargs)
+
+        # with no version
+        res = rpcapi.cast(self.context, msg)
+
+        self.assertEqual(client, rpcapi._client)
+        client.cast.assert_called_once_with(self.context, 'fake_method',
+                                            key='value')
+        self.assertEqual(res, client.cast.return_value)
+
+        # with version
+        res = rpcapi.cast(self.context, msg, version='123')
+        client.prepare.assert_called_once_with(version='123')
+        new_client = client.prepare.return_value
+        new_client.cast.assert_called_once_with(self.context, 'fake_method',
+                                                key='value')
+        self.assertEqual(res, new_client.cast.return_value)
+
     def _to_remote_error(self, error):
         '''Converts the given exception to one with the _Remote suffix.'''
         exc_info = (type(error), error, None)
