@@ -10,7 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# from senlin.drivers import heat_v1 as heat
 from senlin.profiles import base
 
 __type_name__ = 'os.heat.resource'

@@ -12,7 +12,7 @@
 
 import mock
 
-from senlin.drivers.openstack import heat_v1 as heatclient
+from senlin.drivers import base as driver_base
 from senlin.profiles.os.heat import stack
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -44,7 +44,14 @@ class TestHeatStackProfile(base.SenlinTestCase):
         self.assertIsNone(profile.hc)
         self.assertIsNone(profile.stack_id)
 
-    def test_heat_client(self):
+    @mock.patch.object(driver_base, 'SenlinDriver')
+    def test_heat_client_create_new_hc(self, mock_senlindriver):
+        test_stack = mock.Mock()
+        hc = mock.Mock()
+        sd = mock.Mock()
+        sd.orchestration.return_value = hc
+        mock_senlindriver.return_value = sd
+
         kwargs = {
             'spec': self.spec
         }
@@ -52,18 +59,35 @@ class TestHeatStackProfile(base.SenlinTestCase):
                                      'test-profile',
                                      **kwargs)
 
-        profile.hc = mock.Mock()
-        test_stack = mock.Mock()
-        profile.heat(test_stack)
-        self.assertIsNotNone(profile.hc)
+        # New hc will be created if no cache is found
+        profile.hc = None
+        params = mock.Mock()
+        mock_param = self.patchobject(profile, '_get_connection_params',
+                                      return_value=params)
+        res = profile.heat(test_stack)
+        self.assertEqual(hc, res)
+        self.assertEqual(hc, profile.hc)
+        mock_param.assert_called_once_with(mock.ANY, test_stack)
+        sd.orchestration.assert_called_once_with(params)
 
-        with mock.patch('senlin.drivers.openstack.heat_v1.HeatClient',
-                        mock.MagicMock()):
-            profile._get_connection_params = mock.MagicMock()
-            profile.hc = None
-            profile.heat(test_stack)
-            self.assertIsNotNone(profile.hc)
-            self.assertTrue(heatclient.HeatClient.called)
+    @mock.patch.object(driver_base, 'SenlinDriver')
+    def test_heat_client_use_cached_hc(self, mock_senlindriver):
+        test_stack = mock.Mock()
+        hc = mock.Mock()
+        sd = mock.Mock()
+        sd.orchestration.return_value = hc
+        mock_senlindriver.return_value = sd
+
+        kwargs = {
+            'spec': self.spec
+        }
+        profile = stack.StackProfile('os.heat.stack',
+                                     'test-profile',
+                                     **kwargs)
+
+        # Cache hc will be used
+        profile.hc = hc
+        self.assertEqual(hc, profile.heat(test_stack))
 
     def test_do_validate(self):
         kwargs = {

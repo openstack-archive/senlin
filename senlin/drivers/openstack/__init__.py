@@ -10,8 +10,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from senlin.drivers.openstack import heat_v1
 from senlin.drivers.openstack import nova_v2
 
 
 def ComputeClient(params):
     return nova_v2.NovaClient(params)
+
+
+def OrchestrationClient(params):
+    return heat_v1.HeatClient(params)
