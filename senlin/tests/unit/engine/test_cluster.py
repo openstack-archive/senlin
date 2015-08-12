@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import mock
 from oslo_config import cfg
 import six
 
@@ -268,6 +269,12 @@ class TestCluster(base.SenlinTestCase):
         self.assertIsNotNone(cluster.created_time)
         self.assertIsNotNone(cluster.updated_time)
 
+        # set status without a reason
+        reason = cluster.status_reason
+        cluster.set_status(self.context, 'BOOM')
+        self.assertEqual('BOOM', cluster.status)
+        self.assertEqual(reason, cluster.status_reason)
+
         # Delete
         cluster.do_delete(self.context)
         self.assertEqual(cluster.DELETED, cluster.status)
@@ -275,3 +282,87 @@ class TestCluster(base.SenlinTestCase):
         self.assertIsNotNone(cluster.created_time)
         self.assertIsNotNone(cluster.updated_time)
         self.assertIsNotNone(cluster.deleted_time)
+
+    def test_cluster_do_create_wrong_status(self):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+        cluster.status = cluster.ACTIVE
+        res = cluster.do_create(self.context)
+        self.assertFalse(res)
+
+    def test_cluster_get_nodes(self):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+        # empty
+        self.assertEqual([], cluster.get_nodes())
+
+        # with nodes
+        node1 = mock.Mock()
+        node2 = mock.Mock()
+        cluster.rt = {'nodes': [node1, node2]}
+        res = cluster.get_nodes()
+        self.assertEqual([node1, node2], res)
+
+    def test_cluster_get_policies(self):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+        # empty
+        self.assertEqual([], cluster.get_policies())
+
+        # with policies attached
+        policy1 = mock.Mock()
+        policy2 = mock.Mock()
+        cluster.rt = {'policies': [policy1, policy2]}
+        res = cluster.get_policies()
+        self.assertEqual([policy1, policy2], res)
+
+    def test_cluster_add_policy(self):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+        # empty
+        self.assertEqual([], cluster.get_policies())
+
+        # attach one policy (for initialize the policies list)
+        policy = mock.Mock()
+        cluster.add_policy(policy)
+        res = cluster.get_policies()
+        self.assertEqual([policy], res)
+
+        # attach another policy
+        policy_another = mock.Mock()
+        cluster.add_policy(policy_another)
+        res = cluster.get_policies()
+        self.assertEqual([policy, policy_another], res)
+
+    def test_cluster_remove_policy(self):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+        # empty
+        self.assertEqual([], cluster.get_policies())
+
+        # remove from empty list should be okay
+        res = cluster.remove_policy('BOGUS')
+        self.assertIsNone(res)
+
+        # attach one policy
+        policy1 = mock.Mock()
+        policy1.id = 'PP1'
+        cluster.add_policy(policy1)
+        self.assertEqual([policy1], cluster.get_policies())
+
+        # remove non-existent should be okay
+        policy_other = mock.Mock()
+        policy_other.id = 'OTHER'
+        res = cluster.remove_policy(policy_other)
+        self.assertIsNone(res)
+        self.assertEqual([policy1], cluster.get_policies())
+
+        # attach another policy
+        policy2 = mock.Mock()
+        policy2.id = 'PP2'
+        cluster.add_policy(policy2)
+        self.assertEqual([policy1, policy2], cluster.get_policies())
+
+        res = cluster.remove_policy(policy2)
+        self.assertIsNone(res)
+        self.assertEqual([policy1], cluster.get_policies())
