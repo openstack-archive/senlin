@@ -45,12 +45,7 @@ class PolicyTypeController(object):
 
     @util.policy_enforce
     def schema(self, req, type_name):
-        policy_schema = self.rpc_client.policy_type_schema(req.context,
-                                                           type_name)
-        if not policy_schema:
-            raise exc.HTTPInternalServerError()
-
-        return policy_schema
+        return self.rpc_client.policy_type_schema(req.context, type_name)
 
 
 def create_resource(options):
