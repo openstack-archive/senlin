@@ -88,10 +88,15 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual({}, node.metadata)
         self.assertEqual({}, node.rt)
 
-    def test_node_store_init(self):
+    def test_node_init_random_name(self):
+        node = nodem.Node(None, self.profile.id, None)
+        self.assertIsNotNone(node.name)
+        self.assertEqual(13, len(node.name))
+
+    @mock.patch.object(eventm, 'info')
+    def test_node_store_init(self, mock_info):
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
                           self.context, role='first_node')
-        mock_info = self.patchobject(eventm, 'info')
         self.assertIsNone(node.id)
         node_id = node.store(self.context)
         self.assertIsNotNone(node_id)
@@ -119,6 +124,20 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual({}, node_info.data)
 
         mock_info.assert_called_once_with(self.context, node, 'create')
+
+    @mock.patch.object(eventm, 'info')
+    def test_node_store_update(self, mock_info):
+        node = nodem.Node('node1', self.profile.id, None)
+        node_id = node.store(self.context)
+
+        mock_info.assert_called_once_with(self.context, node, 'create')
+        mock_info.reset_mock()
+
+        node.name = 'new_name'
+        new_node_id = node.store(self.context)
+
+        self.assertEqual(node_id, new_node_id)
+        mock_info.assert_called_once_with(self.context, node, 'update')
 
     def test_node_load(self):
         ex = self.assertRaises(exception.NodeNotFound,
@@ -239,6 +258,12 @@ class TestNode(base.SenlinTestCase):
         self.assertIsNone(node.deleted_time)
         self.assertIsNotNone(node.updated_time)
 
+        node.set_status(self.context, node.ACTIVE)
+        self.assertEqual('ACTIVE', node.status)
+        self.assertIsNotNone(node.created_time)
+        self.assertIsNone(node.deleted_time)
+        self.assertIsNotNone(node.updated_time)
+
         # delete
         node.set_status(self.context, node.DELETING,
                         reason='Deletion in progress')
@@ -253,6 +278,37 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual('Deletion succeeded', node.status_reason)
         self.assertIsNotNone(node.created_time)
         self.assertIsNotNone(node.deleted_time)
+
+    @mock.patch.object(profiles_base.Profile, 'get_details')
+    def test_node_get_details(self, mock_details):
+        node = nodem.Node('node1', self.profile.id, None)
+        for physical_id in (None, ''):
+            node.physical_id = physical_id
+            self.assertEqual({}, node.get_details(self.context))
+            self.assertEqual(0, mock_details.call_count)
+
+        node.physical_id = 'FAKE_ID'
+        mock_details.return_value = {'foo': 'bar'}
+        res = node.get_details(self.context)
+        mock_details.assert_called_once_with(self.context, node)
+        self.assertEqual({'foo': 'bar'}, res)
+
+    @mock.patch.object(eventm, 'warning')
+    def test_node_handle_exception(self, mock_warning):
+        ex = exception.ResourceStatusError(resource_id='FAKE_ID',
+                                           status='FAKE_STATUS',
+                                           reason='FAKE_REASON')
+        node = nodem.Node('node1', self.profile.id, None)
+        node.store(self.context)
+        node._handle_exception(self.context, 'ACTION', 'STATUS', ex)
+        db_node = db_api.node_get(self.context, node.id)
+        self.assertEqual(node.ERROR, db_node.status)
+        self.assertEqual('Profile failed in ACTIOing resource '
+                         '(FAKE_ID) due to: %s' % six.text_type(ex),
+                         db_node.status_reason)
+        self.assertEqual('FAKE_ID', db_node.physical_id)
+        mock_warning.assert_called_once_with(self.context, node, 'ACTION',
+                                             'STATUS', six.text_type(ex))
 
     @mock.patch.object(eventm, 'info')
     @mock.patch.object(nodem.Node, 'store')

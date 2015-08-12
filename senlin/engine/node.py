@@ -18,6 +18,7 @@ from oslo_utils import timeutils
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
+from senlin.common import utils
 from senlin.db import api as db_api
 from senlin.engine import event as event_mod
 from senlin.profiles import base as profile_base
@@ -46,9 +47,7 @@ class Node(object):
         if name:
             self.name = name
         else:
-            # TODO(Qiming): Use self.physical_resource_name() to
-            #               generate a unique name
-            self.name = 'node-name-tmp'
+            self.name = 'node-' + utils.random_name(8)
 
         self.physical_id = kwargs.get('physical_id', '')
         self.profile_id = profile_id
@@ -204,13 +203,6 @@ class Node(object):
             'profile_name': self.rt['profile'].name,
         }
         return node_dict
-
-    @classmethod
-    def from_dict(cls, context=None, **kwargs):
-        name = kwargs.pop('name')
-        profile_id = kwargs.pop('profile_id')
-        cluster_id = kwargs.pop('cluster_id')
-        return cls(name, profile_id, cluster_id, context, **kwargs)
 
     def set_status(self, context, status, reason=None):
         '''Set status of the node.'''
