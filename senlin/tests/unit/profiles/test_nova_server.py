@@ -19,6 +19,7 @@ from oslo_utils import encodeutils
 import six
 
 from senlin.common import exception
+from senlin.common import utils as common_utils
 from senlin.drivers import base as driver_base
 from senlin.drivers.openstack import sdk
 from senlin.profiles.os.nova import server
@@ -109,10 +110,12 @@ class TestNovaServerProfile(base.SenlinTestCase):
         res = profile.do_validate(mock.Mock())
         self.assertTrue(res)
 
-    def test_do_create(self):
+    @mock.patch.object(common_utils, 'random_name')
+    def test_do_create(self, mock_random_name):
+        mock_random_name.return_value = '12345678'
         nc = mock.Mock()
         test_server = mock.Mock()
-        test_server.name = "TEST_SERVER"
+        test_server.name = 'TEST_SERVER'
         test_server.cluster_id = 'FAKE_CLUSTER_ID'
         image = mock.Mock()
         image.id = 'FAKE_IMAGE_ID'
@@ -129,6 +132,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         profile._nc = nc
         server_id = profile.do_create(test_server)
 
+        mock_random_name.assert_called_once_with(8)
         nc.image_get_by_name.assert_called_once_with('FAKE_IMAGE')
         nc.flavor_get.assert_called_once_with('FLAV')
 
@@ -147,7 +151,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
                          'cluster': 'FAKE_CLUSTER_ID',
                          'meta var': 'meta val'
                      },
-                     name=mock.ANY,
+                     name='TEST_SERVER-12345678',
                      networks=[{
                          'fixed-ip': 'FAKE_IP',
                          'port': 'FAKE_PORT'
@@ -169,6 +173,80 @@ class TestNovaServerProfile(base.SenlinTestCase):
         nc.server_create.assert_called_once_with(**attrs)
         self.assertEqual(nova_server.id, server_id)
 
+    @mock.patch.object(common_utils, 'random_name')
+    def test_do_create_server_attrs_not_defined(self, mock_random_name):
+        mock_random_name.return_value = '12345678'
+        nc = mock.Mock()
+        test_server = mock.Mock()
+        test_server.name = 'TEST_SERVER'
+        test_server.cluster_id = 'FAKE_CLUSTER_ID'
+        flavor = mock.Mock()
+        flavor.id = 'FAKE_FLAVOR_ID'
+        nc.flavor_get.return_value = flavor
+
+        nova_server = mock.Mock()
+        nova_server.id = 'FAKE_NOVA_SERVER_ID'
+        nc.server_create.return_value = nova_server
+
+        # Assume image/scheduler_hints/user_data were not defined in spec file
+        spec = {
+            'flavor': 'FLAV',
+            'name': 'FAKE_SERVER_NAME',
+            'security_groups': ['HIGH_SECURITY_GROUP'],
+            'timeout': 120,
+        }
+
+        profile = server.ServerProfile('os.nova.server', 's1', spec=spec)
+        profile._nc = nc
+        server_id = profile.do_create(test_server)
+
+        mock_random_name.assert_called_once_with(8)
+        attrs = dict(auto_disk_config=True,
+                     flavorRef='FAKE_FLAVOR_ID',
+                     name='TEST_SERVER-12345678',
+                     metadata={
+                         'cluster': 'FAKE_CLUSTER_ID',
+                     },
+                     security_groups=['HIGH_SECURITY_GROUP'],
+                     timeout=120)
+
+        nc.server_create.assert_called_once_with(**attrs)
+        self.assertEqual(nova_server.id, server_id)
+
+    def test_do_create_obj_name_cluster_id_is_none(self):
+        nc = mock.Mock()
+        test_server = mock.Mock()
+        test_server.name = None
+        test_server.cluster_id = None
+        flavor = mock.Mock()
+        flavor.id = 'FAKE_FLAVOR_ID'
+        nc.flavor_get.return_value = flavor
+
+        nova_server = mock.Mock()
+        nova_server.id = 'FAKE_NOVA_SERVER_ID'
+        nc.server_create.return_value = nova_server
+
+        spec = {
+            'flavor': 'FLAV',
+            'name': 'FAKE_SERVER_NAME',
+            'security_groups': ['HIGH_SECURITY_GROUP'],
+            'timeout': 120,
+        }
+
+        profile = server.ServerProfile('os.nova.server', 's1', spec=spec)
+        profile._nc = nc
+        server_id = profile.do_create(test_server)
+
+        attrs = dict(auto_disk_config=True,
+                     flavorRef='FAKE_FLAVOR_ID',
+                     name='FAKE_SERVER_NAME',
+                     metadata={},
+                     security_groups=['HIGH_SECURITY_GROUP'],
+                     timeout=120)
+
+        nc.server_create.assert_called_once_with(**attrs)
+        self.assertEqual(nova_server.id, server_id)
+
     def test_do_create_image_not_found(self):
         nc = mock.Mock()
         test_server = mock.Mock()
@@ -179,6 +257,54 @@ class TestNovaServerProfile(base.SenlinTestCase):
         nc.image_get_by_name.side_effect = Exception()
         self.assertRaises(exception.ResourceNotFound,
                           profile.do_create, test_server)
+
+    def test_do_create_flavor_not_found_by_id(self):
+        nc = mock.Mock()
+        test_server = mock.Mock()
+        test_server.name = None
+        test_server.cluster_id = None
+        flavor = mock.Mock()
+        flavor.id = 'FAKE_FLAVOR_ID'
+        nc.flavor_get.side_effect = Exception()
+        nc.flavor_get_by_name.return_value = flavor
+
+        spec = {
+            'flavor': 'FLAV',
+            'name': 'FAKE_SERVER_NAME',
+            'security_groups': ['HIGH_SECURITY_GROUP'],
+            'timeout': 120,
+        }
+
+        profile = server.ServerProfile('os.nova.server', 's1', spec=spec)
+        profile._nc = nc
+        profile.do_create(test_server)
+        attrs = dict(auto_disk_config=True,
+                     flavorRef='FAKE_FLAVOR_ID',
+                     name=mock.ANY,
+                     metadata={},
+                     security_groups=['HIGH_SECURITY_GROUP'],
+                     timeout=120)
+        nc.server_create.assert_called_once_with(**attrs)
+        nc.flavor_get.assert_called_once_with('FLAV')
+        nc.flavor_get_by_name.assert_called_once_with(
+            'FLAV', ignore_missing=False)
+
+    def test_do_create_flavor_not_found_by_id_and_name(self):
+        nc = mock.Mock()
+        test_server = mock.Mock()
+        image = mock.Mock()
+        image.id = 'IMAGE_ID'
+        nc.image_get_by_name.return_value = image
+        nc.flavor_get.side_effect = Exception()
+        nc.flavor_get_by_name.side_effect = Exception()
+
+        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile._nc = nc
+        self.assertRaises(exception.ResourceNotFound, profile.do_create,
+                          test_server)
+        nc.flavor_get.assert_called_once_with('FLAV')
+        nc.flavor_get_by_name.assert_called_once_with(
+            'FLAV', ignore_missing=False)
 
     def test_do_delete_no_physical_id(self):
         # Test path where server doesn't already exist
@@ -233,6 +359,25 @@ class TestNovaServerProfile(base.SenlinTestCase):
         mock_calls = [mock.call('FAKE_ID')]
         nc.server_get.assert_has_calls(mock_calls * 2)
         self.assertEqual(2, mock_sleep.call_count)
+
+    @mock.patch.object(time, 'sleep')
+    def test_wait_for_deletion_server_get_exception(self, mock_sleep):
+        cfg.CONF.set_override('default_action_timeout', 2)
+        nc = mock.Mock()
+        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile._nc = nc
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+
+        nc.server_get.side_effect = [
+            mock.Mock(),
+            exception.InternalError(code=500, message='Internal error')
+        ]
+
+        ex = self.assertRaises(exception.InternalError,
+                               profile._wait_for_deletion,
+                               obj)
+        self.assertEqual('Internal error', six.text_type(ex))
 
     def test_do_delete_successful(self):
         profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
@@ -436,3 +581,19 @@ class TestNovaServerProfile(base.SenlinTestCase):
         obj = mock.Mock()
         obj.physical_id = None
         self.assertIsNone(profile.do_leave(obj))
+
+    def test_do_leave_not_in_cluster(self):
+        # Test path where node is not in cluster
+        nc = mock.Mock()
+        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile._nc = nc
+        nc.server_metadata_get.return_value = {'FOO': 'BAR'}
+        nc.server_metadata_update.return_value = 'Boom'
+
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+
+        res = profile.do_leave(obj)
+        self.assertEqual('Boom', res)
+        nc.server_metadata_get.assert_called_once_with(server_id='FAKE_ID')
+        nc.server_metadata_update.assert_called_once_with(FOO='BAR')
