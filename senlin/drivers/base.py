@@ -42,4 +42,5 @@ class SenlinDriver(object):
         # as the start point of using senlin generic driver.
         self.compute = cloud_backend_plugin.ComputeClient
         self.network = cloud_backend_plugin.NetworkClient
+        self.loadbalancing = cloud_backend_plugin.LoadBalancingClient
         self.orchestration = cloud_backend_plugin.OrchestrationClient
