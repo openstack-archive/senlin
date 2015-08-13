@@ -10,11 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo_log import log as logging
 
 from senlin.engine.actions import base
-
-LOG = logging.getLogger(__name__)
 
 
 class CustomAction(base.Action):
@@ -24,11 +21,5 @@ class CustomAction(base.Action):
         'ACTION_EXECUTE',
     )
 
-    def __init__(self, context, action, **kwargs):
-        super(CustomAction, self).__init__(context, action, **kwargs)
-
     def execute(self, **kwargs):
-        return self.RES_OK
-
-    def cancel(self):
-        return self.RES_OK
+        return self.RES_OK, ''
