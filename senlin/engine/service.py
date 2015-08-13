@@ -1496,8 +1496,9 @@ class EngineService(service.Service):
                                           resource_id=db_action.id)
         return None
 
+    @request_context
     def event_find(self, context, identity, show_deleted=False):
-        '''Find a event with the given identity (could be name or ID).'''
+        '''Find a event with the given identity (could ID or short ID).'''
         if uuidutils.is_uuid_like(identity):
             event = db_api.event_get(context, identity)
             if not event:
@@ -1506,7 +1507,7 @@ class EngineService(service.Service):
             event = db_api.event_get_by_short_id(context, identity)
 
         if not event:
-            raise exception.EventNotFound(action=identity)
+            raise exception.EventNotFound(event=identity)
 
         return event
 
@@ -1514,14 +1515,14 @@ class EngineService(service.Service):
     def event_list(self, context, filters=None, limit=None, marker=None,
                    sort_keys=None, sort_dir=None, project_safe=True,
                    show_deleted=False):
-        all_actions = event_mod.Event.load_all(context, filters=filters,
-                                               limit=limit, marker=marker,
-                                               sort_keys=sort_keys,
-                                               sort_dir=sort_dir,
-                                               project_safe=project_safe,
-                                               show_deleted=show_deleted)
+        all_events = event_mod.Event.load_all(context, filters=filters,
+                                              limit=limit, marker=marker,
+                                              sort_keys=sort_keys,
+                                              sort_dir=sort_dir,
+                                              project_safe=project_safe,
+                                              show_deleted=show_deleted)
 
-        results = [action.to_dict() for action in all_actions]
+        results = [event.to_dict() for event in all_events]
         return results
 
     @request_context

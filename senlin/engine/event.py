@@ -51,6 +51,12 @@ class Event(object):
         self.cluster_id = kwargs.get('cluster_id', None)
         self.metadata = kwargs.get('metadata', {})
 
+        ctx = kwargs.get('context', None)
+        if ctx is not None:
+            self.user = ctx.user
+            self.project = ctx.project
+            self.domain = ctx.domain
+
         # entity not None implies an initial creation of event object,
         # not a deserialization, so we try make an inference here
         if entity is not None:
