@@ -21,7 +21,7 @@ from senlin.common.i18n import _
 from senlin.common.i18n import _LW
 from senlin.common import schema
 from senlin.db import api as db_api
-from senlin.drivers.openstack import lbaas
+from senlin.drivers import base as driver_base
 from senlin.engine import cluster_policy
 from senlin.engine import node as node_mod
 from senlin.policies import base
@@ -205,7 +205,7 @@ class LoadBalancingPolicy(base.Policy):
             return False, data
 
         ctx = self._build_context(cluster)
-        lb_driver = lbaas.LoadBalancerDriver(ctx)
+        lb_driver = driver_base.SenlinDriver().loadbalancing(ctx)
 
         # TODO(Anyone): check cluster profile type matches self.PROFILE or not
         res, data = lb_driver.lb_create(self.vip_spec, self.pool_spec)
@@ -247,7 +247,7 @@ class LoadBalancingPolicy(base.Policy):
         """
         reason = _('LB resources deletion succeeded.')
         ctx = self._build_context(cluster)
-        lb_driver = lbaas.LoadBalancerDriver(ctx)
+        lb_driver = driver_base.SenlinDriver().loadbalancing(ctx)
 
         cp = cluster_policy.ClusterPolicy.load(oslo_context.get_current(),
                                                cluster.id, self.id)
@@ -278,7 +278,7 @@ class LoadBalancingPolicy(base.Policy):
             return
 
         ctx = self._build_context(cluster_id)
-        lb_driver = lbaas.LoadBalancerDriver(ctx)
+        lb_driver = driver_base.SenlinDriver().loadbalancing(ctx)
         cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
                                                self.id)
         policy_data = self._extract_policy_data(cp.data)

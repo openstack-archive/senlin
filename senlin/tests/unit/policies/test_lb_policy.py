@@ -18,7 +18,7 @@ from senlin.common import consts
 from senlin.common import context
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
-from senlin.drivers.openstack import lbaas as lb_driver
+from senlin.drivers import base as driver_base
 from senlin.engine import cluster_policy
 from senlin.engine import node as node_mod
 from senlin.policies import base as policy_base
@@ -198,17 +198,19 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_build_policy_data')
     @mock.patch.object(node_mod.Node, 'load_all')
     @mock.patch.object(policy_base.Policy, 'attach')
-    @mock.patch.object(lb_driver, 'LoadBalancerDriver')
-    def test_lb_policy_attach_succeeded(self, mock_lb_driver,
+    @mock.patch.object(driver_base, 'SenlinDriver')
+    def test_lb_policy_attach_succeeded(self, mock_senlindriver,
                                         mock_policy_base_attach,
                                         mock_node_load_all,
                                         mock_build_policy_data):
+        sd = mock.Mock()
+        lb_driver = mock.Mock()
+        sd.loadbalancing.return_value = lb_driver
+        mock_senlindriver.return_value = sd
         cluster = mock.Mock()
         cluster.id = 'CLUSTER_ID'
         node1 = mock.Mock()
         node2 = mock.Mock()
-        lb_driver = mock.Mock()
-        mock_lb_driver.return_value = lb_driver
         mock_policy_base_attach.return_value = (True, None)
         mock_node_load_all.return_value = [node1, node2]
         mock_build_policy_data.return_value = 'policy_data'
@@ -259,13 +261,15 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         self.assertEqual('data', data)
 
     @mock.patch.object(policy_base.Policy, 'attach')
-    @mock.patch.object(lb_driver, 'LoadBalancerDriver')
+    @mock.patch.object(driver_base, 'SenlinDriver')
     def test_lb_policy_attach_failed_lb_creation_failed(
-            self, mock_lb_driver, mock_policy_base_attach):
+            self, mock_senlindriver, mock_policy_base_attach):
 
-        cluster = mock.Mock()
+        sd = mock.Mock()
         lb_driver = mock.Mock()
-        mock_lb_driver.return_value = lb_driver
+        sd.loadbalancing.return_value = lb_driver
+        mock_senlindriver.return_value = sd
+        cluster = mock.Mock()
         mock_policy_base_attach.return_value = (True, None)
         self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
 
@@ -283,13 +287,16 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
 
     @mock.patch.object(node_mod.Node, 'load_all')
     @mock.patch.object(policy_base.Policy, 'attach')
-    @mock.patch.object(lb_driver, 'LoadBalancerDriver')
+    @mock.patch.object(driver_base, 'SenlinDriver')
     def test_lb_policy_attach_failed_member_add_failed(
-            self, mock_lb_driver, mock_policy_base_attach, mock_node_load_all):
+            self, mock_senlindriver, mock_policy_base_attach,
+            mock_node_load_all):
 
-        cluster = mock.Mock()
+        sd = mock.Mock()
         lb_driver = mock.Mock()
-        mock_lb_driver.return_value = lb_driver
+        sd.loadbalancing.return_value = lb_driver
+        mock_senlindriver.return_value = sd
+        cluster = mock.Mock()
         mock_policy_base_attach.return_value = (True, None)
         mock_node_load_all.return_value = ['node1', 'node2']
         lb_data = {
@@ -322,7 +329,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         mock_policy_load.return_value = cp
         mock_extract_policy_data.return_value = None
         self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
-        self.patchobject(lb_driver, 'LoadBalancerDriver')
+        self.patchobject(driver_base, 'SenlinDriver')
         self.patchobject(oslo_context, 'get_current')
 
         kwargs = {
@@ -337,15 +344,17 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
 
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_extract_policy_data')
     @mock.patch.object(cluster_policy.ClusterPolicy, 'load')
-    @mock.patch.object(lb_driver, 'LoadBalancerDriver')
+    @mock.patch.object(driver_base, 'SenlinDriver')
     def test_lb_policy_detach_succeeded_lb_delete_succeeded(
-            self, mock_lb_driver, mock_cluster_policy_load,
+            self, mock_senlindriver, mock_cluster_policy_load,
             mock_extract_policy_data):
 
+        sd = mock.Mock()
+        lb_driver = mock.Mock()
+        sd.loadbalancing.return_value = lb_driver
+        mock_senlindriver.return_value = sd
         cluster = mock.Mock()
         cluster.id = 'CLUSTER_ID'
-        lb_driver = mock.Mock()
-        mock_lb_driver.return_value = lb_driver
         cp = mock.Mock()
         policy_data = {
             'loadbalancer': 'LB_ID',
@@ -381,12 +390,14 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         mock_extract_policy_data.assert_called_once_with(cp_data)
         lb_driver.lb_delete.assert_called_once_with(**policy_data)
 
-    @mock.patch.object(lb_driver, 'LoadBalancerDriver')
-    def test_lb_policy_detach_failed_lb_delete_failed(self, mock_lb_driver):
+    @mock.patch.object(driver_base, 'SenlinDriver')
+    def test_lb_policy_detach_failed_lb_delete_failed(self, mock_senlindriver):
 
-        cluster = mock.Mock()
+        sd = mock.Mock()
         lb_driver = mock.Mock()
-        mock_lb_driver.return_value = lb_driver
+        sd.loadbalancing.return_value = lb_driver
+        mock_senlindriver.return_value = sd
+        cluster = mock.Mock()
         self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
         self.patchobject(oslo_context, 'get_current')
         self.patchobject(cluster_policy.ClusterPolicy, 'load')
@@ -422,14 +433,16 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_extract_policy_data')
     @mock.patch.object(cluster_policy.ClusterPolicy, 'load')
-    @mock.patch.object(lb_driver, 'LoadBalancerDriver')
-    def test_lb_policy_post_op_add_nodes_succeeded(self, mock_lb_driver,
+    @mock.patch.object(driver_base, 'SenlinDriver')
+    def test_lb_policy_post_op_add_nodes_succeeded(self, mock_senlindriver,
                                                    mock_cluster_policy_load,
                                                    mock_extract_policy_data,
                                                    mock_node_load):
 
+        sd = mock.Mock()
         lb_driver = mock.Mock()
-        mock_lb_driver.return_value = lb_driver
+        sd.loadbalancing.return_value = lb_driver
+        mock_senlindriver.return_value = sd
         cluster_id = 'CLUSTER_ID'
         node1 = mock.Mock()
         node2 = mock.Mock()
@@ -487,12 +500,14 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
 
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_extract_policy_data')
-    @mock.patch.object(lb_driver, 'LoadBalancerDriver')
+    @mock.patch.object(driver_base, 'SenlinDriver')
     def test_lb_policy_post_op_add_nodes_already_in_pool(
-            self, mock_lb_driver, mock_extract_policy_data, mock_node_load):
+            self, mock_senlindriver, mock_extract_policy_data, mock_node_load):
 
+        sd = mock.Mock()
         lb_driver = mock.Mock()
-        mock_lb_driver.return_value = lb_driver
+        sd.loadbalancing.return_value = lb_driver
+        mock_senlindriver.return_value = sd
         cluster_id = 'CLUSTER_ID'
         node1 = mock.Mock()
         node2 = mock.Mock()
@@ -529,13 +544,15 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
 
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_extract_policy_data')
-    @mock.patch.object(lb_driver, 'LoadBalancerDriver')
-    def test_lb_policy_post_op_add_nodes_failed(self, mock_lb_driver,
+    @mock.patch.object(driver_base, 'SenlinDriver')
+    def test_lb_policy_post_op_add_nodes_failed(self, mock_senlindriver,
                                                 mock_extract_policy_data,
                                                 mock_node_load):
 
+        sd = mock.Mock()
         lb_driver = mock.Mock()
-        mock_lb_driver.return_value = lb_driver
+        sd.loadbalancing.return_value = lb_driver
+        mock_senlindriver.return_value = sd
         cluster_id = 'CLUSTER_ID'
         node1 = mock.Mock()
         node1.data = {}
@@ -574,14 +591,16 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_extract_policy_data')
     @mock.patch.object(cluster_policy.ClusterPolicy, 'load')
-    @mock.patch.object(lb_driver, 'LoadBalancerDriver')
-    def test_lb_policy_post_op_del_nodes_succeeded(self, mock_lb_driver,
+    @mock.patch.object(driver_base, 'SenlinDriver')
+    def test_lb_policy_post_op_del_nodes_succeeded(self, mock_senlindriver,
                                                    mock_cluster_policy_load,
                                                    mock_extract_policy_data,
                                                    mock_node_load):
 
+        sd = mock.Mock()
         lb_driver = mock.Mock()
-        mock_lb_driver.return_value = lb_driver
+        sd.loadbalancing.return_value = lb_driver
+        mock_senlindriver.return_value = sd
         cluster_id = 'CLUSTER_ID'
         node1 = mock.Mock()
         node2 = mock.Mock()
@@ -635,12 +654,14 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
 
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_extract_policy_data')
-    @mock.patch.object(lb_driver, 'LoadBalancerDriver')
+    @mock.patch.object(driver_base, 'SenlinDriver')
     def test_lb_policy_post_op_remove_nodes_not_in_pool(
-            self, mock_lb_driver, mock_extract_policy_data, mock_node_load):
+            self, mock_senlindriver, mock_extract_policy_data, mock_node_load):
 
+        sd = mock.Mock()
         lb_driver = mock.Mock()
-        mock_lb_driver.return_value = lb_driver
+        sd.loadbalancing.return_value = lb_driver
+        mock_senlindriver.return_value = sd
         cluster_id = 'CLUSTER_ID'
         node1 = mock.Mock()
         node2 = mock.Mock()
@@ -677,13 +698,15 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
 
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_extract_policy_data')
-    @mock.patch.object(lb_driver, 'LoadBalancerDriver')
-    def test_lb_policy_post_op_remove_nodes_failed(self, mock_lb_driver,
+    @mock.patch.object(driver_base, 'SenlinDriver')
+    def test_lb_policy_post_op_remove_nodes_failed(self, mock_senlindriver,
                                                    mock_extract_policy_data,
                                                    mock_node_load):
 
+        sd = mock.Mock()
         lb_driver = mock.Mock()
-        mock_lb_driver.return_value = lb_driver
+        sd.loadbalancing.return_value = lb_driver
+        mock_senlindriver.return_value = sd
         cluster_id = 'CLUSTER_ID'
         node1 = mock.Mock()
         node1.data = {'lb_member': 'MEMBER1_ID'}
