@@ -134,7 +134,6 @@ def parse_exception(ex):
     :param details: details of the exception.
     '''
     code = 500
-    message = _('Unknown exception: %s') % ex
 
     if isinstance(ex, exceptions.HttpException):
         try:
@@ -143,10 +142,15 @@ def parse_exception(ex):
             if code is None:
                 code = data['code']
             message = data['error']['message']
-        except ValueError:
-            # Some exceptions don't have details record, we try make a guess
+        except Exception:
+            # Some exceptions don't have details record or are not in JSON
+            # format
             code = ex.status_code
             message = ex.message
+    elif isinstance(ex, exceptions.SDKException):
+        # Besides HttpException there are some other exceptions like
+        # ResourceTimeout can be raised from SDK, handle them here.
+        message = _('Unknown exception from SDK: %s') % six.text_type(ex)
     elif isinstance(ex, reqexc.RequestException):
         # Exceptions that are not captured by SDK
         if isinstance(ex.message, list):
@@ -156,8 +160,7 @@ def parse_exception(ex):
         code = ex.message[1].errno
         message = msg
     elif isinstance(ex, Exception):
-        code = ex.message[1].errno
-        message = six.text_type(ex)
+        message = _('Unknown exception: %s') % six.text_type(ex)
 
     raise exception.InternalError(code=code, message=message)
 
