@@ -20,41 +20,29 @@ class HeatClient(base.DriverBase):
     def __init__(self, context):
         self.conn = sdk.create_connection(context)
 
+    @sdk.translate_exception
     def stack_create(self, **params):
-        try:
-            return self.conn.orchestration.create_stack(**params)
-        except sdk.exc.HttpException as ex:
-            raise ex
+        return self.conn.orchestration.create_stack(**params)
 
+    @sdk.translate_exception
     def stack_get(self, stack_id):
-        try:
-            return self.conn.orchestration.get_stack(stack_id)
-        except sdk.exc.HttpException as ex:
-            raise ex
+        return self.conn.orchestration.get_stack(stack_id)
 
+    @sdk.translate_exception
     def stack_find(self, name_or_id):
-        try:
-            return self.conn.orchestration.find_stack(name_or_id)
-        except sdk.exc.HttpException as ex:
-            raise ex
+        return self.conn.orchestration.find_stack(name_or_id)
 
+    @sdk.translate_exception
     def stack_list(self):
-        try:
-            return self.conn.orchestration.stacks()
-        except sdk.exc.HttpException as ex:
-            raise ex
+        return self.conn.orchestration.stacks()
 
+    @sdk.translate_exception
     def stack_update(self, **params):
         # NOTE: This still doesn't work because sdk is not supporting
         # stack update yet
-        try:
-            return self.conn.orchestration.update_stack(**params)
-        except sdk.exc.HttpException as ex:
-            raise ex
+        return self.conn.orchestration.update_stack(**params)
 
+    @sdk.translate_exception
     def stack_delete(self, stack_id, ignore_missing=True):
-        try:
-            return self.conn.orchestration.delete_stack(stack_id,
-                                                        ignore_missing)
-        except sdk.exc.HttpException as ex:
-            raise ex
+        return self.conn.orchestration.delete_stack(stack_id,
+                                                    ignore_missing)

@@ -231,10 +231,15 @@ class Node(object):
     def _handle_exception(self, context, action, status, exception):
         msg = six.text_type(exception)
         event_mod.warning(context, self, action, status, msg)
-        self.physical_id = exception.kwargs.get('resource_id')
-        reason = _('Profile failed in %(action)s resource (%(id)s) due to: '
-                   '%(msg)s') % {'action': action[:-1] + 'ing',
-                                 'id': self.physical_id, 'msg': msg}
+        self.physical_id = exception.kwargs.get('resource_id', None)
+        if self.physical_id:
+            reason = _('Profile failed in %(action)s resource (%(id)s) due '
+                       'to: %(msg)s') % {'action': action[:-1] + 'ing',
+                                         'id': self.physical_id, 'msg': msg}
+        else:
+            # Exception happens before physical node creatin started.
+            reason = _('Profile failed in creating node due to: %(msg)s') % {
+                'msg': msg}
         self.set_status(context, self.ERROR, reason)
         self.store(context)
 
@@ -246,7 +251,8 @@ class Node(object):
         event_mod.info(context, self, 'create')
         try:
             physical_id = profile_base.Profile.create_object(context, self)
-        except exception.ResourceStatusError as ex:
+        except (exception.ResourceStatusError,
+                exception.ResourceCreationFailure) as ex:
             self._handle_exception(context, 'create', self.ERROR, ex)
             return False
         if not physical_id:

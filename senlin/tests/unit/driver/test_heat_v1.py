@@ -42,41 +42,17 @@ class TestHeatV1(base.SenlinTestCase):
         self.hc.stack_create(**fake_params)
         self.orch.create_stack.assert_called_once_with(**fake_params)
 
-    def test_stack_create_with_sdk_exception(self):
-        fake_params = {
-            'disable_rollback': True,
-            'stack_name': 'fake_stack',
-            }
-        self.orch.create_stack.side_effect = sdk.exc.HttpException('')
-        self.assertRaises(sdk.exc.HttpException,
-                          self.hc.stack_create, **fake_params)
-
     def test_stack_get(self):
         self.hc.stack_get('stack_id')
         self.orch.get_stack.assert_called_once_with('stack_id')
-
-    def test_stack_get_with_sdk_exception(self):
-        self.orch.get_stack.side_effect = sdk.exc.HttpException('')
-        self.assertRaises(sdk.exc.HttpException,
-                          self.hc.stack_get, 'stack_id')
 
     def test_stack_find(self):
         self.hc.stack_find('name_or_id')
         self.orch.find_stack.assert_called_once_with('name_or_id')
 
-    def test_stack_find_with_sdk_exception(self):
-        self.orch.find_stack.side_effect = sdk.exc.HttpException('')
-        self.assertRaises(sdk.exc.HttpException,
-                          self.hc.stack_find, 'name_or_id')
-
     def test_stack_list(self):
         self.hc.stack_list()
         self.orch.stacks.assert_called_once_with()
-
-    def test_stack_list_with_sdk_exception(self):
-        self.orch.stacks.side_effect = sdk.exc.HttpException('')
-        self.assertRaises(sdk.exc.HttpException,
-                          self.hc.stack_list)
 
     def test_stack_update(self):
         fake_params = {
@@ -85,20 +61,6 @@ class TestHeatV1(base.SenlinTestCase):
         self.hc.stack_update(**fake_params)
         self.orch.update_stack.assert_called_once_with(**fake_params)
 
-    def test_stack_update_with_sdk_exception(self):
-        fake_params = {
-            "name": "new_name",
-        }
-        self.orch.update_stack.side_effect = sdk.exc.HttpException('')
-        self.assertRaises(sdk.exc.HttpException,
-                          self.hc.stack_update, **fake_params)
-
     def test_stack_delete(self):
         self.hc.stack_delete('stack_id', ignore_missing=True)
         self.orch.delete_stack.assert_called_once_with('stack_id', True)
-
-    def test_stack_delete_with_sdk_exception(self):
-        self.orch.delete_stack.side_effect = sdk.exc.HttpException('')
-        self.assertRaises(sdk.exc.HttpException,
-                          self.hc.stack_delete,
-                          'stack_id', ignore_missing=True)

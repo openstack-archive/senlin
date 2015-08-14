@@ -307,8 +307,23 @@ class TestNode(base.SenlinTestCase):
                          '(FAKE_ID) due to: %s' % six.text_type(ex),
                          db_node.status_reason)
         self.assertEqual('FAKE_ID', db_node.physical_id)
-        mock_warning.assert_called_once_with(self.context, node, 'ACTION',
-                                             'STATUS', six.text_type(ex))
+        mock_warning.assert_called_with(self.context, node, 'ACTION',
+                                        'STATUS', six.text_type(ex))
+
+        # Exception happens before physical node creation started.
+        ex = exception.ResourceCreationFailure(rtype='stack',
+                                               code=400,
+                                               message='Bad request')
+        node = nodem.Node('node1', self.profile.id, None)
+        node.store(self.context)
+        node._handle_exception(self.context, 'CREATE', 'STATUS', ex)
+        db_node = db_api.node_get(self.context, node.id)
+        self.assertEqual(node.ERROR, db_node.status)
+        self.assertEqual('Profile failed in creating node due to: '
+                         '%s' % six.text_type(ex), db_node.status_reason)
+        self.assertEqual(None, db_node.physical_id)
+        mock_warning.assert_called_with(self.context, node, 'CREATE',
+                                        'STATUS', six.text_type(ex))
 
     @mock.patch.object(eventm, 'info')
     @mock.patch.object(nodem.Node, 'store')
@@ -360,6 +375,25 @@ class TestNode(base.SenlinTestCase):
                                                mock_event):
         ex = exception.ResourceStatusError(resource_id='id', status='ERROR',
                                            reason='some reason')
+        mock_create.side_effect = ex
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        res = node.do_create(self.context)
+        self.assertFalse(res)
+        mock_handle_exception.assert_called_once_with(self.context,
+                                                      'create', 'ERROR', ex)
+        mock_event.assert_called_once_with(self.context, node, 'create')
+
+    @mock.patch.object(eventm, 'info')
+    @mock.patch.object(nodem.Node, '_handle_exception')
+    @mock.patch.object(nodem.Node, 'set_status')
+    @mock.patch.object(profiles_base.Profile, 'create_object')
+    def test_node_create_with_resource_creation_failure(self, mock_create,
+                                                        mock_status,
+                                                        mock_handle_exception,
+                                                        mock_event):
+        ex = exception.ResourceCreationFailure(rtype='stack', code=400,
+                                               message='Bad request')
         mock_create.side_effect = ex
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
                           self.context)
