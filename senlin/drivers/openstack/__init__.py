@@ -28,5 +28,5 @@ def NetworkClient(params):
     return neutron_v2.NeutronClient(params)
 
 
-def LoadBlanacingClient(params):
+def LoadBalancingClient(params):
     return lbaas.LoadBalancerDriver(params)
