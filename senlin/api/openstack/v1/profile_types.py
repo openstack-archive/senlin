@@ -43,12 +43,7 @@ class ProfileTypeController(object):
     @util.policy_enforce
     def schema(self, req, type_name):
         '''Gets the interface schema for a specified profile type.'''
-        profile_schema = self.rpc_client.profile_type_schema(req.context,
-                                                             type_name)
-        if not profile_schema:
-            raise exc.HTTPInternalServerError()
-
-        return profile_schema
+        return self.rpc_client.profile_type_schema(req.context, type_name)
 
 
 def create_resource(options):
