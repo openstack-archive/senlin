@@ -87,8 +87,8 @@ class ActionBaseTest(base.SenlinTestCase):
     def test_action_new(self):
         for action in ['CLUSTER_CREATE', 'NODE_CREATE', 'POLICY_ATTACH',
                        'WHAT_EVER']:
-            obj = action_base.Action(self.ctx, 'CLUSTER_CREATE')
-            self._verify_new_action(obj, 'CLUSTER_CREATE')
+            obj = action_base.Action(self.ctx, action)
+            self._verify_new_action(obj, action)
 
     def test_action_init_with_values(self):
         values = copy.deepcopy(self.action_values)
@@ -187,12 +187,6 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual(obj.data, action_obj.data)
 
     def test_load(self):
-        ex = self.assertRaises(exception.ActionNotFound,
-                               action_base.Action.load,
-                               self.ctx, 'non-existent', None)
-        self.assertEqual('The action (non-existent) could not be found.',
-                         six.text_type(ex))
-
         values = copy.deepcopy(self.action_values)
         obj = action_base.Action(self.ctx, 'OBJECT_ACTION', **values)
         obj.store(self.ctx)
@@ -207,6 +201,22 @@ class ActionBaseTest(base.SenlinTestCase):
         # no need to do a thorough test here
         self.assertEqual(obj.id, result.id)
         self.assertEqual(obj.action, result.action)
+
+    def test_load_not_found(self):
+        # not found due to bad identity
+        ex = self.assertRaises(exception.ActionNotFound,
+                               action_base.Action.load,
+                               self.ctx, 'non-existent', None)
+        self.assertEqual('The action (non-existent) could not be found.',
+                         six.text_type(ex))
+
+        # not found due to no object
+        self.patchobject(db_api, 'action_get', return_value=None)
+        ex = self.assertRaises(exception.ActionNotFound,
+                               action_base.Action.load,
+                               self.ctx, 'whatever', None)
+        self.assertEqual('The action (whatever) could not be found.',
+                         six.text_type(ex))
 
     def test_load_all(self):
         result = action_base.Action.load_all(self.ctx)
