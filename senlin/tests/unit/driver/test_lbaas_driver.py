@@ -245,6 +245,21 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.lb_driver._wait_for_lb_ready.assert_has_calls(
             calls, any_order=False)
 
+    def test_lb_delete_no_physical_object(self):
+        kwargs = {'loadbalancer': 'LB_ID'}
+        self.lb_driver._wait_for_lb_ready = mock.Mock()
+        self.lb_driver._wait_for_lb_ready.return_value = True
+
+        status, res = self.lb_driver.lb_delete(**kwargs)
+        self.assertTrue(status)
+        self.assertEqual('LB deletion succeeded', res)
+        self.nc.loadbalancer_delete.assert_called_once_with('LB_ID')
+        self.assertEqual(0, self.nc.healthmonitor_delete.call_count)
+        self.assertEqual(0, self.nc.pool_delete.call_count)
+        self.assertEqual(0, self.nc.listener_delete.call_count)
+        self.lb_driver._wait_for_lb_ready.assert_called_once_with(
+            'LB_ID', ignore_not_found=True)
+
     @mock.patch.object(oslo_context, 'get_current')
     def test_get_node_address(self, mock_get_current):
         node = mock.Mock()
