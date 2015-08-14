@@ -69,6 +69,9 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cfgopts = DummyConfig()
         self.controller = webhooks.WebhookController(options=cfgopts)
 
+    def test_default(self, mock_enforce):
+        self.assertRaises(exc.HTTPNotFound, self.controller.default, None)
+
     def test_webhook_index_normal(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/webhooks')
@@ -213,6 +216,17 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn("Invalid value 'abc' specified for 'limit'",
                       six.text_type(ex))
         self.assertFalse(mock_call.called)
+
+    def test_webhook_index_global_project(self, mock_enforce):
+        mock_call = self.patchobject(rpc_client.EngineClient, 'webhook_list',
+                                     return_value=[])
+
+        params = {'global_project': True}
+        req = self._get('/webhooks', params=params)
+        self.controller.index(req, tenant_id=self.project)
+        mock_call.assert_called_once_with(mock.ANY,
+                                          filters=mock.ANY,
+                                          project_safe=False)
 
     def test_webhook_index_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
@@ -572,6 +586,30 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'identity': webhook_id,
             })
         )
+
+        expected = engine_response
+        self.assertEqual(expected, resp)
+
+    def test_webhook_trigger_with_params(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'trigger', True)
+        body = {'params': {'key': 'value'}}
+        webhook_id = 'test_webhook_id'
+
+        engine_response = {'action': 'FAKE_ACTION'}
+
+        req = self._post('/webhooks/test_webhook_id/trigger',
+                         json.dumps(body))
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=engine_response)
+
+        resp = self.controller.trigger(req, tenant_id=self.project,
+                                       webhook_id=webhook_id,
+                                       body=body)
+
+        mock_call.assert_called_with(req.context,
+                                     ('webhook_trigger',
+                                      {'params': {'key': 'value'},
+                                       'identity': webhook_id}))
 
         expected = engine_response
         self.assertEqual(expected, resp)

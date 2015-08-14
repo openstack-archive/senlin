@@ -40,10 +40,8 @@ class WebhookData(object):
         self.data = data
 
     def name(self):
-        if consts.WEBHOOK_NAME not in self.data:
-            # We allow to create a webhook without giving its name
-            return None
-        return self.data[consts.WEBHOOK_NAME]
+        # We allow to create a webhook without giving its name
+        return self.data.get(consts.WEBHOOK_NAME, None)
 
     def obj_id(self):
         if consts.WEBHOOK_OBJ_ID not in self.data:
@@ -66,9 +64,7 @@ class WebhookData(object):
         return self.data[consts.WEBHOOK_CREDENTIAL]
 
     def params(self):
-        if consts.WEBHOOK_PARAMS not in self.data:
-            return None
-        return self.data[consts.WEBHOOK_PARAMS]
+        return self.data.get(consts.WEBHOOK_PARAMS, None)
 
 
 class WebhookController(object):
@@ -145,11 +141,8 @@ class WebhookController(object):
 
     @util.policy_enforce
     def get(self, req, webhook_id):
-        webhook = self.rpc_client.webhook_get(req.context, webhook_id)
-        if not webhook:
-            raise exc.HTTPNotFound()
-
-        return {'webhook': webhook}
+        wh = self.rpc_client.webhook_get(req.context, webhook_id)
+        return {'webhook': wh}
 
     @util.policy_enforce
     def trigger(self, req, webhook_id, body=None):
@@ -157,19 +150,11 @@ class WebhookController(object):
         if body is not None and 'params' in body:
             params = body.get('params')
 
-        res = self.rpc_client.webhook_trigger(req.context,
-                                              webhook_id,
-                                              params)
-
-        return res
+        return self.rpc_client.webhook_trigger(req.context, webhook_id, params)
 
     @util.policy_enforce
     def delete(self, req, webhook_id):
-        res = self.rpc_client.webhook_delete(req.context,
-                                             webhook_id,
-                                             cast=False)
-        if res is not None:
-            raise exc.HTTPBadRequest(res['Error'])
+        self.rpc_client.webhook_delete(req.context, webhook_id, cast=False)
 
         raise exc.HTTPNoContent()
 
