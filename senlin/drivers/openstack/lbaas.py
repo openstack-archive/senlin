@@ -84,7 +84,9 @@ class LoadBalancerDriver(base.DriverBase):
 
         result = {}
         # Create loadblancer
-        lb = self.nc().loadbalancer_create(vip['subnet'],
+        subnet = self.nc().subnet_get(vip['subnet'])
+        subnet_id = subnet['id']
+        lb = self.nc().loadbalancer_create(subnet_id,
                                            vip.get('address', None),
                                            vip['admin_state_up'])
         result['loadbalancer'] = lb.id
