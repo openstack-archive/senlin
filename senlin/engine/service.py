@@ -1428,7 +1428,8 @@ class EngineService(service.Service):
         trigger_base.Trigger.delete(context, db_trigger.id)
         return None
 
-    def action_find(self, context, identity):
+    @request_context
+    def action_find(self, context, identity, show_deleted=False):
         '''Find an action with the given identity (could be name or ID).'''
         if uuidutils.is_uuid_like(identity):
             action = db_api.action_get(context, identity)
@@ -1465,12 +1466,12 @@ class EngineService(service.Service):
         return results
 
     @request_context
-    def action_create(self, context, name, target, action, params):
+    def action_create(self, context, name, target, action, inputs=None):
         LOG.info(_LI('Creating action %s'), name)
 
         # Create a node instance
-        act = action_mod.Action(context, action, target,
-                                name=name, params=params)
+        act = action_mod.Action(context, action, target=target,
+                                name=name, inputs=inputs)
         act.store(context)
 
         # TODO(Anyone): Uncomment this to notify the dispatcher
@@ -1479,10 +1480,21 @@ class EngineService(service.Service):
         return act.to_dict()
 
     @request_context
-    def action_get(self, context, identity):
-        db_action = self.action_find(context, identity)
+    def action_get(self, context, identity, show_deleted=False):
+        db_action = self.action_find(context, identity, show_deleted=False)
         action = action_mod.Action.load(context, db_action=db_action)
         return action.to_dict()
+
+    @request_context
+    def action_delete(self, context, identity):
+        db_action = self.action_find(context, identity)
+        LOG.info(_LI('Deleting action: %s'), identity)
+        try:
+            action_mod.Action.delete(context, db_action.id)
+        except exception.ResourceBusyError:
+            raise exception.ResourceInUse(resource_type='action',
+                                          resource_id=db_action.id)
+        return None
 
     def event_find(self, context, identity, show_deleted=False):
         '''Find a event with the given identity (could be name or ID).'''

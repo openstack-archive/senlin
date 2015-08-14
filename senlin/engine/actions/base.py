@@ -225,10 +225,11 @@ class Action(object):
         return cls(context, record.action, **kwargs)
 
     @classmethod
-    def load(cls, context, action_id=None, db_action=None):
+    def load(cls, context, action_id=None, db_action=None, show_deleted=False):
         '''Retrieve an action from database.'''
         if db_action is None:
-            db_action = db_api.action_get(context, action_id)
+            db_action = db_api.action_get(context, action_id,
+                                          show_deleted=show_deleted)
 
             if db_action is None:
                 raise exception.ActionNotFound(action=action_id)

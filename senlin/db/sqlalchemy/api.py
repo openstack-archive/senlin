@@ -1127,10 +1127,14 @@ def action_update(context, action_id, values):
     action.save(_session(context))
 
 
-def action_get(context, action_id):
+def action_get(context, action_id, show_deleted=False):
     action = model_query(context, models.Action).get(action_id)
-    if action is None:
-        raise exception.ActionNotFound(action=action_id)
+
+    deleted_ok = show_deleted or context.show_deleted
+
+    if action is None or action.deleted_time is not None and not deleted_ok:
+        return None
+
     return action
 
 
@@ -1457,15 +1461,14 @@ def action_signal_query(context, action_id):
 
 
 def action_delete(context, action_id, force=False):
-    query = model_query(context, models.Action)
-    action = query.get(action_id)
-
+    session = _session(context)
+    action = session.query(models.Action).get(action_id)
     if not action:
         return
 
-    # TODO(liuh): Need check if and how an action can be safety deleted
-    action.delete()
-    query.session.flush()
+    # TODO(anyone): check if action can be deleted
+    action.soft_delete(session=session)
+    session.flush()
 
 
 # Utils

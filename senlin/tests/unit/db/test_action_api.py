@@ -406,8 +406,5 @@ class DBAPIActionTest(base.SenlinTestCase):
     def test_action_delete(self):
         action = _create_action(self.ctx)
         self.assertIsNotNone(action)
-        action_id = action.id
-        db_api.action_delete(self.ctx, action.id)
-
-        self.assertRaises(exception.ActionNotFound, db_api.action_get,
-                          self.ctx, action_id)
+        res = db_api.action_delete(self.ctx, action.id)
+        self.assertIsNone(res)
