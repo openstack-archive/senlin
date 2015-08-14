@@ -204,6 +204,9 @@ class LoadBalancingPolicy(base.Policy):
         if res is False:
             return False, data
 
+        nodes = node_mod.Node.load_all(oslo_context.get_current(),
+                                       cluster_id=cluster.id)
+
         ctx = self._build_context(cluster)
         lb_driver = driver_base.SenlinDriver().loadbalancing(ctx)
 
@@ -215,8 +218,6 @@ class LoadBalancingPolicy(base.Policy):
         port = self.pool_spec.get(self.POOL_PROTOCOL_PORT)
         subnet = self.pool_spec.get(self.POOL_SUBNET)
 
-        nodes = node_mod.Node.load_all(oslo_context.get_current(),
-                                       cluster_id=cluster.id)
         for node in nodes:
             member_id = lb_driver.member_add(node, data['loadbalancer'],
                                              data['pool'], port, subnet)
@@ -351,6 +352,5 @@ class LoadBalancingPolicy(base.Policy):
         if cred is None:
             raise exception.TrustNotFound(trustor=cluster.user)
         params['trusts'] = [cred.cred['openstack']['trust']]
-        params['project_id'] = cluster.project
 
         return context.RequestContext.from_dict(params)

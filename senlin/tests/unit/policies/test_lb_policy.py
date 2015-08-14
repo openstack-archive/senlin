@@ -170,7 +170,6 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
             'user_domain_name': service_ctx['user_domain_name'],
             'password': service_ctx['password'],
             'trusts': [cred_info['openstack']['trust']],
-            'project_id': cluster.project
         }
         mock_from_dict.assert_called_once_with(params)
 
@@ -260,10 +259,12 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         self.assertFalse(res)
         self.assertEqual('data', data)
 
+    @mock.patch.object(node_mod.Node, 'load_all')
     @mock.patch.object(policy_base.Policy, 'attach')
     @mock.patch.object(driver_base, 'SenlinDriver')
     def test_lb_policy_attach_failed_lb_creation_failed(
-            self, mock_senlindriver, mock_policy_base_attach):
+            self, mock_senlindriver, mock_policy_base_attach,
+            mock_node_load_all):
 
         sd = mock.Mock()
         lb_driver = mock.Mock()
