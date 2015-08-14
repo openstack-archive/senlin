@@ -10,14 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-
-import six
-import webob
-
 from oslo_log import log as logging
 
 from senlin.common import exception
-from senlin.common.i18n import _
 from senlin.common import wsgi
 from senlin.db import api as db_api
 from senlin.drivers.openstack import keystone_v3
@@ -54,22 +49,17 @@ class TrustMiddleware(wsgi.Middleware):
         }
         kc = keystone_v3.KeystoneClient(params)
         service_cred = keystone_v3.get_service_credentials()
-
+        admin_id = kc.get_user_id(**service_cred)
         try:
-            admin_id = kc.get_user_id(**service_cred)
-        except Exception as ex:
-            LOG.exception(six.text_type(ex))
-            msg = _('Failed in getting service user ID.')
-            raise webob.exc.HTTPInternalServerError(explanation=msg)
-
-        trust = kc.trust_get_by_trustor(ctx.user, admin_id, ctx.project)
+            trust = kc.trust_get_by_trustor(ctx.user, admin_id, ctx.project)
+        except exception.InternalError as ex:
+            if ex.code == 400:
+                trust = None
+            else:
+                raise ex
         if not trust:
             # Create a trust if no existing one found
-            try:
-                trust = kc.trust_create(ctx.user, admin_id, ctx.project,
-                                        ctx.roles)
-            except exception.ResourceCreationFailure as ex:
-                raise webob.exc.HTTPInternalServerError(six.text_type(ex))
+            trust = kc.trust_create(ctx.user, admin_id, ctx.project, ctx.roles)
 
         # update cache
         if cred_exists:
