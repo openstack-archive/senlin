@@ -226,19 +226,12 @@ class ServerProfile(base.Profile):
 
         flavor_id = self.spec_data[self.FLAVOR]
         try:
-            flavor = self.nova(obj).flavor_get(flavor_id)
+            flavor = self.nova(obj).flavor_find(flavor_id, False)
         except Exception as ex:
-            flavor = None
+            LOG.exception(_('Failed in getting flavor: %s'),
+                          six.text_type(ex))
+            raise exception.ResourceNotFound(resource=flavor_id)
 
-        if flavor is None:
-            # Try again using flavor_id as flavor name
-            try:
-                flavor = self.nova(obj).flavor_get_by_name(
-                    flavor_id, ignore_missing=False)
-            except Exception as ex:
-                LOG.exception(_('Failed in getting flavor: %s'),
-                              six.text_type(ex))
-                raise exception.ResourceNotFound(resource=flavor_id)
         # wait for new verson of openstacksdk to fix this
         kwargs.pop(self.FLAVOR)
         kwargs['flavorRef'] = flavor.id

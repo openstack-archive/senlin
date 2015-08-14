@@ -122,7 +122,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         nc.image_get_by_name.return_value = image
         flavor = mock.Mock()
         flavor.id = 'FAKE_FLAVOR_ID'
-        nc.flavor_get.return_value = flavor
+        nc.flavor_find.return_value = flavor
 
         nova_server = mock.Mock()
         nova_server.id = 'FAKE_NOVA_SERVER_ID'
@@ -134,7 +134,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         mock_random_name.assert_called_once_with(8)
         nc.image_get_by_name.assert_called_once_with('FAKE_IMAGE')
-        nc.flavor_get.assert_called_once_with('FLAV')
+        nc.flavor_find.assert_called_once_with('FLAV', False)
 
         attrs = dict(adminPass='adminpass',
                      auto_disk_config=True,
@@ -182,7 +182,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         test_server.cluster_id = 'FAKE_CLUSTER_ID'
         flavor = mock.Mock()
         flavor.id = 'FAKE_FLAVOR_ID'
-        nc.flavor_get.return_value = flavor
+        nc.flavor_find.return_value = flavor
 
         nova_server = mock.Mock()
         nova_server.id = 'FAKE_NOVA_SERVER_ID'
@@ -220,7 +220,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         test_server.cluster_id = None
         flavor = mock.Mock()
         flavor.id = 'FAKE_FLAVOR_ID'
-        nc.flavor_get.return_value = flavor
+        nc.flavor_find.return_value = flavor
 
         nova_server = mock.Mock()
         nova_server.id = 'FAKE_NOVA_SERVER_ID'
@@ -258,15 +258,10 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertRaises(exception.ResourceNotFound,
                           profile.do_create, test_server)
 
-    def test_do_create_flavor_not_found_by_id(self):
+    def test_do_create_flavor_not_found(self):
         nc = mock.Mock()
         test_server = mock.Mock()
-        test_server.name = None
-        test_server.cluster_id = None
-        flavor = mock.Mock()
-        flavor.id = 'FAKE_FLAVOR_ID'
-        nc.flavor_get.side_effect = Exception()
-        nc.flavor_get_by_name.return_value = flavor
+        nc.flavor_find.side_effect = Exception()
 
         spec = {
             'flavor': 'FLAV',
@@ -277,34 +272,13 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         profile = server.ServerProfile('os.nova.server', 's1', spec=spec)
         profile._nc = nc
-        profile.do_create(test_server)
-        attrs = dict(auto_disk_config=True,
-                     flavorRef='FAKE_FLAVOR_ID',
-                     name=mock.ANY,
-                     metadata={},
-                     security_groups=['HIGH_SECURITY_GROUP'],
-                     timeout=120)
-        nc.server_create.assert_called_once_with(**attrs)
-        nc.flavor_get.assert_called_once_with('FLAV')
-        nc.flavor_get_by_name.assert_called_once_with(
-            'FLAV', ignore_missing=False)
 
-    def test_do_create_flavor_not_found_by_id_and_name(self):
-        nc = mock.Mock()
-        test_server = mock.Mock()
-        image = mock.Mock()
-        image.id = 'IMAGE_ID'
-        nc.image_get_by_name.return_value = image
-        nc.flavor_get.side_effect = Exception()
-        nc.flavor_get_by_name.side_effect = Exception()
-
-        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
-        profile._nc = nc
-        self.assertRaises(exception.ResourceNotFound, profile.do_create,
-                          test_server)
-        nc.flavor_get.assert_called_once_with('FLAV')
-        nc.flavor_get_by_name.assert_called_once_with(
-            'FLAV', ignore_missing=False)
+        ex = self.assertRaises(exception.ResourceNotFound,
+                               profile.do_create, test_server)
+        nc.flavor_find.assert_called_once_with('FLAV', False)
+        self.assertEqual('The resource (FLAV) could not be found.',
+                         six.text_type(ex))
+        self.assertEqual(0, nc.server_create.call_count)
 
     def test_do_delete_no_physical_id(self):
         # Test path where server doesn't already exist
