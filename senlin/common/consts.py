@@ -147,9 +147,11 @@ WEBHOOK_OBJ_TYPES = (
 EVENT_ATTRS = (
     EVENT_TIMESTAMP, EVENT_OBJ_ID, EVENT_OBJ_NAME, EVENT_OBJ_TYPE,
     EVENT_USER, EVENT_ACTION, EVENT_STATUS, EVENT_STATUS_REASON,
+    EVENT_LEVEL,
 ) = (
     'timestamp', 'obj_id', 'obj_name', 'obj_type',
     'user', 'action', 'status', 'status_reason',
+    'level',
 )
 
 ACTION_ATTRS = (
