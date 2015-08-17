@@ -146,7 +146,7 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         res = self.middleware._get_credential(webhook.id, key)
         self.assertEqual(expected_auth_url, res['auth_url'])
 
-    @mock.patch.object(keystone_v3, 'get_token')
+    @mock.patch.object(keystone_v3.KeystoneClient, 'get_token')
     def test_get_token_succeeded(self, mock_get_token):
         class FakeAccessInfo(object):
             def __init__(self, auth_token):
@@ -157,7 +157,7 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         token = self.middleware._get_token(self.credential)
         self.assertEqual('TEST_TOKEN', token)
 
-    @mock.patch.object(keystone_v3, 'get_token')
+    @mock.patch.object(keystone_v3.KeystoneClient, 'get_token')
     def test_get_token_failed(self, mock_get_token):
         self.credential['webhook_id'] = 'WEBHOOK_ID'
         mock_get_token.side_effect = Exception()

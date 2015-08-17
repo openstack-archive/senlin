@@ -47,15 +47,19 @@ class KeystoneClient(base.DriverBase):
 
         return
 
-    def user_get_by_name(self, user_name):
+    def user_get(self, name_or_id, ignore_missing=False):
+        # Note: Since default keystone policy will block non-admin user to
+        # get/list user(s), this function may not be workable. Pleaes use
+        # get_user_id method to get the ID of user if needed.
         try:
-            user = self.conn.identity.find_user(user_name)
+            user = self.conn.identity.find_user(
+                name_or_id, ignore_missing=ignore_missing)
         except sdk.exc.HttpException as ex:
             LOG.exception(_('Failed in getting user: %s'), six.text_type(ex))
-            res = _('user:%s') % user_name
+            res = _('user:%s') % name_or_id
             raise exception.ResourceNotFound(resource=res)
 
-        return user.id
+        return user
 
     def endpoint_get(self, service_id, region=None, interface=None):
         '''Utility function to get endpoints of a service.'''
@@ -160,6 +164,32 @@ class KeystoneClient(base.DriverBase):
 
         return result
 
+    @classmethod
+    def get_token(cls, **creds):
+        '''Get token using given credential'''
+
+        try:
+            access_info = sdk.authenticate(**creds)
+            token = access_info.auth_token
+        except Exception as ex:
+            LOG.exception(_('Authentication failure: %s'), six.text_type(ex))
+            raise exception.NotAuthenticated()
+
+        return token
+
+    @classmethod
+    def get_user_id(cls, **creds):
+        '''Get ID of the user with given creddential'''
+
+        try:
+            access_info = sdk.authenticate(**creds)
+            user_id = access_info.user_id
+        except Exception as ex:
+            LOG.exception(_('Authentication failure: %s'), six.text_type(ex))
+            raise exception.NotAuthenticated()
+
+        return user_id
+
 
 def get_service_credentials(**kwargs):
     '''Senlin service credential to use with Keystone.
@@ -178,28 +208,3 @@ def get_service_credentials(**kwargs):
     }
     creds.update(**kwargs)
     return creds
-
-
-def get_service_user_id():
-    '''Get ID of senlin service user'''
-    creds = get_service_credentials()
-
-    try:
-        access_info = sdk.authenticate(**creds)
-        user_id = access_info.user_id
-    except Exception as ex:
-        LOG.exception(_('Authentication failure: %s'), six.text_type(ex))
-
-    return user_id
-
-
-def get_token(**creds):
-    '''Get token using given credential'''
-
-    try:
-        access_info = sdk.authenticate(**creds)
-        token = access_info.auth_token
-    except Exception as ex:
-        LOG.exception(_('Authentication failure: %s'), six.text_type(ex))
-
-    return token

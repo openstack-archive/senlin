@@ -110,7 +110,7 @@ class WebhookMiddleware(wsgi.Middleware):
         :param cred: Rebuilt credential dictionary for authentication.
         """
         try:
-            token = keystone_v3.get_token(**cred)
+            token = keystone_v3.KeystoneClient.get_token(**cred)
         except Exception as ex:
             LOG.exception(_('Webhook failed authentication: %s.'),
                           six.text_type(ex))

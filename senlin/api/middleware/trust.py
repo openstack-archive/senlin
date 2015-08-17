@@ -14,11 +14,15 @@
 import six
 import webob
 
+from oslo_log import log as logging
+
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import wsgi
 from senlin.db import api as db_api
 from senlin.drivers.openstack import keystone_v3
+
+LOG = logging.getLogger(__name__)
 
 
 class TrustMiddleware(wsgi.Middleware):
@@ -42,11 +46,6 @@ class TrustMiddleware(wsgi.Middleware):
                 cred_exists = True
                 pass
 
-        admin_id = keystone_v3.get_service_user_id()
-        if admin_id is None:
-            msg = _('Failed checking service user checking.')
-            raise webob.exc.HTTPInternalServerError(msg)
-
         params = {
             'auth_url': ctx.auth_url,
             'auth_token': ctx.auth_token,
@@ -54,6 +53,14 @@ class TrustMiddleware(wsgi.Middleware):
             'user': ctx.user,
         }
         kc = keystone_v3.KeystoneClient(params)
+        service_cred = keystone_v3.get_service_credentials()
+
+        try:
+            admin_id = kc.get_user_id(service_cred)
+        except Exception as ex:
+            LOG.exception(six.text_type(ex))
+            msg = _('Failed in getting service user ID.')
+            raise webob.exc.HTTPInternalServerError(explanation=msg)
 
         trust = kc.trust_get_by_trustor(ctx.user, admin_id, ctx.project)
         if not trust:
