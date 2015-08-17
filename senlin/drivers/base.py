@@ -44,3 +44,4 @@ class SenlinDriver(object):
         self.network = cloud_backend_plugin.NetworkClient
         self.loadbalancing = cloud_backend_plugin.LoadBalancingClient
         self.orchestration = cloud_backend_plugin.OrchestrationClient
+        self.telemetry = cloud_backend_plugin.TelemetryClient
