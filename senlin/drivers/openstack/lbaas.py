@@ -85,7 +85,7 @@ class LoadBalancerDriver(base.DriverBase):
         result = {}
         # Create loadblancer
         subnet = self.nc().subnet_get(vip['subnet'])
-        subnet_id = subnet['id']
+        subnet_id = subnet.id
         lb = self.nc().loadbalancer_create(subnet_id,
                                            vip.get('address', None),
                                            vip['admin_state_up'])
@@ -166,9 +166,9 @@ class LoadBalancerDriver(base.DriverBase):
             return None
 
         subnet_obj = self.nc().subnet_get(subnet)
-        net_id = subnet_obj['network_id']
+        net_id = subnet_obj.network_id
         net = self.nc().network_get(net_id)
-        net_name = net['name']
+        net_name = net.name
 
         if net_name not in addresses:
             LOG.error(_LE('Node is not in subnet %(subnet)s'),
@@ -177,7 +177,7 @@ class LoadBalancerDriver(base.DriverBase):
 
         address = addresses[net_name]
         member = self.nc().pool_member_create(pool_id, address, port,
-                                              subnet_obj['id'])
+                                              subnet_obj.id)
         self._wait_for_lb_ready(lb_id)
 
         return member.id

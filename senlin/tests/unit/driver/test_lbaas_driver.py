@@ -109,8 +109,10 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         lb_obj.id = 'LB_ID'
         listener_obj.id = 'LISTENER_ID'
         pool_obj.id = 'POOL_ID'
-        subnet_obj = {'name': 'subnet1', 'id': 'SUBNET_ID',
-                      'network_id': 'NETWORK_ID'}
+        subnet_obj = mock.Mock()
+        subnet_obj.name = 'subnet1'
+        subnet_obj.id = 'SUBNET_ID'
+        subnet_obj.network_id = 'NETWORK_ID'
 
         self.nc.loadbalancer_create.return_value = lb_obj
         self.nc.listener_create.return_value = listener_obj
@@ -142,8 +144,10 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
     def test_lb_create_loadbalancer_creation_failed(self):
         lb_obj = mock.Mock()
         lb_obj.id = 'LB_ID'
-        subnet_obj = {'name': 'subnet1', 'id': 'SUBNET_ID',
-                      'network_id': 'NETWORK_ID'}
+        subnet_obj = mock.Mock()
+        subnet_obj.name = 'subnet1'
+        subnet_obj.id = 'SUBNET_ID'
+        subnet_obj.network_id = 'NETWORK_ID'
         self.nc.loadbalancer_create.return_value = lb_obj
         self.nc.subnet_get.return_value = subnet_obj
 
@@ -167,8 +171,10 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         listener_obj = mock.Mock()
         lb_obj.id = 'LB_ID'
         listener_obj.id = 'LISTENER_ID'
-        subnet_obj = {'name': 'subnet1', 'id': 'SUBNET_ID',
-                      'network_id': 'NETWORK_ID'}
+        subnet_obj = mock.Mock()
+        subnet_obj.name = 'subnet1'
+        subnet_obj.id = 'SUBNET_ID'
+        subnet_obj.network_id = 'NETWORK_ID'
 
         self.lb_driver._wait_for_lb_ready = mock.Mock()
         self.lb_driver._wait_for_lb_ready.side_effect = [True, False]
@@ -197,8 +203,10 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         lb_obj.id = 'LB_ID'
         listener_obj.id = 'LISTENER_ID'
         pool_obj.id = 'POOL_ID'
-        subnet_obj = {'name': 'subnet1', 'id': 'SUBNET_ID',
-                      'network_id': 'NETWORK_ID'}
+        subnet_obj = mock.Mock()
+        subnet_obj.name = 'subnet1'
+        subnet_obj.id = 'SUBNET_ID'
+        subnet_obj.network_id = 'NETWORK_ID'
 
         self.lb_driver._wait_for_lb_ready = mock.Mock()
         self.lb_driver._wait_for_lb_ready.side_effect = [True, True, False]
@@ -314,9 +322,13 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         pool_id = 'POOL_ID'
         port = '80'
         subnet = 'subnet1'
-        subnet_obj = {'name': 'subnet1', 'id': 'SUBNET_ID',
-                      'network_id': 'NETWORK_ID'}
-        network_obj = {'name': 'network1', 'id': 'NETWORK_ID'}
+        subnet_obj = mock.Mock()
+        subnet_obj.name = 'subnet1'
+        subnet_obj.id = 'SUBNET_ID'
+        subnet_obj.network_id = 'NETWORK_ID'
+        network_obj = mock.Mock()
+        network_obj.name = 'network1'
+        network_obj.id = 'NETWORK_ID'
         addresses = {'network1': 'ipaddr_net1', 'network2': 'ipaddr_net2'}
         member = mock.Mock()
         member.id = 'MEMBER_ID'
@@ -358,7 +370,9 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         pool_id = 'POOL_ID'
         port = '80'
         subnet = 'subnet1'
-        network_obj = {'name': 'network3', 'id': 'NETWORK_ID'}
+        network_obj = mock.Mock()
+        network_obj.name = 'network3'
+        network_obj.id = 'NETWORK_ID'
         addresses = {'network1': 'ipaddr_net1', 'network2': 'ipaddr_net2'}
 
         self.nc.network_get.return_value = network_obj
