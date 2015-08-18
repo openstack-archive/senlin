@@ -513,10 +513,17 @@ class ClusterAction(base.Action):
         if count == 0:
             return self.RES_OK, 'No scaling needed based on policy checking'
 
-        # Update desired_capacity of cluster
-        nodes = db_api.node_get_all_by_cluster(self.context, cluster.id)
-        current_size = len(nodes)
+        # check provided params against current properties
+        # desired is checked when strict is True
+        node_list = cluster.get_nodes()
+        current_size = len(node_list)
         desired_capacity = current_size + count
+        result, reason = self._check_size_params(cluster, desired_capacity,
+                                                 None, None, True)
+        if result != self.RES_OK:
+            return result, reason
+
+        # Update desired_capacity of cluster
         result, reason = self._update_cluster_properties(
             cluster, desired_capacity, None, None)
         if result != self.RES_OK:
@@ -555,10 +562,17 @@ class ClusterAction(base.Action):
         if count == 0:
             return self.RES_OK, 'No scaling needed based on policy checking'
 
-        # Update desired_capacity of cluster
-        nodes = db_api.node_get_all_by_cluster(self.context, cluster.id)
-        current_size = len(nodes)
+        # check provided params against current properties
+        # desired is checked when strict is True
+        node_list = cluster.get_nodes()
+        current_size = len(node_list)
         desired_capacity = current_size - count
+        result, reason = self._check_size_params(cluster, desired_capacity,
+                                                 None, None, True)
+        if result != self.RES_OK:
+            return result, reason
+
+        # Update desired_capacity of cluster
         result, reason = self._update_cluster_properties(
             cluster, desired_capacity, None, None)
         if result != self.RES_OK:
