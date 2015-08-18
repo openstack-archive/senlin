@@ -18,6 +18,7 @@ import six
 from senlin.common import consts
 from senlin.common import exception
 from senlin.common import utils as common_utils
+from senlin.db.sqlalchemy import api as db_api
 from senlin.engine.actions import base as action_mod
 from senlin.engine import dispatcher
 from senlin.engine import environment
@@ -157,11 +158,14 @@ class WebhookTest(base.SenlinTestCase):
                          '' % (action, obj_type),
                          six.text_type(ex.exc_info[1]))
 
+    @mock.patch.object(db_api, 'cred_get')
     @mock.patch.object(webhook_mod.Webhook, 'generate_url')
     @mock.patch.object(common_utils, 'encrypt')
-    def test_webhook_create_as_admin(self, mock_encrypt, mock_url):
+    def test_webhook_create_as_admin(self, mock_encrypt, mock_url,
+                                     mock_cred):
         mock_encrypt.return_value = 'secret text', 'test-key'
         mock_url.return_value = 'test-url', 'test-key'
+        mock_cred.return_value = {'cred': {'openstack': {'trust': '123abc'}}}
 
         self.ctx.is_admin = True
         cluster = self._create_cluster('c1')
@@ -403,6 +407,7 @@ class WebhookTest(base.SenlinTestCase):
         mock_url.return_value = 'test-url', 'test-key'
         fake_cluster = mock.Mock()
         fake_cluster.user = self.ctx.user
+        fake_cluster.id = 'CLUSTER_FULL_ID'
         mock_find.return_value = fake_cluster
 
         obj_id = 'cluster-id-1'
@@ -419,7 +424,7 @@ class WebhookTest(base.SenlinTestCase):
         action = self.eng.action_get(self.ctx, action_id)
         self._verify_action(action, consts.CLUSTER_SCALE_OUT,
                             'webhook_action_%s' % webhook['id'],
-                            obj_id, cause=action_mod.CAUSE_RPC,
+                            'CLUSTER_FULL_ID', cause=action_mod.CAUSE_RPC,
                             inputs={})
 
         notify.assert_called_once_with(self.ctx, action_id=mock.ANY)
@@ -433,6 +438,7 @@ class WebhookTest(base.SenlinTestCase):
         mock_url.return_value = 'test-url', 'test-key'
         fake_cluster = mock.Mock()
         fake_cluster.user = self.ctx.user
+        fake_cluster.id = 'CLUSTER_FULL_ID'
         mock_find.return_value = fake_cluster
         mock_encrypt.return_value = 'secret text', 'test-key'
 
@@ -451,7 +457,7 @@ class WebhookTest(base.SenlinTestCase):
         action = self.eng.action_get(self.ctx, action_id)
         self._verify_action(action, consts.CLUSTER_SCALE_OUT,
                             'webhook_action_%s' % webhook['id'],
-                            obj_id, cause=action_mod.CAUSE_RPC,
+                            'CLUSTER_FULL_ID', cause=action_mod.CAUSE_RPC,
                             inputs=params2)
 
         notify.assert_called_once_with(self.ctx, action_id=mock.ANY)
