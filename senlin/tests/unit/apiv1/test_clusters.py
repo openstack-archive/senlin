@@ -401,7 +401,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               self.controller.index,
                                               req, tenant_id=self.project)
 
-        self.assertEqual(400, resp.json['code'])
+        self.assertEqual(500, resp.json['code'])
         self.assertEqual('AttributeError', resp.json['error']['type'])
         mock_call.assert_called_once_with(
             req.context, ('cluster_list', mock.ANY))
