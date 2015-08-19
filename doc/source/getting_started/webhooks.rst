@@ -17,16 +17,18 @@ Webhook
 =======
 
 A :term:`Webhook` is used to trigger a specific :term:`Action` on a senlin
-object, for instance the actions that change the size of a specified cluster.
+object including `Cluster`, `Node` and `Policy`, for instance the actions that
+change the size of a specified cluster.
 
 How to use
 ----------
 
-1. Create a cluster, e.g.
+1. Create a cluster named "``test_cluster``", with its desired capacity set to
+   2, its minimum size set to 1 and its maximum size set to 5, e.g.
 
 ::
 
-  senlin cluster-create -p $PROFILE_ID -c 2 -i 1 -a 5 test-cluster
+  senlin cluster-create -p $PROFILE_ID -c 2 -n 1 -m 5 test-cluster
 
 2. Attach a ScalingPolicy to the cluster:
 
@@ -34,16 +36,22 @@ How to use
 
   senlin cluster-policy-attach -p $POLICY_ID test-cluster
 
-3. Create a webhook and specify `test-cluster` as the `obj_id`, `cluster` as
-   the `obj_type` and `CLUSTER_SCALE_OUT` or `CLUSTER_SCALE_IN` as the action.
+3. Create a webhook, use the option :option:`-c` to specify `test-cluster` as
+   the `obj_id`, `cluster` as the `obj_type` and use the option :option:`-a`
+   to specify `CLUSTER_SCALE_OUT` or `CLUSTER_SCALE_IN` as the action.
+
+   Otherwise, option :option:`-n` can be used to specify `node` as the
+   `obj_type`, and option :option:`-p` to specify `policy` as the `obj_type`.
+   Note that only one of `cluster`, `node` or `policy` can be specified.
+
    Senlin service will return the webhook information with its webhook_url.
    User can use this url to trigger cluster scale_out or scale_in action.
 
 ::
 
-  senlin webhook-create -t cluster -i test-cluster \
+  senlin webhook-create -c test-cluster \
       -a CLUSTER_SCALE_OUT \
-      -c 'user=$USER_ID;password=$PASSWORD' \
+      -C 'user=$USER_ID;password=$PASSWORD' \
       test-webhook
 
 4. Trigger the webhook by sending a POST request to its URL, for example:
