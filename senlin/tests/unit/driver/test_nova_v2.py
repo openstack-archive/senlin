@@ -198,18 +198,23 @@ class TestNovaV2(base.SenlinTestCase):
         self.compute.delete_keypair.assert_called_once_with('foo', True)
 
     def test_server_create(self):
+        d = nova_v2.NovaClient(self.ctx)
+        d.server_create(name='foo')
+        self.compute.create_server.assert_called_once_with(name='foo')
+
+    def test_wait_for_server(self):
+        d = nova_v2.NovaClient(self.ctx)
+        d.wait_for_server('foo', timeout=10)
+        self.compute.wait_for_server.assert_called_once_with('foo',
+                                                             wait=10)
+
+    def test_wait_for_server_with_default_timeout(self):
         timeout = cfg.CONF.default_action_timeout
 
         d = nova_v2.NovaClient(self.ctx)
-        obj = d.server_create(name='foo')
-        self.compute.create_server.assert_called_once_with(name='foo')
-        self.compute.wait_for_server.assert_called_once_with(obj, wait=timeout)
-
-    def test_server_create_with_timeout(self):
-        d = nova_v2.NovaClient(self.ctx)
-        obj = d.server_create(name='foo', timeout=10)
-        self.compute.create_server.assert_called_once_with(name='foo')
-        self.compute.wait_for_server.assert_called_once_with(obj, wait=10)
+        d.wait_for_server('foo')
+        self.compute.wait_for_server.assert_called_once_with('foo',
+                                                             wait=timeout)
 
     def test_server_get(self):
         d = nova_v2.NovaClient(self.ctx)
@@ -243,6 +248,30 @@ class TestNovaV2(base.SenlinTestCase):
         d = nova_v2.NovaClient(self.ctx)
         d.server_delete('foo', True)
         self.compute.delete_server.assert_called_once_with('foo', True)
+
+    def test_wait_for_server_delete(self):
+        self.compute.find_server.return_value = 'FOO'
+
+        d = nova_v2.NovaClient(self.ctx)
+        d.wait_for_server_delete('foo', 120)
+        self.compute.find_server.assert_called_once_with('foo', True)
+        self.compute.wait_for_delete.assert_called_once_with('FOO', wait=120)
+
+    def test_wait_for_server_delete_with_default_timeout(self):
+        cfg.CONF.set_override('default_action_timeout', 360)
+        self.compute.find_server.return_value = 'FOO'
+
+        d = nova_v2.NovaClient(self.ctx)
+        d.wait_for_server_delete('foo')
+        self.compute.find_server.assert_called_once_with('foo', True)
+        self.compute.wait_for_delete.assert_called_once_with('FOO', wait=360)
+
+    def test_wait_for_server_delete_server_doesnt_exist(self):
+        self.compute.find_server.return_value = None
+
+        d = nova_v2.NovaClient(self.ctx)
+        res = d.wait_for_server_delete('foo')
+        self.assertIsNone(res)
 
     def test_server_interface_create(self):
         d = nova_v2.NovaClient(self.ctx)

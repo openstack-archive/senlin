@@ -91,14 +91,17 @@ class NovaClient(base.DriverBase):
 
     @sdk.translate_exception
     def server_create(self, **attrs):
-        timeout = cfg.CONF.default_action_timeout
-        if 'timeout' in attrs:
-            timeout = attrs.pop('timeout')
-
         server_obj = self.conn.compute.create_server(**attrs)
-        self.conn.compute.wait_for_server(server_obj, wait=timeout)
-
         return server_obj
+
+    @sdk.translate_exception
+    def wait_for_server(self, value, timeout=None):
+        '''Wait for server creation complete'''
+        if timeout is None:
+            timeout = cfg.CONF.default_action_timeout
+
+        self.conn.compute.wait_for_server(value, wait=timeout)
+        return
 
     @sdk.translate_exception
     def server_get(self, value):
@@ -115,6 +118,18 @@ class NovaClient(base.DriverBase):
     @sdk.translate_exception
     def server_delete(self, value, ignore_missing=True):
         return self.conn.compute.delete_server(value, ignore_missing)
+
+    @sdk.translate_exception
+    def wait_for_server_delete(self, value, timeout=None):
+        '''Wait for server deleting complete'''
+        if timeout is None:
+            timeout = cfg.CONF.default_action_timeout
+
+        server_obj = self.conn.compute.find_server(value, True)
+        if server_obj:
+            self.conn.compute.wait_for_delete(server_obj, wait=timeout)
+
+        return
 
     @sdk.translate_exception
     def server_interface_create(self, **attrs):
