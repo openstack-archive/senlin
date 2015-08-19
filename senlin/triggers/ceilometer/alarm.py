@@ -18,7 +18,7 @@ from senlin.common import constraints
 from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.common import schema
-from senlin.drivers.openstack import ceilometer_v2
+from senlin.drivers import base as driver_base
 from senlin.triggers import base
 
 
@@ -183,7 +183,7 @@ class Alarm(base.Trigger):
         }
 
         try:
-            cc = ceilometer_v2.CeilometerClient(ctx)
+            cc = driver_base.SenlinDriver().telemetry(ctx)
             alarm = cc.alarm_create(**params)
             self.physical_id = alarm.id
             self.store(ctx)
@@ -197,7 +197,7 @@ class Alarm(base.Trigger):
         :param identifier: This must be an alarm ID.
         """
         try:
-            cc = ceilometer_v2.CeilometerClient(ctx)
+            cc = driver_base.SenlinDriver().telemetry(ctx)
             res = cc.alarm_delete(identifier, True)
             return True, res
         except exc.InternalError as ex:

@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from senlin.drivers.openstack import ceilometer_v2
 from senlin.drivers.openstack import heat_v1
 from senlin.drivers.openstack import lbaas
 from senlin.drivers.openstack import neutron_v2
@@ -20,13 +21,17 @@ def ComputeClient(params):
     return nova_v2.NovaClient(params)
 
 
-def OrchestrationClient(params):
-    return heat_v1.HeatClient(params)
+def LoadBalancingClient(params):
+    return lbaas.LoadBalancerDriver(params)
 
 
 def NetworkClient(params):
     return neutron_v2.NeutronClient(params)
 
 
-def LoadBalancingClient(params):
-    return lbaas.LoadBalancerDriver(params)
+def OrchestrationClient(params):
+    return heat_v1.HeatClient(params)
+
+
+def TelemetryClient(params):
+    return ceilometer_v2.CeilometerClient(params)

@@ -14,7 +14,7 @@ import mock
 import six
 
 from senlin.common import exception as exc
-from senlin.drivers.openstack import ceilometer_v2
+from senlin.drivers import base as driver_base
 from senlin.engine import parser
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -149,10 +149,13 @@ class TestCeilometerAlarm(base.SenlinTestCase):
         res = a.validate()
         self.assertIsNone(res)
 
-    @mock.patch.object(ceilometer_v2, 'CeilometerClient')
-    def test_create(self, mock_cc):
+    @mock.patch.object(driver_base, 'SenlinDriver')
+    def test_create(self, mock_senlindriver):
         cc = mock.Mock()
-        mock_cc.return_value = cc
+        sd = mock.Mock()
+        sd.telemetry.return_value = cc
+        mock_senlindriver.return_value = sd
+
         spec = parser.simple_parse(threshold_alarm)
         params = {
             'alarm_actions': ['http://url1'],
@@ -165,7 +168,7 @@ class TestCeilometerAlarm(base.SenlinTestCase):
 
         self.assertTrue(res)
 
-        mock_cc.assert_called_once_with(self.ctx)
+        sd.telemetry.assert_called_once_with(self.ctx)
         values = {
             'name': 'A1',
             'description': '',
@@ -190,11 +193,14 @@ class TestCeilometerAlarm(base.SenlinTestCase):
         cc.alarm_create.assert_called_once_with(**values)
         self.assertIsNotNone(a.id)
 
-    @mock.patch.object(ceilometer_v2, 'CeilometerClient')
-    def test_create_with_failure(self, mock_cc):
-        c = mock.Mock()
-        mock_cc.return_value = c
-        c.alarm_create.side_effect = exc.ResourceCreationFailure(rtype='Alarm')
+    @mock.patch.object(driver_base, 'SenlinDriver')
+    def test_create_with_failure(self, mock_senlindriver):
+        cc = mock.Mock()
+        sd = mock.Mock()
+        sd.telemetry.return_value = cc
+        mock_senlindriver.return_value = sd
+        cc.alarm_create.side_effect = exc.ResourceCreationFailure(
+            rtype='Alarm')
         spec = parser.simple_parse(threshold_alarm)
         a = alarm.Alarm('A1', spec)
         res, reason = a.create(self.ctx)
@@ -202,10 +208,12 @@ class TestCeilometerAlarm(base.SenlinTestCase):
         self.assertFalse(res)
         self.assertEqual('Failed in creating Alarm.', reason)
 
-    @mock.patch.object(ceilometer_v2, 'CeilometerClient')
-    def test_delete(self, mock_cc):
+    @mock.patch.object(driver_base, 'SenlinDriver')
+    def test_delete(self, mock_senlindriver):
         cc = mock.Mock()
-        mock_cc.return_value = cc
+        sd = mock.Mock()
+        sd.telemetry.return_value = cc
+        mock_senlindriver.return_value = sd
         spec = {
             'type': 'FakeAlarmType',
             'version': 1.0
@@ -215,13 +223,15 @@ class TestCeilometerAlarm(base.SenlinTestCase):
         res, res1 = a.delete(self.ctx, 'FAKE_ID')
 
         self.assertTrue(res)
-        mock_cc.assert_called_once_with(self.ctx)
+        sd.telemetry.assert_called_once_with(self.ctx)
         cc.alarm_delete.assert_called_once_with('FAKE_ID', True)
 
-    @mock.patch.object(ceilometer_v2, 'CeilometerClient')
-    def test_delete_with_failure(self, mock_cc):
+    @mock.patch.object(driver_base, 'SenlinDriver')
+    def test_delete_with_failure(self, mock_senlindriver):
         cc = mock.Mock()
-        mock_cc.return_value = cc
+        sd = mock.Mock()
+        sd.telemetry.return_value = cc
+        mock_senlindriver.return_value = sd
         cc.alarm_delete.side_effect = exc.ResourceDeletionFailure(resource='a')
         spec = {
             'type': 'FakeAlarmType',
