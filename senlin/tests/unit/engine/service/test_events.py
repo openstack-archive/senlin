@@ -144,8 +144,9 @@ class EventTest(base.SenlinTestCase):
         ex = self.assertRaises(ValueError,
                                self.eng.event_list, self.ctx,
                                sort_dir='Bogus')
-        self.assertEqual("Unknown sort direction, must be "
-                         "'desc' or 'asc'", six.text_type(ex))
+        self.assertEqual("Unknown sort direction, must be one of: "
+                         "asc-nullsfirst, asc-nullslast, desc-nullsfirst, "
+                         "desc-nullslast", six.text_type(ex))
 
     def test_event_list_with_filters(self):
         e1 = event_mod.Event(timeutils.utcnow(), 50, status='GOOD',

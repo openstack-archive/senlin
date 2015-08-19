@@ -197,8 +197,9 @@ class ProfileTest(base.SenlinTestCase):
         ex = self.assertRaises(ValueError,
                                self.eng.profile_list, self.ctx,
                                sort_dir='Bogus')
-        self.assertEqual("Unknown sort direction, must be "
-                         "'desc' or 'asc'", six.text_type(ex))
+        self.assertEqual("Unknown sort direction, must be one of: "
+                         "asc-nullsfirst, asc-nullslast, desc-nullsfirst, "
+                         "desc-nullslast", six.text_type(ex))
 
     def test_profile_list_show_deleted(self):
         p1 = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', {})

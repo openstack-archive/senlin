@@ -242,8 +242,9 @@ class NodeTest(base.SenlinTestCase):
         ex = self.assertRaises(ValueError,
                                self.eng.node_list, self.ctx,
                                sort_dir='Bogus')
-        self.assertEqual("Unknown sort direction, must be "
-                         "'desc' or 'asc'", six.text_type(ex))
+        self.assertEqual("Unknown sort direction, must be one of: "
+                         "asc-nullsfirst, asc-nullslast, desc-nullsfirst, "
+                         "desc-nullslast", six.text_type(ex))
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_node_list_show_deleted(self, notify):

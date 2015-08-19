@@ -203,8 +203,9 @@ class PolicyTest(base.SenlinTestCase):
         ex = self.assertRaises(ValueError,
                                self.eng.policy_list, self.ctx,
                                sort_dir='Bogus')
-        self.assertEqual("Unknown sort direction, must be "
-                         "'desc' or 'asc'", six.text_type(ex))
+        self.assertEqual("Unknown sort direction, must be one of: "
+                         "asc-nullsfirst, asc-nullslast, desc-nullsfirst, "
+                         "desc-nullslast", six.text_type(ex))
 
     def test_policy_list_show_deleted(self):
         p1 = self.eng.policy_create(self.ctx, 'p-1', 'TestPolicy', {})
