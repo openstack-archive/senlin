@@ -48,11 +48,11 @@ class FaultWrapper(wsgi.Middleware):
     error_map = {
         'ActionInProgress': webob.exc.HTTPConflict,
         'ActionNotFound': webob.exc.HTTPNotFound,
-        'AttributeError': webob.exc.HTTPBadRequest,
         'ClusterNotFound': webob.exc.HTTPNotFound,
         'EventNotFound': webob.exc.HTTPNotFound,
         'FeatureNotSupported': webob.exc.HTTPConflict,
         'Forbidden': webob.exc.HTTPForbidden,
+        'InternalError': webob.exc.HTTPInternalServerError,
         'InvalidParameter': webob.exc.HTTPBadRequest,
         'InvalidSchemaError': webob.exc.HTTPBadRequest,
         'MultipleChoices': webob.exc.HTTPBadRequest,
@@ -61,17 +61,16 @@ class FaultWrapper(wsgi.Middleware):
         'PolicyBindingNotFound': webob.exc.HTTPNotFound,
         'PolicyNotFound': webob.exc.HTTPNotFound,
         'PolicyTypeNotFound': webob.exc.HTTPNotFound,
-        'ProfileInUse': webob.exc.HTTPBadRequest,
+        'ProfileInUse': webob.exc.HTTPConflict,
         'ProfileNotFound': webob.exc.HTTPNotFound,
         'ProfileTypeNotFound': webob.exc.HTTPNotFound,
         'ProfileTypeNotMatch': webob.exc.HTTPBadRequest,
-        'WebhookNotFound': webob.exc.HTTPNotFound,
         'RequestLimitExceeded': webob.exc.HTTPBadRequest,
         'ResourceInUse': webob.exc.HTTPConflict,
         'SenlinBadRequest': webob.exc.HTTPBadRequest,
         'SpecValidationFailed': webob.exc.HTTPBadRequest,
         'TriggerTypeNotFound': webob.exc.HTTPNotFound,
-        'ValueError': webob.exc.HTTPBadRequest,
+        'WebhookNotFound': webob.exc.HTTPNotFound,
     }
 
     def _map_exception_to_error(self, class_exception):
