@@ -133,10 +133,8 @@ class Registry(object):
         def _as_dict(level):
             tmp = {}
             for k, v in iter(level.items()):
-                if isinstance(v, dict):
-                    tmp[k] = _as_dict(v)
-                else:
-                    tmp[k] = v.plugin
+                # TODO(anyone): allow nested dict
+                tmp[k] = v.plugin
             return tmp
 
         return _as_dict(self._registry)
