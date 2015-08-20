@@ -528,7 +528,7 @@ class ClusterAction(base.Action):
         if result == self.RES_OK:
             reason = 'Cluster scaling succeeded'
             cluster.set_status(self.context, cluster.ACTIVE, reason)
-        elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_FAILED]:
+        elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_ERROR]:
             cluster.set_status(self.context, cluster.ERROR, reason)
         else:
             # RETRY or FAILED?
@@ -580,7 +580,7 @@ class ClusterAction(base.Action):
         if result == self.RES_OK:
             reason = 'Cluster scaling succeeded'
             cluster.set_status(self.context, cluster.ACTIVE, reason)
-        elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_FAILED]:
+        elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_ERROR]:
             cluster.set_status(self.context, cluster.ERROR, reason)
         else:
             # RETRY or FAILED?
