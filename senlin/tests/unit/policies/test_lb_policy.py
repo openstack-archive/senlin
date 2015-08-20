@@ -17,7 +17,7 @@ import six
 from senlin.common import consts
 from senlin.common import context
 from senlin.common import exception
-from senlin.db.sqlalchemy import api as db_api
+from senlin.db import api as db_api
 from senlin.drivers import base as driver_base
 from senlin.engine import cluster_policy
 from senlin.engine import node as node_mod
