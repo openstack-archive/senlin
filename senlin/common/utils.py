@@ -39,7 +39,8 @@ class URLFetchError(exception.Error, IOError):
     pass
 
 
-def parse_int_param(name, value, allow_zero=True, allow_negative=False):
+def parse_int_param(name, value, allow_zero=True, allow_negative=False,
+                    lower_limit=None, upper_limit=None):
     if value is None:
         return None
 
@@ -53,7 +54,9 @@ def parse_int_param(name, value, allow_zero=True, allow_negative=False):
     except (TypeError, ValueError):
         raise exception.InvalidParameter(name=name, value=value)
     else:
-        if allow_negative is False and result < 0:
+        if any([(allow_negative is False and result < 0),
+                (lower_limit and result < lower_limit),
+                (upper_limit and result > upper_limit)]):
             raise exception.InvalidParameter(name=name, value=value)
 
     return result
