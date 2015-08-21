@@ -409,7 +409,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.nc.pool_member_delete.assert_called_once_with(pool_id, member_id)
 
         self.nc.pool_member_delete.side_effect = None
-        self.lb_driver._wait_for_lb_ready.side_effect = Exception('')
+        self.lb_driver._wait_for_lb_ready.return_value = False
         res = self.lb_driver.member_remove(lb_id, pool_id, member_id)
-        self.assertFalse(res)
+        self.assertEqual(None, res)
         self.lb_driver._wait_for_lb_ready.assert_called_once_with(lb_id)
