@@ -122,10 +122,11 @@ clusters returned from Senlin server each time, using the option
   | 2959122e | c1   | ACTIVE | 2015-05-05T13:27:28 |
   +----------+------+--------+---------------------+
 
-Another option you can specify is the ID of a cluster from which you want to
+Another option you can specify is the ID of a cluster after which you want to
 see the returned list starts. In other words, you don't want to see those
-clusters with IDs that come before the one you specify. You can use the option
-:option:`--marker <ID>` (or :option:`-m <ID>`) for this purpose. For example::
+clusters with IDs that is or come before the one you specify. You can use the
+option :option:`--marker <ID>` (or :option:`-m <ID>`) for this purpose. For
+example::
 
   $ senlin profile-list -l 1 -m 2959122e-11c7-4e82-b12f-f49dc5dac270
   +----------+------+--------+---------------------+

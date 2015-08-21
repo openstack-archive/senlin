@@ -68,10 +68,10 @@ example, the following command will list all nodes that were members of the
 If the cluster size is very large, you may want to list the nodes in pages.
 This can be achieved by using the :option:`--marker` (or :option:`-m`) option
 together with the :option:`--limit` (or :option:`-l`) option. The ``marker``
-option value specifies a node ID from which you want the resulted list to
+option value specifies a node ID after which you want the resulted list to
 start; and the ``limit`` option value specifies the number of nodes you want
 to include in the resulted list. For example, the following command lists the
-nodes starting with a specific node ID with the length of the list set to 10::
+nodes starting behind a specific node ID with the length of the list set to 10::
 
   $ senlin cluster-node-list -m b28692a5-2536-4921-985b-1142d6045e1f -l 10 webservers
 

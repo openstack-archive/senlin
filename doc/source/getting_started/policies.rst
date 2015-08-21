@@ -69,10 +69,11 @@ of policies returned from Senlin server, using the option :option:`--limit` (or
   | 239d7212 | dp01 | DeletionPolicy | 0     | 0        | 2015-07-11T04:24:34 |
   +----------+------+----------------+-------+----------+---------------------+
 
-Yet another option you can specify is the ID of a policy object from which
+Yet another option you can specify is the ID of a policy object after which
 you want to see the list starts. In other words, you don't want to see those
-policies with IDs that come before the one you specify. You can use the option
-:option:`--marker <ID>` (or option:`-m <ID>`) for this purpose. For example::
+policies with IDs that is or come before the one you specify. You can use the
+option :option:`--marker <ID>` (or option:`-m <ID>`) for this purpose. For
+example::
 
   $ senlin profile-list -l 1 -m 239d7212-6196-4a89-9446-44d28717d7de
 
