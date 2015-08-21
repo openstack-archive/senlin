@@ -114,10 +114,11 @@ returned from Senlin server each time, using the option :option:`--limit
 
   $ senlin node-list --limit 1
 
-Another option you can specify is the ID of a node from which you want to
+Another option you can specify is the ID of a node after which you want to
 see the returned list starts. In other words, you don't want to see those
-nodes with IDs that come before the one you specify. You can use the option
-:option:`--marker <ID>` (or :option:`-m <ID>`) for this purpose. For example::
+nodes with IDs that is or come before the one you specify. You can use the
+option :option:`--marker <ID>` (or :option:`-m <ID>`) for this purpose. For
+example::
 
   $ senlin node-list --marker <NODE ID HERE>
 

@@ -77,9 +77,9 @@ number of profiles returned from Senlin server, using the option :option:`-l
   | 560a8f9d | myserver | os.nova.server | 2015-05-05T13:26:00 |
   +----------+----------+----------------+---------------------+
 
-Yet another option you can specify is the ID of a profile object from which
+Yet another option you can specify is the ID of a profile object after which
 you want to see the list starts. In other words, you don't want to see those
-profiles with IDs that come before the one you specify. You can use the option
+profiles with IDs is or come before the one you specify. You can use the option
 :option:`-m <ID>` (or :option:`--marker <ID>` for this purpose. For example::
 
   $ senlin profile-list -l 1 -m ceda64bd-70b7-4711-9526-77d5d51241c5
