@@ -56,7 +56,7 @@ class TrustMiddleware(wsgi.Middleware):
         service_cred = keystone_v3.get_service_credentials()
 
         try:
-            admin_id = kc.get_user_id(service_cred)
+            admin_id = kc.get_user_id(**service_cred)
         except Exception as ex:
             LOG.exception(six.text_type(ex))
             msg = _('Failed in getting service user ID.')
