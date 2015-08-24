@@ -32,6 +32,7 @@ from senlin.common import messaging as rpc_messaging
 from senlin.common import schema
 from senlin.common import utils
 from senlin.db import api as db_api
+from senlin.drivers.openstack import keystone_v3
 from senlin.engine.actions import base as action_mod
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import cluster_policy
@@ -1260,18 +1261,15 @@ class EngineService(service.Service):
             raise exception.SenlinBadRequest(msg=msg)
 
         if not credential:
+            cdata = keystone_v3.get_service_credentials()
             if context.is_admin:
                 # use object owner if request is from admin
-                cdata = {
-                    'user_id': obj.user,
-                    'trust_id': db_api.cred_get(context, obj.user, obj.project)
-                }
+                cred = db_api.cred_get(context, obj.user, obj.project)
+                trust_id = cred['cred']['openstack']['trust']
+                cdata['trusts'] = trust_id
             else:
                 # otherwise, use context user
-                cdata = {
-                    'user_id': context.user,
-                    'trust_id': context.trusts,
-                }
+                cdata['trusts'] = context.trusts
             credential = jsonutils.dumps(cdata)
         else:
             credential = jsonutils.dumps(credential)
@@ -1314,11 +1312,11 @@ class EngineService(service.Service):
         obj_type = webhook['obj_type']
 
         if obj_type == consts.WEBHOOK_OBJ_TYPE_CLUSTER:
-            self.cluster_find(context, obj_id)
+            db_obj = self.cluster_find(context, obj_id)
         elif obj_type == consts.WEBHOOK_OBJ_TYPE_NODE:
-            self.node_find(context, obj_id)
+            db_obj = self.node_find(context, obj_id)
         else:
-            self.policy_find(context, obj_id)
+            db_obj = self.policy_find(context, obj_id)
 
         # If params are provided, they will override the default params
         if params:
@@ -1329,7 +1327,7 @@ class EngineService(service.Service):
         action_name = 'webhook_action_%s' % webhook['id']
         action = action_mod.Action(context, webhook['action'],
                                    name=action_name,
-                                   target=obj_id,
+                                   target=db_obj.id,
                                    inputs=input_params,
                                    cause=action_mod.CAUSE_RPC)
         action.store(context)

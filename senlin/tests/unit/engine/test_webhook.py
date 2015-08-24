@@ -303,7 +303,7 @@ class TestWebhook(base.SenlinTestCase):
             'id': 'SENLIN_SERVICE_ID'
         }
         mock_endpoint_get.return_value = {
-            'url': 'HTTP://HOST_IP:PORT/V1/%(tenant_id)s'
+            'url': 'HTTP://HOST_IP:PORT/V1/$(tenant_id)s'
         }
 
         kwargs = {

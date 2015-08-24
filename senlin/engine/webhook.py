@@ -191,7 +191,7 @@ class Webhook(object):
 
         region = cfg.CONF.region_name_for_services
         endpoint = kc.endpoint_get(senlin_service_id, region, 'public')
-        endpoint_url = endpoint['url'] % {'tenant_id': self.project}
+        endpoint_url = endpoint['url'].replace('$(tenant_id)s', self.project)
         location = endpoint_url + '/webhooks/%s/trigger' % self.id
         location += "?%s" % parse.urlencode({'key': key})
 
