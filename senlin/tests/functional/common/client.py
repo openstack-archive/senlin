@@ -123,7 +123,7 @@ class TestSenlinAPIClient(object):
         return self.auth_token
 
     def api_request(self, http_method, relative_url, body=None,
-                    expected_resp_status=None, **kwargs):
+                    resp_status=None, **kwargs):
         token = self._authenticate()
 
         endpoints = None
@@ -151,15 +151,15 @@ class TestSenlinAPIClient(object):
         headers['Content-Type'] = 'application/json'
         kwargs['method'] = http_method
 
-        response = self.request(full_url, **kwargs)
+        response = self.request(full_url, body=body, **kwargs)
         http_status = response.status_code
         LOG.debug(_('request url %(url)s, status_code %(status)s, response '
                     'body %(body)s'
                     ), {'url': relative_url, 'status': http_status,
                         'body': response._content})
 
-        if expected_resp_status:
-            if http_status not in expected_resp_status:
+        if resp_status:
+            if http_status not in resp_status:
                 raise SenlinApiException(message="Unexpected status code",
                                          response=response)
 

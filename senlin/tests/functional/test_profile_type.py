@@ -19,8 +19,7 @@ class TestProfileType(base.SenlinFunctionalTest):
         # Check that listing profile types works.
         rel_url = 'profile_types'
         status = [200]
-        resp = self.client.api_request('GET', rel_url,
-                                       expected_resp_status=status)
+        resp = self.client.api_request('GET', rel_url, resp_status=status)
         profile_types = resp.body['profile_types']
         expected_profile_types = [{'name': 'os.nova.server'},
                                   {'name': 'os.heat.stack'}]
