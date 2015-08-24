@@ -142,13 +142,7 @@ class StackProfile(base.Profile):
         }
 
         LOG.info('Creating stack: %s' % kwargs)
-        try:
-            stack = self.heat(obj).stack_create(**kwargs)
-        except exception.InternalError as ex:
-            if ex.code == 400:
-                raise exception.ResourceCreationFailure(rtype='stack',
-                                                        code=400,
-                                                        message=ex.message)
+        stack = self.heat(obj).stack_create(**kwargs)
         self.stack_id = stack.id
 
         # Wait for action to complete/fail

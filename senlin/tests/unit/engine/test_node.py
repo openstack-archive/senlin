@@ -370,30 +370,10 @@ class TestNode(base.SenlinTestCase):
     @mock.patch.object(nodem.Node, '_handle_exception')
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(profiles_base.Profile, 'create_object')
-    def test_node_create_resource_status_error(self, mock_create, mock_status,
-                                               mock_handle_exception,
-                                               mock_event):
-        ex = exception.ResourceStatusError(resource_id='id', status='ERROR',
-                                           reason='some reason')
-        mock_create.side_effect = ex
-        node = nodem.Node('node1', self.profile.id, self.cluster.id,
-                          self.context)
-        res = node.do_create(self.context)
-        self.assertFalse(res)
-        mock_handle_exception.assert_called_once_with(self.context,
-                                                      'create', 'ERROR', ex)
-        mock_event.assert_called_once_with(self.context, node, 'create')
-
-    @mock.patch.object(eventm, 'info')
-    @mock.patch.object(nodem.Node, '_handle_exception')
-    @mock.patch.object(nodem.Node, 'set_status')
-    @mock.patch.object(profiles_base.Profile, 'create_object')
-    def test_node_create_with_resource_creation_failure(self, mock_create,
-                                                        mock_status,
-                                                        mock_handle_exception,
-                                                        mock_event):
-        ex = exception.ResourceCreationFailure(rtype='stack', code=400,
-                                               message='Bad request')
+    def test_node_create_internal_error(self, mock_create, mock_status,
+                                        mock_handle_exception,
+                                        mock_event):
+        ex = exception.InternalError(code=500, message='internal error')
         mock_create.side_effect = ex
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
                           self.context)

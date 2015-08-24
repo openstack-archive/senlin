@@ -251,8 +251,7 @@ class Node(object):
         event_mod.info(context, self, 'create')
         try:
             physical_id = profile_base.Profile.create_object(context, self)
-        except (exception.ResourceStatusError,
-                exception.ResourceCreationFailure) as ex:
+        except exception.InternalError as ex:
             self._handle_exception(context, 'create', self.ERROR, ex)
             return False
         if not physical_id:

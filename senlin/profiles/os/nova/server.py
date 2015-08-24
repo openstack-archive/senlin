@@ -17,7 +17,6 @@ from oslo_log import log as logging
 from oslo_utils import encodeutils
 import six
 
-from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.common import utils
@@ -212,23 +211,13 @@ class ServerProfile(base.Profile):
 
         name_or_id = self.spec_data[self.IMAGE]
         if name_or_id is not None:
-            try:
-                image = self.nova(obj).image_get_by_name(name_or_id)
-            except Exception as ex:
-                LOG.exception(_('Failed in getting image: %s'),
-                              six.text_type(ex))
-                raise exception.ResourceNotFound(resource=name_or_id)
+            image = self.nova(obj).image_get_by_name(name_or_id)
             # wait for new version of openstacksdk to fix this
             kwargs.pop(self.IMAGE)
             kwargs['imageRef'] = image.id
 
         flavor_id = self.spec_data[self.FLAVOR]
-        try:
-            flavor = self.nova(obj).flavor_find(flavor_id, False)
-        except Exception as ex:
-            LOG.exception(_('Failed in getting flavor: %s'),
-                          six.text_type(ex))
-            raise exception.ResourceNotFound(resource=flavor_id)
+        flavor = self.nova(obj).flavor_find(flavor_id, False)
 
         # wait for new verson of openstacksdk to fix this
         kwargs.pop(self.FLAVOR)

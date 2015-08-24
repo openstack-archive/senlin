@@ -14,7 +14,6 @@ import base64
 
 import mock
 from oslo_utils import encodeutils
-import six
 
 from senlin.common import exception
 from senlin.common import utils as common_utils
@@ -262,39 +261,6 @@ class TestNovaServerProfile(base.SenlinTestCase):
         res = profile.do_create(test_server)
         self.assertFalse(res)
         nc.wait_for_server.assert_called_once_with(nova_server)
-
-    def test_do_create_image_not_found(self):
-        nc = mock.Mock()
-        test_server = mock.Mock()
-
-        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
-        profile._nc = nc
-
-        nc.image_get_by_name.side_effect = Exception()
-        self.assertRaises(exception.ResourceNotFound,
-                          profile.do_create, test_server)
-
-    def test_do_create_flavor_not_found(self):
-        nc = mock.Mock()
-        test_server = mock.Mock()
-        nc.flavor_find.side_effect = Exception()
-
-        spec = {
-            'flavor': 'FLAV',
-            'name': 'FAKE_SERVER_NAME',
-            'security_groups': ['HIGH_SECURITY_GROUP'],
-            'timeout': 120,
-        }
-
-        profile = server.ServerProfile('os.nova.server', 's1', spec=spec)
-        profile._nc = nc
-
-        ex = self.assertRaises(exception.ResourceNotFound,
-                               profile.do_create, test_server)
-        nc.flavor_find.assert_called_once_with('FLAV', False)
-        self.assertEqual('The resource (FLAV) could not be found.',
-                         six.text_type(ex))
-        self.assertEqual(0, nc.server_create.call_count)
 
     def test_do_delete_no_physical_id(self):
         # Test path where server doesn't already exist

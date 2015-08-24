@@ -11,9 +11,7 @@
 # under the License.
 
 import mock
-import six
 
-from senlin.common import exception
 from senlin.drivers import base as driver_base
 from senlin.profiles.os.heat import stack
 from senlin.tests.unit.common import base
@@ -117,17 +115,6 @@ class TestHeatStackProfile(base.SenlinTestCase):
         self.assertEqual(fake_stack.id, profile.do_create(test_stack))
         self.assertTrue(profile.hc.stack_create.called)
         self.assertTrue(profile._check_action_complete.called)
-
-    def test_do_create_with_internalerror(self):
-        profile = stack.StackProfile('os.heat.stack', 't', spec=self.spec)
-        test_stack = mock.Mock()
-        test_stack.name = 'test_stack'
-        profile.hc = mock.MagicMock()
-        profile.hc.stack_create = mock.MagicMock(
-            side_effect=exception.InternalError(code=400, message='Bad req'))
-        ex = self.assertRaises(exception.ResourceCreationFailure,
-                               profile.do_create, test_stack)
-        self.assertEqual('Bad req', six.text_type(ex.message))
 
     def test_do_delete(self):
         profile = stack.StackProfile('os.heat.stack', 't', spec=self.spec)
