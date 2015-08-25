@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
+
 from oslo_config import cfg
 from oslo_log import log as logging
 
@@ -23,8 +25,8 @@ CONF = cfg.CONF
 class DriverBase(object):
     '''Base class for all drivers.'''
 
-    def __init__(self, context):
-        self.context = context
+    def __init__(self, params):
+        self.conn_params = copy.deepcopy(params)
 
 
 class SenlinDriver(object):

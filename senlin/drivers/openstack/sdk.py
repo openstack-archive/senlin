@@ -24,7 +24,6 @@ from openstack import transport
 from oslo_serialization import jsonutils
 from requests import exceptions as reqexc
 
-from senlin.common import context
 from senlin.common import exception
 from senlin.common.i18n import _
 
@@ -184,32 +183,14 @@ def ignore_not_found(ex):
         raise parsed
 
 
-def create_connection(ctx):
-    if isinstance(ctx, dict):
-        ctx = context.RequestContext.from_dict(ctx)
-    kwargs = {
-        'auth_url': ctx.auth_url,
-        'domain_id': ctx.domain,
-        'project_id': ctx.project,
-        'project_name': ctx.project_name,
-        'project_domain_name': ctx.project_domain_name,
-        'user_domain_name': ctx.user_domain_name,
-        'username': ctx.user_name,
-        'user_id': ctx.user,
-        'password': ctx.password,
-        'trust_id': ctx.trusts,
-        'token': ctx.auth_token,
-        #  'auth_plugin': args.auth_plugin,
-        #  'verify': OS_CACERT, TLS certificate to verify remote server
-    }
-
+def create_connection(params):
     prof = profile.Profile()
-    if ctx.region_name:
-        prof.set_region(prof.ALL, ctx.region_name)
-
+    if 'region_name' in params:
+        prof.set_region(prof.ALL, params['region_name'])
+        params.pop('region_name')
     try:
         conn = connection.Connection(profile=prof, user_agent=USER_AGENT,
-                                     **kwargs)
+                                     **params)
     except exceptions.HttpException as ex:
         raise ex
     return conn
@@ -218,11 +199,8 @@ def create_connection(ctx):
 def authenticate(**kwargs):
     '''Authenticate using openstack sdk based on user credential'''
 
-    # Build a context based on credential for sdk connection
-    cnxt = context.RequestContext.from_dict(kwargs)
-
     try:
-        auth = create_connection(cnxt).session.authenticator
+        auth = create_connection(kwargs).session.authenticator
         xport = transport.Transport()
         access_info = auth.authorize(xport)
     except exceptions.HttpException as ex:

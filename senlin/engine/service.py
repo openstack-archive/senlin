@@ -1266,10 +1266,10 @@ class EngineService(service.Service):
                 # use object owner if request is from admin
                 cred = db_api.cred_get(context, obj.user, obj.project)
                 trust_id = cred['cred']['openstack']['trust']
-                cdata['trusts'] = trust_id
+                cdata['trusts'] = [trust_id]
             else:
                 # otherwise, use context user
-                cdata['trusts'] = context.trusts
+                cdata['trusts'] = [context.trusts]
             credential = jsonutils.dumps(cdata)
         else:
             credential = jsonutils.dumps(credential)

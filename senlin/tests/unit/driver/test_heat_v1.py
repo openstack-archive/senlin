@@ -24,14 +24,15 @@ class TestHeatV1(base.SenlinTestCase):
         super(TestHeatV1, self).setUp()
 
         self.context = utils.dummy_context()
+        self.conn_params = self.context.to_dict()
         self.mock_conn = mock.Mock()
         self.mock_create = self.patchobject(sdk, 'create_connection',
                                             return_value=self.mock_conn)
         self.orch = self.mock_conn.orchestration
-        self.hc = heat_v1.HeatClient(self.context)
+        self.hc = heat_v1.HeatClient(self.conn_params)
 
     def test_init(self):
-        self.mock_create.assert_called_once_with(self.context)
+        self.mock_create.assert_called_once_with(self.conn_params)
         self.assertEqual(self.mock_conn, self.hc.conn)
 
     def test_stack_create(self):

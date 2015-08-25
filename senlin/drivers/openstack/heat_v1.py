@@ -17,8 +17,9 @@ from senlin.drivers.openstack import sdk
 class HeatClient(base.DriverBase):
     '''Heat V1 driver.'''
 
-    def __init__(self, context):
-        self.conn = sdk.create_connection(context)
+    def __init__(self, params):
+        super(HeatClient, self).__init__(params)
+        self.conn = sdk.create_connection(params)
 
     @sdk.translate_exception
     def stack_create(self, **params):

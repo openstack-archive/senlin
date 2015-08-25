@@ -25,6 +25,7 @@ class NeutronClient(base.DriverBase):
     '''Neutron V2 driver.'''
 
     def __init__(self, params):
+        super(NeutronClient, self).__init__(params)
         self.conn = sdk.create_connection(params)
 
     def network_get(self, name_or_id):

@@ -43,9 +43,9 @@ class TrustMiddleware(wsgi.Middleware):
 
         params = {
             'auth_url': ctx.auth_url,
-            'auth_token': ctx.auth_token,
-            'project': ctx.project,
-            'user': ctx.user,
+            'token': ctx.auth_token,
+            'project_id': ctx.project,
+            'user_id': ctx.user,
         }
         kc = keystone_v3.KeystoneClient(params)
         service_cred = keystone_v3.get_service_credentials()

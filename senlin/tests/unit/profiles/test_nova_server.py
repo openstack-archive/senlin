@@ -94,7 +94,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         # new nc created if no cache found
         profile._nc = None
         params = mock.Mock()
-        mock_param = self.patchobject(profile, '_get_connection_params',
+        mock_param = self.patchobject(profile, '_build_connection_params',
                                       return_value=params)
         res = profile.nova(test_server)
         self.assertEqual(nc, res)

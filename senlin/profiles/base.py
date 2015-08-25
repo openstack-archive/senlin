@@ -10,8 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import copy
-
 from oslo_log import log as logging
 from oslo_utils import timeutils
 
@@ -179,21 +177,16 @@ class Profile(object):
 
     def _init_context(self):
         cred = keystoneclient.get_service_credentials()
-        cntx = {
-            'auth_url': cred['auth_url'],
-            'user_name': cred['user_name'],
-            'user_domain_name': cred['user_domain_name'],
-            'password': cred['password'],
-        }
 
+        # TODO(Yanyan Hu): Rename context field to credential in spec?
         if self.CONTEXT in self.spec_data:
             profile_context = self.spec_data[self.CONTEXT]
             if profile_context:
                 # TODO(Anyone): need to check the contents in self.CONTEXT
-                cntx.update(profile_context)
-        return cntx
+                cred.update(profile_context)
+        return cred
 
-    def _get_connection_params(self, ctx, obj):
+    def _build_connection_params(self, ctx, obj):
         cred = db_api.cred_get(ctx, obj.user, obj.project)
         if cred is None:
             # TODO(Anyone): this exception type makes no sense to end user,
@@ -202,9 +195,19 @@ class Profile(object):
 
         trust_id = cred.cred['openstack']['trust']
 
-        params = copy.deepcopy(self.context)
-        params['project_id'] = obj.project
-        params['trusts'] = trust_id
+        params = {
+            'auth_url': self.context.get('auth_url'),
+            'domain_id': self.context.get('domain'),
+            'project_name': self.context.get('project_name'),
+            'project_domain_name': self.context.get('project_domain_name'),
+            'user_domain_name': self.context.get('user_domain_name'),
+            'username': self.context.get('username'),
+            'user_id': self.context.get('user'),
+            'password': self.context.get('password'),
+            'token': self.context.get('auth_token'),
+            'region_name': self.context.get('region_name'),
+            'trusts': [trust_id],
+        }
 
         return params
 
