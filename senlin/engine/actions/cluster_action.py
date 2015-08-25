@@ -338,7 +338,8 @@ class ClusterAction(base.Action):
             reason = new_reason
         return result, reason
 
-    def _check_size_params(self, cluster, desired, min_size, max_size, strict):
+    @classmethod
+    def check_size_params(cls, cluster, desired, min_size, max_size, strict):
         '''Validate provided arguments with cluster properties.
 
         Sanity Checking 1: the desired, min_size, max_size parameters must
@@ -353,57 +354,57 @@ class ClusterAction(base.Action):
                 v = {'d': desired, 'm': min_size}
                 reason = _("The target capacity (%(d)s) is less than "
                            "the specified min_size (%(m)s).") % v
-                return self.RES_ERROR, reason
+                return cls.RES_ERROR, reason
 
             if min_size is None and desired < cluster.min_size:
                 v = {'d': desired, 'm': cluster.min_size}
                 reason = _("The target capacity (%(d)s) is less than "
                            "the cluster's min_size (%(m)s).") % v
-                return self.RES_ERROR, reason
+                return cls.RES_ERROR, reason
 
             if (max_size is not None and desired > max_size and
                     max_size >= 0):
                 v = {'d': desired, 'm': max_size}
                 reason = _("The target capacity (%(d)s) is greater "
                            "than the specified max_size (%(m)s).") % v
-                return self.RES_ERROR, reason
+                return cls.RES_ERROR, reason
 
             if (max_size is None and
                     desired > cluster.max_size and cluster.max_size >= 0):
                 v = {'d': desired, 'm': cluster.max_size}
                 reason = _("The target capacity (%(d)s) is greater "
                            "than the cluster's max_size (%(m)s).") % v
-                return self.RES_ERROR, reason
+                return cls.RES_ERROR, reason
 
         if min_size is not None:
             if max_size is not None and max_size >= 0 and min_size > max_size:
                 reason = _("The specified min_size is greater than the "
                            "specified max_size.")
-                return self.RES_ERROR, reason
+                return cls.RES_ERROR, reason
 
             if (max_size is None and cluster.max_size >= 0 and
                     min_size > cluster.max_size):
                 reason = _("The specified min_size is greater than the "
                            "current max_size of the cluster.")
-                return self.RES_ERROR, reason
+                return cls.RES_ERROR, reason
 
             if desired is None and min_size > cluster.desired_capacity:
                 reason = _("The specified min_size is greater than the "
                            "current desired_capacity of the cluster.")
-                return self.RES_ERROR, reason
+                return cls.RES_ERROR, reason
 
         if max_size is not None:
             if (min_size is None and max_size >= 0
                     and max_size < cluster.min_size):
                 reason = _("The specified max_size is less than the "
                            "current min_size of the cluster.")
-                return self.RES_ERROR, reason
+                return cls.RES_ERROR, reason
             if desired is None and max_size < cluster.desired_capacity:
                 reason = _("The specified max_size is less than the "
                            "current desired_capacity of the cluster.")
-                return self.RES_ERROR, reason
+                return cls.RES_ERROR, reason
 
-        return self.RES_OK, ''
+        return cls.RES_OK, ''
 
     def _update_cluster_properties(self, cluster, desired, min_size, max_size):
         # update cluster properties related to size and profile
@@ -455,8 +456,8 @@ class ClusterAction(base.Action):
 
         # check provided params against current properties
         # desired is checked when strict is True
-        result, reason = self._check_size_params(cluster, desired, min_size,
-                                                 max_size, strict)
+        result, reason = self.check_size_params(cluster, desired, min_size,
+                                                max_size, strict)
         if result != self.RES_OK:
             return result, reason
 
@@ -520,8 +521,8 @@ class ClusterAction(base.Action):
         node_list = cluster.get_nodes()
         current_size = len(node_list)
         desired_capacity = current_size + count
-        result, reason = self._check_size_params(cluster, desired_capacity,
-                                                 None, None, True)
+        result, reason = self.check_size_params(cluster, desired_capacity,
+                                                None, None, True)
         if result != self.RES_OK:
             return result, reason
 
@@ -569,8 +570,8 @@ class ClusterAction(base.Action):
         node_list = cluster.get_nodes()
         current_size = len(node_list)
         desired_capacity = current_size - count
-        result, reason = self._check_size_params(cluster, desired_capacity,
-                                                 None, None, True)
+        result, reason = self.check_size_params(cluster, desired_capacity,
+                                                None, None, True)
         if result != self.RES_OK:
             return result, reason
 

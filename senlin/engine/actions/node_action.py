@@ -15,6 +15,8 @@ from oslo_log import log as logging
 from senlin.common import exception
 from senlin.common.i18n import _LE
 from senlin.engine.actions import base
+from senlin.engine.actions import cluster_action
+from senlin.engine import cluster as cluster_mod
 from senlin.engine import node as node_mod
 from senlin.engine import senlin_lock
 from senlin.policies import base as policy_mod
@@ -57,15 +59,37 @@ class NodeAction(base.Action):
 
     def do_join(self, node):
         cluster_id = self.inputs.get('cluster_id')
+        # Check the size constraint of parent cluster
+        cluster = cluster_mod.Cluster.load(self.context, cluster_id)
+        desired_capacity = cluster.desired_capacity + 1
+        res, reason = cluster_action.ClusterAction.check_size_params(
+            cluster, desired_capacity, None, None, True)
+        if res != self.RES_OK:
+            return res, reason
+
         res = node.do_join(self.context, cluster_id)
         if res:
+            # Update cluster desired_capacity if node join succeeded
+            cluster.desired_capacity = desired_capacity
+            cluster.store(self.context)
             return self.RES_OK, 'Node successfully joined cluster'
         else:
             return self.RES_ERROR, 'Node failed joining cluster'
 
     def do_leave(self, node):
+        # Check the size constraint of parent cluster
+        cluster = cluster_mod.Cluster.load(self.context, node.cluster_id)
+        desired_capacity = cluster.desired_capacity - 1
+        res, reason = cluster_action.ClusterAction.check_size_params(
+            cluster, desired_capacity, None, None, True)
+        if res != self.RES_OK:
+            return res, reason
+
         res = node.do_leave(self.context)
         if res:
+            # Update cluster desired_capacity if node leave succeeded
+            cluster.desired_capacity = desired_capacity
+            cluster.store(self.context)
             return self.RES_OK, 'Node successfully left cluster'
         else:
             return self.RES_ERROR, 'Node failed leaving cluster'
