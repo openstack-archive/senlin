@@ -184,11 +184,7 @@ class Webhook(object):
         senlin_creds = ksdriver.get_service_credentials()
         kc = ksdriver.KeystoneClient(senlin_creds)
         senlin_service = kc.service_get('clustering', 'senlin')
-        if senlin_service:
-            senlin_service_id = senlin_service['id']
-        else:
-            raise exception.ResourceNotFound(resource='service:senlin')
-
+        senlin_service_id = senlin_service['id']
         region = cfg.CONF.region_name_for_services
         endpoint = kc.endpoint_get(senlin_service_id, region, 'public')
         endpoint_url = endpoint['url'].replace('$(tenant_id)s', self.project)

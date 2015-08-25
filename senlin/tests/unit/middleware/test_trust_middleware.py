@@ -13,6 +13,7 @@
 import mock
 
 from senlin.api.middleware import trust
+from senlin.common import exception
 from senlin.db import api as db_api
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -36,26 +37,25 @@ class TestTrustMiddleware(base.SenlinTestCase):
         self.assertEqual(res.cred['openstack']['trust'], trust_id)
         self.assertTrue(db_api.cred_get.called)
 
-    @mock.patch('senlin.db.api')
-    def test_get_trust_not_exists(self, mock_db_api):
-        db_api.cred_get = mock.MagicMock(return_value=None)
+    @mock.patch.object(db_api, 'cred_create')
+    @mock.patch('senlin.drivers.openstack.keystone_v3.KeystoneClient')
+    @mock.patch.object(db_api, 'cred_get')
+    def test_get_trust_not_exists(self, mock_cred_get, mock_kc,
+                                  mock_cred_create):
+        mock_cred_get.return_value = None
+        kc = mock.Mock()
+        mock_kc.return_value = kc
+        kc.get_user_id.return_value = 'FAKE_ADMIN_ID'
+        kc.trust_get_by_trustor.side_effect = exception.InternalError(
+            code=400, message='Bad request')
+        trust = mock.Mock()
+        kc.trust_create.return_value = trust
+        trust.id = 'FAKE_TRUST_ID'
 
-        client = mock.MagicMock()
-        client.trust_get_by_trustor = mock.MagicMock(return_value=None)
-        client.get_user_id.return_value = 'FAKE_ADMIN_ID'
-        test_trust = mock.MagicMock()
-        test_trust.id = "FAKE_TRUST_ID"
-        client.trust_create = mock.MagicMock(return_value=test_trust)
-        db_api.cred_create = mock.MagicMock()
-
-        with mock.patch(
-                'senlin.drivers.openstack.keystone_v3.KeystoneClient',
-                return_value=client):
-
-            trust_id = self.middleware._get_trust(self.context)
-            self.assertEqual(trust_id, test_trust.id)
-            self.assertTrue(db_api.cred_get.called)
-            self.assertTrue(client.get_user_id.called)
-            self.assertTrue(client.trust_get_by_trustor.called)
-            self.assertTrue(client.trust_create.called)
-            self.assertTrue(db_api.cred_create.called)
+        trust_id = self.middleware._get_trust(self.context)
+        self.assertEqual(trust_id, 'FAKE_TRUST_ID')
+        self.assertTrue(db_api.cred_get.called)
+        self.assertTrue(kc.get_user_id.called)
+        self.assertTrue(kc.trust_get_by_trustor.called)
+        self.assertTrue(kc.trust_create.called)
+        self.assertTrue(db_api.cred_create.called)

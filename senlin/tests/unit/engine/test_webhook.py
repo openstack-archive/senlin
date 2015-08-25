@@ -330,10 +330,3 @@ class TestWebhook(base.SenlinTestCase):
                               'key': six.text_type(key)}
         self.assertEqual(expected_url, res1)
         self.assertEqual(key, res2)
-
-        # Senlin service is not found
-        mock_service_get.return_value = None
-        ex = self.assertRaises(exception.ResourceNotFound,
-                               webhook.generate_url, key)
-        self.assertEqual(_('The resource (service:senlin) could not be '
-                           'found.'), six.text_type(ex))

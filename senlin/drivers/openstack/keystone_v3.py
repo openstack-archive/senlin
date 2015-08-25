@@ -10,13 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import six
-
 from oslo_config import cfg
 from oslo_log import log as logging
 
-from senlin.common import exception
-from senlin.common.i18n import _
 from senlin.drivers import base
 from senlin.drivers.openstack import sdk
 
@@ -31,36 +27,26 @@ class KeystoneClient(base.DriverBase):
         self.conn = sdk.create_connection(context)
         self.session = self.conn.session
 
+    @sdk.translate_exception
     def trust_list(self, **query):
-        try:
-            trusts = [t for t in self.conn.identity.trusts(**query)]
-        except sdk.exc.HttpException as ex:
-            raise ex
-
+        trusts = [t for t in self.conn.identity.trusts(**query)]
         return trusts
 
+    @sdk.translate_exception
     def trust_delete(self, trust_id):
-        try:
-            self.conn.identity.delete_trust(trust_id, ignore_missing=True)
-        except sdk.exc.HttpException as ex:
-            raise ex
-
+        self.conn.identity.delete_trust(trust_id, ignore_missing=True)
         return
 
+    @sdk.translate_exception
     def user_get(self, name_or_id, ignore_missing=False):
         # Note: Since default keystone policy will block non-admin user to
         # get/list user(s), this function may not be workable. Pleaes use
         # get_user_id method to get the ID of user if needed.
-        try:
-            user = self.conn.identity.find_user(
-                name_or_id, ignore_missing=ignore_missing)
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in getting user: %s'), six.text_type(ex))
-            res = _('user:%s') % name_or_id
-            raise exception.ResourceNotFound(resource=res)
-
+        user = self.conn.identity.find_user(
+            name_or_id, ignore_missing=ignore_missing)
         return user
 
+    @sdk.translate_exception
     def endpoint_get(self, service_id, region=None, interface=None):
         '''Utility function to get endpoints of a service.'''
         filters = {
@@ -72,16 +58,9 @@ class KeystoneClient(base.DriverBase):
             filters['interface'] = interface
 
         endpoints = [e for e in self.conn.identity.endpoints(**filters)]
-        if len(endpoints) == 0:
-            resource = _('endpoint: service=%(service)s,region='
-                         '%(region)s,visibility=%(interface)s.'
-                         ) % {'service': service_id,
-                              'region': region,
-                              'interface': interface}
-            raise exception.ResourceNotFound(resource=resource)
+        return endpoints[0] if endpoints else None
 
-        return endpoints[0]
-
+    @sdk.translate_exception
     def service_get(self, service_type, name=None):
         '''Utility function to get service detail based on name and type.'''
         filters = {
@@ -91,14 +70,9 @@ class KeystoneClient(base.DriverBase):
             filters['name'] = name
 
         services = [s for s in self.conn.identity.services(**filters)]
-        if len(services) == 0:
-            resource = _('service:type=%(type)s%(name)s'
-                         ) % {'type': service_type,
-                              'name': ',name=%s' % name if name else ''}
-            raise exception.ResourceNotFound(resource=resource)
+        return services[0] if services else None
 
-        return services[0]
-
+    @sdk.translate_exception
     def trust_get_by_trustor(self, trustor, trustee=None, project=None):
         '''Get trust by trustor.
 
@@ -113,11 +87,7 @@ class KeystoneClient(base.DriverBase):
         '''
         filters = {'trustor_user_id': trustor}
 
-        try:
-            trusts = [t for t in self.conn.identity.trusts(**filters)]
-        except sdk.exc.HttpException as ex:
-            LOG.exception(six.text_type(ex))
-            return None
+        trusts = [t for t in self.conn.identity.trusts(**filters)]
 
         for trust in trusts:
             if (trustee and trust.trustee_user_id != trustee):
@@ -130,6 +100,7 @@ class KeystoneClient(base.DriverBase):
 
         return None
 
+    @sdk.translate_exception
     def trust_create(self, trustor, trustee, project, roles=None,
                      impersonation=True):
         '''Create trust between two users.
@@ -155,39 +126,26 @@ class KeystoneClient(base.DriverBase):
             'roles': role_list
         }
 
-        try:
-            result = self.conn.identity.create_trust(**params)
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in creating trust: %s'),
-                          six.text_type(ex))
-            raise exception.ResourceCreationFailure(rtype='trust')
+        result = self.conn.identity.create_trust(**params)
 
         return result
 
     @classmethod
+    @sdk.translate_exception
     def get_token(cls, **creds):
         '''Get token using given credential'''
 
-        try:
-            access_info = sdk.authenticate(**creds)
-            token = access_info.auth_token
-        except Exception as ex:
-            LOG.exception(_('Authentication failure: %s'), six.text_type(ex))
-            raise exception.NotAuthenticated()
-
+        access_info = sdk.authenticate(**creds)
+        token = access_info.auth_token
         return token
 
     @classmethod
+    @sdk.translate_exception
     def get_user_id(cls, **creds):
         '''Get ID of the user with given creddential'''
 
-        try:
-            access_info = sdk.authenticate(**creds)
-            user_id = access_info.user_id
-        except Exception as ex:
-            LOG.exception(_('Authentication failure: %s'), six.text_type(ex))
-            raise exception.NotAuthenticated()
-
+        access_info = sdk.authenticate(**creds)
+        user_id = access_info.user_id
         return user_id
 
 
