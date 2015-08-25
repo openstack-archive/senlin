@@ -15,14 +15,23 @@
 # This script is executed inside post_test_hook function in devstack gate.
 
 export DEST=${DEST:-/opt/stack/new}
-export DEVSTACK_DIR=$DEST/devstack
-export SENLIN_DIR=$DEST/senlin
+export SENLIN_CONF=/etc/senlin/senlin.conf
 
-# Do some preparation work before starting functional test
-sudo -E $SENLIN_DIR/senlin/tests/functional/prepare_test_env.sh
+source $DEST/devstack/inc/ini-config
 
-# Run functional test
-source $DEVSTACK_DIR/openrc admin admin
-echo "Running Senlin functional test suite..."
-cd $SENLIN_DIR
-sudo -E tox -efunctional
+# Send SIGHUP to service
+function sighup_proc()
+{
+    NAME=$1
+    ID=`ps -ef | grep "$NAME" | grep -v "$0" | grep -v "grep" | awk '{print $2}'`
+    for id in $ID
+    do
+        kill -1 $id
+        echo "sighup $id"
+    done
+}
+
+# Switch cloud_backend to openstack_test
+iniset $SENLIN_CONF DEFAULT cloud_backend openstack_test
+sighup_proc senlin-engine
+sleep 10
