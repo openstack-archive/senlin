@@ -13,6 +13,7 @@
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 import six
+from six.moves.urllib import parse as urlparse
 
 from senlin.common import context
 from senlin.common import exception as exc
@@ -37,80 +38,78 @@ class WebhookMiddleware(wsgi.Middleware):
         if req.method != 'POST':
             return
 
-        # Extract webhook ID
-        webhook_id = self._extract_webhook_id(req.url)
-        if not webhook_id:
+        # Extract project, webhook ID and key
+        results = self._parse_url(req.url)
+        if not results:
             return
 
-        # The request must have a 'key' parameter
-        if 'key' not in req.params:
-            return
-        key = req.params['key']
+        (project, webhook_id, key) = results
 
-        credential = self._get_credential(webhook_id, key)
+        credential = self._get_credential(project, webhook_id, key)
         if not credential:
             return
 
-        # Get token based on credential and fill it into the request header
-        token = self._get_token(credential)
+        svc_ctx = context.get_service_context()
+        kwargs = {
+            'auth_url': svc_ctx['auth_url'],
+            'username': svc_ctx['username'],
+            'user_domain_name': svc_ctx['user_domain_name'],
+            'password': svc_ctx['password']
+        }
+        kwargs.update(credential)
+
+        # Get token and fill it into the request header
+        token = self._get_token(**kwargs)
         req.headers['X-Auth-Token'] = token
 
-    def _extract_webhook_id(self, url):
+    def _parse_url(self, url):
         """Extract webhook ID from the request URL.
 
         :param url: The URL from which the request is received.
         """
-        if 'webhooks' not in url:
+        parts = urlparse.urlparse(url)
+        components = parts.path.split('/')
+        if len(components) < 6:
             return None
 
-        # TODO(Qiming): use urlparse to process the URL
-        url_bottom = url.split('webhooks')[1]
-        if 'trigger' not in url_bottom:
+        if any((components[0] != '', components[3] != 'webhooks',
+                components[5] != 'trigger')):
             return None
 
-        # /<webhook_id>/trigger?key=value
-        parts = url_bottom.split('/')
-        if len(parts) < 3:
+        qs = urlparse.parse_qs(parts.query)
+        if 'key' not in qs:
             return None
 
-        webhook_id = parts[1]
-        if not parts[2].startswith('trigger'):
-            return
+        return components[2], components[4], qs['key'][0]
 
-        return webhook_id
-
-    def _get_credential(self, webhook_id, key):
+    def _get_credential(self, project, webhook_id, key):
         """Get credential for the given webhook using the provided key.
 
         :param webhook_id: ID of the webhook.
         :param key: The key string to be used for decryption.
         """
-        # Build a RequestContext from service context for DB APIs
-        ctx = context.RequestContext.from_dict(context.get_service_context())
-        webhook_obj = webhook_mod.Webhook.load(ctx, webhook_id)
-        credential = webhook_obj.credential
-
+        # Build a dummy RequestContext for DB APIs
+        dbctx = context.RequestContext(is_admin=True, project=project)
+        webhook = webhook_mod.Webhook.load(dbctx, webhook_id)
+        credential = webhook.credential
         # Decrypt the credential using provided key
         try:
-            cdata = utils.decrypt(credential, key)
+            cdata = utils.decrypt(webhook.credential, key)
             credential = jsonutils.loads(cdata)
         except Exception as ex:
             LOG.exception(six.text_type(ex))
             raise exc.Forbidden()
 
-        if 'auth_url' not in credential:
-            # Default to auth_url from service context if not provided
-            credential['auth_url'] = ctx.auth_url
-
         return credential
 
-    def _get_token(self, cred):
+    def _get_token(self, **kwargs):
         """Get a valid token based on the credential provided.
 
         :param cred: Rebuilt credential dictionary for authentication.
         """
+        LOG.error(kwargs)
         try:
-            token = keystone_v3.KeystoneClient.get_token(**cred)
+            token = keystone_v3.KeystoneClient.get_token(**kwargs)
         except Exception as ex:
             LOG.exception(_('Webhook failed authentication: %s.'),
                           six.text_type(ex))

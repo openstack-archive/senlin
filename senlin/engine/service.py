@@ -32,7 +32,6 @@ from senlin.common import messaging as rpc_messaging
 from senlin.common import schema
 from senlin.common import utils
 from senlin.db import api as db_api
-from senlin.drivers.openstack import keystone_v3
 from senlin.engine.actions import base as action_mod
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import cluster_policy
@@ -1261,7 +1260,7 @@ class EngineService(service.Service):
             raise exception.SenlinBadRequest(msg=msg)
 
         if not credential:
-            cdata = keystone_v3.get_service_credentials()
+            cdata = dict()
             if context.is_admin:
                 # use object owner if request is from admin
                 cred = db_api.cred_get(context, obj.user, obj.project)
