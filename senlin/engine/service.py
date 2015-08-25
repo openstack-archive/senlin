@@ -1289,9 +1289,8 @@ class EngineService(service.Service):
         webhook = webhook_mod.Webhook(obj_id, obj_type, action,
                                       context=context, **kwargs)
         key = webhook.encrypt_credential()
-        webhook.store(context)
         url, token = webhook.generate_url(key)
-
+        webhook.store(context)
         result = webhook.to_dict()
         result['url'] = url
 

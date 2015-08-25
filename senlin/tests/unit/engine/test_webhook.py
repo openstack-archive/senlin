@@ -97,7 +97,7 @@ class TestWebhook(base.SenlinTestCase):
         self.assertEqual('test-obj-type', webhook.obj_type)
         self.assertEqual('test-action', webhook.action)
 
-        self.assertEqual(None, webhook.id)
+        self.assertIsNotNone(webhook.id)
         self.assertEqual(None, webhook.name)
         self.assertEqual('', webhook.user)
         self.assertEqual('', webhook.project)
@@ -119,7 +119,7 @@ class TestWebhook(base.SenlinTestCase):
         webhook = webhook_mod.Webhook('test-obj-id', 'test-obj-type',
                                       'test-action')
 
-        self.assertIsNone(webhook.id)
+        self.assertIsNotNone(webhook.id)
         webhook_id = webhook.store(self.context)
         self.assertIsNotNone(webhook_id)
         self.assertEqual(webhook_id, webhook.id)
@@ -330,3 +330,29 @@ class TestWebhook(base.SenlinTestCase):
                               'key': six.text_type(key)}
         self.assertEqual(expected_url, res1)
         self.assertEqual(key, res2)
+
+        # Senlin service not found
+        mock_service_get.return_value = None
+        ex = self.assertRaises(exception.ResourceNotFound,
+                               webhook.generate_url, key)
+        resource = _('service:type=clustering,name=senlin')
+        msg = _('The resource (%(resource)s) could not be found.'
+                ) % {'resource': resource}
+        self.assertEqual(msg, six.text_type(ex))
+
+        # Senlin endpoint not found
+        mock_service_get.return_value = {
+            'id': 'SENLIN_SERVICE_ID'
+        }
+        service_id = mock_service_get.return_value['id']
+        mock_endpoint_get.return_value = None
+        ex = self.assertRaises(exception.ResourceNotFound,
+                               webhook.generate_url, key)
+        resource = _('endpoint: service=%(service)s,region='
+                     '%(region)s,visibility=%(interface)s'
+                     ) % {'service': service_id,
+                          'region': None,
+                          'interface': 'public'}
+        msg = _('The resource (%(resource)s) could not be found.'
+                ) % {'resource': resource}
+        self.assertEqual(msg, six.text_type(ex))

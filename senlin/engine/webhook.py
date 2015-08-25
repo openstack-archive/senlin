@@ -13,9 +13,11 @@
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import timeutils
+from oslo_utils import uuidutils
 from six.moves.urllib import parse
 
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.common import utils
 from senlin.db import api as db_api
 from senlin.drivers.openstack import keystone_v3 as ksdriver
@@ -37,7 +39,7 @@ class Webhook(object):
 
     def __init__(self, obj_id, obj_type, action, context=None, **kwargs):
 
-        self.id = kwargs.get('id', None)
+        self.id = kwargs.get('id', uuidutils.generate_uuid())
         self.name = kwargs.get('name', None)
         self.user = kwargs.get('user', '')
         self.project = kwargs.get('project', '')
@@ -70,24 +72,24 @@ class Webhook(object):
 
         :param context: Security context for DB operations.
         """
-        if not self.id:
-            self.created_time = timeutils.utcnow()
-            values = {
-                'name': self.name,
-                'user': self.user,
-                'project': self.project,
-                'domain': self.domain,
-                'created_time': self.created_time,
-                'deleted_time': self.deleted_time,
-                'obj_id': self.obj_id,
-                'obj_type': self.obj_type,
-                'action': self.action,
-                'credential': self.credential,
-                'params': self.params
-            }
+        self.created_time = timeutils.utcnow()
+        values = {
+            'id': self.id,
+            'name': self.name,
+            'user': self.user,
+            'project': self.project,
+            'domain': self.domain,
+            'created_time': self.created_time,
+            'deleted_time': self.deleted_time,
+            'obj_id': self.obj_id,
+            'obj_type': self.obj_type,
+            'action': self.action,
+            'credential': self.credential,
+            'params': self.params
+        }
 
-            webhook = db_api.webhook_create(context, values)
-            self.id = webhook.id
+        webhook = db_api.webhook_create(context, values)
+        self.id = webhook.id
 
         return self.id
 
@@ -184,9 +186,20 @@ class Webhook(object):
         senlin_creds = ksdriver.get_service_credentials()
         kc = ksdriver.KeystoneClient(senlin_creds)
         senlin_service = kc.service_get('clustering', 'senlin')
+        if not senlin_service:
+            resource = _('service:type=clustering,name=senlin')
+            raise exception.ResourceNotFound(resource=resource)
         senlin_service_id = senlin_service['id']
         region = cfg.CONF.region_name_for_services
         endpoint = kc.endpoint_get(senlin_service_id, region, 'public')
+        if not endpoint:
+            resource = _('endpoint: service=%(service)s,region='
+                         '%(region)s,visibility=%(interface)s'
+                         ) % {'service': senlin_service_id,
+                              'region': region,
+                              'interface': 'public'}
+            raise exception.ResourceNotFound(resource=resource)
+
         endpoint_url = endpoint['url'].replace('$(tenant_id)s', self.project)
         location = endpoint_url + '/webhooks/%s/trigger' % self.id
         location += "?%s" % parse.urlencode({'key': key})
