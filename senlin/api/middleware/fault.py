@@ -69,6 +69,7 @@ class FaultWrapper(wsgi.Middleware):
         'ResourceInUse': webob.exc.HTTPConflict,
         'SenlinBadRequest': webob.exc.HTTPBadRequest,
         'SpecValidationFailed': webob.exc.HTTPBadRequest,
+        'TriggerNotFound': webob.exc.HTTPNotFound,
         'TriggerTypeNotFound': webob.exc.HTTPNotFound,
         'WebhookNotFound': webob.exc.HTTPNotFound,
     }
