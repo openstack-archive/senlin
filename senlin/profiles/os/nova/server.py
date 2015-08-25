@@ -11,9 +11,7 @@
 # under the License.
 
 import base64
-import time
 
-from oslo_config import cfg
 from oslo_context import context
 from oslo_log import log as logging
 from oslo_utils import encodeutils
@@ -254,26 +252,16 @@ class ServerProfile(base.Profile):
             kwargs['user_data'] = encodeutils.safe_decode(base64.b64encode(ud))
 
         LOG.info('Creating server: %s' % kwargs)
-        server = self.nova(obj).server_create(**kwargs)
+        try:
+            server = self.nova(obj).server_create(**kwargs)
+            self.nova(obj).wait_for_server(server)
+        except Exception as ex:
+            LOG.exception(_('Failed in creating server: %s'),
+                          six.text_type(ex))
+            return False
         self.server_id = server.id
 
         return server.id
-
-    def _wait_for_deletion(self, obj):
-        timeout = cfg.CONF.default_action_timeout
-        sleep_count = 0
-        while sleep_count < timeout:
-            try:
-                self.nova(obj).server_get(obj.physical_id)
-            except Exception as ex:
-                if ex.code == 404:
-                    return
-                raise
-            time.sleep(1)
-            sleep_count += 1
-
-        raise exception.ProfileOperationTimeout(
-            message='Server deletion timeout.')
 
     def do_delete(self, obj):
         self.server_id = obj.physical_id
@@ -283,7 +271,7 @@ class ServerProfile(base.Profile):
 
         try:
             self.nova(obj).server_delete(self.server_id)
-            self._wait_for_deletion(obj)
+            self.nova(obj).wait_for_server_delete(self.server_id)
         except Exception as ex:
             LOG.error('Error: %s' % six.text_type(ex))
             return False
