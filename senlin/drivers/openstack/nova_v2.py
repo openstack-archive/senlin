@@ -21,8 +21,9 @@ from senlin.drivers.openstack import sdk
 class NovaClient(base.DriverBase):
     '''Nova V2 driver.'''
 
-    def __init__(self, ctx):
-        self.conn = sdk.create_connection(ctx)
+    def __init__(self, params):
+        super(NovaClient, self).__init__(params)
+        self.conn = sdk.create_connection(params)
         self.session = self.conn.session
 
     @sdk.translate_exception

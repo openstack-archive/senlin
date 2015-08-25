@@ -27,7 +27,8 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
     def setUp(self):
         super(TestNeutronLBaaSDriver, self).setUp()
         self.context = utils.dummy_context()
-        self.lb_driver = lbaas.LoadBalancerDriver(self.context)
+        self.conn_params = self.context.to_dict()
+        self.lb_driver = lbaas.LoadBalancerDriver(self.conn_params)
         self.patchobject(neutron_v2, 'NeutronClient')
         self.nc = self.lb_driver.nc()
 
@@ -46,27 +47,27 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         }
 
     def test_init(self):
-        res = lbaas.LoadBalancerDriver(self.context)
-        self.assertEqual(self.context, res.ctx)
+        res = lbaas.LoadBalancerDriver(self.conn_params)
+        self.assertEqual(self.conn_params, res.conn_params)
         self.assertIsNone(res._nc)
 
     @mock.patch.object(neutron_v2, 'NeutronClient')
     def test_nc_initialize(self, mock_neutron_client):
         fake_nc = mock.Mock()
         mock_neutron_client.return_value = fake_nc
-        lb_driver = lbaas.LoadBalancerDriver(self.context)
+        lb_driver = lbaas.LoadBalancerDriver(self.conn_params)
         self.assertIsNone(lb_driver._nc)
 
         # Create a new NeutronClient
         res = lb_driver.nc()
-        mock_neutron_client.assert_called_once_with(self.context)
+        mock_neutron_client.assert_called_once_with(self.conn_params)
         self.assertEqual(fake_nc, res)
 
         # Use the existing NeutronClient stored in self._nc
         fake_nc_new = mock.Mock()
         mock_neutron_client.return_value = fake_nc_new
         res1 = lb_driver.nc()
-        mock_neutron_client.assert_called_once_with(self.context)
+        mock_neutron_client.assert_called_once_with(self.conn_params)
         self.assertNotEqual(fake_nc_new, res1)
         self.assertEqual(res, res1)
 

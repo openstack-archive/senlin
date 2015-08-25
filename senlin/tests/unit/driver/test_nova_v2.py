@@ -27,6 +27,7 @@ class TestNovaV2(base.SenlinTestCase):
         super(TestNovaV2, self).setUp()
 
         self.ctx = utils.dummy_context()
+        self.conn_params = self.ctx.to_dict()
         self.mock_conn = mock.Mock()
         self.mock_create = self.patchobject(
             sdk, 'create_connection',
@@ -34,22 +35,22 @@ class TestNovaV2(base.SenlinTestCase):
         self.compute = self.mock_conn.compute
 
     def test_init(self):
-        d = nova_v2.NovaClient(self.ctx)
-        self.mock_create.assert_called_once_with(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
+        self.mock_create.assert_called_once_with(self.conn_params)
         self.assertEqual(self.mock_conn, d.conn)
 
     def test_flavor_create(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.flavor_create(name='foo')
         self.compute.create_flavor.assert_called_once_with(name='foo')
 
     def test_flavor_get(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.flavor_get('foo')
         self.compute.get_flavor.assert_called_once_with('foo')
 
     def test_flavor_find(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.flavor_find('foo')
         self.compute.find_flavor.assert_called_once_with('foo', False)
         self.compute.find_flavor.reset_mock()
@@ -62,7 +63,7 @@ class TestNovaV2(base.SenlinTestCase):
         self.compute.find_flavor.assert_called_once_with('foo', False)
 
     def test_flavor_list(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.flavor_list()
         self.compute.flavors.assert_called_once_with(True)
         self.compute.flavors.reset_mock()
@@ -79,13 +80,13 @@ class TestNovaV2(base.SenlinTestCase):
         self.compute.flavors.assert_called_once_with(False, foo='bar')
 
     def test_flavor_update(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         attrs = {'mem': 2}
         d.flavor_update('fakeid', **attrs)
         self.compute.update_flavor.assert_called_once_with('fakeid', **attrs)
 
     def test_flavor_delete(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.flavor_delete('foo', True)
         self.compute.delete_flavor.assert_called_once_with('foo', True)
         self.compute.delete_flavor.reset_mock()
@@ -98,12 +99,12 @@ class TestNovaV2(base.SenlinTestCase):
         self.compute.delete_flavor.assert_called_once_with('foo', True)
 
     def test_image_get(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.image_get('foo')
         self.compute.get_image.assert_called_once_with('foo')
 
     def test_image_get_by_name(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.image_get_by_name('foo')
         self.compute.find_image.assert_called_once_with('foo', False)
         self.compute.find_image.reset_mock()
@@ -116,7 +117,7 @@ class TestNovaV2(base.SenlinTestCase):
         self.compute.find_image.assert_called_once_with('foo', False)
 
     def test_image_list(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.image_list()
         self.compute.images.assert_called_once_with(True)
         self.compute.images.reset_mock()
@@ -133,7 +134,7 @@ class TestNovaV2(base.SenlinTestCase):
         self.compute.images.assert_called_once_with(False, foo='bar')
 
     def test_image_delete(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.image_delete('foo', True)
         self.compute.delete_image.assert_called_once_with('foo', True)
         self.compute.delete_image.reset_mock()
@@ -146,17 +147,17 @@ class TestNovaV2(base.SenlinTestCase):
         self.compute.delete_image.assert_called_once_with('foo', True)
 
     def test_keypair_create(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.keypair_create(name='foo')
         self.compute.create_keypair.assert_called_once_with(name='foo')
 
     def test_keypair_get(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.keypair_get('foo')
         self.compute.get_keypair.assert_called_once_with('foo')
 
     def test_keypair_get_by_name(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.keypair_get_by_name('foo')
         self.compute.find_keypair.assert_called_once_with('foo', False)
         self.compute.find_keypair.reset_mock()
@@ -169,7 +170,7 @@ class TestNovaV2(base.SenlinTestCase):
         self.compute.find_keypair.assert_called_once_with('foo', False)
 
     def test_keypair_list(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.keypair_list()
         self.compute.keypairs.assert_called_once_with()
         self.compute.keypairs.reset_mock()
@@ -179,13 +180,13 @@ class TestNovaV2(base.SenlinTestCase):
         self.compute.keypairs.reset_mock()
 
     def test_keypair_update(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         attrs = {'mem': 2}
         d.keypair_update('fakeid', **attrs)
         self.compute.update_keypair.assert_called_once_with('fakeid', **attrs)
 
     def test_keypair_delete(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.keypair_delete('foo', True)
         self.compute.delete_keypair.assert_called_once_with('foo', True)
         self.compute.delete_keypair.reset_mock()
@@ -198,12 +199,12 @@ class TestNovaV2(base.SenlinTestCase):
         self.compute.delete_keypair.assert_called_once_with('foo', True)
 
     def test_server_create(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.server_create(name='foo')
         self.compute.create_server.assert_called_once_with(name='foo')
 
     def test_wait_for_server(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.wait_for_server('foo', timeout=10)
         self.compute.wait_for_server.assert_called_once_with('foo',
                                                              wait=10)
@@ -211,18 +212,18 @@ class TestNovaV2(base.SenlinTestCase):
     def test_wait_for_server_with_default_timeout(self):
         timeout = cfg.CONF.default_action_timeout
 
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.wait_for_server('foo')
         self.compute.wait_for_server.assert_called_once_with('foo',
                                                              wait=timeout)
 
     def test_server_get(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.server_get('foo')
         self.compute.get_server.assert_called_once_with('foo')
 
     def test_server_list(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.server_list()
         self.compute.servers.assert_called_once_with(True)
         self.compute.servers.reset_mock()
@@ -239,20 +240,20 @@ class TestNovaV2(base.SenlinTestCase):
         self.compute.servers.assert_called_once_with(False, k='v')
 
     def test_server_update(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         attrs = {'mem': 2}
         d.server_update('fakeid', **attrs)
         self.compute.update_server.assert_called_once_with('fakeid', **attrs)
 
     def test_server_delete(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.server_delete('foo', True)
         self.compute.delete_server.assert_called_once_with('foo', True)
 
     def test_wait_for_server_delete(self):
         self.compute.find_server.return_value = 'FOO'
 
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.wait_for_server_delete('foo', 120)
         self.compute.find_server.assert_called_once_with('foo', True)
         self.compute.wait_for_delete.assert_called_once_with('FOO', wait=120)
@@ -261,7 +262,7 @@ class TestNovaV2(base.SenlinTestCase):
         cfg.CONF.set_override('default_action_timeout', 360)
         self.compute.find_server.return_value = 'FOO'
 
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.wait_for_server_delete('foo')
         self.compute.find_server.assert_called_once_with('foo', True)
         self.compute.wait_for_delete.assert_called_once_with('FOO', wait=360)
@@ -269,23 +270,23 @@ class TestNovaV2(base.SenlinTestCase):
     def test_wait_for_server_delete_server_doesnt_exist(self):
         self.compute.find_server.return_value = None
 
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         res = d.wait_for_server_delete('foo')
         self.assertIsNone(res)
 
     def test_server_interface_create(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.server_interface_create(name='foo')
         self.compute.create_server_interface.assert_called_once_with(
             name='foo')
 
     def test_server_interface_get(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.server_interface_get('foo')
         self.compute.get_server_interface.assert_called_once_with('foo')
 
     def test_server_interface_list(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.server_interface_list()
         self.compute.server_interfaces.assert_called_once_with()
         self.compute.server_interfaces.reset_mock()
@@ -295,14 +296,14 @@ class TestNovaV2(base.SenlinTestCase):
         self.compute.server_interfaces.reset_mock()
 
     def test_server_interface_update(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         attrs = {'mem': 2}
         d.server_interface_update('fakeid', **attrs)
         self.compute.update_server_interface.assert_called_once_with(
             'fakeid', **attrs)
 
     def test_server_interface_delete(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.server_interface_delete('foo', True)
         self.compute.delete_server_interface.assert_called_once_with(
             'foo', True)
@@ -318,7 +319,7 @@ class TestNovaV2(base.SenlinTestCase):
             'foo', True)
 
     def test_server_ip_list(self):
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.server_ip_list()
         self.compute.server_ips.assert_called_once_with()
         self.compute.server_ips.reset_mock()
@@ -330,7 +331,7 @@ class TestNovaV2(base.SenlinTestCase):
         mock_metadata = mock.Mock()
         mock_obj = self.patchobject(server_metadata.ServerMetadata, 'new',
                                     return_value=mock_metadata)
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.server_metadata_get(server_id='fake_id')
         mock_obj.assert_called_once_with(server_id='fake_id')
         mock_metadata.get.assert_called_once_with(self.mock_conn.session)
@@ -339,7 +340,7 @@ class TestNovaV2(base.SenlinTestCase):
         mock_metadata = mock.Mock()
         mock_obj = self.patchobject(server_metadata.ServerMetadata, 'new',
                                     return_value=mock_metadata)
-        d = nova_v2.NovaClient(self.ctx)
+        d = nova_v2.NovaClient(self.conn_params)
         d.server_metadata_update(server_id='fake_id')
         mock_obj.assert_called_once_with(server_id='fake_id')
         mock_metadata.update.assert_called_once_with(self.mock_conn.session)

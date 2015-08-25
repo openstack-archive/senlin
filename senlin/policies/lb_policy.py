@@ -15,13 +15,13 @@ from oslo_log import log as logging
 
 from senlin.common import constraints
 from senlin.common import consts
-from senlin.common import context
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LW
 from senlin.common import schema
 from senlin.db import api as db_api
 from senlin.drivers import base as driver_base
+from senlin.drivers.openstack import keystone_v3
 from senlin.engine import cluster_policy
 from senlin.engine import node as node_mod
 from senlin.policies import base
@@ -207,8 +207,8 @@ class LoadBalancingPolicy(base.Policy):
         nodes = node_mod.Node.load_all(oslo_context.get_current(),
                                        cluster_id=cluster.id)
 
-        ctx = self._build_context(cluster)
-        lb_driver = driver_base.SenlinDriver().loadbalancing(ctx)
+        params = self._build_connection_params(cluster)
+        lb_driver = driver_base.SenlinDriver().loadbalancing(params)
 
         # TODO(Anyone): check cluster profile type matches self.PROFILE or not
         res, data = lb_driver.lb_create(self.vip_spec, self.pool_spec)
@@ -247,8 +247,8 @@ class LoadBalancingPolicy(base.Policy):
             contains a error message.
         """
         reason = _('LB resources deletion succeeded.')
-        ctx = self._build_context(cluster)
-        lb_driver = driver_base.SenlinDriver().loadbalancing(ctx)
+        params = self._build_connection_params(cluster)
+        lb_driver = driver_base.SenlinDriver().loadbalancing(params)
 
         cp = cluster_policy.ClusterPolicy.load(oslo_context.get_current(),
                                                cluster.id, self.id)
@@ -278,8 +278,8 @@ class LoadBalancingPolicy(base.Policy):
         if len(nodes) == 0:
             return
 
-        ctx = self._build_context(cluster_id)
-        lb_driver = driver_base.SenlinDriver().loadbalancing(ctx)
+        params = self._build_connection_params(cluster_id)
+        lb_driver = driver_base.SenlinDriver().loadbalancing(params)
         cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
                                                self.id)
         policy_data = self._extract_policy_data(cp.data)
@@ -334,23 +334,16 @@ class LoadBalancingPolicy(base.Policy):
 
         return
 
-    def _build_context(self, cluster):
+    def _build_connection_params(self, cluster):
         """Build a trust-based context for connection parameters.
 
         :param cluster: the cluste for which the trust will be checked.
         """
-        ctx = context.get_service_context()
-        params = {
-            'auth_url': ctx['auth_url'],
-            'user_name': ctx['user_name'],
-            'user_domain_name': ctx['user_domain_name'],
-            'password': ctx['password'],
-        }
-
+        params = keystone_v3.get_service_credentials()
         cred = db_api.cred_get(oslo_context.get_current(),
                                cluster.user, cluster.project)
         if cred is None:
             raise exception.TrustNotFound(trustor=cluster.user)
         params['trusts'] = [cred.cred['openstack']['trust']]
 
-        return context.RequestContext.from_dict(params)
+        return params

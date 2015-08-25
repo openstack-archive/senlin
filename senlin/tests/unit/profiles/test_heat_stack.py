@@ -53,7 +53,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         # New hc will be created if no cache is found
         profile.hc = None
         params = mock.Mock()
-        mock_param = self.patchobject(profile, '_get_connection_params',
+        mock_param = self.patchobject(profile, '_build_connection_params',
                                       return_value=params)
         res = profile.heat(test_stack)
         self.assertEqual(hc, res)

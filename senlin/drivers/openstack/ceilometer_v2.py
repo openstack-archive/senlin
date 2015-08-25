@@ -17,8 +17,9 @@ from senlin.drivers.openstack import sdk
 class CeilometerClient(base.DriverBase):
     '''Ceilometer V2 driver.'''
 
-    def __init__(self, ctx):
-        self.conn = sdk.create_connection(ctx)
+    def __init__(self, params):
+        super(CeilometerClient, self).__init__(params)
+        self.conn = sdk.create_connection(params)
 
     @sdk.translate_exception
     def alarm_create(self, **attrs):

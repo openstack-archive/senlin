@@ -191,7 +191,7 @@ class ServerProfile(base.Profile):
 
         if self._nc is not None:
             return self._nc
-        params = self._get_connection_params(context.get_current(), obj)
+        params = self._build_connection_params(context.get_current(), obj)
         self._nc = driver_base.SenlinDriver().compute(params)
         return self._nc
 

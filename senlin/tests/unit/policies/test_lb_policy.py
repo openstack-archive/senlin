@@ -19,6 +19,7 @@ from senlin.common import context
 from senlin.common import exception
 from senlin.db import api as db_api
 from senlin.drivers import base as driver_base
+from senlin.drivers.openstack import keystone_v3
 from senlin.engine import cluster_policy
 from senlin.engine import node as node_mod
 from senlin.policies import base as policy_base
@@ -118,30 +119,26 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         mock_validate.assert_called_with()
 
     @mock.patch.object(db_api, 'cred_get')
-    @mock.patch.object(context, 'get_service_context')
-    @mock.patch.object(context.RequestContext, 'from_dict')
+    @mock.patch.object(keystone_v3, 'get_service_credentials')
     @mock.patch.object(oslo_context, 'get_current')
-    def test_lb_policy_build_context(self, mock_get_current, mock_from_dict,
-                                     mock_get_service_context, mock_cred_get):
-        service_ctx = {
+    def test_lb_policy_build_connection_params(self, mock_get_current,
+                                               mock_get_service_credentials,
+                                               mock_cred_get):
+        service_cred = {
             'auth_url': 'AUTH_URL',
-            'user_name': 'senlin',
+            'username': 'senlin',
             'user_domain_name': 'default',
             'password': '123'
         }
         current_ctx = {
-            'auth_url': 'AUTH_URL',
+            'auth_url': 'auth_url',
             'user_name': 'user1',
             'user_domain_name': 'default',
             'password': '456'
         }
         cred_info = {
             'openstack': {
-                'trust': {
-                    'id': 'TRUST_ID',
-                    'trustor': 'user1',
-                    'trustee': 'senlin'
-                }
+                'trust': 'TRUST_ID',
             }
         }
 
@@ -150,32 +147,30 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         cluster.project = 'project1'
         cred = mock.Mock()
         cred.cred = cred_info
-        mock_get_service_context.return_value = service_ctx
+        mock_get_service_credentials.return_value = service_cred
         mock_get_current.return_value = current_ctx
         mock_cred_get.return_value = cred
-        mock_from_dict.return_value = 'context_result'
 
         kwargs = {
             'spec': self.spec
         }
         policy = lb_policy.LoadBalancingPolicy('LoadBalancingPolicy',
                                                'test-policy', **kwargs)
-        res = policy._build_context(cluster)
-        self.assertEqual('context_result', res)
-        mock_get_service_context.assert_called_once_with()
-        mock_cred_get.assert_called_once_with(current_ctx, 'user1', 'project1')
-        params = {
-            'auth_url': service_ctx['auth_url'],
-            'user_name': service_ctx['user_name'],
-            'user_domain_name': service_ctx['user_domain_name'],
-            'password': service_ctx['password'],
-            'trusts': [cred_info['openstack']['trust']],
+        expected_result = {
+            'auth_url': 'AUTH_URL',
+            'username': 'senlin',
+            'user_domain_name': 'default',
+            'password': '123',
+            'trusts': ['TRUST_ID']
         }
-        mock_from_dict.assert_called_once_with(params)
+        res = policy._build_connection_params(cluster)
+        self.assertEqual(expected_result, res)
+        mock_get_service_credentials.assert_called_once_with()
+        mock_cred_get.assert_called_once_with(current_ctx, 'user1', 'project1')
 
     @mock.patch.object(context, 'get_service_context')
     @mock.patch.object(db_api, 'cred_get')
-    def test_lb_policy_build_context_trust_not_found(
+    def test_lb_policy_build_connection_params_trust_not_found(
             self, mock_cred_get, mock_get_service_context):
 
         self.patchobject(oslo_context, 'get_current')
@@ -189,7 +184,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         }
         policy = lb_policy.LoadBalancingPolicy('LoadBalancingPolicy',
                                                'test-policy', **kwargs)
-        ex = self.assertRaises(exception.TrustNotFound, policy._build_context,
+        ex = self.assertRaises(exception.TrustNotFound,
+                               policy._build_connection_params,
                                cluster)
         msg = "The trust for trustor (user1) could not be found."
         self.assertEqual(msg, six.text_type(ex))
@@ -217,7 +213,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
             'loadbalancer': 'LB_ID',
             'pool': 'POOL_ID'
         }
-        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        self.patchobject(lb_policy.LoadBalancingPolicy,
+                         '_build_connection_params')
 
         kwargs = {
             'spec': self.spec
@@ -272,7 +269,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         mock_senlindriver.return_value = sd
         cluster = mock.Mock()
         mock_policy_base_attach.return_value = (True, None)
-        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        self.patchobject(lb_policy.LoadBalancingPolicy,
+                         '_build_connection_params')
 
         kwargs = {
             'spec': self.spec
@@ -304,7 +302,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
             'loadbalancer': 'LB_ID',
             'pool': 'POOL_ID'
         }
-        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        self.patchobject(lb_policy.LoadBalancingPolicy,
+                         '_build_connection_params')
 
         kwargs = {
             'spec': self.spec
@@ -329,7 +328,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         cp = mock.Mock()
         mock_policy_load.return_value = cp
         mock_extract_policy_data.return_value = None
-        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        self.patchobject(lb_policy.LoadBalancingPolicy,
+                         '_build_connection_params')
         self.patchobject(driver_base, 'SenlinDriver')
         self.patchobject(oslo_context, 'get_current')
 
@@ -372,7 +372,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         cp.data = cp_data
         mock_cluster_policy_load.return_value = cp
         mock_extract_policy_data.return_value = policy_data
-        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        self.patchobject(lb_policy.LoadBalancingPolicy,
+                         '_build_connection_params')
         self.patchobject(oslo_context, 'get_current')
         lb_driver.lb_delete.return_value = (True, 'lb_delete succeeded.')
 
@@ -399,7 +400,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         sd.loadbalancing.return_value = lb_driver
         mock_senlindriver.return_value = sd
         cluster = mock.Mock()
-        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        self.patchobject(lb_policy.LoadBalancingPolicy,
+                         '_build_connection_params')
         self.patchobject(oslo_context, 'get_current')
         self.patchobject(cluster_policy.ClusterPolicy, 'load')
         self.patchobject(lb_policy.LoadBalancingPolicy,
@@ -470,7 +472,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
             }
         }
         cp.data = cp_data
-        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        self.patchobject(lb_policy.LoadBalancingPolicy,
+                         '_build_connection_params')
         lb_driver.member_add.side_effect = ['MEMBER1_ID', 'MEMBER2_ID']
         mock_node_load.side_effect = [node1, node2]
         mock_cluster_policy_load.return_value = cp
@@ -527,7 +530,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
             'pool': 'POOL_ID',
             'healthmonitor': 'HM_ID'
         }
-        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        self.patchobject(lb_policy.LoadBalancingPolicy,
+                         '_build_connection_params')
         self.patchobject(cluster_policy.ClusterPolicy, 'load')
         lb_driver.member_add.side_effect = ['MEMBER2_ID']
         mock_node_load.side_effect = [node1, node2]
@@ -570,7 +574,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
             'pool': 'POOL_ID',
             'healthmonitor': 'HM_ID'
         }
-        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        self.patchobject(lb_policy.LoadBalancingPolicy,
+                         '_build_connection_params')
         self.patchobject(cluster_policy.ClusterPolicy, 'load')
         lb_driver.member_add.return_value = None
         mock_node_load.side_effect = [node1]
@@ -628,7 +633,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
             }
         }
         cp.data = cp_data
-        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        self.patchobject(lb_policy.LoadBalancingPolicy,
+                         '_build_connection_params')
         lb_driver.member_remove.return_value = True
         mock_node_load.side_effect = [node1, node2]
         mock_cluster_policy_load.return_value = cp
@@ -681,7 +687,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
             'pool': 'POOL_ID',
             'healthmonitor': 'HM_ID'
         }
-        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        self.patchobject(lb_policy.LoadBalancingPolicy,
+                         '_build_connection_params')
         self.patchobject(cluster_policy.ClusterPolicy, 'load')
         lb_driver.member_remove.return_value = True
         mock_node_load.side_effect = [node1, node2]
@@ -724,7 +731,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
             'pool': 'POOL_ID',
             'healthmonitor': 'HM_ID'
         }
-        self.patchobject(lb_policy.LoadBalancingPolicy, '_build_context')
+        self.patchobject(lb_policy.LoadBalancingPolicy,
+                         '_build_connection_params')
         self.patchobject(cluster_policy.ClusterPolicy, 'load')
         lb_driver.member_remove.return_value = False
         mock_node_load.side_effect = [node1]

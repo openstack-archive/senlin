@@ -27,16 +27,15 @@ LOG = logging.getLogger(__name__)
 class LoadBalancerDriver(base.DriverBase):
     """Load-balancing driver based on Neutron LBaaS service."""
 
-    def __init__(self, ctx):
-        super(LoadBalancerDriver, self).__init__(ctx)
-        self.ctx = ctx
+    def __init__(self, params):
+        super(LoadBalancerDriver, self).__init__(params)
         self._nc = None
 
     def nc(self):
         if self._nc:
             return self._nc
 
-        self._nc = neutronclient.NeutronClient(self.ctx)
+        self._nc = neutronclient.NeutronClient(self.conn_params)
         return self._nc
 
     def _wait_for_lb_ready(self, lb_id, timeout=60, ignore_not_found=False):

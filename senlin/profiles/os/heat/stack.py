@@ -86,7 +86,7 @@ class StackProfile(base.Profile):
 
         if self.hc:
             return self.hc
-        params = self._get_connection_params(context.get_current(), obj)
+        params = self._build_connection_params(context.get_current(), obj)
         self.hc = driver_base.SenlinDriver().orchestration(params)
         return self.hc
 

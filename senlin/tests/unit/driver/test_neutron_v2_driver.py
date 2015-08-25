@@ -26,6 +26,7 @@ class TestNeutronV2Driver(base.SenlinTestCase):
     def setUp(self):
         super(TestNeutronV2Driver, self).setUp()
         self.context = utils.dummy_context()
+        self.conn_params = self.context.to_dict()
         self.conn = mock.Mock()
         with mock.patch.object(sdk, 'create_connection') as mock_creare_conn:
             mock_creare_conn.return_value = self.conn
@@ -33,7 +34,7 @@ class TestNeutronV2Driver(base.SenlinTestCase):
 
     @mock.patch.object(sdk, 'create_connection')
     def test_init(self, mock_create_connection):
-        params = self.context
+        params = self.conn_params
         neutron_v2.NeutronClient(params)
         mock_create_connection.assert_called_once_with(params)
 

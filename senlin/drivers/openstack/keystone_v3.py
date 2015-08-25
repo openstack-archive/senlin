@@ -23,8 +23,9 @@ LOG = logging.getLogger(__name__)
 class KeystoneClient(base.DriverBase):
     '''Keystone V3 driver.'''
 
-    def __init__(self, context):
-        self.conn = sdk.create_connection(context)
+    def __init__(self, params):
+        super(KeystoneClient, self).__init__(params)
+        self.conn = sdk.create_connection(params)
         self.session = self.conn.session
 
     @sdk.translate_exception
@@ -157,7 +158,7 @@ def get_service_credentials(**kwargs):
     '''
 
     creds = {
-        'user_name': CONF.authentication.service_username,
+        'username': CONF.authentication.service_username,
         'password': CONF.authentication.service_password,
         'auth_url': CONF.authentication.auth_url,
         'project_name': CONF.authentication.service_project_name,
