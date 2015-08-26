@@ -13,10 +13,10 @@
 from oslo_log import log as logging
 from oslo_utils import timeutils
 
+from senlin.common import context
 from senlin.common import exception
 from senlin.common import schema
 from senlin.db import api as db_api
-from senlin.drivers.openstack import keystone_v3 as keystoneclient
 from senlin.engine import environment
 
 LOG = logging.getLogger(__name__)
@@ -176,8 +176,7 @@ class Profile(object):
                     for name, schema in cls.spec_schema.items())
 
     def _init_context(self):
-        cred = keystoneclient.get_service_credentials()
-
+        cred = context.get_service_context()
         # TODO(Yanyan Hu): Rename context field to credential in spec?
         if self.CONTEXT in self.spec_data:
             profile_context = self.spec_data[self.CONTEXT]

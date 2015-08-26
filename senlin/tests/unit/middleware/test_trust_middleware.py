@@ -13,8 +13,10 @@
 import mock
 
 from senlin.api.middleware import trust
+from senlin.common import context
 from senlin.common import exception
 from senlin.db import api as db_api
+from senlin.drivers import base as driver_base
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -37,14 +39,18 @@ class TestTrustMiddleware(base.SenlinTestCase):
         self.assertEqual(res.cred['openstack']['trust'], trust_id)
         self.assertTrue(db_api.cred_get.called)
 
-    @mock.patch.object(db_api, 'cred_create')
-    @mock.patch('senlin.drivers.openstack.keystone_v3.KeystoneClient')
+    @mock.patch.object(context, 'get_service_context')
     @mock.patch.object(db_api, 'cred_get')
-    def test_get_trust_not_exists(self, mock_cred_get, mock_kc,
-                                  mock_cred_create):
+    @mock.patch.object(db_api, 'cred_create')
+    @mock.patch.object(driver_base, 'SenlinDriver')
+    def test_get_trust_not_exists(self, mock_senlindriver, mock_cred_create,
+                                  mock_cred_get, mock_get_service_context):
         mock_cred_get.return_value = None
+        mock_get_service_context.return_value = {'k1': 'v1', 'k2': 'v2'}
+        sd = mock.Mock()
         kc = mock.Mock()
-        mock_kc.return_value = kc
+        sd.identity.return_value = kc
+        mock_senlindriver.return_value = sd
         kc.get_user_id.return_value = 'FAKE_ADMIN_ID'
         kc.trust_get_by_trustor.side_effect = exception.InternalError(
             code=400, message='Bad request')

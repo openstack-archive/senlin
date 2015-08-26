@@ -15,6 +15,7 @@ from oslo_utils import encodeutils
 
 from senlin.common import policy
 from senlin.db import api as db_api
+from senlin.drivers import base as driver_base
 
 
 class RequestContext(base_context.RequestContext):
@@ -109,7 +110,7 @@ class RequestContext(base_context.RequestContext):
 
 
 def get_service_context(**args):
-    '''An abstraction layer for getting service context.
+    '''An abstraction layer for getting service credential.
 
     There could be multiple cloud backends for senlin to use. This
     abstraction layer provides an indirection for senlin to get the
@@ -118,5 +119,4 @@ def get_service_context(**args):
     in an OpenStack cloud.
     '''
 
-    from senlin.drivers.openstack import keystone_v3
-    return keystone_v3.get_service_credentials(**args)
+    return driver_base.SenlinDriver().identity.get_service_credentials()

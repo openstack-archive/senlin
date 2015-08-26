@@ -12,10 +12,11 @@
 
 from oslo_log import log as logging
 
+from senlin.common import context
 from senlin.common import exception
 from senlin.common import wsgi
 from senlin.db import api as db_api
-from senlin.drivers.openstack import keystone_v3
+from senlin.drivers import base as driver_base
 
 LOG = logging.getLogger(__name__)
 
@@ -47,8 +48,8 @@ class TrustMiddleware(wsgi.Middleware):
             'project_id': ctx.project,
             'user_id': ctx.user,
         }
-        kc = keystone_v3.KeystoneClient(params)
-        service_cred = keystone_v3.get_service_credentials()
+        kc = driver_base.SenlinDriver().identity(params)
+        service_cred = context.get_service_context()
         admin_id = kc.get_user_id(**service_cred)
         try:
             trust = kc.trust_get_by_trustor(ctx.user, admin_id, ctx.project)
