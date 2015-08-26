@@ -15,10 +15,11 @@ from oslo_log import log as logging
 from oslo_utils import timeutils
 from six.moves.urllib import parse
 
+from senlin.common import context
 from senlin.common import exception
 from senlin.common import utils
 from senlin.db import api as db_api
-from senlin.drivers.openstack import keystone_v3 as ksdriver
+from senlin.drivers import base as driver_base
 
 LOG = logging.getLogger(__name__)
 
@@ -181,8 +182,8 @@ class Webhook(object):
 
         :param key: Key string to be used for decrypt the credentials.
         """
-        senlin_creds = ksdriver.get_service_credentials()
-        kc = ksdriver.KeystoneClient(senlin_creds)
+        senlin_creds = context.get_service_context()
+        kc = driver_base.SenlinDriver().identity(senlin_creds)
         senlin_service = kc.service_get('clustering', 'senlin')
         senlin_service_id = senlin_service['id']
         region = cfg.CONF.region_name_for_services

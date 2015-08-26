@@ -23,7 +23,7 @@ from oslo_utils import uuidutils
 import six
 
 from senlin.common import consts
-from senlin.common import context
+from senlin.common import context as senlin_context
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
@@ -54,8 +54,9 @@ CONF = cfg.CONF
 def request_context(func):
     @functools.wraps(func)
     def wrapped(self, ctx, *args, **kwargs):
-        if ctx is not None and not isinstance(ctx, context.RequestContext):
-            ctx = context.RequestContext.from_dict(ctx.to_dict())
+        if ctx is not None and not isinstance(ctx,
+                                              senlin_context.RequestContext):
+            ctx = senlin_context.RequestContext.from_dict(ctx.to_dict())
         try:
             return func(self, ctx, *args, **kwargs)
         except exception.SenlinException:

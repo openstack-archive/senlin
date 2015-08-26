@@ -20,7 +20,7 @@ from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.common import utils
 from senlin.common import wsgi
-from senlin.drivers.openstack import keystone_v3
+from senlin.drivers import base as driver_base
 from senlin.engine import webhook as webhook_mod
 
 LOG = logging.getLogger(__name__)
@@ -108,7 +108,7 @@ class WebhookMiddleware(wsgi.Middleware):
         :param cred: Rebuilt credential dictionary for authentication.
         """
         try:
-            token = keystone_v3.KeystoneClient.get_token(**kwargs)
+            token = driver_base.SenlinDriver().identity.get_token(**kwargs)
         except Exception as ex:
             LOG.exception(_('Webhook failed authentication: %s.'),
                           six.text_type(ex))

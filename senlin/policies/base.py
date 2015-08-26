@@ -274,7 +274,7 @@ class Policy(object):
         return cls(type_name, name, **kwargs)
 
     def _build_connection_params(self, cluster):
-        """Build a trust-based context for connection parameters.
+        """Build trust-based connection parameters.
 
         :param cluster: the cluste for which the trust will be checked.
         """

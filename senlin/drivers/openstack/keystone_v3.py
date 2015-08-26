@@ -149,21 +149,22 @@ class KeystoneClient(base.DriverBase):
         user_id = access_info.user_id
         return user_id
 
+    @classmethod
+    def get_service_credentials(cls, **kwargs):
+        '''Senlin service credential to use with Keystone.
 
-def get_service_credentials(**kwargs):
-    '''Senlin service credential to use with Keystone.
+        :param kwargs: An additional keyword argument list that can be used
+                       for customizing the default settings.
+        '''
 
-    :param kwargs: An additional keyword argument list that can be used
-                   for customizing the default settings.
-    '''
-
-    creds = {
-        'username': CONF.authentication.service_username,
-        'password': CONF.authentication.service_password,
-        'auth_url': CONF.authentication.auth_url,
-        'project_name': CONF.authentication.service_project_name,
-        'user_domain_name': cfg.CONF.authentication.service_user_domain,
-        'project_domain_name': cfg.CONF.authentication.service_project_domain,
-    }
-    creds.update(**kwargs)
-    return creds
+        creds = {
+            'username': CONF.authentication.service_username,
+            'password': CONF.authentication.service_password,
+            'auth_url': CONF.authentication.auth_url,
+            'project_name': CONF.authentication.service_project_name,
+            'user_domain_name': cfg.CONF.authentication.service_user_domain,
+            'project_domain_name':
+                cfg.CONF.authentication.service_project_domain,
+        }
+        creds.update(**kwargs)
+        return creds
