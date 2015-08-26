@@ -131,20 +131,33 @@ class LoadBalancerDriver(base.DriverBase):
         healthmonitor_id = kwargs.pop('healthmonitor', None)
         if healthmonitor_id:
             self.nc().healthmonitor_delete(healthmonitor_id)
-            self._wait_for_lb_ready(lb_id)
+            res = self._wait_for_lb_ready(lb_id)
+            if res is False:
+                msg = _LE('Failed in deleting healthmonitor '
+                          '(%s).') % healthmonitor_id
+                return False, msg
 
         pool_id = kwargs.pop('pool', None)
         if pool_id:
             self.nc().pool_delete(pool_id)
-            self._wait_for_lb_ready(lb_id)
+            res = self._wait_for_lb_ready(lb_id)
+            if res is False:
+                msg = _LE('Failed in deleting pool (%s).') % pool_id
+                return False, msg
 
         listener_id = kwargs.pop('listener', None)
         if listener_id:
             self.nc().listener_delete(listener_id)
-            self._wait_for_lb_ready(lb_id)
+            res = self._wait_for_lb_ready(lb_id)
+            if res is False:
+                msg = _LE('Failed in deleting listener (%s).') % listener_id
+                return False, msg
 
         self.nc().loadbalancer_delete(lb_id)
-        self._wait_for_lb_ready(lb_id, ignore_not_found=True)
+        res = self._wait_for_lb_ready(lb_id, ignore_not_found=True)
+        if res is False:
+            msg = _LE('Failed in deleting loadbalancer (%s).') % lb_id
+            return False, msg
 
         return True, _('LB deletion succeeded')
 
@@ -177,7 +190,10 @@ class LoadBalancerDriver(base.DriverBase):
         address = addresses[net_name]
         member = self.nc().pool_member_create(pool_id, address, port,
                                               subnet_obj.id)
-        self._wait_for_lb_ready(lb_id)
+        res = self._wait_for_lb_ready(lb_id)
+        if res is False:
+            LOG.error(_LE('Failed in creating pool member (%s).') % member.id)
+            return None
 
         return member.id
 
@@ -191,12 +207,15 @@ class LoadBalancerDriver(base.DriverBase):
         """
         try:
             self.nc().pool_member_delete(pool_id, member_id)
-            self._wait_for_lb_ready(lb_id)
         except Exception as ex:
             LOG.error(_LE('Failed in removing member %(m)s from pool %(p)s: '
                           '%(ex)s'),
                       {'m': member_id, 'p': pool_id, 'ex': six.text_type(ex)})
             return False
+        res = self._wait_for_lb_ready(lb_id)
+        if res is False:
+            LOG.error(_LE('Failed in deleting pool member (%s).') % member_id)
+            return None
 
         return True
 
