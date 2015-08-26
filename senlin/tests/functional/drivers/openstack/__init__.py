@@ -18,21 +18,21 @@ from senlin.tests.functional.drivers.openstack import nova_v2
 
 
 # Currently, only fake nova_v2 driver is supported
-def ComputeClient(params):
+def compute(params):
     return nova_v2.NovaClient(params)
 
 
-def OrchestrationClient(params):
-    return heat_v1.HeatClient(params)
-
-
-def NetworkClient(params):
-    return neutron_v2.NeutronClient(params)
-
-
-def LoadBalancingClient(params):
+def loadbalancing(params):
     return lbaas.LoadBalancerDriver(params)
 
 
-def TelemetryClient(params):
+def network(params):
+    return neutron_v2.NeutronClient(params)
+
+
+def orchestration(params):
+    return heat_v1.HeatClient(params)
+
+
+def telemetry(params):
     return ceilometer_v2.CeilometerClient(params)

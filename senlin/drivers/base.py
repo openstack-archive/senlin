@@ -32,18 +32,17 @@ class DriverBase(object):
 class SenlinDriver(object):
     '''Generic driver class'''
 
-    def __init__(self, cloud_backend=None):
-        if cloud_backend:
-            plugin_name = cloud_backend
-        else:
-            plugin_name = cfg.CONF.cloud_backend
+    def __init__(self, backend_name=None):
 
-        cloud_backend_plugin = environment.global_env().get_driver(plugin_name)
+        if backend_name is None:
+            backend_name = cfg.CONF.cloud_backend
+
+        backend = environment.global_env().get_driver(backend_name)
 
         # TODO(Yanyan Hu): Use openstack compute driver(nova_v2)
         # as the start point of using senlin generic driver.
-        self.compute = cloud_backend_plugin.ComputeClient
-        self.network = cloud_backend_plugin.NetworkClient
-        self.loadbalancing = cloud_backend_plugin.LoadBalancingClient
-        self.orchestration = cloud_backend_plugin.OrchestrationClient
-        self.telemetry = cloud_backend_plugin.TelemetryClient
+        self.compute = backend.compute
+        self.loadbalancing = backend.loadbalancing
+        self.network = backend.network
+        self.orchestration = backend.orchestration
+        self.telemetry = backend.telemetry

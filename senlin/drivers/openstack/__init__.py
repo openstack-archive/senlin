@@ -17,21 +17,21 @@ from senlin.drivers.openstack import neutron_v2
 from senlin.drivers.openstack import nova_v2
 
 
-def ComputeClient(params):
+def compute(params):
     return nova_v2.NovaClient(params)
 
 
-def LoadBalancingClient(params):
+def loadbalancing(params):
     return lbaas.LoadBalancerDriver(params)
 
 
-def NetworkClient(params):
+def network(params):
     return neutron_v2.NeutronClient(params)
 
 
-def OrchestrationClient(params):
+def orchestration(params):
     return heat_v1.HeatClient(params)
 
 
-def TelemetryClient(params):
+def telemetry(params):
     return ceilometer_v2.CeilometerClient(params)
