@@ -197,9 +197,6 @@ class Profile(object):
 
         params = {
             'auth_url': self.context.get('auth_url'),
-            'domain_id': self.context.get('domain'),
-            'project_name': self.context.get('project_name'),
-            'project_domain_name': self.context.get('project_domain_name'),
             'user_domain_name': self.context.get('user_domain_name'),
             'username': self.context.get('username'),
             'user_id': self.context.get('user'),

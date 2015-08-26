@@ -15,13 +15,10 @@ from oslo_log import log as logging
 
 from senlin.common import constraints
 from senlin.common import consts
-from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LW
 from senlin.common import schema
-from senlin.db import api as db_api
 from senlin.drivers import base as driver_base
-from senlin.drivers.openstack import keystone_v3
 from senlin.engine import cluster_policy
 from senlin.engine import node as node_mod
 from senlin.policies import base
@@ -333,17 +330,3 @@ class LoadBalancingPolicy(base.Policy):
                 node.store(action.context)
 
         return
-
-    def _build_connection_params(self, cluster):
-        """Build a trust-based context for connection parameters.
-
-        :param cluster: the cluste for which the trust will be checked.
-        """
-        params = keystone_v3.get_service_credentials()
-        cred = db_api.cred_get(oslo_context.get_current(),
-                               cluster.user, cluster.project)
-        if cred is None:
-            raise exception.TrustNotFound(trustor=cluster.user)
-        params['trusts'] = [cred.cred['openstack']['trust']]
-
-        return params

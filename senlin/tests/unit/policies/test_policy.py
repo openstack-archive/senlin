@@ -11,12 +11,14 @@
 # under the License.
 
 import mock
+from oslo_context import context as oslo_context
 import six
 
+from senlin.common import context as senlin_context
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import schema
-from senlin.db.sqlalchemy import api as db_api
+from senlin.db import api as db_api
 from senlin.engine import environment
 from senlin.policies import base as policy_base
 from senlin.policies import deletion_policy
@@ -405,3 +407,83 @@ class TestPolicy(base.SenlinTestCase):
         res, data = policy.detach(cluster)
         self.assertTrue(res)
         self.assertIsNone(data)
+
+    @mock.patch.object(db_api, 'cred_get')
+    @mock.patch.object(senlin_context, 'get_service_context')
+    @mock.patch.object(oslo_context, 'get_current')
+    def test_policy_build_connection_params(self, mock_get_current,
+                                            mock_get_service_context,
+                                            mock_cred_get):
+        service_cred = {
+            'auth_url': 'AUTH_URL',
+            'username': 'senlin',
+            'user_domain_name': 'default',
+            'password': '123'
+        }
+        current_ctx = {
+            'auth_url': 'auth_url',
+            'user_name': 'user1',
+            'user_domain_name': 'default',
+            'password': '456'
+        }
+        cred_info = {
+            'openstack': {
+                'trust': 'TRUST_ID',
+            }
+        }
+
+        cluster = mock.Mock()
+        cluster.user = 'user1'
+        cluster.project = 'project1'
+        cred = mock.Mock()
+        cred.cred = cred_info
+        mock_get_service_context.return_value = service_cred
+        mock_get_current.return_value = current_ctx
+        mock_cred_get.return_value = cred
+
+        kwargs = {
+            'spec': {}
+        }
+        policy = deletion_policy.DeletionPolicy('DeletionPolicy',
+                                                'test-policy', **kwargs)
+        expected_result = {
+            'auth_url': 'AUTH_URL',
+            'username': 'senlin',
+            'user_domain_name': 'default',
+            'password': '123',
+            'trusts': ['TRUST_ID']
+        }
+        res = policy._build_connection_params(cluster)
+        self.assertEqual(expected_result, res)
+        mock_get_service_context.assert_called_once_with()
+        mock_cred_get.assert_called_once_with(current_ctx, 'user1', 'project1')
+
+    @mock.patch.object(db_api, 'cred_get')
+    @mock.patch.object(senlin_context, 'get_service_context')
+    def test_policy_build_connection_params_trust_not_found(
+            self, mock_get_service_context, mock_cred_get):
+
+        service_cred = {
+            'auth_url': 'AUTH_URL',
+            'username': 'senlin',
+            'user_domain_name': 'default',
+            'password': '123'
+        }
+
+        self.patchobject(oslo_context, 'get_current')
+        mock_get_service_context.return_value = service_cred
+        mock_cred_get.return_value = None
+        cluster = mock.Mock()
+        cluster.user = 'user1'
+        cluster.project = 'project1'
+
+        kwargs = {
+            'spec': {}
+        }
+        policy = deletion_policy.DeletionPolicy('DeletionPolicy',
+                                                'test-policy', **kwargs)
+        ex = self.assertRaises(exception.TrustNotFound,
+                               policy._build_connection_params,
+                               cluster)
+        msg = "The trust for trustor (user1) could not be found."
+        self.assertEqual(msg, six.text_type(ex))

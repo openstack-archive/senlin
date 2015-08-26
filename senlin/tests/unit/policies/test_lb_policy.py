@@ -12,14 +12,9 @@
 
 import mock
 from oslo_context import context as oslo_context
-import six
 
 from senlin.common import consts
-from senlin.common import context
-from senlin.common import exception
-from senlin.db import api as db_api
 from senlin.drivers import base as driver_base
-from senlin.drivers.openstack import keystone_v3
 from senlin.engine import cluster_policy
 from senlin.engine import node as node_mod
 from senlin.policies import base as policy_base
@@ -117,78 +112,6 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
 
         policy.validate()
         mock_validate.assert_called_with()
-
-    @mock.patch.object(db_api, 'cred_get')
-    @mock.patch.object(keystone_v3, 'get_service_credentials')
-    @mock.patch.object(oslo_context, 'get_current')
-    def test_lb_policy_build_connection_params(self, mock_get_current,
-                                               mock_get_service_credentials,
-                                               mock_cred_get):
-        service_cred = {
-            'auth_url': 'AUTH_URL',
-            'username': 'senlin',
-            'user_domain_name': 'default',
-            'password': '123'
-        }
-        current_ctx = {
-            'auth_url': 'auth_url',
-            'user_name': 'user1',
-            'user_domain_name': 'default',
-            'password': '456'
-        }
-        cred_info = {
-            'openstack': {
-                'trust': 'TRUST_ID',
-            }
-        }
-
-        cluster = mock.Mock()
-        cluster.user = 'user1'
-        cluster.project = 'project1'
-        cred = mock.Mock()
-        cred.cred = cred_info
-        mock_get_service_credentials.return_value = service_cred
-        mock_get_current.return_value = current_ctx
-        mock_cred_get.return_value = cred
-
-        kwargs = {
-            'spec': self.spec
-        }
-        policy = lb_policy.LoadBalancingPolicy('LoadBalancingPolicy',
-                                               'test-policy', **kwargs)
-        expected_result = {
-            'auth_url': 'AUTH_URL',
-            'username': 'senlin',
-            'user_domain_name': 'default',
-            'password': '123',
-            'trusts': ['TRUST_ID']
-        }
-        res = policy._build_connection_params(cluster)
-        self.assertEqual(expected_result, res)
-        mock_get_service_credentials.assert_called_once_with()
-        mock_cred_get.assert_called_once_with(current_ctx, 'user1', 'project1')
-
-    @mock.patch.object(context, 'get_service_context')
-    @mock.patch.object(db_api, 'cred_get')
-    def test_lb_policy_build_connection_params_trust_not_found(
-            self, mock_cred_get, mock_get_service_context):
-
-        self.patchobject(oslo_context, 'get_current')
-        mock_cred_get.return_value = None
-        cluster = mock.Mock()
-        cluster.user = 'user1'
-        cluster.project = 'project1'
-
-        kwargs = {
-            'spec': self.spec
-        }
-        policy = lb_policy.LoadBalancingPolicy('LoadBalancingPolicy',
-                                               'test-policy', **kwargs)
-        ex = self.assertRaises(exception.TrustNotFound,
-                               policy._build_connection_params,
-                               cluster)
-        msg = "The trust for trustor (user1) could not be found."
-        self.assertEqual(msg, six.text_type(ex))
 
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_build_policy_data')
     @mock.patch.object(node_mod.Node, 'load_all')

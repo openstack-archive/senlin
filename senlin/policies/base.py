@@ -10,8 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_context import context as oslo_context
 from oslo_utils import timeutils
 
+from senlin.common import context as senlin_context
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import schema
@@ -270,3 +272,24 @@ class Policy(object):
         type_name = kwargs.pop('type')
         name = kwargs.pop('name')
         return cls(type_name, name, **kwargs)
+
+    def _build_connection_params(self, cluster):
+        """Build a trust-based context for connection parameters.
+
+        :param cluster: the cluste for which the trust will be checked.
+        """
+        service_creds = senlin_context.get_service_context()
+        params = {
+            'username': service_creds.get('username'),
+            'password': service_creds.get('password'),
+            'auth_url': service_creds.get('auth_url'),
+            'user_domain_name': service_creds.get('user_domain_name')
+        }
+
+        cred = db_api.cred_get(oslo_context.get_current(),
+                               cluster.user, cluster.project)
+        if cred is None:
+            raise exception.TrustNotFound(trustor=cluster.user)
+        params['trusts'] = [cred.cred['openstack']['trust']]
+
+        return params
