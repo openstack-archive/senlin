@@ -1,6 +1,6 @@
 {
     "context_is_admin":  "role:admin",
-    "admin_or_owner":  "is_admin:True or project_id:%(project_id)s",
+    "admin_or_owner":  "is_admin:True or project:%(project)s",
     "deny_everybody": "!",
 
     "build_info:build_info": "",
