@@ -83,3 +83,10 @@ def delete_profile(client, profile_id):
     status = [204]
     client.api_request('DELETE', rel_url, resp_status=status)
     return
+
+
+def list_policy_types(client, **query):
+    rel_url = 'policy_types'
+    status = [200]
+    resp = client.api_request('GET', rel_url, resp_status=status)
+    return resp.body['policy_types']
