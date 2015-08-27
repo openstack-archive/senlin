@@ -23,11 +23,13 @@ RPC_ATTRS = (
 )
 
 RPC_PARAMS = (
-    PARAM_SHOW_DELETED, PARAM_SHOW_NESTED, PARAM_LIMIT, PARAM_GLOBAL_PROJECT,
-    PARAM_SHOW_DETAILS,
+    PARAM_SHOW_DELETED, PARAM_SHOW_NESTED, PARAM_LIMIT, PARAM_MARKER,
+    PARAM_GLOBAL_PROJECT, PARAM_SHOW_DETAILS,
+    PARAM_SORT_DIR, PARAM_SORT_KEYS,
 ) = (
-    'show_deleted', 'show_nested', 'limit', 'global_project',
-    'show_details'
+    'show_deleted', 'show_nested', 'limit', 'marker',
+    'global_project', 'show_details',
+    'sort_dir', 'sort_keys',
 )
 
 ACTION_NAMES = (
@@ -120,11 +122,11 @@ CLUSTER_POLICY_ATTRS = (
 
 TRIGGER_ATTRS = (
     TRIGGER_NAME, TRIGGER_TYPE, TRIGGER_DESC, TRIGGER_STATE,
-    TRIGGER_ENABLED, TRIGGER_SEVERITY, TRIGGER_SPEC,
+    TRIGGER_ENABLED, TRIGGER_SEVERITY, TRIGGER_SPEC, TRIGGER_DESCRIPTION,
     TRIGGER_CREATED_TIME, TRIGGER_UPDATED_TIME, TRIGGER_DELETED_TIME,
 ) = (
     'name', 'type', 'desc', 'state',
-    'enabled', 'severity', 'spec',
+    'enabled', 'severity', 'spec', 'description',
     'created_time', 'updated_time', 'deleted_time',
 )
 

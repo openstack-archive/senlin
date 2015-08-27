@@ -28,10 +28,6 @@ from senlin.rpc import client as rpc_client
 class ProfileData(object):
     '''The data accompanying a POST/PUT request to create/update a profile.'''
 
-    PARAMS = (consts.PROFILE_NAME, consts.PROFILE_SPEC,
-              consts.PROFILE_CONTEXT, consts.PROFILE_TYPE,
-              consts.PROFILE_PERMISSION, consts.PROFILE_METADATA)
-
     def __init__(self, data):
         self.data = data
 

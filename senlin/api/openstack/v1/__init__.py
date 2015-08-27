@@ -23,6 +23,7 @@ from senlin.api.openstack.v1 import policies
 from senlin.api.openstack.v1 import policy_types
 from senlin.api.openstack.v1 import profile_types
 from senlin.api.openstack.v1 import profiles
+from senlin.api.openstack.v1 import triggers
 from senlin.api.openstack.v1 import webhooks
 from senlin.common import wsgi
 
@@ -229,6 +230,28 @@ class API(wsgi.Router):
                                conditions={'method': 'POST'})
             sub_mapper.connect("webhook_delete",
                                "/webhooks/{webhook_id}",
+                               action="delete",
+                               conditions={'method': 'DELETE'})
+
+        # Triggers
+        triggers_resource = triggers.create_resource(conf)
+        with mapper.submapper(controller=triggers_resource,
+                              path_prefix="/{tenant_id}") as sub_mapper:
+
+            sub_mapper.connect("trigger_index",
+                               "/triggers",
+                               action="index",
+                               conditions={'method': 'GET'})
+            sub_mapper.connect("trigger_create",
+                               "/triggers",
+                               action="create",
+                               conditions={'method': 'POST'})
+            sub_mapper.connect("trigger_get",
+                               "/triggers/{trigger_id}",
+                               action="get",
+                               conditions={'method': 'GET'})
+            sub_mapper.connect("trigger_delete",
+                               "/triggers/{trigger_id}",
                                action="delete",
                                conditions={'method': 'DELETE'})
 
