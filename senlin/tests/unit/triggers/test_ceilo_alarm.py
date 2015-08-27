@@ -24,8 +24,8 @@ threshold_alarm = """
   type: FakeTriggerType
   version: 1.0
   time_constraints:
-    start: '10 * * * * *'
-    duration: 10
+    - start: '10 * * * * *'
+      duration: 10
   repeat_actions: True
   rule:
     meter_name: cpu_util
@@ -110,7 +110,7 @@ class TestCeilometerAlarm(base.SenlinTestCase):
         self.assertEqual(spec, a.spec)
 
         props = a.alarm_properties
-        tc = props[alarm.TIME_CONSTRAINTS]
+        tc = props[alarm.TIME_CONSTRAINTS][0]
         self.assertEqual('10 * * * * *', tc[alarm.TC_START])
         self.assertEqual(10, tc[alarm.TC_DURATION])
         self.assertIsNone(tc[alarm.TC_NAME])
@@ -123,7 +123,7 @@ class TestCeilometerAlarm(base.SenlinTestCase):
 
     def test_validate_illegal_tc_start(self):
         spec = parser.simple_parse(threshold_alarm)
-        spec['time_constraints']['start'] = 'XYZ'
+        spec['time_constraints'][0]['start'] = 'XYZ'
         a = alarm.Alarm('A1', spec)
 
         ex = self.assertRaises(exc.InvalidSpec, a.validate)
@@ -134,7 +134,7 @@ class TestCeilometerAlarm(base.SenlinTestCase):
 
     def test_validate_illegal_tc_timezone(self):
         spec = parser.simple_parse(threshold_alarm)
-        spec['time_constraints']['timezone'] = 'Moon/Back'
+        spec['time_constraints'][0]['timezone'] = 'Moon/Back'
         a = alarm.Alarm('A1', spec)
 
         ex = self.assertRaises(exc.InvalidSpec, a.validate)
@@ -179,13 +179,13 @@ class TestCeilometerAlarm(base.SenlinTestCase):
             'alarm_actions': ['http://url1'],
             'ok_actions': ['http://url2'],
             'insufficient_data_actions': ['http://url3'],
-            'time_constraints': {
+            'time_constraints': [{
                 'name': None,
                 'description': None,
                 'start': '10 * * * * *',
                 'duration': 10,
                 'timezone': '',
-            },
+            }],
             'repeat_actions': True,
             'default_rule': None,
         }
