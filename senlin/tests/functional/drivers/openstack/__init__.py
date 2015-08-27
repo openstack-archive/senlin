@@ -12,27 +12,16 @@
 
 from senlin.drivers.openstack import ceilometer_v2
 from senlin.drivers.openstack import heat_v1
+from senlin.drivers.openstack import keystone_v3
 from senlin.drivers.openstack import lbaas
 from senlin.drivers.openstack import neutron_v2
 from senlin.tests.functional.drivers.openstack import nova_v2
 
 
 # Currently, only fake nova_v2 driver is supported
-def compute(params):
-    return nova_v2.NovaClient(params)
-
-
-def loadbalancing(params):
-    return lbaas.LoadBalancerDriver(params)
-
-
-def network(params):
-    return neutron_v2.NeutronClient(params)
-
-
-def orchestration(params):
-    return heat_v1.HeatClient(params)
-
-
-def telemetry(params):
-    return ceilometer_v2.CeilometerClient(params)
+compute = nova_v2.NovaClient
+identity = keystone_v3.KeystoneClient
+loadbalancing = lbaas.LoadBalancerDriver
+network = neutron_v2.NeutronClient
+orchestration = heat_v1.HeatClient
+telemetry = ceilometer_v2.CeilometerClient
