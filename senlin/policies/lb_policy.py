@@ -207,7 +207,6 @@ class LoadBalancingPolicy(base.Policy):
         params = self._build_connection_params(cluster)
         lb_driver = driver_base.SenlinDriver().loadbalancing(params)
 
-        # TODO(Anyone): check cluster profile type matches self.PROFILE or not
         res, data = lb_driver.lb_create(self.vip_spec, self.pool_spec)
         if res is False:
             return False, data
