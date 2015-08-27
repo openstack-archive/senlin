@@ -247,7 +247,7 @@ class Trigger(BASE, SenlinBase, SoftDelete):
 
     id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
                            default=lambda: str(uuid.uuid4()))
-    physical_id = sqlalchemy.Column('physical_id', sqlalchemy.String(36))
+    physical_id = sqlalchemy.Column(sqlalchemy.String(36))
     name = sqlalchemy.Column(sqlalchemy.String(255))
     type = sqlalchemy.Column(sqlalchemy.String(255))
     desc = sqlalchemy.Column(sqlalchemy.String(255))

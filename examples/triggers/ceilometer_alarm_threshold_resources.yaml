@@ -1,6 +1,6 @@
 # Sample trigger using ceilometer gnocchi resources threshold alarm
 
-trigger_type: CeilometerThresholdResourcesAlarm
+type: CeilometerThresholdResourcesAlarm
 version: 1.0
 
 rule:

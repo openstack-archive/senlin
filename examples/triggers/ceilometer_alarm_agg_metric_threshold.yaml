@@ -1,6 +1,6 @@
 # Sample trigger using gnocchi aggegration by metrics alarm
 
-trigger_type: CeilometerAggMetricsThresholdAlarm
+type: CeilometerAggMetricsThresholdAlarm
 version: 1.0
 
 rule:
