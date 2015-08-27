@@ -51,8 +51,8 @@ class ClusterAction(base.Action):
         consts.CLUSTER_UPDATE_POLICY,
     )
 
-    def __init__(self, context, action, **kwargs):
-        super(ClusterAction, self).__init__(context, action, **kwargs)
+    def __init__(self, context, target, action, **kwargs):
+        super(ClusterAction, self).__init__(context, target, action, **kwargs)
 
     def _wait_for_dependents(self):
         self.get_status()
@@ -115,11 +115,11 @@ class ClusterAction(base.Action):
 
             kwargs = {
                 'name': 'node_create_%s' % node.id[:8],
-                'target': node.id,
                 'cause': base.CAUSE_DERIVED,
             }
 
-            action = base.Action(self.context, 'NODE_CREATE', **kwargs)
+            action = base.Action(self.context, node.id, 'NODE_CREATE',
+                                 **kwargs)
             action.store(self.context)
 
             # Build dependency and make the new action ready
@@ -165,13 +165,13 @@ class ClusterAction(base.Action):
         for node in node_list:
             kwargs = {
                 'name': 'node_update_%s' % node.id[:8],
-                'target': node.id,
                 'cause': base.CAUSE_DERIVED,
                 'inputs': {
                     'new_profile_id': profile_id,
                 }
             }
-            action = base.Action(self.context, 'NODE_UPDATE', **kwargs)
+            action = base.Action(self.context, node.id, 'NODE_UPDATE',
+                                 **kwargs)
             action.store(self.context)
 
             db_api.action_add_dependency(self.context, action.id, self.id)
@@ -204,9 +204,8 @@ class ClusterAction(base.Action):
                 action_name = consts.NODE_LEAVE
 
         for node_id in nodes:
-            action = base.Action(self.context, action_name,
+            action = base.Action(self.context, node_id, action_name,
                                  name='node_delete_%s' % node_id[:8],
-                                 target=node_id,
                                  cause=base.CAUSE_DERIVED)
             action.store(self.context)
 
@@ -284,9 +283,8 @@ class ClusterAction(base.Action):
             return self.RES_OK, reason
 
         for node_id in nodes:
-            action = base.Action(self.context, 'NODE_JOIN',
+            action = base.Action(self.context, node.id, 'NODE_JOIN',
                                  name='node_join_%s' % node.id[:8],
-                                 target=node.id,
                                  cause=base.CAUSE_DERIVED,
                                  inputs={'cluster_id': cluster.id})
             action.store(self.context)

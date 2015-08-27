@@ -387,9 +387,8 @@ class NodeTest(base.SenlinTestCase):
         mock_action.reset_mock()
         self.eng.node_update(self.ctx, nodeid, name='node-2')
         action_name = 'node_update_%s' % nodeid[:8]
-        mock_action.assert_called_once_with(self.ctx, 'NODE_UPDATE',
+        mock_action.assert_called_once_with(self.ctx, nodeid, 'NODE_UPDATE',
                                             name=action_name,
-                                            target=nodeid,
                                             inputs={
                                                 'new_profile_id': None,
                                                 'name': 'node-2'
@@ -399,9 +398,8 @@ class NodeTest(base.SenlinTestCase):
         # 2. update role
         mock_action.reset_mock()
         self.eng.node_update(self.ctx, nodeid, role='worker')
-        mock_action.assert_called_once_with(self.ctx, 'NODE_UPDATE',
+        mock_action.assert_called_once_with(self.ctx, nodeid, 'NODE_UPDATE',
                                             name=action_name,
-                                            target=nodeid,
                                             inputs={
                                                 'new_profile_id': None,
                                                 'role': 'worker'
@@ -411,9 +409,8 @@ class NodeTest(base.SenlinTestCase):
         # 3. update metadata
         mock_action.reset_mock()
         self.eng.node_update(self.ctx, nodeid, metadata={'FOO': 'BAR'})
-        mock_action.assert_called_once_with(self.ctx, 'NODE_UPDATE',
+        mock_action.assert_called_once_with(self.ctx, nodeid, 'NODE_UPDATE',
                                             name=action_name,
-                                            target=nodeid,
                                             inputs={
                                                 'new_profile_id': None,
                                                 'metadata': {'FOO': 'BAR'},

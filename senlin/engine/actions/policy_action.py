@@ -32,9 +32,9 @@ class PolicyAction(base.Action):
         'POLICY_ENABLE', 'POLICY_DISABLE', 'POLICY_UPDATE',
     )
 
-    def __init__(self, context, action, **kwargs):
-        super(PolicyAction, self).__init__(context, action, **kwargs)
-        self.cluster_id = kwargs.get('cluster_id', None)
+    def __init__(self, context, target, action, **kwargs):
+        super(PolicyAction, self).__init__(context, target, action, **kwargs)
+        self.cluster_id = target
         self.policy_id = kwargs.get('policy_id', None)
 
         # get policy associaton using the cluster id and policy id
@@ -43,17 +43,13 @@ class PolicyAction(base.Action):
         if self.action not in self.ACTIONS:
             return self.RES_ERROR
 
-        self.store(start_time=timeutils.utcnow(),
-                   status=self.RUNNING)
-
-        cluster_id = kwargs.get('cluster_id')
-        policy_id = kwargs.get('policy_id')
+        self.store(start_time=timeutils.utcnow(), status=self.RUNNING)
 
         # an ENABLE/DISABLE action only changes the database table
         if self.action == self.POLICY_ENABLE:
-            db_api.cluster_enable_policy(cluster_id, policy_id)
+            db_api.cluster_enable_policy(self.cluster_id, self.policy_id)
         elif self.action == self.POLICY_DISABLE:
-            db_api.cluster_disable_policy(cluster_id, policy_id)
+            db_api.cluster_disable_policy(self.cluster_id, self.policy_id)
         else:  # self.action == self.UPDATE:
             # There is not direct way to update a policy because the policy
             # might be shared with another cluster, instead, we clone a new
@@ -62,12 +58,10 @@ class PolicyAction(base.Action):
 
             # TODO(Qiming): Add DB API complete this.
 
-        self.store(end_time=timeutils.utcnow(),
-                   status=self.SUCCEEDED)
+        self.store(end_time=timeutils.utcnow(), status=self.SUCCEEDED)
 
         return self.RES_OK
 
     def cancel(self):
-        self.store(end_time=timeutils.utcnow(),
-                   status=self.CANCELLED)
+        self.store(end_time=timeutils.utcnow(), status=self.CANCELLED)
         return self.RES_OK
