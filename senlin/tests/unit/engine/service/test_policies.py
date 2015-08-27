@@ -317,6 +317,12 @@ class PolicyTest(base.SenlinTestCase):
         p = self.eng.policy_get(self.ctx, pid)
         self.assertEqual(120, p['cooldown'])
 
+        # invalid cooldown value
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.policy_update, self.ctx, pid,
+                               cooldown=-1)
+        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
+
         # 3. update level
         p2 = self.eng.policy_update(self.ctx, pid, level=50)
         self.assertEqual(pid, p2['id'])
@@ -325,6 +331,12 @@ class PolicyTest(base.SenlinTestCase):
         # check persisted into db
         p = self.eng.policy_get(self.ctx, pid)
         self.assertEqual(50, p['level'])
+
+        # invalid enforcement level
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.policy_update, self.ctx, pid,
+                               level=150)
+        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
 
     def test_policy_update_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,

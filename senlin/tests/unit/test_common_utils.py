@@ -58,6 +58,11 @@ class TestParameterParsing(base.SenlinTestCase):
             self.assertRaises(exception.InvalidParameter,
                               utils.parse_int_param, name, value)
 
+        for value in (1, 6):
+            self.assertRaises(exception.InvalidParameter,
+                              utils.parse_int_param, name, value,
+                              lower_limit=2, upper_limit=5)
+
 
 class Response(object):
     def __init__(self, buf=''):

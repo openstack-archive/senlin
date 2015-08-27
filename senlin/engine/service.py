@@ -327,7 +327,7 @@ class EngineService(service.Service):
         if level is None:
             level = policy_base.SHOULD
         else:
-            level = utils.parse_int_param('level', level)
+            level = utils.parse_int_param('level', level, upper_limit=100)
         cooldown = utils.parse_int_param('cooldown', cooldown)
         plugin = environment.global_env().get_policy(policy_type)
 
@@ -370,7 +370,7 @@ class EngineService(service.Service):
             policy.name = name
             changed = True
         if level is not None and level != policy.level:
-            level = utils.parse_int_param('level', level)
+            level = utils.parse_int_param('level', level, upper_limit=100)
             policy.level = level
             changed = True
         if cooldown is not None and cooldown != policy.cooldown:
