@@ -47,6 +47,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
             'networks': [{
                 'port': 'FAKE_PORT',
                 'fixed-ip': 'FAKE_IP',
+                'network': 'FAKE_NET',
             }],
             'personality': [{
                 'path': '/etc/motd',
@@ -68,7 +69,8 @@ class TestNovaServerProfile(base.SenlinTestCase):
                                        'test-profile',
                                        **kwargs)
 
-        self.assertIsNone(profile._nc)
+        self.assertIsNone(profile._novaclient)
+        self.assertIsNone(profile._neutronclient)
         self.assertIsNone(profile.server_id)
 
     @mock.patch.object(driver_base, 'SenlinDriver')
@@ -87,19 +89,49 @@ class TestNovaServerProfile(base.SenlinTestCase):
                                        **kwargs)
 
         # cached will be returned
-        profile._nc = nc
+        profile._novaclient = nc
         self.assertEqual(nc, profile.nova(test_server))
 
         # new nc created if no cache found
-        profile._nc = None
+        profile._novaclient = None
         params = mock.Mock()
         mock_param = self.patchobject(profile, '_build_connection_params',
                                       return_value=params)
         res = profile.nova(test_server)
         self.assertEqual(nc, res)
-        self.assertEqual(nc, profile._nc)
+        self.assertEqual(nc, profile._novaclient)
         mock_param.assert_called_once_with(mock.ANY, test_server)
         sd.compute.assert_called_once_with(params)
+
+    @mock.patch.object(driver_base, 'SenlinDriver')
+    def test_neutron_client(self, mock_senlindriver):
+        test_server = mock.Mock()
+        sd = mock.Mock()
+        nc = mock.Mock()
+        sd.network.return_value = nc
+        mock_senlindriver.return_value = sd
+
+        kwargs = {
+            'spec': self.spec
+        }
+        profile = server.ServerProfile('os.nova.server',
+                                       'test-profile',
+                                       **kwargs)
+
+        # cached will be returned
+        profile._neutronclient = nc
+        self.assertEqual(nc, profile.neutron(test_server))
+
+        # new nc created if no cache found
+        profile._neutronclient = None
+        params = mock.Mock()
+        mock_param = self.patchobject(profile, '_build_connection_params',
+                                      return_value=params)
+        res = profile.neutron(test_server)
+        self.assertEqual(nc, res)
+        self.assertEqual(nc, profile._neutronclient)
+        mock_param.assert_called_once_with(mock.ANY, test_server)
+        sd.network.assert_called_once_with(params)
 
     def test_do_validate(self):
         profile = server.ServerProfile('os.nova.server', 't', spec=self.spec)
@@ -109,28 +141,34 @@ class TestNovaServerProfile(base.SenlinTestCase):
     @mock.patch.object(common_utils, 'random_name')
     def test_do_create(self, mock_random_name):
         mock_random_name.return_value = '12345678'
-        nc = mock.Mock()
+        novaclient = mock.Mock()
+        neutronclient = mock.Mock()
         test_server = mock.Mock()
         test_server.name = 'TEST_SERVER'
         test_server.cluster_id = 'FAKE_CLUSTER_ID'
         image = mock.Mock()
         image.id = 'FAKE_IMAGE_ID'
-        nc.image_get_by_name.return_value = image
+        novaclient.image_get_by_name.return_value = image
         flavor = mock.Mock()
         flavor.id = 'FAKE_FLAVOR_ID'
-        nc.flavor_find.return_value = flavor
+        novaclient.flavor_find.return_value = flavor
+        net = mock.Mock()
+        net.id = 'FAKE_NETWORK_ID'
+        neutronclient.network_get.return_value = net
 
         nova_server = mock.Mock()
         nova_server.id = 'FAKE_NOVA_SERVER_ID'
-        nc.server_create.return_value = nova_server
+        novaclient.server_create.return_value = nova_server
 
         profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
-        profile._nc = nc
+        profile._novaclient = novaclient
+        profile._neutronclient = neutronclient
         server_id = profile.do_create(test_server)
 
         mock_random_name.assert_called_once_with(8)
-        nc.image_get_by_name.assert_called_once_with('FAKE_IMAGE')
-        nc.flavor_find.assert_called_once_with('FLAV', False)
+        novaclient.image_get_by_name.assert_called_once_with('FAKE_IMAGE')
+        novaclient.flavor_find.assert_called_once_with('FLAV', False)
+        neutronclient.network_get.assert_called_once_with('FAKE_NET')
 
         attrs = dict(adminPass='adminpass',
                      auto_disk_config=True,
@@ -150,7 +188,8 @@ class TestNovaServerProfile(base.SenlinTestCase):
                      name='TEST_SERVER-12345678',
                      networks=[{
                          'fixed-ip': 'FAKE_IP',
-                         'port': 'FAKE_PORT'
+                         'port': 'FAKE_PORT',
+                         'uuid': 'FAKE_NETWORK_ID',
                      }],
                      personality=[{
                          'path': '/etc/motd',
@@ -166,23 +205,27 @@ class TestNovaServerProfile(base.SenlinTestCase):
         ud = encodeutils.safe_encode('FAKE_USER_DATA')
         attrs['user_data'] = encodeutils.safe_decode(base64.b64encode(ud))
 
-        nc.server_create.assert_called_once_with(**attrs)
+        novaclient.server_create.assert_called_once_with(**attrs)
         self.assertEqual(nova_server.id, server_id)
 
     @mock.patch.object(common_utils, 'random_name')
     def test_do_create_server_attrs_not_defined(self, mock_random_name):
         mock_random_name.return_value = '12345678'
-        nc = mock.Mock()
+        novaclient = mock.Mock()
+        neutronclient = mock.Mock()
         test_server = mock.Mock()
         test_server.name = 'TEST_SERVER'
         test_server.cluster_id = 'FAKE_CLUSTER_ID'
         flavor = mock.Mock()
         flavor.id = 'FAKE_FLAVOR_ID'
-        nc.flavor_find.return_value = flavor
+        novaclient.flavor_find.return_value = flavor
+        net = mock.Mock()
+        net.id = 'FAKE_NETWORK_ID'
+        neutronclient.network_get.return_value = net
 
         nova_server = mock.Mock()
         nova_server.id = 'FAKE_NOVA_SERVER_ID'
-        nc.server_create.return_value = nova_server
+        novaclient.server_create.return_value = nova_server
 
         # Assume image/scheduler_hints/user_data were not defined in spec file
         spec = {
@@ -193,7 +236,8 @@ class TestNovaServerProfile(base.SenlinTestCase):
         }
 
         profile = server.ServerProfile('os.nova.server', 's1', spec=spec)
-        profile._nc = nc
+        profile._novaclient = novaclient
+        profile._neutronclient = neutronclient
         server_id = profile.do_create(test_server)
 
         mock_random_name.assert_called_once_with(8)
@@ -206,21 +250,25 @@ class TestNovaServerProfile(base.SenlinTestCase):
                      security_groups=['HIGH_SECURITY_GROUP'],
                      timeout=120)
 
-        nc.server_create.assert_called_once_with(**attrs)
+        novaclient.server_create.assert_called_once_with(**attrs)
         self.assertEqual(nova_server.id, server_id)
 
     def test_do_create_obj_name_cluster_id_is_none(self):
-        nc = mock.Mock()
+        novaclient = mock.Mock()
+        neutronclient = mock.Mock()
         test_server = mock.Mock()
         test_server.name = None
         test_server.cluster_id = None
         flavor = mock.Mock()
         flavor.id = 'FAKE_FLAVOR_ID'
-        nc.flavor_find.return_value = flavor
+        novaclient.flavor_find.return_value = flavor
+        net = mock.Mock()
+        net.id = 'FAKE_NETWORK_ID'
+        neutronclient.network_get.return_value = net
 
         nova_server = mock.Mock()
         nova_server.id = 'FAKE_NOVA_SERVER_ID'
-        nc.server_create.return_value = nova_server
+        novaclient.server_create.return_value = nova_server
 
         spec = {
             'flavor': 'FLAV',
@@ -230,7 +278,8 @@ class TestNovaServerProfile(base.SenlinTestCase):
         }
 
         profile = server.ServerProfile('os.nova.server', 's1', spec=spec)
-        profile._nc = nc
+        profile._novaclient = novaclient
+        profile._neutronclient = neutronclient
         server_id = profile.do_create(test_server)
 
         attrs = dict(auto_disk_config=True,
@@ -240,33 +289,39 @@ class TestNovaServerProfile(base.SenlinTestCase):
                      security_groups=['HIGH_SECURITY_GROUP'],
                      timeout=120)
 
-        nc.server_create.assert_called_once_with(**attrs)
+        novaclient.server_create.assert_called_once_with(**attrs)
         self.assertEqual(nova_server.id, server_id)
 
     def test_do_create_wait_for_server_timeout(self):
-        nc = mock.Mock()
+        novaclient = mock.Mock()
+        neutronclient = mock.Mock()
         test_server = mock.Mock()
         test_server.name = None
         test_server.cluster_id = None
         flavor = mock.Mock()
         flavor.id = 'FAKE_FLAVOR_ID'
-        nc.flavor_find.return_value = flavor
+        novaclient.flavor_find.return_value = flavor
+        net = mock.Mock()
+        net.id = 'FAKE_NETWORK_ID'
+        neutronclient.network_get.return_value = net
+
         nova_server = mock.Mock()
-        nc.server_create.return_value = nova_server
-        nc.wait_for_server.side_effect = exception.InternalError(
+        novaclient.server_create.return_value = nova_server
+        novaclient.wait_for_server.side_effect = exception.InternalError(
             code=500, message='timeout')
 
         profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
-        profile._nc = nc
+        profile._novaclient = novaclient
+        profile._neutronclient = neutronclient
         res = profile.do_create(test_server)
         self.assertFalse(res)
-        nc.wait_for_server.assert_called_once_with(nova_server)
+        novaclient.wait_for_server.assert_called_once_with(nova_server)
 
     def test_do_delete_no_physical_id(self):
         # Test path where server doesn't already exist
         nc = mock.Mock()
         profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
-        profile._nc = nc
+        profile._novaclient = nc
         test_server = mock.Mock()
         test_server.physical_id = None
 
@@ -277,7 +332,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         nc = mock.Mock()
         nc.server_delete.return_value = None
-        profile._nc = nc
+        profile._novaclient = nc
 
         test_server = mock.Mock()
         test_server.physical_id = 'FAKE_ID'
@@ -288,7 +343,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
     def test_do_delete_wait_for_server_delete_timeout(self):
         nc = mock.Mock()
         profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
-        profile._nc = nc
+        profile._novaclient = nc
 
         obj = mock.Mock()
         obj.physical_id = 'FAKE_ID'
@@ -302,7 +357,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
     def test_do_delete_with_delete_exception(self):
         nc = mock.Mock()
         profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
-        profile._nc = nc
+        profile._novaclient = nc
 
         err = exception.ProfileOperationTimeout(message='exception')
         nc.server_delete.side_effect = err
@@ -317,7 +372,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
     def test_do_update_successful(self):
         profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
-        profile._nc = mock.Mock()
+        profile._novaclient = mock.Mock()
 
         obj = mock.Mock()
         obj.physical_id = 'FAKE_ID'
@@ -330,7 +385,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
     def test_do_update_no_physical_id(self):
         profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
-        profile._nc = mock.Mock()
+        profile._novaclient = mock.Mock()
 
         test_server = mock.Mock()
         test_server.physical_id = None
@@ -350,7 +405,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
     def test_do_get_details(self):
         nc = mock.Mock()
         profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
-        profile._nc = nc
+        profile._novaclient = nc
         obj = mock.Mock()
         obj.physical_id = 'FAKE_ID'
 
@@ -411,7 +466,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         nc = mock.Mock()
         nc.server_get.return_value = None
         profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
-        profile._nc = nc
+        profile._novaclient = nc
         obj = mock.Mock()
         obj.physical_id = 'FAKE_ID'
 
@@ -423,7 +478,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         # Test normal path
         nc = mock.Mock()
         profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
-        profile._nc = nc
+        profile._novaclient = nc
         nc.server_metadata_get.return_value = {'FOO': 'BAR'}
         nc.server_metadata_update.return_value = 'Boom'
 
@@ -450,7 +505,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         # Test normal path
         nc = mock.Mock()
         profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
-        profile._nc = nc
+        profile._novaclient = nc
         nc.server_metadata_get.return_value = {'FOO': 'BAR', 'cluster': 'CLS'}
         nc.server_metadata_update.return_value = 'Boom'
 
@@ -466,7 +521,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
     def test_do_leave_no_physical_id(self):
         # Test path where server not specified
         profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
-        profile._nc = mock.Mock()
+        profile._novaclient = mock.Mock()
         obj = mock.Mock()
         obj.physical_id = None
         self.assertIsNone(profile.do_leave(obj))
@@ -475,7 +530,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         # Test path where node is not in cluster
         nc = mock.Mock()
         profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
-        profile._nc = nc
+        profile._novaclient = nc
         nc.server_metadata_get.return_value = {'FOO': 'BAR'}
         nc.server_metadata_update.return_value = 'Boom'
 

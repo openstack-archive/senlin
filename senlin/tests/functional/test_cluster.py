@@ -27,7 +27,10 @@ class TestCluster(base.SenlinFunctionalTest):
         test_nova_spec = {
             "flavor": 1,
             "name": "new-server-test",
-            "image": "cirros-0.3.2-x86_64-uec"
+            "image": "cirros-0.3.2-x86_64-uec",
+            "networks": [
+                {"network": "private-net"}
+            ]
         }
         self.profile = test_api.create_profile(self.client, 'test-profile',
                                                'os.nova.server',
