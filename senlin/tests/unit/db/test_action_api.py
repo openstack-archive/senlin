@@ -12,6 +12,8 @@
 
 import time
 
+import six
+
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import parser
@@ -408,3 +410,13 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.assertIsNotNone(action)
         res = db_api.action_delete(self.ctx, action.id)
         self.assertIsNone(res)
+
+    def test_action_delete_action_in_use(self):
+        for status in ('WAITING', 'RUNNING', 'SUSPENDED'):
+            action = _create_action(self.ctx, status=status)
+            self.assertIsNotNone(action)
+            ex = self.assertRaises(exception.ResourceBusyError,
+                                   db_api.action_delete,
+                                   self.ctx, action.id)
+            self.assertEqual('The action (%s) is busy now.' % action.id,
+                             six.text_type(ex))

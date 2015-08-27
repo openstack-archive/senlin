@@ -1466,8 +1466,12 @@ def action_delete(context, action_id, force=False):
     action = session.query(models.Action).get(action_id)
     if not action:
         return
+    if ((action.status == 'WAITING') or (action.status == 'RUNNING') or
+            (action.status == 'SUSPENDED')):
 
-    # TODO(anyone): check if action can be deleted
+        raise exception.ResourceBusyError(resource_type='action',
+                                          resource_id=action_id)
+
     action.soft_delete(session=session)
     session.flush()
 
