@@ -70,7 +70,7 @@ class Action(object):
         'CANCEL', 'SUSPEND', 'RESUME',
     )
 
-    def __new__(cls, context, action, **kwargs):
+    def __new__(cls, context, target, action, **kwargs):
         if (cls != Action):
             return super(Action, cls).__new__(cls)
 
@@ -90,7 +90,7 @@ class Action(object):
 
         return super(Action, cls).__new__(ActionClass)
 
-    def __init__(self, context, action, **kwargs):
+    def __init__(self, context, target, action, **kwargs):
         # context will be persisted into database so that any worker thread
         # can pick the action up and execute it on behalf of the initiator
 
@@ -103,10 +103,7 @@ class Action(object):
         # TODO(Qiming): make description a db column
         self.description = kwargs.get('description', '')
 
-        # TODO(Qiming): make this a positional argument
-        # Target is the ID of a cluster, a node or a policy
-        self.target = kwargs.get('target')
-
+        self.target = target
         self.action = action
 
         # Why this action is fired, it can be a UUID of another action
@@ -203,7 +200,6 @@ class Action(object):
         kwargs = {
             'id': record.id,
             'name': record.name,
-            'target': record.target,
             'cause': record.cause,
             'owner': record.owner,
             'interval': record.interval,
@@ -222,7 +218,7 @@ class Action(object):
             'data': record.data,
         }
 
-        return cls(context, record.action, **kwargs)
+        return cls(context, record.target, record.action, **kwargs)
 
     @classmethod
     def load(cls, context, action_id=None, db_action=None, show_deleted=False):
