@@ -178,11 +178,11 @@ class SchedulerTest(base.SenlinTestCase):
         action.id = '0123'
         mock_sleep = self.patchobject(eventlet, 'sleep')
 
-        scheduler.reschedule(action)
+        scheduler.reschedule(action.id)
         mock_sleep.assert_called_once_with(1)
         mock_sleep.reset_mock()
 
-        scheduler.reschedule(action, None)
+        scheduler.reschedule(action.id, None)
         self.assertEqual(0, mock_sleep.call_count)
 
     def test_sleep(self):
