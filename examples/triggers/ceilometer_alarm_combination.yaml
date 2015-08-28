@@ -1,6 +1,6 @@
 # Sample trigger using ceilometer combination alarms
 
-trigger_type: CeilometerCombinationAlarm
+type: CeilometerCombinationAlarm
 version: 1.0
 
 combination_rule:

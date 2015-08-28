@@ -1,6 +1,6 @@
 # Sample trigger using gnocchi aggregation by resources alarm
 
-trigger_type: CeilometerAggResourceThresholdAlarm
+type: CeilometerAggResourceThresholdAlarm
 version: 1.0
 
 rule:

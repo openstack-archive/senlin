@@ -1,6 +1,6 @@
 # Sample trigger using ceilometer threshold alarm
 
-trigger_type: CeilometerThresholdAlarm
+type: CeilometerThresholdAlarm
 version: 1.0
 
 time_constraints:
