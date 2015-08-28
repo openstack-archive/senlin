@@ -79,7 +79,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
             'enabled': True
         }
         self._verify_action(action, 'CLUSTER_ATTACH_POLICY',
-                            'cluster_attach_policy_%s' % cluster_id[:8],
+                            'attach_policy_%s' % cluster_id[:8],
                             cluster_id, cause=action_mod.CAUSE_RPC,
                             inputs=inputs)
         notify.assert_called_with(self.ctx, action_id=action_id)
@@ -104,7 +104,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
             'enabled': True
         }
         self._verify_action(action, 'CLUSTER_ATTACH_POLICY',
-                            'cluster_attach_policy_%s' % cluster_id[:8],
+                            'attach_policy_%s' % cluster_id[:8],
                             cluster_id, cause=action_mod.CAUSE_RPC,
                             inputs=inputs)
         notify.assert_called_with(self.ctx, action_id=action_id)
@@ -210,7 +210,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         action = db_api.action_get(self.ctx, action_id)
         self.assertIsNotNone(action)
         self._verify_action(action, 'CLUSTER_DETACH_POLICY',
-                            'cluster_detach_policy_%s' % cluster_id[:8],
+                            'detach_policy_%s' % cluster_id[:8],
                             cluster_id, cause=action_mod.CAUSE_RPC,
                             inputs={'policy_id': policy_id})
         notify.assert_called_with(self.ctx, action_id=action_id)
@@ -459,7 +459,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         action = db_api.action_get(self.ctx, action_id)
         self.assertIsNotNone(action)
         self._verify_action(action, 'CLUSTER_UPDATE_POLICY',
-                            'cluster_update_policy_%s' % cluster_id[:8],
+                            'update_policy_%s' % cluster_id[:8],
                             cluster_id, cause=action_mod.CAUSE_RPC,
                             inputs={
                                 'policy_id': policy_id,
