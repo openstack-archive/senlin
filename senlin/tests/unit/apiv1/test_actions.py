@@ -226,7 +226,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(
             req.context, ('action_get', {'identity': action_id}))
 
-        self.assertEqual(engine_resp, response)
+        self.assertEqual({'action': engine_resp}, response)
 
     def test_action_get_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)

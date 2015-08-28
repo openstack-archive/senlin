@@ -121,7 +121,7 @@ class ActionController(object):
         if not action:
             raise exc.HTTPNotFound()
 
-        return action
+        return {'action': action}
 
 
 def create_resource(options):
