@@ -11,10 +11,7 @@
 # under the License.
 
 from oslo_log import log
-import six
 
-from senlin.common import exception
-from senlin.common.i18n import _
 from senlin.drivers import base
 from senlin.drivers.openstack import sdk
 
@@ -29,46 +26,19 @@ class NeutronClient(base.DriverBase):
         self.conn = sdk.create_connection(params)
 
     def network_get(self, name_or_id):
-        try:
-            network = self.conn.network.find_network(name_or_id)
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in getting network: %s'),
-                          six.text_type(ex))
-            res = _('network:%s') % name_or_id
-            raise exception.ResourceNotFound(resource=res)
-
+        network = self.conn.network.find_network(name_or_id)
         return network
 
     def subnet_get(self, name_or_id):
-        try:
-            subnet = self.conn.network.find_subnet(name_or_id)
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in getting subnet: %s.'),
-                          six.text_type(ex))
-            res = _('subnet:%s') % name_or_id
-            raise exception.ResourceNotFound(resource=res)
-
+        subnet = self.conn.network.find_subnet(name_or_id)
         return subnet
 
     def loadbalancer_get(self, name_or_id):
-        try:
-            lb = self.conn.network.find_load_balancer(name_or_id)
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in getting loadbalancer: %s.'),
-                          six.text_type(ex))
-            res = _('loadbalancer:%s') % name_or_id
-            raise exception.ResourceNotFound(resource=res)
-
+        lb = self.conn.network.find_load_balancer(name_or_id)
         return lb
 
     def loadbalancer_list(self):
-        try:
-            lbs = [lb for lb in self.conn.network.load_balancers()]
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in getting loadbalancer: %s.'),
-                          six.text_type(ex))
-            raise exception.ResourceNotFound(resource=_('loadbalancer:*'))
-
+        lbs = [lb for lb in self.conn.network.load_balancers()]
         return lbs
 
     def loadbalancer_create(self, vip_subnet_id, vip_address=None,
@@ -86,47 +56,20 @@ class NeutronClient(base.DriverBase):
         if description is not None:
             kwargs['description'] = description
 
-        try:
-            res = self.conn.network.create_load_balancer(**kwargs)
-        except sdk.exc.HttpException as ex:
-            msg = six.text_type(ex)
-            LOG.exception(_('Failed in creating loadbalancer: %s.'), msg)
-            raise exception.ResourceCreationFailure(rtype='loadbalancer',
-                                                    reason=msg)
-
+        res = self.conn.network.create_load_balancer(**kwargs)
         return res
 
     def loadbalancer_delete(self, lb_id, ignore_missing=True):
-        try:
-            self.conn.network.delete_load_balancer(
-                lb_id, ignore_missing=ignore_missing)
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in deleting loadbalancer: %s.'),
-                          six.text_type(ex))
-            res = _('loadbalancer:%s') % lb_id
-            raise exception.ResourceDeletionFailure(resource=res)
-
+        self.conn.network.delete_load_balancer(
+            lb_id, ignore_missing=ignore_missing)
         return
 
     def listener_get(self, name_or_id):
-        try:
-            listener = self.conn.network.find_listener(name_or_id)
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in getting lb listener: %s.'),
-                          six.text_type(ex))
-            res = _('listener:%s') % name_or_id
-            raise exception.ResourceNotFound(resource=res)
-
+        listener = self.conn.network.find_listener(name_or_id)
         return listener
 
     def listener_list(self):
-        try:
-            listeners = [i for i in self.conn.network.listeners()]
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in listing lb listener: %s.'),
-                          six.text_type(ex))
-            raise exception.ResourceNotFound(resource=_('listener:*'))
-
+        listeners = [i for i in self.conn.network.listeners()]
         return listeners
 
     def listener_create(self, loadbalancer_id, protocol, protocol_port,
@@ -147,46 +90,20 @@ class NeutronClient(base.DriverBase):
         if description is not None:
             kwargs['description'] = description
 
-        try:
-            res = self.conn.network.create_listener(**kwargs)
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in creating lb listener: %s.'),
-                          six.text_type(ex))
-            raise exception.ResourceCreationFailure(rtype='listener')
-
+        res = self.conn.network.create_listener(**kwargs)
         return res
 
     def listener_delete(self, listener_id, ignore_missing=True):
-        try:
-            self.conn.network.delete_listener(listener_id,
-                                              ignore_missing=ignore_missing)
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in deleting lb listener: %s.'),
-                          six.text_type(ex))
-            res = _('listener:%s') % listener_id
-            raise exception.ResourceDeletionFailure(resource=res)
-
+        self.conn.network.delete_listener(listener_id,
+                                          ignore_missing=ignore_missing)
         return
 
     def pool_get(self, name_or_id):
-        try:
-            pool = self.conn.network.find_pool(name_or_id)
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in getting lb pool: %s.'),
-                          six.text_type(ex))
-            res = _('pool:%s') % name_or_id
-            raise exception.ResourceNotFound(resource=res)
-
+        pool = self.conn.network.find_pool(name_or_id)
         return pool
 
     def pool_list(self):
-        try:
-            pools = [p for p in self.conn.network.pools()]
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in listing lb pool: %s.'),
-                          six.text_type(ex))
-            raise exception.ResourceNotFound(resource=_('pool:*'))
-
+        pools = [p for p in self.conn.network.pools()]
         return pools
 
     def pool_create(self, lb_algorithm, listener_id, protocol,
@@ -204,48 +121,21 @@ class NeutronClient(base.DriverBase):
         if description is not None:
             kwargs['description'] = description
 
-        try:
-            res = self.conn.network.create_pool(**kwargs)
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in creating lb pool: %s.'),
-                          six.text_type(ex))
-            raise exception.ResourceCreationFailure(rtype='pool')
-
+        res = self.conn.network.create_pool(**kwargs)
         return res
 
     def pool_delete(self, pool_id, ignore_missing=True):
-        try:
-            self.conn.network.delete_pool(pool_id,
-                                          ignore_missing=ignore_missing)
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in deleting lb pool: %s.'),
-                          six.text_type(ex))
-            res = _('pool:%s') % pool_id
-            raise exception.ResourceDeletionFailure(resource=res)
-
+        self.conn.network.delete_pool(pool_id,
+                                      ignore_missing=ignore_missing)
         return
 
     def pool_member_get(self, pool_id, name_or_id):
-        try:
-            member = self.conn.network.find_pool_member(name_or_id,
-                                                        pool_id)
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in getting lb pool member: %s.'),
-                          six.text_type(ex))
-            res = _('member:%(p)s:%(m)s') % {'p': pool_id, 'm': name_or_id}
-            raise exception.ResourceNotFound(resource=res)
-
+        member = self.conn.network.find_pool_member(name_or_id,
+                                                    pool_id)
         return member
 
     def pool_member_list(self, pool_id):
-        try:
-            members = [m for m in self.conn.network.pool_members(pool_id)]
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in listing lb pool member: %s.'),
-                          six.text_type(ex))
-            res = _('member:%s:*') % pool_id
-            raise exception.ResourceNotFound(resource=res)
-
+        members = [m for m in self.conn.network.pool_members(pool_id)]
         return members
 
     def pool_member_create(self, pool_id, address, protocol_port, subnet_id,
@@ -262,46 +152,20 @@ class NeutronClient(base.DriverBase):
         if weight is not None:
             kwargs['weight'] = weight
 
-        try:
-            res = self.conn.network.create_pool_member(**kwargs)
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in creating lb pool member: %s.'),
-                          six.text_type(ex))
-            raise exception.ResourceCreationFailure(rtype='lb:member')
-
+        res = self.conn.network.create_pool_member(**kwargs)
         return res
 
     def pool_member_delete(self, pool_id, member_id, ignore_missing=True):
-        try:
-            self.conn.network.delete_pool_member(
-                member_id, pool_id, ignore_missing=ignore_missing)
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in deleting lb pool member: %s.'),
-                          six.text_type(ex))
-            res = _('member:%(p)s:%(m)s') % {'p': pool_id, 'm': member_id}
-            raise exception.ResourceDeletionFailure(resource=res)
-
+        self.conn.network.delete_pool_member(
+            member_id, pool_id, ignore_missing=ignore_missing)
         return
 
     def healthmonitor_get(self, name_or_id):
-        try:
-            hm = self.conn.network.find_health_monitor(name_or_id)
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in getting lb health-monitor: %s.'),
-                          six.text_type(ex))
-            res = _('healthmonitor:%s') % name_or_id
-            raise exception.ResourceNotFound(resource=res)
-
+        hm = self.conn.network.find_health_monitor(name_or_id)
         return hm
 
     def healthmonitor_list(self):
-        try:
-            hms = [hm for hm in self.conn.network.health_monitors()]
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in listing lb health-monitor: %s.'),
-                          six.text_type(ex))
-            raise exception.ResourceNotFound(resource=_('healthmonitor:*'))
-
+        hms = [hm for hm in self.conn.network.health_monitors()]
         return hms
 
     def healthmonitor_create(self, hm_type, delay, timeout, max_retries,
@@ -326,23 +190,10 @@ class NeutronClient(base.DriverBase):
             if expected_codes is not None:
                 kwargs['expected_codes'] = expected_codes
 
-        try:
-            res = self.conn.network.create_health_monitor(**kwargs)
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in creating lb health-monitor: %s.'),
-                          six.text_type(ex))
-            raise exception.ResourceCreationFailure(rtype='healthmonitor')
-
+        res = self.conn.network.create_health_monitor(**kwargs)
         return res
 
     def healthmonitor_delete(self, hm_id, ignore_missing=True):
-        try:
-            self.conn.network.delete_health_monitor(
-                hm_id, ignore_missing=ignore_missing)
-        except sdk.exc.HttpException as ex:
-            LOG.exception(_('Failed in deleting lb health-monitor: %s.'),
-                          six.text_type(ex))
-            res = _('healthmonitor:%s') % hm_id
-            raise exception.ResourceDeletionFailure(resource=res)
-
+        self.conn.network.delete_health_monitor(
+            hm_id, ignore_missing=ignore_missing)
         return
