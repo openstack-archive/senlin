@@ -57,6 +57,9 @@ class DBAPITriggerTest(base.SenlinTestCase):
         data['links'] = {}
         data['type'] = spec['type']
         data['spec'] = spec
+        data['user'] = ctx.user
+        data['project'] = ctx.project
+        data['domain'] = ctx.domain
         data.update(kwargs)
 
         return db_api.trigger_create(ctx, data)
@@ -206,6 +209,23 @@ class DBAPITriggerTest(base.SenlinTestCase):
         self.assertEqual(0, len(triggers))
         triggers = db_api.trigger_get_all(self.ctx, show_deleted=True)
         self.assertEqual(2, len(triggers))
+
+    def test_trigger_get_all_project_safe(self):
+        self._create_trigger(self.ctx, id='ID1', project='P1')
+        triggers = db_api.trigger_get_all(self.ctx)
+        self.assertEqual(0, len(triggers))
+        triggers = db_api.trigger_get_all(self.ctx, project_safe=True)
+        self.assertEqual(0, len(triggers))
+        triggers = db_api.trigger_get_all(self.ctx, project_safe=False)
+        self.assertEqual(1, len(triggers))
+
+        self.ctx.project = 'P1'
+        triggers = db_api.trigger_get_all(self.ctx)
+        self.assertEqual(1, len(triggers))
+        triggers = db_api.trigger_get_all(self.ctx, project_safe=True)
+        self.assertEqual(1, len(triggers))
+        triggers = db_api.trigger_get_all(self.ctx, project_safe=False)
+        self.assertEqual(1, len(triggers))
 
     def test_trigger_get_all_with_limit_marker(self):
         ids = ['trigger1', 'trigger2', 'trigger3']

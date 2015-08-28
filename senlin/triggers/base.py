@@ -92,6 +92,9 @@ class Trigger(object):
         self.severity = kwargs.get('severity', S_LOW)
         self.links = kwargs.get('links', {})
 
+        self.user = kwargs.get('user')
+        self.project = kwargs.get('project')
+        self.domain = kwargs.get('domain')
         self.created_time = kwargs.get('created_time', None)
         self.updated_time = kwargs.get('updated_time', None)
         self.deleted_time = kwargs.get('deleted_time', None)
@@ -111,6 +114,9 @@ class Trigger(object):
             'enabled': record.enabled,
             'severity': record.severity,
             'links': record.links,
+            'user': record.user,
+            'project': record.project,
+            'domain': record.domain,
             'created_time': record.created_time,
             'updated_time': record.updated_time,
             'deleted_time': record.deleted_time,
@@ -196,6 +202,9 @@ class Trigger(object):
         else:
             self.created_time = timestamp
             values['created_time'] = timestamp
+            values['user'] = ctx.user
+            values['project'] = ctx.project
+            values['domain'] = ctx.domain
             db_trigger = db_api.trigger_create(ctx, values)
             self.id = db_trigger.id
 
@@ -224,6 +233,9 @@ class Trigger(object):
             'severity': self.severity,
             'links': self.links,
             'spec': self.spec,
+            'user': self.user,
+            'project': self.project,
+            'domain': self.domain,
             'created_time': _fmt_time(self.created_time),
             'updated_time': _fmt_time(self.updated_time),
             'deleted_time': _fmt_time(self.deleted_time),
