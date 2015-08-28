@@ -52,9 +52,9 @@ class ServerProfile(base.Profile):
     )
 
     NETWORK_KEYS = (
-        PORT, FIXED_IP,
+        PORT, FIXED_IP, NETWORK,
     ) = (
-        'port', 'fixed-ip',
+        'port', 'fixed-ip', 'network',
     )
 
     PERSONALITY_KEYS = (
@@ -127,11 +127,14 @@ class ServerProfile(base.Profile):
             schema=schema.Map(
                 _('A map specifying the properties of a network for uses.'),
                 schema={
+                    NETWORK: schema.String(
+                        _('Name or ID of network to create a port on.'),
+                    ),
                     PORT: schema.String(
                         _('Port ID to be used by the network.'),
                     ),
                     FIXED_IP: schema.String(
-                        _('Port ID to be used by the network.'),
+                        _('Fixed IP to be used by the network.'),
                     ),
                 },
             ),
@@ -177,7 +180,8 @@ class ServerProfile(base.Profile):
     def __init__(self, type_name, name, **kwargs):
         super(ServerProfile, self).__init__(type_name, name, **kwargs)
 
-        self._nc = None
+        self._novaclient = None
+        self._neutronclient = None
         self.server_id = None
 
     def nova(self, obj):
@@ -188,11 +192,25 @@ class ServerProfile(base.Profile):
                     a client, it contains the user and project to be used.
         '''
 
-        if self._nc is not None:
-            return self._nc
+        if self._novaclient is not None:
+            return self._novaclient
         params = self._build_connection_params(context.get_current(), obj)
-        self._nc = driver_base.SenlinDriver().compute(params)
-        return self._nc
+        self._novaclient = driver_base.SenlinDriver().compute(params)
+        return self._novaclient
+
+    def neutron(self, obj):
+        '''Construct neutron client based on object.
+
+        :param obj: Object for which the client is created. It is expected to
+                    be None when retrieving an existing client. When creating
+                    a client, it contains the user and project to be used.
+        '''
+
+        if self._neutronclient is not None:
+            return self._neutronclient
+        params = self._build_connection_params(context.get_current(), obj)
+        self._neutronclient = driver_base.SenlinDriver().network(params)
+        return self._neutronclient
 
     def do_validate(self, obj):
         '''Validate if the spec has provided valid info for server creation.'''
@@ -239,6 +257,16 @@ class ServerProfile(base.Profile):
         if user_data is not None:
             ud = encodeutils.safe_encode(user_data)
             kwargs['user_data'] = encodeutils.safe_decode(base64.b64encode(ud))
+
+        networks = self.spec_data[self.NETWORKS]
+        if networks is not None:
+            for network in networks:
+                net_name_id = network.get(self.NETWORK)
+                if net_name_id:
+                    res = self.neutron(obj).network_get(net_name_id)
+                    network['uuid'] = res.id
+                    del network[self.NETWORK]
+            kwargs['networks'] = networks
 
         LOG.info('Creating server: %s' % kwargs)
         try:
