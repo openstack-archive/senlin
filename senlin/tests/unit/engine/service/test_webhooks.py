@@ -423,7 +423,7 @@ class WebhookTest(base.SenlinTestCase):
         action_id = res['action']
         action = self.eng.action_get(self.ctx, action_id)
         self._verify_action(action, consts.CLUSTER_SCALE_OUT,
-                            'webhook_action_%s' % webhook['id'],
+                            'webhook_action_%s' % webhook['id'][:8],
                             'CLUSTER_FULL_ID', cause=action_mod.CAUSE_RPC,
                             inputs={})
 
@@ -456,7 +456,7 @@ class WebhookTest(base.SenlinTestCase):
         action_id = res['action']
         action = self.eng.action_get(self.ctx, action_id)
         self._verify_action(action, consts.CLUSTER_SCALE_OUT,
-                            'webhook_action_%s' % webhook['id'],
+                            'webhook_action_%s' % webhook['id'][:8],
                             'CLUSTER_FULL_ID', cause=action_mod.CAUSE_RPC,
                             inputs=params2)
 

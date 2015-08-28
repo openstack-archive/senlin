@@ -1094,7 +1094,7 @@ class EngineService(service.Service):
                 utils.parse_bool_param('enabled', enabled) or True,
         }
 
-        action_name = 'cluster_attach_policy_%s' % db_cluster.id[:8]
+        action_name = 'attach_policy_%s' % db_cluster.id[:8]
         action = action_mod.Action(context, db_cluster.id,
                                    consts.CLUSTER_ATTACH_POLICY,
                                    name=action_name,
@@ -1122,7 +1122,7 @@ class EngineService(service.Service):
         LOG.info(_LI('Detaching policy %(policy)s from cluster %(cluster)s'),
                  {'policy': policy, 'cluster': identity})
 
-        action_name = 'cluster_detach_policy_%s' % db_cluster.id[:8]
+        action_name = 'detach_policy_%s' % db_cluster.id[:8]
         action = action_mod.Action(context, db_cluster.id,
                                    consts.CLUSTER_DETACH_POLICY,
                                    name=action_name,
@@ -1162,7 +1162,7 @@ class EngineService(service.Service):
         LOG.info(_LI('Updating policy %(policy)s on cluster %(cluster)s'),
                  {'policy': policy, 'cluster': identity})
 
-        action_name = 'cluster_update_policy_%s' % db_cluster.id[:8]
+        action_name = 'update_policy_%s' % db_cluster.id[:8]
         action = action_mod.Action(context, db_cluster.id,
                                    consts.CLUSTER_UPDATE_POLICY,
                                    name=action_name,
@@ -1307,7 +1307,7 @@ class EngineService(service.Service):
         if not params:
             params = webhook['params']
 
-        action_name = 'webhook_action_%s' % webhook['id']
+        action_name = 'webhook_action_%s' % webhook['id'][:8]
         action = action_mod.Action(context, db_obj.id, webhook['action'],
                                    name=action_name,
                                    inputs=params, cause=action_mod.CAUSE_RPC)
