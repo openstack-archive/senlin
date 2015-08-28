@@ -93,30 +93,32 @@ class Alarm(base.Trigger):
               'cycle. Default to False.'),
             default=False,
         ),
-        TIME_CONSTRAINTS: schema.Map(
-            _('A map of time constraint settings.'),
-            schema={
-                NAME: schema.String(
-                    _('Name of the time constraint.'),
-                ),
-                TC_DESCRIPTION: schema.String(
-                    _('A description of the time constraint.'),
-                ),
-                TC_START: schema.String(
-                    _('Start point of the time constraint, expressed as a '
-                      'string in cron expression format.'),
-                    required=True,
-                ),
-                TC_DURATION: schema.Integer(
-                    _('How long the constraint should last, in seconds.'),
-                    required=True,
-                ),
-                TC_TIMEZONE: schema.String(
-                    _('Time zone of the constraint.'),
-                    default='',
-                ),
-            },
-        ),
+        TIME_CONSTRAINTS: schema.List(
+            schema=schema.Map(
+                _('A map of time constraint settings.'),
+                schema={
+                    NAME: schema.String(
+                        _('Name of the time constraint.'),
+                    ),
+                    TC_DESCRIPTION: schema.String(
+                        _('A description of the time constraint.'),
+                    ),
+                    TC_START: schema.String(
+                        _('Start point of the time constraint, expressed as a '
+                          'string in cron expression format.'),
+                        required=True,
+                    ),
+                    TC_DURATION: schema.Integer(
+                        _('How long the constraint should last, in seconds.'),
+                        required=True,
+                    ),
+                    TC_TIMEZONE: schema.String(
+                        _('Time zone of the constraint.'),
+                        default='',
+                    ),
+                },
+            ),
+        )
     }
 
     def __init__(self, name, spec, **kwargs):
@@ -129,29 +131,27 @@ class Alarm(base.Trigger):
     def validate(self):
         # validate cron expression if specified
         if TIME_CONSTRAINTS in self.spec:
-            tc = self.alarm_properties[TIME_CONSTRAINTS]
-            exp = tc.get(TC_START, '')
-            try:
-                croniter.croniter(exp)
-            except Exception as ex:
-                msg = _("Invalid cron expression specified for property "
-                        "'%(property)s' (%(exp)s): %(ex)s"
-                        ) % {'property': TC_START, 'exp': exp,
-                             'ex': six.text_type(ex)}
-                raise exc.InvalidSpec(message=msg)
+            tcs = self.alarm_properties[TIME_CONSTRAINTS]
+            for tc in tcs:
+                exp = tc.get(TC_START, '')
+                try:
+                    croniter.croniter(exp)
+                except Exception as ex:
+                    msg = _("Invalid cron expression specified for property "
+                            "'%(property)s' (%(exp)s): %(ex)s"
+                            ) % {'property': TC_START, 'exp': exp,
+                                 'ex': six.text_type(ex)}
+                    raise exc.InvalidSpec(message=msg)
 
-        # validate timezone if specified.
-        if TIME_CONSTRAINTS in self.spec:
-            tc = self.alarm_properties[TIME_CONSTRAINTS]
-            tz = tc.get(TC_TIMEZONE, '')
-            try:
-                pytz.timezone(tz)
-            except Exception as ex:
-                msg = _("Invalid timezone value specified for property "
-                        "'%(property)s' (%(tz)s): %(ex)s"
-                        ) % {'property': TC_TIMEZONE, 'tz': tz,
-                             'ex': six.text_type(ex)}
-                raise exc.InvalidSpec(message=msg)
+                tz = tc.get(TC_TIMEZONE, '')
+                try:
+                    pytz.timezone(tz)
+                except Exception as ex:
+                    msg = _("Invalid timezone value specified for property "
+                            "'%(property)s' (%(tz)s): %(ex)s"
+                            ) % {'property': TC_TIMEZONE, 'tz': tz,
+                                 'ex': six.text_type(ex)}
+                    raise exc.InvalidSpec(message=msg)
 
     def create(self, ctx, **kwargs):
         """Create an alarm for a cluster.
