@@ -1,0 +1,13 @@
+# Sample batching policy 
+type: senlin.policy.batching
+version: 1.0
+description: A policy for generating batches for cluster operations.
+properties:
+  # Min number of nodes in service when doing cluster-wide operations
+  min_in_service: 1
+
+  # Max number of nodes that can be operated simultaneously
+  max_batch_size: 1
+
+  # Number of seconds between batches
+  pause_time: 0

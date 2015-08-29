@@ -1,21 +1,22 @@
-# Spanning AZs with weights
-availability_zones:
-  strategy:
+# Sample placement policy using weights
+type: senlin.policy.placement
+version: 1.0
+description: A policy for node placement scheduling.
+properties:
+  availability_zones:
     # Valid values include:
     # ROUND_ROBIN, WEIGHTED, SOURCE
-    type: WEIGHTED
-    options:
+    strategy: WEIGHTED
+    candidates:
       - zone: AZ1
         weight: 100
       - zone: AZ2
         weight: 50
 
-# Spanning regions with weights
-regions:
-  strategy:
+  regions:
     # Valid values include:
     # ROUND_ROBIN, WEIGHTED, SOURCE
-    type: WEIGHTED
+    strategy: WEIGHTED
     options:
       - region: RegionOne
         weight: 100

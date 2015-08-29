@@ -1,0 +1,20 @@
+# Sample placement policy doing round-robin
+type: senlin.policy.placement
+version: 1.0
+description: A policy for node placement scheduling.
+properties:
+  availability_zones:
+    # Valid values include:
+    # ROUND_ROBIN, WEIGHTED, SOURCE
+    strategy: ROUND_ROBIN
+    candidates:
+      - AZ1
+      - AZ2
+
+  regions:
+    # Valid values include:
+    # ROUND_ROBIN, WEIGHTED, SOURCE
+    strategy: ROUND_ROBIN 
+    candidates:
+      - RegionOne
+      - RegionTwo
