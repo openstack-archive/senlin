@@ -1,0 +1,6 @@
+# Devstack settings
+
+# We have to add Senlin to enabled services for screen_it to work
+# It consists of 2 parts: sl-api (API), sl-eng (Engine).
+
+enable_service sl-api sl-eng
