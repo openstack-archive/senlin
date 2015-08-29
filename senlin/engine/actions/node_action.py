@@ -13,10 +13,11 @@
 from oslo_log import log as logging
 
 from senlin.common import exception
-from senlin.common.i18n import _LE
+from senlin.common.i18n import _
 from senlin.engine.actions import base
 from senlin.engine.actions import cluster_action
 from senlin.engine import cluster as cluster_mod
+from senlin.engine import event as event_mod
 from senlin.engine import node as node_mod
 from senlin.engine import senlin_lock
 from senlin.policies import base as policy_mod
@@ -95,33 +96,31 @@ class NodeAction(base.Action):
             return self.RES_ERROR, 'Node failed leaving cluster'
 
     def _execute(self, node):
-        # TODO(Qiming): Add node status changes
-        result = self.RES_OK
         action_name = self.action.lower()
         method_name = action_name.replace('node', 'do')
         method = getattr(self, method_name)
 
         if method is None:
-            raise exception.ActionNotSupported(action=self.action)
+            reason = _('Unsupported action %s') % self.action
+            event_mod.error(node.id, self.action, 'Failed', reason)
+            return self.RES_ERROR, reason
 
-        result, reason = method(node)
-        return result, reason
+        return method(node)
 
     def execute(self, **kwargs):
         try:
             node = node_mod.Node.load(self.context, node_id=self.target)
         except exception.NodeNotFound:
-            reason = _LE('Node with id (%s) is not found') % self.target
-            LOG.error(reason)
+            reason = _('Node with id (%s) is not found') % self.target
+            event_mod.error(self.target, self.action, 'Failed', reason)
             return self.RES_ERROR, reason
 
-        reason = ''
         if node.cluster_id:
             if self.cause == base.CAUSE_RPC:
                 res = senlin_lock.cluster_lock_acquire(
                     node.cluster_id, self.id, senlin_lock.NODE_SCOPE, False)
                 if not res:
-                    return self.RES_RETRY, 'Failed locking cluster'
+                    return self.RES_RETRY, _('Failed locking cluster')
 
             self.policy_check(node.cluster_id, 'BEFORE')
             if self.data['status'] != policy_mod.CHECK_OK:
@@ -133,10 +132,11 @@ class NodeAction(base.Action):
 
                 return self.RES_ERROR, 'Policy check:' + self.data['reason']
 
+        reason = ''
         try:
             res = senlin_lock.node_lock_acquire(node.id, self.id, False)
             if not res:
-                reason = 'Failed locking node'
+                reason = _('Failed locking node')
             else:
                 res, reason = self._execute(node)
                 if res == self.RES_OK and node.cluster_id is not None:

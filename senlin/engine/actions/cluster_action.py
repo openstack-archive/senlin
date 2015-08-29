@@ -25,6 +25,7 @@ from senlin.engine.actions import base
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import dispatcher
+from senlin.engine import event as event_mod
 from senlin.engine import node as node_mod
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock
@@ -691,7 +692,9 @@ class ClusterAction(base.Action):
         method_name = action_name.replace('cluster', 'do')
         method = getattr(self, method_name)
         if method is None:
-            raise exception.ActionNotSupported(action=self.action)
+            reason = _('Unsupported action %s') % self.action
+            event_mod.error(cluster.id, self.action, 'Failed', reason)
+            return self.RES_ERROR, reason
 
         result, reason = method(cluster)
 
