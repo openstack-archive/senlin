@@ -964,7 +964,7 @@ class ClusterTest(base.SenlinTestCase):
         self._verify_action(action, 'CLUSTER_SCALE_IN',
                             'cluster_scale_in_%s' % cid[:8],
                             cid, cause=action_mod.CAUSE_RPC,
-                            inputs={'count': 1})
+                            inputs={'count': -1})
 
         expected_call = mock.call(self.ctx, action_id=mock.ANY)
 

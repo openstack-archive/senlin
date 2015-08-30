@@ -812,12 +812,13 @@ class EngineService(service.Service):
     @request_context
     def cluster_scale_in(self, context, identity, count=None):
         db_cluster = self.cluster_find(context, identity)
+        # delta must be positive integer
         delta = utils.parse_int_param('count', count, allow_zero=False)
 
         if delta is not None:
             LOG.info(_LI('Scaling in cluster %(name)s by %(delta)s nodes'),
                      {'name': identity, 'delta': delta})
-            inputs = {'count': delta}
+            inputs = {'count': -delta}
         else:
             LOG.info(_LI('Scaling in cluster %s'), db_cluster.name)
             inputs = {}

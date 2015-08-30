@@ -551,9 +551,7 @@ class ClusterAction(base.Action):
         if pd is not None:
             count = pd.get('count', 1)
             # Try get candidates (set by deletion policy if attached)
-            candidates = self.data.get('candidates')
-            if not candidates:
-                candidates = []
+            candidates = pd.get('candidates', [])
         else:
             # If no scaling policy is attached, use the
             # input count directly
