@@ -10,11 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-'''
+"""
 Policy for placing nodes across AZs and/or regions.
-'''
 
-'''
 NOTE: How placement policy works
 Input:
   cluster: cluster whose nodes are to be manipulated.
@@ -40,7 +38,7 @@ Output:
       ]
     }
   }
-'''
+"""
 
 from senlin.common import consts
 from senlin.policies import base
@@ -61,14 +59,16 @@ class PlacementPolicy(base.Policy):
 
     PROFILE_TYPE = [
         'os.nova.server',
-        'aws.autoscaling.launchconfig',
     ]
 
-    def __init__(self, type_name, name, **kwargs):
-        super(PlacementPolicy, self).__init__(type_name, name, **kwargs)
+    properties_schema = {
+    }
 
-        self.regions = self.spec.get('regions')
-        self.AZs = self.spec.get('AZs')
+    def __init__(self, name, spec, **kwargs):
+        super(PlacementPolicy, self).__init__(name, spec, **kwargs)
+
+        self.regions = self.properties.get('regions')
+        self.AZs = self.properties.get('availability_zones')
 
     def pre_op(self, cluster_id, action):
         '''Call back when new nodes are created for a cluster.'''

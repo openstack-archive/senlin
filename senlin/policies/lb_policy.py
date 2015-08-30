@@ -93,7 +93,7 @@ class LoadBalancingPolicy(base.Policy):
         'SOURCE_IP', 'HTTP_COOKIE', 'APP_COOKIE',
     )
 
-    spec_schema = {
+    properties_schema = {
         POOL: schema.Map(
             _('LB pool properties.'),
             schema={
@@ -177,10 +177,11 @@ class LoadBalancingPolicy(base.Policy):
         ),
     }
 
-    def __init__(self, type_name, name, **kwargs):
-        super(LoadBalancingPolicy, self).__init__(type_name, name, **kwargs)
-        self.pool_spec = self.spec_data.get(self.POOL, None)
-        self.vip_spec = self.spec_data.get(self.VIP, None)
+    def __init__(self, name, spec, **kwargs):
+        super(LoadBalancingPolicy, self).__init__(name, spec, **kwargs)
+
+        self.pool_spec = self.properties.get(self.POOL, {})
+        self.vip_spec = self.properties.get(self.VIP, {})
         self.validate()
         self.lb = None
 
@@ -204,7 +205,7 @@ class LoadBalancingPolicy(base.Policy):
         nodes = node_mod.Node.load_all(oslo_context.get_current(),
                                        cluster_id=cluster.id)
 
-        params = self._build_connection_params(cluster)
+        params = self._build_conn_params(cluster)
         lb_driver = driver_base.SenlinDriver().loadbalancing(params)
 
         res, data = lb_driver.lb_create(self.vip_spec, self.pool_spec)
@@ -243,7 +244,7 @@ class LoadBalancingPolicy(base.Policy):
             contains a error message.
         """
         reason = _('LB resources deletion succeeded.')
-        params = self._build_connection_params(cluster)
+        params = self._build_conn_params(cluster)
         lb_driver = driver_base.SenlinDriver().loadbalancing(params)
 
         cp = cluster_policy.ClusterPolicy.load(oslo_context.get_current(),
@@ -274,7 +275,7 @@ class LoadBalancingPolicy(base.Policy):
         if len(nodes) == 0:
             return
 
-        params = self._build_connection_params(cluster_id)
+        params = self._build_conn_params(cluster_id)
         lb_driver = driver_base.SenlinDriver().loadbalancing(params)
         cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
                                                self.id)

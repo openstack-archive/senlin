@@ -52,7 +52,7 @@ class ScalingInPolicy(base.Policy):
         'type', 'number', 'min_step', 'best_effort',
     )
 
-    spec_schema = {
+    properties_schema = {
         ADJUSTMENT: schema.Map(
             _('Detailed specification for scaling adjustments.'),
             schema={
@@ -82,10 +82,10 @@ class ScalingInPolicy(base.Policy):
         ),
     }
 
-    def __init__(self, type_name, name, **kwargs):
-        super(ScalingInPolicy, self).__init__(type_name, name, **kwargs)
+    def __init__(self, name, spec, **kwargs):
+        super(ScalingInPolicy, self).__init__(name, spec, **kwargs)
 
-        adjustment = self.spec_data[self.ADJUSTMENT]
+        adjustment = self.properties[self.ADJUSTMENT]
         self.adjustment_type = adjustment[self.ADJUSTMENT_TYPE]
         self.adjustment_number = adjustment[self.ADJUSTMENT_NUMBER]
         self.adjustment_min_step = adjustment[self.MIN_STEP]

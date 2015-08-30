@@ -322,27 +322,27 @@ class EngineService(service.Service):
         return [p.to_dict() for p in policies]
 
     @request_context
-    def policy_create(self, context, name, policy_type, spec, level=None,
-                      cooldown=None):
+    def policy_create(self, context, name, spec, level=None, cooldown=None):
         if level is None:
             level = policy_base.SHOULD
         else:
             level = utils.parse_int_param('level', level, upper_limit=100)
         cooldown = utils.parse_int_param('cooldown', cooldown)
-        plugin = environment.global_env().get_policy(policy_type)
+
+        type_name, version = schema.get_spec_version(spec)
+        plugin = environment.global_env().get_policy(type_name)
 
         LOG.info(_LI('Creating policy %(type)s: %(name)s'),
-                 {'type': policy_type, 'name': name})
+                 {'type': type_name, 'name': name})
 
         kwargs = {
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
-            'spec': spec,
             'level': level,
             'cooldown': cooldown,
         }
-        policy = plugin(policy_type, name, **kwargs)
+        policy = plugin(name, spec, **kwargs)
 
         try:
             policy.validate()
@@ -355,7 +355,7 @@ class EngineService(service.Service):
     @request_context
     def policy_get(self, context, identity):
         db_policy = self.policy_find(context, identity)
-        policy = policy_base.Policy.load(context, policy=db_policy)
+        policy = policy_base.Policy.load(context, db_policy=db_policy)
         return policy.to_dict()
 
     @request_context
@@ -363,7 +363,7 @@ class EngineService(service.Service):
                       cooldown=None):
 
         db_policy = self.policy_find(context, identity)
-        policy = policy_base.Policy.load(context, policy=db_policy)
+        policy = policy_base.Policy.load(context, db_policy=db_policy)
         changed = False
 
         if name is not None and name != policy.name:

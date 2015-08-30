@@ -55,17 +55,18 @@ class TestProfile(profile_base.Profile):
 
 
 class TestPolicy(policy_base.Policy):
-    spec_schema = {
+    VERSION = 1.0
+    properties_schema = {
         'KEY1': schema.String('key1', default='default1'),
-        'KEY2': schema.Integer('key2', default=1),
+        'KEY2': schema.Integer('key2', required=True),
     }
 
     TARGET = [
         ('BEFORE', 'CLUSTER_ADD_NODES')
     ]
 
-    def __init__(self, type_name, name, **kwargs):
-        super(TestPolicy, self).__init__(type_name, name, **kwargs)
+    def __init__(self, name, spec, **kwargs):
+        super(TestPolicy, self).__init__(name, spec, **kwargs)
 
     def attach(self, cluster):
         return True, {}

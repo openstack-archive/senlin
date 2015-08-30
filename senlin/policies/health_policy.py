@@ -41,15 +41,21 @@ class HealthPolicy(base.Policy):
     KEYS = (DETECTION, RECOVERY) = ('detection', 'recovery')
 
     _DETECTION_KEYS = (
-        DETECTION_TYPE, DETECTION_INTERVAL
+        DETECTION_TYPE, DETECTION_OPTIONS,
     ) = (
-        'type', 'interval'
+        'type', 'options'
     )
 
     DETECTION_TYPES = (
         VM_LIFECYCLE_EVENTS, NODE_STATUS_POLLING, LB_STATUS_POLLING,
     ) = (
         'VM_LIFECYCLE_EVENTS', 'NODE_STATUS_POLLING', 'LB_STATUS_POLLING',
+    )
+
+    _DETECTION_OPTIONS = (
+        DETECTION_INTERVAL,
+    ) = (
+        'interval',
     )
 
     _RECOVERY_KEYS = (
@@ -70,7 +76,7 @@ class HealthPolicy(base.Policy):
         'COMPUTE', 'STORAGE', 'NETWORK'
     )
 
-    spec_schema = {
+    properties_schema = {
         DETECTION: schema.Map(
             _('Policy aspect for node failure detection.'),
             schema={
@@ -81,10 +87,14 @@ class HealthPolicy(base.Policy):
                     ],
                     required=True,
                 ),
-                DETECTION_INTERVAL: schema.Integer(
-                    _('Number of seconds as interval between pollings. '
-                      'Only required when type is about polling.'),
-                    default=60,
+                DETECTION_OPTIONS: schema.Map(
+                    schema={
+                        DETECTION_INTERVAL: schema.Integer(
+                            _("Number of seconds between pollings. Only "
+                              "required when type is 'NODE_STATUS_POLLING'."),
+                            default=60,
+                        ),
+                    }
                 ),
             },
             required=True,
@@ -114,11 +124,12 @@ class HealthPolicy(base.Policy):
         ),
     }
 
-    def __init__(self, type_name, name, **kwargs):
-        super(HealthPolicy, self).__init__(type_name, name, kwargs)
+    def __init__(self, name, spec, **kwargs):
+        super(HealthPolicy, self).__init__(name, spec, kwargs)
 
-        self.check_type = self.spec_data[self.DETECTION][self.DETECTION_TYPE]
-        self.interval = self.spec_data[self.DETECTION][self.CHECK_INTERVAL]
+        self.check_type = self.properties[self.DETECTION][self.DETECTION_TYPE]
+        options = self.properties[self.DETECTION][self.DETECTION_OPTIONS]
+        self.interval = options[self.DETECTION_INTERVAL]
 
     def attach(self, cluster):
         '''Hook for policy attach.

@@ -40,11 +40,6 @@ class PolicyData(object):
             raise exc.HTTPBadRequest(_("No policy spec provided"))
         return self.data[consts.POLICY_SPEC]
 
-    def type(self):
-        if consts.POLICY_TYPE not in self.data:
-            raise exc.HTTPBadRequest(_("No profile type provided"))
-        return self.data[consts.POLICY_TYPE]
-
     def level(self):
         return self.data.get(consts.POLICY_LEVEL, None)
 
@@ -112,8 +107,8 @@ class PolicyController(object):
 
         data = PolicyData(policy_data)
         result = self.rpc_client.policy_create(req.context, data.name(),
-                                               data.type(), data.spec(),
-                                               data.level(), data.cooldown())
+                                               data.spec(), data.level(),
+                                               data.cooldown())
 
         return {'policy': result}
 

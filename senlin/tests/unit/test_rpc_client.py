@@ -219,7 +219,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
     def test_policy_create(self):
         default_args = {
             'name': mock.ANY,
-            'policy_type': mock.ANY,
             'spec': mock.ANY,
             'level': mock.ANY,
             'cooldown': mock.ANY,

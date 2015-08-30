@@ -45,9 +45,13 @@ class ClusterTest(base.SenlinTestCase):
             self.ctx, 'p-test', 'TestProfile',
             spec={'INT': 10, 'STR': 'string'}, permission='1111')
 
-        self.policy = self.eng.policy_create(
-            self.ctx, 'policy_1', 'TestPolicy',
-            spec={'KEY1': 'string'}, cooldown=60, level=50)
+        spec = {
+            'type': 'TestPolicy',
+            'version': '1.0',
+            'properties': {'KEY2': 3}
+        }
+        self.policy = self.eng.policy_create(self.ctx, 'policy_1', spec,
+                                             cooldown=60, level=50)
 
     def _verify_action(self, obj, action, name, target, cause, inputs=None):
         if inputs is None:

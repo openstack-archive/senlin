@@ -44,13 +44,22 @@ class PolicyTest(base.SenlinTestCase):
         self.eng.init_tgm()
         environment.global_env().register_policy('TestPolicy',
                                                  fakes.TestPolicy)
+        self.spec = {
+            'type': 'TestPolicy',
+            'version': '1.0',
+            'properties': {
+                'KEY1': 'value1',
+                'KEY2': 2,
+            }
+        }
 
     def test_policy_create_default(self):
-        result = self.eng.policy_create(self.ctx, 'p-1', 'TestPolicy', {})
+        self.spec['properties'] = {'KEY2': 5}
+        result = self.eng.policy_create(self.ctx, 'p-1', self.spec)
         self.assertIsInstance(result, dict)
         self.assertEqual('p-1', result['name'])
-        self.assertEqual('TestPolicy', result['type'])
-        self.assertEqual({}, result['spec'])
+        self.assertEqual('TestPolicy-1.0', result['type'])
+        self.assertEqual(self.spec, result['spec'])
         self.assertEqual(policy_base.SHOULD, result['level'])
         self.assertIsNone(result['cooldown'])
         self.assertIsNone(result['updated_time'])
@@ -58,46 +67,38 @@ class PolicyTest(base.SenlinTestCase):
         self.assertIsNotNone(result['created_time'])
         self.assertIsNotNone(result['id'])
 
-    def test_policy_create_with_spec(self):
-        spec = {
-            'KEY1': 'value1',
-            'KEY2': 2,
-        }
-        result = self.eng.policy_create(self.ctx, 'p-1', 'TestPolicy', spec)
-        self.assertEqual(spec, result['spec'])
-
     def test_policy_create_with_cooldown_and_level(self):
-        spec = {'KEY2': 1}
-        result = self.eng.policy_create(self.ctx, 'p-1', 'TestPolicy', spec,
+        result = self.eng.policy_create(self.ctx, 'p-1', self.spec,
                                         cooldown=60, level=20)
-        self.assertEqual(spec, result['spec'])
+        self.assertEqual(self.spec, result['spec'])
         self.assertEqual(60, result['cooldown'])
         self.assertEqual(20, result['level'])
 
     def test_policy_create_type_not_found(self):
+        self.spec['type'] = 'Bogus'
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.policy_create,
-                               self.ctx, 'p-2', 'Bogus', {})
+                               self.ctx, 'p-2', self.spec)
         self.assertEqual(exception.PolicyTypeNotFound, ex.exc_info[0])
 
     def test_policy_create_invalid_spec(self):
-        spec = {'KEY3': 'value3'}
+        self.spec['properties'] = {'KEY3': 'value3'}
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.policy_create,
-                               self.ctx, 'p-2', 'TestPolicy', spec)
+                               self.ctx, 'p-2', self.spec)
         self.assertEqual(exception.SpecValidationFailed, ex.exc_info[0])
 
     def test_policy_create_failed_validation(self):
-        spec = {'KEY2': 1}
+        self.spec['properties'] = {'KEY2': 1}
         self.patchobject(fakes.TestPolicy, 'validate',
                          side_effect=exception.InvalidSpec(message='BOOM'))
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.policy_create,
-                               self.ctx, 'p-2', 'TestPolicy', spec)
+                               self.ctx, 'p-2', self.spec)
         self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
 
     def test_policy_get(self):
-        p = self.eng.policy_create(self.ctx, 'p-1', 'TestPolicy', {})
+        p = self.eng.policy_create(self.ctx, 'p-1', self.spec)
 
         for identity in [p['id'], p['id'][:6], 'p-1']:
             result = self.eng.policy_get(self.ctx, identity)
@@ -109,8 +110,8 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual(exception.PolicyNotFound, ex.exc_info[0])
 
     def test_policy_list(self):
-        p1 = self.eng.policy_create(self.ctx, 'p-1', 'TestPolicy', {})
-        p2 = self.eng.policy_create(self.ctx, 'p-2', 'TestPolicy', {})
+        p1 = self.eng.policy_create(self.ctx, 'p-1', self.spec)
+        p2 = self.eng.policy_create(self.ctx, 'p-2', self.spec)
         result = self.eng.policy_list(self.ctx)
         self.assertIsInstance(result, list)
         names = [p['name'] for p in result]
@@ -121,8 +122,8 @@ class PolicyTest(base.SenlinTestCase):
         self.assertIn(p2['id'], ids)
 
     def test_policy_list_with_limit_marker(self):
-        p1 = self.eng.policy_create(self.ctx, 'p-1', 'TestPolicy', {})
-        p2 = self.eng.policy_create(self.ctx, 'p-2', 'TestPolicy', {})
+        p1 = self.eng.policy_create(self.ctx, 'p-1', self.spec)
+        p2 = self.eng.policy_create(self.ctx, 'p-2', self.spec)
 
         result = self.eng.policy_list(self.ctx, limit=0)
 
@@ -139,19 +140,16 @@ class PolicyTest(base.SenlinTestCase):
         result = self.eng.policy_list(self.ctx, marker=p2['id'])
         self.assertEqual(0, len(result))
 
-        self.eng.policy_create(self.ctx, 'p-3', 'TestPolicy', {})
+        self.eng.policy_create(self.ctx, 'p-3', self.spec)
         result = self.eng.policy_list(self.ctx, limit=1, marker=p1['id'])
         self.assertEqual(1, len(result))
         result = self.eng.policy_list(self.ctx, limit=2, marker=p1['id'])
         self.assertEqual(2, len(result))
 
     def test_policy_list_with_sort_keys(self):
-        p1 = self.eng.policy_create(self.ctx, 'p-B', 'TestPolicy', {},
-                                    cooldown=60)
-        p2 = self.eng.policy_create(self.ctx, 'p-A', 'TestPolicy', {},
-                                    cooldown=60)
-        p3 = self.eng.policy_create(self.ctx, 'p-C', 'TestPolicy', {},
-                                    cooldown=120)
+        p1 = self.eng.policy_create(self.ctx, 'p-B', self.spec, cooldown=60)
+        p2 = self.eng.policy_create(self.ctx, 'p-A', self.spec, cooldown=60)
+        p3 = self.eng.policy_create(self.ctx, 'p-C', self.spec, cooldown=120)
 
         # default by created_time
         result = self.eng.policy_list(self.ctx)
@@ -179,9 +177,9 @@ class PolicyTest(base.SenlinTestCase):
         self.assertIsNotNone(result)
 
     def test_policy_list_with_sort_dir(self):
-        p1 = self.eng.policy_create(self.ctx, 'p-B', 'TestPolicy', {})
-        p2 = self.eng.policy_create(self.ctx, 'p-A', 'TestPolicy', {})
-        p3 = self.eng.policy_create(self.ctx, 'p-C', 'TestPolicy', {})
+        p1 = self.eng.policy_create(self.ctx, 'p-B', self.spec)
+        p2 = self.eng.policy_create(self.ctx, 'p-A', self.spec)
+        p3 = self.eng.policy_create(self.ctx, 'p-C', self.spec)
 
         # default by created_time, ascending
         result = self.eng.policy_list(self.ctx)
@@ -208,7 +206,7 @@ class PolicyTest(base.SenlinTestCase):
                          "desc-nullslast", six.text_type(ex))
 
     def test_policy_list_show_deleted(self):
-        p1 = self.eng.policy_create(self.ctx, 'p-1', 'TestPolicy', {})
+        p1 = self.eng.policy_create(self.ctx, 'p-1', self.spec)
         result = self.eng.policy_list(self.ctx)
         self.assertEqual(1, len(result))
         self.assertEqual(p1['id'], result[0]['id'])
@@ -223,10 +221,9 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual(p1['id'], result[0]['id'])
 
     def test_policy_list_with_filters(self):
-        self.eng.policy_create(self.ctx, 'p-B', 'TestPolicy', {}, cooldown=60)
-        self.eng.policy_create(self.ctx, 'p-A', 'TestPolicy', {}, cooldown=60)
-        self.eng.policy_create(self.ctx, 'p-C', 'TestPolicy', {},
-                               cooldown=0)
+        self.eng.policy_create(self.ctx, 'p-B', self.spec, cooldown=60)
+        self.eng.policy_create(self.ctx, 'p-A', self.spec, cooldown=60)
+        self.eng.policy_create(self.ctx, 'p-C', self.spec, cooldown=0)
 
         result = self.eng.policy_list(self.ctx, filters={'name': 'p-B'})
         self.assertEqual(1, len(result))
@@ -255,7 +252,7 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual(0, len(result))
 
     def test_policy_find(self):
-        p = self.eng.policy_create(self.ctx, 'p-1', 'TestPolicy', {})
+        p = self.eng.policy_create(self.ctx, 'p-1', self.spec)
         pid = p['id']
 
         result = self.eng.policy_find(self.ctx, pid)
@@ -275,7 +272,7 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual(exception.PolicyNotFound, ex.exc_info[0])
 
     def test_policy_find_show_deleted(self):
-        p = self.eng.policy_create(self.ctx, 'p-1', 'TestPolicy', {})
+        p = self.eng.policy_create(self.ctx, 'p-1', self.spec)
         pid = p['id']
         self.eng.policy_delete(self.ctx, pid)
 
@@ -294,10 +291,10 @@ class PolicyTest(base.SenlinTestCase):
         self.assertIsNotNone(result)
 
     def test_policy_update_fields(self):
-        p1 = self.eng.policy_create(self.ctx, 'p-1', 'TestPolicy', {},
-                                    cooldown=60, level=20)
+        p1 = self.eng.policy_create(self.ctx, 'p-1', self.spec, cooldown=60,
+                                    level=20)
         pid = p1['id']
-        self.assertEqual({}, p1['spec'])
+        self.assertEqual(self.spec, p1['spec'])
 
         # 1. update name
         p2 = self.eng.policy_update(self.ctx, pid, name='p-2')
@@ -346,7 +343,7 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual(exception.PolicyNotFound, ex.exc_info[0])
 
     def test_policy_update_using_find(self):
-        p1 = self.eng.policy_create(self.ctx, 'p-1', 'TestPolicy', {})
+        p1 = self.eng.policy_create(self.ctx, 'p-1', self.spec)
         pid = p1['id']
 
         p2 = self.eng.policy_update(self.ctx, pid, name='p-2')
@@ -363,7 +360,7 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual('p-4', p4['name'])
 
     def test_policy_update_err_validate(self):
-        p1 = self.eng.policy_create(self.ctx, 'p-1', 'TestPolicy', {})
+        p1 = self.eng.policy_create(self.ctx, 'p-1', self.spec)
         pid = p1['id']
 
         ex = self.assertRaises(rpc.ExpectedException,
@@ -379,7 +376,7 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
 
     def test_policy_delete(self):
-        p1 = self.eng.policy_create(self.ctx, 'p-1', 'TestPolicy', {})
+        p1 = self.eng.policy_create(self.ctx, 'p-1', self.spec)
         pid = p1['id']
         result = self.eng.policy_delete(self.ctx, pid)
         self.assertIsNone(result)

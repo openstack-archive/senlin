@@ -50,9 +50,8 @@ class PolicyTypeTest(base.SenlinTestCase):
                 'KEY2': {
                     'type': 'Integer',
                     'readonly': False,
-                    'required': False,
+                    'required': True,
                     'description': 'key2',
-                    'default': 1,
                 },
             }
         }
