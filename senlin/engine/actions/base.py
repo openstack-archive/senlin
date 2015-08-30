@@ -20,10 +20,10 @@ from oslo_utils import timeutils
 from senlin.common import context as req_context
 from senlin.common import exception
 from senlin.common.i18n import _
-from senlin.common.i18n import _LI
+from senlin.common.i18n import _LE
 from senlin.db import api as db_api
 from senlin.engine import cluster_policy as cp_mod
-from senlin.engine import event as event_mod
+from senlin.engine import event as EVENT
 from senlin.policies import base as policy_mod
 
 wallclock = time.time
@@ -269,7 +269,7 @@ class Action(object):
                        "(%(expected)s).") % dict(action=self.id,
                                                  expected=expected_statuses,
                                                  actual=self.status)
-            event_mod.error(context, self, cmd, status_reason=reason)
+            EVENT.error(context, self, cmd, status_reason=reason)
             return
 
         db_api.action_signal(context, self.id, cmd)
@@ -285,30 +285,26 @@ class Action(object):
         return NotImplemented
 
     def set_status(self, result, reason=None):
-        '''Set action status based on return value from execute.'''
+        """Set action status based on return value from execute."""
 
         timestamp = wallclock()
 
         if result == self.RES_OK:
             status = self.SUCCEEDED
-            msg = _LI('Action %(name)s [%(id)s] completed with SUCCESS.')
             db_api.action_mark_succeeded(self.context, self.id, timestamp)
 
         elif result == self.RES_ERROR:
             status = self.FAILED
-            msg = _LI('Action %(name)s [%(id)s] failed with ERROR.')
             db_api.action_mark_failed(self.context, self.id, timestamp,
                                       reason=reason or 'ERROR')
 
         elif result == self.RES_TIMEOUT:
             status = self.FAILED
-            msg = _LI('Action %(name)s [%(id)s] failed with TIMEOUT.')
             db_api.action_mark_failed(self.context, self.id, timestamp,
                                       reason=reason or 'TIMEOUT')
 
         elif result == self.RES_CANCEL:
             status = self.CANCELLED
-            msg = _LI('Action %(name)s [%(id)s] was cancelled.')
             db_api.action_mark_cancelled(self.context, self.id, timestamp)
 
         else:  # result == self.RES_RETRY:
@@ -316,9 +312,12 @@ class Action(object):
             # Action failed at the moment, but can be retried
             # We abandon it and then notify other dispatchers to execute it
             db_api.action_abandon(self.context, self.id)
-            msg = _LI('Action %(name)s [%(id)s] aborted with RETRY.')
 
-        LOG.info(msg, {'name': self.action, 'id': self.id, 'status': status})
+        if status == self.SUCCEEDED:
+            EVENT.info(self.context, self, self.action, status, reason)
+        else:
+            EVENT.error(self.context, self, self.action, status, reason)
+
         self.status = status
         self.status_reason = reason
 
@@ -334,7 +333,7 @@ class Action(object):
     def _check_signal(self):
         # Check timeout first, if true, return timeout message
         if self.timeout is not None and self.is_timeout():
-            LOG.debug('Action %s run timeout' % self.id)
+            EVENT.debug(self.context, self, self.action, 'TIMEOUT')
             return self.RES_TIMEOUT
 
         result = db_api.action_signal_query(self.context, self.id)
@@ -348,6 +347,41 @@ class Action(object):
 
     def is_resumed(self):
         return self._check_signal() == self.SIG_RESUME
+
+    def _check_result(self, level, name):
+        """Check policy check status and generate event.
+
+        :param level: Enforcement level of the policy (when bound to cluster).
+        :param name: Name of policy checked
+        :return: True if the policy checking can be continued, or False if the
+                 policy checking should be aborted.
+        """
+        # Abort policy checking if failures found
+        status = 'CHECK ERROR'
+        reason = _("Failed policy '%(name)s': %(reason)s."
+                   ) % {'name': name, 'reason': self.data['reason']}
+        if self.data['status'] == policy_mod.CHECK_OK:
+            method = EVENT.debug
+            status = 'CHECK OK'
+            reason = self.data['reason']
+        elif level >= policy_mod.MUST:
+            method = EVENT.critical
+        elif level >= policy_mod.SHOULD:
+            method = EVENT.error
+        elif level >= policy_mod.WOULD:
+            method = EVENT.warning
+        elif level >= policy_mod.MIGHT:
+            method = EVENT.info
+        else:
+            method = EVENT.debug
+
+        method(self.context, self, self.action, status, reason)
+
+        if ((self.data['status'] == policy_mod.CHECK_OK) or
+                (level < policy_mod.SHOULD)):
+            return True
+        else:
+            return False
 
     def policy_check(self, cluster_id, target):
         """Check all policies attached to cluster and give result.
@@ -365,6 +399,9 @@ class Action(object):
         bindings = cp_mod.ClusterPolicy.load_all(self.context, cluster_id,
                                                  sort_keys=['priority'],
                                                  filters={'enabled': True})
+        # default values
+        self.data['status'] = policy_mod.CHECK_OK
+        self.data['reason'] = _('Completed policy checking.')
 
         for pb in bindings:
             policy = policy_mod.Policy.load(self.context, pb.policy_id)
@@ -378,9 +415,9 @@ class Action(object):
                 continue
 
             if target == 'BEFORE':
-                method = getattr(policy, 'pre_op')
+                method = getattr(policy, 'pre_op', None)
             else:  # target == 'AFTER'
-                method = getattr(policy, 'post_op')
+                method = getattr(policy, 'post_op', None)
 
             if pb.cooldown_inprogress():
                 self.data['status'] = policy_mod.CHECK_ERROR
@@ -388,18 +425,12 @@ class Action(object):
                                         'in progress.') % {'id': policy.id}
                 return
 
-            method(cluster_id, self)
+            if method is not None:
+                method(cluster_id, self)
 
-            # Abort policy checking if failures found
-            if ('status' in self.data and
-                    self.data['status'] == policy_mod.CHECK_ERROR):
-                LOG.warning(_('Failed policy checking: %s'),
-                            self.data['reason'])
-                self.data['reason'] = _('Policy checking failed at policy '
-                                        '%(id)s.') % {'id': policy.id}
+            res = self._check_result(pb.level, policy.name)
+            if res is False:
                 return
-
-        self.data['status'] = policy_mod.CHECK_OK
         return
 
     def to_dict(self):
@@ -433,25 +464,27 @@ class Action(object):
 def ActionProc(context, action_id, worker_id):
     '''Action process.'''
 
-    # Step 1: lock the action for execution
-    timestamp = wallclock()
-    db_action = db_api.action_acquire(context, action_id, worker_id, timestamp)
-    if db_action is None:
-        LOG.debug(_('Failed locking action "%s" for execution'), action_id)
+    # Step 1: materialize the action object
+    action = Action.load(context, action_id=action_id)
+    if action is None:
+        LOG.error(_LE('Action "%s" could not be found.'), action_id)
         return False
 
-    # Step 2: materialize the action object
-    action = Action.load(context, db_action=db_action)
+    # Step 2: lock the action for execution
+    timestamp = wallclock()
+    res = db_api.action_acquire(action.context, action_id, worker_id,
+                                timestamp)
+    if res is None:
+        LOG.warning(_LE('Failed in locking action "%s".'), action_id)
+        return False
 
-    LOG.info(_LI('Action %(name)s [%(id)s] started'),
-             {'name': six.text_type(action.action), 'id': action.id})
+    EVENT.info(action.context, action, action.action, 'START')
 
     reason = 'Action completed'
     success = True
     try:
         # Step 3: execute the action
         result, reason = action.execute()
-
     except Exception as ex:
         # We catch exception here to make sure the following logics are
         # executed.

@@ -584,9 +584,9 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         policy.store(self.ctx)
         return policy
 
-    def _create_cp_binding(self, cluster_id, policy_id):
+    def _create_cp_binding(self, cluster_id, policy_id, priority=30):
         values = {
-            'priority': 30,
+            'priority': priority,
             'cooldown': 60,
             'level': 50,
             'enabled': True,
@@ -630,7 +630,12 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
     def test_policy_check_pre_op(self, mock_load, mock_load_all):
         cluster_id = 'FAKE_CLUSTER_ID'
         # Note: policy is mocked
-        policy = mock.Mock()
+        spec = {
+            'type': 'TestPolicy',
+            'version': '1.0',
+            'properties': {'KEY2': 5},
+        }
+        policy = fakes.TestPolicy('test-policy', spec)
         policy.id = 'FAKE_POLICY_ID'
         policy.TARGET = [('BEFORE', 'OBJECT_ACTION')]
         # Note: policy binding is created but not stored
@@ -650,9 +655,6 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         mock_load.assert_called_once_with(action.context, policy.id)
         # last_op was not updated
         self.assertIsNone(pb.last_op)
-        # pre_op is called, but post_op was not called
-        policy.pre_op.assert_called_once_with(cluster_id, action)
-        self.assertEqual(0, policy.post_op.call_count)
 
     @mock.patch.object(cp_mod.ClusterPolicy, 'load_all')
     @mock.patch.object(policy_mod.Policy, 'load')
@@ -717,34 +719,31 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
 
     @mock.patch.object(cp_mod.ClusterPolicy, 'load_all')
     @mock.patch.object(policy_mod.Policy, 'load')
-    def test_policy_check_abort_in_middle(self, mock_load, mock_load_all):
-        def fake_post_op(action):
-            action.data['reason'] = 'BAD THINGS HAPPEN'
-            action.data['status'] = policy_mod.CHECK_ERROR
-            return
-
+    @mock.patch.object(action_base.Action, '_check_result')
+    def test_policy_check_abort_in_middle(self, mock_check, mock_load,
+                                          mock_load_all):
         cluster_id = 'FAKE_CLUSTER_ID'
         # Note: both policies are mocked
         policy1 = mock.Mock()
         policy1.id = 'FAKE_POLICY_ID_1'
+        policy1.name = 'P1'
         policy1.cooldown = 0
         policy1.TARGET = [('AFTER', 'OBJECT_ACTION')]
         policy2 = mock.Mock()
         policy2.id = 'FAKE_POLICY_ID_2'
+        policy2.name = 'P2'
         policy2.cooldown = 0
         policy2.TARGET = [('AFTER', 'OBJECT_ACTION')]
 
         action = action_base.Action(self.ctx, cluster_id, 'OBJECT_ACTION')
-        # Make policy1.post_op a failure
-        policy1.post_op = mock.MagicMock()
-        policy1.post_op.side_effect = fake_post_op(action)
 
         # Note: policy binding is created but not stored
-        pb1 = self._create_cp_binding(cluster_id, policy1.id)
-        pb2 = self._create_cp_binding(cluster_id, policy2.id)
+        pb1 = self._create_cp_binding(cluster_id, policy1.id, 50)
+        pb2 = self._create_cp_binding(cluster_id, policy2.id, 40)
         mock_load_all.return_value = [pb1, pb2]
         # mock return value for two calls
         mock_load.side_effect = [policy1, policy2]
+        mock_check.side_effect = [False, True]
 
         res = action.policy_check(cluster_id, 'AFTER')
 
@@ -754,9 +753,6 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         policy1.post_op.assert_called_once_with(cluster_id, action)
         self.assertEqual(0, policy2.post_op.call_count)
 
-        self.assertEqual(policy_mod.CHECK_ERROR, action.data['status'])
-        self.assertEqual('Policy checking failed at policy FAKE_POLICY_ID_1.',
-                         six.text_type(action.data['reason']))
         mock_load_all.assert_called_once_with(
             action.context, cluster_id,
             sort_keys=['priority'], filters={'enabled': True})
@@ -772,17 +768,21 @@ class ActionProcTest(base.SenlinTestCase):
         self.ctx = utils.dummy_context()
 
     @mock.patch.object(action_base, 'wallclock')
+    @mock.patch.object(action_base.Action, 'load')
     @mock.patch.object(db_api, 'action_acquire')
-    def test_action_proc_fail_acquire(self, mock_acquire, mock_clock):
+    def test_action_proc_fail_acquire(self, mock_acquire, mock_load,
+                                      mock_clock):
+        action = action_base.Action(self.ctx, 'OBJID', 'OBJECT_ACTION')
         mock_clock.return_value = 'TIMESTAMP'
         mock_acquire.return_value = None
+        mock_load.return_value = action
 
         res = action_base.ActionProc(self.ctx, 'ACTION', 'WORKER')
         self.assertFalse(res)
 
         mock_clock.assert_called_once_with()
         mock_acquire.assert_called_once_with(
-            self.ctx, 'ACTION', 'WORKER', 'TIMESTAMP')
+            action.context, 'ACTION', 'WORKER', 'TIMESTAMP')
 
     @mock.patch.object(action_base, 'wallclock')
     @mock.patch.object(db_api, 'action_acquire')
@@ -802,9 +802,9 @@ class ActionProcTest(base.SenlinTestCase):
         self.assertTrue(res)
 
         mock_acquire.assert_called_once_with(
-            self.ctx, 'ACTION', 'WORKER', 'TIMESTAMP')
+            action.context, 'ACTION', 'WORKER', 'TIMESTAMP')
 
-        mock_load.assert_called_once_with(self.ctx, db_action=mock_db_action)
+        mock_load.assert_called_once_with(self.ctx, action_id='ACTION')
         self.assertEqual(action.SUCCEEDED, action.status)
         self.assertEqual('BIG SUCCESS', action.status_reason)
 
@@ -825,8 +825,8 @@ class ActionProcTest(base.SenlinTestCase):
         self.assertFalse(res)
 
         mock_acquire.assert_called_once_with(
-            self.ctx, 'ACTION', 'WORKER', 'TIMESTAMP')
+            action.context, 'ACTION', 'WORKER', 'TIMESTAMP')
 
-        mock_load.assert_called_once_with(self.ctx, db_action=mock_db_action)
+        mock_load.assert_called_once_with(self.ctx, action_id='ACTION')
         self.assertEqual(action.FAILED, action.status)
         self.assertEqual('Boom!', action.status_reason)

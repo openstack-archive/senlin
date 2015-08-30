@@ -160,34 +160,40 @@ class TestDeletionPolicy(base.SenlinTestCase):
         policy = dp.DeletionPolicy('test-policy', self.spec)
 
         # action data doesn't have 'deletion' field
-        action.data.get.return_value = None
+        action.data = {}
         policy.pre_op(self.cluster['id'], action)
         pd = {
+            'status': 'OK',
+            'reason': 'Candidates generated',
             'deletion': {
                 'candidates': [self.nodes_p1[0]],
                 'destroy_after_deletion': True,
                 'grace_period': 60,
             }
         }
-        action.data.update.assert_called_with(pd)
+        self.assertEqual(pd, action.data)
 
         # action data has 'deletion' field, but 'count' is not provided
-        action.data.get.return_value = {'abc': 123}
+        action.data = {'abc': 123}
         policy.pre_op(self.cluster['id'], action)
         pd = {
+            'status': 'OK',
+            'reason': 'Candidates generated',
             'deletion': {
-                'abc': 123,
                 'candidates': [self.nodes_p1[0]],
                 'destroy_after_deletion': True,
                 'grace_period': 60,
-            }
+            },
+            'abc': 123
         }
-        action.data.update.assert_called_with(pd)
+        self.assertEqual(pd, action.data)
 
         # 'count' is provided in deletion field of action data
-        action.data.get.return_value = {'count': 2}
+        action.data = {'deletion': {'count': 2}}
         policy.pre_op(self.cluster['id'], action)
         pd = {
+            'status': 'OK',
+            'reason': 'Candidates generated',
             'deletion': {
                 'count': 2,
                 'candidates': [self.nodes_p1[0], self.nodes_p1[1]],
@@ -195,7 +201,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
                 'grace_period': 60,
             }
         }
-        action.data.update.assert_called_with(pd)
+        self.assertEqual(pd, action.data)
         action.store.assert_called_with(self.context)
 
     def test_pre_op_candidates_provided(self):
@@ -205,15 +211,19 @@ class TestDeletionPolicy(base.SenlinTestCase):
 
         # Both 'count' and 'candidates' are provided in deletion
         # field of action data
-        action.data.get.return_value = {
-            'count': 2,
-            'candidates': [
-                self.nodes_p1[0],
-                self.nodes_p2[2],
-            ],
+        action.data = {
+            'deletion': {
+                'count': 2,
+                'candidates': [
+                    self.nodes_p1[0],
+                    self.nodes_p2[2],
+                ],
+            }
         }
         policy.pre_op(self.cluster['id'], action)
         pd = {
+            'status': 'OK',
+            'reason': 'Candidates generated',
             'deletion': {
                 'count': 2,
                 'candidates': [self.nodes_p1[0], self.nodes_p2[2]],
@@ -221,5 +231,5 @@ class TestDeletionPolicy(base.SenlinTestCase):
                 'grace_period': 60,
             }
         }
-        action.data.update.assert_called_with(pd)
+        self.assertEqual(pd, action.data)
         action.store.assert_called_with(self.context)

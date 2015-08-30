@@ -155,14 +155,9 @@ class DeletionPolicy(base.Policy):
     def pre_op(self, cluster_id, action):
         '''Choose victims that can be deleted.'''
 
-        pd = action.data.get('deletion', None)
-        if pd is not None:
-            count = pd.get('count', 1)
-            candidates = pd.get('candidates', [])
-        else:
-            pd = {}
-            count = 1
-            candidates = []
+        pd = action.data.get('deletion', {})
+        count = pd.get('count', 1)
+        candidates = pd.get('candidates', [])
 
         # For certain operations ( e.g. DEL_NODES), the candidates might
         # have been specified
@@ -172,7 +167,11 @@ class DeletionPolicy(base.Policy):
         pd['candidates'] = candidates
         pd['destroy_after_deletion'] = self.destroy_after_deletion
         pd['grace_period'] = self.grace_period
-        action.data.update({'deletion': pd})
+        action.data.update({
+            'status': base.CHECK_OK,
+            'reason': _('Candidates generated'),
+            'deletion': pd
+        })
         action.store(action.context)
 
         return
