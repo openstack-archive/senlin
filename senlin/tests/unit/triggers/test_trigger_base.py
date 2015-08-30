@@ -82,7 +82,10 @@ class TestTriggerBase(test_base.SenlinTestCase):
             'links': {
                 'alarm_actions': ['http://url1']
             },
-            'spec': parser.simple_parse(sample_trigger)
+            'spec': parser.simple_parse(sample_trigger),
+            'user': self.ctx.user,
+            'project': self.ctx.project,
+            'domain': self.ctx.domain
         }
         values.update(custom_values)
 
@@ -236,7 +239,9 @@ class TestTriggerBase(test_base.SenlinTestCase):
 
     def test_to_dict(self):
         spec = parser.simple_parse(sample_trigger)
-        trigger = base.Trigger('t1', spec, id='FAKE_ID', desc='DESC')
+        trigger = base.Trigger('t1', spec, id='FAKE_ID', desc='DESC',
+                               user=self.ctx.user, project=self.ctx.project,
+                               domain=self.ctx.domain)
 
         expected = {
             'id': 'FAKE_ID',
@@ -248,6 +253,9 @@ class TestTriggerBase(test_base.SenlinTestCase):
             'severity': base.S_LOW,
             'links': {},
             'spec': spec,
+            'user': self.ctx.user,
+            'project': self.ctx.project,
+            'domain': self.ctx.domain,
             'created_time': None,
             'updated_time': None,
             'deleted_time': None

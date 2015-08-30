@@ -1388,6 +1388,10 @@ class EngineService(service.Service):
         if severity is not None:
             kwargs['severity'] = severity
 
+        kwargs['user'] = context.user
+        kwargs['project'] = context.project
+        kwargs['domain'] = context.domain
+
         trigger = plugin(name, spec, **kwargs)
         trigger.validate()
         trigger.store(context)

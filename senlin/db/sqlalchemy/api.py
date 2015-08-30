@@ -176,7 +176,7 @@ def cluster_get(context, cluster_id, show_deleted=False, project_safe=True):
         return None
 
     if project_safe and (cluster is not None):
-        if (context is not None) and (context.project != cluster.project):
+        if context.project != cluster.project:
             return None
     return cluster
 
@@ -481,8 +481,9 @@ def trigger_get_all(context, limit=None, marker=None, sort_keys=None,
                     show_deleted=False):
     query = soft_delete_aware_query(context, models.Trigger,
                                     show_deleted=show_deleted)
+    if project_safe:
+        query = query.filter_by(project=context.project)
 
-    # TODO(Qiming): Add support to project safe query
     if filters is None:
         filters = {}
 
