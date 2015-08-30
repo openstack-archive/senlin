@@ -129,15 +129,7 @@ class Registry(object):
         return infoes[0].plugin if infoes else None
 
     def as_dict(self):
-        '''Return profiles in a dict format.'''
-        def _as_dict(level):
-            tmp = {}
-            for k, v in iter(level.items()):
-                # TODO(anyone): allow nested dict
-                tmp[k] = v.plugin
-            return tmp
-
-        return _as_dict(self._registry)
+        return dict((k, v.plugin) for k, v in self._registry.items())
 
     def get_types(self):
         '''Return a list of valid plugin types.'''
