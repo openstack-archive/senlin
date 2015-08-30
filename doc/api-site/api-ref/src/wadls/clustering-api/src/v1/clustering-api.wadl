@@ -1002,11 +1002,6 @@
                             </listitem>
                             <listitem>
                                 <para>
-                                    <code>type</code> Name of policy type to be used for the policy. (required).
-                                </para>
-                            </listitem>
-                            <listitem>
-                                <para>
                                     <code>spec</code> Detailed specification based on the chosen policy type. (required).
                                 </para>
                             </listitem>

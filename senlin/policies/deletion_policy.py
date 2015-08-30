@@ -10,11 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-'''
+"""
 Policy for deleting node(s) from a cluster.
-'''
 
-'''
 NOTE: How deletion policy works
 Input:
   cluster: cluster whose nodes can be deleted
@@ -35,7 +33,7 @@ Output: stored in action.data
       'destroy_after_delete': 'True',
     }
   }
-'''
+"""
 
 import random
 
@@ -80,7 +78,7 @@ class DeletionPolicy(base.Policy):
         'ANY'
     ]
 
-    spec_schema = {
+    properties_schema = {
         CRITERIA: schema.String(
             _('Criteria used in selecting candidates for deletion'),
             default=RANDOM,
@@ -104,14 +102,14 @@ class DeletionPolicy(base.Policy):
         )
     }
 
-    def __init__(self, type_name, name, **kwargs):
-        super(DeletionPolicy, self).__init__(type_name, name, **kwargs)
+    def __init__(self, name, spec, **kwargs):
+        super(DeletionPolicy, self).__init__(name, spec, **kwargs)
 
-        self.criteria = self.spec_data[self.CRITERIA]
-        self.grace_period = self.spec_data[self.GRACE_PERIOD]
-        self.destroy_after_deletion = self.spec_data[
+        self.criteria = self.properties[self.CRITERIA]
+        self.grace_period = self.properties[self.GRACE_PERIOD]
+        self.destroy_after_deletion = self.properties[
             self.DESTROY_AFTER_DELETION]
-        self.reduce_desired_capacity = self.spec_data[
+        self.reduce_desired_capacity = self.properties[
             self.REDUCE_DESIRED_CAPACITY]
         random.seed()
 

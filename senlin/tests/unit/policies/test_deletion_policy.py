@@ -15,7 +15,7 @@ from oslo_utils import timeutils
 import six
 
 from senlin.db.sqlalchemy import api as db_api
-from senlin.policies import deletion_policy
+from senlin.policies import deletion_policy as dp
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -26,10 +26,14 @@ class TestDeletionPolicy(base.SenlinTestCase):
         super(TestDeletionPolicy, self).setUp()
         self.context = utils.dummy_context()
         self.spec = {
-            'criteria': 'OLDEST_FIRST',
-            'destroy_after_deletion': True,
-            'grace_period': 60,
-            'reduce_desired_capacity': False
+            'type': 'senlin.policy.deletion',
+            'version': '1.0',
+            'properties': {
+                'criteria': 'OLDEST_FIRST',
+                'destroy_after_deletion': True,
+                'grace_period': 60,
+                'reduce_desired_capacity': False
+            }
         }
         self.profile1 = self._create_profile('PROFILE1')
         self.profile2 = self._create_profile('PROFILE2')
@@ -86,31 +90,22 @@ class TestDeletionPolicy(base.SenlinTestCase):
         return nodes
 
     def test_policy_init(self):
-        kwargs = {
-            'spec': self.spec
-        }
-        policy = deletion_policy.DeletionPolicy('DeletionPolicy',
-                                                'test-policy',
-                                                **kwargs)
+        policy = dp.DeletionPolicy('test-policy', self.spec)
 
         self.assertIsNone(policy.id)
         self.assertEqual('test-policy', policy.name)
-        self.assertEqual('DeletionPolicy', policy.type)
-        self.assertEqual(self.spec['criteria'], policy.criteria)
-        self.assertEqual(self.spec['destroy_after_deletion'],
+        self.assertEqual('senlin.policy.deletion-1.0', policy.type)
+        self.assertEqual(self.spec['properties']['criteria'], policy.criteria)
+        self.assertEqual(self.spec['properties']['destroy_after_deletion'],
                          policy.destroy_after_deletion)
-        self.assertEqual(self.spec['grace_period'], policy.grace_period)
-        self.assertEqual(self.spec['reduce_desired_capacity'],
+        self.assertEqual(self.spec['properties']['grace_period'],
+                         policy.grace_period)
+        self.assertEqual(self.spec['properties']['reduce_desired_capacity'],
                          policy.reduce_desired_capacity)
 
     def test_select_candidates_oldest_first(self):
-        self.spec['criteria'] = deletion_policy.DeletionPolicy.OLDEST_FIRST
-        kwargs = {
-            'spec': self.spec
-        }
-        policy = deletion_policy.DeletionPolicy('DeletionPolicy',
-                                                'test-policy',
-                                                **kwargs)
+        self.spec['properties']['criteria'] = dp.DeletionPolicy.OLDEST_FIRST
+        policy = dp.DeletionPolicy('test-policy', self.spec)
 
         nodes = policy._select_candidates(self.context, self.cluster['id'], 1)
         self.assertEqual(1, len(nodes))
@@ -122,13 +117,8 @@ class TestDeletionPolicy(base.SenlinTestCase):
         self.assertEqual(self.nodes_p1[1], nodes[1])
 
     def test_select_candidates_youngest_first(self):
-        self.spec['criteria'] = deletion_policy.DeletionPolicy.YOUNGEST_FIRST
-        kwargs = {
-            'spec': self.spec
-        }
-        policy = deletion_policy.DeletionPolicy('DeletionPolicy',
-                                                'test-policy',
-                                                **kwargs)
+        self.spec['properties']['criteria'] = dp.DeletionPolicy.YOUNGEST_FIRST
+        policy = dp.DeletionPolicy('test-policy', self.spec)
 
         nodes = policy._select_candidates(self.context, self.cluster['id'], 1)
         self.assertEqual(1, len(nodes))
@@ -140,14 +130,9 @@ class TestDeletionPolicy(base.SenlinTestCase):
         self.assertEqual(self.nodes_p2[1], nodes[1])
 
     def test_select_candidates_oldest_profile_first(self):
-        criteria = deletion_policy.DeletionPolicy.OLDEST_PROFILE_FIRST
-        self.spec['criteria'] = criteria
-        kwargs = {
-            'spec': self.spec
-        }
-        policy = deletion_policy.DeletionPolicy('DeletionPolicy',
-                                                'test-policy',
-                                                **kwargs)
+        criteria = dp.DeletionPolicy.OLDEST_PROFILE_FIRST
+        self.spec['properties']['criteria'] = criteria
+        policy = dp.DeletionPolicy('test-policy', self.spec)
 
         nodes = policy._select_candidates(self.context, self.cluster['id'], 1)
         self.assertEqual(1, len(nodes))
@@ -159,13 +144,8 @@ class TestDeletionPolicy(base.SenlinTestCase):
         self.assertEqual(self.nodes_p1[1], nodes[1])
 
     def test_select_candidates_random(self):
-        self.spec['criteria'] = deletion_policy.DeletionPolicy.RANDOM
-        kwargs = {
-            'spec': self.spec
-        }
-        policy = deletion_policy.DeletionPolicy('DeletionPolicy',
-                                                'test-policy',
-                                                **kwargs)
+        self.spec['properties']['criteria'] = dp.DeletionPolicy.RANDOM
+        policy = dp.DeletionPolicy('test-policy', self.spec)
 
         nodes = policy._select_candidates(self.context, self.cluster['id'], 1)
         self.assertEqual(1, len(nodes))
@@ -177,12 +157,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
     def test_pre_op(self):
         action = mock.Mock()
         action.context = self.context
-        kwargs = {
-            'spec': self.spec
-        }
-        policy = deletion_policy.DeletionPolicy('DeletionPolicy',
-                                                'test-policy',
-                                                **kwargs)
+        policy = dp.DeletionPolicy('test-policy', self.spec)
 
         # action data doesn't have 'deletion' field
         action.data.get.return_value = None
@@ -226,12 +201,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
     def test_pre_op_candidates_provided(self):
         action = mock.Mock()
         action.context = self.context
-        kwargs = {
-            'spec': self.spec
-        }
-        policy = deletion_policy.DeletionPolicy('DeletionPolicy',
-                                                'test-policy',
-                                                **kwargs)
+        policy = dp.DeletionPolicy('test-policy', self.spec)
 
         # Both 'count' and 'candidates' are provided in deletion
         # field of action data

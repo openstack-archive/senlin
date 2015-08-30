@@ -8,15 +8,17 @@
         "level": 0,
         "name": "sp001",
         "spec": {
-            "adjustment": {
-                "min_step": 1,
-                "number": 1,
-                "type": "CHANGE_IN_CAPACITY"
-            },
-            "max_size": 10,
-            "min_size": 1
+            "properties": {
+                 "adjustment": {
+                     "min_step": 1,
+                     "number": 1,
+                     "type": "CHANGE_IN_CAPACITY"
+                 },
+            }
+            "type": "senlin.policy.scaling",
+            "version": "1.0"
         },
-        "type": "ScalingPolicy",
+        "type": "senlin.policy.scaling-1.0",
         "updated_time": null
     }
 }

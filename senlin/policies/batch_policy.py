@@ -10,11 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-'''
-Policy for updating a cluster.
-'''
+"""
+Policy for batching operations on a cluster.
 
-'''
 NOTE: How update policy works
 Input:
   cluster: the cluste whose nodes are to be updated.
@@ -36,7 +34,7 @@ Output:
       ]
     }
   }
-'''
+"""
 
 from senlin.common import consts
 from senlin.common.i18n import _
@@ -44,13 +42,8 @@ from senlin.common import schema
 from senlin.policies import base
 
 
-class UpdatePolicy(base.Policy):
-    '''Policy for updating a cluster's node profile.
-
-    Note that we differentiate the updates to the size(scale) of a cluster from
-    the updates to the node profile.  The former is handled by CreatePolicy,
-    DeletePolicy.
-    '''
+class BatchPolicy(base.Policy):
+    """Policy for batching the operations on a cluster's nodes."""
 
     VERSION = '1.0'
 
@@ -68,7 +61,7 @@ class UpdatePolicy(base.Policy):
         'min_in_service', 'max_batch_size', 'pause_time',
     )
 
-    spec_schema = {
+    properties_schema = {
         MIN_IN_SERVICE: schema.Integer(
             _('Minimum number of nodes in service when performing updates.'),
             default=1,
@@ -76,18 +69,20 @@ class UpdatePolicy(base.Policy):
         MAX_BATCH_SIZE: schema.Integer(
             _('Maximum number of nodes that can be updated at the same '
               'time.'),
+            default=-1,
         ),
         PAUSE_TIME: schema.Integer(
             _('Number of seconds between update batches if any.'),
+            default=60,
         )
     }
 
-    def __init__(self, type_name, name, **kwargs):
-        super(UpdatePolicy, self).__init__(type_name, name, **kwargs)
+    def __init__(self, name, spec, **kwargs):
+        super(BatchPolicy, self).__init__(name, spec, **kwargs)
 
-        self.min_in_service = self.spec.get('min_in_service')
-        self.max_batch_size = self.spec.get('max_batch_size')
-        self.pause_time = self.spec.get('pause_time')
+        self.min_in_service = self.properties[self.MIN_IN_SERVICE]
+        self.max_batch_size = self.properties[self.MAX_BATCH_SIZE]
+        self.pause_time = self.properties[self.PAUSE_TIME]
 
     def pre_op(self, cluster_id, action):
         # TODO(anyone): compute batches

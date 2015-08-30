@@ -45,9 +45,13 @@ class ClusterPolicyTest(base.SenlinTestCase):
             self.ctx, 'p-test', 'TestProfile',
             spec={'INT': 10, 'STR': 'string'}, permission='1111')
 
-        self.policy = self.eng.policy_create(
-            self.ctx, 'policy_1', 'TestPolicy',
-            spec={'KEY1': 'string'}, cooldown=6, level=5)
+        policy_spec = {
+            'type': 'TestPolicy',
+            'version': '1.0',
+            'properties': {'KEY2': 5},
+        }
+        self.policy = self.eng.policy_create(self.ctx, 'policy_1', policy_spec,
+                                             cooldown=6, level=5)
 
         self.cluster = self.eng.cluster_create(self.ctx, 'c-1', 0,
                                                self.profile['id'])
@@ -291,12 +295,14 @@ class ClusterPolicyTest(base.SenlinTestCase):
             env.register_policy(type_name, fakes.TestPolicy)
         else:
             type_name = 'TestPolicy'
-
-        policy = self.eng.policy_create(
-            self.ctx, name, type_name,
-            spec={'KEY1': 'string'},
-            cooldown=cooldown or 60,
-            level=level or 50)
+        spec = {
+            'type': type_name,
+            'version': '1.0',
+            'properties': {'KEY2': 5}
+        }
+        policy = self.eng.policy_create(self.ctx, name, spec,
+                                        cooldown=cooldown or 60,
+                                        level=level or 50)
 
         return policy
 

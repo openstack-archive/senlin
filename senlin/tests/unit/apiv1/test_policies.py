@@ -31,18 +31,20 @@ class PolicyDataTest(base.SenlinTestCase):
         body = {
             'name': 'test_policy',
             'spec': {
-                'param1': 'value1',
-                'param2': 'value2',
+                'type': 'policy_type',
+                'version': '1.0',
+                'properties': {
+                    'param1': 'value1',
+                    'param2': 'value2',
+                }
             },
-            'type': 'test_policy_type',
             'level': 10,
             'cooldown': 60,
         }
 
         data = policies.PolicyData(body)
         self.assertEqual('test_policy', data.name())
-        self.assertEqual({'param1': 'value1', 'param2': 'value2'}, data.spec())
-        self.assertEqual('test_policy_type', data.type())
+        self.assertEqual(body['spec'], data.spec())
         self.assertEqual(10, data.level())
         self.assertEqual(60, data.cooldown())
 
@@ -52,7 +54,6 @@ class PolicyDataTest(base.SenlinTestCase):
         data = policies.PolicyData(body)
         self.assertRaises(exc.HTTPBadRequest, data.name)
         self.assertRaises(exc.HTTPBadRequest, data.spec)
-        self.assertRaises(exc.HTTPBadRequest, data.type)
         self.assertIsNone(data.level())
         self.assertIsNone(data.cooldown())
 
@@ -225,10 +226,13 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {
             'policy': {
                 'name': 'test_policy',
-                'type': 'test_policy_type',
                 'spec': {
-                    'param_1': 'value1',
-                    'param_2': 2,
+                    'type': 'policy_type',
+                    'version': '1.0',
+                    'properties': {
+                        'param_1': 'value1',
+                        'param_2': 2,
+                    }
                 },
                 'level': 30,
                 'cooldown': 60,
@@ -238,10 +242,14 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         engine_response = {
             'id': 'xxxx-yyyy-zzzz',
             'name': 'test_policy',
-            'type': 'test_policy_type',
+            'type': 'test_policy_type-1.0',
             'spec': {
+                'type': 'policy_type',
+                'version': '1.0',
+                'properties': {
                     'param_1': 'value1',
                     'param_2': 2,
+                },
             },
             'level': 30,
             'cooldown': 60,
@@ -257,8 +265,11 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context,
             ('policy_create', {
                 'name': 'test_policy',
-                'policy_type': 'test_policy_type',
-                'spec': {'param_1': 'value1', 'param_2': 2},
+                'spec': {
+                    'type': 'policy_type',
+                    'version': '1.0',
+                    'properties': {'param_1': 'value1', 'param_2': 2}
+                },
                 'level': 30,
                 'cooldown': 60
             })
@@ -283,44 +294,16 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertFalse(mock_call.called)
 
-    def test_policy_create_with_bad_type(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'create', True)
-        type_name = 'unknown_type'
-        body = {
-            'policy': {
-                'name': 'test_policy',
-                'type': type_name,
-                'spec': {'param': 'value'},
-            }
-        }
-        req = self._post('/policies', json.dumps(body))
-
-        error = senlin_exc.PolicyTypeNotFound(policy_type=type_name)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
-                                     side_effect=error)
-
-        resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.create,
-                                              req, tenant_id=self.project,
-                                              body=body)
-
-        expected_args = body['policy']
-        expected_args['cooldown'] = None
-        expected_args['level'] = None
-        expected_args['policy_type'] = expected_args.pop('type')
-        mock_call.assert_called_once_with(req.context,
-                                          ('policy_create', expected_args))
-        self.assertEqual(404, resp.json['code'])
-        self.assertEqual('PolicyTypeNotFound', resp.json['error']['type'])
-        self.assertIsNone(resp.json['error']['traceback'])
-
     def test_policy_create_with_spec_validation_failed(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {
             'policy': {
                 'name': 'test_policy',
-                'type': 'test_policy_type',
-                'spec': {'param': 'value'},
+                'spec': {
+                    'type': 'policy_type',
+                    'version': '1.0',
+                    'properties': {'param': 'value'}
+                },
             }
         }
         req = self._post('/policies', json.dumps(body))
@@ -338,7 +321,6 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         expected_args = body['policy']
         expected_args['cooldown'] = None
         expected_args['level'] = None
-        expected_args['policy_type'] = expected_args.pop('type')
         mock_call.assert_called_once_with(req.context,
                                           ('policy_create', expected_args))
         self.assertEqual(400, resp.json['code'])
@@ -350,8 +332,11 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {
             'policy': {
                 'name': 'test_policy',
-                'type': 'test_policy_type',
-                'spec': {'param': 'value'},
+                'spec': {
+                    'type': 'policy_type',
+                    'version': '1.0',
+                    'properties': {'param': 'value'},
+                }
             }
         }
 
@@ -370,10 +355,14 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         engine_resp = {
             u'id': u'aaaa-bbbb-cccc',
             u'name': u'policy-1',
-            u'type': u'test_policy_type',
+            u'type': u'test_policy_type-1.0',
             u'spec': {
-                u'param_1': u'value1',
-                u'param_2': u'value2',
+                u'type': u'test_policy_type',
+                u'version': u'1.0',
+                u'properties': {
+                    u'param_1': u'value1',
+                    u'param_2': u'value2',
+                }
             },
             u'level': 30,
             u'created_time': u'2015-02-24T19:17:22Z',

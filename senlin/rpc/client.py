@@ -130,10 +130,9 @@ class EngineClient(object):
                                        sort_dir=sort_dir, filters=filters,
                                        show_deleted=show_deleted))
 
-    def policy_create(self, ctxt, name, policy_type, spec, level, cooldown):
+    def policy_create(self, ctxt, name, spec, level, cooldown):
         return self.call(ctxt,
-                         self.make_msg('policy_create', name=name,
-                                       policy_type=policy_type, spec=spec,
+                         self.make_msg('policy_create', name=name, spec=spec,
                                        level=level, cooldown=cooldown))
 
     def policy_get(self, ctxt, identity):

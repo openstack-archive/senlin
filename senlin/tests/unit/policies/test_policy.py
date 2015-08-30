@@ -11,131 +11,120 @@
 # under the License.
 
 import mock
-from oslo_context import context as oslo_context
+from oslo_context import context as oslo_ctx
 import six
 
-from senlin.common import context as senlin_context
+from senlin.common import context as senlin_ctx
 from senlin.common import exception
-from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.db import api as db_api
 from senlin.engine import environment
+from senlin.engine import parser
 from senlin.policies import base as policy_base
-from senlin.policies import deletion_policy
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
 
+sample_policy = """
+  type: senlin.policy.dummy
+  version: 1.0
+  properties:
+    key1: value1
+    key2: 2
+"""
+
+
 class DummyPolicy(policy_base.Policy):
-    spec_schema = {}
+    VERSION = '1.0'
+
+    properties_schema = {
+        'key1': schema.String(
+            'first key',
+            default='value1'
+        ),
+        'key2': schema.Integer(
+            'second key',
+            required=True,
+        ),
+    }
+
+    def __init__(self, name, spec, **kwargs):
+        super(DummyPolicy, self).__init__(name, spec, **kwargs)
 
 
-class TestPolicy(base.SenlinTestCase):
+class TestPolicyBase(base.SenlinTestCase):
 
     def setUp(self):
-        super(TestPolicy, self).setUp()
-        self.context = utils.dummy_context()
-        self.spec_schema = {
-            'key1': schema.String('first key', default='value1'),
-            'key2': schema.Integer('second key', required=True),
-        }
-        self.spec = {'key1': 'value1', 'key2': 2}
-        self.spec_data = schema.Spec(self.spec_schema, self.spec)
-        self.spec_data_deletion_policy = schema.Spec(
-            deletion_policy.DeletionPolicy.spec_schema, {})
+        super(TestPolicyBase, self).setUp()
+        self.ctx = utils.dummy_context()
+        environment.global_env().register_policy('senlin.policy.dummy',
+                                                 DummyPolicy)
+        self.spec = parser.simple_parse(sample_policy)
 
     def _create_policy(self, policy_name, policy_id=None):
-        values = {
-            'user': 'test-user',
-            'project': 'test-project',
-            'domain': 'test-domain',
-            'name': policy_name,
-            'type': 'DeletionPolicy',
-            'level': 0,
-            'cooldown': None,
-            'spec': self.spec,
-            'data': {},
-        }
+        policy = policy_base.Policy(policy_name, self.spec,
+                                    user=self.ctx.user,
+                                    project=self.ctx.project,
+                                    domain=self.ctx.domain)
         if policy_id:
-            values['id'] = policy_id
+            policy.id = policy_id
 
-        return db_api.policy_create(self.context, values)
+        return policy
 
-    @mock.patch.object(schema, 'Spec')
-    def test_policy_new(self, mock_schema_spec):
-        policy = policy_base.Policy('DeletionPolicy', 'test-policy')
+    def _create_db_policy(self, **kwargs):
+        values = {
+            'name': 'test-policy',
+            'type': 'senlin.policy.dummy-1.0',
+            'spec': self.spec,
+            'user': self.ctx.user,
+            'project': self.ctx.project,
+            'domain': self.ctx.domain,
+            'level': policy_base.SHOULD,
+            'cooldown': 0,
+            'data': {}
+        }
+
+        values.update(kwargs)
+        return db_api.policy_create(self.ctx, values)
+
+    def test_init(self):
+        policy = self._create_policy('test-policy')
+
         self.assertIsNone(policy.id)
         self.assertEqual('test-policy', policy.name)
+        self.assertEqual(self.spec, policy.spec)
+        self.assertEqual('senlin.policy.dummy-1.0', policy.type)
+        self.assertEqual(self.ctx.user, policy.user)
+        self.assertEqual(self.ctx.project, policy.project)
+        self.assertEqual(self.ctx.domain, policy.domain)
+        self.assertEqual(policy_base.SHOULD, policy.level)
+        self.assertEqual(0, policy.cooldown)
+        self.assertEqual({}, policy.data)
+        self.assertIsNone(policy.created_time)
+        self.assertIsNone(policy.updated_time)
+        self.assertIsNone(policy.deleted_time)
+
+        spec_data = policy.spec_data
+        self.assertEqual('senlin.policy.dummy', spec_data['type'])
+        self.assertEqual('1.0', spec_data['version'])
+        self.assertEqual({'key1': 'value1', 'key2': 2},
+                         spec_data['properties'])
+        self.assertEqual({'key1': 'value1', 'key2': 2}, policy.properties)
 
     def test_policy_new_type_not_found(self):
+        bad_spec = {
+            'type': 'bad-type',
+            'version': '1.0',
+            'properties': '',
+        }
+
         self.assertRaises(exception.PolicyTypeNotFound,
                           policy_base.Policy,
-                          'fake-policy-type', 'test-policy')
+                          'test-policy', bad_spec)
 
-    @mock.patch.object(schema, 'Spec')
-    def test_policy_init(self, mock_schema_spec):
-        kwargs = {
-            'user': 'test-user',
-            'project': 'test-project',
-            'domain': 'test-domain',
-            'type': 'DeletionPolicy',
-            'level': 0,
-            'cooldown': 10,
-            'spec': self.spec,
-            'data': {},
-        }
-        mock_schema_spec.return_value = self.spec_data_deletion_policy
-        policy = policy_base.Policy('DeletionPolicy', 'test-policy', **kwargs)
-
-        self.assertIsNone(policy.id)
-        self.assertEqual(kwargs['user'], policy.user)
-        self.assertEqual(kwargs['project'], policy.project)
-        self.assertEqual(kwargs['domain'], policy.domain)
-        self.assertEqual('test-policy', policy.name)
-        self.assertEqual(kwargs['type'], policy.type)
-        self.assertEqual(kwargs['level'], policy.level)
-        self.assertEqual(kwargs['cooldown'], policy.cooldown)
-        self.assertEqual(kwargs['spec'], policy.spec)
-        self.assertEqual(kwargs['data'], policy.data)
-        self.assertEqual(self.spec_data_deletion_policy, policy.spec_data)
-
-        self.assertIsNone(policy.created_time)
-        self.assertIsNone(policy.updated_time)
-        self.assertIsNone(policy.deleted_time)
-
-    @mock.patch.object(schema, 'Spec')
-    def test_policy_init_default_value(self, mock_schema_spec):
-        mock_schema_spec.return_value = self.spec_data_deletion_policy
-        policy = policy_base.Policy('DeletionPolicy', 'test-policy')
-
-        self.assertIsNone(policy.id)
-        self.assertEqual(None, policy.user)
-        self.assertEqual(None, policy.project)
-        self.assertEqual(None, policy.domain)
-        self.assertEqual('test-policy', policy.name)
-        self.assertEqual('DeletionPolicy', policy.type)
-        self.assertEqual(0, policy.level)
-        self.assertEqual(None, policy.cooldown)
-        self.assertEqual({}, policy.spec)
-        self.assertEqual({}, policy.data)
-        self.assertEqual(self.spec_data_deletion_policy, policy.spec_data)
-
-        self.assertIsNone(policy.created_time)
-        self.assertIsNone(policy.updated_time)
-        self.assertIsNone(policy.deleted_time)
-
-    @mock.patch.object(schema, 'Spec')
-    def test_policy_load(self, mock_schema_spec):
-        mock_schema_spec.return_value = self.spec_data_deletion_policy
-
-        ex = self.assertRaises(exception.PolicyNotFound,
-                               policy_base.Policy.load,
-                               self.context, 'fake-policy', None)
-        self.assertEqual('The policy (fake-policy) could not be found.',
-                         six.text_type(ex))
-
-        policy = self._create_policy('policy-1')
-        result = policy_base.Policy.load(self.context, policy.id)
+    def test_load(self):
+        policy = self._create_db_policy()
+        result = policy_base.Policy.load(self.ctx, policy.id)
 
         self.assertEqual(policy.id, result.id)
         self.assertEqual(policy.name, result.name)
@@ -147,39 +136,84 @@ class TestPolicy(base.SenlinTestCase):
         self.assertEqual(policy.cooldown, result.cooldown)
         self.assertEqual(policy.spec, result.spec)
         self.assertEqual(policy.data, result.data)
-        self.assertEqual(self.spec_data_deletion_policy, result.spec_data)
+        self.assertEqual({'type': 'senlin.policy.dummy',
+                          'version': '1.0',
+                          'properties': {'key1': 'value1', 'key2': 2}},
+                         result.spec_data)
+        self.assertEqual({'key1': 'value1', 'key2': 2}, result.properties)
 
         self.assertEqual(policy.created_time, result.created_time)
         self.assertEqual(policy.updated_time, result.updated_time)
         self.assertEqual(policy.deleted_time, result.deleted_time)
 
-    @mock.patch.object(schema, 'Spec')
-    def test_policy_load_all(self, mock_schema_spec):
-        result = policy_base.Policy.load_all(self.context)
-        self.assertEqual([], [p for p in result])
+    def test_load_not_found(self):
+        ex = self.assertRaises(exception.PolicyNotFound,
+                               policy_base.Policy.load,
+                               self.ctx, 'fake-policy', None)
+        self.assertEqual('The policy (fake-policy) could not be found.',
+                         six.text_type(ex))
 
-        policy1 = self._create_policy('policy-1', 'ID1')
-        policy2 = self._create_policy('policy-2', 'ID2')
+        ex = self.assertRaises(exception.PolicyNotFound,
+                               policy_base.Policy.load,
+                               self.ctx, None, None)
+        self.assertEqual('The policy (None) could not be found.',
+                         six.text_type(ex))
 
-        result = policy_base.Policy.load_all(self.context)
-        policies = [p for p in result]
+    def test_load_all(self):
+        result = policy_base.Policy.load_all(self.ctx)
+        self.assertEqual([], list(result))
+
+        policy1 = self._create_db_policy(name='policy-1', id='ID1')
+        policy2 = self._create_db_policy(name='policy-2', id='ID2')
+
+        result = policy_base.Policy.load_all(self.ctx)
+        policies = list(result)
         self.assertEqual(2, len(policies))
         self.assertEqual(policy1.id, policies[0].id)
         self.assertEqual(policy2.id, policies[1].id)
 
-    def test_policy_store_init(self):
-        kwargs = {
-            'user': 'test-user',
-            'project': 'test-project',
-            'domain': 'test-domain'
-        }
-        policy = policy_base.Policy('DeletionPolicy', 'test-policy', **kwargs)
+    @mock.patch.object(db_api, 'policy_get_all')
+    def test_load_all_with_params(self, mock_get):
+        mock_get.return_value = []
+
+        res = list(policy_base.Policy.load_all(self.ctx))
+        self.assertEqual([], res)
+        mock_get.assert_called_once_with(self.ctx, limit=None, marker=None,
+                                         sort_keys=None, sort_dir=None,
+                                         filters=None, show_deleted=False)
+        mock_get.reset_mock()
+
+        res = list(policy_base.Policy.load_all(
+            self.ctx, limit=1, marker='MARKER', sort_keys=['K1'],
+            sort_dir='asc', filters={'level': 30}, show_deleted=False))
+        self.assertEqual([], res)
+        mock_get.assert_called_once_with(
+            self.ctx, limit=1, marker='MARKER', sort_keys=['K1'],
+            sort_dir='asc', filters={'level': 30}, show_deleted=False)
+
+    def test_delete(self):
+        policy = self._create_db_policy()
+        policy_id = policy.id
+
+        res = policy_base.Policy.delete(self.ctx, policy_id)
+        self.assertIsNone(res)
+        self.assertRaises(exception.PolicyNotFound,
+                          policy_base.Policy.load,
+                          self.ctx, policy_id, None)
+
+    def test_delete_not_found(self):
+        result = policy_base.Policy.delete(self.ctx, 'bogus')
+        self.assertIsNone(result)
+
+    def test_store_for_create(self):
+        policy = self._create_policy('test-policy')
         self.assertIsNone(policy.id)
-        policy_id = policy.store(self.context)
+
+        policy_id = policy.store(self.ctx)
         self.assertIsNotNone(policy_id)
         self.assertEqual(policy_id, policy.id)
 
-        result = db_api.policy_get(self.context, policy_id)
+        result = db_api.policy_get(self.ctx, policy_id)
 
         self.assertIsNotNone(result)
         self.assertEqual('test-policy', result.name)
@@ -197,44 +231,37 @@ class TestPolicy(base.SenlinTestCase):
         self.assertIsNone(result.updated_time)
         self.assertIsNone(result.deleted_time)
 
-    def test_policy_store_update(self):
-        kwargs = {
-            'user': 'test-user',
-            'project': 'test-project',
-            'domain': 'test-domain'
-        }
-        policy = policy_base.Policy('DeletionPolicy', 'test-policy', **kwargs)
+    def test_store_for_update(self):
+        policy = self._create_policy('test-policy')
         self.assertIsNone(policy.id)
-        policy_id = policy.store(self.context)
+        policy_id = policy.store(self.ctx)
         self.assertIsNotNone(policy_id)
         self.assertEqual(policy_id, policy.id)
 
         # do an update
         policy.name = 'test-policy-1'
-        policy.type = 'PlacementPolicy'
-        policy.spec = {'key1': 'value1'}
         policy.level = 10
         policy.cooldown = 60
-        policy.data = {'key2': 'value2'}
+        policy.data = {'kk': 'vv'}
 
-        new_id = policy.store(self.context)
+        new_id = policy.store(self.ctx)
         self.assertEqual(policy_id, new_id)
 
-        result = db_api.policy_get(self.context, policy_id)
+        result = db_api.policy_get(self.ctx, policy_id)
         self.assertIsNotNone(result)
         self.assertEqual('test-policy-1', result.name)
-        self.assertEqual('PlacementPolicy', result.type)
         self.assertEqual(10, result.level)
         self.assertEqual(60, result.cooldown)
-        self.assertEqual({'key1': 'value1'}, result.spec)
-        self.assertEqual({'key2': 'value2'}, result.data)
+        self.assertEqual({'kk': 'vv'}, policy.data)
+        self.assertIsNotNone(policy.created_time)
+        self.assertIsNotNone(policy.updated_time)
 
-    @mock.patch.object(schema, 'Spec')
-    def test_policy_to_dict(self, mock_schema_spec):
+    def test_to_dict(self):
         policy = self._create_policy('test-policy')
-        self.assertIsNotNone(policy.id)
+        policy_id = policy.store(self.ctx)
+        self.assertIsNotNone(policy_id)
         expected = {
-            'id': policy.id,
+            'id': policy_id,
             'name': policy.name,
             'type': policy.type,
             'user': policy.user,
@@ -244,85 +271,51 @@ class TestPolicy(base.SenlinTestCase):
             'level': policy.level,
             'cooldown': policy.cooldown,
             'data': policy.data,
-            'created_time': policy.created_time,
-            'updated_time': policy.updated_time,
-            'deleted_time': policy.deleted_time,
+            'created_time': policy.created_time.isoformat(),
+            'updated_time': None,
+            'deleted_time': None,
         }
 
-        result = policy_base.Policy.load(self.context, policy_id=policy.id)
+        result = policy_base.Policy.load(self.ctx, policy_id=policy.id)
         self.assertEqual(expected, result.to_dict())
 
-    @mock.patch.object(schema, 'Spec')
-    def test_policy_from_dict(self, mock_schema_spec):
-        params = {
-            'user': 'test-user',
-            'project': 'test-project',
-            'domain': 'test-domain',
-            'name': 'test-policy',
-            'type': 'DeletionPolicy',
-            'level': 10,
-            'cooldown': 60,
-            'spec': self.spec,
-            'data': {},
+    def test_get_schema(self):
+        expected = {
+            'key1': {
+                'default': 'value1',
+                'description': 'first key',
+                'readonly': False,
+                'required': False,
+                'type': 'String'
+            },
+            'key2': {
+                'description': 'second key',
+                'readonly': False,
+                'required': True,
+                'type': 'Integer'
+            },
         }
+        res = DummyPolicy.get_schema()
+        self.assertEqual(expected, res)
 
-        policy = policy_base.Policy.from_dict(**params)
-        self.assertEqual(params['name'], policy.name)
-        self.assertEqual(params['type'], policy.type)
-        self.assertEqual(params['user'], policy.user)
-        self.assertEqual(params['project'], policy.project)
-        self.assertEqual(params['domain'], policy.domain)
-        self.assertEqual(params['level'], policy.level)
-        self.assertEqual(params['cooldown'], policy.cooldown)
-        self.assertEqual(params['spec'], policy.spec)
-        self.assertEqual(params['data'], policy.data)
-
-    @mock.patch.object(schema, 'Spec')
-    def test_policy_delete(self, mock_schema_spec):
+    def test_build_policy_data(self):
         policy = self._create_policy('test-policy')
-        policy_id = policy.id
-        result = policy_base.Policy.load(self.context, policy_id)
-        self.assertIsNotNone(result)
-        self.assertEqual(policy_id, result.id)
-
-        policy_base.Policy.delete(self.context, policy_id)
-        self.assertRaises(exception.PolicyNotFound, policy_base.Policy.load,
-                          self.context, policy_id, None)
-
-    def test_policy_delete_not_found(self):
-        result = policy_base.Policy.delete(self.context, 'fake-policy-id')
-        self.assertEqual(None, result)
-
-    def test_policy_build_policy_data(self):
-        kwargs = {
-            'user': 'test-user',
-            'project': 'test-project',
-            'domain': 'test-domain'
-        }
-        policy = policy_base.Policy('DeletionPolicy', 'test-policy', **kwargs)
-
         data = {'key1': 'value1'}
         res = policy._build_policy_data(data)
         expect_result = {
-            'DeletionPolicy': {
+            'DummyPolicy': {
                 'version': '1.0',
                 'data': data
             }
         }
         self.assertEqual(expect_result, res)
 
-    def test_policy_extract_policy_data(self):
-        kwargs = {
-            'user': 'test-user',
-            'project': 'test-project',
-            'domain': 'test-domain'
-        }
-        policy = policy_base.Policy('DeletionPolicy', 'test-policy', **kwargs)
-
+    def test_extract_policy_data(self):
+        policy = self._create_policy('test-policy')
         # Extract data correctly
         data = {'key1': 'value1'}
         policy_data = {
-            'DeletionPolicy': {
+            'DummyPolicy': {
                 'version': '1.0',
                 'data': data
             }
@@ -341,10 +334,10 @@ class TestPolicy(base.SenlinTestCase):
         res = policy._extract_policy_data(policy_data)
         self.assertIsNone(res)
 
-        # Policy version unmatch
+        # Policy version don't match
         data = {'key1': 'value1'}
         policy_data = {
-            'DeletionPolicy': {
+            'DummyPolicy': {
                 'version': '2.0',
                 'data': data
             }
@@ -352,68 +345,51 @@ class TestPolicy(base.SenlinTestCase):
         res = policy._extract_policy_data(policy_data)
         self.assertIsNone(res)
 
-    def test_policy_default_pre_op(self):
-        environment.global_env().register_policy('DummyPolicy', DummyPolicy)
-        policy = policy_base.Policy('DummyPolicy', 'test-policy')
+    def test_default_pre_op(self):
+        policy = self._create_policy('test-policy')
         res = policy.pre_op('CLUSTER_ID', 'FOO')
         self.assertIsNone(res)
 
-    def test_policy_default_post_op(self):
-        environment.global_env().register_policy('DummyPolicy', DummyPolicy)
-        policy = policy_base.Policy('DummyPolicy', 'test-policy')
+    def test_default_post_op(self):
+        policy = self._create_policy('test-policy')
         res = policy.post_op('CLUSTER_ID', 'FOO')
         self.assertIsNone(res)
 
-    def test_policy_attach(self):
+    def test_default_attach(self):
         cluster = mock.Mock()
-        kwargs = {
-            'user': 'test-user',
-            'project': 'test-project',
-            'domain': 'test-domain'
-        }
-        policy = policy_base.Policy('DeletionPolicy', 'test-policy', **kwargs)
+        policy = self._create_policy('test-policy')
 
         # Policy targets on ANY profile types
         policy.PROFILE_TYPE = ['ANY']
-        res, data = policy.attach(cluster)
-        self.assertTrue(res)
-        self.assertIsNone(data)
+        res = policy.attach(cluster)
+        self.assertEqual((True, None), res)
 
         # Profile type of cluster is not in policy's target scope
         profile = mock.Mock()
         profile.type = 'os.nova.server'
         cluster.rt = {'profile': profile}
         policy.PROFILE_TYPE = ['os.heat.resource']
-        msg = _('Policy not applicable on profile type:%s') % 'os.nova.server'
-        res, data = policy.attach(cluster)
-        self.assertFalse(res)
-        self.assertEqual(msg, data)
+        msg = 'Policy not applicable on profile type: os.nova.server'
+        res = policy.attach(cluster)
+        self.assertEqual((False, msg), res)
 
         # Attaching succeed
         policy.PROFILE_TYPE = ['os.nova.server', 'os.heat.resource']
-        res, data = policy.attach(cluster)
-        self.assertTrue(res)
-        self.assertIsNone(data)
+        res = policy.attach(cluster)
+        self.assertEqual((True, None), res)
 
-    def test_policy_detach(self):
+    def test_default_detach(self):
         cluster = mock.Mock()
-        kwargs = {
-            'user': 'test-user',
-            'project': 'test-project',
-            'domain': 'test-domain'
-        }
-        policy = policy_base.Policy('DeletionPolicy', 'test-policy', **kwargs)
+        policy = self._create_policy('test-policy')
 
-        res, data = policy.detach(cluster)
-        self.assertTrue(res)
-        self.assertIsNone(data)
+        res = policy.detach(cluster)
+        self.assertEqual((True, None), res)
 
     @mock.patch.object(db_api, 'cred_get')
-    @mock.patch.object(senlin_context, 'get_service_context')
-    @mock.patch.object(oslo_context, 'get_current')
-    def test_policy_build_connection_params(self, mock_get_current,
-                                            mock_get_service_context,
-                                            mock_cred_get):
+    @mock.patch.object(senlin_ctx, 'get_service_context')
+    @mock.patch.object(oslo_ctx, 'get_current')
+    def test_build_conn_params(self, mock_get_current, mock_get_service_ctx,
+                               mock_cred_get):
         service_cred = {
             'auth_url': 'AUTH_URL',
             'username': 'senlin',
@@ -437,15 +413,11 @@ class TestPolicy(base.SenlinTestCase):
         cluster.project = 'project1'
         cred = mock.Mock()
         cred.cred = cred_info
-        mock_get_service_context.return_value = service_cred
+        mock_get_service_ctx.return_value = service_cred
         mock_get_current.return_value = current_ctx
         mock_cred_get.return_value = cred
 
-        kwargs = {
-            'spec': {}
-        }
-        policy = deletion_policy.DeletionPolicy('DeletionPolicy',
-                                                'test-policy', **kwargs)
+        policy = self._create_policy('test-policy')
         expected_result = {
             'auth_url': 'AUTH_URL',
             'username': 'senlin',
@@ -453,15 +425,16 @@ class TestPolicy(base.SenlinTestCase):
             'password': '123',
             'trusts': ['TRUST_ID']
         }
-        res = policy._build_connection_params(cluster)
+        res = policy._build_conn_params(cluster)
         self.assertEqual(expected_result, res)
-        mock_get_service_context.assert_called_once_with()
+        mock_get_service_ctx.assert_called_once_with()
         mock_cred_get.assert_called_once_with(current_ctx, 'user1', 'project1')
 
     @mock.patch.object(db_api, 'cred_get')
-    @mock.patch.object(senlin_context, 'get_service_context')
-    def test_policy_build_connection_params_trust_not_found(
-            self, mock_get_service_context, mock_cred_get):
+    @mock.patch.object(senlin_ctx, 'get_service_context')
+    @mock.patch.object(oslo_ctx, 'get_current')
+    def test_build_conn_params_trust_not_found(
+            self, mock_get_current, mock_get_service_ctx, mock_cred_get):
 
         service_cred = {
             'auth_url': 'AUTH_URL',
@@ -470,20 +443,14 @@ class TestPolicy(base.SenlinTestCase):
             'password': '123'
         }
 
-        self.patchobject(oslo_context, 'get_current')
-        mock_get_service_context.return_value = service_cred
+        mock_get_service_ctx.return_value = service_cred
         mock_cred_get.return_value = None
         cluster = mock.Mock()
         cluster.user = 'user1'
         cluster.project = 'project1'
 
-        kwargs = {
-            'spec': {}
-        }
-        policy = deletion_policy.DeletionPolicy('DeletionPolicy',
-                                                'test-policy', **kwargs)
+        policy = self._create_policy('test-policy')
         ex = self.assertRaises(exception.TrustNotFound,
-                               policy._build_connection_params,
-                               cluster)
+                               policy._build_conn_params, cluster)
         msg = "The trust for trustor (user1) could not be found."
         self.assertEqual(msg, six.text_type(ex))

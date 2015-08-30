@@ -82,8 +82,38 @@ class Policy(object):
     '''Base class for policies.'''
     PROFILE_TYPE = 'ANY'
 
-    def __new__(cls, type_name, name, **kwargs):
-        '''Create a new policy of the appropriate class.'''
+    KEYS = (
+        TYPE, VERSION, PROPERTIES,
+    ) = (
+        'type', 'version', 'properties',
+    )
+
+    spec_schema = {
+        TYPE: schema.String(
+            _('Name of the policy type.'),
+            required=True,
+        ),
+        VERSION: schema.String(
+            _('Version number of the policy type.'),
+            required=True,
+        ),
+        PROPERTIES: schema.Map(
+            _('Properties for the policy.'),
+            required=True,
+        )
+    }
+
+    properties_schema = {}
+
+    def __new__(cls, name, spec, **kwargs):
+        """Create a new policy of the appropriate class.
+
+        :param name: The name for the policy.
+        :param spec: A dictionary containing the spec for the policy.
+        :param kwargs: Keyword arguments for policy creation.
+        :returns: An instance of a specific sub-class of Policy.
+        """
+        type_name, version = schema.get_spec_version(spec)
 
         if cls != Policy:
             PolicyClass = cls
@@ -92,23 +122,36 @@ class Policy(object):
 
         return super(Policy, cls).__new__(PolicyClass)
 
-    def __init__(self, type_name, name, **kwargs):
+    def __init__(self, name, spec, **kwargs):
+        """Initialize a policy instance.
+
+        :param name: The name for the policy.
+        :param spec: A dictionary containing the detailed policy spec.
+        :param kwargs: Keyword arguments for initializing the policy.
+        :returns: An instance of a specific sub-class of Policy.
+        """
+
+        type_name, version = schema.get_spec_version(spec)
+
         self.name = name
-        self.type = type_name
+        self.spec = spec
 
         self.id = kwargs.get('id', None)
+        self.type = kwargs.get('type', "%s-%s" % (type_name, version))
         self.user = kwargs.get('user')
         self.project = kwargs.get('project')
         self.domain = kwargs.get('domain')
-        self.level = kwargs.get('level', 0)
-        self.cooldown = kwargs.get('cooldown', None)
-        self.spec = kwargs.get('spec', {})
+        self.level = kwargs.get('level', SHOULD)
+        self.cooldown = kwargs.get('cooldown', 0)
         self.data = kwargs.get('data', {})
+
         self.created_time = kwargs.get('created_time', None)
         self.updated_time = kwargs.get('updated_time', None)
         self.deleted_time = kwargs.get('deleted_time', None)
 
         self.spec_data = schema.Spec(self.spec_schema, self.spec)
+        self.properties = schema.Spec(self.properties_schema,
+                                      self.spec.get(self.PROPERTIES, {}))
 
     @classmethod
     def _from_db_record(cls, record):
@@ -116,10 +159,10 @@ class Policy(object):
 
         kwargs = {
             'id': record.id,
+            'type': record.type,
             'user': record.user,
             'project': record.project,
             'domain': record.domain,
-            'spec': record.spec,
             'level': record.level,
             'cooldown': record.cooldown,
             'created_time': record.created_time,
@@ -128,17 +171,23 @@ class Policy(object):
             'data': record.data,
         }
 
-        return cls(record.type, record.name, **kwargs)
+        return cls(record.name, record.spec, **kwargs)
 
     @classmethod
-    def load(cls, context, policy_id=None, policy=None):
-        '''Retrieve and reconstruct a policy object from DB.'''
-        if policy is None:
-            policy = db_api.policy_get(context, policy_id)
-            if policy is None:
+    def load(cls, context, policy_id=None, db_policy=None):
+        """Retrieve and reconstruct a policy object from DB.
+
+        :param context: DB context for object retrieval.
+        :param policy_id: Optional parameter specifying the ID of policy.
+        :param db_policy: Optional parameter referencing a policy DB object.
+        :returns: An object of the proper policy class.
+        """
+        if db_policy is None:
+            db_policy = db_api.policy_get(context, policy_id)
+            if db_policy is None:
                 raise exception.PolicyNotFound(policy=policy_id)
 
-        return cls._from_db_record(policy)
+        return cls._from_db_record(db_policy)
 
     @classmethod
     def load_all(cls, context, limit=None, sort_keys=None, marker=None,
@@ -189,11 +238,12 @@ class Policy(object):
     def validate(self):
         '''Validate the schema and the data provided.'''
         self.spec_data.validate()
+        self.properties.validate()
 
     @classmethod
     def get_schema(cls):
         return dict((name, dict(schema))
-                    for name, schema in cls.spec_schema.items())
+                    for name, schema in cls.properties_schema.items())
 
     def _build_policy_data(self, data):
         clsname = self.__class__.__name__
@@ -228,7 +278,7 @@ class Policy(object):
 
         profile = cluster.rt['profile']
         if profile.type not in self.PROFILE_TYPE:
-            error = _('Policy not applicable on profile type:'
+            error = _('Policy not applicable on profile type: '
                       '%s') % profile.type
             return False, error
 
@@ -267,13 +317,7 @@ class Policy(object):
         }
         return pb_dict
 
-    @classmethod
-    def from_dict(cls, **kwargs):
-        type_name = kwargs.pop('type')
-        name = kwargs.pop('name')
-        return cls(type_name, name, **kwargs)
-
-    def _build_connection_params(self, cluster):
+    def _build_conn_params(self, cluster):
         """Build trust-based connection parameters.
 
         :param cluster: the cluste for which the trust will be checked.
