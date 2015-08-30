@@ -162,8 +162,7 @@ class ClusterAction(base.Action):
     def do_update(self, cluster):
         profile_id = self.inputs.get('new_profile_id')
 
-        node_list = cluster.get_nodes()
-        for node in node_list:
+        for node in cluster.nodes:
             kwargs = {
                 'name': 'node_update_%s' % node.id[:8],
                 'cause': base.CAUSE_DERIVED,
@@ -182,7 +181,7 @@ class ClusterAction(base.Action):
         # Wait for nodes to complete update
         result = self.RES_OK
         reason = 'Update completed'
-        if len(node_list) > 0:
+        if len(cluster.nodes) > 0:
             result, reason = self._wait_for_dependents()
 
         if result != self.RES_OK:
@@ -227,7 +226,7 @@ class ClusterAction(base.Action):
     def do_delete(self, cluster):
         reason = 'Deletion in progress'
         cluster.set_status(self.context, cluster.DELETING, reason)
-        nodes = [node.id for node in cluster.get_nodes()]
+        node_ids = [node.id for node in cluster.nodes]
 
         # For cluster delete, we delete the nodes
         data = {
@@ -236,7 +235,7 @@ class ClusterAction(base.Action):
             }
         }
         self.data.update(data)
-        result, reason = self._delete_nodes(cluster, nodes)
+        result, reason = self._delete_nodes(cluster, node_ids)
 
         if result == self.RES_OK:
             res = cluster.do_delete(self.context)
@@ -466,7 +465,7 @@ class ClusterAction(base.Action):
         if result != self.RES_OK:
             return result, reason
 
-        node_list = cluster.get_nodes()
+        node_list = cluster.nodes
         current_size = len(node_list)
         desired = cluster.desired_capacity
 
@@ -517,7 +516,7 @@ class ClusterAction(base.Action):
 
         # check provided params against current properties
         # desired is checked when strict is True
-        node_list = cluster.get_nodes()
+        node_list = cluster.nodes
         current_size = len(node_list)
         desired_capacity = current_size + count
         result, reason = self.check_size_params(cluster, desired_capacity,
@@ -566,7 +565,7 @@ class ClusterAction(base.Action):
 
         # check provided params against current properties
         # desired is checked when strict is True
-        node_list = cluster.get_nodes()
+        node_list = cluster.nodes
         current_size = len(node_list)
         desired_capacity = current_size - count
         result, reason = self.check_size_params(cluster, desired_capacity,

@@ -74,7 +74,8 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual('Initializing', cluster.status_reason)
         self.assertEqual({}, cluster.data)
         self.assertEqual({}, cluster.metadata)
-        self.assertEqual({}, cluster.rt)
+        self.assertEqual({'profile': None, 'nodes': [], 'policies': []},
+                         cluster.rt)
 
     def test_cluster_store_init(self):
         mock_info = self.patchobject(eventm, 'info')
@@ -290,55 +291,51 @@ class TestCluster(base.SenlinTestCase):
         res = cluster.do_create(self.context)
         self.assertFalse(res)
 
-    def test_cluster_get_nodes(self):
+    def test_cluster_nodes_property(self):
         cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
                                    project=self.context.project)
         # empty
-        self.assertEqual([], cluster.get_nodes())
+        self.assertEqual([], cluster.nodes)
 
         # with nodes
         node1 = mock.Mock()
         node2 = mock.Mock()
         cluster.rt = {'nodes': [node1, node2]}
-        res = cluster.get_nodes()
-        self.assertEqual([node1, node2], res)
+        self.assertEqual([node1, node2], cluster.nodes)
 
-    def test_cluster_get_policies(self):
+    def test_cluster_policies_property(self):
         cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
                                    project=self.context.project)
         # empty
-        self.assertEqual([], cluster.get_policies())
+        self.assertEqual([], cluster.policies)
 
         # with policies attached
         policy1 = mock.Mock()
         policy2 = mock.Mock()
         cluster.rt = {'policies': [policy1, policy2]}
-        res = cluster.get_policies()
-        self.assertEqual([policy1, policy2], res)
+        self.assertEqual([policy1, policy2], cluster.policies)
 
     def test_cluster_add_policy(self):
         cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
                                    project=self.context.project)
         # empty
-        self.assertEqual([], cluster.get_policies())
+        self.assertEqual([], cluster.policies)
 
         # attach one policy (for initialize the policies list)
         policy = mock.Mock()
         cluster.add_policy(policy)
-        res = cluster.get_policies()
-        self.assertEqual([policy], res)
+        self.assertEqual([policy], cluster.policies)
 
         # attach another policy
         policy_another = mock.Mock()
         cluster.add_policy(policy_another)
-        res = cluster.get_policies()
-        self.assertEqual([policy, policy_another], res)
+        self.assertEqual([policy, policy_another], cluster.policies)
 
     def test_cluster_remove_policy(self):
         cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
                                    project=self.context.project)
         # empty
-        self.assertEqual([], cluster.get_policies())
+        self.assertEqual([], cluster.policies)
 
         # remove from empty list should be okay
         res = cluster.remove_policy('BOGUS')
@@ -348,21 +345,21 @@ class TestCluster(base.SenlinTestCase):
         policy1 = mock.Mock()
         policy1.id = 'PP1'
         cluster.add_policy(policy1)
-        self.assertEqual([policy1], cluster.get_policies())
+        self.assertEqual([policy1], cluster.policies)
 
         # remove non-existent should be okay
         policy_other = mock.Mock()
         policy_other.id = 'OTHER'
         res = cluster.remove_policy(policy_other)
         self.assertIsNone(res)
-        self.assertEqual([policy1], cluster.get_policies())
+        self.assertEqual([policy1], cluster.policies)
 
         # attach another policy
         policy2 = mock.Mock()
         policy2.id = 'PP2'
         cluster.add_policy(policy2)
-        self.assertEqual([policy1, policy2], cluster.get_policies())
+        self.assertEqual([policy1, policy2], cluster.policies)
 
         res = cluster.remove_policy(policy2)
         self.assertIsNone(res)
-        self.assertEqual([policy1], cluster.get_policies())
+        self.assertEqual([policy1], cluster.policies)

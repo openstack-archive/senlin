@@ -19,7 +19,8 @@ from senlin.common.i18n import _LE
 from senlin.db import api as db_api
 from senlin.engine import event as event_mod
 from senlin.engine import node as node_mod
-from senlin.profiles import base as profiles_base
+from senlin.policies import base as policy_base
+from senlin.profiles import base as profile_base
 
 LOG = logging.getLogger(__name__)
 
@@ -77,16 +78,30 @@ class Cluster(object):
 
         # rt is a dict for runtime data
         # TODO(Qiming): nodes have to be reloaded when membership changes
-        self.rt = {}
+        self.rt = {
+            'profile': None,
+            'nodes': [],
+            'policies': []
+        }
 
         if context is not None:
             self._load_runtime_data(context)
 
     def _load_runtime_data(self, context):
+        if self.id is None:
+            return
+
+        policies = []
+        bindings = db_api.cluster_policy_get_all(context, self.id)
+        for b in bindings:
+            # Detect policy type conflicts
+            policy = policy_base.Policy.load(context, b.policy_id)
+            policies.append(policy)
+
         self.rt = {
-            'profile': profiles_base.Profile.load(context, self.profile_id),
+            'profile': profile_base.Profile.load(context, self.profile_id),
             'nodes': node_mod.Node.load_all(context, cluster_id=self.id),
-            'policies': [],
+            'policies': policies
         }
 
     def store(self, context):
@@ -262,7 +277,6 @@ class Cluster(object):
 
         Set cluster status to DELETED.
         '''
-
         self.set_status(context, self.DELETED, reason='Deletion succeeded')
         return True
 
@@ -275,25 +289,20 @@ class Cluster(object):
         # TODO(anyone): generate event record
         return True
 
-    def get_nodes(self):
-        '''Get all nodes for this cluster.'''
-        return self.rt.get('nodes', [])
+    @property
+    def nodes(self):
+        return self.rt['nodes']
 
-    def get_policies(self):
-        '''Get all policies associated with the cluster.'''
-        return self.rt.get('policies', [])
+    @property
+    def policies(self):
+        return self.rt['policies']
 
     def add_policy(self, policy):
         '''Attach specified policy instance to this cluster.'''
-
-        # TODO(Qiming): check conflicts with existing policies
-        if 'policies' not in self.rt:
-            self.rt['policies'] = []
-
         self.rt['policies'].append(policy)
 
     def remove_policy(self, policy):
         # TODO(Qiming): check if actions of specified policies are ongoing
-        for p in self.rt.get('policies', []):
+        for p in self.rt['policies']:
             if(p.id == policy.id):
                 self.rt['policies'].remove(policy)
