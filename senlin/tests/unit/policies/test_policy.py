@@ -136,10 +136,6 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual(policy.cooldown, result.cooldown)
         self.assertEqual(policy.spec, result.spec)
         self.assertEqual(policy.data, result.data)
-        self.assertEqual({'type': 'senlin.policy.dummy',
-                          'version': '1.0',
-                          'properties': {'key1': 'value1', 'key2': 2}},
-                         result.spec_data)
         self.assertEqual({'key1': 'value1', 'key2': 2}, result.properties)
 
         self.assertEqual(policy.created_time, result.created_time)

@@ -83,9 +83,9 @@ class Policy(object):
     PROFILE_TYPE = 'ANY'
 
     KEYS = (
-        TYPE, VERSION, PROPERTIES,
+        TYPE, VERSION, DESCRIPTION, PROPERTIES,
     ) = (
-        'type', 'version', 'properties',
+        'type', 'version', 'description', 'properties',
     )
 
     spec_schema = {
@@ -96,6 +96,10 @@ class Policy(object):
         VERSION: schema.String(
             _('Version number of the policy type.'),
             required=True,
+        ),
+        DESCRIPTION: schema.String(
+            _('A text description of policy.'),
+            default='',
         ),
         PROPERTIES: schema.Map(
             _('Properties for the policy.'),
@@ -149,7 +153,7 @@ class Policy(object):
         self.updated_time = kwargs.get('updated_time', None)
         self.deleted_time = kwargs.get('deleted_time', None)
 
-        self.spec_data = schema.Spec(self.spec_schema, self.spec)
+        self.spec_data = schema.Spec(self.spec_schema, spec)
         self.properties = schema.Spec(self.properties_schema,
                                       self.spec.get(self.PROPERTIES, {}))
 
