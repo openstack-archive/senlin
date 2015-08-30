@@ -126,15 +126,15 @@ class ThreadGroupManager(object):
             eventlet.sleep()
 
 
-def reschedule(action, sleep_time=1):
+def reschedule(action_id, sleep_time=1):
     '''Eventlet Sleep for the specified number of seconds.
 
+    :param action_id: the action to put into sleep.
     :param sleep_time: seconds to sleep; if None, no sleep;
     '''
-    # TODO(Qiming): Don't use rich object here!!!
     if sleep_time is not None:
         LOG.debug('Action %s sleep for %s seconds' % (
-            action.id, sleep_time))
+            action_id, sleep_time))
         eventlet.sleep(sleep_time)
 
 

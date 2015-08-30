@@ -83,7 +83,7 @@ class ClusterAction(base.Action):
                 return self.RES_TIMEOUT
 
             # Continue waiting (with reschedule)
-            scheduler.reschedule(self, 1)
+            scheduler.reschedule(self.id, 1)
             self.get_status()
 
         return self.RES_OK, 'All dependents ended with success'
