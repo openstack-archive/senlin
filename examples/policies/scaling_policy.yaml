@@ -2,6 +2,7 @@
 type: senlin.policy.scaling
 version: 1.0
 properties:
+  event: CLUSTER_SCALE_IN
   adjustment:
     # Adjustment type, valid values include:
     # EXACT_CAPACITY, CHANGE_IN_CAPACITY, CHANGE_IN_PERCENTAGE

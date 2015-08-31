@@ -41,9 +41,15 @@ class ScalingPolicy(base.Policy):
     ]
 
     KEYS = (
-        ADJUSTMENT,
+        EVENT, ADJUSTMENT,
     ) = (
-        'adjustment',
+        'event', 'adjustment',
+    )
+
+    _SUPPORTED_EVENTS = (
+        CLUSTER_SCALE_IN, CLUSTER_SCALE_OUT,
+    ) = (
+        consts.CLUSTER_SCALE_IN, consts.CLUSTER_SCALE_OUT,
     )
 
     _ADJUSTMENT_KEYS = (
@@ -53,6 +59,14 @@ class ScalingPolicy(base.Policy):
     )
 
     properties_schema = {
+        EVENT: schema.String(
+            _('Event that will trigger this policy. Must be one of '
+              'CLUSTER_SCALE_IN and CLUSTER_SCALE_OUT.'),
+            constraints=[
+                constraints.AllowedValues(_SUPPORTED_EVENTS),
+            ],
+            required=True,
+        ),
         ADJUSTMENT: schema.Map(
             _('Detailed specification for scaling adjustments.'),
             schema={
@@ -85,6 +99,7 @@ class ScalingPolicy(base.Policy):
     def __init__(self, name, spec, **kwargs):
         super(ScalingPolicy, self).__init__(name, spec, **kwargs)
 
+        self.event = self.properties[self.EVENT]
         adjustment = self.properties[self.ADJUSTMENT]
 
         self.adjustment_type = adjustment[self.ADJUSTMENT_TYPE]
@@ -107,6 +122,16 @@ class ScalingPolicy(base.Policy):
         return count
 
     def pre_op(self, cluster_id, action):
+
+        status = base.CHECK_OK
+        reason = _('Scaling request validated.')
+
+        # Check if the action is expected by the policy
+        if self.event != action.action:
+            action.data.update({'status': status, 'reason': reason})
+            action.store(action.context)
+            return
+
         cluster = db_api.cluster_get(action.context, cluster_id)
         nodes = db_api.node_get_all_by_cluster(action.context, cluster_id)
         current_size = len(nodes)
@@ -117,8 +142,6 @@ class ScalingPolicy(base.Policy):
         new_size = current_size + count
 
         # Check size constraints
-        status = base.CHECK_OK
-        reason = _('Scaling request validated.')
         if (count < 0) and action.action == consts.CLUSTER_SCALE_IN:
             if (new_size < cluster.min_size):
                 if self.best_effort:
