@@ -12,7 +12,6 @@
 
 import base64
 
-from oslo_context import context
 from oslo_log import log as logging
 from oslo_utils import encodeutils
 import six
@@ -194,7 +193,7 @@ class ServerProfile(base.Profile):
 
         if self._novaclient is not None:
             return self._novaclient
-        params = self._build_connection_params(context.get_current(), obj)
+        params = self._build_conn_params(obj.user, obj.project)
         self._novaclient = driver_base.SenlinDriver().compute(params)
         return self._novaclient
 
@@ -208,7 +207,7 @@ class ServerProfile(base.Profile):
 
         if self._neutronclient is not None:
             return self._neutronclient
-        params = self._build_connection_params(context.get_current(), obj)
+        params = self._build_conn_params(obj.user, obj.project)
         self._neutronclient = driver_base.SenlinDriver().network(params)
         return self._neutronclient
 
