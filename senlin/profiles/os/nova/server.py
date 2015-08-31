@@ -12,10 +12,12 @@
 
 import base64
 
+from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import encodeutils
 import six
 
+from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.common import utils
@@ -183,6 +185,15 @@ class ServerProfile(base.Profile):
         self._neutronclient = None
         self.server_id = None
 
+    def validate(self):
+        super(ServerProfile, self).validate()
+
+        if self.spec_data[self.TIMEOUT] > cfg.CONF.default_action_timeout:
+            suggest = cfg.CONF.default_action_timeout
+            err = _("Value of the 'timeout' property must be lower than the "
+                    "upper limit (%s).") % suggest
+            raise exception.InvalidSpec(message=err)
+
     def nova(self, obj):
         '''Construct nova client based on object.
 
@@ -213,8 +224,6 @@ class ServerProfile(base.Profile):
 
     def do_validate(self, obj):
         '''Validate if the spec has provided valid info for server creation.'''
-
-        # TODO(Qiming): timeout must be less than default_action_timeout
         return True
 
     def do_create(self, obj):
