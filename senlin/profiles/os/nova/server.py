@@ -70,7 +70,7 @@ class ServerProfile(base.Profile):
         'group',
     )
 
-    spec_schema = {
+    properties_schema = {
         CONTEXT: schema.Map(
             _('Customized security context for operating servers.'),
         ),
@@ -188,7 +188,7 @@ class ServerProfile(base.Profile):
     def validate(self):
         super(ServerProfile, self).validate()
 
-        if self.spec_data[self.TIMEOUT] > cfg.CONF.default_action_timeout:
+        if self.properties[self.TIMEOUT] > cfg.CONF.default_action_timeout:
             suggest = cfg.CONF.default_action_timeout
             err = _("Value of the 'timeout' property must be lower than the "
                     "upper limit (%s).") % suggest
@@ -229,20 +229,22 @@ class ServerProfile(base.Profile):
     def do_create(self, obj):
         '''Create a server using the given profile.'''
         kwargs = {}
-        for k in self.KEYS:
-            if k == self.CONTEXT:
+        for key in self.KEYS:
+            # context is treated as connection parameters
+            if key == self.CONTEXT:
                 continue
-            if self.spec_data[k] is not None:
-                kwargs[k] = self.spec_data[k]
 
-        name_or_id = self.spec_data[self.IMAGE]
+            if self.properties[key] is not None:
+                kwargs[key] = self.properties[key]
+
+        name_or_id = self.properties[self.IMAGE]
         if name_or_id is not None:
             image = self.nova(obj).image_get_by_name(name_or_id)
             # wait for new version of openstacksdk to fix this
             kwargs.pop(self.IMAGE)
             kwargs['imageRef'] = image.id
 
-        flavor_id = self.spec_data[self.FLAVOR]
+        flavor_id = self.properties[self.FLAVOR]
         flavor = self.nova(obj).flavor_find(flavor_id, False)
 
         # wait for new verson of openstacksdk to fix this
@@ -252,21 +254,21 @@ class ServerProfile(base.Profile):
         if obj.name is not None:
             kwargs[self.NAME] = obj.name + '-' + utils.random_name(8)
 
-        metadata = self.spec_data[self.METADATA] or {}
+        metadata = self.properties[self.METADATA] or {}
         if obj.cluster_id is not None:
             metadata['cluster'] = obj.cluster_id
         kwargs['metadata'] = metadata
 
-        scheduler_hint = self.spec_data[self.SCHEDULER_HINTS]
+        scheduler_hint = self.properties[self.SCHEDULER_HINTS]
         if scheduler_hint is not None:
             kwargs['scheduler_hints'] = scheduler_hint
 
-        user_data = self.spec_data[self.USER_DATA]
+        user_data = self.properties[self.USER_DATA]
         if user_data is not None:
             ud = encodeutils.safe_encode(user_data)
             kwargs['user_data'] = encodeutils.safe_decode(base64.b64encode(ud))
 
-        networks = self.spec_data[self.NETWORKS]
+        networks = self.properties[self.NETWORKS]
         if networks is not None:
             for network in networks:
                 net_name_id = network.get(self.NETWORK)

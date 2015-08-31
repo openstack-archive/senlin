@@ -24,17 +24,21 @@ class TestHeatStackProfile(base.SenlinTestCase):
         super(TestHeatStackProfile, self).setUp()
         self.context = utils.dummy_context()
         self.spec = {
-            'template': {"Template": "data"},
-            'context': {},
-            'parameters': {'foo': 'bar'},
-            'files': {},
-            'timeout': 60,
-            'disable_rollback': True,
-            'environment': {}
+            'type': 'os.heat.stack',
+            'version': '1.0',
+            'properties': {
+                'template': {"Template": "data"},
+                'context': {},
+                'parameters': {'foo': 'bar'},
+                'files': {},
+                'timeout': 60,
+                'disable_rollback': True,
+                'environment': {}
+            }
         }
 
     def test_stack_init(self):
-        profile = stack.StackProfile('os.heat.stack', 't', spec=self.spec)
+        profile = stack.StackProfile('t', self.spec)
         self.assertIsNone(profile.hc)
         self.assertIsNone(profile.stack_id)
 
@@ -46,7 +50,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         sd.orchestration.return_value = hc
         mock_senlindriver.return_value = sd
 
-        profile = stack.StackProfile('os.heat.stack', 't', spec=self.spec)
+        profile = stack.StackProfile('t', self.spec)
 
         # New hc will be created if no cache is found
         profile.hc = None
@@ -67,14 +71,14 @@ class TestHeatStackProfile(base.SenlinTestCase):
         sd.orchestration.return_value = hc
         mock_senlindriver.return_value = sd
 
-        profile = stack.StackProfile('os.heat.stack', 't', spec=self.spec)
+        profile = stack.StackProfile('t', self.spec)
 
         # Cache hc will be used
         profile.hc = hc
         self.assertEqual(hc, profile.heat(test_stack))
 
     def test_do_validate(self):
-        profile = stack.StackProfile('os.heat.stack', 't', spec=self.spec)
+        profile = stack.StackProfile('t', self.spec)
 
         profile.hc = mock.MagicMock()
         test_stack = mock.Mock()
@@ -83,7 +87,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         self.assertTrue(profile.hc.stacks.validate.called)
 
     def test_check_action_complete(self):
-        profile = stack.StackProfile('os.heat.stack', 't', spec=self.spec)
+        profile = stack.StackProfile('t', self.spec)
 
         # Check 'IN_PROGRESS' Status Path
         test_stack = mock.Mock()
@@ -103,7 +107,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         self.assertEqual(2, profile.hc.stack_get.call_count)
 
     def test_do_create(self):
-        profile = stack.StackProfile('os.heat.stack', 't', spec=self.spec)
+        profile = stack.StackProfile('t', self.spec)
 
         test_stack = mock.Mock()
         test_stack.name = 'test_stack'
@@ -117,7 +121,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         self.assertTrue(profile._check_action_complete.called)
 
     def test_do_delete(self):
-        profile = stack.StackProfile('os.heat.stack', 't', spec=self.spec)
+        profile = stack.StackProfile('t', self.spec)
 
         test_stack = mock.Mock()
         test_stack.physical_id = 'ce8ae86c-9810-4cb1-8888-7fb53bc523bf'
@@ -129,7 +133,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         self.assertTrue(profile._check_action_complete.called)
 
     def test_do_update(self):
-        profile = stack.StackProfile('os.heat.stack', 't', spec=self.spec)
+        profile = stack.StackProfile('t', self.spec)
 
         # Check New Stack Path
         test_stack = mock.Mock()
@@ -139,15 +143,19 @@ class TestHeatStackProfile(base.SenlinTestCase):
 
         # New Profile
         new_spec = {
-            'template': {"Template": "data update"},
-            'context': {},
-            'parameters': {'new': 'params'},
-            'files': {},
-            'timeout': 60,
-            'disable_rollback': True,
-            'environment': {}
+            'type': 'os.heat.stack',
+            'version': '1.0',
+            'properties': {
+                'template': {"Template": "data update"},
+                'context': {},
+                'parameters': {'new': 'params'},
+                'files': {},
+                'timeout': 60,
+                'disable_rollback': True,
+                'environment': {}
+            }
         }
-        new_profile = stack.StackProfile('os.heat.stack', 'u', spec=new_spec)
+        new_profile = stack.StackProfile('u', new_spec)
 
         # Check Update Stack Path
         test_stack.physical_id = 'ce8ae86c-9810-4cb1-8888-7fb53bc523bf'
@@ -159,7 +167,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         self.assertTrue(profile._check_action_complete.called)
 
     def test_do_check(self):
-        profile = stack.StackProfile('os.heat.stack', 't', spec=self.spec)
+        profile = stack.StackProfile('t', self.spec)
 
         heat_client = mock.Mock()
         test_stack = mock.Mock()
@@ -191,7 +199,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         self.assertTrue(fake_stack.check.called)
 
     def test_do_get_details(self):
-        profile = stack.StackProfile('os.heat.stack', 't', spec=self.spec)
+        profile = stack.StackProfile('t', self.spec)
 
         hc = mock.Mock()
         details = mock.Mock()

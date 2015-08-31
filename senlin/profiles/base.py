@@ -18,6 +18,7 @@ from oslo_utils import timeutils
 
 from senlin.common import context
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.db import api as db_api
 from senlin.engine import environment
@@ -28,8 +29,38 @@ LOG = logging.getLogger(__name__)
 class Profile(object):
     '''Base class for profiles.'''
 
-    def __new__(cls, type_name, name, **kwargs):
-        '''Create a new profile of the appropriate class.'''
+    KEYS = (
+        TYPE, VERSION, PROPERTIES,
+    ) = (
+        'type', 'version', 'properties',
+    )
+
+    spec_schema = {
+        TYPE: schema.String(
+            _('Name of the policy type.'),
+            required=True,
+        ),
+        VERSION: schema.String(
+            _('Version number of the policy type.'),
+            required=True,
+        ),
+        PROPERTIES: schema.Map(
+            _('Properties for the policy.'),
+            required=True,
+        )
+    }
+
+    properties_schema = {}
+
+    def __new__(cls, name, spec, **kwargs):
+        """Create a new profile of the appropriate class.
+
+        :param name: The name for the profile.
+        :param spec: A dictionary containing the spec for the profile.
+        :param kwargs: Keyword arguments for policy creation.
+        :returns: An instance of a specific sub-class of Policy.
+        """
+        type_name, version = schema.get_spec_version(spec)
 
         if cls != Profile:
             ProfileClass = cls
@@ -38,25 +69,33 @@ class Profile(object):
 
         return super(Profile, cls).__new__(ProfileClass)
 
-    def __init__(self, type_name, name, **kwargs):
-        '''Initialize the profile with given parameters and a JSON object.
+    def __init__(self, name, spec, **kwargs):
+        """Initialize a profile instance.
 
-        :param type_name: a string containing valid profile type name;
-        :param name: a string that specifies the name for the profile.
-        '''
+        :param name: A string that specifies the name for the profile.
+        :param spec: A dictionary containing the detailed policy spec.
+        :param kwargs: Keyword arguments for initializing the policy.
+        :returns: An instance of a specific sub-class of Policy.
+        """
+
+        type_name, version = schema.get_spec_version(spec)
+
+        self.name = name
+        self.spec = spec
 
         self.id = kwargs.get('id', None)
-        self.name = name
-        self.type = type_name
-
-        self.spec = kwargs.get('spec', None)
-        self.spec_data = schema.Spec(self.spec_schema, self.spec)
+        self.type = kwargs.get('type', '%s-%s' % (type_name, version))
 
         self.permission = kwargs.get('permission', '')
         self.metadata = kwargs.get('metadata', {})
+
         self.created_time = kwargs.get('created_time', None)
         self.updated_time = kwargs.get('updated_time', None)
         self.deleted_time = kwargs.get('deleted_time', None)
+
+        self.spec_data = schema.Spec(self.spec_schema, self.spec)
+        self.properties = schema.Spec(self.properties_schema,
+                                      self.spec.get(self.PROPERTIES, {}))
 
         if not self.id:
             # new object needs a context dict
@@ -72,8 +111,8 @@ class Profile(object):
         '''
         kwargs = {
             'id': record.id,
+            'type': record.type,
             'context': record.context,
-            'spec': record.spec,
             'permission': record.permission,
             'metadata': record.meta_data,
             'created_time': record.created_time,
@@ -81,7 +120,7 @@ class Profile(object):
             'deleted_time': record.deleted_time,
         }
 
-        return cls(record.type, record.name, **kwargs)
+        return cls(record.name, record.spec, **kwargs)
 
     @classmethod
     def load(cls, ctx, profile_id=None, profile=None):
@@ -173,13 +212,14 @@ class Profile(object):
         '''Validate the schema and the data provided.'''
         # general validation
         self.spec_data.validate()
+        self.properties.validate()
 
         # TODO(Anyone): need to check the contents in self.CONTEXT
 
     @classmethod
     def get_schema(cls):
         return dict((name, dict(schema))
-                    for name, schema in cls.spec_schema.items())
+                    for name, schema in cls.properties_schema.items())
 
     def _init_context(self):
         profile_context = {}

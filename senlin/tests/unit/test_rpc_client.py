@@ -172,7 +172,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
     def test_profile_create(self):
         default_args = {
             'name': mock.ANY,
-            'profile_type': mock.ANY,
             'spec': mock.ANY,
             'permission': mock.ANY,
             'metadata': mock.ANY,

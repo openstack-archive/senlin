@@ -33,17 +33,19 @@ class ProfileDataTest(base.SenlinTestCase):
             },
             'name': 'test_profile',
             'spec': {
-                'param1': 'value1',
-                'param2': 'value2',
+                'type': 'test_profile_type',
+                'version': '1.0',
+                'properties': {
+                    'param1': 'value1',
+                    'param2': 'value2',
+                }
             },
-            'type': 'test_profile_type',
             'permission': None,
             'metadata': {}
         }
         data = profiles.ProfileData(body)
         self.assertEqual('test_profile', data.name())
-        self.assertEqual({'param1': 'value1', 'param2': 'value2'}, data.spec())
-        self.assertEqual('test_profile_type', data.type())
+        self.assertEqual(body['spec'], data.spec())
         self.assertIsNone(data.permission())
         self.assertEqual({}, data.metadata())
         self.assertEqual({'region': 'region1'}, data.context())
@@ -53,7 +55,6 @@ class ProfileDataTest(base.SenlinTestCase):
         data = profiles.ProfileData(body)
         self.assertRaises(exc.HTTPBadRequest, data.name)
         self.assertRaises(exc.HTTPBadRequest, data.spec)
-        self.assertRaises(exc.HTTPBadRequest, data.type)
         self.assertIsNone(data.permission())
         self.assertIsNone(data.metadata())
         self.assertIsNone(data.context())
@@ -228,10 +229,13 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {
             'profile': {
                 'name': 'test_profile',
-                'type': 'test_profile_type',
                 'spec': {
-                    'param_1': 'value1',
-                    'param_2': 2,
+                    'type': 'test_profile_type',
+                    'version': '1.0',
+                    'properties': {
+                        'param_1': 'value1',
+                        'param_2': 2,
+                    },
                 },
                 'permission': None,
                 'metadata': {},
@@ -243,8 +247,12 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'name': 'test_profile',
             'type': 'test_profile_type',
             'spec': {
+                'type': 'test_profile_type',
+                'version': '1.0',
+                'properties': {
                     'param_1': 'value1',
                     'param_2': 2,
+                }
             },
             'permission': None,
             'metadata': {},
@@ -260,8 +268,14 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context,
             ('profile_create', {
                 'name': 'test_profile',
-                'profile_type': 'test_profile_type',
-                'spec': {'param_1': 'value1', 'param_2': 2},
+                'spec': {
+                    'type': 'test_profile_type',
+                    'version': '1.0',
+                    'properties': {
+                        'param_1': 'value1',
+                        'param_2': 2
+                    },
+                },
                 'permission': None,
                 'metadata': {},
             })
@@ -292,7 +306,11 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {
             'profile': {
                 'name': 'test_profile',
-                'type': type_name,
+                'spec': {
+                    'type': type_name,
+                    'version': '1.0',
+                    'properties': {'param': 'value'},
+                },
                 'spec': {'param': 'value'},
                 'permission': None,
                 'metadata': {},
@@ -309,10 +327,8 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, tenant_id=self.project,
                                               body=body)
 
-        expected_args = body['profile']
-        expected_args['profile_type'] = expected_args.pop('type')
         mock_call.assert_called_once_with(req.context,
-                                          ('profile_create', expected_args))
+                                          ('profile_create', body['profile']))
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ProfileTypeNotFound', resp.json['error']['type'])
         self.assertIsNone(resp.json['error']['traceback'])
@@ -322,8 +338,11 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {
             'profile': {
                 'name': 'test_profile',
-                'type': 'test_profile_type',
-                'spec': {'param': 'value'},
+                'spec': {
+                    'type': 'test_profile_type',
+                    'version': '1.0',
+                    'properties': {'param': 'value'},
+                },
                 'permission': None,
                 'metadata': {},
             }
@@ -339,11 +358,8 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               self.controller.create,
                                               req, tenant_id=self.project,
                                               body=body)
-
-        expected_args = body['profile']
-        expected_args['profile_type'] = expected_args.pop('type')
         mock_call.assert_called_once_with(req.context,
-                                          ('profile_create', expected_args))
+                                          ('profile_create', body['profile']))
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('SpecValidationFailed', resp.json['error']['type'])
         self.assertIsNone(resp.json['error']['traceback'])
@@ -353,8 +369,11 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {
             'profile': {
                 'name': 'test_profile',
-                'type': 'test_profile_type',
-                'spec': {'param': 'value'},
+                'spec': {
+                    'type': 'test_profile_type',
+                    'version': '1.0',
+                    'properties': {'param': 'value'},
+                }
             }
         }
 

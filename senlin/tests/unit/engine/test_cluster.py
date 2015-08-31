@@ -43,9 +43,17 @@ class TestCluster(base.SenlinTestCase):
     def _create_profile(self, profile_id):
         values = {
             'id': profile_id,
-            'type': 'os.heat.stack',
+            'type': 'os.heat.stack-1.0',
             'name': 'test-profile',
-            'context': self.context.to_dict()
+            'type': 'os.heat.stack',
+            'context': self.context.to_dict(),
+            'spec': {
+                'type': 'os.heat.stack',
+                'version': '1.0',
+                'properties': {
+                    'foo': 'bar'
+                }
+            }
         }
         return db_api.profile_create(self.context, values)
 

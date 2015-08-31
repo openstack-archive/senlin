@@ -201,18 +201,19 @@ class EngineService(service.Service):
         return [p.to_dict() for p in profiles]
 
     @request_context
-    def profile_create(self, context, name, profile_type, spec,
-                       permission=None, metadata=None):
+    def profile_create(self, context, name, spec, permission=None,
+                       metadata=None):
+        type_name, version = schema.get_spec_version(spec)
+        plugin = environment.global_env().get_profile(type_name)
+
         LOG.info(_LI('Creating profile %(type)s: %(name)s'),
-                 {'type': profile_type, 'name': name})
-        plugin = environment.global_env().get_profile(profile_type)
+                 {'type': type_name, 'name': name})
 
         kwargs = {
-            'spec': spec,
             'permission': permission,
             'metadata': metadata,
         }
-        profile = plugin(profile_type, name, **kwargs)
+        profile = plugin(name, spec, **kwargs)
         try:
             profile.validate()
         except exception.InvalidSpec as ex:
@@ -247,18 +248,18 @@ class EngineService(service.Service):
                 profile.store(context)
             return profile.to_dict()
 
-        plugin = environment.global_env().get_profile(db_profile.type)
+        type_name, version = schema.get_spec_version(db_profile.spec)
+        plugin = environment.global_env().get_profile(type_name)
 
         new_spec = copy.deepcopy(db_profile.spec)
         new_spec.update(spec)
         kwargs = {
-            'spec': new_spec,
             'permission': permission or db_profile.permission,
             'metadata': metadata or db_profile.meta_data,
         }
 
         new_name = name or db_profile.name
-        profile = plugin(db_profile.type, new_name, **kwargs)
+        profile = plugin(new_name, new_spec, **kwargs)
         profile.validate()
         profile.store(context)
         return profile.to_dict()

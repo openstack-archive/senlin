@@ -40,7 +40,7 @@ class StackProfile(base.Profile):
         'timeout', 'disable_rollback', 'environment',
     )
 
-    spec_schema = {
+    properties_schema = {
         CONTEXT: schema.Map(
             _('A dictionary for specifying the customized context for '
               'stack operations'),
@@ -94,12 +94,12 @@ class StackProfile(base.Profile):
 
         kwargs = {
             'stack_name': obj.name,
-            'template': self.spec_data[self.TEMPLATE],
-            'timeout_mins': self.spec_data[self.TIMEOUT],
-            'disable_rollback': self.spec_data[self.DISABLE_ROLLBACK],
-            'parameters': self.spec_data[self.PARAMETERS],
-            'files': self.spec_data[self.FILES],
-            'environment': self.spec_data[self.ENVIRONMENT],
+            'template': self.properties[self.TEMPLATE],
+            'timeout_mins': self.properties[self.TIMEOUT],
+            'disable_rollback': self.properties[self.DISABLE_ROLLBACK],
+            'parameters': self.properties[self.PARAMETERS],
+            'files': self.properties[self.FILES],
+            'environment': self.properties[self.ENVIRONMENT],
         }
         try:
             self.heat(obj).stacks.validate(**kwargs)
@@ -132,12 +132,12 @@ class StackProfile(base.Profile):
 
         kwargs = {
             'stack_name': obj.name + '-' + utils.random_name(8),
-            'template': self.spec_data[self.TEMPLATE],
-            'timeout_mins': self.spec_data[self.TIMEOUT],
-            'disable_rollback': self.spec_data[self.DISABLE_ROLLBACK],
-            'parameters': self.spec_data[self.PARAMETERS],
-            'files': self.spec_data[self.FILES],
-            'environment': self.spec_data[self.ENVIRONMENT],
+            'template': self.properties[self.TEMPLATE],
+            'timeout_mins': self.properties[self.TIMEOUT],
+            'disable_rollback': self.properties[self.DISABLE_ROLLBACK],
+            'parameters': self.properties[self.PARAMETERS],
+            'files': self.properties[self.FILES],
+            'environment': self.properties[self.ENVIRONMENT],
         }
 
         LOG.info('Creating stack: %s' % kwargs)
@@ -179,13 +179,13 @@ class StackProfile(base.Profile):
         # TODO(anyone): Check if params differs
         fields = {
             'stack_id': self.stack_id,
-            'parameters': new_profile.spec_data[new_profile.PARAMETERS],
-            'template': new_profile.spec_data[new_profile.TEMPLATE],
-            'timeout_mins': new_profile.spec_data[new_profile.TIMEOUT],
-            'disable_rollback': new_profile.spec_data[
+            'parameters': new_profile.properties[new_profile.PARAMETERS],
+            'template': new_profile.properties[new_profile.TEMPLATE],
+            'timeout_mins': new_profile.properties[new_profile.TIMEOUT],
+            'disable_rollback': new_profile.properties[
                 new_profile.DISABLE_ROLLBACK],
-            'files': new_profile.spec_data[new_profile.FILES],
-            'environment': new_profile.spec_data[new_profile.ENVIRONMENT],
+            'files': new_profile.properties[new_profile.FILES],
+            'environment': new_profile.properties[new_profile.ENVIRONMENT],
         }
 
         self.heat(obj).stack_update(**fields)

@@ -41,9 +41,13 @@ class ClusterPolicyTest(base.SenlinTestCase):
         env.register_profile('TestProfile', fakes.TestProfile)
         env.register_policy('TestPolicy', fakes.TestPolicy)
 
+        profile_spec = {
+            'type': 'TestProfile',
+            'version': '1.0',
+            'properties': {'INT': 10, 'STR': 'string'},
+        }
         self.profile = self.eng.profile_create(
-            self.ctx, 'p-test', 'TestProfile',
-            spec={'INT': 10, 'STR': 'string'}, permission='1111')
+            self.ctx, 'p-test', profile_spec, permission='1111')
 
         policy_spec = {
             'type': 'TestPolicy',

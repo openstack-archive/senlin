@@ -38,9 +38,16 @@ class NodeTest(base.SenlinTestCase):
         env = environment.global_env()
         env.register_profile('TestProfile', fakes.TestProfile)
 
+        self.spec = {
+            'type': 'TestProfile',
+            'version': '1.0',
+            'properties': {
+                'INT': 10,
+                'STR': 'string'
+            }
+        }
         self.profile = self.eng.profile_create(
-            self.ctx, 'p-test', 'TestProfile',
-            spec={'INT': 10, 'STR': 'string'}, permission='1111')
+            self.ctx, 'p-test', self.spec, permission='1111')
 
     def _verify_action(self, obj, action, name, target, cause, inputs=None):
         if inputs is None:
@@ -127,9 +134,12 @@ class NodeTest(base.SenlinTestCase):
     def test_node_create_profile_type_not_match(self, notify):
         env = environment.global_env()
         env.register_profile('SecondProfile', fakes.TestProfile)
-        cluster_profile = self.eng.profile_create(
-            self.ctx, 'cluster-profile', 'SecondProfile',
-            spec={'INT': 20, 'STR': 'string'})
+        new_spec = {
+            'type': 'SecondProfile',
+            'version': '1.0',
+            'properties': {'INT': 20, 'STR': 'string'}
+        }
+        cluster_profile = self.eng.profile_create(self.ctx, 'cp', new_spec)
 
         cluster = self.eng.cluster_create(self.ctx, 'c-1', 0,
                                           cluster_profile['id'])
@@ -428,8 +438,12 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'start_action')
     def test_node_update_with_new_profile(self, notify):
         node = self.eng.node_create(self.ctx, 'node-1', self.profile['id'])
-        new_profile = self.eng.profile_create(
-            self.ctx, 'p-new', 'TestProfile', spec={'INT': 20})
+        new_spec = {
+            'type': 'TestProfile',
+            'version': '1.0',
+            'properties': {'INT': 20},
+        }
+        new_profile = self.eng.profile_create(self.ctx, 'p-new', new_spec)
 
         self.eng.node_update(self.ctx, node['id'],
                              profile_id=new_profile['id'])
@@ -460,8 +474,12 @@ class NodeTest(base.SenlinTestCase):
     def test_node_update_with_diff_profile_type(self, notify):
         env = environment.global_env()
         env.register_profile('NewProfileType', fakes.TestProfile)
-        new_profile = self.eng.profile_create(
-            self.ctx, 'p-new', 'NewProfileType', spec={'INT': 20})
+        new_spec = {
+            'type': 'NewProfileType',
+            'version': '1.0',
+            'properties': {'INT': 20},
+        }
+        new_profile = self.eng.profile_create(self.ctx, 'p-new', new_spec)
 
         node = self.eng.node_create(self.ctx, 'node-1', self.profile['id'])
 
@@ -576,9 +594,16 @@ class NodeTest(base.SenlinTestCase):
         # prepare a cluster with different profile type
         env = environment.global_env()
         env.register_profile('OtherProfileType', fakes.TestProfile)
-        other_profile = self.eng.profile_create(
-            self.ctx, 'new-profile', 'OtherProfileType',
-            spec={'INT': 20, 'STR': 'okay'})
+        other_spec = {
+            'type': 'OtherProfileType',
+            'version': '1.0',
+            'properties': {
+                'INT': 20,
+                'STR': 'okay',
+            }
+        }
+        other_profile = self.eng.profile_create(self.ctx, 'new-profile',
+                                                other_spec)
 
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, other_profile['id'])
         cluster_id = c['id']

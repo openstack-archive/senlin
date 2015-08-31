@@ -41,9 +41,16 @@ class WebhookTest(base.SenlinTestCase):
         env = environment.global_env()
         env.register_profile('TestProfile', fakes.TestProfile)
 
-        self.profile = self.eng.profile_create(
-            self.ctx, 'p-test', 'TestProfile',
-            spec={'INT': 10, 'STR': 'string'}, permission='1111')
+        spec = {
+            'type': 'TestProfile',
+            'version': '1.0',
+            'properties': {
+                'INT': 10,
+                'STR': 'string'
+            }
+        }
+        self.profile = self.eng.profile_create(self.ctx, 'p-test', spec,
+                                               permission='1111')
 
     def _verify_action(self, obj, action, name, target, cause, inputs=None):
         if inputs is None:

@@ -31,64 +31,63 @@ class ProfileTest(base.SenlinTestCase):
         environment.global_env().register_profile('TestProfile',
                                                   fakes.TestProfile)
 
+        self.spec = {
+            'type': 'TestProfile',
+            'version': '1.0',
+            'properties': {
+                'INT': 1,
+                'STR': 'str',
+                'LIST': ['v1', 'v2'],
+                'MAP': {'KEY1': 1, 'KEY2': 'v2'},
+            }
+        }
+
     def test_profile_create_default(self):
-        result = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', {})
+        result = self.eng.profile_create(self.ctx, 'p-1', self.spec)
         self.assertIsInstance(result, dict)
         self.assertEqual('p-1', result['name'])
-        self.assertEqual('TestProfile', result['type'])
-        self.assertEqual({}, result['spec'])
+        self.assertEqual('TestProfile-1.0', result['type'])
+        self.assertEqual(self.spec, result['spec'])
         self.assertIsNone(result['permission'])
         self.assertIsNone(result['updated_time'])
         self.assertIsNone(result['deleted_time'])
         self.assertIsNotNone(result['created_time'])
         self.assertIsNotNone(result['id'])
 
-    def test_profile_create_with_spec(self):
-        spec = {
-            'INT': 1,
-            'STR': 'str',
-            'LIST': ['v1', 'v2'],
-            'MAP': {'KEY1': 1, 'KEY2': 'v2'},
-        }
-
-        result = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', spec)
-        self.assertEqual(spec, result['spec'])
-
     def test_profile_create_with_perm_and_metadata(self):
-        spec = {'INT': 1}
         permission = 'fake permission'
         metadata = {'group': 'mars'}
-        result = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', spec,
+        result = self.eng.profile_create(self.ctx, 'p-1', self.spec,
                                          permission=permission,
                                          metadata=metadata)
-        self.assertEqual(spec, result['spec'])
         self.assertEqual(permission, result['permission'])
         self.assertEqual(metadata, result['metadata'])
 
     def test_profile_create_type_not_found(self):
+        self.spec['type'] = 'Bogus'
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.profile_create,
-                               self.ctx, 'p-2', 'Bogus', {})
+                               self.ctx, 'p', self.spec)
         self.assertEqual(exception.ProfileTypeNotFound, ex.exc_info[0])
 
     def test_profile_create_invalid_spec(self):
-        spec = {'KEY3': 'value3'}
+        self.spec['properties'] = {'KEY3': 'value3'}
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.profile_create,
-                               self.ctx, 'p-2', 'TestProfile', spec)
+                               self.ctx, 'p', self.spec)
         self.assertEqual(exception.SpecValidationFailed, ex.exc_info[0])
 
     def test_profile_create_failed_validation(self):
-        spec = {'INT': 1}
+        self.spec['properties'] = {'INT': 1}
         self.patchobject(fakes.TestProfile, 'validate',
                          side_effect=exception.InvalidSpec(message='BOOM'))
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_create,
-                               self.ctx, 'p-2', 'TestProfile', spec)
+                               self.eng.profile_create, self.ctx,
+                               'p', self.spec)
         self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
 
     def test_profile_get(self):
-        p = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', {})
+        p = self.eng.profile_create(self.ctx, 'p-1', self.spec)
 
         for identity in [p['id'], p['id'][:6], 'p-1']:
             result = self.eng.profile_get(self.ctx, identity)
@@ -100,8 +99,8 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual(exception.ProfileNotFound, ex.exc_info[0])
 
     def test_profile_list(self):
-        p1 = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', {})
-        p2 = self.eng.profile_create(self.ctx, 'p-2', 'TestProfile', {})
+        p1 = self.eng.profile_create(self.ctx, 'p-1', self.spec)
+        p2 = self.eng.profile_create(self.ctx, 'p-2', self.spec)
         result = self.eng.profile_list(self.ctx)
         self.assertIsInstance(result, list)
         names = [p['name'] for p in result]
@@ -112,8 +111,8 @@ class ProfileTest(base.SenlinTestCase):
         self.assertIn(p2['id'], ids)
 
     def test_profile_list_with_limit_marker(self):
-        p1 = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', {})
-        p2 = self.eng.profile_create(self.ctx, 'p-2', 'TestProfile', {})
+        p1 = self.eng.profile_create(self.ctx, 'p-1', self.spec)
+        p2 = self.eng.profile_create(self.ctx, 'p-2', self.spec)
 
         result = self.eng.profile_list(self.ctx, limit=0)
 
@@ -130,18 +129,18 @@ class ProfileTest(base.SenlinTestCase):
         result = self.eng.profile_list(self.ctx, marker=p2['id'])
         self.assertEqual(0, len(result))
 
-        self.eng.profile_create(self.ctx, 'p-3', 'TestProfile', {})
+        self.eng.profile_create(self.ctx, 'p-3', self.spec)
         result = self.eng.profile_list(self.ctx, limit=1, marker=p1['id'])
         self.assertEqual(1, len(result))
         result = self.eng.profile_list(self.ctx, limit=2, marker=p1['id'])
         self.assertEqual(2, len(result))
 
     def test_profile_list_with_sort_keys(self):
-        p1 = self.eng.profile_create(self.ctx, 'p-B', 'TestProfile', {},
+        p1 = self.eng.profile_create(self.ctx, 'p-B', self.spec,
                                      permission='1111')
-        p2 = self.eng.profile_create(self.ctx, 'p-A', 'TestProfile', {},
+        p2 = self.eng.profile_create(self.ctx, 'p-A', self.spec,
                                      permission='1111')
-        p3 = self.eng.profile_create(self.ctx, 'p-C', 'TestProfile', {},
+        p3 = self.eng.profile_create(self.ctx, 'p-C', self.spec,
                                      permission='0000')
 
         # default by created_time
@@ -170,11 +169,11 @@ class ProfileTest(base.SenlinTestCase):
         self.assertIsNotNone(result)
 
     def test_profile_list_with_sort_dir(self):
-        p1 = self.eng.profile_create(self.ctx, 'p-B', 'TestProfile', {},
+        p1 = self.eng.profile_create(self.ctx, 'p-B', self.spec,
                                      permission='1111')
-        p2 = self.eng.profile_create(self.ctx, 'p-A', 'TestProfile', {},
+        p2 = self.eng.profile_create(self.ctx, 'p-A', self.spec,
                                      permission='1111')
-        p3 = self.eng.profile_create(self.ctx, 'p-C', 'TestProfile', {},
+        p3 = self.eng.profile_create(self.ctx, 'p-C', self.spec,
                                      permission='0000')
 
         # default by created_time, ascending
@@ -202,7 +201,7 @@ class ProfileTest(base.SenlinTestCase):
                          "desc-nullslast", six.text_type(ex))
 
     def test_profile_list_show_deleted(self):
-        p1 = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', {})
+        p1 = self.eng.profile_create(self.ctx, 'p-1', self.spec)
         result = self.eng.profile_list(self.ctx)
         self.assertEqual(1, len(result))
         self.assertEqual(p1['id'], result[0]['id'])
@@ -217,11 +216,11 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual(p1['id'], result[0]['id'])
 
     def test_profile_list_with_filters(self):
-        self.eng.profile_create(self.ctx, 'p-B', 'TestProfile', {},
+        self.eng.profile_create(self.ctx, 'p-B', self.spec,
                                 permission='1111')
-        self.eng.profile_create(self.ctx, 'p-A', 'TestProfile', {},
+        self.eng.profile_create(self.ctx, 'p-A', self.spec,
                                 permission='1111')
-        self.eng.profile_create(self.ctx, 'p-C', 'TestProfile', {},
+        self.eng.profile_create(self.ctx, 'p-C', self.spec,
                                 permission='0000')
 
         result = self.eng.profile_list(self.ctx, filters={'name': 'p-B'})
@@ -251,7 +250,7 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual(0, len(result))
 
     def test_profile_find(self):
-        p = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', {})
+        p = self.eng.profile_create(self.ctx, 'p-1', self.spec)
         pid = p['id']
 
         result = self.eng.profile_find(self.ctx, pid)
@@ -271,7 +270,7 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual(exception.ProfileNotFound, ex.exc_info[0])
 
     def test_profile_find_show_deleted(self):
-        p = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', {})
+        p = self.eng.profile_create(self.ctx, 'p-1', self.spec)
         pid = p['id']
         self.eng.profile_delete(self.ctx, pid)
 
@@ -290,11 +289,11 @@ class ProfileTest(base.SenlinTestCase):
         self.assertIsNotNone(result)
 
     def test_profile_update_fields(self):
-        p1 = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', {},
+        p1 = self.eng.profile_create(self.ctx, 'p-1', self.spec,
                                      permission='1111',
                                      metadata={'foo': 'bar'})
         pid = p1['id']
-        self.assertEqual({}, p1['spec'])
+        self.assertEqual(self.spec, p1['spec'])
 
         # 1. update name
         p2 = self.eng.profile_update(self.ctx, pid, name='p-2')
@@ -324,34 +323,38 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual({'bar': 'foo'}, p['metadata'])
 
     def test_profile_update_new_spec(self):
-        spec = {'INT': 1}
-        p1 = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', spec,
+        p1 = self.eng.profile_create(self.ctx, 'p-1', self.spec,
                                      permission='1111',
                                      metadata={'foo': 'bar'})
         pid = p1['id']
 
         # update spec only
-        p2 = self.eng.profile_update(self.ctx, pid, spec={'INT': 2})
+        new_spec = {
+            'type': 'TestProfile',
+            'version': '1.0',
+            'properties': {'INT': 2}
+        }
+        p2 = self.eng.profile_update(self.ctx, pid, spec=new_spec)
         self.assertNotEqual(pid, p2['id'])
         # spec changed but other fields not changed
-        self.assertEqual({'INT': 2}, p2['spec'])
+        self.assertEqual(new_spec, p2['spec'])
         self.assertEqual('p-1', p2['name'])
         self.assertEqual('1111', p2['permission'])
         self.assertEqual({'foo': 'bar'}, p2['metadata'])
 
         p = self.eng.profile_get(self.ctx, p2['id'])
-        self.assertEqual({'INT': 2}, p['spec'])
+        self.assertEqual(new_spec, p['spec'])
         self.assertEqual('p-1', p['name'])
         self.assertEqual('1111', p['permission'])
         self.assertEqual({'foo': 'bar'}, p['metadata'])
 
         # update spec with other fields
         p2 = self.eng.profile_update(self.ctx, pid, name='p-2',
-                                     permission='1100', spec={'INT': 2})
+                                     permission='1100', spec=new_spec)
 
         self.assertNotEqual(pid, p2['id'])
         # spec changed with other fields changed properly
-        self.assertEqual({'INT': 2}, p2['spec'])
+        self.assertEqual(new_spec, p2['spec'])
         self.assertEqual('p-2', p2['name'])
         self.assertEqual('1100', p2['permission'])
         self.assertEqual({'foo': 'bar'}, p2['metadata'])
@@ -364,7 +367,7 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual(exception.ProfileNotFound, ex.exc_info[0])
 
     def test_profile_update_using_find(self):
-        p1 = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', {},
+        p1 = self.eng.profile_create(self.ctx, 'p-1', self.spec,
                                      permission='1111',
                                      metadata={'foo': 'bar'})
         pid = p1['id']
@@ -383,19 +386,26 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual('p-4', p4['name'])
 
     def test_profile_update_err_validate(self):
-        p1 = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', {},
+        p1 = self.eng.profile_create(self.ctx, 'p-1', self.spec,
                                      permission='1111',
                                      metadata={'foo': 'bar'})
         pid = p1['id']
 
+        new_spec = {
+            'type': 'TestProfile',
+            'version': '1.0',
+            'properties': {
+                'bad': 'yes',
+            }
+        }
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.profile_update,
-                               self.ctx, pid, spec={'bad': 'yes'})
+                               self.ctx, pid, spec=new_spec)
 
         self.assertEqual(exception.SpecValidationFailed, ex.exc_info[0])
 
     def test_profile_delete(self):
-        p1 = self.eng.profile_create(self.ctx, 'p-1', 'TestProfile', {},
+        p1 = self.eng.profile_create(self.ctx, 'p-1', self.spec,
                                      permission='1111',
                                      metadata={'foo': 'bar'})
         pid = p1['id']

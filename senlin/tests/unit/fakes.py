@@ -22,7 +22,7 @@ from senlin.triggers import base as trigger_base
 
 class TestProfile(profile_base.Profile):
     CONTEXT = 'context'
-    spec_schema = {
+    properties_schema = {
         'INT': schema.Integer('int property', default=0),
         'STR': schema.String('string property', default='a string'),
         'MAP': schema.Map(
@@ -38,8 +38,8 @@ class TestProfile(profile_base.Profile):
         ),
     }
 
-    def __init__(self, type_name, name, **kwargs):
-        super(TestProfile, self).__init__(type_name, name, **kwargs)
+    def __init__(self, name, spec, **kwargs):
+        super(TestProfile, self).__init__(name, spec, **kwargs)
 
     def do_create(self):
         return {}

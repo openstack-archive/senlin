@@ -41,11 +41,6 @@ class ProfileData(object):
             raise exc.HTTPBadRequest(_("No profile spec provided"))
         return self.data[consts.PROFILE_SPEC]
 
-    def type(self):
-        if consts.PROFILE_TYPE not in self.data:
-            raise exc.HTTPBadRequest(_("No profile type provided"))
-        return self.data[consts.PROFILE_TYPE]
-
     def permission(self):
         return self.data.get(consts.PROFILE_PERMISSION, None)
 
@@ -117,7 +112,6 @@ class ProfileController(object):
         data = ProfileData(profile_data)
         result = self.rpc_client.profile_create(req.context,
                                                 data.name(),
-                                                data.type(),
                                                 data.spec(),
                                                 data.permission(),
                                                 data.metadata())

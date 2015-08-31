@@ -35,8 +35,12 @@ class TestNode(base.SenlinTestCase):
     def _create_profile(self, profile_id):
         values = {
             'id': profile_id,
-            'type': 'os.nova.server',
+            'type': 'os.nova.server-1.0',
             'name': 'test-profile',
+            'spec': {
+                'type': 'os.nova.server',
+                'version': '1.0',
+            }
         }
         return db_api.profile_create(self.context, values)
 

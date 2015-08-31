@@ -32,39 +32,43 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         self.context = utils.dummy_context()
         self.spec = {
-            'context': {},
-            'adminPass': 'adminpass',
-            'auto_disk_config': True,
-            'availability_zone': 'FAKE_AZ',
-            'block_device_mapping': [{
-                'device_name': 'FAKE_NAME',
-                'volume_size': 1000,
-            }],
-            'config_drive': False,
-            'flavor': 'FLAV',
-            'image': 'FAKE_IMAGE',
-            'key_name': 'FAKE_KEYNAME',
-            "metadata": {"meta var": "meta val"},
-            'name': 'FAKE_SERVER_NAME',
-            'networks': [{
-                'port': 'FAKE_PORT',
-                'fixed-ip': 'FAKE_IP',
-                'network': 'FAKE_NET',
-            }],
-            'personality': [{
-                'path': '/etc/motd',
-                'contents': 'foo',
-            }],
-            'scheduler_hints': {
-                'same_host': 'HOST_ID',
-            },
-            'security_groups': ['HIGH_SECURITY_GROUP'],
-            'timeout': 120,
-            'user_data': 'FAKE_USER_DATA',
+            'type': 'os.nova.server',
+            'version': '1.0',
+            'properties': {
+                'context': {},
+                'adminPass': 'adminpass',
+                'auto_disk_config': True,
+                'availability_zone': 'FAKE_AZ',
+                'block_device_mapping': [{
+                    'device_name': 'FAKE_NAME',
+                    'volume_size': 1000,
+                }],
+                'config_drive': False,
+                'flavor': 'FLAV',
+                'image': 'FAKE_IMAGE',
+                'key_name': 'FAKE_KEYNAME',
+                "metadata": {"meta var": "meta val"},
+                'name': 'FAKE_SERVER_NAME',
+                'networks': [{
+                    'port': 'FAKE_PORT',
+                    'fixed-ip': 'FAKE_IP',
+                    'network': 'FAKE_NET',
+                }],
+                'personality': [{
+                    'path': '/etc/motd',
+                    'contents': 'foo',
+                }],
+                'scheduler_hints': {
+                    'same_host': 'HOST_ID',
+                },
+                'security_groups': ['HIGH_SECURITY_GROUP'],
+                'timeout': 120,
+                'user_data': 'FAKE_USER_DATA',
+            }
         }
 
     def test_init(self):
-        profile = server.ServerProfile('os.nova.server', 't', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
 
         self.assertIsNone(profile._novaclient)
         self.assertIsNone(profile._neutronclient)
@@ -73,7 +77,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
     def test_validate(self):
         cfg.CONF.set_override('default_action_timeout', 119)
 
-        profile = server.ServerProfile('os.nova.server', 't', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
 
         ex = self.assertRaises(exception.InvalidSpec, profile.validate)
         self.assertEqual("Value of the 'timeout' property must be lower than "
@@ -87,7 +91,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         sd.compute.return_value = nc
         mock_senlindriver.return_value = sd
 
-        profile = server.ServerProfile('os.nova.server', 't', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
 
         # cached will be returned
         profile._novaclient = nc
@@ -112,7 +116,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         sd.network.return_value = nc
         mock_senlindriver.return_value = sd
 
-        profile = server.ServerProfile('os.nova.server', 't', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
 
         # cached will be returned
         profile._neutronclient = nc
@@ -130,7 +134,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         sd.network.assert_called_once_with(params)
 
     def test_do_validate(self):
-        profile = server.ServerProfile('os.nova.server', 't', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
         res = profile.do_validate(mock.Mock())
         self.assertTrue(res)
 
@@ -156,7 +160,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         nova_server.id = 'FAKE_NOVA_SERVER_ID'
         novaclient.server_create.return_value = nova_server
 
-        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
         profile._novaclient = novaclient
         profile._neutronclient = neutronclient
         server_id = profile.do_create(test_server)
@@ -225,13 +229,17 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         # Assume image/scheduler_hints/user_data were not defined in spec file
         spec = {
-            'flavor': 'FLAV',
-            'name': 'FAKE_SERVER_NAME',
-            'security_groups': ['HIGH_SECURITY_GROUP'],
-            'timeout': 120,
+            'type': 'os.nova.server',
+            'version': '1.0',
+            'properties': {
+                'flavor': 'FLAV',
+                'name': 'FAKE_SERVER_NAME',
+                'security_groups': ['HIGH_SECURITY_GROUP'],
+                'timeout': 120,
+            }
         }
 
-        profile = server.ServerProfile('os.nova.server', 's1', spec=spec)
+        profile = server.ServerProfile('s1', spec)
         profile._novaclient = novaclient
         profile._neutronclient = neutronclient
         server_id = profile.do_create(test_server)
@@ -267,13 +275,17 @@ class TestNovaServerProfile(base.SenlinTestCase):
         novaclient.server_create.return_value = nova_server
 
         spec = {
-            'flavor': 'FLAV',
-            'name': 'FAKE_SERVER_NAME',
-            'security_groups': ['HIGH_SECURITY_GROUP'],
-            'timeout': 120,
+            'type': 'os.nova.server',
+            'version': '1.0',
+            'properties': {
+                'flavor': 'FLAV',
+                'name': 'FAKE_SERVER_NAME',
+                'security_groups': ['HIGH_SECURITY_GROUP'],
+                'timeout': 120,
+            }
         }
 
-        profile = server.ServerProfile('os.nova.server', 's1', spec=spec)
+        profile = server.ServerProfile('t', spec)
         profile._novaclient = novaclient
         profile._neutronclient = neutronclient
         server_id = profile.do_create(test_server)
@@ -306,7 +318,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         novaclient.wait_for_server.side_effect = exception.InternalError(
             code=500, message='timeout')
 
-        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
         profile._novaclient = novaclient
         profile._neutronclient = neutronclient
         res = profile.do_create(test_server)
@@ -316,7 +328,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
     def test_do_delete_no_physical_id(self):
         # Test path where server doesn't already exist
         nc = mock.Mock()
-        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
         profile._novaclient = nc
         test_server = mock.Mock()
         test_server.physical_id = None
@@ -324,7 +336,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertTrue(profile.do_delete(test_server))
 
     def test_do_delete_successful(self):
-        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
 
         nc = mock.Mock()
         nc.server_delete.return_value = None
@@ -338,7 +350,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
     def test_do_delete_wait_for_server_delete_timeout(self):
         nc = mock.Mock()
-        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
         profile._novaclient = nc
 
         obj = mock.Mock()
@@ -352,7 +364,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
     def test_do_delete_with_delete_exception(self):
         nc = mock.Mock()
-        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
         profile._novaclient = nc
 
         err = exception.ProfileOperationTimeout(message='exception')
@@ -367,7 +379,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         nc.server_delete.assert_called_once_with('FAKE_ID')
 
     def test_do_update_successful(self):
-        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
         profile._novaclient = mock.Mock()
 
         obj = mock.Mock()
@@ -380,7 +392,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertTrue(res)
 
     def test_do_update_no_physical_id(self):
-        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
         profile._novaclient = mock.Mock()
 
         test_server = mock.Mock()
@@ -394,13 +406,13 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
     def test_do_check(self):
         # Not implemented in server profile yet.
-        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
         res = profile.do_check(mock.Mock())
         self.assertTrue(res)
 
     def test_do_get_details(self):
         nc = mock.Mock()
-        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
         profile._novaclient = nc
         obj = mock.Mock()
         obj.physical_id = 'FAKE_ID'
@@ -449,7 +461,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
     def test_do_get_details_no_physical_id(self):
         # Test path for server not created
-        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
         obj = mock.Mock()
         obj.physical_id = ''
         self.assertEqual({}, profile.do_get_details(obj))
@@ -461,7 +473,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         # Test path for server not created
         nc = mock.Mock()
         nc.server_get.return_value = None
-        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
         profile._novaclient = nc
         obj = mock.Mock()
         obj.physical_id = 'FAKE_ID'
@@ -473,7 +485,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
     def test_do_join_successful(self):
         # Test normal path
         nc = mock.Mock()
-        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
         profile._novaclient = nc
         nc.server_metadata_get.return_value = {'FOO': 'BAR'}
         nc.server_metadata_update.return_value = 'Boom'
@@ -490,7 +502,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
     def test_do_join_server_not_created(self):
         # Test path where server not specified
-        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
         obj = mock.Mock()
         obj.physical_id = None
 
@@ -500,7 +512,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
     def test_do_leave_successful(self):
         # Test normal path
         nc = mock.Mock()
-        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
         profile._novaclient = nc
         nc.server_metadata_get.return_value = {'FOO': 'BAR', 'cluster': 'CLS'}
         nc.server_metadata_update.return_value = 'Boom'
@@ -516,7 +528,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
     def test_do_leave_no_physical_id(self):
         # Test path where server not specified
-        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
         profile._novaclient = mock.Mock()
         obj = mock.Mock()
         obj.physical_id = None
@@ -525,7 +537,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
     def test_do_leave_not_in_cluster(self):
         # Test path where node is not in cluster
         nc = mock.Mock()
-        profile = server.ServerProfile('os.nova.server', 's1', spec=self.spec)
+        profile = server.ServerProfile('t', self.spec)
         profile._novaclient = nc
         nc.server_metadata_get.return_value = {'FOO': 'BAR'}
         nc.server_metadata_update.return_value = 'Boom'

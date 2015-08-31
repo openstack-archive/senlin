@@ -746,11 +746,6 @@
                             </listitem>
                             <listitem>
                                 <para>
-                                    <code>type</code> Name of profile type to be used for the profile. (required).
-                                </para>
-                            </listitem>
-                            <listitem>
-                                <para>
                                     <code>spec</code> Detailed specification based on the chosen profile type. (required).
                                 </para>
                             </listitem>

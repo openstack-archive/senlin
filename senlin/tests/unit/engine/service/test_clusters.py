@@ -41,10 +41,13 @@ class ClusterTest(base.SenlinTestCase):
         env.register_profile('TestProfile', fakes.TestProfile)
         env.register_policy('TestPolicy', fakes.TestPolicy)
 
-        self.profile = self.eng.profile_create(
-            self.ctx, 'p-test', 'TestProfile',
-            spec={'INT': 10, 'STR': 'string'}, permission='1111')
-
+        spec = {
+            'type': 'TestProfile',
+            'version': '1.0',
+            'properties': {'INT': 10, 'STR': 'string'},
+        }
+        self.profile = self.eng.profile_create(self.ctx, 'p-test', spec,
+                                               permission='1111')
         spec = {
             'type': 'TestPolicy',
             'version': '1.0',
@@ -563,9 +566,13 @@ class ClusterTest(base.SenlinTestCase):
         # Register a different profile
         env = environment.global_env()
         env.register_profile('DiffProfileType', fakes.TestProfile)
+        new_spec = {
+            'type': 'DiffProfileType',
+            'version': '1.0',
+            'properties': {'INT': 10, 'STR': 'string'},
+        }
         new_profile = self.eng.profile_create(
-            self.ctx, 'p-test', 'DiffProfileType',
-            spec={'INT': 10, 'STR': 'string'}, permission='1111')
+            self.ctx, 'p-test', new_spec, permission='1111')
 
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         ex = self.assertRaises(rpc.ExpectedException,
@@ -585,9 +592,12 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_profile_normal(self, notify):
-        new_profile = self.eng.profile_create(
-            self.ctx, 'p-new', 'TestProfile',
-            spec={'INT': 20, 'STR': 'string new'})
+        new_spec = {
+            'type': 'TestProfile',
+            'version': '1.0',
+            'properties': {'INT': 20, 'STR': 'string new'},
+        }
+        new_profile = self.eng.profile_create(self.ctx, 'p-new', new_spec)
 
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         self.eng.cluster_update(self.ctx, c['id'],
@@ -777,9 +787,13 @@ class ClusterTest(base.SenlinTestCase):
         # Register a different profile
         env = environment.global_env()
         env.register_profile('DiffProfileType', fakes.TestProfile)
+        new_spec = {
+            'type': 'DiffProfileType',
+            'version': '1.0',
+            'properties': {'INT': 10, 'STR': 'string'},
+        }
         new_profile = self.eng.profile_create(
-            self.ctx, 'p-test', 'DiffProfileType',
-            spec={'INT': 10, 'STR': 'string'}, permission='1111')
+            self.ctx, 'p-test', new_spec, permission='1111')
         nodes = self._prepare_nodes(self.ctx, count=1,
                                     profile_id=new_profile['id'])
 
