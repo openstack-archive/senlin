@@ -207,8 +207,9 @@ class Profile(object):
 
         trust_id = cred.cred['openstack']['trust']
 
+        # This is supposed to be trust-based authentication
         params = copy.deepcopy(self.context)
-        params['trusts'] = [trust_id]
+        params['trust_id'] = trust_id
 
         return params
 
