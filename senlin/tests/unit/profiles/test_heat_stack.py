@@ -51,12 +51,12 @@ class TestHeatStackProfile(base.SenlinTestCase):
         # New hc will be created if no cache is found
         profile.hc = None
         params = mock.Mock()
-        mock_param = self.patchobject(profile, '_build_connection_params',
+        mock_param = self.patchobject(profile, '_build_conn_params',
                                       return_value=params)
         res = profile.heat(test_stack)
         self.assertEqual(hc, res)
         self.assertEqual(hc, profile.hc)
-        mock_param.assert_called_once_with(mock.ANY, test_stack)
+        mock_param.assert_called_once_with(test_stack.user, test_stack.project)
         sd.orchestration.assert_called_once_with(params)
 
     @mock.patch.object(driver_base, 'SenlinDriver')

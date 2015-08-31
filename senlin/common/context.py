@@ -109,7 +109,7 @@ class RequestContext(base_context.RequestContext):
         return cls(**values)
 
 
-def get_service_context(**args):
+def get_service_context(**kwargs):
     '''An abstraction layer for getting service credential.
 
     There could be multiple cloud backends for senlin to use. This
@@ -118,5 +118,5 @@ def get_service_context(**args):
     this credential refers to the credentials built for keystone middleware
     in an OpenStack cloud.
     '''
-
-    return driver_base.SenlinDriver().identity.get_service_credentials()
+    identity_service = driver_base.SenlinDriver().identity
+    return identity_service.get_service_credentials(**kwargs)

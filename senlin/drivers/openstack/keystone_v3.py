@@ -158,9 +158,9 @@ class KeystoneClient(base.DriverBase):
         '''
 
         creds = {
+            'auth_url': CONF.authentication.auth_url,
             'username': CONF.authentication.service_username,
             'password': CONF.authentication.service_password,
-            'auth_url': CONF.authentication.auth_url,
             'project_name': CONF.authentication.service_project_name,
             'user_domain_name': cfg.CONF.authentication.service_user_domain,
             'project_domain_name':

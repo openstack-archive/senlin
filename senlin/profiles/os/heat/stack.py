@@ -12,7 +12,6 @@
 
 import six
 
-from oslo_context import context
 from oslo_log import log as logging
 
 from senlin.common import exception
@@ -86,7 +85,7 @@ class StackProfile(base.Profile):
 
         if self.hc:
             return self.hc
-        params = self._build_connection_params(context.get_current(), obj)
+        params = self._build_conn_params(obj.user, obj.project)
         self.hc = driver_base.SenlinDriver().orchestration(params)
         return self.hc
 

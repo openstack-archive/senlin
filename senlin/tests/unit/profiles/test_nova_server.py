@@ -62,12 +62,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         }
 
     def test_nova_init(self):
-        kwargs = {
-            'spec': self.spec
-        }
-        profile = server.ServerProfile('os.nova.server',
-                                       'test-profile',
-                                       **kwargs)
+        profile = server.ServerProfile('os.nova.server', 't', spec=self.spec)
 
         self.assertIsNone(profile._novaclient)
         self.assertIsNone(profile._neutronclient)
@@ -75,62 +70,52 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
     @mock.patch.object(driver_base, 'SenlinDriver')
     def test_nova_client(self, mock_senlindriver):
-        test_server = mock.Mock()
+        obj = mock.Mock()
         sd = mock.Mock()
         nc = mock.Mock()
         sd.compute.return_value = nc
         mock_senlindriver.return_value = sd
 
-        kwargs = {
-            'spec': self.spec
-        }
-        profile = server.ServerProfile('os.nova.server',
-                                       'test-profile',
-                                       **kwargs)
+        profile = server.ServerProfile('os.nova.server', 't', spec=self.spec)
 
         # cached will be returned
         profile._novaclient = nc
-        self.assertEqual(nc, profile.nova(test_server))
+        self.assertEqual(nc, profile.nova(obj))
 
         # new nc created if no cache found
         profile._novaclient = None
         params = mock.Mock()
-        mock_param = self.patchobject(profile, '_build_connection_params',
+        mock_param = self.patchobject(profile, '_build_conn_params',
                                       return_value=params)
-        res = profile.nova(test_server)
+        res = profile.nova(obj)
         self.assertEqual(nc, res)
         self.assertEqual(nc, profile._novaclient)
-        mock_param.assert_called_once_with(mock.ANY, test_server)
+        mock_param.assert_called_once_with(obj.user, obj.project)
         sd.compute.assert_called_once_with(params)
 
     @mock.patch.object(driver_base, 'SenlinDriver')
     def test_neutron_client(self, mock_senlindriver):
-        test_server = mock.Mock()
+        obj = mock.Mock()
         sd = mock.Mock()
         nc = mock.Mock()
         sd.network.return_value = nc
         mock_senlindriver.return_value = sd
 
-        kwargs = {
-            'spec': self.spec
-        }
-        profile = server.ServerProfile('os.nova.server',
-                                       'test-profile',
-                                       **kwargs)
+        profile = server.ServerProfile('os.nova.server', 't', spec=self.spec)
 
         # cached will be returned
         profile._neutronclient = nc
-        self.assertEqual(nc, profile.neutron(test_server))
+        self.assertEqual(nc, profile.neutron(obj))
 
         # new nc created if no cache found
         profile._neutronclient = None
         params = mock.Mock()
-        mock_param = self.patchobject(profile, '_build_connection_params',
+        mock_param = self.patchobject(profile, '_build_conn_params',
                                       return_value=params)
-        res = profile.neutron(test_server)
+        res = profile.neutron(obj)
         self.assertEqual(nc, res)
         self.assertEqual(nc, profile._neutronclient)
-        mock_param.assert_called_once_with(mock.ANY, test_server)
+        mock_param.assert_called_once_with(obj.user, obj.project)
         sd.network.assert_called_once_with(params)
 
     def test_do_validate(self):

@@ -10,6 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
+
+from oslo_context import context as oslo_context
 from oslo_log import log as logging
 from oslo_utils import timeutils
 
@@ -168,7 +171,10 @@ class Profile(object):
 
     def validate(self):
         '''Validate the schema and the data provided.'''
+        # general validation
         self.spec_data.validate()
+
+        # TODO(Anyone): need to check the contents in self.CONTEXT
 
     @classmethod
     def get_schema(cls):
@@ -176,34 +182,33 @@ class Profile(object):
                     for name, schema in cls.spec_schema.items())
 
     def _init_context(self):
-        cred = context.get_service_context()
-        # TODO(Yanyan Hu): Rename context field to credential in spec?
+        profile_context = {}
         if self.CONTEXT in self.spec_data:
-            profile_context = self.spec_data[self.CONTEXT]
-            if profile_context:
-                # TODO(Anyone): need to check the contents in self.CONTEXT
-                cred.update(profile_context)
-        return cred
+            profile_context = self.spec_data[self.CONTEXT] or {}
 
-    def _build_connection_params(self, ctx, obj):
-        cred = db_api.cred_get(ctx, obj.user, obj.project)
+        ctx_dict = context.get_service_context(**profile_context)
+
+        ctx_dict.pop('project_name')
+        ctx_dict.pop('project_domain_name')
+
+        return ctx_dict
+
+    def _build_conn_params(self, user, project):
+        """Build connection params for specific user and project.
+
+        :param user: The ID of the user for which a trust will be used.
+        :param project: The ID of the project for which a trust will be used.
+        :returns: A dict containing the required parameters for connection
+                  creation.
+        """
+        cred = db_api.cred_get(oslo_context.get_current(), user, project)
         if cred is None:
-            # TODO(Anyone): this exception type makes no sense to end user,
-            # need to translate it at a higher layer
-            raise exception.TrustNotFound(trustor=obj.user)
+            raise exception.TrustNotFound(trustor=user)
 
         trust_id = cred.cred['openstack']['trust']
 
-        params = {
-            'auth_url': self.context.get('auth_url'),
-            'user_domain_name': self.context.get('user_domain_name'),
-            'username': self.context.get('username'),
-            'user_id': self.context.get('user'),
-            'password': self.context.get('password'),
-            'token': self.context.get('auth_token'),
-            'region_name': self.context.get('region_name'),
-            'trusts': [trust_id],
-        }
+        params = copy.deepcopy(self.context)
+        params['trusts'] = [trust_id]
 
         return params
 
