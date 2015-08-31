@@ -183,22 +183,28 @@ def ignore_not_found(ex):
         raise parsed
 
 
-@translate_exception
 def create_connection(params):
     prof = profile.Profile()
     if 'region_name' in params:
         prof.set_region(prof.ALL, params['region_name'])
         params.pop('region_name')
-    conn = connection.Connection(profile=prof, user_agent=USER_AGENT,
-                                 **params)
+    try:
+        conn = connection.Connection(profile=prof, user_agent=USER_AGENT,
+                                     **params)
+    except Exception as ex:
+        raise parse_exception(ex)
+
     return conn
 
 
-@translate_exception
 def authenticate(**kwargs):
     '''Authenticate using openstack sdk based on user credential'''
 
-    auth = create_connection(kwargs).session.authenticator
-    xport = transport.Transport()
-    access_info = auth.authorize(xport)
+    try:
+        auth = create_connection(kwargs).session.authenticator
+        xport = transport.Transport()
+        access_info = auth.authorize(xport)
+    except Exception as ex:
+        raise parse_exception(ex)
+
     return access_info
