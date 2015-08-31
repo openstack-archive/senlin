@@ -13,7 +13,9 @@
 import base64
 
 import mock
+from oslo_config import cfg
 from oslo_utils import encodeutils
+import six
 
 from senlin.common import exception
 from senlin.common import utils as common_utils
@@ -61,12 +63,21 @@ class TestNovaServerProfile(base.SenlinTestCase):
             'user_data': 'FAKE_USER_DATA',
         }
 
-    def test_nova_init(self):
+    def test_init(self):
         profile = server.ServerProfile('os.nova.server', 't', spec=self.spec)
 
         self.assertIsNone(profile._novaclient)
         self.assertIsNone(profile._neutronclient)
         self.assertIsNone(profile.server_id)
+
+    def test_validate(self):
+        cfg.CONF.set_override('default_action_timeout', 119)
+
+        profile = server.ServerProfile('os.nova.server', 't', spec=self.spec)
+
+        ex = self.assertRaises(exception.InvalidSpec, profile.validate)
+        self.assertEqual("Value of the 'timeout' property must be lower than "
+                         "the upper limit (119).", six.text_type(ex))
 
     @mock.patch.object(driver_base, 'SenlinDriver')
     def test_nova_client(self, mock_senlindriver):
