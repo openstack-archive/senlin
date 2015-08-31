@@ -825,7 +825,7 @@ class EngineService(service.Service):
         if delta is not None:
             LOG.info(_LI('Scaling in cluster %(name)s by %(delta)s nodes'),
                      {'name': identity, 'delta': delta})
-            inputs = {'count': -delta}
+            inputs = {'count': delta}
         else:
             LOG.info(_LI('Scaling in cluster %s'), db_cluster.name)
             inputs = {}

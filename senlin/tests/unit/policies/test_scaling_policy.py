@@ -123,11 +123,21 @@ class TestScalingPolicy(base.SenlinTestCase):
 
     def test_calculate_adjustment_count(self):
         adjustment = self.spec['properties']['adjustment']
-        # adjustment_type as EXACT_CAPACITY
+        # adjustment_type as EXACT_CAPACITY and event as cluster_scale_in
         current_size = 3
         adjustment['type'] = consts.EXACT_CAPACITY
         adjustment['number'] = 1
         policy = sp.ScalingPolicy('test-policy', self.spec)
+        policy.event = consts.CLUSTER_SCALE_IN
+        count = policy._calculate_adjustment_count(current_size)
+        self.assertEqual(2, count)
+
+        # adjustment_type as EXACT_CAPACITY and event as cluster_scale_out
+        current_size = 3
+        adjustment['type'] = consts.EXACT_CAPACITY
+        adjustment['number'] = 1
+        policy = sp.ScalingPolicy('test-policy', self.spec)
+        policy.event = consts.CLUSTER_SCALE_OUT
         count = policy._calculate_adjustment_count(current_size)
         self.assertEqual(-2, count)
 
@@ -194,7 +204,7 @@ class TestScalingPolicy(base.SenlinTestCase):
         action = mock.Mock()
         action.context = self.context
         action.action = consts.CLUSTER_SCALE_IN
-        action.inputs = {'count': -1}
+        action.inputs = {'count': 1}
         adjustment = self.spec['properties']['adjustment']
         adjustment['type'] = consts.CHANGE_IN_CAPACITY
         adjustment['number'] = 2
@@ -222,7 +232,7 @@ class TestScalingPolicy(base.SenlinTestCase):
         policy = sp.ScalingPolicy('test-policy', self.spec)
 
         policy.pre_op(self.cluster['id'], action)
-        reason = _('Count (2) invalid for action CLUSTER_SCALE_IN.')
+        reason = _('Count (-2) invalid for action CLUSTER_SCALE_IN.')
 
         pd = {
             'reason': reason,
@@ -238,7 +248,7 @@ class TestScalingPolicy(base.SenlinTestCase):
         action.inputs = {}
         adjustment = self.spec['properties']['adjustment']
         adjustment['type'] = consts.CHANGE_IN_CAPACITY
-        adjustment['number'] = -3
+        adjustment['number'] = 3
         policy = sp.ScalingPolicy('test-policy', self.spec)
 
         policy.pre_op(self.cluster['id'], action)
@@ -259,7 +269,7 @@ class TestScalingPolicy(base.SenlinTestCase):
         adjustment = self.spec['properties']['adjustment']
         adjustment['best_effort'] = True
         adjustment['type'] = consts.CHANGE_IN_CAPACITY
-        adjustment['number'] = -3
+        adjustment['number'] = 3
         policy = sp.ScalingPolicy('test-policy', self.spec)
 
         policy.pre_op(self.cluster['id'], action)

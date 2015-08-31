@@ -112,7 +112,10 @@ class ScalingPolicy(base.Policy):
         '''Calculate adjustment count based on current_size'''
 
         if self.adjustment_type == consts.EXACT_CAPACITY:
-            count = self.adjustment_number - current_size
+            if self.event == consts.CLUSTER_SCALE_IN:
+                count = current_size - self.adjustment_number
+            else:
+                count = self.adjustment_number - current_size
         elif self.adjustment_type == consts.CHANGE_IN_CAPACITY:
             count = self.adjustment_number
         else:   # consts.CHANGE_IN_PERCENTAGE:
@@ -140,20 +143,24 @@ class ScalingPolicy(base.Policy):
 
         # Use action input if count is provided
         count = action.inputs.get('count', count)
-        new_size = current_size + count
+
+        if count <= 0:
+            status = base.CHECK_ERROR
+            reason = _("Count (%(count)s) invalid for action %(action)s."
+                       ) % {'count': count, 'action': action.action}
 
         # Check size constraints
-        if (count < 0) and action.action == consts.CLUSTER_SCALE_IN:
+        if action.action == consts.CLUSTER_SCALE_IN:
+            new_size = current_size - count
             if (new_size < cluster.min_size):
                 if self.best_effort:
-                    count = cluster.min_size - current_size
+                    count = current_size - cluster.min_size
                     reason = _('Do best effort scaling.')
                 else:
-                    count = 0
                     status = base.CHECK_ERROR
                     reason = _('Attempted scaling below minimum size.')
-
-        elif (count > 0) and action.action == consts.CLUSTER_SCALE_OUT:
+        else:
+            new_size = current_size + count
             if (new_size > cluster.max_size):
                 if self.best_effort:
                     count = cluster.max_size - current_size
@@ -161,17 +168,13 @@ class ScalingPolicy(base.Policy):
                 else:
                     status = base.CHECK_ERROR
                     reason = _('Attempted scaling above maximum size.')
-        else:
-            status = base.CHECK_ERROR
-            reason = _("Count (%(count)s) invalid for action %(action)s."
-                       ) % {'count': count, 'action': action.action}
-            count = 0
 
         pd = {'status': status, 'reason': reason}
-        if count > 0:
-            pd['creation'] = {'count': count}
-        elif count < 0:
-            pd['deletion'] = {'count': -count}
+        if status == base.CHECK_OK:
+            if action.action == consts.CLUSTER_SCALE_IN:
+                pd['deletion'] = {'count': count}
+            else:
+                pd['creation'] = {'count': count}
 
         action.data.update(pd)
         action.store(action.context)
