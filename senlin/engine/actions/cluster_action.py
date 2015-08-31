@@ -614,8 +614,8 @@ class ClusterAction(base.Action):
                 return self.RES_OK, 'Policy already attached'
 
             # Detect policy type conflicts
-            curr = policy_mod.Policy.load(self.context, existing.policy_id)
-            if curr.type == policy.type:
+            curr = db_api.policy_get(self.context, existing.policy_id)
+            if (curr.type == policy.type) and policy.singleton:
                 raise exception.PolicyTypeConflict(policy_type=policy.type)
 
         res, data = policy.attach(cluster)

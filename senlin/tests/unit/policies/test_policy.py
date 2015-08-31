@@ -103,6 +103,7 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertIsNone(policy.created_time)
         self.assertIsNone(policy.updated_time)
         self.assertIsNone(policy.deleted_time)
+        self.assertTrue(policy.singleton)
 
         spec_data = policy.spec_data
         self.assertEqual('senlin.policy.dummy', spec_data['type'])

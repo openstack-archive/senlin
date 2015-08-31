@@ -100,6 +100,7 @@ class ScalingPolicy(base.Policy):
         super(ScalingPolicy, self).__init__(name, spec, **kwargs)
 
         self.event = self.properties[self.EVENT]
+        self.singleton = False
         adjustment = self.properties[self.ADJUSTMENT]
 
         self.adjustment_type = adjustment[self.ADJUSTMENT_TYPE]
