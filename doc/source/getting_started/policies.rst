@@ -40,12 +40,12 @@ that can be used to enumerate profile objects known to the service. For
 example::
 
   $ senlin policy-list
-  +----------+------+---------------------+-------+----------+---------------------+
-  | id       | name | type                | level | cooldown | created_time        |
-  +----------+------+---------------------+-------+----------+---------------------+
-  | 239d7212 | dp01 | DeletionPolicy      | 0     | 0        | 2015-07-11T04:24:34 |
-  | 7ecfd026 | lb01 | LoadBalancingPolicy | 0     | 0        | 2015-07-11T04:25:28 |
-  +----------+------+---------------------+-------+----------+---------------------+
+  +----------+------+-----------------------------+-------+----------+---------------------+
+  | id       | name | type                        | level | cooldown | created_time        |
+  +----------+------+-----------------------------+-------+----------+---------------------+
+  | 239d7212 | dp01 | senlin.policy.deletion-1.0  | 0     | 0        | 2015-07-11T04:24:34 |
+  | 7ecfd026 | lb01 | senlin.policy.placement-1.0 | 0     | 0        | 2015-07-11T04:25:28 |
+  +----------+------+-----------------------------+-------+----------+---------------------+
 
 Note that the first column in the output table is a *short ID* of a policy
 object. Senlin command line use short IDs to save real estate on screen so
@@ -63,11 +63,11 @@ of policies returned from Senlin server, using the option :option:`--limit` (or
 (or `-l`). For example::
 
   $ senlin policy-list -l 1
-  +----------+------+----------------+-------+----------+---------------------+
-  | id       | name | type           | level | cooldown | created_time        |
-  +----------+------+----------------+-------+----------+---------------------+
-  | 239d7212 | dp01 | DeletionPolicy | 0     | 0        | 2015-07-11T04:24:34 |
-  +----------+------+----------------+-------+----------+---------------------+
+  +----------+------+----------------------------+-------+----------+---------------------+
+  | id       | name | type                       | level | cooldown | created_time        |
+  +----------+------+----------------------------+-------+----------+---------------------+
+  | 239d7212 | dp01 | senlin.policy.deletion-1.0 | 0     | 0        | 2015-07-11T04:24:34 |
+  +----------+------+----------------------------+-------+----------+---------------------+
 
 Yet another option you can specify is the ID of a policy object after which
 you want to see the list starts. In other words, you don't want to see those
@@ -75,7 +75,7 @@ policies with IDs that is or come before the one you specify. You can use the
 option :option:`--marker <ID>` (or option:`-m <ID>`) for this purpose. For
 example::
 
-  $ senlin profile-list -l 1 -m 239d7212-6196-4a89-9446-44d28717d7de
+  $ senlin policy-list -l 1 -m 239d7212-6196-4a89-9446-44d28717d7de
 
 Combining the :option:`-m` and the :option:`-l` enables you to do pagination
 on the results returned from the server.
@@ -88,49 +88,56 @@ When creating a new policy object, you need a "spec" file in YAML format. You
 may want to check the :command:`policy-type-schema` command in
 :ref:`guide-policy_types` for the property names and types for a specific
 :term:`policy type`. For example, the following is a spec for the policy type
-``DeletionPolicy`` (the source can be found in the
-:file:`examples/policies/deletion_policy.spec` file)::
+``senlin.policy.deletion`` (the source can be found in the
+:file:`examples/policies/deletion_policy.yaml` file)::
 
   # Sample deletion policy that can be attached to a cluster.
+  type: senlin.policy.deletion
+  version: 1.0
+  properties:
+    # The valid values include:
+    # OLDEST_FIRST, OLDEST_PROFILE_FIRST, YOUNGEST_FIRST, RANDOM
+    criteria: OLDEST_FIRST
+  
+    # Whether deleted node should be destroyed
+    destroy_after_deletion: True
+  
+    # Length in number of seconds before the actual deletion happens
+    # This param buys an instance some time before deletion
+    grace_period: 60
+  
+    # Whether the deletion will reduce the desired capability of
+    # the cluster as well.
+    reduce_desired_capacity: False
 
-  # The valid values include:
-  # OLDEST_FIRST, OLDEST_PROFILE_FIRST, YOUNGEST_FIRST, RANDOM
-  criteria: OLDEST_FIRST
-
-  # Whether deleted node should be destroyed
-  destroy_after_deletion: True
-
-  # Length in number of seconds before the actual deletion happens
-  # This param buys an instance some time before deletion
-  grace_period: 60
-
-  # Whether the deletion will reduce the desired capability of
-  # the cluster as well.
-  reduce_desired_capacity: False
-
-The properties in this spec file are specific to the ``DeletionPolicy`` policy
-type. To create a policy object using this "spec" file, you can use the
+The properties in this spec file are specific to the ``senlin.policy.deletion``
+policy type. To create a policy object using this "spec" file, you can use the
 following command::
 
-  $ senlin policy-create -t DeletionPolicy -s deletion_policy.spec dp01
-  +--------------+--------------------------------------+
-  | Property     | Value                                |
-  +--------------+--------------------------------------+
-  | cooldown     | 0                                    |
-  | created_time | None                                 |
-  | deleted_time | None                                 |
-  | id           | 239d7212-6196-4a89-9446-44d28717d7de |
-  | level        | 0                                    |
-  | name         | dp01                                 |
-  | spec         | {                                    |
-  |              |   "destroy_after_deletion": true,    |
-  |              |   "grace_period": 60,                |
-  |              |   "reduce_desired_capacity": false,  |
-  |              |   "criteria": "OLDEST_FIRST"         |
-  |              | }                                    |
-  | type         | DeletionPolicy                       |
-  | updated_time | None                                 |
-  +--------------+--------------------------------------+
+  $ senlin policy-create -s deletion_policy.yaml dp01
+  +--------------+----------------------------------------------------------------------------------------+
+  | Property     | Value                                                                                  |
+  +--------------+----------------------------------------------------------------------------------------+
+  | cooldown     | 0                                                                                      |
+  | created_time | None                                                                                   |
+  | deleted_time | None                                                                                   |
+  | id           | c2e3cd74-bb69-4286-bf06-05d802c8ec12                                                   |
+  | level        | 0                                                                                      |
+  | name         | dp01                                                                                   |
+  | spec         | {                                                                                      |
+  |              |   "version": 1.0,                                                                      |
+  |              |   "type": "senlin.policy.deletion",                                                    |
+  |              |   "description": "A policy for choosing victim node(s) from a cluster for deletion.",  |
+  |              |   "properties": {                                                                      |
+  |              |     "destroy_after_deletion": true,                                                    |
+  |              |     "grace_period": 60,                                                                |
+  |              |     "reduce_desired_capacity": false,                                                  |
+  |              |     "criteria": "OLDEST_FIRST"                                                         |
+  |              |   }                                                                                    |
+  |              | }                                                                                      |
+  | type         | None                                                                                   |
+  | updated_time | None                                                                                   |
+  +--------------+----------------------------------------------------------------------------------------+
 
 
 Showing the Details of a Policy
@@ -141,25 +148,31 @@ profile. You need to provide an identifier to the :program:`senlin` command
 line to indicate the policy object you want to examine. The identifier can be
 the ID, the name or the "short ID" of a policy object. For example::
 
-  $ senlin policy-show dp01
-  +--------------+--------------------------------------+
-  | Property     | Value                                |
-  +--------------+--------------------------------------+
-  | cooldown     | 0                                    |
-  | created_time | 2015-07-11T04:24:34                  |
-  | deleted_time | None                                 |
-  | id           | 239d7212-6196-4a89-9446-44d28717d7de |
-  | level        | 0                                    |
-  | name         | dp01                                 |
-  | spec         | {                                    |
-  |              |   "destroy_after_deletion": true,    |
-  |              |   "grace_period": 60,                |
-  |              |   "reduce_desired_capacity": false,  |
-  |              |   "criteria": "OLDEST_FIRST"         |
-  |              | }                                    |
-  | type         | DeletionPolicy                       |
-  | updated_time | None                                 |
-  +--------------+--------------------------------------+
+  $ senlin policy-create -s deletion_policy.yaml dp01
+  +--------------+----------------------------------------------------------------------------------------+
+  | Property     | Value                                                                                  |
+  +--------------+----------------------------------------------------------------------------------------+
+  | cooldown     | 0                                                                                      |
+  | created_time | 2015-07-11T04:24:34                                                                    |
+  | deleted_time | None                                                                                   |
+  | id           | c2e3cd74-bb69-4286-bf06-05d802c8ec12                                                   |
+  | level        | 0                                                                                      |
+  | name         | dp01                                                                                   |
+  | spec         | {                                                                                      |
+  |              |   "version": 1.0,                                                                      |
+  |              |   "type": "senlin.policy.deletion",                                                    |
+  |              |   "description": "A policy for choosing victim node(s) from a cluster for deletion.",  |
+  |              |   "properties": {                                                                      |
+  |              |     "destroy_after_deletion": true,                                                    |
+  |              |     "grace_period": 60,                                                                |
+  |              |     "reduce_desired_capacity": false,                                                  |
+  |              |     "criteria": "OLDEST_FIRST"                                                         |
+  |              |   }                                                                                    |
+  |              | }                                                                                      |
+  | type         | None                                                                                   |
+  | updated_time | None                                                                                   |
+  +--------------+----------------------------------------------------------------------------------------+
+
 
 When there is no policy object matching the identifier, you will get an error
 message. When there are more than one object matching the identifier, you will

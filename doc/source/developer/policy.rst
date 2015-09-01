@@ -65,9 +65,9 @@ Creating A Policy
 -----------------
 
 When the Senlin API receives a request to create a policy object, it first
-checks if the JSON body contains a map named ``policy`` that has the ``name``,
-``type`` and ``spec`` keys and values associated with them. If any of these
-keys are missing, the request will be treated as an invalid one and rejected.
+checks if the JSON body contains a map named ``policy`` that has the ``name``
+and ``spec`` keys and values associated with them. If any of these keys are
+missing, the request will be treated as an invalid one and rejected.
 
 After the preliminary request validation done at the Senlin API layer, Senlin
 engine will further check whether the specified policy type does exist and
@@ -140,9 +140,9 @@ Updating A Policy
 
 After a policy is created, a user can send requests to the Senlin API for
 changing some of its properties. To avoid potential state conflicts inside the
-Senlin engine, we currently don't allow changes to the ``type`` or the ``spec``
-property of a policy. However, changing the ``name``, ``cooldown`` or
-``level`` property is permitted.
+Senlin engine, we currently don't allow changes to the ``spec`` property of
+a policy. However, changing the ``name``, ``cooldown`` or ``level`` property
+is permitted.
 
 When validating the requester provided parameters, Senlin API will check if
 the values are of valid data types and whether the values fall in allowed
