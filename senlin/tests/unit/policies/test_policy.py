@@ -419,7 +419,7 @@ class TestPolicyBase(base.SenlinTestCase):
             'username': 'senlin',
             'user_domain_name': 'default',
             'password': '123',
-            'trusts': ['TRUST_ID']
+            'trust_id': ['TRUST_ID']
         }
         res = policy._build_conn_params(cluster)
         self.assertEqual(expected_result, res)

@@ -338,6 +338,6 @@ class Policy(object):
                                cluster.user, cluster.project)
         if cred is None:
             raise exception.TrustNotFound(trustor=cluster.user)
-        params['trusts'] = [cred.cred['openstack']['trust']]
+        params['trust_id'] = [cred.cred['openstack']['trust']]
 
         return params
