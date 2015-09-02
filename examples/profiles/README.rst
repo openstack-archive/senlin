@@ -10,8 +10,7 @@ use of the 'get_file' function supported by Heat.
 To create a profile using the spec, use the following command::
 
   senlin profile-create \
-    -t os.heat.stack \
-    -s heat_stack_random_string.spec \
+    -s heat_stack_random_string.yaml \
     -p 1111
     my_stack
 
