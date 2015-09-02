@@ -80,7 +80,7 @@ class ClusterAction(base.Action):
                 reason = _('%(action)s %(id)s timeout') % {
                     'action': self.action, 'id': self.id}
                 LOG.debug(reason)
-                return self.RES_TIMEOUT
+                return self.RES_TIMEOUT, reason
 
             # Continue waiting (with reschedule)
             scheduler.reschedule(self.id, 1)
