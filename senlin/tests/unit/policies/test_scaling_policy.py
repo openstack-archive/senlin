@@ -97,6 +97,7 @@ class TestScalingPolicy(base.SenlinTestCase):
 
     def test_policy_init(self):
         policy = sp.ScalingPolicy('p1', self.spec)
+        self.assertEqual(False, policy.singleton)
 
         self.assertIsNone(policy.id)
         self.assertEqual('p1', policy.name)

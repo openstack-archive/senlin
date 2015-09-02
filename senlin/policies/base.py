@@ -156,6 +156,7 @@ class Policy(object):
         self.spec_data = schema.Spec(self.spec_schema, spec)
         self.properties = schema.Spec(self.properties_schema,
                                       self.spec.get(self.PROPERTIES, {}))
+        self.singleton = True
 
     @classmethod
     def _from_db_record(cls, record):
