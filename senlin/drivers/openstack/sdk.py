@@ -32,101 +32,6 @@ exc = exceptions
 LOG = logging.getLogger(__name__)
 
 
-class BaseException(Exception):
-    '''An error occurred.'''
-    def __init__(self, message=None):
-        self.message = message
-
-    def __str__(self):
-        return self.message or self.__class__.__doc__
-
-
-class HTTPException(BaseException):
-    """Base exception for all HTTP-derived exceptions."""
-    code = 'N/A'
-
-    def __init__(self, error=None):
-        super(HTTPException, self).__init__(error)
-        try:
-            self.error = error
-            if 'error' not in self.error:
-                raise KeyError(_('Key "error" not exists'))
-        except KeyError:
-            # If key 'error' does not exist, self.message becomes
-            # no sense. In this case, we return doc of current
-            # exception class instead.
-            self.error = {'error': {'message': self.__class__.__doc__}}
-        except Exception:
-            self.error = {'error':
-                          {'message': self.message or self.__class__.__doc__}}
-
-    def __str__(self):
-        message = self.error['error'].get('message', 'Internal Error')
-        code = self.error['error'].get('code', 'Unknown')
-        return _('ERROR(%(code)s): %(message)s') % {'code': code,
-                                                    'message': message}
-
-
-class ClientError(HTTPException):
-    pass
-
-
-class ServerError(HTTPException):
-    pass
-
-
-class ConnectionRefused(HTTPException):
-    # 111
-    pass
-
-
-class HTTPBadRequest(ClientError):
-    # 400
-    pass
-
-
-class HTTPUnauthorized(ClientError):
-    # 401
-    pass
-
-
-class HTTPForbidden(ClientError):
-    # 403
-    pass
-
-
-class HTTPNotFound(ClientError):
-    # 404
-    pass
-
-
-class HTTPInternalServerError(ServerError):
-    # 500
-    pass
-
-
-class HTTPNotImplemented(ServerError):
-    # 501
-    pass
-
-
-class HTTPServiceUnavailable(ServerError):
-    # 503
-    pass
-
-
-_EXCEPTION_MAP = {
-    111: ConnectionRefused,
-    400: HTTPBadRequest,
-    401: HTTPUnauthorized,
-    403: HTTPForbidden,
-    404: HTTPNotFound,
-    500: HTTPInternalServerError,
-    501: HTTPNotImplemented,
-    503: HTTPServiceUnavailable,
-}
-
-
 def parse_exception(ex):
     '''Parse exception code and yield useful information.
 
@@ -175,12 +80,6 @@ def translate_exception(func):
             raise parse_exception(ex)
 
     return invoke_with_catch
-
-
-def ignore_not_found(ex):
-    parsed = parse_exception(ex)
-    if not isinstance(parsed, HTTPNotFound):
-        raise parsed
 
 
 def create_connection(params):
