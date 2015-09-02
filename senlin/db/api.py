@@ -380,8 +380,9 @@ def action_update(context, action_id, values):
     return IMPL.action_update(context, action_id, values)
 
 
-def action_get(context, action_id, show_deleted=False):
-    return IMPL.action_get(context, action_id, show_deleted=show_deleted)
+def action_get(context, action_id, show_deleted=False, refresh=False):
+    return IMPL.action_get(context, action_id, show_deleted=show_deleted,
+                           refresh=refresh)
 
 
 def action_get_by_name(context, name):

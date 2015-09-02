@@ -1129,13 +1129,16 @@ def action_update(context, action_id, values):
     action.save(_session(context))
 
 
-def action_get(context, action_id, show_deleted=False):
-    action = model_query(context, models.Action).get(action_id)
-
+def action_get(context, action_id, show_deleted=False, refresh=False):
+    session = _session(context)
+    action = session.query(models.Action).get(action_id)
     deleted_ok = show_deleted or context.show_deleted
 
     if action is None or action.deleted_time is not None and not deleted_ok:
         return None
+
+    if refresh:
+        session.refresh(action)
 
     return action
 

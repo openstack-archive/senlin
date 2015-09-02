@@ -419,7 +419,8 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual('FAKE_STATUS', res)
         self.assertEqual('FAKE_STATUS', action.status)
         mock_get.assert_called_once_with(action.context, 'FAKE_ID',
-                                         show_deleted=False)
+                                         show_deleted=False,
+                                         refresh=True)
 
     @mock.patch.object(action_base, 'wallclock')
     def test_is_timeout(self, mock_time):
