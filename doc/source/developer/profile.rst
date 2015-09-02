@@ -68,9 +68,7 @@ Creating A Profile
 ------------------
 
 When creating a profile using the ``profile_create`` API, a user must provide
-the ``name``, ``spec`` and the ``type`` parameters. In future, the ``type``
-parameter may be provided as part of the ``spec`` map. All other parameters
-are optional.
+the ``name`` and ``spec`` parameters. All other parameters are optional.
 
 The provided ``spec`` map will be validated using the validation logic
 provided by the corresponding profile type. If the validation succeeds, the
