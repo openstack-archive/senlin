@@ -322,7 +322,7 @@ class Action(object):
         self.status_reason = reason
 
     def get_status(self):
-        action = db_api.action_get(self.context, self.id)
+        action = db_api.action_get(self.context, self.id, refresh=True)
         self.status = action.status
         return action.status
 
