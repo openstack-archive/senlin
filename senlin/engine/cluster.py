@@ -132,11 +132,12 @@ class Cluster(object):
             'data': self.data,
         }
 
+        timestamp = timeutils.utcnow()
         if self.id:
+            values['updated_time'] = timestamp
             db_api.cluster_update(context, self.id, values)
             event_mod.info(context, self, 'update')
         else:
-            timestamp = timeutils.utcnow()
             self.init_time = timestamp
             values['init_time'] = timestamp
             cluster = db_api.cluster_create(context, values)

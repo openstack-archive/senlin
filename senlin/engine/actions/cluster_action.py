@@ -10,10 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
 import random
 
 from oslo_log import log as logging
-from oslo_utils import timeutils
 
 from senlin.common import consts
 from senlin.common import exception
@@ -250,13 +250,12 @@ class ClusterAction(base.Action):
     def do_add_nodes(self, cluster):
         nodes = self.inputs.get('nodes')
 
-        # NOTE: node states might have changed before we lock the cluster
-        failures = {}
+        errors = []
         for node_id in nodes:
             try:
                 node = node_mod.Node.load(self.context, node_id)
             except exception.NodeNotFound:
-                failures[node_id] = 'Node not found'
+                errors.append(_('Node [%s] is not found.') % node_id)
                 continue
 
             if node.cluster_id == cluster.id:
@@ -264,23 +263,25 @@ class ClusterAction(base.Action):
                 continue
 
             if node.cluster_id is not None:
-                failures[node_id] = _('Node already owned by cluster '
-                                      '%s') % node.cluster_id
+                errors.append(_('Node [%(n)s] is already owned by cluster '
+                                '[%(c)s].') % {'n': node_id,
+                                               'c': node.cluster_id})
                 continue
-            if node.status != node_mod.Node.ACTIVE:
-                failures[node_id] = _('Node not in ACTIVE status')
+            if node.status != node.ACTIVE:
+                errors.append(_('Node [%s] is not in ACTIVE status.'
+                                ) % node_id)
                 continue
 
-        if len(failures) > 0:
-            return self.RES_ERROR, str(failures)
+        if len(errors) > 0:
+            return self.RES_ERROR, ''.join(errors)
 
-        reason = 'Completed adding nodes'
+        reason = _('Completed adding nodes.')
         if len(nodes) == 0:
             return self.RES_OK, reason
 
         for node_id in nodes:
-            action = base.Action(self.context, node.id, 'NODE_JOIN',
-                                 name='node_join_%s' % node.id[:8],
+            action = base.Action(self.context, node_id, 'NODE_JOIN',
+                                 name='node_join_%s' % node_id[:8],
                                  cause=base.CAUSE_DERIVED,
                                  inputs={'cluster_id': cluster.id})
             action.store(self.context)
@@ -298,24 +299,23 @@ class ClusterAction(base.Action):
         return result, reason
 
     def do_del_nodes(self, cluster):
-        nodes = self.inputs.get('nodes')
+        nodes = self.inputs.get('nodes', [])
 
-        # NOTE: node states might have changed before we lock the cluster
-        failures = {}
-        for node_id in nodes:
+        node_ids = copy.deepcopy(nodes)
+        errors = []
+        for node_id in node_ids:
             try:
-                node = node_mod.Node.load(self.context, node_id)
+                node = db_api.node_get(self.context, node_id)
             except exception.NodeNotFound:
-                failures[node_id] = 'Node not found'
+                errors.append(_('Node [%s] is not found.') % node_id)
                 continue
-
-            if node.cluster_id is None:
+            if (node.cluster_id is None) or (node.cluster_id != cluster.id):
                 nodes.remove(node_id)
 
-        if len(failures) > 0:
-            return self.RES_ERROR, str(failures)
+        if len(errors) > 0:
+            return self.RES_ERROR, ''.join(errors)
 
-        reason = 'Completed deleting nodes'
+        reason = _('Completed deleting nodes.')
         if len(nodes) == 0:
             return self.RES_OK, reason
 
@@ -393,7 +393,8 @@ class ClusterAction(base.Action):
                 reason = _("The specified max_size is less than the "
                            "current min_size of the cluster.")
                 return cls.RES_ERROR, reason
-            if desired is None and max_size < cluster.desired_capacity:
+            if (desired is None and max_size >= 0
+                    and max_size < cluster.desired_capacity):
                 reason = _("The specified max_size is less than the "
                            "current desired_capacity of the cluster.")
                 return cls.RES_ERROR, reason
@@ -402,6 +403,7 @@ class ClusterAction(base.Action):
 
     def _update_cluster_properties(self, cluster, desired, min_size, max_size):
         # update cluster properties related to size and profile
+
         need_store = False
         if min_size is not None and min_size != cluster.min_size:
             cluster.min_size = min_size
@@ -414,19 +416,10 @@ class ClusterAction(base.Action):
             need_store = True
 
         if need_store is False:
-            # ensure node list is up to date
-            cluster._load_runtime_data(self.context)
             return self.RES_OK, ''
 
-        cluster.updated_time = timeutils.utcnow()
         cluster.status_reason = _('Cluster properties updated.')
-        res = cluster.store(self.context)
-        if not res:
-            reason = _('Cluster object cannot be updated.')
-            # Reset status to active
-            cluster.set_status(self.context, cluster.ACTIVE, reason)
-            return self.RES_ERROR, reason
-
+        cluster.store(self.context)
         return self.RES_OK, ''
 
     def do_resize(self, cluster):
