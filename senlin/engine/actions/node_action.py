@@ -14,8 +14,8 @@ from oslo_log import log as logging
 
 from senlin.common import exception
 from senlin.common.i18n import _
+from senlin.common import scaleutils
 from senlin.engine.actions import base
-from senlin.engine.actions import cluster_action
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import event as event_mod
 from senlin.engine import node as node_mod
@@ -63,13 +63,13 @@ class NodeAction(base.Action):
         # Check the size constraint of parent cluster
         cluster = cluster_mod.Cluster.load(self.context, cluster_id)
         desired_capacity = cluster.desired_capacity + 1
-        res, reason = cluster_action.ClusterAction.check_size_params(
-            cluster, desired_capacity, None, None, True)
-        if res != self.RES_OK:
-            return res, reason
+        result = scaleutils.check_size_params(cluster, desired_capacity,
+                                              None, None, True)
+        if result != '':
+            return self.RES_ERROR, result
 
-        res = node.do_join(self.context, cluster_id)
-        if res:
+        result = node.do_join(self.context, cluster_id)
+        if result:
             # Update cluster desired_capacity if node join succeeded
             cluster.desired_capacity = desired_capacity
             cluster.store(self.context)
@@ -81,10 +81,10 @@ class NodeAction(base.Action):
         # Check the size constraint of parent cluster
         cluster = cluster_mod.Cluster.load(self.context, node.cluster_id)
         desired_capacity = cluster.desired_capacity - 1
-        res, reason = cluster_action.ClusterAction.check_size_params(
-            cluster, desired_capacity, None, None, True)
-        if res != self.RES_OK:
-            return res, reason
+        result = scaleutils.check_size_params(cluster, desired_capacity,
+                                              None, None, True)
+        if result != '':
+            return self.RES_ERROR, result
 
         res = node.do_leave(self.context)
         if res:
