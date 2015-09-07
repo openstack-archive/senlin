@@ -478,6 +478,8 @@ def ActionProc(context, action_id, worker_id):
         LOG.warning(_LE('Failed in locking action "%s".'), action_id)
         return False
 
+    action.owner = res.owner
+    action.start_time = res.start_time
     EVENT.info(action.context, action, action.action, 'START')
 
     reason = 'Action completed'
