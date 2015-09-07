@@ -52,39 +52,34 @@ class ClusterAction(base.Action):
         consts.CLUSTER_UPDATE_POLICY,
     )
 
-    def __init__(self, context, target, action, **kwargs):
-        super(ClusterAction, self).__init__(context, target, action, **kwargs)
-
     def _wait_for_dependents(self):
-        self.get_status()
+        status = self.get_status()
         reason = ''
-        while self.status != self.READY:
-            if self.status == self.FAILED:
-                reason = _('%(action)s [%(id)s] failed due to dependent '
-                           'action failure') % {'action': self.action,
-                                                'id': self.id}
+        while status != self.READY:
+            if status == self.FAILED:
+                reason = _('%(action)s [%(id)s] failed') % {
+                    'action': self.action, 'id': self.id[:8]}
                 LOG.debug(reason)
                 return self.RES_ERROR, reason
 
             if self.is_cancelled():
-                # During this period, if cancel request come, cancel this
-                # cluster operation immediately, then release the cluster
-                # lock and return.
-                reason = _('%(action)s %(id)s cancelled') % {
-                    'action': self.action, 'id': self.id}
+                # During this period, if cancel request comes, cancel this
+                # operation immediately, then release the cluster lock
+                reason = _('%(action)s [%(id)s] cancelled') % {
+                    'action': self.action, 'id': self.id[:8]}
                 LOG.debug(reason)
                 return self.RES_CANCEL, reason
 
             if self.is_timeout():
                 # Action timeout, return
-                reason = _('%(action)s %(id)s timeout') % {
-                    'action': self.action, 'id': self.id}
+                reason = _('%(action)s [%(id)s] timeout') % {
+                    'action': self.action, 'id': self.id[:8]}
                 LOG.debug(reason)
                 return self.RES_TIMEOUT, reason
 
             # Continue waiting (with reschedule)
-            scheduler.reschedule(self.id, 1)
-            self.get_status()
+            scheduler.reschedule(self.id, 3)
+            status = self.get_status()
 
         return self.RES_OK, 'All dependents ended with success'
 
@@ -92,16 +87,17 @@ class ClusterAction(base.Action):
         '''Utility method for node creation.'''
         placement = self.data.get('placement', None)
 
+        db_cluster = db_api.cluster_get(self.context, cluster.id)
+        index = db_cluster.next_index
+
         nodes = []
         for m in range(count):
-            db_cluster = db_api.cluster_get(self.context, cluster.id)
-            index = db_cluster.next_index
 
             kwargs = {
                 'user': cluster.user,
                 'project': cluster.project,
                 'domain': cluster.domain,
-                'index': index,
+                'index': index + m,
                 'metadata': {}
             }
             name = 'node-%s-%003d' % (cluster.id[:8], index)
@@ -142,14 +138,14 @@ class ClusterAction(base.Action):
         res = cluster.do_create(self.context)
 
         if not res:
-            reason = 'Cluster creation failed.'
+            reason = _('Cluster creation failed.')
             cluster.set_status(self.context, cluster.ERROR, reason)
             return self.RES_ERROR, reason
 
         result, reason = self._create_nodes(cluster, cluster.desired_capacity)
 
         if result == self.RES_OK:
-            reason = 'Cluster creation succeeded'
+            reason = _('Cluster creation succeeded.')
             cluster.set_status(self.context, cluster.ACTIVE, reason)
         elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_ERROR]:
             cluster.set_status(self.context, cluster.ERROR, reason)
@@ -175,24 +171,24 @@ class ClusterAction(base.Action):
             action.store(self.context)
 
             db_api.action_add_dependency(self.context, action.id, self.id)
-            action.set_status(self.READY)
+            action.set_status(action.READY)
             dispatcher.start_action(self.context, action_id=action.id)
 
         # Wait for nodes to complete update
         result = self.RES_OK
-        reason = 'Update completed'
+        reason = _('Cluster update completed.')
         if len(cluster.nodes) > 0:
-            result, reason = self._wait_for_dependents()
+            result, new_reason = self._wait_for_dependents()
 
-        if result != self.RES_OK:
-            return result, reason
+            if result != self.RES_OK:
+                return result, new_reason
 
         # TODO(anyone): this seems an overhead
         cluster.profile_id = profile_id
         cluster.store(self.context)
 
         cluster.set_status(self.context, cluster.ACTIVE, reason)
-        return self.RES_OK, _('Cluster update succeeded')
+        return self.RES_OK, reason
 
     def _delete_nodes(self, cluster, nodes):
         action_name = consts.NODE_DELETE
@@ -224,7 +220,7 @@ class ClusterAction(base.Action):
         return self.RES_OK, ''
 
     def do_delete(self, cluster):
-        reason = 'Deletion in progress'
+        reason = _('Deletion in progress.')
         cluster.set_status(self.context, cluster.DELETING, reason)
         node_ids = [node.id for node in cluster.nodes]
 
@@ -240,7 +236,7 @@ class ClusterAction(base.Action):
         if result == self.RES_OK:
             res = cluster.do_delete(self.context)
             if not res:
-                return self.RES_ERROR, 'Cannot delete cluster object.'
+                return self.RES_ERROR, _('Cannot delete cluster object.')
         elif result == self.RES_CANCEL:
             cluster.set_status(self.context, cluster.ACTIVE, reason)
         elif result in [self.RES_TIMEOUT, self.RES_ERROR]:
