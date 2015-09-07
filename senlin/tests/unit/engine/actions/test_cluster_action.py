@@ -12,6 +12,7 @@
 
 import mock
 
+from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine.actions import base as base_action
 from senlin.engine.actions import cluster_action
@@ -670,3 +671,353 @@ class ClusterActionTest(base.SenlinTestCase):
 
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Cannot delete cluster object.', res_msg)
+
+    @mock.patch.object(node_mod.Node, 'load')
+    @mock.patch.object(db_api, 'action_add_dependency')
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(cluster_action.ClusterAction, '_wait_for_dependents')
+    def test_do_add_nodes_single(self, mock_wait, mock_start, mock_dep,
+                                 mock_load):
+        action = cluster_action.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.id = 'CLUSTER_ACTION_ID'
+        action.inputs = {'nodes': ['NODE_1']}
+        action.data = {}
+
+        cluster = mock.Mock()
+        cluster.id = 'CLUSTER_ID'
+        node = mock.Mock()
+        node.id = 'NODE_1'
+        node.cluster_id = None
+        node.status = node.ACTIVE
+        mock_load.return_value = node
+
+        node_action = mock.Mock()
+        node_action.id = 'NODE_ACTION_ID'
+        mock_action = self.patchobject(base_action, 'Action',
+                                       return_value=node_action)
+        mock_wait.return_value = (action.RES_OK, 'Good to go!')
+
+        # do it
+        res_code, res_msg = action.do_add_nodes(cluster)
+
+        # assertions
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Completed adding nodes.', res_msg)
+        self.assertEqual({'nodes': ['NODE_1']}, action.data)
+
+        mock_load.assert_called_once_with(action.context, 'NODE_1')
+        mock_action.assert_called_once_with(
+            action.context, 'NODE_1', 'NODE_JOIN',
+            name='node_join_NODE_1', cause='Derived Action',
+            inputs={'cluster_id': 'CLUSTER_ID'})
+        node_action.store.assert_called_once_with(action.context)
+        mock_dep.assert_called_once_with(action.context, 'NODE_ACTION_ID',
+                                         'CLUSTER_ACTION_ID')
+        node_action.set_status.assert_called_once_with(action.READY)
+        mock_start.assert_called_once_with(action.context,
+                                           action_id='NODE_ACTION_ID')
+        mock_wait.assert_called_once_with()
+
+    @mock.patch.object(node_mod.Node, 'load')
+    @mock.patch.object(db_api, 'action_add_dependency')
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(cluster_action.ClusterAction, '_wait_for_dependents')
+    def test_do_add_nodes_multiple(self, mock_wait, mock_start, mock_dep,
+                                   mock_load):
+        action = cluster_action.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.id = 'CLUSTER_ACTION_ID'
+        action.inputs = {'nodes': ['NODE_1', 'NODE_2']}
+        action.data = {}
+
+        cluster = mock.Mock()
+        cluster.id = 'CLUSTER_ID'
+        node1 = mock.Mock()
+        node1.id = 'NODE_1'
+        node1.cluster_id = None
+        node1.status = node1.ACTIVE
+        node2 = mock.Mock()
+        node2.id = 'NODE_2'
+        node2.cluster_id = None
+        node2.status = node2.ACTIVE
+        mock_load.side_effect = [node1, node2]
+
+        node_action_1 = mock.Mock()
+        node_action_1.id = 'NODE_ACTION_ID_1'
+        node_action_2 = mock.Mock()
+        node_action_2.id = 'NODE_ACTION_ID_2'
+
+        mock_action = self.patchobject(
+            base_action, 'Action', side_effect=[node_action_1, node_action_2])
+        mock_wait.return_value = (action.RES_OK, 'Good to go!')
+
+        # do it
+        res_code, res_msg = action.do_add_nodes(cluster)
+
+        # assertions
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Completed adding nodes.', res_msg)
+        self.assertEqual({'nodes': ['NODE_1', 'NODE_2']}, action.data)
+
+        mock_load.assert_has_calls([
+            mock.call(action.context, 'NODE_1'),
+            mock.call(action.context, 'NODE_2')])
+        mock_action.assert_has_calls([
+            mock.call(action.context, 'NODE_1', 'NODE_JOIN',
+                      name='node_join_NODE_1', cause='Derived Action',
+                      inputs={'cluster_id': 'CLUSTER_ID'}),
+            mock.call(action.context, 'NODE_2', 'NODE_JOIN',
+                      name='node_join_NODE_2', cause='Derived Action',
+                      inputs={'cluster_id': 'CLUSTER_ID'})])
+
+        node_action_1.store.assert_called_once_with(action.context)
+        node_action_2.store.assert_called_once_with(action.context)
+        mock_dep.assert_has_calls([
+            mock.call(action.context, 'NODE_ACTION_ID_1',
+                      'CLUSTER_ACTION_ID'),
+            mock.call(action.context, 'NODE_ACTION_ID_2',
+                      'CLUSTER_ACTION_ID')])
+        node_action_1.set_status.assert_called_once_with(action.READY)
+        node_action_2.set_status.assert_called_once_with(action.READY)
+        mock_start.assert_has_calls([
+            mock.call(action.context, action_id='NODE_ACTION_ID_1'),
+            mock.call(action.context, action_id='NODE_ACTION_ID_2')])
+
+        mock_wait.assert_called_once_with()
+
+    @mock.patch.object(node_mod.Node, 'load')
+    def test_do_add_nodes_node_not_found(self, mock_load):
+        action = cluster_action.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {'nodes': ['NODE_1']}
+        mock_load.side_effect = exception.NodeNotFound(node='NODE_1')
+        cluster = mock.Mock()
+
+        # do it
+        res_code, res_msg = action.do_add_nodes(cluster)
+
+        # assertions
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual("Node [NODE_1] is not found.", res_msg)
+
+    @mock.patch.object(node_mod.Node, 'load')
+    def test_do_add_nodes_node_already_member(self, mock_load):
+        action = cluster_action.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {'nodes': ['NODE_1']}
+        action.data = {}
+
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        node = mock.Mock()
+        node.cluster_id = 'FAKE_CLUSTER'
+        mock_load.return_value = node
+
+        # do it
+        res_code, res_msg = action.do_add_nodes(cluster)
+
+        # assertions
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual("Completed adding nodes.", res_msg)
+        self.assertEqual({}, action.data)
+
+    @mock.patch.object(node_mod.Node, 'load')
+    def test_do_add_nodes_node_in_other_cluster(self, mock_load):
+        action = cluster_action.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {'nodes': ['NODE_1']}
+        action.data = {}
+
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        node = mock.Mock()
+        node.cluster_id = 'ANOTHER_CLUSTER'
+        mock_load.return_value = node
+
+        # do it
+        res_code, res_msg = action.do_add_nodes(cluster)
+
+        # assertions
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual("Node [NODE_1] is already owned by cluster "
+                         "[ANOTHER_CLUSTER].", res_msg)
+
+    @mock.patch.object(node_mod.Node, 'load')
+    def test_do_add_nodes_node_not_active(self, mock_load):
+        action = cluster_action.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {'nodes': ['NODE_1']}
+        action.data = {}
+
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        node = mock.Mock()
+        node.cluster_id = None
+        node.status = node.ERROR
+        mock_load.return_value = node
+
+        # do it
+        res_code, res_msg = action.do_add_nodes(cluster)
+
+        # assertions
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual("Node [NODE_1] is not in ACTIVE status.", res_msg)
+
+    @mock.patch.object(node_mod.Node, 'load')
+    @mock.patch.object(db_api, 'action_add_dependency')
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(cluster_action.ClusterAction, '_wait_for_dependents')
+    def test_do_add_nodes_failed_waiting(self, mock_wait, mock_start, mock_dep,
+                                         mock_load):
+        action = cluster_action.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.id = 'CLUSTER_ACTION_ID'
+        action.inputs = {'nodes': ['NODE_1']}
+        action.data = {}
+
+        cluster = mock.Mock()
+        cluster.id = 'CLUSTER_ID'
+        node = mock.Mock()
+        node.id = 'NODE_1'
+        node.cluster_id = None
+        node.status = node.ACTIVE
+        mock_load.return_value = node
+
+        node_action = mock.Mock()
+        node_action.id = 'NODE_ACTION_ID'
+        self.patchobject(base_action, 'Action', return_value=node_action)
+        mock_wait.return_value = (action.RES_TIMEOUT, 'Timeout!')
+
+        # do it
+        res_code, res_msg = action.do_add_nodes(cluster)
+
+        # assertions
+        self.assertEqual(action.RES_TIMEOUT, res_code)
+        self.assertEqual('Timeout!', res_msg)
+        self.assertEqual({}, action.data)
+
+    @mock.patch.object(db_api, 'node_get')
+    @mock.patch.object(cluster_action.ClusterAction, '_delete_nodes')
+    def test_do_del_nodes(self, mock_delete, mock_get):
+        action = cluster_action.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.id = 'CLUSTER_ACTION_ID'
+        action.inputs = {'nodes': ['NODE_1', 'NODE_2']}
+        action.data = {}
+
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        node1 = mock.Mock()
+        node1.id = 'NODE_1'
+        node1.cluster_id = 'FAKE_CLUSTER'
+        node2 = mock.Mock()
+        node2.id = 'NODE_2'
+        node2.cluster_id = 'FAKE_CLUSTER'
+        mock_get.side_effect = [node1, node2]
+        mock_delete.return_value = (action.RES_OK, 'Good to go!')
+
+        # do it
+        res_code, res_msg = action.do_del_nodes(cluster)
+
+        # assertions
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Completed deleting nodes.', res_msg)
+        self.assertEqual({'deletion': {'destroy_after_delete': False}},
+                         action.data)
+
+        mock_get.assert_has_calls([
+            mock.call(action.context, 'NODE_1', show_deleted=False),
+            mock.call(action.context, 'NODE_2', show_deleted=False)])
+        mock_delete.assert_called_once_with(cluster, ['NODE_1', 'NODE_2'])
+
+    @mock.patch.object(db_api, 'node_get')
+    def test_do_del_nodes_node_not_found(self, mock_get):
+        action = cluster_action.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {'nodes': ['NODE_1']}
+        cluster = mock.Mock()
+        mock_get.side_effect = exception.NodeNotFound(node='NODE_1')
+
+        # do it
+        res_code, res_msg = action.do_del_nodes(cluster)
+
+        # assertions
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual("Node [NODE_1] is not found.", res_msg)
+        self.assertEqual({}, action.data)
+
+    @mock.patch.object(db_api, 'node_get')
+    def test_do_del_nodes_node_not_member(self, mock_get):
+        action = cluster_action.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {'nodes': ['NODE_1', 'NODE_2']}
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        node1 = mock.Mock()
+        node1.cluster_id = None
+        node2 = mock.Mock()
+        node2.cluster_id = 'ANOTHER_CLUSTER'
+        mock_get.side_effect = [node1, node2]
+
+        # do it
+        res_code, res_msg = action.do_del_nodes(cluster)
+
+        # assertions
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual("Completed deleting nodes.", res_msg)
+        self.assertEqual({}, action.data)
+
+    @mock.patch.object(db_api, 'node_get')
+    @mock.patch.object(cluster_action.ClusterAction, '_delete_nodes')
+    def test_do_del_nodes_failed_delete(self, mock_delete, mock_get):
+        action = cluster_action.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {'nodes': ['NODE_1']}
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        node1 = mock.Mock()
+        node1.cluster_id = 'FAKE_CLUSTER'
+        mock_get.side_effect = [node1]
+        mock_delete.return_value = (action.RES_ERROR, 'Things went bad.')
+
+        # do it
+        res_code, res_msg = action.do_del_nodes(cluster)
+
+        # assertions
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual("Things went bad.", res_msg)
+
+    def test__update_cluster_properties_no_store_needed(self):
+        cluster = mock.Mock()
+        cluster.min_size = 10
+        cluster.max_size = 20
+        cluster.desired_capacity = 15
+
+        action = cluster_action.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+
+        res, msg = action._update_cluster_properties(cluster, None, None, None)
+        self.assertEqual(action.RES_OK, res)
+        self.assertEqual('', msg)
+
+        res, msg = action._update_cluster_properties(cluster, 15, 10, 20)
+        self.assertEqual(action.RES_OK, res)
+        self.assertEqual('', msg)
+
+    def test__update_cluster_properties_with_store(self):
+        def new_cluster():
+            cluster = mock.Mock()
+            cluster.min_size = 10
+            cluster.max_size = 20
+            cluster.desired_capacity = 15
+            return cluster
+
+        action = cluster_action.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+
+        args = [
+            (16, None, None),
+            (None, 11, None),
+            (None, None, 21),
+            (16, 11, None),
+            (None, 11, 21),
+            (16, None, 21)
+        ]
+
+        for pargs in args:
+            cluster = new_cluster()
+            res, msg = action._update_cluster_properties(cluster, *pargs)
+            self.assertEqual(action.RES_OK, res)
+            self.assertEqual('', msg)
+            self.assertEqual('Cluster properties updated.',
+                             cluster.status_reason)
+            cluster.store.assert_called_once_with(action.context)
+            cluster.store.reset_mock()
