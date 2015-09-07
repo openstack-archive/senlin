@@ -39,24 +39,24 @@ class NodeAction(base.Action):
     def do_create(self, node):
         res = node.do_create(self.context)
         if res:
-            return self.RES_OK, 'Node created successfully'
+            return self.RES_OK, _('Node created successfully')
         else:
-            return self.RES_ERROR, 'Node creation failed'
+            return self.RES_ERROR, _('Node creation failed')
 
     def do_delete(self, node):
         res = node.do_delete(self.context)
         if res:
-            return self.RES_OK, 'Node deleted successfully'
+            return self.RES_OK, _('Node deleted successfully')
         else:
-            return self.RES_ERROR, 'Node deletion failed'
+            return self.RES_ERROR, _('Node deletion failed')
 
     def do_update(self, node):
         params = self.inputs
         res = node.do_update(self.context, params)
         if res:
-            return self.RES_OK, 'Node updated successfully'
+            return self.RES_OK, _('Node updated successfully')
         else:
-            return self.RES_ERROR, 'Node update failed'
+            return self.RES_ERROR, _('Node update failed')
 
     def do_join(self, node):
         cluster_id = self.inputs.get('cluster_id')
@@ -73,9 +73,9 @@ class NodeAction(base.Action):
             # Update cluster desired_capacity if node join succeeded
             cluster.desired_capacity = desired_capacity
             cluster.store(self.context)
-            return self.RES_OK, 'Node successfully joined cluster'
+            return self.RES_OK, _('Node successfully joined cluster')
         else:
-            return self.RES_ERROR, 'Node failed joining cluster'
+            return self.RES_ERROR, _('Node failed in joining cluster')
 
     def do_leave(self, node):
         # Check the size constraint of parent cluster
@@ -91,17 +91,17 @@ class NodeAction(base.Action):
             # Update cluster desired_capacity if node leave succeeded
             cluster.desired_capacity = desired_capacity
             cluster.store(self.context)
-            return self.RES_OK, 'Node successfully left cluster'
+            return self.RES_OK, _('Node successfully left cluster')
         else:
-            return self.RES_ERROR, 'Node failed leaving cluster'
+            return self.RES_ERROR, _('Node failed in leaving cluster')
 
     def _execute(self, node):
         action_name = self.action.lower()
         method_name = action_name.replace('node', 'do')
-        method = getattr(self, method_name)
+        method = getattr(self, method_name, None)
 
         if method is None:
-            reason = _('Unsupported action %s') % self.action
+            reason = _('Unsupported action: %s') % self.action
             event_mod.error(node.id, self.action, 'Failed', reason)
             return self.RES_ERROR, reason
 
@@ -120,7 +120,7 @@ class NodeAction(base.Action):
                 res = senlin_lock.cluster_lock_acquire(
                     node.cluster_id, self.id, senlin_lock.NODE_SCOPE, False)
                 if not res:
-                    return self.RES_RETRY, _('Failed locking cluster')
+                    return self.RES_RETRY, _('Failed in locking cluster')
 
             self.policy_check(node.cluster_id, 'BEFORE')
             if self.data['status'] != policy_mod.CHECK_OK:
@@ -130,20 +130,21 @@ class NodeAction(base.Action):
                     senlin_lock.cluster_lock_release(
                         node.cluster_id, self.id, senlin_lock.NODE_SCOPE)
 
-                return self.RES_ERROR, 'Policy check:' + self.data['reason']
+                return self.RES_ERROR, 'Policy check: ' + self.data['reason']
 
         reason = ''
         try:
             res = senlin_lock.node_lock_acquire(node.id, self.id, False)
             if not res:
-                reason = _('Failed locking node')
+                res = self.RES_ERROR
+                reason = _('Failed in locking node')
             else:
                 res, reason = self._execute(node)
                 if res == self.RES_OK and node.cluster_id is not None:
                     self.policy_check(node.cluster_id, 'AFTER')
                     if self.data['status'] != policy_mod.CHECK_OK:
                         res = self.RES_ERROR
-                        reason = 'Policy check:' + self.data['reason']
+                        reason = 'Policy check: ' + self.data['reason']
                     else:
                         res = self.RES_OK
         finally:
