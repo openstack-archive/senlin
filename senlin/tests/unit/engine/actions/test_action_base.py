@@ -785,17 +785,20 @@ class ActionProcTest(base.SenlinTestCase):
         mock_acquire.assert_called_once_with(
             action.context, 'ACTION', 'WORKER', 'TIMESTAMP')
 
+    @mock.patch.object(event, 'info')
     @mock.patch.object(action_base, 'wallclock')
     @mock.patch.object(db_api, 'action_acquire')
     @mock.patch.object(action_base.Action, 'load')
     @mock.patch.object(db_api, 'action_mark_succeeded')
     def test_action_proc_successful(self, mock_mark, mock_load, mock_acquire,
-                                    mock_clock):
+                                    mock_clock, mock_event_info):
         action = action_base.Action(self.ctx, 'OBJID', 'OBJECT_ACTION')
         self.patchobject(action, 'execute',
                          return_value=(action.RES_OK, 'BIG SUCCESS'))
         mock_clock.return_value = 'TIMESTAMP'
         mock_db_action = mock.Mock()
+        mock_db_action.owner = 'WORKER'
+        mock_db_action.start_time = 123456
         mock_acquire.return_value = mock_db_action
         mock_load.return_value = action
 
@@ -807,14 +810,17 @@ class ActionProcTest(base.SenlinTestCase):
 
         mock_load.assert_called_once_with(self.ctx, action_id='ACTION')
         self.assertEqual(action.SUCCEEDED, action.status)
+        self.assertEqual('WORKER', action.owner)
+        self.assertEqual(123456, action.start_time)
         self.assertEqual('BIG SUCCESS', action.status_reason)
 
+    @mock.patch.object(event, 'info')
     @mock.patch.object(action_base, 'wallclock')
     @mock.patch.object(db_api, 'action_acquire')
     @mock.patch.object(action_base.Action, 'load')
     @mock.patch.object(db_api, 'action_mark_failed')
     def test_action_proc_failed_error(self, mock_mark, mock_load, mock_acquire,
-                                      mock_clock):
+                                      mock_clock, mock_event_info):
         action = action_base.Action(self.ctx, 'OBJID', 'OBJECT_ACTION')
         self.patchobject(action, 'execute', side_effect=Exception('Boom!'))
         mock_clock.return_value = 'TIMESTAMP'
