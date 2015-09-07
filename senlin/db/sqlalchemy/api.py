@@ -1211,7 +1211,6 @@ def _action_dependency_add(context, action_id, field, adds):
 
     if field == 'depends_on':
         action.status = ACTION_WAITING
-        action.status_reason = ACTION_WAITING
         action.status_reason = _('The action is waiting for its dependency '
                                  'being completed.')
 
