@@ -58,14 +58,12 @@ def delete_cluster(client, cluster_id):
     return
 
 
-def create_profile(client, name, profile_type, spec,
-                   permission=None, metadata={}):
+def create_profile(client, name, spec, permission=None, metadata={}):
     rel_url = 'profiles'
     status = [200]
     data = {
         'profile': {
             'name': name,
-            'type': profile_type,
             'spec': spec,
             'permission': permission,
             'metadata': metadata,
