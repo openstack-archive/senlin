@@ -13,8 +13,8 @@
 import mock
 
 from senlin.common import exception
+from senlin.common import scaleutils
 from senlin.engine.actions import base as base_action
-from senlin.engine.actions import cluster_action
 from senlin.engine.actions import node_action
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import event as event_mod
@@ -91,7 +91,7 @@ class NodeActionTest(base.SenlinTestCase):
         node.do_update.assert_called_once_with(action.context, inputs)
 
     @mock.patch.object(cluster_mod.Cluster, 'load')
-    @mock.patch.object(cluster_action.ClusterAction, 'check_size_params')
+    @mock.patch.object(scaleutils, 'check_size_params')
     def test_do_join_success(self, mock_check, mock_load):
         node = mock.Mock()
         inputs = {"cluster_id": "FAKE_ID"}
@@ -100,7 +100,7 @@ class NodeActionTest(base.SenlinTestCase):
         cluster = mock.Mock()
         cluster.desired_capacity = 100
         mock_load.return_value = cluster
-        mock_check.return_value = action.RES_OK, ''
+        mock_check.return_value = ''
         node.do_join = mock.Mock(return_value=True)
 
         # Test failed node join path
@@ -115,7 +115,7 @@ class NodeActionTest(base.SenlinTestCase):
         cluster.store.assert_called_once_with(action.context)
 
     @mock.patch.object(cluster_mod.Cluster, 'load')
-    @mock.patch.object(cluster_action.ClusterAction, 'check_size_params')
+    @mock.patch.object(scaleutils, 'check_size_params')
     def test_do_join_fail_size_check(self, mock_check, mock_load):
         node = mock.Mock()
         inputs = {"cluster_id": "FAKE_ID"}
@@ -124,7 +124,7 @@ class NodeActionTest(base.SenlinTestCase):
         cluster = mock.Mock()
         cluster.desired_capacity = 100
         mock_load.return_value = cluster
-        mock_check.return_value = action.RES_ERROR, 'Size limits'
+        mock_check.return_value = 'Size limits'
         node.do_join = mock.Mock(return_value=True)
 
         # Test failed node join path
@@ -137,7 +137,7 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual(0, node.do_join.call_count)
 
     @mock.patch.object(cluster_mod.Cluster, 'load')
-    @mock.patch.object(cluster_action.ClusterAction, 'check_size_params')
+    @mock.patch.object(scaleutils, 'check_size_params')
     def test_do_join_failed_do_join(self, mock_check, mock_load):
         node = mock.Mock()
         inputs = {"cluster_id": "FAKE_ID"}
@@ -146,7 +146,7 @@ class NodeActionTest(base.SenlinTestCase):
         cluster = mock.Mock()
         cluster.desired_capacity = 100
         mock_load.return_value = cluster
-        mock_check.return_value = action.RES_OK, ''
+        mock_check.return_value = ''
         node.do_join = mock.Mock(return_value=False)
 
         # Test failed node join path
@@ -159,7 +159,7 @@ class NodeActionTest(base.SenlinTestCase):
         node.do_join.assert_called_once_with(action.context, 'FAKE_ID')
 
     @mock.patch.object(cluster_mod.Cluster, 'load')
-    @mock.patch.object(cluster_action.ClusterAction, 'check_size_params')
+    @mock.patch.object(scaleutils, 'check_size_params')
     def test_do_leave_success(self, mock_check, mock_load):
         node = mock.Mock()
         node.cluster_id = 'FAKE_ID'
@@ -167,7 +167,7 @@ class NodeActionTest(base.SenlinTestCase):
         cluster = mock.Mock()
         cluster.desired_capacity = 100
         mock_load.return_value = cluster
-        mock_check.return_value = action.RES_OK, ''
+        mock_check.return_value = ''
         node.do_leave = mock.Mock(return_value=True)
 
         # Test failed node join path
@@ -182,7 +182,7 @@ class NodeActionTest(base.SenlinTestCase):
         cluster.store.assert_called_once_with(action.context)
 
     @mock.patch.object(cluster_mod.Cluster, 'load')
-    @mock.patch.object(cluster_action.ClusterAction, 'check_size_params')
+    @mock.patch.object(scaleutils, 'check_size_params')
     def test_do_leave_failed_check(self, mock_check, mock_load):
         node = mock.Mock()
         node.cluster_id = 'FAKE_ID'
@@ -190,7 +190,7 @@ class NodeActionTest(base.SenlinTestCase):
         cluster = mock.Mock()
         cluster.desired_capacity = 100
         mock_load.return_value = cluster
-        mock_check.return_value = action.RES_ERROR, 'Size limits'
+        mock_check.return_value = 'Size limits'
         node.do_leave = mock.Mock(return_value=True)
 
         # Test failed node join path
@@ -203,7 +203,7 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual(0, node.do_leave.call_count)
 
     @mock.patch.object(cluster_mod.Cluster, 'load')
-    @mock.patch.object(cluster_action.ClusterAction, 'check_size_params')
+    @mock.patch.object(scaleutils, 'check_size_params')
     def test_do_leave_failed_do_leave(self, mock_check, mock_load):
         node = mock.Mock()
         node.cluster_id = 'FAKE_ID'
@@ -211,7 +211,7 @@ class NodeActionTest(base.SenlinTestCase):
         cluster = mock.Mock()
         cluster.desired_capacity = 100
         mock_load.return_value = cluster
-        mock_check.return_value = action.RES_OK, ''
+        mock_check.return_value = ''
         node.do_leave = mock.Mock(return_value=False)
 
         # Test failed node join path

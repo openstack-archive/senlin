@@ -332,75 +332,6 @@ class ClusterAction(base.Action):
             reason = new_reason
         return result, reason
 
-    @classmethod
-    def check_size_params(cls, cluster, desired, min_size, max_size, strict):
-        '''Validate provided arguments with cluster properties.
-
-        Sanity Checking 1: the desired, min_size, max_size parameters must
-                           form a reasonable relationship among themselves,
-                           if specified.
-        Sanity Checking 2: the desired_capacity must be within the existing
-                           range of the cluster, if new range is not provided.
-        '''
-        if desired is not None and strict is True:
-            # recalculate/validate desired based on strict setting
-            if (min_size is not None and desired < min_size):
-                v = {'d': desired, 'm': min_size}
-                reason = _("The target capacity (%(d)s) is less than "
-                           "the specified min_size (%(m)s).") % v
-                return cls.RES_ERROR, reason
-
-            if min_size is None and desired < cluster.min_size:
-                v = {'d': desired, 'm': cluster.min_size}
-                reason = _("The target capacity (%(d)s) is less than "
-                           "the cluster's min_size (%(m)s).") % v
-                return cls.RES_ERROR, reason
-
-            if (max_size is not None and desired > max_size and
-                    max_size >= 0):
-                v = {'d': desired, 'm': max_size}
-                reason = _("The target capacity (%(d)s) is greater "
-                           "than the specified max_size (%(m)s).") % v
-                return cls.RES_ERROR, reason
-
-            if (max_size is None and
-                    desired > cluster.max_size and cluster.max_size >= 0):
-                v = {'d': desired, 'm': cluster.max_size}
-                reason = _("The target capacity (%(d)s) is greater "
-                           "than the cluster's max_size (%(m)s).") % v
-                return cls.RES_ERROR, reason
-
-        if min_size is not None:
-            if max_size is not None and max_size >= 0 and min_size > max_size:
-                reason = _("The specified min_size is greater than the "
-                           "specified max_size.")
-                return cls.RES_ERROR, reason
-
-            if (max_size is None and cluster.max_size >= 0 and
-                    min_size > cluster.max_size):
-                reason = _("The specified min_size is greater than the "
-                           "current max_size of the cluster.")
-                return cls.RES_ERROR, reason
-
-            if desired is None and min_size > cluster.desired_capacity:
-                reason = _("The specified min_size is greater than the "
-                           "current desired_capacity of the cluster.")
-                return cls.RES_ERROR, reason
-
-        if max_size is not None:
-            if (min_size is None and max_size >= 0
-                    and max_size < cluster.min_size):
-                reason = _("The specified max_size is less than the "
-                           "current min_size of the cluster.")
-                return cls.RES_ERROR, reason
-            if (desired is None and max_size >= 0
-                    and max_size < cluster.desired_capacity):
-                reason = _("The specified max_size is less than the "
-                           "current desired_capacity of the cluster.")
-                return cls.RES_ERROR, reason
-
-        return cls.RES_OK, ''
-
     def _update_cluster_properties(self, cluster, desired, min_size, max_size):
         # update cluster properties related to size and profile
 
@@ -423,18 +354,18 @@ class ClusterAction(base.Action):
         return self.RES_OK, ''
 
     def do_resize(self, cluster):
-        adj_type = self.inputs.get(consts.ADJUSTMENT_TYPE)
-        number = self.inputs.get(consts.ADJUSTMENT_NUMBER)
-        min_size = self.inputs.get(consts.ADJUSTMENT_MIN_SIZE)
-        max_size = self.inputs.get(consts.ADJUSTMENT_MAX_SIZE)
-        min_step = self.inputs.get(consts.ADJUSTMENT_MIN_STEP)
+        adj_type = self.inputs.get(consts.ADJUSTMENT_TYPE, None)
+        number = self.inputs.get(consts.ADJUSTMENT_NUMBER, None)
+        min_size = self.inputs.get(consts.ADJUSTMENT_MIN_SIZE, None)
+        max_size = self.inputs.get(consts.ADJUSTMENT_MAX_SIZE, None)
+        min_step = self.inputs.get(consts.ADJUSTMENT_MIN_STEP, None)
         strict = self.inputs.get(consts.ADJUSTMENT_STRICT, False)
 
         desired = cluster.desired_capacity
         if adj_type is not None:
             # number must be not None according to previous tests
             desired = scaleutils.calculate_desired(
-                cluster.desired_capacity, adj_type, number, min_step)
+                desired, adj_type, number, min_step)
 
         # truncate adjustment if permitted (strict==False)
         if strict is False:
@@ -443,20 +374,16 @@ class ClusterAction(base.Action):
 
         # check provided params against current properties
         # desired is checked when strict is True
-        result, reason = self.check_size_params(cluster, desired, min_size,
-                                                max_size, strict)
-        if result != self.RES_OK:
-            return result, reason
+        result = scaleutils.check_size_params(cluster, desired, min_size,
+                                              max_size, strict)
+        if result != '':
+            return self.RES_ERROR, result
 
         # save sanitized properties
-        result, reason = self._update_cluster_properties(
-            cluster, desired, min_size, max_size)
-        if result != self.RES_OK:
-            return result, reason
-
+        self._update_cluster_properties(cluster, desired, min_size,
+                                        max_size)
         node_list = cluster.nodes
         current_size = len(node_list)
-        desired = cluster.desired_capacity
 
         # delete nodes if necessary
         if desired < current_size:
@@ -479,19 +406,18 @@ class ClusterAction(base.Action):
         # Create new nodes if desired_capacity increased
         if desired > current_size:
             delta = desired - current_size
-            if 'creation' not in self.data:
-                self.data['creation'] = {'count': delta}
+            self.data['creation'] = {'count': delta}
             result, reason = self._create_nodes(cluster, delta)
             if result != self.RES_OK:
                 return result, reason
 
+        reason = _('Cluster resize succeeded.')
         cluster.set_status(self.context, cluster.ACTIVE, reason)
-        return self.RES_OK, _('Cluster resize succeeded')
+        return self.RES_OK, reason
 
     def do_scale_out(self, cluster):
         # We use policy output if any, or else the count is
         # set to 1 as default.
-        count = 0
         pd = self.data.get('creation', None)
         if pd is not None:
             count = pd.get('count', 1)
@@ -500,35 +426,36 @@ class ClusterAction(base.Action):
             # input count directly
             count = self.inputs.get('count', 1)
 
-        if count == 0:
-            return self.RES_OK, 'No scaling needed based on policy checking'
-
         # check provided params against current properties
         # desired is checked when strict is True
-        node_list = cluster.nodes
-        current_size = len(node_list)
-        desired_capacity = current_size + count
-        result, reason = self.check_size_params(cluster, desired_capacity,
-                                                None, None, True)
-        if result != self.RES_OK:
-            return result, reason
+        curr_size = len(cluster.nodes)
+        new_size = cluster.desired_capacity + count
+        count = new_size - curr_size
+        if count <= 0:
+            reason = _('Cluster size (%(curr)s) is already larger than '
+                       'desired (%(desired)s).'
+                       ) % {'curr': curr_size,
+                            'desired': cluster.desired_capacity}
+            return self.RES_ERROR, reason
+
+        result = scaleutils.check_size_params(cluster, new_size,
+                                              None, None, True)
+        if result != '':
+            return self.RES_ERROR, result
 
         # Update desired_capacity of cluster
-        result, reason = self._update_cluster_properties(
-            cluster, desired_capacity, None, None)
-        if result != self.RES_OK:
-            return result, reason
+        # TODO(anyone): make this behavior customizable
+        self._update_cluster_properties(cluster, new_size, None, None)
 
-        # Create new nodes to meet desired_capacity
         result, reason = self._create_nodes(cluster, count)
 
         if result == self.RES_OK:
-            reason = 'Cluster scaling succeeded'
+            reason = _('Cluster scaling succeeded.')
             cluster.set_status(self.context, cluster.ACTIVE, reason)
         elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_ERROR]:
             cluster.set_status(self.context, cluster.ERROR, reason)
         else:
-            # RETRY or FAILED?
+            # RETRY?
             pass
 
         return result, reason
@@ -539,48 +466,46 @@ class ClusterAction(base.Action):
         pd = self.data.get('deletion', None)
         if pd is not None:
             count = pd.get('count', 1)
-            # Try get candidates (set by deletion policy if attached)
             candidates = pd.get('candidates', [])
         else:
-            # If no scaling policy is attached, use the
-            # input count directly
+            # If no scaling policy is attached, use the input count directly
             count = self.inputs.get('count', 1)
             candidates = []
 
-        if count == 0:
-            return self.RES_OK, 'No scaling needed based on policy checking'
-
         # check provided params against current properties
         # desired is checked when strict is True
-        node_list = cluster.nodes
-        current_size = len(node_list)
-        desired_capacity = current_size - count
-        result, reason = self.check_size_params(cluster, desired_capacity,
-                                                None, None, True)
-        if result != self.RES_OK:
-            return result, reason
+        curr_size = len(cluster.nodes)
+        new_size = curr_size - count
+        if count <= 0:
+            reason = _('Cluster size (%(curr)s) is already less than '
+                       'desired (%(desired)s).'
+                       ) % {'curr': curr_size, 'desired': new_size}
+            return self.RES_ERROR, reason
+
+        result = scaleutils.check_size_params(cluster, new_size,
+                                              None, None, True)
+        if result != '':
+            return self.RES_ERROR, result
 
         # Update desired_capacity of cluster
-        result, reason = self._update_cluster_properties(
-            cluster, desired_capacity, None, None)
-        if result != self.RES_OK:
-            return result, reason
+        # TODO(anyone): make this behavior customizable
+        self._update_cluster_properties(cluster, new_size, None, None)
 
         # Choose victims randomly
         if len(candidates) == 0:
-            nodes = db_api.node_get_all_by_cluster(self.context, cluster.id)
+            node_ids = [node.id for node in cluster.nodes]
             i = count
             while i > 0:
-                r = random.randrange(len(nodes))
-                candidates.append(nodes[r].id)
-                nodes.remove(nodes[r])
+                r = random.randrange(len(node_ids))
+                candidates.append(node_ids[r])
+                node_ids.remove(node_ids[r])
                 i = i - 1
 
         # The policy data may contain destroy flag and grace period option
         result, new_reason = self._delete_nodes(cluster, candidates)
 
         if result == self.RES_OK:
-            reason = 'Cluster scaling succeeded'
+            reason = _('Cluster scaling succeeded.')
             cluster.set_status(self.context, cluster.ACTIVE, reason)
         elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_ERROR]:
             cluster.set_status(self.context, cluster.ERROR, reason)
