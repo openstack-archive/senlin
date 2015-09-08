@@ -507,6 +507,7 @@ class EngineService(service.Service):
         action = action_mod.Action(context, cluster.id, consts.CLUSTER_CREATE,
                                    name='cluster_create_%s' % cluster.id[:8],
                                    cause=action_mod.CAUSE_RPC)
+        action.status = action.READY
         action.store(context)
         dispatcher.start_action(context, action_id=action.id)
 
@@ -578,6 +579,7 @@ class EngineService(service.Service):
                                    name='cluster_update_%s' % cluster.id[:8],
                                    cause=action_mod.CAUSE_RPC,
                                    inputs=inputs)
+        action.status = action.READY
         action.store(context)
         dispatcher.start_action(context, action_id=action.id)
         # Update the other properties after profile's update
@@ -646,6 +648,7 @@ class EngineService(service.Service):
                                    name=action_name,
                                    cause=action_mod.CAUSE_RPC,
                                    inputs={'nodes': found})
+        action.status = action.READY
         action.store(context)
         dispatcher.start_action(context, action_id=action.id)
 
@@ -685,6 +688,7 @@ class EngineService(service.Service):
                                    name=action_name,
                                    cause=action_mod.CAUSE_RPC,
                                    inputs={'nodes': found})
+        action.status = action.READY
         action.store(context)
         dispatcher.start_action(context, action_id=action.id)
 
@@ -781,6 +785,7 @@ class EngineService(service.Service):
                                    name=action_name,
                                    cause=action_mod.CAUSE_RPC,
                                    inputs=inputs)
+        action.status = action.READY
         action.store(context)
         dispatcher.start_action(context, action_id=action.id)
 
@@ -805,6 +810,7 @@ class EngineService(service.Service):
                                    consts.CLUSTER_SCALE_OUT,
                                    name=action_name,
                                    inputs=inputs, cause=action_mod.CAUSE_RPC)
+        action.status = action.READY
         action.store(context)
         dispatcher.start_action(context, action_id=action.id)
 
@@ -830,6 +836,7 @@ class EngineService(service.Service):
                                    name=action_name,
                                    inputs=inputs,
                                    cause=action_mod.CAUSE_RPC)
+        action.status = action.READY
         action.store(context)
         dispatcher.start_action(context, action_id=action.id)
 
@@ -851,6 +858,7 @@ class EngineService(service.Service):
         action = action_mod.Action(context, db_cluster.id,
                                    consts.CLUSTER_DELETE,
                                    name=name, cause=action_mod.CAUSE_RPC)
+        action.status = action.READY
         action.store(context)
         dispatcher.start_action(context, action_id=action.id)
 
@@ -930,6 +938,7 @@ class EngineService(service.Service):
         action = action_mod.Action(context, node.id, consts.NODE_CREATE,
                                    name='node_create_%s' % node.id[:8],
                                    cause=action_mod.CAUSE_RPC)
+        action.status = action.READY
         action.store(context)
         dispatcher.start_action(context, action_id=action.id)
 
@@ -982,6 +991,7 @@ class EngineService(service.Service):
         action = action_mod.Action(context, node.id, consts.NODE_UPDATE,
                                    name='node_update_%s' % node.id[:8],
                                    inputs=inputs, cause=action_mod.CAUSE_RPC)
+        action.status = action.READY
         action.store(context)
 
         # TODO(someone): uncomment this when it is implemented
@@ -996,6 +1006,7 @@ class EngineService(service.Service):
         action = action_mod.Action(context, db_node.id, consts.NODE_DELETE,
                                    name='node_delete_%s' % db_node.id[:8],
                                    cause=action_mod.CAUSE_RPC)
+        action.status = action.READY
         action.store(context)
         dispatcher.start_action(context, action_id=action.id)
 
@@ -1021,6 +1032,7 @@ class EngineService(service.Service):
                                    name='node_join_%s' % db_node.id[:8],
                                    cause=action_mod.CAUSE_RPC,
                                    inputs={'cluster_id': db_cluster.id})
+        action.status = action.READY
         action.store(context)
         dispatcher.start_action(context, action_id=action.id)
 
@@ -1038,6 +1050,7 @@ class EngineService(service.Service):
         action = action_mod.Action(context, db_node.id, consts.NODE_LEAVE,
                                    name='node_leave_%s' % db_node.id[:8],
                                    cause=action_mod.CAUSE_RPC)
+        action.status = action.READY
         action.store(context)
         dispatcher.start_action(context, action_id=action.id)
 
@@ -1101,6 +1114,7 @@ class EngineService(service.Service):
                                    consts.CLUSTER_ATTACH_POLICY,
                                    name=action_name,
                                    inputs=inputs, cause=action_mod.CAUSE_RPC)
+        action.status = action.READY
         action.store(context)
         dispatcher.start_action(context, action_id=action.id)
 
@@ -1130,6 +1144,7 @@ class EngineService(service.Service):
                                    name=action_name,
                                    inputs={'policy_id': db_policy.id},
                                    cause=action_mod.CAUSE_RPC)
+        action.status = action.READY
         action.store(context)
         dispatcher.start_action(context, action_id=action.id)
 
@@ -1169,6 +1184,7 @@ class EngineService(service.Service):
                                    consts.CLUSTER_UPDATE_POLICY,
                                    name=action_name,
                                    inputs=inputs, cause=action_mod.CAUSE_RPC)
+        action.status = action.READY
         action.store(context)
         dispatcher.start_action(context, action_id=action.id)
 
@@ -1313,6 +1329,7 @@ class EngineService(service.Service):
         action = action_mod.Action(context, db_obj.id, webhook['action'],
                                    name=action_name,
                                    inputs=params, cause=action_mod.CAUSE_RPC)
+        action.status = action.READY
         action.store(context)
         dispatcher.start_action(context, action_id=action.id)
 
@@ -1457,6 +1474,7 @@ class EngineService(service.Service):
         # Create a node instance
         act = action_mod.Action(context, target, action,
                                 name=name, inputs=inputs)
+        act.status = act.READY
         act.store(context)
 
         # TODO(Anyone): Uncomment this to notify the dispatcher

@@ -1409,6 +1409,11 @@ def action_acquire(context, action_id, owner, timestamp):
         if action.owner and action.owner != owner:
             return None
 
+        if action.status != ACTION_READY:
+            msg = _('The action is not in an executable status: '
+                    '%s') % action.status
+            LOG.warning(msg)
+            return None
         action.owner = owner
         action.start_time = timestamp
         action.status = ACTION_RUNNING
