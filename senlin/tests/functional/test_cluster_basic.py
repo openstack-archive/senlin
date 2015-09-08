@@ -10,12 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import time
-
 from oslo_log import log as logging
 
 from senlin.tests.functional import api as test_api
 from senlin.tests.functional import base
+from senlin.tests.functional.utils import test_utils
 
 LOG = logging.getLogger(__name__)
 
@@ -24,22 +23,8 @@ class TestCluster(base.SenlinFunctionalTest):
     def setUp(self):
         super(TestCluster, self).setUp()
         # Create profile
-        test_nova_spec = {
-            "type": "os.nova.server",
-            "version": "1.0",
-            "properties": {
-                # TODO(Yanyan Hu): Use flavor name rather than ID in
-                # nova server spec file after sdk support is done.
-                "flavor": 1,
-                "name": "new-server-test",
-                "image": "cirros-0.3.2-x86_64-uec",
-                "networks": [
-                    {"network": "private-net"}
-                ]
-            }
-        }
         self.profile = test_api.create_profile(self.client, 'test-profile',
-                                               test_nova_spec)
+                                               test_utils.spec_nova_server)
 
     def tearDown(self):
         # Delete profile
@@ -61,19 +46,8 @@ class TestCluster(base.SenlinFunctionalTest):
                                           min_size, max_size)
 
         # Wait and verify cluster creation result
-        # TODO(Yanyan Hu): Put timeout option into test configure file
-        timeout = 60
-        ready = False
-        while timeout > 0:
-            cluster = test_api.get_cluster(self.client, cluster['id'])
-            if cluster['status'] == 'ACTIVE':
-                ready = True
-                break
-            time.sleep(5)
-            timeout -= 5
-        if not ready:
-            raise Exception('Cluster creation timeout.')
-
+        cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
+                                             cluster['id'], 'ACTIVE')
         self.assertEqual('test-cluster', cluster['name'])
         self.assertEqual(desired_capacity, cluster['desired_capacity'])
         self.assertEqual(min_size, cluster['min_size'])
@@ -82,14 +56,6 @@ class TestCluster(base.SenlinFunctionalTest):
 
         # Delete cluster
         test_api.delete_cluster(self.client, cluster['id'])
-        timeout = 60
-        ready = False
-        while timeout > 0:
-            res = test_api.get_cluster(self.client, cluster['id'], True)
-            if res.status == 404:
-                ready = True
-                break
-            time.sleep(5)
-            timeout -= 5
-        if not ready:
-            raise Exception('Cluster deletion timeout.')
+        test_utils.wait_for_status(test_api.get_cluster, self.client,
+                                   cluster['id'], 'ACTIVE',
+                                   ignore_missing=True)

@@ -51,6 +51,19 @@ def list_clusters(client, **query):
     return resp.body['clusters']
 
 
+def action_cluster(client, cluster_id, action_name, params=None):
+    rel_url = 'clusters/%(id)s/action' % {'id': cluster_id}
+    status = [200]
+    data = {
+        action_name: {} if params is None else params
+    }
+    body = jsonutils.dumps(data)
+    resp = client.api_request('PUT', rel_url, body=body,
+                              resp_status=status)
+    action_id = resp.body['action']
+    return action_id
+
+
 def delete_cluster(client, cluster_id):
     rel_url = 'clusters/%(id)s' % {'id': cluster_id}
     status = [204]
@@ -88,3 +101,10 @@ def list_policy_types(client, **query):
     status = [200]
     resp = client.api_request('GET', rel_url, resp_status=status)
     return resp.body['policy_types']
+
+
+def get_action(client, action_id, ignore_missing=False):
+    rel_url = 'actions/%(id)s' % {'id': action_id}
+    status = [200, 404] if ignore_missing else [200]
+    resp = client.api_request('GET', rel_url, resp_status=status)
+    return resp if ignore_missing else resp.body['action']
