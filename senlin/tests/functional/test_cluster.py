@@ -25,15 +25,20 @@ class TestCluster(base.SenlinFunctionalTest):
         super(TestCluster, self).setUp()
         # Create profile
         test_nova_spec = {
-            "flavor": 1,
-            "name": "new-server-test",
-            "image": "cirros-0.3.2-x86_64-uec",
-            "networks": [
-                {"network": "private-net"}
-            ]
+            "type": "os.nova.server",
+            "version": "1.0",
+            "properties": {
+                # TODO(Yanyan Hu): Use flavor name rather than ID in
+                # nova server spec file after sdk support is done.
+                "flavor": 1,
+                "name": "new-server-test",
+                "image": "cirros-0.3.2-x86_64-uec",
+                "networks": [
+                    {"network": "private-net"}
+                ]
+            }
         }
         self.profile = test_api.create_profile(self.client, 'test-profile',
-                                               'os.nova.server',
                                                test_nova_spec)
 
     def tearDown(self):
