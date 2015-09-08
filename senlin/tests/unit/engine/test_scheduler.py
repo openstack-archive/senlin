@@ -18,7 +18,6 @@ from oslo_service import threadgroup
 from senlin.engine.actions import base as actionm
 from senlin.engine import scheduler
 from senlin.tests.unit.common import base
-from senlin.tests.unit.common import utils
 
 
 class DummyThread(object):
@@ -63,8 +62,6 @@ class SchedulerTest(base.SenlinTestCase):
         self.mock_tg = self.patchobject(threadgroup, 'ThreadGroup')
         self.mock_tg.return_value = self.fake_tg
 
-        self.context = utils.dummy_context()
-
     def test_create(self):
         tgm = scheduler.ThreadGroupManager()
         self.assertEqual({}, tgm.workers)
@@ -93,48 +90,44 @@ class SchedulerTest(base.SenlinTestCase):
         self.mock_tg.return_value = mock_group
 
         tgm = scheduler.ThreadGroupManager()
-        tgm.start_action(self.context, '0123', '4567')
+        tgm.start_action('0123', '4567')
 
         mock_group.add_thread.assert_called_once_with(actionm.ActionProc,
-                                                      self.context,
+                                                      tgm.db_session,
                                                       '0123', '4567')
         mock_thread = mock_group.add_thread.return_value
         self.assertEqual(mock_thread, tgm.workers['0123'])
-        mock_thread.link.assert_called_once_with(mock.ANY, self.context,
-                                                 '0123')
+        mock_thread.link.assert_called_once_with(mock.ANY, '0123')
 
     def test_cancel_action(self):
         mock_action = mock.Mock()
         mock_load = self.patchobject(actionm.Action, 'load',
                                      return_value=mock_action)
         tgm = scheduler.ThreadGroupManager()
-        tgm.cancel_action(self.context, 'action0123')
+        tgm.cancel_action('action0123')
 
-        mock_load.assert_called_once_with(self.context, 'action0123')
-        mock_action.signal.assert_called_once_with(self.context,
-                                                   mock_action.SIG_CANCEL)
+        mock_load.assert_called_once_with(tgm.db_session, 'action0123')
+        mock_action.signal.assert_called_once_with(mock_action.SIG_CANCEL)
 
     def test_suspend_action(self):
         mock_action = mock.Mock()
         mock_load = self.patchobject(actionm.Action, 'load',
                                      return_value=mock_action)
         tgm = scheduler.ThreadGroupManager()
-        tgm.suspend_action(self.context, 'action0123')
+        tgm.suspend_action('action0123')
 
-        mock_load.assert_called_once_with(self.context, 'action0123')
-        mock_action.signal.assert_called_once_with(self.context,
-                                                   mock_action.SIG_SUSPEND)
+        mock_load.assert_called_once_with(tgm.db_session, 'action0123')
+        mock_action.signal.assert_called_once_with(mock_action.SIG_SUSPEND)
 
     def test_resume_action(self):
         mock_action = mock.Mock()
         mock_load = self.patchobject(actionm.Action, 'load',
                                      return_value=mock_action)
         tgm = scheduler.ThreadGroupManager()
-        tgm.resume_action(self.context, 'action0123')
+        tgm.resume_action('action0123')
 
-        mock_load.assert_called_once_with(self.context, 'action0123')
-        mock_action.signal.assert_called_once_with(self.context,
-                                                   mock_action.SIG_RESUME)
+        mock_load.assert_called_once_with(tgm.db_session, 'action0123')
+        mock_action.signal.assert_called_once_with(mock_action.SIG_RESUME)
 
     def test_add_timer(self):
         def f():

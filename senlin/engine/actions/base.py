@@ -250,7 +250,7 @@ class Action(object):
     def delete(cls, context, action_id, force=False):
         db_api.action_delete(context, action_id, force)
 
-    def signal(self, context, cmd):
+    def signal(self, cmd):
         '''Send a signal to the action.'''
         if cmd not in self.COMMANDS:
             return
@@ -269,10 +269,11 @@ class Action(object):
                        "(%(expected)s).") % dict(action=self.id,
                                                  expected=expected_statuses,
                                                  actual=self.status)
-            EVENT.error(context, self, cmd, status_reason=reason)
+            EVENT.error(self.context, self, cmd, status_reason=reason)
             return
 
-        db_api.action_signal(context, self.id, cmd)
+        # TODO(Yanyan Hu): use DB session here
+        db_api.action_signal(self.context, self.id, cmd)
 
     def execute(self, **kwargs):
         '''Execute the action.
@@ -461,6 +462,7 @@ class Action(object):
         return action_dict
 
 
+# TODO(Yanyan Hu): Replace context parameter with session parameter
 def ActionProc(context, action_id, worker_id):
     '''Action process.'''
 
@@ -480,6 +482,7 @@ def ActionProc(context, action_id, worker_id):
 
     action.owner = res.owner
     action.start_time = res.start_time
+    # TODO(Anyone): Remove context usage in event module
     EVENT.info(action.context, action, action.action, 'START')
 
     reason = 'Action completed'

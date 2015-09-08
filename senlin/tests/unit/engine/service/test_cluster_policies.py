@@ -90,7 +90,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                             'attach_policy_%s' % cluster_id[:8],
                             cluster_id, cause=action_mod.CAUSE_RPC,
                             inputs=inputs)
-        notify.assert_called_with(self.ctx, action_id=action_id)
+        notify.assert_called_with(action_id=action_id)
 
         self.assertEqual(1, notify.call_count)
 
@@ -115,7 +115,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                             'attach_policy_%s' % cluster_id[:8],
                             cluster_id, cause=action_mod.CAUSE_RPC,
                             inputs=inputs)
-        notify.assert_called_with(self.ctx, action_id=action_id)
+        notify.assert_called_with(action_id=action_id)
 
         self.assertEqual(1, notify.call_count)
 
@@ -221,7 +221,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                             'detach_policy_%s' % cluster_id[:8],
                             cluster_id, cause=action_mod.CAUSE_RPC,
                             inputs={'policy_id': policy_id})
-        notify.assert_called_with(self.ctx, action_id=action_id)
+        notify.assert_called_with(action_id=action_id)
 
         # called twice: attach and detach
         self.assertEqual(1, notify.call_count)
@@ -477,7 +477,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                 'level': 10,
                                 'cooldown': 60,
                                 'enabled': False})
-        notify.assert_called_once_with(self.ctx, action_id=action_id)
+        notify.assert_called_once_with(action_id=action_id)
 
     def test_cluster_policy_update_cluster_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,

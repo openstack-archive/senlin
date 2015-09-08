@@ -17,6 +17,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_service import threadgroup
 
+from senlin.common import context
 from senlin.engine.actions import base as action_mod
 from senlin.engine import dispatcher
 
@@ -37,6 +38,10 @@ class ThreadGroupManager(object):
         # on self.tg the process exits
         self.add_timer(cfg.CONF.periodic_interval, self._service_task)
 
+        # TODO(Yanyan Hu): Build a DB session with full privilege
+        # for DB accessing in scheduler module
+        self.db_session = context.RequestContext(is_admin=True)
+
     def _service_task(self):
         '''Dummy task which gets queued on the service.Service threadgroup.
 
@@ -55,44 +60,44 @@ class ThreadGroupManager(object):
 
         return self.group.add_thread(func, *args, **kwargs)
 
-    def start_action(self, context, action_id, worker_id):
+    def start_action(self, action_id, worker_id):
         '''Run the given action in a sub-thread.
 
         Release the action lock when the thread finishes?
 
-        :param context: The context of rpc request.
         :param action_id: ID of the action to be executed.
         :param workder_id: ID of the worker thread; we fake workers using
                            senlin engines at the moment.
         '''
-        def release(thread, context, action_id):
+        def release(thread, action_id):
             '''Callback function that will be passed to GreenThread.link().'''
             # Remove action thread from thread list
             self.workers.pop(action_id)
-            action = action_mod.Action.load(context, action_id)
+            action = action_mod.Action.load(self.db_session, action_id)
             # This is for actions with RETRY
             if action.status == action.READY:
-                dispatcher.start_action(context, action_id=action_id)
+                dispatcher.start_action(action_id=action_id)
 
-        th = self.start(action_mod.ActionProc, context, action_id, worker_id)
+        th = self.start(action_mod.ActionProc, self.db_session, action_id,
+                        worker_id)
         self.workers[action_id] = th
-        th.link(release, context, action_id)
+        th.link(release, action_id)
         return th
 
-    def cancel_action(self, context, action_id):
+    def cancel_action(self, action_id):
         '''Cancel an action execution progress.'''
-        action = action_mod.Action.load(context, action_id)
-        action.signal(context, action.SIG_CANCEL)
+        action = action_mod.Action.load(self.db_session, action_id)
+        action.signal(action.SIG_CANCEL)
 
-    def suspend_action(self, context, action_id):
+    def suspend_action(self, action_id):
         '''Suspend an action execution progress.'''
-        action = action_mod.Action.load(context, action_id)
-        action.signal(context, action.SIG_SUSPEND)
+        action = action_mod.Action.load(self.db_session, action_id)
+        action.signal(action.SIG_SUSPEND)
 
-    def resume_action(self, context, action_id):
+    def resume_action(self, action_id):
         '''Resume an action execution progress.'''
-        action = action_mod.Action.load(context, action_id)
-        action.signal(context, action.SIG_RESUME)
+        action = action_mod.Action.load(self.db_session, action_id)
+        action.signal(action.SIG_RESUME)
 
     def add_timer(self, interval, func, *args, **kwargs):
         '''Define a periodic task to be run in the thread group.
