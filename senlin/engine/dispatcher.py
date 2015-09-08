@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_context import context as oslo_context
 from oslo_log import log as logging
 import oslo_messaging
 from oslo_service import service
@@ -47,24 +48,24 @@ class Dispatcher(service.Service):
         server = rpc_messaging.get_rpc_server(self.target, self)
         server.start()
 
-    def listening(self, context):
+    def listening(self, ctxt):
         '''Respond affirmatively to confirm that engine is still alive.'''
         return True
 
-    def start_action(self, context, action_id=None):
-        self.TG.start_action(context, action_id, self.engine_id)
+    def start_action(self, ctxt, action_id=None):
+        self.TG.start_action(action_id, self.engine_id)
 
-    def cancel_action(self, context, action_id):
+    def cancel_action(self, ctxt, action_id):
         '''Cancel an action.'''
-        self.TG.cancel_action(context, action_id)
+        self.TG.cancel_action(action_id)
 
-    def suspend_action(self, context, action_id):
+    def suspend_action(self, ctxt, action_id):
         '''Suspend an action.'''
-        self.TG.suspend_action(context, action_id)
+        self.TG.suspend_action(action_id)
 
-    def resume_action(self, context, action_id):
+    def resume_action(self, ctxt, action_id):
         '''Resume an action.'''
-        self.TG.resume_action(context, action_id)
+        self.TG.resume_action(action_id)
 
     def stop(self):
         super(Dispatcher, self).stop()
@@ -76,10 +77,9 @@ class Dispatcher(service.Service):
         LOG.info(_LI("All action threads have been finished"))
 
 
-def notify(context, method, engine_id=None, **kwargs):
+def notify(method, engine_id=None, **kwargs):
     '''Send notification to dispatcher
 
-    :param context: rpc request context
     :param method: remote method to call
     :param engine_id: dispatcher to notify; None implies broadcast
     '''
@@ -99,11 +99,14 @@ def notify(context, method, engine_id=None, **kwargs):
             topic=consts.ENGINE_DISPATCHER_TOPIC)
 
     try:
-        call_context.call(context, method, **kwargs)
+        # We don't use ctext parameter in action progress
+        # actually. But since RPCClient.call needs this param,
+        # we use oslo current context here.
+        call_context.call(oslo_context.get_current(), method, **kwargs)
         return True
     except oslo_messaging.MessagingTimeout:
         return False
 
 
-def start_action(context, engine_id=None, **kwargs):
-    return notify(context, START_ACTION, engine_id, **kwargs)
+def start_action(engine_id=None, **kwargs):
+    return notify(START_ACTION, engine_id, **kwargs)

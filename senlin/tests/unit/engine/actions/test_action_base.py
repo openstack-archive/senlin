@@ -279,7 +279,7 @@ class ActionBaseTest(base.SenlinTestCase):
                                      **values)
         action1.store(self.ctx)
 
-        result = action1.signal(self.ctx, 'BOGUS')
+        result = action1.signal('BOGUS')
         self.assertIsNone(result)
         self.assertEqual(0, mock_call.call_count)
 
@@ -294,7 +294,7 @@ class ActionBaseTest(base.SenlinTestCase):
         expected = [action.INIT, action.WAITING, action.READY, action.RUNNING]
         for status in expected:
             action.status = status
-            result = action.signal(self.ctx, action.SIG_CANCEL)
+            result = action.signal(action.SIG_CANCEL)
             self.assertIsNone(result)
             self.assertEqual(1, mock_call.call_count)
             mock_call.reset_mock()
@@ -303,7 +303,7 @@ class ActionBaseTest(base.SenlinTestCase):
                    action.FAILED]
         for status in invalid:
             action.status = status
-            result = action.signal(self.ctx, action.SIG_CANCEL)
+            result = action.signal(action.SIG_CANCEL)
             self.assertIsNone(result)
             self.assertEqual(0, mock_call.call_count)
             mock_call.reset_mock()
@@ -318,7 +318,7 @@ class ActionBaseTest(base.SenlinTestCase):
         expected = [action.RUNNING]
         for status in expected:
             action.status = status
-            result = action.signal(self.ctx, action.SIG_SUSPEND)
+            result = action.signal(action.SIG_SUSPEND)
             self.assertIsNone(result)
             self.assertEqual(1, mock_call.call_count)
             mock_call.reset_mock()
@@ -327,7 +327,7 @@ class ActionBaseTest(base.SenlinTestCase):
                    action.SUCCEEDED, action.CANCELLED, action.FAILED]
         for status in invalid:
             action.status = status
-            result = action.signal(self.ctx, action.SIG_SUSPEND)
+            result = action.signal(action.SIG_SUSPEND)
             self.assertIsNone(result)
             self.assertEqual(0, mock_call.call_count)
             mock_call.reset_mock()
@@ -342,7 +342,7 @@ class ActionBaseTest(base.SenlinTestCase):
         expected = [action.SUSPENDED]
         for status in expected:
             action.status = status
-            result = action.signal(self.ctx, action.SIG_RESUME)
+            result = action.signal(action.SIG_RESUME)
             self.assertIsNone(result)
             self.assertEqual(1, mock_call.call_count)
             mock_call.reset_mock()
@@ -351,7 +351,7 @@ class ActionBaseTest(base.SenlinTestCase):
                    action.SUCCEEDED, action.CANCELLED, action.FAILED]
         for status in invalid:
             action.status = status
-            result = action.signal(self.ctx, action.SIG_RESUME)
+            result = action.signal(action.SIG_RESUME)
             self.assertIsNone(result)
             self.assertEqual(0, mock_call.call_count)
             mock_call.reset_mock()

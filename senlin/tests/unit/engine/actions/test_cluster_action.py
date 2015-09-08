@@ -155,14 +155,13 @@ class ClusterActionTest(base.SenlinTestCase):
                                             cause='Derived Action')
         mock_dep.assert_called_once_with(action.context, 'NODE_ACTION_ID',
                                          'CLUSTER_ACTION_ID')
-        mock_status.assert_called_once_with(action.READY)
-        mock_start.assert_called_once_with(action.context,
-                                           action_id='NODE_ACTION_ID')
+        mock_status.assert_called_once_with(n_action.READY)
+        mock_start.assert_called_once_with(action_id='NODE_ACTION_ID')
         mock_wait.assert_called_once_with()
         self.assertEqual(['NODE_ID'], action.data['nodes'])
 
     @mock.patch.object(db_api, 'cluster_get')
-    def test__create_nodes_zero(self, mock_get):
+    def test_create_nodes_zero(self, mock_get):
         cluster = mock.Mock()
         mock_get.return_value = mock.Mock()
         action = cluster_action.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
@@ -223,8 +222,8 @@ class ClusterActionTest(base.SenlinTestCase):
         node2.store.assert_called_once_with(action.context)
         self.assertEqual(2, mock_action.call_count)
         self.assertEqual(2, mock_dep.call_count)
-        mock_status_1.assert_called_once_with(action.READY)
-        mock_status_2.assert_called_once_with(action.READY)
+        mock_status_1.assert_called_once_with(node_action_1.READY)
+        mock_status_2.assert_called_once_with(node_action_2.READY)
         self.assertEqual(2, mock_start.call_count)
         mock_wait.assert_called_once_with()
         self.assertEqual([node1.id, node2.id], action.data['nodes'])
@@ -461,9 +460,8 @@ class ClusterActionTest(base.SenlinTestCase):
         n_action.store.assert_called_once_with(action.context)
         mock_dep.assert_called_once_with(action.context, 'NODE_ACTION_ID',
                                          'CLUSTER_ACTION_ID')
-        n_action.set_status.assert_called_once_with(action.READY)
-        mock_start.assert_called_once_with(action.context,
-                                           action_id='NODE_ACTION_ID')
+        n_action.set_status.assert_called_once_with(n_action.READY)
+        mock_start.assert_called_once_with(action_id='NODE_ACTION_ID')
         mock_wait.assert_called_once_with()
         self.assertEqual(['NODE_ID'], action.data['nodes'])
 
@@ -496,8 +494,8 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(2, mock_action.call_count)
         n_action_1.store.assert_called_once_with(action.context)
         n_action_2.store.assert_called_once_with(action.context)
-        n_action_1.set_status.assert_called_once_with(action.READY)
-        n_action_2.set_status.assert_called_once_with(action.READY)
+        n_action_1.set_status.assert_called_once_with(n_action_1.READY)
+        n_action_2.set_status.assert_called_once_with(n_action_2.READY)
         self.assertEqual(2, mock_dep.call_count)
         self.assertEqual(2, mock_start.call_count)
         mock_wait.assert_called_once_with()
@@ -714,8 +712,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_dep.assert_called_once_with(action.context, 'NODE_ACTION_ID',
                                          'CLUSTER_ACTION_ID')
         node_action.set_status.assert_called_once_with(action.READY)
-        mock_start.assert_called_once_with(action.context,
-                                           action_id='NODE_ACTION_ID')
+        mock_start.assert_called_once_with(action_id='NODE_ACTION_ID')
         mock_wait.assert_called_once_with()
 
     @mock.patch.object(node_mod.Node, 'load')
@@ -779,8 +776,8 @@ class ClusterActionTest(base.SenlinTestCase):
         node_action_1.set_status.assert_called_once_with(action.READY)
         node_action_2.set_status.assert_called_once_with(action.READY)
         mock_start.assert_has_calls([
-            mock.call(action.context, action_id='NODE_ACTION_ID_1'),
-            mock.call(action.context, action_id='NODE_ACTION_ID_2')])
+            mock.call(action_id='NODE_ACTION_ID_1'),
+            mock.call(action_id='NODE_ACTION_ID_2')])
 
         mock_wait.assert_called_once_with()
 

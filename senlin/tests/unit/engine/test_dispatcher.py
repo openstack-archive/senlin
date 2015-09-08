@@ -11,6 +11,7 @@
 # under the License.
 
 import mock
+from oslo_context import context
 import oslo_messaging
 
 from senlin.common import consts
@@ -68,32 +69,32 @@ class TestDispatcher(base.SenlinTestCase):
         disp = dispatcher.Dispatcher(self.svc, 'TOPIC', '1', self.thm)
         disp.start_action(self.context, action_id='FOO')
 
-        mock_start.assert_called_once_with(self.context, 'FOO', '1234')
+        mock_start.assert_called_once_with('FOO', '1234')
         mock_start.reset_mock()
 
         disp.start_action(self.context)
-        mock_start.assert_called_once_with(self.context, None, '1234')
+        mock_start.assert_called_once_with(None, '1234')
 
     @mock.patch.object(scheduler.ThreadGroupManager, 'cancel_action')
     def test_cancel_action(self, mock_cancel):
         disp = dispatcher.Dispatcher(self.svc, 'TOPIC', '1', self.thm)
         disp.cancel_action(self.context, action_id='FOO')
 
-        mock_cancel.assert_called_once_with(self.context, 'FOO')
+        mock_cancel.assert_called_once_with('FOO')
 
     @mock.patch.object(scheduler.ThreadGroupManager, 'suspend_action')
     def test_suspend_action(self, mock_suspend):
         disp = dispatcher.Dispatcher(self.svc, 'TOPIC', '1', self.thm)
         disp.suspend_action(self.context, action_id='FOO')
 
-        mock_suspend.assert_called_once_with(self.context, 'FOO')
+        mock_suspend.assert_called_once_with('FOO')
 
     @mock.patch.object(scheduler.ThreadGroupManager, 'resume_action')
     def test_resume_action(self, mock_resume):
         disp = dispatcher.Dispatcher(self.svc, 'TOPIC', '1', self.thm)
         disp.resume_action(self.context, action_id='FOO')
 
-        mock_resume.assert_called_once_with(self.context, 'FOO')
+        mock_resume.assert_called_once_with('FOO')
 
     @mock.patch.object(scheduler.ThreadGroupManager, 'stop')
     def test_stop(self, mock_stop):
@@ -102,10 +103,13 @@ class TestDispatcher(base.SenlinTestCase):
 
         mock_stop.assert_called_once_with(True)
 
+    @mock.patch.object(context, 'get_current')
     @mock.patch.object(messaging, 'get_rpc_client')
-    def test_notify_broadcast(self, mock_rpc):
+    def test_notify_broadcast(self, mock_rpc, mock_get_current):
+        fake_ctx = mock.Mock()
+        mock_get_current.return_value = fake_ctx
         mock_rpc.return_value = mock.Mock()
-        dispatcher.notify(self.context, 'METHOD')
+        dispatcher.notify('METHOD')
 
         mock_rpc.assert_called_once_with(version=consts.RPC_API_VERSION)
         mock_client = mock_rpc.return_value
@@ -114,12 +118,15 @@ class TestDispatcher(base.SenlinTestCase):
             topic=consts.ENGINE_DISPATCHER_TOPIC)
 
         mock_context = mock_client.prepare.return_value
-        mock_context.call.assert_called_once_with(self.context, 'METHOD')
+        mock_context.call.assert_called_once_with(fake_ctx, 'METHOD')
 
+    @mock.patch.object(context, 'get_current')
     @mock.patch.object(messaging, 'get_rpc_client')
-    def test_notify_single_server(self, mock_rpc):
+    def test_notify_single_server(self, mock_rpc, mock_get_current):
+        fake_ctx = mock.Mock()
+        mock_get_current.return_value = fake_ctx
         mock_rpc.return_value = mock.Mock()
-        result = dispatcher.notify(self.context, 'METHOD', 'FAKE_ENGINE')
+        result = dispatcher.notify('METHOD', 'FAKE_ENGINE')
 
         self.assertTrue(result)
 
@@ -131,7 +138,7 @@ class TestDispatcher(base.SenlinTestCase):
             server='FAKE_ENGINE')
 
         mock_context = mock_client.prepare.return_value
-        mock_context.call.assert_called_once_with(self.context, 'METHOD')
+        mock_context.call.assert_called_once_with(fake_ctx, 'METHOD')
 
     @mock.patch.object(messaging, 'get_rpc_client')
     def test_notify_timeout(self, mock_rpc):
@@ -140,7 +147,7 @@ class TestDispatcher(base.SenlinTestCase):
         mock_context = mock_client.prepare.return_value
         mock_context.call.side_effect = oslo_messaging.MessagingTimeout
 
-        result = dispatcher.notify(self.context, 'METHOD')
+        result = dispatcher.notify('METHOD')
 
         self.assertFalse(result)
 
@@ -149,12 +156,11 @@ class TestDispatcher(base.SenlinTestCase):
             version=consts.RPC_API_VERSION,
             topic=consts.ENGINE_DISPATCHER_TOPIC)
 
-        mock_context.call.assert_called_once_with(self.context, 'METHOD')
+        mock_context.call.assert_called_once_with(mock.ANY, 'METHOD')
 
     @mock.patch.object(dispatcher, 'notify')
     def test_start_action_function(self, mock_notify):
-        dispatcher.start_action(self.context, engine_id='FAKE_ENGINE')
+        dispatcher.start_action(engine_id='FAKE_ENGINE')
 
-        mock_notify.assert_called_once_with(self.context,
-                                            dispatcher.START_ACTION,
+        mock_notify.assert_called_once_with(dispatcher.START_ACTION,
                                             'FAKE_ENGINE')

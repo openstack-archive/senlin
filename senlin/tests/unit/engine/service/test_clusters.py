@@ -86,7 +86,7 @@ class ClusterTest(base.SenlinTestCase):
                             'cluster_create_%s' % result['id'][:8],
                             result['id'],
                             cause=action_mod.CAUSE_RPC)
-        notify.assert_called_once_with(self.ctx, action_id=action_id)
+        notify.assert_called_once_with(action_id=action_id)
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_create_with_timeout(self, notify):
@@ -630,7 +630,7 @@ class ClusterTest(base.SenlinTestCase):
                             c['id'],
                             cause=action_mod.CAUSE_RPC)
 
-        expected_call = mock.call(self.ctx, action_id=mock.ANY)
+        expected_call = mock.call(action_id=mock.ANY)
 
         # two calls: one for create, the other for delete
         notify.assert_has_calls([expected_call] * 2)
@@ -698,7 +698,7 @@ class ClusterTest(base.SenlinTestCase):
                             cid, cause=action_mod.CAUSE_RPC,
                             inputs={'nodes': nodes})
 
-        expected_call = mock.call(self.ctx, action_id=mock.ANY)
+        expected_call = mock.call(action_id=mock.ANY)
 
         # two calls: one for create, the other for adding nodes
         notify.assert_has_calls([expected_call] * 2)
@@ -822,7 +822,7 @@ class ClusterTest(base.SenlinTestCase):
                             cid, cause=action_mod.CAUSE_RPC,
                             inputs={'nodes': nodes})
 
-        expected_call = mock.call(self.ctx, action_id=mock.ANY)
+        expected_call = mock.call(action_id=mock.ANY)
 
         # two calls: one for create, the other for adding nodes
         notify.assert_has_calls([expected_call] * 2)
@@ -909,7 +909,7 @@ class ClusterTest(base.SenlinTestCase):
                             cid, cause=action_mod.CAUSE_RPC,
                             inputs={'count': 1})
 
-        expected_call = mock.call(self.ctx, action_id=mock.ANY)
+        expected_call = mock.call(action_id=mock.ANY)
 
         # two calls: one for create, the other for scaling operation
         notify.assert_has_calls([expected_call] * 2)
@@ -939,7 +939,7 @@ class ClusterTest(base.SenlinTestCase):
                             cid, cause=action_mod.CAUSE_RPC,
                             inputs={})
 
-        expected_call = mock.call(self.ctx, action_id=mock.ANY)
+        expected_call = mock.call(action_id=mock.ANY)
 
         # two calls: one for create, the other for scaling operation
         notify.assert_has_calls([expected_call] * 2)
@@ -980,7 +980,7 @@ class ClusterTest(base.SenlinTestCase):
                             cid, cause=action_mod.CAUSE_RPC,
                             inputs={'count': -1})
 
-        expected_call = mock.call(self.ctx, action_id=mock.ANY)
+        expected_call = mock.call(action_id=mock.ANY)
 
         # two calls: one for create, the other for scaling operation
         notify.assert_has_calls([expected_call] * 2)
@@ -1010,7 +1010,7 @@ class ClusterTest(base.SenlinTestCase):
                             cid, cause=action_mod.CAUSE_RPC,
                             inputs={})
 
-        expected_call = mock.call(self.ctx, action_id=mock.ANY)
+        expected_call = mock.call(action_id=mock.ANY)
 
         # two calls: one for create, the other for scaling operation
         notify.assert_has_calls([expected_call] * 2)

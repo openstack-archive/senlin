@@ -434,7 +434,7 @@ class WebhookTest(base.SenlinTestCase):
                             'CLUSTER_FULL_ID', cause=action_mod.CAUSE_RPC,
                             inputs={})
 
-        notify.assert_called_once_with(self.ctx, action_id=mock.ANY)
+        notify.assert_called_once_with(action_id=action_id)
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(service.EngineService, 'cluster_find')
@@ -467,7 +467,7 @@ class WebhookTest(base.SenlinTestCase):
                             'CLUSTER_FULL_ID', cause=action_mod.CAUSE_RPC,
                             inputs=params2)
 
-        notify.assert_called_once_with(self.ctx, action_id=mock.ANY)
+        notify.assert_called_once_with(action_id=action_id)
 
     @mock.patch.object(webhook_mod.Webhook, 'generate_url')
     @mock.patch.object(common_utils, 'encrypt')

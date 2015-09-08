@@ -76,7 +76,7 @@ class NodeTest(base.SenlinTestCase):
                             'node_create_%s' % node['id'][:8],
                             node['id'],
                             cause=action_mod.CAUSE_RPC)
-        notify.assert_called_once_with(self.ctx, action_id=action_id)
+        notify.assert_called_once_with(action_id=action_id)
 
     def test_node_create_profile_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,
@@ -457,7 +457,7 @@ class NodeTest(base.SenlinTestCase):
         #                     result['id'],
         #                     cause=action_mod.CAUSE_RPC)
 
-        # notify.assert_called_once_with(self.ctx, action_id=action_id)
+        # notify.assert_called_once_with(action_id=action_id)
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_node_update_profile_not_found(self, notify):
@@ -509,7 +509,7 @@ class NodeTest(base.SenlinTestCase):
                             node['id'],
                             cause=action_mod.CAUSE_RPC)
 
-        expected_call = mock.call(self.ctx, action_id=mock.ANY)
+        expected_call = mock.call(action_id=mock.ANY)
 
         # two calls: one for create, the other for delete
         notify.assert_has_calls([expected_call] * 2)
@@ -539,7 +539,7 @@ class NodeTest(base.SenlinTestCase):
                             'node_join_%s' % node_id[:8], node_id,
                             cause=action_mod.CAUSE_RPC,
                             inputs={'cluster_id': cluster_id})
-        notify.assert_called_with(self.ctx, action_id=action_id)
+        notify.assert_called_with(action_id=action_id)
         # Two creations plus one join
         self.assertEqual(3, notify.call_count)
 
@@ -563,7 +563,7 @@ class NodeTest(base.SenlinTestCase):
                             'node_join_%s' % node_id[:8], node_id,
                             cause=action_mod.CAUSE_RPC,
                             inputs={'cluster_id': new_cluster_id})
-        notify.assert_called_with(self.ctx, action_id=mock.ANY)
+        notify.assert_called_with(action_id=mock.ANY)
         # Three creations plus one join
         self.assertEqual(4, notify.call_count)
 
@@ -636,7 +636,7 @@ class NodeTest(base.SenlinTestCase):
         self._verify_action(action, 'NODE_LEAVE',
                             'node_leave_%s' % node_id[:8], node_id,
                             cause=action_mod.CAUSE_RPC)
-        notify.assert_called_with(self.ctx, action_id=mock.ANY)
+        notify.assert_called_with(action_id=mock.ANY)
         # Two creations plus one leave
         self.assertEqual(3, notify.call_count)
 

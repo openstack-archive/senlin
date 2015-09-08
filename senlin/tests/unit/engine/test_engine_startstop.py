@@ -15,6 +15,7 @@ import uuid
 import mock
 
 from senlin.common import consts
+from senlin.common import context
 from senlin.common import messaging as rpc_messaging
 from senlin.engine import service
 from senlin.tests.unit.common import base
@@ -35,7 +36,11 @@ class EngineBasicTest(base.SenlinTestCase):
         self.get_rpc = self.patchobject(rpc_messaging, 'get_rpc_server',
                                         return_value=self.fake_rpc_server)
 
-    def test_engine_start(self, mock_msg_cls, mock_hm_cls, mock_disp_cls):
+    # TODO(Yanyan Hu): Remove this decorator after DB session related
+    # work is done.
+    @mock.patch.object(context, 'RequestContext')
+    def test_engine_start(self, mock_context, mock_msg_cls, mock_hm_cls,
+                          mock_disp_cls):
 
         mock_disp = mock_disp_cls.return_value
         mock_hm = mock_hm_cls.return_value
