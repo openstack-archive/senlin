@@ -18,7 +18,6 @@ from oslo_log import log as logging
 from senlin.common import consts
 from senlin.common import exception
 from senlin.common.i18n import _
-from senlin.common.i18n import _LE
 from senlin.common import scaleutils
 from senlin.db import api as db_api
 from senlin.engine.actions import base
@@ -628,17 +627,18 @@ class ClusterAction(base.Action):
         # do pre-action policy checking
         self.policy_check(cluster.id, 'BEFORE')
         if self.data['status'] != policy_mod.CHECK_OK:
-            return self.RES_ERROR, _('Policy failure: %s') %\
-                self.data['reason']
+            reason = _('Policy check failure: %s') % self.data['reason']
+            event_mod.error(cluster.id, self.action, 'Failed', reason)
+            return self.RES_ERROR, reason
 
         result = self.RES_OK
         action_name = self.action.lower()
         method_name = action_name.replace('cluster', 'do')
-        method = getattr(self, method_name)
+        method = getattr(self, method_name, None)
         if method is None:
-            reason = _('Unsupported action %s') % self.action
-            event_mod.error(cluster.id, self.action, 'Failed', reason)
-            return self.RES_ERROR, reason
+            error = _('Unsupported action: %s.') % self.action
+            event_mod.error(cluster.id, self.action, 'Failed', error)
+            return self.RES_ERROR, error
 
         result, reason = method(cluster)
 
@@ -646,7 +646,9 @@ class ClusterAction(base.Action):
         if result == self.RES_OK:
             self.policy_check(cluster.id, 'AFTER')
             if self.data['status'] != policy_mod.CHECK_OK:
-                return self.RES_ERROR, self.data['reason']
+                error = _('Policy check failure: %s') % self.data['reason']
+                event_mod.error(cluster.id, self.action, 'Failed', error)
+                return self.RES_ERROR, error
 
         return result, reason
 
@@ -662,8 +664,8 @@ class ClusterAction(base.Action):
         try:
             cluster = cluster_mod.Cluster.load(self.context, self.target)
         except exception.ClusterNotFound:
-            reason = _LE('Cluster %(id)s not found') % {'id': self.target}
-            LOG.error(reason)
+            reason = _('Cluster (%(id)s) is not found') % {'id': self.target}
+            event_mod.error(self.target, self.action, 'Failed', reason)
             return self.RES_ERROR, reason
 
         # Try to lock cluster before do real operation
