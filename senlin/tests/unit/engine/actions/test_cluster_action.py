@@ -18,9 +18,11 @@ from senlin.common import scaleutils
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine.actions import base as base_action
 from senlin.engine.actions import cluster_action as ca
+from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import dispatcher
 from senlin.engine import node as node_mod
 from senlin.engine import scheduler
+from senlin.policies import base as policy_base
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -1214,7 +1216,6 @@ class ClusterActionTest(base.SenlinTestCase):
     @mock.patch.object(ca.ClusterAction, '_create_nodes')
     def test_do_scale_out_no_pd_no_inputs(self, mock_create, mock_update):
         cluster = mock.Mock()
-        cluster.desired_capacity = 10
         cluster.min_size = 1
         cluster.max_size = -1
         cluster.nodes = []
@@ -1230,8 +1231,8 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual('Cluster scaling succeeded.', res_msg)
         self.assertEqual(action.RES_OK, res_code)
 
-        # creating 11 nodes, given that the cluster is empty now
-        mock_create.assert_called_once_with(cluster, 11)
+        # creating 1 nodes
+        mock_create.assert_called_once_with(cluster, 1)
         cluster.set_status.assert_called_once_with(
             action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
 
@@ -1239,7 +1240,6 @@ class ClusterActionTest(base.SenlinTestCase):
     @mock.patch.object(ca.ClusterAction, '_create_nodes')
     def test_do_scale_out_with_pd_no_inputs(self, mock_create, mock_update):
         cluster = mock.Mock()
-        cluster.desired_capacity = 10
         cluster.min_size = 1
         cluster.max_size = -1
         cluster.nodes = []
@@ -1255,8 +1255,8 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual('Cluster scaling succeeded.', res_msg)
         self.assertEqual(action.RES_OK, res_code)
 
-        # creating 11 nodes, given that the cluster is empty now
-        mock_create.assert_called_once_with(cluster, 13)
+        # creating 3 nodes
+        mock_create.assert_called_once_with(cluster, 3)
         cluster.set_status.assert_called_once_with(
             action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
 
@@ -1264,7 +1264,6 @@ class ClusterActionTest(base.SenlinTestCase):
     @mock.patch.object(ca.ClusterAction, '_create_nodes')
     def test_do_scale_out_no_pd_with_inputs(self, mock_create, mock_update):
         cluster = mock.Mock()
-        cluster.desired_capacity = 10
         cluster.min_size = 1
         cluster.max_size = -1
         cluster.nodes = []
@@ -1280,26 +1279,23 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual('Cluster scaling succeeded.', res_msg)
         self.assertEqual(action.RES_OK, res_code)
 
-        # creating 11 nodes, given that the cluster is empty now
-        mock_create.assert_called_once_with(cluster, 12)
+        # creating 2 nodes, given that the cluster is empty now
+        mock_create.assert_called_once_with(cluster, 2)
         cluster.set_status.assert_called_once_with(
             action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
 
-    def test_do_scale_out_already_big(self):
+    def test_do_scale_out_count_negative(self):
         cluster = mock.Mock()
-        cluster.desired_capacity = 3
-        cluster.nodes = [mock.Mock() for i in range(5)]
         action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
         action.data = {}
-        action.inputs = {'count': 2}
+        action.inputs = {'count': -2}
 
         # do it
         res_code, res_msg = action.do_scale_out(cluster)
 
         # assertions
         self.assertEqual(action.RES_ERROR, res_code)
-        self.assertEqual('Cluster size (5) is already larger than desired '
-                         '(3).', res_msg)
+        self.assertEqual('Invalid count (-2) for scaling out.', res_msg)
 
     def test_do_scale_out_failed_checking(self):
         cluster = mock.Mock()
@@ -1343,9 +1339,9 @@ class ClusterActionTest(base.SenlinTestCase):
             cluster.set_status.assert_called_once_with(
                 action.context, cluster.ERROR, 'Too hot to work!')
             cluster.set_status.reset_mock()
-            mock_update.assert_called_once_with(cluster, 5, None, None)
+            mock_update.assert_called_once_with(cluster, 3, None, None)
             mock_update.reset_mock()
-            mock_create.assert_called_once_with(cluster, 4)
+            mock_create.assert_called_once_with(cluster, 2)
             mock_create.reset_mock()
 
         # Timeout case
@@ -1356,14 +1352,13 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_RETRY, res_code)
         self.assertEqual('Not good time!', res_msg)
         self.assertEqual(0, cluster.set_status.call_count)
-        mock_update.assert_called_once_with(cluster, 5, None, None)
-        mock_create.assert_called_once_with(cluster, 4)
+        mock_update.assert_called_once_with(cluster, 3, None, None)
+        mock_create.assert_called_once_with(cluster, 2)
 
     @mock.patch.object(ca.ClusterAction, '_update_cluster_properties')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
     def test_do_scale_in_no_pd_no_inputs(self, mock_delete, mock_update):
         cluster = mock.Mock()
-        cluster.desired_capacity = 10
         cluster.min_size = 1
         cluster.max_size = -1
         cluster.nodes = []
@@ -1383,8 +1378,491 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual('Cluster scaling succeeded.', res_msg)
         self.assertEqual(action.RES_OK, res_code)
 
-        # deleting 1 nodes, given that the cluster is empty now
+        # deleting 1 nodes
         mock_delete.assert_called_once_with(cluster, mock.ANY)
         self.assertEqual(1, len(mock_delete.call_args[0][1]))
+        mock_update.assert_called_once_with(cluster, 9, None, None)
         cluster.set_status.assert_called_once_with(
             action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
+
+    @mock.patch.object(ca.ClusterAction, '_update_cluster_properties')
+    @mock.patch.object(ca.ClusterAction, '_delete_nodes')
+    def test_do_scale_in_with_pd_no_input(self, mock_delete, mock_update):
+        cluster = mock.Mock()
+        cluster.min_size = 1
+        cluster.max_size = -1
+        cluster.nodes = []
+        for i in range(5):
+            node = mock.Mock()
+            node.id = 'NODE_ID_%s' % (i + 1)
+            cluster.nodes.append(node)
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.data = {
+            'deletion': {
+                'count': 2,
+                'candidates': ['NODE_ID_3', 'NODE_ID_4']
+            }
+        }
+        action.inputs = {}
+        mock_delete.return_value = (action.RES_OK, 'Life is beautiful.')
+
+        # do it
+        res_code, res_msg = action.do_scale_in(cluster)
+
+        # assertions
+        self.assertEqual('Cluster scaling succeeded.', res_msg)
+        self.assertEqual(action.RES_OK, res_code)
+
+        # deleting 2 nodes
+        mock_delete.assert_called_once_with(cluster, mock.ANY)
+        self.assertEqual(2, len(mock_delete.call_args[0][1]))
+        self.assertIn('NODE_ID_3', mock_delete.call_args[0][1])
+        self.assertIn('NODE_ID_4', mock_delete.call_args[0][1])
+        mock_update.assert_called_once_with(cluster, 3, None, None)
+        cluster.set_status.assert_called_once_with(
+            action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
+
+    @mock.patch.object(ca.ClusterAction, '_update_cluster_properties')
+    @mock.patch.object(ca.ClusterAction, '_delete_nodes')
+    def test_do_scale_in_no_pd_with_input(self, mock_delete, mock_update):
+        cluster = mock.Mock()
+        cluster.min_size = 1
+        cluster.max_size = -1
+        cluster.nodes = []
+        for i in range(5):
+            node = mock.Mock()
+            node.id = 'NODE_ID_%s' % (i + 1)
+            cluster.nodes.append(node)
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.data = {}
+        action.inputs = {'count': 3}
+        mock_delete.return_value = (action.RES_OK, 'Life is beautiful.')
+
+        # do it
+        res_code, res_msg = action.do_scale_in(cluster)
+
+        # assertions
+        self.assertEqual('Cluster scaling succeeded.', res_msg)
+        self.assertEqual(action.RES_OK, res_code)
+
+        # deleting 3 nodes
+        mock_delete.assert_called_once_with(cluster, mock.ANY)
+        self.assertEqual(3, len(mock_delete.call_args[0][1]))
+        mock_update.assert_called_once_with(cluster, 2, None, None)
+        cluster.set_status.assert_called_once_with(
+            action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
+
+    def test_do_scale_in_invalid_count(self):
+        cluster = mock.Mock()
+        cluster.min_size = 1
+        cluster.max_size = -1
+        cluster.nodes = []
+        for i in range(5):
+            node = mock.Mock()
+            node.id = 'NODE_ID_%s' % (i + 1)
+            cluster.nodes.append(node)
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.data = {}
+        action.inputs = {'count': -3}
+
+        # do it
+        res_code, res_msg = action.do_scale_in(cluster)
+
+        # assertions
+        self.assertEqual('Invalid count (-3) for scaling in.', res_msg)
+        self.assertEqual(action.RES_ERROR, res_code)
+
+    @mock.patch.object(ca.ClusterAction, '_update_cluster_properties')
+    @mock.patch.object(ca.ClusterAction, '_delete_nodes')
+    def test_do_scale_in_best_effort(self, mock_delete, mock_update):
+        cluster = mock.Mock()
+        cluster.min_size = 0
+        cluster.max_size = -1
+        cluster.nodes = []
+        for i in range(2):
+            node = mock.Mock()
+            node.id = 'NODE_ID_%s' % (i + 1)
+            cluster.nodes.append(node)
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.data = {}
+        action.inputs = {'count': 3}
+        mock_delete.return_value = (action.RES_OK, 'Deletion done.')
+
+        # do it
+        res_code, res_msg = action.do_scale_in(cluster)
+
+        # assertions
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Cluster scaling succeeded.', res_msg)
+        mock_delete.assert_called_once_with(cluster, mock.ANY)
+        self.assertEqual(2, len(mock_delete.call_args[0][1]))
+        mock_update.assert_called_once_with(cluster, 0, None, None)
+        cluster.set_status.assert_called_once_with(
+            action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
+
+    def test_do_scale_in_failed_check(self):
+        cluster = mock.Mock()
+        cluster.min_size = 1
+        cluster.max_size = -1
+        cluster.nodes = []
+        for i in range(2):
+            node = mock.Mock()
+            node.id = 'NODE_ID_%s' % (i + 1)
+            cluster.nodes.append(node)
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.data = {}
+        action.inputs = {'count': 3}
+
+        # do it
+        res_code, res_msg = action.do_scale_in(cluster)
+
+        # assertions
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('The target capacity (0) is less than the '
+                         'cluster\'s min_size (1).', res_msg)
+
+    @mock.patch.object(ca.ClusterAction, '_update_cluster_properties')
+    @mock.patch.object(ca.ClusterAction, '_delete_nodes')
+    def test_do_scale_in_failed_delete_nodes(self, mock_delete, mock_update):
+        cluster = mock.Mock()
+        cluster.desired_capacity = 3
+        cluster.min_size = 1
+        cluster.max_size = -1
+        cluster.nodes = []
+        for i in range(5):
+            node = mock.Mock()
+            node.id = 'NODE_ID_%s' % (i + 1)
+            cluster.nodes.append(node)
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.data = {}
+        action.inputs = {'count': 2}
+
+        # Error cases
+        for result in (action.RES_ERROR, action.RES_CANCEL,
+                       action.RES_TIMEOUT):
+            mock_delete.return_value = result, 'Too cold to work!'
+            # do it
+            res_code, res_msg = action.do_scale_in(cluster)
+            # assertions
+            self.assertEqual(result, res_code)
+            self.assertEqual('Too cold to work!', res_msg)
+            cluster.set_status.assert_called_once_with(
+                action.context, cluster.ERROR, 'Too cold to work!')
+            cluster.set_status.reset_mock()
+            mock_update.assert_called_once_with(cluster, 3, None, None)
+            mock_update.reset_mock()
+            mock_delete.assert_called_once_with(cluster, mock.ANY)
+            self.assertEqual(2, len(mock_delete.call_args[0][1]))
+            mock_delete.reset_mock()
+
+        # Timeout case
+        mock_delete.return_value = action.RES_RETRY, 'Not good time!'
+        # do it
+        res_code, res_msg = action.do_scale_in(cluster)
+        # assertions
+        self.assertEqual(action.RES_RETRY, res_code)
+        self.assertEqual('Not good time!', res_msg)
+        self.assertEqual(0, cluster.set_status.call_count)
+        mock_update.assert_called_once_with(cluster, 3, None, None)
+        mock_delete.assert_called_once_with(cluster, mock.ANY)
+        self.assertEqual(2, len(mock_delete.call_args[0][1]))
+
+    @mock.patch.object(cp_mod, 'ClusterPolicy')
+    @mock.patch.object(policy_base.Policy, 'load')
+    def test_do_attach_policy(self, mock_load, mock_cp):
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        cluster.policies = []
+        policy = mock.Mock()
+        policy.attach.return_value = (True, None)
+        mock_load.return_value = policy
+        binding = mock.Mock()
+        mock_cp.return_value = binding
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {
+            'policy_id': 'FAKE_POLICY',
+            'priority': 10,
+            'cooldown': 20,
+            'level': 30,
+            'enabled': True
+        }
+
+        # do it
+        res_code, res_msg = action.do_attach_policy(cluster)
+
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Policy attached.', res_msg)
+        policy.attach.assert_called_once_with(cluster)
+        mock_load.assert_called_once_with(action.context, 'FAKE_POLICY')
+        mock_cp.assert_called_once_with('FAKE_CLUSTER', 'FAKE_POLICY',
+                                        priority=10, cooldown=20, level=30,
+                                        enabled=True, data=None)
+        binding.store.assert_called_once_with(action.context)
+        cluster.add_policy.assert_called_once_with(policy)
+
+    def test_do_attach_policy_missing_policy(self):
+        cluster = mock.Mock()
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {}
+
+        # do it
+        res_code, res_msg = action.do_attach_policy(cluster)
+        # assertion
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('Policy not specified.', res_msg)
+
+    @mock.patch.object(policy_base.Policy, 'load')
+    def test_do_attach_policy_already_attached(self, mock_load):
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        existing = mock.Mock()
+        existing.id = 'FAKE_POLICY_1'
+        cluster.policies = [existing]
+        policy = mock.Mock()
+        mock_load.return_value = policy
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {
+            'policy_id': 'FAKE_POLICY_1',
+        }
+
+        # do it
+        res_code, res_msg = action.do_attach_policy(cluster)
+
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Policy already attached.', res_msg)
+        mock_load.assert_called_once_with(action.context, 'FAKE_POLICY_1')
+
+    @mock.patch.object(policy_base.Policy, 'load')
+    def test_do_attach_policy_type_conflict(self, mock_load):
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        existing = mock.Mock()
+        existing.id = 'FAKE_POLICY_2'
+        existing.type = 'POLICY_TYPE_ONE'
+        cluster.policies = [existing]
+        policy = mock.Mock()
+        policy.singleton = True
+        policy.type = 'POLICY_TYPE_ONE'
+        mock_load.return_value = policy
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {
+            'policy_id': 'FAKE_POLICY_1',
+            'priority': 10,
+            'cooldown': 20,
+            'level': 30,
+            'enabled': True
+        }
+
+        # do it
+        res_code, res_msg = action.do_attach_policy(cluster)
+
+        # assert
+        self.assertEqual(action.RES_ERROR, res_code)
+        expected = ('Only one instance of policy type (POLICY_TYPE_ONE) can '
+                    'be attached to a cluster, but another instance '
+                    '(FAKE_POLICY_2) is found attached to the cluster '
+                    '(FAKE_CLUSTER) already.')
+        self.assertEqual(expected, res_msg)
+        mock_load.assert_called_once_with(action.context, 'FAKE_POLICY_1')
+
+    @mock.patch.object(cp_mod, 'ClusterPolicy')
+    @mock.patch.object(policy_base.Policy, 'load')
+    def test_do_attach_policy_type_conflict_but_ok(self, mock_load, mock_cp):
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        existing = mock.Mock()
+        existing.id = 'FAKE_POLICY_2'
+        existing.type = 'POLICY_TYPE_ONE'
+        cluster.policies = [existing]
+        policy = mock.Mock()
+        policy.singleton = False
+        policy.type = 'POLICY_TYPE_ONE'
+        policy.attach.return_value = (True, None)
+        mock_load.return_value = policy
+        binding = mock.Mock()
+        mock_cp.return_value = binding
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {
+            'policy_id': 'FAKE_POLICY_1',
+            'priority': 10,
+            'cooldown': 20,
+            'level': 30,
+            'enabled': True
+        }
+
+        # do it
+        res_code, res_msg = action.do_attach_policy(cluster)
+
+        # assert
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Policy attached.', res_msg)
+
+        policy.attach.assert_called_once_with(cluster)
+        mock_load.assert_called_once_with(action.context, 'FAKE_POLICY_1')
+        mock_cp.assert_called_once_with('FAKE_CLUSTER', 'FAKE_POLICY_1',
+                                        priority=10, cooldown=20, level=30,
+                                        enabled=True, data=None)
+        binding.store.assert_called_once_with(action.context)
+        cluster.add_policy.assert_called_once_with(policy)
+
+    @mock.patch.object(policy_base.Policy, 'load')
+    def test_do_attach_policy_failed_do_attach(self, mock_load):
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        cluster.policies = []
+        policy = mock.Mock()
+        policy.attach.return_value = (False, 'Bad things happened.')
+        mock_load.return_value = policy
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {
+            'policy_id': 'FAKE_POLICY',
+            'priority': 10,
+            'cooldown': 20,
+            'level': 30,
+            'enabled': True
+        }
+
+        # do it
+        res_code, res_msg = action.do_attach_policy(cluster)
+
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('Bad things happened.', res_msg)
+        policy.attach.assert_called_once_with(cluster)
+        mock_load.assert_called_once_with(action.context, 'FAKE_POLICY')
+
+    @mock.patch.object(db_api, 'cluster_policy_detach')
+    @mock.patch.object(policy_base.Policy, 'load')
+    def test_do_detach_policy(self, mock_load, mock_detach):
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        policy = mock.Mock()
+        policy.id == 'FAKE_POLICY'
+        existing = mock.Mock()
+        existing.id = 'FAKE_POLICY'
+        cluster.policies = [existing]
+        policy.detach.return_value = (True, None)
+        mock_load.return_value = policy
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {'policy_id': 'FAKE_POLICY'}
+
+        # do it
+        res_code, res_msg = action.do_detach_policy(cluster)
+
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Policy detached.', res_msg)
+        policy.detach.assert_called_once_with(cluster)
+        mock_load.assert_called_once_with(action.context, 'FAKE_POLICY')
+        mock_detach.assert_called_once_with(action.context, 'FAKE_CLUSTER',
+                                            'FAKE_POLICY')
+        cluster.remove_policy.assert_called_once_with(policy)
+
+    def test_do_detach_policy_missing_policy(self):
+        cluster = mock.Mock()
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {}
+
+        # do it
+        res_code, res_msg = action.do_detach_policy(cluster)
+
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('Policy not specified.', res_msg)
+
+    def test_do_detach_policy_no_attached(self):
+        cluster = mock.Mock()
+        policy = mock.Mock()
+        policy.id == 'FAKE_POLICY'
+        cluster.policies = []
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {'policy_id': 'FAKE_POLICY'}
+
+        # do it
+        res_code, res_msg = action.do_detach_policy(cluster)
+
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Policy not attached.', res_msg)
+
+    @mock.patch.object(policy_base.Policy, 'load')
+    def test_do_detach_policy_failed_detach(self, mock_load):
+        cluster = mock.Mock()
+        policy = mock.Mock()
+        policy.id == 'FAKE_POLICY'
+        policy.detach.return_value = (False, 'Bad things happened.')
+        mock_load.return_value = policy
+        existing = mock.Mock()
+        existing.id = 'FAKE_POLICY'
+        cluster.policies = [existing]
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {'policy_id': 'FAKE_POLICY'}
+
+        # do it
+        res_code, res_msg = action.do_detach_policy(cluster)
+
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('Bad things happened.', res_msg)
+
+    @mock.patch.object(db_api, 'cluster_policy_update')
+    def test_do_update_policy(self, mock_update):
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        existing = mock.Mock()
+        existing.id = 'FAKE_POLICY'
+        cluster.policies = [existing]
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {
+            'policy_id': 'FAKE_POLICY',
+            'cooldown': 10,
+            'level': 20,
+            'priority': 30,
+            'enabled': False,
+        }
+
+        # do it
+        res_code, res_msg = action.do_update_policy(cluster)
+
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Policy updated.', res_msg)
+        mock_update.assert_called_once_with(
+            action.context, 'FAKE_CLUSTER', 'FAKE_POLICY',
+            {'cooldown': 10, 'level': 20, 'priority': 30, 'enabled': False})
+
+    def test_do_update_policy_missing_policy(self):
+        cluster = mock.Mock()
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {'priority': 30}
+
+        # do it
+        res_code, res_msg = action.do_update_policy(cluster)
+
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('Policy not specified.', res_msg)
+
+    def test_do_update_policy_not_attached(self):
+        cluster = mock.Mock()
+        cluster.policies = []
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {
+            'policy_id': 'FAKE_POLICY',
+            'level': 20,
+        }
+
+        # do it
+        res_code, res_msg = action.do_update_policy(cluster)
+
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('Policy not attached.', res_msg)
+
+    def test_do_update_policy_no_update_needed(self):
+        cluster = mock.Mock()
+        existing = mock.Mock()
+        existing.id = 'FAKE_POLICY'
+        cluster.policies = [existing]
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_ACTION')
+        action.inputs = {
+            'policy_id': 'FAKE_POLICY',
+        }
+
+        # do it
+        res_code, res_msg = action.do_update_policy(cluster)
+
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('No update is needed.', res_msg)

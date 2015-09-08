@@ -130,6 +130,7 @@ class ClusterAction(base.Action):
             res, reason = self._wait_for_dependents()
             if res == self.RES_OK:
                 self.data['nodes'] = nodes
+                # TODO(anyone): refresh cluster node memebership
             return res, reason
 
         return self.RES_OK, ''
@@ -215,6 +216,7 @@ class ClusterAction(base.Action):
             res, reason = self._wait_for_dependents()
             if res == self.RES_OK:
                 self.data['nodes'] = nodes
+                # TODO(anyone): refresh cluster node memebership
             return res, reason
 
         return self.RES_OK, ''
@@ -426,17 +428,14 @@ class ClusterAction(base.Action):
             # input count directly
             count = self.inputs.get('count', 1)
 
+        if count <= 0:
+            reason = _('Invalid count (%s) for scaling out.') % count
+            return self.RES_ERROR, reason
+
         # check provided params against current properties
         # desired is checked when strict is True
         curr_size = len(cluster.nodes)
-        new_size = cluster.desired_capacity + count
-        count = new_size - curr_size
-        if count <= 0:
-            reason = _('Cluster size (%(curr)s) is already larger than '
-                       'desired (%(desired)s).'
-                       ) % {'curr': curr_size,
-                            'desired': cluster.desired_capacity}
-            return self.RES_ERROR, reason
+        new_size = curr_size + count
 
         result = scaleutils.check_size_params(cluster, new_size,
                                               None, None, True)
@@ -461,7 +460,7 @@ class ClusterAction(base.Action):
         return result, reason
 
     def do_scale_in(self, cluster):
-        # We use policy output if any, or else the count is
+        # We use policy data if any, or else the count is
         # set to 1 as default.
         pd = self.data.get('deletion', None)
         if pd is not None:
@@ -472,18 +471,22 @@ class ClusterAction(base.Action):
             count = self.inputs.get('count', 1)
             candidates = []
 
+        if count <= 0:
+            reason = _('Invalid count (%s) for scaling in.') % count
+            return self.RES_ERROR, reason
+
         # check provided params against current properties
         # desired is checked when strict is True
         curr_size = len(cluster.nodes)
+        if count > curr_size:
+            LOG.warning(_('Triming count (%(count)s) to current cluster size '
+                          '(%(curr)s) for scaling in'),
+                        {'count': count, 'curr': curr_size})
+            count = curr_size
         new_size = curr_size - count
-        if count <= 0:
-            reason = _('Cluster size (%(curr)s) is already less than '
-                       'desired (%(desired)s).'
-                       ) % {'curr': curr_size, 'desired': new_size}
-            return self.RES_ERROR, reason
 
         result = scaleutils.check_size_params(cluster, new_size,
-                                              None, None, True)
+                                              None, None, False)
         if result != '':
             return self.RES_ERROR, result
 
@@ -493,16 +496,16 @@ class ClusterAction(base.Action):
 
         # Choose victims randomly
         if len(candidates) == 0:
-            node_ids = [node.id for node in cluster.nodes]
+            ids = [node.id for node in cluster.nodes]
             i = count
             while i > 0:
-                r = random.randrange(len(node_ids))
-                candidates.append(node_ids[r])
-                node_ids.remove(node_ids[r])
+                r = random.randrange(len(ids))
+                candidates.append(ids[r])
+                ids.remove(ids[r])
                 i = i - 1
 
         # The policy data may contain destroy flag and grace period option
-        result, new_reason = self._delete_nodes(cluster, candidates)
+        result, reason = self._delete_nodes(cluster, candidates)
 
         if result == self.RES_OK:
             reason = _('Cluster scaling succeeded.')
@@ -519,22 +522,30 @@ class ClusterAction(base.Action):
         '''Attach policy to the cluster.'''
 
         policy_id = self.inputs.get('policy_id', None)
+        if not policy_id:
+            return self.RES_ERROR, _('Policy not specified.')
+
         policy = policy_mod.Policy.load(self.context, policy_id)
         # Check if policy has already been attached
-        all_policies = db_api.cluster_policy_get_all(self.context, cluster.id)
-        for existing in all_policies:
+        for existing in cluster.policies:
             # Policy already attached
-            if existing.policy_id == policy_id:
-                return self.RES_OK, 'Policy already attached'
+            if existing.id == policy_id:
+                return self.RES_OK, _('Policy already attached.')
 
             # Detect policy type conflicts
-            curr = db_api.policy_get(self.context, existing.policy_id)
-            if (curr.type == policy.type) and policy.singleton:
-                raise exception.PolicyTypeConflict(policy_type=policy.type)
+            if (existing.type == policy.type) and policy.singleton:
+                reason = _('Only one instance of policy type (%(ptype)s) can '
+                           'be attached to a cluster, but another instance '
+                           '(%(existing)s) is found attached to the cluster '
+                           '(%(cluster)s) already.'
+                           ) % {'ptype': policy.type,
+                                'existing': existing.id,
+                                'cluster': cluster.id}
+                return self.RES_ERROR, reason
 
         res, data = policy.attach(cluster)
         if not res:
-            return self.RES_ERROR, _('Failed attaching policy.')
+            return self.RES_ERROR, data
 
         # Initialize data field of cluster_policy object with information
         # generated during policy attaching
@@ -553,14 +564,25 @@ class ClusterAction(base.Action):
         return self.RES_OK, _('Policy attached.')
 
     def do_detach_policy(self, cluster):
+        '''Attach policy to the cluster.'''
+
         policy_id = self.inputs.get('policy_id', None)
         if not policy_id:
-            raise exception.PolicyNotSpecified()
+            return self.RES_ERROR, _('Policy not specified.')
+
+        # Check if policy has already been attached
+        found = False
+        for existing in cluster.policies:
+            if existing.id == policy_id:
+                found = True
+                break
+        if not found:
+            return self.RES_OK, _('Policy not attached.')
 
         policy = policy_mod.Policy.load(self.context, policy_id)
         res, data = policy.detach(cluster)
         if not res:
-            return self.RES_ERROR, _('Failed detaching policy.')
+            return self.RES_ERROR, data
 
         db_api.cluster_policy_detach(self.context, cluster.id, policy_id)
 
@@ -570,7 +592,16 @@ class ClusterAction(base.Action):
     def do_update_policy(self, cluster):
         policy_id = self.inputs.get('policy_id', None)
         if not policy_id:
-            raise exception.PolicyNotSpecified()
+            return self.RES_ERROR, _('Policy not specified.')
+
+        # Check if policy has already been attached
+        found = False
+        for existing in cluster.policies:
+            if existing.id == policy_id:
+                found = True
+                break
+        if not found:
+            return self.RES_ERROR, _('Policy not attached.')
 
         values = {}
         cooldown = self.inputs.get('cooldown')
@@ -585,6 +616,8 @@ class ClusterAction(base.Action):
         enabled = self.inputs.get('enabled')
         if enabled is not None:
             values['enabled'] = bool(enabled)
+        if not values:
+            return self.RES_OK, _('No update is needed.')
 
         db_api.cluster_policy_update(self.context, cluster.id, policy_id,
                                      values)
