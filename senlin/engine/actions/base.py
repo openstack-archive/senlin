@@ -70,7 +70,7 @@ class Action(object):
         'CANCEL', 'SUSPEND', 'RESUME',
     )
 
-    def __new__(cls, context, target, action, **kwargs):
+    def __new__(cls, target, action, context=None, **kwargs):
         if (cls != Action):
             return super(Action, cls).__new__(cls)
 
@@ -90,21 +90,30 @@ class Action(object):
 
         return super(Action, cls).__new__(ActionClass)
 
-    def __init__(self, context, target, action, **kwargs):
+    def __init__(self, target, action, context=None, **kwargs):
         # context will be persisted into database so that any worker thread
         # can pick the action up and execute it on behalf of the initiator
 
         self.id = kwargs.get('id', None)
         self.name = kwargs.get('name', '')
 
-        # TODO(Qiming): rework the context initialization logic
-        self.context = req_context.RequestContext.from_dict(context.to_dict())
+        # TODO(Yanyan Hu): Replace context with DB session
+        if not context:
+            params = {
+                'user': kwargs.get('user'),
+                'project': kwargs.get('project'),
+                'domain': kwargs.get('domain'),
+                'is_admin': False
+            }
+            self.context = req_context.RequestContext.from_dict(params)
+        else:
+            self.context = context
 
         # TODO(Qiming): make description a db column
         self.description = kwargs.get('description', '')
 
-        self.target = target
         self.action = action
+        self.target = target
 
         # Why this action is fired, it can be a UUID of another action
         self.cause = kwargs.get('cause', '')
@@ -218,7 +227,7 @@ class Action(object):
             'data': record.data,
         }
 
-        return cls(context, record.target, record.action, **kwargs)
+        return cls(record.target, record.action, context=context, **kwargs)
 
     @classmethod
     def load(cls, context, action_id=None, db_action=None, show_deleted=False):

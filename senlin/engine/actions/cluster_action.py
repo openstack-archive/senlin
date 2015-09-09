@@ -110,12 +110,14 @@ class ClusterAction(base.Action):
             nodes.append(node.id)
 
             kwargs = {
+                'user': self.context.user,
+                'project': self.context.project,
+                'domain': self.context.domain,
                 'name': 'node_create_%s' % node.id[:8],
                 'cause': base.CAUSE_DERIVED,
             }
 
-            action = base.Action(self.context, node.id, 'NODE_CREATE',
-                                 **kwargs)
+            action = base.Action(node.id, 'NODE_CREATE', **kwargs)
             action.store(self.context)
 
             # Build dependency and make the new action ready
@@ -160,14 +162,16 @@ class ClusterAction(base.Action):
 
         for node in cluster.nodes:
             kwargs = {
+                'user': self.context.user,
+                'project': self.context.project,
+                'domain': self.context.domain,
                 'name': 'node_update_%s' % node.id[:8],
                 'cause': base.CAUSE_DERIVED,
                 'inputs': {
                     'new_profile_id': profile_id,
                 }
             }
-            action = base.Action(self.context, node.id, 'NODE_UPDATE',
-                                 **kwargs)
+            action = base.Action(node.id, 'NODE_UPDATE', **kwargs)
             action.store(self.context)
 
             db_api.action_add_dependency(self.context, action.id, self.id)
@@ -200,9 +204,14 @@ class ClusterAction(base.Action):
                 action_name = consts.NODE_LEAVE
 
         for node_id in nodes:
-            action = base.Action(self.context, node_id, action_name,
-                                 name='node_delete_%s' % node_id[:8],
-                                 cause=base.CAUSE_DERIVED)
+            kwargs = {
+                'user': self.context.user,
+                'project': self.context.project,
+                'domain': self.context.domain,
+                'name': 'node_delete_%s' % node_id[:8],
+                'cause': base.CAUSE_DERIVED
+            }
+            action = base.Action(node_id, action_name, **kwargs)
             action.store(self.context)
 
             # Build dependency and make the new action ready
@@ -281,10 +290,15 @@ class ClusterAction(base.Action):
             return self.RES_OK, reason
 
         for node_id in nodes:
-            action = base.Action(self.context, node_id, 'NODE_JOIN',
-                                 name='node_join_%s' % node_id[:8],
-                                 cause=base.CAUSE_DERIVED,
-                                 inputs={'cluster_id': cluster.id})
+            kwargs = {
+                'user': self.context.user,
+                'project': self.context.project,
+                'domain': self.context.domain,
+                'name': 'node_join_%s' % node_id[:8],
+                'cause': base.CAUSE_DERIVED,
+                'inputs': {'cluster_id': cluster.id}
+            }
+            action = base.Action(node_id, 'NODE_JOIN', **kwargs)
             action.store(self.context)
             db_api.action_add_dependency(self.context, action.id, self.id)
             action.set_status(self.READY)
