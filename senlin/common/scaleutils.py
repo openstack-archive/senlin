@@ -85,7 +85,7 @@ def check_size_params(cluster, desired, min_size, max_size, strict):
     Sanity Checking 2: the desired_capacity must be within the existing
                        range of the cluster, if new range is not provided.
     '''
-    if desired is not None and strict is True:
+    if desired is not None:
         # recalculate/validate desired based on strict setting
         if (min_size is not None and desired < min_size):
             v = {'d': desired, 'm': min_size}
