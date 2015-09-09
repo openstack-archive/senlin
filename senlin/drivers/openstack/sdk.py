@@ -18,55 +18,54 @@ from oslo_log import log as logging
 import six
 
 from openstack import connection
-from openstack import exceptions
+from openstack import exceptions as sdk_exc
 from openstack import profile
 from openstack import transport
 from oslo_serialization import jsonutils
-from requests import exceptions as reqexc
+from requests import exceptions as req_exc
 
-from senlin.common import exception
-from senlin.common.i18n import _
+from senlin.common import exception as senlin_exc
 
 USER_AGENT = 'senlin'
-exc = exceptions
+exc = sdk_exc
 LOG = logging.getLogger(__name__)
 
 
 def parse_exception(ex):
-    '''Parse exception code and yield useful information.
-
-    :param details: details of the exception.
-    '''
+    '''Parse exception code and yield useful information.'''
     code = 500
 
-    if isinstance(ex, exceptions.HttpException):
+    if isinstance(ex, sdk_exc.HttpException):
+        code = ex.status_code
+        message = ex.message
+        data = {}
         try:
             data = jsonutils.loads(ex.details)
-            code = data['error'].get('code', None)
-            if code is None:
-                code = data['code']
-            message = data['error']['message']
         except Exception:
-            # Some exceptions don't have details record or are not in JSON
-            # format
-            code = ex.status_code
-            message = ex.message
-    elif isinstance(ex, exceptions.SDKException):
+            # Some exceptions don't have details record or
+            # are not in JSON format
+            pass
+
+        # try dig more into the exception record
+        code = data.get('code', code)
+        error = data.get('error', None)
+        if error:
+            code = data['error'].get('code', code)
+            message = data['error'].get('message', message)
+
+    elif isinstance(ex, sdk_exc.SDKException):
         # Besides HttpException there are some other exceptions like
         # ResourceTimeout can be raised from SDK, handle them here.
-        message = _('Unknown exception from SDK: %s') % six.text_type(ex)
-    elif isinstance(ex, reqexc.RequestException):
+        message = ex.message
+    elif isinstance(ex, req_exc.RequestException):
         # Exceptions that are not captured by SDK
-        if isinstance(ex.message, list):
-            msg = ex.message[0]
-        else:
-            msg = ex.message
-        code = ex.message[1].errno
-        message = msg
+        code = ex.errno
+        message = six.text_type(ex)
     elif isinstance(ex, Exception):
-        message = _('Unknown exception: %s') % six.text_type(ex)
+        message = six.text_type(ex)
 
-    raise exception.InternalError(code=code, message=message)
+    LOG.exception(ex)
+    raise senlin_exc.InternalError(code=code, message=message)
 
 
 def translate_exception(func):
@@ -82,7 +81,9 @@ def translate_exception(func):
     return invoke_with_catch
 
 
-def create_connection(params):
+def create_connection(params=None):
+    if params is None:
+        params = {}
     prof = profile.Profile()
     if 'region_name' in params:
         prof.set_region(prof.ALL, params['region_name'])
