@@ -18,10 +18,13 @@ from senlin.common import scaleutils
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine.actions import base as base_action
 from senlin.engine.actions import cluster_action as ca
+from senlin.engine import cluster as cluster_mod
 from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import dispatcher
+from senlin.engine import event as event_mod
 from senlin.engine import node as node_mod
 from senlin.engine import scheduler
+from senlin.engine import senlin_lock
 from senlin.policies import base as policy_base
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -1866,3 +1869,182 @@ class ClusterActionTest(base.SenlinTestCase):
 
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('No update is needed.', res_msg)
+
+    @mock.patch.object(base_action.Action, 'policy_check')
+    def test__execute(self, mock_check):
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_FLY')
+        action.do_fly = mock.Mock(return_value=(action.RES_OK, 'Good!'))
+        action.data = {
+            'status': policy_base.CHECK_OK,
+            'reason': 'Policy checking passed'
+        }
+
+        res_code, res_msg = action._execute(cluster)
+
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Good!', res_msg)
+        mock_check.assert_has_calls([
+            mock.call('FAKE_CLUSTER', 'BEFORE'),
+            mock.call('FAKE_CLUSTER', 'AFTER')])
+
+    @mock.patch.object(event_mod, 'error')
+    @mock.patch.object(base_action.Action, 'policy_check')
+    def test__execute_failed_policy_check(self, mock_check, mock_error):
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_FLY')
+        action.do_fly = mock.Mock(return_value=(action.RES_OK, 'Good!'))
+        action.data = {
+            'status': policy_base.CHECK_ERROR,
+            'reason': 'Something is wrong.'
+        }
+
+        res_code, res_msg = action._execute(cluster)
+
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('Policy check failure: Something is wrong.', res_msg)
+        mock_check.assert_called_once_with('FAKE_CLUSTER', 'BEFORE')
+        mock_error.assert_called_once_with(
+            'FAKE_CLUSTER', 'CLUSTER_FLY', 'Failed',
+            'Policy check failure: Something is wrong.')
+
+    @mock.patch.object(event_mod, 'error')
+    @mock.patch.object(base_action.Action, 'policy_check')
+    def test__execute_unsupported_action(self, mock_check, mock_error):
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_DANCE')
+        action.data = {
+            'status': policy_base.CHECK_OK,
+            'reason': 'All is going well.'
+        }
+
+        res_code, res_msg = action._execute(cluster)
+
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('Unsupported action: CLUSTER_DANCE.', res_msg)
+        mock_check.assert_called_once_with('FAKE_CLUSTER', 'BEFORE')
+        mock_error.assert_called_once_with(
+            'FAKE_CLUSTER', 'CLUSTER_DANCE', 'Failed',
+            'Unsupported action: CLUSTER_DANCE.')
+
+    @mock.patch.object(event_mod, 'error')
+    def test__execute_post_check_failed(self, mock_error):
+        def fake_check(cluster_id, target):
+            if target == 'BEFORE':
+                action.data = {
+                    'status': policy_base.CHECK_OK,
+                    'reason': 'Policy checking passed.'
+                }
+            else:
+                action.data = {
+                    'status': policy_base.CHECK_ERROR,
+                    'reason': 'Policy checking failed.'
+                }
+
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_FLY')
+        action.do_fly = mock.Mock(return_value=(action.RES_OK, 'Cool!'))
+        mock_check = self.patchobject(action, 'policy_check',
+                                      side_effect=fake_check)
+
+        res_code, res_msg = action._execute(cluster)
+
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('Policy check failure: Policy checking failed.',
+                         res_msg)
+        mock_check.assert_has_calls([
+            mock.call('FAKE_CLUSTER', 'BEFORE'),
+            mock.call('FAKE_CLUSTER', 'AFTER')])
+        mock_error.assert_called_once_with(
+            'FAKE_CLUSTER', 'CLUSTER_FLY', 'Failed',
+            'Policy check failure: Policy checking failed.')
+
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    @mock.patch.object(senlin_lock, 'cluster_lock_acquire')
+    @mock.patch.object(senlin_lock, 'cluster_lock_release')
+    def test_execute(self, mock_release, mock_acquire, mock_load):
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        mock_load.return_value = cluster
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_FLY')
+        action.id = 'ACTION_ID'
+        action.target = 'FAKE_CLUSTER'
+        self.patchobject(action, '_execute',
+                         return_value=(action.RES_OK, 'success'))
+        mock_acquire.return_value = action
+
+        res_code, res_msg = action.execute()
+
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('success', res_msg)
+        mock_load.assert_called_once_with(action.context, 'FAKE_CLUSTER')
+        mock_acquire.assert_called_once_with(
+            'FAKE_CLUSTER', 'ACTION_ID', senlin_lock.CLUSTER_SCOPE, False)
+        mock_release.assert_called_once_with(
+            'FAKE_CLUSTER', 'ACTION_ID', senlin_lock.CLUSTER_SCOPE)
+
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    @mock.patch.object(event_mod, 'error')
+    def test_execute_cluster_not_found(self, mock_error, mock_load):
+        mock_load.side_effect = exception.ClusterNotFound(cluster='CID')
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_JUMP')
+        action.target = 'CID'
+
+        res_code, res_msg = action.execute()
+
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('Cluster (CID) is not found', res_msg)
+        mock_load.assert_called_once_with(action.context, 'CID')
+        mock_error.assert_called_once_with(
+            'CID', 'CLUSTER_JUMP', 'Failed',
+            'Cluster (CID) is not found')
+
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    @mock.patch.object(senlin_lock, 'cluster_lock_acquire')
+    def test_execute_failed_locking(self, mock_acquire, mock_load):
+        cluster = mock.Mock()
+        cluster.id = 'CLUSTER_ID'
+        mock_load.return_value = cluster
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_DELETE')
+        action.target = 'CLUSTER_ID'
+        mock_acquire.return_value = None
+
+        res_code, res_msg = action.execute()
+
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('Failed in locking cluster.', res_msg)
+        mock_load.assert_called_once_with(action.context, 'CLUSTER_ID')
+
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    @mock.patch.object(senlin_lock, 'cluster_lock_acquire')
+    @mock.patch.object(senlin_lock, 'cluster_lock_release')
+    def test_execute_failed_execute(self, mock_release, mock_acquire,
+                                    mock_load):
+        cluster = mock.Mock()
+        cluster.id = 'CLUSTER_ID'
+        mock_load.return_value = cluster
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_DELETE')
+        action.id = 'ACTION_ID'
+        action.target = 'CLUSTER_ID'
+        mock_acquire.return_value = action
+        self.patchobject(action, '_execute',
+                         return_value=(action.RES_ERROR, 'Failed execution.'))
+
+        res_code, res_msg = action.execute()
+
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('Failed execution.', res_msg)
+        mock_load.assert_called_once_with(action.context, 'CLUSTER_ID')
+        mock_acquire.assert_called_once_with(
+            'CLUSTER_ID', 'ACTION_ID', senlin_lock.CLUSTER_SCOPE, True)
+        mock_release.assert_called_once_with(
+            'CLUSTER_ID', 'ACTION_ID', senlin_lock.CLUSTER_SCOPE)
+
+    def test_cancel(self):
+        action = ca.ClusterAction(self.ctx, 'ID', 'CLUSTER_DELETE')
+        res = action.cancel()
+        self.assertEqual(action.RES_OK, res)
