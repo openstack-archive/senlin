@@ -209,6 +209,19 @@ class WebhookTest(base.SenlinTestCase):
                                consts.CLUSTER_SCALE_OUT)
         self.assertEqual(exception.Forbidden, ex.exc_info[0])
 
+    @mock.patch.object(db_api, 'cred_get')
+    def test_create_credential(self, mock_cred):
+        self.ctx.trusts = 'trust1'
+        self.ctx.is_admin = False
+        obj = mock.Mock()
+        credential = self.eng._create_credential(self.ctx, obj)
+        self.assertEqual(['trust1'], credential['trust_id'])
+
+        self.ctx.is_admin = True
+        mock_cred.return_value = {'cred': {'openstack': {'trust': 'trust2'}}}
+        credential = self.eng._create_credential(self.ctx, obj)
+        self.assertEqual(['trust2'], credential['trust_id'])
+
     @mock.patch.object(webhook_mod.Webhook, 'generate_url')
     @mock.patch.object(common_utils, 'encrypt')
     def test_webhook_get(self, mock_encrypt, mock_url):
