@@ -316,6 +316,8 @@ class Action(object):
 
         if status == self.SUCCEEDED:
             EVENT.info(self.context, self, self.action, status, reason)
+        elif status == self.READY:
+            EVENT.warning(self.context, self, self.action, status, reason)
         else:
             EVENT.error(self.context, self, self.action, status, reason)
 
