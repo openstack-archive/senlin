@@ -29,6 +29,21 @@ spec_nova_server = {
 }
 
 
+spec_scaling_policy = {
+    "type": "senlin.policy.scaling",
+    "version": "1.0",
+    "properties": {
+        "event": "CLUSTER_SCALE_IN",
+        "adjustment": {
+            "type": "CHANGE_IN_CAPACITY",
+            "number": 1,
+            "min_step": 1,
+            "best_effort": True
+        }
+    }
+}
+
+
 def wait_for_status(func, client, obj_id, expected_status, timeout=60,
                     ignore_missing=False):
     # TODO(Yanyan Hu): Put timeout option into test configure file
