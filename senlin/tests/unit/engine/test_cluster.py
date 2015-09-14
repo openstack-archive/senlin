@@ -371,3 +371,11 @@ class TestCluster(base.SenlinTestCase):
         res = cluster.remove_policy(policy2)
         self.assertIsNone(res)
         self.assertEqual([policy1], cluster.policies)
+
+        # reload and detach policy
+        policy3 = mock.Mock()
+        policy3.id = 'PP1'
+
+        res = cluster.remove_policy(policy3)
+        self.assertIsNone(res)
+        self.assertEqual([], cluster.policies)

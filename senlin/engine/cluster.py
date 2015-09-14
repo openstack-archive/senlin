@@ -306,4 +306,4 @@ class Cluster(object):
         # TODO(Qiming): check if actions of specified policies are ongoing
         for p in self.rt['policies']:
             if(p.id == policy.id):
-                self.rt['policies'].remove(policy)
+                self.rt['policies'].remove(p)
