@@ -182,7 +182,7 @@ def critical(context, entity, action, status=None, status_reason=None,
                   user=context.user, project=context.project)
     event.store(context)
     LOG.critical(_LC('%(name)s[%(id)s] - %(status)s: %(reason)s') %
-                 {'name': entity.name, 'id': entity.id, 'status': status,
+                 {'name': event.obj_name, 'id': event.obj_id, 'status': status,
                   'reason': status_reason})
 
 
@@ -194,7 +194,7 @@ def error(context, entity, action, status=None, status_reason=None,
                   user=context.user, project=context.project)
     event.store(context)
     LOG.error(_LE('%(name)s[%(id)s] %(action)s - %(status)s: %(reason)s') %
-              {'name': entity.name, 'id': entity.id, 'action': action,
+              {'name': event.obj_name, 'id': event.obj_id, 'action': action,
                'status': status, 'reason': status_reason})
 
 
@@ -206,7 +206,7 @@ def warning(context, entity, action, status=None, status_reason=None,
                   user=context.user, project=context.project)
     event.store(context)
     LOG.warning(_LW('%(name)s[%(id)s] %(action)s - %(status)s: %(reason)s') %
-                {'name': entity.name, 'id': entity.id, 'action': action,
+                {'name': event.obj_name, 'id': event.obj_id, 'action': action,
                  'status': status, 'reason': status_reason})
 
 
@@ -218,7 +218,7 @@ def info(context, entity, action, status=None, status_reason=None,
                   user=context.user, project=context.project)
     event.store(context)
     LOG.info(_LI('%(name)s[%(id)s] %(action)s - %(status)s: %(reason)s') %
-             {'name': entity.name, 'id': entity.id, 'action': action,
+             {'name': event.obj_name, 'id': event.obj_id, 'action': action,
               'status': status, 'reason': status_reason})
 
 
@@ -230,5 +230,5 @@ def debug(context, entity, action, status=None, status_reason=None,
                   user=context.user, project=context.project)
     event.store(context)
     LOG.debug(_('%(name)s[%(id)s] %(action)s - %(status)s: %(reason)s') %
-              {'name': entity.name, 'id': entity.id, 'action': action,
+              {'name': event.obj_name, 'id': event.obj_id, 'action': action,
                'status': status, 'reason': status_reason})

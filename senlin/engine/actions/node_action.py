@@ -17,7 +17,7 @@ from senlin.common.i18n import _
 from senlin.common import scaleutils
 from senlin.engine.actions import base
 from senlin.engine import cluster as cluster_mod
-from senlin.engine import event as event_mod
+from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.engine import senlin_lock
 from senlin.policies import base as policy_mod
@@ -102,7 +102,7 @@ class NodeAction(base.Action):
 
         if method is None:
             reason = _('Unsupported action: %s') % self.action
-            event_mod.error(node.id, self.action, 'Failed', reason)
+            EVENT.error(self.context, node, self.action, 'Failed', reason)
             return self.RES_ERROR, reason
 
         return method(node)
@@ -112,7 +112,8 @@ class NodeAction(base.Action):
             node = node_mod.Node.load(self.context, node_id=self.target)
         except exception.NodeNotFound:
             reason = _('Node with id (%s) is not found') % self.target
-            event_mod.error(self.target, self.action, 'Failed', reason)
+            EVENT.error(self.context, None, self.action, 'Failed',
+                        reason)
             return self.RES_ERROR, reason
 
         if node.cluster_id:

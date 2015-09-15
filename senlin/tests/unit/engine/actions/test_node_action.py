@@ -223,7 +223,7 @@ class NodeActionTest(base.SenlinTestCase):
         mock_load.assert_called_once_with(action.context, 'FAKE_ID')
         mock_check.assert_called_once_with(cluster, 99, None, None, True)
 
-    def test__execute(self):
+    def test_execute(self):
         node = mock.Mock()
         action = node_action.NodeAction(self.ctx, 'ID', 'NODE_SING')
         action.do_sing = mock.Mock(return_value=(action.RES_OK, 'GOOD'))
@@ -235,7 +235,7 @@ class NodeActionTest(base.SenlinTestCase):
         action.do_sing.assert_called_once_with(node)
 
     @mock.patch.object(event_mod, 'error')
-    def test__execute_bad_action(self, mock_error):
+    def test_execute_bad_action(self, mock_error):
         node = mock.Mock()
         action = node_action.NodeAction(self.ctx, 'ID', 'NODE_DANCE')
 
@@ -244,7 +244,8 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_ERROR, res_code)
         reason = 'Unsupported action: NODE_DANCE'
         self.assertEqual(reason, res_msg)
-        mock_error.assert_called_once_with(node.id, action.action, 'Failed',
+        mock_error.assert_called_once_with(action.context, node,
+                                           action.action, 'Failed',
                                            reason)
 
     @mock.patch.object(node_mod.Node, 'load')
@@ -259,8 +260,8 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual(reason, res_msg)
         mock_load.assert_called_once_with(action.context, node_id='ID')
-        mock_error.assert_called_once_with('ID', action.action, 'Failed',
-                                           reason)
+        mock_error.assert_called_once_with(action.context, None, action.action,
+                                           'Failed', reason)
 
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(lock, 'cluster_lock_acquire')

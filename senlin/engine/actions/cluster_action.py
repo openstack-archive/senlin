@@ -24,7 +24,7 @@ from senlin.engine.actions import base
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import dispatcher
-from senlin.engine import event as event_mod
+from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock
@@ -628,7 +628,8 @@ class ClusterAction(base.Action):
         self.policy_check(cluster.id, 'BEFORE')
         if self.data['status'] != policy_mod.CHECK_OK:
             reason = _('Policy check failure: %s') % self.data['reason']
-            event_mod.error(cluster.id, self.action, 'Failed', reason)
+            EVENT.error(self.context, cluster, self.action, 'Failed',
+                        reason)
             return self.RES_ERROR, reason
 
         result = self.RES_OK
@@ -637,7 +638,7 @@ class ClusterAction(base.Action):
         method = getattr(self, method_name, None)
         if method is None:
             error = _('Unsupported action: %s.') % self.action
-            event_mod.error(cluster.id, self.action, 'Failed', error)
+            EVENT.error(self.context, cluster, self.action, 'Failed', error)
             return self.RES_ERROR, error
 
         result, reason = method(cluster)
@@ -647,7 +648,8 @@ class ClusterAction(base.Action):
             self.policy_check(cluster.id, 'AFTER')
             if self.data['status'] != policy_mod.CHECK_OK:
                 error = _('Policy check failure: %s') % self.data['reason']
-                event_mod.error(cluster.id, self.action, 'Failed', error)
+                EVENT.error(self.context, cluster, self.action, 'Failed',
+                            error)
                 return self.RES_ERROR, error
 
         return result, reason
@@ -665,7 +667,8 @@ class ClusterAction(base.Action):
             cluster = cluster_mod.Cluster.load(self.context, self.target)
         except exception.ClusterNotFound:
             reason = _('Cluster (%(id)s) is not found') % {'id': self.target}
-            event_mod.error(self.target, self.action, 'Failed', reason)
+            EVENT.error(self.context, None, self.action, 'Failed',
+                        reason)
             return self.RES_ERROR, reason
 
         # Try to lock cluster before do real operation
