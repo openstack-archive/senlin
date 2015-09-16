@@ -414,6 +414,8 @@ class WebhookTest(base.SenlinTestCase):
         mock_url.return_value = 'test-url', 'test-key'
         fake_cluster = mock.Mock()
         fake_cluster.user = self.ctx.user
+        fake_cluster.project = self.ctx.project
+        fake_cluster.domain = self.ctx.domain
         fake_cluster.id = 'CLUSTER_FULL_ID'
         mock_find.return_value = fake_cluster
 
@@ -445,6 +447,8 @@ class WebhookTest(base.SenlinTestCase):
         mock_url.return_value = 'test-url', 'test-key'
         fake_cluster = mock.Mock()
         fake_cluster.user = self.ctx.user
+        fake_cluster.project = self.ctx.project
+        fake_cluster.domain = self.ctx.domain
         fake_cluster.id = 'CLUSTER_FULL_ID'
         mock_find.return_value = fake_cluster
         mock_encrypt.return_value = 'secret text', 'test-key'

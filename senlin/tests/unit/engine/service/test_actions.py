@@ -29,8 +29,14 @@ class ActionTest(base.SenlinTestCase):
         self.eng = service.EngineService('host-a', 'topic-a')
         self.eng.init_tgm()
 
+        self.target = mock.Mock()
+        self.target.id = 'Node1'
+        self.target.user = 'USER1'
+        self.target.project = 'PROJ1'
+        self.target.domain = 'DOM1'
+
     def test_action_create_default(self):
-        result = self.eng.action_create(self.ctx, 'a1', 'Node1',
+        result = self.eng.action_create(self.ctx, 'a1', self.target,
                                         'OBJECT_ACTION')
         self.assertIsInstance(result, dict)
         self.assertIsNotNone(result['id'])
@@ -39,7 +45,8 @@ class ActionTest(base.SenlinTestCase):
         self.assertIsNone(result['inputs'])
 
     def test_action_get(self):
-        a = self.eng.action_create(self.ctx, 'a1', 'Node1', 'OBJECT_ACTION')
+        a = self.eng.action_create(self.ctx, 'a1', self.target,
+                                   'OBJECT_ACTION')
 
         for identity in [a['id'], a['id'][:6], 'a1']:
             result = self.eng.action_get(self.ctx, identity)
@@ -51,8 +58,10 @@ class ActionTest(base.SenlinTestCase):
         self.assertEqual(exception.ActionNotFound, ex.exc_info[0])
 
     def test_action_list(self):
-        a1 = self.eng.action_create(self.ctx, 'a1', 'Node1', 'OBJECT_ACTION')
-        a2 = self.eng.action_create(self.ctx, 'a2', 'Node1', 'OBJECT_ACTION')
+        a1 = self.eng.action_create(self.ctx, 'a1', self.target,
+                                    'OBJECT_ACTION')
+        a2 = self.eng.action_create(self.ctx, 'a2', self.target,
+                                    'OBJECT_ACTION')
         result = self.eng.action_list(self.ctx)
         self.assertIsInstance(result, list)
         names = [a['name'] for a in result]
@@ -63,8 +72,10 @@ class ActionTest(base.SenlinTestCase):
         self.assertIn(a2['id'], ids)
 
     def test_action_list_with_limit_marker(self):
-        a1 = self.eng.action_create(self.ctx, 'a1', 'Node1', 'OBJECT_ACTION')
-        a2 = self.eng.action_create(self.ctx, 'a2', 'Node1', 'OBJECT_ACTION')
+        a1 = self.eng.action_create(self.ctx, 'a1', self.target,
+                                    'OBJECT_ACTION')
+        a2 = self.eng.action_create(self.ctx, 'a2', self.target,
+                                    'OBJECT_ACTION')
 
         result = self.eng.action_list(self.ctx, limit=0)
         self.assertEqual(0, len(result))
@@ -81,16 +92,24 @@ class ActionTest(base.SenlinTestCase):
         result = self.eng.action_list(self.ctx, marker=a2['id'])
         self.assertEqual(0, len(result))
 
-        self.eng.action_create(self.ctx, 'a3', 'Node1', 'OBJECT_ACTION')
+        self.eng.action_create(self.ctx, 'a3', self.target, 'OBJECT_ACTION')
         result = self.eng.action_list(self.ctx, limit=1, marker=a1['id'])
         self.assertEqual(1, len(result))
         result = self.eng.action_list(self.ctx, limit=2, marker=a1['id'])
         self.assertEqual(2, len(result))
 
     def test_action_list_with_sort_keys(self):
-        a1 = self.eng.action_create(self.ctx, 'B', 'Node2', 'CUST_ACT')
-        a2 = self.eng.action_create(self.ctx, 'A', 'Node2', 'CUST_ACT')
-        a3 = self.eng.action_create(self.ctx, 'C', 'Node1', 'CUST_ACT')
+        t1 = mock.Mock()
+        t2 = mock.Mock()
+        t1.id = 'Node1'
+        t2.id = 'Node2'
+        t1.user = t2.user = 'USER1'
+        t1.project = t2.project = 'PROJ1'
+        t1.domain = t2.domain = 'DOM1'
+
+        a1 = self.eng.action_create(self.ctx, 'B', t2, 'CUST_ACT')
+        a2 = self.eng.action_create(self.ctx, 'A', t2, 'CUST_ACT')
+        a3 = self.eng.action_create(self.ctx, 'C', t1, 'CUST_ACT')
 
         # default by created_time
         result = self.eng.action_list(self.ctx)
@@ -117,9 +136,17 @@ class ActionTest(base.SenlinTestCase):
         self.assertIsNotNone(result)
 
     def test_action_list_with_sort_dir(self):
-        a1 = self.eng.action_create(self.ctx, 'B', 'Node2', 'CUST_ACT')
-        a2 = self.eng.action_create(self.ctx, 'A', 'Node2', 'CUST_ACT')
-        a3 = self.eng.action_create(self.ctx, 'C', 'Node1', 'CUST_ACT')
+        t1 = mock.Mock()
+        t2 = mock.Mock()
+        t1.id = 'Node1'
+        t2.id = 'Node2'
+        t1.user = t2.user = 'USER1'
+        t1.project = t2.project = 'PROJ1'
+        t1.domain = t2.domain = 'DOM1'
+
+        a1 = self.eng.action_create(self.ctx, 'B', t2, 'CUST_ACT')
+        a2 = self.eng.action_create(self.ctx, 'A', t2, 'CUST_ACT')
+        a3 = self.eng.action_create(self.ctx, 'C', t1, 'CUST_ACT')
 
         # default by created_time, ascending
         result = self.eng.action_list(self.ctx)
@@ -146,7 +173,7 @@ class ActionTest(base.SenlinTestCase):
                          "desc-nullslast", six.text_type(ex))
 
     def test_action_list_show_deleted(self):
-        a1 = self.eng.action_create(self.ctx, 'a1', 'Node1', 'CUST_ACT')
+        a1 = self.eng.action_create(self.ctx, 'a1', self.target, 'CUST_ACT')
 
         result = self.eng.action_list(self.ctx)
 
@@ -163,9 +190,17 @@ class ActionTest(base.SenlinTestCase):
         self.assertEqual(a1['id'], result[0]['id'])
 
     def test_action_list_with_filters(self):
-        self.eng.action_create(self.ctx, 'B', 'Node2', 'CUST_ACT')
-        self.eng.action_create(self.ctx, 'A', 'Node2', 'CUST_ACT')
-        self.eng.action_create(self.ctx, 'C', 'Node1', 'CUST_ACT')
+        t1 = mock.Mock()
+        t2 = mock.Mock()
+        t1.id = 'Node1'
+        t2.id = 'Node2'
+        t1.user = t2.user = 'USER1'
+        t1.project = t2.project = 'PROJ1'
+        t1.domain = t2.domain = 'DOM1'
+
+        self.eng.action_create(self.ctx, 'B', t2, 'CUST_ACT')
+        self.eng.action_create(self.ctx, 'A', t2, 'CUST_ACT')
+        self.eng.action_create(self.ctx, 'C', t1, 'CUST_ACT')
 
         result = self.eng.action_list(self.ctx, filters={'name': 'B'})
         self.assertEqual(1, len(result))
@@ -194,7 +229,7 @@ class ActionTest(base.SenlinTestCase):
         self.assertEqual(0, len(result))
 
     def test_action_find(self):
-        a = self.eng.action_create(self.ctx, 'A', 'Node2', 'CUST_ACT')
+        a = self.eng.action_create(self.ctx, 'A', self.target, 'CUST_ACT')
         aid = a['id']
 
         result = self.eng.action_find(self.ctx, aid)
@@ -214,7 +249,7 @@ class ActionTest(base.SenlinTestCase):
         self.assertEqual(exception.ActionNotFound, ex.exc_info[0])
 
     def test_action_delete(self):
-        a1 = self.eng.action_create(self.ctx, 'A', 'Node1', 'CUST_ACT')
+        a1 = self.eng.action_create(self.ctx, 'A', self.target, 'CUST_ACT')
         aid = a1['id']
         result = self.eng.action_delete(self.ctx, aid)
         self.assertIsNone(result)
@@ -226,7 +261,7 @@ class ActionTest(base.SenlinTestCase):
 
     @mock.patch.object(action_base.Action, 'delete')
     def test_action_delete_resource_busy(self, mock_delete):
-        a1 = self.eng.action_create(self.ctx, 'A', 'Node2', 'CUST_ACT')
+        a1 = self.eng.action_create(self.ctx, 'A', self.target, 'CUST_ACT')
         aid = a1['id']
         ex = exception.ResourceBusyError(resource_type='action',
                                          resource_id=aid)

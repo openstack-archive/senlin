@@ -504,9 +504,14 @@ class EngineService(service.Service):
         cluster.store(context)
 
         # Build an Action for cluster creation
-        action = action_mod.Action(context, cluster.id, consts.CLUSTER_CREATE,
-                                   name='cluster_create_%s' % cluster.id[:8],
-                                   cause=action_mod.CAUSE_RPC)
+        kwargs = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': 'cluster_create_%s' % cluster.id[:8],
+            'cause': action_mod.CAUSE_RPC
+        }
+        action = action_mod.Action(cluster.id, consts.CLUSTER_CREATE, **kwargs)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
@@ -575,10 +580,15 @@ class EngineService(service.Service):
         LOG.info(fmt % {'cluster': identity, 'profile': profile_id})
 
         inputs = {'new_profile_id': profile_id}
-        action = action_mod.Action(context, cluster.id, consts.CLUSTER_UPDATE,
-                                   name='cluster_update_%s' % cluster.id[:8],
-                                   cause=action_mod.CAUSE_RPC,
-                                   inputs=inputs)
+        kwargs = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': 'cluster_update_%s' % cluster.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': inputs
+        }
+        action = action_mod.Action(cluster.id, consts.CLUSTER_UPDATE, **kwargs)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
@@ -643,11 +653,16 @@ class EngineService(service.Service):
             raise exception.SenlinBadRequest(msg=error)
 
         action_name = 'cluster_add_nodes_%s' % db_cluster.id[:8]
-        action = action_mod.Action(context, db_cluster.id,
-                                   consts.CLUSTER_ADD_NODES,
-                                   name=action_name,
-                                   cause=action_mod.CAUSE_RPC,
-                                   inputs={'nodes': found})
+        params = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': {'nodes': found}
+        }
+        action = action_mod.Action(db_cluster.id, consts.CLUSTER_ADD_NODES,
+                                   **params)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
@@ -683,11 +698,16 @@ class EngineService(service.Service):
             raise exception.SenlinBadRequest(msg=error)
 
         action_name = 'cluster_del_nodes_%s' % db_cluster.id[:8]
-        action = action_mod.Action(context, db_cluster.id,
-                                   consts.CLUSTER_DEL_NODES,
-                                   name=action_name,
-                                   cause=action_mod.CAUSE_RPC,
-                                   inputs={'nodes': found})
+        params = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': {'nodes': found}
+        }
+        action = action_mod.Action(db_cluster.id, consts.CLUSTER_DEL_NODES,
+                                   **params)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
@@ -780,11 +800,16 @@ class EngineService(service.Service):
         }
 
         action_name = 'cluster_resize_%s' % db_cluster.id[:8]
-        action = action_mod.Action(context, db_cluster.id,
-                                   consts.CLUSTER_RESIZE,
-                                   name=action_name,
-                                   cause=action_mod.CAUSE_RPC,
-                                   inputs=inputs)
+        params = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': inputs
+        }
+        action = action_mod.Action(db_cluster.id, consts.CLUSTER_RESIZE,
+                                   **params)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
@@ -806,10 +831,16 @@ class EngineService(service.Service):
             inputs = {}
 
         action_name = 'cluster_scale_out_%s' % db_cluster.id[:8]
-        action = action_mod.Action(context, db_cluster.id,
-                                   consts.CLUSTER_SCALE_OUT,
-                                   name=action_name,
-                                   inputs=inputs, cause=action_mod.CAUSE_RPC)
+        params = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': inputs
+        }
+        action = action_mod.Action(db_cluster.id, consts.CLUSTER_SCALE_OUT,
+                                   **params)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
@@ -831,11 +862,16 @@ class EngineService(service.Service):
             inputs = {}
 
         action_name = 'cluster_scale_in_%s' % db_cluster.id[:8]
-        action = action_mod.Action(context, db_cluster.id,
-                                   consts.CLUSTER_SCALE_IN,
-                                   name=action_name,
-                                   inputs=inputs,
-                                   cause=action_mod.CAUSE_RPC)
+        params = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': inputs
+        }
+        action = action_mod.Action(db_cluster.id, consts.CLUSTER_SCALE_IN,
+                                   **params)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
@@ -854,10 +890,16 @@ class EngineService(service.Service):
 
         LOG.info(_LI('Deleting cluster %s'), identity)
 
-        name = 'cluster_delete_%s' % db_cluster.id[:8]
-        action = action_mod.Action(context, db_cluster.id,
-                                   consts.CLUSTER_DELETE,
-                                   name=name, cause=action_mod.CAUSE_RPC)
+        action_name = 'cluster_delete_%s' % db_cluster.id[:8]
+        params = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC
+        }
+        action = action_mod.Action(db_cluster.id, consts.CLUSTER_DELETE,
+                                   **params)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
@@ -935,9 +977,14 @@ class EngineService(service.Service):
                              **kwargs)
         node.store(context)
 
-        action = action_mod.Action(context, node.id, consts.NODE_CREATE,
-                                   name='node_create_%s' % node.id[:8],
-                                   cause=action_mod.CAUSE_RPC)
+        params = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': 'node_create_%s' % node.id[:8],
+            'cause': action_mod.CAUSE_RPC
+        }
+        action = action_mod.Action(node.id, consts.NODE_CREATE, **params)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
@@ -988,9 +1035,15 @@ class EngineService(service.Service):
         if metadata is not None and metadata != node.metadata:
             inputs['metadata'] = metadata
 
-        action = action_mod.Action(context, node.id, consts.NODE_UPDATE,
-                                   name='node_update_%s' % node.id[:8],
-                                   inputs=inputs, cause=action_mod.CAUSE_RPC)
+        params = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': 'node_update_%s' % node.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': inputs
+        }
+        action = action_mod.Action(node.id, consts.NODE_UPDATE, **params)
         action.status = action.READY
         action.store(context)
 
@@ -1003,9 +1056,14 @@ class EngineService(service.Service):
         db_node = self.node_find(context, identity)
         LOG.info(_LI('Deleting node %s'), identity)
 
-        action = action_mod.Action(context, db_node.id, consts.NODE_DELETE,
-                                   name='node_delete_%s' % db_node.id[:8],
-                                   cause=action_mod.CAUSE_RPC)
+        params = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': 'node_delete_%s' % db_node.id[:8],
+            'cause': action_mod.CAUSE_RPC
+        }
+        action = action_mod.Action(db_node.id, consts.NODE_DELETE, **params)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
@@ -1028,10 +1086,15 @@ class EngineService(service.Service):
         LOG.info(_LI('Joining node %(node)s to cluster %(cluster)s'),
                  {'node': identity, 'cluster': cluster_id})
 
-        action = action_mod.Action(context, db_node.id, consts.NODE_JOIN,
-                                   name='node_join_%s' % db_node.id[:8],
-                                   cause=action_mod.CAUSE_RPC,
-                                   inputs={'cluster_id': db_cluster.id})
+        params = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': 'node_join_%s' % db_node.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': {'cluster_id': db_cluster.id}
+        }
+        action = action_mod.Action(db_node.id, consts.NODE_JOIN, **params)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
@@ -1047,9 +1110,14 @@ class EngineService(service.Service):
 
         LOG.info(_LI('Node %(node)s leaving cluster'), {'node': identity})
 
-        action = action_mod.Action(context, db_node.id, consts.NODE_LEAVE,
-                                   name='node_leave_%s' % db_node.id[:8],
-                                   cause=action_mod.CAUSE_RPC)
+        params = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': 'node_leave_%s' % db_node.id[:8],
+            'cause': action_mod.CAUSE_RPC
+        }
+        action = action_mod.Action(db_node.id, consts.NODE_LEAVE, **params)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
@@ -1110,10 +1178,17 @@ class EngineService(service.Service):
         }
 
         action_name = 'attach_policy_%s' % db_cluster.id[:8]
-        action = action_mod.Action(context, db_cluster.id,
-                                   consts.CLUSTER_ATTACH_POLICY,
-                                   name=action_name,
-                                   inputs=inputs, cause=action_mod.CAUSE_RPC)
+
+        params = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': inputs
+        }
+        action = action_mod.Action(db_cluster.id, consts.CLUSTER_ATTACH_POLICY,
+                                   **params)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
@@ -1139,11 +1214,16 @@ class EngineService(service.Service):
                  {'policy': policy, 'cluster': identity})
 
         action_name = 'detach_policy_%s' % db_cluster.id[:8]
-        action = action_mod.Action(context, db_cluster.id,
-                                   consts.CLUSTER_DETACH_POLICY,
-                                   name=action_name,
-                                   inputs={'policy_id': db_policy.id},
-                                   cause=action_mod.CAUSE_RPC)
+        params = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': {'policy_id': db_policy.id}
+        }
+        action = action_mod.Action(db_cluster.id, consts.CLUSTER_DETACH_POLICY,
+                                   **params)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
@@ -1180,10 +1260,16 @@ class EngineService(service.Service):
                  {'policy': policy, 'cluster': identity})
 
         action_name = 'update_policy_%s' % db_cluster.id[:8]
-        action = action_mod.Action(context, db_cluster.id,
-                                   consts.CLUSTER_UPDATE_POLICY,
-                                   name=action_name,
-                                   inputs=inputs, cause=action_mod.CAUSE_RPC)
+        params = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': inputs
+        }
+        action = action_mod.Action(db_cluster.id, consts.CLUSTER_UPDATE_POLICY,
+                                   **params)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
@@ -1326,9 +1412,15 @@ class EngineService(service.Service):
             params = webhook['params']
 
         action_name = 'webhook_action_%s' % webhook['id'][:8]
-        action = action_mod.Action(context, db_obj.id, webhook['action'],
-                                   name=action_name,
-                                   inputs=params, cause=action_mod.CAUSE_RPC)
+        kwargs = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': params
+        }
+        action = action_mod.Action(db_obj.id, webhook['action'], **kwargs)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
@@ -1471,9 +1563,15 @@ class EngineService(service.Service):
     def action_create(self, context, name, target, action, inputs=None):
         LOG.info(_LI('Creating action %s'), name)
 
-        # Create a node instance
-        act = action_mod.Action(context, target, action,
-                                name=name, inputs=inputs)
+        # Create an action instance
+        params = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': name,
+            'inputs': inputs
+        }
+        act = action_mod.Action(target.id, action, **params)
         act.status = act.READY
         act.store(context)
 

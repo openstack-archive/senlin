@@ -34,7 +34,7 @@ class NodeActionTest(base.SenlinTestCase):
     def test_do_create(self):
         node = mock.Mock()
         node.do_create = mock.Mock(return_value=None)
-        action = node_action.NodeAction(self.ctx, 'ID', 'ACTION')
+        action = node_action.NodeAction('ID', 'ACTION', self.ctx)
 
         # Test node creation failure path
         res_code, res_msg = action.do_create(node)
@@ -53,7 +53,7 @@ class NodeActionTest(base.SenlinTestCase):
     def test_do_delete(self):
         node = mock.Mock()
         node.do_delete = mock.Mock(return_value=None)
-        action = node_action.NodeAction(self.ctx, 'ID', 'ACTION')
+        action = node_action.NodeAction('ID', 'ACTION', self.ctx)
 
         # Test failed node deletion path
         res_code, res_msg = action.do_delete(node)
@@ -73,7 +73,8 @@ class NodeActionTest(base.SenlinTestCase):
     def test_do_update(self):
         node = mock.Mock()
         inputs = {"new_profile_id": "FAKE_PROFILE_ID"}
-        action = node_action.NodeAction(self.ctx, 'ID', 'ACT', inputs=inputs)
+        action = node_action.NodeAction('ID', 'ACT', self.ctx,
+                                        inputs=inputs)
 
         # Test failed node update path
         node.do_update = mock.Mock(return_value=None)
@@ -95,7 +96,7 @@ class NodeActionTest(base.SenlinTestCase):
     def test_do_join_success(self, mock_check, mock_load):
         node = mock.Mock()
         inputs = {"cluster_id": "FAKE_ID"}
-        action = node_action.NodeAction(self.ctx, 'ID', 'NODE_JOIN',
+        action = node_action.NodeAction('ID', 'NODE_JOIN', self.ctx,
                                         inputs=inputs)
         cluster = mock.Mock()
         cluster.desired_capacity = 100
@@ -119,7 +120,7 @@ class NodeActionTest(base.SenlinTestCase):
     def test_do_join_fail_size_check(self, mock_check, mock_load):
         node = mock.Mock()
         inputs = {"cluster_id": "FAKE_ID"}
-        action = node_action.NodeAction(self.ctx, 'ID', 'NODE_JOIN',
+        action = node_action.NodeAction('ID', 'NODE_JOIN', self.ctx,
                                         inputs=inputs)
         cluster = mock.Mock()
         cluster.desired_capacity = 100
@@ -141,7 +142,7 @@ class NodeActionTest(base.SenlinTestCase):
     def test_do_join_failed_do_join(self, mock_check, mock_load):
         node = mock.Mock()
         inputs = {"cluster_id": "FAKE_ID"}
-        action = node_action.NodeAction(self.ctx, 'ID', 'NODE_JOIN',
+        action = node_action.NodeAction('ID', 'NODE_JOIN', self.ctx,
                                         inputs=inputs)
         cluster = mock.Mock()
         cluster.desired_capacity = 100
@@ -163,7 +164,7 @@ class NodeActionTest(base.SenlinTestCase):
     def test_do_leave_success(self, mock_check, mock_load):
         node = mock.Mock()
         node.cluster_id = 'FAKE_ID'
-        action = node_action.NodeAction(self.ctx, 'ID', 'NODE_LEAVE')
+        action = node_action.NodeAction('ID', 'NODE_LEAVE', self.ctx)
         cluster = mock.Mock()
         cluster.desired_capacity = 100
         mock_load.return_value = cluster
@@ -186,7 +187,7 @@ class NodeActionTest(base.SenlinTestCase):
     def test_do_leave_failed_check(self, mock_check, mock_load):
         node = mock.Mock()
         node.cluster_id = 'FAKE_ID'
-        action = node_action.NodeAction(self.ctx, 'ID', 'NODE_LEAVE')
+        action = node_action.NodeAction('ID', 'NODE_LEAVE', self.ctx)
         cluster = mock.Mock()
         cluster.desired_capacity = 100
         mock_load.return_value = cluster
@@ -207,7 +208,7 @@ class NodeActionTest(base.SenlinTestCase):
     def test_do_leave_failed_do_leave(self, mock_check, mock_load):
         node = mock.Mock()
         node.cluster_id = 'FAKE_ID'
-        action = node_action.NodeAction(self.ctx, 'ID', 'NODE_LEAVE')
+        action = node_action.NodeAction('ID', 'NODE_LEAVE', self.ctx)
         cluster = mock.Mock()
         cluster.desired_capacity = 100
         mock_load.return_value = cluster
@@ -225,7 +226,7 @@ class NodeActionTest(base.SenlinTestCase):
 
     def test_execute(self):
         node = mock.Mock()
-        action = node_action.NodeAction(self.ctx, 'ID', 'NODE_SING')
+        action = node_action.NodeAction('ID', 'NODE_SING', self.ctx)
         action.do_sing = mock.Mock(return_value=(action.RES_OK, 'GOOD'))
 
         res_code, res_msg = action._execute(node)
@@ -237,7 +238,7 @@ class NodeActionTest(base.SenlinTestCase):
     @mock.patch.object(event_mod, 'error')
     def test_execute_bad_action(self, mock_error):
         node = mock.Mock()
-        action = node_action.NodeAction(self.ctx, 'ID', 'NODE_DANCE')
+        action = node_action.NodeAction('ID', 'NODE_DANCE', self.ctx)
 
         res_code, res_msg = action._execute(node)
 
@@ -251,7 +252,7 @@ class NodeActionTest(base.SenlinTestCase):
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(event_mod, 'error')
     def test_execute_node_not_found(self, mock_error, mock_load):
-        action = node_action.NodeAction(self.ctx, 'ID', 'NODE_FLY')
+        action = node_action.NodeAction('ID', 'NODE_FLY', self.ctx)
         mock_load.side_effect = exception.NodeNotFound(node='ID')
 
         res_code, res_msg = action.execute()
@@ -268,7 +269,7 @@ class NodeActionTest(base.SenlinTestCase):
     def test_execute_failed_lock_cluster(self, mock_acquire, mock_load):
         node = mock.Mock()
         node.cluster_id = 'FAKE_CLUSTER'
-        action = node_action.NodeAction(self.ctx, 'NODE_ID', 'NODE_FLY',
+        action = node_action.NodeAction('NODE_ID', 'NODE_FLY', self.ctx,
                                         cause='RPC Request')
         action.id = 'ACTION_ID'
         mock_load.return_value = node
@@ -291,7 +292,7 @@ class NodeActionTest(base.SenlinTestCase):
                                          mock_acquire, mock_load):
         node = mock.Mock()
         node.cluster_id = 'FAKE_CLUSTER'
-        action = node_action.NodeAction(self.ctx, 'NODE_ID', 'NODE_FLY',
+        action = node_action.NodeAction('NODE_ID', 'NODE_FLY', self.ctx,
                                         cause='RPC Request')
         action.id = 'ACTION_ID'
         action.data = {
@@ -326,7 +327,7 @@ class NodeActionTest(base.SenlinTestCase):
         node = mock.Mock()
         node.cluster_id = 'FAKE_CLUSTER'
         node.id = 'NODE_ID'
-        action = node_action.NodeAction(self.ctx, 'NODE_ID', 'NODE_FLY',
+        action = node_action.NodeAction('NODE_ID', 'NODE_FLY', self.ctx,
                                         cause='RPC Request')
         action.id = 'ACTION_ID'
         action.data = {
@@ -364,7 +365,7 @@ class NodeActionTest(base.SenlinTestCase):
         node = mock.Mock()
         node.cluster_id = 'FAKE_CLUSTER'
         node.id = 'NODE_ID'
-        action = node_action.NodeAction(self.ctx, 'NODE_ID', 'NODE_FLY',
+        action = node_action.NodeAction('NODE_ID', 'NODE_FLY', self.ctx,
                                         cause='RPC Request')
         action.id = 'ACTION_ID'
         # check result
@@ -409,7 +410,7 @@ class NodeActionTest(base.SenlinTestCase):
         node = mock.Mock()
         node.cluster_id = 'FAKE_CLUSTER'
         node.id = 'NODE_ID'
-        action = node_action.NodeAction(self.ctx, 'NODE_ID', 'NODE_FLY',
+        action = node_action.NodeAction('NODE_ID', 'NODE_FLY', self.ctx,
                                         cause='RPC Request')
         action.id = 'ACTION_ID'
         # check result
@@ -463,7 +464,7 @@ class NodeActionTest(base.SenlinTestCase):
         node = mock.Mock()
         node.cluster_id = 'FAKE_CLUSTER'
         node.id = 'NODE_ID'
-        action = node_action.NodeAction(self.ctx, 'NODE_ID', 'NODE_FLY',
+        action = node_action.NodeAction('NODE_ID', 'NODE_FLY', self.ctx,
                                         cause='RPC Request')
         action.id = 'ACTION_ID'
         mock_check = self.patchobject(action, 'policy_check',
