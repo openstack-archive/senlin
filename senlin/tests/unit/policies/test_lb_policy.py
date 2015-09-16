@@ -252,7 +252,13 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         self.assertTrue(res)
         self.assertEqual('LB resources deletion succeeded.', data)
 
-    def test_detach_succeeded(self, m_extract, m_load, m_conn):
+    @mock.patch.object(node_mod.Node, 'load_all')
+    def test_detach_succeeded(self, m_load_all, m_extract, m_load, m_conn):
+        node1 = mock.Mock()
+        node2 = mock.Mock()
+        node1.data = {'lb_member': 'MEMBER1'}
+        node2.data = {'lb_member': 'MEMBER2'}
+        m_load_all.return_value = [node1, node2]
         cluster = mock.Mock()
         cluster.id = 'CLUSTER_ID'
         cp = mock.Mock()
@@ -280,6 +286,10 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         m_load.assert_called_once_with(mock.ANY, cluster.id, policy.id)
         m_extract.assert_called_once_with(cp_data)
         self.lb_driver.lb_delete.assert_called_once_with(**policy_data)
+        m_load_all.assert_called_once_with(mock.ANY, cluster_id=cluster.id)
+        for n in [node1, node2]:
+            self.assertEqual({}, n.data)
+            n.store.assert_called_once_with(mock.ANY)
 
     def test_detach_failed_lb_delete(self, m_extract, m_load, m_conn):
         cluster = mock.Mock()
