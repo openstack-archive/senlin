@@ -258,6 +258,13 @@ class LoadBalancingPolicy(base.Policy):
         if res is False:
             return False, reason
 
+        nodes = node_mod.Node.load_all(oslo_context.get_current(),
+                                       cluster_id=cluster.id)
+        for node in nodes:
+            if 'lb_member' in node.data:
+                node.data.pop('lb_member')
+                node.store(oslo_context.get_current())
+
         return True, reason
 
     def post_op(self, cluster_id, action):
