@@ -8,18 +8,15 @@ DRIVER
 
 POLICY
 ------
-  - Enable placement policy and deletion policy to handle CLUSTER_RESIZE
-    action.
   - Investigate the impact of node-create and node-delete on certain policies.
   - Implement a placement policy which supports cross-az/region node creation
-    with some simple algorithms, e.g. ROUND_ROBIN, FIXED_PRIORITY.
+    with some simple algorithms, e.g. ROUND_ROBIN, FIXED_PRIORITY. [Xinhui, Qiming]
+  - Implement a deletion policy that supports cross-az/region node deleting.
 
 TEST CASES
 ----------
 
   - Add test case the profile context can be saved and loaded correctly.
-
-  - Functional tests set up [Yanyan]
 
 MIDDLE PRIORITY
 ===============
@@ -53,9 +50,6 @@ ENGINE
     requirements for cluster/node names to be unique within a project. This
     should be supported, maybe with the help from a name generator?
 
-  - Revise spec parser so that 'type' and 'version' are parts of the spec file
-    This could be a client-only fix, or a client/server fix.
-
   - Design and implement dynamical plugin loading mechanism that allows 
     loading plugins from any paths
 
@@ -75,7 +69,7 @@ ENGINE
     means that the scheduler will pick a suitable READY action for execution.
 
   - Add event logs wherever needed. Before that, we need a design on the
-    criteria for events to be emitted.
+    criteria for events to be emitted. [Partially done]
 
 OSLO
 ----
@@ -89,12 +83,6 @@ POLICY
 
 DRIVER
 ------
-
-  - Add another abstract layer which hides interface differentiation between
-    multiple drivers of the same type and provides unified interface for
-    profile, e.g. alarm interfaces for scaling policy which can be mapped to
-    both Ceilometer or Monasca driver; loadblancer interfaces for lb policy
-    which can be mapped to both Neutron LBaaS or AWS LBaaS driver.
 
 
 LOW PRIORITY
@@ -110,13 +98,10 @@ API
 DRIVER
 ------
   - add Heat resource driver
-  - add exception translation in driver
 
 TEST
 ----
   - Add test case to engine/parser
-  - Add test case to engine/registry
-  - Add test case to engine/environment
 
 DOC
 -----
