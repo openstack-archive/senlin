@@ -1315,6 +1315,18 @@ class EngineService(service.Service):
 
         return [w.to_dict() for w in webhooks]
 
+    def _create_credential(self, context, obj):
+        cdata = dict()
+        if context.is_admin:
+            # use object owner if request is from admin
+            cred = db_api.cred_get(context, obj.user, obj.project)
+            trust_id = cred['cred']['openstack']['trust']
+            cdata['trust_id'] = [trust_id]
+        else:
+            # otherwise, use context user
+            cdata['trust_id'] = [context.trusts]
+        return cdata
+
     @request_context
     def webhook_create(self, context, obj_id, obj_type, action,
                        credential=None, params=None, name=None):
@@ -1351,18 +1363,8 @@ class EngineService(service.Service):
             raise exception.SenlinBadRequest(msg=msg)
 
         if not credential:
-            cdata = dict()
-            if context.is_admin:
-                # use object owner if request is from admin
-                cred = db_api.cred_get(context, obj.user, obj.project)
-                trust_id = cred['cred']['openstack']['trust']
-                cdata['trusts'] = [trust_id]
-            else:
-                # otherwise, use context user
-                cdata['trusts'] = [context.trusts]
-            credential = jsonutils.dumps(cdata)
-        else:
-            credential = jsonutils.dumps(credential)
+            credential = self._create_credential(context, obj)
+        credential = jsonutils.dumps(credential)
 
         if not params:
             params = {}
