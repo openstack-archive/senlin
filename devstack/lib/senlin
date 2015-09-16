@@ -5,7 +5,7 @@
 
 # To enable, add the following to localrc
 #
-#   ENABLED_SERVICES+=,senlin,sl-api,,sl-eng
+#   ENABLED_SERVICES+=,senlin,sl-api,sl-eng
 
 # Dependencies:
 #
