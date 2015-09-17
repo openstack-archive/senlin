@@ -1193,16 +1193,17 @@ def action_get_all(context, filters=None, limit=None, marker=None,
                            default_sort_keys=['created_time']).all()
 
 
-def _action_dependency_add(context, action_id, field, adds):
+def _action_dependency_add(query, action_id, field, adds):
     if not isinstance(adds, list):
         add_list = [adds]
     else:
         add_list = adds
 
-    action = model_query(context, models.Action).get(action_id)
+    action = query.get(action_id)
     if action is None:
         raise exception.ActionNotFound(action=action_id)
 
+    query.session.refresh(action)
     if action[field] is None:
         d = add_list
     else:
@@ -1227,6 +1228,7 @@ def _action_dependency_del(query, action_id, field, dels):
         LOG.warning(msg)
         return
 
+    query.session.refresh(action)
     if action[field] is not None:
         action[field] = list(set(action[field]) - set(del_list))
 
@@ -1247,9 +1249,9 @@ def action_add_dependency(context, depended, dependent):
     if isinstance(depended, list):   # e.g. D depends on A,B,C
         session.begin()
         for d in depended:
-            _action_dependency_add(context, d, "depended_by", dependent)
+            _action_dependency_add(query, d, "depended_by", dependent)
 
-        _action_dependency_add(context, dependent, "depends_on", depended)
+        _action_dependency_add(query, dependent, "depends_on", depended)
         session.commit()
         return
 
@@ -1261,10 +1263,10 @@ def action_add_dependency(context, depended, dependent):
         dependents = dependent
 
     session.begin()
-    _action_dependency_add(context, depended, "depended_by", dependent)
+    _action_dependency_add(query, depended, "depended_by", dependent)
 
     for d in dependents:
-        _action_dependency_add(context, d, "depends_on", depended)
+        _action_dependency_add(query, d, "depends_on", depended)
     session.commit()
 
 
