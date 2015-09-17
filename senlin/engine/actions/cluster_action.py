@@ -99,7 +99,7 @@ class ClusterAction(base.Action):
                 'index': index + m,
                 'metadata': {}
             }
-            name = 'node-%s-%003d' % (cluster.id[:8], index)
+            name = 'node-%s-%003d' % (cluster.id[:8], index + m)
             node = node_mod.Node(name, cluster.profile_id, cluster.id,
                                  context=self.context, **kwargs)
 

@@ -238,6 +238,14 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual([node1.id, node2.id], action.data['nodes'])
         self.assertEqual({'region': 'regionOne'}, node1.data['placement'])
         self.assertEqual({'region': 'regionTwo'}, node2.data['placement'])
+        mock_node_calls = []
+        for i in [1, 2]:
+            mock_node_calls.append(mock.call('node-01234567-00%s' % i,
+                                             mock.ANY, '01234567-123434',
+                                             user=mock.ANY, project=mock.ANY,
+                                             domain=mock.ANY, index=i,
+                                             context=mock.ANY, metadata={}))
+        mock_node.assert_has_calls(mock_node_calls)
 
     @mock.patch.object(db_api, 'cluster_get')
     @mock.patch.object(node_mod, 'Node')
