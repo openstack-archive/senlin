@@ -81,9 +81,6 @@ class Action(object):
         elif target_type == 'NODE':
             from senlin.engine.actions import node_action
             ActionClass = node_action.NodeAction
-        elif target_type == 'POLICY':
-            from senlin.engine.actions import policy_action
-            ActionClass = policy_action.PolicyAction
         else:
             from senlin.engine.actions import custom_action
             ActionClass = custom_action.CustomAction
