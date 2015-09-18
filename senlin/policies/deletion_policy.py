@@ -155,8 +155,8 @@ class DeletionPolicy(base.Policy):
     def pre_op(self, cluster_id, action):
         '''Choose victims that can be deleted.'''
 
+        count = action.inputs.get('count', 1)
         pd = action.data.get('deletion', {})
-        count = pd.get('count', 1)
         candidates = pd.get('candidates', [])
 
         # For certain operations ( e.g. DEL_NODES), the candidates might

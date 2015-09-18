@@ -157,6 +157,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
     def test_pre_op(self):
         action = mock.Mock()
         action.context = self.context
+        action.inputs = {}
         policy = dp.DeletionPolicy('test-policy', self.spec)
 
         # action data doesn't have 'deletion' field
@@ -188,14 +189,14 @@ class TestDeletionPolicy(base.SenlinTestCase):
         }
         self.assertEqual(pd, action.data)
 
-        # 'count' is provided in deletion field of action data
-        action.data = {'deletion': {'count': 2}}
+        # 'count' is provided in inputs field of action
+        action.inputs = {'count': 2}
+        action.data = {}
         policy.pre_op(self.cluster['id'], action)
         pd = {
             'status': 'OK',
             'reason': 'Candidates generated',
             'deletion': {
-                'count': 2,
                 'candidates': [self.nodes_p1[0], self.nodes_p1[1]],
                 'destroy_after_deletion': True,
                 'grace_period': 60,
