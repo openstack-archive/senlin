@@ -18,6 +18,7 @@ from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common.i18n import _LW
 from senlin.common import schema
+from senlin.db import api as db_api
 from senlin.drivers import base as driver_base
 from senlin.engine import cluster_policy
 from senlin.engine import node as node_mod
@@ -44,7 +45,7 @@ class LoadBalancingPolicy(base.Policy):
     ]
 
     PROFILE_TYPE = [
-        'os.nova.server',
+        'os.nova.server-1.0',
     ]
 
     KEYS = (
@@ -282,7 +283,8 @@ class LoadBalancingPolicy(base.Policy):
         if len(nodes) == 0:
             return
 
-        params = self._build_conn_params(cluster_id)
+        db_cluster = db_api.cluster_get(action.context, cluster_id)
+        params = self._build_conn_params(db_cluster)
         lb_driver = driver_base.SenlinDriver().loadbalancing(params)
         cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
                                                self.id)
