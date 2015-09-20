@@ -38,10 +38,8 @@ class HeatClient(base.DriverBase):
         return self.conn.orchestration.stacks()
 
     @sdk.translate_exception
-    def stack_update(self, **params):
-        # NOTE: This still doesn't work because sdk is not supporting
-        # stack update yet
-        return self.conn.orchestration.update_stack(**params)
+    def stack_update(self, stack_id, **params):
+        return self.conn.orchestration.update_stack(stack_id, **params)
 
     @sdk.translate_exception
     def stack_delete(self, stack_id, ignore_missing=True):

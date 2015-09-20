@@ -178,7 +178,6 @@ class StackProfile(base.Profile):
         # TODO(anyone): Check if template differs
         # TODO(anyone): Check if params differs
         fields = {
-            'stack_id': self.stack_id,
             'parameters': new_profile.properties[new_profile.PARAMETERS],
             'template': new_profile.properties[new_profile.TEMPLATE],
             'timeout_mins': new_profile.properties[new_profile.TIMEOUT],
@@ -188,7 +187,7 @@ class StackProfile(base.Profile):
             'environment': new_profile.properties[new_profile.ENVIRONMENT],
         }
 
-        self.heat(obj).stack_update(**fields)
+        self.heat(obj).stack_update(self.stack_id, **fields)
 
         # Wait for action to complete/fail
         while not self._check_action_complete(obj, 'UPDATE'):

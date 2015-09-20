@@ -59,8 +59,9 @@ class TestHeatV1(base.SenlinTestCase):
         fake_params = {
             "name": "new_name",
         }
-        self.hc.stack_update(**fake_params)
-        self.orch.update_stack.assert_called_once_with(**fake_params)
+        self.hc.stack_update('stack_id', **fake_params)
+        self.orch.update_stack.assert_called_once_with('stack_id',
+                                                       **fake_params)
 
     def test_stack_delete(self):
         self.hc.stack_delete('stack_id', ignore_missing=True)

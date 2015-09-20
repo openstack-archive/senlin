@@ -1110,13 +1110,11 @@ class EngineService(service.Service):
         action = action_mod.Action(node.id, consts.NODE_UPDATE, **params)
         action.status = action.READY
         action.store(context)
-
-        # TODO(someone): uncomment this when it is implemented
-        # dispatcher.start_action(action_id=action.id)
+        dispatcher.start_action(action_id=action.id)
 
         LOG.info(_LI("Node update action is queued: %s."), action.id)
 
-        return
+        return {'action': action.id}
 
     @request_context
     def node_delete(self, context, identity, force=False):

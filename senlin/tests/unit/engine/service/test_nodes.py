@@ -451,6 +451,7 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'start_action')
     def test_node_update_with_new_profile(self, notify):
         node = self.eng.node_create(self.ctx, 'node-1', self.profile['id'])
+        notify.reset_mock()
         new_spec = {
             'type': 'TestProfile',
             'version': '1.0',
@@ -458,19 +459,18 @@ class NodeTest(base.SenlinTestCase):
         }
         new_profile = self.eng.profile_create(self.ctx, 'p-new', new_spec)
 
-        self.eng.node_update(self.ctx, node['id'],
-                             profile_id=new_profile['id'])
+        result = self.eng.node_update(self.ctx, node['id'],
+                                      profile_id=new_profile['id'])
 
-        # TODO(anyone): uncomment the following lines when cluster-update
-        # is implemented
-        # action_id = result['action']
-        # action = self.eng.action_get(self.ctx, action_id)
-        # self._verify_action(action, 'NODE_UPDATE',
-        #                     'node_update_%s' % c['id'][:8],
-        #                     result['id'],
-        #                     cause=action_mod.CAUSE_RPC)
+        action_id = result['action']
+        action = self.eng.action_get(self.ctx, action_id)
+        self._verify_action(action, 'NODE_UPDATE',
+                            'node_update_%s' % node['id'][:8],
+                            node['id'],
+                            cause=action_mod.CAUSE_RPC,
+                            inputs={'new_profile_id': new_profile['id']})
 
-        # notify.assert_called_once_with(action_id=action_id)
+        notify.assert_called_once_with(action_id=action_id)
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_node_update_profile_not_found(self, notify):
