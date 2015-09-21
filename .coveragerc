@@ -4,4 +4,4 @@ source = senlin
 omit = */tests/*,senlin/openstack/common/*
 
 [report]
-ignore-errors = True
+ignore_errors = True
