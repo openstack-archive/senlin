@@ -303,7 +303,6 @@ class Cluster(object):
         self.rt['policies'].append(policy)
 
     def remove_policy(self, policy):
-        # TODO(Qiming): check if actions of specified policies are ongoing
         for p in self.rt['policies']:
-            if(p.id == policy.id):
+            if (p.id == policy.id):
                 self.rt['policies'].remove(p)
