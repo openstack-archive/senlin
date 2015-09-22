@@ -276,6 +276,10 @@ class ServerProfile(base.Profile):
                     res = self.neutron(obj).network_get(net_name_id)
                     network['uuid'] = res.id
                     del network[self.NETWORK]
+                    if network['port'] is None:
+                        del network['port']
+                    if network['fixed-ip'] is None:
+                        del network['fixed-ip']
             kwargs['networks'] = networks
 
         LOG.info('Creating server: %s' % kwargs)

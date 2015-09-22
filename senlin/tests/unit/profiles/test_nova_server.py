@@ -209,6 +209,60 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertEqual(nova_server.id, server_id)
 
     @mock.patch.object(common_utils, 'random_name')
+    def test_do_create_port_and_fixedip_not_defined(self, mock_random_name):
+        mock_random_name.return_value = '12345678'
+        novaclient = mock.Mock()
+        neutronclient = mock.Mock()
+        test_server = mock.Mock()
+        test_server.name = 'TEST_SERVER'
+        test_server.cluster_id = 'FAKE_CLUSTER_ID'
+        image = mock.Mock()
+        image.id = 'FAKE_IMAGE_ID'
+        novaclient.image_get_by_name.return_value = image
+        flavor = mock.Mock()
+        flavor.id = 'FAKE_FLAVOR_ID'
+        novaclient.flavor_find.return_value = flavor
+        net = mock.Mock()
+        net.id = 'FAKE_NETWORK_ID'
+        neutronclient.network_get.return_value = net
+
+        nova_server = mock.Mock()
+        nova_server.id = 'FAKE_NOVA_SERVER_ID'
+        novaclient.server_create.return_value = nova_server
+
+        spec = {
+            'type': 'os.nova.server',
+            'version': '1.0',
+            'properties': {
+                'flavor': 'FLAV',
+                'image': 'FAKE_IMAGE',
+                'key_name': 'FAKE_KEYNAME',
+                'name': 'FAKE_SERVER_NAME',
+                'networks': [{
+                    'network': 'FAKE_NET'
+                }]
+            }
+        }
+
+        profile = server.ServerProfile('s2', spec)
+        profile._novaclient = novaclient
+        profile._neutronclient = neutronclient
+        server_id = profile.do_create(test_server)
+
+        mock_random_name.assert_called_once_with(8)
+        attrs = dict(auto_disk_config=True,
+                     flavorRef='FAKE_FLAVOR_ID',
+                     imageRef='FAKE_IMAGE_ID',
+                     key_name='FAKE_KEYNAME',
+                     metadata={'cluster': 'FAKE_CLUSTER_ID'},
+                     name='TEST_SERVER-12345678',
+                     networks=[{'uuid': 'FAKE_NETWORK_ID'}],
+                     timeout=120)
+
+        novaclient.server_create.assert_called_once_with(**attrs)
+        self.assertEqual(nova_server.id, server_id)
+
+    @mock.patch.object(common_utils, 'random_name')
     def test_do_create_server_attrs_not_defined(self, mock_random_name):
         mock_random_name.return_value = '12345678'
         novaclient = mock.Mock()
