@@ -112,7 +112,7 @@ class WebhookTest(base.SenlinTestCase):
                                credential=credential)
         self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
         self.assertEqual('The request is malformed: '
-                         'Webhook obj_type %s is not supported.'
+                         'Webhook obj type %s is not supported.'
                          '' % obj_type,
                          six.text_type(ex.exc_info[1]))
 

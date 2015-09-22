@@ -104,8 +104,7 @@ class EngineService(service.Service):
                                                 self.dispatcher_topic,
                                                 consts.RPC_API_VERSION,
                                                 self.TG)
-        LOG.debug("Starting dispatcher for engine %s" % self.engine_id)
-
+        LOG.info(_LI("Starting dispatcher for engine %s"), self.engine_id)
         self.dispatcher.start()
 
         # create a health manager greenthread for this engine.
@@ -113,8 +112,7 @@ class EngineService(service.Service):
                                                         self.health_mgr_topic,
                                                         consts.RPC_API_VERSION,
                                                         self.TG)
-        LOG.debug("Starting health manager for engine %s" % self.engine_id)
-
+        LOG.info(_LI("Starting health manager for engine %s"), self.engine_id)
         self.health_mgr.start()
 
         target = oslo_messaging.Target(version=consts.RPC_API_VERSION,
@@ -127,7 +125,7 @@ class EngineService(service.Service):
 
     def _stop_rpc_server(self):
         # Stop RPC connection to prevent new requests
-        LOG.debug(_("Attempting to stop engine service..."))
+        LOG.info(_LI("Stopping engine service..."))
         try:
             self._rpc_server.stop()
             self._rpc_server.wait()
@@ -140,14 +138,14 @@ class EngineService(service.Service):
         self._stop_rpc_server()
 
         # Notify dispatcher to stop all action threads it started.
+        LOG.info(_LI("Stopping dispatcher for engine %s"), self.engine_id)
         self.dispatcher.stop()
 
         # Notify health_manager to stop
+        LOG.info(_LI("Stopping health manager for engine %s"), self.engine_id)
         self.health_mgr.stop()
 
         self.TG.stop()
-        # Terminate the engine process
-        LOG.info(_LI("All threads were gone, terminating engine"))
         super(EngineService, self).stop()
 
     @request_context
@@ -206,7 +204,7 @@ class EngineService(service.Service):
         type_name, version = schema.get_spec_version(spec)
         plugin = environment.global_env().get_profile(type_name)
 
-        LOG.info(_LI('Creating profile %(type)s: %(name)s'),
+        LOG.info(_LI("Creating profile %(type)s '%(name)s'."),
                  {'type': type_name, 'name': name})
 
         kwargs = {
@@ -217,9 +215,15 @@ class EngineService(service.Service):
         try:
             profile.validate()
         except exception.InvalidSpec as ex:
-            raise exception.SenlinBadRequest(msg=six.text_type(ex))
+            msg = six.text_type(ex)
+            LOG.error(_LE("Failed in creating policy: %s"), msg)
+            raise exception.SenlinBadRequest(msg=msg)
 
         profile.store(context)
+
+        LOG.info(_LI("Profile %(name)s is created: %(id)s."),
+                 {'name': name, 'id': profile.id})
+
         return profile.to_dict()
 
     @request_context
@@ -231,6 +235,8 @@ class EngineService(service.Service):
     @request_context
     def profile_update(self, context, profile_id, name=None, spec=None,
                        permission=None, metadata=None):
+        LOG.info(_LI("Updating profile '%(id)s.'"), {'id': profile_id})
+
         db_profile = self.profile_find(context, profile_id)
         if spec is None:
             profile = profile_base.Profile.load(context, profile=db_profile)
@@ -246,6 +252,8 @@ class EngineService(service.Service):
                 changed = True
             if changed:
                 profile.store(context)
+
+            LOG.info(_LI("Profile '%(id)s' is updated."), {'id': profile_id})
             return profile.to_dict()
 
         type_name, version = schema.get_spec_version(db_profile.spec)
@@ -262,17 +270,25 @@ class EngineService(service.Service):
         profile = plugin(new_name, new_spec, **kwargs)
         profile.validate()
         profile.store(context)
+
+        LOG.info(_LI("New Profile '%(new_id)s' is created based on profile "
+                     "'%(old_id)s'."),
+                 {'new_id': profile.id, 'old_id': profile_id})
+
         return profile.to_dict()
 
     @request_context
     def profile_delete(self, context, identity):
         db_profile = self.profile_find(context, identity)
-        LOG.info(_LI('Deleting profile: %s'), identity)
+        LOG.info(_LI("Deleting profile '%s'."), identity)
         try:
             profile_base.Profile.delete(context, db_profile.id)
         except exception.ResourceBusyError:
+            LOG.error(_LI("Profile '%s' cannot be deleted."), identity)
             raise exception.ResourceInUse(resource_type='profile',
                                           resource_id=db_profile.id)
+
+        LOG.info(_LI("Profile '%(id)s' is deleted."), {'id': identity})
         return None
 
     @request_context
@@ -333,7 +349,7 @@ class EngineService(service.Service):
         type_name, version = schema.get_spec_version(spec)
         plugin = environment.global_env().get_policy(type_name)
 
-        LOG.info(_LI('Creating policy %(type)s: %(name)s'),
+        LOG.info(_LI("Creating policy %(type)s '%(name)s'"),
                  {'type': type_name, 'name': name})
 
         kwargs = {
@@ -348,9 +364,13 @@ class EngineService(service.Service):
         try:
             policy.validate()
         except exception.InvalidSpec as ex:
-            raise exception.SenlinBadRequest(msg=six.text_type(ex))
+            msg = six.text_type(ex)
+            LOG.error(_LE("Failed in creating policy: %s"), msg)
+            raise exception.SenlinBadRequest(msg=msg)
 
         policy.store(context)
+        LOG.info(_LI("Policy '%(name)s' is created: %(id)s."),
+                 {'name': name, 'id': policy.id})
         return policy.to_dict()
 
     @request_context
@@ -362,6 +382,7 @@ class EngineService(service.Service):
     @request_context
     def policy_update(self, context, identity, name=None, level=None,
                       cooldown=None):
+        LOG.info(_LI("Updating policy '%(id)s.'"), {'id': identity})
 
         db_policy = self.policy_find(context, identity)
         policy = policy_base.Policy.load(context, db_policy=db_policy)
@@ -382,17 +403,21 @@ class EngineService(service.Service):
         if changed:
             policy.store(context)
 
+        LOG.info(_LI("Policy '%(id)s is updated.'"), {'id': identity})
         return policy.to_dict()
 
     @request_context
     def policy_delete(self, context, identity):
         db_policy = self.policy_find(context, identity)
-        LOG.info(_LI('Delete policy: %s'), identity)
+        LOG.info(_LI("Delete policy '%s'."), identity)
         try:
             policy_base.Policy.delete(context, db_policy.id)
         except exception.ResourceBusyError:
+            LOG.error(_LI("Policy '%s' cannot be deleted."), identity)
             raise exception.ResourceInUse(resource_type='policy',
                                           resource_id=db_policy.id)
+
+        LOG.info(_LI("Policy '%s' is deleted."), identity)
         return None
 
     @request_context
@@ -480,6 +505,7 @@ class EngineService(service.Service):
     def cluster_create(self, context, name, desired_capacity, profile_id,
                        min_size=None, max_size=None, parent=None,
                        metadata=None, timeout=None):
+        LOG.info(_LI("Creating cluster '%s'."), name)
         db_profile = self.profile_find(context, profile_id)
 
         (init_size, min_size, max_size) = self._validate_cluster_size_params(
@@ -488,7 +514,6 @@ class EngineService(service.Service):
         if timeout is not None:
             timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
 
-        LOG.info(_LI('Creating cluster %s'), name)
         kwargs = {
             'user': context.user,
             'project': context.project,
@@ -515,6 +540,8 @@ class EngineService(service.Service):
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
+
+        LOG.info(_LI("Cluster create action queued: %s."), action.id)
 
         # We return a cluster dictionary with an additional key carried
         result = cluster.to_dict()
@@ -554,6 +581,7 @@ class EngineService(service.Service):
             if changed is True:
                 cluster.store(context)
 
+        LOG.info(_LI("Updating cluster '%s'."), identity)
         # Get the database representation of the existing cluster
         db_cluster = self.cluster_find(context, identity)
         cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
@@ -561,10 +589,12 @@ class EngineService(service.Service):
         if profile_id is None or profile_id == cluster.profile_id:
             # Only update the other properties except profile
             update_cluster_properties(cluster)
+            LOG.info(_LI("Cluster '%s' is updated."), identity)
             return cluster.to_dict()
 
         if cluster.status == cluster.ERROR:
             msg = _('Cannot update a cluster when it is in error state.')
+            LOG.error(msg)
             raise exception.FeatureNotSupported(feature=msg)
 
         old_profile = self.profile_find(context, cluster.profile_id)
@@ -572,12 +602,13 @@ class EngineService(service.Service):
         if new_profile.type != old_profile.type:
             msg = _('Cannot update a cluster to a different profile type, '
                     'operation aborted.')
+            LOG.error(msg)
             raise exception.ProfileTypeNotMatch(message=msg)
 
         profile_id = new_profile.id
 
         fmt = _LI("Updating cluster '%(cluster)s': profile='%(profile)s'.")
-        LOG.info(fmt % {'cluster': identity, 'profile': profile_id})
+        LOG.info(fmt, {'cluster': identity, 'profile': profile_id})
 
         inputs = {'new_profile_id': profile_id}
         kwargs = {
@@ -596,12 +627,17 @@ class EngineService(service.Service):
         # TODO(xuhaiwei): move the other properties update into start_action
         update_cluster_properties(cluster)
 
+        LOG.info(_LI("Cluster update action queued: %s."), action.id)
+
         result = cluster.to_dict()
         result['action'] = action.id
         return result
 
     @request_context
     def cluster_add_nodes(self, context, identity, nodes):
+
+        LOG.info(_LI("Adding nodes '%(nodes)s' to cluster '%(cluster)s'."),
+                 {'cluster': identity, 'nodes': nodes})
         db_cluster = self.cluster_find(context, identity)
         db_cluster_profile = self.profile_find(context,
                                                db_cluster.profile_id)
@@ -637,10 +673,12 @@ class EngineService(service.Service):
         if len(not_match_nodes) > 0:
             error = _("Profile type of nodes %s does not match with "
                       "cluster") % not_match_nodes
+            LOG.error(error)
             raise exception.ProfileTypeNotMatch(message=error)
         elif len(owned_nodes) > 0:
             error = _("Nodes %s owned by other cluster, need to delete "
                       "them from those clusters first.") % owned_nodes
+            LOG.error(error)
             raise exception.NodeNotOrphan(message=error)
         elif len(bad_nodes) > 0:
             error = _("Nodes are not ACTIVE: %s") % bad_nodes
@@ -650,6 +688,7 @@ class EngineService(service.Service):
             error = _("No nodes to add: %s") % nodes
 
         if error is not None:
+            LOG.error(error)
             raise exception.SenlinBadRequest(msg=error)
 
         action_name = 'cluster_add_nodes_%s' % db_cluster.id[:8]
@@ -666,11 +705,13 @@ class EngineService(service.Service):
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
-
+        LOG.info(_LI("Cluster add nodes action queued: %s."), action.id)
         return {'action': action.id}
 
     @request_context
     def cluster_del_nodes(self, context, identity, nodes):
+        LOG.info(_LI("Deleting nodes '%(nodes)s' from cluster '%(cluster)s'."),
+                 {'cluster': identity, 'nodes': nodes})
         db_cluster = self.cluster_find(context, identity)
         found = []
         not_found = []
@@ -695,6 +736,7 @@ class EngineService(service.Service):
             error = _("No nodes specified.")
 
         if error is not None:
+            LOG.error(error)
             raise exception.SenlinBadRequest(msg=error)
 
         action_name = 'cluster_del_nodes_%s' % db_cluster.id[:8]
@@ -712,6 +754,7 @@ class EngineService(service.Service):
         action.store(context)
         dispatcher.start_action(action_id=action.id)
 
+        LOG.info(_LI("Cluster delete nodes action queued: %s."), action.id)
         return {'action': action.id}
 
     @request_context
@@ -785,10 +828,10 @@ class EngineService(service.Service):
                   "number=%(number)s, min_size=%(min_size)s, "
                   "max_size=%(max_size)s, min_step=%(min_step)s, "
                   "strict=%(strict)s.")
-        LOG.info(fmt % {'cluster': identity, 'adj_type': adj_type,
-                        'number': number, 'min_size': min_size,
-                        'max_size': max_size, 'min_step': min_step,
-                        'strict': strict})
+        LOG.info(fmt, {'cluster': identity, 'adj_type': adj_type,
+                       'number': number, 'min_size': min_size,
+                       'max_size': max_size, 'min_step': min_step,
+                       'strict': strict})
 
         inputs = {
             consts.ADJUSTMENT_TYPE: adj_type,
@@ -814,10 +857,14 @@ class EngineService(service.Service):
         action.store(context)
         dispatcher.start_action(action_id=action.id)
 
+        LOG.info(_LI("Cluster resize action queued: %s."), action.id)
+
         return {'action': action.id}
 
     @request_context
     def cluster_scale_out(self, context, identity, count=None):
+
+        LOG.info(_LI("Scaling out cluster '%s'."), identity)
         # Validation
         db_cluster = self.cluster_find(context, identity)
         delta = utils.parse_int_param('count', count, allow_zero=False)
@@ -845,10 +892,15 @@ class EngineService(service.Service):
         action.store(context)
         dispatcher.start_action(action_id=action.id)
 
+        LOG.info(_LI("Cluster Scale out action queued: %s"), action.id)
+
         return {'action': action.id}
 
     @request_context
     def cluster_scale_in(self, context, identity, count=None):
+
+        LOG.info(_LI("Scaling in cluster '%s'."), identity)
+
         db_cluster = self.cluster_find(context, identity)
         # delta must be positive integer
         delta = utils.parse_int_param('count', count, allow_zero=False)
@@ -876,19 +928,23 @@ class EngineService(service.Service):
         action.store(context)
         dispatcher.start_action(action_id=action.id)
 
+        LOG.info(_LI("Cluster Scale in action queued: %s."), action.id)
+
         return {'action': action.id}
 
     @request_context
     def cluster_delete(self, context, identity):
+
+        LOG.info(_LI('Deleting cluster %s'), identity)
+
         db_cluster = self.cluster_find(context, identity)
 
         policies = db_api.cluster_policy_get_all(context, db_cluster.id)
         if len(policies) > 0:
             msg = _('Cluster %(id)s is not allowed to be deleted without '
                     'detaching all policies.') % {'id': identity}
+            LOG.error(msg)
             raise exception.SenlinBadRequest(msg=msg)
-
-        LOG.info(_LI('Deleting cluster %s'), identity)
 
         action_name = 'cluster_delete_%s' % db_cluster.id[:8]
         params = {
@@ -903,6 +959,8 @@ class EngineService(service.Service):
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
+
+        LOG.info(_LI("Cluster delete action queued: %s"), action.id)
 
         return {'action': action.id}
 
@@ -949,6 +1007,9 @@ class EngineService(service.Service):
     @request_context
     def node_create(self, context, name, profile_id, cluster_id=None,
                     role=None, metadata=None):
+
+        LOG.info(_LI("Creating node '%s'."), name)
+
         node_profile = self.profile_find(context, profile_id)
         if cluster_id is not None:
             db_cluster = self.cluster_find(context, cluster_id)
@@ -960,9 +1021,8 @@ class EngineService(service.Service):
                 if node_profile.type != cluster_profile.type:
                     msg = _('Node and cluster have different profile type, '
                             'operation aborted.')
+                    LOG.error(msg)
                     raise exception.ProfileTypeNotMatch(message=msg)
-
-        LOG.info(_LI('Creating node %s'), name)
 
         # Create a node instance
         kwargs = {
@@ -989,6 +1049,8 @@ class EngineService(service.Service):
         action.store(context)
         dispatcher.start_action(action_id=action.id)
 
+        LOG.info(_LI("Node create action queued: %s."), action.id)
+
         # We return a node dictionary with an additional key (action) carried
         result = node.to_dict()
         result['action'] = action.id
@@ -1009,6 +1071,9 @@ class EngineService(service.Service):
     @request_context
     def node_update(self, context, identity, name=None, profile_id=None,
                     role=None, metadata=None):
+
+        LOG.info(_LI("Updating node '%s'."), identity)
+
         db_node = self.node_find(context, identity)
         node = node_mod.Node.load(context, node=db_node)
 
@@ -1021,9 +1086,8 @@ class EngineService(service.Service):
             if old_profile.type != db_profile.type:
                 msg = _('Cannot update a node to a different profile type, '
                         'operation aborted.')
+                LOG.error(msg)
                 raise exception.ProfileTypeNotMatch(message=msg)
-
-        LOG.info(_LI('Updating node %s'), identity)
 
         inputs = {
             'new_profile_id': profile_id,
@@ -1049,13 +1113,16 @@ class EngineService(service.Service):
 
         # TODO(someone): uncomment this when it is implemented
         # dispatcher.start_action(action_id=action.id)
+
+        LOG.info(_LI("Node update action is queued: %s."), action.id)
+
         return
 
     @request_context
     def node_delete(self, context, identity, force=False):
-        db_node = self.node_find(context, identity)
         LOG.info(_LI('Deleting node %s'), identity)
 
+        db_node = self.node_find(context, identity)
         params = {
             'user': context.user,
             'project': context.project,
@@ -1068,10 +1135,15 @@ class EngineService(service.Service):
         action.store(context)
         dispatcher.start_action(action_id=action.id)
 
+        LOG.info(_LI("Node delete action is queued: %s."), action.id)
+
         return {'action': action.id}
 
     @request_context
     def node_join(self, context, identity, cluster_id):
+        LOG.info(_LI('Joining node %(node)s to cluster %(cluster)s'),
+                 {'node': identity, 'cluster': cluster_id})
+
         db_node = self.node_find(context, identity)
         db_cluster = self.cluster_find(context, cluster_id)
 
@@ -1082,9 +1154,6 @@ class EngineService(service.Service):
                 msg = _('Node and cluster have different profile type, '
                         'operation aborted.')
                 raise exception.ProfileTypeNotMatch(message=msg)
-
-        LOG.info(_LI('Joining node %(node)s to cluster %(cluster)s'),
-                 {'node': identity, 'cluster': cluster_id})
 
         params = {
             'user': context.user,
@@ -1099,16 +1168,18 @@ class EngineService(service.Service):
         action.store(context)
         dispatcher.start_action(action_id=action.id)
 
+        LOG.info(_LI("Node join action is queued: %s."), action.id)
+
         return {'action': action.id}
 
     @request_context
     def node_leave(self, context, identity):
+        LOG.info(_LI('Node %(node)s leaving cluster'), {'node': identity})
+
         db_node = self.node_find(context, identity)
         if db_node.cluster_id is None:
             msg = _('Node is already an orphan node: %s.') % identity
             raise exception.SenlinBadRequest(msg=msg)
-
-        LOG.info(_LI('Node %(node)s leaving cluster'), {'node': identity})
 
         params = {
             'user': context.user,
@@ -1121,6 +1192,8 @@ class EngineService(service.Service):
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
+
+        LOG.info(_LI("Node leave action is queued: %s."), action.id)
 
         return {'action': action.id}
 
@@ -1156,12 +1229,12 @@ class EngineService(service.Service):
 
         This is done via an action because a cluster lock is needed.
         '''
+        LOG.info(_LI("Attaching policy '%(policy)s' to cluster "
+                     "'%(cluster)s'."),
+                 {'policy': policy, 'cluster': identity})
 
         db_cluster = self.cluster_find(context, identity)
         db_policy = self.policy_find(context, policy)
-
-        LOG.info(_LI('Attaching policy %(policy)s to cluster %(cluster)s'),
-                 {'policy': policy, 'cluster': identity})
 
         inputs = {
             'policy_id': db_policy.id,
@@ -1193,6 +1266,8 @@ class EngineService(service.Service):
         action.store(context)
         dispatcher.start_action(action_id=action.id)
 
+        LOG.info(_LI("Policy attach action queued: %s."), action.id)
+
         return {'action': action.id}
 
     @request_context
@@ -1202,6 +1277,10 @@ class EngineService(service.Service):
         This is done via an action because cluster lock is needed.
         '''
 
+        LOG.info(_LI("Detaching policy '%(policy)s' from cluster "
+                     "'%(cluster)s'."),
+                 {'policy': policy, 'cluster': identity})
+
         db_cluster = self.cluster_find(context, identity)
         db_policy = self.policy_find(context, policy)
         binding = db_api.cluster_policy_get(context, db_cluster.id,
@@ -1209,9 +1288,6 @@ class EngineService(service.Service):
         if binding is None:
             raise exception.PolicyBindingNotFound(policy=policy,
                                                   identity=identity)
-
-        LOG.info(_LI('Detaching policy %(policy)s from cluster %(cluster)s'),
-                 {'policy': policy, 'cluster': identity})
 
         action_name = 'detach_policy_%s' % db_cluster.id[:8]
         params = {
@@ -1228,6 +1304,8 @@ class EngineService(service.Service):
         action.store(context)
         dispatcher.start_action(action_id=action.id)
 
+        LOG.info(_LI("Policy dettach action queued: %s."), action.id)
+
         return {'action': action.id}
 
     @request_context
@@ -1237,6 +1315,9 @@ class EngineService(service.Service):
 
         This is done via an action because cluster lock is needed.
         '''
+        LOG.info(_LI("Updating policy '%(policy)s' on cluster '%(cluster)s.'"),
+                 {'policy': policy, 'cluster': identity})
+
         db_cluster = self.cluster_find(context, identity)
         db_policy = self.policy_find(context, policy)
 
@@ -1256,9 +1337,6 @@ class EngineService(service.Service):
         if enabled is not None:
             inputs['enabled'] = utils.parse_bool_param('enabled', enabled)
 
-        LOG.info(_LI('Updating policy %(policy)s on cluster %(cluster)s'),
-                 {'policy': policy, 'cluster': identity})
-
         action_name = 'update_policy_%s' % db_cluster.id[:8]
         params = {
             'user': context.user,
@@ -1273,6 +1351,8 @@ class EngineService(service.Service):
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
+
+        LOG.info(_LI("Policy update action queued: %s."), action.id)
 
         return {'action': action.id}
 
@@ -1330,11 +1410,14 @@ class EngineService(service.Service):
     @request_context
     def webhook_create(self, context, obj_id, obj_type, action,
                        credential=None, params=None, name=None):
-        LOG.info(_LI("Creating webhook %(n)s, %(t)s:%(i)s:%(a)s."),
+        LOG.info(_LI("Creating webhook '%(n)s': \n"
+                     "  type: %(t)s\n  id: %(i)s\n  action: %(a)s."),
                  {'n': name, 'i': obj_id, 't': obj_type, 'a': action})
+
         obj_type = obj_type.lower()
         if obj_type not in consts.WEBHOOK_OBJ_TYPES:
-            msg = _('Webhook obj_type %s is not supported.') % obj_type
+            msg = _('Webhook obj type %s is not supported.') % obj_type
+            LOG.error(msg)
             raise exception.SenlinBadRequest(msg=msg)
 
         # Check whether object identified by obj_id does exists
@@ -1383,6 +1466,10 @@ class EngineService(service.Service):
         key = webhook.encrypt_credential()
         url, token = webhook.generate_url(key)
         webhook.store(context)
+
+        LOG.info(_LI("Webhook '%(name)s' is created: %(id)s."),
+                 {'name': name, 'id': webhook.id})
+
         result = webhook.to_dict()
         result['url'] = url
 
@@ -1396,6 +1483,9 @@ class EngineService(service.Service):
 
     @request_context
     def webhook_trigger(self, context, identity, params=None):
+
+        LOG.info(_LI("Triggering webhook '%s'."), identity)
+
         webhook = self.webhook_get(context, identity)
 
         # Check whether target obj exists
@@ -1427,13 +1517,18 @@ class EngineService(service.Service):
         action.store(context)
         dispatcher.start_action(action_id=action.id)
 
+        LOG.info(_LI("Webhook '%(identity)s' triggered with action queued: "
+                     "%(id)s."),
+                 {'identity': identity, 'id': action.id})
+
         return {'action': action.id}
 
     @request_context
     def webhook_delete(self, context, identity, force=False):
         db_webhook = self.webhook_find(context, identity)
-        LOG.info(_LI('Deleting webhook: %s'), identity)
+        LOG.info(_LI("Deleting webhook '%s'."), identity)
         webhook_mod.Webhook.delete(context, db_webhook.id)
+        LOG.info(_LI("Webhook '%s' is deleted."), identity)
         return None
 
     @request_context
@@ -1487,7 +1582,7 @@ class EngineService(service.Service):
     def trigger_create(self, context, name, spec, description=None,
                        enabled=None, state=None, severity=None):
         type_name, version = schema.get_spec_version(spec)
-        LOG.info(_LI("Creating trigger %(type)s: %(name)s."),
+        LOG.info(_LI("Creating trigger %(type)s: '%(name)s'."),
                  {'type': type_name, 'name': name})
         plugin = environment.global_env().get_trigger(type_name)
 
@@ -1509,6 +1604,9 @@ class EngineService(service.Service):
         trigger.validate()
         trigger.store(context)
 
+        LOG.info(_LI("Trigger '%(name)s' is created: %(id)s."),
+                 {'name': name, 'id': trigger.id})
+
         return trigger.to_dict()
 
     @request_context
@@ -1520,8 +1618,9 @@ class EngineService(service.Service):
     @request_context
     def trigger_delete(self, context, identity, force=False):
         db_trigger = self.trigger_find(context, identity)
-        LOG.info(_LI('Deleting trigger: %s'), identity)
+        LOG.info(_LI("Deleting trigger '%s'."), identity)
         trigger_base.Trigger.delete(context, db_trigger.id)
+        LOG.info(_LI("Trigger '%s' is deleted."), identity)
         return None
 
     @request_context
@@ -1563,7 +1662,7 @@ class EngineService(service.Service):
 
     @request_context
     def action_create(self, context, name, target, action, inputs=None):
-        LOG.info(_LI('Creating action %s'), name)
+        LOG.info(_LI("Creating action '%s'."), name)
 
         # Create an action instance
         params = {
@@ -1580,6 +1679,8 @@ class EngineService(service.Service):
         # TODO(Anyone): Uncomment this to notify the dispatcher
         # dispatcher.start_action(action_id=action.id)
 
+        LOG.info(_LI("Action '%(name)s' is created: %(id)s."),
+                 {'name': name, 'id': act.id})
         return act.to_dict()
 
     @request_context
@@ -1591,12 +1692,14 @@ class EngineService(service.Service):
     @request_context
     def action_delete(self, context, identity):
         db_action = self.action_find(context, identity)
-        LOG.info(_LI('Deleting action: %s'), identity)
+        LOG.info(_LI("Deleting action '%s'."), identity)
         try:
             action_mod.Action.delete(context, db_action.id)
         except exception.ResourceBusyError:
             raise exception.ResourceInUse(resource_type='action',
                                           resource_id=db_action.id)
+
+        LOG.info(_LI("Action '%s' is deleted."), identity)
         return None
 
     @request_context
