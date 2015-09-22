@@ -218,12 +218,6 @@ class StackProfile(base.Profile):
         else:
             return False
 
-    def get_template(self):
-        return {}
-
-    def get_schema(self):
-        return {}
-
     def do_get_details(self, obj):
         if obj.physical_id is None or obj.physical_id == '':
             return {}
