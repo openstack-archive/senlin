@@ -37,15 +37,43 @@ class NodeAction(base.Action):
     )
 
     def do_create(self, node):
+        if node.cluster_id and self.cause == base.CAUSE_RPC:
+            # If node is created with target cluster specified,
+            # check cluster size constraint
+            cluster = cluster_mod.Cluster.load(self.context, node.cluster_id)
+            result = scaleutils.check_size_params(
+                cluster, cluster.desired_capacity+1, None, None, True)
+
+            if result != '':
+                return self.RES_ERROR, result
+
         res = node.do_create(self.context)
         if res:
+            if node.cluster_id and self.cause == base.CAUSE_RPC:
+                # Update cluster desired_capacity if node creation succeeded
+                cluster.desired_capacity += 1
+                cluster.store(self.context)
             return self.RES_OK, _('Node created successfully')
         else:
             return self.RES_ERROR, _('Node creation failed')
 
     def do_delete(self, node):
+        if node.cluster_id and self.cause == base.CAUSE_RPC:
+            # If node belongs to a cluster, check size constraint
+            # before deleting it
+            cluster = cluster_mod.Cluster.load(self.context, node.cluster_id)
+            result = scaleutils.check_size_params(cluster,
+                                                  cluster.desired_capacity-1,
+                                                  None, None, True)
+            if result != '':
+                return self.RES_ERROR, result
+
         res = node.do_delete(self.context)
         if res:
+            if node.cluster_id and self.cause == base.CAUSE_RPC:
+                # Update cluster desired_capacity if node deletion succeeded
+                cluster.desired_capacity -= 1
+                cluster.store(self.context)
             return self.RES_OK, _('Node deleted successfully')
         else:
             return self.RES_ERROR, _('Node deletion failed')
