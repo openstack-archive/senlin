@@ -12,12 +12,8 @@ if is_service_enabled sl-api sl-eng; then
     if [[ "$1" == "stack" && "$2" == "install" ]]; then
         echo_summary "Installing senlin"
         install_senlin
-        if [[ "$ERROR_ON_CLONE" == "True" ]]; then
-            echo_summary "This is a gate job, skip senlinclient installation"
-        else
-            echo_summary "Installing senlinclient"
-            install_senlinclient
-        fi
+        echo_summary "Installing senlinclient"
+        install_senlinclient
         cleanup_senlin
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         echo_summary "Configuring senlin"
