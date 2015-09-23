@@ -72,11 +72,58 @@ def delete_cluster(client, cluster_id):
     return
 
 
+def create_node(client, name, profile_id, cluster_id=None, role=None,
+                metadata=None):
+    rel_url = 'nodes'
+    status = [200]
+    data = {
+        'node': {
+            'name': name,
+            'profile_id': profile_id,
+            'cluster_id': cluster_id,
+            'role': role,
+            'metadata': metadata
+        }
+    }
+    body = jsonutils.dumps(data)
+    resp = client.api_request('POST', rel_url, body=body,
+                              resp_status=status)
+    node = resp.body['node']
+    return node
+
+
 def get_node(client, node_id, ignore_missing=False):
     rel_url = 'nodes/%(id)s' % {'id': node_id}
     status = [200, 404] if ignore_missing else [200]
     resp = client.api_request('GET', rel_url, resp_status=status)
     return resp if ignore_missing else resp.body['node']
+
+
+def list_nodes(client, **query):
+    rel_url = 'nodes'
+    status = [200]
+    resp = client.api_request('GET', rel_url, resp_status=status)
+    return resp.body['nodes']
+
+
+def action_node(client, node_id, action_name, params=None):
+    rel_url = 'nodes/%(id)s/action' % {'id': node_id}
+    status = [200]
+    data = {
+        action_name: {} if params is None else params
+    }
+    body = jsonutils.dumps(data)
+    resp = client.api_request('PUT', rel_url, body=body,
+                              resp_status=status)
+    action_id = resp.body['action']
+    return action_id
+
+
+def delete_node(client, node_id):
+    rel_url = 'nodes/%(id)s' % {'id': node_id}
+    status = [200]
+    client.api_request('DELETE', rel_url, resp_status=status)
+    return
 
 
 def create_profile(client, name, spec, permission=None, metadata={}):
