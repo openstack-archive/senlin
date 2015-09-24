@@ -50,6 +50,29 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual('Node created successfully', res_msg)
         node.do_create.assert_called_once_with(action.context)
 
+    @mock.patch.object(scaleutils, 'check_size_params')
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    def test_do_create_with_cluster_id_specified(self, mock_c_load,
+                                                 mock_check):
+        cluster = mock.Mock()
+        cluster.id = 'CID'
+        cluster.desired_capacity = 0
+        mock_c_load.return_value = cluster
+        node = mock.Mock()
+        node.do_create = mock.Mock(return_value=None)
+        node.cluster_id = cluster.id
+        mock_check.return_value = ''
+        action = node_action.NodeAction('ID', 'ACTION', self.ctx,
+                                        cause=base_action.CAUSE_RPC)
+
+        node.do_create = mock.Mock(return_value=mock.Mock())
+        res_code, res_msg = action.do_create(node)
+        self.assertEqual(action.RES_OK, res_code)
+        mock_check.assert_called_once_with(cluster, 1, None, None, True)
+        mock_c_load.assert_called_once_with(action.context, 'CID')
+        cluster.store.assert_called_once_with(action.context)
+        self.assertEqual(1, cluster.desired_capacity)
+
     def test_do_delete(self):
         node = mock.Mock()
         node.do_delete = mock.Mock(return_value=None)
@@ -69,6 +92,29 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Node deleted successfully', res_msg)
         node.do_delete.assert_called_once_with(action.context)
+
+    @mock.patch.object(scaleutils, 'check_size_params')
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    def test_do_delete_with_cluster_id_specified(self, mock_c_load,
+                                                 mock_check):
+        cluster = mock.Mock()
+        cluster.id = 'CID'
+        cluster.desired_capacity = 1
+        mock_c_load.return_value = cluster
+        node = mock.Mock()
+        node.do_delete = mock.Mock(return_value=None)
+        node.cluster_id = cluster.id
+        mock_check.return_value = ''
+        action = node_action.NodeAction('ID', 'ACTION', self.ctx,
+                                        cause=base_action.CAUSE_RPC)
+
+        node.do_delete = mock.Mock(return_value=mock.Mock())
+        res_code, res_msg = action.do_delete(node)
+        self.assertEqual(action.RES_OK, res_code)
+        mock_check.assert_called_once_with(cluster, 0, None, None, True)
+        mock_c_load.assert_called_once_with(action.context, 'CID')
+        cluster.store.assert_called_once_with(action.context)
+        self.assertEqual(0, cluster.desired_capacity)
 
     def test_do_update(self):
         node = mock.Mock()
