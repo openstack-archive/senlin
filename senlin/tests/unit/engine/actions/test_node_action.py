@@ -362,6 +362,10 @@ class NodeActionTest(base.SenlinTestCase):
     def test_execute_success(self, mock_release_node, mock_acquire_node,
                              mock_check, mock_release, mock_acquire,
                              mock_load):
+        def fake_execute(node):
+            node.cluster_id = None
+            return (action.RES_OK, 'Execution ok')
+
         node = mock.Mock()
         node.cluster_id = 'FAKE_CLUSTER'
         node.id = 'NODE_ID'
@@ -374,7 +378,7 @@ class NodeActionTest(base.SenlinTestCase):
             'reason': 'Policy checking passed'
         }
         self.patchobject(action, '_execute',
-                         return_value=(action.RES_OK, 'Execution ok'))
+                         side_effect=fake_execute)
         mock_load.return_value = node
         mock_acquire.return_value = 'ACTION_ID'
         mock_acquire_node.return_value = 'ACTION_ID'
