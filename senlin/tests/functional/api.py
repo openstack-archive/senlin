@@ -103,6 +103,31 @@ def list_policy_types(client, **query):
     return resp.body['policy_types']
 
 
+def create_policy(client, name, spec, level=0, cooldown=0):
+    rel_url = 'policies'
+    status = [200]
+    data = {
+        'policy': {
+            'name': name,
+            'spec': spec,
+            'level': level,
+            'cooldown': cooldown,
+        }
+    }
+    body = jsonutils.dumps(data)
+    resp = client.api_request('POST', rel_url, body=body,
+                              resp_status=status)
+    policy = resp.body['policy']
+    return policy
+
+
+def delete_policy(client, policy_id):
+    rel_url = 'policies/%(id)s' % {'id': policy_id}
+    status = [204]
+    client.api_request('DELETE', rel_url, resp_status=status)
+    return
+
+
 def get_action(client, action_id, ignore_missing=False):
     rel_url = 'actions/%(id)s' % {'id': action_id}
     status = [200, 404] if ignore_missing else [200]
