@@ -55,17 +55,16 @@ Senlin server comes with some built-in policy types. You can check the list
 of policy types using the following command::
 
   $ senlin policy-type-list
-  +---------------------+
-  | name                |
-  +---------------------+
-  | DeletionPolicy      |
-  | HealthPolicy        |
-  | LoadBalancingPolicy |
-  | PlacementPolicy     |
-  | ScalingInPolicy     |
-  | ScalingOutPolicy    |
-  | UpdatePolicy        |
-  +---------------------+
+  +---------------------------+
+  | name                      |
+  +---------------------------+
+  | senlin.policy.batch       |
+  | senlin.policy.deletion    |
+  | senlin.policy.health      |
+  | senlin.policy.loadbalance |
+  | senlin.policy.placement   |
+  | senlin.policy.scaling     |
+  +---------------------------+
 
 The output is a list of policy types supported by the Senlin server.
 
@@ -78,8 +77,8 @@ that describes the names and types of the properties that can be accepted. To
 show the schema of a specific policy type, you can use the following
 command::
 
-  $ senlin policy-type-schema DeletionPolicy
-  policy_type: DeletionPolicy
+  $ senlin policy-type-schema senlin.policy.deletion
+  policy_type: senlin.policy.deletion
   spec:
     criteria:
       constraints:
@@ -96,7 +95,7 @@ command::
       type: String
     destroy_after_deletion:
       default: true
-      description: Whethere a node should be completely destroyed after
+      description: Whether a node should be completely destroyed after
         deletion. Default to True
       readonly: false
       required: false
@@ -128,7 +127,7 @@ The default output from the :command:`policy-type-schema` command is in YAML
 format. You can choose to show the spec schema in JSON format by specifying
 the the :option:`-F json` option as shown below::
 
-  $ senlin policy-type-schema -F json DeletionPolicy
+  $ senlin policy-type-schema -F json senlin.policy.deletion
 
 For information on how to manage the relationship between a policy and a
 cluster, please refer to :ref:`guide-bindings`.
