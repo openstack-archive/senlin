@@ -11,9 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_middleware import ssl
+
 from senlin.api.middleware import context
 from senlin.api.middleware import fault
-from senlin.api.middleware import ssl
 from senlin.api.middleware import trust
 from senlin.api.middleware import version_negotiation as vn
 from senlin.api.middleware import webhook

@@ -11,10 +11,10 @@
 # under the License.
 
 import mock
+from oslo_middleware import ssl
 
 from senlin.api.middleware import context
 from senlin.api.middleware import fault
-from senlin.api.middleware import ssl
 from senlin.api.middleware import trust
 from senlin.api.middleware import version_negotiation as vn
 from senlin.api.middleware import webhook
