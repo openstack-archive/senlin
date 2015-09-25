@@ -51,6 +51,11 @@ class ClusterAction(base.Action):
         consts.CLUSTER_UPDATE_POLICY,
     )
 
+    def __init__(self, target, action, context=None, **kwargs):
+        super(ClusterAction, self).__init__(target, action, context, **kwargs)
+
+        self.cluster = cluster_mod.Cluster.load(self.context, self.target)
+
     def _wait_for_dependents(self):
         status = self.get_status()
         reason = ''
@@ -676,27 +681,18 @@ class ClusterAction(base.Action):
         :return: A tuple (res, reason) that indicates whether the execution
                  was a success and why if it wasn't a success.
         '''
-
-        try:
-            cluster = cluster_mod.Cluster.load(self.context, self.target)
-        except exception.ClusterNotFound:
-            reason = _('Cluster (%(id)s) is not found') % {'id': self.target}
-            EVENT.error(self.context, None, self.action, 'Failed',
-                        reason)
-            return self.RES_ERROR, reason
-
         # Try to lock cluster before do real operation
         forced = True if self.action == self.CLUSTER_DELETE else False
-        res = senlin_lock.cluster_lock_acquire(cluster.id, self.id,
+        res = senlin_lock.cluster_lock_acquire(self.target, self.id,
                                                senlin_lock.CLUSTER_SCOPE,
                                                forced)
         if not res:
             return self.RES_ERROR, _('Failed in locking cluster.')
 
         try:
-            res, reason = self._execute(cluster)
+            res, reason = self._execute(self.cluster)
         finally:
-            senlin_lock.cluster_lock_release(cluster.id, self.id,
+            senlin_lock.cluster_lock_release(self.target, self.id,
                                              senlin_lock.CLUSTER_SCOPE)
 
         return res, reason

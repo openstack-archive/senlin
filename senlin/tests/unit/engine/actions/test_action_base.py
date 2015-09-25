@@ -20,6 +20,7 @@ from senlin.common import context
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine.actions import base as action_base
+from senlin.engine import cluster as cluster_mod
 from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import environment
 from senlin.engine import event
@@ -84,9 +85,9 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertIsNone(obj.deleted_time)
         self.assertEqual({}, obj.data)
 
-    def test_action_new(self):
-        for action in ['CLUSTER_CREATE', 'NODE_CREATE', 'POLICY_ATTACH',
-                       'WHAT_EVER']:
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    def test_action_new(self, mock_load):
+        for action in ['CLUSTER_CREATE', 'NODE_CREATE', 'WHAT_EVER']:
             obj = action_base.Action('OBJID', action, self.ctx)
             self._verify_new_action(obj, 'OBJID', action)
 

@@ -20,6 +20,7 @@ from senlin.common import exception
 from senlin.common import utils as common_utils
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine.actions import base as action_mod
+from senlin.engine import cluster as cluster_mod
 from senlin.engine import dispatcher
 from senlin.engine import environment
 from senlin.engine import service
@@ -418,11 +419,13 @@ class WebhookTest(base.SenlinTestCase):
                          "asc-nullsfirst, asc-nullslast, desc-nullsfirst, "
                          "desc-nullslast", six.text_type(ex))
 
+    @mock.patch.object(cluster_mod.Cluster, 'load')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(webhook_mod.Webhook, 'generate_url')
     @mock.patch.object(common_utils, 'encrypt')
-    def test_webhook_trigger(self, mock_encrypt, mock_url, mock_find, notify):
+    def test_webhook_trigger(self, mock_encrypt, mock_url, mock_find, notify,
+                             mock_load):
         mock_encrypt.return_value = 'secret text', 'test-key'
         mock_url.return_value = 'test-url', 'test-key'
         fake_cluster = mock.Mock()
@@ -430,6 +433,7 @@ class WebhookTest(base.SenlinTestCase):
         fake_cluster.project = self.ctx.project
         fake_cluster.domain = self.ctx.domain
         fake_cluster.id = 'CLUSTER_FULL_ID'
+        mock_load.return_value = fake_cluster
         mock_find.return_value = fake_cluster
 
         obj_id = 'cluster-id-1'
@@ -451,18 +455,20 @@ class WebhookTest(base.SenlinTestCase):
 
         notify.assert_called_once_with(action_id=action_id)
 
+    @mock.patch.object(cluster_mod.Cluster, 'load')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(webhook_mod.Webhook, 'generate_url')
     @mock.patch.object(common_utils, 'encrypt')
     def test_webhook_trigger_with_params(self, mock_encrypt, mock_url,
-                                         mock_find, notify):
+                                         mock_find, notify, mock_load):
         mock_url.return_value = 'test-url', 'test-key'
         fake_cluster = mock.Mock()
         fake_cluster.user = self.ctx.user
         fake_cluster.project = self.ctx.project
         fake_cluster.domain = self.ctx.domain
         fake_cluster.id = 'CLUSTER_FULL_ID'
+        mock_load.return_value = fake_cluster
         mock_find.return_value = fake_cluster
         mock_encrypt.return_value = 'secret text', 'test-key'
 
