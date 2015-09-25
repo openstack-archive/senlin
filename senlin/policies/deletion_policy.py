@@ -119,6 +119,14 @@ class DeletionPolicy(base.Policy):
         if count > len(nodes):
             count = len(nodes)
 
+        err_nodes = [n for n in nodes if n.status == 'ERROR']
+        nodes = [n for n in nodes if n.status != 'ERROR']
+        if count <= len(err_nodes):
+            return [n.id for n in err_nodes[:count]]
+
+        candidates.extend([n.id for n in err_nodes])
+        count -= len(err_nodes)
+
         # Random selection
         if self.criteria == self.RANDOM:
             i = count

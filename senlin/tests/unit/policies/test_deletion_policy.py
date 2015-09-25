@@ -37,6 +37,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
         }
         self.profile1 = self._create_profile('PROFILE1')
         self.profile2 = self._create_profile('PROFILE2')
+        self.profile3 = self._create_profile('PROFILE3')
         self.cluster = self._create_cluster('CLUSTER1',
                                             self.profile1['id'])
         self.nodes_p1 = self._create_nodes(self.cluster['id'],
@@ -65,7 +66,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
 
         return db_api.cluster_create(self.context, values)
 
-    def _create_nodes(self, cluster_id, profile_id, count):
+    def _create_nodes(self, cluster_id, profile_id, count, **kwargs):
         nodes = []
         for i in range(count):
             values = {
@@ -76,18 +77,22 @@ class TestDeletionPolicy(base.SenlinTestCase):
                 'profile_id': profile_id,
                 'project': self.context.project,
                 'index': i + 1,
-                'role': None,
+                'role': kwargs.get('role', None),
                 'created_time': timeutils.utcnow(),
                 'updated_time': None,
                 'deleted_time': None,
-                'status': 'ACTIVE',
-                'status_reason': 'create complete',
-                'metadata': {'foo': '123'},
-                'data': {'key1': 'value1'},
+                'status': kwargs.get('status', 'ACTIVE'),
+                'status_reason': kwargs.get('status_reason',
+                                            'create complete'),
+                'metadata': kwargs.get('metadata', {'foo': '123'}),
+                'data': kwargs.get('data', {'key1': 'value1'}),
             }
             db_node = db_api.node_create(self.context, values)
             nodes.append(six.text_type(db_node.id))
         return nodes
+
+    def _delete_nodes(self, node_id):
+        db_api.node_delete(self.context, node_id)
 
     def test_policy_init(self):
         policy = dp.DeletionPolicy('test-policy', self.spec)
@@ -153,6 +158,25 @@ class TestDeletionPolicy(base.SenlinTestCase):
         self.assertEqual(3, len(nodes))
         nodes = policy._select_candidates(self.context, self.cluster['id'], 10)
         self.assertEqual(6, len(nodes))
+
+    def test_select_candidates_error_nodes_first(self):
+        kwargs = {
+            'status': 'ERROR',
+            'status_reason': 'Unknown',
+        }
+
+        self.nodes_p3 = self._create_nodes(self.cluster['id'],
+                                           self.profile3['id'], 1,
+                                           **kwargs)
+        self.spec['properties']['criteria'] = \
+            dp.DeletionPolicy.OLDEST_PROFILE_FIRST
+        policy = dp.DeletionPolicy('test-policy', self.spec)
+
+        nodes = policy._select_candidates(self.context, self.cluster['id'], 2)
+        self.assertEqual(2, len(nodes))
+        self.assertEqual(self.nodes_p3[0], nodes[0])
+        self.assertEqual(self.nodes_p1[0], nodes[1])
+        self._delete_nodes(self.nodes_p3[0])
 
     def test_pre_op(self):
         action = mock.Mock()
