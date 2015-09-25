@@ -24,6 +24,7 @@ from senlin.engine import cluster as cluster_mod
 from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import environment
 from senlin.engine import event
+from senlin.engine import node as node_mod
 from senlin.policies import base as policy_mod
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -85,8 +86,9 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertIsNone(obj.deleted_time)
         self.assertEqual({}, obj.data)
 
+    @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(cluster_mod.Cluster, 'load')
-    def test_action_new(self, mock_load):
+    def test_action_new(self, mock_n_load, mock_c_load):
         for action in ['CLUSTER_CREATE', 'NODE_CREATE', 'WHAT_EVER']:
             obj = action_base.Action('OBJID', action, self.ctx)
             self._verify_new_action(obj, 'OBJID', action)
