@@ -135,8 +135,12 @@ function create_senlin_cache_dir {
 
 # install_senlinclient() - Collect source and prepare
 function install_senlinclient {
-    git_clone $SENLINCLIENT_REPO $SENLINCLIENT_DIR $SENLINCLIENT_BRANCH
-    setup_develop $SENLINCLIENT_DIR
+    if use_library_from_git "python-senlinclient"; then
+        git_clone $SENLINCLIENT_REPO $SENLINCLIENT_DIR $SENLINCLIENT_BRANCH
+        setup_develop $SENLINCLIENT_DIR
+    else
+        pip_install python-senlinclient
+    fi
 }
 
 # install_senlin() - Collect source and prepare
