@@ -72,6 +72,13 @@ def delete_cluster(client, cluster_id):
     return
 
 
+def get_node(client, node_id, ignore_missing=False):
+    rel_url = 'nodes/%(id)s' % {'id': node_id}
+    status = [200, 404] if ignore_missing else [200]
+    resp = client.api_request('GET', rel_url, resp_status=status)
+    return resp if ignore_missing else resp.body['node']
+
+
 def create_profile(client, name, spec, permission=None, metadata={}):
     rel_url = 'profiles'
     status = [200]
