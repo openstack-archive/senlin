@@ -1430,7 +1430,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context,
             ('cluster_policy_attach', {
                 'identity': cid, 'policy': 'xxxx-yyyy',
-                'level': 50, 'enabled': True, 'cooldown': 0,
+                'level': None, 'enabled': True, 'cooldown': None,
                 'priority': 50,
             })
         )
