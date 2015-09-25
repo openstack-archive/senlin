@@ -43,6 +43,29 @@ spec_scaling_policy = {
     }
 }
 
+spec_lb_policy = {
+    "type": "senlin.policy.loadbalance",
+    "version": "1.0",
+    "properties": {
+        "pool": {
+            "protocol": "HTTP",
+            "protocol_port": 80,
+            "subnet": "private-subnet",
+            "lb_method": "ROUND_ROBIN",
+            "session_persistence": {
+                "type": "SOURCE_IP",
+                "cookie_name": "test-cookie"
+            }
+        },
+        "vip": {
+            "subnet": "private-subnet",
+            "connection_limit": 100,
+            "protocol": "HTTP",
+            "protocol_port": 80
+        }
+    }
+}
+
 
 def wait_for_status(func, client, obj_id, expected_status, timeout=60,
                     ignore_missing=False):

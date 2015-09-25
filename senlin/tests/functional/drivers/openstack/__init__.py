@@ -13,7 +13,7 @@
 from senlin.drivers.openstack import ceilometer_v2
 from senlin.drivers.openstack import heat_v1
 from senlin.drivers.openstack import keystone_v3
-from senlin.drivers.openstack import lbaas
+from senlin.tests.functional.drivers.openstack import lbaas
 from senlin.tests.functional.drivers.openstack import neutron_v2
 from senlin.tests.functional.drivers.openstack import nova_v2
 
