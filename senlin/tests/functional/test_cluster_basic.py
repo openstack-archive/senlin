@@ -19,9 +19,9 @@ from senlin.tests.functional.utils import test_utils
 LOG = logging.getLogger(__name__)
 
 
-class TestCluster(base.SenlinFunctionalTest):
+class TestClusterBasic(base.SenlinFunctionalTest):
     def setUp(self):
-        super(TestCluster, self).setUp()
+        super(TestClusterBasic, self).setUp()
         # Create profile
         self.profile = test_api.create_profile(self.client, 'test-profile',
                                                test_utils.spec_nova_server)
@@ -29,7 +29,7 @@ class TestCluster(base.SenlinFunctionalTest):
     def tearDown(self):
         # Delete profile
         test_api.delete_profile(self.client, self.profile['id'])
-        super(TestCluster, self).tearDown()
+        super(TestClusterBasic, self).tearDown()
 
     def test_get_clusters(self):
         # Check that listing clusters works.
