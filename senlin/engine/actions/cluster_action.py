@@ -87,26 +87,27 @@ class ClusterAction(base.Action):
 
         return self.RES_OK, 'All dependents ended with success'
 
-    def _create_nodes(self, cluster, count):
+    def _create_nodes(self, count):
         '''Utility method for node creation.'''
         placement = self.data.get('placement', None)
 
-        db_cluster = db_api.cluster_get(self.context, cluster.id)
+        db_cluster = db_api.cluster_get(self.context, self.cluster.id)
         index = db_cluster.next_index
 
         nodes = []
         for m in range(count):
 
             kwargs = {
-                'user': cluster.user,
-                'project': cluster.project,
-                'domain': cluster.domain,
+                'user': self.cluster.user,
+                'project': self.cluster.project,
+                'domain': self.cluster.domain,
                 'index': index + m,
                 'metadata': {}
             }
-            name = 'node-%s-%003d' % (cluster.id[:8], index + m)
-            node = node_mod.Node(name, cluster.profile_id, cluster.id,
-                                 context=self.context, **kwargs)
+            name = 'node-%s-%003d' % (self.cluster.id[:8], index + m)
+            node = node_mod.Node(name, self.cluster.profile_id,
+                                 self.cluster.id, context=self.context,
+                                 **kwargs)
 
             if placement is not None:
                 # We assume placement is a list
@@ -141,31 +142,31 @@ class ClusterAction(base.Action):
 
         return self.RES_OK, ''
 
-    def do_create(self, cluster):
-        res = cluster.do_create(self.context)
+    def do_create(self):
+        res = self.cluster.do_create(self.context)
 
         if not res:
             reason = _('Cluster creation failed.')
-            cluster.set_status(self.context, cluster.ERROR, reason)
+            self.cluster.set_status(self.context, self.cluster.ERROR, reason)
             return self.RES_ERROR, reason
 
-        result, reason = self._create_nodes(cluster, cluster.desired_capacity)
+        result, reason = self._create_nodes(self.cluster.desired_capacity)
 
         if result == self.RES_OK:
             reason = _('Cluster creation succeeded.')
-            cluster.set_status(self.context, cluster.ACTIVE, reason)
+            self.cluster.set_status(self.context, self.cluster.ACTIVE, reason)
         elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_ERROR]:
-            cluster.set_status(self.context, cluster.ERROR, reason)
+            self.cluster.set_status(self.context, self.cluster.ERROR, reason)
         else:
             # RETRY or FAILED?
             pass
 
         return result, reason
 
-    def do_update(self, cluster):
+    def do_update(self):
         profile_id = self.inputs.get('new_profile_id')
 
-        for node in cluster.nodes:
+        for node in self.cluster.nodes:
             kwargs = {
                 'user': self.context.user,
                 'project': self.context.project,
@@ -186,20 +187,20 @@ class ClusterAction(base.Action):
         # Wait for nodes to complete update
         result = self.RES_OK
         reason = _('Cluster update completed.')
-        if len(cluster.nodes) > 0:
+        if len(self.cluster.nodes) > 0:
             result, new_reason = self._wait_for_dependents()
 
             if result != self.RES_OK:
                 return result, new_reason
 
         # TODO(anyone): this seems an overhead
-        cluster.profile_id = profile_id
-        cluster.store(self.context)
+        self.cluster.profile_id = profile_id
+        self.cluster.store(self.context)
 
-        cluster.set_status(self.context, cluster.ACTIVE, reason)
+        self.cluster.set_status(self.context, self.cluster.ACTIVE, reason)
         return self.RES_OK, reason
 
-    def _delete_nodes(self, cluster, nodes):
+    def _delete_nodes(self, nodes):
         action_name = consts.NODE_DELETE
 
         pd = self.data.get('deletion', None)
@@ -234,10 +235,10 @@ class ClusterAction(base.Action):
 
         return self.RES_OK, ''
 
-    def do_delete(self, cluster):
+    def do_delete(self):
         reason = _('Deletion in progress.')
-        cluster.set_status(self.context, cluster.DELETING, reason)
-        node_ids = [node.id for node in cluster.nodes]
+        self.cluster.set_status(self.context, self.cluster.DELETING, reason)
+        node_ids = [node.id for node in self.cluster.nodes]
 
         # For cluster delete, we delete the nodes
         data = {
@@ -246,23 +247,23 @@ class ClusterAction(base.Action):
             }
         }
         self.data.update(data)
-        result, reason = self._delete_nodes(cluster, node_ids)
+        result, reason = self._delete_nodes(node_ids)
 
         if result == self.RES_OK:
-            res = cluster.do_delete(self.context)
+            res = self.cluster.do_delete(self.context)
             if not res:
                 return self.RES_ERROR, _('Cannot delete cluster object.')
         elif result == self.RES_CANCEL:
-            cluster.set_status(self.context, cluster.ACTIVE, reason)
+            self.cluster.set_status(self.context, self.cluster.ACTIVE, reason)
         elif result in [self.RES_TIMEOUT, self.RES_ERROR]:
-            cluster.set_status(self.context, cluster.WARNING, reason)
+            self.cluster.set_status(self.context, self.cluster.WARNING, reason)
         else:
             # RETRY
             pass
 
         return result, reason
 
-    def do_add_nodes(self, cluster):
+    def do_add_nodes(self):
         nodes = self.inputs.get('nodes')
 
         errors = []
@@ -273,7 +274,7 @@ class ClusterAction(base.Action):
                 errors.append(_('Node [%s] is not found.') % node_id)
                 continue
 
-            if node.cluster_id == cluster.id:
+            if node.cluster_id == self.cluster.id:
                 nodes.remove(node_id)
                 continue
 
@@ -301,7 +302,7 @@ class ClusterAction(base.Action):
                 'domain': self.context.domain,
                 'name': 'node_join_%s' % node_id[:8],
                 'cause': base.CAUSE_DERIVED,
-                'inputs': {'cluster_id': cluster.id}
+                'inputs': {'cluster_id': self.target}
             }
             action = base.Action(node_id, 'NODE_JOIN', **kwargs)
             action.store(self.context)
@@ -318,7 +319,7 @@ class ClusterAction(base.Action):
 
         return result, reason
 
-    def do_del_nodes(self, cluster):
+    def do_del_nodes(self):
         nodes = self.inputs.get('nodes', [])
 
         node_ids = copy.deepcopy(nodes)
@@ -329,7 +330,8 @@ class ClusterAction(base.Action):
             except exception.NodeNotFound:
                 errors.append(_('Node [%s] is not found.') % node_id)
                 continue
-            if (node.cluster_id is None) or (node.cluster_id != cluster.id):
+            if ((node.cluster_id is None) or
+                    (node.cluster_id != self.cluster.id)):
                 nodes.remove(node_id)
 
         if len(errors) > 0:
@@ -346,34 +348,34 @@ class ClusterAction(base.Action):
             }
         }
         self.data.update(data)
-        result, new_reason = self._delete_nodes(cluster, nodes)
+        result, new_reason = self._delete_nodes(nodes)
 
         if result != self.RES_OK:
             reason = new_reason
         return result, reason
 
-    def _update_cluster_properties(self, cluster, desired, min_size, max_size):
+    def _update_cluster_properties(self, desired, min_size, max_size):
         # update cluster properties related to size and profile
 
         need_store = False
-        if min_size is not None and min_size != cluster.min_size:
-            cluster.min_size = min_size
+        if min_size is not None and min_size != self.cluster.min_size:
+            self.cluster.min_size = min_size
             need_store = True
-        if max_size is not None and max_size != cluster.max_size:
-            cluster.max_size = max_size
+        if max_size is not None and max_size != self.cluster.max_size:
+            self.cluster.max_size = max_size
             need_store = True
-        if desired is not None and desired != cluster.desired_capacity:
-            cluster.desired_capacity = desired
+        if desired is not None and desired != self.cluster.desired_capacity:
+            self.cluster.desired_capacity = desired
             need_store = True
 
         if need_store is False:
             return self.RES_OK, ''
 
-        cluster.status_reason = _('Cluster properties updated.')
-        cluster.store(self.context)
+        self.cluster.status_reason = _('Cluster properties updated.')
+        self.cluster.store(self.context)
         return self.RES_OK, ''
 
-    def do_resize(self, cluster):
+    def do_resize(self):
         adj_type = self.inputs.get(consts.ADJUSTMENT_TYPE, None)
         number = self.inputs.get(consts.ADJUSTMENT_NUMBER, None)
         min_size = self.inputs.get(consts.ADJUSTMENT_MIN_SIZE, None)
@@ -381,7 +383,7 @@ class ClusterAction(base.Action):
         min_step = self.inputs.get(consts.ADJUSTMENT_MIN_STEP, None)
         strict = self.inputs.get(consts.ADJUSTMENT_STRICT, False)
 
-        desired = cluster.desired_capacity
+        desired = self.cluster.desired_capacity
         if adj_type is not None:
             # number must be not None according to previous tests
             desired = scaleutils.calculate_desired(
@@ -390,19 +392,18 @@ class ClusterAction(base.Action):
         # truncate adjustment if permitted (strict==False)
         if strict is False:
             desired = scaleutils.truncate_desired(
-                cluster, desired, min_size, max_size)
+                self.cluster, desired, min_size, max_size)
 
         # check provided params against current properties
         # desired is checked when strict is True
-        result = scaleutils.check_size_params(cluster, desired, min_size,
+        result = scaleutils.check_size_params(self.cluster, desired, min_size,
                                               max_size, strict)
         if result != '':
             return self.RES_ERROR, result
 
         # save sanitized properties
-        self._update_cluster_properties(cluster, desired, min_size,
-                                        max_size)
-        node_list = cluster.nodes
+        self._update_cluster_properties(desired, min_size, max_size)
+        node_list = self.cluster.nodes
         current_size = len(node_list)
 
         # delete nodes if necessary
@@ -419,7 +420,7 @@ class ClusterAction(base.Action):
                 node_list.remove(node_list[r])
                 i = i - 1
 
-            result, reason = self._delete_nodes(cluster, candidates)
+            result, reason = self._delete_nodes(candidates)
             if result != self.RES_OK:
                 return result, reason
 
@@ -427,15 +428,15 @@ class ClusterAction(base.Action):
         if desired > current_size:
             delta = desired - current_size
             self.data['creation'] = {'count': delta}
-            result, reason = self._create_nodes(cluster, delta)
+            result, reason = self._create_nodes(delta)
             if result != self.RES_OK:
                 return result, reason
 
         reason = _('Cluster resize succeeded.')
-        cluster.set_status(self.context, cluster.ACTIVE, reason)
+        self.cluster.set_status(self.context, self.cluster.ACTIVE, reason)
         return self.RES_OK, reason
 
-    def do_scale_out(self, cluster):
+    def do_scale_out(self):
         # We use policy output if any, or else the count is
         # set to 1 as default.
         pd = self.data.get('creation', None)
@@ -452,32 +453,32 @@ class ClusterAction(base.Action):
 
         # check provided params against current properties
         # desired is checked when strict is True
-        curr_size = len(cluster.nodes)
+        curr_size = len(self.cluster.nodes)
         new_size = curr_size + count
 
-        result = scaleutils.check_size_params(cluster, new_size,
+        result = scaleutils.check_size_params(self.cluster, new_size,
                                               None, None, True)
         if result != '':
             return self.RES_ERROR, result
 
         # Update desired_capacity of cluster
         # TODO(anyone): make this behavior customizable
-        self._update_cluster_properties(cluster, new_size, None, None)
+        self._update_cluster_properties(new_size, None, None)
 
-        result, reason = self._create_nodes(cluster, count)
+        result, reason = self._create_nodes(count)
 
         if result == self.RES_OK:
             reason = _('Cluster scaling succeeded.')
-            cluster.set_status(self.context, cluster.ACTIVE, reason)
+            self.cluster.set_status(self.context, self.cluster.ACTIVE, reason)
         elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_ERROR]:
-            cluster.set_status(self.context, cluster.ERROR, reason)
+            self.cluster.set_status(self.context, self.cluster.ERROR, reason)
         else:
             # RETRY?
             pass
 
         return result, reason
 
-    def do_scale_in(self, cluster):
+    def do_scale_in(self):
         # We use policy data if any, or else the count is
         # set to 1 as default.
         pd = self.data.get('deletion', None)
@@ -495,7 +496,7 @@ class ClusterAction(base.Action):
 
         # check provided params against current properties
         # desired is checked when strict is True
-        curr_size = len(cluster.nodes)
+        curr_size = len(self.cluster.nodes)
         if count > curr_size:
             LOG.warning(_('Triming count (%(count)s) to current cluster size '
                           '(%(curr)s) for scaling in'),
@@ -503,18 +504,18 @@ class ClusterAction(base.Action):
             count = curr_size
         new_size = curr_size - count
 
-        result = scaleutils.check_size_params(cluster, new_size,
+        result = scaleutils.check_size_params(self.cluster, new_size,
                                               None, None, False)
         if result != '':
             return self.RES_ERROR, result
 
         # Update desired_capacity of cluster
         # TODO(anyone): make this behavior customizable
-        self._update_cluster_properties(cluster, new_size, None, None)
+        self._update_cluster_properties(new_size, None, None)
 
         # Choose victims randomly
         if len(candidates) == 0:
-            ids = [node.id for node in cluster.nodes]
+            ids = [node.id for node in self.cluster.nodes]
             i = count
             while i > 0:
                 r = random.randrange(len(ids))
@@ -523,20 +524,20 @@ class ClusterAction(base.Action):
                 i = i - 1
 
         # The policy data may contain destroy flag and grace period option
-        result, reason = self._delete_nodes(cluster, candidates)
+        result, reason = self._delete_nodes(candidates)
 
         if result == self.RES_OK:
             reason = _('Cluster scaling succeeded.')
-            cluster.set_status(self.context, cluster.ACTIVE, reason)
+            self.cluster.set_status(self.context, self.cluster.ACTIVE, reason)
         elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_ERROR]:
-            cluster.set_status(self.context, cluster.ERROR, reason)
+            self.cluster.set_status(self.context, self.cluster.ERROR, reason)
         else:
             # RETRY or FAILED?
             pass
 
         return result, reason
 
-    def do_attach_policy(self, cluster):
+    def do_attach_policy(self):
         '''Attach policy to the cluster.'''
 
         policy_id = self.inputs.get('policy_id', None)
@@ -545,7 +546,7 @@ class ClusterAction(base.Action):
 
         policy = policy_mod.Policy.load(self.context, policy_id)
         # Check if policy has already been attached
-        for existing in cluster.policies:
+        for existing in self.cluster.policies:
             # Policy already attached
             if existing.id == policy_id:
                 return self.RES_OK, _('Policy already attached.')
@@ -558,10 +559,10 @@ class ClusterAction(base.Action):
                            '(%(cluster)s) already.'
                            ) % {'ptype': policy.type,
                                 'existing': existing.id,
-                                'cluster': cluster.id}
+                                'cluster': self.target}
                 return self.RES_ERROR, reason
 
-        res, data = policy.attach(cluster)
+        res, data = policy.attach(self.cluster)
         if not res:
             return self.RES_ERROR, data
 
@@ -575,13 +576,13 @@ class ClusterAction(base.Action):
             'data': data,
         }
 
-        cp = cp_mod.ClusterPolicy(cluster.id, policy_id, **values)
+        cp = cp_mod.ClusterPolicy(self.cluster.id, policy_id, **values)
         cp.store(self.context)
 
-        cluster.add_policy(policy)
+        self.cluster.add_policy(policy)
         return self.RES_OK, _('Policy attached.')
 
-    def do_detach_policy(self, cluster):
+    def do_detach_policy(self):
         '''Attach policy to the cluster.'''
 
         policy_id = self.inputs.get('policy_id', None)
@@ -590,7 +591,7 @@ class ClusterAction(base.Action):
 
         # Check if policy has already been attached
         found = False
-        for existing in cluster.policies:
+        for existing in self.cluster.policies:
             if existing.id == policy_id:
                 found = True
                 break
@@ -598,23 +599,23 @@ class ClusterAction(base.Action):
             return self.RES_OK, _('Policy not attached.')
 
         policy = policy_mod.Policy.load(self.context, policy_id)
-        res, data = policy.detach(cluster)
+        res, data = policy.detach(self.cluster)
         if not res:
             return self.RES_ERROR, data
 
-        db_api.cluster_policy_detach(self.context, cluster.id, policy_id)
+        db_api.cluster_policy_detach(self.context, self.cluster.id, policy_id)
 
-        cluster.remove_policy(policy)
+        self.cluster.remove_policy(policy)
         return self.RES_OK, _('Policy detached.')
 
-    def do_update_policy(self, cluster):
+    def do_update_policy(self):
         policy_id = self.inputs.get('policy_id', None)
         if not policy_id:
             return self.RES_ERROR, _('Policy not specified.')
 
         # Check if policy has already been attached
         found = False
-        for existing in cluster.policies:
+        for existing in self.cluster.policies:
             if existing.id == policy_id:
                 found = True
                 break
@@ -637,17 +638,17 @@ class ClusterAction(base.Action):
         if not values:
             return self.RES_OK, _('No update is needed.')
 
-        db_api.cluster_policy_update(self.context, cluster.id, policy_id,
+        db_api.cluster_policy_update(self.context, self.cluster.id, policy_id,
                                      values)
 
         return self.RES_OK, _('Policy updated.')
 
-    def _execute(self, cluster):
+    def _execute(self, **kwargs):
         # do pre-action policy checking
-        self.policy_check(cluster.id, 'BEFORE')
+        self.policy_check(self.cluster.id, 'BEFORE')
         if self.data['status'] != policy_mod.CHECK_OK:
             reason = _('Policy check failure: %s') % self.data['reason']
-            EVENT.error(self.context, cluster, self.action, 'Failed',
+            EVENT.error(self.context, self.cluster, self.action, 'Failed',
                         reason)
             return self.RES_ERROR, reason
 
@@ -657,17 +658,18 @@ class ClusterAction(base.Action):
         method = getattr(self, method_name, None)
         if method is None:
             error = _('Unsupported action: %s.') % self.action
-            EVENT.error(self.context, cluster, self.action, 'Failed', error)
+            EVENT.error(self.context, self.cluster, self.action, 'Failed',
+                        error)
             return self.RES_ERROR, error
 
-        result, reason = method(cluster)
+        result, reason = method()
 
         # do post-action policy checking
         if result == self.RES_OK:
-            self.policy_check(cluster.id, 'AFTER')
+            self.policy_check(self.cluster.id, 'AFTER')
             if self.data['status'] != policy_mod.CHECK_OK:
                 error = _('Policy check failure: %s') % self.data['reason']
-                EVENT.error(self.context, cluster, self.action, 'Failed',
+                EVENT.error(self.context, self.cluster, self.action, 'Failed',
                             error)
                 return self.RES_ERROR, error
 
@@ -690,7 +692,7 @@ class ClusterAction(base.Action):
             return self.RES_ERROR, _('Failed in locking cluster.')
 
         try:
-            res, reason = self._execute(self.cluster)
+            res, reason = self._execute(**kwargs)
         finally:
             senlin_lock.cluster_lock_release(self.target, self.id,
                                              senlin_lock.CLUSTER_SCOPE)

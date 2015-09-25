@@ -143,7 +143,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_status = self.patchobject(n_action, 'set_status')
 
         # do it
-        res_code, res_msg = action._create_nodes(cluster, 1)
+        res_code, res_msg = action._create_nodes(1)
 
         # assertions
         self.assertEqual(action.RES_OK, res_code)
@@ -180,7 +180,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_load.return_value = cluster
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
 
-        res_code, res_msg = action._create_nodes(cluster, 0)
+        res_code, res_msg = action._create_nodes(0)
 
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('', res_msg)
@@ -226,7 +226,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_status_2 = self.patchobject(node_action_2, 'set_status')
 
         # do it
-        res_code, res_msg = action._create_nodes(cluster, 2)
+        res_code, res_msg = action._create_nodes(2)
 
         # assertions
         self.assertEqual(action.RES_OK, res_code)
@@ -295,7 +295,7 @@ class ClusterActionTest(base.SenlinTestCase):
         self.patchobject(n_action_2, 'set_status')
 
         # do it
-        res_code, res_msg = action._create_nodes(cluster, 2)
+        res_code, res_msg = action._create_nodes(2)
 
         # assertions
         self.assertEqual(action.RES_ERROR, res_code)
@@ -313,12 +313,11 @@ class ClusterActionTest(base.SenlinTestCase):
         x_create_nodes = self.patchobject(action, '_create_nodes',
                                           return_value=(action.RES_OK, 'OK'))
         # do it
-        res_code, res_msg = action.do_create(cluster)
+        res_code, res_msg = action.do_create()
 
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Cluster creation succeeded.', res_msg)
-        x_create_nodes.assert_called_once_with(cluster,
-                                               cluster.desired_capacity)
+        x_create_nodes.assert_called_once_with(cluster.desired_capacity)
         cluster.set_status.assert_called_once_with(
             action.context, 'ACTIVE', 'Cluster creation succeeded.')
 
@@ -332,7 +331,7 @@ class ClusterActionTest(base.SenlinTestCase):
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
 
         # do it
-        res_code, res_msg = action.do_create(cluster)
+        res_code, res_msg = action.do_create()
 
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Cluster creation failed.', res_msg)
@@ -353,7 +352,7 @@ class ClusterActionTest(base.SenlinTestCase):
             self.patchobject(action, '_create_nodes',
                              return_value=(code, 'Really Bad'))
 
-            res_code, res_msg = action.do_create(cluster)
+            res_code, res_msg = action.do_create()
 
             self.assertEqual(code, res_code)
             self.assertEqual('Really Bad', res_msg)
@@ -371,7 +370,7 @@ class ClusterActionTest(base.SenlinTestCase):
                          return_value=(action.RES_RETRY, 'retry'))
 
         # do it
-        res_code, res_msg = action.do_create(cluster)
+        res_code, res_msg = action.do_create()
 
         self.assertEqual(action.RES_RETRY, res_code)
         self.assertEqual('retry', res_msg)
@@ -399,7 +398,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_wait.return_value = (action.RES_OK, 'OK')
 
         # do it
-        res_code, res_msg = action.do_update(cluster)
+        res_code, res_msg = action.do_update()
 
         # assertions
         self.assertEqual(action.RES_OK, res_code)
@@ -426,7 +425,7 @@ class ClusterActionTest(base.SenlinTestCase):
         action.inputs = {'new_profile_id': 'FAKE_PROFILE'}
 
         # do it
-        res_code, res_msg = action.do_update(cluster)
+        res_code, res_msg = action.do_update()
 
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Cluster update completed.', res_msg)
@@ -457,7 +456,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_wait.return_value = (action.RES_TIMEOUT, 'Timeout')
 
         # do it
-        res_code, res_msg = action.do_update(cluster)
+        res_code, res_msg = action.do_update()
 
         # assertions
         self.assertEqual(action.RES_TIMEOUT, res_code)
@@ -489,7 +488,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_action = self.patchobject(base_action, 'Action',
                                        return_value=n_action)
         # do it
-        res_code, res_msg = action._delete_nodes(cluster, ['NODE_ID'])
+        res_code, res_msg = action._delete_nodes(['NODE_ID'])
 
         # assertions
         self.assertEqual(action.RES_OK, res_code)
@@ -529,7 +528,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_action = self.patchobject(base_action, 'Action',
                                        side_effect=[n_action_1, n_action_2])
         # do it
-        res_code, res_msg = action._delete_nodes(cluster, ['NODE_1', 'NODE_2'])
+        res_code, res_msg = action._delete_nodes(['NODE_1', 'NODE_2'])
 
         # assertions
         self.assertEqual(action.RES_OK, res_code)
@@ -552,7 +551,7 @@ class ClusterActionTest(base.SenlinTestCase):
         action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
 
         # do it
-        res_code, res_msg = action._delete_nodes(cluster, [])
+        res_code, res_msg = action._delete_nodes([])
 
         # assertions
         self.assertEqual(action.RES_OK, res_code)
@@ -583,7 +582,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_action = self.patchobject(base_action, 'Action',
                                        return_value=n_action)
         # do it
-        res_code, res_msg = action._delete_nodes(cluster, ['NODE_ID'])
+        res_code, res_msg = action._delete_nodes(['NODE_ID'])
 
         # assertions (other assertions are skipped)
         self.assertEqual(action.RES_OK, res_code)
@@ -614,7 +613,7 @@ class ClusterActionTest(base.SenlinTestCase):
         self.patchobject(base_action, 'Action', return_value=n_action)
 
         # do it
-        res_code, res_msg = action._delete_nodes(cluster, ['NODE_ID'])
+        res_code, res_msg = action._delete_nodes(['NODE_ID'])
 
         # assertions (other assertions are skipped)
         self.assertEqual(action.RES_TIMEOUT, res_code)
@@ -622,24 +621,27 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual({}, action.data)
 
     def test_do_delete_success(self, mock_load):
-        mock_load.return_value = mock.Mock()
-        action = ca.ClusterAction('ID', 'CLUSTER_DELETE', self.ctx)
-        action.data = {}
-
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
         node1 = mock.Mock()
         node1.id = 'NODE_1'
         node2 = mock.Mock()
         node2.id = 'NODE_2'
 
-        cluster = mock.Mock()
         cluster.nodes = [node1, node2]
         cluster.DELETING = 'DELETING'
         cluster.do_delete.return_value = True
+
+        mock_load.return_value = cluster
+
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
+        action.data = {}
+
         mock_delete = self.patchobject(action, '_delete_nodes',
                                        return_value=(action.RES_OK, 'Good'))
 
         # do it
-        res_code, res_msg = action.do_delete(cluster)
+        res_code, res_msg = action.do_delete()
 
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Good', res_msg)
@@ -647,25 +649,27 @@ class ClusterActionTest(base.SenlinTestCase):
                          action.data)
         cluster.set_status.assert_called_once_with(action.context, 'DELETING',
                                                    'Deletion in progress.')
-        mock_delete.assert_called_once_with(cluster, ['NODE_1', 'NODE_2'])
+        mock_delete.assert_called_once_with(['NODE_1', 'NODE_2'])
         cluster.do_delete.assert_called_once_with(action.context)
 
     def test_do_delete_failed_delete_nodes(self, mock_load):
-        action = ca.ClusterAction('ID', 'CLUSTER_DELETE', self.ctx)
-        action.data = {}
-
         node = mock.Mock()
         node.id = 'NODE_1'
         cluster = mock.Mock()
+        cluster.id = 'CID'
         cluster.nodes = [node]
         cluster.ACTIVE = 'ACTIVE'
         cluster.DELETING = 'DELETING'
         cluster.WARNING = 'WARNING'
+        mock_load.return_value = cluster
+
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
+        action.data = {}
 
         # timeout
         self.patchobject(action, '_delete_nodes',
                          return_value=(action.RES_TIMEOUT, 'Timeout!'))
-        res_code, res_msg = action.do_delete(cluster)
+        res_code, res_msg = action.do_delete()
 
         self.assertEqual(action.RES_TIMEOUT, res_code)
         self.assertEqual('Timeout!', res_msg)
@@ -677,7 +681,7 @@ class ClusterActionTest(base.SenlinTestCase):
         # error
         self.patchobject(action, '_delete_nodes',
                          return_value=(action.RES_ERROR, 'Error!'))
-        res_code, res_msg = action.do_delete(cluster)
+        res_code, res_msg = action.do_delete()
 
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Error!', res_msg)
@@ -689,7 +693,7 @@ class ClusterActionTest(base.SenlinTestCase):
         # cancel
         self.patchobject(action, '_delete_nodes',
                          return_value=(action.RES_CANCEL, 'Cancelled!'))
-        res_code, res_msg = action.do_delete(cluster)
+        res_code, res_msg = action.do_delete()
 
         self.assertEqual(action.RES_CANCEL, res_code)
         self.assertEqual('Cancelled!', res_msg)
@@ -700,25 +704,28 @@ class ClusterActionTest(base.SenlinTestCase):
         # retry
         self.patchobject(action, '_delete_nodes',
                          return_value=(action.RES_RETRY, 'Busy!'))
-        res_code, res_msg = action.do_delete(cluster)
+        res_code, res_msg = action.do_delete()
 
         self.assertEqual(action.RES_RETRY, res_code)
         self.assertEqual('Busy!', res_msg)
 
     def test_do_delete_failed_delete_cluster(self, mock_load):
-        action = ca.ClusterAction('ID', 'CLUSTER_DELETE', self.ctx)
-        action.data = {}
-
         node = mock.Mock()
         node.id = 'NODE_1'
         cluster = mock.Mock()
+        cluster.id = 'CID'
         cluster.nodes = [node]
         cluster.DELETING = 'DELETING'
         cluster.do_delete.return_value = False
+        mock_load.return_value = cluster
+
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
+        action.data = {}
+
         self.patchobject(action, '_delete_nodes',
                          return_value=(action.RES_OK, 'Good'))
         # do it
-        res_code, res_msg = action.do_delete(cluster)
+        res_code, res_msg = action.do_delete()
 
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Cannot delete cluster object.', res_msg)
@@ -729,13 +736,15 @@ class ClusterActionTest(base.SenlinTestCase):
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
     def test_do_add_nodes_single(self, mock_wait, mock_start, mock_dep,
                                  mock_load_node, mock_load):
-        action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx)
+        cluster = mock.Mock()
+        cluster.id = 'CLUSTER_ID'
+        mock_load.return_value = cluster
+
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
         action.inputs = {'nodes': ['NODE_1']}
         action.data = {}
 
-        cluster = mock.Mock()
-        cluster.id = 'CLUSTER_ID'
         node = mock.Mock()
         node.id = 'NODE_1'
         node.cluster_id = None
@@ -749,7 +758,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_wait.return_value = (action.RES_OK, 'Good to go!')
 
         # do it
-        res_code, res_msg = action.do_add_nodes(cluster)
+        res_code, res_msg = action.do_add_nodes()
 
         # assertions
         self.assertEqual(action.RES_OK, res_code)
@@ -775,13 +784,15 @@ class ClusterActionTest(base.SenlinTestCase):
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
     def test_do_add_nodes_multiple(self, mock_wait, mock_start, mock_dep,
                                    mock_load_node, mock_load):
-        action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx)
+        cluster = mock.Mock()
+        cluster.id = 'CLUSTER_ID'
+        mock_load.return_value = cluster
+
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
         action.inputs = {'nodes': ['NODE_1', 'NODE_2']}
         action.data = {}
 
-        cluster = mock.Mock()
-        cluster.id = 'CLUSTER_ID'
         node1 = mock.Mock()
         node1.id = 'NODE_1'
         node1.cluster_id = None
@@ -802,7 +813,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_wait.return_value = (action.RES_OK, 'Good to go!')
 
         # do it
-        res_code, res_msg = action.do_add_nodes(cluster)
+        res_code, res_msg = action.do_add_nodes()
 
         # assertions
         self.assertEqual(action.RES_OK, res_code)
@@ -842,10 +853,9 @@ class ClusterActionTest(base.SenlinTestCase):
         action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx)
         action.inputs = {'nodes': ['NODE_1']}
         mock_load_node.side_effect = exception.NodeNotFound(node='NODE_1')
-        cluster = mock.Mock()
 
         # do it
-        res_code, res_msg = action.do_add_nodes(cluster)
+        res_code, res_msg = action.do_add_nodes()
 
         # assertions
         self.assertEqual(action.RES_ERROR, res_code)
@@ -853,18 +863,20 @@ class ClusterActionTest(base.SenlinTestCase):
 
     @mock.patch.object(node_mod.Node, 'load')
     def test_do_add_nodes_node_already_member(self, mock_load_node, mock_load):
-        action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx)
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        mock_load.return_value = cluster
+
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.inputs = {'nodes': ['NODE_1']}
         action.data = {}
 
-        cluster = mock.Mock()
-        cluster.id = 'FAKE_CLUSTER'
         node = mock.Mock()
         node.cluster_id = 'FAKE_CLUSTER'
         mock_load_node.return_value = node
 
         # do it
-        res_code, res_msg = action.do_add_nodes(cluster)
+        res_code, res_msg = action.do_add_nodes()
 
         # assertions
         self.assertEqual(action.RES_OK, res_code)
@@ -874,18 +886,20 @@ class ClusterActionTest(base.SenlinTestCase):
     @mock.patch.object(node_mod.Node, 'load')
     def test_do_add_nodes_node_in_other_cluster(self, mock_load_node,
                                                 mock_load):
-        action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx)
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        mock_load.return_value = cluster
+
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.inputs = {'nodes': ['NODE_1']}
         action.data = {}
 
-        cluster = mock.Mock()
-        cluster.id = 'FAKE_CLUSTER'
         node = mock.Mock()
         node.cluster_id = 'ANOTHER_CLUSTER'
         mock_load_node.return_value = node
 
         # do it
-        res_code, res_msg = action.do_add_nodes(cluster)
+        res_code, res_msg = action.do_add_nodes()
 
         # assertions
         self.assertEqual(action.RES_ERROR, res_code)
@@ -906,7 +920,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_load_node.return_value = node
 
         # do it
-        res_code, res_msg = action.do_add_nodes(cluster)
+        res_code, res_msg = action.do_add_nodes()
 
         # assertions
         self.assertEqual(action.RES_ERROR, res_code)
@@ -937,7 +951,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_wait.return_value = (action.RES_TIMEOUT, 'Timeout!')
 
         # do it
-        res_code, res_msg = action.do_add_nodes(cluster)
+        res_code, res_msg = action.do_add_nodes()
 
         # assertions
         self.assertEqual(action.RES_TIMEOUT, res_code)
@@ -947,13 +961,15 @@ class ClusterActionTest(base.SenlinTestCase):
     @mock.patch.object(db_api, 'node_get')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
     def test_do_del_nodes(self, mock_delete, mock_get, mock_load):
-        action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx)
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        mock_load.return_value = cluster
+
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
         action.inputs = {'nodes': ['NODE_1', 'NODE_2']}
         action.data = {}
 
-        cluster = mock.Mock()
-        cluster.id = 'FAKE_CLUSTER'
         node1 = mock.Mock()
         node1.id = 'NODE_1'
         node1.cluster_id = 'FAKE_CLUSTER'
@@ -964,7 +980,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_delete.return_value = (action.RES_OK, 'Good to go!')
 
         # do it
-        res_code, res_msg = action.do_del_nodes(cluster)
+        res_code, res_msg = action.do_del_nodes()
 
         # assertions
         self.assertEqual(action.RES_OK, res_code)
@@ -975,7 +991,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_get.assert_has_calls([
             mock.call(action.context, 'NODE_1', show_deleted=False),
             mock.call(action.context, 'NODE_2', show_deleted=False)])
-        mock_delete.assert_called_once_with(cluster, ['NODE_1', 'NODE_2'])
+        mock_delete.assert_called_once_with(['NODE_1', 'NODE_2'])
 
     @mock.patch.object(db_api, 'node_get')
     def test_do_del_nodes_node_not_found(self, mock_get, mock_load):
@@ -986,7 +1002,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_get.side_effect = exception.NodeNotFound(node='NODE_1')
 
         # do it
-        res_code, res_msg = action.do_del_nodes(cluster)
+        res_code, res_msg = action.do_del_nodes()
 
         # assertions
         self.assertEqual(action.RES_ERROR, res_code)
@@ -1007,7 +1023,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_get.side_effect = [node1, node2]
 
         # do it
-        res_code, res_msg = action.do_del_nodes(cluster)
+        res_code, res_msg = action.do_del_nodes()
 
         # assertions
         self.assertEqual(action.RES_OK, res_code)
@@ -1029,7 +1045,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_delete.return_value = (action.RES_ERROR, 'Things went bad.')
 
         # do it
-        res_code, res_msg = action.do_del_nodes(cluster)
+        res_code, res_msg = action.do_del_nodes()
 
         # assertions
         self.assertEqual(action.RES_ERROR, res_code)
@@ -1043,11 +1059,11 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_load.return_value = cluster
         action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx)
 
-        res, msg = action._update_cluster_properties(cluster, None, None, None)
+        res, msg = action._update_cluster_properties(None, None, None)
         self.assertEqual(action.RES_OK, res)
         self.assertEqual('', msg)
 
-        res, msg = action._update_cluster_properties(cluster, 15, 10, 20)
+        res, msg = action._update_cluster_properties(15, 10, 20)
         self.assertEqual(action.RES_OK, res)
         self.assertEqual('', msg)
 
@@ -1072,7 +1088,7 @@ class ClusterActionTest(base.SenlinTestCase):
             cluster = new_cluster()
             mock_load.return_value = cluster
             action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx)
-            res, msg = action._update_cluster_properties(cluster, *pargs)
+            res, msg = action._update_cluster_properties(*pargs)
             self.assertEqual(action.RES_OK, res)
             self.assertEqual('', msg)
             self.assertEqual('Cluster properties updated.',
@@ -1106,7 +1122,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_create.return_value = (action.RES_OK, 'All dependents completed.')
 
         # do it
-        res_code, res_msg = action.do_resize(cluster)
+        res_code, res_msg = action.do_resize()
 
         # assertions
         self.assertEqual(action.RES_OK, res_code)
@@ -1116,8 +1132,8 @@ class ClusterActionTest(base.SenlinTestCase):
                                           2, None)
         mock_trunc.assert_called_once_with(cluster, 12, None, None)
         mock_check.assert_called_once_with(cluster, 12, None, None, False)
-        mock_update.assert_called_once_with(cluster, 12, None, None)
-        mock_create.assert_called_once_with(cluster, 12)
+        mock_update.assert_called_once_with(12, None, None)
+        mock_create.assert_called_once_with(12)
         self.assertEqual({'creation': {'count': 12}}, action.data)
         cluster.set_status.assert_called_once_with(
             action.context, 'ACTIVE', 'Cluster resize succeeded.')
@@ -1149,7 +1165,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_create.return_value = (action.RES_ERROR, 'Things out of control.')
 
         # do it
-        res_code, res_msg = action.do_resize(cluster)
+        res_code, res_msg = action.do_resize()
 
         # assertions
         self.assertEqual(action.RES_ERROR, res_code)
@@ -1159,8 +1175,8 @@ class ClusterActionTest(base.SenlinTestCase):
                                           None)
         mock_trunc.assert_called_once_with(cluster, 5, None, None)
         mock_check.assert_called_once_with(cluster, 5, None, None, False)
-        mock_update.assert_called_once_with(cluster, 5, None, None)
-        mock_create.assert_called_once_with(cluster, 5)
+        mock_update.assert_called_once_with(5, None, None)
+        mock_create.assert_called_once_with(5)
         self.assertEqual({'creation': {'count': 5}}, action.data)
 
     @mock.patch.object(scaleutils, 'calculate_desired')
@@ -1194,7 +1210,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_delete.return_value = (action.RES_OK, 'All dependents completed.')
 
         # do it
-        res_code, res_msg = action.do_resize(cluster)
+        res_code, res_msg = action.do_resize()
 
         # assertions
         self.assertEqual(action.RES_OK, res_code)
@@ -1204,10 +1220,10 @@ class ClusterActionTest(base.SenlinTestCase):
                                           -2, None)
         mock_trunc.assert_called_once_with(cluster, 8, None, None)
         mock_check.assert_called_once_with(cluster, 8, None, None, False)
-        mock_update.assert_called_once_with(cluster, 8, None, None)
+        mock_update.assert_called_once_with(8, None, None)
 
-        mock_delete.assert_called_once_with(cluster, mock.ANY)
-        self.assertEqual(2, len(mock_delete.call_args[0][1]))
+        mock_delete.assert_called_once_with(mock.ANY)
+        self.assertEqual(2, len(mock_delete.call_args[0][0]))
         self.assertEqual({'deletion': {'count': 2}}, action.data)
         cluster.set_status.assert_called_once_with(
             action.context, 'ACTIVE', 'Cluster resize succeeded.')
@@ -1224,7 +1240,7 @@ class ClusterActionTest(base.SenlinTestCase):
         }
 
         # do it
-        res_code, res_msg = action.do_resize(cluster)
+        res_code, res_msg = action.do_resize()
 
         # assertions
         self.assertEqual(action.RES_ERROR, res_code)
@@ -1263,7 +1279,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_delete.return_value = (action.RES_ERROR, 'Bad things happened.')
 
         # do it
-        res_code, res_msg = action.do_resize(cluster)
+        res_code, res_msg = action.do_resize()
 
         # assertions
         self.assertEqual(action.RES_ERROR, res_code)
@@ -1273,10 +1289,10 @@ class ClusterActionTest(base.SenlinTestCase):
                                           None)
         mock_trunc.assert_called_once_with(cluster, 1, None, None)
         mock_check.assert_called_once_with(cluster, 1, None, None, False)
-        mock_update.assert_called_once_with(cluster, 1, None, None)
+        mock_update.assert_called_once_with(1, None, None)
 
-        mock_delete.assert_called_once_with(cluster, mock.ANY)
-        self.assertEqual(2, len(mock_delete.call_args[0][1]))
+        mock_delete.assert_called_once_with(mock.ANY)
+        self.assertEqual(2, len(mock_delete.call_args[0][0]))
         self.assertEqual({'deletion': {'count': 2}}, action.data)
         self.assertEqual(0, cluster.set_status.call_count)
 
@@ -1296,14 +1312,14 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_create.return_value = (action.RES_OK, 'Life is beautiful.')
 
         # do it
-        res_code, res_msg = action.do_scale_out(cluster)
+        res_code, res_msg = action.do_scale_out()
 
         # assertions
         self.assertEqual('Cluster scaling succeeded.', res_msg)
         self.assertEqual(action.RES_OK, res_code)
 
         # creating 1 nodes
-        mock_create.assert_called_once_with(cluster, 1)
+        mock_create.assert_called_once_with(1)
         cluster.set_status.assert_called_once_with(
             action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
 
@@ -1323,14 +1339,14 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_create.return_value = (action.RES_OK, 'Life is beautiful.')
 
         # do it
-        res_code, res_msg = action.do_scale_out(cluster)
+        res_code, res_msg = action.do_scale_out()
 
         # assertions
         self.assertEqual('Cluster scaling succeeded.', res_msg)
         self.assertEqual(action.RES_OK, res_code)
 
         # creating 3 nodes
-        mock_create.assert_called_once_with(cluster, 3)
+        mock_create.assert_called_once_with(3)
         cluster.set_status.assert_called_once_with(
             action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
 
@@ -1351,14 +1367,14 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_create.return_value = (action.RES_OK, 'Life is beautiful.')
 
         # do it
-        res_code, res_msg = action.do_scale_out(cluster)
+        res_code, res_msg = action.do_scale_out()
 
         # assertions
         self.assertEqual('Cluster scaling succeeded.', res_msg)
         self.assertEqual(action.RES_OK, res_code)
 
         # creating 2 nodes, given that the cluster is empty now
-        mock_create.assert_called_once_with(cluster, 2)
+        mock_create.assert_called_once_with(2)
         cluster.set_status.assert_called_once_with(
             action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
 
@@ -1371,7 +1387,7 @@ class ClusterActionTest(base.SenlinTestCase):
         action.inputs = {'count': -2}
 
         # do it
-        res_code, res_msg = action.do_scale_out(cluster)
+        res_code, res_msg = action.do_scale_out()
 
         # assertions
         self.assertEqual(action.RES_ERROR, res_code)
@@ -1390,7 +1406,7 @@ class ClusterActionTest(base.SenlinTestCase):
         action.inputs = {'count': 2}
 
         # do it
-        res_code, res_msg = action.do_scale_out(cluster)
+        res_code, res_msg = action.do_scale_out()
 
         # assertions
         self.assertEqual(action.RES_ERROR, res_code)
@@ -1417,28 +1433,28 @@ class ClusterActionTest(base.SenlinTestCase):
                        action.RES_TIMEOUT):
             mock_create.return_value = result, 'Too hot to work!'
             # do it
-            res_code, res_msg = action.do_scale_out(cluster)
+            res_code, res_msg = action.do_scale_out()
             # assertions
             self.assertEqual(result, res_code)
             self.assertEqual('Too hot to work!', res_msg)
             cluster.set_status.assert_called_once_with(
                 action.context, cluster.ERROR, 'Too hot to work!')
             cluster.set_status.reset_mock()
-            mock_update.assert_called_once_with(cluster, 3, None, None)
+            mock_update.assert_called_once_with(3, None, None)
             mock_update.reset_mock()
-            mock_create.assert_called_once_with(cluster, 2)
+            mock_create.assert_called_once_with(2)
             mock_create.reset_mock()
 
         # Timeout case
         mock_create.return_value = action.RES_RETRY, 'Not good time!'
         # do it
-        res_code, res_msg = action.do_scale_out(cluster)
+        res_code, res_msg = action.do_scale_out()
         # assertions
         self.assertEqual(action.RES_RETRY, res_code)
         self.assertEqual('Not good time!', res_msg)
         self.assertEqual(0, cluster.set_status.call_count)
-        mock_update.assert_called_once_with(cluster, 3, None, None)
-        mock_create.assert_called_once_with(cluster, 2)
+        mock_update.assert_called_once_with(3, None, None)
+        mock_create.assert_called_once_with(2)
 
     @mock.patch.object(ca.ClusterAction, '_update_cluster_properties')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
@@ -1460,16 +1476,16 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_delete.return_value = (action.RES_OK, 'Life is beautiful.')
 
         # do it
-        res_code, res_msg = action.do_scale_in(cluster)
+        res_code, res_msg = action.do_scale_in()
 
         # assertions
         self.assertEqual('Cluster scaling succeeded.', res_msg)
         self.assertEqual(action.RES_OK, res_code)
 
         # deleting 1 nodes
-        mock_delete.assert_called_once_with(cluster, mock.ANY)
-        self.assertEqual(1, len(mock_delete.call_args[0][1]))
-        mock_update.assert_called_once_with(cluster, 9, None, None)
+        mock_delete.assert_called_once_with(mock.ANY)
+        self.assertEqual(1, len(mock_delete.call_args[0][0]))
+        mock_update.assert_called_once_with(9, None, None)
         cluster.set_status.assert_called_once_with(
             action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
 
@@ -1498,18 +1514,18 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_delete.return_value = (action.RES_OK, 'Life is beautiful.')
 
         # do it
-        res_code, res_msg = action.do_scale_in(cluster)
+        res_code, res_msg = action.do_scale_in()
 
         # assertions
         self.assertEqual('Cluster scaling succeeded.', res_msg)
         self.assertEqual(action.RES_OK, res_code)
 
         # deleting 2 nodes
-        mock_delete.assert_called_once_with(cluster, mock.ANY)
-        self.assertEqual(2, len(mock_delete.call_args[0][1]))
-        self.assertIn('NODE_ID_3', mock_delete.call_args[0][1])
-        self.assertIn('NODE_ID_4', mock_delete.call_args[0][1])
-        mock_update.assert_called_once_with(cluster, 3, None, None)
+        mock_delete.assert_called_once_with(mock.ANY)
+        self.assertEqual(2, len(mock_delete.call_args[0][0]))
+        self.assertIn('NODE_ID_3', mock_delete.call_args[0][0])
+        self.assertIn('NODE_ID_4', mock_delete.call_args[0][0])
+        mock_update.assert_called_once_with(3, None, None)
         cluster.set_status.assert_called_once_with(
             action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
 
@@ -1533,16 +1549,16 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_delete.return_value = (action.RES_OK, 'Life is beautiful.')
 
         # do it
-        res_code, res_msg = action.do_scale_in(cluster)
+        res_code, res_msg = action.do_scale_in()
 
         # assertions
         self.assertEqual('Cluster scaling succeeded.', res_msg)
         self.assertEqual(action.RES_OK, res_code)
 
         # deleting 3 nodes
-        mock_delete.assert_called_once_with(cluster, mock.ANY)
-        self.assertEqual(3, len(mock_delete.call_args[0][1]))
-        mock_update.assert_called_once_with(cluster, 2, None, None)
+        mock_delete.assert_called_once_with(mock.ANY)
+        self.assertEqual(3, len(mock_delete.call_args[0][0]))
+        mock_update.assert_called_once_with(2, None, None)
         cluster.set_status.assert_called_once_with(
             action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
 
@@ -1562,7 +1578,7 @@ class ClusterActionTest(base.SenlinTestCase):
         action.inputs = {'count': -3}
 
         # do it
-        res_code, res_msg = action.do_scale_in(cluster)
+        res_code, res_msg = action.do_scale_in()
 
         # assertions
         self.assertEqual('Invalid count (-3) for scaling in.', res_msg)
@@ -1588,14 +1604,14 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_delete.return_value = (action.RES_OK, 'Deletion done.')
 
         # do it
-        res_code, res_msg = action.do_scale_in(cluster)
+        res_code, res_msg = action.do_scale_in()
 
         # assertions
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Cluster scaling succeeded.', res_msg)
-        mock_delete.assert_called_once_with(cluster, mock.ANY)
-        self.assertEqual(2, len(mock_delete.call_args[0][1]))
-        mock_update.assert_called_once_with(cluster, 0, None, None)
+        mock_delete.assert_called_once_with(mock.ANY)
+        self.assertEqual(2, len(mock_delete.call_args[0][0]))
+        mock_update.assert_called_once_with(0, None, None)
         cluster.set_status.assert_called_once_with(
             action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
 
@@ -1615,7 +1631,7 @@ class ClusterActionTest(base.SenlinTestCase):
         action.inputs = {'count': 3}
 
         # do it
-        res_code, res_msg = action.do_scale_in(cluster)
+        res_code, res_msg = action.do_scale_in()
 
         # assertions
         self.assertEqual(action.RES_ERROR, res_code)
@@ -1646,30 +1662,30 @@ class ClusterActionTest(base.SenlinTestCase):
                        action.RES_TIMEOUT):
             mock_delete.return_value = result, 'Too cold to work!'
             # do it
-            res_code, res_msg = action.do_scale_in(cluster)
+            res_code, res_msg = action.do_scale_in()
             # assertions
             self.assertEqual(result, res_code)
             self.assertEqual('Too cold to work!', res_msg)
             cluster.set_status.assert_called_once_with(
                 action.context, cluster.ERROR, 'Too cold to work!')
             cluster.set_status.reset_mock()
-            mock_update.assert_called_once_with(cluster, 3, None, None)
+            mock_update.assert_called_once_with(3, None, None)
             mock_update.reset_mock()
-            mock_delete.assert_called_once_with(cluster, mock.ANY)
-            self.assertEqual(2, len(mock_delete.call_args[0][1]))
+            mock_delete.assert_called_once_with(mock.ANY)
+            self.assertEqual(2, len(mock_delete.call_args[0][0]))
             mock_delete.reset_mock()
 
         # Timeout case
         mock_delete.return_value = action.RES_RETRY, 'Not good time!'
         # do it
-        res_code, res_msg = action.do_scale_in(cluster)
+        res_code, res_msg = action.do_scale_in()
         # assertions
         self.assertEqual(action.RES_RETRY, res_code)
         self.assertEqual('Not good time!', res_msg)
         self.assertEqual(0, cluster.set_status.call_count)
-        mock_update.assert_called_once_with(cluster, 3, None, None)
-        mock_delete.assert_called_once_with(cluster, mock.ANY)
-        self.assertEqual(2, len(mock_delete.call_args[0][1]))
+        mock_update.assert_called_once_with(3, None, None)
+        mock_delete.assert_called_once_with(mock.ANY)
+        self.assertEqual(2, len(mock_delete.call_args[0][0]))
 
     @mock.patch.object(cp_mod, 'ClusterPolicy')
     @mock.patch.object(policy_base.Policy, 'load')
@@ -1695,7 +1711,7 @@ class ClusterActionTest(base.SenlinTestCase):
         }
 
         # do it
-        res_code, res_msg = action.do_attach_policy(cluster)
+        res_code, res_msg = action.do_attach_policy()
 
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Policy attached.', res_msg)
@@ -1715,7 +1731,7 @@ class ClusterActionTest(base.SenlinTestCase):
         action.inputs = {}
 
         # do it
-        res_code, res_msg = action.do_attach_policy(cluster)
+        res_code, res_msg = action.do_attach_policy()
         # assertion
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Policy not specified.', res_msg)
@@ -1737,7 +1753,7 @@ class ClusterActionTest(base.SenlinTestCase):
         }
 
         # do it
-        res_code, res_msg = action.do_attach_policy(cluster)
+        res_code, res_msg = action.do_attach_policy()
 
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Policy already attached.', res_msg)
@@ -1766,7 +1782,7 @@ class ClusterActionTest(base.SenlinTestCase):
         }
 
         # do it
-        res_code, res_msg = action.do_attach_policy(cluster)
+        res_code, res_msg = action.do_attach_policy()
 
         # assert
         self.assertEqual(action.RES_ERROR, res_code)
@@ -1807,7 +1823,7 @@ class ClusterActionTest(base.SenlinTestCase):
         }
 
         # do it
-        res_code, res_msg = action.do_attach_policy(cluster)
+        res_code, res_msg = action.do_attach_policy()
 
         # assert
         self.assertEqual(action.RES_OK, res_code)
@@ -1842,7 +1858,7 @@ class ClusterActionTest(base.SenlinTestCase):
         }
 
         # do it
-        res_code, res_msg = action.do_attach_policy(cluster)
+        res_code, res_msg = action.do_attach_policy()
 
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Bad things happened.', res_msg)
@@ -1868,7 +1884,7 @@ class ClusterActionTest(base.SenlinTestCase):
         action.inputs = {'policy_id': 'FAKE_POLICY'}
 
         # do it
-        res_code, res_msg = action.do_detach_policy(cluster)
+        res_code, res_msg = action.do_detach_policy()
 
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Policy detached.', res_msg)
@@ -1886,7 +1902,7 @@ class ClusterActionTest(base.SenlinTestCase):
         action.inputs = {}
 
         # do it
-        res_code, res_msg = action.do_detach_policy(cluster)
+        res_code, res_msg = action.do_detach_policy()
 
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Policy not specified.', res_msg)
@@ -1904,7 +1920,7 @@ class ClusterActionTest(base.SenlinTestCase):
         action.inputs = {'policy_id': 'FAKE_POLICY'}
 
         # do it
-        res_code, res_msg = action.do_detach_policy(cluster)
+        res_code, res_msg = action.do_detach_policy()
 
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Policy not attached.', res_msg)
@@ -1926,7 +1942,7 @@ class ClusterActionTest(base.SenlinTestCase):
         action.inputs = {'policy_id': 'FAKE_POLICY'}
 
         # do it
-        res_code, res_msg = action.do_detach_policy(cluster)
+        res_code, res_msg = action.do_detach_policy()
 
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Bad things happened.', res_msg)
@@ -1951,7 +1967,7 @@ class ClusterActionTest(base.SenlinTestCase):
         }
 
         # do it
-        res_code, res_msg = action.do_update_policy(cluster)
+        res_code, res_msg = action.do_update_policy()
 
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Policy updated.', res_msg)
@@ -1967,7 +1983,7 @@ class ClusterActionTest(base.SenlinTestCase):
         action.inputs = {'priority': 30}
 
         # do it
-        res_code, res_msg = action.do_update_policy(cluster)
+        res_code, res_msg = action.do_update_policy()
 
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Policy not specified.', res_msg)
@@ -1983,7 +1999,7 @@ class ClusterActionTest(base.SenlinTestCase):
         }
 
         # do it
-        res_code, res_msg = action.do_update_policy(cluster)
+        res_code, res_msg = action.do_update_policy()
 
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Policy not attached.', res_msg)
@@ -2001,7 +2017,7 @@ class ClusterActionTest(base.SenlinTestCase):
         }
 
         # do it
-        res_code, res_msg = action.do_update_policy(cluster)
+        res_code, res_msg = action.do_update_policy()
 
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('No update is needed.', res_msg)
@@ -2018,7 +2034,7 @@ class ClusterActionTest(base.SenlinTestCase):
             'reason': 'Policy checking passed'
         }
 
-        res_code, res_msg = action._execute(cluster)
+        res_code, res_msg = action._execute()
 
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Good!', res_msg)
@@ -2040,7 +2056,7 @@ class ClusterActionTest(base.SenlinTestCase):
             'reason': 'Something is wrong.'
         }
 
-        res_code, res_msg = action._execute(cluster)
+        res_code, res_msg = action._execute()
 
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Policy check failure: Something is wrong.', res_msg)
@@ -2062,7 +2078,7 @@ class ClusterActionTest(base.SenlinTestCase):
             'reason': 'All is going well.'
         }
 
-        res_code, res_msg = action._execute(cluster)
+        res_code, res_msg = action._execute()
 
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Unsupported action: CLUSTER_DANCE.', res_msg)
@@ -2093,7 +2109,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_check = self.patchobject(action, 'policy_check',
                                       side_effect=fake_check)
 
-        res_code, res_msg = action._execute(cluster)
+        res_code, res_msg = action._execute()
 
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Policy check failure: Policy checking failed.',
