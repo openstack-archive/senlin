@@ -109,29 +109,29 @@ class ClusterAction(base.Action):
         for m in range(count):
 
             kwargs = {
+                'index': index + m,
+                'metadata': {},
                 'user': self.cluster.user,
                 'project': self.cluster.project,
                 'domain': self.cluster.domain,
-                'index': index + m,
-                'metadata': {}
             }
+            if placement is not None:
+                # We assume placement is a list
+                kwargs['data'] = {'placement': placement[m]}
+
             name = 'node-%s-%003d' % (self.cluster.id[:8], index + m)
             node = node_mod.Node(name, self.cluster.profile_id,
                                  self.cluster.id, context=self.context,
                                  **kwargs)
-
-            if placement is not None:
-                # We assume placement is a list
-                node.data['placement'] = placement[m]
             node.store(self.context)
-            nodes.append(node.id)
+            nodes.append(node)
 
             kwargs = {
+                'name': 'node_create_%s' % node.id[:8],
+                'cause': base.CAUSE_DERIVED,
                 'user': self.context.user,
                 'project': self.context.project,
                 'domain': self.context.domain,
-                'name': 'node_create_%s' % node.id[:8],
-                'cause': base.CAUSE_DERIVED,
             }
 
             action = base.Action(node.id, 'NODE_CREATE', **kwargs)
@@ -147,8 +147,11 @@ class ClusterAction(base.Action):
             # Wait for cluster creation to complete
             res, reason = self._wait_for_dependents()
             if res == self.RES_OK:
-                self.data['nodes'] = nodes
-                # TODO(anyone): refresh cluster node memebership
+                # TODO(anyone): avoid passing nodes in this way
+                self.data['nodes'] = [n.id for n in nodes]
+                for node in nodes:
+                    self.cluster.add_node(node)
+
             return res, reason
 
         return self.RES_OK, ''
@@ -240,8 +243,11 @@ class ClusterAction(base.Action):
         if len(nodes) > 0:
             res, reason = self._wait_for_dependents()
             if res == self.RES_OK:
+                # TODO(anyone): avoid passing nodes in this way.
                 self.data['nodes'] = nodes
-                # TODO(anyone): refresh cluster node memebership
+                for node_id in nodes:
+                    self.cluster.remove_node(node_id)
+
             return res, reason
 
         return self.RES_OK, ''

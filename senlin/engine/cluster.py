@@ -294,6 +294,22 @@ class Cluster(object):
     def nodes(self):
         return self.rt['nodes']
 
+    def add_node(self, node):
+        """Append specified node to the cluster cache.
+
+        :param node: The node to become a new member of the cluster.
+        """
+        self.rt['nodes'].append(node)
+
+    def remove_node(self, node_id):
+        """Remove node with specified ID from cache.
+
+        :param node_id: ID of the node to be removed from cache.
+        """
+        for node in self.rt['nodes']:
+            if node.id == node_id:
+                self.rt['nodes'].remove(node)
+
     @property
     def policies(self):
         return self.rt['policies']

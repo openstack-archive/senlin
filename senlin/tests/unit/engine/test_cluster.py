@@ -323,6 +323,62 @@ class TestCluster(base.SenlinTestCase):
         cluster.rt = {'policies': [policy1, policy2]}
         self.assertEqual([policy1, policy2], cluster.policies)
 
+    def test_cluster_add_node(self):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+        # empty
+        self.assertEqual([], cluster.nodes)
+
+        # add one node
+        node = mock.Mock()
+        cluster.add_node(node)
+        self.assertEqual([node], cluster.nodes)
+
+        # add another node
+        another_node = mock.Mock()
+        cluster.add_node(another_node)
+        self.assertEqual([node, another_node], cluster.nodes)
+
+    def test_cluster_remove_node(self):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+        # empty
+        self.assertEqual([], cluster.nodes)
+
+        # remove from empty list should be okay
+        res = cluster.remove_node('BOGUS')
+        self.assertIsNone(res)
+
+        # add one node
+        node1 = mock.Mock()
+        node1.id = 'NODE1'
+        cluster.add_node(node1)
+        self.assertEqual([node1], cluster.nodes)
+
+        # remove non-existent node should be okay
+        node2 = mock.Mock()
+        node2.id = 'NODE2'
+        res = cluster.remove_node(node2)
+        self.assertIsNone(res)
+        self.assertEqual([node1], cluster.nodes)
+
+        # add another node
+        cluster.add_node(node2)
+        self.assertEqual([node1, node2], cluster.nodes)
+
+        # remove first node
+        res = cluster.remove_node(node1.id)
+        self.assertIsNone(res)
+        self.assertEqual([node2], cluster.nodes)
+
+        # reload and remove node
+        node3 = mock.Mock()
+        node3.id = 'NODE2'
+
+        res = cluster.remove_node(node3.id)
+        self.assertIsNone(res)
+        self.assertEqual([], cluster.nodes)
+
     def test_cluster_add_policy(self):
         cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
                                    project=self.context.project)
