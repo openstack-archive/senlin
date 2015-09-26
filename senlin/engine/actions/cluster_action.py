@@ -91,7 +91,15 @@ class ClusterAction(base.Action):
         return self.RES_OK, 'All dependents ended with success'
 
     def _create_nodes(self, count):
-        '''Utility method for node creation.'''
+        """Utility method for node creation.
+
+        :param count: Number of nodes to create.
+        :returns: A tuple comprised of the result and reason.
+        """
+
+        if count == 0:
+            return self.RES_OK, ''
+
         placement = self.data.get('placement', None)
 
         db_cluster = db_api.cluster_get(self.context, self.cluster.id)
