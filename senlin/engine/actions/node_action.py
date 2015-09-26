@@ -38,7 +38,10 @@ class NodeAction(base.Action):
     def __init__(self, target, action, context=None, **kwargs):
         super(NodeAction, self).__init__(target, action, context, **kwargs)
 
-        self.node = node_mod.Node.load(self.context, node_id=self.target)
+        try:
+            self.node = node_mod.Node.load(self.context, node_id=self.target)
+        except Exception:
+            self.node = None
 
     def do_create(self):
         if self.node.cluster_id and self.cause == base.CAUSE_RPC:

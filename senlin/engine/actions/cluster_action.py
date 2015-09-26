@@ -54,7 +54,10 @@ class ClusterAction(base.Action):
     def __init__(self, target, action, context=None, **kwargs):
         super(ClusterAction, self).__init__(target, action, context, **kwargs)
 
-        self.cluster = cluster_mod.Cluster.load(self.context, self.target)
+        try:
+            self.cluster = cluster_mod.Cluster.load(self.context, self.target)
+        except Exception:
+            self.cluster = None
 
     def _wait_for_dependents(self):
         status = self.get_status()
