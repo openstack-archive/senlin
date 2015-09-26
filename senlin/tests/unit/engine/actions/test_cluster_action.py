@@ -786,6 +786,7 @@ class ClusterActionTest(base.SenlinTestCase):
         node_action.set_status.assert_called_once_with(action.READY)
         mock_start.assert_called_once_with(action_id='NODE_ACTION_ID')
         mock_wait.assert_called_once_with()
+        cluster.add_node.assert_called_once_with(node)
 
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(db_api, 'action_add_dependency')
@@ -856,6 +857,8 @@ class ClusterActionTest(base.SenlinTestCase):
             mock.call(action_id='NODE_ACTION_ID_2')])
 
         mock_wait.assert_called_once_with()
+        cluster.add_node.assert_has_calls([
+            mock.call(node1), mock.call(node2)])
 
     @mock.patch.object(node_mod.Node, 'load')
     def test_do_add_nodes_node_not_found(self, mock_load_node, mock_load):

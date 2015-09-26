@@ -281,10 +281,12 @@ class ClusterAction(base.Action):
         return result, reason
 
     def do_add_nodes(self):
-        nodes = self.inputs.get('nodes')
+        node_ids = self.inputs.get('nodes')
+        # TODO(anyone): handle placement data
 
         errors = []
-        for node_id in nodes:
+        nodes = []
+        for node_id in node_ids:
             try:
                 node = node_mod.Node.load(self.context, node_id)
             except exception.NodeNotFound:
@@ -292,7 +294,7 @@ class ClusterAction(base.Action):
                 continue
 
             if node.cluster_id == self.cluster.id:
-                nodes.remove(node_id)
+                node_ids.remove(node_id)
                 continue
 
             if node.cluster_id is not None:
@@ -304,22 +306,23 @@ class ClusterAction(base.Action):
                 errors.append(_('Node [%s] is not in ACTIVE status.'
                                 ) % node_id)
                 continue
+            nodes.append(node)
 
         if len(errors) > 0:
             return self.RES_ERROR, ''.join(errors)
 
         reason = _('Completed adding nodes.')
-        if len(nodes) == 0:
+        if len(node_ids) == 0:
             return self.RES_OK, reason
 
-        for node_id in nodes:
+        for node_id in node_ids:
             kwargs = {
+                'name': 'node_join_%s' % node_id[:8],
+                'cause': base.CAUSE_DERIVED,
+                'inputs': {'cluster_id': self.target},
                 'user': self.context.user,
                 'project': self.context.project,
                 'domain': self.context.domain,
-                'name': 'node_join_%s' % node_id[:8],
-                'cause': base.CAUSE_DERIVED,
-                'inputs': {'cluster_id': self.target}
             }
             action = base.Action(node_id, 'NODE_JOIN', **kwargs)
             action.store(self.context)
@@ -332,7 +335,10 @@ class ClusterAction(base.Action):
         if result != self.RES_OK:
             reason = new_reason
         else:
-            self.data['nodes'] = nodes
+            # TODO(anyone): avoid passing nodes this way
+            self.data['nodes'] = node_ids
+            for node in nodes:
+                self.cluster.add_node(node)
 
         return result, reason
 
