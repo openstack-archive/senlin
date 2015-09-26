@@ -3,7 +3,7 @@ version: 1.0
 properties:
   name: cirros_server
   flavor: 1
-  image: "cirros-0.3.2-x86_64-uec"
+  image: "cirros-0.3.4-x86_64-uec"
   key_name: oskey
   networks:
    - network: private
