@@ -236,8 +236,16 @@ class Cluster(object):
         }
         return info
 
-    def set_status(self, context, status, reason=None):
-        '''Set status of the cluster.'''
+    def set_status(self, context, status, reason=None, **kwargs):
+        """Set status of the cluster.
+
+        :param context: A DB session for accessing the backend database.
+        :param status: A string providing the new status of the cluster.
+        :param reason: A string containing the reason for the status change.
+                       It can be omitted when invoking this method.
+        :param dict kwargs: Other optional attributes to be updated.
+        :returns: Nothing.
+        """
 
         values = {}
         now = timeutils.utcnow()
@@ -256,6 +264,16 @@ class Cluster(object):
         if reason:
             self.status_reason = reason
             values['status_reason'] = reason
+
+        for k, v in kwargs.items():
+            if hasattr(self, k):
+                setattr(self, k, v)
+                values[k] = v
+
+        # There is a possibility that the profile id is changed
+        if 'profile_id' in values:
+            self.rt['profile'] = profile_base.Profile.load(context,
+                                                           self.profile_id)
 
         db_api.cluster_update(context, self.id, values)
         # TODO(anyone): generate event record

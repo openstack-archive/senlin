@@ -178,18 +178,24 @@ class ClusterAction(base.Action):
         return result, reason
 
     def do_update(self):
+        res = self.cluster.do_update(self.context)
+        if not res:
+            reason = _('Cluster update failed.')
+            self.cluster.set_status(self.context, self.cluster.ERROR, reason)
+            return self.RES_ERROR, reason
+
         profile_id = self.inputs.get('new_profile_id')
 
         for node in self.cluster.nodes:
             kwargs = {
-                'user': self.context.user,
-                'project': self.context.project,
-                'domain': self.context.domain,
                 'name': 'node_update_%s' % node.id[:8],
                 'cause': base.CAUSE_DERIVED,
                 'inputs': {
                     'new_profile_id': profile_id,
-                }
+                },
+                'user': self.context.user,
+                'project': self.context.project,
+                'domain': self.context.domain,
             }
             action = base.Action(node.id, 'NODE_UPDATE', **kwargs)
             action.store(self.context)
@@ -199,19 +205,17 @@ class ClusterAction(base.Action):
             dispatcher.start_action(action_id=action.id)
 
         # Wait for nodes to complete update
-        result = self.RES_OK
-        reason = _('Cluster update completed.')
         if len(self.cluster.nodes) > 0:
             result, new_reason = self._wait_for_dependents()
 
             if result != self.RES_OK:
+                self.cluster.set_status(self.context, self.cluster.WARNING,
+                                        new_reason)
                 return result, new_reason
 
-        # TODO(anyone): this seems an overhead
-        self.cluster.profile_id = profile_id
-        self.cluster.store(self.context)
-
-        self.cluster.set_status(self.context, self.cluster.ACTIVE, reason)
+        reason = _('Cluster update completed.')
+        self.cluster.set_status(self.context, self.cluster.ACTIVE, reason,
+                                profile_id=profile_id)
         return self.RES_OK, reason
 
     def _delete_nodes(self, nodes):

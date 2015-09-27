@@ -272,11 +272,13 @@ class TestCluster(base.SenlinTestCase):
         self.assertIsNotNone(cluster.created_time)
         self.assertIsNone(cluster.updated_time)
 
-        cluster.set_status(self.context, cluster.ACTIVE, 'Update succeeded')
+        cluster.set_status(self.context, cluster.ACTIVE, 'Update succeeded',
+                           data={'key': 'value'})
         self.assertEqual(cluster.ACTIVE, cluster.status)
         self.assertEqual('Update succeeded', cluster.status_reason)
         self.assertIsNotNone(cluster.created_time)
         self.assertIsNotNone(cluster.updated_time)
+        self.assertEqual({'key': 'value'}, cluster.data)
 
         # set status without a reason
         reason = cluster.status_reason
@@ -291,6 +293,22 @@ class TestCluster(base.SenlinTestCase):
         self.assertIsNotNone(cluster.created_time)
         self.assertIsNotNone(cluster.updated_time)
         self.assertIsNotNone(cluster.deleted_time)
+
+    def test_cluster_set_status_with_new_profile(self):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+        cluster.store(self.context)
+        cluster.status = cluster.UPDATING
+
+        self._create_profile('NEW_PROFILE')
+        cluster.set_status(self.context, cluster.ACTIVE, 'Update succeeded',
+                           profile_id='NEW_PROFILE')
+
+        self.assertEqual(cluster.ACTIVE, cluster.status)
+        self.assertEqual('Update succeeded', cluster.status_reason)
+        self.assertIsNotNone(cluster.updated_time)
+        self.assertEqual('NEW_PROFILE', cluster.profile_id)
+        self.assertEqual('NEW_PROFILE', cluster.rt['profile'].id)
 
     def test_cluster_do_create_wrong_status(self):
         cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,

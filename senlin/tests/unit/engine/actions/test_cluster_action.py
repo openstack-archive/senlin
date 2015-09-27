@@ -418,10 +418,9 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(1, n_action_1.set_status.call_count)
         self.assertEqual(1, n_action_2.set_status.call_count)
         self.assertEqual(2, mock_start.call_count)
-        self.assertEqual('FAKE_PROFILE', cluster.profile_id)
-        cluster.store.assert_called_once_with(action.context)
         cluster.set_status.assert_called_once_with(
-            action.context, 'ACTIVE', 'Cluster update completed.')
+            action.context, 'ACTIVE', 'Cluster update completed.',
+            profile_id='FAKE_PROFILE')
 
     def test_do_update_empty_cluster(self, mock_load):
         cluster = mock.Mock()
@@ -437,11 +436,9 @@ class ClusterActionTest(base.SenlinTestCase):
 
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Cluster update completed.', res_msg)
-
-        self.assertEqual('FAKE_PROFILE', cluster.profile_id)
-        cluster.store.assert_called_once_with(action.context)
         cluster.set_status.assert_called_once_with(
-            action.context, 'ACTIVE', 'Cluster update completed.')
+            action.context, 'ACTIVE', 'Cluster update completed.',
+            profile_id='FAKE_PROFILE')
 
     @mock.patch.object(db_api, 'action_add_dependency')
     @mock.patch.object(dispatcher, 'start_action')
