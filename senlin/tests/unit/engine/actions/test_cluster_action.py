@@ -369,6 +369,7 @@ class ClusterActionTest(base.SenlinTestCase):
     def test_do_create_failed_for_retry(self, mock_load):
         cluster = mock.Mock()
         cluster.id = 'FAKE_ID'
+        cluster.INIT = 'INIT'
         cluster.do_create.return_value = True
         mock_load.return_value = cluster
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
@@ -380,6 +381,7 @@ class ClusterActionTest(base.SenlinTestCase):
 
         self.assertEqual(action.RES_RETRY, res_code)
         self.assertEqual('retry', res_msg)
+        cluster.set_status.assert_called_once_with(action.context, 'INIT')
 
     @mock.patch.object(db_api, 'action_add_dependency')
     @mock.patch.object(dispatcher, 'start_action')

@@ -172,8 +172,8 @@ class ClusterAction(base.Action):
         elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_ERROR]:
             self.cluster.set_status(self.context, self.cluster.ERROR, reason)
         else:
-            # RETRY or FAILED?
-            pass
+            # in case of RES_RETRY, need to reset cluster status
+            self.cluster.set_status(self.context, self.cluster.INIT)
 
         return result, reason
 
