@@ -381,27 +381,6 @@ class ClusterAction(base.Action):
             reason = new_reason
         return result, reason
 
-    def _update_cluster_properties(self, desired, min_size, max_size):
-        # update cluster properties related to size and profile
-
-        need_store = False
-        if min_size is not None and min_size != self.cluster.min_size:
-            self.cluster.min_size = min_size
-            need_store = True
-        if max_size is not None and max_size != self.cluster.max_size:
-            self.cluster.max_size = max_size
-            need_store = True
-        if desired is not None and desired != self.cluster.desired_capacity:
-            self.cluster.desired_capacity = desired
-            need_store = True
-
-        if need_store is False:
-            return self.RES_OK, ''
-
-        self.cluster.status_reason = _('Cluster properties updated.')
-        self.cluster.store(self.context)
-        return self.RES_OK, ''
-
     def do_resize(self):
         adj_type = self.inputs.get(consts.ADJUSTMENT_TYPE, None)
         number = self.inputs.get(consts.ADJUSTMENT_NUMBER, None)
@@ -429,7 +408,6 @@ class ClusterAction(base.Action):
             return self.RES_ERROR, result
 
         # save sanitized properties
-        self._update_cluster_properties(desired, min_size, max_size)
         node_list = self.cluster.nodes
         current_size = len(node_list)
 
@@ -460,7 +438,13 @@ class ClusterAction(base.Action):
                 return result, reason
 
         reason = _('Cluster resize succeeded.')
-        self.cluster.set_status(self.context, self.cluster.ACTIVE, reason)
+        kwargs = {'desired_capacity': desired}
+        if min_size:
+            kwargs['min_size'] = min_size
+        if max_size:
+            kwargs['max_size'] = max_size
+        self.cluster.set_status(self.context, self.cluster.ACTIVE, reason,
+                                **kwargs)
         return self.RES_OK, reason
 
     def do_scale_out(self):
@@ -488,19 +472,15 @@ class ClusterAction(base.Action):
         if result != '':
             return self.RES_ERROR, result
 
-        # Update desired_capacity of cluster
-        # TODO(anyone): make this behavior customizable
-        self._update_cluster_properties(new_size, None, None)
-
         result, reason = self._create_nodes(count)
-
         if result == self.RES_OK:
             reason = _('Cluster scaling succeeded.')
-            self.cluster.set_status(self.context, self.cluster.ACTIVE, reason)
+            # TODO(anyone): make update to desired_capacity customizable
+            self.cluster.set_status(self.context, self.cluster.ACTIVE, reason,
+                                    desired_capacity=new_size)
         elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_ERROR]:
             self.cluster.set_status(self.context, self.cluster.ERROR, reason)
-        else:
-            # RETRY?
+        else:  # RES_RETRY
             pass
 
         return result, reason
@@ -536,10 +516,6 @@ class ClusterAction(base.Action):
         if result != '':
             return self.RES_ERROR, result
 
-        # Update desired_capacity of cluster
-        # TODO(anyone): make this behavior customizable
-        self._update_cluster_properties(new_size, None, None)
-
         # Choose victims randomly
         if len(candidates) == 0:
             ids = [node.id for node in self.cluster.nodes]
@@ -555,7 +531,9 @@ class ClusterAction(base.Action):
 
         if result == self.RES_OK:
             reason = _('Cluster scaling succeeded.')
-            self.cluster.set_status(self.context, self.cluster.ACTIVE, reason)
+            # TODO(anyone): make update to desired capacity customizable
+            self.cluster.set_status(self.context, self.cluster.ACTIVE, reason,
+                                    desired_capacity=new_size)
         elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_ERROR]:
             self.cluster.set_status(self.context, self.cluster.ERROR, reason)
         else:

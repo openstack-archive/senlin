@@ -1062,58 +1062,12 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual("Things went bad.", res_msg)
 
-    def test__update_cluster_properties_no_store_needed(self, mock_load):
-        cluster = mock.Mock()
-        cluster.min_size = 10
-        cluster.max_size = 20
-        cluster.desired_capacity = 15
-        mock_load.return_value = cluster
-        action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx)
-
-        res, msg = action._update_cluster_properties(None, None, None)
-        self.assertEqual(action.RES_OK, res)
-        self.assertEqual('', msg)
-
-        res, msg = action._update_cluster_properties(15, 10, 20)
-        self.assertEqual(action.RES_OK, res)
-        self.assertEqual('', msg)
-
-    def test__update_cluster_properties_with_store(self, mock_load):
-        def new_cluster():
-            cluster = mock.Mock()
-            cluster.min_size = 10
-            cluster.max_size = 20
-            cluster.desired_capacity = 15
-            return cluster
-
-        args = [
-            (16, None, None),
-            (None, 11, None),
-            (None, None, 21),
-            (16, 11, None),
-            (None, 11, 21),
-            (16, None, 21)
-        ]
-
-        for pargs in args:
-            cluster = new_cluster()
-            mock_load.return_value = cluster
-            action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx)
-            res, msg = action._update_cluster_properties(*pargs)
-            self.assertEqual(action.RES_OK, res)
-            self.assertEqual('', msg)
-            self.assertEqual('Cluster properties updated.',
-                             cluster.status_reason)
-            cluster.store.assert_called_once_with(action.context)
-            cluster.store.reset_mock()
-
     @mock.patch.object(scaleutils, 'calculate_desired')
     @mock.patch.object(scaleutils, 'truncate_desired')
     @mock.patch.object(scaleutils, 'check_size_params')
-    @mock.patch.object(ca.ClusterAction, '_update_cluster_properties')
     @mock.patch.object(ca.ClusterAction, '_create_nodes')
-    def test_do_resize_grow(self, mock_create, mock_update, mock_check,
-                            mock_trunc, mock_calc, mock_load):
+    def test_do_resize_grow(self, mock_create, mock_check, mock_trunc,
+                            mock_calc, mock_load):
         cluster = mock.Mock()
         cluster.id = 'ID'
         cluster.desired_capacity = 10
@@ -1143,20 +1097,62 @@ class ClusterActionTest(base.SenlinTestCase):
                                           2, None)
         mock_trunc.assert_called_once_with(cluster, 12, None, None)
         mock_check.assert_called_once_with(cluster, 12, None, None, False)
-        mock_update.assert_called_once_with(12, None, None)
         mock_create.assert_called_once_with(12)
         self.assertEqual({'creation': {'count': 12}}, action.data)
         cluster.set_status.assert_called_once_with(
-            action.context, 'ACTIVE', 'Cluster resize succeeded.')
+            action.context, 'ACTIVE', 'Cluster resize succeeded.',
+            desired_capacity=12)
 
     @mock.patch.object(scaleutils, 'calculate_desired')
     @mock.patch.object(scaleutils, 'truncate_desired')
     @mock.patch.object(scaleutils, 'check_size_params')
-    @mock.patch.object(ca.ClusterAction, '_update_cluster_properties')
     @mock.patch.object(ca.ClusterAction, '_create_nodes')
-    def test_do_resize_grow_failed_creation(self, mock_create, mock_update,
-                                            mock_check, mock_trunc, mock_calc,
-                                            mock_load):
+    def test_do_resize_grow_with_new_constraints(self, mock_create, mock_check,
+                                                 mock_trunc, mock_calc,
+                                                 mock_load):
+        cluster = mock.Mock()
+        cluster.id = 'ID'
+        cluster.desired_capacity = 10
+        cluster.nodes = []
+        cluster.ACTIVE = 'ACTIVE'
+        mock_load.return_value = cluster
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
+        action.data = {}
+        action.inputs = {
+            'adjustment_type': 'CHANGE_IN_CAPACITY',
+            'number': 2,
+            'min_size': 5,
+            'max_size': 20
+        }
+
+        mock_calc.return_value = 12
+        mock_trunc.return_value = 12
+        mock_check.return_value = ''
+        mock_create.return_value = (action.RES_OK, 'All dependents completed.')
+
+        # do it
+        res_code, res_msg = action.do_resize()
+
+        # assertions
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Cluster resize succeeded.', res_msg)
+
+        mock_calc.assert_called_once_with(10, consts.CHANGE_IN_CAPACITY,
+                                          2, None)
+        mock_trunc.assert_called_once_with(cluster, 12, 5, 20)
+        mock_check.assert_called_once_with(cluster, 12, 5, 20, False)
+        mock_create.assert_called_once_with(12)
+        self.assertEqual({'creation': {'count': 12}}, action.data)
+        cluster.set_status.assert_called_once_with(
+            action.context, 'ACTIVE', 'Cluster resize succeeded.',
+            desired_capacity=12, min_size=5, max_size=20)
+
+    @mock.patch.object(scaleutils, 'calculate_desired')
+    @mock.patch.object(scaleutils, 'truncate_desired')
+    @mock.patch.object(scaleutils, 'check_size_params')
+    @mock.patch.object(ca.ClusterAction, '_create_nodes')
+    def test_do_resize_grow_failed_creation(self, mock_create, mock_check,
+                                            mock_trunc, mock_calc, mock_load):
         cluster = mock.Mock()
         cluster.id = 'FAKE_ID'
         cluster.desired_capacity = 3
@@ -1186,17 +1182,15 @@ class ClusterActionTest(base.SenlinTestCase):
                                           None)
         mock_trunc.assert_called_once_with(cluster, 5, None, None)
         mock_check.assert_called_once_with(cluster, 5, None, None, False)
-        mock_update.assert_called_once_with(5, None, None)
         mock_create.assert_called_once_with(5)
         self.assertEqual({'creation': {'count': 5}}, action.data)
 
     @mock.patch.object(scaleutils, 'calculate_desired')
     @mock.patch.object(scaleutils, 'truncate_desired')
     @mock.patch.object(scaleutils, 'check_size_params')
-    @mock.patch.object(ca.ClusterAction, '_update_cluster_properties')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
-    def test_do_resize_shrink(self, mock_delete, mock_update, mock_check,
-                              mock_trunc, mock_calc, mock_load):
+    def test_do_resize_shrink(self, mock_delete, mock_check, mock_trunc,
+                              mock_calc, mock_load):
         cluster = mock.Mock()
         cluster.id = 'CID'
         cluster.desired_capacity = 10
@@ -1231,13 +1225,13 @@ class ClusterActionTest(base.SenlinTestCase):
                                           -2, None)
         mock_trunc.assert_called_once_with(cluster, 8, None, None)
         mock_check.assert_called_once_with(cluster, 8, None, None, False)
-        mock_update.assert_called_once_with(8, None, None)
 
         mock_delete.assert_called_once_with(mock.ANY)
         self.assertEqual(2, len(mock_delete.call_args[0][0]))
         self.assertEqual({'deletion': {'count': 2}}, action.data)
         cluster.set_status.assert_called_once_with(
-            action.context, 'ACTIVE', 'Cluster resize succeeded.')
+            action.context, 'ACTIVE', 'Cluster resize succeeded.',
+            desired_capacity=8)
 
     def test_do_resize_failed_checking(self, mock_load):
         cluster = mock.Mock()
@@ -1261,11 +1255,9 @@ class ClusterActionTest(base.SenlinTestCase):
     @mock.patch.object(scaleutils, 'calculate_desired')
     @mock.patch.object(scaleutils, 'truncate_desired')
     @mock.patch.object(scaleutils, 'check_size_params')
-    @mock.patch.object(ca.ClusterAction, '_update_cluster_properties')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
-    def test_do_resize_shrink_failed_delete(self, mock_delete, mock_update,
-                                            mock_check, mock_trunc, mock_calc,
-                                            mock_load):
+    def test_do_resize_shrink_failed_delete(self, mock_delete, mock_check,
+                                            mock_trunc, mock_calc, mock_load):
         cluster = mock.Mock()
         cluster.id = 'CLID'
         cluster.desired_capacity = 3
@@ -1300,17 +1292,14 @@ class ClusterActionTest(base.SenlinTestCase):
                                           None)
         mock_trunc.assert_called_once_with(cluster, 1, None, None)
         mock_check.assert_called_once_with(cluster, 1, None, None, False)
-        mock_update.assert_called_once_with(1, None, None)
 
         mock_delete.assert_called_once_with(mock.ANY)
         self.assertEqual(2, len(mock_delete.call_args[0][0]))
         self.assertEqual({'deletion': {'count': 2}}, action.data)
         self.assertEqual(0, cluster.set_status.call_count)
 
-    @mock.patch.object(ca.ClusterAction, '_update_cluster_properties')
     @mock.patch.object(ca.ClusterAction, '_create_nodes')
-    def test_do_scale_out_no_pd_no_inputs(self, mock_create, mock_update,
-                                          mock_load):
+    def test_do_scale_out_no_pd_no_inputs(self, mock_create, mock_load):
         cluster = mock.Mock()
         cluster.id = 'CLUSTER_ID'
         cluster.min_size = 1
@@ -1332,12 +1321,11 @@ class ClusterActionTest(base.SenlinTestCase):
         # creating 1 nodes
         mock_create.assert_called_once_with(1)
         cluster.set_status.assert_called_once_with(
-            action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
+            action.context, cluster.ACTIVE, 'Cluster scaling succeeded.',
+            desired_capacity=1)
 
-    @mock.patch.object(ca.ClusterAction, '_update_cluster_properties')
     @mock.patch.object(ca.ClusterAction, '_create_nodes')
-    def test_do_scale_out_with_pd_no_inputs(self, mock_create, mock_update,
-                                            mock_load):
+    def test_do_scale_out_with_pd_no_inputs(self, mock_create, mock_load):
         cluster = mock.Mock()
         cluster.id = 'CLUSTER_ID'
         cluster.min_size = 1
@@ -1359,12 +1347,11 @@ class ClusterActionTest(base.SenlinTestCase):
         # creating 3 nodes
         mock_create.assert_called_once_with(3)
         cluster.set_status.assert_called_once_with(
-            action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
+            action.context, cluster.ACTIVE, 'Cluster scaling succeeded.',
+            desired_capacity=3)
 
-    @mock.patch.object(ca.ClusterAction, '_update_cluster_properties')
     @mock.patch.object(ca.ClusterAction, '_create_nodes')
-    def test_do_scale_out_no_pd_with_inputs(self, mock_create, mock_update,
-                                            mock_load):
+    def test_do_scale_out_no_pd_with_inputs(self, mock_create, mock_load):
         cluster = mock.Mock()
         cluster.id = 'CLUSTER_ID'
         cluster.min_size = 1
@@ -1387,7 +1374,8 @@ class ClusterActionTest(base.SenlinTestCase):
         # creating 2 nodes, given that the cluster is empty now
         mock_create.assert_called_once_with(2)
         cluster.set_status.assert_called_once_with(
-            action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
+            action.context, cluster.ACTIVE, 'Cluster scaling succeeded.',
+            desired_capacity=2)
 
     def test_do_scale_out_count_negative(self, mock_load):
         cluster = mock.Mock()
@@ -1424,10 +1412,8 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual('The target capacity (5) is greater than the '
                          'cluster\'s max_size (4).', res_msg)
 
-    @mock.patch.object(ca.ClusterAction, '_update_cluster_properties')
     @mock.patch.object(ca.ClusterAction, '_create_nodes')
-    def test_do_scale_out_failed_create_nodes(self, mock_create, mock_update,
-                                              mock_load):
+    def test_do_scale_out_failed_create_nodes(self, mock_create, mock_load):
         cluster = mock.Mock()
         cluster.id = 'CID'
         cluster.desired_capacity = 3
@@ -1451,8 +1437,6 @@ class ClusterActionTest(base.SenlinTestCase):
             cluster.set_status.assert_called_once_with(
                 action.context, cluster.ERROR, 'Too hot to work!')
             cluster.set_status.reset_mock()
-            mock_update.assert_called_once_with(3, None, None)
-            mock_update.reset_mock()
             mock_create.assert_called_once_with(2)
             mock_create.reset_mock()
 
@@ -1464,13 +1448,10 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_RETRY, res_code)
         self.assertEqual('Not good time!', res_msg)
         self.assertEqual(0, cluster.set_status.call_count)
-        mock_update.assert_called_once_with(3, None, None)
         mock_create.assert_called_once_with(2)
 
-    @mock.patch.object(ca.ClusterAction, '_update_cluster_properties')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
-    def test_do_scale_in_no_pd_no_inputs(self, mock_delete, mock_update,
-                                         mock_load):
+    def test_do_scale_in_no_pd_no_inputs(self, mock_delete, mock_load):
         cluster = mock.Mock()
         cluster.id = 'CID'
         cluster.min_size = 1
@@ -1496,14 +1477,12 @@ class ClusterActionTest(base.SenlinTestCase):
         # deleting 1 nodes
         mock_delete.assert_called_once_with(mock.ANY)
         self.assertEqual(1, len(mock_delete.call_args[0][0]))
-        mock_update.assert_called_once_with(9, None, None)
         cluster.set_status.assert_called_once_with(
-            action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
+            action.context, cluster.ACTIVE, 'Cluster scaling succeeded.',
+            desired_capacity=9)
 
-    @mock.patch.object(ca.ClusterAction, '_update_cluster_properties')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
-    def test_do_scale_in_with_pd_no_input(self, mock_delete, mock_update,
-                                          mock_load):
+    def test_do_scale_in_with_pd_no_input(self, mock_delete, mock_load):
         cluster = mock.Mock()
         cluster.id = 'CID'
         cluster.min_size = 1
@@ -1536,14 +1515,12 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(2, len(mock_delete.call_args[0][0]))
         self.assertIn('NODE_ID_3', mock_delete.call_args[0][0])
         self.assertIn('NODE_ID_4', mock_delete.call_args[0][0])
-        mock_update.assert_called_once_with(3, None, None)
         cluster.set_status.assert_called_once_with(
-            action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
+            action.context, cluster.ACTIVE, 'Cluster scaling succeeded.',
+            desired_capacity=3)
 
-    @mock.patch.object(ca.ClusterAction, '_update_cluster_properties')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
-    def test_do_scale_in_no_pd_with_input(self, mock_delete, mock_update,
-                                          mock_load):
+    def test_do_scale_in_no_pd_with_input(self, mock_delete, mock_load):
         cluster = mock.Mock()
         cluster.id = 'CID'
         cluster.min_size = 1
@@ -1569,9 +1546,9 @@ class ClusterActionTest(base.SenlinTestCase):
         # deleting 3 nodes
         mock_delete.assert_called_once_with(mock.ANY)
         self.assertEqual(3, len(mock_delete.call_args[0][0]))
-        mock_update.assert_called_once_with(2, None, None)
         cluster.set_status.assert_called_once_with(
-            action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
+            action.context, cluster.ACTIVE, 'Cluster scaling succeeded.',
+            desired_capacity=2)
 
     def test_do_scale_in_invalid_count(self, mock_load):
         cluster = mock.Mock()
@@ -1595,10 +1572,8 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual('Invalid count (-3) for scaling in.', res_msg)
         self.assertEqual(action.RES_ERROR, res_code)
 
-    @mock.patch.object(ca.ClusterAction, '_update_cluster_properties')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
-    def test_do_scale_in_best_effort(self, mock_delete, mock_update,
-                                     mock_load):
+    def test_do_scale_in_best_effort(self, mock_delete, mock_load):
         cluster = mock.Mock()
         cluster.id = 'CID'
         cluster.min_size = 0
@@ -1622,9 +1597,9 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual('Cluster scaling succeeded.', res_msg)
         mock_delete.assert_called_once_with(mock.ANY)
         self.assertEqual(2, len(mock_delete.call_args[0][0]))
-        mock_update.assert_called_once_with(0, None, None)
         cluster.set_status.assert_called_once_with(
-            action.context, cluster.ACTIVE, 'Cluster scaling succeeded.')
+            action.context, cluster.ACTIVE, 'Cluster scaling succeeded.',
+            desired_capacity=0)
 
     def test_do_scale_in_failed_check(self, mock_load):
         cluster = mock.Mock()
@@ -1649,10 +1624,8 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual('The target capacity (0) is less than the '
                          'cluster\'s min_size (1).', res_msg)
 
-    @mock.patch.object(ca.ClusterAction, '_update_cluster_properties')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
-    def test_do_scale_in_failed_delete_nodes(self, mock_delete, mock_update,
-                                             mock_load):
+    def test_do_scale_in_failed_delete_nodes(self, mock_delete, mock_load):
         cluster = mock.Mock()
         cluster.id = 'CID'
         cluster.desired_capacity = 3
@@ -1680,8 +1653,6 @@ class ClusterActionTest(base.SenlinTestCase):
             cluster.set_status.assert_called_once_with(
                 action.context, cluster.ERROR, 'Too cold to work!')
             cluster.set_status.reset_mock()
-            mock_update.assert_called_once_with(3, None, None)
-            mock_update.reset_mock()
             mock_delete.assert_called_once_with(mock.ANY)
             self.assertEqual(2, len(mock_delete.call_args[0][0]))
             mock_delete.reset_mock()
@@ -1694,7 +1665,6 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_RETRY, res_code)
         self.assertEqual('Not good time!', res_msg)
         self.assertEqual(0, cluster.set_status.call_count)
-        mock_update.assert_called_once_with(3, None, None)
         mock_delete.assert_called_once_with(mock.ANY)
         self.assertEqual(2, len(mock_delete.call_args[0][0]))
 
