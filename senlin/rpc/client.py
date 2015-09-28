@@ -286,7 +286,7 @@ class EngineClient(object):
                                              sort_dir=sort_dir))
 
     def cluster_policy_attach(self, ctxt, cluster_id, policy_id, priority=50,
-                              level=50, cooldown=0, enabled=True):
+                              level=None, cooldown=None, enabled=True):
         return self.call(ctxt, self.make_msg('cluster_policy_attach',
                                              identity=cluster_id,
                                              policy=policy_id,
