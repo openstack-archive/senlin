@@ -274,9 +274,7 @@ class Cluster(object):
         if 'profile_id' in values:
             self.rt['profile'] = profile_base.Profile.load(context,
                                                            self.profile_id)
-
         db_api.cluster_update(context, self.id, values)
-        # TODO(anyone): generate event record
         return
 
     def do_create(self, context, **kwargs):
@@ -305,7 +303,6 @@ class Cluster(object):
         This method is intended to be called only from an action.
         '''
         self.set_status(context, self.UPDATING, reason='Update in progress')
-        # TODO(anyone): generate event record
         return True
 
     @property
