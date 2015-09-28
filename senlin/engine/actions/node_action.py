@@ -61,9 +61,10 @@ class NodeAction(base.Action):
                 # Update cluster desired_capacity if node creation succeeded
                 cluster.desired_capacity += 1
                 cluster.store(self.context)
-            return self.RES_OK, _('Node created successfully')
+                cluster.add_node(self.node)
+            return self.RES_OK, _('Node created successfully.')
         else:
-            return self.RES_ERROR, _('Node creation failed')
+            return self.RES_ERROR, _('Node creation failed.')
 
     def do_delete(self):
         if self.node.cluster_id and self.cause == base.CAUSE_RPC:
@@ -83,17 +84,18 @@ class NodeAction(base.Action):
                 # Update cluster desired_capacity if node deletion succeeded
                 cluster.desired_capacity -= 1
                 cluster.store(self.context)
-            return self.RES_OK, _('Node deleted successfully')
+                cluster.remove_node(self.node.id)
+            return self.RES_OK, _('Node deleted successfully.')
         else:
-            return self.RES_ERROR, _('Node deletion failed')
+            return self.RES_ERROR, _('Node deletion failed.')
 
     def do_update(self):
         params = self.inputs
         res = self.node.do_update(self.context, params)
         if res:
-            return self.RES_OK, _('Node updated successfully')
+            return self.RES_OK, _('Node updated successfully.')
         else:
-            return self.RES_ERROR, _('Node update failed')
+            return self.RES_ERROR, _('Node update failed.')
 
     def do_join(self):
         cluster_id = self.inputs.get('cluster_id')
@@ -110,9 +112,10 @@ class NodeAction(base.Action):
             # Update cluster desired_capacity if node join succeeded
             cluster.desired_capacity = desired_capacity
             cluster.store(self.context)
-            return self.RES_OK, _('Node successfully joined cluster')
+            cluster.add_node(self.node)
+            return self.RES_OK, _('Node successfully joined cluster.')
         else:
-            return self.RES_ERROR, _('Node failed in joining cluster')
+            return self.RES_ERROR, _('Node failed in joining cluster.')
 
     def do_leave(self):
         # Check the size constraint of parent cluster
@@ -129,9 +132,10 @@ class NodeAction(base.Action):
             # Update cluster desired_capacity if node leave succeeded
             cluster.desired_capacity = desired_capacity
             cluster.store(self.context)
-            return self.RES_OK, _('Node successfully left cluster')
+            cluster.remove_node(self.node.id)
+            return self.RES_OK, _('Node successfully left cluster.')
         else:
-            return self.RES_ERROR, _('Node failed in leaving cluster')
+            return self.RES_ERROR, _('Node failed in leaving cluster.')
 
     def _execute(self):
         action_name = self.action.lower()
