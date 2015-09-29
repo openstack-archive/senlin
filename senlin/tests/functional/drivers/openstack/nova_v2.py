@@ -145,3 +145,9 @@ class NovaClient(base.DriverBase):
 
     def server_delete(self, value, ignore_missing=True):
         return
+
+    def server_metadata_get(self, **params):
+        return {}
+
+    def server_metadata_update(self, **params):
+        return
