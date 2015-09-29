@@ -166,7 +166,7 @@ class Alarm(base.Trigger):
             INSUFFICIENT_DATA_ACTIONS, [])
 
         rule_name = self.namespace + '_rule'
-
+        rule_data = dict((k, v) for k, v in self.rule.items())
         params = {
             NAME: self.name,
             DESCRIPTION: self.desc,
@@ -179,11 +179,11 @@ class Alarm(base.Trigger):
             INSUFFICIENT_DATA_ACTIONS: self.insufficient_data_actions,
             TIME_CONSTRAINTS: self.alarm_properties[TIME_CONSTRAINTS],
             REPEAT: self.alarm_properties[REPEAT],
-            rule_name: self.rule,
+            rule_name: rule_data,
         }
 
         try:
-            cc = driver_base.SenlinDriver().telemetry(ctx)
+            cc = driver_base.SenlinDriver().telemetry(ctx.to_dict())
             alarm = cc.alarm_create(**params)
             self.physical_id = alarm.id
             self.store(ctx)
