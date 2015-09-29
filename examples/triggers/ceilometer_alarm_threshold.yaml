@@ -20,5 +20,4 @@ rule:
   query:
     - field: resource_metadata.cluster
       op: eq
-      type: ''
       value: cluster1
