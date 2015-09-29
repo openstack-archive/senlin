@@ -41,15 +41,8 @@ class TestClusterScaling(base.SenlinFunctionalTest):
         cluster = test_api.create_cluster(self.client, 'test-cluster',
                                           self.profile['id'], desired_capacity,
                                           min_size, max_size)
-
-        # Wait and verify cluster creation result
         cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
                                              cluster['id'], 'ACTIVE')
-        self.assertEqual('test-cluster', cluster['name'])
-        self.assertEqual(desired_capacity, cluster['desired_capacity'])
-        self.assertEqual(min_size, cluster['min_size'])
-        self.assertEqual(max_size, cluster['max_size'])
-        self.assertEqual(desired_capacity, len(cluster['nodes']))
 
         # Scale out cluster without params
         action_id = test_api.action_cluster(self.client, cluster['id'],
@@ -140,15 +133,8 @@ class TestClusterScaling(base.SenlinFunctionalTest):
         cluster = test_api.create_cluster(self.client, 'test-cluster',
                                           self.profile['id'], desired_capacity,
                                           min_size, max_size)
-
-        # Wait and verify cluster creation result
         cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
                                              cluster['id'], 'ACTIVE')
-        self.assertEqual('test-cluster', cluster['name'])
-        self.assertEqual(desired_capacity, cluster['desired_capacity'])
-        self.assertEqual(min_size, cluster['min_size'])
-        self.assertEqual(max_size, cluster['max_size'])
-        self.assertEqual(desired_capacity, len(cluster['nodes']))
 
         # Increase cluster size by specifying adjustment count
         params = {
@@ -209,15 +195,8 @@ class TestClusterScaling(base.SenlinFunctionalTest):
         cluster = test_api.create_cluster(self.client, 'test-cluster',
                                           self.profile['id'], desired_capacity,
                                           min_size, max_size)
-
-        # Wait and verify cluster creation result
         cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
                                              cluster['id'], 'ACTIVE')
-        self.assertEqual('test-cluster', cluster['name'])
-        self.assertEqual(desired_capacity, cluster['desired_capacity'])
-        self.assertEqual(min_size, cluster['min_size'])
-        self.assertEqual(max_size, cluster['max_size'])
-        self.assertEqual(desired_capacity, len(cluster['nodes']))
 
         # Increase cluster size and break the size constraint
         params = {
@@ -301,15 +280,8 @@ class TestClusterScaling(base.SenlinFunctionalTest):
         cluster = test_api.create_cluster(self.client, 'test-cluster',
                                           self.profile['id'], desired_capacity,
                                           min_size, max_size)
-
-        # Wait and verify cluster creation result
         cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
                                              cluster['id'], 'ACTIVE')
-        self.assertEqual('test-cluster', cluster['name'])
-        self.assertEqual(desired_capacity, cluster['desired_capacity'])
-        self.assertEqual(min_size, cluster['min_size'])
-        self.assertEqual(max_size, cluster['max_size'])
-        self.assertEqual(desired_capacity, len(cluster['nodes']))
 
         # Increase cluster size with upper limit increasing
         params = {
@@ -390,15 +362,8 @@ class TestClusterScaling(base.SenlinFunctionalTest):
         cluster = test_api.create_cluster(self.client, 'test-cluster',
                                           self.profile['id'], desired_capacity,
                                           min_size, max_size)
-
-        # Wait and verify cluster creation result
         cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
                                              cluster['id'], 'ACTIVE')
-        self.assertEqual('test-cluster', cluster['name'])
-        self.assertEqual(desired_capacity, cluster['desired_capacity'])
-        self.assertEqual(min_size, cluster['min_size'])
-        self.assertEqual(max_size, cluster['max_size'])
-        self.assertEqual(desired_capacity, len(cluster['nodes']))
 
         # New min_size is larger than current cluster
         # max_size with strict set to False

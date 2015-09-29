@@ -39,15 +39,8 @@ class TestWebhook(base.SenlinFunctionalTest):
         cluster = test_api.create_cluster(self.client, 'test-cluster',
                                           self.profile['id'], desired_capacity,
                                           min_size, max_size)
-
-        # Wait and verify cluster creation result
         cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
                                              cluster['id'], 'ACTIVE')
-        self.assertEqual('test-cluster', cluster['name'])
-        self.assertEqual(desired_capacity, cluster['desired_capacity'])
-        self.assertEqual(min_size, cluster['min_size'])
-        self.assertEqual(max_size, cluster['max_size'])
-        self.assertEqual(desired_capacity, len(cluster['nodes']))
 
         # Create a webhook targets on cluster resize action with params
         params = {
@@ -89,5 +82,5 @@ class TestWebhook(base.SenlinFunctionalTest):
         # Delete cluster
         test_api.delete_cluster(self.client, cluster['id'])
         test_utils.wait_for_status(test_api.get_cluster, self.client,
-                                   cluster['id'], 'ACTIVE',
+                                   cluster['id'], 'DELETED',
                                    ignore_missing=True)
