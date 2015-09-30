@@ -213,6 +213,8 @@ class Trigger(object):
     def validate(self):
         """Validate the schema and the data provided."""
         self.spec_data.validate()
+        # NOTE: the rule property is supposed to be assigned in subclasses.
+        self.rule.validate()
 
     @classmethod
     def get_schema(cls):

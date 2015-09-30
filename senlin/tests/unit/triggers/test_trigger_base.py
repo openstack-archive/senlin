@@ -33,9 +33,11 @@ sample_trigger = """
 
 
 class FakeTriggerImpl(base.Trigger):
+    rule_schema = {}
 
     def __init__(self, name, spec, **kwargs):
         super(FakeTriggerImpl, self).__init__(name, spec, **kwargs)
+        self.rule = schema.Spec(self.rule_schema, spec['rule'])
 
 
 class TestTriggerBase(test_base.SenlinTestCase):
@@ -210,7 +212,7 @@ class TestTriggerBase(test_base.SenlinTestCase):
         trigger = base.Trigger('t1', spec)
         trigger.validate()
 
-        mock_validate.assert_called_once_with()
+        mock_validate.assert_has_calls([mock.call(), mock.call()])
 
     def test_get_schema(self):
         expected = {
