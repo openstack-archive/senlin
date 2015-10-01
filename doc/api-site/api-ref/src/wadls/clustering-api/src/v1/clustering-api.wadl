@@ -463,6 +463,15 @@
                             </listitem>
                             <listitem>
                                 <para>
+                                    <code>resize</code> Change the size of the cluster using the specified
+                                    parameters. Valid parameters include: <code>adjustment_type</code>,
+                                    <code>number</code>, <code>min_step</code>, <code>min_size</code>,
+                                    <code>max_size</code> and <code>strict</code>.
+                                    <xsdxt:code href="samples/cluster_resize.json"/>
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
                                     <code>policy_attach</code> Attach the specified policy to the cluster where
                                     the request body contains parameters for the policy attachment.
                                     <xsdxt:code href="samples/cluster_policy_attach.json"/>
