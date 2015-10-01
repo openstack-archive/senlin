@@ -26,7 +26,6 @@ API
     of the resource to be created. This is a requirement from API WG.
   - API resource names should not include underscores. A guideline from API
     WG.
-  - Add API doc for CLUSTER_RESIZE operation.
   - Add support to have Senlin API run under Apache.
 
 DB
