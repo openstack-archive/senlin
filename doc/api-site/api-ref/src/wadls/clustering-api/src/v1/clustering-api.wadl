@@ -1443,8 +1443,8 @@
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                         <para>
                             A list of key-value pairs for filtering the returned nodes.
-                            The valid filter keys are <code>name</name>, <code>user</name>,
-                            <code>obj_type</code>, <code>obj_id</code>, <code>action</action>.
+                            The valid filter keys are <code>name</code>, <code>user</code>,
+                            <code>obj_type</code>, <code>obj_id</code>, <code>action</code>.
                         </para>
                     </wadl:doc>
                 </param>
