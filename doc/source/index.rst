@@ -47,6 +47,17 @@ Getting Started
    :maxdepth: 2
 
    getting_started/index
+   getting_started/profile_types
+   getting_started/profiles
+   getting_started/clusters
+   getting_started/nodes
+   getting_started/membership
+   getting_started/policy_types
+   getting_started/policies
+   getting_started/bindings
+   getting_started/webhooks
+   getting_started/actions
+   getting_started/events
    glossary
 
 Man Pages

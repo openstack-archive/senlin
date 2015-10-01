@@ -76,23 +76,3 @@ Installation
 You will need to make sure you have a suitable environment for deploying
 Senlin. Please refer to :ref:`Installation <guide-install>` for detailed
 instructions on setting up an environment to use the Senlin service.
-
-
-----------
-How To Use
-----------
-
-This section walks you through some basic operations you can do with the
-Senlin service including its clients.
-
-- :doc:`Working with Profile Types <profile_types>`
-- :doc:`Managing Profiles Objects <profiles>`
-- :doc:`Creating Clusters <clusters>`
-- :doc:`Creating and Managing Nodes <nodes>`
-- :doc:`Managing Cluster Membership <membership>`
-- :doc:`Working with Policy Types <policy_types>`
-- :doc:`Creating Your Own Policy Objects <policies>`
-- :doc:`Binding a Policy to a Cluster <bindings>`
-- :doc:`Creating Webhooks for Your Objects <webhooks>`
-- :doc:`Examinining Actions <actions>`
-- :doc:`Browsing Events <events>`
