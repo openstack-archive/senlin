@@ -2,21 +2,13 @@
 HIGH PRIORITY
 =============
 
-DRIVER
-------
-  - Handle Heat stack operation exceptions [Qiming]
-
 POLICY
 ------
   - Investigate the impact of node-create and node-delete on certain policies.
   - Implement a placement policy which supports cross-az/region node creation
-    with some simple algorithms, e.g. ROUND_ROBIN, FIXED_PRIORITY. [Xinhui, Qiming]
+    with a simple algorithm. [Xinhui, Qiming]
   - Implement a deletion policy that supports cross-az/region node deleting.
 
-TEST CASES
-----------
-
-  - Add test case the profile context can be saved and loaded correctly.
 
 MIDDLE PRIORITY
 ===============
@@ -35,14 +27,12 @@ API
   - API resource names should not include underscores. A guideline from API
     WG.
   - Add API doc for CLUSTER_RESIZE operation.
-  - Add API doc for webhook APIs operation.
   - Add support to have Senlin API run under Apache.
 
 DB
 --
-  - Add test cases for policy_delete with 'force' set to True[Liuh/ZhaiHF]
   - The action data model is missing 'scheduled_start' and 'scheduled_stop'
-    fields, we will need these fields for scheduled action execution.
+    fields, we may need these fields for scheduled action execution.
 
 ENGINE
 ------
@@ -74,15 +64,11 @@ ENGINE
 OSLO
 ----
   - Add support to oslo_versionedobjects
-  - Check if pre-context middleware needs logging and add special supports.
 
 POLICY
 ------
   - Scaling policy allowng a cluster to scale to existing nodes
   - Health policy
-
-DRIVER
-------
 
 
 LOW PRIORITY
@@ -94,10 +80,6 @@ API
   - Allow forced deletion of objects (cluster, node, policy, profile). The
     current problem is due to the limitations of the HTTP DELETE requests. We
     need to investigate whether a DELETE verb can carry query strings.
-
-DRIVER
-------
-  - add Heat resource driver
 
 TEST
 ----
