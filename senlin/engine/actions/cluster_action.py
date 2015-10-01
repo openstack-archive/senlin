@@ -147,8 +147,7 @@ class ClusterAction(base.Action):
             # Wait for cluster creation to complete
             res, reason = self._wait_for_dependents()
             if res == self.RES_OK:
-                # TODO(anyone): avoid passing nodes in this way
-                self.data['nodes'] = [n.id for n in nodes]
+                self.outputs['nodes_added'] = [n.id for n in nodes]
                 for node in nodes:
                     self.cluster.add_node(node)
 
@@ -218,7 +217,7 @@ class ClusterAction(base.Action):
                                 profile_id=profile_id)
         return self.RES_OK, reason
 
-    def _delete_nodes(self, nodes):
+    def _delete_nodes(self, node_ids):
         action_name = consts.NODE_DELETE
 
         pd = self.data.get('deletion', None)
@@ -227,13 +226,13 @@ class ClusterAction(base.Action):
             if not destroy:
                 action_name = consts.NODE_LEAVE
 
-        for node_id in nodes:
+        for node_id in node_ids:
             kwargs = {
+                'name': 'node_delete_%s' % node_id[:8],
+                'cause': base.CAUSE_DERIVED,
                 'user': self.context.user,
                 'project': self.context.project,
                 'domain': self.context.domain,
-                'name': 'node_delete_%s' % node_id[:8],
-                'cause': base.CAUSE_DERIVED
             }
             action = base.Action(node_id, action_name, **kwargs)
             action.store(self.context)
@@ -244,12 +243,11 @@ class ClusterAction(base.Action):
 
             dispatcher.start_action(action_id=action.id)
 
-        if len(nodes) > 0:
+        if len(node_ids) > 0:
             res, reason = self._wait_for_dependents()
             if res == self.RES_OK:
-                # TODO(anyone): avoid passing nodes in this way.
-                self.data['nodes'] = nodes
-                for node_id in nodes:
+                self.outputs['nodes_removed'] = node_ids
+                for node_id in node_ids:
                     self.cluster.remove_node(node_id)
 
             return res, reason
@@ -339,8 +337,7 @@ class ClusterAction(base.Action):
         if result != self.RES_OK:
             reason = new_reason
         else:
-            # TODO(anyone): avoid passing nodes this way
-            self.data['nodes'] = node_ids
+            self.outputs['nodes_added'] = node_ids
             for node in nodes:
                 self.cluster.add_node(node)
 
@@ -537,7 +534,7 @@ class ClusterAction(base.Action):
         elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_ERROR]:
             self.cluster.set_status(self.context, self.cluster.ERROR, reason)
         else:
-            # RETRY or FAILED?
+            # RES_RETRY
             pass
 
         return result, reason

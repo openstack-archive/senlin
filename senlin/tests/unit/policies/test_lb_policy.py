@@ -294,7 +294,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
     def test_post_op_no_nodes(self, m_extract, m_load, m_conn):
         action = mock.Mock()
-        action.data = {'nodes': []}
+        action.outputs = {}
 
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
 
@@ -313,10 +313,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         node1.data = {}
         node2.data = {}
         action = mock.Mock()
-        action.data = {
-            'nodes': ['NODE1_ID', 'NODE2_ID'],
-            'creation': {'count': 2}
-        }
+        action.outputs = {'nodes_added': ['NODE1_ID', 'NODE2_ID']}
         action.context = 'action_context'
         action.action = consts.CLUSTER_RESIZE
         cp = mock.Mock()
@@ -367,10 +364,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         node1.data = {'lb_member': 'MEMBER1_ID'}
         node2.data = {}
         action = mock.Mock()
-        action.data = {
-            'nodes': ['NODE1_ID', 'NODE2_ID'],
-            'creation': {'count': 2}
-        }
+        action.outputs = {'nodes_added': ['NODE1_ID', 'NODE2_ID']}
         action.context = 'action_context'
         action.action = consts.CLUSTER_RESIZE
         policy_data = {
@@ -397,10 +391,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         node1 = mock.Mock()
         node1.data = {}
         action = mock.Mock()
-        action.data = {
-            'nodes': ['NODE1_ID'],
-            'creation': {'count': 1}
-        }
+        action.data = {}
+        action.outputs = {'nodes_added': ['NODE1_ID']}
         action.context = 'action_context'
         action.action = consts.CLUSTER_RESIZE
         self.lb_driver.member_add.return_value = None
@@ -417,7 +409,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
         self.assertIsNone(res)
         self.assertEqual(policy_base.CHECK_ERROR, action.data['status'])
-        self.assertEqual('Failed in adding new node into lb pool',
+        self.assertEqual('Failed in adding new node(s) into lb pool.',
                          action.data['reason'])
         self.lb_driver.member_add.assert_called_once_with(
             node1, 'LB_ID', 'POOL_ID', 80, 'test-subnet')
@@ -430,16 +422,14 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         cluster = mock.Mock()
         m_cluster_get.return_value = cluster
         node1 = mock.Mock()
-        node2 = mock.Mock()
         node1.data = {'lb_member': 'MEMBER1_ID'}
+        node2 = mock.Mock()
         node2.data = {'lb_member': 'MEMBER2_ID'}
         action = mock.Mock()
-        action.data = {
-            'nodes': ['NODE1_ID', 'NODE2_ID'],
-            'deletion': {'count': 2}
-        }
+        action.data = {}
+        action.outputs = {'nodes_removed': ['NODE1_ID', 'NODE2_ID']}
         action.context = 'action_context'
-        action.action = consts.CLUSTER_RESIZE
+        action.action = consts.CLUSTER_DEL_NODES
         cp = mock.Mock()
         policy_data = {
             'loadbalancer': 'LB_ID',
@@ -460,18 +450,23 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         m_extract.return_value = policy_data
 
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+
         res = policy.post_op(cluster_id, action)
+
         self.assertIsNone(res)
         m_cluster_get.assert_called_once_with('action_context', 'CLUSTER_ID')
         m_conn.assert_called_once_with(cluster)
         m_load.assert_called_once_with('action_context', cluster_id, policy.id)
         m_extract.assert_called_once_with(cp_data)
-        calls_node_load = [mock.call('action_context', node_id=n,
-                                     show_deleted=True
-                                     ) for n in ['NODE1_ID', 'NODE2_ID']]
+        calls_node_load = [
+            mock.call(mock.ANY, node_id='NODE1_ID', show_deleted=True),
+            mock.call(mock.ANY, node_id='NODE2_ID', show_deleted=True)
+        ]
         m_node_load.assert_has_calls(calls_node_load)
-        calls_member_del = [mock.call('LB_ID', 'POOL_ID', m
-                                      ) for m in ['MEMBER1_ID', 'MEMBER2_ID']]
+        calls_member_del = [
+            mock.call('LB_ID', 'POOL_ID', 'MEMBER1_ID'),
+            mock.call('LB_ID', 'POOL_ID', 'MEMBER2_ID')
+        ]
         self.lb_driver.member_remove.assert_has_calls(calls_member_del)
 
     @mock.patch.object(node_mod.Node, 'load')
@@ -484,10 +479,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         node1.data = {}
         node2.data = {'lb_member': 'MEMBER2_ID'}
         action = mock.Mock()
-        action.data = {
-            'nodes': ['NODE1_ID', 'NODE2_ID'],
-            'deletion': {'count': 2}
-        }
+        action.outputs = {'nodes_removed': ['NODE1_ID', 'NODE2_ID']}
         action.context = 'action_context'
         action.action = consts.CLUSTER_RESIZE
         self.lb_driver.member_remove.return_value = True
@@ -513,10 +505,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         node1 = mock.Mock()
         node1.data = {'lb_member': 'MEMBER1_ID'}
         action = mock.Mock()
-        action.data = {
-            'nodes': ['NODE1_ID'],
-            'deletion': {'count': 1}
-        }
+        action.data = {}
+        action.outputs = {'nodes_removed': ['NODE1_ID']}
         action.context = 'action_context'
         action.action = consts.CLUSTER_RESIZE
         self.lb_driver.member_remove.return_value = False
@@ -534,7 +524,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
         self.assertIsNone(res)
         self.assertEqual(policy_base.CHECK_ERROR, action.data['status'])
-        self.assertEqual('Failed in removing deleted node from lb pool',
+        self.assertEqual('Failed in removing deleted node(s) from lb pool.',
                          action.data['reason'])
         self.lb_driver.member_remove.assert_called_once_with(
             'LB_ID', 'POOL_ID', 'MEMBER1_ID')

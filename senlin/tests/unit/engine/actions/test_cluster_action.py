@@ -170,7 +170,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_status.assert_called_once_with(n_action.READY)
         mock_start.assert_called_once_with(action_id='NODE_ACTION_ID')
         mock_wait.assert_called_once_with()
-        self.assertEqual(['NODE_ID'], action.data['nodes'])
+        self.assertEqual({'nodes_added': ['NODE_ID']}, action.outputs)
 
     @mock.patch.object(db_api, 'cluster_get')
     def test_create_nodes_zero(self, mock_get, mock_load):
@@ -241,7 +241,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_status_2.assert_called_once_with(node_action_2.READY)
         self.assertEqual(2, mock_start.call_count)
         mock_wait.assert_called_once_with()
-        self.assertEqual([node1.id, node2.id], action.data['nodes'])
+        self.assertEqual({'nodes_added': [node1.id, node2.id]}, action.outputs)
         self.assertEqual({'region': 'regionOne'}, node1.data['placement'])
         self.assertEqual({'region': 'regionTwo'}, node2.data['placement'])
         mock_node_calls = [
@@ -508,7 +508,7 @@ class ClusterActionTest(base.SenlinTestCase):
         n_action.set_status.assert_called_once_with(n_action.READY)
         mock_start.assert_called_once_with(action_id='NODE_ACTION_ID')
         mock_wait.assert_called_once_with()
-        self.assertEqual(['NODE_ID'], action.data['nodes'])
+        self.assertEqual(['NODE_ID'], action.outputs['nodes_removed'])
         cluster.remove_node.assert_called_once_with('NODE_ID')
 
     @mock.patch.object(db_api, 'action_add_dependency')
@@ -547,7 +547,8 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(2, mock_dep.call_count)
         self.assertEqual(2, mock_start.call_count)
         mock_wait.assert_called_once_with()
-        self.assertEqual(['NODE_1', 'NODE_2'], action.data['nodes'])
+        self.assertEqual({'nodes_removed': ['NODE_1', 'NODE_2']},
+                         action.outputs)
         cluster.remove_node.assert_has_calls([
             mock.call('NODE_1'), mock.call('NODE_2')])
 
@@ -752,6 +753,7 @@ class ClusterActionTest(base.SenlinTestCase):
         action.id = 'CLUSTER_ACTION_ID'
         action.inputs = {'nodes': ['NODE_1']}
         action.data = {}
+        action.outputs = {}
 
         node = mock.Mock()
         node.id = 'NODE_1'
@@ -771,7 +773,7 @@ class ClusterActionTest(base.SenlinTestCase):
         # assertions
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Completed adding nodes.', res_msg)
-        self.assertEqual({'nodes': ['NODE_1']}, action.data)
+        self.assertEqual({'nodes_added': ['NODE_1']}, action.outputs)
 
         mock_load_node.assert_called_once_with(action.context, 'NODE_1')
         mock_action.assert_called_once_with(
@@ -800,7 +802,7 @@ class ClusterActionTest(base.SenlinTestCase):
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
         action.inputs = {'nodes': ['NODE_1', 'NODE_2']}
-        action.data = {}
+        action.outputs = {}
 
         node1 = mock.Mock()
         node1.id = 'NODE_1'
@@ -827,7 +829,7 @@ class ClusterActionTest(base.SenlinTestCase):
         # assertions
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Completed adding nodes.', res_msg)
-        self.assertEqual({'nodes': ['NODE_1', 'NODE_2']}, action.data)
+        self.assertEqual({'nodes_added': ['NODE_1', 'NODE_2']}, action.outputs)
 
         mock_load_node.assert_has_calls([
             mock.call(action.context, 'NODE_1'),
