@@ -279,8 +279,9 @@ class LoadBalancingPolicy(base.Policy):
         :param action: The action object that triggered this operation.
         :returns: Nothing.
         """
-        nodes = action.data.get('nodes', [])
-        if len(nodes) == 0:
+        nodes_added = action.outputs.get('nodes_added', [])
+        nodes_removed = action.outputs.get('nodes_removed', [])
+        if ((len(nodes_added) == 0) and (len(nodes_removed) == 0)):
             return
 
         db_cluster = db_api.cluster_get(action.context, cluster_id)
@@ -294,48 +295,42 @@ class LoadBalancingPolicy(base.Policy):
         port = self.pool_spec.get(self.POOL_PROTOCOL_PORT)
         subnet = self.pool_spec.get(self.POOL_SUBNET)
 
-        for node_id in nodes:
+        # Remove nodes that have been deleted from lb pool
+        for node_id in nodes_removed:
             node = node_mod.Node.load(action.context, node_id=node_id,
                                       show_deleted=True)
-            member_id = node.data.get('lb_member')
-            if (action.action in (consts.CLUSTER_DEL_NODES,
-                                  consts.CLUSTER_SCALE_IN))\
-                    or (action.action == consts.CLUSTER_RESIZE and
-                        action.data.get('deletion')):
+            member_id = node.data.get('lb_member', None)
+            if member_id is None:
+                LOG.warning(_LW('Node %(n)s not found in lb pool %(p)s.'),
+                            {'n': node_id, 'p': pool_id})
+                continue
 
-                if member_id is None:
-                    LOG.warning(_LW('Node %(node)s not found in loadbalancer '
-                                    'pool %(pool)s.'),
-                                {'node': node_id, 'pool': pool_id})
-                    continue
+            res = lb_driver.member_remove(lb_id, pool_id, member_id)
+            if res is not True:
+                action.data['status'] = base.CHECK_ERROR
+                action.data['reason'] = _('Failed in removing deleted '
+                                          'node(s) from lb pool.')
+                return
 
-                # Remove nodes that have been deleted from lb pool
-                res = lb_driver.member_remove(lb_id, pool_id, member_id)
-                if res is not True:
-                    action.data['status'] = base.CHECK_ERROR
-                    action.data['reason'] = _('Failed in removing deleted '
-                                              'node from lb pool')
-                    return
+        # Add new nodes to lb pool
+        for node_id in nodes_added:
+            node = node_mod.Node.load(action.context, node_id=node_id,
+                                      show_deleted=True)
+            member_id = node.data.get('lb_member', None)
+            if member_id:
+                LOG.warning(_LW('Node %(n)s already in lb pool %(p)s.'),
+                            {'n': node_id, 'p': pool_id})
+                continue
 
-            if (action.action in (consts.CLUSTER_ADD_NODES,
-                                  consts.CLUSTER_SCALE_OUT))\
-                    or (action.action == consts.CLUSTER_RESIZE and
-                        action.data.get('creation')):
+            member_id = lb_driver.member_add(node, lb_id, pool_id, port,
+                                             subnet)
+            if member_id is None:
+                action.data['status'] = base.CHECK_ERROR
+                action.data['reason'] = _('Failed in adding new node(s) '
+                                          'into lb pool.')
+                return
 
-                if member_id:
-                    LOG.warning(_LW('Node %(node)s already in loadbalancer '
-                                    'pool %(pool)s.'),
-                                {'node': node_id, 'pool': pool_id})
-                    continue
-
-                res = lb_driver.member_add(node, lb_id, pool_id, port, subnet)
-                if res is None:
-                    action.data['status'] = base.CHECK_ERROR
-                    action.data['reason'] = _('Failed in adding new node '
-                                              'into lb pool')
-                    return
-
-                node.data.update({'lb_member': res})
-                node.store(action.context)
+            node.data.update({'lb_member': member_id})
+            node.store(action.context)
 
         return
