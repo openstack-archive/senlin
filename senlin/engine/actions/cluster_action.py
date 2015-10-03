@@ -34,7 +34,7 @@ LOG = logging.getLogger(__name__)
 
 
 class ClusterAction(base.Action):
-    '''An action performed on a cluster.'''
+    """An action that can be performed on a cluster."""
 
     ACTIONS = (
         CLUSTER_CREATE, CLUSTER_DELETE, CLUSTER_UPDATE,
@@ -52,6 +52,13 @@ class ClusterAction(base.Action):
     )
 
     def __init__(self, target, action, context=None, **kwargs):
+        """Constructor for cluster action.
+
+        :param target: ID of the target cluster.
+        :param action: Name of the action to be executed.
+        :param context: Context used when interacting with DB layer.
+        :param dict kwargs: Other optional arguments for the action.
+        """
         super(ClusterAction, self).__init__(target, action, context, **kwargs)
 
         try:
@@ -60,6 +67,10 @@ class ClusterAction(base.Action):
             self.cluster = None
 
     def _wait_for_dependents(self):
+        """Wait for dependent actions to complete.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
         status = self.get_status()
         reason = ''
         while status != self.READY:
@@ -156,6 +167,10 @@ class ClusterAction(base.Action):
         return self.RES_OK, ''
 
     def do_create(self):
+        """Handler for CLUSTER_CREATE action.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
         res = self.cluster.do_create(self.context)
 
         if not res:
@@ -177,6 +192,10 @@ class ClusterAction(base.Action):
         return result, reason
 
     def do_update(self):
+        """Handler for CLUSTER_UPDATE action.
+
+        :returns: A tuple consisting the result and the corresponding reason.
+        """
         res = self.cluster.do_update(self.context)
         if not res:
             reason = _('Cluster update failed.')
@@ -255,6 +274,10 @@ class ClusterAction(base.Action):
         return self.RES_OK, ''
 
     def do_delete(self):
+        """Handler for the CLUSTER_DELETE action.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
         reason = _('Deletion in progress.')
         self.cluster.set_status(self.context, self.cluster.DELETING, reason)
         node_ids = [node.id for node in self.cluster.nodes]
@@ -283,6 +306,10 @@ class ClusterAction(base.Action):
         return result, reason
 
     def do_add_nodes(self):
+        """Handler for the CLUSTER_ADD_NODES action.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
         node_ids = self.inputs.get('nodes')
         # TODO(anyone): handle placement data
 
@@ -344,6 +371,10 @@ class ClusterAction(base.Action):
         return result, reason
 
     def do_del_nodes(self):
+        """Handler for the CLUSTER_DEL_NODES action.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
         nodes = self.inputs.get('nodes', [])
 
         node_ids = copy.deepcopy(nodes)
@@ -379,6 +410,10 @@ class ClusterAction(base.Action):
         return result, reason
 
     def do_resize(self):
+        """Handler for the CLUSTER_RESIZE action.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
         adj_type = self.inputs.get(consts.ADJUSTMENT_TYPE, None)
         number = self.inputs.get(consts.ADJUSTMENT_NUMBER, None)
         min_size = self.inputs.get(consts.ADJUSTMENT_MIN_SIZE, None)
@@ -445,6 +480,10 @@ class ClusterAction(base.Action):
         return self.RES_OK, reason
 
     def do_scale_out(self):
+        """Handler for the CLUSTER_SCALE_OUT action.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
         # We use policy output if any, or else the count is
         # set to 1 as default.
         pd = self.data.get('creation', None)
@@ -483,8 +522,11 @@ class ClusterAction(base.Action):
         return result, reason
 
     def do_scale_in(self):
-        # We use policy data if any, or else the count is
-        # set to 1 as default.
+        """Handler for the CLUSTER_SCALE_IN action.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
+        # We use policy data if any, or else the count is set to 1 as default.
         pd = self.data.get('deletion', None)
         if pd is not None:
             count = pd.get('count', 1)
@@ -540,8 +582,10 @@ class ClusterAction(base.Action):
         return result, reason
 
     def do_attach_policy(self):
-        '''Attach policy to the cluster.'''
+        """Handler for the CLUSTER_ATTACH_POLICY action.
 
+        :returns: A tuple containing the result and the corresponding reason.
+        """
         policy_id = self.inputs.get('policy_id', None)
         if not policy_id:
             return self.RES_ERROR, _('Policy not specified.')
@@ -585,8 +629,10 @@ class ClusterAction(base.Action):
         return self.RES_OK, _('Policy attached.')
 
     def do_detach_policy(self):
-        '''Attach policy to the cluster.'''
+        """Handler for the CLUSTER_DETACH_POLICY action.
 
+        :returns: A tuple containing the result and the corresponding reason.
+        """
         policy_id = self.inputs.get('policy_id', None)
         if not policy_id:
             return self.RES_ERROR, _('Policy not specified.')
@@ -611,6 +657,10 @@ class ClusterAction(base.Action):
         return self.RES_OK, _('Policy detached.')
 
     def do_update_policy(self):
+        """Handler for the CLUSTER_UPDATE_POLICY action.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
         policy_id = self.inputs.get('policy_id', None)
         if not policy_id:
             return self.RES_ERROR, _('Policy not specified.')
@@ -646,6 +696,13 @@ class ClusterAction(base.Action):
         return self.RES_OK, _('Policy updated.')
 
     def _execute(self, **kwargs):
+        """Private method for action execution.
+
+        This function search for the handler based on the action name for
+        execution and it wraps the action execution with policy checks.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
         # do pre-action policy checking
         self.policy_check(self.cluster.id, 'BEFORE')
         if self.data['status'] != policy_mod.CHECK_OK:
@@ -678,13 +735,14 @@ class ClusterAction(base.Action):
         return result, reason
 
     def execute(self, **kwargs):
-        '''Wrapper of action execution.
+        """Wrapper of action execution.
 
         This is mainly a wrapper that executes an action with cluster lock
         acquired.
-        :return: A tuple (res, reason) that indicates whether the execution
+
+        :returns: A tuple (res, reason) that indicates whether the execution
                  was a success and why if it wasn't a success.
-        '''
+        """
         # Try to lock cluster before do real operation
         forced = True if self.action == self.CLUSTER_DELETE else False
         res = senlin_lock.cluster_lock_acquire(self.target, self.id,
@@ -702,4 +760,5 @@ class ClusterAction(base.Action):
         return res, reason
 
     def cancel(self):
+        """Handler to cancel the execution of action."""
         return self.RES_OK
