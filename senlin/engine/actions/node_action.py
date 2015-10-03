@@ -25,7 +25,7 @@ LOG = logging.getLogger(__name__)
 
 
 class NodeAction(base.Action):
-    '''An action performed on a cluster member.'''
+    """An action that can be performed on a cluster member (node)."""
 
     ACTIONS = (
         NODE_CREATE, NODE_DELETE, NODE_UPDATE,
@@ -36,6 +36,15 @@ class NodeAction(base.Action):
     )
 
     def __init__(self, target, action, context=None, **kwargs):
+        """Constructor for a node action object.
+
+        :param target: ID of the target node object on which the action is to
+                       be executed.
+        :param action: The name of the action to be executed.
+        :param context: The context used for accessing the DB layer.
+        :param dict kwargs: Additional parameters that can be passed to the
+                            action.
+        """
         super(NodeAction, self).__init__(target, action, context, **kwargs)
 
         try:
@@ -44,6 +53,10 @@ class NodeAction(base.Action):
             self.node = None
 
     def do_create(self):
+        """Handler for the NODE_CREATE action.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
         if self.node.cluster_id and self.cause == base.CAUSE_RPC:
             # If node is created with target cluster specified,
             # check cluster size constraint
@@ -67,6 +80,10 @@ class NodeAction(base.Action):
             return self.RES_ERROR, _('Node creation failed.')
 
     def do_delete(self):
+        """Handler for the NODE_DELETE action.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
         if self.node.cluster_id and self.cause == base.CAUSE_RPC:
             # If node belongs to a cluster, check size constraint
             # before deleting it
@@ -90,6 +107,10 @@ class NodeAction(base.Action):
             return self.RES_ERROR, _('Node deletion failed.')
 
     def do_update(self):
+        """Handler for the NODE_UPDATE action.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
         params = self.inputs
         res = self.node.do_update(self.context, params)
         if res:
@@ -98,6 +119,10 @@ class NodeAction(base.Action):
             return self.RES_ERROR, _('Node update failed.')
 
     def do_join(self):
+        """Handler for the NODE_JOIN action.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
         cluster_id = self.inputs.get('cluster_id')
         # Check the size constraint of parent cluster
         cluster = cluster_mod.Cluster.load(self.context, cluster_id)
@@ -118,6 +143,10 @@ class NodeAction(base.Action):
             return self.RES_ERROR, _('Node failed in joining cluster.')
 
     def do_leave(self):
+        """Handler for the NODE_LEAVE action.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
         # Check the size constraint of parent cluster
         cluster = cluster_mod.Cluster.load(self.context,
                                            self.node.cluster_id)
@@ -138,6 +167,8 @@ class NodeAction(base.Action):
             return self.RES_ERROR, _('Node failed in leaving cluster.')
 
     def _execute(self):
+        """Private function that finds out the handler and execute it."""
+
         action_name = self.action.lower()
         method_name = action_name.replace('node', 'do')
         method = getattr(self, method_name, None)
@@ -150,6 +181,11 @@ class NodeAction(base.Action):
         return method()
 
     def execute(self, **kwargs):
+        """Interface function for action execution.
+
+        :param dict kwargs: Parameters provided to the action, if any.
+        :returns: A tuple containing the result and the related reason.
+        """
         # Since node.cluster_id could be reset to None in _execute progress,
         # we record it here for policy check and cluster lock release.
         saved_cluster_id = self.node.cluster_id
@@ -194,4 +230,5 @@ class NodeAction(base.Action):
         return res, reason
 
     def cancel(self):
+        """Handler for cancelling the action."""
         return self.RES_OK
