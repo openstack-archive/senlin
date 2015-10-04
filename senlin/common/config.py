@@ -64,6 +64,10 @@ engine_opts = [
     cfg.IntOpt('default_action_timeout',
                default=3600,
                help=_('Timeout in seconds for actions.')),
+    cfg.IntOpt('max_actions_per_batch',
+               default=10,
+               help=_('Maximum number of actions per batch when operating a '
+                      'cluster.')),
     cfg.IntOpt('default_policy_priority',
                default=50,
                help=_('Default priority for policies attached to a cluster.')),
