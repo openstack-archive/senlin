@@ -239,6 +239,18 @@ def cluster_get_all(context, limit=None, marker=None, sort_keys=None,
                            default_sort_keys=['init_time']).all()
 
 
+def cluster_next_index(context, cluster_id):
+    session = _session(context)
+    cluster = session.query(models.Cluster).get(cluster_id)
+    if cluster is None:
+        return 0
+
+    next_index = cluster.next_index
+    cluster.next_index += 1
+    cluster.save(session)
+    return next_index
+
+
 def cluster_count_all(context, filters=None, project_safe=True,
                       show_deleted=False, show_nested=False):
     query = _query_cluster_get_all(context, project_safe=project_safe,

@@ -71,6 +71,10 @@ def cluster_get_all_by_parent(context, parent):
     return IMPL.cluster_get_all_by_parent(context, parent)
 
 
+def cluster_next_index(context, cluster_id):
+    return IMPL.cluster_next_index(context, cluster_id)
+
+
 def cluster_count_all(context, filters=None, project_safe=True,
                       show_deleted=False, show_nested=False):
     return IMPL.cluster_count_all(context, filters=filters,

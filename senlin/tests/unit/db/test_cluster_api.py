@@ -358,6 +358,20 @@ class DBAPIClusterTest(base.SenlinTestCase):
         children0 = db_api.cluster_get_all_by_parent(self.ctx, 'non-existent')
         self.assertEqual(0, len(children0))
 
+    def test_cluster_next_index(self):
+        cluster = shared.create_cluster(self.ctx, self.profile)
+        cluster_id = cluster.id
+        res = db_api.cluster_get(self.ctx, cluster_id)
+        self.assertEqual(1, res.next_index)
+        res = db_api.cluster_next_index(self.ctx, cluster_id)
+        self.assertEqual(1, res)
+        res = db_api.cluster_get(self.ctx, cluster_id)
+        self.assertEqual(2, res.next_index)
+        res = db_api.cluster_next_index(self.ctx, cluster_id)
+        self.assertEqual(2, res)
+        res = db_api.cluster_get(self.ctx, cluster_id)
+        self.assertEqual(3, res.next_index)
+
     def test_cluster_count_all(self):
         clusters = [shared.create_cluster(self.ctx, self.profile)
                     for i in range(3)]
