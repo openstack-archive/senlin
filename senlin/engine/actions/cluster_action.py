@@ -113,14 +113,11 @@ class ClusterAction(base.Action):
 
         placement = self.data.get('placement', None)
 
-        db_cluster = db_api.cluster_get(self.context, self.cluster.id)
-        index = db_cluster.next_index
-
         nodes = []
         for m in range(count):
-
+            index = db_api.cluster_next_index(self.context, self.cluster.id)
             kwargs = {
-                'index': index + m,
+                'index': index,
                 'metadata': {},
                 'user': self.cluster.user,
                 'project': self.cluster.project,
@@ -130,7 +127,7 @@ class ClusterAction(base.Action):
                 # We assume placement is a list
                 kwargs['data'] = {'placement': placement[m]}
 
-            name = 'node-%s-%003d' % (self.cluster.id[:8], index + m)
+            name = 'node-%s-%003d' % (self.cluster.id[:8], index)
             node = node_mod.Node(name, self.cluster.profile_id,
                                  self.cluster.id, context=self.context,
                                  **kwargs)

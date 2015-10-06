@@ -108,13 +108,13 @@ class ClusterActionTest(base.SenlinTestCase):
         super(ClusterActionTest, self).setUp()
         self.ctx = utils.dummy_context()
 
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(db_api, 'cluster_next_index')
     @mock.patch.object(node_mod, 'Node')
     @mock.patch.object(db_api, 'action_add_dependency')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
     def test__create_nodes_single(self, mock_wait, mock_start, mock_dep,
-                                  mock_node, mock_get, mock_load):
+                                  mock_node, mock_index, mock_load):
         # prepare mocks
         cluster = mock.Mock()
         cluster.id = 'CLUSTER_ID'
@@ -122,9 +122,7 @@ class ClusterActionTest(base.SenlinTestCase):
         cluster.user = 'FAKE_USER'
         cluster.project = 'FAKE_PROJECT'
         cluster.domain = 'FAKE_DOMAIN'
-        db_cluster = mock.Mock()
-        db_cluster.next_index = 1
-        mock_get.return_value = db_cluster
+        mock_index.return_value = 123
         node = mock.Mock()
         node.id = 'NODE_ID'
         mock_node.return_value = node
@@ -148,16 +146,15 @@ class ClusterActionTest(base.SenlinTestCase):
         # assertions
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('All dependents completed', res_msg)
-        mock_get.assert_called_once_with(action.context, 'CLUSTER_ID',
-                                         project_safe=True, show_deleted=False)
-        mock_node.assert_called_once_with('node-CLUSTER_-001',
+        mock_index.assert_called_once_with(action.context, 'CLUSTER_ID')
+        mock_node.assert_called_once_with('node-CLUSTER_-123',
                                           'FAKE_PROFILE',
                                           'CLUSTER_ID',
                                           context=action.context,
                                           user='FAKE_USER',
                                           project='FAKE_PROJECT',
                                           domain='FAKE_DOMAIN',
-                                          index=1, metadata={})
+                                          index=123, metadata={})
         node.store.assert_called_once_with(action.context)
         mock_action.assert_called_once_with('NODE_ID', 'NODE_CREATE',
                                             user=self.ctx.user,
@@ -185,18 +182,15 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('', res_msg)
 
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(db_api, 'cluster_next_index')
     @mock.patch.object(node_mod, 'Node')
     @mock.patch.object(db_api, 'action_add_dependency')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
     def test__create_nodes_multiple(self, mock_wait, mock_start, mock_dep,
-                                    mock_node, mock_get, mock_load):
+                                    mock_node, mock_index, mock_load):
         cluster = mock.Mock()
         cluster.id = '01234567-123434'
-        db_cluster = mock.Mock()
-        db_cluster.next_index = 1
-        mock_get.return_value = db_cluster
         node1 = mock.Mock()
         node1.id = '01234567-abcdef'
         node1.data = {'placement': {'region': 'regionOne'}}
@@ -204,6 +198,7 @@ class ClusterActionTest(base.SenlinTestCase):
         node2.id = 'abcdefab-123456'
         node2.data = {'placement': {'region': 'regionTwo'}}
         mock_node.side_effect = [node1, node2]
+        mock_index.side_effect = [123, 124]
 
         mock_load.return_value = cluster
         # cluster action is real
@@ -231,7 +226,7 @@ class ClusterActionTest(base.SenlinTestCase):
         # assertions
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('All dependents completed', res_msg)
-        self.assertEqual(1, mock_get.call_count)
+        self.assertEqual(2, mock_index.call_count)
         self.assertEqual(2, mock_node.call_count)
         node1.store.assert_called_once_with(action.context)
         node2.store.assert_called_once_with(action.context)
@@ -245,13 +240,13 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual({'region': 'regionOne'}, node1.data['placement'])
         self.assertEqual({'region': 'regionTwo'}, node2.data['placement'])
         mock_node_calls = [
-            mock.call('node-01234567-001', mock.ANY, '01234567-123434',
+            mock.call('node-01234567-123', mock.ANY, '01234567-123434',
                       user=mock.ANY, project=mock.ANY, domain=mock.ANY,
-                      index=1, context=mock.ANY, metadata={},
+                      index=123, context=mock.ANY, metadata={},
                       data={'placement': {'region': 'regionOne'}}),
-            mock.call('node-01234567-002', mock.ANY, '01234567-123434',
+            mock.call('node-01234567-124', mock.ANY, '01234567-123434',
                       user=mock.ANY, project=mock.ANY, domain=mock.ANY,
-                      index=2, context=mock.ANY, metadata={},
+                      index=124, context=mock.ANY, metadata={},
                       data={'placement': {'region': 'regionTwo'}})
         ]
 

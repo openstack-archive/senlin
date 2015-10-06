@@ -81,13 +81,20 @@ def create_cluster(ctx, profile, **kwargs):
 
 
 def create_node(ctx, cluster, profile, **kwargs):
+    if cluster:
+        cluster_id = cluster.id
+        index = db_api.cluster_next_index(ctx, cluster_id)
+    else:
+        cluster_id = None
+        index = -1
+
     values = {
         'name': 'test_node_name',
         'physical_id': UUID1,
-        'cluster_id': cluster.id if cluster else None,
+        'cluster_id': cluster_id,
         'profile_id': profile.id,
         'project': ctx.project,
-        'index': 0,
+        'index': index,
         'role': None,
         'created_time': None,
         'updated_time': None,

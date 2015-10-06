@@ -100,7 +100,8 @@ class TestNode(base.SenlinTestCase):
     @mock.patch.object(eventm, 'info')
     def test_node_store_init(self, mock_info):
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
-                          self.context, role='first_node')
+                          self.context, role='first_node',
+                          index=1)
         self.assertIsNone(node.id)
         node_id = node.store(self.context)
         self.assertIsNotNone(node_id)
