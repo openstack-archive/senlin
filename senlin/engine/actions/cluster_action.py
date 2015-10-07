@@ -409,71 +409,61 @@ class ClusterAction(base.Action):
             reason = new_reason
         return result, reason
 
+    def _get_action_data(self, current_size):
+        if 'deletion' in self.data:
+            count = self.data['deletion']['count']
+            desired = current_size - count
+            candidates = self.data['deletion'].get('candidates', [])
+        elif 'creation' in self.data:
+            count = self.data['creation']['count']
+            desired = current_size + count
+            candidates = None
+        else:
+            return 0, 0, None
+        return count, desired, candidates
+
     def do_resize(self):
         """Handler for the CLUSTER_RESIZE action.
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        adj_type = self.inputs.get(consts.ADJUSTMENT_TYPE, None)
-        number = self.inputs.get(consts.ADJUSTMENT_NUMBER, None)
-        min_size = self.inputs.get(consts.ADJUSTMENT_MIN_SIZE, None)
-        max_size = self.inputs.get(consts.ADJUSTMENT_MAX_SIZE, None)
-        min_step = self.inputs.get(consts.ADJUSTMENT_MIN_STEP, None)
-        strict = self.inputs.get(consts.ADJUSTMENT_STRICT, False)
-
-        desired = self.cluster.desired_capacity
-        if adj_type is not None:
-            # number must be not None according to previous tests
-            desired = scaleutils.calculate_desired(
-                desired, adj_type, number, min_step)
-
-        # truncate adjustment if permitted (strict==False)
-        if strict is False:
-            desired = scaleutils.truncate_desired(
-                self.cluster, desired, min_size, max_size)
-
-        # check provided params against current properties
-        # desired is checked when strict is True
-        result = scaleutils.check_size_params(self.cluster, desired, min_size,
-                                              max_size, strict)
-        if result != '':
-            return self.RES_ERROR, result
-
-        # save sanitized properties
         node_list = self.cluster.nodes
         current_size = len(node_list)
-
-        # delete nodes if necessary
-        if desired < current_size:
-            adjustment = current_size - desired
-            if 'deletion' not in self.data:
-                self.data['deletion'] = {'count': adjustment}
-            candidates = []
+        count, desired, candidates = self._get_action_data(current_size)
+        # if policy is attached to the cluster, use policy data directly,
+        # or parse resize params to get action data.
+        if count == 0:
+            result, reason = scaleutils.parse_resize_params(self, self.cluster)
+            if result != self.RES_OK:
+                return result, reason
+            count, desired, candidates = self._get_action_data(current_size)
+        if candidates is not None and len(candidates) == 0:
             # Choose victims randomly
-            i = adjustment
+            i = count
             while i > 0:
                 r = random.randrange(len(node_list))
                 candidates.append(node_list[r].id)
                 node_list.remove(node_list[r])
                 i = i - 1
 
+        # delete nodes if necessary
+        if desired < current_size:
             result, reason = self._delete_nodes(candidates)
             if result != self.RES_OK:
                 return result, reason
-
         # Create new nodes if desired_capacity increased
-        if desired > current_size:
-            delta = desired - current_size
-            self.data['creation'] = {'count': delta}
-            result, reason = self._create_nodes(delta)
+        else:
+            result, reason = self._create_nodes(count)
             if result != self.RES_OK:
                 return result, reason
 
         reason = _('Cluster resize succeeded.')
         kwargs = {'desired_capacity': desired}
-        if min_size:
+        min_size = self.inputs.get(consts.ADJUSTMENT_MIN_SIZE, None)
+        max_size = self.inputs.get(consts.ADJUSTMENT_MAX_SIZE, None)
+        if min_size is not None:
             kwargs['min_size'] = min_size
-        if max_size:
+        if max_size is not None:
             kwargs['max_size'] = max_size
         self.cluster.set_status(self.context, self.cluster.ACTIVE, reason,
                                 **kwargs)

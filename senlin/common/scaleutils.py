@@ -135,3 +135,47 @@ def check_size_params(cluster, desired, min_size, max_size, strict):
                      "current desired_capacity of the cluster.")
 
     return ''
+
+
+def parse_resize_params(action, cluster):
+    '''Parse the parameters of CLUSTER_RESIZE action.'''
+
+    adj_type = action.inputs.get(consts.ADJUSTMENT_TYPE, None)
+    number = action.inputs.get(consts.ADJUSTMENT_NUMBER, None)
+    min_size = action.inputs.get(consts.ADJUSTMENT_MIN_SIZE, None)
+    max_size = action.inputs.get(consts.ADJUSTMENT_MAX_SIZE, None)
+    min_step = action.inputs.get(consts.ADJUSTMENT_MIN_STEP, None)
+    strict = action.inputs.get(consts.ADJUSTMENT_STRICT, False)
+
+    desired = cluster.desired_capacity
+    if adj_type is not None:
+        # number must be not None according to previous tests
+        desired = calculate_desired(desired, adj_type, number, min_step)
+
+    # truncate adjustment if permitted (strict==False)
+    if strict is False:
+        desired = truncate_desired(cluster, desired, min_size, max_size)
+
+    # check provided params against current properties
+    # desired is checked when strict is True
+    result = check_size_params(cluster, desired, min_size, max_size, strict)
+    if result != '':
+        return action.RES_ERROR, result
+
+    # save sanitized properties
+    current_size = cluster.desired_capacity
+    count = current_size - desired
+    if count > 0:
+        action.data.update({
+            'deletion': {
+                'count': count,
+            }
+        })
+    else:
+        action.data.update({
+            'creation': {
+                'count': abs(count),
+            }
+        })
+
+    return action.RES_OK, ''

@@ -14,6 +14,8 @@ import mock
 from oslo_utils import timeutils
 import six
 
+from senlin.common import consts
+from senlin.common import scaleutils
 from senlin.db.sqlalchemy import api as db_api
 from senlin.policies import deletion_policy as dp
 from senlin.tests.unit.common import base
@@ -178,14 +180,19 @@ class TestDeletionPolicy(base.SenlinTestCase):
         self.assertEqual(self.nodes_p1[0], nodes[1])
         self._delete_nodes(self.nodes_p3[0])
 
-    def test_pre_op(self):
+    @mock.patch.object(scaleutils, 'parse_resize_params')
+    @mock.patch.object(db_api, 'cluster_get')
+    def test_pre_op(self, mock_cluster, mock_parse):
         action = mock.Mock()
         action.context = self.context
         action.inputs = {}
         policy = dp.DeletionPolicy('test-policy', self.spec)
+        mock_parse.return_value = 'OK', ''
 
+        # CLUSTER_SCALE_IN or ClUSTER_DEL_NODES action
         # action data doesn't have 'deletion' field
         action.data = {}
+        action.action = consts.CLUSTER_SCALE_IN
         policy.pre_op(self.cluster['id'], action)
         pd = {
             'status': 'OK',
@@ -200,6 +207,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
 
         # action data has 'deletion' field, but 'count' is not provided
         action.data = {'abc': 123}
+        action.action = consts.CLUSTER_DEL_NODES
         policy.pre_op(self.cluster['id'], action)
         pd = {
             'status': 'OK',
@@ -215,6 +223,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
 
         # 'count' is provided in inputs field of action
         action.inputs = {'count': 2}
+        action.action = consts.CLUSTER_DEL_NODES
         action.data = {}
         policy.pre_op(self.cluster['id'], action)
         pd = {
@@ -224,6 +233,23 @@ class TestDeletionPolicy(base.SenlinTestCase):
                 'candidates': [self.nodes_p1[0], self.nodes_p1[1]],
                 'destroy_after_deletion': True,
                 'grace_period': 60,
+            }
+        }
+        self.assertEqual(pd, action.data)
+        action.store.assert_called_with(self.context)
+        # CLUSTER_RESIZE action
+        # delete nodes
+        action.action = consts.CLUSTER_RESIZE
+        action.data = {'deletion': {'count': 1}}
+        policy.pre_op(self.cluster['id'], action)
+        pd = {
+            'status': 'OK',
+            'reason': 'Candidates generated',
+            'deletion': {
+                'candidates': [self.nodes_p1[0]],
+                'destroy_after_deletion': True,
+                'grace_period': 60,
+                'count': 1,
             }
         }
         self.assertEqual(pd, action.data)

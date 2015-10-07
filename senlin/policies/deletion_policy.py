@@ -40,6 +40,7 @@ import random
 from senlin.common import constraints
 from senlin.common import consts
 from senlin.common.i18n import _
+from senlin.common import scaleutils
 from senlin.common import schema
 from senlin.db import api as db_api
 from senlin.policies import base
@@ -72,6 +73,7 @@ class DeletionPolicy(base.Policy):
     TARGET = [
         ('BEFORE', consts.CLUSTER_SCALE_IN),
         ('BEFORE', consts.CLUSTER_DEL_NODES),
+        ('BEFORE', consts.CLUSTER_RESIZE),
     ]
 
     PROFILE_TYPE = [
@@ -163,7 +165,14 @@ class DeletionPolicy(base.Policy):
     def pre_op(self, cluster_id, action):
         '''Choose victims that can be deleted.'''
 
-        count = action.inputs.get('count', 1)
+        if action.action == consts.CLUSTER_RESIZE:
+            cluster = db_api.cluster_get(action.context, cluster_id)
+            scaleutils.parse_resize_params(action, cluster)
+            if 'deletion' not in action.data:
+                return
+            count = action.data['deletion']['count']
+        else:  # CLUSTER_SCALE_IN or CLUSTER_DEL_NODES
+            count = action.inputs.get('count', 1)
         pd = action.data.get('deletion', {})
         candidates = pd.get('candidates', [])
 
