@@ -64,7 +64,7 @@ def parse_exception(ex):
     elif isinstance(ex, Exception):
         message = six.text_type(ex)
 
-    LOG.exception(ex)
+    # LOG.exception(ex)
     raise senlin_exc.InternalError(code=code, message=message)
 
 
