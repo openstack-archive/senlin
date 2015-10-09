@@ -87,3 +87,4 @@ TEST
 DOC
 -----
   - Provide a sample conf file for customizing senlin options
+  - Provide documentation for all policies
