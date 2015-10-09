@@ -1010,6 +1010,7 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Creating node '%s'."), name)
 
+        index = -1
         node_profile = self.profile_find(context, profile_id)
         if cluster_id is not None:
             db_cluster = self.cluster_find(context, cluster_id)
@@ -1023,14 +1024,16 @@ class EngineService(service.Service):
                             'operation aborted.')
                     LOG.error(msg)
                     raise exception.ProfileTypeNotMatch(message=msg)
+            index = db_api.cluster_next_index(context, cluster_id)
 
         # Create a node instance
         kwargs = {
+            'index': index,
+            'role': role,
+            'metadata': metadata or {},
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
-            'role': role,
-            'metadata': metadata or {}
         }
 
         node = node_mod.Node(name, node_profile.id, cluster_id, context,
