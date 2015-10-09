@@ -163,16 +163,16 @@ class TestCeilometerAlarm(base.SenlinTestCase):
             'insufficient_data_actions': ['http://url3']
         }
 
-        a = alarm.Alarm('A1', spec)
+        a = alarm.ThresholdAlarm('A1', spec)
         res, alarm_dict = a.create(self.ctx, **params)
 
         self.assertTrue(res)
 
-        sd.telemetry.assert_called_once_with(self.ctx)
+        sd.telemetry.assert_called_once_with(self.ctx.to_dict())
         values = {
             'name': 'A1',
             'description': '',
-            'type': 'default',
+            'type': 'threshold',
             'state': 'insufficient_data',
             'severity': 'low',
             'enabled': True,
@@ -187,7 +187,18 @@ class TestCeilometerAlarm(base.SenlinTestCase):
                 'timezone': '',
             }],
             'repeat_actions': True,
-            'default_rule': None,
+            'threshold_rule': {
+                'meter_name': 'cpu_util',
+                'evaluation_periods': 2,
+                'period': 120,
+                'statistic': 'avg',
+                'threshold': 15,
+                'query': [{
+                    'field': 'resource_metadata.cluster',
+                    'value': 'cluster1',
+                    'op': '=='}],
+                'comparison_operator': 'lt',
+            }
         }
 
         cc.alarm_create.assert_called_once_with(**values)
@@ -202,7 +213,7 @@ class TestCeilometerAlarm(base.SenlinTestCase):
         cc.alarm_create.side_effect = exc.ResourceCreationFailure(
             rtype='Alarm')
         spec = parser.simple_parse(threshold_alarm)
-        a = alarm.Alarm('A1', spec)
+        a = alarm.ThresholdAlarm('A1', spec)
         res, reason = a.create(self.ctx)
 
         self.assertFalse(res)
