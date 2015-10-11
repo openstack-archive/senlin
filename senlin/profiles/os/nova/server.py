@@ -331,32 +331,78 @@ class ServerProfile(base.Profile):
         return True
 
     def do_get_details(self, obj):
+        known_keys = {
+            'OS-DCF:diskConfig',
+            'OS-EXT-AZ:availability_zone',
+            'OS-EXT-STS:power_state',
+            'OS-EXT-STS:vm_state',
+            'accessIPv4',
+            'accessIPv6',
+            'config_drive',
+            'created',
+            'hostId',
+            'id',
+            'key_name',
+            'locked',
+            'metadata',
+            'name',
+            'os-extended-volumes:volumes_attached',
+            'progress',
+            'status',
+            'updated'
+        }
         if obj.physical_id is None or obj.physical_id == '':
             return {}
 
         server = self.nova(obj).server_get(obj.physical_id)
         if server is None:
             return {}
+        server_data = server.to_dict()
         details = {
-            'id': server.id,
-            'name': server.name,
-            'access_ipv4': server.access_ipv4,
-            'access_ipv6': server.access_ipv6,
-            'addresses': server.addresses,
-            'created_at': server.created_at,
-            'flavor': server.flavor,
-            'host_id': server.host_id,
-            'image': server.image,
-            'links': server.links,
-            'metadata': server.metadata,
-            'progress': server.progress,
-            'project_id': server.project_id,
-            'status': server.status,
-            'updated_at': server.updated_at,
-            'user_id': server.user_id,
+            'image': server_data['image']['id'],
+            'flavor': server_data['flavor']['id'],
         }
+        for key in known_keys:
+            if key in server_data:
+                details[key] = server_data[key]
 
-        return details
+        # process special keys like 'OS-EXT-STS:task_state': these keys have
+        # a default value '-' when not existing
+        special_keys = [
+            'OS-EXT-STS:task_state',
+            'OS-SRV-USG:launched_at',
+            'OS-SRV-USG:terminated_at',
+        ]
+        for key in special_keys:
+            if key in server_data:
+                val = server_data[key]
+                details[key] = val if val else '-'
+
+        # process network addresses
+        for net in server_data['addresses']:
+            network = '%s network' % net
+            addresses = []
+            for addr in server_data['addresses'][net]:
+                addresses.append(addr['addr'])
+            if len(addresses) == 0:
+                details[network] = ''
+            elif len(addresses) == 1:
+                details[network] = addresses[0]
+            else:
+                details[network] = addresses
+
+        # process security groups
+        sgroups = []
+        for sg in server_data['security_groups']:
+            sgroups.append(sg['name'])
+        if len(sgroups) == 0:
+            details['security_groups'] = ''
+        elif len(sgroups) == 1:
+            details['security_groups'] = sgroups[0]
+        else:
+            details['security_groups'] = sgroups
+
+        return dict((k, details[k]) for k in sorted(details))
 
     def do_join(self, obj, cluster_id):
         if not obj.physical_id:
