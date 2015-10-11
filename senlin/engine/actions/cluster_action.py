@@ -126,12 +126,13 @@ class ClusterAction(base.Action):
             }
             if placement is not None:
                 # We assume placement is a list
-                kwargs['data'] = {'placement': placement[m]}
+                kwargs['data'] = {'placement': placement['placements'][m]}
 
             name = 'node-%s-%003d' % (self.cluster.id[:8], index)
             node = node_mod.Node(name, self.cluster.profile_id,
                                  self.cluster.id, context=self.context,
                                  **kwargs)
+
             node.store(self.context)
             nodes.append(node)
 

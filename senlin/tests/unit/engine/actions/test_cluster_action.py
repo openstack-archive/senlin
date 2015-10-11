@@ -204,10 +204,13 @@ class ClusterActionTest(base.SenlinTestCase):
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
         action.data = {
-            'placement': [
-                {'region': 'regionOne'},
-                {'region': 'regionTwo'}
-            ]
+            'placement': {
+                'count': 2,
+                'placements': [
+                    {'region': 'regionOne'},
+                    {'region': 'regionTwo'}
+                ]
+            }
         }
         mock_wait.return_value = (action.RES_OK, 'All dependents completed')
 
@@ -279,10 +282,13 @@ class ClusterActionTest(base.SenlinTestCase):
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
         action.data = {
-            'placement': [
-                {'region': 'regionOne'},
-                {'region': 'regionTwo'}
-            ]
+            'placement': {
+                'count': 2,
+                'placements': [
+                    {'region': 'regionOne'},
+                    {'region': 'regionTwo'}
+                ]
+            }
         }
         mock_wait.return_value = (action.RES_ERROR, 'Waiting timed out')
 
