@@ -131,6 +131,10 @@ class KeystoneClient(base.DriverBase):
 
         return result
 
+    @sdk.translate_exception
+    def region_list(self, **queries):
+        return self.conn.identity.regions(**queries)
+
     @classmethod
     @sdk.translate_exception
     def get_token(cls, **creds):

@@ -211,6 +211,16 @@ class TestKeystoneV3(base.SenlinTestCase):
             allow_redelegation=True, roles=[])
         self.conn.reset_mock()
 
+    def test_region_list(self, mock_create):
+        self.conn.identity.regions.return_value = ['fake_region']
+        mock_create.return_value = self.conn
+        kc = kv3.KeystoneClient({'k': 'v'})
+
+        res = kc.region_list(p1='v1', p2='v2')
+
+        self.assertEqual(['fake_region'], res)
+        self.conn.identity.regions.assert_called_once_with(p1='v1', p2='v2')
+
     @mock.patch.object(sdk, 'authenticate')
     def test_get_token(self, mock_auth, mock_create):
         access_info = mock.Mock()
