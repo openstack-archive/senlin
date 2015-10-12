@@ -55,7 +55,9 @@ class TestNode(base.SenlinFunctionalTest):
         node1 = test_utils.wait_for_status(test_api.get_node, self.client,
                                            node1['id'], 'ACTIVE')
         self.assertEqual(cluster['id'], node1['cluster_id'])
+        self.assertEqual(2, node1['index'])
         cluster = test_api.get_cluster(self.client, cluster['id'])
+        self.assertEqual(2, cluster['desired_capacity'])
         self.assertEqual(2, len(cluster['nodes']))
         self.assertIn(node1['id'], cluster['nodes'])
 
@@ -97,6 +99,7 @@ class TestNode(base.SenlinFunctionalTest):
 
         node1 = test_api.get_node(self.client, node1['id'])
         self.assertEqual(cluster['id'], node1['cluster_id'])
+        self.assertEqual(1, node1['index'])
         cluster = test_api.get_cluster(self.client, cluster['id'])
         self.assertEqual(1, len(cluster['nodes']))
         self.assertIn(node1['id'], cluster['nodes'])
