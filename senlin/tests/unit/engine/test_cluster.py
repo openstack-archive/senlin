@@ -243,6 +243,15 @@ class TestCluster(base.SenlinTestCase):
         result = clusterm.Cluster.load(self.context, cluster_id='CLUSTER123')
         self.assertEqual(expected, result.to_dict())
 
+        db_api.cluster_delete(self.context, cluster_id='CLUSTER123')
+        result = clusterm.Cluster.load(self.context, cluster_id='CLUSTER123',
+                                       show_deleted=True)
+        expected.update({'profile_name': None})
+        expected.update({'status': 'DELETED'})
+        expected.update({'deleted_time': cluster.deleted_time.isoformat()})
+        expected.update({'status_reason': 'Cluster deletion succeeded'})
+        self.assertEqual(expected, result.to_dict())
+
     def test_cluster_set_status(self):
         cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
                                    project=self.context.project)
