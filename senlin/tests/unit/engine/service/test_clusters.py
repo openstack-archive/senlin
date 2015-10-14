@@ -820,7 +820,8 @@ class ClusterTest(base.SenlinTestCase):
         self._verify_action(action, 'CLUSTER_DEL_NODES',
                             'cluster_del_nodes_%s' % cid[:8],
                             cid, cause=action_mod.CAUSE_RPC,
-                            inputs={'nodes': nodes})
+                            inputs={'candidates': nodes,
+                                    'count': len(nodes)})
 
         expected_call = mock.call(action_id=mock.ANY)
 

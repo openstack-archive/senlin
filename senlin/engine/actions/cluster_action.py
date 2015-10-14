@@ -372,7 +372,7 @@ class ClusterAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        nodes = self.inputs.get('nodes', [])
+        nodes = self.inputs.get('candidates', [])
 
         node_ids = copy.deepcopy(nodes)
         errors = []

@@ -746,13 +746,17 @@ class EngineService(service.Service):
             raise exception.SenlinBadRequest(msg=error)
 
         action_name = 'cluster_del_nodes_%s' % db_cluster.id[:8]
+        count = len(found)
         params = {
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
             'name': action_name,
             'cause': action_mod.CAUSE_RPC,
-            'inputs': {'nodes': found}
+            'inputs': {
+                'candidates': found,
+                'count': count
+            }
         }
         action = action_mod.Action(db_cluster.id, consts.CLUSTER_DEL_NODES,
                                    **params)

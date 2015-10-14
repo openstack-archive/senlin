@@ -173,14 +173,14 @@ class DeletionPolicy(base.Policy):
             count = action.data['deletion']['count']
         else:  # CLUSTER_SCALE_IN or CLUSTER_DEL_NODES
             count = action.inputs.get('count', 1)
-        pd = action.data.get('deletion', {})
-        candidates = pd.get('candidates', [])
+        candidates = action.inputs.get('candidates', [])
 
-        # For certain operations ( e.g. DEL_NODES), the candidates might
-        # have been specified
+        # For CLUSTER_RESIZE and CLUSTER_SCALE_IN actions, use policy
+        # creteria to selete candidates.
         if len(candidates) == 0:
             candidates = self._select_candidates(action.context, cluster_id,
                                                  count)
+        pd = action.data.get('deletion', {})
         pd['candidates'] = candidates
         pd['destroy_after_deletion'] = self.destroy_after_deletion
         pd['grace_period'] = self.grace_period
