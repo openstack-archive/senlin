@@ -207,6 +207,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
 
         # action data has 'deletion' field, but 'count' is not provided
         action.data = {'abc': 123}
+        action.inputs = {'nodes': [self.nodes_p1[0]]}
         action.action = consts.CLUSTER_DEL_NODES
         policy.pre_op(self.cluster['id'], action)
         pd = {
@@ -223,7 +224,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
 
         # 'count' is provided in inputs field of action
         action.inputs = {'count': 2}
-        action.action = consts.CLUSTER_DEL_NODES
+        action.action = consts.CLUSTER_SCALE_IN
         action.data = {}
         policy.pre_op(self.cluster['id'], action)
         pd = {
@@ -265,11 +266,13 @@ class TestDeletionPolicy(base.SenlinTestCase):
         action.data = {
             'deletion': {
                 'count': 2,
-                'candidates': [
-                    self.nodes_p1[0],
-                    self.nodes_p2[2],
-                ],
             }
+        }
+        action.inputs = {
+            'candidates': [
+                self.nodes_p1[0],
+                self.nodes_p2[2],
+            ],
         }
         policy.pre_op(self.cluster['id'], action)
         pd = {

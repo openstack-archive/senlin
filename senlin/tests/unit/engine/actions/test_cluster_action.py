@@ -975,7 +975,7 @@ class ClusterActionTest(base.SenlinTestCase):
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
-        action.inputs = {'nodes': ['NODE_1', 'NODE_2']}
+        action.inputs = {'candidates': ['NODE_1', 'NODE_2']}
         action.data = {}
 
         node1 = mock.Mock()
@@ -1006,7 +1006,7 @@ class ClusterActionTest(base.SenlinTestCase):
         cluster = mock.Mock()
         mock_load.return_value = cluster
         action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx)
-        action.inputs = {'nodes': ['NODE_1']}
+        action.inputs = {'candidates': ['NODE_1']}
         mock_get.side_effect = exception.NodeNotFound(node='NODE_1')
 
         # do it
@@ -1046,7 +1046,7 @@ class ClusterActionTest(base.SenlinTestCase):
         cluster.id = 'FAKE_CLUSTER'
         mock_load.return_value = cluster
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
-        action.inputs = {'nodes': ['NODE_1']}
+        action.inputs = {'candidates': ['NODE_1']}
         node1 = mock.Mock()
         node1.cluster_id = 'FAKE_CLUSTER'
         mock_get.side_effect = [node1]
