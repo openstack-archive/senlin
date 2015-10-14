@@ -54,6 +54,9 @@ UUIDs = (UUID1, UUID2, UUID3) = sorted([str(uuid.uuid4())
 
 def create_profile(context, profile=sample_profile, **kwargs):
     data = parser.simple_parse(profile)
+    data['user'] = context.user
+    data['project'] = context.project
+    data['domain'] = context.domain
     data.update(kwargs)
     return db_api.profile_create(context, data)
 

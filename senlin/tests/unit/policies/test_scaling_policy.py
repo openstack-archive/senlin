@@ -53,6 +53,8 @@ class TestScalingPolicy(base.SenlinTestCase):
             'type': 'os.heat.stack',
             'name': 'test-profile',
             'created_time': timeutils.utcnow(),
+            'user': self.context.user,
+            'project': self.context.project,
         }
         return db_api.profile_create(self.context, values)
 

@@ -86,6 +86,10 @@ class Profile(object):
         self.id = kwargs.get('id', None)
         self.type = kwargs.get('type', '%s-%s' % (type_name, version))
 
+        self.user = kwargs.get('user')
+        self.project = kwargs.get('project')
+        self.domain = kwargs.get('domain')
+
         self.permission = kwargs.get('permission', '')
         self.metadata = kwargs.get('metadata', {})
 
@@ -113,6 +117,9 @@ class Profile(object):
             'id': record.id,
             'type': record.type,
             'context': record.context,
+            'user': record.user,
+            'project': record.project,
+            'domain': record.domain,
             'permission': record.permission,
             'metadata': record.meta_data,
             'created_time': record.created_time,
@@ -159,6 +166,9 @@ class Profile(object):
             'type': self.type,
             'context': self.context,
             'spec': self.spec,
+            'user': self.user,
+            'project': self.project,
+            'domain': self.domain,
             'permission': self.permission,
             'meta_data': self.metadata,
         }
@@ -292,6 +302,9 @@ class Profile(object):
             'id': self.id,
             'name': self.name,
             'type': self.type,
+            'user': self.user,
+            'project': self.project,
+            'domain': self.domain,
             'permission': self.permission,
             'spec': self.spec,
             'metadata': self.metadata,

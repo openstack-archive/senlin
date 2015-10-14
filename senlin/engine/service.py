@@ -208,6 +208,9 @@ class EngineService(service.Service):
                  {'type': type_name, 'name': name})
 
         kwargs = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
             'permission': permission,
             'metadata': metadata,
         }
@@ -262,6 +265,9 @@ class EngineService(service.Service):
         new_spec = copy.deepcopy(db_profile.spec)
         new_spec.update(spec)
         kwargs = {
+            'user': db_profile.user,
+            'project': db_profile.project,
+            'domain': db_profile.domain,
             'permission': permission or db_profile.permission,
             'metadata': metadata or db_profile.meta_data,
         }

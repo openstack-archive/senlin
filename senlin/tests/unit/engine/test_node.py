@@ -40,7 +40,9 @@ class TestNode(base.SenlinTestCase):
             'spec': {
                 'type': 'os.nova.server',
                 'version': '1.0',
-            }
+            },
+            'user': self.context.user,
+            'project': self.context.project
         }
         return db_api.profile_create(self.context, values)
 

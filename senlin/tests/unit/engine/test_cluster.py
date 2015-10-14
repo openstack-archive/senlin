@@ -53,7 +53,9 @@ class TestCluster(base.SenlinTestCase):
                 'properties': {
                     'foo': 'bar'
                 }
-            }
+            },
+            'user': self.context.user,
+            'project': self.context.project
         }
         return db_api.profile_create(self.context, values)
 
