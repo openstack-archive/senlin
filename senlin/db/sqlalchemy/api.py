@@ -128,9 +128,15 @@ def soft_delete_aware_query(context, *args, **kwargs):
     return query
 
 
-def query_by_short_id(context, model, short_id, show_deleted=False):
+# TODO(Yanyan Hu): Set default value of project_safe to True
+def query_by_short_id(context, model, short_id, project_safe=False,
+                      show_deleted=False):
     q = soft_delete_aware_query(context, model, show_deleted=show_deleted)
     q = q.filter(model.id.like('%s%%' % short_id))
+
+    if project_safe:
+        q = q.filter_by(project=context.project)
+
     if q.count() == 1:
         return q.first()
     elif q.count() == 0:
@@ -139,6 +145,7 @@ def query_by_short_id(context, model, short_id, show_deleted=False):
         raise exception.MultipleChoices(arg=short_id)
 
 
+# TODO(Yanyan Hu): Set default value of project_safe to True
 def query_by_name(context, model, name, project_safe=False,
                   show_deleted=False):
     q = soft_delete_aware_query(context, model, show_deleted=show_deleted)
@@ -181,12 +188,14 @@ def cluster_get(context, cluster_id, show_deleted=False, project_safe=True):
     return cluster
 
 
-def cluster_get_by_name(context, name):
-    return query_by_name(context, models.Cluster, name, True)
+def cluster_get_by_name(context, name, project_safe=True):
+    return query_by_name(context, models.Cluster, name,
+                         project_safe=project_safe)
 
 
-def cluster_get_by_short_id(context, short_id):
-    return query_by_short_id(context, models.Cluster, short_id)
+def cluster_get_by_short_id(context, short_id, project_safe=True):
+    return query_by_short_id(context, models.Cluster, short_id,
+                             project_safe=project_safe)
 
 
 def _query_cluster_get_all(context, project_safe=True, show_deleted=False,

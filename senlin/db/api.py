@@ -45,12 +45,14 @@ def cluster_get(context, cluster_id, show_deleted=False, project_safe=True):
                             project_safe=project_safe)
 
 
-def cluster_get_by_name(context, cluster_name):
-    return IMPL.cluster_get_by_name(context, cluster_name)
+def cluster_get_by_name(context, cluster_name, project_safe=True):
+    return IMPL.cluster_get_by_name(context, cluster_name,
+                                    project_safe=project_safe)
 
 
-def cluster_get_by_short_id(context, short_id):
-    return IMPL.cluster_get_by_short_id(context, short_id)
+def cluster_get_by_short_id(context, short_id, project_safe=True):
+    return IMPL.cluster_get_by_short_id(context, short_id,
+                                        project_safe=project_safe)
 
 
 def cluster_get_all(context, limit=None, marker=None, sort_keys=None,

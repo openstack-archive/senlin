@@ -165,6 +165,22 @@ class DBAPIClusterTest(base.SenlinTestCase):
         res = db_api.cluster_get_by_short_id(self.ctx, 'non-existent')
         self.assertIsNone(res)
 
+        ctx_new = utils.dummy_context(project='different_project_id')
+        res = db_api.cluster_get_by_short_id(ctx_new, cid1[:11])
+        self.assertIsNone(res)
+
+    def test_cluster_get_by_short_id_diff_project(self):
+        cluster1 = shared.create_cluster(self.ctx, self.profile,
+                                         id=UUID1,
+                                         name='cluster-1')
+
+        res = db_api.cluster_get_by_short_id(self.ctx, UUID1[:11])
+        self.assertEqual(cluster1.id, res.id)
+
+        ctx_new = utils.dummy_context(project='different_project_id')
+        res = db_api.cluster_get_by_short_id(ctx_new, UUID1[:11])
+        self.assertIsNone(res)
+
     def test_cluster_get_all(self):
         values = [
             {'name': 'cluster1'},
