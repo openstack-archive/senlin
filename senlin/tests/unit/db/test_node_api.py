@@ -66,6 +66,17 @@ class DBAPINodeTest(base.SenlinTestCase):
         nodes = db_api.node_get_all_by_cluster(self.ctx, self.cluster.id)
         self.assertEqual(1, len(nodes))
 
+    def test_node_get_diff_project(self):
+        res = shared.create_node(self.ctx, self.cluster, self.profile)
+        node = db_api.node_get(self.ctx, res.id)
+        self.assertIsNotNone(node)
+
+        ctx_new = utils.dummy_context(project='a_different_project')
+        node = db_api.node_get(ctx_new, res.id)
+        self.assertIsNone(node)
+        node = db_api.node_get(ctx_new, res.id, project_safe=False)
+        self.assertIsNotNone(node)
+
     def test_node_get_show_deleted(self):
         res = shared.create_node(self.ctx, self.cluster, self.profile)
         node_id = res.id
@@ -92,6 +103,18 @@ class DBAPINodeTest(base.SenlinTestCase):
 
         res = db_api.node_get_by_name(self.ctx, 'BogusName')
         self.assertIsNone(res)
+
+    def test_node_get_by_name_diff_project(self):
+        shared.create_node(self.ctx, self.cluster, self.profile)
+        res = db_api.node_get_by_name(self.ctx, 'test_node_name')
+        self.assertIsNotNone(res)
+
+        ctx_new = utils.dummy_context(project='a_different_project')
+        res = db_api.node_get_by_name(ctx_new, 'test_node_name')
+        self.assertIsNone(res)
+        res = db_api.node_get_by_name(ctx_new, 'test_node_name',
+                                      project_safe=False)
+        self.assertIsNotNone(res)
 
     def test_node_get_by_name_show_deleted(self):
         node_name = 'test_node_name'
@@ -131,6 +154,20 @@ class DBAPINodeTest(base.SenlinTestCase):
         self.assertEqual(node_id2, res.id)
         res = db_api.node_get_by_short_id(self.ctx, 'non-existent')
         self.assertIsNone(res)
+
+    def test_node_get_by_short_id_diff_project(self):
+        node_id = 'same-part-unique-part'
+        shared.create_node(self.ctx, None, self.profile,
+                           id=node_id, name='node-1')
+        res = db_api.node_get_by_short_id(self.ctx, node_id[:11])
+        self.assertIsNotNone(res)
+
+        ctx_new = utils.dummy_context(project='a_different_project')
+        res = db_api.node_get_by_short_id(ctx_new, node_id[:11])
+        self.assertIsNone(res)
+        res = db_api.node_get_by_short_id(ctx_new, node_id[:11],
+                                          project_safe=False)
+        self.assertIsNotNone(res)
 
     def test_node_get_by_short_id_show_deleted(self):
         node_id = 'this-is-a-unique-id'
@@ -338,6 +375,24 @@ class DBAPINodeTest(base.SenlinTestCase):
         self.assertEqual(1, len(nodes))
         self.assertEqual(node3.id, nodes[0].id)
 
+    def test_node_get_by_cluster_diff_project(self):
+        shared.create_cluster(self.ctx, self.profile)
+
+        node1 = shared.create_node(self.ctx, self.cluster, self.profile)
+        node2 = shared.create_node(self.ctx, self.cluster, self.profile)
+
+        nodes = db_api.node_get_all_by_cluster(self.ctx, self.cluster.id)
+        self.assertEqual(2, len(nodes))
+        self.assertEqual(set([node1.id, node2.id]),
+                         set([nodes[0].id, nodes[1].id]))
+
+        ctx_new = utils.dummy_context(project='a_different_project')
+        nodes = db_api.node_get_all_by_cluster(ctx_new, self.cluster.id)
+        self.assertEqual(0, len(nodes))
+        nodes = db_api.node_get_all_by_cluster(ctx_new, self.cluster.id,
+                                               project_safe=False)
+        self.assertEqual(2, len(nodes))
+
     def test_node_get_by_cluster_show_deleted(self):
         node0 = shared.create_node(self.ctx, self.cluster, self.profile)
         node1 = shared.create_node(self.ctx, self.cluster, self.profile)
@@ -380,6 +435,26 @@ class DBAPINodeTest(base.SenlinTestCase):
                                                    'BogusClusterID')
         self.assertIsNone(node)
 
+    def test_node_get_by_name_and_cluster_diff_project(self):
+        node_name = 'test_node_007'
+        shared.create_node(self.ctx, self.cluster, self.profile,
+                           name=node_name)
+        node = db_api.node_get_by_name_and_cluster(self.ctx,
+                                                   node_name,
+                                                   self.cluster.id)
+        self.assertIsNotNone(node)
+
+        ctx_new = utils.dummy_context(project='a_different_project')
+        node = db_api.node_get_by_name_and_cluster(ctx_new,
+                                                   node_name,
+                                                   self.cluster.id)
+        self.assertIsNone(node)
+        node = db_api.node_get_by_name_and_cluster(ctx_new,
+                                                   node_name,
+                                                   self.cluster.id,
+                                                   project_safe=False)
+        self.assertIsNotNone(node)
+
     def test_node_get_by_physical_id(self):
         shared.create_node(self.ctx, self.cluster, self.profile,
                            physical_id=UUID1)
@@ -390,6 +465,21 @@ class DBAPINodeTest(base.SenlinTestCase):
 
         node = db_api.node_get_by_physical_id(self.ctx, UUID2)
         self.assertIsNone(node)
+
+    def test_node_get_by_physical_id_diff_project(self):
+        shared.create_node(self.ctx, self.cluster, self.profile,
+                           physical_id=UUID1)
+
+        node = db_api.node_get_by_physical_id(self.ctx, UUID1)
+        self.assertIsNotNone(node)
+        self.assertEqual(UUID1, node.physical_id)
+
+        ctx_new = utils.dummy_context(project='a_different_project')
+        node = db_api.node_get_by_physical_id(ctx_new, UUID1)
+        self.assertIsNone(node)
+        node = db_api.node_get_by_physical_id(ctx_new, UUID1,
+                                              project_safe=False)
+        self.assertIsNotNone(node)
 
     def test_node_update(self):
         node = shared.create_node(self.ctx, self.cluster, self.profile)

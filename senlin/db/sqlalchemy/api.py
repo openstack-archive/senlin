@@ -300,7 +300,7 @@ def node_create(context, values):
     return node
 
 
-def node_get(context, node_id, show_deleted=False):
+def node_get(context, node_id, show_deleted=False, project_safe=True):
     node = model_query(context, models.Node).get(node_id)
     if not node:
         return None
@@ -308,24 +308,36 @@ def node_get(context, node_id, show_deleted=False):
     if not show_deleted and node.deleted_time is not None:
         return None
 
+    if project_safe:
+        if context.project != node.project:
+            return None
+
     return node
 
 
-def node_get_by_name(context, name, show_deleted=False):
-    return query_by_name(context, models.Node, name, show_deleted=show_deleted)
+def node_get_by_name(context, name, show_deleted=False, project_safe=True):
+    return query_by_name(context, models.Node, name,
+                         show_deleted=show_deleted,
+                         project_safe=project_safe)
 
 
-def node_get_by_short_id(context, short_id, show_deleted=False):
+def node_get_by_short_id(context, short_id, show_deleted=False,
+                         project_safe=True):
     return query_by_short_id(context, models.Node, short_id,
-                             show_deleted=show_deleted)
+                             show_deleted=show_deleted,
+                             project_safe=project_safe)
 
 
-def _query_node_get_all(context, show_deleted=False, cluster_id=None):
+def _query_node_get_all(context, project_safe=True, show_deleted=False,
+                        cluster_id=None):
     query = soft_delete_aware_query(context, models.Node,
                                     show_deleted=show_deleted)
 
     if cluster_id:
         query = query.filter_by(cluster_id=cluster_id)
+
+    if project_safe:
+        query = query.filter_by(project=context.project)
 
     return query
 
@@ -334,13 +346,12 @@ def node_get_all(context, cluster_id=None, show_deleted=False,
                  limit=None, marker=None, sort_keys=None, sort_dir=None,
                  filters=None, project_safe=True):
     if cluster_id is None:
-        query = _query_node_get_all(context, show_deleted=show_deleted)
+        query = _query_node_get_all(context, project_safe=project_safe,
+                                    show_deleted=show_deleted)
     else:
-        query = _query_node_get_all(context, show_deleted=show_deleted,
+        query = _query_node_get_all(context, project_safe=project_safe,
+                                    show_deleted=show_deleted,
                                     cluster_id=cluster_id)
-
-    if project_safe:
-        query = query.filter_by(project=context.project)
 
     if filters is None:
         filters = {}
@@ -361,7 +372,8 @@ def node_get_all(context, cluster_id=None, show_deleted=False,
                            default_sort_keys=['init_time']).all()
 
 
-def node_get_all_by_cluster(context, cluster_id, show_deleted=False):
+def node_get_all_by_cluster(context, cluster_id, show_deleted=False,
+                            project_safe=True):
     if show_deleted:
         query = model_query(context,
                             models.Node).filter_by(cluster_id=cluster_id)
@@ -369,19 +381,32 @@ def node_get_all_by_cluster(context, cluster_id, show_deleted=False):
         query = model_query(context,
                             models.Node).filter_by(cluster_id=cluster_id,
                                                    deleted_time=None)
+
+    if project_safe:
+        query = query.filter_by(project=context.project)
+
     nodes = query.all()
 
     return nodes
 
 
-def node_get_by_name_and_cluster(context, node_name, cluster_id):
-    q0 = model_query(context, models.Node).filter_by(name=node_name)
-    node = q0.filter_by(cluster_id=cluster_id).first()
+def node_get_by_name_and_cluster(context, node_name, cluster_id,
+                                 project_safe=True):
+    query = model_query(context, models.Node).filter_by(name=node_name)
+
+    if project_safe:
+        query = query.filter_by(project=context.project)
+
+    node = query.filter_by(cluster_id=cluster_id).first()
     return node
 
 
-def node_get_by_physical_id(context, phy_id):
+def node_get_by_physical_id(context, phy_id, project_safe=True):
     query = model_query(context, models.Node).filter_by(physical_id=phy_id)
+
+    if project_safe:
+        query = query.filter_by(project=context.project)
+
     return query.first()
 
 

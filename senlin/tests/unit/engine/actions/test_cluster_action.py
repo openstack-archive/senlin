@@ -997,8 +997,10 @@ class ClusterActionTest(base.SenlinTestCase):
                          action.data)
 
         mock_get.assert_has_calls([
-            mock.call(action.context, 'NODE_1', show_deleted=False),
-            mock.call(action.context, 'NODE_2', show_deleted=False)])
+            mock.call(action.context, 'NODE_1', show_deleted=False,
+                      project_safe=True),
+            mock.call(action.context, 'NODE_2', show_deleted=False,
+                      project_safe=True)])
         mock_delete.assert_called_once_with(['NODE_1', 'NODE_2'])
 
         # deletion policy is attached to the action
