@@ -165,25 +165,6 @@ class DBAPIClusterTest(base.SenlinTestCase):
         res = db_api.cluster_get_by_short_id(self.ctx, 'non-existent')
         self.assertIsNone(res)
 
-    def test_cluster_get_by_name_and_parent(self):
-        cluster1 = shared.create_cluster(self.ctx, self.profile,
-                                         name='cluster1')
-        cluster2 = shared.create_cluster(self.ctx, self.profile,
-                                         name='cluster2',
-                                         parent=cluster1.id)
-
-        result = db_api.cluster_get_by_name_and_parent(self.ctx, 'cluster2',
-                                                       None)
-        self.assertIsNone(result)
-
-        result = db_api.cluster_get_by_name_and_parent(self.ctx, 'cluster2',
-                                                       cluster1.id)
-        self.assertEqual(cluster2.id, result.id)
-
-        result = db_api.cluster_get_by_name_and_parent(self.ctx, 'cluster1',
-                                                       cluster1.id)
-        self.assertIsNone(result)
-
     def test_cluster_get_all(self):
         values = [
             {'name': 'cluster1'},
@@ -339,24 +320,6 @@ class DBAPIClusterTest(base.SenlinTestCase):
         sort_keys = ['id']
         db_api.cluster_get_all(self.ctx, sort_keys=sort_keys)
         self.assertEqual(['id'], sort_keys)
-
-    def test_cluster_get_all_by_parent(self):
-        cluster1 = shared.create_cluster(self.ctx, self.profile)
-        cluster2 = shared.create_cluster(self.ctx, self.profile)
-        values = [
-            {'parent': cluster1.id},
-            {'parent': cluster1.id},
-            {'parent': cluster2.id},
-            {'parent': cluster2.id},
-        ]
-        [shared.create_cluster(self.ctx, self.profile, **v) for v in values]
-
-        children1 = db_api.cluster_get_all_by_parent(self.ctx, cluster1.id)
-        self.assertEqual(2, len(children1))
-        children2 = db_api.cluster_get_all_by_parent(self.ctx, cluster2.id)
-        self.assertEqual(2, len(children2))
-        children0 = db_api.cluster_get_all_by_parent(self.ctx, 'non-existent')
-        self.assertEqual(0, len(children0))
 
     def test_cluster_next_index(self):
         cluster = shared.create_cluster(self.ctx, self.profile)
