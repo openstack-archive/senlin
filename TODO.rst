@@ -19,6 +19,9 @@ API
     https://github.com/openstack/api-wg/blob/master/guidelines/pagination_filter_sort.rst
   - According to the guidelines from API WG, we need to support `page_reverse`
     as a pagination parameter. https://review.openstack.org/190743
+  - According to the proposal (https://review.openstack.org/#/c/234994/),
+    actions are to follow a guideline. We may need to revise our actions API
+    and those related to asynchronous operations.
   - Add support to replace a cluster node with another node
   - Make object creation requests return code 202, since most creation
     are done asynchronously in Senlin.
