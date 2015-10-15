@@ -189,20 +189,6 @@ def cluster_get_by_short_id(context, short_id):
     return query_by_short_id(context, models.Cluster, short_id)
 
 
-def cluster_get_all_by_parent(context, parent):
-    results = soft_delete_aware_query(context, models.Cluster).\
-        filter_by(parent=parent).all()
-    return results
-
-
-def cluster_get_by_name_and_parent(context, cluster_name, parent):
-    query = soft_delete_aware_query(context, models.Cluster).\
-        filter_by(project=context.project).\
-        filter_by(name=cluster_name).\
-        filter_by(parent=parent)
-    return query.first()
-
-
 def _query_cluster_get_all(context, project_safe=True, show_deleted=False,
                            show_nested=False):
     query = soft_delete_aware_query(context, models.Cluster,

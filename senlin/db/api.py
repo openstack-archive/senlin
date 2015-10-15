@@ -53,10 +53,6 @@ def cluster_get_by_short_id(context, short_id):
     return IMPL.cluster_get_by_short_id(context, short_id)
 
 
-def cluster_get_by_name_and_parent(context, cluster_name, parent):
-    return IMPL.cluster_get_by_name_and_parent(context, cluster_name, parent)
-
-
 def cluster_get_all(context, limit=None, marker=None, sort_keys=None,
                     sort_dir=None, filters=None, project_safe=True,
                     show_deleted=False, show_nested=False):
@@ -65,10 +61,6 @@ def cluster_get_all(context, limit=None, marker=None, sort_keys=None,
                                 filters=filters, project_safe=project_safe,
                                 show_deleted=show_deleted,
                                 show_nested=show_nested)
-
-
-def cluster_get_all_by_parent(context, parent):
-    return IMPL.cluster_get_all_by_parent(context, parent)
 
 
 def cluster_next_index(context, cluster_id):
