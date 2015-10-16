@@ -11,6 +11,7 @@
 # under the License.
 
 import copy
+import eventlet
 import random
 
 from oslo_log import log as logging
@@ -238,7 +239,7 @@ class ClusterAction(base.Action):
 
         pd = self.data.get('deletion', None)
         if pd is not None:
-            destroy = pd.get('destroy_after_delete', True)
+            destroy = pd.get('destroy_after_deletion', True)
             if not destroy:
                 action_name = consts.NODE_LEAVE
 
@@ -270,6 +271,9 @@ class ClusterAction(base.Action):
 
         return self.RES_OK, ''
 
+    def _wait_before_deletion(self, period):
+        eventlet.sleep(period)
+
     def do_delete(self):
         """Handler for the CLUSTER_DELETE action.
 
@@ -282,7 +286,7 @@ class ClusterAction(base.Action):
         # For cluster delete, we delete the nodes
         data = {
             'deletion': {
-                'destroy_after_delete': True
+                'destroy_after_deletion': True
             }
         }
         self.data.update(data)
@@ -372,6 +376,19 @@ class ClusterAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
+        # Check if deletion policy is attached to the action, if is,
+        # get grace_period value
+        pd = self.data.get('deletion', None)
+        grace_period = None
+        if pd is not None:
+            grace_period = self.data['deletion']['grace_period']
+        else:  # if not, deleting nodes from cluster, don't destroy them
+            data = {
+                'deletion': {
+                    'destroy_after_deletion': False,
+                }
+            }
+            self.data.update(data)
         nodes = self.inputs.get('candidates', [])
 
         node_ids = copy.deepcopy(nodes)
@@ -393,13 +410,8 @@ class ClusterAction(base.Action):
         if len(nodes) == 0:
             return self.RES_OK, reason
 
-        # For deleting nodes from cluster, set destroy to false
-        data = {
-            'deletion': {
-                'destroy_after_delete': False,
-            }
-        }
-        self.data.update(data)
+        if grace_period is not None:
+            self._wait_before_deletion(grace_period)
         result, new_reason = self._delete_nodes(nodes)
 
         if result != self.RES_OK:
@@ -427,6 +439,7 @@ class ClusterAction(base.Action):
         node_list = self.cluster.nodes
         current_size = len(node_list)
         count, desired, candidates = self._get_action_data(current_size)
+        grace_period = None
         # if policy is attached to the cluster, use policy data directly,
         # or parse resize params to get action data.
         if count == 0:
@@ -434,6 +447,8 @@ class ClusterAction(base.Action):
             if result != self.RES_OK:
                 return result, reason
             count, desired, candidates = self._get_action_data(current_size)
+        elif 'deletion' in self.data:
+            grace_period = self.data['deletion']['grace_period']
         if candidates is not None and len(candidates) == 0:
             # Choose victims randomly
             i = count
@@ -445,6 +460,8 @@ class ClusterAction(base.Action):
 
         # delete nodes if necessary
         if desired < current_size:
+            if grace_period is not None:
+                self._wait_before_deletion(grace_period)
             result, reason = self._delete_nodes(candidates)
             if result != self.RES_OK:
                 return result, reason
@@ -515,9 +532,11 @@ class ClusterAction(base.Action):
         """
         # We use policy data if any, or else the count is set to 1 as default.
         pd = self.data.get('deletion', None)
+        grace_period = None
         if pd is not None:
-            count = pd.get('count', 1)
+            grace_period = self.data['deletion']['grace_period']
             candidates = pd.get('candidates', [])
+            count = len(candidates)
         else:
             # If no scaling policy is attached, use the input count directly
             count = self.inputs.get('count', 1)
@@ -552,6 +571,8 @@ class ClusterAction(base.Action):
                 ids.remove(ids[r])
                 i = i - 1
 
+        if grace_period is not None:
+            self._wait_before_deletion(grace_period)
         # The policy data may contain destroy flag and grace period option
         result, reason = self._delete_nodes(candidates)
 
