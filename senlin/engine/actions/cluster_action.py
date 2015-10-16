@@ -318,11 +318,6 @@ class ClusterAction(base.Action):
             except exception.NodeNotFound:
                 errors.append(_('Node [%s] is not found.') % node_id)
                 continue
-
-            if node.cluster_id == self.cluster.id:
-                node_ids.remove(node_id)
-                continue
-
             if node.cluster_id is not None:
                 errors.append(_('Node [%(n)s] is already owned by cluster '
                                 '[%(c)s].') % {'n': node_id,
@@ -338,19 +333,17 @@ class ClusterAction(base.Action):
             return self.RES_ERROR, ''.join(errors)
 
         reason = _('Completed adding nodes.')
-        if len(node_ids) == 0:
-            return self.RES_OK, reason
 
-        for node_id in node_ids:
+        for node in nodes:
             kwargs = {
-                'name': 'node_join_%s' % node_id[:8],
+                'name': 'node_join_%s' % node.id[:8],
                 'cause': base.CAUSE_DERIVED,
                 'inputs': {'cluster_id': self.target},
                 'user': self.context.user,
                 'project': self.context.project,
                 'domain': self.context.domain,
             }
-            action = base.Action(node_id, 'NODE_JOIN', **kwargs)
+            action = base.Action(node.id, 'NODE_JOIN', **kwargs)
             action.store(self.context)
             db_api.action_add_dependency(self.context, action.id, self.id)
             action.set_status(self.READY)
@@ -361,7 +354,7 @@ class ClusterAction(base.Action):
         if result != self.RES_OK:
             reason = new_reason
         else:
-            self.outputs['nodes_added'] = node_ids
+            self.outputs['nodes_added'] = [node.id for node in nodes]
             for node in nodes:
                 self.cluster.add_node(node)
 

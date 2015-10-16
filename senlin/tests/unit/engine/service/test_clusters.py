@@ -767,8 +767,7 @@ class ClusterTest(base.SenlinTestCase):
 
         # adding from the same cluster is not allowed
         self.assertEqual(exception.NodeNotOrphan, ex.exc_info[0])
-        msg = _("Nodes %s owned by other cluster, need to delete them from "
-                "those clusters first.") % nodes1
+        msg = _("Nodes %s already owned by some cluster") % nodes1
         self.assertEqual(msg, six.text_type(ex.exc_info[1]))
 
         ex = self.assertRaises(rpc.ExpectedException,
@@ -777,8 +776,7 @@ class ClusterTest(base.SenlinTestCase):
 
         # adding from a different cluster is not allowed either
         self.assertEqual(exception.NodeNotOrphan, ex.exc_info[0])
-        msg = _("Nodes %s owned by other cluster, need to delete them from "
-                "those clusters first.") % nodes2
+        msg = _("Nodes %s already owned by some cluster") % nodes2
         self.assertEqual(msg, six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
