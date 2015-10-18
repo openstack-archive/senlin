@@ -43,8 +43,8 @@ Launchpad Projects
 
 Code Repository
 ---------------
-- Server: https://git.openstack.org/cgit/stackforge/senlin
-- Client: https://git.openstack.org/cgit/stackforge/python-senlinclient
+- Server: https://git.openstack.org/cgit/openstack/senlin
+- Client: https://git.openstack.org/cgit/openstack/python-senlinclient
 
 Blueprints
 ----------

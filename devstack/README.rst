@@ -1,17 +1,15 @@
-====================
-Devstack Integration
-====================
+===========================
+Enabling senlin in DevStack
+===========================
 
-This directory contains the files necessary to integrate Senlin with devstack.
+1. Download DevStack::
 
-Refer the quickstart guide for more information on using devstack and senlin.
+     git clone https://git.openstack.org/openstack-dev/devstack
+     cd devstack
 
-To install senlin into devstack, add the following settings to enable senlin plugin: ::
+2. Add this repo as an external repository into your ``local.conf`` file::
 
      [[local|localrc]]
-     enable_plugin senlin https://git.openstack.org/stackforge/senlin
+     enable_plugin senlin https://git.openstack.org/openstack/senlin
 
-Run devstack as normal: ::
-
-    cd /opt/stack/devstack
-    ./stack.sh
+3. Run ``stack.sh``.
