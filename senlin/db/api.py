@@ -90,17 +90,21 @@ def node_create(context, values):
     return IMPL.node_create(context, values)
 
 
-def node_get(context, node_id, show_deleted=False):
-    return IMPL.node_get(context, node_id, show_deleted=show_deleted)
+def node_get(context, node_id, show_deleted=False, project_safe=True):
+    return IMPL.node_get(context, node_id, show_deleted=show_deleted,
+                         project_safe=project_safe)
 
 
-def node_get_by_name(context, name, show_deleted=False):
-    return IMPL.node_get_by_name(context, name, show_deleted=show_deleted)
+def node_get_by_name(context, name, show_deleted=False, project_safe=True):
+    return IMPL.node_get_by_name(context, name, show_deleted=show_deleted,
+                                 project_safe=project_safe)
 
 
-def node_get_by_short_id(context, short_id, show_deleted=False):
+def node_get_by_short_id(context, short_id, show_deleted=False,
+                         project_safe=True):
     return IMPL.node_get_by_short_id(context, short_id,
-                                     show_deleted=show_deleted)
+                                     show_deleted=show_deleted,
+                                     project_safe=project_safe)
 
 
 def node_get_all(context, cluster_id=None, show_deleted=False,
@@ -113,17 +117,21 @@ def node_get_all(context, cluster_id=None, show_deleted=False,
                              filters=filters, project_safe=project_safe)
 
 
-def node_get_all_by_cluster(context, cluster_id):
-    return IMPL.node_get_all_by_cluster(context, cluster_id)
+def node_get_all_by_cluster(context, cluster_id, project_safe=True):
+    return IMPL.node_get_all_by_cluster(context, cluster_id,
+                                        project_safe=project_safe)
 
 
-def node_get_by_name_and_cluster(context, node_name, cluster_id):
+def node_get_by_name_and_cluster(context, node_name, cluster_id,
+                                 project_safe=True):
     return IMPL.node_get_by_name_and_cluster(context,
-                                             node_name, cluster_id)
+                                             node_name, cluster_id,
+                                             project_safe=project_safe)
 
 
-def node_get_by_physical_id(context, physical_id):
-    return IMPL.node_get_by_physical_id(context, physical_id)
+def node_get_by_physical_id(context, physical_id, project_safe=True):
+    return IMPL.node_get_by_physical_id(context, physical_id,
+                                        project_safe=project_safe)
 
 
 def node_update(context, node_id, values):

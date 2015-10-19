@@ -305,7 +305,7 @@ class TestNode(base.SenlinTestCase):
         ex = exception.ResourceStatusError(resource_id='FAKE_ID',
                                            status='FAKE_STATUS',
                                            reason='FAKE_REASON')
-        node = nodem.Node('node1', self.profile.id, None)
+        node = nodem.Node('node1', self.profile.id, None, self.context)
         node.store(self.context)
         node._handle_exception(self.context, 'ACTION', 'STATUS', ex)
         db_node = db_api.node_get(self.context, node.id)
@@ -321,7 +321,7 @@ class TestNode(base.SenlinTestCase):
         ex = exception.ResourceCreationFailure(rtype='stack',
                                                code=400,
                                                message='Bad request')
-        node = nodem.Node('node1', self.profile.id, None)
+        node = nodem.Node('node1', self.profile.id, None, self.context)
         node.store(self.context)
         node._handle_exception(self.context, 'CREATE', 'STATUS', ex)
         db_node = db_api.node_get(self.context, node.id)
