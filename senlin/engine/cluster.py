@@ -88,7 +88,7 @@ class Cluster(object):
             self._load_runtime_data(context)
 
     def _load_runtime_data(self, context):
-        if self.id is None:
+        if self.id is None or self.deleted_time is not None:
             return
 
         policies = []
@@ -232,8 +232,12 @@ class Cluster(object):
             'data': self.data,
             'nodes': [node.id for node in self.rt['nodes']],
             'policies': [policy.id for policy in self.rt['policies']],
-            'profile_name': self.rt['profile'].name,
         }
+        if self.rt['profile']:
+            info['profile_name'] = self.rt['profile'].name
+        else:
+            info['profile_name'] = None
+
         return info
 
     def set_status(self, context, status, reason=None, **kwargs):
