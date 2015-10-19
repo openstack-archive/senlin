@@ -179,16 +179,20 @@ class Policy(object):
         return cls(record.name, record.spec, **kwargs)
 
     @classmethod
-    def load(cls, context, policy_id=None, db_policy=None):
+    def load(cls, context, policy_id=None, db_policy=None, project_safe=True):
         """Retrieve and reconstruct a policy object from DB.
 
         :param context: DB context for object retrieval.
         :param policy_id: Optional parameter specifying the ID of policy.
         :param db_policy: Optional parameter referencing a policy DB object.
+        :param project_safe: Optional parameter specifying whether only
+                             policies belong to the context.project will be
+                             loaded.
         :returns: An object of the proper policy class.
         """
         if db_policy is None:
-            db_policy = db_api.policy_get(context, policy_id)
+            db_policy = db_api.policy_get(context, policy_id,
+                                          project_safe=project_safe)
             if db_policy is None:
                 raise exception.PolicyNotFound(policy=policy_id)
 
@@ -196,14 +200,16 @@ class Policy(object):
 
     @classmethod
     def load_all(cls, context, limit=None, sort_keys=None, marker=None,
-                 sort_dir=None, filters=None, show_deleted=False):
+                 sort_dir=None, filters=None, show_deleted=False,
+                 project_safe=True):
         '''Retrieve all policies from database.'''
 
         records = db_api.policy_get_all(context, limit=limit, marker=marker,
                                         sort_keys=sort_keys,
                                         sort_dir=sort_dir,
                                         filters=filters,
-                                        show_deleted=show_deleted)
+                                        show_deleted=show_deleted,
+                                        project_safe=project_safe)
 
         for record in records:
             yield cls._from_db_record(record)

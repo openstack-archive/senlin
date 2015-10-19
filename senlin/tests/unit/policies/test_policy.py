@@ -143,6 +143,18 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual(policy.updated_time, result.updated_time)
         self.assertEqual(policy.deleted_time, result.deleted_time)
 
+    def test_load_diff_project(self):
+        policy = self._create_db_policy()
+
+        new_ctx = utils.dummy_context(project='a-different-project')
+        self.assertRaises(exception.PolicyNotFound,
+                          policy_base.Policy.load,
+                          new_ctx, policy.id, None)
+
+        res = policy_base.Policy.load(new_ctx, policy.id, project_safe=False)
+        self.assertIsNotNone(res)
+        self.assertEqual(policy.id, res.id)
+
     def test_load_not_found(self):
         ex = self.assertRaises(exception.PolicyNotFound,
                                policy_base.Policy.load,
@@ -169,6 +181,16 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual(policy1.id, policies[0].id)
         self.assertEqual(policy2.id, policies[1].id)
 
+    def test_load_all_diff_project(self):
+        self._create_db_policy(name='policy-1', id='ID1')
+        self._create_db_policy(name='policy-2', id='ID2')
+
+        new_ctx = utils.dummy_context(project='a-different-project')
+        res = policy_base.Policy.load_all(new_ctx)
+        self.assertEqual(0, len(list(res)))
+        res = policy_base.Policy.load_all(new_ctx, project_safe=False)
+        self.assertEqual(2, len(list(res)))
+
     @mock.patch.object(db_api, 'policy_get_all')
     def test_load_all_with_params(self, mock_get):
         mock_get.return_value = []
@@ -177,7 +199,8 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual([], res)
         mock_get.assert_called_once_with(self.ctx, limit=None, marker=None,
                                          sort_keys=None, sort_dir=None,
-                                         filters=None, show_deleted=False)
+                                         filters=None, show_deleted=False,
+                                         project_safe=True)
         mock_get.reset_mock()
 
         res = list(policy_base.Policy.load_all(
@@ -186,7 +209,8 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual([], res)
         mock_get.assert_called_once_with(
             self.ctx, limit=1, marker='MARKER', sort_keys=['K1'],
-            sort_dir='asc', filters={'level': 30}, show_deleted=False)
+            sort_dir='asc', filters={'level': 30}, show_deleted=False,
+            project_safe=True)
 
     def test_delete(self):
         policy = self._create_db_policy()

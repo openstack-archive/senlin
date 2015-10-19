@@ -210,24 +210,30 @@ def policy_create(context, values):
     return IMPL.policy_create(context, values)
 
 
-def policy_get(context, policy_id, show_deleted=False):
-    return IMPL.policy_get(context, policy_id, show_deleted=show_deleted)
+def policy_get(context, policy_id, show_deleted=False, project_safe=True):
+    return IMPL.policy_get(context, policy_id, show_deleted=show_deleted,
+                           project_safe=project_safe)
 
 
-def policy_get_by_name(context, name, show_deleted=False):
-    return IMPL.policy_get_by_name(context, name, show_deleted=show_deleted)
+def policy_get_by_name(context, name, show_deleted=False, project_safe=True):
+    return IMPL.policy_get_by_name(context, name, show_deleted=show_deleted,
+                                   project_safe=project_safe)
 
 
-def policy_get_by_short_id(context, short_id, show_deleted=False):
+def policy_get_by_short_id(context, short_id, show_deleted=False,
+                           project_safe=True):
     return IMPL.policy_get_by_short_id(context, short_id,
-                                       show_deleted=show_deleted)
+                                       show_deleted=show_deleted,
+                                       project_safe=project_safe)
 
 
 def policy_get_all(context, limit=None, marker=None, sort_keys=None,
-                   sort_dir=None, filters=None, show_deleted=False):
+                   sort_dir=None, filters=None, show_deleted=False,
+                   project_safe=True):
     return IMPL.policy_get_all(context, limit=limit, marker=marker,
                                sort_keys=sort_keys, sort_dir=sort_dir,
-                               filters=filters, show_deleted=show_deleted)
+                               filters=filters, show_deleted=show_deleted,
+                               project_safe=project_safe)
 
 
 def policy_update(context, policy_id, values):

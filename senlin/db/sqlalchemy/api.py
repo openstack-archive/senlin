@@ -746,27 +746,39 @@ def policy_create(context, values):
     return policy
 
 
-def policy_get(context, policy_id, show_deleted=False):
+def policy_get(context, policy_id, show_deleted=False, project_safe=True):
     policy = soft_delete_aware_query(context, models.Policy,
                                      show_deleted=show_deleted)
     policy = policy.filter_by(id=policy_id).first()
+
+    if project_safe and policy is not None:
+        if context.project != policy.project:
+            return None
+
     return policy
 
 
-def policy_get_by_name(context, name, show_deleted=False):
+def policy_get_by_name(context, name, show_deleted=False, project_safe=True):
     return query_by_name(context, models.Policy, name,
-                         show_deleted=show_deleted)
+                         show_deleted=show_deleted,
+                         project_safe=project_safe)
 
 
-def policy_get_by_short_id(context, short_id, show_deleted=False):
+def policy_get_by_short_id(context, short_id, show_deleted=False,
+                           project_safe=True):
     return query_by_short_id(context, models.Policy, short_id,
-                             show_deleted=show_deleted)
+                             show_deleted=show_deleted,
+                             project_safe=project_safe)
 
 
 def policy_get_all(context, limit=None, marker=None, sort_keys=None,
-                   sort_dir=None, filters=None, show_deleted=False):
+                   sort_dir=None, filters=None, show_deleted=False,
+                   project_safe=True):
     query = soft_delete_aware_query(context, models.Policy,
                                     show_deleted=show_deleted)
+
+    if project_safe:
+        query = query.filter_by(project=context.project)
 
     if filters is None:
         filters = {}

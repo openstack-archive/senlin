@@ -75,6 +75,17 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         self.assertEqual(10, retobj.spec['max_size'])
         self.assertIsNone(retobj.data)
 
+    def test_policy_get_diff_project(self):
+        data = self.new_policy_data()
+        policy = db_api.policy_create(self.ctx, data)
+
+        new_ctx = utils.dummy_context(project='a-different-project')
+        res = db_api.policy_get(new_ctx, policy.id)
+        self.assertIsNone(res)
+        res = db_api.policy_get(new_ctx, policy.id, project_safe=False)
+        self.assertIsNotNone(res)
+        self.assertEqual(policy.id, res.id)
+
     def test_policy_get_not_found(self):
         retobj = db_api.policy_get(self.ctx, 'BogusID')
         self.assertIsNone(retobj)
@@ -120,6 +131,19 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         # bad name
         retobj = db_api.policy_get_by_name(self.ctx, 'non-exist')
         self.assertIsNone(retobj)
+
+    def test_policy_get_by_name_diff_project(self):
+        policy_name = 'my_best_policy'
+        data = self.new_policy_data(name=policy_name)
+        policy = db_api.policy_create(self.ctx, data)
+
+        new_ctx = utils.dummy_context(project='a-different-project')
+        res = db_api.policy_get_by_name(new_ctx, policy_name)
+        self.assertIsNone(res)
+        res = db_api.policy_get_by_name(new_ctx, policy_name,
+                                        project_safe=False)
+        self.assertIsNotNone(res)
+        self.assertEqual(policy.id, res.id)
 
     def test_policy_get_by_name_show_deleted(self):
         policy_name = 'my_best_policy'
@@ -172,6 +196,19 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         res = db_api.policy_get_by_short_id(self.ctx, 'non-existent')
         self.assertIsNone(res)
 
+    def test_policy_get_by_short_id_diff_project(self):
+        policy_id = 'same-part-unique-part'
+        data = self.new_policy_data(id=policy_id)
+        db_api.policy_create(self.ctx, data)
+
+        new_ctx = utils.dummy_context(project='a-different-project')
+        res = db_api.policy_get_by_short_id(new_ctx, policy_id[0][:11])
+        self.assertIsNone(res)
+        res = db_api.policy_get_by_short_id(new_ctx, policy_id[0][:11],
+                                            project_safe=False)
+        self.assertIsNotNone(res)
+        self.assertEqual(policy_id, res.id)
+
     def test_policy_get_all(self):
         specs = [
             {'name': 'policy_short', 'cooldown': '10'},
@@ -207,6 +244,22 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         policies = db_api.policy_get_all(self.ctx)
         self.assertEqual(0, len(policies))
         policies = db_api.policy_get_all(self.ctx, show_deleted=True)
+        self.assertEqual(2, len(policies))
+
+    def test_policy_get_all_diff_project(self):
+        specs = [
+            {'name': 'policy_short', 'cooldown': '10'},
+            {'name': 'policy_long', 'cooldown': '100'},
+        ]
+
+        for spec in specs:
+            data = self.new_policy_data(**spec)
+            db_api.policy_create(self.ctx, data)
+
+        new_ctx = utils.dummy_context(project='a-different-project')
+        policies = db_api.policy_get_all(new_ctx)
+        self.assertEqual(0, len(policies))
+        policies = db_api.policy_get_all(new_ctx, project_safe=False)
         self.assertEqual(2, len(policies))
 
     def test_policy_get_all_with_limit_marker(self):
