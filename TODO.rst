@@ -35,12 +35,15 @@ DB
 --
   - The action data model is missing 'scheduled_start' and 'scheduled_stop'
     fields, we may need these fields for scheduled action execution.
+  - Make Senlin DB operation project_safe/tenant_safe by default. [Yanyan Hu]
+     - Add owner properties(project, user, domain) for profile;
+     - Make all DB query project_safe by default;
 
 ENGINE
 ------
   - Add configuration option to enforce name uniqueness. There are reasonable
     requirements for cluster/node names to be unique within a project. This
-    should be supported, maybe with the help from a name generator?
+    should be supported, maybe with the help from a name generator? [Yanyan Hu]
 
   - Design and implement dynamical plugin loading mechanism that allows 
     loading plugins from any paths
