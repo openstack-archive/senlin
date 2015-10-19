@@ -130,10 +130,11 @@ class Profile(object):
         return cls(record.name, record.spec, **kwargs)
 
     @classmethod
-    def load(cls, ctx, profile_id=None, profile=None):
+    def load(cls, ctx, profile_id=None, profile=None, project_safe=True):
         '''Retrieve a profile object from database.'''
         if profile is None:
-            profile = db_api.profile_get(ctx, profile_id)
+            profile = db_api.profile_get(ctx, profile_id,
+                                         project_safe=project_safe)
             if profile is None:
                 raise exception.ProfileNotFound(profile=profile_id)
 
@@ -141,14 +142,16 @@ class Profile(object):
 
     @classmethod
     def load_all(cls, ctx, limit=None, sort_keys=None, marker=None,
-                 sort_dir=None, filters=None, show_deleted=False):
+                 sort_dir=None, filters=None, show_deleted=False,
+                 project_safe=True):
         '''Retrieve all profiles from database.'''
 
         records = db_api.profile_get_all(ctx, limit=limit, marker=marker,
                                          sort_keys=sort_keys,
                                          sort_dir=sort_dir,
                                          filters=filters,
-                                         show_deleted=show_deleted)
+                                         show_deleted=show_deleted,
+                                         project_safe=project_safe)
 
         for record in records:
             yield cls.from_db_record(record)

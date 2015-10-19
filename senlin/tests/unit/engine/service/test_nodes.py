@@ -117,13 +117,15 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_node_create_project_not_match(self, notify):
-        ctx_cluster = utils.dummy_context(project='a-different-project')
-        cluster = self.eng.cluster_create(ctx_cluster, 'c-1', 0,
+        cluster = self.eng.cluster_create(self.ctx, 'c-1', 0,
                                           self.profile['id'])
 
+        ctx_node = utils.dummy_context(project='a-different-project')
+        profile_node = self.eng.profile_create(
+            ctx_node, 'p-test', self.spec, permission='1111')
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_create,
-                               self.ctx, 'n-1', self.profile['id'],
+                               ctx_node, 'n-1', profile_node['id'],
                                cluster_id=cluster['id'])
 
         self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
@@ -275,9 +277,18 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_node_list_project_safe(self, notify):
-        node1 = self.eng.node_create(self.ctx, 'n1', self.profile['id'])
         new_ctx = utils.dummy_context(project='a_diff_project')
-        node2 = self.eng.node_create(new_ctx, 'n2', self.profile['id'])
+        spec = {
+            'type': 'TestProfile',
+            'version': '1.0',
+            'properties': {'INT': 10, 'STR': 'string'},
+        }
+        p1 = self.eng.profile_create(self.ctx, 'p-test-1', spec,
+                                     permission='1111')
+        p2 = self.eng.profile_create(new_ctx, 'p-test-2', spec,
+                                     permission='1111')
+        node1 = self.eng.node_create(self.ctx, 'n1', p1['id'])
+        node2 = self.eng.node_create(new_ctx, 'n2', p2['id'])
 
         # default is project_safe
         result = self.eng.node_list(self.ctx)

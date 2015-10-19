@@ -42,6 +42,16 @@ class DBAPIProfileTest(base.SenlinTestCase):
         self.assertEqual(profile.id, retobj.id)
         self.assertEqual(profile.spec, retobj.spec)
 
+    def test_profile_get_diff_project(self):
+        profile = shared.create_profile(self.ctx)
+        new_ctx = utils.dummy_context(project='a-different-project')
+        res = db_api.profile_get(new_ctx, profile.id)
+        self.assertIsNone(res)
+
+        res = db_api.profile_get(new_ctx, profile.id, project_safe=False)
+        self.assertIsNotNone(res)
+        self.assertEqual(profile.id, res.id)
+
     def test_profile_get_not_found(self):
         profile = db_api.profile_get(self.ctx, 'BogusProfileID')
         self.assertIsNone(profile)
@@ -86,6 +96,19 @@ class DBAPIProfileTest(base.SenlinTestCase):
         # bad name
         retobj = db_api.profile_get_by_name(self.ctx, 'non-exist')
         self.assertIsNone(retobj)
+
+    def test_profile_get_by_name_diff_project(self):
+        profile_name = 'my_best_profile'
+        shared.create_profile(self.ctx, name=profile_name)
+
+        new_ctx = utils.dummy_context(project='a-different-project')
+        res = db_api.profile_get_by_name(new_ctx, profile_name)
+        self.assertIsNone(res)
+
+        res = db_api.profile_get_by_name(new_ctx, profile_name,
+                                         project_safe=False)
+        self.assertIsNotNone(res)
+        self.assertEqual(profile_name, res.name)
 
     def test_profile_get_by_name_show_deleted(self):
         profile_name = 'my_best_profile'
@@ -137,6 +160,19 @@ class DBAPIProfileTest(base.SenlinTestCase):
         res = db_api.profile_get_by_short_id(self.ctx, 'non-existent')
         self.assertIsNone(res)
 
+    def test_profile_get_by_short_id_diff_project(self):
+        profile_id = 'same-part-unique-part'
+        shared.create_profile(self.ctx, id=profile_id)
+
+        new_ctx = utils.dummy_context(project='a-different-project')
+        res = db_api.profile_get_by_short_id(new_ctx, profile_id)
+        self.assertIsNone(res)
+
+        res = db_api.profile_get_by_short_id(new_ctx, profile_id,
+                                             project_safe=False)
+        self.assertIsNotNone(res)
+        self.assertEqual(profile_id, res.id)
+
     def test_profile_get_all(self):
         ids = ['profile1', 'profile2']
 
@@ -168,6 +204,17 @@ class DBAPIProfileTest(base.SenlinTestCase):
         profiles = db_api.profile_get_all(self.ctx)
         self.assertEqual(0, len(profiles))
         profiles = db_api.profile_get_all(self.ctx, show_deleted=True)
+        self.assertEqual(2, len(profiles))
+
+    def test_profile_get_all_diff_project(self):
+        ids = ['profile1', 'profile2']
+        for pid in ids:
+            shared.create_profile(self.ctx, id=pid)
+
+        new_ctx = utils.dummy_context(project='a-different-project')
+        profiles = db_api.profile_get_all(new_ctx)
+        self.assertEqual(0, len(profiles))
+        profiles = db_api.profile_get_all(new_ctx, project_safe=False)
         self.assertEqual(2, len(profiles))
 
     def test_profile_get_all_with_limit_marker(self):
