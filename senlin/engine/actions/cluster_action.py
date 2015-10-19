@@ -530,13 +530,15 @@ class ClusterAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        # We use policy data if any, or else the count is set to 1 as default.
+        # We use policy data if any, deletion policy and scaling policy might
+        # be attached.
         pd = self.data.get('deletion', None)
         grace_period = None
         if pd is not None:
-            grace_period = self.data['deletion']['grace_period']
+            grace_period = pd.get('grace_period', 0)
             candidates = pd.get('candidates', [])
-            count = len(candidates)
+            # if scaling policy is attached, get 'count' from action data
+            count = len(candidates) or pd['count']
         else:
             # If no scaling policy is attached, use the input count directly
             count = self.inputs.get('count', 1)
