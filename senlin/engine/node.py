@@ -153,10 +153,13 @@ class Node(object):
                    context=context, **kwargs)
 
     @classmethod
-    def load(cls, context, node_id=None, node=None, show_deleted=False):
+    def load(cls, context, node_id=None, node=None, show_deleted=False,
+             project_safe=True):
         '''Retrieve a node from database.'''
         if node is None:
-            node = db_api.node_get(context, node_id, show_deleted=show_deleted)
+            node = db_api.node_get(context, node_id,
+                                   show_deleted=show_deleted,
+                                   project_safe=project_safe)
             if node is None:
                 raise exception.NodeNotFound(node=node_id)
 

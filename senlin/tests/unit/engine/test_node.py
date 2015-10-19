@@ -177,6 +177,19 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual(node.meta_data, node_info.metadata)
         self.assertEqual(node.data, node_info.data)
 
+    def test_node_load_diff_project(self):
+        self._create_node('NODE_ID')
+        new_ctx = utils.dummy_context(project='a-different-project')
+        ex = self.assertRaises(exception.NodeNotFound,
+                               nodem.Node.load,
+                               new_ctx, 'NODE_ID', None)
+        self.assertEqual('The node (NODE_ID) could not be found.',
+                         six.text_type(ex))
+
+        res = nodem.Node.load(new_ctx, 'NODE_ID', project_safe=False)
+        self.assertIsNotNone(res)
+        self.assertEqual('NODE_ID', res.id)
+
     def test_node_load_all(self):
         node_info = nodem.Node.load_all(self.context)
         self.assertEqual([], [c for c in node_info])
