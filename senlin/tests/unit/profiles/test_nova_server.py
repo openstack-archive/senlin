@@ -146,6 +146,11 @@ class TestNovaServerProfile(base.SenlinTestCase):
         test_server = mock.Mock()
         test_server.name = 'TEST_SERVER'
         test_server.cluster_id = 'FAKE_CLUSTER_ID'
+        test_server.data = {
+            'placement': {
+                'zone': 'AZ1'
+            }
+        }
         image = mock.Mock()
         image.id = 'FAKE_IMAGE_ID'
         novaclient.image_get_by_name.return_value = image
@@ -163,6 +168,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = novaclient
         profile._neutronclient = neutronclient
+
         server_id = profile.do_create(test_server)
 
         mock_random_name.assert_called_once_with(8)
@@ -170,37 +176,40 @@ class TestNovaServerProfile(base.SenlinTestCase):
         novaclient.flavor_find.assert_called_once_with('FLAV', False)
         neutronclient.network_get.assert_called_once_with('FAKE_NET')
 
-        attrs = dict(adminPass='adminpass',
-                     auto_disk_config=True,
-                     availability_zone='FAKE_AZ',
-                     block_device_mapping=[{
-                         'volume_size': 1000,
-                         'device_name': 'FAKE_NAME'
-                     }],
-                     config_drive=False,
-                     flavorRef='FAKE_FLAVOR_ID',
-                     imageRef='FAKE_IMAGE_ID',
-                     key_name='FAKE_KEYNAME',
-                     metadata={
-                         'cluster': 'FAKE_CLUSTER_ID',
-                         'meta var': 'meta val'
-                     },
-                     name='TEST_SERVER-12345678',
-                     networks=[{
-                         'fixed-ip': 'FAKE_IP',
-                         'port': 'FAKE_PORT',
-                         'uuid': 'FAKE_NETWORK_ID',
-                     }],
-                     personality=[{
-                         'path': '/etc/motd',
-                         'contents': 'foo'
-                     }],
-                     scheduler_hints={
-                         'same_host': 'HOST_ID'
-                     },
-                     security_groups=['HIGH_SECURITY_GROUP'],
-                     timeout=120,
-                     user_data='FAKE_USER_DATA')
+        attrs = dict(
+            adminPass='adminpass',
+            auto_disk_config=True,
+            # availability_zone='FAKE_AZ',
+            block_device_mapping=[{
+                'volume_size': 1000,
+                'device_name': 'FAKE_NAME'
+            }],
+            config_drive=False,
+            flavorRef='FAKE_FLAVOR_ID',
+            imageRef='FAKE_IMAGE_ID',
+            key_name='FAKE_KEYNAME',
+            metadata={
+                'cluster': 'FAKE_CLUSTER_ID',
+                'meta var': 'meta val'
+            },
+            name='TEST_SERVER-12345678',
+            networks=[{
+                'fixed-ip': 'FAKE_IP',
+                'port': 'FAKE_PORT',
+                'uuid': 'FAKE_NETWORK_ID',
+            }],
+            personality=[{
+                'path': '/etc/motd',
+                'contents': 'foo'
+            }],
+            scheduler_hints={
+                'same_host': 'HOST_ID'
+            },
+            security_groups=['HIGH_SECURITY_GROUP'],
+            timeout=120,
+            user_data='FAKE_USER_DATA',
+            availability_zone='AZ1',
+        )
 
         ud = encodeutils.safe_encode('FAKE_USER_DATA')
         attrs['user_data'] = encodeutils.safe_decode(base64.b64encode(ud))
@@ -216,6 +225,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         test_server = mock.Mock()
         test_server.name = 'TEST_SERVER'
         test_server.cluster_id = 'FAKE_CLUSTER_ID'
+        test_server.data = {}
         image = mock.Mock()
         image.id = 'FAKE_IMAGE_ID'
         novaclient.image_get_by_name.return_value = image
@@ -270,6 +280,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         test_server = mock.Mock()
         test_server.name = 'TEST_SERVER'
         test_server.cluster_id = 'FAKE_CLUSTER_ID'
+        test_server.data = {}
         flavor = mock.Mock()
         flavor.id = 'FAKE_FLAVOR_ID'
         novaclient.flavor_find.return_value = flavor
@@ -317,6 +328,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         test_server = mock.Mock()
         test_server.name = None
         test_server.cluster_id = None
+        test_server.data = {}
         flavor = mock.Mock()
         flavor.id = 'FAKE_FLAVOR_ID'
         novaclient.flavor_find.return_value = flavor
@@ -360,6 +372,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         test_server = mock.Mock()
         test_server.name = None
         test_server.cluster_id = None
+        test_server.data = {}
         flavor = mock.Mock()
         flavor.id = 'FAKE_FLAVOR_ID'
         novaclient.flavor_find.return_value = flavor
@@ -473,42 +486,168 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         # Test normal path
         nova_server = mock.Mock()
-        nova_server.id = 'FAKE_ID'
-        nova_server.name = 'FAKE_NAME'
-        nova_server.access_ipv4 = 'FAKE_IPV4'
-        nova_server.access_ipv6 = 'FAKE_IPV6'
-        nova_server.addresses = 'FAKE_ADDRESSES'
-        nova_server.created_at = 'FAKE_CREATED'
-        nova_server.flavor = 'FAKE_FLAVOR'
-        nova_server.host_id = 'FAKE_HOST'
-        nova_server.image = 'FAKE_IMAGE'
-        nova_server.links = 'FAKE_LINKS'
-        nova_server.metadata = 'FAKE_METADATA'
-        nova_server.progress = 'FAKE_PROGRESS'
-        nova_server.project_id = 'FAKE_PROJECT_ID'
-        nova_server.status = 'FAKE_STATUS'
-        nova_server.updated_at = 'FAKE_UPDATED'
-        nova_server.user_id = 'FAKE_USER_ID'
-
+        nova_server.to_dict.return_value = {
+            'OS-DCF:diskConfig': 'MANUAL',
+            'OS-EXT-AZ:availability_zone': 'nova',
+            'OS-EXT-STS:power_state': 1,
+            'OS-EXT-STS:task_state': None,
+            'OS-EXT-STS:vm_state': 'active',
+            'OS-SRV-USG:launched_at': 'TIMESTAMP1',
+            'OS-SRV-USG:terminated_at': None,
+            'accessIPv4': 'FAKE_IPV4',
+            'accessIPv6': 'FAKE_IPV6',
+            'addresses': {
+                'private': [{
+                    'OS-EXT-IPS-MAC:mac_addr': 'fa:16:3e:5e:00:81',
+                    'version': 4,
+                    'addr': '10.0.0.3',
+                    'OS-EXT-IPS:type': 'fixed'
+                }]
+            },
+            'config_drive': True,
+            'created': 'CREATED_TIMESTAMP',
+            'flavor': {
+                'id': '1',
+                'links': [{
+                    'href': 'http://url_flavor',
+                    'rel': 'bookmark'
+                }]
+            },
+            'hostId': 'FAKE_HOST_ID',
+            'id': 'FAKE_ID',
+            'image': {
+                'id': 'FAKE_IMAGE',
+                'links': [{
+                    'href': 'http://url_image',
+                    'rel': 'bookmark'
+                }],
+            },
+            'key_name': 'FAKE_KEY',
+            'links': [{
+                'href': 'http://url1',
+                'rel': 'self'
+            }, {
+                'href': 'http://url2',
+                'rel': 'bookmark'
+            }],
+            'metadata': {},
+            'name': 'FAKE_NAME',
+            'os-extended-volumes:volumes_attached': [],
+            'progress': 0,
+            'security_groups': [{'name': 'default'}],
+            'status': 'FAKE_STATUS',
+            'tenant_id': 'FAKE_TENANT',
+            'updated': 'UPDATE_TIMESTAMP',
+            'user_id': 'FAKE_USER_ID',
+        }
         nc.server_get.return_value = nova_server
         res = profile.do_get_details(obj)
         expected = {
+            'OS-DCF:diskConfig': 'MANUAL',
+            'OS-EXT-AZ:availability_zone': 'nova',
+            'OS-EXT-STS:power_state': 1,
+            'OS-EXT-STS:task_state': '-',
+            'OS-EXT-STS:vm_state': 'active',
+            'OS-SRV-USG:launched_at': 'TIMESTAMP1',
+            'OS-SRV-USG:terminated_at': '-',
+            'accessIPv4': 'FAKE_IPV4',
+            'accessIPv6': 'FAKE_IPV6',
+            'config_drive': True,
+            'created': 'CREATED_TIMESTAMP',
+            'flavor': '1',
+            'hostId': 'FAKE_HOST_ID',
             'id': 'FAKE_ID',
-            'name': 'FAKE_NAME',
-            'access_ipv4': 'FAKE_IPV4',
-            'access_ipv6': 'FAKE_IPV6',
-            'addresses': 'FAKE_ADDRESSES',
-            'created_at': 'FAKE_CREATED',
-            'flavor': 'FAKE_FLAVOR',
-            'host_id': 'FAKE_HOST',
             'image': 'FAKE_IMAGE',
-            'links': 'FAKE_LINKS',
-            'metadata': 'FAKE_METADATA',
-            'progress': 'FAKE_PROGRESS',
-            'project_id': 'FAKE_PROJECT_ID',
+            'key_name': 'FAKE_KEY',
+            'metadata': {},
+            'name': 'FAKE_NAME',
+            'os-extended-volumes:volumes_attached': [],
+            'private network': '10.0.0.3',
+            'progress': 0,
+            'security_groups': 'default',
+            'updated': 'UPDATE_TIMESTAMP',
             'status': 'FAKE_STATUS',
-            'updated_at': 'FAKE_UPDATED',
-            'user_id': 'FAKE_USER_ID',
+            'updated': 'UPDATE_TIMESTAMP',
+        }
+        self.assertEqual(expected, res)
+        nc.server_get.assert_called_once_with('FAKE_ID')
+
+    def test_do_get_details_with_no_network_or_sg(self):
+        nc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = nc
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+
+        # Test normal path
+        nova_server = mock.Mock()
+        nova_server.to_dict.return_value = {
+            'addresses': {},
+            'flavor': {
+                'id': 'FAKE_FLAVOR',
+            },
+            'id': 'FAKE_ID',
+            'image': {
+                'id': 'FAKE_IMAGE',
+            },
+            'security_groups': [],
+        }
+        nc.server_get.return_value = nova_server
+        res = profile.do_get_details(obj)
+        expected = {
+            'flavor': 'FAKE_FLAVOR',
+            'id': 'FAKE_ID',
+            'image': 'FAKE_IMAGE',
+            'security_groups': '',
+        }
+        self.assertEqual(expected, res)
+        nc.server_get.assert_called_once_with('FAKE_ID')
+
+    def test_do_get_details_with_more_network_or_sg(self):
+        nc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = nc
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+
+        # Test normal path
+        nova_server = mock.Mock()
+        nova_server.to_dict.return_value = {
+            'addresses': {
+                'private': [{
+                    'version': 4,
+                    'addr': '10.0.0.3',
+                }, {
+                    'version': 4,
+                    'addr': '192.168.43.3'
+                }],
+                'public': [{
+                    'version': 4,
+                    'addr': '172.16.5.3',
+                }]
+            },
+            'flavor': {
+                'id': 'FAKE_FLAVOR',
+            },
+            'id': 'FAKE_ID',
+            'image': {
+                'id': 'FAKE_IMAGE',
+            },
+            'security_groups': [{
+                'name': 'default',
+            }, {
+                'name': 'webserver',
+            }],
+        }
+        nc.server_get.return_value = nova_server
+        res = profile.do_get_details(obj)
+        expected = {
+            'flavor': 'FAKE_FLAVOR',
+            'id': 'FAKE_ID',
+            'image': 'FAKE_IMAGE',
+            'private network': ['10.0.0.3', '192.168.43.3'],
+            'public network': '172.16.5.3',
+            'security_groups': ['default', 'webserver'],
         }
         self.assertEqual(expected, res)
         nc.server_get.assert_called_once_with('FAKE_ID')

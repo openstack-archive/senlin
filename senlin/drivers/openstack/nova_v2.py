@@ -165,3 +165,7 @@ class NovaClient(base.DriverBase):
     def server_metadata_update(self, **params):
         obj = server_metadata.ServerMetadata.new(**params)
         return obj.update(self.session)
+
+    @sdk.translate_exception
+    def availability_zone_list(self, **query):
+        return self.conn.compute.availability_zones(**query)
