@@ -126,6 +126,20 @@ class TestTriggerBase(test_base.SenlinTestCase):
         self.assertIsInstance(res, base.Trigger)
         self.assertEqual('FAKE_ID', res.id)
 
+    def test_load_diff_project(self):
+        self._create_db_trigger('ID_1')
+
+        new_ctx = utils.dummy_context(project='a-different-project')
+        ex = self.assertRaises(exception.TriggerNotFound,
+                               base.Trigger.load, new_ctx, trigger_id='ID_1')
+        self.assertEqual('The trigger (ID_1) could not be found.',
+                         six.text_type(ex))
+
+        res = base.Trigger.load(new_ctx, trigger_id='ID_1',
+                                project_safe=False)
+        self.assertIsNotNone(res)
+        self.assertEqual('ID_1', res.id)
+
     def test_load_not_found(self):
         ex = self.assertRaises(exception.TriggerNotFound,
                                base.Trigger.load,
