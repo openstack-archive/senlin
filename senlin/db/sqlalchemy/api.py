@@ -1050,12 +1050,18 @@ def event_create(context, values):
     return event
 
 
-def event_get(context, event_id):
-    return model_query(context, models.Event).get(event_id)
+def event_get(context, event_id, project_safe=True):
+    event = model_query(context, models.Event).get(event_id)
+    if project_safe and event is not None:
+        if event.project != context.project:
+            return None
+
+    return event
 
 
-def event_get_by_short_id(context, short_id):
-    return query_by_short_id(context, models.Event, short_id)
+def event_get_by_short_id(context, short_id, project_safe=True):
+    return query_by_short_id(context, models.Event, short_id,
+                             project_safe=project_safe)
 
 
 def _event_filter_paginate_query(context, query, filters=None,
@@ -1095,16 +1101,24 @@ def event_get_all(context, limit=None, marker=None, sort_keys=None,
                                         sort_dir=sort_dir)
 
 
-def event_count_by_cluster(context, cluster_id):
-    count = model_query(context, models.Event).\
-        filter_by(cluster_id=cluster_id).count()
+def event_count_by_cluster(context, cluster_id, project_safe=True):
+    query = model_query(context, models.Event)
+
+    if project_safe:
+        query = query.filter_by(project=context.project)
+    count = query.filter_by(cluster_id=cluster_id).count()
+
     return count
 
 
 def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
-                             sort_keys=None, sort_dir=None, filters=None):
+                             sort_keys=None, sort_dir=None, filters=None,
+                             project_safe=True):
     query = model_query(context, models.Event).\
         filter_by(cluster_id=cluster_id)
+
+    if project_safe:
+        query = query.filter_by(project=context.project)
 
     return _event_filter_paginate_query(context, query, filters=filters,
                                         limit=limit, marker=marker,

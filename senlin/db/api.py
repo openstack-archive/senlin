@@ -326,12 +326,13 @@ def event_create(context, values):
     return IMPL.event_create(context, values)
 
 
-def event_get(context, event_id):
-    return IMPL.event_get(context, event_id)
+def event_get(context, event_id, project_safe=True):
+    return IMPL.event_get(context, event_id, project_safe=project_safe)
 
 
-def event_get_by_short_id(context, short_id):
-    return IMPL.event_get_by_short_id(context, short_id)
+def event_get_by_short_id(context, short_id, project_safe=True):
+    return IMPL.event_get_by_short_id(context, short_id,
+                                      project_safe=project_safe)
 
 
 def event_get_all(context, limit=None, marker=None, sort_keys=None,
@@ -344,17 +345,20 @@ def event_get_all(context, limit=None, marker=None, sort_keys=None,
                               show_deleted=show_deleted)
 
 
-def event_count_by_cluster(context, cluster_id):
-    return IMPL.event_count_by_cluster(context, cluster_id)
+def event_count_by_cluster(context, cluster_id, project_safe=True):
+    return IMPL.event_count_by_cluster(context, cluster_id,
+                                       project_safe=project_safe)
 
 
 def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
-                             sort_keys=None, sort_dir=None, filters=None):
+                             sort_keys=None, sort_dir=None, filters=None,
+                             project_safe=True):
     return IMPL.event_get_all_by_cluster(context, cluster_id,
                                          limit=limit, marker=marker,
                                          sort_keys=sort_keys,
                                          sort_dir=sort_dir,
-                                         filters=filters)
+                                         filters=filters,
+                                         project_safe=project_safe)
 
 
 # Webhooks

@@ -85,6 +85,15 @@ class DBAPIEventTest(base.SenlinTestCase):
         self.assertEqual(self.ctx.user, ret_event.user)
         self.assertEqual(self.ctx.project, ret_event.project)
 
+    def test_event_get_diff_project(self):
+        event = self.create_event(self.ctx)
+        new_ctx = utils.dummy_context(project='a-different-project')
+        res = db_api.event_get(new_ctx, event.id)
+        self.assertIsNone(res)
+        res = db_api.event_get(new_ctx, event.id, project_safe=False)
+        self.assertIsNotNone(res)
+        self.assertEqual(event.id, res.id)
+
     def test_event_get_by_short_id(self):
         event = self.create_event(self.ctx)
         short_id = event.id[:6]
@@ -97,6 +106,18 @@ class DBAPIEventTest(base.SenlinTestCase):
 
         ret_event = db_api.event_get_by_short_id(self.ctx, 'non-existent')
         self.assertIsNone(ret_event)
+
+    def test_event_get_by_short_id_diff_project(self):
+        event = self.create_event(self.ctx)
+
+        new_ctx = utils.dummy_context(project='a-different-project')
+        short_id = event.id[:8]
+        res = db_api.event_get_by_short_id(new_ctx, short_id)
+        self.assertIsNone(res)
+        res = db_api.event_get_by_short_id(new_ctx, short_id,
+                                           project_safe=False)
+        self.assertIsNotNone(res)
+        self.assertEqual(event.id, res.id)
 
     def test_event_get_all(self):
         cluster1 = shared.create_cluster(self.ctx, self.profile)
@@ -117,10 +138,6 @@ class DBAPIEventTest(base.SenlinTestCase):
         self.assertIn(cluster1.name, obj_names)
         self.assertIn(cluster2.id, cluster_ids)
         self.assertIn(cluster2.name, obj_names)
-
-        # Set project_safe to false
-        events = db_api.event_get_all(self.ctx, project_safe=False)
-        self.assertEqual(3, len(events))
 
     def test_event_get_all_with_limit(self):
         cluster1 = shared.create_cluster(self.ctx, self.profile)
@@ -304,6 +321,19 @@ class DBAPIEventTest(base.SenlinTestCase):
         events = db_api.event_get_all_by_cluster(self.ctx, cluster2.id)
         self.assertEqual(3, len(events))
 
+    def test_event_get_all_by_cluster_diff_project(self):
+        cluster1 = shared.create_cluster(self.ctx, self.profile)
+        cluster2 = shared.create_cluster(self.ctx, self.profile)
+        self.create_event(self.ctx, entity=cluster1)
+        self.create_event(self.ctx, entity=cluster2)
+
+        new_ctx = utils.dummy_context(project='a-different-project')
+        events = db_api.event_get_all_by_cluster(new_ctx, cluster1.id)
+        self.assertEqual(0, len(events))
+        events = db_api.event_get_all_by_cluster(new_ctx, cluster1.id,
+                                                 project_safe=False)
+        self.assertEqual(1, len(events))
+
     def test_event_count_all_by_cluster(self):
         cluster1 = shared.create_cluster(self.ctx, self.profile)
         cluster2 = shared.create_cluster(self.ctx, self.profile)
@@ -345,6 +375,19 @@ class DBAPIEventTest(base.SenlinTestCase):
                                                           cluster1.id))
         self.assertEqual(1, db_api.event_count_by_cluster(self.ctx,
                                                           cluster2.id))
+
+    def test_event_count_all_by_cluster_diff_project(self):
+        cluster1 = shared.create_cluster(self.ctx, self.profile)
+        cluster2 = shared.create_cluster(self.ctx, self.profile)
+        self.create_event(self.ctx, entity=cluster1)
+        self.create_event(self.ctx, entity=cluster2)
+
+        new_ctx = utils.dummy_context(project='a-different-project')
+        res = db_api.event_count_by_cluster(new_ctx, cluster1.id)
+        self.assertEqual(0, res)
+        res = db_api.event_count_by_cluster(new_ctx, cluster1.id,
+                                            project_safe=False)
+        self.assertEqual(1, res)
 
     def test_event_get_all_filtered(self):
         cluster1 = shared.create_cluster(self.ctx, self.profile,

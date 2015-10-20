@@ -97,12 +97,12 @@ class Event(object):
         return cls(record.timestamp, record.level, **kwargs)
 
     @classmethod
-    def load(cls, context, db_event=None, event_id=None):
+    def load(cls, context, db_event=None, event_id=None, project_safe=True):
         '''Retrieve an event record from database.'''
         if db_event is not None:
             return cls.from_db_record(db_event)
 
-        record = db_api.event_get(context, event_id)
+        record = db_api.event_get(context, event_id, project_safe=project_safe)
         if record is None:
             raise exception.EventNotFound(event=event_id)
 
