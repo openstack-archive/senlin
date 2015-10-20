@@ -892,8 +892,9 @@ class ClusterActionTest(base.SenlinTestCase):
         res_code, res_msg = action.do_add_nodes()
 
         # assertions
-        self.assertEqual(action.RES_OK, res_code)
-        self.assertEqual("Completed adding nodes.", res_msg)
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual("Node [NODE_1] is already owned by cluster "
+                         "[FAKE_CLUSTER].", res_msg)
         self.assertEqual({}, action.data)
 
     @mock.patch.object(node_mod.Node, 'load')

@@ -661,7 +661,7 @@ class EngineService(service.Service):
                 if db_node.status != node_mod.Node.ACTIVE:
                     bad_nodes.append(db_node.id)
                 elif db_node.cluster_id is not None:
-                    owned_nodes.append(node)
+                    owned_nodes.append(db_node.id)
                 else:
                     # check profile type matching
                     db_node_profile = self.profile_find(context,
@@ -682,8 +682,7 @@ class EngineService(service.Service):
             LOG.error(error)
             raise exception.ProfileTypeNotMatch(message=error)
         elif len(owned_nodes) > 0:
-            error = _("Nodes %s owned by other cluster, need to delete "
-                      "them from those clusters first.") % owned_nodes
+            error = _("Nodes %s already owned by some cluster") % owned_nodes
             LOG.error(error)
             raise exception.NodeNotOrphan(message=error)
         elif len(bad_nodes) > 0:
