@@ -178,11 +178,13 @@ class Cluster(object):
                    context=context, **kwargs)
 
     @classmethod
-    def load(cls, context, cluster_id=None, cluster=None, show_deleted=False):
+    def load(cls, context, cluster_id=None, cluster=None, show_deleted=False,
+             project_safe=True):
         '''Retrieve a cluster from database.'''
         if cluster is None:
             cluster = db_api.cluster_get(context, cluster_id,
-                                         show_deleted=show_deleted)
+                                         show_deleted=show_deleted,
+                                         project_safe=project_safe)
             if cluster is None:
                 raise exception.ClusterNotFound(cluster=cluster_id)
 

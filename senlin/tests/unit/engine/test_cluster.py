@@ -199,6 +199,20 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual(cluster.data, result.data)
         self.assertEqual(cluster.meta_data, result.metadata)
 
+    def test_cluster_load_diff_project(self):
+        self._create_cluster('CLUSTER_ID')
+
+        new_ctx = utils.dummy_context(project='a-different-project')
+        ex = self.assertRaises(exception.ClusterNotFound,
+                               clusterm.Cluster.load,
+                               new_ctx, 'CLUSTER_ID', None)
+        self.assertEqual('The cluster (CLUSTER_ID) could not be found.',
+                         six.text_type(ex))
+        res = clusterm.Cluster.load(new_ctx, 'CLUSTER_ID', None,
+                                    project_safe=False)
+        self.assertIsNotNone(res)
+        self.assertEqual('CLUSTER_ID', res.id)
+
     def test_cluster_load_all(self):
         result = clusterm.Cluster.load_all(self.context)
         self.assertEqual([], [c for c in result])
