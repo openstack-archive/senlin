@@ -10,10 +10,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher as rpc
 import six
 
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.engine import environment
 from senlin.engine import service
 from senlin.tests.unit.common import base
@@ -53,6 +55,19 @@ class ProfileTest(base.SenlinTestCase):
         self.assertIsNone(result['deleted_time'])
         self.assertIsNotNone(result['created_time'])
         self.assertIsNotNone(result['id'])
+
+    def test_profile_create_already_exists(self):
+        cfg.CONF.set_override('name_unique', True)
+        result = self.eng.profile_create(self.ctx, 'p-1', self.spec)
+        self.assertIsNotNone(result)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.profile_create,
+                               self.ctx, 'p-1', self.spec)
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(_("The request is malformed: The profile (p-1) "
+                           "already exists."),
+                         six.text_type(ex.exc_info[1]))
 
     def test_profile_create_with_perm_and_metadata(self):
         permission = 'fake permission'

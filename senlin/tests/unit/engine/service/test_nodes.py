@@ -11,10 +11,12 @@
 # under the License.
 
 import mock
+from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher as rpc
 import six
 
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.db import api as db_api
 from senlin.engine.actions import base as action_mod
 from senlin.engine import dispatcher
@@ -104,6 +106,21 @@ class NodeTest(base.SenlinTestCase):
         node = self.eng.node_create(self.ctx, 'n-2', self.profile['name'])
         self.assertIsNotNone(node)
         self.assertEqual(self.profile['id'], node['profile_id'])
+
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_node_create_already_exists(self, notify):
+        cfg.CONF.set_override('name_unique', True)
+        node = self.eng.node_create(self.ctx, 'n-1', self.profile['id'])
+        self.assertIsNotNone(node)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_create,
+                               self.ctx, 'n-1', self.profile['id'])
+
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(_("The request is malformed: The node (n-1) "
+                           "already exists."),
+                         six.text_type(ex.exc_info[1]))
 
     def test_node_create_with_cluster_id_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,

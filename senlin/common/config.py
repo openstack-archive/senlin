@@ -84,7 +84,11 @@ engine_opts = [
     cfg.IntOpt('engine_life_check_timeout',
                default=2,
                help=_('RPC timeout for the engine liveness check that is used'
-                      ' for cluster locking.'))]
+                      ' for cluster locking.')),
+    cfg.BoolOpt('name_unique',
+                default=False,
+                help=_('Flag to indicate whether to enforce unique names for '
+                       'Senlin objects belonging to the same project.'))]
 
 rpc_opts = [
     cfg.StrOpt('host',
