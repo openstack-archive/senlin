@@ -99,7 +99,10 @@ class Cluster(object):
             policies.append(policy)
 
         self.rt = {
-            'profile': profile_base.Profile.load(context, self.profile_id),
+            # TODO(Yanyan Hu): Use permission to control access privilege
+            # of profile.
+            'profile': profile_base.Profile.load(context, self.profile_id,
+                                                 project_safe=False),
             'nodes': node_mod.Node.load_all(context, cluster_id=self.id),
             'policies': policies
         }

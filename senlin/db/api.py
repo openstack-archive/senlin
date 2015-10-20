@@ -272,23 +272,28 @@ def profile_create(context, values):
     return IMPL.profile_create(context, values)
 
 
-def profile_get(context, profile_id, show_deleted=False):
-    return IMPL.profile_get(context, profile_id, show_deleted=show_deleted)
+def profile_get(context, profile_id, show_deleted=False, project_safe=True):
+    return IMPL.profile_get(context, profile_id, show_deleted=show_deleted,
+                            project_safe=project_safe)
 
 
-def profile_get_by_name(context, name, show_deleted=False):
-    return IMPL.profile_get_by_name(context, name, show_deleted=show_deleted)
+def profile_get_by_name(context, name, show_deleted=False, project_safe=True):
+    return IMPL.profile_get_by_name(context, name, show_deleted=show_deleted,
+                                    project_safe=project_safe)
 
 
-def profile_get_by_short_id(context, short_id):
-    return IMPL.profile_get_by_short_id(context, short_id)
+def profile_get_by_short_id(context, short_id, project_safe=True):
+    return IMPL.profile_get_by_short_id(context, short_id,
+                                        project_safe=project_safe)
 
 
 def profile_get_all(context, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None, show_deleted=False):
+                    sort_dir=None, filters=None, show_deleted=False,
+                    project_safe=True):
     return IMPL.profile_get_all(context, limit=limit, marker=marker,
                                 sort_keys=sort_keys, sort_dir=sort_dir,
-                                filters=filters, show_deleted=show_deleted)
+                                filters=filters, show_deleted=show_deleted,
+                                project_safe=project_safe)
 
 
 def profile_update(context, profile_id, values):

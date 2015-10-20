@@ -904,27 +904,39 @@ def profile_create(context, values):
     return profile
 
 
-def profile_get(context, profile_id, show_deleted=False):
+def profile_get(context, profile_id, show_deleted=False, project_safe=True):
     query = soft_delete_aware_query(context, models.Profile,
                                     show_deleted=show_deleted)
     profile = query.filter_by(id=profile_id).first()
+
+    if project_safe and profile is not None:
+        if context.project != profile.project:
+            return None
+
     return profile
 
 
-def profile_get_by_name(context, name, show_deleted=False):
+def profile_get_by_name(context, name, show_deleted=False, project_safe=True):
     return query_by_name(context, models.Profile, name,
-                         show_deleted=show_deleted)
+                         show_deleted=show_deleted,
+                         project_safe=project_safe)
 
 
-def profile_get_by_short_id(context, short_id, show_deleted=False):
+def profile_get_by_short_id(context, short_id, show_deleted=False,
+                            project_safe=True):
     return query_by_short_id(context, models.Profile, short_id,
-                             show_deleted=show_deleted)
+                             show_deleted=show_deleted,
+                             project_safe=project_safe)
 
 
 def profile_get_all(context, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None, show_deleted=False):
+                    sort_dir=None, filters=None, show_deleted=False,
+                    project_safe=True):
     query = soft_delete_aware_query(context, models.Profile,
                                     show_deleted=show_deleted)
+
+    if project_safe:
+        query = query.filter_by(project=context.project)
 
     if filters is None:
         filters = {}

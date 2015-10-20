@@ -80,7 +80,10 @@ class Node(object):
 
     def _load_runtime_data(self, context):
         self.rt = {
-            'profile': profile_base.Profile.load(context, self.profile_id),
+            # TODO(Yanyan Hu): Use permission to control access privilege
+            # of profile.
+            'profile': profile_base.Profile.load(context, self.profile_id,
+                                                 project_safe=False),
         }
 
     def store(self, context):

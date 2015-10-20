@@ -364,9 +364,18 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_list_project_safe(self, notify):
-        c1 = self.eng.cluster_create(self.ctx, 'c1', 0, self.profile['id'])
         new_ctx = utils.dummy_context(project='a_diff_project')
-        c2 = self.eng.cluster_create(new_ctx, 'c2', 0, self.profile['id'])
+        spec = {
+            'type': 'TestProfile',
+            'version': '1.0',
+            'properties': {'INT': 10, 'STR': 'string'},
+        }
+        p1 = self.eng.profile_create(self.ctx, 'p-test-1', spec,
+                                     permission='1111')
+        p2 = self.eng.profile_create(new_ctx, 'p-test-2', spec,
+                                     permission='1111')
+        c1 = self.eng.cluster_create(self.ctx, 'c1', 0, p1['id'])
+        c2 = self.eng.cluster_create(new_ctx, 'c2', 0, p2['id'])
 
         # default is project_safe
         result = self.eng.cluster_list(self.ctx)
