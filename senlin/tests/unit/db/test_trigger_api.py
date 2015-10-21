@@ -82,6 +82,15 @@ class DBAPITriggerTest(base.SenlinTestCase):
         self.assertEqual(trigger.id, retobj.id)
         self.assertEqual(trigger.spec, retobj.spec)
 
+    def test_trigger_get_diff_project(self):
+        trigger = self._create_trigger(self.ctx)
+        new_ctx = utils.dummy_context(project='a-different-project')
+        retobj = db_api.trigger_get(new_ctx, trigger.id)
+        self.assertIsNone(retobj)
+        retobj = db_api.trigger_get(new_ctx, trigger.id, project_safe=False)
+        self.assertIsNotNone(retobj)
+        self.assertEqual(trigger.id, retobj.id)
+
     def test_trigger_get_not_found(self):
         trigger = db_api.trigger_get(self.ctx, 'BOGUS_ID')
         self.assertIsNone(trigger)
@@ -126,6 +135,18 @@ class DBAPITriggerTest(base.SenlinTestCase):
         # bad name
         retobj = db_api.trigger_get_by_name(self.ctx, 'non-exist')
         self.assertIsNone(retobj)
+
+    def test_trigger_get_by_name_diff_project(self):
+        trigger_name = 'my_best_trigger'
+        self._create_trigger(self.ctx, name=trigger_name)
+
+        new_ctx = utils.dummy_context(project='a-different-project')
+        retobj = db_api.trigger_get_by_name(new_ctx, trigger_name)
+        self.assertIsNone(retobj)
+        retobj = db_api.trigger_get_by_name(new_ctx, trigger_name,
+                                            project_safe=False)
+        self.assertIsNotNone(retobj)
+        self.assertEqual(trigger_name, retobj.name)
 
     def test_trigger_get_by_name_show_deleted(self):
         trigger_name = 'my_best_trigger'
@@ -176,6 +197,18 @@ class DBAPITriggerTest(base.SenlinTestCase):
         # bad ids
         res = db_api.trigger_get_by_short_id(self.ctx, 'non-existent')
         self.assertIsNone(res)
+
+    def test_trigger_get_by_short_id_diff_project(self):
+        trigger_id = 'same-part-unique-part'
+        self._create_trigger(self.ctx, id=trigger_id)
+
+        new_ctx = utils.dummy_context(project='a-different-project')
+        trigger = db_api.trigger_get_by_short_id(new_ctx, trigger_id[:11])
+        self.assertIsNone(trigger)
+        trigger = db_api.trigger_get_by_short_id(new_ctx, trigger_id[:11],
+                                                 project_safe=False)
+        self.assertIsNotNone(trigger)
+        self.assertEqual(trigger_id, trigger.id)
 
     def test_trigger_get_all(self):
         ids = ['trigger1', 'trigger2']

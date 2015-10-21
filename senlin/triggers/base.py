@@ -125,7 +125,7 @@ class Trigger(object):
         return cls(record.name, record.spec, **kwargs)
 
     @classmethod
-    def load(cls, ctx, trigger_id=None, db_trigger=None):
+    def load(cls, ctx, trigger_id=None, db_trigger=None, project_safe=True):
         """Retrieve and reconstruct a trigger object from DB.
 
         :param ctx: A request context for DB operations.
@@ -133,7 +133,8 @@ class Trigger(object):
         :param db_trigger: A DB record for a trigger.
         """
         if db_trigger is None:
-            db_trigger = db_api.trigger_get(ctx, trigger_id)
+            db_trigger = db_api.trigger_get(ctx, trigger_id,
+                                            project_safe=project_safe)
             if db_trigger is None:
                 raise exception.TriggerNotFound(trigger=trigger_id)
 

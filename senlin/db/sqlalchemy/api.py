@@ -484,21 +484,29 @@ def trigger_create(context, values):
     return trigger
 
 
-def trigger_get(context, trigger_id, show_deleted=False):
+def trigger_get(context, trigger_id, show_deleted=False, project_safe=True):
     query = soft_delete_aware_query(context, models.Trigger,
                                     show_deleted=show_deleted)
     trigger = query.filter_by(id=trigger_id).first()
+
+    if project_safe and trigger is not None:
+        if trigger.project != context.project:
+            return None
+
     return trigger
 
 
-def trigger_get_by_name(context, name, show_deleted=False):
+def trigger_get_by_name(context, name, show_deleted=False, project_safe=True):
     return query_by_name(context, models.Trigger, name,
-                         show_deleted=show_deleted)
+                         show_deleted=show_deleted,
+                         project_safe=project_safe)
 
 
-def trigger_get_by_short_id(context, short_id, show_deleted=False):
+def trigger_get_by_short_id(context, short_id, show_deleted=False,
+                            project_safe=True):
     return query_by_short_id(context, models.Trigger, short_id,
-                             show_deleted=show_deleted)
+                             show_deleted=show_deleted,
+                             project_safe=project_safe)
 
 
 def trigger_get_all(context, limit=None, marker=None, sort_keys=None,
