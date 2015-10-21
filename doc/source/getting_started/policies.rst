@@ -148,7 +148,7 @@ profile. You need to provide an identifier to the :program:`senlin` command
 line to indicate the policy object you want to examine. The identifier can be
 the ID, the name or the "short ID" of a policy object. For example::
 
-  $ senlin policy-create -s deletion_policy.yaml dp01
+  $ senlin policy-show dp01
   +--------------+----------------------------------------------------------------------------------------+
   | Property     | Value                                                                                  |
   +--------------+----------------------------------------------------------------------------------------+
