@@ -566,7 +566,7 @@ def webhook_create(context, values):
     return webhook
 
 
-def webhook_get(context, webhook_id, show_deleted=False):
+def webhook_get(context, webhook_id, show_deleted=False, project_safe=True):
     webhook = model_query(context, models.Webhook).get(webhook_id)
     if not webhook:
         return None
@@ -574,12 +574,17 @@ def webhook_get(context, webhook_id, show_deleted=False):
     if not show_deleted and webhook.deleted_time is not None:
         return None
 
+    if project_safe:
+        if context.project != webhook.project:
+            return None
+
     return webhook
 
 
-def webhook_get_by_name(context, name, show_deleted=False):
+def webhook_get_by_name(context, name, show_deleted=False, project_safe=True):
     return query_by_name(context, models.Webhook, name,
-                         show_deleted=show_deleted)
+                         show_deleted=show_deleted,
+                         project_safe=project_safe)
 
 
 def webhook_get_all(context, show_deleted=False, limit=None,
@@ -609,9 +614,11 @@ def webhook_get_all(context, show_deleted=False, limit=None,
                            default_sort_keys=['obj_id']).all()
 
 
-def webhook_get_by_short_id(context, short_id, show_deleted=False):
+def webhook_get_by_short_id(context, short_id, show_deleted=False,
+                            project_safe=True):
     return query_by_short_id(context, models.Webhook, short_id,
-                             show_deleted=show_deleted)
+                             show_deleted=show_deleted,
+                             project_safe=project_safe)
 
 
 def webhook_delete(context, webhook_id, force=False):

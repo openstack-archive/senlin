@@ -369,12 +369,14 @@ def webhook_create(context, values):
     return IMPL.webhook_create(context, values)
 
 
-def webhook_get(context, webhook_id, show_deleted=False):
-    return IMPL.webhook_get(context, webhook_id, show_deleted=show_deleted)
+def webhook_get(context, webhook_id, show_deleted=False, project_safe=True):
+    return IMPL.webhook_get(context, webhook_id, show_deleted=show_deleted,
+                            project_safe=project_safe)
 
 
-def webhook_get_by_name(context, name, show_deleted=False):
-    return IMPL.webhook_get_by_name(context, name, show_deleted=show_deleted)
+def webhook_get_by_name(context, name, show_deleted=False, project_safe=True):
+    return IMPL.webhook_get_by_name(context, name, show_deleted=show_deleted,
+                                    project_safe=project_safe)
 
 
 def webhook_get_all(context, show_deleted=False, limit=None,
@@ -386,9 +388,11 @@ def webhook_get_all(context, show_deleted=False, limit=None,
                                 filters=filters, project_safe=project_safe)
 
 
-def webhook_get_by_short_id(context, short_id, show_deleted=False):
+def webhook_get_by_short_id(context, short_id, show_deleted=False,
+                            project_safe=True):
     return IMPL.webhook_get_by_short_id(context, short_id,
-                                        show_deleted=show_deleted)
+                                        show_deleted=show_deleted,
+                                        project_safe=project_safe)
 
 
 def webhook_delete(context, webhook_id, force=False):

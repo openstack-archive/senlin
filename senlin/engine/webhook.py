@@ -115,16 +115,20 @@ class Webhook(object):
         return cls(record.obj_id, record.obj_type, record.action, **kwargs)
 
     @classmethod
-    def load(cls, context, webhook_id, show_deleted=False):
+    def load(cls, context, webhook_id, show_deleted=False, project_safe=True):
         """Retrieve a webhook from database.
 
         :param context: the security context for db operations.
         :param webhook_id: the unique ID of the webhook to retrieve.
         :param show_deleted: boolean indicating whether deleted objects
                              should be returned or not. Default is False.
+        :param project_safe: Optional parameter specifying whether only
+                             policies belong to the context.project will be
+                             loaded.
         """
         webhook = db_api.webhook_get(context, webhook_id,
-                                     show_deleted=show_deleted)
+                                     show_deleted=show_deleted,
+                                     project_safe=project_safe)
         if webhook is None:
             raise exception.WebhookNotFound(webhook=webhook_id)
 

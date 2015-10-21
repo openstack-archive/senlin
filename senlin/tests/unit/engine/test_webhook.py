@@ -117,7 +117,7 @@ class TestWebhook(base.SenlinTestCase):
 
     def test_webhook_store(self):
         webhook = webhook_mod.Webhook('test-obj-id', 'test-obj-type',
-                                      'test-action')
+                                      'test-action', context=self.context)
 
         self.assertIsNotNone(webhook.id)
         webhook_id = webhook.store(self.context)
@@ -175,6 +175,21 @@ class TestWebhook(base.SenlinTestCase):
         self.assertEqual(webhook.created_time, result.created_time)
         self.assertEqual(webhook.deleted_time, result.deleted_time)
 
+    def test_webhook_load_diff_project(self):
+        webhook = self._create_webhook('webhook-1', 'WEBHOOK_ID')
+
+        new_context = utils.dummy_context(project='a-different-project')
+        ex = self.assertRaises(exception.WebhookNotFound,
+                               webhook_mod.Webhook.load,
+                               new_context, 'WEBHOOK_ID', None)
+        self.assertEqual('The webhook (WEBHOOK_ID) could not be found.',
+                         six.text_type(ex))
+
+        res = webhook_mod.Webhook.load(new_context, webhook.id,
+                                       project_safe=False)
+        self.assertIsNotNone(res)
+        self.assertEqual(webhook.id, res.id)
+
     def test_webhook_load_all(self):
         result = webhook_mod.Webhook.load_all(self.context)
         self.assertEqual([], [w for w in result])
@@ -187,6 +202,16 @@ class TestWebhook(base.SenlinTestCase):
         self.assertEqual(2, len(webhooks))
         self.assertEqual(webhook1.id, webhooks[0].id)
         self.assertEqual(webhook2.id, webhooks[1].id)
+
+    def test_webhook_load_all_diff_project(self):
+        self._create_webhook('webhook-1', 'ID1')
+        self._create_webhook('webhook-2', 'ID2')
+
+        new_context = utils.dummy_context(project='a-different-project')
+        result = webhook_mod.Webhook.load_all(new_context)
+        self.assertEqual(0, len(list(result)))
+        result = webhook_mod.Webhook.load_all(new_context, project_safe=False)
+        self.assertEqual(2, len(list(result)))
 
     def test_webhook_to_dict(self):
         webhook = self._create_webhook('test-webhook', 'WEBHOOK_ID')

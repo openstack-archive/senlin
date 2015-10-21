@@ -52,6 +52,16 @@ class DBAPIWebhookTest(base.SenlinTestCase):
         webhook = db_api.webhook_get(self.ctx, res.id)
         self.assertIsNotNone(webhook)
 
+    def test_webhook_get_diff_project(self):
+        new_ctx = utils.dummy_context(project='a-different-project')
+        webhook = shared.create_webhook(self.ctx, self.obj_id,
+                                        self.obj_type, self.action)
+        res = db_api.webhook_get(new_ctx, webhook.id)
+        self.assertIsNone(res)
+        res = db_api.webhook_get(new_ctx, webhook.id, project_safe=False)
+        self.assertIsNotNone(res)
+        self.assertEqual(webhook.id, res.id)
+
     def test_webhook_get_show_deleted(self):
         res = shared.create_webhook(self.ctx, self.obj_id,
                                     self.obj_type, self.action)
@@ -90,6 +100,19 @@ class DBAPIWebhookTest(base.SenlinTestCase):
         res = db_api.webhook_get_by_short_id(self.ctx, 'non-existent')
         self.assertIsNone(res)
 
+    def test_webhook_get_by_short_id_diff_project(self):
+        webhook_id = 'same-part-unique-part'
+        shared.create_webhook(self.ctx, self.obj_id, self.obj_type,
+                              self.action, id=webhook_id, name='webhook-1')
+
+        new_ctx = utils.dummy_context(project='a-different-project')
+        res = db_api.webhook_get_by_short_id(new_ctx, webhook_id[:11])
+        self.assertIsNone(res)
+        res = db_api.webhook_get_by_short_id(new_ctx, webhook_id[:11],
+                                             project_safe=False)
+        self.assertIsNotNone(res)
+        self.assertEqual(webhook_id, res.id)
+
     def test_webhook_get_by_short_id_show_deleted(self):
         webhook_id = 'this-is-a-unique-id'
         shared.create_webhook(self.ctx, self.obj_id, self.obj_type,
@@ -121,6 +144,19 @@ class DBAPIWebhookTest(base.SenlinTestCase):
 
         res = db_api.webhook_get_by_name(self.ctx, 'BogusName')
         self.assertIsNone(res)
+
+    def test_webhook_get_by_name_diff_project(self):
+        webhook_name = 'fake_webhook_name'
+        shared.create_webhook(self.ctx, self.obj_id, self.obj_type,
+                              self.action, name=webhook_name)
+
+        new_ctx = utils.dummy_context(project='a-different-project')
+        res = db_api.webhook_get_by_name(new_ctx, webhook_name)
+        self.assertIsNone(res)
+        res = db_api.webhook_get_by_name(new_ctx, webhook_name,
+                                         project_safe=False)
+        self.assertIsNotNone(res)
+        self.assertEqual(webhook_name, res.name)
 
     def test_webhook_get_by_name_show_deleted(self):
         webhook_name = 'fake_webhook_name'
