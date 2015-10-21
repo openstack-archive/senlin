@@ -1433,10 +1433,8 @@ class EngineService(service.Service):
         # Check whether object identified by obj_id does exists
         if obj_type == consts.WEBHOOK_OBJ_TYPE_CLUSTER:
             obj = self.cluster_find(context, obj_id)
-        elif obj_type == consts.WEBHOOK_OBJ_TYPE_NODE:
+        else:  # WEBHOOK_OBJ_TYPE_NODE:
             obj = self.node_find(context, obj_id)
-        else:
-            obj = self.policy_find(context, obj_id)
 
         # permission checking
         if not context.is_admin and context.user != obj.user:
@@ -1504,10 +1502,8 @@ class EngineService(service.Service):
 
         if obj_type == consts.WEBHOOK_OBJ_TYPE_CLUSTER:
             db_obj = self.cluster_find(context, obj_id)
-        elif obj_type == consts.WEBHOOK_OBJ_TYPE_NODE:
+        else:  # consts.WEBHOOK_OBJ_TYPE_NODE:
             db_obj = self.node_find(context, obj_id)
-        else:
-            db_obj = self.policy_find(context, obj_id)
 
         # If params are provided, they will override the default params
         if not params:

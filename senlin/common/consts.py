@@ -141,9 +141,8 @@ WEBHOOK_ATTRS = (
 
 WEBHOOK_OBJ_TYPES = (
     WEBHOOK_OBJ_TYPE_CLUSTER, WEBHOOK_OBJ_TYPE_NODE,
-    WEBHOOK_OBJ_TYPE_POLICY,
 ) = (
-    'cluster', 'node', 'policy',
+    'cluster', 'node'
 )
 
 EVENT_ATTRS = (
