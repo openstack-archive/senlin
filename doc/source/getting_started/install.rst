@@ -59,7 +59,7 @@ Install Senlin Server
    :file:`tools` folder.
 
 ::
-
+  $ source ~/devstack/openrc admin
   $ cd /opt/stack/senlin/tools
   $ ./setup-service <HOST IP> <SERVICE_PASSWORD>
 
