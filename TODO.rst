@@ -9,6 +9,10 @@ POLICY
     with a simple algorithm. [Xinhui, Qiming]
   - Implement a deletion policy that supports cross-az/region node deleting.
 
+PROFILE
+-------
+  - Enable node update support for Nova server. [Yanyan Hu]
+
 
 MIDDLE PRIORITY
 ===============
@@ -35,9 +39,6 @@ DB
 --
   - The action data model is missing 'scheduled_start' and 'scheduled_stop'
     fields, we may need these fields for scheduled action execution.
-  - Make Senlin DB operation project_safe/tenant_safe by default. [Yanyan Hu]
-     - Add owner properties(project, user, domain) for profile;
-     - Make all DB query project_safe by default;
 
 ENGINE
 ------
