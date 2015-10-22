@@ -17,7 +17,9 @@ import six
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import cluster as clusterm
+from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import event as eventm
+from senlin.policies import base as policy_base
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -421,6 +423,138 @@ class TestCluster(base.SenlinTestCase):
         res = cluster.remove_node(node3.id)
         self.assertIsNone(res)
         self.assertEqual([], cluster.nodes)
+
+    @mock.patch.object(policy_base.Policy, 'load')
+    @mock.patch.object(cp_mod, 'ClusterPolicy')
+    def test_attach_policy(self, mock_cp, mock_load):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+        cluster.id = 'FAKE_CLUSTER'
+        policy = mock.Mock()
+        policy.attach.return_value = (True, None)
+        mock_load.return_value = policy
+
+        binding = mock.Mock()
+        mock_cp.return_value = binding
+
+        values = {
+            'priority': 10,
+            'cooldown': 20,
+            'level': 30,
+            'enabled': True
+        }
+        res, reason = cluster.attach_policy(self.context, 'FAKE_POLICY',
+                                            values)
+        policy.attach.assert_called_once_with(cluster)
+        mock_load.assert_called_once_with(self.context, 'FAKE_POLICY')
+        mock_cp.assert_called_once_with('FAKE_CLUSTER', 'FAKE_POLICY',
+                                        priority=10, cooldown=20, level=30,
+                                        enabled=True, data=None)
+        binding.store.assert_called_once_with(self.context)
+        self.assertIn(policy, cluster.policies)
+
+    @mock.patch.object(policy_base.Policy, 'load')
+    def test_attach_policy_already_attached(self, mock_load):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+
+        existing = mock.Mock()
+        existing.id = 'FAKE_POLICY_1'
+        cluster.rt['policies'] = [existing]
+        policy = mock.Mock()
+        mock_load.return_value = policy
+
+        # do it
+        res, reason = cluster.attach_policy(self.context, 'FAKE_POLICY_1', {})
+
+        self.assertTrue(res)
+        self.assertEqual('Policy already attached.', reason)
+        mock_load.assert_called_once_with(self.context, 'FAKE_POLICY_1')
+
+    @mock.patch.object(policy_base.Policy, 'load')
+    def test_attach_policy_type_conflict(self, mock_load):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+        cluster.id = 'FAKE_CLUSTER'
+        existing = mock.Mock()
+        existing.id = 'PLCY2'
+        existing.type = 'POLICY_TYPE_ONE'
+        cluster.rt['policies'] = [existing]
+        policy = mock.Mock()
+        policy.singleton = True
+        policy.type = 'POLICY_TYPE_ONE'
+        mock_load.return_value = policy
+
+        # do it
+        res, reason = cluster.attach_policy(self.context, 'PLCY1', {})
+
+        # assert
+        self.assertFalse(res)
+        expected = ('Only one instance of policy type (POLICY_TYPE_ONE) can '
+                    'be attached to a cluster, but another instance '
+                    '(PLCY2) is found attached to the cluster '
+                    '(FAKE_CLUSTER) already.')
+        self.assertEqual(expected, reason)
+        mock_load.assert_called_once_with(self.context, 'PLCY1')
+
+    @mock.patch.object(cp_mod, 'ClusterPolicy')
+    @mock.patch.object(policy_base.Policy, 'load')
+    def test_attach_policy_type_conflict_but_ok(self, mock_load, mock_cp):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+
+        existing = mock.Mock()
+        existing.id = 'FAKE_2'
+        existing.type = 'POLICY_TYPE_ONE'
+        cluster.rt['policies'] = [existing]
+
+        policy = mock.Mock()
+        policy.singleton = False
+        policy.type = 'POLICY_TYPE_ONE'
+        policy.attach.return_value = (True, None)
+        mock_load.return_value = policy
+
+        binding = mock.Mock()
+        mock_cp.return_value = binding
+
+        values = {
+            'priority': 10,
+            'cooldown': 20,
+            'level': 30,
+            'enabled': True
+        }
+
+        # do it
+        res, reason = cluster.attach_policy(self.context, 'FAKE_1', values)
+
+        # assert
+        self.assertTrue(res)
+        self.assertEqual('Policy attached.', reason)
+
+        policy.attach.assert_called_once_with(cluster)
+        mock_load.assert_called_once_with(self.context, 'FAKE_1')
+        mock_cp.assert_called_once_with(cluster.id, 'FAKE_1',
+                                        priority=10, cooldown=20, level=30,
+                                        enabled=True, data=None)
+        binding.store.assert_called_once_with(self.context)
+        self.assertIn(policy, cluster.policies)
+
+    @mock.patch.object(policy_base.Policy, 'load')
+    def test_do_attach_policy_failed_do_attach(self, mock_load):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+
+        policy = mock.Mock()
+        policy.attach.return_value = (False, 'Bad things happened.')
+        mock_load.return_value = policy
+
+        # do it
+        res, reason = cluster.attach_policy(self.context, 'FAKE_1', {})
+
+        self.assertFalse(res)
+        self.assertEqual('Bad things happened.', reason)
+        policy.attach.assert_called_once_with(cluster)
+        mock_load.assert_called_once_with(self.context, 'FAKE_1')
 
     def test_cluster_add_policy(self):
         cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,

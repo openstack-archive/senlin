@@ -15,8 +15,10 @@ from oslo_log import log as logging
 from oslo_utils import timeutils
 
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.db import api as db_api
+from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import event as event_mod
 from senlin.engine import node as node_mod
 from senlin.policies import base as policy_base
@@ -313,6 +315,57 @@ class Cluster(object):
         '''
         self.set_status(context, self.UPDATING, reason='Update in progress')
         return True
+
+    def attach_policy(self, ctx, policy_id, values):
+        """Attach policy object to the cluster.
+
+        Note this method MUST be called with the cluster locked.
+
+        :param ctx: A context for DB operation.
+        :param policy_id: ID of the policy object.
+        :param values: Optional dictionary containing binding properties.
+
+        :returns: A tuple containing a boolean result and a reason string.
+        """
+
+        policy = policy_base.Policy.load(ctx, policy_id)
+        # Check if policy has already been attached
+        for existing in self.rt['policies']:
+            # Policy already attached
+            if existing.id == policy_id:
+                return True, _('Policy already attached.')
+
+            # Detect policy type conflicts
+            if (existing.type == policy.type) and policy.singleton:
+                reason = _('Only one instance of policy type (%(ptype)s) can '
+                           'be attached to a cluster, but another instance '
+                           '(%(existing)s) is found attached to the cluster '
+                           '(%(cluster)s) already.'
+                           ) % {'ptype': policy.type,
+                                'existing': existing.id,
+                                'cluster': self.id}
+                return False, reason
+
+        # invoke policy callback
+        res, data = policy.attach(self)
+        if not res:
+            return False, data
+
+        kwargs = {
+            'priority': values['priority'],
+            'cooldown': values['cooldown'],
+            'level': values['level'],
+            'enabled': values['enabled'],
+            'data': data,
+        }
+
+        cp = cp_mod.ClusterPolicy(self.id, policy_id, **kwargs)
+        cp.store(ctx)
+
+        # refresh cached runtime
+        self.rt['policies'].append(policy)
+
+        return True, _('Policy attached.')
 
     @property
     def nodes(self):

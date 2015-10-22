@@ -18,7 +18,6 @@ from senlin.db.sqlalchemy import api as db_api
 from senlin.engine.actions import base as base_action
 from senlin.engine.actions import cluster_action as ca
 from senlin.engine import cluster as cluster_mod
-from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import dispatcher
 from senlin.engine import event as event_mod
 from senlin.engine import node as node_mod
@@ -1703,41 +1702,26 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_delete.assert_called_once_with(mock.ANY)
         self.assertEqual(2, len(mock_delete.call_args[0][0]))
 
-    @mock.patch.object(cp_mod, 'ClusterPolicy')
-    @mock.patch.object(policy_base.Policy, 'load')
-    def test_do_attach_policy(self, mock_load_policy, mock_cp, mock_load):
+    def test_do_attach_policy(self, mock_load):
         cluster = mock.Mock()
         cluster.id = 'FAKE_CLUSTER'
         cluster.policies = []
+        cluster.attach_policy.return_value = True, 'OK'
         mock_load.return_value = cluster
-
-        policy = mock.Mock()
-        policy.attach.return_value = (True, None)
-        mock_load_policy.return_value = policy
-        binding = mock.Mock()
-        mock_cp.return_value = binding
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.inputs = {
             'policy_id': 'FAKE_POLICY',
-            'priority': 10,
-            'cooldown': 20,
-            'level': 30,
-            'enabled': True
+            'FOO': 'BAR'
         }
 
         # do it
         res_code, res_msg = action.do_attach_policy()
 
         self.assertEqual(action.RES_OK, res_code)
-        self.assertEqual('Policy attached.', res_msg)
-        policy.attach.assert_called_once_with(cluster)
-        mock_load_policy.assert_called_once_with(action.context, 'FAKE_POLICY')
-        mock_cp.assert_called_once_with('FAKE_CLUSTER', 'FAKE_POLICY',
-                                        priority=10, cooldown=20, level=30,
-                                        enabled=True, data=None)
-        binding.store.assert_called_once_with(action.context)
-        cluster.add_policy.assert_called_once_with(policy)
+        self.assertEqual('OK', res_msg)
+        cluster.attach_policy.assert_called_once_with(
+            action.context, 'FAKE_POLICY', {'FOO': 'BAR'})
 
     def test_do_attach_policy_missing_policy(self, mock_load):
         cluster = mock.Mock()
@@ -1751,135 +1735,6 @@ class ClusterActionTest(base.SenlinTestCase):
         # assertion
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Policy not specified.', res_msg)
-
-    @mock.patch.object(policy_base.Policy, 'load')
-    def test_do_attach_policy_already_attached(self, mock_pload, mock_load):
-        cluster = mock.Mock()
-        cluster.id = 'FAKE_CLUSTER'
-        mock_load.return_value = cluster
-        existing = mock.Mock()
-        existing.id = 'FAKE_POLICY_1'
-        cluster.policies = [existing]
-        policy = mock.Mock()
-        mock_pload.return_value = policy
-
-        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
-        action.inputs = {
-            'policy_id': 'FAKE_POLICY_1',
-        }
-
-        # do it
-        res_code, res_msg = action.do_attach_policy()
-
-        self.assertEqual(action.RES_OK, res_code)
-        self.assertEqual('Policy already attached.', res_msg)
-        mock_pload.assert_called_once_with(action.context, 'FAKE_POLICY_1')
-
-    @mock.patch.object(policy_base.Policy, 'load')
-    def test_do_attach_policy_type_conflict(self, mock_pload, mock_load):
-        cluster = mock.Mock()
-        cluster.id = 'FAKE_CLUSTER'
-        mock_load.return_value = cluster
-        existing = mock.Mock()
-        existing.id = 'FAKE_POLICY_2'
-        existing.type = 'POLICY_TYPE_ONE'
-        cluster.policies = [existing]
-        policy = mock.Mock()
-        policy.singleton = True
-        policy.type = 'POLICY_TYPE_ONE'
-        mock_pload.return_value = policy
-        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
-        action.inputs = {
-            'policy_id': 'FAKE_POLICY_1',
-            'priority': 10,
-            'cooldown': 20,
-            'level': 30,
-            'enabled': True
-        }
-
-        # do it
-        res_code, res_msg = action.do_attach_policy()
-
-        # assert
-        self.assertEqual(action.RES_ERROR, res_code)
-        expected = ('Only one instance of policy type (POLICY_TYPE_ONE) can '
-                    'be attached to a cluster, but another instance '
-                    '(FAKE_POLICY_2) is found attached to the cluster '
-                    '(FAKE_CLUSTER) already.')
-        self.assertEqual(expected, res_msg)
-        mock_pload.assert_called_once_with(action.context, 'FAKE_POLICY_1')
-
-    @mock.patch.object(cp_mod, 'ClusterPolicy')
-    @mock.patch.object(policy_base.Policy, 'load')
-    def test_do_attach_policy_type_conflict_but_ok(self, mock_pload, mock_cp,
-                                                   mock_load):
-        cluster = mock.Mock()
-        cluster.id = 'FAKE_CLUSTER'
-        mock_load.return_value = cluster
-
-        existing = mock.Mock()
-        existing.id = 'FAKE_POLICY_2'
-        existing.type = 'POLICY_TYPE_ONE'
-        cluster.policies = [existing]
-        policy = mock.Mock()
-        policy.singleton = False
-        policy.type = 'POLICY_TYPE_ONE'
-        policy.attach.return_value = (True, None)
-        mock_pload.return_value = policy
-        binding = mock.Mock()
-        mock_cp.return_value = binding
-
-        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
-        action.inputs = {
-            'policy_id': 'FAKE_POLICY_1',
-            'priority': 10,
-            'cooldown': 20,
-            'level': 30,
-            'enabled': True
-        }
-
-        # do it
-        res_code, res_msg = action.do_attach_policy()
-
-        # assert
-        self.assertEqual(action.RES_OK, res_code)
-        self.assertEqual('Policy attached.', res_msg)
-
-        policy.attach.assert_called_once_with(cluster)
-        mock_pload.assert_called_once_with(action.context, 'FAKE_POLICY_1')
-        mock_cp.assert_called_once_with('FAKE_CLUSTER', 'FAKE_POLICY_1',
-                                        priority=10, cooldown=20, level=30,
-                                        enabled=True, data=None)
-        binding.store.assert_called_once_with(action.context)
-        cluster.add_policy.assert_called_once_with(policy)
-
-    @mock.patch.object(policy_base.Policy, 'load')
-    def test_do_attach_policy_failed_do_attach(self, mock_pload, mock_load):
-        cluster = mock.Mock()
-        cluster.id = 'FAKE_CLUSTER'
-        cluster.policies = []
-        mock_load.return_value = cluster
-
-        policy = mock.Mock()
-        policy.attach.return_value = (False, 'Bad things happened.')
-        mock_pload.return_value = policy
-
-        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
-        action.inputs = {
-            'policy_id': 'FAKE_POLICY',
-            'priority': 10,
-            'cooldown': 20,
-            'level': 30,
-            'enabled': True
-        }
-
-        # do it
-        res_code, res_msg = action.do_attach_policy()
-
-        self.assertEqual(action.RES_ERROR, res_code)
-        self.assertEqual('Bad things happened.', res_msg)
-        policy.attach.assert_called_once_with(cluster)
-        mock_pload.assert_called_once_with(action.context, 'FAKE_POLICY')
 
     @mock.patch.object(db_api, 'cluster_policy_detach')
     @mock.patch.object(policy_base.Policy, 'load')

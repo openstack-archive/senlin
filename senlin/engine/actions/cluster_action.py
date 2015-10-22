@@ -23,7 +23,6 @@ from senlin.common import scaleutils
 from senlin.db import api as db_api
 from senlin.engine.actions import base
 from senlin.engine import cluster as cluster_mod
-from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import dispatcher
 from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
@@ -590,47 +589,14 @@ class ClusterAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        policy_id = self.inputs.get('policy_id', None)
+        policy_id = self.inputs.pop('policy_id', None)
         if not policy_id:
             return self.RES_ERROR, _('Policy not specified.')
 
-        policy = policy_mod.Policy.load(self.context, policy_id)
-        # Check if policy has already been attached
-        for existing in self.cluster.policies:
-            # Policy already attached
-            if existing.id == policy_id:
-                return self.RES_OK, _('Policy already attached.')
-
-            # Detect policy type conflicts
-            if (existing.type == policy.type) and policy.singleton:
-                reason = _('Only one instance of policy type (%(ptype)s) can '
-                           'be attached to a cluster, but another instance '
-                           '(%(existing)s) is found attached to the cluster '
-                           '(%(cluster)s) already.'
-                           ) % {'ptype': policy.type,
-                                'existing': existing.id,
-                                'cluster': self.target}
-                return self.RES_ERROR, reason
-
-        res, data = policy.attach(self.cluster)
-        if not res:
-            return self.RES_ERROR, data
-
-        # Initialize data field of cluster_policy object with information
-        # generated during policy attaching
-        values = {
-            'priority': self.inputs['priority'],
-            'cooldown': self.inputs['cooldown'],
-            'level': self.inputs['level'],
-            'enabled': self.inputs['enabled'],
-            'data': data,
-        }
-
-        cp = cp_mod.ClusterPolicy(self.cluster.id, policy_id, **values)
-        cp.store(self.context)
-
-        self.cluster.add_policy(policy)
-        return self.RES_OK, _('Policy attached.')
+        res, reason = self.cluster.attach_policy(self.context, policy_id,
+                                                 self.inputs)
+        result = self.RES_OK if res else self.RES_ERROR
+        return result, reason
 
     def do_detach_policy(self):
         """Handler for the CLUSTER_DETACH_POLICY action.
