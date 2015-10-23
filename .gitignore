@@ -1,5 +1,6 @@
 *.pyc
 *.swp
+*.swo
 *~
 build
 dist
@@ -7,6 +8,7 @@ dist
 *.egg-info
 tags
 *.log
+etc/senlin/senlin.conf.sample
 senlin-test.db
 senlin.sqlite
 .venv
