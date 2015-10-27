@@ -98,13 +98,13 @@ class TestWebhook(base.SenlinTestCase):
         self.assertEqual('test-action', webhook.action)
 
         self.assertIsNotNone(webhook.id)
-        self.assertEqual(None, webhook.name)
+        self.assertIsNone(webhook.name)
         self.assertEqual('', webhook.user)
         self.assertEqual('', webhook.project)
         self.assertEqual('', webhook.domain)
-        self.assertEqual(None, webhook.created_time)
-        self.assertEqual(None, webhook.deleted_time)
-        self.assertEqual(None, webhook.credential)
+        self.assertIsNone(webhook.created_time)
+        self.assertIsNone(webhook.deleted_time)
+        self.assertIsNone(webhook.credential)
         self.assertEqual({}, webhook.params)
 
     def test_webhook_init_with_context(self):
@@ -295,7 +295,7 @@ class TestWebhook(base.SenlinTestCase):
 
     def test_webhook_delete_not_found(self):
         result = webhook_mod.Webhook.delete(self.context, 'fake-webhook-id')
-        self.assertEqual(None, result)
+        self.assertIsNone(result)
 
     def test_encrypt_credential(self):
         kwargs = {

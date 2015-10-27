@@ -341,7 +341,7 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual(node.ERROR, db_node.status)
         self.assertEqual('Profile failed in creating node due to: '
                          '%s' % six.text_type(ex), db_node.status_reason)
-        self.assertEqual(None, db_node.physical_id)
+        self.assertIsNone(db_node.physical_id)
         mock_warning.assert_called_with(self.context, node, 'CREATE',
                                         'STATUS', six.text_type(ex))
 
