@@ -219,7 +219,7 @@ class EngineService(service.Service):
             profile.validate()
         except exception.InvalidSpec as ex:
             msg = six.text_type(ex)
-            LOG.error(_LE("Failed in creating policy: %s"), msg)
+            LOG.error(_LE("Failed in creating profile: %s"), msg)
             raise exception.SenlinBadRequest(msg=msg)
 
         profile.store(context)
