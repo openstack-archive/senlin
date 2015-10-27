@@ -47,7 +47,7 @@ class TriggerDataTest(base.SenlinTestCase):
                          data.spec)
         self.assertEqual('a test alarm', data.desc)
         self.assertEqual('ok', data.state)
-        self.assertEqual(True, data.enabled)
+        self.assertTrue(data.enabled)
         self.assertEqual('low', data.severity)
 
     def test_required_fields_missing(self):

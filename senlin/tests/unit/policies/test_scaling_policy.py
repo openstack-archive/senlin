@@ -99,7 +99,7 @@ class TestScalingPolicy(base.SenlinTestCase):
 
     def test_policy_init(self):
         policy = sp.ScalingPolicy('p1', self.spec)
-        self.assertEqual(False, policy.singleton)
+        self.assertFalse(policy.singleton)
 
         self.assertIsNone(policy.id)
         self.assertEqual('p1', policy.name)
@@ -121,7 +121,7 @@ class TestScalingPolicy(base.SenlinTestCase):
         self.assertEqual(consts.CHANGE_IN_CAPACITY, policy.adjustment_type)
         self.assertEqual(1, policy.adjustment_number)
         self.assertEqual(1, policy.adjustment_min_step)
-        self.assertEqual(False, policy.best_effort)
+        self.assertFalse(policy.best_effort)
 
     def test_calculate_adjustment_count(self):
         adjustment = self.spec['properties']['adjustment']
