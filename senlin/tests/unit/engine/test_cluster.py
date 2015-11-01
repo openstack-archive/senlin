@@ -556,6 +556,58 @@ class TestCluster(base.SenlinTestCase):
         policy.attach.assert_called_once_with(cluster)
         mock_load.assert_called_once_with(self.context, 'FAKE_1')
 
+    @mock.patch.object(db_api, 'cluster_policy_detach')
+    @mock.patch.object(policy_base.Policy, 'load')
+    def test_detach_policy(self, mock_load, mock_detach):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+        cluster.id = 'FAKE_CLUSTER'
+
+        policy = mock.Mock()
+        policy.id == 'FAKE_POLICY'
+        existing = mock.Mock()
+        existing.id = 'FAKE_POLICY'
+        cluster.rt['policies'] = [existing]
+        policy.detach.return_value = (True, None)
+        mock_load.return_value = policy
+
+        res, reason = cluster.detach_policy(self.context, 'FAKE_POLICY')
+
+        self.assertTrue(res)
+        self.assertEqual('Policy detached.', reason)
+        policy.detach.assert_called_once_with(cluster)
+        mock_load.assert_called_once_with(self.context, 'FAKE_POLICY')
+        mock_detach.assert_called_once_with(self.context, 'FAKE_CLUSTER',
+                                            'FAKE_POLICY')
+        self.assertEqual([], cluster.rt['policies'])
+
+    def test_detach_policy_not_attached(self):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+        cluster.rt['policies'] = []
+
+        res, reason = cluster.detach_policy(self.context, 'FAKE_POLICY')
+
+        self.assertFalse(res)
+        self.assertEqual('Policy not attached.', reason)
+
+    @mock.patch.object(policy_base.Policy, 'load')
+    def test_detach_policy_failed_detach(self, mock_load):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+        policy = mock.Mock()
+        policy.id = 'FAKE_POLICY'
+        policy.detach.return_value = False, 'Things went wrong.'
+        mock_load.return_value = policy
+        cluster.rt['policies'] = [policy]
+
+        res, reason = cluster.detach_policy(self.context, 'FAKE_POLICY')
+
+        self.assertFalse(res)
+        self.assertEqual('Things went wrong.', reason)
+        mock_load.assert_called_once_with(self.context, 'FAKE_POLICY')
+        policy.detach.assert_called_once_with(cluster)
+
     def test_cluster_add_policy(self):
         cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
                                    project=self.context.project)
@@ -571,44 +623,3 @@ class TestCluster(base.SenlinTestCase):
         policy_another = mock.Mock()
         cluster.add_policy(policy_another)
         self.assertEqual([policy, policy_another], cluster.policies)
-
-    def test_cluster_remove_policy(self):
-        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
-                                   project=self.context.project)
-        # empty
-        self.assertEqual([], cluster.policies)
-
-        # remove from empty list should be okay
-        res = cluster.remove_policy('BOGUS')
-        self.assertIsNone(res)
-
-        # attach one policy
-        policy1 = mock.Mock()
-        policy1.id = 'PP1'
-        cluster.add_policy(policy1)
-        self.assertEqual([policy1], cluster.policies)
-
-        # remove non-existent should be okay
-        policy_other = mock.Mock()
-        policy_other.id = 'OTHER'
-        res = cluster.remove_policy(policy_other)
-        self.assertIsNone(res)
-        self.assertEqual([policy1], cluster.policies)
-
-        # attach another policy
-        policy2 = mock.Mock()
-        policy2.id = 'PP2'
-        cluster.add_policy(policy2)
-        self.assertEqual([policy1, policy2], cluster.policies)
-
-        res = cluster.remove_policy(policy2)
-        self.assertIsNone(res)
-        self.assertEqual([policy1], cluster.policies)
-
-        # reload and detach policy
-        policy3 = mock.Mock()
-        policy3.id = 'PP1'
-
-        res = cluster.remove_policy(policy3)
-        self.assertIsNone(res)
-        self.assertEqual([], cluster.policies)

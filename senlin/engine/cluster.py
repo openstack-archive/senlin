@@ -367,6 +367,35 @@ class Cluster(object):
 
         return True, _('Policy attached.')
 
+    def detach_policy(self, ctx, policy_id):
+        """Detach policy object from the cluster.
+
+        Note this method MUST be called with the cluster locked.
+
+        :param ctx: A context for DB operation.
+        :param policy_id: ID of the policy object.
+
+        :returns: A tuple containing a boolean result and a reason string.
+        """
+        # Check if policy has already been attached
+        found = None
+        for existing in self.policies:
+            if existing.id == policy_id:
+                found = existing
+                break
+        if found is None:
+            return False, _('Policy not attached.')
+
+        policy = policy_base.Policy.load(ctx, policy_id)
+        res, reason = policy.detach(self)
+        if not res:
+            return res, reason
+
+        db_api.cluster_policy_detach(ctx, self.id, policy_id)
+        self.rt['policies'].remove(found)
+
+        return True, _('Policy detached.')
+
     @property
     def nodes(self):
         return self.rt['nodes']
@@ -394,8 +423,3 @@ class Cluster(object):
     def add_policy(self, policy):
         '''Attach specified policy instance to this cluster.'''
         self.rt['policies'].append(policy)
-
-    def remove_policy(self, policy):
-        for p in self.rt['policies']:
-            if (p.id == policy.id):
-                self.rt['policies'].remove(p)
