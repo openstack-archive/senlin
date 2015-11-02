@@ -152,7 +152,7 @@ def delete_profile(client, profile_id):
 
 
 def list_policy_types(client, **query):
-    rel_url = 'policy_types'
+    rel_url = 'policy-types'
     status = [200]
     resp = client.api_request('GET', rel_url, resp_status=status)
     return resp.body['policy_types']
