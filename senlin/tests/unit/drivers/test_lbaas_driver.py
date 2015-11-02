@@ -451,7 +451,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.nc.subnet_get.side_effect = exception.InternalError(
             code=500, message="Can't find subnet1")
         res = self.lb_driver.member_add(node, lb_id, pool_id, port, subnet)
-        self.assertEqual(None, res)
+        self.assertIsNone(res)
         self.assertTrue(mock_event.called)
 
         # Exception happens in network_get
@@ -460,7 +460,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.nc.network_get.side_effect = exception.InternalError(
             code=500, message="Can't find NETWORK_ID")
         res = self.lb_driver.member_add(node, lb_id, pool_id, port, subnet)
-        self.assertEqual(None, res)
+        self.assertIsNone(res)
         self.assertTrue(mock_event.called)
 
         # Exception happens in pool_member_create
@@ -471,7 +471,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.nc.pool_member_create.side_effect = exception.InternalError(
             code=500, message="CREATE FAILED")
         res = self.lb_driver.member_add(node, lb_id, pool_id, port, subnet)
-        self.assertEqual(None, res)
+        self.assertIsNone(res)
         self.assertTrue(mock_event.called)
 
     @mock.patch.object(lbaas.LoadBalancerDriver, '_get_node_address')
@@ -540,5 +540,5 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.nc.pool_member_delete.side_effect = None
         self.lb_driver._wait_for_lb_ready.return_value = False
         res = self.lb_driver.member_remove(lb_id, pool_id, member_id)
-        self.assertEqual(None, res)
+        self.assertIsNone(res)
         self.lb_driver._wait_for_lb_ready.assert_called_once_with(lb_id)

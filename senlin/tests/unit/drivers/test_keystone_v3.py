@@ -54,7 +54,7 @@ class TestKeystoneV3(base.SenlinTestCase):
 
         res = kc.trust_delete('value')
 
-        self.assertEqual(None, res)
+        self.assertIsNone(res)
         self.conn.identity.delete_trust.assert_called_once_with(
             'value', ignore_missing=True)
 
@@ -102,7 +102,7 @@ class TestKeystoneV3(base.SenlinTestCase):
 
         res = kc.endpoint_get('FAKE_ID')
 
-        self.assertEqual(None, res)
+        self.assertIsNone(res)
         self.conn.identity.endpoints.assert_called_once_with(
             service_id='FAKE_ID')
 
@@ -130,7 +130,7 @@ class TestKeystoneV3(base.SenlinTestCase):
 
         res = kc.service_get('FAKE_TYPE')
 
-        self.assertEqual(None, res)
+        self.assertIsNone(res)
         self.conn.identity.services.assert_called_once_with(type='FAKE_TYPE')
 
     def test_trust_get_by_trustor(self, mock_create):
@@ -168,7 +168,7 @@ class TestKeystoneV3(base.SenlinTestCase):
 
         # No matching record found
         res = kc.trust_get_by_trustor('USER_A', 'USER_C_ID')
-        self.assertEqual(None, res)
+        self.assertIsNone(res)
 
         get_calls = [mock.call(trustor_user_id='USER_A')]
         self.conn.identity.trusts.assert_has_calls(get_calls * 5)

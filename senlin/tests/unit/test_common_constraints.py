@@ -264,11 +264,11 @@ class TestConstraintsSchema(testtools.TestCase):
 
         data = {'key1': 'value1', 'key2': 2}
         spec = schema.Spec(spec_schema, data)
-        self.assertEqual(None, spec.validate())
+        self.assertIsNone(spec.validate())
 
         data = {'key2': 2}
         spec = schema.Spec(spec_schema, data)
-        self.assertEqual(None, spec.validate())
+        self.assertIsNone(spec.validate())
 
     def test_spec_validate_fail_value_type_incorrect(self):
         spec_schema = {
