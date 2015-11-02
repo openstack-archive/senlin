@@ -1,5 +1,18 @@
 #!/bin/bash
 
+if [[ -z $OS_AUTH_URL ]]; then
+  echo "This script must have proper environment variables exported."
+  echo "Please check if you have sourced senlinrc file or openrc file if "
+  echo "you are using devstack."
+  exit -1
+fi
+
+if [ $OS_USERNAME != 'admin' ]; then
+  echo "This script has to be executed as an 'admin' user."
+  echo "Please set environment variable OS_USERNAME to 'admin'."
+  exit -1
+fi
+
 if [ $# -ne 2 ]; then
   echo "Usage: `basename $0` <HOST_IP> <SERVICE_PASSWORD>"
   exit -1
