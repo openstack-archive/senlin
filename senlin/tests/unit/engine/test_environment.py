@@ -99,7 +99,7 @@ class TestEnvironment(base.SenlinTestCase):
         e = environment.Environment(env=env, is_global=True)
 
         self.assertEqual('v1', e.params['p1'])
-        self.assertEqual(True, e.params['p2'])
+        self.assertTrue(e.params['p2'])
         self.assertEqual('some.class', e.get_profile('PROFILE_FOO'))
         self.assertEqual('other.class', e.get_profile('PROFILE_BAR'))
         self.assertEqual('package.alpha', e.get_policy('POLICY_Alpha'))

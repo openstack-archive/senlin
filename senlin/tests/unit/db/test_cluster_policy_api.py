@@ -56,7 +56,7 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
                                      fields)
         bindings = db_api.cluster_policy_get_all(self.ctx, self.cluster.id)
         self.assertEqual(1, len(bindings))
-        self.assertEqual(True, bindings[0].enabled)
+        self.assertTrue(bindings[0].enabled)
 
         # This will succeed
         db_api.cluster_policy_detach(self.ctx, self.cluster.id, policy.id)
@@ -78,25 +78,25 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
                                      fields)
         bindings = db_api.cluster_policy_get_all(self.ctx, self.cluster.id)
         self.assertEqual(1, len(bindings))
-        self.assertEqual(True, bindings[0].enabled)
+        self.assertTrue(bindings[0].enabled)
 
         db_api.cluster_policy_update(self.ctx, self.cluster.id, policy.id,
                                      {'enabled': True})
         bindings = db_api.cluster_policy_get_all(self.ctx, self.cluster.id)
         self.assertEqual(1, len(bindings))
-        self.assertEqual(True, bindings[0].enabled)
+        self.assertTrue(bindings[0].enabled)
 
         db_api.cluster_policy_update(self.ctx, self.cluster.id, policy.id,
                                      {'enabled': False})
         bindings = db_api.cluster_policy_get_all(self.ctx, self.cluster.id)
         self.assertEqual(1, len(bindings))
-        self.assertEqual(False, bindings[0].enabled)
+        self.assertFalse(bindings[0].enabled)
 
         db_api.cluster_policy_update(self.ctx, self.cluster.id, policy.id,
                                      {'enabled': True})
         bindings = db_api.cluster_policy_get_all(self.ctx, self.cluster.id)
         self.assertEqual(1, len(bindings))
-        self.assertEqual(True, bindings[0].enabled)
+        self.assertTrue(bindings[0].enabled)
 
         # No policy binding found
         res = db_api.cluster_policy_update(self.ctx, self.cluster.id, 'BOGUS',
