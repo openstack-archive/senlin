@@ -1,17 +1,61 @@
+Senlin TODO Item List
+=====================
+This document records all workitems the team want to finish in a short-term
+(usually a development cycle which lasts 6 month). All jobs listed here are NOT
+in working progress which means developers can pick up any workitem they are
+interested in if they do have enough time to work on it. Developer should file
+a BluePrint in the launchpad to give a detailed description about their plan after
+deciding to work on a specific item. A patch should be proposed as well to remove
+related workitem from the TODO list after the BP gets approval.
+
 
 HIGH PRIORITY
 =============
 
+API
+---
+  - Make object creation/updating requests return code 202, since most of them
+    are done asynchronously in Senlin.
+  - Make object creation requests return both action_id and a location header set
+    to the URI of the resource to be created. This is a requirement from API WG.
+  - Correctly use 400 and 404 resp code following the guide from API WG.
+    https://review.openstack.org/#/c/221163/
+  - Find and fill gaps with API-WG besides the one we already identified.
+
+ENGINE
+------
+  - Lock breaker in multi-engine environment to pevent objects being locked by
+    dead engine.
+
 POLICY
 ------
-  - Investigate the impact of node-create and node-delete on certain policies.
-  - Implement a placement policy which supports cross-az/region node creation
-    with a simple algorithm. [Xinhui, Qiming]
   - Implement a deletion policy that supports cross-az/region node deleting.
+  - Investigate the impact of node-create and node-delete on certain policies.
 
-PROFILE
--------
-  - Enable node update support for Nova server. [Yanyan Hu]
+Receiver
+--------
+ - Provide another abstraction layer to generalize the design of receiver in
+   Senlin. Although we only support receiver type of webhook in current stage,
+   we do have the plan to support more receiver types like message queue.
+
+Health Management
+-----------------
+  - Provide an option for user to define the threshold of cluster health status
+    classification.
+  - Support do_check/do_recover in profiles.
+  - Support cluster/node health status refresh and expose API interface: By
+    default, 'cached' health status of Senlin objects will be provided to user.
+    Object health status will only be refreshed when user requests initiatively.
+
+TEST
+----
+  - Add unit test for engine/parser
+  - Complete unit test of senlinclient
+
+DOC
+-----
+  - Provide document(or docstring) for policy data passing for developers.
+  - Provide documentation for existing policies.
 
 
 MIDDLE PRIORITY
@@ -26,55 +70,33 @@ API
   - According to the proposal (https://review.openstack.org/#/c/234994/),
     actions are to follow a guideline. We may need to revise our actions API
     and those related to asynchronous operations.
-  - Add support to replace a cluster node with another node
-  - Make object creation requests return code 202, since most creation
-    are done asynchronously in Senlin.
-  - Make object creation requests return a location header set to the URI
-    of the resource to be created. This is a requirement from API WG.
-  - API resource names should not include underscores. A guideline from API
-    WG.
-  - Add support to have Senlin API run under Apache.
 
-DB
---
-  - The action data model is missing 'scheduled_start' and 'scheduled_stop'
-    fields, we may need these fields for scheduled action execution.
 
 ENGINE
 ------
-  - Add configuration option to enforce name uniqueness. There are reasonable
-    requirements for cluster/node names to be unique within a project. This
-    should be supported, maybe with the help from a name generator? [Yanyan Hu]
-
-  - Design and implement dynamical plugin loading mechanism that allows 
-    loading plugins from any paths
-
-  - Provide support to oslo.notification and allow nodes to receive and react
-    to those notifications accordingly.
-    [https://ask.openstack.org/en/question/46495/heat-autoscaling-adaptation-actions-on-existing-servers/]
-
-  - Allow actions to be paused and resumed.
-    This is important for some background actions such as health checking
-
-  - Add support to template_url for heat stack profile
-    Note: if template and template_url are both specified, use template
-    Need to refer to heat api test for testing heat profile
-
   - Revise start_action() in scheduler module so that it can handle cases when
     action_id specified is None. When ``action_id`` parameter is None, it
     means that the scheduler will pick a suitable READY action for execution.
 
-  - Add event logs wherever needed. Before that, we need a design on the
-    criteria for events to be emitted. [Partially done]
 
-OSLO
-----
-  - Add support to oslo_versionedobjects
+PROFILE
+-------
+  - Add support to template_url for heat stack profile. If template and template_url
+    are both specified, use template. Need to refer to heat api test for testing heat
+    profile.
+
 
 POLICY
 ------
-  - Scaling policy allowng a cluster to scale to existing nodes
-  - Health policy
+  - Provide support for watching all objects we created on behalf of users, like
+    loadbalancer which is created when attaching lb policy.
+  - Leverage other monitoring service for object health status monitoring.
+
+
+DB
+--
+  - Add db purge (senlin-manage) for deleting old db entries, especially for events
+    and actions because they accumulate very fast.
 
 
 LOW PRIORITY
@@ -82,16 +104,35 @@ LOW PRIORITY
 
 API
 ---
-
   - Allow forced deletion of objects (cluster, node, policy, profile). The
     current problem is due to the limitations of the HTTP DELETE requests. We
     need to investigate whether a DELETE verb can carry query strings.
 
-TEST
-----
-  - Add test case to engine/parser
+ENGINE
+------
+  - Allow actions to be paused and resumed. This is important for some background
+    actions such as health checking.
+  - Add support to replace a cluster node with another node.
+  - Provide support to oslo.notification and allow nodes to receive and react
+    to those notifications accordingly.
+    [https://ask.openstack.org/en/question/46495/heat-autoscaling-adaptation-actions-on-existing-servers/]
+
+POLICY
+------
+  - Scaling policy: allow a cluster to scale to existing nodes.
+  - Batching policy: create batchs for node creation/deletion/update.
+
+Trigger
+-------
+  - Monasca alarm based triggers.
+  - Zaqar queue based triggers.
+
+EVENT
+-----
+  - Complete event log generation.
 
 DOC
 -----
-  - Provide a sample conf file for customizing senlin options
-  - Provide documentation for all policies
+  - Provide a sample conf file for customizing senlin options.
+  - Give a sample end-to-end story to demonstrate how to use Senlin for autoscaling
+    scenario.
