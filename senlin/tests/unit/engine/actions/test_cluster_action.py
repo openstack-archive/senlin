@@ -1736,20 +1736,11 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Policy not specified.', res_msg)
 
-    @mock.patch.object(db_api, 'cluster_policy_detach')
-    @mock.patch.object(policy_base.Policy, 'load')
-    def test_do_detach_policy(self, mock_pload, mock_detach, mock_load):
+    def test_do_detach_policy(self, mock_load):
         cluster = mock.Mock()
         cluster.id = 'FAKE_CLUSTER'
+        cluster.detach_policy.return_value = True, 'Success'
         mock_load.return_value = cluster
-
-        policy = mock.Mock()
-        policy.id == 'FAKE_POLICY'
-        existing = mock.Mock()
-        existing.id = 'FAKE_POLICY'
-        cluster.policies = [existing]
-        policy.detach.return_value = (True, None)
-        mock_pload.return_value = policy
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.inputs = {'policy_id': 'FAKE_POLICY'}
@@ -1758,12 +1749,9 @@ class ClusterActionTest(base.SenlinTestCase):
         res_code, res_msg = action.do_detach_policy()
 
         self.assertEqual(action.RES_OK, res_code)
-        self.assertEqual('Policy detached.', res_msg)
-        policy.detach.assert_called_once_with(cluster)
-        mock_pload.assert_called_once_with(action.context, 'FAKE_POLICY')
-        mock_detach.assert_called_once_with(action.context, 'FAKE_CLUSTER',
-                                            'FAKE_POLICY')
-        cluster.remove_policy.assert_called_once_with(policy)
+        self.assertEqual('Success', res_msg)
+        cluster.detach_policy.assert_called_once_with(action.context,
+                                                      'FAKE_POLICY')
 
     def test_do_detach_policy_missing_policy(self, mock_load):
         cluster = mock.Mock()
@@ -1778,35 +1766,10 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Policy not specified.', res_msg)
 
-    def test_do_detach_policy_no_attached(self, mock_load):
+    def test_do_detach_policy_failed(self, mock_load):
         cluster = mock.Mock()
         cluster.id = 'FAKE_CLUSTER'
-        mock_load.return_value = cluster
-
-        policy = mock.Mock()
-        policy.id == 'FAKE_POLICY'
-        cluster.policies = []
-
-        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
-        action.inputs = {'policy_id': 'FAKE_POLICY'}
-
-        # do it
-        res_code, res_msg = action.do_detach_policy()
-
-        self.assertEqual(action.RES_OK, res_code)
-        self.assertEqual('Policy not attached.', res_msg)
-
-    @mock.patch.object(policy_base.Policy, 'load')
-    def test_do_detach_policy_failed_detach(self, mock_pload, mock_load):
-        cluster = mock.Mock()
-        cluster.id = 'FAKE_CLUSTER'
-        policy = mock.Mock()
-        policy.id == 'FAKE_POLICY'
-        policy.detach.return_value = False, 'Bad things happened.'
-        mock_pload.return_value = policy
-        existing = mock.Mock()
-        existing.id = 'FAKE_POLICY'
-        cluster.policies = [existing]
+        cluster.detach_policy.return_value = False, 'Failure.'
         mock_load.return_value = cluster
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
@@ -1816,7 +1779,9 @@ class ClusterActionTest(base.SenlinTestCase):
         res_code, res_msg = action.do_detach_policy()
 
         self.assertEqual(action.RES_ERROR, res_code)
-        self.assertEqual('Bad things happened.', res_msg)
+        self.assertEqual('Failure.', res_msg)
+        cluster.detach_policy.assert_called_once_with(action.context,
+                                                      'FAKE_POLICY')
 
     @mock.patch.object(db_api, 'cluster_policy_update')
     def test_do_update_policy(self, mock_update, mock_load):

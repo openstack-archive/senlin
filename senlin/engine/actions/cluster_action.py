@@ -607,24 +607,9 @@ class ClusterAction(base.Action):
         if not policy_id:
             return self.RES_ERROR, _('Policy not specified.')
 
-        # Check if policy has already been attached
-        found = False
-        for existing in self.cluster.policies:
-            if existing.id == policy_id:
-                found = True
-                break
-        if not found:
-            return self.RES_OK, _('Policy not attached.')
-
-        policy = policy_mod.Policy.load(self.context, policy_id)
-        res, data = policy.detach(self.cluster)
-        if not res:
-            return self.RES_ERROR, data
-
-        db_api.cluster_policy_detach(self.context, self.cluster.id, policy_id)
-
-        self.cluster.remove_policy(policy)
-        return self.RES_OK, _('Policy detached.')
+        res, reason = self.cluster.detach_policy(self.context, policy_id)
+        result = self.RES_OK if res else self.RES_ERROR
+        return result, reason
 
     def do_update_policy(self):
         """Handler for the CLUSTER_UPDATE_POLICY action.
