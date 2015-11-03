@@ -17,7 +17,7 @@ class TestProfileType(base.SenlinFunctionalTest):
 
     def test_get_profile_types(self):
         # Check that listing profile types works.
-        rel_url = 'profile_types'
+        rel_url = 'profile-types'
         status = [200]
         resp = self.client.api_request('GET', rel_url, resp_status=status)
         profile_types = resp.body['profile_types']

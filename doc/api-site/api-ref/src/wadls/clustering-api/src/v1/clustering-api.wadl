@@ -26,7 +26,7 @@
                         <para>The unique identifier of the tenant or account.</para>
                     </wadl:doc>
                 </param>
-                <resource id="profile_types" path="profile_types">
+                <resource id="profile_types" path="profile-types">
                     <method href="#profile_type_list"/>
                     <resource id="profile_schema" path="{profile_type}" >
                         <param name="profile_type" style="template" required="true"
@@ -38,7 +38,7 @@
                         <method href="#profile_type_schema"/>
                     </resource>
                 </resource>
-                <resource id="policy_types" path="policy_types">
+                <resource id="policy_types" path="policy-types">
                     <method href="#policy_type_list"/>
                     <resource id="policy_schema" path="{policy_type}">
                         <param name="policy_type" style="template" required="true"
@@ -50,7 +50,7 @@
                         <method href="#policy_type_schema"/>
                     </resource>
                 </resource>
-                <resource path="profiles" id="profiles">
+                <resource id="profiles" path="profiles">
                     <method href="#profile_list"/>
                     <method href="#profile_create"/>
                     <resource path="{profile_id}" id="profile_id">
@@ -64,7 +64,7 @@
                         <method href="#profile_delete"/>
                     </resource>
                 </resource>
-                <resource path="policies" id="policies">
+                <resource id="policies" path="policies">
                     <method href="#policy_list"/>
                     <method href="#policy_create"/>
                     <resource path="{policy_id}" id="policy_id">
@@ -81,7 +81,7 @@
                 <resource id="clusters" path="clusters">
                     <method href="#cluster_list"/>
                     <method href="#cluster_create"/>
-                    <resource path="{cluster_id}" id="cluster_id">
+                    <resource id="cluster_id" path="{cluster_id}">
                         <param name="cluster_id" style="template" required="true">
                             <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                                 <para>The unique identifier for a cluster.</para>
@@ -90,12 +90,12 @@
                         <method href="#cluster_get"/>
                         <method href="#cluster_update"/>
                         <method href="#cluster_delete"/>
-                        <resource path="action" id="cluster_actions">
+                        <resource id="cluster_actions" path="action">
                             <method href="#cluster_action"/>
                         </resource>
-                        <resource path="policies" id="cluster_policies">
+                        <resource id="cluster_policies" path="policies">
                             <method href="#cluster_policy_list"/>
-                            <resource path="{policy_id}" id="cluster_policy_id">
+                            <resource id="cluster_policy_id" path="{policy_id}">
                                 <param name="policy_id" style="template" required="true">
                                     <wadl:doc xlmns="http://docbook.org/ns/docbook" xml:lang="EN">
                                         The ID of a policy.
@@ -106,10 +106,10 @@
                         </resource>
                    </resource>
                 </resource>
-                <resource path="nodes" id="nodes">
+                <resource id="nodes" path="nodes">
                     <method href="#node_list"/>
                     <method href="#node_create"/>
-                    <resource path="{node_id}" id="node_id">
+                    <resource id="node_id" path="{node_id}">
                         <param name="node_id" style="template" required="true">
                             <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                                 The ID of a node.
@@ -118,14 +118,14 @@
                         <method href="#node_get"/>
                         <method href="#node_update"/>
                         <method href="#node_delete"/>
-                        <resource path="action" id="node_actions">
+                        <resource id="node_actions" path="action">
                             <method href="#node_action"/>
                         </resource>
                     </resource>
                 </resource>
-                <resource path="actions" id="actions">
+                <resource id="actions" path="actions">
                     <method href="#action_list"/>
-                    <resource path="{action_id}" id="action_id">
+                    <resource id="action_id" path="{action_id}">
                         <param name="action_id" style="template" required="true">
                             <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                                 <para>The unique ID of an action.</para>
@@ -134,10 +134,10 @@
                         <method href="#action_get"/>
                     </resource>
                 </resource>
-                <resource path="webhooks" id="webhooks">
+                <resource id="webhooks" path="webhooks">
                     <method href="#webhook_list"/>
                     <method href="#webhook_create"/>
-                    <resource path="{webhook_id}" id="webhook_id">
+                    <resource id="webhook_id" path="{webhook_id}">
                         <param name="webhook_id" style="template" required="true">
                             <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                                 <para>The unique ID of a webhook.</para>
@@ -145,14 +145,14 @@
                         </param>
                         <method href="#webhook_get"/>
                         <method href="#webhook_delete"/>
-                        <resource path="trigger" id="webhook_trigger">
+                        <resource id="webhook_trigger" path="trigger">
                             <method href="#webhook_trigger"/>
                         </resource>
                     </resource>
                 </resource>
-                <resource path="events" id="events">
+                <resource id="events" path="events">
                     <method href="#event_list"/>
-                    <resource path="{event_id}" id="event_id">
+                    <resource id="event_id" path="{event_id}">
                         <param name="event_id" style="template" required="true">
                             <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                                 <para>The unique ID of an event.</para>
@@ -161,7 +161,7 @@
                         <method href="#event_get"/>
                     </resource>
                 </resource>
-                <resource path="build_info" id="build_info">
+                <resource id="build_info" path="build-info">
                     <method href="#build_info_get"/>
                 </resource>
             </resource>

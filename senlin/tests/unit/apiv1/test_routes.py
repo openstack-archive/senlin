@@ -36,7 +36,7 @@ class RoutesTest(base.SenlinTestCase):
     def test_profile_types_handling(self):
         self.assertRoute(
             self.m,
-            '/aaaa/profile_types',
+            '/aaaa/profile-types',
             'GET',
             'index',
             'ProfileTypeController',
@@ -46,7 +46,7 @@ class RoutesTest(base.SenlinTestCase):
 
         self.assertRoute(
             self.m,
-            '/aaaa/profile_types/test_type',
+            '/aaaa/profile-types/test_type',
             'GET',
             'schema',
             'ProfileTypeController',
@@ -112,7 +112,7 @@ class RoutesTest(base.SenlinTestCase):
     def test_policy_types_handling(self):
         self.assertRoute(
             self.m,
-            '/aaaa/policy_types',
+            '/aaaa/policy-types',
             'GET',
             'index',
             'PolicyTypeController',
@@ -122,7 +122,7 @@ class RoutesTest(base.SenlinTestCase):
 
         self.assertRoute(
             self.m,
-            '/aaaa/policy_types/test_type',
+            '/aaaa/policy-types/test_type',
             'GET',
             'schema',
             'PolicyTypeController',
@@ -374,7 +374,7 @@ class RoutesTest(base.SenlinTestCase):
     def test_build_info(self):
         self.assertRoute(
             self.m,
-            '/aaaa/build_info',
+            '/aaaa/build-info',
             'GET',
             'build_info',
             'BuildInfoController',

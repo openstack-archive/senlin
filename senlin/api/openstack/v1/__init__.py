@@ -41,11 +41,11 @@ class API(wsgi.Router):
                               path_prefix="/{tenant_id}") as sub_mapper:
 
             sub_mapper.connect("profile_type_index",
-                               "/profile_types",
+                               "/profile-types",
                                action="index",
                                conditions={'method': 'GET'})
             sub_mapper.connect("profile_type_schema",
-                               "/profile_types/{type_name}",
+                               "/profile-types/{type_name}",
                                action="schema",
                                conditions={'method': 'GET'})
 
@@ -81,11 +81,11 @@ class API(wsgi.Router):
                               path_prefix="/{tenant_id}") as sub_mapper:
             # Policy collection
             sub_mapper.connect("policy_type_index",
-                               "/policy_types",
+                               "/policy-types",
                                action="index",
                                conditions={'method': 'GET'})
             sub_mapper.connect("policy_type_schema",
-                               "/policy_types/{type_name}",
+                               "/policy-types/{type_name}",
                                action="schema",
                                conditions={'method': 'GET'})
 
@@ -275,7 +275,7 @@ class API(wsgi.Router):
                               path_prefix="/{tenant_id}") as sub_mapper:
 
             sub_mapper.connect("build_info",
-                               "/build_info",
+                               "/build-info",
                                action="build_info",
                                conditions={'method': 'GET'})
 
