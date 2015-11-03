@@ -11,6 +11,7 @@
 # under the License.
 
 import base64
+import copy
 
 import mock
 from oslo_config import cfg
@@ -445,18 +446,128 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertFalse(res)
         nc.server_delete.assert_called_once_with('FAKE_ID')
 
-    def test_do_update_successful(self):
+    @mock.patch.object(server.ServerProfile, '_update_network')
+    def test_do_update_network_successful_no_definition_overlap(
+            self, mock_update_network):
+
+        mock_update_network.return_value = True
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = mock.Mock()
 
         obj = mock.Mock()
         obj.physical_id = 'FAKE_ID'
 
-        new_profile = mock.Mock()
+        networks_delete = [{
+            'port': 'FAKE_PORT',
+            'fixed-ip': 'FAKE_IP',
+            'network': 'FAKE_NET',
+        }]
+        new_networks = [{
+            'port': 'FAKE_PORT_NEW',
+            'fixed-ip': 'FAKE_IP_NEW',
+            'network': 'FAKE_NET_NEW',
+        }]
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['networks'] = new_networks
+        new_profile = server.ServerProfile('t', new_spec)
 
-        # Test path for an existing server
         res = profile.do_update(obj, new_profile)
         self.assertTrue(res)
+        mock_update_network.assert_called_with(obj, new_networks,
+                                               networks_delete)
+
+    @mock.patch.object(server.ServerProfile, '_update_network')
+    def test_do_update_network_successful_definition_overlap(
+            self, mock_update_network):
+
+        mock_update_network.return_value = True
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = mock.Mock()
+
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+
+        networks_delete = [{
+            'port': 'FAKE_PORT',
+            'fixed-ip': 'FAKE_IP',
+            'network': 'FAKE_NET',
+        }]
+        new_networks = [{
+            'port': 'FAKE_PORT_NEW',
+            'fixed-ip': 'FAKE_IP_NEW',
+            'network': 'FAKE_NET_NEW',
+        }]
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['networks'] = [new_networks[0],
+                                              networks_delete[0]]
+        new_profile = server.ServerProfile('t', new_spec)
+
+        res = profile.do_update(obj, new_profile)
+        self.assertTrue(res)
+        mock_update_network.assert_called_with(obj, new_networks, [])
+
+    def test_update_network(self):
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+        novaclient = mock.Mock()
+        neutronclient = mock.Mock()
+        server_obj = mock.Mock()
+        net1 = mock.Mock()
+        net2 = mock.Mock()
+        net3 = mock.Mock()
+        net4 = mock.Mock()
+        net1.id = 'net1'
+        net2.id = 'net2'
+        net3.id = 'net3'
+        net4.id = 'net4'
+        existing_ports = [
+            {
+                'port_id': 'port1',
+                'net_id': 'net1',
+                'fixed_ips': [{'subnet_id': 'subnet1', 'ip_address': 'ip1'}]
+            },
+            {
+                'port_id': 'port2',
+                'net_id': 'net1',
+                'fixed_ips': [{'subnet_id': 'subnet1',
+                               'ip_address': 'ip-random2'}]
+            },
+            {
+                'port_id': 'port3',
+                'net_id': 'net2',
+                'fixed_ips': [{'subnet_id': 'subnet2', 'ip_address': 'ip3'}]
+            },
+        ]
+        deleted_networks = [
+            {'fixed-ip': 'ip1', 'network': 'net1', 'port': None},
+            {'fixed-ip': None, 'network': 'net1', 'port': None},
+            {'fixed-ip': None, 'network': None, 'port': 'port3'}
+        ]
+        created_networks = [
+            {'fixed-ip': 'ip2', 'network': 'net1', 'port': None},
+            {'fixed-ip': None, 'network': 'net2', 'port': None},
+            {'fixed-ip': None, 'network': None, 'port': 'port4'}
+        ]
+        novaclient.server_get.return_value = server_obj
+        novaclient.server_interface_list.return_value = existing_ports
+        neutronclient.network_get.side_effect = [net1, net1,
+                                                 net1, net2]
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = novaclient
+        profile._neutronclient = neutronclient
+        profile._update_network(obj, created_networks, deleted_networks)
+        calls = [mock.call('port1', server_obj),
+                 mock.call('port3', server_obj),
+                 mock.call('port2', server_obj)]
+        novaclient.server_interface_delete.assert_has_calls(calls)
+        calls = [
+            mock.call(
+                server_obj, net_id='net1', fixed_ips=[{'ip_address': 'ip2'}]),
+            mock.call(server_obj, net_id='net2'),
+            mock.call(server_obj, port_id='port4'),
+        ]
+        novaclient.server_interface_create.assert_has_calls(calls)
 
     def test_do_update_no_physical_id(self):
         profile = server.ServerProfile('t', self.spec)

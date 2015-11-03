@@ -275,48 +275,46 @@ class TestNovaV2(base.SenlinTestCase):
         self.assertIsNone(res)
 
     def test_server_interface_create(self):
+        server = mock.Mock()
         d = nova_v2.NovaClient(self.conn_params)
-        d.server_interface_create(name='foo')
+        d.server_interface_create(server, name='foo')
         self.compute.create_server_interface.assert_called_once_with(
-            name='foo')
+            server, name='foo')
 
     def test_server_interface_get(self):
+        server = mock.Mock()
         d = nova_v2.NovaClient(self.conn_params)
-        d.server_interface_get('foo')
-        self.compute.get_server_interface.assert_called_once_with('foo')
+        d.server_interface_get(server, 'foo')
+        self.compute.get_server_interface.assert_called_once_with(server,
+                                                                  'foo')
 
     def test_server_interface_list(self):
         d = nova_v2.NovaClient(self.conn_params)
-        d.server_interface_list()
-        self.compute.server_interfaces.assert_called_once_with()
+        server = mock.Mock()
+        d.server_interface_list(server)
+        self.compute.server_interfaces.assert_called_once_with(server)
         self.compute.server_interfaces.reset_mock()
 
-        d.server_interface_list(k='v')
-        self.compute.server_interfaces.assert_called_once_with(k='v')
+        d.server_interface_list(server, k='v')
+        self.compute.server_interfaces.assert_called_once_with(server, k='v')
         self.compute.server_interfaces.reset_mock()
-
-    def test_server_interface_update(self):
-        d = nova_v2.NovaClient(self.conn_params)
-        attrs = {'mem': 2}
-        d.server_interface_update('fakeid', **attrs)
-        self.compute.update_server_interface.assert_called_once_with(
-            'fakeid', **attrs)
 
     def test_server_interface_delete(self):
+        server = mock.Mock()
         d = nova_v2.NovaClient(self.conn_params)
-        d.server_interface_delete('foo', True)
+        d.server_interface_delete('foo', server, True)
         self.compute.delete_server_interface.assert_called_once_with(
-            'foo', True)
+            'foo', server, True)
         self.compute.delete_server_interface.reset_mock()
 
-        d.server_interface_delete('foo', False)
+        d.server_interface_delete('foo', server, False)
         self.compute.delete_server_interface.assert_called_once_with(
-            'foo', False)
+            'foo', server, False)
         self.compute.delete_server_interface.reset_mock()
 
-        d.server_interface_delete('foo')
+        d.server_interface_delete('foo', server)
         self.compute.delete_server_interface.assert_called_once_with(
-            'foo', True)
+            'foo', server, True)
 
     def test_server_ip_list(self):
         d = nova_v2.NovaClient(self.conn_params)

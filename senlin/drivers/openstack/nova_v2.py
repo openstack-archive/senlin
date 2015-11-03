@@ -133,24 +133,21 @@ class NovaClient(base.DriverBase):
         return
 
     @sdk.translate_exception
-    def server_interface_create(self, **attrs):
-        return self.conn.compute.create_server_interface(**attrs)
+    def server_interface_create(self, server, **attrs):
+        return self.conn.compute.create_server_interface(server, **attrs)
 
     @sdk.translate_exception
-    def server_interface_get(self, value):
-        return self.conn.compute.get_server_interface(value)
+    def server_interface_get(self, value, server):
+        return self.conn.compute.get_server_interface(value, server)
 
     @sdk.translate_exception
-    def server_interface_list(self, **query):
-        return self.conn.compute.server_interfaces(**query)
+    def server_interface_list(self, server, **query):
+        return self.conn.compute.server_interfaces(server, **query)
 
     @sdk.translate_exception
-    def server_interface_update(self, value, **attrs):
-        return self.conn.compute.update_server_interface(value, **attrs)
-
-    @sdk.translate_exception
-    def server_interface_delete(self, value, ignore_missing=True):
-        return self.conn.compute.delete_server_interface(value, ignore_missing)
+    def server_interface_delete(self, value, server, ignore_missing=True):
+        return self.conn.compute.delete_server_interface(value, server,
+                                                         ignore_missing)
 
     @sdk.translate_exception
     def server_ip_list(self, **query):
