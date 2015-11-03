@@ -142,7 +142,7 @@ class ScalingPolicy(base.Policy):
         count = self._calculate_adjustment_count(current_size)
 
         # Use action input if count is provided
-        count = action.inputs.get('count', count)
+        count = int(action.inputs.get('count', count))
 
         if count <= 0:
             status = base.CHECK_ERROR

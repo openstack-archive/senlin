@@ -223,6 +223,18 @@ class TestScalingPolicy(base.SenlinTestCase):
         action.data.update.assert_called_with(pd)
         action.store.assert_called_with(self.context)
 
+        # count value is string rather than integer
+        action.inputs = {'count': '1'}
+        policy.pre_op(self.cluster['id'], action)
+        pd = {
+            'deletion': {
+                'count': 1,
+            },
+            'reason': 'Scaling request validated.',
+            'status': policy_base.CHECK_OK,
+        }
+        action.data.update.assert_called_with(pd)
+
     def test_pre_op_fail_negative_count(self):
         action = mock.Mock()
         action.context = self.context
