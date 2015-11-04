@@ -10,10 +10,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher as rpc
 import six
 
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.engine import environment
 from senlin.engine import parser
 from senlin.engine import service
@@ -58,6 +60,20 @@ class TriggerTest(base.SenlinTestCase):
         self.assertIsNotNone(result['created_time'])
         self.assertIsNone(result['updated_time'])
         self.assertIsNone(result['deleted_time'])
+
+    def test_trigger_create_already_exists(self):
+        cfg.CONF.set_override('name_unique', True)
+        spec = parser.simple_parse(trigger_spec)
+        result = self.eng.trigger_create(self.ctx, 't-1', spec)
+        self.assertIsNotNone(result)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.trigger_create,
+                               self.ctx, 't-1', spec)
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(_("The request is malformed: The trigger (t-1) "
+                           "already exists."),
+                         six.text_type(ex.exc_info[1]))
 
     def test_trigger_create_with_parameters(self):
         spec = parser.simple_parse(trigger_spec)

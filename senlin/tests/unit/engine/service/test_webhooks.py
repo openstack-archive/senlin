@@ -11,12 +11,14 @@
 # under the License.
 
 import mock
+from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher as rpc
 from oslo_serialization import jsonutils
 import six
 
 from senlin.common import consts
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.common import utils as common_utils
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine.actions import base as action_mod
@@ -99,6 +101,31 @@ class WebhookTest(base.SenlinTestCase):
         self.assertIsNone(webhook['deleted_time'])
         self.assertIsNotNone(webhook['id'])
         self.assertIsNotNone(webhook['created_time'])
+
+    @mock.patch.object(webhook_mod.Webhook, 'generate_url')
+    @mock.patch.object(common_utils, 'encrypt')
+    def test_webhook_create_already_exists(self, mock_encrypt, mock_url):
+        cfg.CONF.set_override('name_unique', True)
+        mock_url.return_value = 'test-url', 'test-key'
+        mock_encrypt.return_value = 'secret text', 'test-key'
+
+        cluster = self._create_cluster('c1')
+        obj_id = cluster['id']
+        obj_type = 'cluster'
+        action = consts.CLUSTER_SCALE_OUT
+
+        webhook = self.eng.webhook_create(self.ctx, obj_id, obj_type,
+                                          action, name='webhook-1')
+        self.assertIsNotNone(webhook)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.webhook_create, self.ctx,
+                               obj_id, obj_type, action,
+                               name='webhook-1')
+
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(_("The request is malformed: The webhook (webhook-1)"
+                           " already exists."),
+                         six.text_type(ex.exc_info[1]))
 
     def test_webhook_create_obj_type_unsupported(self):
         cluster = self._create_cluster('c1')

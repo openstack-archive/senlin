@@ -201,6 +201,12 @@ class EngineService(service.Service):
     @request_context
     def profile_create(self, context, name, spec, permission=None,
                        metadata=None):
+        if cfg.CONF.name_unique:
+            if db_api.profile_get_by_name(context, name):
+                msg = _("The profile (%(name)s) already exists."
+                        ) % {"name": name}
+                raise exception.SenlinBadRequest(msg=msg)
+
         type_name, version = schema.get_spec_version(spec)
         plugin = environment.global_env().get_profile(type_name)
 
@@ -346,6 +352,12 @@ class EngineService(service.Service):
 
     @request_context
     def policy_create(self, context, name, spec, level=None, cooldown=None):
+        if cfg.CONF.name_unique:
+            if db_api.policy_get_by_name(context, name):
+                msg = _("The policy (%(name)s) already exists."
+                        ) % {"name": name}
+                raise exception.SenlinBadRequest(msg=msg)
+
         if level is None:
             level = policy_base.SHOULD
         else:
@@ -511,6 +523,12 @@ class EngineService(service.Service):
     def cluster_create(self, context, name, desired_capacity, profile_id,
                        min_size=None, max_size=None, parent=None,
                        metadata=None, timeout=None):
+        if cfg.CONF.name_unique:
+            if db_api.cluster_get_by_name(context, name):
+                msg = _("The cluster (%(name)s) already exists."
+                        ) % {"name": name}
+                raise exception.SenlinBadRequest(msg=msg)
+
         LOG.info(_LI("Creating cluster '%s'."), name)
         db_profile = self.profile_find(context, profile_id)
 
@@ -1016,6 +1034,10 @@ class EngineService(service.Service):
     @request_context
     def node_create(self, context, name, profile_id, cluster_id=None,
                     role=None, metadata=None):
+        if cfg.CONF.name_unique:
+            if db_api.node_get_by_name(context, name):
+                msg = _("The node (%(name)s) already exists.") % {"name": name}
+                raise exception.SenlinBadRequest(msg=msg)
 
         LOG.info(_LI("Creating node '%s'."), name)
 
@@ -1420,6 +1442,12 @@ class EngineService(service.Service):
     @request_context
     def webhook_create(self, context, obj_id, obj_type, action,
                        credential=None, params=None, name=None):
+        if cfg.CONF.name_unique:
+            if name and db_api.webhook_get_by_name(context, name):
+                msg = _("The webhook (%(name)s) already exists."
+                        ) % {"name": name}
+                raise exception.SenlinBadRequest(msg=msg)
+
         LOG.info(_LI("Creating webhook '%(n)s': \n"
                      "  type: %(t)s\n  id: %(i)s\n  action: %(a)s."),
                  {'n': name, 'i': obj_id, 't': obj_type, 'a': action})
@@ -1587,6 +1615,12 @@ class EngineService(service.Service):
     @request_context
     def trigger_create(self, context, name, spec, description=None,
                        enabled=None, state=None, severity=None):
+        if cfg.CONF.name_unique:
+            if db_api.trigger_get_by_name(context, name):
+                msg = _("The trigger (%(name)s) already exists."
+                        ) % {"name": name}
+                raise exception.SenlinBadRequest(msg=msg)
+
         type_name, version = schema.get_spec_version(spec)
         LOG.info(_LI("Creating trigger %(type)s: '%(name)s'."),
                  {'type': type_name, 'name': name})

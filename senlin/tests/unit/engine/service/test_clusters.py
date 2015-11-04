@@ -11,6 +11,7 @@
 # under the License.
 
 import mock
+from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher as rpc
 import six
 
@@ -89,6 +90,22 @@ class ClusterTest(base.SenlinTestCase):
         notify.assert_called_once_with(action_id=action_id)
 
     @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_create_already_exists(self, notify):
+        cfg.CONF.set_override('name_unique', True)
+        result = self.eng.cluster_create(self.ctx, 'c-1', 0,
+                                         self.profile['id'])
+        self.assertIsNotNone(result)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_create,
+                               self.ctx, 'c-1', 0,
+                               self.profile['id'])
+
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(_("The request is malformed: The cluster (c-1) "
+                           "already exists."),
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_create_with_timeout(self, notify):
         result = self.eng.cluster_create(self.ctx, 'c-1', 0,
                                          self.profile['id'],
@@ -100,7 +117,7 @@ class ClusterTest(base.SenlinTestCase):
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_create,
-                               self.ctx, 'c-1', 0,
+                               self.ctx, 'c-2', 0,
                                self.profile['id'],
                                timeout='N/A')
 
@@ -117,7 +134,7 @@ class ClusterTest(base.SenlinTestCase):
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_create,
-                               self.ctx, 'c-1', 'Big',
+                               self.ctx, 'c-2', 'Big',
                                self.profile['id'])
 
         self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
@@ -581,7 +598,7 @@ class ClusterTest(base.SenlinTestCase):
             'properties': {'INT': 10, 'STR': 'string'},
         }
         new_profile = self.eng.profile_create(
-            self.ctx, 'p-test', new_spec, permission='1111')
+            self.ctx, 'p-test-2', new_spec, permission='1111')
 
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         ex = self.assertRaises(rpc.ExpectedException,
@@ -800,7 +817,7 @@ class ClusterTest(base.SenlinTestCase):
             'properties': {'INT': 10, 'STR': 'string'},
         }
         new_profile = self.eng.profile_create(
-            self.ctx, 'p-test', new_spec, permission='1111')
+            self.ctx, 'p-test-2', new_spec, permission='1111')
         nodes = self._prepare_nodes(self.ctx, count=1,
                                     profile_id=new_profile['id'])
 
