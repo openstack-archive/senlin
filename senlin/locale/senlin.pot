@@ -1287,7 +1287,7 @@ msgstr ""
 
 #: senlin/policies/deletion_policy.py:90
 msgid ""
-"Whethere a node should be completely destroyed after deletion. Default to"
+"Whether a node should be completely destroyed after deletion. Default to"
 " True"
 msgstr ""
 

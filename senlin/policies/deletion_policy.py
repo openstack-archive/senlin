@@ -89,7 +89,7 @@ class DeletionPolicy(base.Policy):
             ]
         ),
         DESTROY_AFTER_DELETION: schema.Boolean(
-            _('Whethere a node should be completely destroyed after '
+            _('Whether a node should be completely destroyed after '
               'deletion. Default to True'),
             default=True,
         ),
