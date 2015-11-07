@@ -114,7 +114,7 @@ class ClusterPolicy(object):
 
     def cooldown_inprogress(self):
         if self.cooldown and self.last_op:
-            if timeutils.is_older_than(self.last_op, self.cooldown):
+            if not timeutils.is_older_than(self.last_op, self.cooldown):
                 return True
 
         return False

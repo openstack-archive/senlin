@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from datetime import timedelta
 from oslo_utils import timeutils
 import six
 
@@ -200,3 +201,16 @@ class TestClusterPolicy(base.SenlinTestCase):
         }
 
         self.assertEqual(expected, cp.to_dict())
+
+    def test_cooldown_inprogress(self):
+        values = {
+            'priority': 12,
+            'cooldown': 34,
+            'level': 56,
+            'enabled': True,
+            'last_op': timeutils.utcnow(),
+        }
+        cp = cpm.ClusterPolicy('fake-cluster', 'fake-policy', **values)
+        self.assertTrue(cp.cooldown_inprogress())
+        cp.last_op -= timedelta(hours=1)
+        self.assertFalse(cp.cooldown_inprogress())
