@@ -14,9 +14,18 @@ that can be picked up by any developer who is willing to do it, while this
 document records more general requirements that needs at least a draft design
 before being worked on.
 
+
 -------------
 High Priority
 -------------
+
+Support Scheduled Actions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is a request to trigger some actions at a specified time. One typical use
+case is to scale up a cluster before weekend or promotion season as a
+preparation for the coming burst of workloads.
+
 
 Event Listener
 ^^^^^^^^^^^^^^
@@ -46,15 +55,19 @@ partial failures, communication latencies, concurrency, consistency etc. There
 are hardware/software failures expected. Senlin must remain operational in the
 face of such failures.
 
+
 ---------------
 Middle Priority
 ---------------
 
-Horizon Plugin
-^^^^^^^^^^^^^^
 
-Senlin needs a plug-in at the OpenStack dashboard side so that users can
-interact with the service in a more user-friendly way.
+Multi-cloud Support
+^^^^^^^^^^^^^^^^^^^
+
+In some case, user could have the demand to create/scale cluster cross different
+clouds. Therefore, Senlin is supposed to have the ability to manage nodes which
+span cross multiple clouds within the same cluster. Support from both profile
+and policy layers are necessary for providing this ability.
 
 
 User Defined Actions
@@ -64,14 +77,6 @@ Actions in Senlin are mostly built-in ones at present. There are requirements
 to incorporate Shell scripts and/or other structured software configuration
 tools into the whole picture. One of the option is to provide a easy way for
 Senlin to work with Ansible, for example.
-
-
-CoreOS based Container Support
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To Senlin, CoreOS is just another VM image. However, CoreOS provides some
-builtin support to Container/Docker and it provides clustering facility for
-user applications.
 
 
 Define and Enforce Quotas
@@ -99,6 +104,19 @@ potential tradeoff is to introduce an option for users to customize the size
 of batches when large number of DB requests pouring in.
 
 
+API versioning support
+^^^^^^^^^^^^^^^^^^^^^^
+
+This support can help to improve the stability and compatibility of Senlin API
+interface. We can learn some experience from what Nova has done for providing
+API version control.
+
+
+------------
+Low Priority
+------------
+
+
 Use Barbican to Store Secrets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -124,9 +142,13 @@ necessarily have control over the admin plane, he or she does have a right to
 express their requirements in an abstract manner.
 
 
-------------
-Low Priority
-------------
+CoreOS based Container Support
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To Senlin, CoreOS is just another VM image. However, CoreOS provides some
+builtin support to Container/Docker and it provides clustering facility for
+user applications.
+
 
 Vertical Scaling
 ^^^^^^^^^^^^^^^^
@@ -179,14 +201,6 @@ needs to provide a generic definition of 'suspend' and 'resume'. It needs to
 be aware of whether the profile and the driver support such operations.
 
 
-Support to Scheduled Actions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-This is a request to trigger some actions at a specified time. One typical use
-case is to scale up a cluster before weekend or promotion season as a
-preparation for the coming burst of workloads.
-
-
 Interaction with Congress
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -201,3 +215,44 @@ Integration with Tooz
 
 There is potential requirement to do a better coordination between nodes in a
 cluster. That is where the Tooz project can be leveraged.
+
+
+Run Senlin API under Apache
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Add support to have Senlin API run under Apache.
+
+
+Baremetal Support
+^^^^^^^^^^^^^^^^^
+
+Managing baremetal cluster is a very common requirement from user. It is
+reasonable for Senlin to support it by talking with service like Ironic.
+
+
+Container/Docker support
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Using Senlin to manage Container/Docker cluster is possible. We should
+provide related support for users who have this requirement.
+
+
+TOSCA support
+^^^^^^^^^^^^^
+
+Provide TOSCA support in Senlin(maybe reuse heat-translator/tosca-parser?)
+
+
+Versioned Object Support
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+oslo.versionedobjects is a lib provides a generic versioned object model that
+is RPC-friendly, with inbuilt serialization, field typing, and remotable method
+calls. We can use it to promote the upgrading capatibility of Senlin service.
+
+
+Dynamic Plugin Loading
+^^^^^^^^^^^^^^^^^^^^^^
+
+Design and implement dynamic plugin loading mechanism that allows loading
+plugins from any paths.
