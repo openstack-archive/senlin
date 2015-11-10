@@ -608,18 +608,51 @@ class TestCluster(base.SenlinTestCase):
         mock_load.assert_called_once_with(self.context, 'FAKE_POLICY')
         policy.detach.assert_called_once_with(cluster)
 
-    def test_cluster_add_policy(self):
+    @mock.patch.object(db_api, 'cluster_policy_update')
+    def test_update_policy(self, mock_update):
         cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
                                    project=self.context.project)
-        # empty
-        self.assertEqual([], cluster.policies)
+        cluster.id = 'FAKE_CLUSTER'
+        existing = mock.Mock()
+        existing.id = 'FAKE_POLICY'
+        cluster.rt['policies'] = [existing]
+        values = {
+            'cooldown': 10,
+            'level': 20,
+            'priority': 30,
+            'enabled': False
+        }
+        res, reason = cluster.update_policy(self.context, 'FAKE_POLICY',
+                                            **values)
+        self.assertTrue(res)
+        self.assertEqual('Policy updated.', reason)
+        mock_update.assert_called_once_with(
+            self.context, 'FAKE_CLUSTER', 'FAKE_POLICY',
+            {'cooldown': 10, 'level': 20, 'priority': 30, 'enabled': False})
 
-        # attach one policy (for initialize the policies list)
-        policy = mock.Mock()
-        cluster.add_policy(policy)
-        self.assertEqual([policy], cluster.policies)
+    def test_update_policy_not_attached(self):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+        cluster.rt['policies'] = []
 
-        # attach another policy
-        policy_another = mock.Mock()
-        cluster.add_policy(policy_another)
-        self.assertEqual([policy, policy_another], cluster.policies)
+        # do it
+        values = {'level': 20}
+        res, reason = cluster.update_policy(self.context, 'FAKE_POLICY',
+                                            **values)
+        self.assertFalse(res)
+        self.assertEqual('Policy not attached.', reason)
+
+    def test_update_policy_no_update_needed(self):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+        existing = mock.Mock()
+        existing.id = 'FAKE_POLICY'
+        cluster.rt['policies'] = [existing]
+
+        # do it
+        values = {}
+        res, reason = cluster.update_policy(self.context, 'FAKE_POLICY',
+                                            **values)
+
+        self.assertTrue(res)
+        self.assertEqual('No update is needed.', reason)

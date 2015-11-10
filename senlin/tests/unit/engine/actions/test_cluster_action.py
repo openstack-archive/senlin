@@ -1783,37 +1783,49 @@ class ClusterActionTest(base.SenlinTestCase):
         cluster.detach_policy.assert_called_once_with(action.context,
                                                       'FAKE_POLICY')
 
-    @mock.patch.object(db_api, 'cluster_policy_update')
-    def test_do_update_policy(self, mock_update, mock_load):
+    def test_do_update_policy(self, mock_load):
         cluster = mock.Mock()
         cluster.id = 'FAKE_CLUSTER'
-
-        existing = mock.Mock()
-        existing.id = 'FAKE_POLICY'
-        cluster.policies = [existing]
+        cluster.update_policy.return_value = True, 'Success.'
         mock_load.return_value = cluster
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.inputs = {
             'policy_id': 'FAKE_POLICY',
-            'cooldown': 10,
-            'level': 20,
-            'priority': 30,
-            'enabled': False,
+            'foo': 'bar',
         }
 
         # do it
         res_code, res_msg = action.do_update_policy()
 
         self.assertEqual(action.RES_OK, res_code)
-        self.assertEqual('Policy updated.', res_msg)
-        mock_update.assert_called_once_with(
-            action.context, 'FAKE_CLUSTER', 'FAKE_POLICY',
-            {'cooldown': 10, 'level': 20, 'priority': 30, 'enabled': False})
+        self.assertEqual('Success.', res_msg)
+        cluster.update_policy.assert_called_once_with(
+            action.context, 'FAKE_POLICY', foo='bar')
+
+    def test_do_update_policy_failed_update(self, mock_load):
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        cluster.update_policy.return_value = False, 'Something is wrong.'
+        mock_load.return_value = cluster
+
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
+        action.inputs = {
+            'policy_id': 'FAKE_POLICY',
+            'foo': 'bar',
+        }
+
+        # do it
+        res_code, res_msg = action.do_update_policy()
+
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('Something is wrong.', res_msg)
+        cluster.update_policy.assert_called_once_with(
+            action.context, 'FAKE_POLICY', foo='bar')
 
     def test_do_update_policy_missing_policy(self, mock_load):
         cluster = mock.Mock()
-        cluster.id = 'CID'
+        cluster.id = 'FAKE_CLUSTER'
         mock_load.return_value = cluster
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.inputs = {'priority': 30}
@@ -1823,40 +1835,6 @@ class ClusterActionTest(base.SenlinTestCase):
 
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Policy not specified.', res_msg)
-
-    def test_do_update_policy_not_attached(self, mock_load):
-        cluster = mock.Mock()
-        cluster.policies = []
-        mock_load.return_value = cluster
-        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
-        action.inputs = {
-            'policy_id': 'FAKE_POLICY',
-            'level': 20,
-        }
-
-        # do it
-        res_code, res_msg = action.do_update_policy()
-
-        self.assertEqual(action.RES_ERROR, res_code)
-        self.assertEqual('Policy not attached.', res_msg)
-
-    def test_do_update_policy_no_update_needed(self, mock_load):
-        cluster = mock.Mock()
-        existing = mock.Mock()
-        existing.id = 'FAKE_POLICY'
-        cluster.policies = [existing]
-        mock_load.return_value = cluster
-
-        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
-        action.inputs = {
-            'policy_id': 'FAKE_POLICY',
-        }
-
-        # do it
-        res_code, res_msg = action.do_update_policy()
-
-        self.assertEqual(action.RES_OK, res_code)
-        self.assertEqual('No update is needed.', res_msg)
 
     @mock.patch.object(base_action.Action, 'policy_check')
     def test__execute(self, mock_check, mock_load):

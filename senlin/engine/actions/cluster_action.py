@@ -616,39 +616,13 @@ class ClusterAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        policy_id = self.inputs.get('policy_id', None)
+        policy_id = self.inputs.pop('policy_id', None)
         if not policy_id:
             return self.RES_ERROR, _('Policy not specified.')
-
-        # Check if policy has already been attached
-        found = False
-        for existing in self.cluster.policies:
-            if existing.id == policy_id:
-                found = True
-                break
-        if not found:
-            return self.RES_ERROR, _('Policy not attached.')
-
-        values = {}
-        cooldown = self.inputs.get('cooldown')
-        if cooldown is not None:
-            values['cooldown'] = cooldown
-        level = self.inputs.get('level')
-        if level is not None:
-            values['level'] = level
-        priority = self.inputs.get('priority')
-        if priority is not None:
-            values['priority'] = priority
-        enabled = self.inputs.get('enabled')
-        if enabled is not None:
-            values['enabled'] = bool(enabled)
-        if not values:
-            return self.RES_OK, _('No update is needed.')
-
-        db_api.cluster_policy_update(self.context, self.cluster.id, policy_id,
-                                     values)
-
-        return self.RES_OK, _('Policy updated.')
+        res, reason = self.cluster.update_policy(self.context, policy_id,
+                                                 **self.inputs)
+        result = self.RES_OK if res else self.RES_ERROR
+        return result, reason
 
     def _execute(self, **kwargs):
         """Private method for action execution.
