@@ -32,12 +32,6 @@ POLICY
   - Implement a deletion policy that supports cross-az/region node deleting.
   - Investigate the impact of node-create and node-delete on certain policies.
 
-Receiver
---------
- - Provide another abstraction layer to generalize the design of receiver in
-   Senlin. Although we only support receiver type of webhook in current stage,
-   we do have the plan to support more receiver types like message queue.
-
 Health Management
 -----------------
   - Provide an option for user to define the threshold of cluster health status
@@ -49,7 +43,6 @@ Health Management
 
 TEST
 ----
-  - Add unit test for engine/parser
   - Complete unit test of senlinclient
 
 DOC
@@ -124,7 +117,6 @@ POLICY
 
 Trigger
 -------
-  - Monasca alarm based triggers.
   - Zaqar queue based triggers.
 
 EVENT
