@@ -56,6 +56,17 @@ are hardware/software failures expected. Senlin must remain operational in the
 face of such failures.
 
 
+Access Permission Control
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Currently, all access to Senlin objects like cluster, profile are project_safe
+by default. This is for preventing user manipulating resources belong to other
+users. However, sharing resource between different users/projects with limited
+privilege(e.g. read-only, read-write) is also a very reasonable demand in many
+cases. Therefore, we may need to provide access permission control in Senlin to
+support this kind of requirement.
+
+
 ---------------
 Middle Priority
 ---------------
