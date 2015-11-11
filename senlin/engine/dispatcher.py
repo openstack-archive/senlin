@@ -53,7 +53,7 @@ class Dispatcher(service.Service):
         return True
 
     def start_action(self, ctxt, action_id=None):
-        self.TG.start_action(action_id, self.engine_id)
+        self.TG.start_action(self.engine_id, action_id)
 
     def cancel_action(self, ctxt, action_id):
         '''Cancel an action.'''

@@ -82,10 +82,10 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.assertEqual(10, retobj.inputs['max_size'])
         self.assertIsNone(retobj.outputs)
 
-    def test_action_get_1st_ready(self):
+    def test_action_acquire_1st_ready(self):
         specs = [
             {'name': 'action_001', 'status': 'INIT'},
-            {'name': 'action_002', 'status': 'READY'},
+            {'name': 'action_002', 'status': 'READY', 'owner': 'worker1'},
             {'name': 'action_003', 'status': 'INIT'},
             {'name': 'action_004', 'status': 'READY'}
         ]
@@ -93,27 +93,13 @@ class DBAPIActionTest(base.SenlinTestCase):
         for spec in specs:
             _create_action(self.ctx, action=shared.sample_action, **spec)
 
-        action = db_api.action_get_1st_ready(self.ctx)
-        self.assertTrue(action.name in ['action_002', 'action_004'])
-
-    def test_action_get_all_ready(self):
-        specs = [
-            {'name': 'action_001', 'status': 'INIT'},
-            {'name': 'action_002', 'status': 'READY'},
-            {'name': 'action_003', 'status': 'INIT'},
-            {'name': 'action_004', 'status': 'READY'}
-        ]
-
-        for spec in specs:
-            _create_action(self.ctx,
-                           action=shared.sample_action,
-                           **spec)
-
-        actions = db_api.action_get_all_ready(self.ctx)
-        self.assertEqual(2, len(actions))
-        names = [p.name for p in actions]
-        for spec in ['action_002', 'action_004']:
-            self.assertIn(spec, names)
+        worker = 'worker2'
+        timestamp = time.time()
+        action = db_api.action_acquire_1st_ready(self.ctx, worker, timestamp)
+        self.assertEqual('action_004', action.name)
+        self.assertEqual('worker2', action.owner)
+        self.assertEqual(consts.ACTION_RUNNING, action.status)
+        self.assertEqual(timestamp, action.start_time)
 
     def test_action_get_all_by_owner(self):
         specs = [

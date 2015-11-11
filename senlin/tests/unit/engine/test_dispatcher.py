@@ -69,11 +69,11 @@ class TestDispatcher(base.SenlinTestCase):
         disp = dispatcher.Dispatcher(self.svc, 'TOPIC', '1', self.thm)
         disp.start_action(self.context, action_id='FOO')
 
-        mock_start.assert_called_once_with('FOO', '1234')
+        mock_start.assert_called_once_with('1234', 'FOO')
         mock_start.reset_mock()
 
         disp.start_action(self.context)
-        mock_start.assert_called_once_with(None, '1234')
+        mock_start.assert_called_once_with('1234', None)
 
     @mock.patch.object(scheduler.ThreadGroupManager, 'cancel_action')
     def test_cancel_action(self, mock_cancel):

@@ -471,7 +471,7 @@ class Action(object):
 
 
 # TODO(Yanyan Hu): Replace context parameter with session parameter
-def ActionProc(context, action_id, worker_id):
+def ActionProc(context, action_id):
     '''Action process.'''
 
     # Step 1: materialize the action object
@@ -480,23 +480,13 @@ def ActionProc(context, action_id, worker_id):
         LOG.error(_LE('Action "%s" could not be found.'), action_id)
         return False
 
-    # Step 2: lock the action for execution
-    timestamp = wallclock()
-    res = db_api.action_acquire(action.context, action_id, worker_id,
-                                timestamp)
-    if res is None:
-        LOG.warning(_LE('Failed in locking action "%s".'), action_id)
-        return False
-
-    action.owner = res.owner
-    action.start_time = res.start_time
     # TODO(Anyone): Remove context usage in event module
     EVENT.info(action.context, action, action.action, 'START')
 
     reason = 'Action completed'
     success = True
     try:
-        # Step 3: execute the action
+        # Step 2: execute the action
         result, reason = action.execute()
     except Exception as ex:
         # We catch exception here to make sure the following logics are

@@ -15,6 +15,7 @@ import mock
 from oslo_config import cfg
 from oslo_service import threadgroup
 
+from senlin.db import api as db_api
 from senlin.engine.actions import base as actionm
 from senlin.engine import scheduler
 from senlin.tests.unit.common import base
@@ -85,19 +86,59 @@ class SchedulerTest(base.SenlinTestCase):
 
         mock_group.add_thread.assert_called_once_with(f)
 
-    def test_start_action(self):
+    @mock.patch.object(db_api, 'action_acquire')
+    def test_start_action(self, mock_action_acquire):
+        mock_group = mock.Mock()
+        self.mock_tg.return_value = mock_group
+        action = mock.Mock()
+        action.id = '0123'
+        mock_action_acquire.return_value = action
+
+        tgm = scheduler.ThreadGroupManager()
+        tgm.start_action('4567', '0123')
+
+        mock_group.add_thread.assert_called_once_with(actionm.ActionProc,
+                                                      tgm.db_session, '0123')
+        mock_thread = mock_group.add_thread.return_value
+        self.assertEqual(mock_thread, tgm.workers['0123'])
+        mock_thread.link.assert_called_once_with(mock.ANY, '0123')
+
+    @mock.patch.object(db_api, 'action_acquire_1st_ready')
+    def test_start_action_no_action_id(self, mock_acquire_action):
+        mock_action = mock.Mock()
+        mock_action.id = '0123'
+        mock_acquire_action.return_value = mock_action
         mock_group = mock.Mock()
         self.mock_tg.return_value = mock_group
 
         tgm = scheduler.ThreadGroupManager()
-        tgm.start_action('0123', '4567')
+        tgm.start_action('4567')
 
         mock_group.add_thread.assert_called_once_with(actionm.ActionProc,
-                                                      tgm.db_session,
-                                                      '0123', '4567')
+                                                      tgm.db_session, '0123')
         mock_thread = mock_group.add_thread.return_value
         self.assertEqual(mock_thread, tgm.workers['0123'])
         mock_thread.link.assert_called_once_with(mock.ANY, '0123')
+
+    @mock.patch.object(db_api, 'action_acquire')
+    def test_start_action_failed_locking_action(self, mock_acquire_action):
+        mock_acquire_action.return_value = None
+        mock_group = mock.Mock()
+        self.mock_tg.return_value = mock_group
+
+        tgm = scheduler.ThreadGroupManager()
+        res = tgm.start_action('4567')
+        self.assertIsNone(res)
+
+    @mock.patch.object(db_api, 'action_acquire_1st_ready')
+    def test_start_action_no_action_ready(self, mock_acquire_action):
+        mock_acquire_action.return_value = None
+        mock_group = mock.Mock()
+        self.mock_tg.return_value = mock_group
+
+        tgm = scheduler.ThreadGroupManager()
+        res = tgm.start_action('4567')
+        self.assertIsNone(res)
 
     def test_cancel_action(self):
         mock_action = mock.Mock()

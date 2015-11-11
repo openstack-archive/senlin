@@ -18,6 +18,7 @@ from oslo_log import log as logging
 from oslo_service import threadgroup
 
 from senlin.common import context
+from senlin.db import api as db_api
 from senlin.engine.actions import base as action_mod
 from senlin.engine import dispatcher
 
@@ -60,14 +61,15 @@ class ThreadGroupManager(object):
 
         return self.group.add_thread(func, *args, **kwargs)
 
-    def start_action(self, action_id, worker_id):
+    def start_action(self, worker_id, action_id=None):
         '''Run the given action in a sub-thread.
 
         Release the action lock when the thread finishes?
 
-        :param action_id: ID of the action to be executed.
         :param workder_id: ID of the worker thread; we fake workers using
                            senlin engines at the moment.
+        :param action_id: ID of the action to be executed. None means the
+                          1st ready action will be scheduled to run.
         '''
         def release(thread, action_id):
             '''Callback function that will be passed to GreenThread.link().'''
@@ -78,10 +80,20 @@ class ThreadGroupManager(object):
             if action.status == action.READY:
                 dispatcher.start_action(action_id=action_id)
 
-        th = self.start(action_mod.ActionProc, self.db_session, action_id,
-                        worker_id)
-        self.workers[action_id] = th
-        th.link(release, action_id)
+        timestamp = wallclock()
+        if action_id is not None:
+            action = db_api.action_acquire(self.db_session, action_id,
+                                           worker_id, timestamp)
+        else:
+            action = db_api.action_acquire_1st_ready(self.db_session,
+                                                     worker_id,
+                                                     timestamp)
+        if not action:
+            return
+
+        th = self.start(action_mod.ActionProc, self.db_session, action.id)
+        self.workers[action.id] = th
+        th.link(release, action.id)
         return th
 
     def cancel_action(self, action_id):

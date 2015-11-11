@@ -421,14 +421,6 @@ def action_get_by_short_id(context, short_id):
     return IMPL.action_get_by_short_id(context, short_id)
 
 
-def action_get_1st_ready(context):
-    return IMPL.action_get_1st_ready(context)
-
-
-def action_get_all_ready(context):
-    return IMPL.action_get_all_ready(context)
-
-
 def action_get_all_by_owner(context, owner):
     return IMPL.action_get_all_by_owner(context, owner)
 
@@ -463,6 +455,10 @@ def action_mark_cancelled(context, action_id, timestamp):
 
 def action_acquire(context, action_id, owner, timestamp):
     return IMPL.action_acquire(context, action_id, owner, timestamp)
+
+
+def action_acquire_1st_ready(context, owner, timestamp):
+    return IMPL.action_acquire_1st_ready(context, owner, timestamp)
 
 
 def action_abandon(context, action_id):

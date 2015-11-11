@@ -797,45 +797,20 @@ class ActionProcTest(base.SenlinTestCase):
 
         self.ctx = utils.dummy_context()
 
-    @mock.patch.object(action_base, 'wallclock')
-    @mock.patch.object(action_base.Action, 'load')
-    @mock.patch.object(db_api, 'action_acquire')
-    def test_action_proc_fail_acquire(self, mock_acquire, mock_load,
-                                      mock_clock):
-        action = action_base.Action('OBJID', 'OBJECT_ACTION', self.ctx)
-        mock_clock.return_value = 'TIMESTAMP'
-        mock_acquire.return_value = None
-        mock_load.return_value = action
-
-        res = action_base.ActionProc(self.ctx, 'ACTION', 'WORKER')
-        self.assertFalse(res)
-
-        mock_clock.assert_called_once_with()
-        mock_acquire.assert_called_once_with(
-            action.context, 'ACTION', 'WORKER', 'TIMESTAMP')
-
     @mock.patch.object(event, 'info')
-    @mock.patch.object(action_base, 'wallclock')
-    @mock.patch.object(db_api, 'action_acquire')
     @mock.patch.object(action_base.Action, 'load')
     @mock.patch.object(db_api, 'action_mark_succeeded')
-    def test_action_proc_successful(self, mock_mark, mock_load, mock_acquire,
-                                    mock_clock, mock_event_info):
+    def test_action_proc_successful(self, mock_mark, mock_load,
+                                    mock_event_info):
         action = action_base.Action('OBJID', 'OBJECT_ACTION', self.ctx)
+        action.owner = 'WORKER'
+        action.start_time = 123456
         self.patchobject(action, 'execute',
                          return_value=(action.RES_OK, 'BIG SUCCESS'))
-        mock_clock.return_value = 'TIMESTAMP'
-        mock_db_action = mock.Mock()
-        mock_db_action.owner = 'WORKER'
-        mock_db_action.start_time = 123456
-        mock_acquire.return_value = mock_db_action
         mock_load.return_value = action
 
-        res = action_base.ActionProc(self.ctx, 'ACTION', 'WORKER')
+        res = action_base.ActionProc(self.ctx, 'ACTION')
         self.assertTrue(res)
-
-        mock_acquire.assert_called_once_with(
-            action.context, 'ACTION', 'WORKER', 'TIMESTAMP')
 
         mock_load.assert_called_once_with(self.ctx, action_id='ACTION')
         self.assertEqual(action.SUCCEEDED, action.status)
@@ -844,24 +819,18 @@ class ActionProcTest(base.SenlinTestCase):
         self.assertEqual('BIG SUCCESS', action.status_reason)
 
     @mock.patch.object(event, 'info')
-    @mock.patch.object(action_base, 'wallclock')
-    @mock.patch.object(db_api, 'action_acquire')
     @mock.patch.object(action_base.Action, 'load')
     @mock.patch.object(db_api, 'action_mark_failed')
-    def test_action_proc_failed_error(self, mock_mark, mock_load, mock_acquire,
-                                      mock_clock, mock_event_info):
+    def test_action_proc_failed_error(self, mock_mark, mock_load,
+                                      mock_event_info):
         action = action_base.Action('OBJID', 'OBJECT_ACTION', self.ctx)
+        action.owner = 'WORKER'
+        action.start_time = 123456
         self.patchobject(action, 'execute', side_effect=Exception('Boom!'))
-        mock_clock.return_value = 'TIMESTAMP'
-        mock_db_action = mock.Mock()
-        mock_acquire.return_value = mock_db_action
         mock_load.return_value = action
 
-        res = action_base.ActionProc(self.ctx, 'ACTION', 'WORKER')
+        res = action_base.ActionProc(self.ctx, 'ACTION')
         self.assertFalse(res)
-
-        mock_acquire.assert_called_once_with(
-            action.context, 'ACTION', 'WORKER', 'TIMESTAMP')
 
         mock_load.assert_called_once_with(self.ctx, action_id='ACTION')
         self.assertEqual(action.FAILED, action.status)

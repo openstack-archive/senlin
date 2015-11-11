@@ -1212,18 +1212,6 @@ def action_get_by_short_id(context, short_id):
     return query_by_short_id(context, models.Action, short_id)
 
 
-def action_get_1st_ready(context):
-    query = model_query(context, models.Action).\
-        filter_by(status=consts.ACTION_READY)
-    return query.first()
-
-
-def action_get_all_ready(context):
-    query = model_query(context, models.Action).\
-        filter_by(status=consts.ACTION_READY)
-    return query.all()
-
-
 def action_get_all_by_owner(context, owner_id):
     query = model_query(context, models.Action).\
         filter_by(owner=owner_id)
@@ -1483,6 +1471,23 @@ def action_acquire(context, action_id, owner, timestamp):
         action.status_reason = _('The action is being processed.')
 
         return action
+
+
+def action_acquire_1st_ready(context, owner, timestamp):
+    session = _session(context)
+
+    with session.begin():
+        action = session.query(models.Action).\
+            filter_by(status=consts.ACTION_READY).\
+            filter_by(owner=None).first()
+
+        if action:
+            action.owner = owner
+            action.start_time = timestamp
+            action.status = consts.ACTION_RUNNING
+            action.status_reason = _('The action is being processed.')
+
+            return action
 
 
 def action_abandon(context, action_id):
