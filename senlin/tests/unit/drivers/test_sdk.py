@@ -41,6 +41,19 @@ class OpenStackSDKTest(base.SenlinTestCase):
 
         self.assertEqual(404, ex.code)
         self.assertEqual('Resource BAR is not found.', six.text_type(ex))
+        # key name is not 'error' case
+        details = jsonutils.dumps({
+            'forbidden': {
+                'code': 403,
+                'message': 'Quota exceeded for instances.'
+            }
+        })
+        raw = sdk.exc.ResourceNotFound('A message', details, 403)
+        ex = self.assertRaises(senlin_exc.InternalError,
+                               sdk.parse_exception, raw)
+
+        self.assertEqual(403, ex.code)
+        self.assertEqual('Quota exceeded for instances.', six.text_type(ex))
 
     def test_parser_exception_http_exception_no_details(self):
         details = "An error message"
