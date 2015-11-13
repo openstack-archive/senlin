@@ -77,8 +77,8 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(self.ctx.user, result['user'])
         self.assertEqual('cluster_test_project', result['project'])
         self.assertIsNone(result['parent'])
-        self.assertIsNone(result['timeout'])
-        self.assertIsNone(result['metadata'])
+        self.assertEqual(result['timeout'], cfg.CONF.default_action_timeout)
+        self.assertEqual(result['metadata'], {})
 
         action_id = result['action']
         action = db_api.action_get(self.ctx, result['action'])

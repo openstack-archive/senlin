@@ -168,3 +168,9 @@ ACTION_ATTRS = (
     'inputs', 'outputs', 'depends_on', 'depended_by',
     'created_time', 'updated_time', 'deleted_time',
 )
+
+CLUSTER_DEFAULT_VALUE = (
+    CLUSTER_DEFAULT_MIN_SIZE, CLUSTER_DEFAULT_MAX_SIZE
+) = (
+    0, -1
+)
