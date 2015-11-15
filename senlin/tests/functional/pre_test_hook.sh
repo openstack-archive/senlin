@@ -1,10 +1,10 @@
-#!/bin/bash -xe
-
+#!/bin/bash
+#
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
 # a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#      http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -12,14 +12,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# This script is executed inside post_test_hook function in devstack gate.
+# This script is executed inside pre_test_hook function in devstack gate.
 
-export DEST=${DEST:-/opt/stack/new}
-export DEVSTACK_DIR=$DEST/devstack
-export SENLIN_DIR=$DEST/senlin
+export localconf=$BASE/new/devstack/local.conf
+export SENLIN_CONF=/etc/senlin/senlin.conf
 
-# Run functional test
-source $DEVSTACK_DIR/openrc admin admin
-echo "Running Senlin functional test suite..."
-cd $SENLIN_DIR
-sudo -E tox -efunctional
+echo -e '[[post-config|$SENLIN_CONF]]\n[DEFAULT]\n' >> $localconf
+echo -e 'num_engine_workers=2\n' >> $localconf
+echo -e 'cloud_backend=openstack_test\n' >> $localconf
