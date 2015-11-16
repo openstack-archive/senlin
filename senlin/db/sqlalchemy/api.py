@@ -38,23 +38,6 @@ LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 CONF.import_opt('max_events_per_cluster', 'senlin.common.config')
 
-# Action status definitions:
-#  ACTION_INIT:      Not ready to be executed because fields are being
-#                    modified, or dependency with other actions are being
-#                    analyzed.
-#  ACTION_READY:     Initialized and ready to be executed by a worker.
-#  ACTION_RUNNING:   Being executed by a worker thread.
-#  ACTION_SUCCEEDED: Completed with success.
-#  ACTION_FAILED:    Completed with failure.
-#  ACTION_CANCELLED: Action cancelled because worker thread was cancelled.
-ACTION_STATUSES = (
-    ACTION_INIT, ACTION_WAITING, ACTION_READY, ACTION_RUNNING,
-    ACTION_SUCCEEDED, ACTION_FAILED, ACTION_CANCELED
-) = (
-    'INIT', 'WAITING', 'READY', 'RUNNING',
-    'SUCCEEDED', 'FAILED', 'CANCELLED',
-)
-
 _facade = None
 
 
@@ -1231,13 +1214,13 @@ def action_get_by_short_id(context, short_id):
 
 def action_get_1st_ready(context):
     query = model_query(context, models.Action).\
-        filter_by(status=ACTION_READY)
+        filter_by(status=consts.ACTION_READY)
     return query.first()
 
 
 def action_get_all_ready(context):
     query = model_query(context, models.Action).\
-        filter_by(status=ACTION_READY)
+        filter_by(status=consts.ACTION_READY)
     return query.all()
 
 
@@ -1289,7 +1272,7 @@ def _action_dependency_add(query, action_id, field, adds):
     action[field] = d
 
     if field == 'depends_on':
-        action.status = ACTION_WAITING
+        action.status = consts.ACTION_WAITING
         action.status_reason = _('The action is waiting for its dependency '
                                  'being completed.')
 
@@ -1311,7 +1294,7 @@ def _action_dependency_del(query, action_id, field, dels):
         action[field] = list(set(action[field]) - set(del_list))
 
     if field == 'depends_on' and len(action[field]) == 0:
-        action.status = ACTION_READY
+        action.status = consts.ACTION_READY
         action.status_reason = _('The action becomes ready due to all '
                                  'dependencies have been satisfied.')
 
@@ -1390,7 +1373,7 @@ def action_mark_succeeded(context, action_id, timestamp):
     session.begin()
 
     action.owner = None
-    action.status = ACTION_SUCCEEDED
+    action.status = consts.ACTION_SUCCEEDED
     action.status_reason = _('Action completed successfully.')
     action.end_time = timestamp
 
@@ -1409,7 +1392,7 @@ def _mark_failed_action(query, action_id, timestamp, reason):
         return
 
     action.owner = None
-    action.status = ACTION_FAILED
+    action.status = consts.ACTION_FAILED
     action.status_reason = reason
     action.end_time = timestamp
 
@@ -1426,7 +1409,7 @@ def action_mark_failed(context, action_id, timestamp, reason=None):
 
     action = query.get(action_id)
     action.owner = None
-    action.status = ACTION_FAILED
+    action.status = consts.ACTION_FAILED
     if reason is not None:
         action.status_reason = six.text_type(reason)
     else:
@@ -1449,7 +1432,7 @@ def _mark_cancelled_action(query, action_id, timestamp):
         return
 
     action.owner = None
-    action.status = ACTION_CANCELED
+    action.status = consts.ACTION_CANCELED
     action.status_reason = _('Dependent action was cancelled')
     action.end_time = timestamp
     if action.depended_by is not None:
@@ -1467,7 +1450,7 @@ def action_mark_cancelled(context, action_id, timestamp):
     session.begin()
 
     action.owner = None
-    action.status = ACTION_CANCELED
+    action.status = consts.ACTION_CANCELED
     action.reason = _('Action execution was cancelled')
     action.end_time = timestamp
 
@@ -1489,14 +1472,14 @@ def action_acquire(context, action_id, owner, timestamp):
         if action.owner and action.owner != owner:
             return None
 
-        if action.status != ACTION_READY:
+        if action.status != consts.ACTION_READY:
             msg = _('The action is not in an executable status: '
                     '%s') % action.status
             LOG.warning(msg)
             return None
         action.owner = owner
         action.start_time = timestamp
-        action.status = ACTION_RUNNING
+        action.status = consts.ACTION_RUNNING
         action.status_reason = _('The action is being processed.')
 
         return action
@@ -1514,7 +1497,7 @@ def action_abandon(context, action_id):
 
     action.owner = None
     action.start_time = None
-    action.status = ACTION_READY
+    action.status = consts.ACTION_READY
     action.status_reason = _('The action was abandoned.')
     action.save(query.session)
     return action
