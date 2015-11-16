@@ -36,7 +36,9 @@ def parse_exception(ex):
     code = 500
 
     if isinstance(ex, sdk_exc.HttpException):
-        code = ex.status_code
+        # some exceptions don't contain status_code
+        if ex.status_code is not None:
+            code = ex.status_code
         message = ex.message
         data = {}
         try:
@@ -47,11 +49,20 @@ def parse_exception(ex):
             pass
 
         # try dig more into the exception record
-        code = data.get('code', code)
-        error = data.get('error', None)
-        if error:
-            code = data['error'].get('code', code)
-            message = data['error'].get('message', message)
+        # usually 'data' has two types of format :
+        # type1: {"forbidden": {"message": "error message", "code": 403}
+        # type2: {"code": 404, "error": { "message": "not found"}}
+        if data:
+            code = data.get('code', code)
+            message = data.get('message', message)
+            error = data.get('error', None)
+            if error:
+                code = data.get('code', code)
+                message = data['error'].get('message', message)
+            else:
+                for value in data.values():
+                    code = value.get('code', code)
+                    message = value.get('message', message)
 
     elif isinstance(ex, sdk_exc.SDKException):
         # Besides HttpException there are some other exceptions like
