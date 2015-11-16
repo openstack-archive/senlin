@@ -14,6 +14,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import timeutils
 
+from senlin.common import consts
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
@@ -67,16 +68,19 @@ class Cluster(object):
         self.updated_time = kwargs.get('updated_time', None)
         self.deleted_time = kwargs.get('deleted_time', None)
 
-        self.min_size = kwargs.get('min_size', 0)
-        self.max_size = kwargs.get('max_size', -1)
+        self.min_size = (kwargs.get('min_size') or
+                         consts.CLUSTER_DEFAULT_MIN_SIZE)
+        self.max_size = (kwargs.get('max_size') or
+                         consts.CLUSTER_DEFAULT_MAX_SIZE)
         self.desired_capacity = desired_capacity
         self.next_index = kwargs.get('next_index', 1)
-        self.timeout = kwargs.get('timeout', cfg.CONF.default_action_timeout)
+        self.timeout = (kwargs.get('timeout') or
+                        cfg.CONF.default_action_timeout)
 
         self.status = kwargs.get('status', self.INIT)
         self.status_reason = kwargs.get('status_reason', 'Initializing')
         self.data = kwargs.get('data', {})
-        self.metadata = kwargs.get('metadata', {})
+        self.metadata = kwargs.get('metadata') or {}
 
         # rt is a dict for runtime data
         # TODO(Qiming): nodes have to be reloaded when membership changes

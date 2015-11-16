@@ -89,6 +89,26 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual({'profile': None, 'nodes': [], 'policies': []},
                          cluster.rt)
 
+    def test_cluster_init_with_none(self):
+        kwargs = {
+            'min_size': None,
+            'max_size': None,
+            'metadata': None
+        }
+        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID',
+                                   **kwargs)
+        self.assertEqual(-1, cluster.max_size)
+        self.assertEqual(0, cluster.min_size)
+        self.assertEqual({}, cluster.metadata)
+
+        self.assertIsNone(cluster.id)
+        self.assertEqual('test-cluster', cluster.name)
+        self.assertEqual('PROFILE_ID', cluster.profile_id)
+        self.assertEqual('', cluster.user)
+        self.assertEqual('', cluster.project)
+        self.assertEqual('', cluster.domain)
+        self.assertEqual('', cluster.parent)
+
     def test_cluster_store_init(self):
         mock_info = self.patchobject(eventm, 'info')
 
@@ -191,15 +211,15 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual(cluster.created_time, result.created_time)
         self.assertEqual(cluster.updated_time, result.updated_time)
         self.assertEqual(cluster.deleted_time, result.deleted_time)
-        self.assertEqual(cluster.min_size, result.min_size)
-        self.assertEqual(cluster.max_size, result.max_size)
+        self.assertEqual(0, result.min_size)
+        self.assertEqual(-1, result.max_size)
         self.assertEqual(cluster.desired_capacity, result.desired_capacity)
         self.assertEqual(cluster.next_index, result.next_index)
         self.assertEqual(cluster.profile_id, result.profile_id)
         self.assertEqual(cluster.status, result.status)
         self.assertEqual(cluster.status_reason, result.status_reason)
         self.assertEqual(cluster.data, result.data)
-        self.assertEqual(cluster.meta_data, result.metadata)
+        self.assertEqual({}, result.metadata)
 
     def test_cluster_load_diff_project(self):
         self._create_cluster('CLUSTER_ID')
@@ -245,13 +265,13 @@ class TestCluster(base.SenlinTestCase):
             'created_time': cluster.created_time,
             'updated_time': cluster.updated_time,
             'deleted_time': cluster.deleted_time,
-            'min_size': cluster.min_size,
-            'max_size': cluster.max_size,
+            'min_size': 0,
+            'max_size': -1,
             'desired_capacity': cluster.desired_capacity,
-            'timeout': cluster.timeout,
+            'timeout': cfg.CONF.default_action_timeout,
             'status': cluster.status,
             'status_reason': cluster.status_reason,
-            'metadata': cluster.meta_data,
+            'metadata': {},
             'data': cluster.data,
             'nodes': [],
             'policies': [],
