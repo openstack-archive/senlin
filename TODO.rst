@@ -22,11 +22,6 @@ API
     https://review.openstack.org/#/c/221163/
   - Find and fill gaps with API-WG besides the one we already identified.
 
-ENGINE
-------
-  - Lock breaker in multi-engine environment to pevent objects being locked by
-    dead engine.
-
 POLICY
 ------
   - Implement a deletion policy that supports cross-az/region node deleting.
