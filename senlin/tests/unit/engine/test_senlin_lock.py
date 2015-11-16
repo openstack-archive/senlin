@@ -14,6 +14,7 @@ import mock
 from oslo_config import cfg
 
 from senlin.db.sqlalchemy import api as db_api
+from senlin.engine import dispatcher
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock as lockm
 from senlin.tests.unit.common import base
@@ -203,3 +204,32 @@ class SenlinLockTest(base.SenlinTestCase):
         actual = lockm.node_lock_release('C', 'A')
         self.assertEqual(mock_release.return_value, actual)
         mock_release.assert_called_once_with('C', 'A')
+
+
+class SenlinLockActionCheckTest(base.SenlinTestCase):
+
+    def setUp(self):
+        super(SenlinLockActionCheckTest, self).setUp()
+
+        self.ctx = utils.dummy_context()
+
+    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(db_api, 'action_get')
+    def test_action_on_live_engine(self, mock_action, mock_notify):
+        mock_notify.return_value = True
+        ret = mock.MagicMock()
+        ret.owner = 'fake_engine_id'
+        mock_action.return_value = ret
+        self.assertIs(False,
+                      lockm.action_on_dead_engine(self.ctx, 'fake_action'))
+        mock_notify.assert_called_once_with('listening', 'fake_engine_id')
+
+    @mock.patch.object(dispatcher, 'notify')
+    @mock.patch.object(db_api, 'action_get')
+    def test_action_on_dead_engine(self, mock_action, mock_notify):
+        mock_notify.return_value = False
+        ret = mock.MagicMock()
+        ret.owner = 'fake_engine_id'
+        mock_action.return_value = ret
+        self.assertTrue(lockm.action_on_dead_engine(self.ctx, 'fake_action'))
+        mock_notify.assert_called_once_with('listening', 'fake_engine_id')

@@ -15,6 +15,7 @@ from oslo_log import log as logging
 
 from senlin.common.i18n import _LE
 from senlin.db import api as db_api
+from senlin.engine import dispatcher
 from senlin.engine import scheduler
 
 CONF = cfg.CONF
@@ -29,6 +30,12 @@ LOCK_SCOPES = (
 ) = (
     -1, 1,
 )
+
+
+def action_on_dead_engine(context, action):
+    action = db_api.action_get(context, action)
+    if action.owner:
+        return not dispatcher.notify('listening', action.owner)
 
 
 def cluster_lock_acquire(cluster_id, action_id, scope=CLUSTER_SCOPE,
