@@ -209,7 +209,8 @@ class NodeAction(base.Action):
 
         reason = ''
         try:
-            res = senlin_lock.node_lock_acquire(self.node.id, self.id, False)
+            res = senlin_lock.node_lock_acquire(self.context, self.node.id,
+                                                self.id, False)
             if not res:
                 res = self.RES_ERROR
                 reason = _('Failed in locking node')

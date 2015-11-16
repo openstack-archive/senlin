@@ -13,8 +13,10 @@
 from oslo_config import cfg
 from oslo_log import log as logging
 
+from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.db import api as db_api
+from senlin.engine.actions import base
 from senlin.engine import dispatcher
 from senlin.engine import scheduler
 
@@ -90,9 +92,10 @@ def cluster_lock_release(cluster_id, action_id, scope):
     return db_api.cluster_lock_release(cluster_id, action_id, scope)
 
 
-def node_lock_acquire(node_id, action_id, forced=False):
+def node_lock_acquire(context, node_id, action_id, forced=False):
     """Try to lock the specified node.
 
+    :param context: the context used for DB operations;
     :param node_id: ID of the node to be locked.
     :param action_id: ID of the action that attempts to lock the node.
     :param forced: set to True to cancel current action that owns the lock,
@@ -103,6 +106,18 @@ def node_lock_acquire(node_id, action_id, forced=False):
     #         action id, it was a success
     owner = db_api.node_lock_acquire(node_id, action_id)
     if action_id == owner:
+        return True
+    if action_on_dead_engine(context, owner):
+        LOG.debug(_('The node %(n)s is locked by dead action %(a)s, '
+                    'try to steal the lock.') % {
+            'n': node_id,
+            'a': owner
+        })
+        act = base.Action.load(context, owner)
+        reason = _('Engine died when executing this action.')
+        act.set_status(result=base.Action.RES_ERROR,
+                       reason=reason)
+        db_api.node_lock_steal(node_id, action_id)
         return True
 
     # Step 2: retry using global configuration options
