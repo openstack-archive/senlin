@@ -14,6 +14,7 @@ import time
 
 import six
 
+from senlin.common import consts
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import parser
@@ -185,7 +186,7 @@ class DBAPIActionTest(base.SenlinTestCase):
             self.assertEqual(1, len(l))
             self.assertIn(id_of['action_001'], l)
             self.assertIsNone(action.depended_by)
-            self.assertEqual(action.status, db_api.ACTION_WAITING)
+            self.assertEqual(action.status, consts.ACTION_WAITING)
         return id_of
 
     def _check_action_add_dependency_depended_list(self):
@@ -216,7 +217,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.assertIn(id_of['action_003'], l)
         self.assertIn(id_of['action_004'], l)
         self.assertIsNone(action.depended_by)
-        self.assertEqual(action.status, db_api.ACTION_WAITING)
+        self.assertEqual(action.status, consts.ACTION_WAITING)
 
         for id in [id_of['action_002'],
                    id_of['action_003'],
@@ -244,7 +245,7 @@ class DBAPIActionTest(base.SenlinTestCase):
 
         action = db_api.action_get(self.ctx, id_of['action_001'])
         self.assertEqual(0, len(action.depends_on))
-        self.assertEqual(action.status, db_api.ACTION_READY)
+        self.assertEqual(action.status, consts.ACTION_READY)
 
         for id in [id_of['action_002'],
                    id_of['action_003'],
@@ -268,7 +269,7 @@ class DBAPIActionTest(base.SenlinTestCase):
                    id_of['action_004']]:
             action = db_api.action_get(self.ctx, id)
             self.assertEqual(0, len(action.depends_on))
-            self.assertEqual(db_api.ACTION_READY, action.status)
+            self.assertEqual(consts.ACTION_READY, action.status)
 
     def test_action_mark_succeeded(self):
         timestamp = time.time()
@@ -277,8 +278,8 @@ class DBAPIActionTest(base.SenlinTestCase):
 
         action = db_api.action_get(self.ctx, id_of['action_001'])
         self.assertEqual(0, len(action.depended_by))
-        self.assertEqual(db_api.ACTION_SUCCEEDED, action.status)
-        self.assertEqual(db_api.ACTION_SUCCEEDED, action.status)
+        self.assertEqual(consts.ACTION_SUCCEEDED, action.status)
+        self.assertEqual(consts.ACTION_SUCCEEDED, action.status)
         self.assertEqual(timestamp, action.end_time)
 
         for id in [id_of['action_002'],
@@ -302,7 +303,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         for spec in specs:
             action = _create_action(self.ctx, action=shared.sample_action,
                                     **spec)
-            # action.status = db_api.ACTION_INIT
+            # action.status = consts.ACTION_INIT
             id_of[spec['name']] = action.id
 
         db_api.action_add_dependency(self.ctx,
@@ -323,7 +324,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.assertIn(id_of['action_002'], l)
         self.assertIn(id_of['action_003'], l)
         self.assertIn(id_of['action_004'], l)
-        self.assertEqual(db_api.ACTION_WAITING, action.status)
+        self.assertEqual(consts.ACTION_WAITING, action.status)
 
         for id in [id_of['action_002'],
                    id_of['action_003'],
@@ -349,7 +350,7 @@ class DBAPIActionTest(base.SenlinTestCase):
             self.assertEqual(1, len(l))
             self.assertIn(id_of['action_001'], l)
             self.assertIsNone(action.depended_by)
-            self.assertEqual(db_api.ACTION_WAITING, action.status)
+            self.assertEqual(consts.ACTION_WAITING, action.status)
 
         return id_of
 
@@ -361,7 +362,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         for id in [id_of['action_003'],
                    id_of['action_004']]:
             action = db_api.action_get(self.ctx, id)
-            self.assertEqual(db_api.ACTION_INIT, action.status)
+            self.assertEqual(consts.ACTION_INIT, action.status)
 
         for id in [id_of['action_002'],
                    id_of['action_001'],
@@ -369,7 +370,7 @@ class DBAPIActionTest(base.SenlinTestCase):
                    id_of['action_006'],
                    id_of['action_007']]:
             action = db_api.action_get(self.ctx, id)
-            self.assertEqual(db_api.ACTION_FAILED, action.status)
+            self.assertEqual(consts.ACTION_FAILED, action.status)
             self.assertEqual(timestamp, action.end_time)
 
     def test_action_mark_cancelled(self):
@@ -380,7 +381,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         for id in [id_of['action_003'],
                    id_of['action_004']]:
             action = db_api.action_get(self.ctx, id)
-            self.assertEqual(db_api.ACTION_INIT, action.status)
+            self.assertEqual(consts.ACTION_INIT, action.status)
 
         for id in [id_of['action_002'],
                    id_of['action_001'],
@@ -388,7 +389,7 @@ class DBAPIActionTest(base.SenlinTestCase):
                    id_of['action_006'],
                    id_of['action_007']]:
             action = db_api.action_get(self.ctx, id)
-            self.assertEqual(db_api.ACTION_CANCELED, action.status)
+            self.assertEqual(consts.ACTION_CANCELED, action.status)
             self.assertEqual(timestamp, action.end_time)
 
     def test_action_acquire(self):
@@ -399,7 +400,7 @@ class DBAPIActionTest(base.SenlinTestCase):
                                        timestamp)
 
         self.assertEqual('worker1', action.owner)
-        self.assertEqual(db_api.ACTION_RUNNING, action.status)
+        self.assertEqual(consts.ACTION_RUNNING, action.status)
         self.assertEqual(timestamp, action.start_time)
 
         action = db_api.action_acquire(self.ctx, action.id, 'worker2',

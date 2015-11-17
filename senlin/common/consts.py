@@ -174,3 +174,13 @@ CLUSTER_DEFAULT_VALUE = (
 ) = (
     0, -1
 )
+
+# Note: This is a copy of action status definition defined in
+# senlin.engine.actions.base module.
+ACTION_STATUSES = (
+    ACTION_INIT, ACTION_WAITING, ACTION_READY, ACTION_RUNNING,
+    ACTION_SUCCEEDED, ACTION_FAILED, ACTION_CANCELED
+) = (
+    'INIT', 'WAITING', 'READY', 'RUNNING',
+    'SUCCEEDED', 'FAILED', 'CANCELLED',
+)
