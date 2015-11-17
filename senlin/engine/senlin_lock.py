@@ -40,7 +40,7 @@ def action_on_dead_engine(context, action):
         return not dispatcher.notify('listening', action.owner)
 
 
-def cluster_lock_acquire(cluster_id, action_id, scope=CLUSTER_SCOPE,
+def cluster_lock_acquire(context, cluster_id, action_id, scope=CLUSTER_SCOPE,
                          forced=False):
     """Try to lock the specified cluster.
 
@@ -58,6 +58,19 @@ def cluster_lock_acquire(cluster_id, action_id, scope=CLUSTER_SCOPE,
     owners = db_api.cluster_lock_acquire(cluster_id, action_id, scope)
     if action_id in owners:
         return True
+    # Will reach here only because scope == CLUSTER_SCOPE
+    if action_on_dead_engine(context, owners[0]):
+        LOG.debug(_('The cluster %(c)s is locked by dead action %(a)s, '
+                    'try to steal the lock.') % {
+            'c': cluster_id,
+            'a': owners[0]
+        })
+        act = base.Action.load(context, owners[0])
+        reason = _('Engine died when executing this action.')
+        act.set_status(result=base.Action.RES_ERROR,
+                       reason=reason)
+        owners = db_api.cluster_lock_steal(cluster_id, action_id)
+        return action_id in owners
 
     # Step 2: retry using global configuration options
     retries = cfg.CONF.lock_retry_times

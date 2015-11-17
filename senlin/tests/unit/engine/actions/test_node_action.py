@@ -345,7 +345,8 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_RETRY, res_code)
         self.assertEqual(reason, res_msg)
         mock_load.assert_called_once_with(action.context, node_id='NODE_ID')
-        mock_acquire.assert_called_once_with('FAKE_CLUSTER', 'ACTION_ID',
+        mock_acquire.assert_called_once_with(self.ctx, 'FAKE_CLUSTER',
+                                             'ACTION_ID',
                                              lock.NODE_SCOPE, False)
 
     @mock.patch.object(lock, 'cluster_lock_acquire')
@@ -373,7 +374,8 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual(reason, res_msg)
         mock_load.assert_called_once_with(action.context, node_id='NODE_ID')
-        mock_acquire.assert_called_once_with('FAKE_CLUSTER', 'ACTION_ID',
+        mock_acquire.assert_called_once_with(self.ctx, 'FAKE_CLUSTER',
+                                             'ACTION_ID',
                                              lock.NODE_SCOPE, False)
         mock_release.assert_called_once_with('FAKE_CLUSTER', 'ACTION_ID',
                                              lock.NODE_SCOPE)
@@ -409,7 +411,8 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual(reason, res_msg)
         mock_load.assert_called_once_with(action.context, node_id='NODE_ID')
-        mock_acquire.assert_called_once_with('FAKE_CLUSTER', 'ACTION_ID',
+        mock_acquire.assert_called_once_with(self.ctx, 'FAKE_CLUSTER',
+                                             'ACTION_ID',
                                              lock.NODE_SCOPE, False)
         mock_release.assert_called_once_with('FAKE_CLUSTER', 'ACTION_ID',
                                              lock.NODE_SCOPE)
@@ -453,7 +456,8 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual(reason, res_msg)
         mock_load.assert_called_once_with(action.context, node_id='NODE_ID')
-        mock_acquire.assert_called_once_with('FAKE_CLUSTER', 'ACTION_ID',
+        mock_acquire.assert_called_once_with(self.ctx, 'FAKE_CLUSTER',
+                                             'ACTION_ID',
                                              lock.NODE_SCOPE, False)
         mock_release.assert_called_once_with('FAKE_CLUSTER', 'ACTION_ID',
                                              lock.NODE_SCOPE)
@@ -498,7 +502,8 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual(reason, res_msg)
         mock_load.assert_called_once_with(action.context, node_id='NODE_ID')
-        mock_acquire.assert_called_once_with('FAKE_CLUSTER', 'ACTION_ID',
+        mock_acquire.assert_called_once_with(self.ctx, 'FAKE_CLUSTER',
+                                             'ACTION_ID',
                                              lock.NODE_SCOPE, False)
         mock_release.assert_called_once_with('FAKE_CLUSTER', 'ACTION_ID',
                                              lock.NODE_SCOPE)
@@ -550,7 +555,8 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual(reason, res_msg)
         mock_load.assert_called_once_with(action.context, node_id='NODE_ID')
-        mock_acquire.assert_called_once_with('FAKE_CLUSTER', 'ACTION_ID',
+        mock_acquire.assert_called_once_with(self.ctx, 'FAKE_CLUSTER',
+                                             'ACTION_ID',
                                              lock.NODE_SCOPE, False)
         mock_release.assert_called_once_with('FAKE_CLUSTER', 'ACTION_ID',
                                              lock.NODE_SCOPE)
