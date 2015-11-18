@@ -10,7 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import copy
 import functools
 import uuid
 
@@ -242,51 +241,26 @@ class EngineService(service.Service):
         return profile.to_dict()
 
     @request_context
-    def profile_update(self, context, profile_id, name=None, spec=None,
-                       permission=None, metadata=None):
+    def profile_update(self, context, profile_id, name=None, permission=None,
+                       metadata=None):
         LOG.info(_LI("Updating profile '%(id)s.'"), {'id': profile_id})
 
         db_profile = self.profile_find(context, profile_id)
-        if spec is None:
-            profile = profile_base.Profile.load(context, profile=db_profile)
-            changed = False
-            if name is not None and name != profile.name:
-                profile.name = name
-                changed = True
-            if permission is not None and permission != profile.permission:
-                profile.permission = permission
-                changed = True
-            if metadata is not None and metadata != profile.metadata:
-                profile.metadata = metadata
-                changed = True
-            if changed:
-                profile.store(context)
+        profile = profile_base.Profile.load(context, profile=db_profile)
+        changed = False
+        if name is not None and name != profile.name:
+            profile.name = name
+            changed = True
+        if permission is not None and permission != profile.permission:
+            profile.permission = permission
+            changed = True
+        if metadata is not None and metadata != profile.metadata:
+            profile.metadata = metadata
+            changed = True
+        if changed:
+            profile.store(context)
 
-            LOG.info(_LI("Profile '%(id)s' is updated."), {'id': profile_id})
-            return profile.to_dict()
-
-        type_name, version = schema.get_spec_version(db_profile.spec)
-        plugin = environment.global_env().get_profile(type_name)
-
-        new_spec = copy.deepcopy(db_profile.spec)
-        new_spec.update(spec)
-        kwargs = {
-            'user': db_profile.user,
-            'project': db_profile.project,
-            'domain': db_profile.domain,
-            'permission': permission or db_profile.permission,
-            'metadata': metadata or db_profile.meta_data,
-        }
-
-        new_name = name or db_profile.name
-        profile = plugin(new_name, new_spec, **kwargs)
-        profile.validate()
-        profile.store(context)
-
-        LOG.info(_LI("New Profile '%(new_id)s' is created based on profile "
-                     "'%(old_id)s'."),
-                 {'new_id': profile.id, 'old_id': profile_id})
-
+        LOG.info(_LI("Profile '%(id)s' is updated."), {'id': profile_id})
         return profile.to_dict()
 
     @request_context
