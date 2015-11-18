@@ -337,43 +337,6 @@ class ProfileTest(base.SenlinTestCase):
         p = self.eng.profile_get(self.ctx, pid)
         self.assertEqual({'bar': 'foo'}, p['metadata'])
 
-    def test_profile_update_new_spec(self):
-        p1 = self.eng.profile_create(self.ctx, 'p-1', self.spec,
-                                     permission='1111',
-                                     metadata={'foo': 'bar'})
-        pid = p1['id']
-
-        # update spec only
-        new_spec = {
-            'type': 'TestProfile',
-            'version': '1.0',
-            'properties': {'INT': 2}
-        }
-        p2 = self.eng.profile_update(self.ctx, pid, spec=new_spec)
-        self.assertNotEqual(pid, p2['id'])
-        # spec changed but other fields not changed
-        self.assertEqual(new_spec, p2['spec'])
-        self.assertEqual('p-1', p2['name'])
-        self.assertEqual('1111', p2['permission'])
-        self.assertEqual({'foo': 'bar'}, p2['metadata'])
-
-        p = self.eng.profile_get(self.ctx, p2['id'])
-        self.assertEqual(new_spec, p['spec'])
-        self.assertEqual('p-1', p['name'])
-        self.assertEqual('1111', p['permission'])
-        self.assertEqual({'foo': 'bar'}, p['metadata'])
-
-        # update spec with other fields
-        p2 = self.eng.profile_update(self.ctx, pid, name='p-2',
-                                     permission='1100', spec=new_spec)
-
-        self.assertNotEqual(pid, p2['id'])
-        # spec changed with other fields changed properly
-        self.assertEqual(new_spec, p2['spec'])
-        self.assertEqual('p-2', p2['name'])
-        self.assertEqual('1100', p2['permission'])
-        self.assertEqual({'foo': 'bar'}, p2['metadata'])
-
     def test_profile_update_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.profile_update,
@@ -399,25 +362,6 @@ class ProfileTest(base.SenlinTestCase):
         p4 = self.eng.profile_update(self.ctx, 'p-3', name='p-4')
         self.assertEqual(pid, p4['id'])
         self.assertEqual('p-4', p4['name'])
-
-    def test_profile_update_err_validate(self):
-        p1 = self.eng.profile_create(self.ctx, 'p-1', self.spec,
-                                     permission='1111',
-                                     metadata={'foo': 'bar'})
-        pid = p1['id']
-
-        new_spec = {
-            'type': 'TestProfile',
-            'version': '1.0',
-            'properties': {
-                'bad': 'yes',
-            }
-        }
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_update,
-                               self.ctx, pid, spec=new_spec)
-
-        self.assertEqual(exception.SpecValidationFailed, ex.exc_info[0])
 
     def test_profile_delete(self):
         p1 = self.eng.profile_create(self.ctx, 'p-1', self.spec,
