@@ -44,7 +44,10 @@ DOC
 -----
   - Provide document(or docstring) for policy data passing for developers.
   - Provide documentation for existing policies.
-
+  - Get Senlin APIs published on the official website:
+    http://docs.openstack.org/developer/openstack-projects.html
+    http://developer.openstack.org/api-ref.html
+  - Add gate job for API and user/developer docs
 
 MIDDLE PRIORITY
 ===============
