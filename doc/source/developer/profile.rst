@@ -58,8 +58,8 @@ A profile object has the following properties:
 - ``deleted_time``: the timestamp when the profile was deleted.
 
 The ``spec`` property is the most important property for a profile. It is
-immutable, i.e. changing the ``spec`` property will result in a new profile
-being created. By restricting changes to this property, Senlin can do a better
+immutable, i.e. the only way to "change" the ``spec`` property is to create
+a new profile. By restricting changes to this property, Senlin can do a better
 job in managing the object configurations.
 
 
@@ -141,15 +141,8 @@ Updating A Profile
 
 Once a profile object is created, a user can request its properties to be
 updated. Updates to the ``name``, ``permission`` or ``metadata`` properties
-are applied on the specified profile object directly, however, updates to the
-``spec`` property of a profile object will result in the creation of a new
-profile object.
-
-When ``spec`` is specified as one of the properties for update, Senlin always
-try create a new profile object. This is a design consideration to make
-profiles used by clusters and nodes easier to manage. Note that the newly
-created profile will have the same name as the old profile if a new name is
-not provided.
+are applied on the specified profile object directly. Changing the ``spec``
+property of a profile object is not permitted.
 
 
 ------------------

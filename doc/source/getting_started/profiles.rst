@@ -283,16 +283,8 @@ profile::
 
   $ senlin profile-update -M version=2.2 myserver
 
-Changing the "spec" of a profile is not allowed, but you still can specify a
-new spec file for use in the :command:`profile-update` command::
-
-  $ senlin profile-update -s new_specfile.yaml myserver
-
-The result of this update command is that a new profile will be created. The
-new profile will have the same profile name, but a different ``spec`` property
-and a new ``id``.
-
-**NOTE**: This behavior is subject to change in future.
+Changing the "spec" of a profile is not allowed. The only way to make a change
+is to create a new profile using the :command:`profile-create` command.
 
 
 Deleting a Profile
