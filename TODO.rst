@@ -67,13 +67,6 @@ API
     and those related to asynchronous operations.
 
 
-ENGINE
-------
-  - Revise start_action() in scheduler module so that it can handle cases when
-    action_id specified is None. When ``action_id`` parameter is None, it
-    means that the scheduler will pick a suitable READY action for execution.
-
-
 PROFILE
 -------
   - Add support to template_url for heat stack profile. If template and template_url
