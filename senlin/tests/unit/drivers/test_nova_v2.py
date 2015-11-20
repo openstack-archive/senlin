@@ -259,7 +259,7 @@ class TestNovaV2(base.SenlinTestCase):
         self.compute.wait_for_delete.assert_called_once_with('FOO', wait=120)
 
     def test_wait_for_server_delete_with_default_timeout(self):
-        cfg.CONF.set_override('default_action_timeout', 360)
+        cfg.CONF.set_override('default_action_timeout', 360, enforce_type=True)
         self.compute.find_server.return_value = 'FOO'
 
         d = nova_v2.NovaClient(self.conn_params)

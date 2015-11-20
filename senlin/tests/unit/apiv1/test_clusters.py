@@ -561,7 +561,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('InvalidParameter', resp.json['error']['type'])
 
     def test_create_err_cluster_bad_reqest(self, mock_enforce):
-        cfg.CONF.set_override('debug', True)
+        cfg.CONF.set_override('debug', True, enforce_type=True)
         body = {
             'cluster': {
                 'name': 'test_cluster',

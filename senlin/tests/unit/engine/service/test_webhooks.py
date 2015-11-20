@@ -105,7 +105,7 @@ class WebhookTest(base.SenlinTestCase):
     @mock.patch.object(webhook_mod.Webhook, 'generate_url')
     @mock.patch.object(common_utils, 'encrypt')
     def test_webhook_create_already_exists(self, mock_encrypt, mock_url):
-        cfg.CONF.set_override('name_unique', True)
+        cfg.CONF.set_override('name_unique', True, enforce_type=True)
         mock_url.return_value = 'test-url', 'test-key'
         mock_encrypt.return_value = 'secret text', 'test-key'
 

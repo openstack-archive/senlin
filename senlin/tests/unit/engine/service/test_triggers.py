@@ -62,7 +62,7 @@ class TriggerTest(base.SenlinTestCase):
         self.assertIsNone(result['deleted_time'])
 
     def test_trigger_create_already_exists(self):
-        cfg.CONF.set_override('name_unique', True)
+        cfg.CONF.set_override('name_unique', True, enforce_type=True)
         spec = parser.simple_parse(trigger_spec)
         result = self.eng.trigger_create(self.ctx, 't-1', spec)
         self.assertIsNotNone(result)

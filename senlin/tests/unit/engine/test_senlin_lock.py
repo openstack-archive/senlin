@@ -40,7 +40,7 @@ class SenlinLockTest(base.SenlinTestCase):
     @mock.patch.object(scheduler, 'sleep')
     @mock.patch.object(db_api, "cluster_lock_acquire")
     def test_cluster_lock_acquire_with_retry(self, mock_acquire, mock_sleep):
-        cfg.CONF.set_override('lock_retry_times', 5)
+        cfg.CONF.set_override('lock_retry_times', 5, enforce_type=True)
         mock_acquire.side_effect = ['ACTION_ABC', 'ACTION_ABC', 'ACTION_XYZ']
 
         res = lockm.cluster_lock_acquire('CLUSTER_A', 'ACTION_XYZ')
@@ -56,7 +56,7 @@ class SenlinLockTest(base.SenlinTestCase):
     @mock.patch.object(scheduler, 'sleep')
     @mock.patch.object(db_api, "cluster_lock_acquire")
     def test_cluster_lock_acquire_max_retries(self, mock_acquire, mock_sleep):
-        cfg.CONF.set_override('lock_retry_times', 2)
+        cfg.CONF.set_override('lock_retry_times', 2, enforce_type=True)
         mock_acquire.side_effect = [
             'ACTION_ABC', 'ACTION_ABC', 'ACTION_ABC', 'ACTION_XYZ'
         ]
@@ -77,7 +77,7 @@ class SenlinLockTest(base.SenlinTestCase):
     @mock.patch.object(db_api, "cluster_lock_steal")
     def test_cluster_lock_acquire_forced(self, mock_steal, mock_acquire,
                                          mock_sleep):
-        cfg.CONF.set_override('lock_retry_times', 2)
+        cfg.CONF.set_override('lock_retry_times', 2, enforce_type=True)
         mock_acquire.side_effect = ['ACTION_ABC', 'ACTION_ABC', 'ACTION_ABC']
         mock_steal.return_value = ['ACTION_XY']
 
@@ -98,7 +98,7 @@ class SenlinLockTest(base.SenlinTestCase):
     @mock.patch.object(db_api, "cluster_lock_steal")
     def test_cluster_lock_acquire_steal_failed(self, mock_steal, mock_acquire,
                                                mock_sleep):
-        cfg.CONF.set_override('lock_retry_times', 2)
+        cfg.CONF.set_override('lock_retry_times', 2, enforce_type=True)
         mock_acquire.side_effect = ['ACTION_ABC', 'ACTION_ABC', 'ACTION_ABC']
         mock_steal.return_value = []
 
@@ -133,7 +133,7 @@ class SenlinLockTest(base.SenlinTestCase):
     @mock.patch.object(scheduler, 'sleep')
     @mock.patch.object(db_api, "node_lock_acquire")
     def test_node_lock_acquire_with_retry(self, mock_acquire, mock_sleep):
-        cfg.CONF.set_override('lock_retry_times', 5)
+        cfg.CONF.set_override('lock_retry_times', 5, enforce_type=True)
         mock_acquire.side_effect = ['ACTION_ABC', 'ACTION_ABC', 'ACTION_XYZ']
 
         res = lockm.node_lock_acquire('NODE_A', 'ACTION_XYZ')
@@ -146,7 +146,7 @@ class SenlinLockTest(base.SenlinTestCase):
     @mock.patch.object(scheduler, 'sleep')
     @mock.patch.object(db_api, "node_lock_acquire")
     def test_node_lock_acquire_max_retries(self, mock_acquire, mock_sleep):
-        cfg.CONF.set_override('lock_retry_times', 2)
+        cfg.CONF.set_override('lock_retry_times', 2, enforce_type=True)
         mock_acquire.side_effect = [
             'ACTION_ABC', 'ACTION_ABC', 'ACTION_ABC', 'ACTION_XYZ'
         ]
@@ -165,7 +165,7 @@ class SenlinLockTest(base.SenlinTestCase):
     @mock.patch.object(db_api, "node_lock_steal")
     def test_node_lock_acquire_forced(self, mock_steal, mock_acquire,
                                       mock_sleep):
-        cfg.CONF.set_override('lock_retry_times', 2)
+        cfg.CONF.set_override('lock_retry_times', 2, enforce_type=True)
         mock_acquire.side_effect = ['ACTION_ABC', 'ACTION_ABC', 'ACTION_ABC']
         mock_steal.return_value = 'ACTION_XY'
 
@@ -184,7 +184,7 @@ class SenlinLockTest(base.SenlinTestCase):
     @mock.patch.object(db_api, "node_lock_steal")
     def test_node_lock_acquire_steal_failed(self, mock_steal, mock_acquire,
                                             mock_sleep):
-        cfg.CONF.set_override('lock_retry_times', 2)
+        cfg.CONF.set_override('lock_retry_times', 2, enforce_type=True)
         mock_acquire.side_effect = ['ACTION_ABC', 'ACTION_ABC', 'ACTION_ABC']
         mock_steal.return_value = None
 

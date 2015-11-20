@@ -70,7 +70,7 @@ class PolicyTest(base.SenlinTestCase):
         self.assertIsNotNone(result['id'])
 
     def test_policy_create_already_exists(self):
-        cfg.CONF.set_override('name_unique', True)
+        cfg.CONF.set_override('name_unique', True, enforce_type=True)
         result = self.eng.policy_create(self.ctx, 'p-1', self.spec)
         self.assertIsNotNone(result)
 

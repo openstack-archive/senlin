@@ -28,7 +28,8 @@ class TestSenlinDriver(base.SenlinTestCase):
         env.register_driver('cloud_backend_1', plugin1)
 
         # Using default cloud backend defined in configure file
-        cfg.CONF.set_override('cloud_backend', 'cloud_backend_1')
+        cfg.CONF.set_override('cloud_backend', 'cloud_backend_1',
+                              enforce_type=True)
         sd = driver_base.SenlinDriver()
         self.assertEqual('Compute1', sd.compute)
         self.assertEqual('Orchestration1', sd.orchestration)

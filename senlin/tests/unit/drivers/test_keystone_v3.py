@@ -242,18 +242,18 @@ class TestKeystoneV3(base.SenlinTestCase):
         self.assertEqual(access_info.user_id, user_id)
 
     def test_get_service_credentials(self, mock_create):
-        cfg.CONF.set_override('auth_url', 'FAKE_URL',
-                              group='authentication')
+        cfg.CONF.set_override('auth_url', 'FAKE_URL', group='authentication',
+                              enforce_type=True)
         cfg.CONF.set_override('service_username', 'FAKE_USERNAME',
-                              group='authentication')
+                              group='authentication', enforce_type=True)
         cfg.CONF.set_override('service_password', 'FAKE_PASSWORD',
-                              group='authentication')
+                              group='authentication', enforce_type=True)
         cfg.CONF.set_override('service_project_name', 'FAKE_PROJECT',
-                              group='authentication')
+                              group='authentication', enforce_type=True)
         cfg.CONF.set_override('service_user_domain', 'FAKE_DOMAIN_1',
-                              group='authentication')
+                              group='authentication', enforce_type=True)
         cfg.CONF.set_override('service_project_domain', 'FAKE_DOMAIN_2',
-                              group='authentication')
+                              group='authentication', enforce_type=True)
         expected = {
             'auth_url': 'FAKE_URL',
             'username': 'FAKE_USERNAME',

@@ -780,7 +780,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     def test_node_action_missing_action(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
-        cfg.CONF.set_override('debug', True)
+        cfg.CONF.set_override('debug', True, enforce_type=True)
         node_id = 'xxxx-yyyy'
         body = {}
         req = self._put('/nodes/%(node_id)s/action' % {'node_id': node_id},
@@ -798,7 +798,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     def test_node_action_multiple_action(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
-        cfg.CONF.set_override('debug', True)
+        cfg.CONF.set_override('debug', True, enforce_type=True)
         node_id = 'xxxx-yyyy'
         body = {'fly': {}, 'swim': {}}
         req = self._put('/nodes/%(node_id)s/action' % {'node_id': node_id},
@@ -816,7 +816,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     def test_node_action_unknown_action(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
-        cfg.CONF.set_override('debug', True)
+        cfg.CONF.set_override('debug', True, enforce_type=True)
         node_id = 'xxxx-yyyy'
         body = {'fly': None}
         req = self._put('/nodes/%(node_id)s/action' % {'node_id': node_id},

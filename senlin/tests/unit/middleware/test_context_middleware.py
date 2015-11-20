@@ -89,7 +89,7 @@ class RequestContextMiddlewareTest(base.SenlinTestCase):
         cfg.CONF.register_opts(opts)
         policy_opts.set_defaults(cfg.CONF)
         cfg.CONF.set_override('policy_file', 'check_admin.json',
-                              group='oslo_policy')
+                              group='oslo_policy', enforce_type=True)
 
     def test_context_middleware(self):
 
