@@ -617,11 +617,19 @@ class ClusterTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_profile_not_found(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        mock_find = self.patchobject(self.eng, 'profile_find')
+        mock_find.side_effect = [
+            self.profile,
+            exception.ProfileNotFound(profile='Bogus')
+        ]
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_update,
                                self.ctx, c['id'], profile_id='Bogus')
 
-        self.assertEqual(exception.ProfileNotFound, ex.exc_info[0])
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: "
+                         "The specified profile 'Bogus' is not found.",
+                         six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_profile_normal(self, notify):

@@ -600,7 +600,12 @@ class EngineService(service.Service):
             raise exception.FeatureNotSupported(feature=msg)
 
         old_profile = self.profile_find(context, cluster.profile_id)
-        new_profile = self.profile_find(context, profile_id)
+        try:
+            new_profile = self.profile_find(context, profile_id)
+        except exception.ProfileNotFound:
+            msg = _("The specified profile '%s' is not found.") % profile_id
+            raise exception.SenlinBadRequest(msg=msg)
+
         if new_profile.type != old_profile.type:
             msg = _('Cannot update a cluster to a different profile type, '
                     'operation aborted.')
