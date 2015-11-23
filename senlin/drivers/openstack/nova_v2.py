@@ -121,6 +121,13 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.delete_server(value, ignore_missing)
 
     @sdk.translate_exception
+    def server_rebuild(self, value, imageref, name=None, admin_password=None,
+                       **attrs):
+        return self.conn.compute.rebuild_server(value, imageref, name=name,
+                                                admin_password=admin_password,
+                                                **attrs)
+
+    @sdk.translate_exception
     def wait_for_server_delete(self, value, timeout=None):
         '''Wait for server deleting complete'''
         if timeout is None:
