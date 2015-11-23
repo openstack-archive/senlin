@@ -292,8 +292,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
             'limit': 'fake limit',
-            'sort_keys': 'fake sort keys',
             'marker': 'fake marker',
+            'sort_keys': 'fake sort keys',
             'sort_dir': 'fake sort dir',
             'balrog': 'you shall not pass!'
         }
@@ -319,9 +319,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {
             'status': 'fake status',
             'name': 'fake name',
-            'user': 'fake username',
-            'project': 'fake project',
-            'owner': 'no such key',
             'balrog': 'you shall not pass!'
         }
         req = self._get('/clusters', params=params)
@@ -334,12 +331,9 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('filters', engine_args)
 
         filters = engine_args['filters']
-        self.assertEqual(4, len(filters))
+        self.assertEqual(2, len(filters))
         self.assertIn('status', filters)
         self.assertIn('name', filters)
-        self.assertIn('project', filters)
-        self.assertIn('user', filters)
-        self.assertNotIn('owner', filters)
         self.assertNotIn('balrog', filters)
 
     def test_index_show_deleted_false(self, mock_enforce):
@@ -351,7 +345,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.controller.index(req, tenant_id=self.project)
         rpc_client.cluster_list.assert_called_once_with(mock.ANY,
                                                         filters=mock.ANY,
-                                                        project_safe=True,
                                                         show_deleted=False)
 
     def test_index_show_deleted_true(self, mock_enforce):
@@ -363,7 +356,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.controller.index(req, tenant_id=self.project)
         rpc_client.cluster_list.assert_called_once_with(mock.ANY,
                                                         filters=mock.ANY,
-                                                        project_safe=True,
                                                         show_deleted=True)
 
     def test_index_show_nested_false(self, mock_enforce):
@@ -375,7 +367,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.controller.index(req, tenant_id=self.project)
         rpc_client.cluster_list.assert_called_once_with(mock.ANY,
                                                         filters=mock.ANY,
-                                                        project_safe=True,
                                                         show_nested=False)
 
     def test_index_show_nested_true(self, mock_enforce):
@@ -387,8 +378,47 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.controller.index(req, tenant_id=self.project)
         rpc_client.cluster_list.assert_called_once_with(mock.ANY,
                                                         filters=mock.ANY,
-                                                        project_safe=True,
                                                         show_nested=True)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_index_global_project_true(self, mock_call, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {'global_project': 'True'}
+        req = self._get('/clusters', params=params)
+
+        self.controller.index(req, tenant_id=self.project)
+
+        call_args, w = mock_call.call_args
+        call_args = call_args[1][1]
+        self.assertIn('project_safe', call_args)
+        self.assertFalse(call_args['project_safe'])
+
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_index_global_project_false(self, mock_call, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {'global_project': 'False'}
+        req = self._get('/clusters', params=params)
+
+        self.controller.index(req, tenant_id=self.project)
+
+        call_args, w = mock_call.call_args
+        call_args = call_args[1][1]
+        self.assertIn('project_safe', call_args)
+        self.assertTrue(call_args['project_safe'])
+
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_node_index_global_project_not_bool(self, mock_call, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {'global_project': 'No'}
+        req = self._get('/clusters', params=params)
+
+        ex = self.assertRaises(senlin_exc.InvalidParameter,
+                               self.controller.index, req,
+                               tenant_id=self.project)
+
+        self.assertEqual("Invalid value 'No' specified for 'global_project'",
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_remote_attribute_error(self, mock_call, mock_enforce):
