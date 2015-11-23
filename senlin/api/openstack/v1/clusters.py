@@ -17,6 +17,7 @@ Cluster endpoint for Senlin v1 ReST API.
 
 from oslo_config import cfg
 from oslo_log import log as logging
+import six
 from webob import exc
 
 from senlin.api.openstack.v1 import util
@@ -266,6 +267,60 @@ class ClusterController(object):
                                               adj_type, number, min_size,
                                               max_size, min_step, strict)
 
+    def _sanitize_policy(self, data):
+        """Validate dict body of policy attach.
+
+        :param dict data: A dictionary containing the properties of the policy
+                          to be attached including the policy ID.
+        :returns: A sanitized dict containing the policy properties.
+        :raises: :class:`~webob.exception.HTTPBadRequest` if the policy dict
+                 contains invalid property values.
+        """
+        if not isinstance(data, dict):
+            msg = _("The data provided is not a map.")
+            raise exc.HTTPBadRequest(msg)
+
+        if consts.CP_POLICY_ID not in data:
+            msg = _("The 'policy_id' field is missing in the request.")
+            raise exc.HTTPBadRequest(msg)
+
+        if consts.CP_PRIORITY in data:
+            pri = data.get(consts.CP_PRIORITY)
+            try:
+                pri = utils.parse_int_param('priority', pri, lower_limit=0,
+                                            upper_limit=100)
+            except senlin_exc.InvalidParameter as ex:
+                raise exc.HTTPBadRequest(six.text_type(ex))
+
+            data[consts.CP_PRIORITY] = pri
+
+        if consts.CP_LEVEL in data:
+            lvl = data.get(consts.CP_LEVEL)
+            try:
+                lvl = utils.parse_int_param('level', lvl, lower_limit=0,
+                                            upper_limit=100)
+            except senlin_exc.InvalidParameter as ex:
+                raise exc.HTTPBadRequest(six.text_type(ex))
+            data[consts.CP_LEVEL] = lvl
+
+        if consts.CP_COOLDOWN in data:
+            cdn = data.get(consts.CP_COOLDOWN)
+            try:
+                cdn = utils.parse_int_param('cooldown', cdn, lower_limit=0)
+            except senlin_exc.InvalidParameter as ex:
+                raise exc.HTTPBadRequest(six.text_type(ex))
+            data[consts.CP_COOLDOWN] = cdn
+
+        if consts.CP_ENABLED in data:
+            enb = data.get(consts.CP_ENABLED)
+            try:
+                enb = utils.parse_bool_param('enabled', enb)
+            except senlin_exc.InvalidParameter as ex:
+                raise exc.HTTPBadRequest(six.text_type(ex))
+            data[consts.CP_ENABLED] = enb
+
+        return data
+
     @util.policy_enforce
     def action(self, req, cluster_id, body=None):
         '''Perform specified action on a cluster.'''
@@ -304,7 +359,8 @@ class ClusterController(object):
             res = self.rpc_client.cluster_scale_in(req.context, cluster_id,
                                                    count)
         elif this_action == self.POLICY_ATTACH:
-            data = body.get(this_action)
+            raw_data = body.get(this_action)
+            data = self._sanitize_policy(raw_data)
             res = self.rpc_client.cluster_policy_attach(req.context,
                                                         cluster_id,
                                                         **data)
