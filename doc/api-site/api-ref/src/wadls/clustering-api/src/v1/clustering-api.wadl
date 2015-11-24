@@ -221,23 +221,6 @@
                                     <code>status</code> Status of cluster, may appear more than once.
                                 </para>
                             </listitem>
-                            <listitem>
-                                <para>
-                                    <code>project</code> Project of cluster, may appear more than once.
-                                </para>
-                            </listitem>
-                            <listitem>
-                                <para>
-                                    <code>user</code> User who is owner of the cluster, may appear
-                                    more than once.
-                                </para>
-                            </listitem>
-                            <listitem>
-                                <para>
-                                    <code>parent</code> ID of parent cluster of the cluster, may
-                                    appear more than once. This is used for nested clusters.
-                                </para>
-                            </listitem>
                         </itemizedlist>
                     </wadl:doc>
                 </param>
@@ -270,6 +253,12 @@
                         <para>The sort direction of the cluster list.  Either <code>asc</code>
                             (ascending) or <code>desc</code> (descending) is acceptable.
                         </para>
+                    </wadl:doc>
+                </param>
+                <param name="global_project" style="query" required="false">
+                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+                        <para>Indicates whether nodes from tenants(projects) are to be listed.
+                            Operation subject to access policy enforcement.</para>
                     </wadl:doc>
                 </param>
             </representation>
@@ -1211,7 +1200,7 @@
                         </para>
                     </wadl:doc>
                 </param>
-                <param name="global_tenant" style="query" required="false">
+                <param name="global_project" style="query" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                         <para>Indicates whether nodes from tenants(projects) are to be listed.
                             Operation subject to access policy enforcement.</para>

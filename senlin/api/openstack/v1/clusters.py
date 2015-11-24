@@ -142,9 +142,6 @@ class ClusterController(object):
         filter_whitelist = {
             'status': 'mixed',
             'name': 'mixed',
-            'project': 'mixed',
-            'parent': 'mixed',
-            'user': 'mixed',
         }
         param_whitelist = {
             'limit': 'single',
@@ -153,6 +150,7 @@ class ClusterController(object):
             'sort_keys': 'multi',
             'show_deleted': 'single',
             'show_nested': 'single',
+            'global_project': 'single',
         }
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)
@@ -165,12 +163,17 @@ class ClusterController(object):
         if key in params:
             params[key] = utils.parse_bool_param(key, params[key])
 
+        key = consts.PARAM_GLOBAL_PROJECT
+        if key in params:
+            project_safe = not utils.parse_bool_param(key, params[key])
+            del params[key]
+            params['project_safe'] = project_safe
+
         if not filters:
             filters = None
 
         clusters = self.rpc_client.cluster_list(req.context,
                                                 filters=filters,
-                                                project_safe=True,
                                                 **params)
         return {'clusters': clusters}
 
