@@ -864,11 +864,6 @@
                         <para>New name, if specified, for the target profile.</para>
                     </wadl:doc>
                 </param>
-                <param name="spec" style="plain" required="false">
-                    <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
-                        <para>Detailed specification based on the chosen profile type.</para>
-                    </wadl:doc>
-                </param>
                 <param name="permission" style="plain" required="false">
                     <wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
                         <para>A string to be interpreted as new permission.</para>
