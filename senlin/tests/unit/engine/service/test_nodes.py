@@ -109,7 +109,7 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_node_create_already_exists(self, notify):
-        cfg.CONF.set_override('name_unique', True)
+        cfg.CONF.set_override('name_unique', True, enforce_type=True)
         node = self.eng.node_create(self.ctx, 'n-1', self.profile['id'])
         self.assertIsNotNone(node)
 

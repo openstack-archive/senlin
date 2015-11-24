@@ -354,15 +354,15 @@ class JSONRequestDeserializerTest(base.SenlinTestCase):
         self.assertEqual(expected, actual)
 
     def test_from_json_exceeds_max_json_mb(self):
-        cfg.CONF.set_override('max_json_body_size', 10)
+        cfg.CONF.set_override('max_json_body_size', 10, enforce_type=True)
         body = json.dumps(['a'] * cfg.CONF.max_json_body_size)
         self.assertTrue(len(body) > cfg.CONF.max_json_body_size)
         error = self.assertRaises(exception.RequestLimitExceeded,
                                   wsgi.JSONRequestDeserializer().from_json,
                                   body)
-        msg = 'Request limit exceeded: JSON body size ' + \
-              '(%s bytes) exceeds maximum allowed size (%s bytes).' % \
-              (len(body), cfg.CONF.max_json_body_size)
+        msg = ('Request limit exceeded: JSON body size '
+               '(%s bytes) exceeds maximum allowed size (%s bytes).'
+               ) % (len(body), cfg.CONF.max_json_body_size)
         self.assertEqual(msg, six.text_type(error))
 
 

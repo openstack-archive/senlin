@@ -75,7 +75,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertIsNone(profile.server_id)
 
     def test_validate(self):
-        cfg.CONF.set_override('default_action_timeout', 119)
+        cfg.CONF.set_override('default_action_timeout', 119, enforce_type=True)
 
         profile = server.ServerProfile('t', self.spec)
 

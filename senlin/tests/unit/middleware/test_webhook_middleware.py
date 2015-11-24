@@ -159,13 +159,14 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         req.url = 'http://url1'
         req.params = {'key': 'FAKE_KEY'}
         req.headers = {}
-        cfg.CONF.set_override('auth_url', 'AUTH_URL', group='authentication')
+        cfg.CONF.set_override('auth_url', 'AUTH_URL', group='authentication',
+                              enforce_type=True)
         cfg.CONF.set_override('service_username', 'USERNAME',
-                              group='authentication')
+                              group='authentication', enforce_type=True)
         cfg.CONF.set_override('service_user_domain', 'DOMAIN',
-                              group='authentication')
+                              group='authentication', enforce_type=True)
         cfg.CONF.set_override('service_password', 'PASSWORD',
-                              group='authentication')
+                              group='authentication', enforce_type=True)
 
         fake_return = ('TENANT', 'WEBHOOK', 'FAKE_KEY')
         mock_extract = self.patchobject(self.middleware, '_parse_url',

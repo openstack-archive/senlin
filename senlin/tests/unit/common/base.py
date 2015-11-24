@@ -71,7 +71,7 @@ class SenlinTestCase(testscenarios.WithScenarios,
 
         self.addCleanup(enable_sleep)
 
-        cfg.CONF.set_override('error_wait_time', None)
+        cfg.CONF.set_override('error_wait_time', 0, enforce_type=True)
         self.addCleanup(cfg.CONF.reset)
 
         messaging.setup("fake://", optional=True)

@@ -91,7 +91,7 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_create_already_exists(self, notify):
-        cfg.CONF.set_override('name_unique', True)
+        cfg.CONF.set_override('name_unique', True, enforce_type=True)
         result = self.eng.cluster_create(self.ctx, 'c-1', 0,
                                          self.profile['id'])
         self.assertIsNotNone(result)
