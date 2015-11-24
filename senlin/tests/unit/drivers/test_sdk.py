@@ -13,7 +13,6 @@
 import mock
 from openstack import connection
 from openstack import profile
-from openstack import transport
 from oslo_serialization import jsonutils
 from requests import exceptions as req_exc
 import six
@@ -185,32 +184,28 @@ class OpenStackSDKTest(base.SenlinTestCase):
         self.assertEqual('BOOM', ex.message)
 
     @mock.patch.object(sdk, 'create_connection')
-    @mock.patch.object(transport, 'Transport')
-    def test_authenticate(self, mock_transport, mock_conn):
+    def test_authenticate(self, mock_conn):
         x_conn = mock_conn.return_value
-        x_auth = x_conn.session.authenticator
-        x_transport = mock_transport.return_value
+        x_transport = mock.Mock()
+        x_conn.transport = x_transport
         x_access_info = mock.Mock()
         mock_authorize = mock.Mock(return_value=x_access_info)
-        x_auth.authorize = mock_authorize
+        x_conn.session.authenticator.authorize = mock_authorize
 
         res = sdk.authenticate(foo='bar')
 
         self.assertEqual(x_access_info, res)
         mock_conn.assert_called_once_with({'foo': 'bar'})
-        mock_transport.assert_called_once_with()
         mock_authorize.assert_called_once_with(x_transport)
 
     @mock.patch.object(sdk, 'create_connection')
-    @mock.patch.object(transport, 'Transport')
     @mock.patch.object(sdk, 'parse_exception')
-    def test_authenticate_with_exception(self, mock_parse, mock_transport,
-                                         mock_conn):
+    def test_authenticate_with_exception(self, mock_parse, mock_conn):
         x_conn = mock_conn.return_value
-        x_auth = x_conn.session.authenticator
-        x_transport = mock_transport.return_value
+        x_transport = mock.Mock()
+        x_conn.transport = x_transport
         error = Exception('test exception')
-        x_auth.authorize.side_effect = error
+        x_conn.session.authenticator.authorize.side_effect = error
         mock_parse.side_effect = senlin_exc.InternalError(code=123,
                                                           message='BOOM')
 
@@ -218,8 +213,6 @@ class OpenStackSDKTest(base.SenlinTestCase):
                                sdk.authenticate, foo='bar')
 
         mock_conn.assert_called_once_with({'foo': 'bar'})
-        mock_transport.assert_called_once_with()
-        x_auth.authorize.assert_called_once_with(x_transport)
         mock_parse.assert_called_once_with(error)
         self.assertEqual(123, ex.code)
         self.assertEqual('BOOM', ex.message)

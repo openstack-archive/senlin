@@ -20,7 +20,6 @@ import six
 from openstack import connection
 from openstack import exceptions as sdk_exc
 from openstack import profile
-from openstack import transport
 from oslo_serialization import jsonutils
 from requests import exceptions as req_exc
 
@@ -112,9 +111,8 @@ def authenticate(**kwargs):
     '''Authenticate using openstack sdk based on user credential'''
 
     try:
-        auth = create_connection(kwargs).session.authenticator
-        xport = transport.Transport()
-        access_info = auth.authorize(xport)
+        conn = create_connection(kwargs)
+        access_info = conn.session.authenticator.authorize(conn.transport)
     except Exception as ex:
         raise parse_exception(ex)
 
