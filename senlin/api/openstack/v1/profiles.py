@@ -132,15 +132,13 @@ class ProfileController(object):
         if profile_data is None:
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'profile' key in request body."))
-        # spec can be empty in an update request
+        # We ignore the 'spec' property even if it is specified.
         name = profile_data.get(consts.PROFILE_NAME, None)
-        spec = profile_data.get(consts.PROFILE_SPEC, None)
         permission = profile_data.get(consts.PROFILE_PERMISSION, None)
         metadata = profile_data.get(consts.PROFILE_METADATA, None)
         # We don't check if type is specified or not
         profile = self.rpc_client.profile_update(req.context, profile_id,
-                                                 name, spec, permission,
-                                                 metadata)
+                                                 name, permission, metadata)
 
         return {'profile': profile}
 

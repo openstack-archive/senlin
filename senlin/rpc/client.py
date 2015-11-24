@@ -97,13 +97,11 @@ class EngineClient(object):
         return self.call(ctxt,
                          self.make_msg('profile_get', identity=identity))
 
-    def profile_update(self, ctxt, profile_id, name, spec, permission,
-                       metadata):
+    def profile_update(self, ctxt, profile_id, name, permission, metadata):
         return self.call(ctxt,
                          self.make_msg('profile_update',
                                        profile_id=profile_id,
-                                       name=name, spec=spec,
-                                       permission=permission,
+                                       name=name, permission=permission,
                                        metadata=metadata))
 
     def profile_delete(self, ctxt, identity, cast=True):

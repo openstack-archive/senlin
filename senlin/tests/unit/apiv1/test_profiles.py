@@ -488,6 +488,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         args = copy.deepcopy(body['profile'])
         args['profile_id'] = pid
         args['permission'] = None
+        del args['spec']
         mock_call.assert_called_with(req.context, ('profile_update', args))
 
         expected = {'profile': engine_resp}
@@ -558,7 +559,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         args = copy.deepcopy(body['profile'])
         args['profile_id'] = pid
-        args['spec'] = None
         mock_call.assert_called_with(req.context, ('profile_update', args))
 
         expected = {'profile': engine_response}
@@ -589,39 +589,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ProfileNotFound', resp.json['error']['type'])
-
-    def test_profile_update_with_spec_validation_failed(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'update', True)
-        pid = 'aaaa-bbbb-cccc'
-        body = {
-            'profile': {
-                'name': 'test_profile',
-                'spec': {'param4': 'value4'},
-            }
-        }
-        req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
-                        json.dumps(body))
-
-        msg = 'Spec validation error (param): value'
-        error = senlin_exc.SpecValidationFailed(message=msg)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
-                                     side_effect=error)
-
-        resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.update,
-                                              req, tenant_id=self.project,
-                                              profile_id=pid,
-                                              body=body)
-
-        expected_args = body['profile']
-        expected_args['permission'] = None
-        expected_args['metadata'] = None
-        expected_args['profile_id'] = pid
-        mock_call.assert_called_once_with(req.context,
-                                          ('profile_update', expected_args))
-        self.assertEqual(400, resp.json['code'])
-        self.assertEqual('SpecValidationFailed', resp.json['error']['type'])
-        self.assertIsNone(resp.json['error']['traceback'])
 
     def test_profile_update_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', False)

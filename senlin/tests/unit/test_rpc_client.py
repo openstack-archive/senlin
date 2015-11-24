@@ -185,7 +185,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         default_args = {
             'profile_id': 'aaaa-bbbb-cccc',
             'name': mock.ANY,
-            'spec': mock.ANY,
             'permission': mock.ANY,
             'metadata': mock.ANY,
         }
