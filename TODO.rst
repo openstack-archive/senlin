@@ -18,8 +18,6 @@ API
     are done asynchronously in Senlin.
   - Make object creation requests return both action_id and a location header set
     to the URI of the resource to be created. This is a requirement from API WG.
-  - Correctly use 400 and 404 resp code following the guide from API WG.
-    https://review.openstack.org/#/c/221163/
   - Find and fill gaps with API-WG besides the one we already identified.
 
 POLICY
