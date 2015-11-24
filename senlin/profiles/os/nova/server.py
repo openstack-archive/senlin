@@ -11,6 +11,7 @@
 # under the License.
 
 import base64
+import copy
 
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -139,6 +140,7 @@ class ServerProfile(base.Profile):
                     ),
                 },
             ),
+            updatable=True,
         ),
         PERSONALITY: schema.List(
             _('List of files to be injected into the server, where each.'),
@@ -324,10 +326,90 @@ class ServerProfile(base.Profile):
             return True
 
         # TODO(anyone): Validate the new profile
-        # TODO(anyone): Do update based on the fields provided.
+        # TODO(Yanyan Hu): Update all server properties changed in new profile
 
-        # self.nova(obj).server_update(**fields)
+        # Update server network
+        networks_current = self.properties[self.NETWORKS]
+        networks_create = new_profile.properties[self.NETWORKS]
+        networks_delete = copy.deepcopy(networks_current)
+        for network in networks_current:
+            if network in networks_create:
+                networks_create.remove(network)
+                networks_delete.remove(network)
+        if networks_create or networks_delete:
+            # We have network interfaces to be deleted and/or created
+            try:
+                self._update_network(obj, networks_create, networks_delete)
+            except Exception as ex:
+                LOG.exception(_('Failed in updating server network: %s'),
+                              six.text_type(ex))
+                return False
+
         return True
+
+    def _update_network(self, obj, networks_create, networks_delete):
+        '''Updating server network interfaces'''
+
+        server = self.nova(obj).server_get(self.server_id)
+        ports_existing = list(self.nova(obj).server_interface_list(server))
+        ports = []
+        for p in ports_existing:
+            fixed_ips = []
+            for addr in p['fixed_ips']:
+                fixed_ips.append(addr['ip_address'])
+            ports.append({'port_id': p['port_id'], 'net_id': p['net_id'],
+                          'fixed_ips': fixed_ips})
+
+        # Detach some existing ports
+        # Step1. Accurately search port with port_id or fixed-ip/net_id
+        for n in networks_delete:
+            if n['port'] is not None:
+                for p in ports:
+                    if p['port_id'] == n['port']:
+                        ports.remove(p)
+                        break
+                res = self.nova(obj).server_interface_delete(n['port'],
+                                                             server)
+            elif n['fixed-ip'] is not None:
+                res = self.neutron(obj).network_get(n['network'])
+                net_id = res.id
+                for p in ports:
+                    if (n['fixed-ip'] in p['fixed_ips']) and (
+                            p['net_id'] == net_id):
+                        res = self.nova(obj).server_interface_delete(
+                            p['port_id'], server)
+                        ports.remove(p)
+                        break
+
+        # Step2. Fuzzy search port with net_id
+        for n in networks_delete:
+            if n['port'] is None and n['fixed-ip'] is None:
+                res = self.neutron(obj).network_get(n['network'])
+                net_id = res.id
+                for p in ports:
+                    if p['net_id'] == net_id:
+                        res = self.nova(obj).server_interface_delete(
+                            p['port_id'], server)
+                        ports.remove(p)
+                        break
+
+        # Attach new ports added in new network definition
+        for n in networks_create:
+            net_name_id = n.get(self.NETWORK, None)
+            if net_name_id:
+                res = self.neutron(obj).network_get(net_name_id)
+                n['net_id'] = res.id
+                if n['fixed-ip'] is not None:
+                    n['fixed_ips'] = [
+                        {'ip_address': n['fixed-ip']}]
+            if n['port'] is not None:
+                n['port_id'] = n['port']
+            del n['network']
+            del n['port']
+            del n['fixed-ip']
+            self.nova(obj).server_interface_create(server, **n)
+
+        return
 
     def do_check(self, obj):
         # TODO(anyone): Check server status
