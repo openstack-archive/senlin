@@ -1439,6 +1439,80 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test_cluster_action_scale_in_non_int(self, mock_enforce):
         self._cluster_action_scale_non_int('scale_in', mock_enforce)
 
+    def test__sanitize_policy(self, mock_enforce):
+        data = {
+            'policy_id': 'FOO',
+            'priority': 50,
+            'level': 50,
+            'enabled': True
+        }
+        res = self.controller._sanitize_policy(data)
+        self.assertEqual(res, data)
+
+    def test__sanitize_policy_not_dict(self, mock_enforce):
+        data = ['aha, bad data']
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller._sanitize_policy, data)
+        self.assertEqual("The data provided is not a map.",
+                         six.text_type(ex))
+
+    def test__sanitize_policy_missing_policy_id(self, mock_enforce):
+        data = {
+            'Foo': 'Bar'
+        }
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller._sanitize_policy, data)
+        self.assertEqual("The 'policy_id' field is missing in the request.",
+                         six.text_type(ex))
+
+    def test__sanitize_policy_bad_priority(self, mock_enforce):
+        data = {
+            'policy_id': 'FAKE',
+        }
+
+        for value in ['high', '-1', '200']:
+            data['priority'] = value
+            ex = self.assertRaises(exc.HTTPBadRequest,
+                                   self.controller._sanitize_policy, data)
+            expected = "Invalid value '%s' specified for 'priority'" % value
+            self.assertEqual(expected, six.text_type(ex))
+
+    def test__sanitize_policy_bad_level(self, mock_enforce):
+        data = {
+            'policy_id': 'FAKE',
+        }
+
+        for value in ['high', '-1', '200']:
+            data['level'] = value
+            ex = self.assertRaises(exc.HTTPBadRequest,
+                                   self.controller._sanitize_policy, data)
+            expected = "Invalid value '%s' specified for 'level'" % value
+            self.assertEqual(expected, six.text_type(ex))
+
+    def test__sanitize_policy_bad_cooldown(self, mock_enforce):
+        data = {
+            'policy_id': 'FAKE',
+        }
+
+        for value in ['long', '-1']:
+            data['cooldown'] = value
+            ex = self.assertRaises(exc.HTTPBadRequest,
+                                   self.controller._sanitize_policy, data)
+            expected = "Invalid value '%s' specified for 'cooldown'" % value
+            self.assertEqual(expected, six.text_type(ex))
+
+    def test__sanitize_policy_bad_enabled_value(self, mock_enforce):
+        data = {
+            'policy_id': 'FAKE',
+        }
+
+        for value in ['yes', '1', 1]:
+            data['enabled'] = value
+            ex = self.assertRaises(exc.HTTPBadRequest,
+                                   self.controller._sanitize_policy, data)
+            expected = "Invalid value '%s' specified for 'enabled'" % value
+            self.assertEqual(expected, six.text_type(ex))
+
     def test_cluster_action_attach_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
