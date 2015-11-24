@@ -223,23 +223,23 @@ class TestKeystoneV3(base.SenlinTestCase):
 
     @mock.patch.object(sdk, 'authenticate')
     def test_get_token(self, mock_auth, mock_create):
-        access_info = mock.Mock()
+        access_info = {'token': '123', 'user_id': 'abc', 'project_id': 'xyz'}
         mock_auth.return_value = access_info
 
         token = kv3.KeystoneClient.get_token(key='value')
 
         mock_auth.assert_called_once_with(key='value')
-        self.assertEqual(access_info.auth_token, token)
+        self.assertEqual('123', token)
 
     @mock.patch.object(sdk, 'authenticate')
     def test_get_user_id(self, mock_auth, mock_create):
-        access_info = mock.Mock()
+        access_info = {'token': '123', 'user_id': 'abc', 'project_id': 'xyz'}
         mock_auth.return_value = access_info
 
         user_id = kv3.KeystoneClient.get_user_id(key='value')
 
         mock_auth.assert_called_once_with(key='value')
-        self.assertEqual(access_info.user_id, user_id)
+        self.assertEqual('abc', user_id)
 
     def test_get_service_credentials(self, mock_create):
         cfg.CONF.set_override('auth_url', 'FAKE_URL', group='authentication',

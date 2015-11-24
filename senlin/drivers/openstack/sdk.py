@@ -110,10 +110,11 @@ def create_connection(params=None):
 def authenticate(**kwargs):
     '''Authenticate using openstack sdk based on user credential'''
 
-    try:
-        conn = create_connection(kwargs)
-        access_info = conn.session.authenticator.authorize(conn.transport)
-    except Exception as ex:
-        raise parse_exception(ex)
+    conn = create_connection(kwargs)
+    access_info = {
+        'token': conn.session.get_token(),
+        'user_id': conn.session.get_user_id(),
+        'project_id': conn.session.get_project_id()
+    }
 
     return access_info
