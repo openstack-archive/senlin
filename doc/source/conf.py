@@ -72,7 +72,7 @@ bug_tag = "docs"
 pwd = os.getcwd()
 
 # html_context allows us to pass arbitrary values into the html template
-html_context = {"pwd":pwd, "gitsha":gitsha, "bug_tag":bug_tag}
+html_context = {"pwd": pwd, "gitsha": gitsha, "bug_tag": bug_tag}
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 add_function_parentheses = True
