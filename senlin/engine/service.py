@@ -949,8 +949,8 @@ class EngineService(service.Service):
 
         policies = db_api.cluster_policy_get_all(context, db_cluster.id)
         if len(policies) > 0:
-            msg = _('Cluster %(id)s is not allowed to be deleted without '
-                    'detaching all policies.') % {'id': identity}
+            msg = _('Cluster %(id)s cannot be deleted without having all '
+                    'policies detached.') % {'id': identity}
             LOG.error(msg)
             raise exception.SenlinBadRequest(msg=msg)
 

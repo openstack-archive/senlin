@@ -685,9 +685,9 @@ class ClusterTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_delete, self.ctx, cid)
         self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
-        self.assertEqual(_('The request is malformed: Cluster %(id)s is not '
-                           'allowed to be deleted without detaching all '
-                           'policies.') % {'id': cid},
+        self.assertEqual(_('The request is malformed: Cluster %(id)s cannot '
+                           'be deleted without having all policies '
+                           'detached.') % {'id': cid},
                          six.text_type(ex.exc_info[1]))
 
     def test_cluster_delete_not_found(self):
