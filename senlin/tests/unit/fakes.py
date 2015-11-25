@@ -17,7 +17,6 @@ A module that contains various fake entities
 from senlin.common import schema
 from senlin.policies import base as policy_base
 from senlin.profiles import base as profile_base
-from senlin.triggers import base as trigger_base
 
 
 class TestProfile(profile_base.Profile):
@@ -79,16 +78,3 @@ class TestPolicy(policy_base.Policy):
 
     def post_op(self, cluster_id, action):
         return
-
-
-class TestTrigger(trigger_base.Trigger):
-    rule_schema = {
-        'KEY1': schema.String('key1', default='default1'),
-        'KEY2': schema.Integer('key2', default=1),
-    }
-
-    def __init__(self, name, spec, **kwargs):
-        super(TestTrigger, self).__init__(name, spec, **kwargs)
-        rule_spec = spec.get('rule', {})
-        self.rule = schema.Spec(self.rule_schema, rule_spec)
-        self.namespace = 'test'
