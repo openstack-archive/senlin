@@ -134,7 +134,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'cluster_delete',
             'node_delete',
             'webhook_delete',
-            'trigger_delete'
         ]
 
         if rpc_method == 'call' and method in cast_and_call:

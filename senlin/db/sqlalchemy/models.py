@@ -240,33 +240,6 @@ class Profile(BASE, SenlinBase, SoftDelete):
     deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
 
 
-class Trigger(BASE, SenlinBase, SoftDelete):
-    '''A profile managed by the Senlin engine.'''
-
-    # The table cannot be named as 'trigger' because 'trigger' may be
-    # a reserved word in mysql
-
-    __tablename__ = 'triggers'
-
-    id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
-                           default=lambda: str(uuid.uuid4()))
-    physical_id = sqlalchemy.Column(sqlalchemy.String(36))
-    name = sqlalchemy.Column(sqlalchemy.String(255))
-    type = sqlalchemy.Column(sqlalchemy.String(255))
-    desc = sqlalchemy.Column(sqlalchemy.String(255))
-    state = sqlalchemy.Column(sqlalchemy.String(32))
-    enabled = sqlalchemy.Column(sqlalchemy.Boolean)
-    severity = sqlalchemy.Column(sqlalchemy.String(32))
-    links = sqlalchemy.Column(types.Dict)
-    spec = sqlalchemy.Column(types.Dict)
-    user = sqlalchemy.Column(sqlalchemy.String(32), nullable=False)
-    project = sqlalchemy.Column(sqlalchemy.String(32), nullable=False)
-    domain = sqlalchemy.Column(sqlalchemy.String(32))
-    created_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
-
-
 class Webhook(BASE, SenlinBase, SoftDelete):
     """Represents a webhook bonded with Senlin resource entity."""
 

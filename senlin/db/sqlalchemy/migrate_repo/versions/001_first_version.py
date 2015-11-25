@@ -158,29 +158,6 @@ def upgrade(migrate_engine):
         mysql_charset='utf8'
     )
 
-    triggers = sqlalchemy.Table(
-        'triggers', meta,
-        sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
-                          nullable=False),
-        sqlalchemy.Column('physical_id', sqlalchemy.String(36)),
-        sqlalchemy.Column('name', sqlalchemy.String(255)),
-        sqlalchemy.Column('type', sqlalchemy.String(255)),
-        sqlalchemy.Column('desc', sqlalchemy.String(255)),
-        sqlalchemy.Column('state', sqlalchemy.String(32)),
-        sqlalchemy.Column('enabled', sqlalchemy.Boolean),
-        sqlalchemy.Column('severity', sqlalchemy.String(32)),
-        sqlalchemy.Column('links', types.Dict),
-        sqlalchemy.Column('spec', types.Dict),
-        sqlalchemy.Column('user', sqlalchemy.String(32), nullable=False),
-        sqlalchemy.Column('project', sqlalchemy.String(32), nullable=False),
-        sqlalchemy.Column('domain', sqlalchemy.String(32)),
-        sqlalchemy.Column('created_time', sqlalchemy.DateTime),
-        sqlalchemy.Column('updated_time', sqlalchemy.DateTime),
-        sqlalchemy.Column('deleted_time', sqlalchemy.DateTime),
-        mysql_engine='InnoDB',
-        mysql_charset='utf8'
-    )
-
     webhook = sqlalchemy.Table(
         'webhook', meta,
         sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
@@ -270,7 +247,6 @@ def upgrade(migrate_engine):
         node_lock,
         policy,
         cluster_policy,
-        triggers,
         webhook,
         credential,
         action,
