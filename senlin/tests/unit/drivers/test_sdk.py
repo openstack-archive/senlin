@@ -142,6 +142,7 @@ class OpenStackSDKTest(base.SenlinTestCase):
         mock_profile.assert_called_once_with()
         mock_conn.assert_called_once_with(profile=x_profile,
                                           user_agent=sdk.USER_AGENT,
+                                          auth_plugin="password",
                                           foo='bar')
 
     @mock.patch.object(profile, 'Profile')
@@ -159,7 +160,8 @@ class OpenStackSDKTest(base.SenlinTestCase):
         x_profile.set_region.assert_called_once_with(x_profile.ALL,
                                                      'REGION_ONE')
         mock_conn.assert_called_once_with(profile=x_profile,
-                                          user_agent=sdk.USER_AGENT)
+                                          user_agent=sdk.USER_AGENT,
+                                          auth_plugin="password")
 
     @mock.patch.object(profile, 'Profile')
     @mock.patch.object(connection, 'Connection')
@@ -178,7 +180,8 @@ class OpenStackSDKTest(base.SenlinTestCase):
 
         mock_profile.assert_called_once_with()
         mock_conn.assert_called_once_with(profile=x_profile,
-                                          user_agent=sdk.USER_AGENT)
+                                          user_agent=sdk.USER_AGENT,
+                                          auth_plugin="password")
         mock_parse.assert_called_once_with(ex_raw)
         self.assertEqual(123, ex.code)
         self.assertEqual('BOOM', ex.message)

@@ -100,7 +100,7 @@ def create_connection(params=None):
         params.pop('region_name')
     try:
         conn = connection.Connection(profile=prof, user_agent=USER_AGENT,
-                                     **params)
+                                     auth_plugin="password", **params)
     except Exception as ex:
         raise parse_exception(ex)
 
