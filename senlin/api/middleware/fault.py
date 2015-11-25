@@ -70,7 +70,6 @@ class FaultWrapper(wsgi.Middleware):
         'SenlinBadRequest': webob.exc.HTTPBadRequest,
         'SpecValidationFailed': webob.exc.HTTPBadRequest,
         'TriggerNotFound': webob.exc.HTTPNotFound,
-        'TriggerTypeNotFound': webob.exc.HTTPNotFound,
         'WebhookNotFound': webob.exc.HTTPNotFound,
     }
 

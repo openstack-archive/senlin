@@ -146,10 +146,6 @@ class PolicyTypeConflict(SenlinException):
     msg_fmt = _("The policy with type (%(policy_type)s) already exists.")
 
 
-class TriggerTypeNotFound(SenlinException):
-    msg_fmt = _("Trigger type (%(trigger_type)s) is not found.")
-
-
 class InvalidSchemaError(SenlinException):
     msg_fmt = _("%(message)s")
 

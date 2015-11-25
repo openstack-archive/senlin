@@ -26,8 +26,6 @@ custom_profiles:
   prof_1: plugin_1
 custom_policies:
   policy_2: plugin_2
-custom_triggers:
-  trigger_3: plugin_3
 """
 
 
@@ -42,11 +40,9 @@ class TestEnvironment(base.SenlinTestCase):
         self.assertEqual({}, e.params)
         self.assertEqual('profiles', e.profile_registry.registry_name)
         self.assertEqual('policies', e.policy_registry.registry_name)
-        self.assertEqual('triggers', e.trigger_registry.registry_name)
         self.assertEqual('drivers', e.driver_registry.registry_name)
         self.assertTrue(e.profile_registry.is_global)
         self.assertTrue(e.policy_registry.is_global)
-        self.assertTrue(e.trigger_registry.is_global)
         self.assertTrue(e.driver_registry.is_global)
 
     def test_create_default(self):
@@ -55,25 +51,20 @@ class TestEnvironment(base.SenlinTestCase):
 
         reg_prof = e.profile_registry
         reg_plcy = e.policy_registry
-        reg_trig = e.trigger_registry
         reg_driv = e.driver_registry
 
         self.assertEqual({}, e.params)
         self.assertEqual('profiles', reg_prof.registry_name)
         self.assertEqual('policies', reg_plcy.registry_name)
-        self.assertEqual('triggers', reg_trig.registry_name)
         self.assertEqual('drivers', reg_driv.registry_name)
         self.assertFalse(reg_prof.is_global)
         self.assertFalse(reg_plcy.is_global)
-        self.assertFalse(reg_trig.is_global)
         self.assertFalse(reg_driv.is_global)
         self.assertEqual('profiles', ge.profile_registry.registry_name)
         self.assertEqual('policies', ge.policy_registry.registry_name)
-        self.assertEqual('triggers', ge.trigger_registry.registry_name)
         self.assertEqual('drivers', ge.driver_registry.registry_name)
         self.assertEqual(ge.profile_registry, reg_prof.global_registry)
         self.assertEqual(ge.policy_registry, reg_plcy.global_registry)
-        self.assertEqual(ge.trigger_registry, reg_trig.global_registry)
         self.assertEqual(ge.driver_registry, reg_driv.global_registry)
 
     def test_create_with_env(self):
@@ -90,10 +81,6 @@ class TestEnvironment(base.SenlinTestCase):
                 'POLICY_Alpha': 'package.alpha',
                 'POLICY_Beta': 'package.beta',
             },
-            'custom_triggers': {
-                'TRIGGER_1': 'module.1',
-                'TRIGGER_2': 'module.2',
-            }
         }
 
         e = environment.Environment(env=env, is_global=True)
@@ -104,8 +91,6 @@ class TestEnvironment(base.SenlinTestCase):
         self.assertEqual('other.class', e.get_profile('PROFILE_BAR'))
         self.assertEqual('package.alpha', e.get_policy('POLICY_Alpha'))
         self.assertEqual('package.beta', e.get_policy('POLICY_Beta'))
-        self.assertEqual('module.1', e.get_trigger('TRIGGER_1'))
-        self.assertEqual('module.2', e.get_trigger('TRIGGER_2'))
 
     def test_parse(self):
         env = environment.Environment()
@@ -115,7 +100,6 @@ class TestEnvironment(base.SenlinTestCase):
         self.assertEqual('vb', result['parameters']['pb'])
         self.assertEqual('plugin_1', result['custom_profiles']['prof_1'])
         self.assertEqual('plugin_2', result['custom_policies']['policy_2'])
-        self.assertEqual('plugin_3', result['custom_triggers']['trigger_3'])
 
         # unknown sections
         env_str = "variables:\n  p1: v1"
@@ -129,7 +113,6 @@ class TestEnvironment(base.SenlinTestCase):
         self.assertEqual('v1', result['parameters']['p1'])
         self.assertEqual({}, result['custom_profiles'])
         self.assertEqual({}, result['custom_policies'])
-        self.assertEqual({}, result['custom_triggers'])
 
     def test_parse_empty(self):
         env = environment.Environment()
@@ -142,7 +125,6 @@ class TestEnvironment(base.SenlinTestCase):
         self.assertEqual({}, env.params)
         self.assertEqual({}, env.profile_registry._registry)
         self.assertEqual({}, env.policy_registry._registry)
-        self.assertEqual({}, env.trigger_registry._registry)
         self.assertEqual({}, env.driver_registry._registry)
 
         env_dict = {
@@ -155,21 +137,16 @@ class TestEnvironment(base.SenlinTestCase):
             'custom_policies': {
                 'C2': 'class2',
             },
-            'custom_triggers': {
-                'C3': 'class3',
-            }
-
         }
         env.load(env_dict)
         self.assertEqual('V', env.params['P'])
         self.assertEqual('class1', env.get_profile('C1'))
         self.assertEqual('class2', env.get_policy('C2'))
-        self.assertEqual('class3', env.get_trigger('C3'))
 
     def test_check_plugin_name(self):
         env = environment.Environment()
 
-        for pt in ['Profile', 'Policy', 'Trigger', 'Driver']:
+        for pt in ['Profile', 'Policy', 'Driver']:
             res = env._check_plugin_name(pt, 'abc')
             self.assertIsNone(res)
 
@@ -232,29 +209,6 @@ class TestEnvironment(base.SenlinTestCase):
         env.register_policy('bar', plugin2)
 
         actual = env.get_policy_types()
-        self.assertIn({'name': 'foo'}, actual)
-        self.assertIn({'name': 'bar'}, actual)
-
-    def test_register_and_get_trigger_types(self):
-        plugin = mock.Mock()
-        env = environment.Environment()
-
-        ex = self.assertRaises(exception.TriggerTypeNotFound,
-                               env.get_trigger, 'foo')
-        self.assertEqual('Trigger type (foo) is not found.',
-                         six.text_type(ex))
-
-        env.register_trigger('foo', plugin)
-        self.assertEqual(plugin, env.get_trigger('foo'))
-
-    def test_get_trigger_types(self):
-        env = environment.Environment()
-        plugin1 = mock.Mock()
-        env.register_trigger('foo', plugin1)
-        plugin2 = mock.Mock()
-        env.register_trigger('bar', plugin2)
-
-        actual = env.get_trigger_types()
         self.assertIn({'name': 'foo'}, actual)
         self.assertIn({'name': 'bar'}, actual)
 
@@ -353,14 +307,12 @@ class TestEnvironment(base.SenlinTestCase):
 
         expected = [mock.call('senlin.profiles'),
                     mock.call('senlin.policies'),
-                    mock.call('senlin.triggers'),
                     mock.call('senlin.drivers')]
 
         self.assertIsNotNone(environment._environment)
         self.assertEqual(expected, mock_mapping.call_args_list)
         self.assertIsNotNone(environment.global_env().get_profile('aaa'))
         self.assertIsNotNone(environment.global_env().get_policy('aaa'))
-        self.assertIsNotNone(environment.global_env().get_trigger('aaa'))
         self.assertIsNotNone(environment.global_env().get_driver('aaa'))
 
         environment._environment = None

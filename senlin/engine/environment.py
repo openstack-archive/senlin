@@ -42,9 +42,9 @@ class Environment(object):
     '''An object that contains all profiles, policies and customizations.'''
 
     SECTIONS = (
-        PARAMETERS, CUSTOM_PROFILES, CUSTOM_POLICIES, CUSTOM_TRIGGERS,
+        PARAMETERS, CUSTOM_PROFILES, CUSTOM_POLICIES,
     ) = (
-        'parameters', 'custom_profiles', 'custom_policies', 'custom_triggers',
+        'parameters', 'custom_profiles', 'custom_policies',
     )
 
     def __init__(self, env=None, is_global=False):
@@ -57,15 +57,12 @@ class Environment(object):
         if is_global:
             self.profile_registry = registry.Registry('profiles')
             self.policy_registry = registry.Registry('policies')
-            self.trigger_registry = registry.Registry('triggers')
             self.driver_registry = registry.Registry('drivers')
         else:
             self.profile_registry = registry.Registry(
                 'profiles', global_env().profile_registry)
             self.policy_registry = registry.Registry(
                 'policies', global_env().policy_registry)
-            self.trigger_registry = registry.Registry(
-                'triggers', global_env().trigger_registry)
             self.driver_registry = registry.Registry(
                 'drivers', global_env().driver_registry)
 
@@ -74,10 +71,8 @@ class Environment(object):
             self.params = env.get(self.PARAMETERS, {})
             custom_profiles = env.get(self.CUSTOM_PROFILES, {})
             custom_policies = env.get(self.CUSTOM_POLICIES, {})
-            custom_triggers = env.get(self.CUSTOM_TRIGGERS, {})
             self.profile_registry.load(custom_profiles)
             self.policy_registry.load(custom_policies)
-            self.trigger_registry.load(custom_triggers)
 
     def parse(self, env_str):
         '''Parse a string format environment file into a dictionary.'''
@@ -106,7 +101,6 @@ class Environment(object):
         self.params.update(env_dict.get(self.PARAMETERS, {}))
         self.profile_registry.load(env_dict.get(self.CUSTOM_PROFILES, {}))
         self.policy_registry.load(env_dict.get(self.CUSTOM_POLICIES, {}))
-        self.trigger_registry.load(env_dict.get(self.CUSTOM_TRIGGERS, {}))
 
     def _check_plugin_name(self, plugin_type, name):
         if name is None or name == "":
@@ -143,20 +137,6 @@ class Environment(object):
 
     def get_policy_types(self):
         return self.policy_registry.get_types()
-
-    def register_trigger(self, name, plugin):
-        self._check_plugin_name('Trigger', name)
-        self.trigger_registry.register_plugin(name, plugin)
-
-    def get_trigger(self, name):
-        self._check_plugin_name('Trigger', name)
-        plugin = self.trigger_registry.get_plugin(name)
-        if plugin is None:
-            raise exception.TriggerTypeNotFound(trigger_type=name)
-        return plugin
-
-    def get_trigger_types(self):
-        return self.trigger_registry.get_types()
 
     def register_driver(self, name, plugin):
         self._check_plugin_name('Driver', name)
@@ -223,10 +203,6 @@ def initialize():
     entries = _get_mapping('senlin.policies')
     for name, plugin in entries:
         env.register_policy(name, plugin)
-
-    entries = _get_mapping('senlin.triggers')
-    for name, plugin in entries:
-        env.register_trigger(name, plugin)
 
     entries = _get_mapping('senlin.drivers')
     for name, plugin in entries:
