@@ -186,33 +186,16 @@ class OpenStackSDKTest(base.SenlinTestCase):
     @mock.patch.object(sdk, 'create_connection')
     def test_authenticate(self, mock_conn):
         x_conn = mock_conn.return_value
-        x_transport = mock.Mock()
-        x_conn.transport = x_transport
-        x_access_info = mock.Mock()
-        mock_authorize = mock.Mock(return_value=x_access_info)
-        x_conn.session.authenticator.authorize = mock_authorize
+        x_conn.session.get_token.return_value = 'TOKEN'
+        x_conn.session.get_user_id.return_value = 'test-user-id'
+        x_conn.session.get_project_id.return_value = 'test-project-id'
+        access_info = {
+            'token': 'TOKEN',
+            'user_id': 'test-user-id',
+            'project_id': 'test-project-id'
+        }
 
         res = sdk.authenticate(foo='bar')
 
-        self.assertEqual(x_access_info, res)
+        self.assertEqual(access_info, res)
         mock_conn.assert_called_once_with({'foo': 'bar'})
-        mock_authorize.assert_called_once_with(x_transport)
-
-    @mock.patch.object(sdk, 'create_connection')
-    @mock.patch.object(sdk, 'parse_exception')
-    def test_authenticate_with_exception(self, mock_parse, mock_conn):
-        x_conn = mock_conn.return_value
-        x_transport = mock.Mock()
-        x_conn.transport = x_transport
-        error = Exception('test exception')
-        x_conn.session.authenticator.authorize.side_effect = error
-        mock_parse.side_effect = senlin_exc.InternalError(code=123,
-                                                          message='BOOM')
-
-        ex = self.assertRaises(senlin_exc.InternalError,
-                               sdk.authenticate, foo='bar')
-
-        mock_conn.assert_called_once_with({'foo': 'bar'})
-        mock_parse.assert_called_once_with(error)
-        self.assertEqual(123, ex.code)
-        self.assertEqual('BOOM', ex.message)

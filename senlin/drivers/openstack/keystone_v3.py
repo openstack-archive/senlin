@@ -141,8 +141,7 @@ class KeystoneClient(base.DriverBase):
         '''Get token using given credential'''
 
         access_info = sdk.authenticate(**creds)
-        token = access_info.auth_token
-        return token
+        return access_info['token']
 
     @classmethod
     @sdk.translate_exception
@@ -150,8 +149,7 @@ class KeystoneClient(base.DriverBase):
         '''Get ID of the user with given creddential'''
 
         access_info = sdk.authenticate(**creds)
-        user_id = access_info.user_id
-        return user_id
+        return access_info['user_id']
 
     @classmethod
     def get_service_credentials(cls, **kwargs):
