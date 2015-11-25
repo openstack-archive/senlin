@@ -1682,12 +1682,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         )
         self.assertEqual(eng_resp, resp)
 
-    def test_cluster_action_update_policy_non_int(self, mock_enforce):
-        # NOTE: There are other cases of invalid parameter inputs, but
-        # we only take one of them as the example for testing. The rest
-        # of them should be tested at the engine side because this test
-        # case cares only about whether the API layer can respond to such
-        # 'error's correctly.
+    def test_cluster_action_update_policy_invalid_values(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
         body = {'policy_update': {
@@ -1698,20 +1693,13 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._put('/clusters/%(cluster_id)s/action' % {
                         'cluster_id': cid}, json.dumps(body))
 
-        error = senlin_exc.InvalidParameter(name='priority', value='abc')
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        mock_call.side_effect = shared.to_remote_error(error)
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, tenant_id=self.project,
+                               cluster_id=cid, body=body)
 
-        resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.action,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid,
-                                              body=body)
-
-        self.assertEqual(400, resp.json['code'])
-        self.assertEqual('InvalidParameter', resp.json['error']['type'])
         self.assertIn("Invalid value 'abc' specified for 'priority'",
-                      resp.json['error']['message'])
+                      six.text_type(ex))
 
     def test_cluster_action_update_policy_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)

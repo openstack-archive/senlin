@@ -268,10 +268,10 @@ class ClusterController(object):
                                               max_size, min_step, strict)
 
     def _sanitize_policy(self, data):
-        """Validate dict body of policy attach.
+        """Validate dict body of policy attach or update.
 
         :param dict data: A dictionary containing the properties of the policy
-                          to be attached including the policy ID.
+                          to be attached/updated including the policy ID.
         :returns: A sanitized dict containing the policy properties.
         :raises: :class:`~webob.exception.HTTPBadRequest` if the policy dict
                  contains invalid property values.
@@ -374,10 +374,10 @@ class ClusterController(object):
         else:
             # this_action == self.POLICY_UPDATE:
             # Note the POLICY_UPDATE action includes policy-enable/disable
-            data = body.get(this_action)
+            raw_data = body.get(this_action)
+            data = self._sanitize_policy(raw_data)
             res = self.rpc_client.cluster_policy_update(req.context,
-                                                        cluster_id,
-                                                        **data)
+                                                        cluster_id, **data)
         return res
 
     @util.policy_enforce
