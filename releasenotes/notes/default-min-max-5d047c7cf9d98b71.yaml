@@ -1,0 +1,4 @@
+---
+fixes:
+  - Fixed parsing of default values for 'max_size' and 'min_size' properties
+    of a cluster.

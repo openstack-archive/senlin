@@ -1,0 +1,3 @@
+---
+fixes:
+  - Added parameter sanitization for cluster-policy-attach.

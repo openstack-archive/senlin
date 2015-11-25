@@ -1,0 +1,3 @@
+---
+other:
+  - Added configuration option for enforcing name uniqueness.

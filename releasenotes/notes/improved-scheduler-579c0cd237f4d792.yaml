@@ -1,0 +1,4 @@
+---
+features:
+  - Improved action scheduler so that it can pick an action that is READY to
+    be executed from DB.

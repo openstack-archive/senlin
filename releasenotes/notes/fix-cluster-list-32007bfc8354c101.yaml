@@ -1,0 +1,5 @@
+---
+fixes:
+  - Fixed cluster-list function so that 'global-project' can be specified.
+  - Removed useless parameters ('user', 'project', etc.) from filtering when
+    listing clusters.
