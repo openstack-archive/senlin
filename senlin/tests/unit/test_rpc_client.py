@@ -473,41 +473,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
     def test_webhook_delete_call(self):
         self._test_engine_api('webhook_delete', 'call', identity='wh_name')
 
-    def test_trigger_list(self):
-        default_args = {
-            'limit': mock.ANY,
-            'marker': mock.ANY,
-            'sort_keys': mock.ANY,
-            'sort_dir': mock.ANY,
-            'filters': mock.ANY,
-            'project_safe': mock.ANY,
-            'show_deleted': mock.ANY,
-        }
-        self._test_engine_api('trigger_list', 'call', **default_args)
-
-    def test_trigger_create(self):
-        kwargs = {
-            'name': 'mytrigger',
-            'spec': mock.ANY,
-            'description': 'desc',
-            'enabled': True,
-            'state': 'ok',
-            'severity': 'low',
-        }
-
-        self._test_engine_api('trigger_create', 'call', **kwargs)
-
-    def test_trigger_get(self):
-        self._test_engine_api('trigger_get', 'call', identity='a-trigger')
-
-    def test_trigger_delete_cast(self):
-        self._test_engine_api('trigger_delete', 'cast', identity='a-trigger',
-                              force=True)
-
-    def test_trigger_delete_call(self):
-        self._test_engine_api('trigger_delete', 'call', identity='a-trigger',
-                              force=True)
-
     def test_event_list(self):
         default_args = {
             'filters': mock.ANY,
