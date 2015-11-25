@@ -43,7 +43,6 @@ from senlin.engine import scheduler
 from senlin.engine import webhook as webhook_mod
 from senlin.policies import base as policy_base
 from senlin.profiles import base as profile_base
-from senlin.triggers import base as trigger_base
 
 LOG = logging.getLogger(__name__)
 
@@ -1545,104 +1544,6 @@ class EngineService(service.Service):
         LOG.info(_LI("Deleting webhook '%s'."), identity)
         webhook_mod.Webhook.delete(context, db_webhook.id)
         LOG.info(_LI("Webhook '%s' is deleted."), identity)
-        return None
-
-    @request_context
-    def trigger_find(self, context, identity, show_deleted=False):
-        """Find a trigger with the given identity.
-
-        :param identity: The identity of a trigger, could be name or ID or
-                         short ID of a trigger.
-        :param show_deleted: A boolean indicating whether deleted triggers
-                             should be included.
-        :returns: A trigger DB object if a matching entity is found, or
-                  an exception will be raised.
-        """
-        if uuidutils.is_uuid_like(identity):
-            trigger = db_api.trigger_get(context, identity,
-                                         show_deleted=show_deleted)
-            if not trigger:
-                trigger = db_api.trigger_get_by_name(context, identity)
-        else:
-            trigger = db_api.trigger_get_by_name(context, identity)
-            if not trigger:
-                trigger = db_api.trigger_get_by_short_id(context, identity)
-
-        if not trigger:
-            raise exception.TriggerNotFound(trigger=identity)
-
-        return trigger
-
-    @request_context
-    def trigger_list(self, context, limit=None, marker=None, sort_keys=None,
-                     sort_dir=None, filters=None, project_safe=True,
-                     show_deleted=False):
-        if limit is not None:
-            limit = utils.parse_int_param('limit', limit)
-        if project_safe is not None:
-            project_safe = utils.parse_bool_param('project_safe', project_safe)
-        if show_deleted is not None:
-            show_deleted = utils.parse_bool_param('show_deleted', show_deleted)
-
-        triggers = trigger_base.Trigger.load_all(context, limit=limit,
-                                                 marker=marker,
-                                                 sort_keys=sort_keys,
-                                                 sort_dir=sort_dir,
-                                                 filters=filters,
-                                                 project_safe=project_safe,
-                                                 show_deleted=show_deleted)
-
-        return [t.to_dict() for t in triggers]
-
-    @request_context
-    def trigger_create(self, context, name, spec, description=None,
-                       enabled=None, state=None, severity=None):
-        if cfg.CONF.name_unique:
-            if db_api.trigger_get_by_name(context, name):
-                msg = _("The trigger (%(name)s) already exists."
-                        ) % {"name": name}
-                raise exception.SenlinBadRequest(msg=msg)
-
-        type_name, version = schema.get_spec_version(spec)
-        LOG.info(_LI("Creating trigger %(type)s: '%(name)s'."),
-                 {'type': type_name, 'name': name})
-        plugin = environment.global_env().get_trigger(type_name)
-
-        kwargs = dict()
-        if description is not None:
-            kwargs['desc'] = description
-        if enabled is not None:
-            kwargs['enabled'] = enabled
-        if state is not None:
-            kwargs['state'] = state
-        if severity is not None:
-            kwargs['severity'] = severity
-
-        kwargs['user'] = context.user
-        kwargs['project'] = context.project
-        kwargs['domain'] = context.domain
-
-        trigger = plugin(name, spec, **kwargs)
-        trigger.validate()
-        trigger.store(context)
-
-        LOG.info(_LI("Trigger '%(name)s' is created: %(id)s."),
-                 {'name': name, 'id': trigger.id})
-
-        return trigger.to_dict()
-
-    @request_context
-    def trigger_get(self, context, identity):
-        db_trigger = self.trigger_find(context, identity)
-        trigger = trigger_base.Trigger.load(context, db_trigger=db_trigger)
-        return trigger.to_dict()
-
-    @request_context
-    def trigger_delete(self, context, identity, force=False):
-        db_trigger = self.trigger_find(context, identity)
-        LOG.info(_LI("Deleting trigger '%s'."), identity)
-        trigger_base.Trigger.delete(context, db_trigger.id)
-        LOG.info(_LI("Trigger '%s' is deleted."), identity)
         return None
 
     @request_context
