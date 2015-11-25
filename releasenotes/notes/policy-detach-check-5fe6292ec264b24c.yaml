@@ -1,0 +1,3 @@
+---
+fixes:
+  - Added parameter checking for cluster-policy-detach API invocation.

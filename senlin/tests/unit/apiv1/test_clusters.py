@@ -1618,6 +1618,20 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         )
         self.assertEqual(eng_resp, resp)
 
+    def test_cluster_action_detach_policy_not_specified(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'policy_detach': {'policy': 'fake-policy'}}
+        req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                        json.dumps(body))
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, tenant_id=self.project,
+                               cluster_id=cid, body=body)
+
+        self.assertEqual('No policy specified for detach.', six.text_type(ex))
+
     def test_cluster_action_detach_policy_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
