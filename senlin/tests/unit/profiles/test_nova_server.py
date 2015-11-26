@@ -155,7 +155,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         }
         image = mock.Mock()
         image.id = 'FAKE_IMAGE_ID'
-        novaclient.image_get_by_name.return_value = image
+        novaclient.image_find.return_value = image
         flavor = mock.Mock()
         flavor.id = 'FAKE_FLAVOR_ID'
         novaclient.flavor_find.return_value = flavor
@@ -174,7 +174,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         server_id = profile.do_create(test_server)
 
         mock_random_name.assert_called_once_with(8)
-        novaclient.image_get_by_name.assert_called_once_with('FAKE_IMAGE')
+        novaclient.image_find.assert_called_once_with('FAKE_IMAGE')
         novaclient.flavor_find.assert_called_once_with('FLAV', False)
         neutronclient.network_get.assert_called_once_with('FAKE_NET')
 
@@ -230,7 +230,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         test_server.data = {}
         image = mock.Mock()
         image.id = 'FAKE_IMAGE_ID'
-        novaclient.image_get_by_name.return_value = image
+        novaclient.image_find.return_value = image
         flavor = mock.Mock()
         flavor.id = 'FAKE_FLAVOR_ID'
         novaclient.flavor_find.return_value = flavor
@@ -613,13 +613,13 @@ class TestNovaServerProfile(base.SenlinTestCase):
         mock_new_image = mock.Mock()
         mock_new_image.id = '456'
         novaclient = mock.Mock()
-        novaclient.image_get_by_name.side_effect = [mock_old_image,
-                                                    mock_new_image]
+        novaclient.image_find.side_effect = [mock_old_image,
+                                             mock_new_image]
 
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = novaclient
         profile._update_image(obj, 'old_image', 'new_image')
-        novaclient.image_get_by_name.has_calls(
+        novaclient.image_find.has_calls(
             [mock.call('old_image'), mock.call('new_image')])
         novaclient.rebuild_server.assert_called_once_with('FAKE_ID',
                                                           '456')
@@ -639,12 +639,12 @@ class TestNovaServerProfile(base.SenlinTestCase):
         novaclient.server_get.return_value = mock_server
         mock_image = mock.Mock()
         mock_image.id = '456'
-        novaclient.image_get_by_name.return_value = mock_image
+        novaclient.image_find.return_value = mock_image
 
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = novaclient
         profile._update_image(obj, None, 'new_image')
-        novaclient.image_get_by_name.assert_called_once_with('new_image')
+        novaclient.image_find.assert_called_once_with('new_image')
         novaclient.server_get.assert_called_once_with('FAKE_ID')
         novaclient.rebuild_server.assert_called_once_with('FAKE_ID',
                                                           '456')
@@ -655,7 +655,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         novaclient = mock.Mock()
         mock_image = mock.Mock()
         mock_image.id = '123'
-        novaclient.image_get_by_name.return_value = mock_image
+        novaclient.image_find.return_value = mock_image
 
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = novaclient
@@ -664,7 +664,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
                                obj, 'old_image', None)
         msg = _("Failed in updating FAKE_ID.")
         self.assertEqual(msg, six.text_type(ex))
-        novaclient.image_get_by_name.assert_called_once_with('old_image')
+        novaclient.image_find.assert_called_once_with('old_image')
 
     def test_do_update_no_physical_id(self):
         profile = server.ServerProfile('t', self.spec)
