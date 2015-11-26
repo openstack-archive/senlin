@@ -626,8 +626,9 @@ class NodeTest(base.SenlinTestCase):
                                self.eng.node_join,
                                self.ctx, node_id, 'BogusCluster')
 
-        self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
-        self.assertEqual('The cluster (BogusCluster) could not be found.',
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: "
+                         "The specified cluster 'BogusCluster' is not found.",
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')

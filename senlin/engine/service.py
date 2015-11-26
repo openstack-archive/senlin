@@ -1158,9 +1158,16 @@ class EngineService(service.Service):
                  {'node': identity, 'cluster': cluster_id})
 
         db_node = self.node_find(context, identity)
-        db_cluster = self.cluster_find(context, cluster_id)
+        try:
+            db_cluster = self.cluster_find(context, cluster_id)
+        except exception.ClusterNotFound:
+            msg = _("The specified cluster '%s' is not found.") % cluster_id
+            raise exception.SenlinBadRequest(msg=msg)
 
         if db_node.profile_id != db_cluster.profile_id:
+            # NOTE: We assume the following 'profile_find' calls won't fail
+            #       because when deleting a profile, we test if it is still
+            #       referenced by a node or a cluster.
             node_profile = self.profile_find(context, db_node.profile_id)
             cluster_profile = self.profile_find(context, db_cluster.profile_id)
             if node_profile.type != cluster_profile.type:
