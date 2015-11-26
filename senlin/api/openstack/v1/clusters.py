@@ -366,9 +366,11 @@ class ClusterController(object):
                                                         **data)
         elif this_action == self.POLICY_DETACH:
             data = body.get(this_action)
+            policy_id = data.get('policy_id', None)
+            if not policy_id:
+                raise exc.HTTPBadRequest(_('No policy specified for detach.'))
             res = self.rpc_client.cluster_policy_detach(req.context,
-                                                        cluster_id,
-                                                        data.get('policy_id'))
+                                                        cluster_id, policy_id)
         else:
             # this_action == self.POLICY_UPDATE:
             # Note the POLICY_UPDATE action includes policy-enable/disable
