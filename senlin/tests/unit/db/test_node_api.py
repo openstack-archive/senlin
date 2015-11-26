@@ -532,13 +532,14 @@ class DBAPINodeTest(base.SenlinTestCase):
         timestamp = tu.utcnow()
 
         node = db_api.node_migrate(self.ctx, node_orphan.id, self.cluster.id,
-                                   timestamp)
+                                   timestamp, 'NEW-ROLE')
         cluster = db_api.cluster_get(self.ctx, self.cluster.id)
         self.assertEqual(timestamp, node.updated_time)
         self.assertEqual(self.cluster.id, node.cluster_id)
         self.assertEqual(2, cluster.next_index)
         nodes = db_api.node_get_all_by_cluster(self.ctx, self.cluster.id)
         self.assertEqual(1, len(nodes))
+        self.assertEqual('NEW-ROLE', nodes[0].role)
 
     def test_node_migrate_to_none(self):
         node = shared.create_node(self.ctx, self.cluster, self.profile)
@@ -570,6 +571,7 @@ class DBAPINodeTest(base.SenlinTestCase):
         cluster2 = db_api.cluster_get(self.ctx, cluster2.id)
         self.assertEqual(timestamp, node_new.updated_time)
         self.assertEqual(cluster2.id, node_new.cluster_id)
+        self.assertIsNone(node_new.role)
         nodes = db_api.node_get_all_by_cluster(self.ctx, cluster1.id)
         self.assertEqual(0, len(nodes))
         nodes = db_api.node_get_all_by_cluster(self.ctx, cluster2.id)
@@ -581,11 +583,12 @@ class DBAPINodeTest(base.SenlinTestCase):
         timestamp = tu.utcnow()
 
         node_new = db_api.node_migrate(self.ctx, node.id, cluster1.id,
-                                       timestamp)
+                                       timestamp, 'FAKE-ROLE')
         cluster1 = db_api.cluster_get(self.ctx, cluster1.id)
         cluster2 = db_api.cluster_get(self.ctx, cluster2.id)
         self.assertEqual(timestamp, node_new.updated_time)
         self.assertEqual(cluster1.id, node_new.cluster_id)
+        self.assertEqual('FAKE-ROLE', node_new.role)
         nodes = db_api.node_get_all_by_cluster(self.ctx, cluster1.id)
         self.assertEqual(1, len(nodes))
         nodes = db_api.node_get_all_by_cluster(self.ctx, cluster2.id)

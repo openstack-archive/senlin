@@ -516,7 +516,8 @@ class TestNode(base.SenlinTestCase):
         res = node.do_join(self.context, 'NEW_CLUSTER_ID')
         self.assertTrue(res)
         mock_migrate.assert_called_once_with(self.context, node.id,
-                                             'NEW_CLUSTER_ID', mock_time())
+                                             'NEW_CLUSTER_ID', mock_time(),
+                                             None)
         mock_join_cluster.assert_called_once_with(self.context, node,
                                                   'NEW_CLUSTER_ID')
         self.assertEqual('NEW_CLUSTER_ID', node.cluster_id)
@@ -543,5 +544,5 @@ class TestNode(base.SenlinTestCase):
         self.assertIsNotNone(node.updated_time)
         self.assertEqual(-1, node.index)
         mock_migrate.assert_called_once_with(self.context, node.id,
-                                             None, mock_time())
+                                             None, mock_time(), None)
         mock_leave_cluster.assert_called_once_with(self.context, node)
