@@ -138,8 +138,8 @@ def node_update(context, node_id, values):
     return IMPL.node_update(context, node_id, values)
 
 
-def node_migrate(context, node_id, to_cluster, timestamp):
-    return IMPL.node_migrate(context, node_id, to_cluster, timestamp)
+def node_migrate(context, node_id, to_cluster, timestamp, role=None):
+    return IMPL.node_migrate(context, node_id, to_cluster, timestamp, role)
 
 
 def node_delete(context, node_id, force=False):

@@ -422,7 +422,7 @@ def node_update(context, node_id, values):
     session.commit()
 
 
-def node_migrate(context, node_id, to_cluster, timestamp):
+def node_migrate(context, node_id, to_cluster, timestamp, role=None):
     session = _session(context)
     session.begin()
 
@@ -437,6 +437,7 @@ def node_migrate(context, node_id, to_cluster, timestamp):
         node.index = index
     node.cluster_id = to_cluster
     node.updated_time = timestamp
+    node.role = role
     session.commit()
     return node
 
