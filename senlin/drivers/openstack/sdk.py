@@ -91,7 +91,7 @@ def translate_exception(func):
     return invoke_with_catch
 
 
-def create_connection(params=None):
+def create_connection(params=None, auth_plugin='token'):
     if params is None:
         params = {}
     prof = profile.Profile()
@@ -101,7 +101,7 @@ def create_connection(params=None):
         params.pop('region_name')
     try:
         conn = connection.Connection(profile=prof, user_agent=USER_AGENT,
-                                     auth_plugin="password", **params)
+                                     auth_plugin=auth_plugin, **params)
     except Exception as ex:
         raise parse_exception(ex)
 
@@ -111,7 +111,12 @@ def create_connection(params=None):
 def authenticate(**kwargs):
     '''Authenticate using openstack sdk based on user credential'''
 
-    conn = create_connection(kwargs)
+    if kwargs.get('token', None):
+        auth_plugin = 'token'
+    else:
+        auth_plugin = 'password'
+
+    conn = create_connection(kwargs, auth_plugin)
     access_info = {
         'token': conn.session.get_token(),
         'user_id': conn.session.get_user_id(),

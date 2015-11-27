@@ -143,7 +143,7 @@ class OpenStackSDKTest(base.SenlinTestCase):
         x_profile.set_version.assert_called_once_with('identity', 'v3')
         mock_conn.assert_called_once_with(profile=x_profile,
                                           user_agent=sdk.USER_AGENT,
-                                          auth_plugin="password",
+                                          auth_plugin="token",
                                           foo='bar')
 
     @mock.patch.object(profile, 'Profile')
@@ -162,7 +162,7 @@ class OpenStackSDKTest(base.SenlinTestCase):
                                                      'REGION_ONE')
         mock_conn.assert_called_once_with(profile=x_profile,
                                           user_agent=sdk.USER_AGENT,
-                                          auth_plugin="password")
+                                          auth_plugin="token")
 
     @mock.patch.object(profile, 'Profile')
     @mock.patch.object(connection, 'Connection')
@@ -182,13 +182,31 @@ class OpenStackSDKTest(base.SenlinTestCase):
         mock_profile.assert_called_once_with()
         mock_conn.assert_called_once_with(profile=x_profile,
                                           user_agent=sdk.USER_AGENT,
-                                          auth_plugin="password")
+                                          auth_plugin="token")
         mock_parse.assert_called_once_with(ex_raw)
         self.assertEqual(123, ex.code)
         self.assertEqual('BOOM', ex.message)
 
     @mock.patch.object(sdk, 'create_connection')
-    def test_authenticate(self, mock_conn):
+    def test_authenticate_token(self, mock_conn):
+        x_conn = mock_conn.return_value
+        x_conn.session.get_token.return_value = 'TOKEN'
+        x_conn.session.get_user_id.return_value = 'test-user-id'
+        x_conn.session.get_project_id.return_value = 'test-project-id'
+        access_info = {
+            'token': 'TOKEN',
+            'user_id': 'test-user-id',
+            'project_id': 'test-project-id'
+        }
+
+        res = sdk.authenticate(token='test-token', foo='bar')
+
+        self.assertEqual(access_info, res)
+        mock_conn.assert_called_once_with(
+            {'token': 'test-token', 'foo': 'bar'}, 'token')
+
+    @mock.patch.object(sdk, 'create_connection')
+    def test_authenticate_password(self, mock_conn):
         x_conn = mock_conn.return_value
         x_conn.session.get_token.return_value = 'TOKEN'
         x_conn.session.get_user_id.return_value = 'test-user-id'
@@ -202,4 +220,4 @@ class OpenStackSDKTest(base.SenlinTestCase):
         res = sdk.authenticate(foo='bar')
 
         self.assertEqual(access_info, res)
-        mock_conn.assert_called_once_with({'foo': 'bar'})
+        mock_conn.assert_called_once_with({'foo': 'bar'}, 'password')
