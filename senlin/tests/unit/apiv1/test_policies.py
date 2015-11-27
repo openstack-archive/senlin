@@ -57,6 +57,16 @@ class PolicyDataTest(base.SenlinTestCase):
         self.assertIsNone(data.level())
         self.assertIsNone(data.cooldown())
 
+    def test_level_invalid(self):
+        body = {
+            'name': 'test_policy',
+            'level': -1,
+            'cooldown': 'long',
+        }
+        data = policies.PolicyData(body)
+        self.assertRaises(senlin_exc.InvalidParameter, data.level)
+        self.assertRaises(senlin_exc.InvalidParameter, data.cooldown)
+
 
 @mock.patch.object(policy, 'enforce')
 class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):

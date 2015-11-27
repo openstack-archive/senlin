@@ -41,10 +41,16 @@ class PolicyData(object):
         return self.data[consts.POLICY_SPEC]
 
     def level(self):
-        return self.data.get(consts.POLICY_LEVEL, None)
+        value = self.data.get(consts.POLICY_LEVEL, None)
+        if value is not None:
+            value = utils.parse_int_param('level', value)
+        return value
 
     def cooldown(self):
-        return self.data.get(consts.POLICY_COOLDOWN, None)
+        value = self.data.get(consts.POLICY_COOLDOWN, None)
+        if value is not None:
+            value = utils.parse_int_param('cooldown', value)
+        return value
 
 
 class PolicyController(object):
