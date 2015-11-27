@@ -1300,12 +1300,18 @@ class EngineService(service.Service):
                  {'policy': policy, 'cluster': identity})
 
         db_cluster = self.cluster_find(context, identity)
-        db_policy = self.policy_find(context, policy)
+        try:
+            db_policy = self.policy_find(context, policy)
+        except exception.PolicyNotFound:
+            msg = _("The specified policy (%s) is not found.") % policy
+            raise exception.SenlinBadRequest(msg=msg)
+
         binding = db_api.cluster_policy_get(context, db_cluster.id,
                                             db_policy.id)
         if binding is None:
-            raise exception.PolicyBindingNotFound(policy=policy,
-                                                  identity=identity)
+            msg = _("The policy (%(p)s) is not attached to the specified "
+                    "cluster (%(c)s).") % {'p': policy, 'c': identity}
+            raise exception.SenlinBadRequest(msg=msg)
 
         action_name = 'detach_policy_%s' % db_cluster.id[:8]
         params = {
