@@ -282,9 +282,8 @@ class PolicyTest(base.SenlinTestCase):
         self.assertIsNotNone(result)
 
         # others
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_find, self.ctx, 'Bogus')
-        self.assertEqual(exception.PolicyNotFound, ex.exc_info[0])
+        self.assertRaises(exception.PolicyNotFound,
+                          self.eng.policy_find, self.ctx, 'Bogus')
 
     def test_policy_find_show_deleted(self):
         p = self.eng.policy_create(self.ctx, 'p-1', self.spec)
@@ -292,14 +291,13 @@ class PolicyTest(base.SenlinTestCase):
         self.eng.policy_delete(self.ctx, pid)
 
         for identity in [pid, pid[:6], 'p-1']:
-            self.assertRaises(rpc.ExpectedException,
+            self.assertRaises(exception.PolicyNotFound,
                               self.eng.policy_find, self.ctx, identity)
 
         # short id and name based finding does not support show_deleted
         for identity in [pid[:6], 'p-1']:
-            ex = self.assertRaises(rpc.ExpectedException,
-                                   self.eng.policy_find, self.ctx, identity)
-            self.assertEqual(exception.PolicyNotFound, ex.exc_info[0])
+            self.assertRaises(exception.PolicyNotFound,
+                              self.eng.policy_find, self.ctx, identity)
 
         # ID based finding is okay with show_deleted
         result = self.eng.policy_find(self.ctx, pid, show_deleted=True)

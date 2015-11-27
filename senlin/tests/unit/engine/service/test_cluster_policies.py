@@ -132,9 +132,10 @@ class ClusterPolicyTest(base.SenlinTestCase):
         cluster_id = self.cluster['id']
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_policy_attach,
-                               self.ctx, cluster_id, 'Bogus')
-        self.assertEqual(exception.PolicyNotFound, ex.exc_info[0])
-        self.assertEqual("The policy (Bogus) could not be found.",
+                               self.ctx, cluster_id, 'BOGUS')
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: The specified policy "
+                         "(BOGUS) is not found.",
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
