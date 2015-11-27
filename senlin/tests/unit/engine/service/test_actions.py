@@ -244,9 +244,8 @@ class ActionTest(base.SenlinTestCase):
         self.assertIsNotNone(result)
 
         # others
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.action_find, self.ctx, 'Bogus')
-        self.assertEqual(exception.ActionNotFound, ex.exc_info[0])
+        self.assertRaises(exception.ActionNotFound,
+                          self.eng.action_find, self.ctx, 'Bogus')
 
     def test_action_delete(self):
         a1 = self.eng.action_create(self.ctx, 'A', self.target, 'CUST_ACT')
