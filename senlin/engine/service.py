@@ -287,7 +287,6 @@ class EngineService(service.Service):
 
         return {'spec': data}
 
-    @request_context
     def policy_find(self, context, identity, show_deleted=False):
         '''Find a policy with the given identity (could be name or ID).'''
 
@@ -1249,34 +1248,33 @@ class EngineService(service.Service):
 
         This is done via an action because a cluster lock is needed.
         '''
-        LOG.info(_LI("Attaching policy '%(policy)s' to cluster "
-                     "'%(cluster)s'."),
+        LOG.info(_LI("Attaching policy (%(policy)s) to cluster "
+                     "(%(cluster)s)."),
                  {'policy': policy, 'cluster': identity})
 
         db_cluster = self.cluster_find(context, identity)
-        db_policy = self.policy_find(context, policy)
+        try:
+            db_policy = self.policy_find(context, policy)
+        except exception.PolicyNotFound:
+            msg = _("The specified policy (%s) is not found.") % policy
+            raise exception.SenlinBadRequest(msg=msg)
 
+        def_pri = cfg.CONF.default_policy_priority
+        def_lvl = db_policy.level
+        def_cld = db_policy.cooldown
         inputs = {
             'policy_id': db_policy.id,
-            'priority':
-                utils.parse_int_param('priority', priority) or
-                cfg.CONF.default_policy_priority,
-            'level':
-                utils.parse_int_param('level', level) or db_policy.level,
-            'cooldown':
-                utils.parse_int_param('cooldown', cooldown) or
-                db_policy.cooldown,
-            'enabled':
-                utils.parse_bool_param('enabled', enabled) or True,
+            'priority': utils.parse_int_param('priority', priority) or def_pri,
+            'level': utils.parse_int_param('level', level) or def_lvl,
+            'cooldown': utils.parse_int_param('cooldown', cooldown) or def_cld,
+            'enabled': utils.parse_bool_param('enabled', enabled) or True,
         }
-
-        action_name = 'attach_policy_%s' % db_cluster.id[:8]
 
         params = {
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
-            'name': action_name,
+            'name': 'attach_policy_%s' % db_cluster.id[:8],
             'cause': action_mod.CAUSE_RPC,
             'inputs': inputs
         }
