@@ -95,6 +95,7 @@ def create_connection(params=None):
     if params is None:
         params = {}
     prof = profile.Profile()
+    prof.set_version('identity', 'v3')
     if 'region_name' in params:
         prof.set_region(prof.ALL, params['region_name'])
         params.pop('region_name')

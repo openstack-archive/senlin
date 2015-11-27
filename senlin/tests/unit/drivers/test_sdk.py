@@ -140,6 +140,7 @@ class OpenStackSDKTest(base.SenlinTestCase):
 
         self.assertEqual(x_conn, res)
         mock_profile.assert_called_once_with()
+        x_profile.set_version.assert_called_once_with('identity', 'v3')
         mock_conn.assert_called_once_with(profile=x_profile,
                                           user_agent=sdk.USER_AGENT,
                                           auth_plugin="password",
