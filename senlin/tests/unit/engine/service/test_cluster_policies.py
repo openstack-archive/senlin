@@ -495,8 +495,9 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.eng.cluster_policy_update,
                                self.ctx, self.cluster['id'], 'Bogus',
                                priority=10)
-        self.assertEqual(exception.PolicyNotFound, ex.exc_info[0])
-        self.assertEqual("The policy (Bogus) could not be found.",
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: The specified policy "
+                         "(Bogus) is not found.",
                          six.text_type(ex.exc_info[1]))
 
     def test_cluster_policy_update_binding_not_found(self):
@@ -505,11 +506,10 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.ctx,
                                self.cluster['id'], self.policy['id'],
                                priority=10)
-        self.assertEqual(exception.PolicyBindingNotFound, ex.exc_info[0])
-        self.assertEqual(("The policy (%(policy)s) is not found attached to "
-                          "the specified cluster (%(cluster)s)." %
-                          dict(policy=self.policy['id'],
-                               cluster=self.cluster['id'])),
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(("The request is malformed: The policy (%(p)s) is "
+                          "not attached to the specified cluster (%(c)s)." %
+                          dict(p=self.policy['id'], c=self.cluster['id'])),
                          six.text_type(ex.exc_info[1]))
 
     def test_cluster_policy_update_parameter_invalid(self):
