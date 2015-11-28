@@ -280,9 +280,8 @@ class ProfileTest(base.SenlinTestCase):
         self.assertIsNotNone(result)
 
         # others
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_find, self.ctx, 'Bogus')
-        self.assertEqual(exception.ProfileNotFound, ex.exc_info[0])
+        self.assertRaises(exception.ProfileNotFound,
+                          self.eng.profile_find, self.ctx, 'Bogus')
 
     def test_profile_find_show_deleted(self):
         p = self.eng.profile_create(self.ctx, 'p-1', self.spec)
@@ -290,14 +289,13 @@ class ProfileTest(base.SenlinTestCase):
         self.eng.profile_delete(self.ctx, pid)
 
         for identity in [pid, pid[:6], 'p-1']:
-            self.assertRaises(rpc.ExpectedException,
+            self.assertRaises(exception.ProfileNotFound,
                               self.eng.profile_find, self.ctx, identity)
 
         # short id and name based finding does not support show_deleted
         for identity in [pid[:6], 'p-1']:
-            ex = self.assertRaises(rpc.ExpectedException,
-                                   self.eng.profile_find, self.ctx, identity)
-            self.assertEqual(exception.ProfileNotFound, ex.exc_info[0])
+            self.assertRaises(exception.ProfileNotFound,
+                              self.eng.profile_find, self.ctx, identity)
 
         # ID based finding is okay with show_deleted
         result = self.eng.profile_find(self.ctx, pid, show_deleted=True)

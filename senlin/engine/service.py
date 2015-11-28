@@ -161,7 +161,6 @@ class EngineService(service.Service):
 
         return {'spec': data}
 
-    @request_context
     def profile_find(self, context, identity, show_deleted=False):
         '''Find a profile with the given identity (could be name or ID).'''
         if uuidutils.is_uuid_like(identity):
@@ -1380,7 +1379,6 @@ class EngineService(service.Service):
 
         return {'action': action.id}
 
-    @request_context
     def webhook_find(self, context, identity, show_deleted=False):
         '''Find a webhook with the given identity (could be name or ID).'''
         if uuidutils.is_uuid_like(identity):
@@ -1557,7 +1555,6 @@ class EngineService(service.Service):
         LOG.info(_LI("Webhook '%s' is deleted."), identity)
         return None
 
-    @request_context
     def action_find(self, context, identity, show_deleted=False):
         '''Find an action with the given identity (could be name or ID).'''
         if uuidutils.is_uuid_like(identity):
@@ -1636,7 +1633,6 @@ class EngineService(service.Service):
         LOG.info(_LI("Action '%s' is deleted."), identity)
         return None
 
-    @request_context
     def event_find(self, context, identity, show_deleted=False):
         '''Find a event with the given identity (could ID or short ID).'''
         if uuidutils.is_uuid_like(identity):

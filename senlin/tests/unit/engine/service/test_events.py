@@ -10,7 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo_messaging.rpc import dispatcher as rpc
 from oslo_utils import timeutils
 import six
 
@@ -187,6 +186,5 @@ class EventTest(base.SenlinTestCase):
         self.assertIsNotNone(result)
 
         # others
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.event_find, self.ctx, 'Bogus')
-        self.assertEqual(exception.EventNotFound, ex.exc_info[0])
+        self.assertRaises(exception.EventNotFound,
+                          self.eng.event_find, self.ctx, 'Bogus')
