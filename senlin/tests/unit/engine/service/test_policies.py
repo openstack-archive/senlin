@@ -94,7 +94,10 @@ class PolicyTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.policy_create,
                                self.ctx, 'p-2', self.spec)
-        self.assertEqual(exception.PolicyTypeNotFound, ex.exc_info[0])
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: The specified policy "
+                         "type (Bogus) is not supported.",
+                         six.text_type(ex.exc_info[1]))
 
     def test_policy_create_invalid_spec(self):
         self.spec['properties'] = {'KEY3': 'value3'}
