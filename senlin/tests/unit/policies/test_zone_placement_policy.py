@@ -16,7 +16,7 @@ import six
 
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import cluster as cluster_base
-from senlin.policies import zone_placement_policy as zp
+from senlin.policies import zone_placement as zp
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
