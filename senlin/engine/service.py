@@ -371,7 +371,7 @@ class EngineService(service.Service):
     @request_context
     def policy_update(self, context, identity, name=None, level=None,
                       cooldown=None):
-        LOG.info(_LI("Updating policy '%(id)s.'"), {'id': identity})
+        LOG.info(_LI("Updating policy '%s'."), identity)
 
         db_policy = self.policy_find(context, identity)
         policy = policy_base.Policy.load(context, db_policy=db_policy)
@@ -392,7 +392,7 @@ class EngineService(service.Service):
         if changed:
             policy.store(context)
 
-        LOG.info(_LI("Policy '%(id)s is updated.'"), {'id': identity})
+        LOG.info(_LI("Policy '%s' is updated."), identity)
         return policy.to_dict()
 
     @request_context
