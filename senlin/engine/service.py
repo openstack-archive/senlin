@@ -1021,11 +1021,21 @@ class EngineService(service.Service):
         LOG.info(_LI("Creating node '%s'."), name)
 
         index = -1
-        node_profile = self.profile_find(context, profile_id)
-        if cluster_id is not None:
-            db_cluster = self.cluster_find(context, cluster_id)
-            cluster_id = db_cluster.id
+        try:
+            node_profile = self.profile_find(context, profile_id)
+        except exception.ProfileNotFound:
+            msg = _("The specified profile (%s) is not found.") % profile_id
+            raise exception.SenlinBadRequest(msg=msg)
 
+        if cluster_id is not None:
+            try:
+                db_cluster = self.cluster_find(context, cluster_id)
+            except exception.ClusterNotFound:
+                msg = _("The specified cluster (%s) is not found."
+                        ) % cluster_id
+                raise exception.SenlinBadRequest(msg=msg)
+
+            cluster_id = db_cluster.id
             if profile_id != db_cluster.profile_id:
                 cluster_profile = self.profile_find(context,
                                                     db_cluster.profile_id)

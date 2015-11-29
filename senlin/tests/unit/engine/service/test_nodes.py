@@ -85,7 +85,10 @@ class NodeTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_create,
                                self.ctx, 'n-1', 'Bogus')
-        self.assertEqual(exception.ProfileNotFound, ex.exc_info[0])
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: The specified profile "
+                         "(Bogus) is not found.",
+                         six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_node_create_with_role_and_metadata(self, notify):
@@ -128,8 +131,9 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, 'n-1', self.profile['id'],
                                cluster_id='Bogus')
 
-        self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
-        self.assertEqual("The cluster (Bogus) could not be found.",
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: The specified cluster "
+                         "(Bogus) is not found.",
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
@@ -145,8 +149,9 @@ class NodeTest(base.SenlinTestCase):
                                ctx_node, 'n-1', profile_node['id'],
                                cluster_id=cluster['id'])
 
-        self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
-        self.assertEqual("The cluster (%s) could not be found."
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: The specified cluster "
+                         "(%s) is not found."
                          "" % cluster['id'],
                          six.text_type(ex.exc_info[1]))
 
