@@ -1101,7 +1101,12 @@ class EngineService(service.Service):
         node = node_mod.Node.load(context, node=db_node)
 
         if profile_id:
-            db_profile = self.profile_find(context, profile_id)
+            try:
+                db_profile = self.profile_find(context, profile_id)
+            except exception.ProfileNotFound:
+                msg = _("The specified profile (%s) is not found."
+                        ) % profile_id
+                raise exception.SenlinBadRequest(msg=msg)
             profile_id = db_profile.id
 
             # check if profile_type matches

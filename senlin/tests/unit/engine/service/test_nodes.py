@@ -512,8 +512,9 @@ class NodeTest(base.SenlinTestCase):
                                self.eng.node_update, self.ctx, node['id'],
                                profile_id='Bogus')
 
-        self.assertEqual(exception.ProfileNotFound, ex.exc_info[0])
-        self.assertEqual('The profile (Bogus) could not be found.',
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual('The request is malformed: The specified profile '
+                         '(Bogus) is not found.',
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
