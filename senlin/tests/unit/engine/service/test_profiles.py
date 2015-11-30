@@ -83,7 +83,10 @@ class ProfileTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.profile_create,
                                self.ctx, 'p', self.spec)
-        self.assertEqual(exception.ProfileTypeNotFound, ex.exc_info[0])
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: The specified profile "
+                         "type (Bogus) is not supported.",
+                         six.text_type(ex.exc_info[1]))
 
     def test_profile_create_invalid_spec(self):
         self.spec['properties'] = {'KEY3': 'value3'}

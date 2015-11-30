@@ -205,7 +205,12 @@ class EngineService(service.Service):
                 raise exception.SenlinBadRequest(msg=msg)
 
         type_name, version = schema.get_spec_version(spec)
-        plugin = environment.global_env().get_profile(type_name)
+        try:
+            plugin = environment.global_env().get_profile(type_name)
+        except exception.ProfileTypeNotFound:
+            msg = _("The specified profile type (%(name)s) is not supported."
+                    ) % {"name": type_name}
+            raise exception.SenlinBadRequest(msg=msg)
 
         LOG.info(_LI("Creating profile %(type)s '%(name)s'."),
                  {'type': type_name, 'name': name})
