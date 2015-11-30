@@ -1492,7 +1492,7 @@ class EngineService(service.Service):
             'params': params
         }
 
-        webhook = webhook_mod.Webhook(obj_id, obj_type, action,
+        webhook = webhook_mod.Webhook(obj.id, obj_type, action,
                                       context=context, **kwargs)
         key = webhook.encrypt_credential()
         url, token = webhook.generate_url(key)
