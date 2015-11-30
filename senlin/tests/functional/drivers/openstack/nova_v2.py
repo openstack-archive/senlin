@@ -124,7 +124,7 @@ class NovaClient(base.DriverBase):
     def flavor_find(self, name_or_id, ignore_missing=False):
         return sdk.FakeResourceObject(self.fake_flavor)
 
-    def image_get_by_name(self, name_or_id, ignore_missing=False):
+    def image_find(self, name_or_id, ignore_missing=False):
         return sdk.FakeResourceObject(self.fake_image)
 
     def server_create(self, **attrs):

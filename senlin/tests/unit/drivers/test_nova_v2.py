@@ -103,17 +103,17 @@ class TestNovaV2(base.SenlinTestCase):
         d.image_get('foo')
         self.compute.get_image.assert_called_once_with('foo')
 
-    def test_image_get_by_name(self):
+    def test_image_find(self):
         d = nova_v2.NovaClient(self.conn_params)
-        d.image_get_by_name('foo')
+        d.image_find('foo')
         self.compute.find_image.assert_called_once_with('foo', False)
         self.compute.find_image.reset_mock()
 
-        d.image_get_by_name('foo', True)
+        d.image_find('foo', True)
         self.compute.find_image.assert_called_once_with('foo', True)
         self.compute.find_image.reset_mock()
 
-        d.image_get_by_name('foo', False)
+        d.image_find('foo', False)
         self.compute.find_image.assert_called_once_with('foo', False)
 
     def test_image_list(self):

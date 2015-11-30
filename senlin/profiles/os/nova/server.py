@@ -242,7 +242,7 @@ class ServerProfile(base.Profile):
 
         name_or_id = self.properties[self.IMAGE]
         if name_or_id is not None:
-            image = self.nova(obj).image_get_by_name(name_or_id)
+            image = self.nova(obj).image_find(name_or_id)
             # wait for new version of openstacksdk to fix this
             kwargs.pop(self.IMAGE)
             kwargs['imageRef'] = image.id
@@ -363,14 +363,14 @@ class ServerProfile(base.Profile):
         '''Updating server image'''
 
         if old_image:
-            res = self.nova(obj).image_get_by_name(old_image)
+            res = self.nova(obj).image_find(old_image)
             image_id = res.id
         else:
             server = self.nova(obj).server_get(obj.physical_id)
             image_id = server.image['id']
 
         if new_image:
-            res = self.nova(obj).image_get_by_name(new_image)
+            res = self.nova(obj).image_find(new_image)
             new_image_id = res.id
             if new_image_id != image_id:
                 self.nova(obj).rebuild_server(obj.physical_id, new_image_id)

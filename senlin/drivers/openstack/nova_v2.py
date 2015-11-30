@@ -55,7 +55,7 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.get_image(value)
 
     @sdk.translate_exception
-    def image_get_by_name(self, name_or_id, ignore_missing=False):
+    def image_find(self, name_or_id, ignore_missing=False):
         return self.conn.compute.find_image(name_or_id, ignore_missing)
 
     @sdk.translate_exception
