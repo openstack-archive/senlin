@@ -250,6 +250,18 @@ class TestNovaV2(base.SenlinTestCase):
         d.server_delete('foo', True)
         self.compute.delete_server.assert_called_once_with('foo', True)
 
+    def test_server_rebuild(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        attrs = {
+            'personality': '123',
+            'metadata': {'k1': 'v1'}
+        }
+        d.server_rebuild('fakeid', 'new_image', 'new_name', 'new_pass',
+                         **attrs)
+        self.compute.rebuild_server.assert_called_once_with(
+            'fakeid', 'new_image', name='new_name',
+            admin_password='new_pass', **attrs)
+
     def test_wait_for_server_delete(self):
         self.compute.find_server.return_value = 'FOO'
 

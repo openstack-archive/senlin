@@ -112,6 +112,7 @@ class ServerProfile(base.Profile):
             # IMAGE is not required, because there could be BDM or BDMv2
             # support and the corresponding settings effective
             _('ID of image to be used for the new server.'),
+            updatable=True,
         ),
         KEY_NAME: schema.String(
             _('Name of Nova keypair to be injected to server.'),
@@ -328,6 +329,17 @@ class ServerProfile(base.Profile):
         # TODO(anyone): Validate the new profile
         # TODO(Yanyan Hu): Update all server properties changed in new profile
 
+        # Update server image
+        image = self.properties[self.IMAGE]
+        new_image = new_profile.properties[self.IMAGE]
+        if new_image != image:
+            try:
+                self._update_image(obj, image, new_image)
+            except Exception as ex:
+                LOG.exception(_('Failed in updating server image: %s'),
+                              six.text_type(ex))
+                return False
+
         # Update server network
         networks_current = self.properties[self.NETWORKS]
         networks_create = new_profile.properties[self.NETWORKS]
@@ -346,6 +358,28 @@ class ServerProfile(base.Profile):
                 return False
 
         return True
+
+    def _update_image(self, obj, old_image, new_image):
+        '''Updating server image'''
+
+        if old_image:
+            res = self.nova(obj).image_get_by_name(old_image)
+            image_id = res.id
+        else:
+            server = self.nova(obj).server_get(obj.physical_id)
+            image_id = server.image['id']
+
+        if new_image:
+            res = self.nova(obj).image_get_by_name(new_image)
+            new_image_id = res.id
+            if new_image_id != image_id:
+                self.nova(obj).rebuild_server(obj.physical_id, new_image_id)
+        else:
+            # TODO(Yanyan Hu): Allow server update with new_image
+            # set to None if Nova service supports it
+            LOG.error(_("Updating Nova server with image set to None is "
+                        "not supported by Nova."))
+            raise exception.ResourceUpdateFailure(resource=obj.physical_id)
 
     def _update_network(self, obj, networks_create, networks_delete):
         '''Updating server network interfaces'''

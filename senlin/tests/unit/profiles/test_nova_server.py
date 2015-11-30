@@ -19,6 +19,7 @@ from oslo_utils import encodeutils
 import six
 
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.common import utils as common_utils
 from senlin.drivers import base as driver_base
 from senlin.profiles.os.nova import server
@@ -568,6 +569,102 @@ class TestNovaServerProfile(base.SenlinTestCase):
             mock.call(server_obj, port_id='port4'),
         ]
         novaclient.server_interface_create.assert_has_calls(calls)
+
+    @mock.patch.object(server.ServerProfile, '_update_image')
+    def test_do_update_image_succeeded(self, mock_update_image):
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = mock.Mock()
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['image'] = 'FAKE_IMAGE_NEW'
+        new_profile = server.ServerProfile('t', new_spec)
+
+        res = profile.do_update(obj, new_profile)
+        self.assertTrue(res)
+        mock_update_image.assert_called_with(obj, 'FAKE_IMAGE',
+                                             'FAKE_IMAGE_NEW')
+
+    @mock.patch.object(server.ServerProfile, '_update_image')
+    def test_do_update_image_failed(self, mock_update_image):
+        ex = exception.InternalError(code=404,
+                                     message='FAKE_IMAGE_NEW is not found')
+        mock_update_image.side_effect = ex
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = mock.Mock()
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['image'] = 'FAKE_IMAGE_NEW'
+        new_profile = server.ServerProfile('t', new_spec)
+
+        res = profile.do_update(obj, new_profile)
+        self.assertFalse(res)
+        mock_update_image.assert_called_with(obj, 'FAKE_IMAGE',
+                                             'FAKE_IMAGE_NEW')
+
+    def test_update_image(self):
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+        mock_old_image = mock.Mock()
+        mock_old_image.id = '123'
+        mock_new_image = mock.Mock()
+        mock_new_image.id = '456'
+        novaclient = mock.Mock()
+        novaclient.image_get_by_name.side_effect = [mock_old_image,
+                                                    mock_new_image]
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = novaclient
+        profile._update_image(obj, 'old_image', 'new_image')
+        novaclient.image_get_by_name.has_calls(
+            [mock.call('old_image'), mock.call('new_image')])
+        novaclient.rebuild_server.assert_called_once_with('FAKE_ID',
+                                                          '456')
+
+    def test_update_image_old_image_is_none(self):
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+        novaclient = mock.Mock()
+        mock_server = mock.Mock()
+        mock_server.image = {
+            'id': '123',
+            'link': {
+                'href': 'http://openstack.example.com/openstack/images/123',
+                'rel': 'bookmark'
+            }
+        }
+        novaclient.server_get.return_value = mock_server
+        mock_image = mock.Mock()
+        mock_image.id = '456'
+        novaclient.image_get_by_name.return_value = mock_image
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = novaclient
+        profile._update_image(obj, None, 'new_image')
+        novaclient.image_get_by_name.assert_called_once_with('new_image')
+        novaclient.server_get.assert_called_once_with('FAKE_ID')
+        novaclient.rebuild_server.assert_called_once_with('FAKE_ID',
+                                                          '456')
+
+    def test_update_image_new_image_is_none(self):
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+        novaclient = mock.Mock()
+        mock_image = mock.Mock()
+        mock_image.id = '123'
+        novaclient.image_get_by_name.return_value = mock_image
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = novaclient
+        ex = self.assertRaises(exception.ResourceUpdateFailure,
+                               profile._update_image,
+                               obj, 'old_image', None)
+        msg = _("Failed in updating FAKE_ID.")
+        self.assertEqual(msg, six.text_type(ex))
+        novaclient.image_get_by_name.assert_called_once_with('old_image')
 
     def test_do_update_no_physical_id(self):
         profile = server.ServerProfile('t', self.spec)
