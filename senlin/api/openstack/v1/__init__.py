@@ -136,9 +136,9 @@ class API(wsgi.Router):
                                action="update",
                                conditions={'method': 'PATCH'})
             sub_mapper.connect("cluster_action",
-                               "/clusters/{cluster_id}/action",
+                               "/clusters/{cluster_id}/actions",
                                action="action",
-                               conditions={'method': 'PUT'})
+                               conditions={'method': 'POST'})
             sub_mapper.connect("cluster_delete",
                                "/clusters/{cluster_id}",
                                action="delete",
@@ -166,9 +166,9 @@ class API(wsgi.Router):
                                action="update",
                                conditions={'method': 'PATCH'})
             sub_mapper.connect("node_action",
-                               "/nodes/{node_id}/action",
+                               "/nodes/{node_id}/actions",
                                action="action",
-                               conditions={'method': 'PUT'})
+                               conditions={'method': 'POST'})
             sub_mapper.connect("node_delete",
                                "/nodes/{node_id}",
                                action="delete",

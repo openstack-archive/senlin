@@ -90,7 +90,7 @@
                         <method href="#cluster_get"/>
                         <method href="#cluster_update"/>
                         <method href="#cluster_delete"/>
-                        <resource id="cluster_actions" path="action">
+                        <resource id="cluster_actions" path="actions">
                             <method href="#cluster_action"/>
                         </resource>
                         <resource id="cluster_policies" path="policies">
@@ -118,7 +118,7 @@
                         <method href="#node_get"/>
                         <method href="#node_update"/>
                         <method href="#node_delete"/>
-                        <resource id="node_actions" path="action">
+                        <resource id="node_actions" path="actions">
                             <method href="#node_action"/>
                         </resource>
                     </resource>
@@ -411,7 +411,7 @@
         </request>
         <response status="202"/>
     </method>
-    <method name="PUT" id="cluster_action">
+    <method name="POST" id="cluster_action">
         <wadl:doc xml:lang="EN" title="Cluster Action" xmlns="http://docbook.org/ns/docbook">
             <para role="shortdesc">Trigger an action on the specified cluster.</para>
         </wadl:doc>
@@ -1334,7 +1334,7 @@
         </request>
         <response status="202"/>
     </method>
-    <method name="PUT" id="node_action">
+    <method name="POST" id="node_action">
         <wadl:doc xml:lang="EN" title="Node Action" xmlns="http://docbook.org/ns/docbook">
             <para role="shortdesc">Trigger an action on the specified node.</para>
         </wadl:doc>
