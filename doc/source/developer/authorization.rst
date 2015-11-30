@@ -11,6 +11,7 @@
   License for the specific language governing permissions and limitations
   under the License.
 
+====================
 Senlin Authorization
 ====================
 
@@ -29,9 +30,8 @@ agnostic so it can be used to support clustering of resources in a multi-cloud,
 or multi-region, or multi-availability-zone setups.
 
 
-----------------
 Major Components
-----------------
+~~~~~~~~~~~~~~~~
 
 In the context of an OpenStack cloud, the most important components invovled in
 the authentication and the authorization process are:
@@ -56,9 +56,8 @@ the authentication and the authorization process are:
    downstream components don't have to access the HTTP request header.
 
 
----------------
 Usage Scenarios
----------------
+~~~~~~~~~~~~~~~
 
 There are several ways to raise a service request to the Senlin API, each of
 which has its own characteristics that will affect the way authentication
@@ -89,13 +88,13 @@ the Webhook API Senlin provides that enables a user to trigger an action on an
 object managed by Senlin. Senlin provides a special support to these use cases.
 
 
------------------------------
 Operation Delegation (Trusts)
------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Since Senlin models most operations as "Actions" that can be executed by worker
-threads asynchronously, these operations have to be done on behalf of the
-requester so that they can be properly traced, authenticated, audited or logged.
+Since Senlin models most operations as "Actions" that can be executed by
+worker threads asynchronously, these operations have to be done on behalf of
+the requester so that they can be properly traced, authenticated, audited or
+logged.
 
 
 Credentials and Context

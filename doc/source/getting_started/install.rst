@@ -13,6 +13,7 @@
 
 .. _guide-install:
 
+============
 Installation
 ============
 
@@ -21,9 +22,8 @@ via devstack, or you install it manually, following the steps outlined in this
 document.
 
 
---------------------
 Install via Devstack
---------------------
+~~~~~~~~~~~~~~~~~~~~
 
 This is the recommended way to install the Senlin service. Please refer to
 :file:`devstack/README.rst` for detailed instructions.
@@ -31,9 +31,8 @@ This is the recommended way to install the Senlin service. Please refer to
 Note that Senlin client is also installed when following the instructions
 it the above mentioned document.
 
--------------------
 Manual Installation
--------------------
+~~~~~~~~~~~~~~~~~~~
 
 
 Install Senlin Server
@@ -122,7 +121,6 @@ The most common options to be customized include:
   $ senlin-engine --config-file /etc/senlin/senlin.conf
   $ senlin-api --config-file /etc/senlin/senlin.conf
 
----------------------
 Install Senlin Client
 ---------------------
 

@@ -13,12 +13,12 @@
 
 .. _guide-index:
 
+===========================
 Getting Started with Senlin
 ===========================
 
---------
 Overview
---------
+~~~~~~~~
 
 Senlin is a **clustering service** for OpenStack clouds. It creates and
 operates clusters of homogenous objects exposed by other OpenStack services.
@@ -43,7 +43,7 @@ object's lifecycle is managed using :term:`Profile Type` implementations,
 which are plugins that can be dynamically loaded by the service engine.
 
 Components
-----------
+~~~~~~~~~~
 
 The developers are focusing on creating an OpenStack style project using
 OpenStack design tenets, implemented in Python. We have started with a close
@@ -69,9 +69,8 @@ The :program:`senlin-engine`'s main responsibility is to create and orchestrate
 the clusters, nodes, profiles and policies.
 
 
-------------
 Installation
-------------
+~~~~~~~~~~~~
 
 You will need to make sure you have a suitable environment for deploying
 Senlin. Please refer to :ref:`Installation <guide-install>` for detailed

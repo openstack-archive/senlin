@@ -19,8 +19,8 @@ Senlin is a service to create and manage :term:`cluster` of multiple cloud
 resources. Senlin provides an OpenStack-native ReST API and a AWS 
 AutoScaling-compatible Query API is in plan.
 
-What is the purpose of the project and vision for it?
-=====================================================
+Project Scope and Vision
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Senlin provides a clustering solution for :term:`OpenStack` cloud. A user
   can create clusters of :term:`node` and associate :term:`policy` to such
@@ -41,12 +41,13 @@ This documentation offers information on how Senlin works and how to
 contribute to the project.
 
 Getting Started
-===============
+~~~~~~~~~~~~~~~
 
 .. toctree::
    :maxdepth: 2
 
    getting_started/index
+   getting_started/install
    getting_started/profile_types
    getting_started/profiles
    getting_started/clusters
@@ -61,7 +62,7 @@ Getting Started
    glossary
 
 Man Pages
-=========
+~~~~~~~~~
 
 .. toctree::
    :maxdepth: 2
@@ -69,7 +70,7 @@ Man Pages
    man/index
 
 Developers Documentation
-========================
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. toctree::
    :maxdepth: 2
@@ -87,7 +88,7 @@ Developers Documentation
    developer/plugin_guide
 
 API Documentation
-========================
+~~~~~~~~~~~~~~~~~
 
 -  `Senlin REST API Reference (OpenStack API Complete Reference - Clustering)`_
 
@@ -95,7 +96,7 @@ API Documentation
 
 
 Indices and tables
-==================
+~~~~~~~~~~~~~~~~~~
 
 * :ref:`genindex`
 * :ref:`modindex`

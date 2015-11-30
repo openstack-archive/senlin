@@ -11,7 +11,7 @@
   License for the specific language governing permissions and limitations
   under the License.
 
-
+========
 Clusters
 ========
 
@@ -40,9 +40,8 @@ A cluster has the following timestamps when instantiated:
    treated as deleted.
 
 
-----------------
 Cluster Statuses
-----------------
+~~~~~~~~~~~~~~~~
 
 A cluster can have one of the following statuses during its lifecycle:
 
@@ -73,9 +72,8 @@ policies attached to the cluster. The runtime data is not directly visible to
 users. It is merely a convenience for cluster operations.
 
 
-------------------
 Creating A Cluster
-------------------
+~~~~~~~~~~~~~~~~~~
 
 When creating a cluster, the Senlin API will verify whether the request
 carries a body with valid, sufficient information for the engine to complete
@@ -115,9 +113,8 @@ real job of cluster creation. A user can check the status of the action to
 determine whether the cluster has been successfully completed or failed.
 
 
-----------------
 Listing Clusters
-----------------
+~~~~~~~~~~~~~~~~
 
 Clusters in the current project can be queried using some query parameters.
 None of these parameters is required. By default, the Senlin API will return
@@ -160,9 +157,8 @@ future, sorting parameters will be specified in a more generic way as
 suggested by the API working group.
 
 
------------------
 Getting a Cluster
------------------
+~~~~~~~~~~~~~~~~~
 
 When a user wants to check the details about a specific cluster, he or she can
 specify one of the following keys for query:
@@ -189,9 +185,8 @@ cluster. It also injects the name of the profile used by the cluster. These
 are all for user's convenience.
 
 
-------------------
 Updating A Cluster
-------------------
+~~~~~~~~~~~~~~~~~~
 
 A cluster can be updated upon user's requests. In theory, all properties of a
 cluster could be updated/changed. However, some update operations are light
@@ -216,8 +211,8 @@ for the following properties:
 - ``timeout``: new timeout value for the specified cluster.
 
 
-Update Cluster Profile
-^^^^^^^^^^^^^^^^^^^^^^
+Update Cluster's Profile
+------------------------
 
 When ``profile_id`` is specified, the request will be interpreted as a
 wholistic update to all nodes across the cluster. The targeted use case is to
@@ -249,7 +244,7 @@ underlying service is controlled.
 
 
 Update Cluster Size Properties
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------
 
 When either one of the ``desired_capacity``, ``min_size`` and ``max_size``
 property is specified in the ``CLUSTER_UPDATE`` request, it may lead to a
@@ -285,7 +280,7 @@ and/or remove nodes in a predictable way.
 
 
 Update Other Cluster Properties
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------
 
 The update to other cluster properties is relatively straightforward. Senlin
 engine simply verifies the data types when necessary and override the existing
@@ -297,9 +292,8 @@ others. Any mixes of update properties are acceptable to the Senlin API and
 the engine.
 
 
----------------
 Cluster Actions
----------------
+~~~~~~~~~~~~~~~
 
 A cluster object supports the following asynchronous actions:
 
@@ -324,8 +318,8 @@ name is found or more than one action is specified, the API will return error
 messages to the caller and reject the request.
 
 
-Adding Nodes To A Cluster
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Adding Nodes to a Cluster
+-------------------------
 
 Senlin API provides the ``add_nodes`` action for user to add some existing
 nodes into the specified cluster. The parameter for this action is interpreted
@@ -359,8 +353,8 @@ into the action's ``data`` field so that those policies could update the
 associated resources.
 
 
-Deleting Nodes From A Cluster
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Deleting Nodes from a Cluster
+-----------------------------
 
 Senlin API provides the ``del_nodes`` action for user to delete some existing
 nodes from the specified cluster. The parameter for this action is interpreted
@@ -395,8 +389,8 @@ from the cluster. It simply removes the nodes from the cluster so that they
 become orphan nodes.
 
 
-Resizing A Cluster
-^^^^^^^^^^^^^^^^^^
+Resizing a Cluster
+------------------
 
 In addition to the ``cluster_update`` request, Senlin provides a dedicated API
 for adjusting the size of a cluster, i.e. ``cluster_resize``. This operation
@@ -456,8 +450,8 @@ corresponding cluster properties are updated before the resize operation
 is started.
 
 
-Scaling In/Out A Cluster
-^^^^^^^^^^^^^^^^^^^^^^^^
+Scaling in/out a Cluster
+------------------------
 
 As a convenience method, Senlin provides the ``scale_out`` and the ``scale_in``
 action API for clusters. With these two APIs, a user can request a cluster to
@@ -492,9 +486,8 @@ Note that both ``scale_out`` and ``scale_in`` actions will adjust the
 ``desired_capacity`` property of the target cluster.
 
 
------------------------
 Cluster Policy Bindings
------------------------
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Senlin API provides the following action APIs for managing the binding
 relationship between a cluster and a policy:
@@ -505,8 +498,8 @@ relationship between a cluster and a policy:
   and a policy.
 
 
-Attaching A Policy To A Cluster
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Attaching a Policy to a Cluster
+-------------------------------
 
 Once a policy is attached (bound) to a cluster, it will be enforced when
 related actions are performed on that cluster, unless the policy is
@@ -550,8 +543,8 @@ Policies attached to a cluster are cached at the target cluster as part of its
 runtime ``rt`` data structure. This is an optimization regarding DB queries.
 
 
-Detaching A Policy from A Cluster
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Detaching a Policy from a Cluster
+---------------------------------
 
 Once a policy is attached to a cluster, it can be detached from the cluster at
 user's request. The only parameter required for the ``policy_detach`` action
@@ -578,8 +571,8 @@ The ``CLUSTER_DETACH_POLICY`` action will invalidate the cache when detaching
 a policy from a cluster.
 
 
-Updating A Policy On A Cluster
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Updating a Policy on a Cluster
+------------------------------
 
 When a policy is attached to a cluster, there are some properties pertaining
 to the binding. These properties can be updated as long as the policy is still

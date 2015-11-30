@@ -15,29 +15,30 @@
 .. _guide-actions:
 
 
+=======
 Actions
 =======
 
 Concept
--------
+~~~~~~~
 
 An :term:`Action` is a ...
 
 
 Listing Actions
----------------
+~~~~~~~~~~~~~~~
 
 (TBC)
 
 
 Showing Details of an Action
-----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 (TBC)
 
 
 See Also
---------
+~~~~~~~~
 
 * :doc:`Creating Webooks <webhooks>`
 * :doc:`Browsing Events <events>`

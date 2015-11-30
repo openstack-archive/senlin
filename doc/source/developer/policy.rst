@@ -11,6 +11,8 @@
   License for the specific language governing permissions and limitations
   under the License.
 
+
+========
 Policies
 ========
 
@@ -23,9 +25,8 @@ development an easier task for developers to introduce new policies and/or
 customize existing ones for their needs.
 
 
------------------
 Policy Properties
------------------
+~~~~~~~~~~~~~~~~~
 
 A policy object has the following properties:
 
@@ -60,9 +61,8 @@ values for the levels are:
   generated when this policy is enforced.
 
 
------------------
-Creating A Policy
------------------
+Creating a Policy
+~~~~~~~~~~~~~~~~~
 
 When the Senlin API receives a request to create a policy object, it first
 checks if the JSON body contains a map named ``policy`` that has the ``name``
@@ -78,9 +78,8 @@ details of the object will be returned to the requester. If any of these
 validations fail, an error message will be returned to the requester instead.
 
 
-----------------
 Listing Policies
-----------------
+~~~~~~~~~~~~~~~~
 
 Policy objects can be listed using the Senlin API. When querying the policy
 objects, a user can specify the following query parameters, individually or
@@ -120,9 +119,8 @@ returned to the requester. If there is no matching record, the result will be
 an empty list.
 
 
-----------------
-Getting A Policy
-----------------
+Getting a Policy
+~~~~~~~~~~~~~~~~
 
 A user can provide one of the UUID, the name or the short ID of policy object
 to the Senlin API ``policy_show`` to retrieve the details about a policy.
@@ -134,9 +132,8 @@ is found matching the criteria, a different error message will be returned to
 the requester.
 
 
------------------
-Updating A Policy
------------------
+Updating a Policy
+~~~~~~~~~~~~~~~~~
 
 After a policy is created, a user can send requests to the Senlin API for
 changing some of its properties. To avoid potential state conflicts inside the
@@ -156,9 +153,8 @@ to the user. Otherwise, the engine updates the object property and returns the
 object details in a map.
 
 
------------------
-Deleting A Policy
------------------
+Deleting a Policy
+~~~~~~~~~~~~~~~~~
 
 A user can specify the UUID, the name or the short ID of a policy object when
 sending a ``policy_delete`` request to the Senlin API.

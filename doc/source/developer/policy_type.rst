@@ -12,10 +12,11 @@
   under the License.
 
 
+============
 Policy Types
 ============
 
-A :doc:`policy <developer/policy>` policy is a set of rules that are checked
+A :doc:`policy <policy>` policy is a set of rules that are checked
 and enforced. The checking can be done before or after an action's execution
 or both. Policies are of different policy types, each of which is designed to
 make sure that a cluster's behavior follows certain patterns or complies with
@@ -33,9 +34,8 @@ entries in the ``entry_points`` section in the ``setup.cfg`` file, followed by
 a reinstall of the Senlin service, i.e. ``sudo pip install`` command.
 
 
--------------------------
 The Base Class ``Policy``
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The base class ``Policy`` provides some common logics regarding the following
 operations:
@@ -58,9 +58,8 @@ operations:
     action is executed.
 
 
---------------------------
 Providing New Policy Types
---------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Adding new policy type implementations is an easy task with only a few steps
 to follow.
@@ -75,7 +74,7 @@ policy type in a Python dictionary named ``spec_schema``.
 
 
 Defining Spec Schema
-^^^^^^^^^^^^^^^^^^^^
+--------------------
 
 Each key in this dictionary represents a property name; the value of it is an
 object of one of the schema types listed below:
@@ -142,7 +141,7 @@ arguments to gain a better control of the property:
 
 
 Applicable Profile Types
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
 Not all policy types can be used on all profile types. For example, a policy
 about load-balancing is only meaningful for objects that can handle workloads,
@@ -152,18 +151,18 @@ You can define what are the profile types your new policy type can handle by
 specifying the ``PROFILE_TYPE`` property of your policy type class. The value
 of ``PROFILE_TYPE`` is a list of profile type names. If a policy type is
 designed to handle all profile types, you can specify a single entry ``ANY``
-as the value. See :doc:`profile types <developer/profile_type>` for profile
-type related operations.
+as the value. See :doc:`profile types <profile_type>` for profile type related
+operations.
 
 
 Policy Targets
-^^^^^^^^^^^^^^
+--------------
 
 A policy type is usually defined to handle certain operations. The rules
 embedded in the implementation may need to be checked before the execution of
-an :doc:`action <developer/action>` or they may need to be enforced after the
-execution of the action. When an action is about to be executed or an action
-has finished execution, the Senlin engine will check if any policy objects
+an :doc:`action <action>` or they may need to be enforced after the execution
+of the action. When an action is about to be executed or an action has
+finished execution, the Senlin engine will check if any policy objects
 attached to a cluster is interested in the action. If the answer is yes, the
 engine will invoke the ``pre_op`` function or the ``post_op`` function
 respectively, thus giving the policy object a chance to adjust the action's
@@ -191,18 +190,18 @@ function of this policy object will be invoked.
 
 
 Passing Data Between Policies
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------
 
 Each policy type may decide to send some data as additional inputs or
 constraints for the action to consume. This is done by modifying the ``data``
-property of an ``Action`` object (see :doc:`action <developer/action>`).
+property of an ``Action`` object (see :doc:`action <action>`).
 
 A policy type may want to check if there are other policy objects leaving some
 policy decisions in the ``data`` property of an action object.
 
 
 Registering The New Policy Type
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------
 
 For Senlin service to be aware of and thus to make use of the new policy type
 you have just developed, you will register it to the Senlin service.

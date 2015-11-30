@@ -5,19 +5,19 @@ senlin-manage
 .. program:: senlin-manage
 
 SYNOPSIS
-========
+~~~~~~~~
 
 ``senlin-manage <action> [options]``
 
 DESCRIPTION
-===========
+~~~~~~~~~~~
 
 senlin-manage provides utilities for operators to manage Senlin specific
 maitenance operations.
 
 
 OPTIONS
-=======
+~~~~~~~
 
 To issue a senlin-manage command:
 
@@ -32,7 +32,7 @@ detailed descriptions.
 
 
 Senlin DB version
-~~~~~~~~~~~~~~~~~
+-----------------
 
 ``senlin-manage db_version``
 
@@ -48,7 +48,7 @@ Senlin DB version
 
 
 FILES
-=====
+~~~~~
 
 The /etc/senlin/senlin.conf file contains global options which can be
 used to configure some aspects of `senlin-manage`, for example the DB
@@ -56,7 +56,7 @@ connection and logging options.
 
 
 BUGS
-====
+~~~~
 
 * Senlin issues are tracked in Launchpad so you can view or report bugs here
   `OpenStack Senlin Bugs <https://bugs.launchpad.net/senlin>`__

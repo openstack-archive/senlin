@@ -14,11 +14,12 @@
 
 .. _guide-profiles:
 
+========
 Profiles
 ========
 
 Concept
--------
+~~~~~~~
 
 A :term:`Profile` is the mould used for creating a :term:`Node` to be managed
 by the Senlin service. It can be treated as an instance of a
@@ -32,7 +33,7 @@ provided.
 
 
 Listing Profiles
-----------------
+~~~~~~~~~~~~~~~~
 
 To examine the list of profile objects supported by the Senlin engine, you can
 use the following command::
@@ -91,7 +92,7 @@ profiles with IDs is or come before the one you specify. You can use the option
 
 
 Creating a Profile
-------------------
+~~~~~~~~~~~~~~~~~~
 
 Before working with a :term:`Cluster` or a :term:`Node`, you will need a
 :term:`Profile` object created with a profile type. To create a profile, you
@@ -197,7 +198,7 @@ creating it. This data is referred to as the *metadata* for the profile::
 
 
 Showing the Details of a Profile
---------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Once there are profile objects in Senlin database, you can use the following
 command to show the properties of a profile::
@@ -267,7 +268,7 @@ the short ID, you will get a ``MultipleChoices`` exception.
 
 
 Updating a Profile
-------------------
+~~~~~~~~~~~~~~~~~~
 
 In general, a profile object should not be updated after creation. This is a
 restriction to keep cluster and node status consistent at any time. However,
@@ -288,7 +289,7 @@ is to create a new profile using the :command:`profile-create` command.
 
 
 Deleting a Profile
-------------------
+~~~~~~~~~~~~~~~~~~
 
 When there are no clusters or nodes referencing a profile object, you can
 delete it from the Senlin database using the following command::
@@ -307,7 +308,7 @@ If more than one profile matches the criteria, you will get a
 
 
 See Also
---------
+~~~~~~~~
 
 The following is a list of the links to documents related to profile's
 creation and usage:

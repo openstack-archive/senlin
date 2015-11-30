@@ -14,11 +14,12 @@
 
 .. _guide-bindings:
 
+=======================
 Cluster-Policy Bindings
 =======================
 
 Concept
--------
+~~~~~~~
 
 A :term:`Policy` object can attached to at least one :term:`Cluster` at the
 same time. A cluster at any time can have more than one Policy objects
@@ -35,7 +36,7 @@ disable it or update some properties of the policy object.
 
 
 Listing Policies Attached to a Cluster
---------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The :program:`senlin` tool provides the :command:`cluster-policy-list` command
 to list policy objects that are attached to a cluster. You can provide the
@@ -47,7 +48,7 @@ cluster ``webservers``::
 
 
 Sorting the List
-^^^^^^^^^^^^^^^^
+----------------
 
 You specify the sorting keys and sorting directions for the policy list,
 using the option :option:`--sort-keys` (or :option:`-k`) and the option
@@ -69,19 +70,19 @@ For sorting the policy list, the valid keys are: ``priority``, ``level``,
 
 
 Filtering the List
-^^^^^^^^^^^^^^^^^^
+------------------
 
 The :program:`senlin` command line also provides options for filtering the
 policy list at the server side. The option :option:`--filters` (or
 :option:`-f`) can be used for this purpose. For example, the following command
 filters clusters by the ``priority`` field::
 
-]$ senlin cluster-policy-list -f priority=20 c3
-+--------------------------------------+--------+----------------+----------+-------+----------+---------+
-| policy_id                            | policy | type           | priority | level | cooldown | enabled |
-+--------------------------------------+--------+----------------+----------+-------+----------+---------+
-| 0705f0f4-629e-4417-84d7-30569d23b271 | up01   | UpdatePolicy   | 20       | 50    | 60       | True    |
-+--------------------------------------+--------+----------------+----------+-------+----------+---------+
+  $ senlin cluster-policy-list -f priority=20 c3
+  +--------------------------------------+--------+----------------+----------+-------+----------+---------+
+  | policy_id                            | policy | type           | priority | level | cooldown | enabled |
+  +--------------------------------------+--------+----------------+----------+-------+----------+---------+
+  | 0705f0f4-629e-4417-84d7-30569d23b271 | up01   | UpdatePolicy   | 20       | 50    | 60       | True    |
+  +--------------------------------------+--------+----------------+----------+-------+----------+---------+
 
 The option :option:`--filters` accepts a list of key-value pairs separated by
 semicolon (``;``), where each key-value pair is expected to be of format
@@ -90,7 +91,7 @@ semicolon (``;``), where each key-value pair is expected to be of format
 
 
 Attaching a Policy to a Cluster
--------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Senlin permits policy objects to be attached to clusters and to be detached
 from clusters dynamically. When attaching a policy object to a cluster, you
@@ -102,7 +103,7 @@ enforcement level of a policy object on this cluster.
 The following options are supported for the :command:`cluster-policy-attach`
 command:
 
-- :option:`--priority` (or :opiton:`-r`): specifies the relative priority
+- :option:`--priority` (or :option:`-r`): specifies the relative priority
   among all policies attached to the same cluster. Policies with a lower
   priority value (higher priority) will be evaluated before those with a
   higher value (lower priority).
@@ -129,7 +130,7 @@ more than one entity matching the identifier, you will get an error message.
 
 
 Showing Policy Properties on a Cluster
--------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To examine the detailed properties of a policy object that has been attached
 to a cluster, you can use the command :command:`cluster-policy-show` with the
@@ -155,7 +156,7 @@ name the objects.
 
 
 Updating Policy Properties on a Cluster
-------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Once a policy is attached to a cluster, you can request its property on this
 cluster be changed by using the command :command:`cluster-policy-update`. For
@@ -187,7 +188,7 @@ object to name it as well.
 
 
 Detach a Policy from a Cluster
-------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Finally, to remove the binding between a specified policy object from a
 cluster, you can use the :command:`cluster-policy-detach` command as shown

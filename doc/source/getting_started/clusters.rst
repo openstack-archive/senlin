@@ -14,11 +14,12 @@
 
 .. _guide-clusters:
 
+========
 Clusters
 ========
 
 Concept
--------
+~~~~~~~
 
 A :term:`Cluster` is a group of logical objects, each of which is called a
 :term:`Node` in Senlin's terminology. A cluster can contain zero or more
@@ -32,7 +33,7 @@ properties when attaching a policy to a cluster. Please refer to
 :ref:`guide-bindings` for details.
 
 Listing Clusters
-----------------
+~~~~~~~~~~~~~~~~
 
 The following command shows the clusters managed by the Senlin service::
 
@@ -65,7 +66,7 @@ to the command::
 
 
 Sorting the List
-^^^^^^^^^^^^^^^^
+----------------
 
 You can specify the sorting keys and sorting direction for the cluster list,
 using the option :option:`--sort-keys` (or :option:`-k`) and/or the option
@@ -87,7 +88,7 @@ For sorting the cluster list, the valid keys are: ``name``, ``status``,
 
 
 Filtering the List
-^^^^^^^^^^^^^^^^^^
+------------------
 
 The :program:`senlin` command line also provides options for filtering the
 cluster list at the server side. The option :option:`--filters` (or
@@ -108,8 +109,8 @@ semicolon (``;``), where each key-value pair is expected to be of format
 ``project``, ``parent`` and ``user``.
 
 
-Paginating the Query
-^^^^^^^^^^^^^^^^^^^^
+Paginating the Query Results
+----------------------------
 
 In case you have a huge collection of clusters, you can limit the number of
 clusters returned from Senlin server each time, using the option
@@ -140,7 +141,7 @@ the one specified from the command line.
 
 
 Creating a Cluster
-------------------
+~~~~~~~~~~~~~~~~~~
 
 To create a cluster, you need to provide the ID or name of the profile to be
 associated with the cluster. For example::
@@ -180,7 +181,7 @@ profiles found matching the value, you will receive an error message.
 
 
 Controlling Cluster Capacity
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------
 
 When creating a cluster, by default :program:`senlin` will create a cluster
 with no nodes, i.e. the ``desired_capacity`` will be set to 0. However, you
@@ -207,7 +208,7 @@ immediately after the cluster object is created.
 
 
 Other Properties
-^^^^^^^^^^^^^^^^
+----------------
 
 You can use the option :option:`--metadata` (or :option:`-M`) to associate
 some key-value pairs to the cluster to be created. These data are referred to
@@ -227,7 +228,7 @@ for nested clusters. It is not supported yet at the time of this writing.
 
 
 Showing Details of a Cluster
-----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When there are clusters in the Senlin database, you can request Senlin to show
 the details about a cluster you are intested in.
@@ -271,7 +272,7 @@ of this cluster.
 
 
 Updating a Cluster
-------------------
+~~~~~~~~~~~~~~~~~~
 
 Once a cluster has been created, you change its properties using the
 :program:`senlin` command line. For example, to change the name of a cluster,
@@ -305,14 +306,14 @@ information.
 
 
 Resizing a Cluster
-------------------
+~~~~~~~~~~~~~~~~~~
 
 The :program:`senlin` tool supports several different commands to resize a
 cluster.
 
 
 ``cluster-resize``
-^^^^^^^^^^^^^^^^^^
+------------------
 
 The command :command:`cluster-resize` takes several arguments that allow you
 to resize a cluster in various ways:
@@ -412,8 +413,9 @@ Along with the :command:`cluster-resize` command, you can specify the new size
 constraints using either the option :option:`--min-size` (or :option:`-n`) or
 the option :option:`--max-size` (or :option:`-m`) or both.
 
+
 ``cluster-scale-in`` and ``cluster-scale-out``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------------
 
 The :command:`cluster-scale-in` command and the :command:`cluster-scale-out`
 command are provided for convenience when you want to add specific number of
@@ -435,7 +437,7 @@ omitted, however, Senlin will treat it as implicitly set to value 1.
 
 
 Deleting a Cluster
-------------------
+~~~~~~~~~~~~~~~~~~
 
 A cluster can be deleted using the command :command:`cluster-delete`, for
 example::
@@ -452,8 +454,9 @@ When there are nodes in the cluster, the Senlin engine will launch a process
 to delete all nodes from the cluster and destroy them before deleting the
 cluster object itself.
 
+
 See Also
---------
+~~~~~~~~
 
 There are other operations related to clusters. Please refer to the following
 links for operations related to cluster membership management and the creation

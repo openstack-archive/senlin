@@ -13,11 +13,12 @@
 
 .. _guide-profile-types:
 
+=============
 Profile Types
 =============
 
-Basic Concept
--------------
+Concept
+~~~~~~~
 
 A :term:`Profile Type` can be treated as the meta-type of a :term:`Profile`
 object. A registry of profile types is built in memory when Senlin engine
@@ -68,7 +69,7 @@ A profile of type ``os.heat.stack`` may look like:
 
 
 Listing Profile Types
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 Senlin server comes with some built-in profile types. You can check the list
 of profile types using the following command::
@@ -85,7 +86,7 @@ The output is a list of profile types supported by the Senlin server.
 
 
 Showing Profile Schema
-----------------------
+~~~~~~~~~~~~~~~~~~~~~~
 
 Each :term:`Profile Type` has a schema for its *spec* (i.e. specification)
 that describes the names and the types of properties that can be accepted. To
@@ -155,7 +156,7 @@ the the :option:`-F json` option as exemplified below::
 
 
 See Also
---------
+~~~~~~~~
 
 Below is a list of links to the documents related to profile types:
 
