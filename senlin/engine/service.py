@@ -341,7 +341,12 @@ class EngineService(service.Service):
         cooldown = utils.parse_int_param('cooldown', cooldown)
 
         type_name, version = schema.get_spec_version(spec)
-        plugin = environment.global_env().get_policy(type_name)
+        try:
+            plugin = environment.global_env().get_policy(type_name)
+        except exception.PolicyTypeNotFound:
+            msg = _("The specified policy type (%(name)s) is not supported."
+                    ) % {"name": type_name}
+            raise exception.SenlinBadRequest(msg=msg)
 
         LOG.info(_LI("Creating policy %(type)s '%(name)s'"),
                  {'type': type_name, 'name': name})
