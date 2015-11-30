@@ -1474,10 +1474,14 @@ class EngineService(service.Service):
             raise exception.SenlinBadRequest(msg=msg)
 
         # Check whether object identified by obj_id does exists
-        if obj_type == consts.WEBHOOK_OBJ_TYPE_CLUSTER:
-            obj = self.cluster_find(context, obj_id)
-        else:  # WEBHOOK_OBJ_TYPE_NODE:
-            obj = self.node_find(context, obj_id)
+        try:
+            if obj_type == consts.WEBHOOK_OBJ_TYPE_CLUSTER:
+                obj = self.cluster_find(context, obj_id)
+            else:  # WEBHOOK_OBJ_TYPE_NODE:
+                obj = self.node_find(context, obj_id)
+        except (exception.ClusterNotFound, exception.NodeNotFound):
+            msg = _("The referenced object (%s) is not found.") % obj_id
+            raise exception.SenlinBadRequest(msg=msg)
 
         # permission checking
         if not context.is_admin and context.user != obj.user:
@@ -1537,22 +1541,26 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Triggering webhook '%s'."), identity)
 
-        webhook = self.webhook_get(context, identity)
+        webhook = self.webhook_find(context, identity)
 
         # Check whether target obj exists
-        obj_id = webhook['obj_id']
-        obj_type = webhook['obj_type']
+        obj_id = webhook.obj_id
+        obj_type = webhook.obj_type
 
-        if obj_type == consts.WEBHOOK_OBJ_TYPE_CLUSTER:
-            db_obj = self.cluster_find(context, obj_id)
-        else:  # consts.WEBHOOK_OBJ_TYPE_NODE:
-            db_obj = self.node_find(context, obj_id)
+        try:
+            if obj_type == consts.WEBHOOK_OBJ_TYPE_CLUSTER:
+                db_obj = self.cluster_find(context, obj_id)
+            else:  # consts.WEBHOOK_OBJ_TYPE_NODE:
+                db_obj = self.node_find(context, obj_id)
+        except (exception.ClusterNotFound, exception.NodeNotFound):
+            msg = _("The referenced object (%s) is not found.") % obj_id
+            raise exception.SenlinBadRequest(msg=msg)
 
         # If params are provided, they will override the default params
         if not params:
-            params = webhook['params']
+            params = webhook.params
 
-        action_name = 'webhook_action_%s' % webhook['id'][:8]
+        action_name = 'webhook_action_%s' % webhook.id[:8]
         kwargs = {
             'user': context.user,
             'project': context.project,
@@ -1561,7 +1569,7 @@ class EngineService(service.Service):
             'cause': action_mod.CAUSE_RPC,
             'inputs': params
         }
-        action = action_mod.Action(db_obj.id, webhook['action'], **kwargs)
+        action = action_mod.Action(db_obj.id, webhook.action, **kwargs)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)

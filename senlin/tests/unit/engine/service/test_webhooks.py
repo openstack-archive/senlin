@@ -154,9 +154,23 @@ class WebhookTest(base.SenlinTestCase):
                                self.eng.webhook_create,
                                self.ctx, obj_id, obj_type, action,
                                credential=credential)
-        self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
-        self.assertEqual('The cluster (%s) could not be found.'
-                         '' % obj_id,
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual('The request is malformed: The referenced object '
+                         '(%s) is not found.' % obj_id,
+                         six.text_type(ex.exc_info[1]))
+
+        obj_id = 'fake-id'
+        obj_type = 'node'
+        action = consts.NODE_LEAVE
+
+        credential = {'userid': 'test-user-id', 'password': 'test-pass'}
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.webhook_create,
+                               self.ctx, obj_id, obj_type, action,
+                               credential=credential)
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual('The request is malformed: The referenced object '
+                         '(%s) is not found.' % obj_id,
                          six.text_type(ex.exc_info[1]))
 
     def test_webhook_create_action_illegal(self):
@@ -518,6 +532,35 @@ class WebhookTest(base.SenlinTestCase):
                             inputs=params2)
 
         notify.assert_called_once_with(action_id=action_id)
+
+    @mock.patch.object(service.EngineService, 'webhook_find')
+    def test_webhook_trigger_obj_id_not_found(self, mock_get):
+        wh = mock.Mock()
+        wh.obj_id = 'FAKE_ID'
+        wh.obj_type = 'cluster'
+        mock_get.return_value = wh
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.webhook_trigger,
+                               self.ctx, 'FAKE_WEBHOOK')
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual('The request is malformed: The referenced object '
+                         '(FAKE_ID) is not found.',
+                         six.text_type(ex.exc_info[1]))
+        mock_get.assert_called_once_with(self.ctx, 'FAKE_WEBHOOK')
+        mock_get.reset_mock()
+
+        wh.obj_type = 'node'
+        mock_get.return_value = wh
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.webhook_trigger,
+                               self.ctx, 'FAKE_WEBHOOK')
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual('The request is malformed: The referenced object '
+                         '(FAKE_ID) is not found.',
+                         six.text_type(ex.exc_info[1]))
+        mock_get.assert_called_once_with(self.ctx, 'FAKE_WEBHOOK')
 
     @mock.patch.object(webhook_mod.Webhook, 'generate_url')
     @mock.patch.object(common_utils, 'encrypt')
