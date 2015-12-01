@@ -74,6 +74,7 @@ class RoutesTest(base.SenlinTestCase):
             'ProfileController',
             {
                 'tenant_id': 'aaaa',
+                'success': '201',
             })
 
         self.assertRoute(
@@ -106,7 +107,8 @@ class RoutesTest(base.SenlinTestCase):
             'ProfileController',
             {
                 'tenant_id': 'aaaa',
-                'profile_id': 'bbbb'
+                'profile_id': 'bbbb',
+                'success': '204'
             })
 
     def test_policy_types_handling(self):
@@ -150,6 +152,7 @@ class RoutesTest(base.SenlinTestCase):
             'PolicyController',
             {
                 'tenant_id': 'aaaa',
+                'success': '201',
             })
 
         self.assertRoute(
@@ -182,7 +185,8 @@ class RoutesTest(base.SenlinTestCase):
             'PolicyController',
             {
                 'tenant_id': 'aaaa',
-                'policy_id': 'bbbb'
+                'policy_id': 'bbbb',
+                'success': '204',
             })
 
     def test_cluster_collection(self):
@@ -203,7 +207,8 @@ class RoutesTest(base.SenlinTestCase):
             'create',
             'ClusterController',
             {
-                'tenant_id': 'aaaa'
+                'tenant_id': 'aaaa',
+                'success': '202',
             })
 
         self.assertRoute(
@@ -225,7 +230,8 @@ class RoutesTest(base.SenlinTestCase):
             'ClusterController',
             {
                 'tenant_id': 'aaaa',
-                'cluster_id': 'bbbb'
+                'cluster_id': 'bbbb',
+                'success': '202',
             })
 
         self.assertRoute(
@@ -236,7 +242,8 @@ class RoutesTest(base.SenlinTestCase):
             'ClusterController',
             {
                 'tenant_id': 'aaaa',
-                'cluster_id': 'bbbb'
+                'cluster_id': 'bbbb',
+                'success': '202',
             })
 
         self.assertRoute(
@@ -247,7 +254,8 @@ class RoutesTest(base.SenlinTestCase):
             'ClusterController',
             {
                 'tenant_id': 'aaaa',
-                'cluster_id': 'bbbb'
+                'cluster_id': 'bbbb',
+                'success': '202',
             })
 
     def test_node_collection(self):
@@ -269,6 +277,7 @@ class RoutesTest(base.SenlinTestCase):
             'NodeController',
             {
                 'tenant_id': 'aaaa',
+                'success': '202'
             })
 
         self.assertRoute(
@@ -291,6 +300,7 @@ class RoutesTest(base.SenlinTestCase):
             {
                 'tenant_id': 'aaaa',
                 'node_id': 'bbbb',
+                'success': '202',
             })
 
         self.assertRoute(
@@ -302,6 +312,7 @@ class RoutesTest(base.SenlinTestCase):
             {
                 'tenant_id': 'aaaa',
                 'node_id': 'bbbb',
+                'success': '202',
             })
 
         self.assertRoute(
@@ -313,6 +324,7 @@ class RoutesTest(base.SenlinTestCase):
             {
                 'tenant_id': 'aaaa',
                 'node_id': 'bbbb',
+                'success': '202',
             })
 
     def test_cluster_policy(self):
@@ -358,6 +370,7 @@ class RoutesTest(base.SenlinTestCase):
             'ActionController',
             {
                 'tenant_id': 'aaaa',
+                'success': '201',
             })
 
         self.assertRoute(

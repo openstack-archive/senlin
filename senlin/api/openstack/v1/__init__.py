@@ -60,7 +60,8 @@ class API(wsgi.Router):
             sub_mapper.connect("profile_create",
                                "/profiles",
                                action="create",
-                               conditions={'method': 'POST'})
+                               conditions={'method': 'POST'},
+                               success=201)
             sub_mapper.connect("profile_get",
                                "/profiles/{profile_id}",
                                action="get",
@@ -72,7 +73,8 @@ class API(wsgi.Router):
             sub_mapper.connect("profile_delete",
                                "/profiles/{profile_id}",
                                action="delete",
-                               conditions={'method': 'DELETE'})
+                               conditions={'method': 'DELETE'},
+                               success=204)
 
         # Policy Types
         policy_types_resource = policy_types.create_resource(conf)
@@ -100,7 +102,8 @@ class API(wsgi.Router):
             sub_mapper.connect("policy_create",
                                "/policies",
                                action="create",
-                               conditions={'method': 'POST'})
+                               conditions={'method': 'POST'},
+                               success=201)
             sub_mapper.connect("policy_get",
                                "/policies/{policy_id}",
                                action="get",
@@ -112,7 +115,8 @@ class API(wsgi.Router):
             sub_mapper.connect("policy_delete",
                                "/policies/{policy_id}",
                                action="delete",
-                               conditions={'method': 'DELETE'})
+                               conditions={'method': 'DELETE'},
+                               success=204)
 
         # Clusters
         clusters_resource = clusters.create_resource(conf)
@@ -126,7 +130,8 @@ class API(wsgi.Router):
             sub_mapper.connect("cluster_create",
                                "/clusters",
                                action="create",
-                               conditions={'method': 'POST'})
+                               conditions={'method': 'POST'},
+                               success=202)
             sub_mapper.connect("cluster_get",
                                "/clusters/{cluster_id}",
                                action="get",
@@ -134,15 +139,18 @@ class API(wsgi.Router):
             sub_mapper.connect("cluster_update",
                                "/clusters/{cluster_id}",
                                action="update",
-                               conditions={'method': 'PATCH'})
+                               conditions={'method': 'PATCH'},
+                               success=202)
             sub_mapper.connect("cluster_action",
                                "/clusters/{cluster_id}/actions",
                                action="action",
-                               conditions={'method': 'POST'})
+                               conditions={'method': 'POST'},
+                               success=202)
             sub_mapper.connect("cluster_delete",
                                "/clusters/{cluster_id}",
                                action="delete",
-                               conditions={'method': 'DELETE'})
+                               conditions={'method': 'DELETE'},
+                               success=202)
 
         # Nodes
         nodes_resource = nodes.create_resource(conf)
@@ -156,7 +164,8 @@ class API(wsgi.Router):
             sub_mapper.connect("node_create",
                                "/nodes",
                                action="create",
-                               conditions={'method': 'POST'})
+                               conditions={'method': 'POST'},
+                               success=202)
             sub_mapper.connect("node_get",
                                "/nodes/{node_id}",
                                action="get",
@@ -164,15 +173,18 @@ class API(wsgi.Router):
             sub_mapper.connect("node_update",
                                "/nodes/{node_id}",
                                action="update",
-                               conditions={'method': 'PATCH'})
+                               conditions={'method': 'PATCH'},
+                               success=202)
             sub_mapper.connect("node_action",
                                "/nodes/{node_id}/actions",
                                action="action",
-                               conditions={'method': 'POST'})
+                               conditions={'method': 'POST'},
+                               success=202)
             sub_mapper.connect("node_delete",
                                "/nodes/{node_id}",
                                action="delete",
-                               conditions={'method': 'DELETE'})
+                               conditions={'method': 'DELETE'},
+                               success=202)
 
         # Cluster Policies
         cluster_policies_resource = cluster_policies.create_resource(conf)
@@ -200,7 +212,8 @@ class API(wsgi.Router):
             sub_mapper.connect("action_create",
                                "/actions",
                                action="create",
-                               conditions={'method': 'POST'})
+                               conditions={'method': 'POST'},
+                               success=201)
             sub_mapper.connect("action_get",
                                "/actions/{action_id}",
                                action="get",
@@ -218,7 +231,8 @@ class API(wsgi.Router):
             sub_mapper.connect("webhook_create",
                                "/webhooks",
                                action="create",
-                               conditions={'method': 'POST'})
+                               conditions={'method': 'POST'},
+                               success=201)
             sub_mapper.connect("webhook_get",
                                "/webhooks/{webhook_id}",
                                action="get",
@@ -226,11 +240,13 @@ class API(wsgi.Router):
             sub_mapper.connect("webhook_trigger",
                                "/webhooks/{webhook_id}/trigger",
                                action="trigger",
-                               conditions={'method': 'POST'})
+                               conditions={'method': 'POST'},
+                               success=202)
             sub_mapper.connect("webhook_delete",
                                "/webhooks/{webhook_id}",
                                action="delete",
-                               conditions={'method': 'DELETE'})
+                               conditions={'method': 'DELETE'},
+                               success=204)
 
         # Events
         events_resource = events.create_resource(conf)
