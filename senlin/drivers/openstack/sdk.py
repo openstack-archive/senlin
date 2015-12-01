@@ -74,7 +74,6 @@ def parse_exception(ex):
     elif isinstance(ex, Exception):
         message = six.text_type(ex)
 
-    # LOG.exception(ex)
     raise senlin_exc.InternalError(code=code, message=message)
 
 
@@ -86,6 +85,7 @@ def translate_exception(func):
         try:
             return func(driver, *args, **kwargs)
         except Exception as ex:
+            LOG.exception(ex)
             raise parse_exception(ex)
 
     return invoke_with_catch
