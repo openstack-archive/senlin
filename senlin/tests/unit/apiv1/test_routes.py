@@ -230,8 +230,8 @@ class RoutesTest(base.SenlinTestCase):
 
         self.assertRoute(
             self.m,
-            '/aaaa/clusters/bbbb/action',
-            'PUT',
+            '/aaaa/clusters/bbbb/actions',
+            'POST',
             'action',
             'ClusterController',
             {
@@ -295,8 +295,8 @@ class RoutesTest(base.SenlinTestCase):
 
         self.assertRoute(
             self.m,
-            '/aaaa/nodes/bbbb/action',
-            'PUT',
+            '/aaaa/nodes/bbbb/actions',
+            'POST',
             'action',
             'NodeController',
             {
