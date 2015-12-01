@@ -192,6 +192,7 @@ class NodeAction(base.Action):
         if self.node.cluster_id:
             if self.cause == base.CAUSE_RPC:
                 res = senlin_lock.cluster_lock_acquire(
+                    self.context,
                     self.node.cluster_id, self.id,
                     senlin_lock.NODE_SCOPE, False)
                 if not res:

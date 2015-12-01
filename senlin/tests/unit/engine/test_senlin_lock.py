@@ -35,11 +35,33 @@ class SenlinLockTest(base.SenlinTestCase):
     def test_cluster_lock_acquire_already_owner(self, mock_acquire):
         mock_acquire.return_value = ['ACTION_XYZ']
 
-        res = lockm.cluster_lock_acquire('CLUSTER_A', 'ACTION_XYZ')
+        res = lockm.cluster_lock_acquire(self.ctx, 'CLUSTER_A', 'ACTION_XYZ')
 
         self.assertTrue(res)
         mock_acquire.assert_called_once_with('CLUSTER_A', 'ACTION_XYZ',
                                              lockm.CLUSTER_SCOPE)
+
+    @mock.patch.object(action.Action, 'load')
+    @mock.patch.object(db_api, "cluster_lock_acquire")
+    @mock.patch.object(db_api, "cluster_lock_steal")
+    def test_cluster_lock_acquire_dead_owner(self, mock_steal, mock_acquire,
+                                             mock_action_load):
+        self.stub_action.return_value = True
+        mock_acquire.side_effect = ['ACTION_ABC']
+        mock_steal.side_effect = ['ACTION_XYZ']
+        act = mock.Mock()
+        mock_action_load.return_value = act
+
+        res = lockm.cluster_lock_acquire(self.ctx, 'CLUSTER_A', 'ACTION_XYZ')
+
+        self.assertTrue(res)
+        mock_acquire.assert_called_once_with('CLUSTER_A', 'ACTION_XYZ',
+                                             lockm.CLUSTER_SCOPE)
+        mock_steal.assert_called_once_with('CLUSTER_A', 'ACTION_XYZ')
+        act.set_status.assert_called_once_with(
+            result=action.Action.RES_ERROR,
+            reason='Engine died when executing this action.'
+        )
 
     @mock.patch.object(scheduler, 'sleep')
     @mock.patch.object(db_api, "cluster_lock_acquire")
@@ -47,7 +69,7 @@ class SenlinLockTest(base.SenlinTestCase):
         cfg.CONF.set_override('lock_retry_times', 5, enforce_type=True)
         mock_acquire.side_effect = ['ACTION_ABC', 'ACTION_ABC', 'ACTION_XYZ']
 
-        res = lockm.cluster_lock_acquire('CLUSTER_A', 'ACTION_XYZ')
+        res = lockm.cluster_lock_acquire(self.ctx, 'CLUSTER_A', 'ACTION_XYZ')
 
         self.assertTrue(res)
         sleep_calls = [mock.call(cfg.CONF.lock_retry_interval)]
@@ -65,7 +87,7 @@ class SenlinLockTest(base.SenlinTestCase):
             'ACTION_ABC', 'ACTION_ABC', 'ACTION_ABC', 'ACTION_XYZ'
         ]
 
-        res = lockm.cluster_lock_acquire('CLUSTER_A', 'ACTION_XYZ')
+        res = lockm.cluster_lock_acquire(self.ctx, 'CLUSTER_A', 'ACTION_XYZ')
 
         self.assertFalse(res)
         sleep_calls = [mock.call(cfg.CONF.lock_retry_interval)]
@@ -85,7 +107,8 @@ class SenlinLockTest(base.SenlinTestCase):
         mock_acquire.side_effect = ['ACTION_ABC', 'ACTION_ABC', 'ACTION_ABC']
         mock_steal.return_value = ['ACTION_XY']
 
-        res = lockm.cluster_lock_acquire('CLUSTER_A', 'ACTION_XY', forced=True)
+        res = lockm.cluster_lock_acquire(self.ctx, 'CLUSTER_A',
+                                         'ACTION_XY', forced=True)
 
         self.assertTrue(res)
         sleep_calls = [mock.call(cfg.CONF.lock_retry_interval)]
@@ -106,7 +129,8 @@ class SenlinLockTest(base.SenlinTestCase):
         mock_acquire.side_effect = ['ACTION_ABC', 'ACTION_ABC', 'ACTION_ABC']
         mock_steal.return_value = []
 
-        res = lockm.cluster_lock_acquire('CLUSTER_A', 'ACTION_XY', forced=True)
+        res = lockm.cluster_lock_acquire(self.ctx, 'CLUSTER_A',
+                                         'ACTION_XY', forced=True)
 
         self.assertFalse(res)
         sleep_calls = [mock.call(cfg.CONF.lock_retry_interval)]
