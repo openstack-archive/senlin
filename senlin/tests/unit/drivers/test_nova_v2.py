@@ -205,17 +205,24 @@ class TestNovaV2(base.SenlinTestCase):
 
     def test_wait_for_server(self):
         d = nova_v2.NovaClient(self.conn_params)
+        d.wait_for_server('foo', 'STATUS1', ['STATUS2'], 5, 10)
+        self.compute.wait_for_server.assert_called_once_with(
+            'foo', status='STATUS1', failures=['STATUS2'], interval=5, wait=10)
+
+    def test_wait_for_server_default_value(self):
+        d = nova_v2.NovaClient(self.conn_params)
         d.wait_for_server('foo', timeout=10)
-        self.compute.wait_for_server.assert_called_once_with('foo',
-                                                             wait=10)
+        self.compute.wait_for_server.assert_called_once_with(
+            'foo', status='ACTIVE', failures=['ERROR'], interval=2, wait=10)
 
     def test_wait_for_server_with_default_timeout(self):
         timeout = cfg.CONF.default_action_timeout
 
         d = nova_v2.NovaClient(self.conn_params)
         d.wait_for_server('foo')
-        self.compute.wait_for_server.assert_called_once_with('foo',
-                                                             wait=timeout)
+        self.compute.wait_for_server.assert_called_once_with(
+            'foo', status='ACTIVE', failures=['ERROR'], interval=2,
+            wait=timeout)
 
     def test_server_get(self):
         d = nova_v2.NovaClient(self.conn_params)
