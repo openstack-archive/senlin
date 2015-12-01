@@ -12,14 +12,15 @@
   under the License.
 
 
+=============
 Profile Types
 =============
 
 In Senlin, each node is associated with a physical object created by
-instantiating a :doc:`profile <developer/profile>`. Profiles themselves are
-objects instantiated from "profile types". In other words, a profile type
-provides the specification for creating profiles while a profile can be used
-to create multiple homogeneous objects.
+instantiating a :doc:`profile <profile>`. Profiles themselves are objects
+instantiated from "profile types". In other words, a profile type provides the
+specification for creating profiles while a profile can be used to create
+multiple homogeneous objects.
 
 Profile type implementations are managed as plugins. Users can use the
 built-in profile types directly and they can provide their own implementation
@@ -29,9 +30,8 @@ loading of plugins. Currently, this can be done by adding new
 file followed by a reinstall (i.e. ``pip install``) operation.
 
 
-------------------------
 The Base Class 'Profile'
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 The base class ``Profile`` provides some common logics regarding the following
 operations:
@@ -62,7 +62,7 @@ operations:
 
 
 Abstract Methods
-^^^^^^^^^^^^^^^^
+----------------
 
 In addition to the above logics, the base class ``Profile`` also defines some
 abstract methods for a profile type implementation to implement. When invoked,
@@ -86,14 +86,14 @@ indicates the method is not implemented.
   cluster.
 
 
-The Context Property
-^^^^^^^^^^^^^^^^^^^^
+The ``context`` Property
+------------------------
 
 In the ``Profile`` class, there is a special property named ``context``. This
 is the data structure containing all necessary information needed when the
 profile type implementation wants to authenticate with a cloud platform.
-Refer to :doc:`authorization <developer/authorization>`, Senlin makes use of
-the trust mechanism provided by the OpenStack Keystone service.
+Refer to :doc:`authorization <authorization>`, Senlin makes use of the trust
+mechanism provided by the OpenStack Keystone service.
 
 The dictionary in this ``context`` property by default contains the credentials
 for the Senlin service account. Using the trust built between the requesting
@@ -108,16 +108,15 @@ to enable a multi-region cluster deployment. They could even specify a
 different ``auth_url`` so that a cluster can be built across OpenStack clouds.
 
 
----------------------------
 Providing New Profile Types
----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When released, Senlin provides some built-in profile types. However,
 developing new profile types for Senlin is not a difficult task.
 
 
-Develop A New Profile Type
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Develop a New Profile Type
+--------------------------
 
 The first step is to create a new file containing a subclass of ``Profile``.
 Then you will define the spec schema for the new profile which is a python
@@ -201,8 +200,8 @@ After the properties are defined, you can continue to work on overriding the
 abstract methods inherited from the base ``Profile`` type as appropriate.
 
 
-Registering The New Profile Type
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Registering a New Profile Type
+------------------------------
 
 For Senlin to make use of the new profile type you have just developed, you
 will register it to Senlin service. Currently, this is done through a manual

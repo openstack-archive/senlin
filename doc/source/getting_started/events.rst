@@ -14,6 +14,7 @@
 
 .. _guide-events:
 
+======
 Events
 ======
 
@@ -21,11 +22,11 @@ An :term:`Event` is a record generated during engine execution.
 
 
 Listing Events
---------------
+~~~~~~~~~~~~~~
 
 (TBC)
 
 Showing Details about an Event
--------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 (TBC)

@@ -11,6 +11,8 @@
   License for the specific language governing permissions and limitations
   under the License.
 
+
+========
 Profiles
 ========
 
@@ -33,9 +35,8 @@ It is up to the profile type author and the specific use case how a profile is
 making use of the properties of a node.
 
 
-------------------
 Profile Properties
-------------------
+~~~~~~~~~~~~~~~~~~
 
 A profile object has the following properties:
 
@@ -63,9 +64,8 @@ a new profile. By restricting changes to this property, Senlin can do a better
 job in managing the object configurations.
 
 
-------------------
 Creating A Profile
-------------------
+~~~~~~~~~~~~~~~~~~
 
 When creating a profile using the ``profile_create`` API, a user must provide
 the ``name`` and ``spec`` parameters. All other parameters are optional.
@@ -78,9 +78,8 @@ requesting user. If the validation fails, Senlin engine returns an error
 message describing the reason of the failure.
 
 
-----------------
 Listing Profiles
-----------------
+~~~~~~~~~~~~~~~~
 
 Senlin profiles an API for listing all profiles known to the Senlin engine.
 When querying the profiles, users can provide any of the following parameters:
@@ -114,9 +113,8 @@ profile object. Otherwise, an empty list or an error message will be returned
 depending on whether the query was well formed.
 
 
------------------
 Getting A Profile
------------------
+~~~~~~~~~~~~~~~~~
 
 A user can provide one of the following values in attempt to retrieve the
 details of a specific profile.
@@ -135,9 +133,8 @@ details of a specific profile.
   multiple profiles were found matching the specified short ID.
 
 
-------------------
 Updating A Profile
-------------------
+~~~~~~~~~~~~~~~~~~
 
 Once a profile object is created, a user can request its properties to be
 updated. Updates to the ``name``, ``permission`` or ``metadata`` properties
@@ -145,9 +142,8 @@ are applied on the specified profile object directly. Changing the ``spec``
 property of a profile object is not permitted.
 
 
-------------------
 Deleting A Profile
-------------------
+~~~~~~~~~~~~~~~~~~
 
 A user can provide one of profile UUID, profile name or a short ID of a
 profile when requesting a profile object to be deleted. Senlin engine will

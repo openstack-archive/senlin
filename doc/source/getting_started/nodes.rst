@@ -14,11 +14,12 @@
 
 .. _guide-nodes:
 
+=====
 Nodes
 =====
 
 Concept
--------
+~~~~~~~
 
 A :term:`Node` is a logical object managed by the Senlin service. A node can
 be a member of at most one cluster at any time. A node can be an orphan node
@@ -33,7 +34,7 @@ profile objects.
 
 
 Listing Nodes
--------------
+~~~~~~~~~~~~~
 
 To list nodes that are managed by the Senlin service, you will use the command
 :command:`node-list`. For example::
@@ -55,7 +56,7 @@ you can add the option :option:`--full-id` (or :option:`-F`) to the command.
 
 
 Sorting the List
-^^^^^^^^^^^^^^^^
+----------------
 
 You can specify the sorting keys and sorting direction for the node list,
 using the option :option:`--sort-keys` (or :option:`-k`) and/or the option
@@ -79,7 +80,7 @@ valid sorting directions are: ``asc`` and ``desc``.
 
 
 Filtering the List
-^^^^^^^^^^^^^^^^^^
+------------------
 
 You can specify the option :option:`--show-deleted` (or :option:`-D`) to
 indicate that soft-deleted nodes be included in the list result.
@@ -106,7 +107,7 @@ command below filters the list by node status ``ACTIVE``::
 
 
 Paginating the List
-^^^^^^^^^^^^^^^^^^^
+-------------------
 
 In case you have a large number of nodes, you can limit the number of nodes
 returned from Senlin server each time, using the option :option:`--limit
@@ -127,7 +128,7 @@ to control how many node records you will get from each request.
 
 
 Creating a Node
----------------
+~~~~~~~~~~~~~~~
 
 To create a node, you need to specify the ID or name of the profile to be
 used. For example, the following example creates a node named ``test_node``
@@ -202,7 +203,7 @@ whatever purposes. For example::
 
 
 Showing Details of a Node
----------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can use the name, the ID or the "short ID" of a node to name a node for
 show. The Senlin API and engine will verify if the identifier you specified
@@ -249,7 +250,7 @@ details about the physical object that backs the node. For example::
 
 
 Updating a Node
--------------------------
+~~~~~~~~~~~~~~~
 
 Once a node has been created, you can change its properties using the command
 :command:`node-update`. For example, to change the name of a node, you can use
@@ -285,7 +286,7 @@ process.
 
 
 Deleting a Node
----------------
+~~~~~~~~~~~~~~~
 
 A node can be deleted using the command :command:`node-delete`, for example::
 
@@ -298,7 +299,7 @@ matches the criteria, you will get a ``MultipleChoices`` error.
 
 
 See Also
---------
+~~~~~~~~
 
 Below are links to documents related to node management:
 

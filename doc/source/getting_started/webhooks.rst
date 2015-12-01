@@ -13,6 +13,7 @@
 
 .. _guide-webhooks:
 
+=======
 Webhook
 =======
 
@@ -21,7 +22,7 @@ object including `Cluster`, `Node` and `Policy`, for instance the actions that
 change the size of a specified cluster.
 
 How to use
-----------
+~~~~~~~~~~
 
 1. Create a cluster named "``test_cluster``", with its desired capacity set to
    2, its minimum size set to 1 and its maximum size set to 5, e.g.

@@ -11,12 +11,12 @@
   License for the specific language governing permissions and limitations
   under the License.
 
+=======
 Webhook
 =======
 
---------
-Concepts
---------
+Concept
+~~~~~~~
 
 A "Webhook" is a URI that can be accessed from any users or programs, provided
 they possess some credentials that can be authenticated.
@@ -37,9 +37,8 @@ In the long term, senlin may support user-defined actions where ``action``
 will be interpreted as the UUID or name of a user-defined action.
 
 
-------------------
-Creating A Webhook
-------------------
+Creating a Webhook
+~~~~~~~~~~~~~~~~~~
 
 When a user requests the creation of a webhook by invoking :program:`senlin`
 command line tool, the request comes with at least two parameters: the
@@ -73,9 +72,8 @@ Finally, Senlin engine returns a dictionary containing the properties of the
 webhook object.
 
 
---------------------
-Triggering A Webhook
---------------------
+Triggering a Webhook
+~~~~~~~~~~~~~~~~~~~~
 
 When triggering a webhook, a user or a software sends a ``POST`` request to
 the webhook URL. This request is first processed by the ``webhook`` middleware
@@ -98,9 +96,8 @@ The newly created action is then dispatched and scheduled by a scheduler to
 perform the expected operation.
 
 
------------
 Credentials
------------
+~~~~~~~~~~~
 
 When requesting the creation of a webhook, the requester need to provide some
 credentials for invoking the webhook in future. There are several options to
@@ -125,9 +122,9 @@ the ``admin`` role in the project. This is enforced by the policy middleware.
 If the requester is the ``admin`` of the project, Senlin engine will use the
 object owner's credentials (i.e. a trust with the Senlin user in this case).
 
---------
+
 DB Model
---------
+~~~~~~~~
 
 A webhook DB object has the following properties:
 

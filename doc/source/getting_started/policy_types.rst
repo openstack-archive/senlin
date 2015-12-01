@@ -14,11 +14,12 @@
 
 .. _guide-policy-types:
 
+============
 Policy Types
 ============
 
 Concept
--------
+~~~~~~~
 
 A :term:`Policy Type` is an abstract specification of the rules to be checked
 and/or enforced when certain :term:`Action` is performed on a cluster that
@@ -49,7 +50,7 @@ A policy object of this policy type may look like following::
 
 
 Listing Policy Types
---------------------
+~~~~~~~~~~~~~~~~~~~~
 
 Senlin server comes with some built-in policy types. You can check the list
 of policy types using the following command::
@@ -70,7 +71,7 @@ The output is a list of policy types supported by the Senlin server.
 
 
 Showing Policy Schema
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 Each :term:`Policy Type` has a schema for its *spec* (i.e. specification)
 that describes the names and types of the properties that can be accepted. To
@@ -134,7 +135,7 @@ cluster, please refer to :ref:`guide-bindings`.
 
 
 See Also
---------
+~~~~~~~~
 
 Check the list below for documents related to the creation and usage of
 :term:`Policy` objects.

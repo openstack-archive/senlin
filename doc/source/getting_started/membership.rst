@@ -14,11 +14,12 @@
 
 .. _guide-membership:
 
+==================
 Cluster Membership
 ==================
 
 Concept
--------
+~~~~~~~
 
 A :term:`Node` can belong to at most one :term:`Cluster` at any time. A node
 is referred to as an *orphan node* when it doesn't belong to any cluster.
@@ -26,8 +27,9 @@ is referred to as an *orphan node* when it doesn't belong to any cluster.
 A node can be made a member of cluster when creation, or you can change the
 cluster membership after the cluster and and the node have been created.
 
+
 Listing Nodes in a Cluster
---------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Using the command :command:`cluster-node-list`, you can list the nodes that
 are members of a specific cluster. For example, to list nodes in cluster
@@ -87,7 +89,7 @@ status is "``ACTIVE``"::
 
 
 Specify the Cluster When Creating a Node
-----------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are several ways to make a node a member of a cluster. When creating a
 node using command :command:`node-create`, you can specify the option
@@ -96,7 +98,7 @@ node belongs. Please refer to :ref:`guide-nodes` for detailed instructions.
 
 
 Adding Node(s) to A Cluster
---------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When you already have some nodes and some clusters, you can add some specified
 nodes to a specified cluster using the command :command:`cluster-node-add`.
@@ -128,7 +130,7 @@ that can be used to uniquely identify them within the cluster.
 
 
 Removing Node(s) from a Cluster
--------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The :program:`senlin` command line also provides command
 :command:`cluster-node-del` to remove node(s) from a cluster. In this case,
@@ -155,7 +157,7 @@ reset to -1.
 
 
 See Also
---------
+~~~~~~~~
 
 Below are links to documents related to clusters and nodes:
 

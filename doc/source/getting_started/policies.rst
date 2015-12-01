@@ -14,11 +14,12 @@
 
 .. _guide-policies:
 
+========
 Policies
 ========
 
 Concept
--------
+~~~~~~~
 
 A :term:`Policy` is an object instantiated from a :term:`Policy Type`. Once
 created, it can be dynamically attached to or detached from a cluster. Such a
@@ -33,7 +34,7 @@ disabled. Please refer to :ref:`guide-bindings` for details.
 
 
 Listing Policies
-----------------
+~~~~~~~~~~~~~~~~
 
 The :program:`senlin` command line provides a command :command:`policy-list`
 that can be used to enumerate profile objects known to the service. For
@@ -82,11 +83,11 @@ on the results returned from the server.
 
 
 Creating a Policy
------------------
+~~~~~~~~~~~~~~~~~
 
 When creating a new policy object, you need a "spec" file in YAML format. You
 may want to check the :command:`policy-type-schema` command in
-:ref:`guide-policy_types` for the property names and types for a specific
+:ref:`guide-policy-types` for the property names and types for a specific
 :term:`policy type`. For example, the following is a spec for the policy type
 ``senlin.policy.deletion`` (the source can be found in the
 :file:`examples/policies/deletion_policy.yaml` file)::
@@ -141,7 +142,7 @@ following command::
 
 
 Showing the Details of a Policy
--------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can use the :command:`policy-show` command to show the properties of a
 profile. You need to provide an identifier to the :program:`senlin` command
@@ -180,7 +181,7 @@ get an error message as well.
 
 
 Updating a Policy
------------------
+~~~~~~~~~~~~~~~~~
 
 After a policy object is created, you may want to change some properties of it.
 You can use the :command:`policy-update` to change the "cooldown", the "name",
@@ -200,7 +201,7 @@ validation, you will get an error message.
 
 
 Deleting a Policy
------------------
+~~~~~~~~~~~~~~~~~
 
 When there are no clusters referencing a policy object, you can delete it from
 the Senlin database using the following command::
@@ -214,7 +215,7 @@ If more than one policy matches the criteria, you will get an error message.
 
 
 See Also
---------
+~~~~~~~~
 
 The list below provides links to documents related to the creation and usage
 of policy objects.

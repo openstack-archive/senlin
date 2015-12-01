@@ -11,6 +11,7 @@
   License for the specific language governing permissions and limitations
   under the License.
 
+=====
 Nodes
 =====
 
@@ -19,9 +20,8 @@ to at most one cluster. A node that does not belong to any cluster can be
 referred to as an "orphan" node.
 
 
----------------
 Node Properties
----------------
+~~~~~~~~~~~~~~~
 
 There are some common properties that are defined for all nodes. The following
 properties are always available on a node:
@@ -60,9 +60,8 @@ user, Senlin provides a pseudo-property named ``profile_name`` for user's
 convenience.
 
 
-------------------
 Cluster Membership
-------------------
+~~~~~~~~~~~~~~~~~~
 
 A prerequisite for a node to become a member of a cluster is that the node
 must share the same profile type with the cluster. When adding nodes to an
@@ -80,9 +79,8 @@ cluster. In this case, Senlin will not force an unncecessary profile update to
 the nodes.
 
 
----------------
 Creating A Node
----------------
+~~~~~~~~~~~~~~~
 
 When receiving a request to create a node, Senlin API checks if any required
 fields are missing and whether there are invalid values specified to some
@@ -103,9 +101,8 @@ Optionally, the request can contain the following fields:
 - ``metadata``: A list of key-value pairs to be associated with the node.
 
 
--------------
 Listing Nodes
--------------
+~~~~~~~~~~~~~
 
 Nodes in the current project can be queried/listed using some query parameters.
 None of these parameters is required. By default, the Senlin API will return
@@ -149,9 +146,9 @@ individually or combined:
 future, sorting parameters will be specified in a more generic way as
 suggested by the API working group.
 
---------------
-Getting A Node
---------------
+
+Getting a Node
+~~~~~~~~~~~~~~
 
 When a user wants to check the details about a specific node, he or she can
 specify one of the following values for query:
@@ -182,9 +179,8 @@ In the returned result, Senlin injects the name of the profile used by the
 node for the user's convenience.
 
 
----------------
-Updating A Node
----------------
+Updating a Node
+~~~~~~~~~~~~~~~
 
 Some node properties are updatable after the node has been created. These
 properties include:
@@ -203,18 +199,16 @@ When validating the node update request, Senlin rejects requests that attempt
 to change the profile type used by the node.
 
 
----------------
-Deleting A Node
----------------
+Deleting a Node
+~~~~~~~~~~~~~~~
 
 A node can be deleted no matter if it is a member of a cluster or not. Node
 deletion is handled asynchronously in Senlin. When the Senlin engine receives
 a request, it will create an Action to be executed by a worker thread.
 
 
-------------------
 Cluster Membership
-------------------
+~~~~~~~~~~~~~~~~~~
 
 Senlin service provides APIs for users to add a node to a cluster or remove a
 node from a cluster. From a node's perspective, it means a node can "join" an

@@ -5,24 +5,24 @@ senlin-api
 .. program:: senlin-api
 
 SYNOPSIS
-========
+~~~~~~~~
 
 ``senlin-api [options]``
 
 DESCRIPTION
-===========
+~~~~~~~~~~~
 
 senlin-api provides an external REST API to the Senlin service.
 
 INVENTORY
-=========
+~~~~~~~~~
 
 senlin-api is a WSGI application that exposes an external ReST style API to
 the Senlin service. senlin-api communicates with senlin-engine using Remote
 Procedure Calls (RPC), which is based on AMQP protocol.
 
 OPTIONS
-=======
+~~~~~~~
 
 .. cmdoption:: --config-file
 
@@ -38,8 +38,14 @@ OPTIONS
   --config-file, hence over-ridden options in the directory take precedence.
 
 FILES
-========
+~~~~~
 
 * /etc/senlin/senlin.conf
 * /etc/senlin/api-paste.ini
 * /etc/senlin/policy.json
+
+BUGS
+~~~~
+
+* Senlin issues are tracked in Launchpad so you can view or report bugs here
+  `OpenStack Senlin Bugs <https://bugs.launchpad.net/senlin>`__

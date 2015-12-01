@@ -11,6 +11,7 @@
   License for the specific language governing permissions and limitations
   under the License.
 
+=======
 Actions
 =======
 
@@ -49,9 +50,8 @@ actions are supported at the time of this design:
 - ``POLICY_UPDATE``: An action for updating the properties of a policy.
 
 
------------------
 Action Properties
------------------
+~~~~~~~~~~~~~~~~~
 
 An action has the following properties when created:
 
@@ -115,7 +115,7 @@ An action has the following properties when created:
 
 
 The Action Data Property
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
 An action object has a property named ``data`` which is used for saving policy
 decisions. This property is a Python dict for different policies to save and
@@ -176,9 +176,8 @@ that the profile code will inject ``scheduler_hints`` to the server instance
 before it is created.
 
 
----------------
 Action Statuses
----------------
+~~~~~~~~~~~~~~~
 
 An action can be in one of the following statuses during its lifetime:
 
@@ -199,9 +198,8 @@ Collectively, the ``SUCCEEDED``, ``FAILED`` and ``CANCELLED`` statuses are all
 valid action completion status.
 
 
-------------------------------------------
 The ``execute()`` Method and Return Values
-------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Each subclass of the base ``Action`` must provide an implementation of the
 ``execute()`` method which provides the actual logic to be invoked by the
@@ -232,9 +230,8 @@ thread will release its lock on the action so that other threads can pick it
 up when resources permit.
 
 
-------------------
 Creating An Action
-------------------
+~~~~~~~~~~~~~~~~~~
 
 Currently, Senlin actions are mostly generated from within the Senlin engine,
 either due to a RPC request, or due to aother action's execution.
@@ -243,9 +240,8 @@ In future, Senlin plans to support user-defined actions (UDAs). Senlin API will
 provide API for creating an UDA and invoking an action which can be an UDA.
 
 
----------------
 Listing Actions
----------------
+~~~~~~~~~~~~~~~
 
 Senlin provides an ``action_list`` API for users to query the action objects
 in the Senlin database. Such a query request can be accompanied with the
@@ -278,9 +274,8 @@ following query parameters in the query string:
   included in the results. The default is False.
 
 
------------------
 Getting An Action
------------------
+~~~~~~~~~~~~~~~~~
 
 Senlin API provides the ``action_show`` API call for software or a user to
 retrieve a specific action for examining its details. When such a query
@@ -293,9 +288,8 @@ When more than one action matches the criteria, an error message is returned
 to user, or else the details of the action object is returned.
 
 
--------------------
 Signaling An Action
--------------------
+~~~~~~~~~~~~~~~~~~~
 
 When an action is in ``RUNNING`` status, a user can send signals to it. A
 signal is actually a word that will be written into the ``control`` field of
