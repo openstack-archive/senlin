@@ -55,6 +55,22 @@ class WebhookTest(base.SenlinTestCase):
         self.profile = self.eng.profile_create(self.ctx, 'p-test', spec,
                                                permission='1111')
 
+    def _create_fake_cluster(self, count=2):
+        fake_clusters = []
+        for c in range(count):
+            fake_cluster = mock.Mock()
+            fake_cluster.id = 'cid-%d' % (c+1)
+            fake_cluster.user = self.ctx.user
+            fake_clusters.append(fake_cluster)
+
+        return fake_clusters
+
+    def _common_fake_for_webhook_list(self, mock_encrypt, mock_url,
+                                      mock_find, fake_clusters):
+        mock_encrypt.return_value = 'secret text', 'test-key'
+        mock_url.return_value = 'test-url', 'test-key'
+        mock_find.side_effect = fake_clusters
+
     def _verify_action(self, obj, action, name, target, cause, inputs=None):
         if inputs is None:
             inputs = {}
@@ -285,15 +301,29 @@ class WebhookTest(base.SenlinTestCase):
                                self.eng.webhook_get, self.ctx, 'fake-id')
         self.assertEqual(exception.WebhookNotFound, ex.exc_info[0])
 
+    @mock.patch.object(webhook_mod.Webhook, 'generate_url')
+    @mock.patch.object(common_utils, 'encrypt')
+    def test_webhook_create_with_obj_uuid(self, mock_encrypt, mock_url):
+        mock_encrypt.return_value = 'encoded text', 'test-key'
+        mock_url.return_value = 'test-url', 'test-key'
+
+        cluster = self._create_cluster('c1')
+        obj_id = cluster['id']
+
+        w = self.eng.webhook_create(self.ctx, 'c1', 'cluster',
+                                    consts.CLUSTER_SCALE_OUT, name='w-1')
+
+        for identity in [w['id'], w['id'][:6], 'w-1']:
+            result = self.eng.webhook_get(self.ctx, identity)
+            self.assertEqual(obj_id, result['obj_id'])
+
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(webhook_mod.Webhook, 'generate_url')
     @mock.patch.object(common_utils, 'encrypt')
     def test_webhook_list(self, mock_encrypt, mock_url, mock_find):
-        mock_encrypt.return_value = 'secret text', 'test-key'
-        mock_url.return_value = 'test-url', 'test-key'
-        fake_cluster = mock.Mock()
-        fake_cluster.user = self.ctx.user
-        mock_find.return_value = fake_cluster
+        fake_clusters = self._create_fake_cluster()
+        self._common_fake_for_webhook_list(mock_encrypt, mock_url,
+                                           mock_find, fake_clusters)
 
         w1 = self.eng.webhook_create(self.ctx, 'cid-1', 'cluster',
                                      consts.CLUSTER_SCALE_OUT, name='w1')
@@ -314,11 +344,9 @@ class WebhookTest(base.SenlinTestCase):
     @mock.patch.object(common_utils, 'encrypt')
     def test_webhook_list_with_filters(self, mock_encrypt, mock_url,
                                        mock_find):
-        mock_encrypt.return_value = 'secret text', 'test-key'
-        mock_url.return_value = 'test-url', 'test-key'
-        fake_cluster = mock.Mock()
-        fake_cluster.user = self.ctx.user
-        mock_find.return_value = fake_cluster
+        fake_clusters = self._create_fake_cluster()
+        self._common_fake_for_webhook_list(mock_encrypt, mock_url,
+                                           mock_find, fake_clusters)
 
         w1 = self.eng.webhook_create(self.ctx, 'cid-1', 'cluster',
                                      consts.CLUSTER_SCALE_OUT, name='w1')
@@ -352,11 +380,9 @@ class WebhookTest(base.SenlinTestCase):
     @mock.patch.object(common_utils, 'encrypt')
     def test_webhook_list_with_limit_marker(self, mock_encrypt, mock_url,
                                             mock_find):
-        mock_encrypt.return_value = 'secret text', 'test-key'
-        mock_url.return_value = 'test-url', 'test-key'
-        fake_cluster = mock.Mock()
-        fake_cluster.user = self.ctx.user
-        mock_find.return_value = fake_cluster
+        fake_clusters = self._create_fake_cluster(3)
+        self._common_fake_for_webhook_list(mock_encrypt, mock_url,
+                                           mock_find, fake_clusters)
 
         w1 = self.eng.webhook_create(self.ctx, 'cid1', 'cluster',
                                      consts.CLUSTER_SCALE_OUT, name='w1')
@@ -390,11 +416,10 @@ class WebhookTest(base.SenlinTestCase):
     @mock.patch.object(common_utils, 'encrypt')
     def test_webhook_list_with_sort_keys(self, mock_encrypt, mock_url,
                                          mock_find):
-        mock_encrypt.return_value = 'secret text', 'test-key'
-        mock_url.return_value = 'test-url', 'test-key'
-        fake_cluster = mock.Mock()
-        fake_cluster.user = self.ctx.user
-        mock_find.return_value = fake_cluster
+        fake_clusters = self._create_fake_cluster()
+        fake_clusters.append(fake_clusters[0])
+        self._common_fake_for_webhook_list(mock_encrypt, mock_url,
+                                           mock_find, fake_clusters)
 
         w1 = self.eng.webhook_create(self.ctx, 'obj-id-1', 'cluster',
                                      consts.CLUSTER_SCALE_OUT,
@@ -435,11 +460,9 @@ class WebhookTest(base.SenlinTestCase):
     @mock.patch.object(common_utils, 'encrypt')
     def test_webhook_list_with_sort_dir(self, mock_encrypt, mock_url,
                                         mock_find):
-        mock_encrypt.return_value = 'secret text', 'test-key'
-        mock_url.return_value = 'test-url', 'test-key'
-        fake_cluster = mock.Mock()
-        fake_cluster.user = self.ctx.user
-        mock_find.return_value = fake_cluster
+        fake_clusters = self._create_fake_cluster()
+        self._common_fake_for_webhook_list(mock_encrypt, mock_url,
+                                           mock_find, fake_clusters)
 
         w1 = self.eng.webhook_create(self.ctx, 'cid-1', 'cluster',
                                      consts.CLUSTER_SCALE_OUT, name='w1')
