@@ -360,7 +360,7 @@ class TestWebhook(base.SenlinTestCase):
         mock_service_get.return_value = None
         ex = self.assertRaises(exception.ResourceNotFound,
                                webhook.generate_url, key)
-        resource = _('service:type=clustering,name=senlin')
+        resource = _('service:type=clustering')
         msg = _('The resource (%(resource)s) could not be found.'
                 ) % {'resource': resource}
         self.assertEqual(msg, six.text_type(ex))
