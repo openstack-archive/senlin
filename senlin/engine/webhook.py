@@ -190,9 +190,9 @@ class Webhook(object):
         """
         senlin_creds = context.get_service_context()
         kc = driver_base.SenlinDriver().identity(senlin_creds)
-        senlin_service = kc.service_get('clustering', 'senlin')
+        senlin_service = kc.service_get('clustering')
         if not senlin_service:
-            resource = _('service:type=clustering,name=senlin')
+            resource = _('service:type=clustering')
             raise exception.ResourceNotFound(resource=resource)
         senlin_service_id = senlin_service['id']
         region = cfg.CONF.region_name_for_services

@@ -62,16 +62,12 @@ class KeystoneClient(base.DriverBase):
         return endpoints[0] if endpoints else None
 
     @sdk.translate_exception
-    def service_get(self, service_type, name=None):
-        '''Utility function to get service detail based on name and type.'''
-        filters = {
-            'type': service_type,
-        }
-        if name:
-            filters['name'] = name
-
-        services = [s for s in self.conn.identity.services(**filters)]
-        return services[0] if services else None
+    def service_get(self, service_type):
+        '''Utility function to get service detail based on type.'''
+        services = [s for s in self.conn.identity.services()]
+        for service in services:
+            if service['type'] == service_type:
+                return service
 
     @sdk.translate_exception
     def trust_get_by_trustor(self, trustor, trustee=None, project=None):
