@@ -96,12 +96,16 @@ class NovaClient(base.DriverBase):
         return server_obj
 
     @sdk.translate_exception
-    def wait_for_server(self, value, timeout=None):
+    def wait_for_server(self, value, status='ACTIVE', failures=['ERROR'],
+                        interval=2, timeout=None):
         '''Wait for server creation complete'''
         if timeout is None:
             timeout = cfg.CONF.default_action_timeout
 
-        self.conn.compute.wait_for_server(value, wait=timeout)
+        self.conn.compute.wait_for_server(value, status=status,
+                                          failures=failures,
+                                          interval=interval,
+                                          wait=timeout)
         return
 
     @sdk.translate_exception
