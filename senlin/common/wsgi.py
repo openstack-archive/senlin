@@ -710,6 +710,7 @@ class Resource(object):
         """WSGI method that controls (de)serialization and method dispatch."""
         action_args = self.get_action_args(request.environ)
         action = action_args.pop('action', None)
+        action_args.pop('success', 200)
 
         try:
             deserialized_request = self.dispatch(self.deserializer,
