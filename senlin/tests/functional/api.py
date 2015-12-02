@@ -18,7 +18,7 @@ def create_cluster(client, name, profile_id, desired_capacity,
                    min_size=0, max_size=-1, parent=None,
                    metadata={}, timeout=120):
     rel_url = 'clusters'
-    status = [200]
+    status = [202]
     data = {
         'cluster': {
             'name': name,
@@ -54,7 +54,7 @@ def list_clusters(client, **query):
 
 def action_cluster(client, cluster_id, action_name, params=None):
     rel_url = 'clusters/%(id)s/actions' % {'id': cluster_id}
-    status = [200]
+    status = [202]
     data = {
         action_name: {} if params is None else params
     }
@@ -75,7 +75,7 @@ def delete_cluster(client, cluster_id):
 def create_node(client, name, profile_id, cluster_id=None, role=None,
                 metadata=None):
     rel_url = 'nodes'
-    status = [200]
+    status = [202]
     data = {
         'node': {
             'name': name,
@@ -108,7 +108,7 @@ def list_nodes(client, **query):
 
 def action_node(client, node_id, action_name, params=None):
     rel_url = 'nodes/%(id)s/actions' % {'id': node_id}
-    status = [200]
+    status = [202]
     data = {
         action_name: {} if params is None else params
     }
@@ -121,14 +121,14 @@ def action_node(client, node_id, action_name, params=None):
 
 def delete_node(client, node_id):
     rel_url = 'nodes/%(id)s' % {'id': node_id}
-    status = [200]
+    status = [202]
     client.api_request('DELETE', rel_url, resp_status=status)
     return
 
 
 def create_profile(client, name, spec, permission=None, metadata={}):
     rel_url = 'profiles'
-    status = [200]
+    status = [201]
     data = {
         'profile': {
             'name': name,
@@ -160,7 +160,7 @@ def list_policy_types(client, **query):
 
 def create_policy(client, name, spec, level=0, cooldown=0):
     rel_url = 'policies'
-    status = [200]
+    status = [201]
     data = {
         'policy': {
             'name': name,
@@ -186,7 +186,7 @@ def delete_policy(client, policy_id):
 def create_webhook(client, name, obj_type, obj_id, action,
                    credential=None, params=None):
     rel_url = 'webhooks'
-    status = [200]
+    status = [201]
     data = {
         'webhook': {
             'name': name,
