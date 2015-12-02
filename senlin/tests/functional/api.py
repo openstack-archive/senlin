@@ -53,13 +53,13 @@ def list_clusters(client, **query):
 
 
 def action_cluster(client, cluster_id, action_name, params=None):
-    rel_url = 'clusters/%(id)s/action' % {'id': cluster_id}
+    rel_url = 'clusters/%(id)s/actions' % {'id': cluster_id}
     status = [200]
     data = {
         action_name: {} if params is None else params
     }
     body = jsonutils.dumps(data)
-    resp = client.api_request('PUT', rel_url, body=body,
+    resp = client.api_request('POST', rel_url, body=body,
                               resp_status=status)
     action_id = resp.body['action']
     return action_id
@@ -107,13 +107,13 @@ def list_nodes(client, **query):
 
 
 def action_node(client, node_id, action_name, params=None):
-    rel_url = 'nodes/%(id)s/action' % {'id': node_id}
+    rel_url = 'nodes/%(id)s/actions' % {'id': node_id}
     status = [200]
     data = {
         action_name: {} if params is None else params
     }
     body = jsonutils.dumps(data)
-    resp = client.api_request('PUT', rel_url, body=body,
+    resp = client.api_request('POST', rel_url, body=body,
                               resp_status=status)
     action_id = resp.body['action']
     return action_id
