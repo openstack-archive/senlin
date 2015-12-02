@@ -315,7 +315,7 @@ class ServerProfile(base.Profile):
 
         return True
 
-    def do_update(self, obj, new_profile, **params):
+    def do_update(self, obj, new_profile=None, **params):
         '''Perform update on the server.
 
         :param obj: the server to operate on
@@ -324,6 +324,9 @@ class ServerProfile(base.Profile):
         '''
         self.server_id = obj.physical_id
         if not self.server_id:
+            return True
+
+        if not new_profile:
             return True
 
         # TODO(anyone): Validate the new profile

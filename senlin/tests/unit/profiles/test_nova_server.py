@@ -507,6 +507,14 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertTrue(res)
         mock_update_network.assert_called_with(obj, new_networks, [])
 
+    def test_do_update_without_profile(self):
+        profile = server.ServerProfile('t', self.spec)
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+        new_profile = None
+        res = profile.do_update(obj, new_profile)
+        self.assertTrue(res)
+
     def test_update_network(self):
         obj = mock.Mock()
         obj.physical_id = 'FAKE_ID'

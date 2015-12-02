@@ -1130,6 +1130,7 @@ class EngineService(service.Service):
         inputs = {
             'new_profile_id': profile_id,
         }
+        # TODO(xuhaiwei): Move all the attributes update into action execution
         if name is not None and name != node.name:
             inputs['name'] = name
         if role is not None and role != node.role:
