@@ -17,6 +17,12 @@ Plugin Writer's Guide
 =====================
 
 Senlin provides an open design where developer can incorporate new profile
-or policy implementations for different purposes.
+or policy implementations for different purposes. The following documents
+describe how to develop and plug your own profile types and/or policy types.
 
-[TBC]
+
+.. toctree::
+   :maxdepth: 1
+
+   policy_type
+   profile_type

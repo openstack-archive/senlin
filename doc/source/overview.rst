@@ -11,14 +11,11 @@
   License for the specific language governing permissions and limitations
   under the License.
 
-.. _guide-index:
+.. _guide-overview:
 
-===========================
-Getting Started with Senlin
-===========================
-
+========
 Overview
-~~~~~~~~
+========
 
 Senlin is a **clustering service** for OpenStack clouds. It creates and
 operates clusters of homogenous objects exposed by other OpenStack services.
