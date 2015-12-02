@@ -31,9 +31,9 @@ This is the recommended way to install the Senlin service. Please refer to
 Note that Senlin client is also installed when following the instructions
 it the above mentioned document.
 
+
 Manual Installation
 ~~~~~~~~~~~~~~~~~~~
-
 
 Install Senlin Server
 ---------------------

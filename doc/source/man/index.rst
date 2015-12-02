@@ -1,23 +1,22 @@
-===========================================
-Man pages for Senlin services and utilities
-===========================================
+=========
+Man Pages
+=========
 
-===============
+
 Senlin services
-===============
+~~~~~~~~~~~~~~~
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    senlin-engine
    senlin-api
 
 
-================
 Senlin utilities
-================
+~~~~~~~~~~~~~~~~
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    senlin-manage
