@@ -32,19 +32,13 @@ class TestClusterBasic(base.SenlinFunctionalTest):
         test_api.delete_profile(self.client, self.profile['id'])
         super(TestClusterBasic, self).tearDown()
 
-    def test_get_clusters(self):
-        # Check that listing clusters works.
-        clusters = test_api.list_clusters(self.client)
-        self.assertEqual([], clusters)
-
     def test_cluster_create_delete(self):
         # Create cluster
         desired_capacity = 2
         min_size = 1
         max_size = 3
         cluster_name = test_utils.random_name('cluster')
-        cluster = test_api.create_cluster(self.client,
-                                          cluster_name,
+        cluster = test_api.create_cluster(self.client, cluster_name,
                                           self.profile['id'], desired_capacity,
                                           min_size, max_size)
 
@@ -57,8 +51,30 @@ class TestClusterBasic(base.SenlinFunctionalTest):
         self.assertEqual(max_size, cluster['max_size'])
         self.assertEqual(desired_capacity, len(cluster['nodes']))
 
+        # Create cluster2
+        desired_capacity = 1
+        min_size = 1
+        max_size = 3
+        cluster2_name = test_utils.random_name('cluster')
+        cluster2 = test_api.create_cluster(self.client, cluster2_name,
+                                           self.profile['id'],
+                                           desired_capacity,
+                                           min_size, max_size)
+
+        # List clusters
+        clusters = test_api.list_clusters(self.client)
+        self.assertEqual(2, len(clusters))
+
         # Delete cluster
         test_api.delete_cluster(self.client, cluster['id'])
+        test_api.delete_cluster(self.client, cluster2['id'])
         test_utils.wait_for_status(test_api.get_cluster, self.client,
                                    cluster['id'], 'DELETED',
                                    ignore_missing=True)
+        test_utils.wait_for_status(test_api.get_cluster, self.client,
+                                   cluster2['id'], 'DELETED',
+                                   ignore_missing=True)
+
+        # List clusters
+        clusters = test_api.list_clusters(self.client)
+        self.assertEqual(0, len(clusters))

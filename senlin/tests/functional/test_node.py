@@ -32,10 +32,6 @@ class TestNode(base.SenlinFunctionalTest):
         test_api.delete_profile(self.client, self.profile['id'])
         super(TestNode, self).tearDown()
 
-    def test_get_nodes(self):
-        nodes = test_api.list_nodes(self.client)
-        self.assertEqual([], nodes)
-
     def test_node_create_delete_with_target_cluster(self):
         # Create a cluster
         desired_capacity = 1
@@ -64,6 +60,10 @@ class TestNode(base.SenlinFunctionalTest):
         self.assertEqual(2, len(cluster['nodes']))
         self.assertIn(node1['id'], cluster['nodes'])
 
+        # List nodes
+        nodes = test_api.list_nodes(self.client)
+        self.assertEqual(2, len(nodes))
+
         # Delete node1 from cluster
         test_api.delete_node(self.client, node1['id'])
         test_utils.wait_for_status(test_api.get_node, self.client,
@@ -73,11 +73,19 @@ class TestNode(base.SenlinFunctionalTest):
         self.assertEqual(1, len(cluster['nodes']))
         self.assertNotIn(node1['id'], cluster['nodes'])
 
+        # List nodes
+        nodes = test_api.list_nodes(self.client)
+        self.assertEqual(1, len(nodes))
+
         # Delete cluster
         test_api.delete_cluster(self.client, cluster['id'])
         test_utils.wait_for_status(test_api.get_cluster, self.client,
                                    cluster['id'], 'DELETED',
                                    ignore_missing=True)
+
+        # List nodes
+        nodes = test_api.list_nodes(self.client)
+        self.assertEqual(0, len(nodes))
 
     def test_node_create_join_leave_cluster(self):
         # Create a cluster
