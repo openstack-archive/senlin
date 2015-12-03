@@ -289,8 +289,9 @@ class Action(BASE, SenlinBase, SoftDelete):
     cause = sqlalchemy.Column(sqlalchemy.String(255))
     owner = sqlalchemy.Column(sqlalchemy.String(36))
     interval = sqlalchemy.Column(sqlalchemy.Integer)
-    start_time = sqlalchemy.Column(sqlalchemy.Float)
-    end_time = sqlalchemy.Column(sqlalchemy.Float)
+    # FIXME: Don't specify fixed precision.
+    start_time = sqlalchemy.Column(sqlalchemy.Float('24,8'))
+    end_time = sqlalchemy.Column(sqlalchemy.Float('24,8'))
     timeout = sqlalchemy.Column(sqlalchemy.Integer)
     status = sqlalchemy.Column(sqlalchemy.String(255))
     status_reason = sqlalchemy.Column(sqlalchemy.Text)
