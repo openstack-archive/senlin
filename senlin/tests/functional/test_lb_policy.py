@@ -23,8 +23,9 @@ class TestLBPolicy(base.SenlinFunctionalTest):
     def setUp(self):
         super(TestLBPolicy, self).setUp()
         # Create profile
-        self.profile = test_api.create_profile(self.client, 'test-profile',
-                                               test_utils.spec_nova_server)
+        self.profile = test_api.create_profile(
+            self.client, test_utils.random_name('profile'),
+            test_utils.spec_nova_server)
 
     def tearDown(self):
         # Delete profile
@@ -36,7 +37,8 @@ class TestLBPolicy(base.SenlinFunctionalTest):
         desired_capacity = 2
         min_size = 1
         max_size = 5
-        cluster = test_api.create_cluster(self.client, 'test-cluster',
+        cluster = test_api.create_cluster(self.client,
+                                          test_utils.random_name('cluster'),
                                           self.profile['id'], desired_capacity,
                                           min_size, max_size)
         cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
@@ -50,8 +52,9 @@ class TestLBPolicy(base.SenlinFunctionalTest):
 
         # Create a lb policy
         spec = test_utils.spec_lb_policy
-        lb_policy = test_api.create_policy(self.client, 'test-lb-policy', spec,
-                                           0, 0)
+        lb_policy = test_api.create_policy(self.client,
+                                           test_utils.random_name('lb-policy'),
+                                           spec, 0, 0)
 
         # Attach scaling in/out policies to cluster
         params = {

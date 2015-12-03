@@ -23,8 +23,9 @@ class TestNode(base.SenlinFunctionalTest):
     def setUp(self):
         super(TestNode, self).setUp()
         # Create profile
-        self.profile = test_api.create_profile(self.client, 'test-profile',
-                                               test_utils.spec_nova_server)
+        self.profile = test_api.create_profile(
+            self.client, test_utils.random_name('profile'),
+            test_utils.spec_nova_server)
 
     def tearDown(self):
         # Delete profile
@@ -40,14 +41,16 @@ class TestNode(base.SenlinFunctionalTest):
         desired_capacity = 1
         min_size = 1
         max_size = 3
-        cluster = test_api.create_cluster(self.client, 'test-cluster',
+        cluster = test_api.create_cluster(self.client,
+                                          test_utils.random_name('cluster'),
                                           self.profile['id'], desired_capacity,
                                           min_size, max_size)
         cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
                                              cluster['id'], 'ACTIVE')
 
         # Create a node belongs to the cluster
-        node1 = test_api.create_node(self.client, 'node1',
+        node1 = test_api.create_node(self.client,
+                                     test_utils.random_name('node1'),
                                      self.profile['id'],
                                      cluster_id=cluster['id'],
                                      role='master')
@@ -81,14 +84,16 @@ class TestNode(base.SenlinFunctionalTest):
         desired_capacity = 0
         min_size = 0
         max_size = 3
-        cluster = test_api.create_cluster(self.client, 'test-cluster',
+        cluster = test_api.create_cluster(self.client,
+                                          test_utils.random_name('cluster'),
                                           self.profile['id'], desired_capacity,
                                           min_size, max_size)
         cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
                                              cluster['id'], 'ACTIVE')
 
         # Create a node and let it join the cluster
-        node1 = test_api.create_node(self.client, 'node1',
+        node1 = test_api.create_node(self.client,
+                                     test_utils.random_name('node1'),
                                      self.profile['id'])
         node1 = test_utils.wait_for_status(test_api.get_node, self.client,
                                            node1['id'], 'ACTIVE')

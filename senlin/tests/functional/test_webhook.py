@@ -23,8 +23,9 @@ class TestWebhook(base.SenlinFunctionalTest):
     def setUp(self):
         super(TestWebhook, self).setUp()
         # Create profile
-        self.profile = test_api.create_profile(self.client, 'test-profile',
-                                               test_utils.spec_nova_server)
+        self.profile = test_api.create_profile(
+            self.client, test_utils.random_name('profile'),
+            test_utils.spec_nova_server)
 
     def tearDown(self):
         # Delete profile
@@ -36,7 +37,8 @@ class TestWebhook(base.SenlinFunctionalTest):
         desired_capacity = 2
         min_size = 1
         max_size = 5
-        cluster = test_api.create_cluster(self.client, 'test-cluster',
+        cluster = test_api.create_cluster(self.client,
+                                          test_utils.random_name('cluster'),
                                           self.profile['id'], desired_capacity,
                                           min_size, max_size)
         cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
@@ -47,14 +49,15 @@ class TestWebhook(base.SenlinFunctionalTest):
             'adjustment_type': 'EXACT_CAPACITY',
             'number': 2,
         }
-        webhook = test_api.create_webhook(self.client, 'webhook-c-resize',
+        webhook_name = test_utils.random_name('webhook')
+        webhook = test_api.create_webhook(self.client, webhook_name,
                                           'cluster', cluster['id'],
                                           'CLUSTER_RESIZE',
                                           params=params)
         webhook_url = webhook['url']
 
         # Verify webhook params
-        self.assertEqual('webhook-c-resize', webhook['name'])
+        self.assertEqual(webhook_name, webhook['name'])
         self.assertEqual('cluster', webhook['obj_type'])
         self.assertEqual(cluster['id'], webhook['obj_id'])
         self.assertEqual('CLUSTER_RESIZE', webhook['action'])

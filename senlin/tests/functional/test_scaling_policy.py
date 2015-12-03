@@ -24,8 +24,9 @@ class TestScalingPolicy(base.SenlinFunctionalTest):
     def setUp(self):
         super(TestScalingPolicy, self).setUp()
         # Create profile
-        self.profile = test_api.create_profile(self.client, 'test-profile',
-                                               test_utils.spec_nova_server)
+        self.profile = test_api.create_profile(
+            self.client, test_utils.random_name('profile'),
+            test_utils.spec_nova_server)
 
     def tearDown(self):
         # Delete profile
@@ -37,7 +38,8 @@ class TestScalingPolicy(base.SenlinFunctionalTest):
         desired_capacity = 1
         min_size = 0
         max_size = 5
-        cluster = test_api.create_cluster(self.client, 'test-cluster',
+        cluster = test_api.create_cluster(self.client,
+                                          test_utils.random_name('cluster'),
                                           self.profile['id'], desired_capacity,
                                           min_size, max_size)
         cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
@@ -54,9 +56,8 @@ class TestScalingPolicy(base.SenlinFunctionalTest):
                 'best_effort': True
             }
         }
-        scaling_out_policy = test_api.create_policy(self.client,
-                                                    'scaling-out-policy',
-                                                    spec, 0, 0)
+        scaling_out_policy = test_api.create_policy(
+            self.client, test_utils.random_name('policy'), spec, 0, 0)
 
         # Create a scaling policy targets on CLUSTER_SCALE_IN action
         spec['properties'] = {
@@ -68,9 +69,8 @@ class TestScalingPolicy(base.SenlinFunctionalTest):
                 'best_effort': False
             }
         }
-        scaling_in_policy = test_api.create_policy(self.client,
-                                                   'scaling-in-policy',
-                                                   spec, 0, 0)
+        scaling_in_policy = test_api.create_policy(
+            self.client, test_utils.random_name('policy'), spec, 0, 0)
 
         # Attach scaling in/out policies to cluster
         for policy in [scaling_in_policy, scaling_out_policy]:
