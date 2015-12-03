@@ -710,7 +710,7 @@ class Resource(object):
         """WSGI method that controls (de)serialization and method dispatch."""
         action_args = self.get_action_args(request.environ)
         action = action_args.pop('action', None)
-        action_args.pop('success', 200)
+        status_code = action_args.pop('success', None)
 
         try:
             deserialized_request = self.dispatch(self.deserializer,
@@ -756,6 +756,8 @@ class Resource(object):
         serializer = self.serializer or serializers.JSONResponseSerializer()
         try:
             response = webob.Response(request=request)
+            if status_code is not None:
+                response.status_code = int(status_code)
             self.dispatch(serializer, action, response, action_result)
             return response
 
