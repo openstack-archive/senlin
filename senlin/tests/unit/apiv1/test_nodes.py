@@ -13,7 +13,6 @@
 import json
 import mock
 import six
-import webob
 from webob import exc
 
 from oslo_config import cfg
@@ -490,11 +489,6 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         engine_response = {
-            'name': 'test_node',
-            'profile_id': 'xxxx-yyyy',
-            'cluster_id': None,
-            'role': None,
-            'metadata': {},
             'action': 'this-is-the-node-update-action',
         }
 
@@ -504,11 +498,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 
-        self.assertRaises(webob.exc.HTTPAccepted,
-                          self.controller.update,
-                          req, tenant_id=self.project,
-                          node_id=nid,
-                          body=body)
+        self.controller.update(req, tenant_id=self.project, node_id=nid,
+                               body=body)
 
         mock_call.assert_called_with(
             req.context,

@@ -162,8 +162,8 @@ class NodeController(object):
 
         self.rpc_client.node_update(req.context, node_id, name, profile_id,
                                     role, metadata)
-
-        raise exc.HTTPAccepted()
+        # TODO(xuhaiwei): update method's response should return 'body'
+        # TODO(xuhaiwei): put resource url into response header
 
     @util.policy_enforce
     def action(self, req, node_id, body=None):
