@@ -696,10 +696,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.return_value = {'action': 'action_id'}
 
-        self.assertRaises(webob.exc.HTTPNoContent,
-                          self.controller.delete,
-                          req, tenant_id=self.project,
-                          cluster_id=cid)
+        self.controller.delete(req, tenant_id=self.project, cluster_id=cid)
         mock_call.assert_called_with(req.context,
                                      ('cluster_delete', {'identity': cid}))
 
