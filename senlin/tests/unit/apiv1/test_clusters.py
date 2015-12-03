@@ -764,11 +764,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
 
-        self.assertRaises(exc.HTTPAccepted,
-                          self.controller.update,
-                          req, tenant_id=self.project,
-                          cluster_id=cid,
-                          body=body)
+        self.controller.update(req, tenant_id=self.project, cluster_id=cid,
+                               body=body)
 
         args = {
             'name': None,
