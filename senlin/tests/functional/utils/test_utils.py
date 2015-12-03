@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_utils import uuidutils
 import time
 
 
@@ -82,3 +83,8 @@ def wait_for_status(func, client, obj_id, expected_status, timeout=60,
         timeout -= 5
 
     raise Exception('Waiting for status timeout.')
+
+
+def random_name(prefix, len_postfix=8):
+    postfix = uuidutils.generate_uuid()[:len_postfix]
+    return ''.join([prefix, '-', postfix])

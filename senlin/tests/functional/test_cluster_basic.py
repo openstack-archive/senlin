@@ -23,8 +23,9 @@ class TestClusterBasic(base.SenlinFunctionalTest):
     def setUp(self):
         super(TestClusterBasic, self).setUp()
         # Create profile
-        self.profile = test_api.create_profile(self.client, 'test-profile',
-                                               test_utils.spec_nova_server)
+        self.profile = test_api.create_profile(
+            self.client, test_utils.random_name('profile'),
+            test_utils.spec_nova_server)
 
     def tearDown(self):
         # Delete profile
@@ -41,14 +42,16 @@ class TestClusterBasic(base.SenlinFunctionalTest):
         desired_capacity = 2
         min_size = 1
         max_size = 3
-        cluster = test_api.create_cluster(self.client, 'test-cluster',
+        cluster_name = test_utils.random_name('cluster')
+        cluster = test_api.create_cluster(self.client,
+                                          cluster_name,
                                           self.profile['id'], desired_capacity,
                                           min_size, max_size)
 
         # Wait and verify cluster creation result
         cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
                                              cluster['id'], 'ACTIVE')
-        self.assertEqual('test-cluster', cluster['name'])
+        self.assertEqual(cluster_name, cluster['name'])
         self.assertEqual(desired_capacity, cluster['desired_capacity'])
         self.assertEqual(min_size, cluster['min_size'])
         self.assertEqual(max_size, cluster['max_size'])

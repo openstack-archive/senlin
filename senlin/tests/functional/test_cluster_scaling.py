@@ -25,8 +25,9 @@ class TestClusterScaling(base.SenlinFunctionalTest):
     def setUp(self):
         super(TestClusterScaling, self).setUp()
         # Create profile
-        self.profile = test_api.create_profile(self.client, 'test-profile',
-                                               test_utils.spec_nova_server)
+        self.profile = test_api.create_profile(
+            self.client, test_utils.random_name('profile'),
+            test_utils.spec_nova_server)
 
     def tearDown(self):
         # Delete profile
@@ -38,7 +39,8 @@ class TestClusterScaling(base.SenlinFunctionalTest):
         desired_capacity = 2
         min_size = 1
         max_size = 5
-        cluster = test_api.create_cluster(self.client, 'test-cluster',
+        cluster = test_api.create_cluster(self.client,
+                                          test_utils.random_name('cluster'),
                                           self.profile['id'], desired_capacity,
                                           min_size, max_size)
         cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
@@ -130,7 +132,8 @@ class TestClusterScaling(base.SenlinFunctionalTest):
         desired_capacity = 2
         min_size = 1
         max_size = 5
-        cluster = test_api.create_cluster(self.client, 'test-cluster',
+        cluster = test_api.create_cluster(self.client,
+                                          test_utils.random_name('cluster'),
                                           self.profile['id'], desired_capacity,
                                           min_size, max_size)
         cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
@@ -192,7 +195,8 @@ class TestClusterScaling(base.SenlinFunctionalTest):
         desired_capacity = 3
         min_size = 1
         max_size = 5
-        cluster = test_api.create_cluster(self.client, 'test-cluster',
+        cluster = test_api.create_cluster(self.client,
+                                          test_utils.random_name('cluster'),
                                           self.profile['id'], desired_capacity,
                                           min_size, max_size)
         cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
@@ -277,7 +281,8 @@ class TestClusterScaling(base.SenlinFunctionalTest):
         desired_capacity = 3
         min_size = 2
         max_size = 5
-        cluster = test_api.create_cluster(self.client, 'test-cluster',
+        cluster = test_api.create_cluster(self.client,
+                                          test_utils.random_name('cluster'),
                                           self.profile['id'], desired_capacity,
                                           min_size, max_size)
         cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
@@ -359,7 +364,8 @@ class TestClusterScaling(base.SenlinFunctionalTest):
         desired_capacity = 3
         min_size = 1
         max_size = 4
-        cluster = test_api.create_cluster(self.client, 'test-cluster',
+        cluster = test_api.create_cluster(self.client,
+                                          test_utils.random_name('cluster'),
                                           self.profile['id'], desired_capacity,
                                           min_size, max_size)
         cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
