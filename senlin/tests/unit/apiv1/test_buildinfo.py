@@ -16,6 +16,7 @@ import six
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import build_info
 from senlin.common import policy
+from senlin.rpc import client as rpc_client
 from senlin.tests.unit.apiv1 import shared
 from senlin.tests.unit.common import base
 
@@ -27,40 +28,39 @@ class BuildInfoControllerTest(shared.ControllerTest, base.SenlinTestCase):
         super(BuildInfoControllerTest, self).setUp()
         self.controller = build_info.BuildInfoController({})
 
-    def test_theres_a_default_api_build_revision(self, mock_enforce):
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_default_build_revision(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'build_info', True)
         req = self._get('/build_info')
-        self.controller.rpc_client = mock.Mock()
 
-        response = self.controller.build_info(req, tenant_id=self.project)
+        mock_call.return_value = '12.34'
+
+        result = self.controller.build_info(req, tenant_id=self.project)
+        response = result['build_info']
         self.assertIn('api', response)
+        self.assertIn('engine', response)
         self.assertIn('revision', response['api'])
         self.assertEqual('1.0', response['api']['revision'])
+        self.assertIn('revision', response['engine'])
+        self.assertEqual('12.34', response['engine']['revision'])
+
+        mock_call.assert_called_once_with(req.context,
+                                          ('get_revision', {}))
 
     @mock.patch.object(build_info.cfg, 'CONF')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_response_api_build_revision_from_config_file(
-            self, mock_conf, mock_enforce):
+            self, mock_call, mock_conf, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'build_info', True)
         req = self._get('/build_info')
-        mock_engine = mock.Mock()
-        mock_engine.get_revision.return_value = 'engine_revision'
-        self.controller.rpc_client = mock_engine
+        mock_call.return_value = 'engine_revision'
         mock_conf.revision = {'senlin_api_revision': 'test'}
 
-        response = self.controller.build_info(req, tenant_id=self.project)
+        result = self.controller.build_info(req, tenant_id=self.project)
+        response = result['build_info']
         self.assertEqual('test', response['api']['revision'])
-
-    def test_retrieves_build_revision_from_the_engine(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'build_info', True)
-        req = self._get('/build_info')
-        mock_engine = mock.Mock()
-        mock_engine.get_revision.return_value = 'engine_revision'
-        self.controller.rpc_client = mock_engine
-
-        response = self.controller.build_info(req, tenant_id=self.project)
-        self.assertIn('engine', response)
-        self.assertIn('revision', response['engine'])
-        self.assertEqual('engine_revision', response['engine']['revision'])
+        mock_call.assert_called_once_with(req.context,
+                                          ('get_revision', {}))
 
     def test_build_info_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'build_info', False)
