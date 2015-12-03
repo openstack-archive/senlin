@@ -37,7 +37,7 @@ class BuildInfoController(object):
             'engine': {'revision': engine_revision}
         }
 
-        return build_info
+        return {'build_info': build_info}
 
 
 def create_resource(options):
