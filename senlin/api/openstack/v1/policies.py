@@ -73,9 +73,6 @@ class PolicyController(object):
             'type': 'mixed',
             'level': 'mixed',
             'cooldown': 'mixed',
-            'created_time': 'single',
-            'updated_time': 'single',
-            'deleted_time': 'single',
         }
         param_whitelist = {
             'limit': 'single',

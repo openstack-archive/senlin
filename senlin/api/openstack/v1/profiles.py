@@ -69,9 +69,6 @@ class ProfileController(object):
         filter_whitelist = {
             'name': 'mixed',
             'type': 'mixed',
-            'created_time': 'single',
-            'updated_time': 'single',
-            'deleted_time': 'single',
             'permission': 'mixed',
             'metadata': 'mixed',
         }
