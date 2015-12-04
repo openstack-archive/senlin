@@ -616,8 +616,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=None)
 
-        self.assertRaises(exc.HTTPNoContent, self.controller.delete,
-                          req, tenant_id=self.project, profile_id=pid)
+        self.controller.delete(req, tenant_id=self.project, profile_id=pid)
 
         mock_call.assert_called_with(
             req.context, ('profile_delete', {'identity': pid}))
