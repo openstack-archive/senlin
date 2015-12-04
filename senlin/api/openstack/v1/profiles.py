@@ -146,8 +146,6 @@ class ProfileController(object):
     def delete(self, req, profile_id):
         self.rpc_client.profile_delete(req.context, profile_id, cast=False)
 
-        raise exc.HTTPNoContent()
-
 
 def create_resource(options):
     '''Profiles resource factory method.'''
