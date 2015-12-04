@@ -67,7 +67,7 @@ def action_cluster(client, cluster_id, action_name, params=None):
 
 def delete_cluster(client, cluster_id):
     rel_url = 'clusters/%(id)s' % {'id': cluster_id}
-    status = [204]
+    status = [202]
     client.api_request('DELETE', rel_url, resp_status=status)
     return
 
