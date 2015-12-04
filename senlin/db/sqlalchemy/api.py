@@ -1339,7 +1339,7 @@ def _mark_cancelled_action(query, action_id, timestamp):
         return
 
     action.owner = None
-    action.status = consts.ACTION_CANCELED
+    action.status = consts.ACTION_CANCELLED
     action.status_reason = _('Dependent action was cancelled')
     action.end_time = timestamp
     if action.depended_by is not None:
@@ -1357,7 +1357,7 @@ def action_mark_cancelled(context, action_id, timestamp):
     session.begin()
 
     action.owner = None
-    action.status = consts.ACTION_CANCELED
+    action.status = consts.ACTION_CANCELLED
     action.reason = _('Action execution was cancelled')
     action.end_time = timestamp
 
