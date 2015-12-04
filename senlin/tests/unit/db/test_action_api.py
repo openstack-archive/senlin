@@ -375,7 +375,7 @@ class DBAPIActionTest(base.SenlinTestCase):
                    id_of['action_006'],
                    id_of['action_007']]:
             action = db_api.action_get(self.ctx, id)
-            self.assertEqual(consts.ACTION_CANCELED, action.status)
+            self.assertEqual(consts.ACTION_CANCELLED, action.status)
             self.assertEqual(timestamp, action.end_time)
 
     def test_action_acquire(self):
