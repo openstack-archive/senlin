@@ -156,8 +156,6 @@ class WebhookController(object):
     def delete(self, req, webhook_id):
         self.rpc_client.webhook_delete(req.context, webhook_id, cast=False)
 
-        raise exc.HTTPNoContent()
-
 
 def create_resource(options):
     '''Webhooks resource factory method.'''
