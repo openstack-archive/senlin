@@ -155,8 +155,6 @@ class PolicyController(object):
     def delete(self, req, policy_id):
         self.rpc_client.policy_delete(req.context, policy_id, cast=False)
 
-        raise exc.HTTPNoContent()
-
 
 def create_resource(options):
     '''Policies resource factory method.'''
