@@ -20,6 +20,7 @@ from oslo_config import cfg
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import nodes
 from senlin.common import exception as senlin_exc
+from senlin.common.i18n import _
 from senlin.common import policy
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.apiv1 import shared
@@ -876,9 +877,23 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.return_value = {'action': 'ACTIONID'}
 
         res = self.controller.delete(req, tenant_id=self.project, node_id=nid)
-        self.assertIsNotNone(res)
+        self.assertIsNone(res)
         mock_call.assert_called_with(
             req.context, ('node_delete', {'identity': nid, 'force': False}))
+
+    def test_node_delete_failed(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete', True)
+        nid = 'aaaa-bbbb-cccc'
+        req = self._delete('/node/%(node_id)s' % {'node_id': nid})
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.return_value = None
+        ex = self.assertRaises(exc.HTTPInternalServerError,
+                               self.controller.delete,
+                               req, tenant_id=self.project,
+                               node_id=nid)
+        msg = _('Failed to delete the node: "%s"') % nid
+        self.assertEqual(msg, six.text_type(ex))
 
     def test_node_delete_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', False)
