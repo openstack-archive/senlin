@@ -185,7 +185,10 @@ class Node(object):
 
     def to_dict(self):
         def _fmt_time(value):
-            return value and value.isoformat()
+            if value:
+                value = value.replace(microsecond=0)
+                value = value.isoformat()
+            return value
 
         node_dict = {
             'id': self.id,
