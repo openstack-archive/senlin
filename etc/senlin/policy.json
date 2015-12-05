@@ -5,11 +5,9 @@
 
     "build_info:build_info": "",
     "profile_types:index": "",
-    "profile_types:template": "",
-    "profile_types:schema": "",
+    "profile_types:get": "",
     "policy_types:index": "",
-    "policy_types:template": "",
-    "policy_types:schema": "",
+    "policy_types:get": "",
     "clusters:index": "rule:admin_or_owner",
     "clusters:create": "",
     "clusters:delete": "rule:admin_or_owner",

@@ -63,14 +63,14 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_profile_type_schema(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'schema', True)
+    def test_profile_type_get(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'get', True)
         type_name = 'SimpleProfile'
         req = self._get('/profile_types/%(type)s' % {'type': type_name})
 
         engine_response = {
-            'profile_type': type_name,
-            'spec': {
+            'name': type_name,
+            'schema': {
                 'Foo': {'type': 'String', 'required': False},
                 'Bar': {'type': 'Integer', 'required': False},
             },
@@ -79,17 +79,17 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 
-        response = self.controller.schema(req, tenant_id=self.project,
-                                          type_name=type_name)
+        response = self.controller.get(req, tenant_id=self.project,
+                                       type_name=type_name)
 
         mock_call.assert_called_once_with(
             req.context,
-            ('profile_type_schema', {'type_name': type_name}))
+            ('profile_type_get', {'type_name': type_name}))
 
-        self.assertEqual(engine_response, response)
+        self.assertEqual(engine_response, response['profile_type'])
 
-    def test_profile_type_schema_not_found(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'schema', True)
+    def test_profile_type_get_not_found(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'get', True)
         type_name = 'BogusProfileType'
         req = self._get('/profile_types/%(type)s' % {'type': type_name})
 
@@ -98,24 +98,24 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.schema,
+                                              self.controller.get,
                                               req, tenant_id=self.project,
                                               type_name=type_name)
 
         mock_call.assert_called_once_with(
             req.context,
-            ('profile_type_schema', {'type_name': type_name}))
+            ('profile_type_get', {'type_name': type_name}))
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ProfileTypeNotFound', resp.json['error']['type'])
 
-    def test_profile_type_schema_err_denied_policy(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'schema', False)
+    def test_profile_type_get_err_denied_policy(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'get', False)
         type_name = 'BogusProfileType'
         req = self._get('/profile_types/%(type)s' % {'type': type_name})
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.schema,
+                                              self.controller.get,
                                               req, tenant_id=self.project,
                                               type_name=type_name)
         self.assertEqual(403, resp.status_int)

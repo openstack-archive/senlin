@@ -48,7 +48,7 @@ class RoutesTest(base.SenlinTestCase):
             self.m,
             '/aaaa/profile-types/test_type',
             'GET',
-            'schema',
+            'get',
             'ProfileTypeController',
             {
                 'tenant_id': 'aaaa',

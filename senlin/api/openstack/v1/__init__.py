@@ -43,9 +43,9 @@ class API(wsgi.Router):
                                "/profile-types",
                                action="index",
                                conditions={'method': 'GET'})
-            sub_mapper.connect("profile_type_schema",
+            sub_mapper.connect("profile_type_get",
                                "/profile-types/{type_name}",
-                               action="schema",
+                               action="get",
                                conditions={'method': 'GET'})
 
         # Profiles

@@ -39,7 +39,7 @@ class ProfileTypeTest(base.SenlinTestCase):
     def test_profile_type_schema(self):
         type_name = 'TestProfile'
         expected = {
-            'spec': {
+            'schema': {
                 'INT': {
                     'type': 'Integer',
                     'readonly': False,
@@ -92,11 +92,12 @@ class ProfileTypeTest(base.SenlinTestCase):
             },
         }
 
-        schema = self.eng.profile_type_schema(self.ctx, type_name=type_name)
-        self.assertEqual(expected, schema)
+        res = self.eng.profile_type_get(self.ctx, type_name=type_name)
+        self.assertEqual(expected['schema'], res['schema'])
+        self.assertEqual(type_name, res['name'])
 
-    def test_profile_type_schema_nonexist(self):
+    def test_profile_type_get_nonexist(self):
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_type_schema,
+                               self.eng.profile_type_get,
                                self.ctx, type_name='Bogus')
         self.assertEqual(exception.ProfileTypeNotFound, ex.exc_info[0])

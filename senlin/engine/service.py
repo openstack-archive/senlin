@@ -155,11 +155,14 @@ class EngineService(service.Service):
         return environment.global_env().get_profile_types()
 
     @request_context
-    def profile_type_schema(self, context, type_name):
+    def profile_type_get(self, context, type_name):
         profile = environment.global_env().get_profile(type_name)
         data = profile.get_schema()
 
-        return {'spec': data}
+        return {
+            'name': type_name,
+            'schema': data,
+        }
 
     def profile_find(self, context, identity, show_deleted=False):
         '''Find a profile with the given identity (could be name or ID).'''

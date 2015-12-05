@@ -75,8 +75,8 @@ class EngineClient(object):
     def profile_type_list(self, ctxt):
         return self.call(ctxt, self.make_msg('profile_type_list'))
 
-    def profile_type_schema(self, ctxt, type_name):
-        return self.call(ctxt, self.make_msg('profile_type_schema',
+    def profile_type_get(self, ctxt, type_name):
+        return self.call(ctxt, self.make_msg('profile_type_get',
                                              type_name=type_name))
 
     def profile_list(self, ctxt, limit=None, marker=None, sort_keys=None,

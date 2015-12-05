@@ -41,9 +41,10 @@ class ProfileTypeController(object):
         return {'profile_types': types}
 
     @util.policy_enforce
-    def schema(self, req, type_name):
+    def get(self, req, type_name):
         '''Gets the interface schema for a specified profile type.'''
-        return self.rpc_client.profile_type_schema(req.context, type_name)
+        content = self.rpc_client.profile_type_get(req.context, type_name)
+        return {'profile_type': content}
 
 
 def create_resource(options):

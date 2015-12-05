@@ -153,8 +153,8 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
     def test_profile_type_list(self):
         self._test_engine_api('profile_type_list', 'call')
 
-    def test_profile_type_schema(self):
-        self._test_engine_api('profile_type_schema', 'call',
+    def test_profile_type_get(self):
+        self._test_engine_api('profile_type_get', 'call',
                               type_name='a-profile-type')
 
     def test_profile_list(self):
