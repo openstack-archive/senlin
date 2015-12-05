@@ -73,9 +73,6 @@ class ActionController(object):
             'name': 'mixed',
             'target': 'mixed',
             'action': 'mixed',
-            'created_time': 'single',
-            'updated_time': 'single',
-            'deleted_time': 'single',
         }
         param_whitelist = {
             'limit': 'single',
