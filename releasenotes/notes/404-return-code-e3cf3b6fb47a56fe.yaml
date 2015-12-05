@@ -1,0 +1,3 @@
+---
+fixes:
+  - When referenced objects are not found in an API request, 400 is returned now.
