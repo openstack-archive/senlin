@@ -198,8 +198,8 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
     def test_policy_type_list(self):
         self._test_engine_api('policy_type_list', 'call')
 
-    def test_policy_type_schema(self):
-        self._test_engine_api('policy_type_schema', 'call',
+    def test_policy_type_get(self):
+        self._test_engine_api('policy_type_get', 'call',
                               type_name='a-profile-type')
 
     def test_policy_list(self):

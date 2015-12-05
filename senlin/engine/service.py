@@ -288,11 +288,14 @@ class EngineService(service.Service):
         return environment.global_env().get_policy_types()
 
     @request_context
-    def policy_type_schema(self, context, type_name):
+    def policy_type_get(self, context, type_name):
         policy_type = environment.global_env().get_policy(type_name)
         data = policy_type.get_schema()
 
-        return {'spec': data}
+        return {
+            'name': type_name,
+            'schema': data
+        }
 
     def policy_find(self, context, identity, show_deleted=False):
         '''Find a policy with the given identity (could be name or ID).'''

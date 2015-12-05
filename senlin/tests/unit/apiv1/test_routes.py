@@ -126,7 +126,7 @@ class RoutesTest(base.SenlinTestCase):
             self.m,
             '/aaaa/policy-types/test_type',
             'GET',
-            'schema',
+            'get',
             'PolicyTypeController',
             {
                 'tenant_id': 'aaaa',

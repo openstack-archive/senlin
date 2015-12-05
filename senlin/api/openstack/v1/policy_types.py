@@ -44,8 +44,9 @@ class PolicyTypeController(object):
         return {'policy_types': types}
 
     @util.policy_enforce
-    def schema(self, req, type_name):
-        return self.rpc_client.policy_type_schema(req.context, type_name)
+    def get(self, req, type_name):
+        content = self.rpc_client.policy_type_get(req.context, type_name)
+        return {'policy_type': content}
 
 
 def create_resource(options):

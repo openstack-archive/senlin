@@ -85,9 +85,9 @@ class API(wsgi.Router):
                                "/policy-types",
                                action="index",
                                conditions={'method': 'GET'})
-            sub_mapper.connect("policy_type_schema",
+            sub_mapper.connect("policy_type_get",
                                "/policy-types/{type_name}",
-                               action="schema",
+                               action="get",
                                conditions={'method': 'GET'})
 
         # Policies

@@ -113,8 +113,8 @@ class EngineClient(object):
     def policy_type_list(self, ctxt):
         return self.call(ctxt, self.make_msg('policy_type_list'))
 
-    def policy_type_schema(self, ctxt, type_name):
-        return self.call(ctxt, self.make_msg('policy_type_schema',
+    def policy_type_get(self, ctxt, type_name):
+        return self.call(ctxt, self.make_msg('policy_type_get',
                                              type_name=type_name))
 
     def policy_list(self, ctxt, limit=None, marker=None, sort_keys=None,

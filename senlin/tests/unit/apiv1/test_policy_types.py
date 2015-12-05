@@ -63,14 +63,14 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_policy_type_schema(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'schema', True)
+    def test_policy_type_get(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'get', True)
         type_name = 'SimplePolicy'
         req = self._get('/policy_types/%(type)s' % {'type': type_name})
 
         engine_response = {
-            'policy_type': type_name,
-            'spec': {
+            'name': type_name,
+            'schema': {
                 'Foo': {'type': 'String', 'required': False},
                 'Bar': {'type': 'Integer', 'required': False},
             },
@@ -79,17 +79,16 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 
-        response = self.controller.schema(req, tenant_id=self.project,
-                                          type_name=type_name)
+        response = self.controller.get(req, tenant_id=self.project,
+                                       type_name=type_name)
 
         mock_call.assert_called_once_with(
-            req.context,
-            ('policy_type_schema', {'type_name': type_name}))
+            req.context, ('policy_type_get', {'type_name': type_name}))
 
-        self.assertEqual(engine_response, response)
+        self.assertEqual(engine_response, response['policy_type'])
 
-    def test_policy_type_schema_not_found(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'schema', True)
+    def test_policy_type_get_not_found(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'get', True)
         type_name = 'BogusPolicyType'
         req = self._get('/policy_types/%(type)s' % {'type': type_name})
 
@@ -98,24 +97,23 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.schema,
+                                              self.controller.get,
                                               req, tenant_id=self.project,
                                               type_name=type_name)
 
         mock_call.assert_called_once_with(
-            req.context,
-            ('policy_type_schema', {'type_name': type_name}))
+            req.context, ('policy_type_get', {'type_name': type_name}))
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('PolicyTypeNotFound', resp.json['error']['type'])
 
     def test_policy_type_schema_err_denied_policy(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'schema', False)
-        type_name = 'BogusPolicyType'
+        self._mock_enforce_setup(mock_enforce, 'get', False)
+        type_name = 'FakePolicyType'
         req = self._get('/policy_types/%(type)s' % {'type': type_name})
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.schema,
+                                              self.controller.get,
                                               req, tenant_id=self.project,
                                               type_name=type_name)
         self.assertEqual(403, resp.status_int)

@@ -36,10 +36,11 @@ class PolicyTypeTest(base.SenlinTestCase):
         self.assertIn({'name': 'TestPolicy'}, types)
         self.assertNotIn({'name': 'some-weird-stuff'}, types)
 
-    def test_policy_type_schema(self):
+    def test_policy_type_get(self):
         type_name = 'TestPolicy'
         expected = {
-            'spec': {
+            'name': 'TestPolicy',
+            'schema': {
                 'KEY1': {
                     'type': 'String',
                     'readonly': False,
@@ -56,11 +57,11 @@ class PolicyTypeTest(base.SenlinTestCase):
             }
         }
 
-        schema = self.eng.policy_type_schema(self.ctx, type_name=type_name)
+        schema = self.eng.policy_type_get(self.ctx, type_name=type_name)
         self.assertEqual(expected, schema)
 
-    def test_policy_type_schema_nonexist(self):
+    def test_policy_type_get_nonexist(self):
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_type_schema,
+                               self.eng.policy_type_get,
                                self.ctx, type_name='Bogus')
         self.assertEqual(exception.PolicyTypeNotFound, ex.exc_info[0])
