@@ -14,8 +14,6 @@ HIGH PRIORITY
 
 API
 ---
-  - Make object creation/updating requests return code 202, since most of them
-    are done asynchronously in Senlin.
   - Make object creation requests return both action_id and a location header set
     to the URI of the resource to be created. This is a requirement from API WG.
   - Find and fill gaps with API-WG besides the one we already identified.
@@ -43,9 +41,8 @@ DOC
   - Provide document(or docstring) for policy data passing for developers.
   - Provide documentation for existing policies.
   - Get Senlin APIs published on the official website:
-    http://docs.openstack.org/developer/openstack-projects.html
     http://developer.openstack.org/api-ref.html
-  - Add gate job for API and user/developer docs
+  - Add gate job for API docs
 
 MIDDLE PRIORITY
 ===============
