@@ -750,20 +750,30 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'aaaa-bbbb-cccc'
         body = {
             'cluster': {
-                'desired_capacity': 0,
+                'desired_capacity': 5,
                 'profile_id': 'xxxx-yyyy-zzzz',
-                'min_size': 0,
-                'max_size': 0,
+                'min_size': None,
+                'max_size': None,
             }
+        }
+
+        engine_resp = {
+            'id': cid,
+            'name': 'test_cluster',
+            'profile_id': 'xxxx-yyyy-zzzz',
+            'desired_capacity': 5,
+            'min_size': 0,
+            'max_size': -1
         }
 
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
                         json.dumps(body))
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=engine_resp)
 
-        self.controller.update(req, tenant_id=self.project, cluster_id=cid,
-                               body=body)
+        res = self.controller.update(req, tenant_id=self.project,
+                                     cluster_id=cid, body=body)
 
         args = {
             'name': None,
@@ -775,6 +785,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
         mock_call.assert_called_once_with(req.context,
                                           ('cluster_update', args))
+        self.assertEqual(engine_resp, res['cluster'])
+        self.assertEqual('/clusters/%s' % cid, res['location'])
 
     def test_cluster_update_missing_cluster_key(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)

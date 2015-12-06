@@ -220,11 +220,15 @@ class ClusterController(object):
         data = ClusterData(cluster_data)
         data.validate_for_update()
 
-        self.rpc_client.cluster_update(
+        cluster = self.rpc_client.cluster_update(
             req.context, cluster_id, data.name, data.profile, data.parent,
             data.metadata, data.timeout)
-        # TODO(xuhaiwei): update method's response should return 'body'
-        # TODO(xuhaiwei): put resource url into response header
+
+        result = {
+            'cluster': cluster,
+            'location': '/clusters/%s' % cluster['id'],
+        }
+        return result
 
     def _do_resize(self, req, cluster_id, this_action, body):
         data = body.get(this_action)

@@ -639,9 +639,7 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Cluster update action queued: %s."), action.id)
 
-        result = cluster.to_dict()
-        result['action'] = action.id
-        return result
+        return cluster.to_dict()
 
     @request_context
     def cluster_add_nodes(self, context, identity, nodes):
