@@ -711,6 +711,7 @@ class Resource(object):
         action_args = self.get_action_args(request.environ)
         action = action_args.pop('action', None)
         status_code = action_args.pop('success', None)
+        project = action_args.get('tenant_id', None)
 
         try:
             deserialized_request = self.dispatch(self.deserializer,
@@ -756,8 +757,14 @@ class Resource(object):
         serializer = self.serializer or serializers.JSONResponseSerializer()
         try:
             response = webob.Response(request=request)
+            # Customize status code if default (200) should be overridden
             if status_code is not None:
                 response.status_code = int(status_code)
+            # Customize 'location' header if provided
+            if action_result and isinstance(action_result, dict):
+                location = action_result.pop('location', None)
+                if location:
+                    response.location = '/v1/%s%s' % (project, location)
             self.dispatch(serializer, action, response, action_result)
             return response
 

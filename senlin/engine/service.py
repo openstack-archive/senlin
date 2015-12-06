@@ -552,10 +552,7 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Cluster create action queued: %s."), action.id)
 
-        # We return a cluster dictionary with an additional key carried
-        result = cluster.to_dict()
-        result['action'] = action.id
-        return result
+        return cluster.to_dict()
 
     @request_context
     def cluster_update(self, context, identity, name=None, profile_id=None,
