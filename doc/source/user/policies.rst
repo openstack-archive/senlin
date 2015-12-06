@@ -86,7 +86,7 @@ Creating a Policy
 ~~~~~~~~~~~~~~~~~
 
 When creating a new policy object, you need a "spec" file in YAML format. You
-may want to check the :command:`policy-type-schema` command in
+may want to check the :command:`policy-type-show` command in
 :ref:`guide-policy-types` for the property names and types for a specific
 :term:`policy type`. For example, the following is a spec for the policy type
 ``senlin.policy.deletion`` (the source can be found in the
@@ -99,14 +99,14 @@ may want to check the :command:`policy-type-schema` command in
     # The valid values include:
     # OLDEST_FIRST, OLDEST_PROFILE_FIRST, YOUNGEST_FIRST, RANDOM
     criteria: OLDEST_FIRST
-  
+
     # Whether deleted node should be destroyed
     destroy_after_deletion: True
-  
+
     # Length in number of seconds before the actual deletion happens
     # This param buys an instance some time before deletion
     grace_period: 60
-  
+
     # Whether the deletion will reduce the desired capability of
     # the cluster as well.
     reduce_desired_capacity: False

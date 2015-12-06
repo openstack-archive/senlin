@@ -46,26 +46,29 @@ A profile of type ``os.heat.stack`` may look like:
 ::
 
   # a spec for os.heat.stack
-  context:
-    region_name: RegionOne
-  template:
-    heat_template_version: 2014-10-16
+  type: os.heat.stack
+  version: 1.0
+  properties:
+    context:
+      region_name: RegionOne
+    template:
+      heat_template_version: 2014-10-16
+      parameters:
+        length: Integer
+      resources:
+        rand:
+          type: OS::Heat::RandomString
+          properties:
+            len: {get_param: length}
+      outputs:
+        rand_val:
+          value: {get_attr: [rand, value]}
     parameters:
-      length: Integer
-    resources:
-      rand:
-        type: OS::Heat::RandomString
-        properties:
-          len: {get_param: length}
-    outputs:
-      rand_val:
-        value: {get_attr: [rand, value]}
-  parameters:
-    length: 32
-  files: {}
-  timeout: 60
-  disable_rollback: True
-  environment: {}
+      length: 32
+    files: {}
+    timeout: 60
+    disable_rollback: True
+    environment: {}
 
 
 Listing Profile Types
@@ -85,17 +88,17 @@ of profile types using the following command::
 The output is a list of profile types supported by the Senlin server.
 
 
-Showing Profile Schema
-~~~~~~~~~~~~~~~~~~~~~~
+Showing Profile Details
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Each :term:`Profile Type` has a schema for its *spec* (i.e. specification)
 that describes the names and the types of properties that can be accepted. To
-show the schema of a specific profile type, you can use the following
-command::
+show the schema of a specific profile type along with other properties, you
+can use the following command::
 
-  $ senlin profile-type-schema os.heat.stack
-  profile_type: os.heat.stack
-  spec:
+  $ senlin profile-type-show os.heat.stack
+  name: os.heat.stack
+  schema:
     context:
       default: {}
       description: A dictionary for specifying the customized context for
@@ -128,13 +131,14 @@ Here, each property has the following attributes:
   property usually doesn't have a ``default`` value.
 - ``type``: one of ``String``, ``Integer``, ``Boolean``, ``Map`` or ``List``.
 
-The default output from the :command:`profile-type-schema` command is in YAML
+The default output from the :command:`profile-type-show` command is in YAML
 format. You can choose to show the spec schema in JSON format by specifying
 the the :option:`-F json` option as exemplified below::
 
-  $ senlin profile-type-schema -F json os.heat.stack
+  $ senlin profile-type-show -F json os.heat.stack
   {
-    "spec": {
+    "name": "os.heat.stack",
+    "schema": {
       "files": {
         "default": {},
         "readonly": false,
@@ -142,7 +146,7 @@ the the :option:`-F json` option as exemplified below::
         "type": "Map",
         "description": "Contents of files referenced by the template, if any."
       },
-    <... omitted ...>
+      <... omitted ...>
       "context": {
         "default": {},
         "readonly": false,
@@ -151,7 +155,6 @@ the the :option:`-F json` option as exemplified below::
         "description": "A dictionary for specifying the customized context for stack operations"
       }
     },
-    "profile_type": "os.heat.stack"
   }
 
 
