@@ -69,8 +69,13 @@ class TestSenlinAPIClient(object):
         self.catalogs = None
 
     def request(self, url, method='GET', body=None, headers=None):
-        _headers = {'Content-Type': 'application/json'}
-        _headers.update(headers or {})
+        _headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+
+        if headers:
+            _headers.update(headers)
 
         response = requests.request(method, url, data=body, headers=_headers)
         return response
@@ -117,8 +122,9 @@ class TestSenlinAPIClient(object):
         if http_status == 401:
             raise Exception(_('Authentication failed: %s'), response._content)
 
-        self.auth_token = response.headers['x-subject-token']
+        self.auth_token = response.headers['X-Subject-Token']
         self.catalogs = jsonutils.loads(response._content)['token']['catalog']
+        self.auth_result = self.auth_token
 
         return self.auth_token
 
@@ -144,7 +150,7 @@ class TestSenlinAPIClient(object):
                               '%(region)s was not found.'
                               ), {'region': self.region})
 
-        full_url = '%s/%s' % (endpoint, relative_url)
+        full_url = '%s/v1/%s' % (endpoint, relative_url)
 
         headers = kwargs.setdefault('headers', {})
         headers['X-Auth-Token'] = token

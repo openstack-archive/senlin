@@ -22,7 +22,8 @@ class SenlinFunctionalTest(testtools.TestCase):
         super(SenlinFunctionalTest, self).setUp()
         self.username = os.getenv('OS_USERNAME')
         self.password = os.getenv('OS_PASSWORD')
-        self.project_name = os.getenv('OS_TENANT_NAME')
+        self.project_name = (os.getenv('OS_TENANT_NAME') or
+                             os.getenv('OS_PROJECT_NAME'))
         self.user_domain_name = os.getenv('OS_USER_DOMAIN_NAME',
                                           'Default')
         self.project_domain_name = os.getenv('OS_PROJECT_DOMAIN_NAME',
