@@ -482,6 +482,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._post('/clusters', json.dumps(body))
 
         engine_response = {
+            'id': 'FAKE_ID',
             'name': 'test_cluster',
             'desired_capacity': 0,
             'profile_id': 'xxxx-yyyy',
@@ -511,8 +512,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             })
         )
 
-        expected = {'cluster': engine_response}
-        self.assertEqual(expected, resp)
+        self.assertEqual(engine_response, resp['cluster'])
+        self.assertEqual('/clusters/FAKE_ID', resp['location'])
 
     def test_create_maleformed_body(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)

@@ -195,7 +195,11 @@ class ClusterController(object):
             data.min_size, data.max_size, data.parent, data.metadata,
             data.timeout)
 
-        return {'cluster': cluster}
+        result = {
+            'cluster': cluster,
+            'location': '/clusters/%s' % cluster['id'],
+        }
+        return result
 
     @util.policy_enforce
     def get(self, req, cluster_id):

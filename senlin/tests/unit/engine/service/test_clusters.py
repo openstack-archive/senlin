@@ -80,14 +80,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(result['timeout'], cfg.CONF.default_action_timeout)
         self.assertEqual(result['metadata'], {})
 
-        action_id = result['action']
-        action = db_api.action_get(self.ctx, result['action'])
-        self.assertIsNotNone(action)
-        self._verify_action(action, 'CLUSTER_CREATE',
-                            'cluster_create_%s' % result['id'][:8],
-                            result['id'],
-                            cause=action_mod.CAUSE_RPC)
-        notify.assert_called_once_with(action_id=action_id)
+        notify.assert_called_once_with(action_id=mock.ANY)
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_create_already_exists(self, notify):
