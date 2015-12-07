@@ -107,7 +107,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
 
-        result = self.controller.index(req, tenant_id=self.project)
+        result = self.controller.index(req)
 
         default_args = {'limit': None, 'marker': None,
                         'sort_keys': None, 'sort_dir': None,
@@ -134,7 +134,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.return_value = []
 
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
 
         rpc_call_args, w = mock_call.call_args
         engine_args = rpc_call_args[1][1]
@@ -161,7 +161,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.return_value = []
 
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
 
         rpc_call_args, w = mock_call.call_args
         engine_args = rpc_call_args[1][1]
@@ -179,7 +179,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         params = {'show_deleted': 'False'}
         req = self._get('/policies', params=params)
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
         mock_call.assert_called_once_with(mock.ANY,
                                           filters=mock.ANY,
                                           show_deleted=False)
@@ -190,7 +190,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         params = {'show_deleted': 'True'}
         req = self._get('/policies', params=params)
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
         mock_call.assert_called_once_with(mock.ANY,
                                           filters=mock.ANY,
                                           show_deleted=True)
@@ -202,8 +202,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {'show_deleted': 'yes'}
         req = self._get('/policies', params=params)
         ex = self.assertRaises(senlin_exc.InvalidParameter,
-                               self.controller.index, req,
-                               tenant_id=self.project)
+                               self.controller.index, req)
         self.assertIn("Invalid value 'yes' specified for 'show_deleted'",
                       six.text_type(ex))
         self.assertFalse(mock_call.called)
@@ -215,8 +214,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {'limit': 'abc'}
         req = self._get('/policies', params=params)
         ex = self.assertRaises(senlin_exc.InvalidParameter,
-                               self.controller.index, req,
-                               tenant_id=self.project)
+                               self.controller.index, req)
         self.assertIn("Invalid value 'abc' specified for 'limit'",
                       six.text_type(ex))
         self.assertFalse(mock_call.called)
@@ -227,7 +225,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.index,
-                                              req, tenant_id=self.project)
+                                              req)
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
@@ -269,7 +267,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 
-        resp = self.controller.create(req, tenant_id=self.project, body=body)
+        resp = self.controller.create(req, body=body)
 
         mock_call.assert_called_with(
             req.context,
@@ -296,8 +294,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
-                               req, tenant_id=self.project,
-                               body=body)
+                               req, body=body)
 
         self.assertEqual("Malformed request data, missing 'policy' key "
                          "in request body.", six.text_type(ex))
@@ -325,8 +322,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create,
-                                              req, tenant_id=self.project,
-                                              body=body)
+                                              req, body=body)
 
         expected_args = body['policy']
         expected_args['cooldown'] = None
@@ -352,8 +348,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         req = self._post('/policies', json.dumps(body))
         resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.create,
-                                              req, tenant_id=self.project)
+                                              self.controller.create, req)
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
@@ -384,8 +379,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
 
-        result = self.controller.get(req, tenant_id=self.project,
-                                     policy_id=pid)
+        result = self.controller.get(req, policy_id=pid)
 
         mock_call.assert_called_with(req.context,
                                      ('policy_get', {'identity': pid}))
@@ -404,8 +398,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,
-                                              req, tenant_id=self.project,
-                                              policy_id=pid)
+                                              req, policy_id=pid)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('PolicyNotFound', resp.json['error']['type'])
@@ -417,8 +410,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,
-                                              req, tenant_id=self.project,
-                                              policy_id=pid)
+                                              req, policy_id=pid)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
@@ -454,9 +446,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
-        result = self.controller.update(req, tenant_id=self.project,
-                                        policy_id=pid,
-                                        body=body)
+        result = self.controller.update(req, policy_id=pid, body=body)
 
         args = copy.deepcopy(body['policy'])
         args['identity'] = pid
@@ -477,8 +467,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         engine_resp = mock.Mock()
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
-        result = self.controller.update(req, tenant_id=self.project,
-                                        policy_id=pid, body=body)
+        result = self.controller.update(req, policy_id=pid, body=body)
 
         args = {
             'identity': pid,
@@ -500,8 +489,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.update,
-                               req, tenant_id=self.project, policy_id=pid,
-                               body=body)
+                               req, policy_id=pid, body=body)
 
         self.assertEqual("Malformed request data, missing 'policy' key in "
                          "request body.", six.text_type(ex))
@@ -520,8 +508,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.update,
-                               req, tenant_id=self.project, policy_id=pid,
-                               body=body)
+                               req, policy_id=pid, body=body)
 
         msg = _("Updating the spec of a policy is not supported because "
                 "it may cause state conflicts in engine.")
@@ -547,9 +534,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,
-                                              req, tenant_id=self.project,
-                                              policy_id=pid,
-                                              body=body)
+                                              req, policy_id=pid, body=body)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('PolicyNotFound', resp.json['error']['type'])
@@ -565,9 +550,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,
-                                              req, tenant_id=self.project,
-                                              policy_id=pid,
-                                              body=body)
+                                              req, policy_id=pid, body=body)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
@@ -580,7 +563,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=None)
 
-        self.controller.delete(req, tenant_id=self.project, policy_id=pid)
+        self.controller.delete(req, policy_id=pid)
 
         mock_call.assert_called_with(
             req.context, ('policy_delete', {'identity': pid}))
@@ -596,8 +579,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.delete,
-                                              req, tenant_id=self.project,
-                                              policy_id=pid)
+                                              req, policy_id=pid)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('PolicyNotFound', resp.json['error']['type'])
@@ -609,8 +591,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.delete,
-                                              req, tenant_id=self.project,
-                                              policy_id=pid)
+                                              req, policy_id=pid)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))

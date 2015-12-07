@@ -99,17 +99,6 @@ class TestPolicyEnforce(base.SenlinTestCase):
         self.controller = DummyController()
 
     @mock.patch.object(policy, 'enforce')
-    def test_policy_enforce_project_mismatch(self, mock_enforce):
-        mock_enforce.return_value = True
-
-        self.assertEqual('woot',
-                         self.controller.an_action(self.req, 'foo'))
-
-        self.assertRaises(exc.HTTPForbidden,
-                          self.controller.an_action,
-                          self.req, tenant_id='bar')
-
-    @mock.patch.object(policy, 'enforce')
     def test_policy_enforce_policy_deny(self, mock_enforce):
         mock_enforce.return_value = False
 

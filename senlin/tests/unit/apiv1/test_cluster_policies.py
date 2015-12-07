@@ -64,8 +64,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
 
-        result = self.controller.index(req, tenant_id=self.project,
-                                       cluster_id=cid)
+        result = self.controller.index(req, cluster_id=cid)
 
         default_args = {'sort_keys': None, 'sort_dir': None,
                         'filters': None, 'identity': cid}
@@ -90,7 +89,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/cluster_policies/%s' % cid, params=params)
         mock_call.return_value = []
 
-        self.controller.index(req, tenant_id=self.project, cluster_id=cid)
+        self.controller.index(req, cluster_id=cid)
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
@@ -114,7 +113,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/cluster_policies/%s' % cid, params=params)
         mock_call.return_value = []
 
-        self.controller.index(req, tenant_id=self.project, cluster_id=cid)
+        self.controller.index(req, cluster_id=cid)
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
@@ -133,8 +132,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.index,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid)
+                                              req, cluster_id=cid)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
@@ -162,9 +160,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
-        response = self.controller.get(req, tenant_id=self.project,
-                                       cluster_id=cid,
-                                       policy_id=pid)
+        response = self.controller.get(req, cluster_id=cid, policy_id=pid)
 
         mock_call.assert_called_once_with(
             req.context, ('cluster_policy_get',
@@ -185,8 +181,8 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid, policy_id=pid)
+                                              req, cluster_id=cid,
+                                              policy_id=pid)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('PolicyBindingNotFound', resp.json['error']['type'])
@@ -200,8 +196,8 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid, policy_id=pid)
+                                              req, cluster_id=cid,
+                                              policy_id=pid)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))

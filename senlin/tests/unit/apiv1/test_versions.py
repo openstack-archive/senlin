@@ -39,7 +39,7 @@ class VersionControllerTest(base.SenlinTestCase):
             'SERVER_NAME': 'host',
             'SERVER_PORT': 8778,
             'SCRIPT_NAME': '/v1',
-            'PATH_INFO': '/tenant_id/versions',
+            'PATH_INFO': '/versions',
             'wsgi.url_scheme': 'http',
         }
         req = wsgi.Request(environ)

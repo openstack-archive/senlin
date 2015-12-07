@@ -47,7 +47,7 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 
-        response = self.controller.index(req, tenant_id=self.project)
+        response = self.controller.index(req)
         self.assertEqual({'policy_types': engine_response}, response)
 
         mock_call.assert_called_once_with(req.context,
@@ -58,7 +58,7 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/policy_types')
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.index,
-                                              req, tenant_id=self.project)
+                                              req)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
@@ -79,8 +79,7 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 
-        response = self.controller.get(req, tenant_id=self.project,
-                                       type_name=type_name)
+        response = self.controller.get(req, type_name=type_name)
 
         mock_call.assert_called_once_with(
             req.context, ('policy_type_get', {'type_name': type_name}))
@@ -98,8 +97,7 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,
-                                              req, tenant_id=self.project,
-                                              type_name=type_name)
+                                              req, type_name=type_name)
 
         mock_call.assert_called_once_with(
             req.context, ('policy_type_get', {'type_name': type_name}))
@@ -114,7 +112,6 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,
-                                              req, tenant_id=self.project,
-                                              type_name=type_name)
+                                              req, type_name=type_name)
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
