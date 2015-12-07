@@ -4,7 +4,6 @@
 
 pbr>=1.6
 Babel>=1.3
-croniter>=0.3.4 # MIT License
 cryptography>=1.0 # Apache-2.0
 eventlet>=0.17.4
 keystonemiddleware!=2.4.0,>=2.0.0
