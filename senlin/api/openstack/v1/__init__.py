@@ -36,8 +36,7 @@ class API(wsgi.Router):
 
         # Profile_types
         profile_types_resource = profile_types.create_resource(conf)
-        with mapper.submapper(controller=profile_types_resource,
-                              path_prefix="/{tenant_id}") as sub_mapper:
+        with mapper.submapper(controller=profile_types_resource) as sub_mapper:
 
             sub_mapper.connect("profile_type_index",
                                "/profile-types",
@@ -50,8 +49,7 @@ class API(wsgi.Router):
 
         # Profiles
         profiles_resource = profiles.create_resource(conf)
-        with mapper.submapper(controller=profiles_resource,
-                              path_prefix="/{tenant_id}") as sub_mapper:
+        with mapper.submapper(controller=profiles_resource) as sub_mapper:
 
             sub_mapper.connect("profile_index",
                                "/profiles",
@@ -78,8 +76,7 @@ class API(wsgi.Router):
 
         # Policy Types
         policy_types_resource = policy_types.create_resource(conf)
-        with mapper.submapper(controller=policy_types_resource,
-                              path_prefix="/{tenant_id}") as sub_mapper:
+        with mapper.submapper(controller=policy_types_resource) as sub_mapper:
             # Policy collection
             sub_mapper.connect("policy_type_index",
                                "/policy-types",
@@ -92,8 +89,7 @@ class API(wsgi.Router):
 
         # Policies
         policies_resource = policies.create_resource(conf)
-        with mapper.submapper(controller=policies_resource,
-                              path_prefix="/{tenant_id}") as sub_mapper:
+        with mapper.submapper(controller=policies_resource) as sub_mapper:
 
             sub_mapper.connect("policy_index",
                                "/policies",
@@ -120,8 +116,7 @@ class API(wsgi.Router):
 
         # Clusters
         clusters_resource = clusters.create_resource(conf)
-        with mapper.submapper(controller=clusters_resource,
-                              path_prefix="/{tenant_id}") as sub_mapper:
+        with mapper.submapper(controller=clusters_resource) as sub_mapper:
 
             sub_mapper.connect("cluster_index",
                                "/clusters",
@@ -154,8 +149,7 @@ class API(wsgi.Router):
 
         # Nodes
         nodes_resource = nodes.create_resource(conf)
-        with mapper.submapper(controller=nodes_resource,
-                              path_prefix="/{tenant_id}") as sub_mapper:
+        with mapper.submapper(controller=nodes_resource) as sub_mapper:
 
             sub_mapper.connect("node_index",
                                "/nodes",
@@ -188,7 +182,7 @@ class API(wsgi.Router):
 
         # Cluster Policies
         cluster_policies_resource = cluster_policies.create_resource(conf)
-        policies_path = "/{tenant_id}/clusters/{cluster_id}"
+        policies_path = "/clusters/{cluster_id}"
         with mapper.submapper(controller=cluster_policies_resource,
                               path_prefix=policies_path) as sub_mapper:
             sub_mapper.connect("cluster_policy_list",
@@ -202,8 +196,7 @@ class API(wsgi.Router):
 
         # Actions
         actions_resource = actions.create_resource(conf)
-        with mapper.submapper(controller=actions_resource,
-                              path_prefix="/{tenant_id}") as sub_mapper:
+        with mapper.submapper(controller=actions_resource) as sub_mapper:
 
             sub_mapper.connect("action_index",
                                "/actions",
@@ -221,8 +214,7 @@ class API(wsgi.Router):
 
         # Webhooks
         webhooks_resource = webhooks.create_resource(conf)
-        with mapper.submapper(controller=webhooks_resource,
-                              path_prefix="/{tenant_id}") as sub_mapper:
+        with mapper.submapper(controller=webhooks_resource) as sub_mapper:
 
             sub_mapper.connect("webhook_index",
                                "/webhooks",
@@ -250,8 +242,7 @@ class API(wsgi.Router):
 
         # Events
         events_resource = events.create_resource(conf)
-        with mapper.submapper(controller=events_resource,
-                              path_prefix="/{tenant_id}") as sub_mapper:
+        with mapper.submapper(controller=events_resource) as sub_mapper:
 
             sub_mapper.connect("event_index",
                                "/events",
@@ -264,8 +255,7 @@ class API(wsgi.Router):
 
         # Info
         info_resource = build_info.create_resource(conf)
-        with mapper.submapper(controller=info_resource,
-                              path_prefix="/{tenant_id}") as sub_mapper:
+        with mapper.submapper(controller=info_resource) as sub_mapper:
 
             sub_mapper.connect("build_info",
                                "/build-info",

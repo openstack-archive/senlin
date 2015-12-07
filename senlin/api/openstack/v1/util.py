@@ -28,19 +28,12 @@ def policy_enforce(handler):
     This is a handler method decorator.
     """
     @functools.wraps(handler)
-    def policy_checker(controller, req, tenant_id, **kwargs):
-        if req.context.project != tenant_id:
-            raise exc.HTTPForbidden()
-
+    def policy_checker(controller, req, **kwargs):
         # Enable project_id based target check
-        target = {
-            'project': tenant_id,
-        }
         rule = "%s:%s" % (controller.REQUEST_SCOPE,
                           handler.__name__)
         allowed = policy.enforce(context=req.context,
-                                 rule=rule,
-                                 target=target)
+                                 rule=rule, target={})
         if not allowed:
             raise exc.HTTPForbidden()
         return handler(controller, req, **kwargs)

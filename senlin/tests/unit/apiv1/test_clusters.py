@@ -276,7 +276,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call.return_value = engine_resp
 
-        result = self.controller.index(req, tenant_id=req.context.project)
+        result = self.controller.index(req)
+
         expected = {u'clusters': engine_resp}
         self.assertEqual(expected, result)
 
@@ -300,7 +301,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/clusters', params=params)
         mock_call.return_value = []
 
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
 
         rpc_call_args, w = mock_call.call_args
         engine_args = rpc_call_args[1][1]
@@ -324,7 +325,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/clusters', params=params)
         mock_call.return_value = []
 
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
 
         rpc_call_args, w = mock_call.call_args
         engine_args = rpc_call_args[1][1]
@@ -342,7 +343,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         params = {'show_deleted': 'False'}
         req = self._get('/clusters', params=params)
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
         rpc_client.cluster_list.assert_called_once_with(mock.ANY,
                                                         filters=mock.ANY,
                                                         show_deleted=False)
@@ -353,7 +354,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         params = {'show_deleted': 'True'}
         req = self._get('/clusters', params=params)
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
         rpc_client.cluster_list.assert_called_once_with(mock.ANY,
                                                         filters=mock.ANY,
                                                         show_deleted=True)
@@ -364,7 +365,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         params = {'show_nested': 'False'}
         req = self._get('/clusters', params=params)
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
         rpc_client.cluster_list.assert_called_once_with(mock.ANY,
                                                         filters=mock.ANY,
                                                         show_nested=False)
@@ -375,7 +376,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         params = {'show_nested': 'True'}
         req = self._get('/clusters', params=params)
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
         rpc_client.cluster_list.assert_called_once_with(mock.ANY,
                                                         filters=mock.ANY,
                                                         show_nested=True)
@@ -386,7 +387,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {'global_project': 'True'}
         req = self._get('/clusters', params=params)
 
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
 
         call_args, w = mock_call.call_args
         call_args = call_args[1][1]
@@ -399,7 +400,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {'global_project': 'False'}
         req = self._get('/clusters', params=params)
 
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
 
         call_args, w = mock_call.call_args
         call_args = call_args[1][1]
@@ -413,8 +414,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/clusters', params=params)
 
         ex = self.assertRaises(senlin_exc.InvalidParameter,
-                               self.controller.index, req,
-                               tenant_id=self.project)
+                               self.controller.index, req)
 
         self.assertEqual("Invalid value 'No' specified for 'global_project'",
                          six.text_type(ex))
@@ -428,8 +428,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.side_effect = shared.to_remote_error(AttributeError())
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.index,
-                                              req, tenant_id=self.project)
+                                              self.controller.index, req)
 
         self.assertEqual(500, resp.json['code'])
         self.assertEqual('AttributeError', resp.json['error']['type'])
@@ -445,7 +444,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.index,
-                                              req, tenant_id=self.project)
+                                              req)
 
         self.assertEqual(500, resp.json['code'])
         self.assertEqual('Exception', resp.json['error']['type'])
@@ -459,7 +458,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.index,
-                                              req, tenant_id=self.project)
+                                              req)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
@@ -496,7 +495,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 
-        resp = self.controller.create(req, tenant_id=self.project, body=body)
+        resp = self.controller.create(req, body=body)
 
         mock_call.assert_called_with(
             req.context,
@@ -533,7 +532,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
-                               req, tenant_id=self.project, body=body)
+                               req, body=body)
 
         self.assertIn("Malformed request data, missing 'cluster' key "
                       "in request body.", six.text_type(ex))
@@ -558,8 +557,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create,
-                                              req, tenant_id=self.project,
-                                              body=body)
+                                              req, body=body)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
@@ -585,8 +583,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create,
-                                              req, tenant_id=self.project,
-                                              body=body)
+                                              req, body=body)
 
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('InvalidParameter', resp.json['error']['type'])
@@ -650,8 +647,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
-        response = self.controller.get(req, tenant_id=self.project,
-                                       cluster_id=cid)
+        response = self.controller.get(req, cluster_id=cid)
 
         mock_call.assert_called_once_with(
             req.context, ('cluster_get', {'identity': cid}))
@@ -670,8 +666,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid)
+                                              req, cluster_id=cid)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ClusterNotFound', resp.json['error']['type'])
@@ -683,8 +678,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid)
+                                              req, cluster_id=cid)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
@@ -697,7 +691,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.return_value = {'action': 'action_id'}
 
-        self.controller.delete(req, tenant_id=self.project, cluster_id=cid)
+        self.controller.delete(req, cluster_id=cid)
         mock_call.assert_called_with(req.context,
                                      ('cluster_delete', {'identity': cid}))
 
@@ -712,8 +706,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.delete,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid)
+                                              req, cluster_id=cid)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ClusterNotFound', resp.json['error']['type'])
@@ -728,8 +721,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.delete,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid)
+                                              req, cluster_id=cid)
         self.assertEqual(500, resp.status_int)
         self.assertIn('Failed deleting cluster', six.text_type(resp))
 
@@ -739,8 +731,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._delete('/clusters/%(cluster_id)s' % {'cluster_id': cid})
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.delete,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid)
+                                              req, cluster_id=cid)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
@@ -772,8 +763,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
 
-        res = self.controller.update(req, tenant_id=self.project,
-                                     cluster_id=cid, body=body)
+        res = self.controller.update(req, cluster_id=cid, body=body)
 
         args = {
             'name': None,
@@ -800,9 +790,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'cluster_update')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.update,
-                               req, tenant_id=self.project,
-                               cluster_id=cid,
-                               body=body)
+                               req, cluster_id=cid, body=body)
 
         self.assertIn("Malformed request data, missing 'cluster' key "
                       "in request body.", six.text_type(ex))
@@ -821,9 +809,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'cluster_update')
         ex = self.assertRaises(senlin_exc.InvalidParameter,
                                self.controller.update,
-                               req, tenant_id=self.project,
-                               cluster_id=cid,
-                               body=body)
+                               req, cluster_id=cid, body=body)
 
         self.assertEqual(_("Invalid value '10min' specified for 'timeout'"),
                          six.text_type(ex))
@@ -843,9 +829,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid,
-                                              body=body)
+                                              req, cluster_id=cid, body=body)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ClusterNotFound', resp.json['error']['type'])
@@ -863,9 +847,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid,
-                                              body=body)
+                                              req, cluster_id=cid, body=body)
 
         self.assertEqual(409, resp.json['code'])
         self.assertEqual('FeatureNotSupported', resp.json['error']['type'])
@@ -883,9 +865,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid,
-                                              body=body)
+                                              req, cluster_id=cid, body=body)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ProfileNotFound', resp.json['error']['type'])
@@ -903,9 +883,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid,
-                                              body=body)
+                                              req, cluster_id=cid, body=body)
 
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('ProfileTypeNotMatch', resp.json['error']['type'])
@@ -920,9 +898,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid,
-                                              body=body)
+                                              req, cluster_id=cid, body=body)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
@@ -944,9 +920,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=eng_resp)
 
-        resp = self.controller.action(req, tenant_id=self.project,
-                                      cluster_id=cid,
-                                      body=body)
+        resp = self.controller.action(req, cluster_id=cid, body=body)
 
         mock_call.assert_called_once_with(
             req.context,
@@ -968,9 +942,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
-                               req, tenant_id=self.project,
-                               cluster_id=cid,
-                               body=body)
+                               req, cluster_id=cid, body=body)
 
         self.assertEqual('No node to add', six.text_type(ex))
         self.assertFalse(mock_call.called)
@@ -987,9 +959,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
-                               req, tenant_id=self.project,
-                               cluster_id=cid,
-                               body=body)
+                               req, cluster_id=cid, body=body)
 
         self.assertEqual('No node to add', six.text_type(ex))
         self.assertFalse(mock_call.called)
@@ -1008,9 +978,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.action,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid,
-                                              body=body)
+                                              req, cluster_id=cid, body=body)
 
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('SenlinBadRequest', resp.json['error']['type'])
@@ -1034,9 +1002,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=eng_resp)
 
-        resp = self.controller.action(req, tenant_id=self.project,
-                                      cluster_id=cid,
-                                      body=body)
+        resp = self.controller.action(req, cluster_id=cid, body=body)
 
         mock_call.assert_called_once_with(
             req.context,
@@ -1058,9 +1024,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
-                               req, tenant_id=self.project,
-                               cluster_id=cid,
-                               body=body)
+                               req, cluster_id=cid, body=body)
 
         self.assertEqual('No node to delete', six.text_type(ex))
         self.assertFalse(mock_call.called)
@@ -1077,9 +1041,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
-                               req, tenant_id=self.project,
-                               cluster_id=cid,
-                               body=body)
+                               req, cluster_id=cid, body=body)
 
         self.assertEqual('No node to delete', six.text_type(ex))
         self.assertFalse(mock_call.called)
@@ -1098,9 +1060,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.action,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid,
-                                              body=body)
+                                              req, cluster_id=cid, body=body)
 
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('SenlinBadRequest', resp.json['error']['type'])
@@ -1129,9 +1089,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=eng_resp)
 
-        resp = self.controller.action(req, tenant_id=self.project,
-                                      cluster_id=cid,
-                                      body=body)
+        resp = self.controller.action(req, cluster_id=cid, body=body)
 
         mock_call.assert_called_once_with(
             req.context,
@@ -1179,9 +1137,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.action,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid,
-                                              body=body)
+                                              req, cluster_id=cid, body=body)
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('InvalidParameter', resp.json['error']['type'])
         self.assertIn("Invalid value 'NOT_QUITE_SURE' specified for "
@@ -1201,9 +1157,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
-                               req, tenant_id=self.project,
-                               cluster_id=cid,
-                               body=body)
+                               req, cluster_id=cid, body=body)
         self.assertEqual('Missing number value for resize operation.',
                          six.text_type(ex))
         self.assertEqual(0, mock_call.call_count)
@@ -1218,9 +1172,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
-                               req, tenant_id=self.project,
-                               cluster_id=cid,
-                               body=body)
+                               req, cluster_id=cid, body=body)
         self.assertEqual('Missing adjustment_type value for resize operation.',
                          six.text_type(ex))
         self.assertEqual(0, mock_call.call_count)
@@ -1241,9 +1193,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         ex = self.assertRaises(senlin_exc.InvalidParameter,
                                self.controller.action,
-                               req, tenant_id=self.project,
-                               cluster_id=cid,
-                               body=body)
+                               req, cluster_id=cid, body=body)
         self.assertEqual("Invalid value 'BOGUS' specified for '%s'" %
                          param, six.text_type(ex))
         self.assertEqual(0, mock_call.call_count)
@@ -1270,9 +1220,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         ex = self.assertRaises(senlin_exc.InvalidParameter,
                                self.controller.action,
-                               req, tenant_id=self.project,
-                               cluster_id=cid,
-                               body=body)
+                               req, cluster_id=cid, body=body)
         self.assertEqual("Invalid value '-1' specified for 'min_size'",
                          six.text_type(ex))
         self.assertEqual(0, mock_call.call_count)
@@ -1288,8 +1236,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=eng_resp)
 
-        resp = self.controller.action(req, tenant_id=self.project,
-                                      cluster_id=cid, body=body)
+        resp = self.controller.action(req, cluster_id=cid, body=body)
         mock_call.assert_called_once_with(
             req.context,
             ('cluster_resize', {
@@ -1314,9 +1261,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
-                               req, tenant_id=self.project,
-                               cluster_id=cid,
-                               body=body)
+                               req, cluster_id=cid, body=body)
         self.assertEqual("The specified min_size (2) is greater than "
                          "the specified max_size (1).", six.text_type(ex))
         self.assertEqual(0, mock_call.call_count)
@@ -1332,9 +1277,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=eng_resp)
 
-        resp = self.controller.action(req, tenant_id=self.project,
-                                      cluster_id=cid,
-                                      body=body)
+        resp = self.controller.action(req, cluster_id=cid, body=body)
 
         mock_call.assert_called_once_with(
             req.context,
@@ -1360,9 +1303,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         ex = self.assertRaises(senlin_exc.InvalidParameter,
                                self.controller.action,
-                               req, tenant_id=self.project,
-                               cluster_id=cid,
-                               body=body)
+                               req, cluster_id=cid, body=body)
         self.assertEqual("Invalid value 'yes' specified for 'strict'",
                          six.text_type(ex))
         self.assertEqual(0, mock_call.call_count)
@@ -1380,9 +1321,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=eng_resp)
 
-        resp = self.controller.action(req, tenant_id=self.project,
-                                      cluster_id=cid,
-                                      body=body)
+        resp = self.controller.action(req, cluster_id=cid, body=body)
 
         mock_call.assert_called_once_with(
             req.context,
@@ -1405,9 +1344,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=eng_resp)
 
-        resp = self.controller.action(req, tenant_id=self.project,
-                                      cluster_id=cid,
-                                      body=body)
+        resp = self.controller.action(req, cluster_id=cid, body=body)
 
         mock_call.assert_called_once_with(
             req.context,
@@ -1431,9 +1368,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.action,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid,
-                                              body=body)
+                                              req, cluster_id=cid, body=body)
 
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('InvalidParameter', resp.json['error']['type'])
@@ -1533,9 +1468,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=eng_resp)
 
-        resp = self.controller.action(req, tenant_id=self.project,
-                                      cluster_id=cid,
-                                      body=body)
+        resp = self.controller.action(req, cluster_id=cid, body=body)
 
         mock_call.assert_called_once_with(
             req.context,
@@ -1566,9 +1499,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=eng_resp)
 
-        resp = self.controller.action(req, tenant_id=self.project,
-                                      cluster_id=cid,
-                                      body=body)
+        resp = self.controller.action(req, cluster_id=cid, body=body)
 
         mock_call.assert_called_once_with(
             req.context,
@@ -1593,9 +1524,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.action,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid,
-                                              body=body)
+                                              req, cluster_id=cid, body=body)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('PolicyNotFound', resp.json['error']['type'])
@@ -1613,9 +1542,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=eng_resp)
 
-        resp = self.controller.action(req, tenant_id=self.project,
-                                      cluster_id=cid,
-                                      body=body)
+        resp = self.controller.action(req, cluster_id=cid, body=body)
 
         mock_call.assert_called_once_with(
             req.context,
@@ -1634,8 +1561,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
-                               req, tenant_id=self.project,
-                               cluster_id=cid, body=body)
+                               req, cluster_id=cid, body=body)
 
         self.assertEqual('No policy specified for detach.', six.text_type(ex))
 
@@ -1652,9 +1578,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.action,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid,
-                                              body=body)
+                                              req, cluster_id=cid, body=body)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('PolicyNotFound', resp.json['error']['type'])
@@ -1675,9 +1599,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=eng_resp)
 
-        resp = self.controller.action(req, tenant_id=self.project,
-                                      cluster_id=cid,
-                                      body=body)
+        resp = self.controller.action(req, cluster_id=cid, body=body)
 
         mock_call.assert_called_once_with(
             req.context,
@@ -1702,8 +1624,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
-                               req, tenant_id=self.project,
-                               cluster_id=cid, body=body)
+                               req, cluster_id=cid, body=body)
 
         self.assertIn("Invalid value 'abc' specified for 'priority'",
                       six.text_type(ex))
@@ -1721,9 +1642,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.action,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid,
-                                              body=body)
+                                              req, cluster_id=cid, body=body)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('PolicyNotFound', resp.json['error']['type'])
@@ -1741,9 +1660,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.action,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid,
-                                              body=body)
+                                              req, cluster_id=cid, body=body)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ClusterNotFound', resp.json['error']['type'])
@@ -1758,9 +1675,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
-                               req, tenant_id=self.project,
-                               cluster_id=cid,
-                               body=body)
+                               req, cluster_id=cid, body=body)
         self.assertEqual('No action specified', six.text_type(ex))
         self.assertFalse(mock_call.called)
 
@@ -1774,9 +1689,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
-                               req, tenant_id=self.project,
-                               cluster_id=cid,
-                               body=body)
+                               req, cluster_id=cid, body=body)
         self.assertEqual('Multiple actions specified', six.text_type(ex))
         self.assertFalse(mock_call.called)
 
@@ -1790,9 +1703,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
-                               req, tenant_id=self.project,
-                               cluster_id=cid,
-                               body=body)
+                               req, cluster_id=cid, body=body)
         self.assertEqual("Unrecognized action 'fly' specified",
                          six.text_type(ex))
         self.assertFalse(mock_call.called)
@@ -1807,9 +1718,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.action,
-                                              req, tenant_id=self.project,
-                                              cluster_id=cid,
-                                              body=body)
+                                              req, cluster_id=cid, body=body)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))

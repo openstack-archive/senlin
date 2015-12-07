@@ -99,7 +99,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
 
-        result = self.controller.index(req, tenant_id=self.project)
+        result = self.controller.index(req)
 
         default_args = {'cluster_id': None, 'limit': None, 'marker': None,
                         'sort_keys': None, 'sort_dir': None, 'filters': None,
@@ -125,7 +125,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/nodes', params=params)
         mock_call.return_value = []
 
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
@@ -147,7 +147,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {'global_project': 'True'}
         req = self._get('/nodes', params=params)
 
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
 
         call_args, w = mock_call.call_args
         call_args = call_args[1][1]
@@ -160,7 +160,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {'global_project': 'False'}
         req = self._get('/nodes', params=params)
 
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
 
         call_args, w = mock_call.call_args
         call_args = call_args[1][1]
@@ -174,8 +174,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/nodes', params=params)
 
         ex = self.assertRaises(senlin_exc.InvalidParameter,
-                               self.controller.index, req,
-                               tenant_id=self.project)
+                               self.controller.index, req)
 
         self.assertEqual("Invalid value 'No' specified for 'global_project'",
                          six.text_type(ex))
@@ -188,8 +187,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/nodes', params=params)
 
         ex = self.assertRaises(senlin_exc.InvalidParameter,
-                               self.controller.index, req,
-                               tenant_id=self.project)
+                               self.controller.index, req)
 
         self.assertEqual("Invalid value 'not-int' specified for 'limit'",
                          six.text_type(ex))
@@ -206,7 +204,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/nodes', params=params)
         mock_call.return_value = []
 
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
@@ -225,7 +223,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {'show_deleted': 'False'}
         req = self._get('/nodes', params=params)
 
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
         call_args, w = mock_call.call_args
         call_args = call_args[1][1]
         self.assertIn('show_deleted', call_args)
@@ -237,7 +235,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {'show_deleted': 'True'}
         req = self._get('/nodes', params=params)
 
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
 
         call_args, w = mock_call.call_args
         call_args = call_args[1][1]
@@ -251,8 +249,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/nodes', params=params)
 
         ex = self.assertRaises(senlin_exc.InvalidParameter,
-                               self.controller.index, req,
-                               tenant_id=self.project)
+                               self.controller.index, req)
 
         self.assertEqual("Invalid value 'Okay' specified for 'show_deleted'",
                          six.text_type(ex))
@@ -267,10 +264,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.patchobject(rpc_client.EngineClient, 'call',
                          side_effect=shared.to_remote_error(error))
 
-        resp = shared.request_with_middleware(
-            fault.FaultWrapper,
-            self.controller.index,
-            req, tenant_id=self.project)
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.index, req)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ClusterNotFound', resp.json['error']['type'])
@@ -280,8 +275,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/nodes')
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.index,
-                                              req, tenant_id=self.project)
+                                              self.controller.index, req)
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
@@ -310,7 +304,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 
-        resp = self.controller.create(req, tenant_id=self.project, body=body)
+        resp = self.controller.create(req, body=body)
 
         mock_call.assert_called_with(
             req.context,
@@ -332,8 +326,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._post('/nodes', json.dumps(body))
 
         ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.create, req,
-                               tenant_id=self.project, body=body)
+                               self.controller.create,
+                               req, body=body)
         self.assertEqual("Malformed request data, missing 'node' key in "
                          "request body.", six.text_type(ex))
 
@@ -356,8 +350,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create,
-                                              req, tenant_id=self.project,
-                                              body=body)
+                                              req, body=body)
         mock_call.assert_called_once_with(req.context,
                                           ('node_create', body['node']))
         self.assertEqual(404, resp.json['code'])
@@ -383,8 +376,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create,
-                                              req, tenant_id=self.project,
-                                              body=body)
+                                              req, body=body)
 
         mock_call.assert_called_once_with(req.context,
                                           ('node_create', body['node']))
@@ -419,9 +411,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
-        response = self.controller.get(req,
-                                       tenant_id=self.project,
-                                       node_id=node_id)
+        response = self.controller.get(req, node_id=node_id)
 
         mock_call.assert_called_once_with(
             req.context, ('node_get', {'identity': node_id,
@@ -439,9 +429,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                         params=params)
 
         ex = self.assertRaises(senlin_exc.InvalidParameter,
-                               self.controller.get, req,
-                               node_id=node_id,
-                               tenant_id=self.project)
+                               self.controller.get,
+                               req, node_id=node_id)
 
         self.assertEqual("Invalid value 'Okay' specified for 'show_details'",
                          six.text_type(ex))
@@ -458,8 +447,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,
-                                              req, tenant_id=self.project,
-                                              node_id=node_id)
+                                              req, node_id=node_id)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('NodeNotFound', resp.json['error']['type'])
@@ -471,8 +459,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,
-                                              req, tenant_id=self.project,
-                                              node_id=node_id)
+                                              req, node_id=node_id)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
@@ -499,8 +486,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 
-        self.controller.update(req, tenant_id=self.project, node_id=nid,
-                               body=body)
+        self.controller.update(req, node_id=nid, body=body)
 
         mock_call.assert_called_with(
             req.context,
@@ -524,7 +510,6 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.update, req,
-                               tenant_id=self.project,
                                node_id=nid, body=body)
         self.assertEqual("Malformed request data, missing 'node' key "
                          "in request body.", six.text_type(ex))
@@ -551,9 +536,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,
-                                              req, tenant_id=self.project,
-                                              node_id=nid,
-                                              body=body)
+                                              req, node_id=nid, body=body)
 
         mock_call.assert_called_with(
             req.context,
@@ -590,9 +573,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,
-                                              req, tenant_id=self.project,
-                                              node_id=nid,
-                                              body=body)
+                                              req, node_id=nid, body=body)
         mock_call.assert_called_with(
             req.context,
             ('node_update', {
@@ -616,9 +597,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.update, req,
-                               tenant_id=self.project,
-                               node_id=nid, body=body)
+                               self.controller.update,
+                               req, node_id=nid, body=body)
         self.assertEqual('Updating cluster_id is not allowed, please invoke '
                          'node join/leave actions if needed.',
                          six.text_type(ex))
@@ -640,9 +620,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,
-                                              req, tenant_id=self.project,
-                                              node_id=node_id,
-                                              body=body)
+                                              req, node_id=node_id, body=body)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
@@ -669,9 +647,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 
-        response = self.controller.action(req, tenant_id=self.project,
-                                          node_id=node_id,
-                                          body=body)
+        response = self.controller.action(req, node_id=node_id, body=body)
 
         mock_call.assert_called_once_with(
             req.context, ('node_join', {'identity': node_id,
@@ -697,9 +673,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.action,
-                                              req, tenant_id=self.project,
-                                              node_id=node_id,
-                                              body=body)
+                                              req, node_id=node_id, body=body)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('NodeNotFound', resp.json['error']['type'])
@@ -713,9 +687,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.action, req,
-                               tenant_id=self.project, node_id=node_id,
-                               body=body)
+                               self.controller.action,
+                               req, node_id=node_id, body=body)
 
         self.assertFalse(mock_call.called)
         self.assertEqual('No cluster specified.', six.text_type(ex))
@@ -738,9 +711,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.action,
-                                              req, tenant_id=self.project,
-                                              node_id=node_id,
-                                              body=body)
+                                              req, node_id=node_id, body=body)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ClusterNotFound', resp.json['error']['type'])
@@ -761,9 +732,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 
-        response = self.controller.action(req, tenant_id=self.project,
-                                          node_id=node_id,
-                                          body=body)
+        response = self.controller.action(req, node_id=node_id, body=body)
 
         mock_call.assert_called_once_with(
             req.context, ('node_leave', {'identity': node_id}))
@@ -781,7 +750,6 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action, req,
-                               tenant_id=self.project,
                                node_id=node_id, body=body)
 
         self.assertFalse(mock_call.called)
@@ -798,9 +766,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.action, req,
-                               tenant_id=self.project,
-                               node_id=node_id, body=body)
+                               self.controller.action,
+                               req, node_id=node_id, body=body)
 
         self.assertFalse(mock_call.called)
         self.assertEqual(400, ex.code)
@@ -816,9 +783,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.action, req,
-                               tenant_id=self.project,
-                               node_id=node_id, body=body)
+                               self.controller.action,
+                               req, node_id=node_id, body=body)
 
         self.assertFalse(mock_call.called)
         self.assertEqual(400, ex.code)
@@ -838,9 +804,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.action,
-                                              req, tenant_id=self.project,
-                                              node_id=node_id,
-                                              body=body)
+                                              req, node_id=node_id, body=body)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('NodeNotFound', resp.json['error']['type'])
@@ -862,8 +826,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.action,
-                                              req, tenant_id=self.project,
-                                              node_id=node_id)
+                                              req, node_id=node_id)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
@@ -876,7 +839,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.return_value = {'action': 'ACTIONID'}
 
-        res = self.controller.delete(req, tenant_id=self.project, node_id=nid)
+        res = self.controller.delete(req, node_id=nid)
         self.assertIsNone(res)
         mock_call.assert_called_with(
             req.context, ('node_delete', {'identity': nid, 'force': False}))
@@ -890,8 +853,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.return_value = None
         ex = self.assertRaises(exc.HTTPInternalServerError,
                                self.controller.delete,
-                               req, tenant_id=self.project,
-                               node_id=nid)
+                               req, node_id=nid)
         msg = _('Failed to delete the node: "%s"') % nid
         self.assertEqual(msg, six.text_type(ex))
 
@@ -902,8 +864,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.delete,
-                                              req, tenant_id=self.project,
-                                              node_id=nid)
+                                              req, node_id=nid)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
@@ -919,8 +880,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.delete,
-                                              req, tenant_id=self.project,
-                                              node_id=nid)
+                                              req, node_id=nid)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('NodeNotFound', resp.json['error']['type'])

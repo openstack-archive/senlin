@@ -36,77 +36,66 @@ class RoutesTest(base.SenlinTestCase):
     def test_profile_types_handling(self):
         self.assertRoute(
             self.m,
-            '/aaaa/profile-types',
+            '/profile-types',
             'GET',
             'index',
-            'ProfileTypeController',
-            {
-                'tenant_id': 'aaaa',
-            })
+            'ProfileTypeController')
 
         self.assertRoute(
             self.m,
-            '/aaaa/profile-types/test_type',
+            '/profile-types/test_type',
             'GET',
             'get',
             'ProfileTypeController',
             {
-                'tenant_id': 'aaaa',
                 'type_name': 'test_type'
             })
 
     def test_profile_handling(self):
         self.assertRoute(
             self.m,
-            '/aaaa/profiles',
+            '/profiles',
             'GET',
             'index',
-            'ProfileController',
-            {
-                'tenant_id': 'aaaa',
-            })
+            'ProfileController')
 
         self.assertRoute(
             self.m,
-            '/aaaa/profiles',
+            '/profiles',
             'POST',
             'create',
             'ProfileController',
             {
-                'tenant_id': 'aaaa',
                 'success': '201',
             })
 
         self.assertRoute(
             self.m,
-            '/aaaa/profiles/bbbb',
+            '/profiles/bbbb',
             'GET',
             'get',
             'ProfileController',
             {
-                'tenant_id': 'aaaa',
                 'profile_id': 'bbbb'
             })
 
         self.assertRoute(
             self.m,
-            '/aaaa/profiles/bbbb',
+            '/profiles/bbbb',
             'PATCH',
             'update',
             'ProfileController',
             {
-                'tenant_id': 'aaaa',
                 'profile_id': 'bbbb'
             })
 
         self.assertRoute(
             self.m,
-            '/aaaa/profiles/bbbb',
+            '/profiles/bbbb',
             'DELETE',
             'delete',
             'ProfileController',
             {
-                'tenant_id': 'aaaa',
                 'profile_id': 'bbbb',
                 'success': '204'
             })
@@ -114,77 +103,66 @@ class RoutesTest(base.SenlinTestCase):
     def test_policy_types_handling(self):
         self.assertRoute(
             self.m,
-            '/aaaa/policy-types',
+            '/policy-types',
             'GET',
             'index',
-            'PolicyTypeController',
-            {
-                'tenant_id': 'aaaa',
-            })
+            'PolicyTypeController')
 
         self.assertRoute(
             self.m,
-            '/aaaa/policy-types/test_type',
+            '/policy-types/test_type',
             'GET',
             'get',
             'PolicyTypeController',
             {
-                'tenant_id': 'aaaa',
                 'type_name': 'test_type'
             })
 
     def test_policy_handling(self):
         self.assertRoute(
             self.m,
-            '/aaaa/policies',
+            '/policies',
             'GET',
             'index',
-            'PolicyController',
-            {
-                'tenant_id': 'aaaa',
-            })
+            'PolicyController')
 
         self.assertRoute(
             self.m,
-            '/aaaa/policies',
+            '/policies',
             'POST',
             'create',
             'PolicyController',
             {
-                'tenant_id': 'aaaa',
                 'success': '201',
             })
 
         self.assertRoute(
             self.m,
-            '/aaaa/policies/bbbb',
+            '/policies/bbbb',
             'GET',
             'get',
             'PolicyController',
             {
-                'tenant_id': 'aaaa',
                 'policy_id': 'bbbb'
             })
 
         self.assertRoute(
             self.m,
-            '/aaaa/policies/bbbb',
+            '/policies/bbbb',
             'PATCH',
             'update',
             'PolicyController',
             {
-                'tenant_id': 'aaaa',
                 'policy_id': 'bbbb'
             })
 
         self.assertRoute(
             self.m,
-            '/aaaa/policies/bbbb',
+            '/policies/bbbb',
             'DELETE',
             'delete',
             'PolicyController',
             {
-                'tenant_id': 'aaaa',
                 'policy_id': 'bbbb',
                 'success': '204',
             })
@@ -192,68 +170,60 @@ class RoutesTest(base.SenlinTestCase):
     def test_cluster_collection(self):
         self.assertRoute(
             self.m,
-            '/aaaa/clusters',
+            '/clusters',
             'GET',
             'index',
-            'ClusterController',
-            {
-                'tenant_id': 'aaaa'
-            })
+            'ClusterController')
 
         self.assertRoute(
             self.m,
-            '/aaaa/clusters',
+            '/clusters',
             'POST',
             'create',
             'ClusterController',
             {
-                'tenant_id': 'aaaa',
                 'success': '202',
             })
 
         self.assertRoute(
             self.m,
-            '/aaaa/clusters/bbbb',
+            '/clusters/bbbb',
             'GET',
             'get',
             'ClusterController',
             {
-                'tenant_id': 'aaaa',
                 'cluster_id': 'bbbb'
             })
 
         self.assertRoute(
             self.m,
-            '/aaaa/clusters/bbbb',
+            '/clusters/bbbb',
             'PATCH',
             'update',
             'ClusterController',
             {
-                'tenant_id': 'aaaa',
                 'cluster_id': 'bbbb',
                 'success': '202',
             })
 
         self.assertRoute(
             self.m,
-            '/aaaa/clusters/bbbb/actions',
+            '/clusters/bbbb/actions',
             'POST',
             'action',
             'ClusterController',
             {
-                'tenant_id': 'aaaa',
                 'cluster_id': 'bbbb',
                 'success': '202',
             })
 
         self.assertRoute(
             self.m,
-            '/aaaa/clusters/bbbb',
+            '/clusters/bbbb',
             'DELETE',
             'delete',
             'ClusterController',
             {
-                'tenant_id': 'aaaa',
                 'cluster_id': 'bbbb',
                 'success': '202',
             })
@@ -261,68 +231,60 @@ class RoutesTest(base.SenlinTestCase):
     def test_node_collection(self):
         self.assertRoute(
             self.m,
-            '/aaaa/nodes',
+            '/nodes',
             'GET',
             'index',
-            'NodeController',
-            {
-                'tenant_id': 'aaaa',
-            })
+            'NodeController')
 
         self.assertRoute(
             self.m,
-            '/aaaa/nodes',
+            '/nodes',
             'POST',
             'create',
             'NodeController',
             {
-                'tenant_id': 'aaaa',
                 'success': '202'
             })
 
         self.assertRoute(
             self.m,
-            '/aaaa/nodes/bbbb',
+            '/nodes/bbbb',
             'GET',
             'get',
             'NodeController',
             {
-                'tenant_id': 'aaaa',
                 'node_id': 'bbbb',
             })
 
         self.assertRoute(
             self.m,
-            '/aaaa/nodes/bbbb',
+            '/nodes/bbbb',
             'PATCH',
             'update',
             'NodeController',
             {
-                'tenant_id': 'aaaa',
                 'node_id': 'bbbb',
                 'success': '202',
             })
 
         self.assertRoute(
             self.m,
-            '/aaaa/nodes/bbbb/actions',
+            '/nodes/bbbb/actions',
             'POST',
             'action',
             'NodeController',
             {
-                'tenant_id': 'aaaa',
                 'node_id': 'bbbb',
                 'success': '202',
             })
 
         self.assertRoute(
             self.m,
-            '/aaaa/nodes/bbbb',
+            '/nodes/bbbb',
             'DELETE',
             'delete',
             'NodeController',
             {
-                'tenant_id': 'aaaa',
                 'node_id': 'bbbb',
                 'success': '202',
             })
@@ -330,23 +292,21 @@ class RoutesTest(base.SenlinTestCase):
     def test_cluster_policy(self):
         self.assertRoute(
             self.m,
-            '/aaaa/clusters/bbbb/policies',
+            '/clusters/bbbb/policies',
             'GET',
             'index',
             'ClusterPolicyController',
             {
-                'tenant_id': 'aaaa',
                 'cluster_id': 'bbbb',
             })
 
         self.assertRoute(
             self.m,
-            '/aaaa/clusters/bbbb/policies/cccc',
+            '/clusters/bbbb/policies/cccc',
             'GET',
             'get',
             'ClusterPolicyController',
             {
-                'tenant_id': 'aaaa',
                 'cluster_id': 'bbbb',
                 'policy_id': 'cccc'
             })
@@ -354,44 +314,35 @@ class RoutesTest(base.SenlinTestCase):
     def test_action_collection(self):
         self.assertRoute(
             self.m,
-            '/aaaa/actions',
+            '/actions',
             'GET',
             'index',
-            'ActionController',
-            {
-                'tenant_id': 'aaaa',
-            })
+            'ActionController')
 
         self.assertRoute(
             self.m,
-            '/aaaa/actions',
+            '/actions',
             'POST',
             'create',
             'ActionController',
             {
-                'tenant_id': 'aaaa',
                 'success': '201',
             })
 
         self.assertRoute(
             self.m,
-            '/aaaa/actions/bbbb',
+            '/actions/bbbb',
             'GET',
             'get',
             'ActionController',
             {
-                'tenant_id': 'aaaa',
                 'action_id': 'bbbb'
             })
 
     def test_build_info(self):
         self.assertRoute(
             self.m,
-            '/aaaa/build-info',
+            '/build-info',
             'GET',
             'build_info',
-            'BuildInfoController',
-            {
-                'tenant_id': 'aaaa',
-            }
-        )
+            'BuildInfoController')

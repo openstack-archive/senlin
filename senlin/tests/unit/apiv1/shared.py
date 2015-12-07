@@ -113,8 +113,7 @@ class ControllerTest(object):
             rule = "%s:%s" % (self.controller.REQUEST_SCOPE, self.action)
             self.mock_enforce.assert_called_with(
                 context=self.context,
-                target={'project': self.context.project},
-                rule=rule)
+                target={}, rule=rule)
             self.assertEqual(self.expected_request_count,
                              len(self.mock_enforce.call_args_list))
         super(ControllerTest, self).tearDown()

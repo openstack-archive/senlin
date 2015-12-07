@@ -35,7 +35,7 @@ class BuildInfoControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call.return_value = '12.34'
 
-        result = self.controller.build_info(req, tenant_id=self.project)
+        result = self.controller.build_info(req)
         response = result['build_info']
         self.assertIn('api', response)
         self.assertIn('engine', response)
@@ -56,7 +56,7 @@ class BuildInfoControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.return_value = 'engine_revision'
         mock_conf.revision = {'senlin_api_revision': 'test'}
 
-        result = self.controller.build_info(req, tenant_id=self.project)
+        result = self.controller.build_info(req)
         response = result['build_info']
         self.assertEqual('test', response['api']['revision'])
         mock_call.assert_called_once_with(req.context,
@@ -68,6 +68,6 @@ class BuildInfoControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.build_info,
-                                              req, tenant_id=self.project)
+                                              req)
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))

@@ -66,7 +66,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
 
-        resp = self.controller.index(req, tenant_id=self.project)
+        resp = self.controller.index(req)
 
         kwargs = {'limit': None, 'marker': None, 'filters': None,
                   'sort_keys': None, 'sort_dir': None,
@@ -92,7 +92,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=[])
 
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
 
         rpc_call_args, w = mock_call.call_args
         engine_args = rpc_call_args[1][1]
@@ -113,7 +113,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/events', params=params)
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
 
         call_args, w = mock_call.call_args
         call_args = call_args[1][1]
@@ -126,7 +126,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/events', params=params)
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
 
         call_args, w = mock_call.call_args
         call_args = call_args[1][1]
@@ -140,8 +140,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(senlin_exc.InvalidParameter,
-                               self.controller.index, req,
-                               tenant_id=self.project)
+                               self.controller.index, req)
 
         self.assertEqual("Invalid value 'No' specified for 'global_project'",
                          six.text_type(ex))
@@ -154,8 +153,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(senlin_exc.InvalidParameter,
-                               self.controller.index, req,
-                               tenant_id=self.project)
+                               self.controller.index, req)
 
         self.assertEqual("Invalid value 'not-int' specified for 'limit'",
                          six.text_type(ex))
@@ -175,7 +173,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=[])
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
@@ -197,7 +195,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/events', params=params)
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
 
         call_args, w = mock_call.call_args
         call_args = call_args[1][1]
@@ -210,7 +208,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/events', params=params)
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        self.controller.index(req, tenant_id=self.project)
+        self.controller.index(req)
 
         call_args, w = mock_call.call_args
         call_args = call_args[1][1]
@@ -224,8 +222,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(senlin_exc.InvalidParameter,
-                               self.controller.index, req,
-                               tenant_id=self.project)
+                               self.controller.index, req)
 
         self.assertEqual("Invalid value 'Okay' specified for 'show_deleted'",
                          six.text_type(ex))
@@ -237,7 +234,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.index,
-                                              req, tenant_id=self.project)
+                                              req)
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
@@ -264,8 +261,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
-        response = self.controller.get(req, tenant_id=self.project,
-                                       event_id=event_id)
+        response = self.controller.get(req, event_id=event_id)
 
         mock_call.assert_called_once_with(
             req.context, ('event_get', {'identity': event_id}))
@@ -284,8 +280,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,
-                                              req, tenant_id=self.project,
-                                              event_id=event_id)
+                                              req, event_id=event_id)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('EventNotFound', resp.json['error']['type'])
@@ -297,8 +292,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,
-                                              req, tenant_id=self.project,
-                                              event_id=event_id)
+                                              req, event_id=event_id)
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
