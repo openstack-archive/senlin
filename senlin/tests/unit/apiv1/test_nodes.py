@@ -469,6 +469,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         nid = 'aaaa-bbbb-cccc'
         body = {
             'node': {
+                'id': nid,
                 'name': 'test_node',
                 'profile_id': 'xxxx-yyyy',
                 'role': None,
@@ -476,9 +477,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
 
-        engine_response = {
-            'action': 'this-is-the-node-update-action',
-        }
+        engine_response = body['node']
 
         req = self._patch('/nodes/%(node_id)s' % {'node_id': nid},
                           json.dumps(body))
@@ -486,7 +485,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 
-        self.controller.update(req, node_id=nid, body=body)
+        res = self.controller.update(req, node_id=nid, body=body)
 
         mock_call.assert_called_with(
             req.context,
@@ -498,6 +497,11 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'metadata': {},
             })
         )
+        result = {
+            'node': body['node'],
+            'location': '/nodes/%s' % nid,
+        }
+        self.assertEqual(result, res)
 
     def test_node_update_malformed_request(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)

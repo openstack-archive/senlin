@@ -160,10 +160,13 @@ class NodeController(object):
         role = node_data.get(consts.NODE_ROLE, None)
         metadata = node_data.get(consts.NODE_METADATA, None)
 
-        self.rpc_client.node_update(req.context, node_id, name, profile_id,
-                                    role, metadata)
-        # TODO(xuhaiwei): update method's response should return 'body'
-        # TODO(xuhaiwei): put resource url into response header
+        node = self.rpc_client.node_update(req.context, node_id, name,
+                                           profile_id, role, metadata)
+        result = {
+            'node': node,
+            'location': '/nodes/%s' % node['id'],
+        }
+        return result
 
     @util.policy_enforce
     def action(self, req, node_id, body=None):
