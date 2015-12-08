@@ -33,20 +33,23 @@ dynamically.
 A policy type implementation dictates which fields are required, which fields
 are optional and sometimes the constraints on field values. When a
 :term:`policy` is created by referencing this policy type, the fields are
-assigned with concrete values. For example, a policy type ``DeletionPolicy``
-conceptually specifies the properties required::
+assigned with concrete values. For example, a policy type
+``senlin.policy.deletion`` conceptually specifies the properties required::
 
   criteria: String # valid values - OLDEST_FIRST, YOUNGEST_FIRST, RANDOM
   destroy_after_deletion: Boolean
   grace_period: Integer
   reduce_desired_capacity: Boolean
 
-A policy object of this policy type may look like following::
+The speci of a policy object of this policy type may look like following::
 
-  criteria: OLDEST_FIRST
-  distroy_after_deletion: True
-  grace_period: 120
-  reduce_desired_capacity: True
+  type: senlin.policy.deletion
+  version: 1.0
+  properties:
+    criteria: OLDEST_FIRST
+    distroy_after_deletion: True
+    grace_period: 120
+    reduce_desired_capacity: True
 
 
 Listing Policy Types
@@ -70,17 +73,17 @@ of policy types using the following command::
 The output is a list of policy types supported by the Senlin server.
 
 
-Showing Policy Schema
-~~~~~~~~~~~~~~~~~~~~~
+Showing Policy Details
+~~~~~~~~~~~~~~~~~~~~~~
 
 Each :term:`Policy Type` has a schema for its *spec* (i.e. specification)
 that describes the names and types of the properties that can be accepted. To
-show the schema of a specific policy type, you can use the following
-command::
+show the schema of a specific policy type along with other properties, you can
+use the following command::
 
-  $ senlin policy-type-schema senlin.policy.deletion
-  policy_type: senlin.policy.deletion
-  spec:
+  $ senlin policy-type-show senlin.policy.deletion
+  name: senlin.policy.deletion
+  schema:
     criteria:
       constraints:
       - constraint:
@@ -124,11 +127,11 @@ Here, each property has the following attributes:
   property usually doesn't have a ``default`` value.
 - ``type``: one of ``String``, ``Integer``, ``Boolean``, ``Map`` or ``List``.
 
-The default output from the :command:`policy-type-schema` command is in YAML
+The default output from the :command:`policy-type-show` command is in YAML
 format. You can choose to show the spec schema in JSON format by specifying
 the the :option:`-F json` option as shown below::
 
-  $ senlin policy-type-schema -F json senlin.policy.deletion
+  $ senlin policy-type-show -F json senlin.policy.deletion
 
 For information on how to manage the relationship between a policy and a
 cluster, please refer to :ref:`guide-bindings`.
