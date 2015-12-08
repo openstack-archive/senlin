@@ -711,7 +711,6 @@ class Resource(object):
         action_args = self.get_action_args(request.environ)
         action = action_args.pop('action', None)
         status_code = action_args.pop('success', None)
-        project = action_args.get('tenant_id', None)
 
         try:
             deserialized_request = self.dispatch(self.deserializer,
@@ -764,7 +763,7 @@ class Resource(object):
             if action_result and isinstance(action_result, dict):
                 location = action_result.pop('location', None)
                 if location:
-                    response.location = '/v1/%s%s' % (project, location)
+                    response.location = '/v1%s' % location
             self.dispatch(serializer, action, response, action_result)
             return response
 
