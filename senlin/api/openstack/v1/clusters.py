@@ -271,9 +271,12 @@ class ClusterController(object):
         if strict is not None:
             strict = utils.parse_bool_param('strict', strict)
 
-        return self.rpc_client.cluster_resize(req.context, cluster_id,
-                                              adj_type, number, min_size,
-                                              max_size, min_step, strict)
+        result = self.rpc_client.cluster_resize(req.context, cluster_id,
+                                                adj_type, number, min_size,
+                                                max_size, min_step, strict)
+        location = {'location': '/actions/%s' % result['action']}
+        result.update(location)
+        return result
 
     def _sanitize_policy(self, data):
         """Validate dict body of policy attach or update.

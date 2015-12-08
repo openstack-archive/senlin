@@ -1069,7 +1069,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'strict': True
             }
         }
-        eng_resp = {'action': {'id': 'action-id', 'target': cid}}
+        eng_resp = {'action': 'action-id'}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
                         'cluster_id': cid}, json.dumps(body))
@@ -1091,7 +1091,11 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'strict': True
             })
         )
-        self.assertEqual(eng_resp, resp)
+        result = {
+            'action': 'action-id',
+            'location': '/actions/action-id',
+        }
+        self.assertEqual(result, resp)
 
     def test_cluster_action_resize_with_exact_capacity(self, mock_enforce):
         self._test_cluster_action_resize_with_types('EXACT_CAPACITY',
