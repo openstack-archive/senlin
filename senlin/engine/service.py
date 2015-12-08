@@ -1175,7 +1175,7 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Node delete action is queued: %s."), action.id)
 
-        return {'action': action.id}
+        return db_node.id
 
     @request_context
     def node_join(self, context, identity, cluster_id):

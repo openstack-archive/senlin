@@ -196,12 +196,10 @@ class NodeController(object):
     @util.policy_enforce
     def delete(self, req, node_id):
         force = 'force' in req.params
-        action = self.rpc_client.node_delete(req.context, node_id, force=force,
-                                             cast=False)
-        if not action:
-            msg = _('Failed to delete the node: "%s"') % node_id
-            raise exc.HTTPInternalServerError(msg)
-        # TODO(xuhaiwei): put action information into response header
+        node = self.rpc_client.node_delete(req.context, node_id, force=force,
+                                           cast=False)
+        result = {'location': '/nodes/%s' % node}
+        return result
 
 
 def create_resource(options):
