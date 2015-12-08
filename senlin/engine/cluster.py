@@ -18,6 +18,7 @@ from senlin.common import consts
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
+from senlin.common import utils
 from senlin.db import api as db_api
 from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import event as event_mod
@@ -218,9 +219,6 @@ class Cluster(object):
             yield cluster
 
     def to_dict(self):
-        def _fmt_time(value):
-            return value and value.isoformat()
-
         info = {
             'id': self.id,
             'name': self.name,
@@ -229,10 +227,10 @@ class Cluster(object):
             'project': self.project,
             'domain': self.domain,
             'parent': self.parent,
-            'init_time': _fmt_time(self.init_time),
-            'created_time': _fmt_time(self.created_time),
-            'updated_time': _fmt_time(self.updated_time),
-            'deleted_time': _fmt_time(self.deleted_time),
+            'init_time': utils.format_time(self.init_time),
+            'created_time': utils.format_time(self.created_time),
+            'updated_time': utils.format_time(self.updated_time),
+            'deleted_time': utils.format_time(self.deleted_time),
             'min_size': self.min_size,
             'max_size': self.max_size,
             'desired_capacity': self.desired_capacity,

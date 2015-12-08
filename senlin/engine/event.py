@@ -17,6 +17,7 @@ from oslo_utils import timeutils
 
 from senlin.common import exception
 from senlin.common import i18n
+from senlin.common import utils
 from senlin.db import api as db_api
 
 _LC = i18n._LC
@@ -153,12 +154,10 @@ class Event(object):
         return cls(timestamp, level, kwargs)
 
     def to_dict(self):
-        def _fmt_time(value):
-            return value and value.isoformat()
         evt = {
             'id': self.id,
             'level': self.level,
-            'timestamp': _fmt_time(self.timestamp),
+            'timestamp': utils.format_time(self.timestamp),
             'obj_type': self.obj_type,
             'obj_id': self.obj_id,
             'obj_name': self.obj_name,
@@ -168,7 +167,7 @@ class Event(object):
             'action': self.action,
             'status': self.status,
             'status_reason': self.status_reason,
-            'deleted_time': _fmt_time(self.deleted_time),
+            'deleted_time': utils.format_time(self.deleted_time),
             'metadata': self.metadata,
         }
         return evt

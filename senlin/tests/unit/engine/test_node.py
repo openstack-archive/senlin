@@ -16,6 +16,7 @@ import six
 from oslo_utils import timeutils
 
 from senlin.common import exception
+from senlin.common import utils as common_utils
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import event as eventm
 from senlin.engine import node as nodem
@@ -205,9 +206,6 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual(node2.id, nodes[1].id)
 
     def test_node_to_dict(self):
-        def _fmt_time(value):
-            return value and value.isoformat()
-
         node = self._create_node('NODE1')
         self.assertIsNotNone(node.id)
         expected = {
@@ -221,10 +219,10 @@ class TestNode(base.SenlinTestCase):
             'domain': node.domain,
             'index': node.index,
             'role': node.role,
-            'init_time': _fmt_time(node.init_time),
-            'created_time': _fmt_time(node.created_time),
-            'updated_time': _fmt_time(node.updated_time),
-            'deleted_time': _fmt_time(node.deleted_time),
+            'init_time': common_utils.format_time(node.init_time),
+            'created_time': common_utils.format_time(node.created_time),
+            'updated_time': common_utils.format_time(node.updated_time),
+            'deleted_time': common_utils.format_time(node.deleted_time),
             'status': node.status,
             'status_reason': node.status_reason,
             'data': node.data,

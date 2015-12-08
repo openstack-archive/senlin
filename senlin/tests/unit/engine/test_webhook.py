@@ -17,7 +17,7 @@ import six
 
 from senlin.common import exception
 from senlin.common.i18n import _
-from senlin.common import utils as encrypt_utils
+from senlin.common import utils as common_utils
 from senlin.db.sqlalchemy import api as db_api
 from senlin.drivers.openstack import keystone_v3 as ksdriver
 from senlin.engine import webhook as webhook_mod
@@ -227,7 +227,7 @@ class TestWebhook(base.SenlinTestCase):
             'action': webhook.action,
             'credential': webhook.credential,
             'params': webhook.params,
-            'created_time': webhook.created_time.isoformat(),
+            'created_time': common_utils.format_time(webhook.created_time),
             'deleted_time': webhook.deleted_time,
         }
 
@@ -314,7 +314,7 @@ class TestWebhook(base.SenlinTestCase):
                                       'test-action', **kwargs)
 
         key = webhook.encrypt_credential()
-        cdata = encrypt_utils.decrypt(webhook.credential, key)
+        cdata = common_utils.decrypt(webhook.credential, key)
         credential = jsonutils.loads(cdata)
         self.assertEqual('abc', credential['password'])
 

@@ -17,6 +17,7 @@ import six
 from senlin.common import context as senlin_ctx
 from senlin.common import exception
 from senlin.common import schema
+from senlin.common import utils as common_utils
 from senlin.db import api as db_api
 from senlin.engine import environment
 from senlin.engine import parser
@@ -292,7 +293,7 @@ class TestPolicyBase(base.SenlinTestCase):
             'level': policy.level,
             'cooldown': policy.cooldown,
             'data': policy.data,
-            'created_time': policy.created_time.isoformat(),
+            'created_time': common_utils.format_time(policy.created_time),
             'updated_time': None,
             'deleted_time': None,
         }

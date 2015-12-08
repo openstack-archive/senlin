@@ -184,12 +184,6 @@ class Node(object):
         return [cls._from_db_record(context, record) for record in records]
 
     def to_dict(self):
-        def _fmt_time(value):
-            if value:
-                value = value.replace(microsecond=0)
-                value = value.isoformat()
-            return value
-
         node_dict = {
             'id': self.id,
             'name': self.name,
@@ -201,10 +195,10 @@ class Node(object):
             'domain': self.domain,
             'index': self.index,
             'role': self.role,
-            'init_time': _fmt_time(self.init_time),
-            'created_time': _fmt_time(self.created_time),
-            'updated_time': _fmt_time(self.updated_time),
-            'deleted_time': _fmt_time(self.deleted_time),
+            'init_time': utils.format_time(self.init_time),
+            'created_time': utils.format_time(self.created_time),
+            'updated_time': utils.format_time(self.updated_time),
+            'deleted_time': utils.format_time(self.deleted_time),
             'status': self.status,
             'status_reason': self.status_reason,
             'data': self.data,

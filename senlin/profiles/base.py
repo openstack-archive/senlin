@@ -20,6 +20,7 @@ from senlin.common import context
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import schema
+from senlin.common import utils
 from senlin.db import api as db_api
 from senlin.engine import environment
 
@@ -298,9 +299,6 @@ class Profile(object):
         return NotImplemented
 
     def to_dict(self):
-        def _fmt_time(value):
-            return value and value.isoformat()
-
         pb_dict = {
             'id': self.id,
             'name': self.name,
@@ -311,9 +309,9 @@ class Profile(object):
             'permission': self.permission,
             'spec': self.spec,
             'metadata': self.metadata,
-            'created_time': _fmt_time(self.created_time),
-            'updated_time': _fmt_time(self.updated_time),
-            'deleted_time': _fmt_time(self.deleted_time),
+            'created_time': utils.format_time(self.created_time),
+            'updated_time': utils.format_time(self.updated_time),
+            'deleted_time': utils.format_time(self.deleted_time),
         }
         return pb_dict
 
