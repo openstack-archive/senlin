@@ -538,16 +538,9 @@ class NodeTest(base.SenlinTestCase):
         nodeid = node['id']
 
         result = self.eng.node_delete(self.ctx, nodeid)
-        self.assertIsNotNone(result)
+        self.assertEqual(nodeid, result)
 
         # verify action is fired
-        action_id = result['action']
-        action = self.eng.action_get(self.ctx, action_id)
-        self._verify_action(action, 'NODE_DELETE',
-                            'node_delete_%s' % node['id'][:8],
-                            node['id'],
-                            cause=action_mod.CAUSE_RPC)
-
         expected_call = mock.call(action_id=mock.ANY)
 
         # two calls: one for create, the other for delete
