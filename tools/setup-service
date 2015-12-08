@@ -36,14 +36,11 @@ if [[ -z $SERVICE_ID ]]; then
 fi
 
 openstack endpoint create \
+  --adminurl "http://$HOST:$PORT" \
+  --publicurl "http://$HOST:$PORT" \
+  --internalurl "http://$HOST:$PORT" \
   --region RegionOne \
-  senlin admin "http://$HOST:$PORT"
-openstack endpoint create \
-  --region RegionOne \
-  senlin public "http://$HOST:$PORT"
-openstack endpoint create \
-  --region RegionOne \
-  senlin internal "http://$HOST:$PORT"
+  senlin
 
 openstack user create \
   --password "$SVC_PASSWD" \
