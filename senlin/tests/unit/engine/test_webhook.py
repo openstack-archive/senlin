@@ -328,7 +328,7 @@ class TestWebhook(base.SenlinTestCase):
             'id': 'SENLIN_SERVICE_ID'
         }
         mock_endpoint_get.return_value = {
-            'url': 'HTTP://HOST_IP:PORT/V1/$(tenant_id)s'
+            'url': 'HTTP://HOST_IP:PORT'
         }
 
         kwargs = {
@@ -348,10 +348,9 @@ class TestWebhook(base.SenlinTestCase):
         key = 'test-key'
         res1, res2 = webhook.generate_url(key)
 
-        expected_url = _('HTTP://HOST_IP:PORT/V1/%(tenant_id)s/webhooks/'
+        expected_url = _('HTTP://HOST_IP:PORT/v1/webhooks/'
                          '%(webhook_id)s/trigger?key=%(key)s'
-                         ) % {'tenant_id': 'test-project',
-                              'webhook_id': webhook.id,
+                         ) % {'webhook_id': webhook.id,
                               'key': six.text_type(key)}
         self.assertEqual(expected_url, res1)
         self.assertEqual(key, res2)

@@ -38,14 +38,14 @@ class WebhookMiddleware(wsgi.Middleware):
         if req.method != 'POST':
             return
 
-        # Extract project, webhook ID and key
+        # Extract webhook ID and key
         results = self._parse_url(req.url)
         if not results:
             return
 
-        (project, webhook_id, key) = results
+        (webhook_id, key) = results
 
-        credential = self._get_credential(project, webhook_id, key)
+        credential = self._get_credential(webhook_id, key)
         if not credential:
             return
 
@@ -69,28 +69,29 @@ class WebhookMiddleware(wsgi.Middleware):
         """
         parts = urlparse.urlparse(url)
         components = parts.path.split('/')
-        if len(components) < 6:
+        if len(components) < 5:
             return None
 
-        if any((components[0] != '', components[3] != 'webhooks',
-                components[5] != 'trigger')):
+        if any((components[0] != '', components[2] != 'webhooks',
+                components[4] != 'trigger')):
             return None
 
         qs = urlparse.parse_qs(parts.query)
         if 'key' not in qs:
             return None
 
-        return components[2], components[4], qs['key'][0]
+        return components[3], qs['key'][0]
 
-    def _get_credential(self, project, webhook_id, key):
+    def _get_credential(self, webhook_id, key):
         """Get credential for the given webhook using the provided key.
 
         :param webhook_id: ID of the webhook.
         :param key: The key string to be used for decryption.
         """
         # Build a dummy RequestContext for DB APIs
-        dbctx = context.RequestContext(is_admin=True, project=project)
-        webhook = webhook_mod.Webhook.load(dbctx, webhook_id)
+        dbctx = context.RequestContext(is_admin=True)
+        webhook = webhook_mod.Webhook.load(dbctx, webhook_id,
+                                           project_safe=False)
         credential = webhook.credential
         # Decrypt the credential using provided key
         try:

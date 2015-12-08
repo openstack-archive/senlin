@@ -205,9 +205,9 @@ class Webhook(object):
                               'interface': 'public'}
             raise exception.ResourceNotFound(resource=resource)
 
-        endpoint_url = endpoint['url'].replace('$(tenant_id)s', self.project)
-        location = endpoint_url + '/webhooks/%s/trigger' % self.id
-        location += "?%s" % parse.urlencode({'key': key})
+        location = "".join([endpoint['url'],
+                            '/v1/webhooks/%s/trigger' % self.id,
+                            '?%s' % parse.urlencode({'key': key})])
 
         return location, key
 

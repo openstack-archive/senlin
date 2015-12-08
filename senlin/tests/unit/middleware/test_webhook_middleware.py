@@ -33,13 +33,12 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         self.middleware = webhook_middleware.WebhookMiddleware(None)
 
         self.url_slices = {
-            '00_url_base': 'http://HOST_IP:PORT/v1/',
-            '01_tenant_id': 'TENANT_ID',
-            '02_webhook_str': '/webhooks/',
-            '03_webhook_id': 'WEBHOOK_ID',
-            '04_trigger_str': '/trigger?',
-            '05_key_str': 'key=',
-            '06_key': 'TEST_KEY',
+            '00_url_base': 'http://HOST_IP:PORT/v1',
+            '01_webhook_str': '/webhooks/',
+            '02_webhook_id': 'WEBHOOK_ID',
+            '03_trigger_str': '/trigger?',
+            '04_key_str': 'key=',
+            '05_key': 'TEST_KEY',
         }
         self.credential = {
             'auth_url': 'TEST_URL',
@@ -54,35 +53,35 @@ class TestWebhookMiddleware(base.SenlinTestCase):
     def test_parse_url(self):
         # Get webhook_id correctly
         res = self.middleware._parse_url(self._generate_url())
-        self.assertEqual(('TENANT_ID', 'WEBHOOK_ID', 'TEST_KEY'), res)
+        self.assertEqual(('WEBHOOK_ID', 'TEST_KEY'), res)
 
     def test_parse_url_webhooks_not_found(self):
         # String 'webhooks' is not found in url
-        self.url_slices['02_webhook_str'] = '/foo/'
+        self.url_slices['01_webhook_str'] = '/foo/'
         res = self.middleware._parse_url(self._generate_url())
         self.assertIsNone(res)
 
     def test_parse_url_trigger_not_found(self):
         # String 'trigger' is not found in url
-        self.url_slices['04_trigger_str'] = '/foo?'
+        self.url_slices['03_trigger_str'] = '/foo?'
         res = self.middleware._parse_url(self._generate_url())
         self.assertIsNone(res)
 
     def test_parse_url_illegal_format(self):
         # The structure /<webhook_id>/trigger?key=value is not matched
-        self.url_slices['04_trigger_str'] = 'trigger?'
+        self.url_slices['03_trigger_str'] = 'trigger?'
         res = self.middleware._parse_url(self._generate_url())
         self.assertIsNone(res)
 
     def test_parse_url_no_trigger_word(self):
         # Bottom string of the url does not start with 'trigger'
-        self.url_slices['04_trigger_str'] = '/foo-trigger?'
+        self.url_slices['03_trigger_str'] = '/foo-trigger?'
         res = self.middleware._parse_url(self._generate_url())
         self.assertIsNone(res)
 
     def test_parse_url_no_key_provided(self):
         # Bottom string of the url does not start with 'trigger'
-        self.url_slices['05_key_str'] = 'secret='
+        self.url_slices['04_key_str'] = 'secret='
         res = self.middleware._parse_url(self._generate_url())
         self.assertIsNone(res)
 
@@ -103,8 +102,7 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         webhook.store(self.ctx)
 
         # User credential can be got correctly if valid key is provided
-        res = self.middleware._get_credential(self.ctx.project,
-                                              webhook.id, key)
+        res = self.middleware._get_credential(webhook.id, key)
         self.assertEqual('123', res['user_id'])
         self.assertEqual('abc', res['password'])
         self.assertEqual('TEST_URL', res['auth_url'])
@@ -127,7 +125,7 @@ class TestWebhookMiddleware(base.SenlinTestCase):
 
         # Credential getting failed for invalid key provided
         self.assertRaises(exception.Forbidden, self.middleware._get_credential,
-                          self.ctx.project, webhook.id, 'fake-key')
+                          webhook.id, 'fake-key')
 
     @mock.patch.object(driver_base, 'SenlinDriver')
     def test_get_token_succeeded(self, mock_senlindriver):
@@ -168,7 +166,7 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         cfg.CONF.set_override('service_password', 'PASSWORD',
                               group='authentication', enforce_type=True)
 
-        fake_return = ('TENANT', 'WEBHOOK', 'FAKE_KEY')
+        fake_return = ('WEBHOOK', 'FAKE_KEY')
         mock_extract = self.patchobject(self.middleware, '_parse_url',
                                         return_value=fake_return)
         mock_cred = self.patchobject(self.middleware, '_get_credential',
@@ -180,7 +178,7 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         self.assertIsNone(res)
         self.assertEqual('FAKE_TOKEN', req.headers['X-Auth-Token'])
         mock_extract.assert_called_once_with('http://url1')
-        mock_cred.assert_called_once_with('TENANT', 'WEBHOOK', 'FAKE_KEY')
+        mock_cred.assert_called_once_with('WEBHOOK', 'FAKE_KEY')
         mock_token.assert_called_once_with(
             auth_url='AUTH_URL', password='PASSWORD', username='USERNAME',
             KEY='VAL', user_domain_name='DOMAIN')
@@ -212,7 +210,7 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         req.url = 'http://url1'
         req.params = {'key': 'FAKE_KEY'}
         req.headers = {}
-        fake_return = ('TENANT_ID', 'WEBHOOK_ID', 'TEST_KEY')
+        fake_return = ('WEBHOOK_ID', 'TEST_KEY')
         mock_extract = self.patchobject(self.middleware, '_parse_url',
                                         return_value=fake_return)
         mock_cred = self.patchobject(self.middleware, '_get_credential',
@@ -221,6 +219,5 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         res = self.middleware.process_request(req)
         self.assertIsNone(res)
         mock_extract.assert_called_once_with(req.url)
-        mock_cred.assert_called_once_with('TENANT_ID', 'WEBHOOK_ID',
-                                          'TEST_KEY')
+        mock_cred.assert_called_once_with('WEBHOOK_ID', 'TEST_KEY')
         self.assertNotIn('X-Auth-Token', req.headers)
