@@ -764,6 +764,8 @@ class Resource(object):
                 location = action_result.pop('location', None)
                 if location:
                     response.location = '/v1%s' % location
+                if not action_result:
+                    action_result = None
             self.dispatch(serializer, action, response, action_result)
             return response
 

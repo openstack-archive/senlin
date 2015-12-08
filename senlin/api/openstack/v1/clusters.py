@@ -390,11 +390,11 @@ class ClusterController(object):
 
     @util.policy_enforce
     def delete(self, req, cluster_id):
-        action = self.rpc_client.cluster_delete(req.context,
-                                                cluster_id,
-                                                cast=False)
-        if not action:
-            raise exc.HTTPInternalServerError(_('Failed deleting cluster.'))
+        cluster = self.rpc_client.cluster_delete(req.context,
+                                                 cluster_id,
+                                                 cast=False)
+        result = {'location': '/clusters/%s' % cluster}
+        return result
 
 
 def create_resource(options):

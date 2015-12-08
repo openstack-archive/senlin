@@ -654,18 +654,8 @@ class ClusterTest(base.SenlinTestCase):
         cid = c['id']
 
         result = self.eng.cluster_delete(self.ctx, cid)
-        self.assertIsNotNone(result)
-
-        # verify action is fired
-        action_id = result['action']
-        action = self.eng.action_get(self.ctx, action_id)
-        self._verify_action(action, 'CLUSTER_DELETE',
-                            'cluster_delete_%s' % c['id'][:8],
-                            c['id'],
-                            cause=action_mod.CAUSE_RPC)
-
+        self.assertEqual(cid, result)
         expected_call = mock.call(action_id=mock.ANY)
-
         # two calls: one for create, the other for delete
         notify.assert_has_calls([expected_call] * 2)
 
