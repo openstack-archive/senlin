@@ -494,16 +494,8 @@ class NodeTest(base.SenlinTestCase):
 
         result = self.eng.node_update(self.ctx, node['id'],
                                       profile_id=new_profile['id'])
-
-        action_id = result['action']
-        action = self.eng.action_get(self.ctx, action_id)
-        self._verify_action(action, 'NODE_UPDATE',
-                            'node_update_%s' % node['id'][:8],
-                            node['id'],
-                            cause=action_mod.CAUSE_RPC,
-                            inputs={'new_profile_id': new_profile['id']})
-
-        notify.assert_called_once_with(action_id=action_id)
+        del node['action']
+        self.assertEqual(node, result)
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_node_update_profile_not_found(self, notify):
