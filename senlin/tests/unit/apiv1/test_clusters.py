@@ -900,7 +900,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
 
-        eng_resp = {'action': {'id': 'action-id', 'target': cid}}
+        eng_resp = {'action': 'action-id'}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
                         'cluster_id': cid}, json.dumps(body))
@@ -916,7 +916,11 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'identity': cid, 'nodes': ['xxxx-yyyy-zzzz'],
             })
         )
-        self.assertEqual(eng_resp, resp)
+        result = {
+            'action': 'action-id',
+            'location': '/actions/action-id',
+        }
+        self.assertEqual(result, resp)
 
     def test_cluster_action_add_nodes_none(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -982,7 +986,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
 
-        eng_resp = {'action': {'id': 'action-id', 'target': cid}}
+        eng_resp = {'action': 'action-id'}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
                         'cluster_id': cid}, json.dumps(body))
@@ -998,7 +1002,11 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'identity': cid, 'nodes': ['xxxx-yyyy-zzzz'],
             })
         )
-        self.assertEqual(eng_resp, resp)
+        result = {
+            'action': 'action-id',
+            'location': '/actions/action-id',
+        }
+        self.assertEqual(result, resp)
 
     def test_cluster_action_del_nodes_none(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -1452,7 +1460,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'aaaa-bbbb-cccc'
         body = {'policy_attach': {'policy_id': 'xxxx-yyyy'}}
 
-        eng_resp = {'action': {'id': 'action-id', 'target': cid}}
+        eng_resp = {'action': 'action-id'}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
                         'cluster_id': cid}, json.dumps(body))
@@ -1470,7 +1478,11 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'priority': 50,
             })
         )
-        self.assertEqual(eng_resp, resp)
+        result = {
+            'action': 'action-id',
+            'location': '/actions/action-id',
+        }
+        self.assertEqual(result, resp)
 
     def test_cluster_action_attach_policy_with_fields(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -1483,7 +1495,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'enabled': False,
         }}
 
-        eng_resp = {'action': {'id': 'action-id', 'target': cid}}
+        eng_resp = {'action': 'action-id'}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
                         'cluster_id': cid}, json.dumps(body))
@@ -1501,7 +1513,11 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'priority': 40,
             })
         )
-        self.assertEqual(eng_resp, resp)
+        result = {
+            'action': 'action-id',
+            'location': '/actions/action-id',
+        }
+        self.assertEqual(result, resp)
 
     def test_cluster_action_attach_policy_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -1526,7 +1542,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'aaaa-bbbb-cccc'
         body = {'policy_detach': {'policy_id': 'xxxx-yyyy'}}
 
-        eng_resp = {'action': {'id': 'action-id', 'target': cid}}
+        eng_resp = {'action': 'action-id'}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
                         'cluster_id': cid}, json.dumps(body))
@@ -1542,7 +1558,11 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'identity': cid, 'policy': 'xxxx-yyyy',
             })
         )
-        self.assertEqual(eng_resp, resp)
+        result = {
+            'action': 'action-id',
+            'location': '/actions/action-id',
+        }
+        self.assertEqual(result, resp)
 
     def test_cluster_action_detach_policy_not_specified(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -1583,7 +1603,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'priority': 99,
         }}
 
-        eng_resp = {'action': {'id': 'action-id', 'target': cid}}
+        eng_resp = {'action': 'action-id'}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
                         'cluster_id': cid}, json.dumps(body))
@@ -1601,7 +1621,11 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'cooldown': None,
             })
         )
-        self.assertEqual(eng_resp, resp)
+        result = {
+            'action': 'action-id',
+            'location': '/actions/action-id',
+        }
+        self.assertEqual(result, resp)
 
     def test_cluster_action_update_policy_invalid_values(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)

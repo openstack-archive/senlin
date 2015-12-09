@@ -389,6 +389,8 @@ class ClusterController(object):
             data = self._sanitize_policy(raw_data)
             res = self.rpc_client.cluster_policy_update(req.context,
                                                         cluster_id, **data)
+        location = {'location': '/actions/%s' % res['action']}
+        res.update(location)
         return res
 
     @util.policy_enforce
