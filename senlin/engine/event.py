@@ -181,8 +181,10 @@ def critical(context, entity, action, status=None, status_reason=None,
                   action=action, status=status, status_reason=status_reason,
                   user=context.user, project=context.project)
     event.store(context)
-    LOG.critical(_LC('%(name)s[%(id)s] - %(status)s: %(reason)s') %
-                 {'name': event.obj_name, 'id': event.obj_id, 'status': status,
+    LOG.critical(_LC('%(name)s [%(id)s] - %(status)s: %(reason)s'),
+                 {'name': event.obj_name,
+                  'id': event.obj_id and event.obj_id[:8],
+                  'status': status,
                   'reason': status_reason})
 
 
@@ -193,9 +195,12 @@ def error(context, entity, action, status=None, status_reason=None,
                   action=action, status=status, status_reason=status_reason,
                   user=context.user, project=context.project)
     event.store(context)
-    LOG.error(_LE('%(name)s[%(id)s] %(action)s - %(status)s: %(reason)s') %
-              {'name': event.obj_name, 'id': event.obj_id, 'action': action,
-               'status': status, 'reason': status_reason})
+    LOG.error(_LE('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s'),
+              {'name': event.obj_name,
+               'id': event.obj_id and event.obj_id[:8],
+               'action': action,
+               'status': status,
+               'reason': status_reason})
 
 
 def warning(context, entity, action, status=None, status_reason=None,
@@ -205,9 +210,12 @@ def warning(context, entity, action, status=None, status_reason=None,
                   action=action, status=status, status_reason=status_reason,
                   user=context.user, project=context.project)
     event.store(context)
-    LOG.warning(_LW('%(name)s[%(id)s] %(action)s - %(status)s: %(reason)s') %
-                {'name': event.obj_name, 'id': event.obj_id, 'action': action,
-                 'status': status, 'reason': status_reason})
+    LOG.warning(_LW('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s'),
+                {'name': event.obj_name,
+                 'id': event.obj_id and event.obj_id[:8],
+                 'action': action,
+                 'status': status,
+                 'reason': status_reason})
 
 
 def info(context, entity, action, status=None, status_reason=None,
@@ -217,9 +225,12 @@ def info(context, entity, action, status=None, status_reason=None,
                   action=action, status=status, status_reason=status_reason,
                   user=context.user, project=context.project)
     event.store(context)
-    LOG.info(_LI('%(name)s[%(id)s] %(action)s - %(status)s: %(reason)s') %
-             {'name': event.obj_name, 'id': event.obj_id, 'action': action,
-              'status': status, 'reason': status_reason})
+    LOG.info(_LI('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s'),
+             {'name': event.obj_name,
+              'id': event.obj_id and event.obj_id[:8],
+              'action': action,
+              'status': status,
+              'reason': status_reason})
 
 
 def debug(context, entity, action, status=None, status_reason=None,
@@ -229,6 +240,9 @@ def debug(context, entity, action, status=None, status_reason=None,
                   action=action, status=status, status_reason=status_reason,
                   user=context.user, project=context.project)
     event.store(context)
-    LOG.debug(_('%(name)s[%(id)s] %(action)s - %(status)s: %(reason)s') %
-              {'name': event.obj_name, 'id': event.obj_id, 'action': action,
-               'status': status, 'reason': status_reason})
+    LOG.debug(_('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s'),
+              {'name': event.obj_name,
+               'id': event.obj_id and event.obj_id[:8],
+               'action': action,
+               'status': status,
+               'reason': status_reason})
