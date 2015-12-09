@@ -291,12 +291,12 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         engine_response = {
+            'id': 'test_node_id',
             'name': 'test_node',
             'profile_id': 'xxxx-yyyy',
             'cluster_id': None,
             'role': None,
             'metadata': {},
-            'action': 'this-is-the-node-create-action',
         }
 
         req = self._post('/nodes', json.dumps(body))
@@ -316,7 +316,10 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             })
         )
 
-        expected = {'node': engine_response}
+        expected = {
+            'node': engine_response,
+            'location': '/nodes/test_node_id'
+        }
         self.assertEqual(expected, resp)
 
     def test_node_create_with_bad_body(self, mock_enforce):

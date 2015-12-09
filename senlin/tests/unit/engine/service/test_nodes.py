@@ -72,15 +72,6 @@ class NodeTest(base.SenlinTestCase):
         self.assertIsNone(node['role'])
         self.assertEqual({}, node['metadata'])
 
-        action_id = node['action']
-        action = db_api.action_get(self.ctx, action_id)
-        self.assertIsNotNone(action)
-        self._verify_action(action, 'NODE_CREATE',
-                            'node_create_%s' % node['id'][:8],
-                            node['id'],
-                            cause=action_mod.CAUSE_RPC)
-        notify.assert_called_once_with(action_id=action_id)
-
     def test_node_create_profile_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_create,
@@ -494,7 +485,6 @@ class NodeTest(base.SenlinTestCase):
 
         result = self.eng.node_update(self.ctx, node['id'],
                                       profile_id=new_profile['id'])
-        del node['action']
         self.assertEqual(node, result)
 
     @mock.patch.object(dispatcher, 'start_action')

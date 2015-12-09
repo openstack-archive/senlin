@@ -1085,10 +1085,7 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Node create action queued: %s."), action.id)
 
-        # We return a node dictionary with an additional key (action) carried
-        result = node.to_dict()
-        result['action'] = action.id
-        return result
+        return node.to_dict()
 
     @request_context
     def node_get(self, context, identity, show_details=False):

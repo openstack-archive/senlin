@@ -126,11 +126,15 @@ class NodeController(object):
 
         data = NodeData(node_data)
 
-        result = self.rpc_client.node_create(req.context, data.name(),
-                                             data.cluster_id(),
-                                             data.profile_id(),
-                                             data.role(), data.metadata())
-        return {'node': result}
+        node = self.rpc_client.node_create(req.context, data.name(),
+                                           data.cluster_id(),
+                                           data.profile_id(),
+                                           data.role(), data.metadata())
+        result = {
+            'node': node,
+            'location': '/nodes/%s' % node['id']
+        }
+        return result
 
     @util.policy_enforce
     def get(self, req, node_id):
