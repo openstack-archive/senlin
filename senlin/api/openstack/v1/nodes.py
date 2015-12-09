@@ -195,6 +195,8 @@ class NodeController(object):
         else:    # self.NODE_LEAVE
             res = self.rpc_client.node_leave(req.context, node_id)
 
+        location = {'location': '/actions/%s' % res['action']}
+        res.update(location)
         return res
 
     @util.policy_enforce

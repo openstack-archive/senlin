@@ -643,12 +643,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._put('/nodes/%(node_id)s/action' % {'node_id': node_id},
                         json.dumps(body))
 
-        engine_response = {
-            'id': 'action-id',
-            'name': 'node_join',
-            'target': 'xxxx-yyyy',
-            'inputs': {'cluster_id': cluster_id},
-        }
+        engine_response = {'action': 'action-id'}
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
@@ -659,6 +654,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, ('node_join', {'identity': node_id,
                                         'cluster_id': cluster_id}))
 
+        location = {'location': '/actions/action-id'}
+        engine_response.update(location)
         self.assertEqual(engine_response, response)
 
     def test_node_action_join_node_not_found(self, mock_enforce):
@@ -729,11 +726,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._put('/nodes/%(node_id)s/action' % {'node_id': node_id},
                         json.dumps(body))
 
-        engine_response = {
-            'id': 'action-id',
-            'name': 'node_leave_idstring',
-            'target': 'xxxx-yyyy',
-        }
+        engine_response = {'action': 'action-id'}
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
@@ -743,6 +736,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(
             req.context, ('node_leave', {'identity': node_id}))
 
+        location = {'location': '/actions/action-id'}
+        engine_response.update(location)
         self.assertEqual(engine_response, response)
 
     def test_node_action_missing_action(self, mock_enforce):
