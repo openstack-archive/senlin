@@ -20,16 +20,22 @@ from sqlalchemy import types
 class MutableList(mutable.Mutable, list):
     @classmethod
     def coerce(cls, key, value):
-        if not isinstance(value, cls):
+        if not isinstance(value, MutableList):
             if isinstance(value, list):
-                return cls(value)
-            return mutable.Mutable.coerce(key, value)
+                return MutableList(value)
+            else:
+                return MutableList([value])
         else:
             return value
 
-    def __delitem__(self, key):
-        list.__delitem__(self, key)
-        self.changed()
+    def __init__(self, initval=None):
+        list.__init__(self, initval or [])
+
+    def __getitem__(self, key):
+        value = list.__getitem__(self, key)
+        for obj, key in self._parents.items():
+            value._parents[obj] = key
+        return value
 
     def __setitem__(self, key, value):
         list.__setitem__(self, key, value)
@@ -39,14 +45,28 @@ class MutableList(mutable.Mutable, list):
         return list(self)
 
     def __setstate__(self, state):
-        len = list.__len__(self)
-        list.__delslice__(self, 0, len)
-        list.__add__(self, state)
-        self.changed()
+        self[:] = state
 
     def append(self, value):
         list.append(self, value)
         self.changed()
+
+    def extend(self, iterable):
+        list.extend(self, iterable)
+        self.changed()
+
+    def insert(self, index, item):
+        list.insert(self, index, item)
+        self.changed()
+
+    def __setslice__(self, i, j, other):
+        list.__setslice__(self, i, j, other)
+        self.changed()
+
+    def pop(self, index=-1):
+        item = list.pop(self, index)
+        self.changed()
+        return item
 
     def remove(self, value):
         list.remove(self, value)
