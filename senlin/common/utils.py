@@ -147,3 +147,11 @@ def random_name(length=8):
     tail = ''.join(random.choice(string.ascii_letters + string.digits)
                    for i in range(length-1))
     return lead + tail
+
+
+def format_time(value):
+    """Cut microsecond and format to isoformat string."""
+    if value:
+        value = value.replace(microsecond=0)
+        value = value.isoformat()
+    return value

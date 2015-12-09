@@ -152,17 +152,14 @@ class Webhook(object):
             yield webhook
 
     def to_dict(self):
-        def _fmt_time(value):
-            return value and value.isoformat()
-
         info = {
             'id': self.id,
             'name': self.name,
             'user': self.user,
             'project': self.project,
             'domain': self.domain,
-            'created_time': _fmt_time(self.created_time),
-            'deleted_time': _fmt_time(self.deleted_time),
+            'created_time': utils.format_time(self.created_time),
+            'deleted_time': utils.format_time(self.deleted_time),
             'obj_id': self.obj_id,
             'obj_type': self.obj_type,
             'action': self.action,

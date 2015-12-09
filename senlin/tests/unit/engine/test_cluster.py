@@ -15,6 +15,7 @@ from oslo_config import cfg
 import six
 
 from senlin.common import exception
+from senlin.common import utils as common_utils
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import cluster as clusterm
 from senlin.engine import cluster_policy as cp_mod
@@ -286,7 +287,8 @@ class TestCluster(base.SenlinTestCase):
                                        show_deleted=True)
         expected.update({'profile_name': None})
         expected.update({'status': 'DELETED'})
-        expected.update({'deleted_time': cluster.deleted_time.isoformat()})
+        deleted_time = common_utils.format_time(cluster.deleted_time)
+        expected.update({'deleted_time': deleted_time})
         expected.update({'status_reason': 'Cluster deletion succeeded'})
         self.assertEqual(expected, result.to_dict())
 
