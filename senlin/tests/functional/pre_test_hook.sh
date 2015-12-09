@@ -17,6 +17,18 @@
 export localconf=$BASE/new/devstack/local.conf
 export SENLIN_CONF=/etc/senlin/senlin.conf
 
+_LOG_CFG='default_log_levels ='
+_LOG_CFG+='amqp=WARN,amqplib=WARN,sqlalchemy=WARN,oslo_messaging=WARN'
+_LOG_CFG+=',iso8601=WARN,requests.packages.urllib3.connectionpool=WARN'
+_LOG_CFG+=',urllib3.connectionpool=WARN'
+_LOG_CFG+=',requests.packages.urllib3.util.retry=WARN,urllib3.util.retry=WARN'
+_LOG_CFG+=',keystonemiddleware=WARN'
+_LOG_CFG+=',routes.middleware=WARN'
+_LOG_CFG+=',stevedore=WARN'
+_LOG_CFG+=',oslo_messaging._drivers.amqp=WARN'
+_LOG_CFG+=',oslo_messaging._drivers.amqpdriver=WARN'
+
 echo -e '[[post-config|$SENLIN_CONF]]\n[DEFAULT]\n' >> $localconf
 echo -e 'num_engine_workers=2\n' >> $localconf
 echo -e 'cloud_backend=openstack_test\n' >> $localconf
+echo -e $_LOG_CFG >> $localconf
