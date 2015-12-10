@@ -574,6 +574,8 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
         )
 
         expected = engine_response
+        location = {'location': '/actions/test_action_id'}
+        expected.update(location)
         self.assertEqual(expected, resp)
 
     def test_webhook_trigger_with_params(self, mock_enforce):

@@ -150,7 +150,11 @@ class WebhookController(object):
         if body is not None and 'params' in body:
             params = body.get('params')
 
-        return self.rpc_client.webhook_trigger(req.context, webhook_id, params)
+        result = self.rpc_client.webhook_trigger(req.context, webhook_id,
+                                                 params)
+        location = {'location': '/actions/%s' % result['action']}
+        result.update(location)
+        return result
 
     @util.policy_enforce
     def delete(self, req, webhook_id):
