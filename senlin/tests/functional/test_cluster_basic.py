@@ -63,7 +63,9 @@ class TestClusterBasic(base.SenlinFunctionalTest):
 
         # List clusters
         clusters = test_api.list_clusters(self.client)
-        self.assertEqual(2, len(clusters))
+        clusters_id = [c['id'] for c in clusters]
+        self.assertIn(cluster['id'], clusters_id)
+        self.assertIn(cluster2['id'], clusters_id)
 
         # Delete cluster
         test_api.delete_cluster(self.client, cluster['id'])
@@ -74,7 +76,3 @@ class TestClusterBasic(base.SenlinFunctionalTest):
         test_utils.wait_for_status(test_api.get_cluster, self.client,
                                    cluster2['id'], 'DELETED',
                                    ignore_missing=True)
-
-        # List clusters
-        clusters = test_api.list_clusters(self.client)
-        self.assertEqual(0, len(clusters))
