@@ -101,7 +101,7 @@ JSON request body:
 The ``max_size`` and the ``min_size`` fields, when specified, will be checked
 against each other by the Senlin API. The API also checks if the specified
 ``desired_capacity`` falls out of the range [``min_size``, ``max_size``]. If
-any verification failes, a ``HTTPBadRequest`` exception is thrown and the
+any verification failed, a ``HTTPBadRequest`` exception is thrown and the
 cluster creation request is rejected.
 
 A cluster creation request is then forwarded to the Senlin RPC engine for
