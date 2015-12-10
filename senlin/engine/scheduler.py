@@ -20,7 +20,6 @@ from oslo_service import threadgroup
 from senlin.common import context
 from senlin.db import api as db_api
 from senlin.engine.actions import base as action_mod
-from senlin.engine import dispatcher
 
 LOG = logging.getLogger(__name__)
 
@@ -75,10 +74,6 @@ class ThreadGroupManager(object):
             '''Callback function that will be passed to GreenThread.link().'''
             # Remove action thread from thread list
             self.workers.pop(action_id)
-            action = action_mod.Action.load(self.db_session, action_id)
-            # This is for actions with RETRY
-            if action.status == action.READY:
-                dispatcher.start_action(action_id=action_id)
 
         timestamp = wallclock()
         if action_id is not None:
