@@ -24,7 +24,7 @@ Build the REST API reference manual:
   cd api-ref
   mvn clean generate-sources
 
-Build the Heat admin guide:
+Build the Senlin admin guide:
 
   cd senlin-admin
   mvn clean generate-sources
