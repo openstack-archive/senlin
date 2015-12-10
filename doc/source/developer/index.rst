@@ -46,12 +46,9 @@ Understanding the Design
 API Documentation
 ~~~~~~~~~~~~~~~~~
 
-The following API document is still to be proposed and uploaded.
+Follow the link below for the Senlin API design document.
 
-
--  `Senlin REST API Reference (OpenStack API Complete Reference - Clustering)`_
-
-   .. _`Senlin REST API Reference (OpenStack API Complete Reference - Clustering)`: http://api.openstack.org/api-ref-clustering-v1.html
+-  `OpenStack API Complete Reference - Clustering`_
 
 
 Indices and tables
@@ -60,3 +57,6 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+.. _`OpenStack API Complete Reference - Clustering`: http://api.openstack.org/api-ref-clustering-v1.html
