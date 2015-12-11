@@ -148,7 +148,8 @@ class ClusterAction(base.Action):
 
             # Build dependency and make the new action ready
             db_api.action_add_dependency(self.context, action.id, self.id)
-            action.set_status(action.READY)
+            db_api.action_update(self.context, action.id,
+                                 {'status': action.READY})
 
             dispatcher.start_action(action_id=action.id)
 
@@ -217,7 +218,8 @@ class ClusterAction(base.Action):
             action.store(self.context)
 
             db_api.action_add_dependency(self.context, action.id, self.id)
-            action.set_status(action.READY)
+            db_api.action_update(self.context, action.id,
+                                 {'status': action.READY})
             dispatcher.start_action(action_id=action.id)
 
         # Wait for nodes to complete update
@@ -256,7 +258,8 @@ class ClusterAction(base.Action):
 
             # Build dependency and make the new action ready
             db_api.action_add_dependency(self.context, action.id, self.id)
-            action.set_status(action.READY)
+            db_api.action_update(self.context, action.id,
+                                 {'status': action.READY})
 
             dispatcher.start_action(action_id=action.id)
 
@@ -350,7 +353,8 @@ class ClusterAction(base.Action):
             action = base.Action(node.id, 'NODE_JOIN', **kwargs)
             action.store(self.context)
             db_api.action_add_dependency(self.context, action.id, self.id)
-            action.set_status(self.READY)
+            db_api.action_update(self.context, action.id,
+                                 {'status': action.READY})
             dispatcher.start_action(action_id=action.id)
 
         # Wait for dependent action if any
