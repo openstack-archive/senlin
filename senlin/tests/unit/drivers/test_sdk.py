@@ -80,13 +80,13 @@ class OpenStackSDKTest(base.SenlinTestCase):
         self.assertEqual('Resource BAR is in error state.', six.text_type(ex))
 
     def test_parser_exception_sdk_exception(self):
-        raw = sdk.exc.AuthorizationFailure()
+        raw = sdk.exc.InvalidResponse('INVALID')
 
         ex = self.assertRaises(senlin_exc.InternalError,
                                sdk.parse_exception, raw)
 
         self.assertEqual(500, ex.code)
-        self.assertEqual('AuthorizationFailure', six.text_type(ex))
+        self.assertEqual('InvalidResponse', six.text_type(ex))
 
     def test_parser_exception_request_exception(self):
         raw = req_exc.HTTPError(401, 'ERROR')
