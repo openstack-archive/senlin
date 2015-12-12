@@ -133,7 +133,7 @@ class DeletionPolicy(base.Policy):
         if self.criteria == self.RANDOM:
             i = count
             while i > 0:
-                rand = random.randrange(i)
+                rand = random.randrange(len(nodes))
                 candidates.append(nodes[rand].id)
                 nodes.remove(nodes[rand])
                 i = i - 1

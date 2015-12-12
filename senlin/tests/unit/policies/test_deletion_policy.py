@@ -156,8 +156,15 @@ class TestDeletionPolicy(base.SenlinTestCase):
         self.spec['properties']['criteria'] = dp.DeletionPolicy.RANDOM
         policy = dp.DeletionPolicy('test-policy', self.spec)
 
-        nodes = policy._select_candidates(self.context, self.cluster['id'], 1)
-        self.assertEqual(1, len(nodes))
+        random_nodes = []
+        for i in range(10):
+            nodes = policy._select_candidates(self.context,
+                                              self.cluster['id'], 1)
+            self.assertEqual(1, len(nodes))
+            random_nodes.append(nodes[0])
+        random_nodes = list(set(random_nodes))
+        self.assertTrue(len(random_nodes) > 1)
+
         nodes = policy._select_candidates(self.context, self.cluster['id'], 3)
         self.assertEqual(3, len(nodes))
         nodes = policy._select_candidates(self.context, self.cluster['id'], 10)
