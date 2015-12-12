@@ -145,8 +145,7 @@ def reschedule(action_id, sleep_time=1):
     :param sleep_time: seconds to sleep; if None, no sleep;
     '''
     if sleep_time is not None:
-        LOG.debug('Action %s sleep for %s seconds' % (
-            action_id, sleep_time))
+        LOG.debug('Action %s sleep for %s seconds' % (action_id, sleep_time))
         eventlet.sleep(sleep_time)
 
 
