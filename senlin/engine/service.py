@@ -39,6 +39,7 @@ from senlin.engine import environment
 from senlin.engine import event as event_mod
 from senlin.engine import health_manager
 from senlin.engine import node as node_mod
+from senlin.engine import receiver as receiver_mod
 from senlin.engine import scheduler
 from senlin.engine import webhook as webhook_mod
 from senlin.policies import base as policy_base
@@ -1669,6 +1670,149 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Action '%s' is deleted."), identity)
         return None
+
+    def receiver_find(self, context, identity, show_deleted=False):
+        """Find a receiver with the given identity (could be name or ID)."""
+        if uuidutils.is_uuid_like(identity):
+            receiver = db_api.receiver_get(context, identity,
+                                           show_deleted=show_deleted)
+            if not receiver:
+                receiver = db_api.receiver_get_by_name(context, identity)
+        else:
+            receiver = db_api.receiver_get_by_name(context, identity)
+            if not receiver:
+                receiver = db_api.receiver_get_by_short_id(context, identity)
+
+        if not receiver:
+            raise exception.ReceiverNotFound(receiver=identity)
+
+        return receiver
+
+    @request_context
+    def receiver_list(self, context, limit=None, marker=None, sort_keys=None,
+                      sort_dir=None, filters=None, show_deleted=False,
+                      project_safe=True):
+        if limit is not None:
+            limit = utils.parse_int_param('limit', limit)
+        if project_safe is not None:
+            project_safe = utils.parse_bool_param('project_safe', project_safe)
+        if show_deleted is not None:
+            show_deleted = utils.parse_bool_param('show_deleted', show_deleted)
+
+        receivers = receiver_mod.Receiver.load_all(context, limit=limit,
+                                                   marker=marker,
+                                                   sort_keys=sort_keys,
+                                                   sort_dir=sort_dir,
+                                                   filters=filters,
+                                                   show_deleted=show_deleted,
+                                                   project_safe=project_safe)
+        return [r.to_dict() for r in receivers]
+
+    @request_context
+    def receiver_create(self, context, name, type_name, cluster_id, action,
+                        credential=None, params=None):
+        if cfg.CONF.name_unique:
+            if db_api.receiver_get_by_name(context, name):
+                msg = _("A receiver named (%s) already exists.") % name
+                raise exception.SenlinBadRequest(msg=msg)
+
+        LOG.info(_LI("Creating receiver '%(n)s': \n"
+                     "  type: %(t)s\n  id: %(i)s\n  action: %(a)s."),
+                 {'n': name, 't': type_name, 'i': cluster_id, 'a': action})
+
+        rtype = type_name.lower()
+        if rtype not in consts.RECEIVER_TYPES:
+            msg = _('Receiver type (%s) is not supported.') % rtype
+            raise exception.SenlinBadRequest(msg=msg)
+
+        # Check whether cluster identified by cluster_id does exist
+        cluster = None
+        try:
+            cluster = self.cluster_find(context, cluster_id)
+        except exception.ClusterNotFound:
+            msg = _("The referenced cluster (%s) is not found.") % cluster_id
+            raise exception.SenlinBadRequest(msg=msg)
+
+        # permission checking
+        if not context.is_admin and context.user != cluster.user:
+            raise exception.Forbidden()
+
+        # Check action name
+        if action not in consts.ACTION_NAMES:
+            msg = _('Illegal action (%s) specified.') % action
+            raise exception.SenlinBadRequest(msg=msg)
+
+        if action.lower().split('_')[0] != 'cluster':
+            msg = _('Action %s is not applicable to clusters.') % action
+            raise exception.SenlinBadRequest(msg=msg)
+
+        if not params:
+            params = {}
+
+        kwargs = {
+            'name': name,
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'params': params
+        }
+
+        receiver = receiver_mod.Receiver.create(context, rtype, cluster,
+                                                action, **kwargs)
+        LOG.info(_LI("Webhook (%(n)s) is created: %(i)s."),
+                 {'n': name, 'i': receiver.id})
+
+        return receiver.to_dict()
+
+    @request_context
+    def receiver_get(self, context, identity):
+        db_receiver = self.receiver_find(context, identity)
+        receiver = receiver_mod.Receiver.load(context,
+                                              receiver_id=db_receiver.id)
+        return receiver.to_dict()
+
+    @request_context
+    def receiver_delete(self, context, identity, force=False):
+        db_receiver = self.receiver_find(context, identity)
+        LOG.info(_LI("Deleting receiver %s."), identity)
+        db_api.receiver_delete(context, db_receiver.id)
+        LOG.info(_LI("Receiver %s is deleted."), identity)
+
+    @request_context
+    def webhook_action(self, context, identity, params=None):
+
+        LOG.info(_LI("Triggering webhook (%s)."), identity)
+        receiver = self.receiver_find(context, identity)
+
+        try:
+            cluster = self.cluster_find(context, receiver.cluster_id)
+        except exception.ClusterNotFound:
+            msg = _("The referenced object (%s) is not found."
+                    ) % receiver.cluster_id
+            raise exception.SenlinBadRequest(msg=msg)
+
+        # Use default params if no customized params are provided
+        if not params:
+            params = receiver.params
+
+        action_name = 'webhook_%s' % receiver.id[:8]
+        kwargs = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': params
+        }
+        action = action_mod.Action(cluster.id, receiver.action, **kwargs)
+        action.status = action.READY
+        action.store(context)
+        dispatcher.start_action(action_id=action.id)
+
+        LOG.info(_LI("Webhook %(w)s' triggered with action queued: %(a)s."),
+                 {'w': identity, 'a': action.id})
+
+        return {'action': action.id}
 
     def event_find(self, context, identity, show_deleted=False):
         '''Find a event with the given identity (could ID or short ID).'''
