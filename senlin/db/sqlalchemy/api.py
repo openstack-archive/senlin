@@ -1471,6 +1471,78 @@ def action_delete(context, action_id, force=False):
     session.flush()
 
 
+# Receivers
+def receiver_create(context, values):
+    receiver = models.Receiver()
+    receiver.update(values)
+    receiver.save(_session(context))
+    return receiver
+
+
+def receiver_get(context, receiver_id, show_deleted=False, project_safe=True):
+    receiver = model_query(context, models.Receiver).get(receiver_id)
+    if not receiver:
+        return None
+
+    if not show_deleted and receiver.deleted_time is not None:
+        return None
+
+    if project_safe:
+        if context.project != receiver.project:
+            return None
+
+    return receiver
+
+
+def receiver_get_all(context, show_deleted=False, limit=None,
+                     marker=None, sort_keys=None, sort_dir=None,
+                     filters=None, project_safe=True):
+    query = soft_delete_aware_query(context, models.Receiver,
+                                    show_deleted=show_deleted)
+
+    if project_safe:
+        query = query.filter_by(project=context.project)
+
+    if filters is None:
+        filters = {}
+
+    sort_key_map = {
+        consts.RECEIVER_NAME: models.Receiver.name.key,
+        consts.RECEIVER_TYPE: models.Receiver.type.key,
+        consts.RECEIVER_CLUSTER_ID: models.Receiver.cluster_id.key,
+        consts.RECEIVER_CREATED_TIME: models.Receiver.created_time.key,
+    }
+    keys = _get_sort_keys(sort_keys, sort_key_map)
+    query = db_filters.exact_filter(query, models.Receiver, filters)
+    return _paginate_query(context, query, models.Receiver,
+                           limit=limit, marker=marker,
+                           sort_keys=keys, sort_dir=sort_dir,
+                           default_sort_keys=['name']).all()
+
+
+def receiver_get_by_name(context, name, show_deleted=False, project_safe=True):
+    return query_by_name(context, models.Receiver, name,
+                         show_deleted=show_deleted,
+                         project_safe=project_safe)
+
+
+def receiver_get_by_short_id(context, short_id, show_deleted=False,
+                             project_safe=True):
+    return query_by_short_id(context, models.Receiver, short_id,
+                             show_deleted=show_deleted,
+                             project_safe=project_safe)
+
+
+def receiver_delete(context, receiver_id, force=False):
+    session = _session(context)
+    receiver = session.query(models.Receiver).get(receiver_id)
+    if not receiver:
+        return
+
+    receiver.soft_delete(session=session)
+    session.flush()
+
+
 # Utils
 def db_sync(engine, version=None):
     """Migrate the database to `version` or the most recent version."""
