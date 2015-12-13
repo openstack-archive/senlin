@@ -14,7 +14,6 @@ import base64
 import copy
 
 import mock
-from oslo_config import cfg
 from oslo_utils import encodeutils
 import six
 
@@ -64,7 +63,6 @@ class TestNovaServerProfile(base.SenlinTestCase):
                     'same_host': 'HOST_ID',
                 },
                 'security_groups': ['HIGH_SECURITY_GROUP'],
-                'timeout': 120,
                 'user_data': 'FAKE_USER_DATA',
             }
         }
@@ -75,15 +73,6 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertIsNone(profile._novaclient)
         self.assertIsNone(profile._neutronclient)
         self.assertIsNone(profile.server_id)
-
-    def test_validate(self):
-        cfg.CONF.set_override('default_action_timeout', 119, enforce_type=True)
-
-        profile = server.ServerProfile('t', self.spec)
-
-        ex = self.assertRaises(exception.InvalidSpec, profile.validate)
-        self.assertEqual("Value of the 'timeout' property must be lower than "
-                         "the upper limit (119).", six.text_type(ex))
 
     @mock.patch.object(driver_base, 'SenlinDriver')
     def test_nova_client(self, mock_senlindriver):
@@ -208,7 +197,6 @@ class TestNovaServerProfile(base.SenlinTestCase):
                 'same_host': 'HOST_ID'
             },
             security_groups=['HIGH_SECURITY_GROUP'],
-            timeout=120,
             user_data='FAKE_USER_DATA',
             availability_zone='AZ1',
         )
@@ -268,8 +256,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
                      key_name='FAKE_KEYNAME',
                      metadata={'cluster': 'FAKE_CLUSTER_ID'},
                      name='TEST_SERVER-12345678',
-                     networks=[{'uuid': 'FAKE_NETWORK_ID'}],
-                     timeout=120)
+                     networks=[{'uuid': 'FAKE_NETWORK_ID'}])
 
         novaclient.server_create.assert_called_once_with(**attrs)
         self.assertEqual(nova_server.id, server_id)
@@ -302,7 +289,6 @@ class TestNovaServerProfile(base.SenlinTestCase):
                 'flavor': 'FLAV',
                 'name': 'FAKE_SERVER_NAME',
                 'security_groups': ['HIGH_SECURITY_GROUP'],
-                'timeout': 120,
             }
         }
 
@@ -318,8 +304,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
                      metadata={
                          'cluster': 'FAKE_CLUSTER_ID',
                      },
-                     security_groups=['HIGH_SECURITY_GROUP'],
-                     timeout=120)
+                     security_groups=['HIGH_SECURITY_GROUP'])
 
         novaclient.server_create.assert_called_once_with(**attrs)
         self.assertEqual(nova_server.id, server_id)
@@ -349,7 +334,6 @@ class TestNovaServerProfile(base.SenlinTestCase):
                 'flavor': 'FLAV',
                 'name': 'FAKE_SERVER_NAME',
                 'security_groups': ['HIGH_SECURITY_GROUP'],
-                'timeout': 120,
             }
         }
 
@@ -362,8 +346,80 @@ class TestNovaServerProfile(base.SenlinTestCase):
                      flavorRef='FAKE_FLAVOR_ID',
                      name='FAKE_SERVER_NAME',
                      metadata={},
+                     security_groups=['HIGH_SECURITY_GROUP'])
+
+        novaclient.server_create.assert_called_once_with(**attrs)
+        self.assertEqual(nova_server.id, server_id)
+
+    def test_do_create_bdm_v2(self):
+        novaclient = mock.Mock()
+        neutronclient = mock.Mock()
+        test_server = mock.Mock()
+        test_server.name = None
+        test_server.cluster_id = None
+        test_server.data = {}
+        flavor = mock.Mock()
+        flavor.id = 'FAKE_FLAVOR_ID'
+        novaclient.flavor_find.return_value = flavor
+        net = mock.Mock()
+        net.id = 'FAKE_NETWORK_ID'
+        neutronclient.network_get.return_value = net
+
+        nova_server = mock.Mock()
+        nova_server.id = 'FAKE_NOVA_SERVER_ID'
+        novaclient.server_create.return_value = nova_server
+        bdm_v2 = [
+            {
+                'volume_size': 1,
+                'uuid': '6ce0be68',
+                'source_type': 'image',
+                'destination_type': 'volume',
+                'boot_index': 0,
+            },
+            {
+                'volume_size': 2,
+                'source_type': 'blank',
+                'destination_type': 'volume',
+            }
+        ]
+        expected_volume = {
+            'guest_format': None,
+            'boot_index': 0,
+            'uuid': '6ce0be68',
+            'volume_size': 1,
+            'device_name': None,
+            'disk_bus': None,
+            'source_type': 'image',
+            'device_type': None,
+            'destination_type': 'volume',
+            'delete_on_termination': None
+        }
+
+        spec = {
+            'type': 'os.nova.server',
+            'version': '1.0',
+            'properties': {
+                'flavor': 'FLAV',
+                'name': 'FAKE_SERVER_NAME',
+                'security_groups': ['HIGH_SECURITY_GROUP'],
+                'block_device_mapping_v2': bdm_v2,
+            }
+        }
+
+        profile = server.ServerProfile('t', spec)
+        self.assertDictEqual(profile.properties['block_device_mapping_v2'][0],
+                             expected_volume)
+
+        profile._novaclient = novaclient
+        profile._neutronclient = neutronclient
+        server_id = profile.do_create(test_server)
+
+        attrs = dict(auto_disk_config=True,
+                     flavorRef='FAKE_FLAVOR_ID',
+                     name='FAKE_SERVER_NAME',
+                     metadata={},
                      security_groups=['HIGH_SECURITY_GROUP'],
-                     timeout=120)
+                     block_device_mapping_v2=bdm_v2)
 
         novaclient.server_create.assert_called_once_with(**attrs)
         self.assertEqual(nova_server.id, server_id)

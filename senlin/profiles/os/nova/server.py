@@ -13,7 +13,6 @@
 import base64
 import copy
 
-from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import encodeutils
 import six
@@ -33,17 +32,16 @@ class ServerProfile(base.Profile):
 
     KEYS = (
         CONTEXT, ADMIN_PASS, AUTO_DISK_CONFIG, AVAILABILITY_ZONE,
-        BLOCK_DEVICE_MAPPING,  # BLOCK_DEVICE_MAPPING_V2,
+        BLOCK_DEVICE_MAPPING,  BLOCK_DEVICE_MAPPING_V2,
         CONFIG_DRIVE, FLAVOR, IMAGE, KEY_NAME, METADATA,
         NAME, NETWORKS, PERSONALITY, SECURITY_GROUPS,
-        TIMEOUT, USER_DATA, SCHEDULER_HINTS,
+        USER_DATA, SCHEDULER_HINTS,
     ) = (
         'context', 'adminPass', 'auto_disk_config', 'availability_zone',
-        'block_device_mapping',
-        # 'block_device_mapping_v2',
+        'block_device_mapping', 'block_device_mapping_v2',
         'config_drive', 'flavor', 'image', 'key_name', 'metadata',
         'name', 'networks', 'personality', 'security_groups',
-        'timeout', 'user_data', 'scheduler_hints',
+        'user_data', 'scheduler_hints',
     )
 
     BDM_KEYS = (
@@ -51,6 +49,17 @@ class ServerProfile(base.Profile):
     ) = (
         'device_name',
         'volume_size',
+    )
+
+    BDM2_KEYS = (
+        BDM2_UUID, BDM2_SOURCE_TYPE, BDM2_DESTINATION_TYPE,
+        BDM2_DISK_BUS, BDM2_DEVICE_NAME, BDM2_VOLUME_SIZE,
+        BDM2_GUEST_FORMAT, BDM2_BOOT_INDEX, BDM2_DEVICE_TYPE,
+        BDM2_DELETE_ON_TERMINATION,
+    ) = (
+        'uuid', 'source_type', 'destination_type', 'disk_bus',
+        'device_name', 'volume_size', 'guest_format', 'boot_index',
+        'device_type', 'delete_on_termination',
     )
 
     NETWORK_KEYS = (
@@ -97,6 +106,54 @@ class ServerProfile(base.Profile):
                     ),
                     BDM_VOLUME_SIZE: schema.Integer(
                         _('Block device size in GB.'),
+                    ),
+                }
+            ),
+        ),
+        BLOCK_DEVICE_MAPPING_V2: schema.List(
+            _('A list specifying the properties of block devices to be used '
+              'for this server.'),
+            schema=schema.Map(
+                _('A map specifying the properties of a block device to be '
+                  'used by the server.'),
+                schema={
+                    BDM2_UUID: schema.String(
+                        _('ID of the source image, snapshot or volume'),
+                    ),
+                    BDM2_SOURCE_TYPE: schema.String(
+                        _('Volume source type, should be image, snapshot, '
+                          'volume or blank'),
+                        required=True,
+                    ),
+                    BDM2_DESTINATION_TYPE: schema.String(
+                        _('Volume destination type, should be volume or '
+                          'local'),
+                        required=True,
+                    ),
+                    BDM2_DISK_BUS: schema.String(
+                        _('Bus of the device.'),
+                    ),
+                    BDM2_DEVICE_NAME: schema.String(
+                        _('Name of the device(e.g. vda, xda, ....).'),
+                    ),
+                    BDM2_VOLUME_SIZE: schema.Integer(
+                        _('Size of the block device in MB(for swap) and '
+                          'in GB(for other formats)'),
+                        required=True,
+                    ),
+                    BDM2_GUEST_FORMAT: schema.String(
+                        _('Specifies the disk file system format(e.g. swap, '
+                          'ephemeral, ...).'),
+                    ),
+                    BDM2_BOOT_INDEX: schema.Integer(
+                        _('Define the boot order of the device'),
+                    ),
+                    BDM2_DEVICE_TYPE: schema.String(
+                        _('Type of the device(e.g. disk, cdrom, ...).'),
+                    ),
+                    BDM2_DELETE_ON_TERMINATION: schema.Boolean(
+                        _('Whether to delete the volume when the server '
+                          'stops.'),
                     ),
                 }
             ),
@@ -172,10 +229,6 @@ class ServerProfile(base.Profile):
                 required=True,
             ),
         ),
-        TIMEOUT: schema.Integer(
-            _('Time out threshold for server operations.'),
-            default=120,
-        ),
         USER_DATA: schema.String(
             _('User data to be exposed by the metadata server.'),
         ),
@@ -187,15 +240,6 @@ class ServerProfile(base.Profile):
         self._novaclient = None
         self._neutronclient = None
         self.server_id = None
-
-    def validate(self):
-        super(ServerProfile, self).validate()
-
-        if self.properties[self.TIMEOUT] > cfg.CONF.default_action_timeout:
-            suggest = cfg.CONF.default_action_timeout
-            err = _("Value of the 'timeout' property must be lower than the "
-                    "upper limit (%s).") % suggest
-            raise exception.InvalidSpec(message=err)
 
     def nova(self, obj):
         '''Construct nova client based on object.
@@ -262,9 +306,13 @@ class ServerProfile(base.Profile):
             metadata['cluster'] = obj.cluster_id
         kwargs['metadata'] = metadata
 
-        scheduler_hint = self.properties[self.SCHEDULER_HINTS]
-        if scheduler_hint is not None:
-            kwargs['scheduler_hints'] = scheduler_hint
+        block_device_mapping_v2 = self.properties[self.BLOCK_DEVICE_MAPPING_V2]
+        if block_device_mapping_v2 is not None:
+            for bdm in block_device_mapping_v2:
+                for key in self.BDM2_KEYS:
+                    if bdm[key] is None:
+                        del bdm[key]
+            kwargs['block_device_mapping_v2'] = block_device_mapping_v2
 
         user_data = self.properties[self.USER_DATA]
         if user_data is not None:
