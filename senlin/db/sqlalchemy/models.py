@@ -240,6 +240,31 @@ class Profile(BASE, SenlinBase, SoftDelete):
     deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
 
 
+class Receiver(BASE, SenlinBase, SoftDelete):
+    """Represents a receiver associated with a Senlin cluster."""
+
+    __tablename__ = 'receiver'
+
+    id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
+                           default=lambda: str(uuid.uuid4()))
+    name = sqlalchemy.Column('name', sqlalchemy.String(255))
+    type = sqlalchemy.Column(sqlalchemy.String(255))
+    user = sqlalchemy.Column(sqlalchemy.String(32))
+    project = sqlalchemy.Column(sqlalchemy.String(32))
+    domain = sqlalchemy.Column(sqlalchemy.String(32))
+
+    created_time = sqlalchemy.Column(sqlalchemy.DateTime)
+    updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
+    deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
+
+    cluster_id = sqlalchemy.Column(sqlalchemy.String(36),
+                                   sqlalchemy.ForeignKey('cluster.id'))
+    actor = sqlalchemy.Column(types.Dict)
+    action = sqlalchemy.Column(sqlalchemy.Text)
+    params = sqlalchemy.Column(types.Dict)
+    channel = sqlalchemy.Column(types.Dict)
+
+
 class Webhook(BASE, SenlinBase, SoftDelete):
     """Represents a webhook bonded with Senlin resource entity."""
 

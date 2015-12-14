@@ -447,6 +447,40 @@ def action_delete(context, action_id, force=False):
     return IMPL.action_delete(context, action_id, force)
 
 
+def receiver_create(context, values):
+    return IMPL.receiver_create(context, values)
+
+
+def receiver_get(context, receiver_id, show_deleted=False, project_safe=True):
+    return IMPL.receiver_get(context, receiver_id, show_deleted=show_deleted,
+                             project_safe=project_safe)
+
+
+def receiver_get_by_name(context, name, show_deleted=False, project_safe=True):
+    return IMPL.receiver_get_by_name(context, name, show_deleted=show_deleted,
+                                     project_safe=project_safe)
+
+
+def receiver_get_by_short_id(context, short_id, show_deleted=False,
+                             project_safe=True):
+    return IMPL.receiver_get_by_short_id(context, short_id,
+                                         show_deleted=show_deleted,
+                                         project_safe=project_safe)
+
+
+def receiver_get_all(context, show_deleted=False, limit=None,
+                     marker=None, sort_keys=None, sort_dir=None,
+                     filters=None, project_safe=True):
+    return IMPL.receiver_get_all(context, show_deleted=show_deleted,
+                                 limit=limit, marker=marker,
+                                 sort_keys=sort_keys, sort_dir=sort_dir,
+                                 filters=filters, project_safe=project_safe)
+
+
+def receiver_delete(context, receiver_id, force=False):
+    return IMPL.receiver_delete(context, receiver_id, force=force)
+
+
 def db_sync(engine, version=None):
     """Migrate the database to `version` or the most recent version."""
     return IMPL.db_sync(engine, version=version)

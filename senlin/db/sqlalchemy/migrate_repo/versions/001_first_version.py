@@ -158,6 +158,27 @@ def upgrade(migrate_engine):
         mysql_charset='utf8'
     )
 
+    receiver = sqlalchemy.Table(
+        'receiver', meta,
+        sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
+                          nullable=False),
+        sqlalchemy.Column('name', sqlalchemy.String(255)),
+        sqlalchemy.Column('type', sqlalchemy.String(255)),
+        sqlalchemy.Column('user', sqlalchemy.String(32)),
+        sqlalchemy.Column('project', sqlalchemy.String(32)),
+        sqlalchemy.Column('domain', sqlalchemy.String(32)),
+        sqlalchemy.Column('created_time', sqlalchemy.DateTime),
+        sqlalchemy.Column('updated_time', sqlalchemy.DateTime),
+        sqlalchemy.Column('deleted_time', sqlalchemy.DateTime),
+        sqlalchemy.Column('cluster_id', sqlalchemy.String(36)),
+        sqlalchemy.Column('actor', types.Dict),
+        sqlalchemy.Column('action', sqlalchemy.Text),
+        sqlalchemy.Column('params', types.Dict),
+        sqlalchemy.Column('channel', types.Dict),
+        mysql_engine='InnoDB',
+        mysql_charset='utf8'
+    )
+
     webhook = sqlalchemy.Table(
         'webhook', meta,
         sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
@@ -251,6 +272,7 @@ def upgrade(migrate_engine):
         webhook,
         credential,
         action,
+        receiver,
         event,
     )
 
