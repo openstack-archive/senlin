@@ -10,11 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import io
 import os
 
 from oslo_serialization import jsonutils
-import requests
 import six
 from six.moves import urllib
 import yaml
@@ -38,36 +36,21 @@ else:
 
 
 class YamlLoader(Loader):
-    def __init__(self, stream):
-        if isinstance(stream, io.IOBase):
-            self._curdir = os.path.split(stream.name)[0]
-        else:
-            self._curdir = './'
-        super(YamlLoader, self).__init__(stream)
+    def normalise_file_path_to_url(self, path):
+        if urllib.parse.urlparse(path).scheme:
+            return path
+        path = os.path.abspath(path)
+        return urllib.parse.urljoin('file:',
+                                    urllib.request.pathname2url(path))
 
     def include(self, node):
-        url = self.construct_scalar(node)
-        components = urllib.parse.urlparse(url)
-
-        if components.scheme == '':
-            try:
-                url = os.path.join(self._curdir, url)
-                with open(url, 'r') as f:
-                    return yaml.load(f, Loader)
-            except Exception as ex:
-                raise Exception('Failed loading file %s: %s' % (url,
-                                six.text_type(ex)))
         try:
-            resp = requests.get(url, stream=True)
-            resp.raise_for_status()
-            reader = resp.iter_content(chunk_size=1024)
-            result = ''
-            for chunk in reader:
-                result += chunk
-            return yaml.load(result, Loader)
-        except Exception as ex:
-            raise Exception('Failed retrieving file %s: %s' % (url,
-                            six.text_type(ex)))
+            url = self.normalise_file_path_to_url(self.construct_scalar(node))
+            tmpl = urllib.request.urlopen(url).read()
+            return yaml.load(tmpl, Loader)
+        except urllib.error.URLError as ex:
+            raise IOError('Failed retrieving file %s: %s' %
+                          (url, six.text_type(ex)))
 
     def process_unicode(self, node):
         # Override the default string handling function to always return
