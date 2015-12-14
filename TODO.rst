@@ -14,8 +14,6 @@ HIGH PRIORITY
 
 API
 ---
-  - Make object creation requests return both action_id and a location header set
-    to the URI of the resource to be created. This is a requirement from API WG.
   - Find and fill gaps with API-WG besides the one we already identified.
 
 POLICY
