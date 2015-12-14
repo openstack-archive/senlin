@@ -181,6 +181,10 @@ class WebhookNotFound(SenlinException):
     msg_fmt = _("The webhook (%(webhook)s) could not be found.")
 
 
+class ReceiverNotFound(SenlinException):
+    msg_fmt = _("The receiver (%(receiver)s) could not be found.")
+
+
 class ActionNotFound(SenlinException):
     msg_fmt = _("The action (%(action)s) could not be found.")
 
