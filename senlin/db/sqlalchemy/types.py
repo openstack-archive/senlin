@@ -23,8 +23,7 @@ class MutableList(mutable.Mutable, list):
         if not isinstance(value, MutableList):
             if isinstance(value, list):
                 return MutableList(value)
-            else:
-                return MutableList([value])
+            return mutable.Mutable.coerce(key, value)
         else:
             return value
 
