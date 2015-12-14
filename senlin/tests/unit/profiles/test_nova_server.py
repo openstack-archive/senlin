@@ -648,7 +648,34 @@ class TestNovaServerProfile(base.SenlinTestCase):
         res = profile.do_update(obj, new_profile)
         self.assertTrue(res)
         mock_update_image.assert_called_with(obj, 'FAKE_IMAGE',
-                                             'FAKE_IMAGE_NEW')
+                                             'FAKE_IMAGE_NEW',
+                                             'adminpass')
+
+    @mock.patch.object(server.ServerProfile, '_update_image')
+    def test_do_update_image_with_passwd(self, mock_update_image):
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = mock.Mock()
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['image'] = 'FAKE_IMAGE_NEW'
+        new_spec['properties']['adminPass'] = 'adminpass2'
+        new_profile = server.ServerProfile('t', new_spec)
+        res = profile.do_update(obj, new_profile)
+        self.assertTrue(res)
+        mock_update_image.assert_called_with(obj, 'FAKE_IMAGE',
+                                             'FAKE_IMAGE_NEW',
+                                             'adminpass2')
+
+        del new_spec['properties']['adminPass']
+        new_profile = server.ServerProfile('t', new_spec)
+        self.assertEqual(new_profile.properties['adminPass'], None)
+        res = profile.do_update(obj, new_profile)
+        self.assertTrue(res)
+        mock_update_image.assert_called_with(obj, 'FAKE_IMAGE',
+                                             'FAKE_IMAGE_NEW',
+                                             'adminpass')
 
     @mock.patch.object(server.ServerProfile, '_update_image')
     def test_do_update_image_failed(self, mock_update_image):
@@ -667,7 +694,8 @@ class TestNovaServerProfile(base.SenlinTestCase):
         res = profile.do_update(obj, new_profile)
         self.assertFalse(res)
         mock_update_image.assert_called_with(obj, 'FAKE_IMAGE',
-                                             'FAKE_IMAGE_NEW')
+                                             'FAKE_IMAGE_NEW',
+                                             'adminpass')
 
     def test_update_image(self):
         obj = mock.Mock()
@@ -682,11 +710,13 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = novaclient
-        profile._update_image(obj, 'old_image', 'new_image')
+        profile._update_image(obj, 'old_image', 'new_image', 'adminpass')
         novaclient.image_find.has_calls(
             [mock.call('old_image'), mock.call('new_image')])
-        novaclient.rebuild_server.assert_called_once_with('FAKE_ID',
-                                                          '456')
+        novaclient.server_rebuild.assert_called_once_with('FAKE_ID',
+                                                          '456',
+                                                          'FAKE_SERVER_NAME',
+                                                          'adminpass')
 
     def test_update_image_old_image_is_none(self):
         obj = mock.Mock()
@@ -707,11 +737,13 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = novaclient
-        profile._update_image(obj, None, 'new_image')
+        profile._update_image(obj, None, 'new_image', 'adminpass')
         novaclient.image_find.assert_called_once_with('new_image')
         novaclient.server_get.assert_called_once_with('FAKE_ID')
-        novaclient.rebuild_server.assert_called_once_with('FAKE_ID',
-                                                          '456')
+        novaclient.server_rebuild.assert_called_once_with('FAKE_ID',
+                                                          '456',
+                                                          'FAKE_SERVER_NAME',
+                                                          'adminpass')
 
     def test_update_image_new_image_is_none(self):
         obj = mock.Mock()
@@ -725,7 +757,8 @@ class TestNovaServerProfile(base.SenlinTestCase):
         profile._novaclient = novaclient
         ex = self.assertRaises(exception.ResourceUpdateFailure,
                                profile._update_image,
-                               obj, 'old_image', None)
+                               obj, 'old_image', None,
+                               'adminpass')
         msg = _("Failed in updating FAKE_ID.")
         self.assertEqual(msg, six.text_type(ex))
         novaclient.image_find.assert_called_once_with('old_image')

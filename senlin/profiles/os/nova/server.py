@@ -381,15 +381,22 @@ class ServerProfile(base.Profile):
         # TODO(Yanyan Hu): Update all server properties changed in new profile
 
         # Update server image
+        old_passwd = self.properties.get(self.ADMIN_PASS)
+        passwd = old_passwd
+        if new_profile.properties[self.ADMIN_PASS] is not None:
+            passwd = new_profile.properties[self.ADMIN_PASS]
         image = self.properties[self.IMAGE]
         new_image = new_profile.properties[self.IMAGE]
         if new_image != image:
             try:
-                self._update_image(obj, image, new_image)
+                self._update_image(obj, image, new_image, passwd)
             except Exception as ex:
                 LOG.exception(_('Failed in updating server image: %s'),
                               six.text_type(ex))
                 return False
+        elif old_passwd != passwd:
+            # TODO(Jun Xu): update server admin password
+            pass
 
         # Update server network
         networks_current = self.properties[self.NETWORKS]
@@ -410,7 +417,7 @@ class ServerProfile(base.Profile):
 
         return True
 
-    def _update_image(self, obj, old_image, new_image):
+    def _update_image(self, obj, old_image, new_image, admin_password):
         '''Updating server image'''
 
         if old_image:
@@ -424,7 +431,11 @@ class ServerProfile(base.Profile):
             res = self.nova(obj).image_find(new_image)
             new_image_id = res.id
             if new_image_id != image_id:
-                self.nova(obj).rebuild_server(obj.physical_id, new_image_id)
+                # (Jun Xu): Not update name here if name changed,
+                # it should be updated  in do_update
+                self.nova(obj).server_rebuild(obj.physical_id, new_image_id,
+                                              self.properties.get(self.NAME),
+                                              admin_password)
         else:
             # TODO(Yanyan Hu): Allow server update with new_image
             # set to None if Nova service supports it
