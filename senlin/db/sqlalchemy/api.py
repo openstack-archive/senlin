@@ -1172,11 +1172,12 @@ def _action_dependency_add(query, action_id, field, adds):
         raise exception.ActionNotFound(action=action_id)
 
     query.session.refresh(action)
-    if action[field] is None:
-        d = add_list
+    value = action[field]
+    if value is None:
+        value = add_list
     else:
-        d = list(set(action[field]).union(set(add_list)))
-    action[field] = d
+        value = list(set(value).union(set(add_list)))
+    action[field] = value
 
     if field == 'depends_on':
         action.status = consts.ACTION_WAITING
@@ -1197,10 +1198,12 @@ def _action_dependency_del(query, action_id, field, dels):
         return
 
     query.session.refresh(action)
-    if action[field] is not None:
-        action[field] = list(set(action[field]) - set(del_list))
+    value = action[field]
+    if value:
+        value = list(set(value) - set(del_list))
+        action[field] = value
 
-    if field == 'depends_on' and len(action[field]) == 0:
+    if field == 'depends_on' and len(value) == 0:
         action.status = consts.ACTION_READY
         action.status_reason = _('The action becomes ready due to all '
                                  'dependencies have been satisfied.')
@@ -1288,6 +1291,7 @@ def action_mark_succeeded(context, action_id, timestamp):
         _action_dependency_del(query, a, 'depends_on', action_id)
     action.depended_by = []
 
+    session.flush()
     session.commit()
     return action
 
