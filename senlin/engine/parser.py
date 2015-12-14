@@ -11,10 +11,9 @@
 # under the License.
 
 import io
-import json
 import os
 
-from oslo_utils import encodeutils
+from oslo_serialization import jsonutils
 import requests
 import six
 from six.moves import urllib
@@ -85,7 +84,7 @@ YamlLoader.add_constructor(u'tag:yaml.org,2002:timestamp',
 
 def simple_parse(in_str):
     try:
-        out_dict = json.loads(encodeutils.safe_decode(in_str))
+        out_dict = jsonutils.loads(in_str)
     except ValueError:
         try:
             out_dict = yaml.load(in_str, Loader=YamlLoader)
