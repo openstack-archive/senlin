@@ -282,7 +282,6 @@ class EngineService(service.Service):
                                           resource_id=db_profile.id)
 
         LOG.info(_LI("Profile '%(id)s' is deleted."), {'id': identity})
-        return None
 
     @request_context
     def policy_type_list(self, context):
@@ -424,7 +423,6 @@ class EngineService(service.Service):
                                           resource_id=db_policy.id)
 
         LOG.info(_LI("Policy '%s' is deleted."), identity)
-        return None
 
     @request_context
     def cluster_list(self, context, limit=None, marker=None, sort_keys=None,
@@ -1591,7 +1589,6 @@ class EngineService(service.Service):
         LOG.info(_LI("Deleting webhook '%s'."), identity)
         webhook_mod.Webhook.delete(context, db_webhook.id)
         LOG.info(_LI("Webhook '%s' is deleted."), identity)
-        return None
 
     def action_find(self, context, identity, show_deleted=False):
         '''Find an action with the given identity (could be name or ID).'''
@@ -1669,7 +1666,6 @@ class EngineService(service.Service):
                                           resource_id=db_action.id)
 
         LOG.info(_LI("Action '%s' is deleted."), identity)
-        return None
 
     def receiver_find(self, context, identity, show_deleted=False):
         """Find a receiver with the given identity (could be name or ID)."""
