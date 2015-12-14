@@ -26,10 +26,23 @@ Install via Devstack
 ~~~~~~~~~~~~~~~~~~~~
 
 This is the recommended way to install the Senlin service. Please refer to
-:file:`devstack/README.rst` for detailed instructions.
+following detailed instructions.
 
-Note that Senlin client is also installed when following the instructions
-it the above mentioned document.
+1. Download DevStack::
+
+   $ git clone https://git.openstack.org/openstack-dev/devstack
+   $ cd devstack
+
+2. Add this repo as an external repository into your ``local.conf`` file::
+
+   [[local|localrc]]
+   enable_plugin senlin https://git.openstack.org/openstack/senlin
+
+3. Run ``stack.sh``::
+
+    $ stack.sh
+
+Note that Senlin client is also installed when following the instructions.
 
 
 Manual Installation
