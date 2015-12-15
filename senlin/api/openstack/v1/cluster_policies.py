@@ -18,6 +18,7 @@ from webob import exc
 
 from senlin.api.openstack.v1 import util
 from senlin.common import serializers
+from senlin.common import utils
 from senlin.common import wsgi
 from senlin.rpc import client as rpc_client
 
@@ -49,10 +50,12 @@ class ClusterPolicyController(object):
         }
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)
+        key = 'enabled'
+        if key in filters:
+            filters[key] = utils.parse_bool_param(key, filters[key])
 
         if not filters:
             filters = None
-
         policies = self.rpc_client.cluster_policy_list(req.context,
                                                        cluster_id=cluster_id,
                                                        filters=filters,
