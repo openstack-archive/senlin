@@ -535,7 +535,16 @@ class ServerProfile(base.Profile):
         if obj.physical_id is None or obj.physical_id == '':
             return {}
 
-        server = self.nova(obj).server_get(obj.physical_id)
+        try:
+            server = self.nova(obj).server_get(obj.physical_id)
+        except exception.InternalError as ex:
+            return {
+                'Error': {
+                    'code': ex.code,
+                    'message': six.text_type(ex)
+                }
+            }
+
         if server is None:
             return {}
         server_data = server.to_dict()
