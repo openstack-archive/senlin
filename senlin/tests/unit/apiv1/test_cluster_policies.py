@@ -108,6 +108,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {
             'priority': 20,
             'level': 50,
+            'enabled': 'True',
             'balrog': 'you shall not pass!'
         }
         req = self._get('/cluster_policies/%s' % cid, params=params)
@@ -120,7 +121,8 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('filters', engine_args)
 
         filters = engine_args['filters']
-        self.assertEqual(2, len(filters))
+        self.assertEqual(3, len(filters))
+        self.assertTrue(filters['enabled'])
         self.assertIn('priority', filters)
         self.assertIn('level', filters)
         self.assertNotIn('balrog', filters)
