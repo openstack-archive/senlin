@@ -1,0 +1,3 @@
+---
+features:
+  - Support to 'senlin-manage purge_deleted <age> [<unit>]' is added.

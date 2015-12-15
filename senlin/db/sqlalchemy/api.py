@@ -14,6 +14,7 @@
 Implementation of SQLAlchemy backend.
 '''
 
+import datetime
 import six
 import sys
 
@@ -23,6 +24,7 @@ from oslo_db.sqlalchemy import utils
 from oslo_log import log as logging
 from oslo_utils import timeutils
 
+import sqlalchemy
 from sqlalchemy.orm import session as orm_session
 
 from senlin.common import consts
@@ -1043,54 +1045,6 @@ def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
                                         sort_dir=sort_dir)
 
 
-def purge_deleted(age, granularity='days'):
-    pass
-#    try:
-#        age = int(age)
-#    except ValueError:
-#        raise exception.Error(_("age should be an integer"))
-#    if age < 0:
-#        raise exception.Error(_("age should be a positive integer"))
-#
-#    if granularity not in ('days', 'hours', 'minutes', 'seconds'):
-#        raise exception.Error(
-#            _("granularity should be days, hours, minutes, or seconds"))
-#
-#    if granularity == 'days':
-#        age = age * 86400
-#    elif granularity == 'hours':
-#        age = age * 3600
-#    elif granularity == 'minutes':
-#        age = age * 60
-#
-#    time_line = datetime.datetime.now() - datetime.timedelta(seconds=age)
-#    engine = get_engine()
-#    meta = sqlalchemy.MetaData()
-#    meta.bind = engine
-#
-#    cluster = sqlalchemy.Table('cluster', meta, autoload=True)
-#    event = sqlalchemy.Table('event', meta, autoload=True)
-#    cluster_policies = sqlalchemy.Table('cluster_policy', meta, autoload=True)
-#    user_creds = sqlalchemy.Table('user_creds', meta, autoload=True)
-#
-#    stmt = sqlalchemy.select([cluster.c.id,
-#                              cluster.c.profile_id,
-#                              cluster.c.user_creds_id]).\
-#        where(cluster.c.deleted_at < time_line)
-#    deleted_clusters = engine.execute(stmt)
-#
-#    for s in deleted_clusters:
-#        event_del = event.delete().where(event.c.cluster_id == s[0])
-#        engine.execute(event_del)
-#        cluster_del = cluster.delete().where(cluster.c.id == s[0])
-#        engine.execute(cluster_del)
-#        cluster_policies_del = cluster_policies.delete().\
-#            where(.c.id == s[1])
-#        engine.execute(raw_template_del)
-#        user_creds_del = user_creds.delete().where(user_creds.c.id == s[2])
-#        engine.execute(user_creds_del)
-
-
 # Actions
 def action_create(context, values):
     action = models.Action()
@@ -1556,3 +1510,70 @@ def db_sync(engine, version=None):
 def db_version(engine):
     """Display the current database version."""
     return migration.db_version(engine)
+
+
+def purge_deleted(age, unit='days'):
+    """Delete objects that were marked as soft-deleted.
+
+    :param age: An integer to be interpreted as a length of time period.
+    :param unit: A string for the granularity of the 'age' param.
+    """
+    try:
+        age = int(age)
+    except ValueError:
+        raise exception.Error(_("age should be an integer"))
+
+    if age < 0:
+        raise exception.Error(_("age should be a positive integer"))
+
+    if unit not in ('days', 'hours', 'minutes', 'seconds'):
+        raise exception.Error(
+            _("unit must be one of days, hours, minutes, or seconds"))
+
+    if unit == 'days':
+        age = age * 86400
+    elif unit == 'hours':
+        age = age * 3600
+    elif unit == 'minutes':
+        age = age * 60
+
+    timeline = timeutils.utcnow() - datetime.timedelta(seconds=age)
+    engine = get_engine()
+    meta = sqlalchemy.MetaData()
+    meta.bind = engine
+
+    profile = sqlalchemy.Table('profile', meta, autoload=True)
+    policy = sqlalchemy.Table('policy', meta, autoload=True)
+    cluster = sqlalchemy.Table('cluster', meta, autoload=True)
+    node = sqlalchemy.Table('node', meta, autoload=True)
+    action = sqlalchemy.Table('action', meta, autoload=True)
+    receiver = sqlalchemy.Table('receiver', meta, autoload=True)
+    event = sqlalchemy.Table('event', meta, autoload=True)
+
+    # delete policies
+    policy_del = policy.delete().where(policy.c.deleted_time < timeline)
+    engine.execute(policy_del)
+
+    # delete events
+    event_del = event.delete().where(event.c.timestamp < timeline)
+    engine.execute(event_del)
+
+    # delete actions
+    action_del = action.delete().where(action.c.deleted_time < timeline)
+    engine.execute(action_del)
+
+    # delete receivers
+    receiver_del = receiver.delete().where(receiver.c.deleted_time < timeline)
+    engine.execute(receiver_del)
+
+    # delete nodes
+    node_del = node.delete().where(node.c.deleted_time < timeline)
+    engine.execute(node_del)
+
+    # delete clusters
+    cluster_del = cluster.delete().where(cluster.c.deleted_time < timeline)
+    engine.execute(cluster_del)
+
+    # delete profiles
+    profile_del = profile.delete().where(profile.c.deleted_time < timeline)
+    engine.execute(profile_del)
