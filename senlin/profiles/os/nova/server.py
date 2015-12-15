@@ -337,13 +337,8 @@ class ServerProfile(base.Profile):
             kwargs['availability_zone'] = obj.data['placement']['zone']
 
         LOG.info('Creating server: %s' % kwargs)
-        try:
-            server = self.nova(obj).server_create(**kwargs)
-            self.nova(obj).wait_for_server(server)
-        except Exception as ex:
-            LOG.exception(_('Failed in creating server: %s'),
-                          six.text_type(ex))
-            return False
+        server = self.nova(obj).server_create(**kwargs)
+        self.nova(obj).wait_for_server(server)
         self.server_id = server.id
 
         return server.id
