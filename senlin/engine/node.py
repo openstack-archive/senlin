@@ -255,6 +255,8 @@ class Node(object):
         try:
             physical_id = profile_base.Profile.create_object(context, self)
         except exception.InternalError as ex:
+            LOG.exception(_('Failed in creating server: %s'),
+                          six.text_type(ex))
             self._handle_exception(context, 'create', self.ERROR, ex)
             return False
         if not physical_id:

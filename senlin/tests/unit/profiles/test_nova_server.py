@@ -424,32 +424,6 @@ class TestNovaServerProfile(base.SenlinTestCase):
         novaclient.server_create.assert_called_once_with(**attrs)
         self.assertEqual(nova_server.id, server_id)
 
-    def test_do_create_wait_for_server_timeout(self):
-        novaclient = mock.Mock()
-        neutronclient = mock.Mock()
-        test_server = mock.Mock()
-        test_server.name = None
-        test_server.cluster_id = None
-        test_server.data = {}
-        flavor = mock.Mock()
-        flavor.id = 'FAKE_FLAVOR_ID'
-        novaclient.flavor_find.return_value = flavor
-        net = mock.Mock()
-        net.id = 'FAKE_NETWORK_ID'
-        neutronclient.network_get.return_value = net
-
-        nova_server = mock.Mock()
-        novaclient.server_create.return_value = nova_server
-        novaclient.wait_for_server.side_effect = exception.InternalError(
-            code=500, message='timeout')
-
-        profile = server.ServerProfile('t', self.spec)
-        profile._novaclient = novaclient
-        profile._neutronclient = neutronclient
-        res = profile.do_create(test_server)
-        self.assertFalse(res)
-        novaclient.wait_for_server.assert_called_once_with(nova_server)
-
     def test_do_delete_no_physical_id(self):
         # Test path where server doesn't already exist
         nc = mock.Mock()
