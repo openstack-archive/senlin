@@ -42,7 +42,6 @@ class SenlinException(Exception):
 
     def __init__(self, **kwargs):
         self.kwargs = kwargs
-        self.__context__ = None
 
         try:
             self.message = self.msg_fmt % kwargs
