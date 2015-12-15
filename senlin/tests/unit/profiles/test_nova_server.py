@@ -970,14 +970,22 @@ class TestNovaServerProfile(base.SenlinTestCase):
     def test_do_get_details_server_not_found(self):
         # Test path for server not created
         nc = mock.Mock()
-        nc.server_get.return_value = None
+        err = exception.InternalError(code=404,
+                                      message='No Server found for ID')
+        nc.server_get.side_effect = err
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = nc
         obj = mock.Mock()
         obj.physical_id = 'FAKE_ID'
 
         res = profile.do_get_details(obj)
-        self.assertEqual({}, res)
+        expected = {
+            'Error': {
+                'message': 'No Server found for ID',
+                'code': 404
+            }
+        }
+        self.assertEqual(expected, res)
         nc.server_get.assert_called_once_with('FAKE_ID')
 
     def test_do_join_successful(self):
