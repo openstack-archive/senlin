@@ -1712,9 +1712,9 @@ class EngineService(service.Service):
                 msg = _("A receiver named (%s) already exists.") % name
                 raise exception.SenlinBadRequest(msg=msg)
 
-        LOG.info(_LI("Creating receiver '%(n)s': \n"
-                     "  type: %(t)s\n  id: %(i)s\n  action: %(a)s."),
-                 {'n': name, 't': type_name, 'i': cluster_id, 'a': action})
+        LOG.info(_LI("Creating receiver %(n)s: \n"
+                     "  type: %(t)s\n  cluster: %(c)s\n  action: %(a)s."),
+                 {'n': name, 't': type_name, 'c': cluster_id, 'a': action})
 
         rtype = type_name.lower()
         if rtype not in consts.RECEIVER_TYPES:

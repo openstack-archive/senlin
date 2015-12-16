@@ -10,15 +10,37 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_config import cfg
 from oslo_utils import timeutils
+from oslo_utils import uuidutils
+from six.moves.urllib import parse
 
+from senlin.common import consts
 from senlin.common import exception
 from senlin.common import utils
 from senlin.db import api as db_api
 
+CONF = cfg.CONF
+
 
 class Receiver(object):
     """Create a Receiver which is used to trigger a cluster action."""
+
+    def __new__(cls, rtype, cluster_id, action, **kwargs):
+        """Create a new receiver object.
+
+        :param rtype: Type name of receiver.
+        :param cluster_id: ID of the targeted cluster.
+        :param action: Targeted action for execution.
+        :param kwargs: A dict containing optional parameters.
+        :returns: An instance of a specific sub-class of Receiver.
+        """
+        if rtype == consts.RECEIVER_WEBHOOK:
+            ReceiverClass = Webhook
+        else:
+            ReceiverClass = Receiver
+
+        return super(Receiver, cls).__new__(ReceiverClass)
 
     def __init__(self, rtype, cluster_id, action, **kwargs):
 
@@ -80,11 +102,11 @@ class Receiver(object):
             # otherwise, use context user
             cdata['trust_id'] = [context.trusts]
 
+        kwargs['id'] = uuidutils.generate_uuid()
         kwargs['actor'] = cdata
         kwargs['user'] = context.user
         kwargs['project'] = context.project
         kwargs['domain'] = context.domain
-
         obj = cls(rtype, cluster.id, action, **kwargs)
         obj.initialize_channel()
         obj.store(context)
@@ -173,16 +195,24 @@ class Receiver(object):
         return info
 
     def initialize_channel(self):
-        return
+        return {}
 
 
 class Webhook(Receiver):
     """Webhook flavor of receivers."""
 
     def initialize_channel(self):
-        # key = receiver.encrypt_credential()
-        # url, token = receiver.generate_url(key)
+        host = CONF.webhook.host
+        port = CONF.webhook.port
+        base = "http://%(h)s:%(p)s/v1" % {'h': host, 'p': port}
+        webhook = "/webhooks/%(id)s/trigger" % {'id': self.id}
+        if self.params:
+            params = parse.urlencode(self.params)
+            url = "".join([base, webhook, '?V=1&', params])
+        else:
+            url = "".join([base, webhook, '?V=1'])
 
-        channel = {}
-        self.channel = channel
-        return channel
+        self.channel = {
+            'alarm_url': url
+        }
+        return self.channel

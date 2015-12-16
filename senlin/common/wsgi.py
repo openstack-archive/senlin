@@ -101,6 +101,20 @@ wsgi_eventlet_group = cfg.OptGroup('eventlet_opts')
 cfg.CONF.register_group(wsgi_eventlet_group)
 cfg.CONF.register_opts(wsgi_eventlet_opts, group=wsgi_eventlet_group)
 
+webhook_opts = [
+    cfg.StrOpt('host',
+               default=socket.gethostname(),
+               help=_('Address for invoking webhooks. It is useful for cases '
+                      'where proxies are used for triggering webhooks. '
+                      'Default to the hostname of the API node.')),
+    cfg.PortOpt('port', default=8778,
+                help=_('The port on which a webhook will be invoked. Useful '
+                       'when service is running behind a proxy.'))
+]
+webhook_group = cfg.OptGroup('webhook')
+cfg.CONF.register_group(webhook_group)
+cfg.CONF.register_opts(webhook_opts, group=webhook_group)
+
 json_size_opt = cfg.IntOpt('max_json_body_size', default=1048576,
                            help=_('Maximum raw byte size of JSON request body.'
                                   ' Should be larger than max_template_size.'))
