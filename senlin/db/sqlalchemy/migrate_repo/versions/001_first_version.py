@@ -222,8 +222,8 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('owner', sqlalchemy.String(36)),
         sqlalchemy.Column('interval', sqlalchemy.Integer),
         # FIXME: Don't specify fixed precision.
-        sqlalchemy.Column('start_time', sqlalchemy.Float('24,8')),
-        sqlalchemy.Column('end_time', sqlalchemy.Float('24,8')),
+        sqlalchemy.Column('start_time', sqlalchemy.Float(precision='24,8')),
+        sqlalchemy.Column('end_time', sqlalchemy.Float(precision='24,8')),
         sqlalchemy.Column('timeout', sqlalchemy.Integer),
         sqlalchemy.Column('control', sqlalchemy.String(255)),
         sqlalchemy.Column('status', sqlalchemy.String(255)),

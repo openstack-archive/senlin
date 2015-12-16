@@ -114,6 +114,7 @@ class ClusterAction(base.Action):
         placement = self.data.get('placement', None)
 
         nodes = []
+        child_actions = []
         for m in range(count):
             index = db_api.cluster_next_index(self.context, self.cluster.id)
             kwargs = {
@@ -145,15 +146,18 @@ class ClusterAction(base.Action):
 
             action = base.Action(node.id, 'NODE_CREATE', **kwargs)
             action.store(self.context)
+            child_actions.append(action)
 
+        if child_actions:
             # Build dependency and make the new action ready
-            db_api.action_add_dependency(self.context, action.id, self.id)
-            db_api.action_update(self.context, action.id,
-                                 {'status': action.READY})
+            db_api.action_add_dependency(self.context,
+                                         [a.id for a in child_actions],
+                                         self.id)
+            for child in child_actions:
+                db_api.action_update(self.context, child.id,
+                                     {'status': child.READY})
+                dispatcher.start_action(action_id=child.id)
 
-            dispatcher.start_action(action_id=action.id)
-
-        if count > 0:
             # Wait for cluster creation to complete
             res, reason = self._wait_for_dependents()
             if res == self.RES_OK:
@@ -203,6 +207,7 @@ class ClusterAction(base.Action):
 
         profile_id = self.inputs.get('new_profile_id')
 
+        child_actions = []
         for node in self.cluster.nodes:
             kwargs = {
                 'name': 'node_update_%s' % node.id[:8],
@@ -216,16 +221,18 @@ class ClusterAction(base.Action):
             }
             action = base.Action(node.id, 'NODE_UPDATE', **kwargs)
             action.store(self.context)
+            child_actions.append(action)
 
-            db_api.action_add_dependency(self.context, action.id, self.id)
-            db_api.action_update(self.context, action.id,
-                                 {'status': action.READY})
-            dispatcher.start_action(action_id=action.id)
+        if child_actions:
+            db_api.action_add_dependency(self.context,
+                                         [c.id for c in child_actions],
+                                         self.id)
+            for child in child_actions:
+                db_api.action_update(self.context, child.id,
+                                     {'status': child.READY})
+                dispatcher.start_action(action_id=child.id)
 
-        # Wait for nodes to complete update
-        if len(self.cluster.nodes) > 0:
             result, new_reason = self._wait_for_dependents()
-
             if result != self.RES_OK:
                 self.cluster.set_status(self.context, self.cluster.WARNING,
                                         new_reason)
@@ -245,6 +252,7 @@ class ClusterAction(base.Action):
             if not destroy:
                 action_name = consts.NODE_LEAVE
 
+        child_actions = []
         for node_id in node_ids:
             kwargs = {
                 'name': 'node_delete_%s' % node_id[:8],
@@ -255,15 +263,18 @@ class ClusterAction(base.Action):
             }
             action = base.Action(node_id, action_name, **kwargs)
             action.store(self.context)
+            child_actions.append(action)
 
-            # Build dependency and make the new action ready
-            db_api.action_add_dependency(self.context, action.id, self.id)
-            db_api.action_update(self.context, action.id,
-                                 {'status': action.READY})
+        if child_actions:
+            db_api.action_add_dependency(self.context,
+                                         [c.id for c in child_actions],
+                                         self.id)
+            for child in child_actions:
+                # Build dependency and make the new action ready
+                db_api.action_update(self.context, child.id,
+                                     {'status': child.READY})
+                dispatcher.start_action(action_id=child.id)
 
-            dispatcher.start_action(action_id=action.id)
-
-        if len(node_ids) > 0:
             res, reason = self._wait_for_dependents()
             if res == self.RES_OK:
                 self.outputs['nodes_removed'] = node_ids
@@ -593,12 +604,13 @@ class ClusterAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        policy_id = self.inputs.pop('policy_id', None)
+        inputs = dict(self.inputs)
+        policy_id = inputs.pop('policy_id', None)
         if not policy_id:
             return self.RES_ERROR, _('Policy not specified.')
 
         res, reason = self.cluster.attach_policy(self.context, policy_id,
-                                                 self.inputs)
+                                                 inputs)
         result = self.RES_OK if res else self.RES_ERROR
         return result, reason
 
