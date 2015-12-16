@@ -43,7 +43,7 @@ def do_db_sync():
 def purge_deleted():
     """Remove database records that have been previously soft deleted."""
 
-    utils.purge_deleted(CONF.command.age, CONF.command.granularity)
+    utils.purge_deleted(CONF.command.age, CONF.command.unit)
 
 
 def add_command_parsers(subparsers):
@@ -60,9 +60,9 @@ def add_command_parsers(subparsers):
     parser.add_argument('age', nargs='?', default='90',
                         help=_('How long to preserve deleted data.'))
     parser.add_argument(
-        '-g', '--granularity', default='days',
+        '-u', '--unit', default='days',
         choices=['days', 'hours', 'minutes', 'seconds'],
-        help=_('Granularity to use for age argument, defaults to days.'))
+        help=_('Unit to use for age argument, defaults to days.'))
 
 command_opt = cfg.SubCommandOpt('command',
                                 title='Commands',
