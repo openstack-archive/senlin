@@ -120,3 +120,7 @@ def notify(context, method, engine_id, *args, **kwargs):
         return True
     except oslo_messaging.MessagingTimeout:
         return False
+
+
+def list_opts():
+    yield None, health_mgr_opts
