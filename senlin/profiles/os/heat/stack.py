@@ -112,6 +112,7 @@ class StackProfile(base.Profile):
 
     def _check_action_complete(self, obj, action):
         stack = self.heat(obj).stack_get(self.stack_id)
+
         status = stack.status.split('_', 1)
 
         if status[0] == action:
@@ -155,12 +156,10 @@ class StackProfile(base.Profile):
 
         try:
             self.heat(obj).stack_delete(self.stack_id, True)
+            self.heat(obj).wait_for_stack_delete(self.stack_id)
         except Exception as ex:
+            LOG.error('Error: %s' % six.text_type(ex))
             raise ex
-
-        # Wait for action to complete/fail
-        while not self._check_action_complete(obj, 'DELETE'):
-            scheduler.sleep(1)
 
         return True
 

@@ -11,6 +11,7 @@
 # under the License.
 
 import mock
+from oslo_config import cfg
 
 from senlin.drivers.openstack import heat_v1
 from senlin.drivers.openstack import sdk
@@ -66,3 +67,25 @@ class TestHeatV1(base.SenlinTestCase):
     def test_stack_delete(self):
         self.hc.stack_delete('stack_id', ignore_missing=True)
         self.orch.delete_stack.assert_called_once_with('stack_id', True)
+
+    def test_wait_for_stack_delete_successful(self):
+        fake_stack = mock.Mock(id='stack_id')
+        self.orch.find_stack.return_value = fake_stack
+        self.hc.wait_for_stack_delete('stack_id')
+        self.orch.find_stack.assert_called_once_with('stack_id', True)
+        self.orch.wait_for_delete.assert_called_once_with(fake_stack,
+                                                          wait=3600)
+
+    def test_wait_for_stack_delete_with_resource_not_found(self):
+        self.orch.find_stack.return_value = None
+        self.hc.wait_for_stack_delete('stack_id')
+        self.orch.find_stack.assert_called_once_with('stack_id', True)
+
+    def test_wait_for_server_delete_with_timeout(self):
+        cfg.CONF.set_override('default_action_timeout', 360, enforce_type=True)
+        fake_stack = mock.Mock(id='stack_id')
+        self.orch.find_stack.return_value = fake_stack
+
+        self.hc.wait_for_stack_delete('stack_id')
+        self.orch.wait_for_delete.assert_called_once_with(fake_stack,
+                                                          wait=360)
