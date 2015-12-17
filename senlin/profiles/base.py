@@ -38,15 +38,15 @@ class Profile(object):
 
     spec_schema = {
         TYPE: schema.String(
-            _('Name of the policy type.'),
+            _('Name of the profile type.'),
             required=True,
         ),
         VERSION: schema.String(
-            _('Version number of the policy type.'),
+            _('Version number of the profile type.'),
             required=True,
         ),
         PROPERTIES: schema.Map(
-            _('Properties for the policy.'),
+            _('Properties for the profile.'),
             required=True,
         )
     }
@@ -58,8 +58,8 @@ class Profile(object):
 
         :param name: The name for the profile.
         :param spec: A dictionary containing the spec for the profile.
-        :param kwargs: Keyword arguments for policy creation.
-        :returns: An instance of a specific sub-class of Policy.
+        :param kwargs: Keyword arguments for profile creation.
+        :returns: An instance of a specific sub-class of Profile.
         """
         type_name, version = schema.get_spec_version(spec)
 
@@ -74,9 +74,9 @@ class Profile(object):
         """Initialize a profile instance.
 
         :param name: A string that specifies the name for the profile.
-        :param spec: A dictionary containing the detailed policy spec.
-        :param kwargs: Keyword arguments for initializing the policy.
-        :returns: An instance of a specific sub-class of Policy.
+        :param spec: A dictionary containing the detailed profile spec.
+        :param kwargs: Keyword arguments for initializing the profile.
+        :returns: An instance of a specific sub-class of Profile.
         """
 
         type_name, version = schema.get_spec_version(spec)
