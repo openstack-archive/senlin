@@ -130,12 +130,6 @@ class ScalingPolicy(base.Policy):
         status = base.CHECK_OK
         reason = _('Scaling request validated.')
 
-        # Check if the action is expected by the policy
-        if self.event != action.action:
-            action.data.update({'status': status, 'reason': reason})
-            action.store(action.context)
-            return
-
         cluster = db_api.cluster_get(action.context, cluster_id)
         nodes = db_api.node_get_all_by_cluster(action.context, cluster_id)
         current_size = len(nodes)
@@ -180,3 +174,11 @@ class ScalingPolicy(base.Policy):
         action.store(action.context)
 
         return
+
+    def need_check(self, target, action):
+        res = super(ScalingPolicy, self).need_check(target, action)
+        if res:
+            # Check if the action is expected by the policy
+            res = (self.event == action.action)
+
+        return res

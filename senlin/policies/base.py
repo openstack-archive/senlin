@@ -300,6 +300,15 @@ class Policy(object):
         '''Method to be invoked before policy is detached from a cluster.'''
         return True, None
 
+    def need_check(self, target, action):
+        if getattr(self, 'TARGET', None) is None:
+            return True
+
+        if (target, action.action) in self.TARGET:
+            return True
+        else:
+            return False
+
     def pre_op(self, cluster_id, action):
         '''A method that will be invoked before an action execution.'''
         return

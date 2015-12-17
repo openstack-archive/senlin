@@ -187,21 +187,6 @@ class TestScalingPolicy(base.SenlinTestCase):
         action.data.update.assert_called_with(pd)
         action.store.assert_called_with(self.context)
 
-    def test_pre_op_action_not_in_event(self):
-        action = mock.Mock()
-        action.context = self.context
-        action.action = consts.CLUSTER_SCALE_OUT
-        action.data = {}
-
-        policy = sp.ScalingPolicy('test-policy', self.spec)
-        policy.pre_op(self.cluster['id'], action)
-        expected = {
-            'reason': 'Scaling request validated.',
-            'status': policy_base.CHECK_OK,
-        }
-        self.assertEqual(expected, action.data)
-        action.store.assert_called_with(self.context)
-
     def test_pre_op_pass_with_input(self):
         action = mock.Mock()
         action.context = self.context
@@ -298,3 +283,23 @@ class TestScalingPolicy(base.SenlinTestCase):
         }
         action.data.update.assert_called_with(pd)
         action.store.assert_called_with(self.context)
+
+    def test_need_check_in_event(self):
+        action = mock.Mock()
+        action.context = self.context
+        action.action = consts.CLUSTER_SCALE_IN
+        action.data = {}
+
+        policy = sp.ScalingPolicy('test-policy', self.spec)
+        res = policy.need_check('BEFORE', action)
+        self.assertTrue(res)
+
+    def test_need_check_not_in_event(self):
+        action = mock.Mock()
+        action.context = self.context
+        action.action = consts.CLUSTER_SCALE_OUT
+        action.data = {}
+
+        policy = sp.ScalingPolicy('test-policy', self.spec)
+        res = policy.need_check('BEFORE', action)
+        self.assertFalse(res)
