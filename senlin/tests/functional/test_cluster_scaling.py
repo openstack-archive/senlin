@@ -11,6 +11,7 @@
 # under the License.
 
 from oslo_log import log as logging
+import six
 
 from senlin.common.i18n import _
 from senlin.tests.functional import api as test_api
@@ -414,7 +415,7 @@ class TestClusterScaling(base.SenlinFunctionalTest):
                                test_api.action_cluster, self.client,
                                cluster['id'], 'resize', params)
         self.assertEqual(400, ex.response.status_code)
-        self.assertIn(msg, ex.response.content)
+        self.assertIn(msg, six.text_type(ex.response.content))
 
         # Delete cluster
         test_api.delete_cluster(self.client, cluster['id'])

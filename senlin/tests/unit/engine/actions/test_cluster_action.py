@@ -161,7 +161,7 @@ class ClusterActionTest(base.SenlinTestCase):
                                             domain=self.ctx.domain,
                                             name='node_create_NODE_ID',
                                             cause='Derived Action')
-        mock_dep.assert_called_once_with(action.context, 'NODE_ACTION_ID',
+        mock_dep.assert_called_once_with(action.context, ['NODE_ACTION_ID'],
                                          'CLUSTER_ACTION_ID')
         mock_update.assert_called_once_with(
             action.context, n_action.id,
@@ -235,7 +235,7 @@ class ClusterActionTest(base.SenlinTestCase):
         node1.store.assert_called_once_with(action.context)
         node2.store.assert_called_once_with(action.context)
         self.assertEqual(2, mock_action.call_count)
-        self.assertEqual(2, mock_dep.call_count)
+        self.assertEqual(1, mock_dep.call_count)
 
         update_calls = [
             mock.call(action.context, node_action_1.id,
@@ -423,7 +423,7 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(2,  mock_action.call_count)
         n_action_1.store.assert_called_once_with(action.context)
         n_action_2.store.assert_called_once_with(action.context)
-        self.assertEqual(2, mock_dep.call_count)
+        self.assertEqual(1, mock_dep.call_count)
         update_calls = [
             mock.call(action.context, n_action_1.id,
                       {'status': n_action_1.READY}),
@@ -521,7 +521,7 @@ class ClusterActionTest(base.SenlinTestCase):
             project=self.ctx.project, domain=self.ctx.domain,
             name='node_delete_NODE_ID', cause='Derived Action')
         n_action.store.assert_called_once_with(action.context)
-        mock_dep.assert_called_once_with(action.context, 'NODE_ACTION_ID',
+        mock_dep.assert_called_once_with(action.context, ['NODE_ACTION_ID'],
                                          'CLUSTER_ACTION_ID')
         mock_update.assert_called_once_with(
             action.context, n_action.id, {'status': n_action.READY})
@@ -569,7 +569,7 @@ class ClusterActionTest(base.SenlinTestCase):
                       {'status': n_action_2.READY})
         ]
         mock_update.assert_has_calls(update_calls)
-        self.assertEqual(2, mock_dep.call_count)
+        self.assertEqual(1, mock_dep.call_count)
         self.assertEqual(2, mock_start.call_count)
         mock_wait.assert_called_once_with()
         self.assertEqual({'nodes_removed': ['NODE_1', 'NODE_2']},

@@ -36,7 +36,7 @@ LOCK_SCOPES = (
 
 def action_on_dead_engine(context, action):
     action = db_api.action_get(context, action)
-    if action.owner:
+    if action and action.owner:
         return not dispatcher.notify('listening', action.owner)
 
 
