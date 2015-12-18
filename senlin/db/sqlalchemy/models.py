@@ -300,6 +300,21 @@ class Credential(BASE, SenlinBase):
     data = sqlalchemy.Column(types.Dict)
 
 
+class ActionDependency(BASE, SenlinBase):
+    """A table for recording action dependencies."""
+
+    __tablename__ = 'dependency'
+
+    id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
+                           default=lambda: str(uuid.uuid4()))
+    depended = sqlalchemy.Column('depended', sqlalchemy.String(36),
+                                 sqlalchemy.ForeignKey('action.id'),
+                                 nullable=False)
+    dependent = sqlalchemy.Column('dependent', sqlalchemy.String(36),
+                                  sqlalchemy.ForeignKey('action.id'),
+                                  nullable=False)
+
+
 class Action(BASE, SenlinBase, SoftDelete):
     '''An action persisted in the Senlin database.'''
 

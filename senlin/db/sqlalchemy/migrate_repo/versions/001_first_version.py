@@ -240,6 +240,18 @@ def upgrade(migrate_engine):
         mysql_charset='utf8'
     )
 
+    dependency = sqlalchemy.Table(
+        'dependency', meta,
+        sqlalchemy.Column('id', sqlalchemy.String(36), nullable=False,
+                          primary_key=True),
+        sqlalchemy.Column('depended', sqlalchemy.String(36),
+                          sqlalchemy.ForeignKey('action.id'), nullable=False),
+        sqlalchemy.Column('dependent', sqlalchemy.String(36),
+                          sqlalchemy.ForeignKey('action.id'), nullable=False),
+        mysql_engine='InnoDB',
+        mysql_charset='utf8'
+    )
+
     event = sqlalchemy.Table(
         'event', meta,
         sqlalchemy.Column('id', sqlalchemy.String(36),
@@ -272,6 +284,7 @@ def upgrade(migrate_engine):
         webhook,
         credential,
         action,
+        dependency,
         receiver,
         event,
     )
