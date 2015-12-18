@@ -71,6 +71,11 @@ support this kind of requirement.
 Middle Priority
 ---------------
 
+Blue-Green Deployment
+^^^^^^^^^^^^^^^^^^^^^
+
+Support to deploy environments using blue-green deployment pattern.
+http://martinfowler.com/bliki/BlueGreenDeployment.html
 
 Multi-cloud Support
 ^^^^^^^^^^^^^^^^^^^
