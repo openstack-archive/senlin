@@ -300,6 +300,21 @@ class Credential(BASE, SenlinBase):
     data = sqlalchemy.Column(types.Dict)
 
 
+class ActionDependency(BASE, SenlinBase):
+    """A table for recording action dependencies."""
+
+    __tablename__ = 'dependency'
+
+    id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
+                           default=lambda: str(uuid.uuid4()))
+    depended = sqlalchemy.Column('depended', sqlalchemy.String(36),
+                                 sqlalchemy.ForeignKey('action.id'),
+                                 nullable=False)
+    dependent = sqlalchemy.Column('dependent', sqlalchemy.String(36),
+                                  sqlalchemy.ForeignKey('action.id'),
+                                  nullable=False)
+
+
 class Action(BASE, SenlinBase, SoftDelete):
     '''An action persisted in the Senlin database.'''
 
@@ -315,8 +330,8 @@ class Action(BASE, SenlinBase, SoftDelete):
     owner = sqlalchemy.Column(sqlalchemy.String(36))
     interval = sqlalchemy.Column(sqlalchemy.Integer)
     # FIXME: Don't specify fixed precision.
-    start_time = sqlalchemy.Column(sqlalchemy.Float('24,8'))
-    end_time = sqlalchemy.Column(sqlalchemy.Float('24,8'))
+    start_time = sqlalchemy.Column(sqlalchemy.Float(precision='24,8'))
+    end_time = sqlalchemy.Column(sqlalchemy.Float(precision='24,8'))
     timeout = sqlalchemy.Column(sqlalchemy.Integer)
     status = sqlalchemy.Column(sqlalchemy.String(255))
     status_reason = sqlalchemy.Column(sqlalchemy.Text)
