@@ -150,9 +150,9 @@ class ClusterAction(base.Action):
 
         if child_actions:
             # Build dependency and make the new action ready
-            db_api.action_add_dependency(self.context,
-                                         [a.id for a in child_actions],
-                                         self.id)
+            db_api.dependency_add(self.context,
+                                  [a.id for a in child_actions],
+                                  self.id)
             for child in child_actions:
                 db_api.action_update(self.context, child.id,
                                      {'status': child.READY})
@@ -224,9 +224,9 @@ class ClusterAction(base.Action):
             child_actions.append(action)
 
         if child_actions:
-            db_api.action_add_dependency(self.context,
-                                         [c.id for c in child_actions],
-                                         self.id)
+            db_api.dependency_add(self.context,
+                                  [c.id for c in child_actions],
+                                  self.id)
             for child in child_actions:
                 db_api.action_update(self.context, child.id,
                                      {'status': child.READY})
@@ -266,9 +266,8 @@ class ClusterAction(base.Action):
             child_actions.append(action)
 
         if child_actions:
-            db_api.action_add_dependency(self.context,
-                                         [c.id for c in child_actions],
-                                         self.id)
+            db_api.dependency_add(self.context, [c.id for c in child_actions],
+                                  self.id)
             for child in child_actions:
                 # Build dependency and make the new action ready
                 db_api.action_update(self.context, child.id,
@@ -352,6 +351,7 @@ class ClusterAction(base.Action):
 
         reason = _('Completed adding nodes.')
 
+        child_actions = []
         for node in nodes:
             kwargs = {
                 'name': 'node_join_%s' % node.id[:8],
@@ -363,10 +363,15 @@ class ClusterAction(base.Action):
             }
             action = base.Action(node.id, 'NODE_JOIN', **kwargs)
             action.store(self.context)
-            db_api.action_add_dependency(self.context, action.id, self.id)
-            db_api.action_update(self.context, action.id,
-                                 {'status': action.READY})
-            dispatcher.start_action(action_id=action.id)
+            child_actions.append(action)
+
+        if child_actions:
+            db_api.dependency_add(self.context, [c.id for c in child_actions],
+                                  self.id)
+            for child in child_actions:
+                db_api.action_update(self.context, child.id,
+                                     {'status': child.READY})
+                dispatcher.start_action(action_id=child.id)
 
         # Wait for dependent action if any
         result, new_reason = self._wait_for_dependents()

@@ -396,12 +396,16 @@ def action_get_all(context, filters=None, limit=None, marker=None,
                                show_deleted=show_deleted)
 
 
-def action_add_dependency(context, depended, dependent):
-    return IMPL.action_add_dependency(context, depended, dependent)
+def dependency_add(context, depended, dependent):
+    return IMPL.dependency_add(context, depended, dependent)
 
 
-def action_del_dependency(context, depended, dependent):
-    return IMPL.action_del_dependency(context, depended, dependent)
+def dependency_get_depended(context, action_id):
+    return IMPL.dependency_get_depended(context, action_id)
+
+
+def dependency_get_dependents(context, action_id):
+    return IMPL.dependency_get_dependents(context, action_id)
 
 
 def action_mark_succeeded(context, action_id, timestamp):

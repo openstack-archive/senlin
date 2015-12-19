@@ -338,8 +338,6 @@ class Action(BASE, SenlinBase, SoftDelete):
     control = sqlalchemy.Column(sqlalchemy.String(255))
     inputs = sqlalchemy.Column(types.Dict)
     outputs = sqlalchemy.Column(types.Dict)
-    depends_on = sqlalchemy.Column(types.List)
-    depended_by = sqlalchemy.Column(types.List)
     created_time = sqlalchemy.Column(sqlalchemy.DateTime)
     updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
     deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)

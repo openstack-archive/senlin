@@ -145,10 +145,6 @@ class Action(object):
         self.inputs = kwargs.get('inputs', {})
         self.outputs = kwargs.get('outputs', {})
 
-        # Dependency with other actions
-        self.depends_on = kwargs.get('depends_on', [])
-        self.depended_by = kwargs.get('depended_by', [])
-
         self.created_time = kwargs.get('created_time', None)
         self.updated_time = kwargs.get('updated_time', None)
         self.deleted_time = kwargs.get('deleted_time', None)
@@ -175,8 +171,6 @@ class Action(object):
             'status_reason': self.status_reason,
             'inputs': self.inputs,
             'outputs': self.outputs,
-            'depends_on': self.depends_on,
-            'depended_by': self.depended_by,
             'created_time': self.created_time,
             'updated_time': self.updated_time,
             'deleted_time': self.deleted_time,
@@ -216,8 +210,6 @@ class Action(object):
             'status_reason': record.status_reason,
             'inputs': record.inputs,
             'outputs': record.outputs,
-            'depends_on': record.depends_on,
-            'depended_by': record.depended_by,
             'created_time': record.created_time,
             'updated_time': record.updated_time,
             'deleted_time': record.deleted_time,
@@ -443,6 +435,12 @@ class Action(object):
         return
 
     def to_dict(self):
+        if self.id:
+            dep_on = db_api.dependency_get_depended(self.context, self.id)
+            dep_by = db_api.dependency_get_dependents(self.context, self.id)
+        else:
+            dep_on = []
+            dep_by = []
         action_dict = {
             'id': self.id,
             'name': self.name,
@@ -460,8 +458,8 @@ class Action(object):
             'status_reason': self.status_reason,
             'inputs': self.inputs,
             'outputs': self.outputs,
-            'depends_on': self.depends_on,
-            'depended_by': self.depended_by,
+            'depends_on': dep_on,
+            'depended_by': dep_by,
             'created_time': self.created_time,
             'updated_time': self.updated_time,
             'deleted_time': self.deleted_time,

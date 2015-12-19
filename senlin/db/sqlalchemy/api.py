@@ -1059,23 +1059,23 @@ def action_create(context, values):
 
 
 def action_update(context, action_id, values):
-    action = action_get(context, action_id)
-
+    session = get_session()
+    action = session.query(models.Action).get(action_id)
     if not action:
         raise exception.ActionNotFound(action=action_id)
 
     action.update(values)
-    action.save(_session(context))
+    action.save(session)
 
 
 def action_get(context, action_id, show_deleted=False, refresh=False):
-    session = _session(context)
+    session = get_session()
     action = session.query(models.Action).get(action_id)
-    deleted_ok = show_deleted or context.show_deleted
-
-    if action is None or action.deleted_time is not None and not deleted_ok:
+    if action is None:
         return None
-
+    session.refresh(action)
+    if action.deleted_time is not None and not show_deleted:
+        return None
     return action
 
 
@@ -1117,75 +1117,36 @@ def action_get_all(context, filters=None, limit=None, marker=None,
                            default_sort_keys=['created_time']).all()
 
 
-def _action_dependency_add(session, action_id, field, adds):
-    if not isinstance(adds, list):
-        add_list = [adds]
-    else:
-        add_list = adds
-
-    query = session.query(models.Action).filter_by(id=action_id)
-    action = query.first()
-    if action is None:
-        raise exception.ActionNotFound(action=action_id)
-
-    value = action[field]
-    if value is None:
-        value = add_list
-    else:
-        value = list(set(value).union(set(add_list)))
-
-    values = {field: value}
-    if field == 'depends_on':
-        values['status'] = consts.ACTION_WAITING
-        values['status_reason'] = _('The action is waiting for its dependency '
-                                    'being completed.')
-    query.update(values, synchronize_session=False)
-    session.add(action)
+def dependency_get_depended(context, action_id):
+    session = get_session()
+    q = session.query(models.ActionDependency).filter_by(dependent=action_id)
+    return [d.depended for d in q.all()]
 
 
-def _action_dependency_del(session, action_id, field, dels):
-    if not isinstance(dels, list):
-        del_list = [dels]
-    else:
-        del_list = dels
-
-    query = session.query(models.Action).filter_by(id=action_id)
-    action = query.first()
-    if not action:
-        msg = _('Action with id "%s" not found') % action_id
-        LOG.warning(msg)
-        return
-
-    value = action[field]
-    if not value:
-        value = []
-    else:
-        value = list(set(value) - set(del_list))
-
-    values = {field: value}
-    if field == 'depends_on' and len(value) == 0:
-        values['status'] = consts.ACTION_READY
-        values['status_reason'] = _('The action becomes ready due to all '
-                                    'dependencies have been satisfied.')
-    query.update(values, synchronize_session=False)
-    session.add(action)
+def dependency_get_dependents(context, action_id):
+    session = get_session()
+    q = session.query(models.ActionDependency).filter_by(depended=action_id)
+    return [d.dependent for d in q.all()]
 
 
-def action_add_dependency(context, depended, dependent):
+def dependency_add(context, depended, dependent):
     if isinstance(depended, list) and isinstance(dependent, list):
         raise exception.NotSupport(
             _('Multiple dependencies between lists not support'))
 
-    session = _session(context)
+    session = get_session()
 
     if isinstance(depended, list):   # e.g. D depends on A,B,C
         session.begin()
         for d in depended:
-            _action_dependency_add(session, d, "depended_by", dependent)
+            r = models.ActionDependency(depended=d, dependent=dependent)
+            session.add(r)
 
-        _action_dependency_add(session, dependent, "depends_on", depended)
+        query = session.query(models.Action).filter_by(id=dependent)
+        query.update({'status': consts.ACTION_WAITING,
+                      'status_reason': _('Waiting for depended actions.')},
+                     synchronize_session=False)
         session.commit()
-        session.expire_all()
         return
 
     # Only dependent can be a list now, convert it to a list if it
@@ -1196,101 +1157,53 @@ def action_add_dependency(context, depended, dependent):
         dependents = dependent
 
     session.begin()
-    _action_dependency_add(session, depended, "depended_by", dependent)
-
     for d in dependents:
-        _action_dependency_add(session, d, "depends_on", depended)
+        r = models.ActionDependency(depended=depended, dependent=d)
+        session.add(r)
 
+    q = session.query(models.Action).filter(models.Action.id.in_(dependents))
+    q.update({'status': consts.ACTION_WAITING,
+              'status_reason': _('Waiting for depended actions.')},
+             synchronize_session=False)
     session.commit()
-    session.expire_all()
-
-
-def action_del_dependency(context, depended, dependent):
-    if isinstance(depended, list) and isinstance(dependent, list):
-        raise exception.NotSupport(
-            _('Multiple dependencies between lists not support'))
-
-    session = _session(context)
-
-    if isinstance(depended, list):   # e.g. D depends on A,B,C
-        session.begin()
-        for d in depended:
-            _action_dependency_del(session, d, "depended_by", dependent)
-
-        _action_dependency_del(session, dependent, "depends_on", depended)
-        session.commit()
-        session.expire_all()
-        return
-
-    # Only dependent can be a list now, convert it to a list if it
-    # is not a list
-    if not isinstance(dependent, list):  # e.g. B,C,D depend on A
-        dependents = [dependent]
-    else:
-        dependents = dependent
-
-    session.begin()
-    _action_dependency_del(session, depended, "depended_by", dependent)
-
-    for d in dependents:
-        _action_dependency_del(session, d, "depends_on", depended)
-    session.commit()
-    session.expire_all()
 
 
 def action_mark_succeeded(context, action_id, timestamp):
-    session = _session(context)
+    session = get_session()
     session.begin()
+
     query = session.query(models.Action).filter_by(id=action_id)
-    action = query.first()
-    if not action:
-        msg = _('Action with id "%s" not found') % action_id
-        LOG.warning(msg)
-        return
-
-    for a in action.depended_by:
-        _action_dependency_del(session, a, 'depends_on', action_id)
-
     values = {
         'owner': None,
         'status': consts.ACTION_SUCCEEDED,
         'status_reason': _('Action completed successfully.'),
         'end_time': timestamp,
-        'depended_by': [],
     }
-
     query.update(values, synchronize_session=False)
+
+    subquery = session.query(models.ActionDependency).filter_by(
+        depended=action_id)
+    dependents = [d.dependent for d in subquery.all()]
+    subquery.delete(synchronize_session=False)
+
+    for d in dependents:
+        # set action to ready if no depended action hanging
+        q = session.query(models.ActionDependency).filter_by(dependent=d)
+        count = q.count()
+        if count == 0:
+            query = session.query(models.Action).filter_by(id=d)
+            values = {
+                'status': consts.ACTION_READY,
+                'status_reason': _('All depended actions completed.')
+            }
+            query.update(values, synchronize_session=False)
+
     session.commit()
     session.expire_all()
-    return action
 
 
-def _mark_failed_action(session, action_id, timestamp, reason):
-    action = session.query(models.Action).get(action_id)
-    if not action:
-        LOG.warning(_('Action with id "%s" not found') % action_id)
-        return
-
-    values = {
-        'owner': None,
-        'status': consts.ACTION_FAILED,
-        'status_reason': reason,
-        'end_time': timestamp,
-    }
-    action.update(values)
-    session.add(action)
-
-    if action.depended_by is not None:
-        for child in action.depended_by:
-            _mark_failed_action(session, child, timestamp, reason)
-
-
-def action_mark_failed(context, action_id, timestamp, reason=None):
-    session = _session(context)
-    session.begin()
-
+def _mark_failed(session, action_id, timestamp, reason=None):
     query = session.query(models.Action).filter_by(id=action_id)
-    action = query.first()
     values = {
         'owner': None,
         'status': consts.ACTION_FAILED,
@@ -1298,64 +1211,43 @@ def action_mark_failed(context, action_id, timestamp, reason=None):
                           _('Action execution failed')),
         'end_time': timestamp,
     }
-    query.update(values, synchronize_session='fetch')
-    session.add(action)
+    query.update(values, synchronize_session=False)
 
-    for child in action.depended_by:
-        child_reason = _('Action %(id)s failed: %(reason)s') % {
-            'id': action_id, 'reason': action.status_reason}
-        _mark_failed_action(session, child, timestamp, child_reason)
-
-    session.commit()
-    session.expire_all()
-    return action
+    dep = session.query(models.ActionDependency)
+    dependents = dep.filter_by(depended=action_id).all()
+    for d in dependents:
+        _mark_failed(session, d.dependent, timestamp)
 
 
-def _mark_cancelled_action(session, action_id, timestamp):
-    action = session.query(models.Action).get(action_id)
-    if not action:
-        LOG.warning(_('Action with id "%s" not found') % action_id)
-        return
-
-    values = {
-        'owner': None,
-        'status': consts.ACTION_CANCELLED,
-        'status_reason': _('Dependent action was cancelled'),
-        'end_time': timestamp,
-    }
-    action.update(values)
-    session.add(action)
-
-    if action.depended_by is not None:
-        for a in action.depended_by:
-            _mark_cancelled_action(session, a, timestamp)
-
-
-def action_mark_cancelled(context, action_id, timestamp):
-    session = _session(context)
+def action_mark_failed(context, action_id, timestamp, reason=None):
+    session = get_session()
     session.begin()
+    _mark_failed(session, action_id, timestamp, reason)
+    session.commit()
 
+
+def _mark_cancelled(session, action_id, timestamp, reason=None):
     query = session.query(models.Action).filter_by(id=action_id)
-    action = query.first()
-    if not action:
-        LOG.warning(_('Action with id "%s" not found') % action_id)
-        session.rollback()
-        return
-
     values = {
         'owner': None,
         'status': consts.ACTION_CANCELLED,
-        'status_reason': _('Action execution was cancelled'),
+        'status_reason': (six.text_type(reason) if reason else
+                          _('Action execution failed')),
         'end_time': timestamp,
     }
     query.update(values, synchronize_session=False)
-    session.add(action)
 
-    for a in action.depended_by:
-        _mark_cancelled_action(session, a, timestamp)
+    dep = session.query(models.ActionDependency)
+    dependents = dep.filter_by(depended=action_id).all()
+    for d in dependents:
+        _mark_cancelled(session, d.dependent, timestamp)
+
+
+def action_mark_cancelled(context, action_id, timestamp, reason=None):
+    session = get_session()
+    session.begin()
+    _mark_cancelled(session, action_id, timestamp, reason)
     session.commit()
-    session.expire_all()
-    return action
 
 
 def action_acquire(context, action_id, owner, timestamp):

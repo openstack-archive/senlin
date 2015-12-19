@@ -84,50 +84,48 @@ class DBAPIActionTest(base.SenlinTestCase):
 
     def test_action_acquire_1st_ready(self):
         specs = [
-            {'name': 'action_001', 'status': 'INIT'},
-            {'name': 'action_002', 'status': 'READY', 'owner': 'worker1'},
-            {'name': 'action_003', 'status': 'INIT'},
-            {'name': 'action_004', 'status': 'READY'}
+            {'name': 'A01', 'status': 'INIT'},
+            {'name': 'A02', 'status': 'READY', 'owner': 'worker1'},
+            {'name': 'A03', 'status': 'INIT'},
+            {'name': 'A04', 'status': 'READY'}
         ]
 
         for spec in specs:
-            _create_action(self.ctx, action=shared.sample_action, **spec)
+            _create_action(self.ctx, **spec)
 
         worker = 'worker2'
         timestamp = time.time()
         action = db_api.action_acquire_1st_ready(self.ctx, worker, timestamp)
-        self.assertEqual('action_004', action.name)
+        self.assertEqual('A04', action.name)
         self.assertEqual('worker2', action.owner)
         self.assertEqual(consts.ACTION_RUNNING, action.status)
         self.assertEqual(timestamp, action.start_time)
 
     def test_action_get_all_by_owner(self):
         specs = [
-            {'name': 'action_001', 'owner': 'work1'},
-            {'name': 'action_002', 'owner': 'work2'},
-            {'name': 'action_003', 'owner': 'work1'},
-            {'name': 'action_004', 'owner': 'work3'}
+            {'name': 'A01', 'owner': 'work1'},
+            {'name': 'A02', 'owner': 'work2'},
+            {'name': 'A03', 'owner': 'work1'},
+            {'name': 'A04', 'owner': 'work3'}
         ]
 
         for spec in specs:
-            _create_action(self.ctx,
-                           action=shared.sample_action,
-                           **spec)
+            _create_action(self.ctx, **spec)
 
         actions = db_api.action_get_all_by_owner(self.ctx, 'work1')
         self.assertEqual(2, len(actions))
         names = [p.name for p in actions]
-        for spec in ['action_001', 'action_003']:
+        for spec in ['A01', 'A03']:
             self.assertIn(spec, names)
 
     def test_action_get_all(self):
         specs = [
-            {'name': 'action_001', 'target': 'cluster_001'},
-            {'name': 'action_002', 'target': 'node_001'},
+            {'name': 'A01', 'target': 'cluster_001'},
+            {'name': 'A02', 'target': 'node_001'},
         ]
 
         for spec in specs:
-            _create_action(self.ctx, action=shared.sample_action, **spec)
+            _create_action(self.ctx, **spec)
 
         actions = db_api.action_get_all(self.ctx)
         self.assertEqual(2, len(actions))
@@ -135,207 +133,158 @@ class DBAPIActionTest(base.SenlinTestCase):
         for spec in specs:
             self.assertIn(spec['name'], names)
 
-    def _check_action_add_dependency_dependent_list(self):
+    def _check_dependency_add_dependent_list(self):
         specs = [
-            {'name': 'action_001', 'target': 'cluster_001'},
-            {'name': 'action_002', 'target': 'node_001'},
-            {'name': 'action_003', 'target': 'node_002'},
-            {'name': 'action_004', 'target': 'node_003'},
+            {'name': 'A01', 'target': 'cluster_001'},
+            {'name': 'A02', 'target': 'node_001'},
+            {'name': 'A03', 'target': 'node_002'},
+            {'name': 'A04', 'target': 'node_003'},
         ]
 
         id_of = {}
         for spec in specs:
-            action = _create_action(self.ctx,
-                                    action=shared.sample_action,
-                                    **spec)
+            action = _create_action(self.ctx, **spec)
             id_of[spec['name']] = action.id
 
-        db_api.action_add_dependency(self.ctx,
-                                     id_of['action_001'],
-                                     [id_of['action_002'],
-                                      id_of['action_003'],
-                                      id_of['action_004']])
+        db_api.dependency_add(self.ctx,
+                              id_of['A01'],
+                              [id_of['A02'], id_of['A03'], id_of['A04']])
 
-        action = db_api.action_get(self.ctx, id_of['action_001'])
-        l = action.depended_by
-        self.assertEqual(3, len(l))
-        self.assertIn(id_of['action_002'], l)
-        self.assertIn(id_of['action_003'], l)
-        self.assertIn(id_of['action_004'], l)
-        self.assertIsNone(action.depends_on)
+        res = db_api.dependency_get_dependents(self.ctx, id_of['A01'])
+        self.assertEqual(3, len(res))
+        self.assertIn(id_of['A02'], res)
+        self.assertIn(id_of['A03'], res)
+        self.assertIn(id_of['A04'], res)
+        res = db_api.dependency_get_depended(self.ctx, id_of['A01'])
+        self.assertEqual(0, len(res))
 
-        for id in [id_of['action_002'],
-                   id_of['action_003'],
-                   id_of['action_004']]:
-            action = db_api.action_get(self.ctx, id)
-            l = action.depends_on
-            self.assertEqual(1, len(l))
-            self.assertIn(id_of['action_001'], l)
-            self.assertIsNone(action.depended_by)
+        for aid in [id_of['A02'], id_of['A03'], id_of['A04']]:
+            res = db_api.dependency_get_depended(self.ctx, aid)
+            self.assertEqual(1, len(res))
+            self.assertIn(id_of['A01'], res)
+            res = db_api.dependency_get_dependents(self.ctx, aid)
+            self.assertEqual(0, len(res))
+            action = db_api.action_get(self.ctx, aid)
             self.assertEqual(action.status, consts.ACTION_WAITING)
+
         return id_of
 
-    def _check_action_add_dependency_depended_list(self):
+    def _check_dependency_add_depended_list(self):
         specs = [
-            {'name': 'action_001', 'target': 'cluster_001'},
-            {'name': 'action_002', 'target': 'node_001'},
-            {'name': 'action_003', 'target': 'node_002'},
-            {'name': 'action_004', 'target': 'node_003'},
+            {'name': 'A01', 'target': 'cluster_001'},
+            {'name': 'A02', 'target': 'node_001'},
+            {'name': 'A03', 'target': 'node_002'},
+            {'name': 'A04', 'target': 'node_003'},
         ]
 
         id_of = {}
         for spec in specs:
-            action = _create_action(self.ctx,
-                                    action=shared.sample_action,
-                                    **spec)
+            action = _create_action(self.ctx, **spec)
             id_of[spec['name']] = action.id
 
-        db_api.action_add_dependency(self.ctx,
-                                     [id_of['action_002'],
-                                      id_of['action_003'],
-                                      id_of['action_004']],
-                                     id_of['action_001'])
+        db_api.dependency_add(self.ctx,
+                              [id_of['A02'], id_of['A03'], id_of['A04']],
+                              id_of['A01'])
 
-        action = db_api.action_get(self.ctx, id_of['action_001'])
-        l = action.depends_on
-        self.assertEqual(3, len(l))
-        self.assertIn(id_of['action_002'], l)
-        self.assertIn(id_of['action_003'], l)
-        self.assertIn(id_of['action_004'], l)
-        self.assertIsNone(action.depended_by)
+        res = db_api.dependency_get_depended(self.ctx, id_of['A01'])
+        self.assertEqual(3, len(res))
+        self.assertIn(id_of['A02'], res)
+        self.assertIn(id_of['A03'], res)
+        self.assertIn(id_of['A04'], res)
+
+        res = db_api.dependency_get_dependents(self.ctx, id_of['A01'])
+        self.assertEqual(0, len(res))
+
+        action = db_api.action_get(self.ctx, id_of['A01'])
         self.assertEqual(action.status, consts.ACTION_WAITING)
 
-        for id in [id_of['action_002'],
-                   id_of['action_003'],
-                   id_of['action_004']]:
-            action = db_api.action_get(self.ctx, id)
-            l = action.depended_by
-            self.assertEqual(1, len(l))
-            self.assertIn(id_of['action_001'], l)
-            self.assertIsNone(action.depends_on)
+        for aid in [id_of['A02'], id_of['A03'], id_of['A04']]:
+            res = db_api.dependency_get_dependents(self.ctx, aid)
+            self.assertEqual(1, len(res))
+            self.assertIn(id_of['A01'], res)
+            res = db_api.dependency_get_depended(self.ctx, aid)
+            self.assertEqual(0, len(res))
+
         return id_of
 
-    def test_action_add_dependency_depended_list(self):
-        self._check_action_add_dependency_depended_list()
+    def test_dependency_add_depended_list(self):
+        self._check_dependency_add_depended_list()
 
-    def test_action_add_dependency_dependent_list(self):
-        self._check_action_add_dependency_dependent_list()
-
-    def test_action_del_dependency_depended_list(self):
-        id_of = self._check_action_add_dependency_depended_list()
-        db_api.action_del_dependency(self.ctx,
-                                     [id_of['action_002'],
-                                      id_of['action_003'],
-                                      id_of['action_004']],
-                                     id_of['action_001'])
-
-        action = db_api.action_get(self.ctx, id_of['action_001'])
-        self.assertEqual(0, len(action.depends_on))
-        self.assertEqual(action.status, consts.ACTION_READY)
-
-        for id in [id_of['action_002'],
-                   id_of['action_003'],
-                   id_of['action_004']]:
-            action = db_api.action_get(self.ctx, id)
-            self.assertEqual(0, len(action.depended_by))
-
-    def test_action_del_dependency_dependent_list(self):
-        id_of = self._check_action_add_dependency_dependent_list()
-        db_api.action_del_dependency(self.ctx,
-                                     id_of['action_001'],
-                                     [id_of['action_002'],
-                                      id_of['action_003'],
-                                      id_of['action_004']])
-
-        action = db_api.action_get(self.ctx, id_of['action_001'])
-        self.assertEqual(0, len(action.depended_by))
-
-        for id in [id_of['action_002'],
-                   id_of['action_003'],
-                   id_of['action_004']]:
-            action = db_api.action_get(self.ctx, id)
-            self.assertEqual(0, len(action.depends_on))
-            self.assertEqual(consts.ACTION_READY, action.status)
+    def test_dependency_add_dependent_list(self):
+        self._check_dependency_add_dependent_list()
 
     def test_action_mark_succeeded(self):
         timestamp = time.time()
-        id_of = self._check_action_add_dependency_dependent_list()
-        db_api.action_mark_succeeded(self.ctx, id_of['action_001'], timestamp)
+        id_of = self._check_dependency_add_dependent_list()
 
-        action = db_api.action_get(self.ctx, id_of['action_001'])
-        self.assertEqual(0, len(action.depended_by))
-        self.assertEqual(consts.ACTION_SUCCEEDED, action.status)
+        db_api.action_mark_succeeded(self.ctx, id_of['A01'], timestamp)
+
+        res = db_api.dependency_get_depended(self.ctx, id_of['A01'])
+        self.assertEqual(0, len(res))
+
+        action = db_api.action_get(self.ctx, id_of['A01'])
         self.assertEqual(consts.ACTION_SUCCEEDED, action.status)
         self.assertEqual(timestamp, action.end_time)
 
-        for id in [id_of['action_002'],
-                   id_of['action_003'],
-                   id_of['action_004']]:
-            action = db_api.action_get(self.ctx, id)
-            self.assertEqual(0, len(action.depends_on))
+        for aid in [id_of['A02'], id_of['A03'], id_of['A04']]:
+            res = db_api.dependency_get_dependents(self.ctx, aid)
+            self.assertEqual(0, len(res))
 
     def _prepare_action_mark_failed_cancel(self):
         specs = [
-            {'name': 'action_001', 'status': 'INIT', 'target': 'cluster_001'},
-            {'name': 'action_002', 'status': 'INIT', 'target': 'node_001'},
-            {'name': 'action_003', 'status': 'INIT', 'target': 'node_002'},
-            {'name': 'action_004', 'status': 'INIT', 'target': 'node_003'},
-            {'name': 'action_005', 'status': 'INIT', 'target': 'cluster_002'},
-            {'name': 'action_006', 'status': 'INIT', 'target': 'cluster_003'},
-            {'name': 'action_007', 'status': 'INIT', 'target': 'cluster_004'},
+            {'name': 'A01', 'status': 'INIT', 'target': 'cluster_001'},
+            {'name': 'A02', 'status': 'INIT', 'target': 'node_001'},
+            {'name': 'A03', 'status': 'INIT', 'target': 'node_002'},
+            {'name': 'A04', 'status': 'INIT', 'target': 'node_003'},
+            {'name': 'A05', 'status': 'INIT', 'target': 'cluster_002'},
+            {'name': 'A06', 'status': 'INIT', 'target': 'cluster_003'},
+            {'name': 'A07', 'status': 'INIT', 'target': 'cluster_004'},
         ]
 
         id_of = {}
         for spec in specs:
-            action = _create_action(self.ctx, action=shared.sample_action,
-                                    **spec)
-            # action.status = consts.ACTION_INIT
+            action = _create_action(self.ctx, **spec)
             id_of[spec['name']] = action.id
 
-        db_api.action_add_dependency(self.ctx,
-                                     [id_of['action_002'],
-                                      id_of['action_003'],
-                                      id_of['action_004']],
-                                     id_of['action_001'])
+        db_api.dependency_add(self.ctx,
+                              [id_of['A02'], id_of['A03'], id_of['A04']],
+                              id_of['A01'])
 
-        db_api.action_add_dependency(self.ctx,
-                                     id_of['action_001'],
-                                     [id_of['action_005'],
-                                      id_of['action_006'],
-                                      id_of['action_007']])
+        db_api.dependency_add(self.ctx,
+                              id_of['A01'],
+                              [id_of['A05'], id_of['A06'], id_of['A07']])
 
-        action = db_api.action_get(self.ctx, id_of['action_001'])
-        l = action.depends_on
-        self.assertEqual(3, len(l))
-        self.assertIn(id_of['action_002'], l)
-        self.assertIn(id_of['action_003'], l)
-        self.assertIn(id_of['action_004'], l)
+        res = db_api.dependency_get_depended(self.ctx, id_of['A01'])
+        self.assertEqual(3, len(res))
+        self.assertIn(id_of['A02'], res)
+        self.assertIn(id_of['A03'], res)
+        self.assertIn(id_of['A04'], res)
+
+        action = db_api.action_get(self.ctx, id_of['A01'])
         self.assertEqual(consts.ACTION_WAITING, action.status)
 
-        for id in [id_of['action_002'],
-                   id_of['action_003'],
-                   id_of['action_004']]:
-            action = db_api.action_get(self.ctx, id)
-            l = action.depended_by
-            self.assertEqual(1, len(l))
-            self.assertIn(id_of['action_001'], l)
-            self.assertIsNone(action.depends_on)
+        for aid in [id_of['A02'], id_of['A03'], id_of['A04']]:
+            res = db_api.dependency_get_dependents(self.ctx, aid)
+            self.assertEqual(1, len(res))
+            self.assertIn(id_of['A01'], res)
+            res = db_api.dependency_get_depended(self.ctx, aid)
+            self.assertEqual(0, len(res))
 
-        action = db_api.action_get(self.ctx, id_of['action_001'])
-        l = action.depended_by
-        self.assertEqual(3, len(l))
-        self.assertIn(id_of['action_005'], l)
-        self.assertIn(id_of['action_006'], l)
-        self.assertIn(id_of['action_007'], l)
+        res = db_api.dependency_get_dependents(self.ctx, id_of['A01'])
+        self.assertEqual(3, len(res))
+        self.assertIn(id_of['A05'], res)
+        self.assertIn(id_of['A06'], res)
+        self.assertIn(id_of['A07'], res)
 
-        for id in [id_of['action_005'],
-                   id_of['action_006'],
-                   id_of['action_007']]:
-            action = db_api.action_get(self.ctx, id)
-            l = action.depends_on
-            self.assertEqual(1, len(l))
-            self.assertIn(id_of['action_001'], l)
-            self.assertIsNone(action.depended_by)
+        for aid in [id_of['A05'], id_of['A06'], id_of['A07']]:
+            res = db_api.dependency_get_depended(self.ctx, aid)
+            self.assertEqual(1, len(res))
+            self.assertIn(id_of['A01'], res)
+
+            res = db_api.dependency_get_dependents(self.ctx, aid)
+            self.assertEqual(0, len(res))
+
+            action = db_api.action_get(self.ctx, aid)
             self.assertEqual(consts.ACTION_WAITING, action.status)
 
         return id_of
@@ -343,38 +292,20 @@ class DBAPIActionTest(base.SenlinTestCase):
     def test_action_mark_failed(self):
         timestamp = time.time()
         id_of = self._prepare_action_mark_failed_cancel()
-        db_api.action_mark_failed(self.ctx, id_of['action_002'], timestamp)
+        db_api.action_mark_failed(self.ctx, id_of['A01'], timestamp)
 
-        for id in [id_of['action_003'],
-                   id_of['action_004']]:
-            action = db_api.action_get(self.ctx, id)
-            self.assertEqual(consts.ACTION_INIT, action.status)
-
-        for id in [id_of['action_002'],
-                   id_of['action_001'],
-                   id_of['action_005'],
-                   id_of['action_006'],
-                   id_of['action_007']]:
-            action = db_api.action_get(self.ctx, id)
+        for aid in [id_of['A05'], id_of['A06'], id_of['A07']]:
+            action = db_api.action_get(self.ctx, aid)
             self.assertEqual(consts.ACTION_FAILED, action.status)
             self.assertEqual(timestamp, action.end_time)
 
     def test_action_mark_cancelled(self):
         timestamp = time.time()
         id_of = self._prepare_action_mark_failed_cancel()
-        db_api.action_mark_cancelled(self.ctx, id_of['action_002'], timestamp)
+        db_api.action_mark_cancelled(self.ctx, id_of['A01'], timestamp)
 
-        for id in [id_of['action_003'],
-                   id_of['action_004']]:
-            action = db_api.action_get(self.ctx, id)
-            self.assertEqual(consts.ACTION_INIT, action.status)
-
-        for id in [id_of['action_002'],
-                   id_of['action_001'],
-                   id_of['action_005'],
-                   id_of['action_006'],
-                   id_of['action_007']]:
-            action = db_api.action_get(self.ctx, id)
+        for aid in [id_of['A05'], id_of['A06'], id_of['A07']]:
+            action = db_api.action_get(self.ctx, aid)
             self.assertEqual(consts.ACTION_CANCELLED, action.status)
             self.assertEqual(timestamp, action.end_time)
 

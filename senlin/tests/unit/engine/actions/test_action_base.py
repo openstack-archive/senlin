@@ -55,8 +55,6 @@ class ActionBaseTest(base.SenlinTestCase):
             'status_reason': 'FAKE_STATUS_REASON',
             'inputs': {'param': 'value'},
             'outputs': {'key': 'output_value'},
-            'depends_on': ['ACTION_1'],
-            'depended_by': ['ACTION_2'],
             'created_time': None,
             'updated_time': None,
             'deleted_time': None,
@@ -79,8 +77,6 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual('', obj.status_reason)
         self.assertEqual({}, obj.inputs)
         self.assertEqual({}, obj.outputs)
-        self.assertEqual([], obj.depends_on)
-        self.assertEqual([], obj.depended_by)
         self.assertIsNone(obj.created_time)
         self.assertIsNone(obj.updated_time)
         self.assertIsNone(obj.deleted_time)
@@ -118,8 +114,6 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual('FAKE_STATUS_REASON', obj.status_reason)
         self.assertEqual({'param': 'value'}, obj.inputs)
         self.assertEqual({'key': 'output_value'}, obj.outputs)
-        self.assertEqual(['ACTION_1'], obj.depends_on)
-        self.assertEqual(['ACTION_2'], obj.depended_by)
         self.assertEqual('FAKE_CREATED_TIME', obj.created_time)
         self.assertEqual('FAKE_UPDATED_TIME', obj.updated_time)
         self.assertEqual('FAKE_DELETED_TIME', obj.deleted_time)
@@ -206,8 +200,6 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual(obj.status_reason, action_obj.status_reason)
         self.assertEqual(obj.inputs, action_obj.inputs)
         self.assertEqual(obj.outputs, action_obj.outputs)
-        self.assertEqual(obj.depends_on, action_obj.depends_on)
-        self.assertEqual(obj.depended_by, action_obj.depended_by)
         self.assertEqual(obj.created_time, action_obj.created_time)
         self.assertEqual(obj.updated_time, action_obj.updated_time)
         self.assertEqual(obj.deleted_time, action_obj.deleted_time)
@@ -563,7 +555,11 @@ class ActionBaseTest(base.SenlinTestCase):
                                           sort_keys=['priority'],
                                           filters={'enabled': True})
 
-    def test_action_to_dict(self):
+    @mock.patch.object(db_api, 'dependency_get_depended')
+    @mock.patch.object(db_api, 'dependency_get_dependents')
+    def test_action_to_dict(self, mock_dep_by, mock_dep_on):
+        mock_dep_on.return_value = ['ACTION_1']
+        mock_dep_by.return_value = ['ACTION_2']
         action = action_base.Action('OBJID', 'OBJECT_ACTION', self.ctx,
                                     **self.action_values)
         action.id = 'FAKE_ID'
@@ -593,6 +589,8 @@ class ActionBaseTest(base.SenlinTestCase):
 
         res = action.to_dict()
         self.assertEqual(expected, res)
+        mock_dep_on.assert_called_once_with(action.context, 'FAKE_ID')
+        mock_dep_by.assert_called_once_with(action.context, 'FAKE_ID')
 
 
 class ActionPolicyCheckTest(base.SenlinTestCase):
