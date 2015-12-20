@@ -133,6 +133,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'policy_delete',
             'cluster_delete',
             'node_delete',
+            'receiver_delete',
             'webhook_delete',
         ]
 
@@ -434,6 +435,39 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
 
     def test_action_get(self):
         self._test_engine_api('action_get', 'call', identity='an-action')
+
+    def test_receiver_list(self):
+        default_args = {
+            'limit': mock.ANY,
+            'marker': mock.ANY,
+            'sort_keys': mock.ANY,
+            'sort_dir': mock.ANY,
+            'filters': mock.ANY,
+            'project_safe': mock.ANY,
+            'show_deleted': mock.ANY,
+        }
+        self._test_engine_api('receiver_list', 'call', **default_args)
+
+    def test_receiver_create(self):
+        kwargs = {
+            'name': 'myreceiver',
+            'type_name': 'webhook',
+            'cluster': 'fake cluster',
+            'action': 'sing_a_song',
+            'credential': {'key': 'value'},
+            'params': {'pname': 'pvalue'},
+        }
+
+        self._test_engine_api('receiver_create', 'call', **kwargs)
+
+    def test_receiver_get(self):
+        self._test_engine_api('receiver_get', 'call', identity='wh_name')
+
+    def test_receiver_delete_cast(self):
+        self._test_engine_api('receiver_delete', 'cast', identity='wh_name')
+
+    def test_receiver_delete_call(self):
+        self._test_engine_api('receiver_delete', 'call', identity='wh_name')
 
     def test_webhook_list(self):
         default_args = {

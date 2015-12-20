@@ -1705,8 +1705,20 @@ class EngineService(service.Service):
         return [r.to_dict() for r in receivers]
 
     @request_context
-    def receiver_create(self, context, name, type_name, cluster_id, action,
+    def receiver_create(self, context, name, type_name, cluster, action,
                         credential=None, params=None):
+        """Create a receiver.
+
+        :param context: RPC context.
+        :param name: Name of the receiver.
+        :param type_name: Name of the receiver type, subject to validation.
+        :param cluster: Name or ID of a cluster.
+        :param action: Name or ID of an action, currently only builtin action
+                       names are supported.
+        :param credential: Future extension.
+        :param params: A dictionary containing key-value pairs as inputs to
+                       the action.
+        """
         if cfg.CONF.name_unique:
             if db_api.receiver_get_by_name(context, name):
                 msg = _("A receiver named (%s) already exists.") % name
@@ -1714,7 +1726,7 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Creating receiver %(n)s: \n"
                      "  type: %(t)s\n  cluster: %(c)s\n  action: %(a)s."),
-                 {'n': name, 't': type_name, 'c': cluster_id, 'a': action})
+                 {'n': name, 't': type_name, 'c': cluster, 'a': action})
 
         rtype = type_name.lower()
         if rtype not in consts.RECEIVER_TYPES:
@@ -1724,9 +1736,9 @@ class EngineService(service.Service):
         # Check whether cluster identified by cluster_id does exist
         cluster = None
         try:
-            cluster = self.cluster_find(context, cluster_id)
+            cluster = self.cluster_find(context, cluster)
         except exception.ClusterNotFound:
-            msg = _("The referenced cluster (%s) is not found.") % cluster_id
+            msg = _("The referenced cluster (%s) is not found.") % cluster
             raise exception.SenlinBadRequest(msg=msg)
 
         # permission checking

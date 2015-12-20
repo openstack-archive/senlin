@@ -323,6 +323,34 @@ class EngineClient(object):
         return self.call(ctxt,
                          self.make_msg('action_get', identity=identity))
 
+    def receiver_list(self, ctxt, limit=None, marker=None, show_deleted=False,
+                      sort_keys=None, sort_dir=None, filters=None,
+                      project_safe=True):
+        return self.call(ctxt,
+                         self.make_msg('receiver_list',
+                                       limit=limit, marker=marker,
+                                       sort_keys=sort_keys, sort_dir=sort_dir,
+                                       filters=filters,
+                                       project_safe=project_safe,
+                                       show_deleted=show_deleted))
+
+    def receiver_create(self, ctxt, name, type_name, cluster, action,
+                        credential=None, params=None):
+        return self.call(ctxt,
+                         self.make_msg('receiver_create',
+                                       name=name, type_name=type_name,
+                                       cluster=cluster, action=action,
+                                       credential=credential, params=params))
+
+    def receiver_get(self, ctxt, identity):
+        return self.call(ctxt, self.make_msg('receiver_get',
+                                             identity=identity))
+
+    def receiver_delete(self, ctxt, identity, cast=True):
+        rpc_method = self.cast if cast else self.call
+        return rpc_method(ctxt, self.make_msg('receiver_delete',
+                                              identity=identity))
+
     def webhook_list(self, ctxt, show_deleted=False, limit=None,
                      marker=None, sort_keys=None, sort_dir=None,
                      filters=None, project_safe=True):
