@@ -1478,7 +1478,7 @@ def purge_deleted(age, unit='days'):
     engine.execute(policy_del)
 
     # delete events
-    event_del = event.delete().where(event.c.timestamp < timeline)
+    event_del = event.delete().where(event.c.deleted_time < timeline)
     engine.execute(event_del)
 
     # delete actions

@@ -33,6 +33,9 @@ class DBAPIPurgeTest(base.SenlinTestCase):
                                         deleted_time=deleted_time)
         shared.create_node(self.ctx, cluster, profile,
                            deleted_time=deleted_time)
+        shared.create_policy(self.ctx, deleted_time=deleted_time)
+        shared.create_action(self.ctx, deleted_time=deleted_time)
+        shared.create_event(self.ctx, deleted_time=deleted_time)
 
     def verify_left(self, count):
         profiles = db_api.profile_get_all(self.ctx, show_deleted=True)
@@ -41,6 +44,12 @@ class DBAPIPurgeTest(base.SenlinTestCase):
         self.assertEqual(count, len(clusters))
         nodes = db_api.node_get_all(self.ctx, show_deleted=True)
         self.assertEqual(count, len(nodes))
+        policies = db_api.policy_get_all(self.ctx, show_deleted=True)
+        self.assertEqual(count, len(policies))
+        actions = db_api.action_get_all(self.ctx, show_deleted=True)
+        self.assertEqual(count, len(actions))
+        events = db_api.event_get_all(self.ctx, show_deleted=True)
+        self.assertEqual(count, len(events))
 
     def test_purge_deleted(self):
         now = timeutils.utcnow()

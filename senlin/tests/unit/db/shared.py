@@ -145,3 +145,50 @@ def create_action(ctx, **kwargs):
     }
     values.update(kwargs)
     return db_api.action_create(ctx, values)
+
+
+def create_policy(ctx, **kwargs):
+    values = {
+        'name': 'test_policy',
+        'type': 'senlin.policy.scaling',
+        'user': ctx.user,
+        'project': ctx.project,
+        'domain': ctx.domain,
+        'spec': {
+            'type': 'senlin.policy.scaling',
+            'version': '1.0',
+            'properties': {
+                'adjustment_type': 'WHATEVER',
+                'count': 1,
+            }
+        },
+        'level': 50,
+        'cooldown': 60,
+        'data': None,
+    }
+
+    values.update(kwargs)
+    return db_api.policy_create(ctx, values)
+
+
+def create_event(ctx, **kwargs):
+    values = {
+        'timestamp': tu.utcnow(),
+        'deleted_time': None,
+        'obj_id': 'FAKE_ID',
+        'obj_name': 'FAKE_NAME',
+        'obj_type': 'CLUSTER',
+        'cluster_id': 'FAKE_CLUSTER',
+        'level': '20',
+        'user': ctx.user,
+        'project': ctx.project,
+        'action': 'DANCE',
+        'status': 'READY',
+        'status_reason': 'Just created.',
+        'meta_data': {
+            'air': 'polluted'
+        }
+    }
+
+    values.update(kwargs)
+    return db_api.event_create(ctx, values)
