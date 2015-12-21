@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_config import cfg
+
 from senlin.drivers import base
 from senlin.drivers.openstack import sdk
 
@@ -45,3 +47,15 @@ class HeatClient(base.DriverBase):
     def stack_delete(self, stack_id, ignore_missing=True):
         return self.conn.orchestration.delete_stack(stack_id,
                                                     ignore_missing)
+
+    @sdk.translate_exception
+    def wait_for_stack_delete(self, stack_id, timeout=None):
+        '''Wait for stack deleting complete'''
+        if timeout is None:
+            timeout = cfg.CONF.default_action_timeout
+
+        server_obj = self.conn.orchestration.find_stack(stack_id, True)
+        if server_obj:
+            self.conn.orchestration.wait_for_delete(server_obj, wait=timeout)
+
+        return

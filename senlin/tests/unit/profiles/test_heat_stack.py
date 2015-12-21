@@ -130,7 +130,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         profile.hc.stack_delete = mock.MagicMock()
         self.assertTrue(profile.do_delete(test_stack))
         self.assertTrue(profile.hc.stack_delete.called)
-        self.assertTrue(profile._check_action_complete.called)
+        self.assertTrue(profile.hc.wait_for_stack_delete.called)
 
     def test_do_update(self):
         profile = stack.StackProfile('t', self.spec)
