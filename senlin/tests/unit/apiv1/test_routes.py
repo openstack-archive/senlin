@@ -378,6 +378,18 @@ class RoutesTest(base.SenlinTestCase):
                 'success': '204',
             })
 
+    def test_webhook_collection(self):
+        self.assertRoute(
+            self.m,
+            '/webhooks/bbbbb/trigger',
+            'POST',
+            'trigger',
+            'WebhookController',
+            {
+                'webhook_id': 'bbbbb',
+                'success': '202',
+            })
+
     def test_build_info(self):
         self.assertRoute(
             self.m,
