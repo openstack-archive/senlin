@@ -135,6 +135,7 @@ class NodeAction(base.Action):
         result = self.node.do_join(self.context, cluster_id)
         if result:
             # Update cluster desired_capacity if node join succeeded
+            cluster = cluster_mod.Cluster.load(self.context, cluster_id)
             cluster.desired_capacity = desired_capacity
             cluster.store(self.context)
             cluster.add_node(self.node)
@@ -159,6 +160,7 @@ class NodeAction(base.Action):
         res = self.node.do_leave(self.context)
         if res:
             # Update cluster desired_capacity if node leave succeeded
+            cluster = cluster_mod.Cluster.load(self.context, cluster.id)
             cluster.desired_capacity = desired_capacity
             cluster.store(self.context)
             cluster.remove_node(self.node.id)
