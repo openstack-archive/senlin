@@ -334,13 +334,13 @@ class EngineClient(object):
                                        project_safe=project_safe,
                                        show_deleted=show_deleted))
 
-    def receiver_create(self, ctxt, name, type_name, cluster, action,
-                        credential=None, params=None):
+    def receiver_create(self, ctxt, name, type_name, cluster_id, action,
+                        actor=None, params=None):
         return self.call(ctxt,
                          self.make_msg('receiver_create',
                                        name=name, type_name=type_name,
-                                       cluster=cluster, action=action,
-                                       credential=credential, params=params))
+                                       cluster_id=cluster_id, action=action,
+                                       actor=actor, params=params))
 
     def receiver_get(self, ctxt, identity):
         return self.call(ctxt, self.make_msg('receiver_get',

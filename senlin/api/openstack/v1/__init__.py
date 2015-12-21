@@ -23,6 +23,7 @@ from senlin.api.openstack.v1 import policies
 from senlin.api.openstack.v1 import policy_types
 from senlin.api.openstack.v1 import profile_types
 from senlin.api.openstack.v1 import profiles
+from senlin.api.openstack.v1 import receivers
 from senlin.api.openstack.v1 import webhooks
 from senlin.common import wsgi
 
@@ -211,6 +212,29 @@ class API(wsgi.Router):
                                "/actions/{action_id}",
                                action="get",
                                conditions={'method': 'GET'})
+
+        # Receivers
+        receivers_resource = receivers.create_resource(conf)
+        with mapper.submapper(controller=receivers_resource) as sub_mapper:
+
+            sub_mapper.connect("receivers_index",
+                               "/receivers",
+                               action="index",
+                               conditions={'method': 'GET'})
+            sub_mapper.connect("receiver_create",
+                               "/receivers",
+                               action="create",
+                               conditions={'method': 'POST'},
+                               success=201)
+            sub_mapper.connect("receiver_get",
+                               "/receivers/{receiver_id}",
+                               action="get",
+                               conditions={'method': 'GET'})
+            sub_mapper.connect("receiver_delete",
+                               "/receivers/{receiver_id}",
+                               action="delete",
+                               conditions={'method': 'DELETE'},
+                               success=204)
 
         # Webhooks
         webhooks_resource = webhooks.create_resource(conf)

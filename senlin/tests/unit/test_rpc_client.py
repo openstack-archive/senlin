@@ -452,9 +452,9 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         kwargs = {
             'name': 'myreceiver',
             'type_name': 'webhook',
-            'cluster': 'fake cluster',
+            'cluster_id': 'fake cluster',
             'action': 'sing_a_song',
-            'credential': {'key': 'value'},
+            'actor': {'key': 'value'},
             'params': {'pname': 'pvalue'},
         }
 

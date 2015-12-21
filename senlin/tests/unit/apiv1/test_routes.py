@@ -339,6 +339,45 @@ class RoutesTest(base.SenlinTestCase):
                 'action_id': 'bbbb'
             })
 
+    def test_receiver_collection(self):
+        self.assertRoute(
+            self.m,
+            '/receivers',
+            'GET',
+            'index',
+            'ReceiverController')
+
+        self.assertRoute(
+            self.m,
+            '/receivers',
+            'POST',
+            'create',
+            'ReceiverController',
+            {
+                'success': '201',
+            })
+
+        self.assertRoute(
+            self.m,
+            '/receivers/bbbb',
+            'GET',
+            'get',
+            'ReceiverController',
+            {
+                'receiver_id': 'bbbb'
+            })
+
+        self.assertRoute(
+            self.m,
+            '/receivers/bbbb',
+            'DELETE',
+            'delete',
+            'ReceiverController',
+            {
+                'receiver_id': 'bbbb',
+                'success': '204',
+            })
+
     def test_build_info(self):
         self.assertRoute(
             self.m,

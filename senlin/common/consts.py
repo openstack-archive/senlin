@@ -176,11 +176,11 @@ RECEIVER_TYPES = (
 )
 
 RECEIVER_ATTRS = (
-    RECEIVER_NAME, RECEIVER_TYPE, RECEIVER_CLUSTER_ID,
+    RECEIVER_NAME, RECEIVER_TYPE, RECEIVER_CLUSTER, RECEIVER_CLUSTER_ID,
     RECEIVER_CREATED_TIME, RECEIVER_UPDATED_TIME, RECEIVER_DELETED_TIME,
     RECEIVER_ACTOR, RECEIVER_ACTION, RECEIVER_PARAMS, RECEIVER_CHANNEL,
 ) = (
-    'name', 'type', 'cluster_id',
+    'name', 'type', 'cluster', 'cluster_id',
     'created_time', 'updated_time', 'deleted_time',
     'actor', 'action', 'params', 'channel',
 )
