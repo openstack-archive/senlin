@@ -13,8 +13,6 @@
 
 from webob import exc
 
-from oslo_log import log as logging
-
 from senlin.api.openstack.v1 import util
 from senlin.common import consts
 from senlin.common.i18n import _
@@ -22,8 +20,6 @@ from senlin.common import serializers
 from senlin.common import utils
 from senlin.common import wsgi
 from senlin.rpc import client as rpc_client
-
-LOG = logging.getLogger(__name__)
 
 
 class ActionData(object):

@@ -19,7 +19,6 @@ health policies.
 '''
 
 from oslo_config import cfg
-from oslo_log import log as logging
 import oslo_messaging
 from oslo_service import service
 
@@ -42,8 +41,6 @@ health_mgr_opts = [
 
 CONF = cfg.CONF
 CONF.register_opts(health_mgr_opts)
-
-LOG = logging.getLogger(__name__)
 
 
 class Health_Manager(service.Service):

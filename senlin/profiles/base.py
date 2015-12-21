@@ -13,7 +13,6 @@
 import copy
 
 from oslo_context import context as oslo_context
-from oslo_log import log as logging
 from oslo_utils import timeutils
 
 from senlin.common import context
@@ -23,8 +22,6 @@ from senlin.common import schema
 from senlin.common import utils
 from senlin.db import api as db_api
 from senlin.engine import environment
-
-LOG = logging.getLogger(__name__)
 
 
 class Profile(object):

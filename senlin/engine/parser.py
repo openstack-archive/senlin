@@ -17,11 +17,8 @@ import six
 from six.moves import urllib
 import yaml
 
-from oslo_log import log as logging
-
 from senlin.common.i18n import _
 
-LOG = logging.getLogger(__name__)
 
 # Try LibYAML if available
 if hasattr(yaml, 'CSafeLoader'):

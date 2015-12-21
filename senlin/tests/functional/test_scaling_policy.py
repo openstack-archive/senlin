@@ -10,14 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo_log import log as logging
-
 from senlin.common.i18n import _
 from senlin.tests.functional import api as test_api
 from senlin.tests.functional import base
 from senlin.tests.functional.utils import test_utils
-
-LOG = logging.getLogger(__name__)
 
 
 class TestScalingPolicy(base.SenlinFunctionalTest):

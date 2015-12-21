@@ -10,8 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo_log import log as logging
-
 from senlin.common.i18n import _
 from senlin.common import scaleutils
 from senlin.engine.actions import base
@@ -20,8 +18,6 @@ from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.engine import senlin_lock
 from senlin.policies import base as policy_mod
-
-LOG = logging.getLogger(__name__)
 
 
 class NodeAction(base.Action):

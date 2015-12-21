@@ -16,7 +16,6 @@ Cluster endpoint for Senlin v1 ReST API.
 """
 
 from oslo_config import cfg
-from oslo_log import log as logging
 import six
 from webob import exc
 
@@ -28,8 +27,6 @@ from senlin.common import serializers
 from senlin.common import utils
 from senlin.common import wsgi
 from senlin.rpc import client as rpc_client
-
-LOG = logging.getLogger(__name__)
 
 
 class ClusterData(object):

@@ -11,13 +11,11 @@
 # under the License.
 
 from oslo_config import cfg
-from oslo_log import log as logging
 
 from senlin.drivers import base
 from senlin.drivers.openstack import sdk
 
 CONF = cfg.CONF
-LOG = logging.getLogger(__name__)
 
 
 class KeystoneClient(base.DriverBase):
