@@ -240,29 +240,11 @@ class API(wsgi.Router):
         webhooks_resource = webhooks.create_resource(conf)
         with mapper.submapper(controller=webhooks_resource) as sub_mapper:
 
-            sub_mapper.connect("webhook_index",
-                               "/webhooks",
-                               action="index",
-                               conditions={'method': 'GET'})
-            sub_mapper.connect("webhook_create",
-                               "/webhooks",
-                               action="create",
-                               conditions={'method': 'POST'},
-                               success=201)
-            sub_mapper.connect("webhook_get",
-                               "/webhooks/{webhook_id}",
-                               action="get",
-                               conditions={'method': 'GET'})
             sub_mapper.connect("webhook_trigger",
                                "/webhooks/{webhook_id}/trigger",
                                action="trigger",
                                conditions={'method': 'POST'},
                                success=202)
-            sub_mapper.connect("webhook_delete",
-                               "/webhooks/{webhook_id}",
-                               action="delete",
-                               conditions={'method': 'DELETE'},
-                               success=204)
 
         # Events
         events_resource = events.create_resource(conf)
