@@ -16,7 +16,6 @@ import uuid
 from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
-from oslo_serialization import jsonutils
 from oslo_service import service
 from oslo_utils import uuidutils
 import six
@@ -41,7 +40,6 @@ from senlin.engine import health_manager
 from senlin.engine import node as node_mod
 from senlin.engine import receiver as receiver_mod
 from senlin.engine import scheduler
-from senlin.engine import webhook as webhook_mod
 from senlin.policies import base as policy_base
 from senlin.profiles import base as profile_base
 
@@ -1407,144 +1405,15 @@ class EngineService(service.Service):
 
         return {'action': action.id}
 
-    def webhook_find(self, context, identity, show_deleted=False):
-        '''Find a webhook with the given identity (could be name or ID).'''
-        if uuidutils.is_uuid_like(identity):
-            webhook = db_api.webhook_get(context, identity,
-                                         show_deleted=show_deleted)
-            if not webhook:
-                webhook = db_api.webhook_get_by_name(context, identity)
-        else:
-            webhook = db_api.webhook_get_by_name(context, identity)
-            if not webhook:
-                webhook = db_api.webhook_get_by_short_id(context, identity)
-
-        if not webhook:
-            raise exception.WebhookNotFound(webhook=identity)
-
-        return webhook
-
-    @request_context
-    def webhook_list(self, context, limit=None, marker=None, sort_keys=None,
-                     sort_dir=None, filters=None, project_safe=True,
-                     show_deleted=False):
-        if limit is not None:
-            limit = utils.parse_int_param('limit', limit)
-        if project_safe is not None:
-            project_safe = utils.parse_bool_param('project_safe', project_safe)
-        if show_deleted is not None:
-            show_deleted = utils.parse_bool_param('show_deleted', show_deleted)
-
-        webhooks = webhook_mod.Webhook.load_all(context, limit=limit,
-                                                marker=marker,
-                                                sort_keys=sort_keys,
-                                                sort_dir=sort_dir,
-                                                filters=filters,
-                                                project_safe=project_safe,
-                                                show_deleted=show_deleted)
-
-        return [w.to_dict() for w in webhooks]
-
-    def _create_credential(self, context, obj):
-        cdata = dict()
-        if context.is_admin:
-            # use object owner if request is from admin
-            cred = db_api.cred_get(context, obj.user, obj.project)
-            trust_id = cred['cred']['openstack']['trust']
-            cdata['trust_id'] = [trust_id]
-        else:
-            # otherwise, use context user
-            cdata['trust_id'] = [context.trusts]
-        return cdata
-
-    @request_context
-    def webhook_create(self, context, obj_id, obj_type, action,
-                       credential=None, params=None, name=None):
-        if cfg.CONF.name_unique:
-            if name and db_api.webhook_get_by_name(context, name):
-                msg = _("The webhook (%(name)s) already exists."
-                        ) % {"name": name}
-                raise exception.SenlinBadRequest(msg=msg)
-
-        LOG.info(_LI("Creating webhook '%(n)s': \n"
-                     "  type: %(t)s\n  id: %(i)s\n  action: %(a)s."),
-                 {'n': name, 'i': obj_id, 't': obj_type, 'a': action})
-
-        obj_type = obj_type.lower()
-        if obj_type not in consts.WEBHOOK_OBJ_TYPES:
-            msg = _('Webhook obj type %s is not supported.') % obj_type
-            LOG.error(msg)
-            raise exception.SenlinBadRequest(msg=msg)
-
-        # Check whether object identified by obj_id does exists
-        try:
-            if obj_type == consts.WEBHOOK_OBJ_TYPE_CLUSTER:
-                obj = self.cluster_find(context, obj_id)
-            else:  # WEBHOOK_OBJ_TYPE_NODE:
-                obj = self.node_find(context, obj_id)
-        except (exception.ClusterNotFound, exception.NodeNotFound):
-            msg = _("The referenced object (%s) is not found.") % obj_id
-            raise exception.SenlinBadRequest(msg=msg)
-
-        # permission checking
-        if not context.is_admin and context.user != obj.user:
-            LOG.error(_LE('Failed in permission checking'))
-            raise exception.Forbidden()
-
-        # Check action name
-        if action not in consts.ACTION_NAMES:
-            msg = _('Illegal action name (%s) specified.') % action
-            LOG.error(msg)
-            raise exception.SenlinBadRequest(msg=msg)
-
-        if action.lower().split('_')[0] != obj_type:
-            msg = _('Action %(a)s is not applicable to object of type %(t)s.'
-                    ) % {'a': action, 't': obj_type}
-            LOG.error(msg)
-            raise exception.SenlinBadRequest(msg=msg)
-
-        if not credential:
-            credential = self._create_credential(context, obj)
-        credential = jsonutils.dumps(credential)
-
-        if not params:
-            params = {}
-
-        kwargs = {
-            'name': name,
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
-            'credential': credential,
-            'params': params
-        }
-
-        webhook = webhook_mod.Webhook(obj.id, obj_type, action,
-                                      context=context, **kwargs)
-        key = webhook.encrypt_credential()
-        url, token = webhook.generate_url(key)
-        webhook.store(context)
-
-        LOG.info(_LI("Webhook '%(name)s' is created: %(id)s."),
-                 {'name': name, 'id': webhook.id})
-
-        result = webhook.to_dict()
-        result['url'] = url
-
-        return result
-
-    @request_context
-    def webhook_get(self, context, identity):
-        db_webhook = self.webhook_find(context, identity)
-        webhook = webhook_mod.Webhook.load(context, webhook_id=db_webhook.id)
-        return webhook.to_dict()
-
     @request_context
     def webhook_trigger(self, context, identity, params=None):
 
         LOG.info(_LI("Triggering webhook '%s'."), identity)
 
-        webhook = self.webhook_find(context, identity)
+        webhook = db_api.receiver_get(context, identity)
+        if not webhook:
+            msg = _("The referenced webhook (%s) is not found.") % identity
+            raise exception.SenlinBadRequest(msg=msg)
 
         # Check whether target obj exists
         obj_id = webhook.obj_id
@@ -1582,13 +1451,6 @@ class EngineService(service.Service):
                  {'identity': identity, 'id': action.id})
 
         return {'action': action.id}
-
-    @request_context
-    def webhook_delete(self, context, identity, force=False):
-        db_webhook = self.webhook_find(context, identity)
-        LOG.info(_LI("Deleting webhook '%s'."), identity)
-        webhook_mod.Webhook.delete(context, db_webhook.id)
-        LOG.info(_LI("Webhook '%s' is deleted."), identity)
 
     def action_find(self, context, identity, show_deleted=False):
         '''Find an action with the given identity (could be name or ID).'''
