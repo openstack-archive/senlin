@@ -20,7 +20,6 @@ import six
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import schema
-from senlin.common import utils
 from senlin.drivers import base as driver_base
 from senlin.profiles import base
 
@@ -181,7 +180,6 @@ class ServerProfile(base.Profile):
         ),
         NAME: schema.String(
             _('Name of the server.'),
-            required=True,
         ),
         NETWORKS: schema.List(
             _('List of networks for the server.'),
@@ -299,8 +297,11 @@ class ServerProfile(base.Profile):
         kwargs.pop(self.FLAVOR)
         kwargs['flavorRef'] = flavor.id
 
-        if obj.name is not None:
-            kwargs[self.NAME] = obj.name + '-' + utils.random_name(8)
+        name = self.properties[self.NAME]
+        if name:
+            kwargs['name'] = name
+        else:
+            kwargs['name'] = obj.name
 
         metadata = self.properties[self.METADATA] or {}
         if obj.cluster_id is not None:
