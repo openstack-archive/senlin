@@ -351,41 +351,10 @@ class EngineClient(object):
         return rpc_method(ctxt, self.make_msg('receiver_delete',
                                               identity=identity))
 
-    def webhook_list(self, ctxt, show_deleted=False, limit=None,
-                     marker=None, sort_keys=None, sort_dir=None,
-                     filters=None, project_safe=True):
-        return self.call(ctxt,
-                         self.make_msg('webhook_list',
-                                       limit=limit, marker=marker,
-                                       sort_keys=sort_keys, sort_dir=sort_dir,
-                                       filters=filters,
-                                       project_safe=project_safe,
-                                       show_deleted=show_deleted))
-
-    def webhook_create(self, ctxt, name, obj_id, obj_type, action,
-                       credential, params):
-        return self.call(ctxt,
-                         self.make_msg('webhook_create',
-                                       obj_id=obj_id,
-                                       obj_type=obj_type,
-                                       action=action,
-                                       credential=credential,
-                                       params=params,
-                                       name=name))
-
-    def webhook_get(self, ctxt, identity):
-        return self.call(ctxt,
-                         self.make_msg('webhook_get', identity=identity))
-
     def webhook_trigger(self, ctxt, identity, params=None):
         return self.call(ctxt,
                          self.make_msg('webhook_trigger', identity=identity,
                                        params=params))
-
-    def webhook_delete(self, ctxt, identity, cast=True):
-        rpc_method = self.cast if cast else self.call
-        return rpc_method(ctxt,
-                          self.make_msg('webhook_delete', identity=identity))
 
     def event_list(self, ctxt, filters=None, limit=None, marker=None,
                    sort_keys=None, sort_dir=None, project_safe=True,

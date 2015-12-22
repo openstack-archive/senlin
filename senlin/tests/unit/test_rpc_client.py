@@ -469,42 +469,9 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
     def test_receiver_delete_call(self):
         self._test_engine_api('receiver_delete', 'call', identity='wh_name')
 
-    def test_webhook_list(self):
-        default_args = {
-            'show_deleted': mock.ANY,
-            'limit': mock.ANY,
-            'marker': mock.ANY,
-            'sort_keys': mock.ANY,
-            'sort_dir': mock.ANY,
-            'filters': mock.ANY,
-            'project_safe': mock.ANY,
-        }
-        self._test_engine_api('webhook_list', 'call', **default_args)
-
-    def test_webhook_create(self):
-        kwargs = {
-            'name': 'myaction',
-            'obj_id': 'aaaa-bbbb-cccc',
-            'obj_type': 'fake_type',
-            'action': 'standard action',
-            'credential': {'key': 'value'},
-            'params': {'pname': 'value'},
-        }
-
-        self._test_engine_api('webhook_create', 'call', **kwargs)
-
-    def test_webhook_get(self):
-        self._test_engine_api('webhook_get', 'call', identity='wh_name')
-
     def test_webhook_trigger(self):
         self._test_engine_api('webhook_trigger', 'call', identity='wh_name',
                               params={'pname': 'pvalue'})
-
-    def test_webhook_delete_cast(self):
-        self._test_engine_api('webhook_delete', 'cast', identity='wh_name')
-
-    def test_webhook_delete_call(self):
-        self._test_engine_api('webhook_delete', 'call', identity='wh_name')
 
     def test_event_list(self):
         default_args = {
