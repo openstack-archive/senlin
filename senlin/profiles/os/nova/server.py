@@ -180,6 +180,7 @@ class ServerProfile(base.Profile):
         ),
         NAME: schema.String(
             _('Name of the server.'),
+            updatable=True,
         ),
         NETWORKS: schema.List(
             _('List of networks for the server.'),
@@ -376,6 +377,18 @@ class ServerProfile(base.Profile):
 
         # TODO(anyone): Validate the new profile
         # TODO(Yanyan Hu): Update all server properties changed in new profile
+
+        # Update server name
+        name = self.properties[self.NAME]
+        new_name = new_profile.properties[self.NAME]
+        if new_name != name:
+            attrs = {'name': new_name if new_name else obj.name}
+            try:
+                self.nova(obj).server_update(self.server_id, **attrs)
+            except Exception as ex:
+                LOG.exception(_('Failed in updating server name: %s'),
+                              six.text_type(ex))
+                return False
 
         # Update server flavor
         flavor = self.properties[self.FLAVOR]
