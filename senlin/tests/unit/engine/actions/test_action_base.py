@@ -624,12 +624,20 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         pb.id = 'FAKE_BINDING_ID'
         return pb
 
+    @mock.patch.object(policy_mod.Policy, 'post_op')
+    @mock.patch.object(policy_mod.Policy, 'pre_op')
     @mock.patch.object(cp_mod.ClusterPolicy, 'load_all')
     @mock.patch.object(policy_mod.Policy, 'load')
-    def test_policy_check_missing_target(self, mock_load, mock_load_all):
+    def test_policy_check_missing_target(self, mock_load, mock_load_all,
+                                         mock_pre_op, mock_post_op):
         cluster_id = 'FAKE_CLUSTER_ID'
         # Note: policy is mocked
-        policy = mock.Mock()
+        spec = {
+            'type': 'TestPolicy',
+            'version': '1.0',
+            'properties': {'KEY2': 5},
+        }
+        policy = fakes.TestPolicy('test-policy', spec)
         policy.id = 'FAKE_POLICY_ID'
         policy.TARGET = [('BEFORE', 'OBJECT_ACTION')]
         # Note: policy binding is created but not stored
@@ -637,6 +645,8 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         self.assertIsNone(pb.last_op)
         mock_load_all.return_value = [pb]
         mock_load.return_value = policy
+        mock_pre_op.return_value = None
+        mock_post_op.return_value = None
         action = action_base.Action(cluster_id, 'OBJECT_ACTION_1', self.ctx)
 
         res = action.policy_check(cluster_id, 'AFTER')
@@ -650,8 +660,8 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         # last_op was updated anyway
         self.assertIsNotNone(pb.last_op)
         # neither pre_op nor post_op was called, because target not match
-        self.assertEqual(0, policy.pre_op.call_count)
-        self.assertEqual(0, policy.post_op.call_count)
+        self.assertEqual(0, mock_pre_op.call_count)
+        self.assertEqual(0, mock_post_op.call_count)
 
     @mock.patch.object(cp_mod.ClusterPolicy, 'load_all')
     @mock.patch.object(policy_mod.Policy, 'load')

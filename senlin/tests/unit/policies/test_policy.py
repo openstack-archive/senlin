@@ -14,6 +14,7 @@ import mock
 from oslo_context import context as oslo_ctx
 import six
 
+from senlin.common import consts
 from senlin.common import context as senlin_ctx
 from senlin.common import exception
 from senlin.common import schema
@@ -366,6 +367,21 @@ class TestPolicyBase(base.SenlinTestCase):
         }
         res = policy._extract_policy_data(policy_data)
         self.assertIsNone(res)
+
+    def test_default_need_check(self):
+        action = mock.Mock()
+        action.action = consts.CLUSTER_SCALE_IN
+        action.data = {}
+
+        policy = self._create_policy('test-policy')
+        res = policy.need_check('BEFORE', action)
+        self.assertTrue(res)
+
+        setattr(policy, 'TARGET', [('BEFORE', consts.CLUSTER_SCALE_IN)])
+        res = policy.need_check('BEFORE', action)
+        self.assertTrue(res)
+        res = policy.need_check('AFTER', action)
+        self.assertFalse(res)
 
     def test_default_pre_op(self):
         policy = self._create_policy('test-policy')

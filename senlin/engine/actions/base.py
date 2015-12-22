@@ -412,7 +412,7 @@ class Action(object):
             if target == 'AFTER':
                 pb.record_last_op(self.context)
 
-            if (target, self.action) not in policy.TARGET:
+            if not policy.need_check(target, self):
                 continue
 
             if target == 'BEFORE':
