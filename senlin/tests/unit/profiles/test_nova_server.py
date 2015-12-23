@@ -508,6 +508,59 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertFalse(res)
         nc.server_delete.assert_called_once_with('FAKE_ID')
 
+    def test_do_update_name_to_given_string_succeeded(self):
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+
+        novaclient = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = novaclient
+        new_spec = copy.deepcopy(self.spec)
+
+        new_spec['properties']['name'] = 'TEST_SERVER'
+        new_profile = server.ServerProfile('t', new_spec)
+        res = profile.do_update(obj, new_profile)
+        self.assertTrue(res)
+        novaclient.server_update.assert_called_once_with('FAKE_ID',
+                                                         name='TEST_SERVER')
+
+    def test_do_update_name_to_none_succeeded(self):
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+        obj.name = 'FAKE_OBJ_NAME'
+
+        novaclient = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = novaclient
+        new_spec = copy.deepcopy(self.spec)
+        del new_spec['properties']['name']
+
+        # name property is removed
+        new_profile = server.ServerProfile('t', new_spec)
+        res = profile.do_update(obj, new_profile)
+        self.assertTrue(res)
+        novaclient.server_update.assert_called_once_with('FAKE_ID',
+                                                         name='FAKE_OBJ_NAME')
+
+    def test_do_update_name_failed(self):
+        ex = exception.InternalError(code=500,
+                                     message='Internal server error')
+        novaclient = mock.Mock()
+        novaclient.server_update.side_effect = ex
+
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = novaclient
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['name'] = 'TEST_SERVER'
+        new_profile = server.ServerProfile('t', new_spec)
+        res = profile.do_update(obj, new_profile)
+        self.assertFalse(res)
+        novaclient.server_update.assert_called_once_with('FAKE_ID',
+                                                         name='TEST_SERVER')
+
     @mock.patch.object(server.ServerProfile, '_update_network')
     def test_do_update_network_successful_no_definition_overlap(
             self, mock_update_network):
