@@ -102,7 +102,8 @@ class NovaClient(base.DriverBase):
         if timeout is None:
             timeout = cfg.CONF.default_action_timeout
 
-        self.conn.compute.wait_for_server(value, status=status,
+        server_obj = self.conn.compute.find_server(value, False)
+        self.conn.compute.wait_for_server(server_obj, status=status,
                                           failures=failures,
                                           interval=interval,
                                           wait=timeout)
@@ -130,6 +131,18 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.rebuild_server(value, imageref, name=name,
                                                 admin_password=admin_password,
                                                 **attrs)
+
+    @sdk.translate_exception
+    def server_resize(self, value, flavor):
+        return self.conn.compute.resize_server(value, flavor)
+
+    @sdk.translate_exception
+    def server_resize_confirm(self, value):
+        return self.conn.compute.confirm_resize_server(value)
+
+    @sdk.translate_exception
+    def server_resize_revert(self, value):
+        return self.conn.compute.revert_resize_server(value)
 
     @sdk.translate_exception
     def wait_for_server_delete(self, value, timeout=None):

@@ -671,6 +671,112 @@ class TestNovaServerProfile(base.SenlinTestCase):
                                              'FAKE_IMAGE_NEW',
                                              'adminpass')
 
+    @mock.patch.object(server.ServerProfile, '_update_flavor')
+    def test_do_update_flavor_succeeded(self, mock_update_flavor):
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = mock.Mock()
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['flavor'] = 'FAKE_FLAVOR_NEW'
+        new_profile = server.ServerProfile('t', new_spec)
+
+        res = profile.do_update(obj, new_profile)
+        self.assertTrue(res)
+        mock_update_flavor.assert_called_with(obj, 'FLAV',
+                                              'FAKE_FLAVOR_NEW')
+
+    @mock.patch.object(server.ServerProfile, '_update_flavor')
+    def test_do_update_flavor_failed(self, mock_update_flavor):
+        ex = exception.InternalError(code=404,
+                                     message='FAKE_FLAVOR_NEW is not found')
+        mock_update_flavor.side_effect = ex
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = mock.Mock()
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['flavor'] = 'FAKE_FLAVOR_NEW'
+        new_profile = server.ServerProfile('t', new_spec)
+
+        res = profile.do_update(obj, new_profile)
+        self.assertFalse(res)
+        mock_update_flavor.assert_called_with(obj, 'FLAV',
+                                              'FAKE_FLAVOR_NEW')
+
+    def test_update_flavor(self):
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+        mock_old_flavor = mock.Mock()
+        mock_old_flavor.id = '123'
+        mock_new_flavor = mock.Mock()
+        mock_new_flavor.id = '456'
+        novaclient = mock.Mock()
+        novaclient.flavor_find.side_effect = [mock_old_flavor,
+                                              mock_new_flavor]
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = novaclient
+        profile._update_flavor(obj, 'old_flavor', 'new_flavor')
+        novaclient.flavor_find.has_calls(
+            [mock.call('old_flavor'), mock.call('new_flavor')])
+        novaclient.server_resize.assert_called_once_with('FAKE_ID',
+                                                         '456')
+        novaclient.wait_for_server.has_calls([
+            mock.call('FAKE_ID', 'VERIFY_RESIZE'),
+            mock.call('FAKE_ID', 'ACTIVE')])
+        novaclient.server_resize_confirm.assert_called_once_with('FAKE_ID')
+
+    def test_update_flavor_resize_failed(self):
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+        mock_old_flavor = mock.Mock()
+        mock_old_flavor.id = '123'
+        mock_new_flavor = mock.Mock()
+        mock_new_flavor.id = '456'
+        novaclient = mock.Mock()
+        novaclient.flavor_find.side_effect = [mock_old_flavor,
+                                              mock_new_flavor]
+        novaclient.server_resize.side_effect = [
+            Exception('Server resize failed')]
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = novaclient
+        self.assertRaises(exception.ResourceUpdateFailure,
+                          profile._update_flavor, obj, 'old_flavor',
+                          'new_flavor')
+        novaclient.server_resize.assert_called_once_with('FAKE_ID',
+                                                         '456')
+        novaclient.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
+        novaclient.server_resize_revert.assert_called_once_with('FAKE_ID')
+
+    def test_update_flavor_wait_for_server_failed(self):
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+        mock_old_flavor = mock.Mock()
+        mock_old_flavor.id = '123'
+        mock_new_flavor = mock.Mock()
+        mock_new_flavor.id = '456'
+        novaclient = mock.Mock()
+        novaclient.flavor_find.side_effect = [mock_old_flavor,
+                                              mock_new_flavor]
+        novaclient.wait_for_server.side_effect = [
+            Exception('Wait for server timeout'), None]
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = novaclient
+        self.assertRaises(exception.ResourceUpdateFailure,
+                          profile._update_flavor, obj, 'old_flavor',
+                          'new_flavor')
+        novaclient.server_resize.assert_called_once_with('FAKE_ID',
+                                                         '456')
+        novaclient.wait_for_server.has_calls([
+            mock.call('FAKE_ID', 'VERIFY_RESIZE'),
+            mock.call('FAKE_ID', 'ACTIVE')])
+        novaclient.server_resize_revert.assert_called_once_with('FAKE_ID')
+
     def test_update_image(self):
         obj = mock.Mock()
         obj.physical_id = 'FAKE_ID'

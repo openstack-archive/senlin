@@ -164,6 +164,7 @@ class ServerProfile(base.Profile):
         FLAVOR: schema.String(
             _('ID of flavor used for the server.'),
             required=True,
+            updatable=True,
         ),
         IMAGE: schema.String(
             # IMAGE is not required, because there could be BDM or BDMv2
@@ -338,7 +339,7 @@ class ServerProfile(base.Profile):
 
         LOG.info('Creating server: %s' % kwargs)
         server = self.nova(obj).server_create(**kwargs)
-        self.nova(obj).wait_for_server(server)
+        self.nova(obj).wait_for_server(server.id)
         self.server_id = server.id
 
         return server.id
@@ -374,6 +375,17 @@ class ServerProfile(base.Profile):
 
         # TODO(anyone): Validate the new profile
         # TODO(Yanyan Hu): Update all server properties changed in new profile
+
+        # Update server flavor
+        flavor = self.properties[self.FLAVOR]
+        new_flavor = new_profile.properties[self.FLAVOR]
+        if new_flavor != flavor:
+            try:
+                self._update_flavor(obj, flavor, new_flavor)
+            except Exception as ex:
+                LOG.exception(_('Failed in updating server flavor: %s'),
+                              six.text_type(ex))
+                return False
 
         # Update server image
         old_passwd = self.properties.get(self.ADMIN_PASS)
@@ -411,6 +423,28 @@ class ServerProfile(base.Profile):
                 return False
 
         return True
+
+    def _update_flavor(self, obj, old_flavor, new_flavor):
+        '''Updating server flavor'''
+        res = self.nova(obj).flavor_find(old_flavor)
+        old_flavor_id = res.id
+        res = self.nova(obj).flavor_find(new_flavor)
+        new_flavor_id = res.id
+        if new_flavor_id == old_flavor_id:
+            return
+
+        try:
+            self.nova(obj).server_resize(obj.physical_id, new_flavor_id)
+            self.nova(obj).wait_for_server(obj.physical_id, 'VERIFY_RESIZE')
+        except Exception as ex:
+            LOG.error(_("Server resizing failed, revert it: %s"),
+                      six.text_type(ex))
+            self.nova(obj).server_resize_revert(obj.physical_id)
+            self.nova(obj).wait_for_server(obj.physical_id, 'ACTIVE')
+            raise exception.ResourceUpdateFailure(resource=obj.physical_id)
+
+        self.nova(obj).server_resize_confirm(obj.physical_id)
+        self.nova(obj).wait_for_server(obj.physical_id, 'ACTIVE')
 
     def _update_image(self, obj, old_image, new_image, admin_password):
         '''Updating server image'''
