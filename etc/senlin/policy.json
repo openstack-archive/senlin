@@ -42,9 +42,5 @@
     "actions:get": "",
     "events:index": "",
     "events:get": "",
-    "webhooks:create": "",
-    "webhooks:index": "",
-    "webhooks:get": "",
     "webhooks:trigger": "",
-    "webhooks:delete": ""
 }
