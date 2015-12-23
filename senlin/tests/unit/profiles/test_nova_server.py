@@ -19,7 +19,6 @@ import six
 
 from senlin.common import exception
 from senlin.common.i18n import _
-from senlin.common import utils as common_utils
 from senlin.drivers import base as driver_base
 from senlin.profiles.os.nova import server
 from senlin.tests.unit.common import base
@@ -129,9 +128,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         res = profile.do_validate(mock.Mock())
         self.assertTrue(res)
 
-    @mock.patch.object(common_utils, 'random_name')
-    def test_do_create(self, mock_random_name):
-        mock_random_name.return_value = '12345678'
+    def test_do_create(self):
         novaclient = mock.Mock()
         neutronclient = mock.Mock()
         test_server = mock.Mock()
@@ -162,7 +159,6 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         server_id = profile.do_create(test_server)
 
-        mock_random_name.assert_called_once_with(8)
         novaclient.image_find.assert_called_once_with('FAKE_IMAGE')
         novaclient.flavor_find.assert_called_once_with('FLAV', False)
         neutronclient.network_get.assert_called_once_with('FAKE_NET')
@@ -183,7 +179,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
                 'cluster': 'FAKE_CLUSTER_ID',
                 'meta var': 'meta val'
             },
-            name='TEST_SERVER-12345678',
+            name='FAKE_SERVER_NAME',
             networks=[{
                 'fixed-ip': 'FAKE_IP',
                 'port': 'FAKE_PORT',
@@ -207,9 +203,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         novaclient.server_create.assert_called_once_with(**attrs)
         self.assertEqual(nova_server.id, server_id)
 
-    @mock.patch.object(common_utils, 'random_name')
-    def test_do_create_port_and_fixedip_not_defined(self, mock_random_name):
-        mock_random_name.return_value = '12345678'
+    def test_do_create_port_and_fixedip_not_defined(self):
         novaclient = mock.Mock()
         neutronclient = mock.Mock()
         test_server = mock.Mock()
@@ -249,21 +243,18 @@ class TestNovaServerProfile(base.SenlinTestCase):
         profile._neutronclient = neutronclient
         server_id = profile.do_create(test_server)
 
-        mock_random_name.assert_called_once_with(8)
         attrs = dict(auto_disk_config=True,
                      flavorRef='FAKE_FLAVOR_ID',
                      imageRef='FAKE_IMAGE_ID',
                      key_name='FAKE_KEYNAME',
                      metadata={'cluster': 'FAKE_CLUSTER_ID'},
-                     name='TEST_SERVER-12345678',
+                     name='FAKE_SERVER_NAME',
                      networks=[{'uuid': 'FAKE_NETWORK_ID'}])
 
         novaclient.server_create.assert_called_once_with(**attrs)
         self.assertEqual(nova_server.id, server_id)
 
-    @mock.patch.object(common_utils, 'random_name')
-    def test_do_create_server_attrs_not_defined(self, mock_random_name):
-        mock_random_name.return_value = '12345678'
+    def test_do_create_server_attrs_not_defined(self):
         novaclient = mock.Mock()
         neutronclient = mock.Mock()
         test_server = mock.Mock()
@@ -297,10 +288,9 @@ class TestNovaServerProfile(base.SenlinTestCase):
         profile._neutronclient = neutronclient
         server_id = profile.do_create(test_server)
 
-        mock_random_name.assert_called_once_with(8)
         attrs = dict(auto_disk_config=True,
                      flavorRef='FAKE_FLAVOR_ID',
-                     name='TEST_SERVER-12345678',
+                     name='FAKE_SERVER_NAME',
                      metadata={
                          'cluster': 'FAKE_CLUSTER_ID',
                      },
@@ -345,6 +335,47 @@ class TestNovaServerProfile(base.SenlinTestCase):
         attrs = dict(auto_disk_config=True,
                      flavorRef='FAKE_FLAVOR_ID',
                      name='FAKE_SERVER_NAME',
+                     metadata={},
+                     security_groups=['HIGH_SECURITY_GROUP'])
+
+        novaclient.server_create.assert_called_once_with(**attrs)
+        self.assertEqual(nova_server.id, server_id)
+
+    def test_do_create_name_property_is_not_defined(self):
+        novaclient = mock.Mock()
+        neutronclient = mock.Mock()
+        test_server = mock.Mock()
+        test_server.name = 'TEST-SERVER'
+        test_server.cluster_id = None
+        test_server.data = {}
+        flavor = mock.Mock()
+        flavor.id = 'FAKE_FLAVOR_ID'
+        novaclient.flavor_find.return_value = flavor
+        net = mock.Mock()
+        net.id = 'FAKE_NETWORK_ID'
+        neutronclient.network_get.return_value = net
+
+        nova_server = mock.Mock()
+        nova_server.id = 'FAKE_NOVA_SERVER_ID'
+        novaclient.server_create.return_value = nova_server
+
+        spec = {
+            'type': 'os.nova.server',
+            'version': '1.0',
+            'properties': {
+                'flavor': 'FLAV',
+                'security_groups': ['HIGH_SECURITY_GROUP'],
+            }
+        }
+
+        profile = server.ServerProfile('t', spec)
+        profile._novaclient = novaclient
+        profile._neutronclient = neutronclient
+        server_id = profile.do_create(test_server)
+
+        attrs = dict(auto_disk_config=True,
+                     flavorRef='FAKE_FLAVOR_ID',
+                     name='TEST-SERVER',
                      metadata={},
                      security_groups=['HIGH_SECURITY_GROUP'])
 
