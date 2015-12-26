@@ -125,7 +125,7 @@ class HealthPolicy(base.Policy):
     }
 
     def __init__(self, name, spec, **kwargs):
-        super(HealthPolicy, self).__init__(name, spec, kwargs)
+        super(HealthPolicy, self).__init__(name, spec, **kwargs)
 
         self.check_type = self.properties[self.DETECTION][self.DETECTION_TYPE]
         options = self.properties[self.DETECTION][self.DETECTION_OPTIONS]
