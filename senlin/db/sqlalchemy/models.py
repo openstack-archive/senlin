@@ -265,28 +265,6 @@ class Receiver(BASE, SenlinBase, SoftDelete):
     channel = sqlalchemy.Column(types.Dict)
 
 
-class Webhook(BASE, SenlinBase, SoftDelete):
-    """Represents a webhook bonded with Senlin resource entity."""
-
-    __tablename__ = 'webhook'
-
-    id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
-                           default=lambda: str(uuid.uuid4()))
-    name = sqlalchemy.Column('name', sqlalchemy.String(255))
-    user = sqlalchemy.Column(sqlalchemy.String(32))
-    domain = sqlalchemy.Column(sqlalchemy.String(32))
-    project = sqlalchemy.Column(sqlalchemy.String(32))
-
-    created_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
-
-    obj_id = sqlalchemy.Column(sqlalchemy.String(36))
-    obj_type = sqlalchemy.Column(sqlalchemy.String(36))
-    action = sqlalchemy.Column(sqlalchemy.String(36))
-    credential = sqlalchemy.Column(sqlalchemy.Text)
-    params = sqlalchemy.Column(types.Dict)
-
-
 class Credential(BASE, SenlinBase):
     '''A table for storing user credentials.'''
 
