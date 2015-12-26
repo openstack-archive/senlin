@@ -327,41 +327,6 @@ def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
                                          project_safe=project_safe)
 
 
-# Webhooks
-def webhook_create(context, values):
-    return IMPL.webhook_create(context, values)
-
-
-def webhook_get(context, webhook_id, show_deleted=False, project_safe=True):
-    return IMPL.webhook_get(context, webhook_id, show_deleted=show_deleted,
-                            project_safe=project_safe)
-
-
-def webhook_get_by_name(context, name, show_deleted=False, project_safe=True):
-    return IMPL.webhook_get_by_name(context, name, show_deleted=show_deleted,
-                                    project_safe=project_safe)
-
-
-def webhook_get_all(context, show_deleted=False, limit=None,
-                    marker=None, sort_keys=None, sort_dir=None,
-                    filters=None, project_safe=True):
-    return IMPL.webhook_get_all(context, show_deleted=show_deleted,
-                                limit=limit, marker=marker,
-                                sort_keys=sort_keys, sort_dir=sort_dir,
-                                filters=filters, project_safe=project_safe)
-
-
-def webhook_get_by_short_id(context, short_id, show_deleted=False,
-                            project_safe=True):
-    return IMPL.webhook_get_by_short_id(context, short_id,
-                                        show_deleted=show_deleted,
-                                        project_safe=project_safe)
-
-
-def webhook_delete(context, webhook_id, force=False):
-    return IMPL.webhook_delete(context, webhook_id, force)
-
-
 # Actions
 def action_create(context, values):
     return IMPL.action_create(context, values)
