@@ -13,153 +13,89 @@
 import mock
 from oslo_messaging.rpc import dispatcher as rpc
 import six
-import testtools
 
-from senlin.common import consts
 from senlin.common import exception
-from senlin.common import utils as common_utils
 from senlin.engine.actions import base as action_mod
-from senlin.engine import cluster as cluster_mod
 from senlin.engine import dispatcher
-from senlin.engine import environment
 from senlin.engine import service
-from senlin.engine import webhook as webhook_mod
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
-from senlin.tests.unit import fakes
 
 
-@testtools.skip("Skip until webhook rework is completed.")
 class WebhookTest(base.SenlinTestCase):
 
     def setUp(self):
         super(WebhookTest, self).setUp()
         self.ctx = utils.dummy_context(project='webhook_test_project')
         self.eng = service.EngineService('host-a', 'topic-a')
-        self.eng.init_tgm()
-        self.eng.dispatcher = mock.Mock()
 
-        env = environment.global_env()
-        env.register_profile('TestProfile', fakes.TestProfile)
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(action_mod, 'Action')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(service.EngineService, 'receiver_find')
+    def test_webhook_trigger(self, mock_get, mock_find, mock_action, notify):
+        fake_cluster = mock.Mock()
+        fake_cluster.id = 'FAKE_CLUSTER'
+        mock_find.return_value = fake_cluster
 
-        spec = {
-            'type': 'TestProfile',
-            'version': '1.0',
-            'properties': {
-                'INT': 10,
-                'STR': 'string'
-            }
+        fake_receiver = mock.Mock()
+        fake_receiver.id = '01234567-abcd-efef'
+        fake_receiver.cluster_id = 'FAKE_CLUSTER'
+        fake_receiver.action = 'DANCE'
+        fake_receiver.params = {'foo': 'bar'}
+        mock_get.return_value = fake_receiver
+
+        fake_action = mock.Mock()
+        fake_action.READY = 'READY'
+        fake_action.id = 'FAKE_ACTION'
+        mock_action.return_value = fake_action
+        res = self.eng.webhook_trigger(self.ctx, 'FAKE_RECEIVER',
+                                       params={'kee': 'vee'})
+
+        self.assertEqual({'action': 'FAKE_ACTION'}, res)
+
+        mock_get.assert_called_once_with(self.ctx, 'FAKE_RECEIVER')
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
+        kwargs = {
+            'name': 'webhook_01234567',
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': {'kee': 'vee', 'foo': 'bar'},
+            'user': self.ctx.user,
+            'project': self.ctx.project,
+            'domain': self.ctx.domain,
         }
-        self.profile = self.eng.profile_create(self.ctx, 'p-test', spec,
-                                               permission='1111')
 
-    def _verify_action(self, obj, action, name, target, cause, inputs=None):
-        if inputs is None:
-            inputs = {}
-        self.assertEqual(action, obj['action'])
-        self.assertEqual(name, obj['name'])
-        self.assertEqual(target, obj['target'])
-        self.assertEqual(cause, obj['cause'])
-        self.assertEqual(inputs, obj['inputs'])
+        mock_action.assert_called_once_with('FAKE_CLUSTER', 'DANCE', **kwargs)
+        fake_action.store.assert_called_once_with(self.ctx)
+        self.assertEqual('READY', fake_action.status)
+        notify.assert_called_once_with(action_id='FAKE_ACTION')
 
-    @mock.patch.object(cluster_mod.Cluster, 'load')
-    @mock.patch.object(dispatcher, 'start_action')
-    @mock.patch.object(service.EngineService, 'cluster_find')
-    @mock.patch.object(webhook_mod.Webhook, 'generate_url')
-    @mock.patch.object(common_utils, 'encrypt')
-    def test_webhook_trigger(self, mock_encrypt, mock_url, mock_find, notify,
-                             mock_load):
-        mock_encrypt.return_value = 'secret text', 'test-key'
-        mock_url.return_value = 'test-url', 'test-key'
-        fake_cluster = mock.Mock()
-        fake_cluster.user = self.ctx.user
-        fake_cluster.project = self.ctx.project
-        fake_cluster.domain = self.ctx.domain
-        fake_cluster.id = 'CLUSTER_FULL_ID'
-        mock_load.return_value = fake_cluster
-        mock_find.return_value = fake_cluster
-
-        obj_id = 'cluster-id-1'
-        webhook = self.eng.webhook_create(self.ctx, obj_id, 'cluster',
-                                          consts.CLUSTER_SCALE_OUT,
-                                          name='test-webhook-name')
-
-        self.assertIsNotNone(webhook)
-
-        res = self.eng.webhook_trigger(self.ctx, webhook['id'])
-
-        # verify action is fired
-        action_id = res['action']
-        action = self.eng.action_get(self.ctx, action_id)
-        self._verify_action(action, consts.CLUSTER_SCALE_OUT,
-                            'webhook_action_%s' % webhook['id'][:8],
-                            'CLUSTER_FULL_ID', cause=action_mod.CAUSE_RPC,
-                            inputs={})
-
-        notify.assert_called_once_with(action_id=action_id)
-
-    @mock.patch.object(cluster_mod.Cluster, 'load')
-    @mock.patch.object(dispatcher, 'start_action')
-    @mock.patch.object(service.EngineService, 'cluster_find')
-    @mock.patch.object(webhook_mod.Webhook, 'generate_url')
-    @mock.patch.object(common_utils, 'encrypt')
-    def test_webhook_trigger_with_params(self, mock_encrypt, mock_url,
-                                         mock_find, notify, mock_load):
-        mock_url.return_value = 'test-url', 'test-key'
-        fake_cluster = mock.Mock()
-        fake_cluster.user = self.ctx.user
-        fake_cluster.project = self.ctx.project
-        fake_cluster.domain = self.ctx.domain
-        fake_cluster.id = 'CLUSTER_FULL_ID'
-        mock_load.return_value = fake_cluster
-        mock_find.return_value = fake_cluster
-        mock_encrypt.return_value = 'secret text', 'test-key'
-
-        obj_id = 'cluster-id-1'
-        params = {'p1': 'v1', 'p2': 'v2'}
-        webhook = self.eng.webhook_create(self.ctx, obj_id, 'cluster',
-                                          consts.CLUSTER_SCALE_OUT,
-                                          params=params)
-        self.assertIsNotNone(webhook)
-
-        params2 = {'p1': 'v3', 'p2': 'v4'}
-        res = self.eng.webhook_trigger(self.ctx, webhook['id'], params2)
-
-        # verify action is fired
-        action_id = res['action']
-        action = self.eng.action_get(self.ctx, action_id)
-        self._verify_action(action, consts.CLUSTER_SCALE_OUT,
-                            'webhook_action_%s' % webhook['id'][:8],
-                            'CLUSTER_FULL_ID', cause=action_mod.CAUSE_RPC,
-                            inputs=params2)
-
-        notify.assert_called_once_with(action_id=action_id)
-
-    @mock.patch.object(service.EngineService, 'webhook_find')
-    def test_webhook_trigger_obj_id_not_found(self, mock_get):
-        wh = mock.Mock()
-        wh.obj_id = 'FAKE_ID'
-        wh.obj_type = 'cluster'
-        mock_get.return_value = wh
-
+    @mock.patch.object(service.EngineService, 'receiver_find')
+    def test_webhook_trigger_receiver_not_found(self, mock_find):
+        mock_find.side_effect = exception.ReceiverNotFound(receiver='RRR')
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.webhook_trigger,
-                               self.ctx, 'FAKE_WEBHOOK')
-        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
-        self.assertEqual('The request is malformed: The referenced object '
-                         '(FAKE_ID) is not found.',
+                               self.ctx, 'RRR')
+
+        self.assertEqual(exception.ReceiverNotFound, ex.exc_info[0])
+        self.assertEqual('The receiver (RRR) could not be found.',
                          six.text_type(ex.exc_info[1]))
-        mock_get.assert_called_once_with(self.ctx, 'FAKE_WEBHOOK')
-        mock_get.reset_mock()
+        mock_find.assert_called_once_with(self.ctx, 'RRR')
 
-        wh.obj_type = 'node'
-        mock_get.return_value = wh
-
+    @mock.patch.object(service.EngineService, 'receiver_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_webhook_trigger_cluster_not_found(self, mock_cluster, mock_find):
+        receiver = mock.Mock()
+        receiver.cluster_id = 'BOGUS'
+        mock_find.return_value = receiver
+        mock_cluster.side_effect = exception.ClusterNotFound(cluster='BOGUS')
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.webhook_trigger,
-                               self.ctx, 'FAKE_WEBHOOK')
+                               self.ctx, 'RRR')
+
         self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
-        self.assertEqual('The request is malformed: The referenced object '
-                         '(FAKE_ID) is not found.',
+        self.assertEqual('The request is malformed: The referenced cluster '
+                         '(BOGUS) is not found.',
                          six.text_type(ex.exc_info[1]))
-        mock_get.assert_called_once_with(self.ctx, 'FAKE_WEBHOOK')
+        mock_find.assert_called_once_with(self.ctx, 'RRR')
+        mock_cluster.assert_called_once_with(self.ctx, 'BOGUS')

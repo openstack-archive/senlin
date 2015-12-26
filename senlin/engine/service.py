@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
 import functools
 import uuid
 
@@ -1405,50 +1406,6 @@ class EngineService(service.Service):
 
         return {'action': action.id}
 
-    @request_context
-    def webhook_trigger(self, context, identity, params=None):
-
-        LOG.info(_LI("Triggering webhook '%s'."), identity)
-
-        receiver = db_api.receiver_get(context, identity)
-        if not receiver:
-            msg = _("The referenced receiver (%s) is not found.") % identity
-            raise exception.SenlinBadRequest(msg=msg)
-
-        # Check whether target obj exists
-        cluster_id = receiver.cluster_id
-
-        try:
-            self.cluster_find(context, cluster_id)
-        except exception.ClusterNotFound:
-            msg = _("The referenced cluster (%s) is not found.") % cluster_id
-            raise exception.SenlinBadRequest(msg=msg)
-
-        # If params are provided, they will override the default params
-        data = receiver.params
-        if params:
-            data.update(params)
-
-        action_name = 'webhook_action_%s' % receiver.id[:8]
-        kwargs = {
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
-            'name': action_name,
-            'cause': action_mod.CAUSE_RPC,
-            'inputs': params
-        }
-        action = action_mod.Action(cluster_id, receiver.action, **kwargs)
-        action.status = action.READY
-        action.store(context)
-        dispatcher.start_action(action_id=action.id)
-
-        LOG.info(_LI("Webhook '%(identity)s' triggered with action queued: "
-                     "%(id)s."),
-                 {'identity': identity, 'id': action.id})
-
-        return {'action': action.id}
-
     def action_find(self, context, identity, show_deleted=False):
         '''Find an action with the given identity (could be name or ID).'''
         if uuidutils.is_uuid_like(identity):
@@ -1656,7 +1613,7 @@ class EngineService(service.Service):
         LOG.info(_LI("Receiver %s is deleted."), identity)
 
     @request_context
-    def webhook_action(self, context, identity, params=None):
+    def webhook_trigger(self, context, identity, params=None):
 
         LOG.info(_LI("Triggering webhook (%s)."), identity)
         receiver = self.receiver_find(context, identity)
@@ -1664,22 +1621,22 @@ class EngineService(service.Service):
         try:
             cluster = self.cluster_find(context, receiver.cluster_id)
         except exception.ClusterNotFound:
-            msg = _("The referenced object (%s) is not found."
+            msg = _("The referenced cluster (%s) is not found."
                     ) % receiver.cluster_id
             raise exception.SenlinBadRequest(msg=msg)
 
-        # Use default params if no customized params are provided
-        if not params:
-            params = receiver.params
+        data = copy.deepcopy(receiver.params)
+        if params:
+            data.update(params)
 
         action_name = 'webhook_%s' % receiver.id[:8]
         kwargs = {
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': data,
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
-            'name': action_name,
-            'cause': action_mod.CAUSE_RPC,
-            'inputs': params
         }
         action = action_mod.Action(cluster.id, receiver.action, **kwargs)
         action.status = action.READY
