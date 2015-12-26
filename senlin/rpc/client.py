@@ -342,9 +342,11 @@ class EngineClient(object):
                                        cluster_id=cluster_id, action=action,
                                        actor=actor, params=params))
 
-    def receiver_get(self, ctxt, identity):
-        return self.call(ctxt, self.make_msg('receiver_get',
-                                             identity=identity))
+    def receiver_get(self, ctxt, identity, project_safe=True,
+                     show_deleted=False):
+        return self.call(ctxt, self.make_msg('receiver_get', identity=identity,
+                                             project_safe=project_safe,
+                                             show_deleted=show_deleted))
 
     def receiver_delete(self, ctxt, identity, cast=True):
         rpc_method = self.cast if cast else self.call

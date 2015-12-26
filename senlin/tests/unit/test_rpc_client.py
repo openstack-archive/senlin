@@ -461,7 +461,9 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         self._test_engine_api('receiver_create', 'call', **kwargs)
 
     def test_receiver_get(self):
-        self._test_engine_api('receiver_get', 'call', identity='wh_name')
+        self._test_engine_api('receiver_get', 'call',
+                              identity='wh_name', project_safe=True,
+                              show_deleted=False)
 
     def test_receiver_delete_cast(self):
         self._test_engine_api('receiver_delete', 'cast', identity='wh_name')
