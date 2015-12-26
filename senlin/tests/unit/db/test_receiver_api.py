@@ -251,12 +251,12 @@ class DBAPIReceiverTest(base.SenlinTestCase):
             self._create_receiver(self.ctx, id=v)
 
         mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
-        sort_keys = ['name', 'type', 'cluster_id', 'created_time']
+        sort_keys = ['name', 'type', 'cluster_id', 'action', 'created_time']
 
         db_api.receiver_get_all(self.ctx, sort_keys=sort_keys)
         args = mock_paginate.call_args[0]
         used_sort_keys = set(args[3])
-        expected_keys = set(['id', 'name', 'type', 'cluster_id',
+        expected_keys = set(['id', 'name', 'type', 'cluster_id', 'action',
                              'created_time'])
         self.assertEqual(expected_keys, used_sort_keys)
 
