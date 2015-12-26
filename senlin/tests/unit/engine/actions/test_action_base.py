@@ -205,6 +205,18 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual(obj.deleted_time, action_obj.deleted_time)
         self.assertEqual(obj.data, action_obj.data)
 
+    def test_from_db_record_with_empty_fields(self):
+        values = copy.deepcopy(self.action_values)
+        del values['inputs']
+        del values['outputs']
+        obj = action_base.Action('OBJID', 'OBJECT_ACTION', self.ctx,
+                                 **values)
+        obj.store(self.ctx)
+        record = db_api.action_get(self.ctx, obj.id)
+        action_obj = action_base.Action._from_db_record(record)
+        self.assertEqual({}, action_obj.inputs)
+        self.assertEqual({}, action_obj.outputs)
+
     def test_load(self):
         values = copy.deepcopy(self.action_values)
         obj = action_base.Action('OBJID', 'OBJECT_ACTION', self.ctx, **values)
