@@ -125,13 +125,19 @@ This section contains the glossary for the Senlin service.
    OpenStack
      Open source software for building private and public clouds.
 
+   Receiver
+     A receiver is an abstract resource created at the senlin engine that can
+     be used to hook the engine to some external event/alarm sources. A
+     receiver can be of different types. The most common type is a
+     :term:`webhook`.
+
    Webhook
      A webhook is an encoded URI (Universion Resource Identifier) that
      encapsulates a tuple (user, object, action), where the user is a Keystone
-     entity that initiates an action and the object is a specific
-     :term:`Cluster`, a :term:`Node` or a :term:`Policy` etc. The action item
-     specifies an :term:`Action` to be triggered. Such a Webhook is the only
-     thing one needs to know to trigger an action on an object in Senlin.
+     entity that initiates an action and the object is a specific cluster.
+     The action item specifies an :term:`Action` to be triggered. Such a
+     webhook is the only thing one needs to know to trigger an action on a
+     cluster.
 
    Worker
      A worker is the thread created and managed by Senlin engine to execute

@@ -38,7 +38,7 @@ Understanding the Design
    node
    policy
    action
-   webhook
+   receiver
    testing
    plugin_guide
 
