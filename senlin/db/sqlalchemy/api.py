@@ -1390,6 +1390,7 @@ def receiver_get_all(context, show_deleted=False, limit=None,
     sort_key_map = {
         consts.RECEIVER_NAME: models.Receiver.name.key,
         consts.RECEIVER_TYPE: models.Receiver.type.key,
+        consts.RECEIVER_ACTION: models.Receiver.action.key,
         consts.RECEIVER_CLUSTER_ID: models.Receiver.cluster_id.key,
         consts.RECEIVER_CREATED_TIME: models.Receiver.created_time.key,
     }
