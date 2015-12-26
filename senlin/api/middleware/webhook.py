@@ -11,17 +11,15 @@
 # under the License.
 
 from oslo_log import log as logging
-from oslo_serialization import jsonutils
 import six
 from six.moves.urllib import parse as urlparse
 
 from senlin.common import context
 from senlin.common import exception as exc
 from senlin.common.i18n import _
-from senlin.common import utils
 from senlin.common import wsgi
 from senlin.drivers import base as driver_base
-from senlin.engine import webhook as webhook_mod
+from senlin.rpc import client as rpc
 
 LOG = logging.getLogger(__name__)
 
@@ -38,16 +36,16 @@ class WebhookMiddleware(wsgi.Middleware):
         if req.method != 'POST':
             return
 
-        # Extract webhook ID and key
+        # Extract webhook (receiver) ID and params
         results = self._parse_url(req.url)
         if not results:
             return
 
-        (webhook_id, key) = results
+        (receiver_id, params) = results
 
-        credential = self._get_credential(webhook_id, key)
-        if not credential:
-            return
+        dbctx = context.RequestContext(is_admin=True)
+        rpcc = rpc.EngineClient()
+        receiver = rpcc.receiver_get(dbctx, receiver_id, project_safe=False)
 
         svc_ctx = context.get_service_context()
         kwargs = {
@@ -56,52 +54,34 @@ class WebhookMiddleware(wsgi.Middleware):
             'user_domain_name': svc_ctx['user_domain_name'],
             'password': svc_ctx['password']
         }
-        kwargs.update(credential)
+        kwargs.update(receiver['actor'])
 
         # Get token and fill it into the request header
         token = self._get_token(**kwargs)
         req.headers['X-Auth-Token'] = token
 
     def _parse_url(self, url):
-        """Extract webhook ID from the request URL.
+        """Extract receiver ID from the request URL.
 
+        Parse a URL of format: http://host:port/webhooks/id/trigger?V=1&k=v
         :param url: The URL from which the request is received.
         """
         parts = urlparse.urlparse(url)
-        components = parts.path.split('/')
-        if len(components) < 5:
+        p = parts.path.split('/')
+
+        # expected: ['', 'v1', 'webhooks', 'webhook-id', 'trigger']
+        if len(p) != 5:
             return None
 
-        if any((components[0] != '', components[2] != 'webhooks',
-                components[4] != 'trigger')):
+        if any((p[0] != '', p[2] != 'webhooks', p[4] != 'trigger')):
             return None
 
         qs = urlparse.parse_qs(parts.query)
-        if 'key' not in qs:
+        if 'V' not in qs:
             return None
-
-        return components[3], qs['key'][0]
-
-    def _get_credential(self, webhook_id, key):
-        """Get credential for the given webhook using the provided key.
-
-        :param webhook_id: ID of the webhook.
-        :param key: The key string to be used for decryption.
-        """
-        # Build a dummy RequestContext for DB APIs
-        dbctx = context.RequestContext(is_admin=True)
-        webhook = webhook_mod.Webhook.load(dbctx, webhook_id,
-                                           project_safe=False)
-        credential = webhook.credential
-        # Decrypt the credential using provided key
-        try:
-            cdata = utils.decrypt(webhook.credential, key)
-            credential = jsonutils.loads(cdata)
-        except Exception as ex:
-            LOG.exception(six.text_type(ex))
-            raise exc.Forbidden()
-
-        return credential
+        qs.pop('V')
+        params = dict((k, v[0]) for k, v in qs.items())
+        return p[3], params
 
     def _get_token(self, **kwargs):
         """Get a valid token based on the credential provided.
