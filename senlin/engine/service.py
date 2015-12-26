@@ -1410,29 +1410,26 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Triggering webhook '%s'."), identity)
 
-        webhook = db_api.receiver_get(context, identity)
-        if not webhook:
-            msg = _("The referenced webhook (%s) is not found.") % identity
+        receiver = db_api.receiver_get(context, identity)
+        if not receiver:
+            msg = _("The referenced receiver (%s) is not found.") % identity
             raise exception.SenlinBadRequest(msg=msg)
 
         # Check whether target obj exists
-        obj_id = webhook.obj_id
-        obj_type = webhook.obj_type
+        cluster_id = receiver.cluster_id
 
         try:
-            if obj_type == consts.WEBHOOK_OBJ_TYPE_CLUSTER:
-                db_obj = self.cluster_find(context, obj_id)
-            else:  # consts.WEBHOOK_OBJ_TYPE_NODE:
-                db_obj = self.node_find(context, obj_id)
-        except (exception.ClusterNotFound, exception.NodeNotFound):
-            msg = _("The referenced object (%s) is not found.") % obj_id
+            self.cluster_find(context, cluster_id)
+        except exception.ClusterNotFound:
+            msg = _("The referenced cluster (%s) is not found.") % cluster_id
             raise exception.SenlinBadRequest(msg=msg)
 
         # If params are provided, they will override the default params
-        if not params:
-            params = webhook.params
+        data = receiver.params
+        if params:
+            data.update(params)
 
-        action_name = 'webhook_action_%s' % webhook.id[:8]
+        action_name = 'webhook_action_%s' % receiver.id[:8]
         kwargs = {
             'user': context.user,
             'project': context.project,
@@ -1441,7 +1438,7 @@ class EngineService(service.Service):
             'cause': action_mod.CAUSE_RPC,
             'inputs': params
         }
-        action = action_mod.Action(db_obj.id, webhook.action, **kwargs)
+        action = action_mod.Action(cluster_id, receiver.action, **kwargs)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
@@ -1529,17 +1526,22 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Action '%s' is deleted."), identity)
 
-    def receiver_find(self, context, identity, show_deleted=False):
+    def receiver_find(self, context, identity, project_safe=True,
+                      show_deleted=False):
         """Find a receiver with the given identity (could be name or ID)."""
         if uuidutils.is_uuid_like(identity):
             receiver = db_api.receiver_get(context, identity,
+                                           project_safe=project_safe,
                                            show_deleted=show_deleted)
             if not receiver:
-                receiver = db_api.receiver_get_by_name(context, identity)
+                receiver = db_api.receiver_get_by_name(
+                    context, identity, project_safe=project_safe)
         else:
-            receiver = db_api.receiver_get_by_name(context, identity)
+            receiver = db_api.receiver_get_by_name(
+                context, identity, project_safe=project_safe)
             if not receiver:
-                receiver = db_api.receiver_get_by_short_id(context, identity)
+                receiver = db_api.receiver_get_by_short_id(
+                    context, identity, project_safe=project_safe)
 
         if not receiver:
             raise exception.ReceiverNotFound(receiver=identity)
@@ -1635,10 +1637,15 @@ class EngineService(service.Service):
         return receiver.to_dict()
 
     @request_context
-    def receiver_get(self, context, identity):
-        db_receiver = self.receiver_find(context, identity)
+    def receiver_get(self, context, identity, project_safe=True,
+                     show_deleted=False):
+        db_receiver = self.receiver_find(context, identity,
+                                         project_safe=project_safe,
+                                         show_deleted=show_deleted)
         receiver = receiver_mod.Receiver.load(context,
-                                              receiver_id=db_receiver.id)
+                                              receiver_obj=db_receiver,
+                                              project_safe=project_safe,
+                                              show_deleted=show_deleted)
         return receiver.to_dict()
 
     @request_context

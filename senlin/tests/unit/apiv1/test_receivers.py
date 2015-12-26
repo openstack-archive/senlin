@@ -478,8 +478,10 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         result = self.controller.get(req, receiver_id=wid)
 
-        mock_call.assert_called_with(req.context,
-                                     ('receiver_get', {'identity': wid}))
+        mock_call.assert_called_once_with(
+            req.context, ('receiver_get', {'identity': wid,
+                                           'project_safe': True,
+                                           'show_deleted': False}))
 
         expected = {'receiver': engine_resp}
         self.assertEqual(expected, result)
