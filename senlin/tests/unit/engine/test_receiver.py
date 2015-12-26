@@ -152,16 +152,7 @@ class TestReceiver(base.SenlinTestCase):
         self.assertEqual(self.context.project, receiver.project)
         self.assertEqual(self.context.domain, receiver.domain)
 
-    def test_receiver_load(self):
-        ex = self.assertRaises(exception.ReceiverNotFound,
-                               receiver_mod.Receiver.load,
-                               self.context, 'fake-receiver', None)
-        self.assertEqual('The receiver (fake-receiver) could not be found.',
-                         six.text_type(ex))
-
-        receiver = self._create_receiver('receiver-1', 'FAKE_ID')
-        result = receiver_mod.Receiver.load(self.context, receiver.id)
-
+    def _verify_receiver(self, receiver, result):
         self.assertEqual(receiver.id, result.id)
         self.assertEqual(receiver.name, result.name)
         self.assertEqual(receiver.type, result.type)
@@ -178,6 +169,25 @@ class TestReceiver(base.SenlinTestCase):
         self.assertEqual(receiver.action, result.action)
         self.assertEqual(receiver.params, result.params)
         self.assertEqual(receiver.channel, result.channel)
+
+    def test_receiver_load_with_id(self):
+        receiver = self._create_receiver('receiver-1', 'FAKE_ID')
+        result = receiver_mod.Receiver.load(self.context,
+                                            receiver_id=receiver.id)
+        self._verify_receiver(receiver, result)
+
+    def test_receiver_load_with_object(self):
+        receiver = self._create_receiver('receiver-1', 'FAKE_ID')
+        result = receiver_mod.Receiver.load(self.context,
+                                            receiver_obj=receiver)
+        self._verify_receiver(receiver, result)
+
+    def test_receiver_load_not_found(self):
+        ex = self.assertRaises(exception.ReceiverNotFound,
+                               receiver_mod.Receiver.load,
+                               self.context, 'fake-receiver', None)
+        self.assertEqual('The receiver (fake-receiver) could not be found.',
+                         six.text_type(ex))
 
     def test_receiver_load_diff_project(self):
         receiver = self._create_receiver('receiver-1', 'FAKE_ID')

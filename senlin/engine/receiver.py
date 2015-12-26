@@ -150,13 +150,13 @@ class Receiver(object):
                              loaded.
         """
         if receiver_obj is None:
-            receiver = db_api.receiver_get(context, receiver_id,
-                                           show_deleted=show_deleted,
-                                           project_safe=project_safe)
-            if receiver is None:
+            receiver_obj = db_api.receiver_get(context, receiver_id,
+                                               show_deleted=show_deleted,
+                                               project_safe=project_safe)
+            if receiver_obj is None:
                 raise exception.ReceiverNotFound(receiver=receiver_id)
 
-        return cls._from_db_record(receiver)
+        return cls._from_db_record(receiver_obj)
 
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort_keys=None,
