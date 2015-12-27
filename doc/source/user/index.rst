@@ -50,6 +50,6 @@ Working with Senlin
    policy_types
    policies
    bindings
-   webhooks
+   receivers
    actions
    events

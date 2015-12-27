@@ -40,5 +40,5 @@ Showing Details of an Action
 See Also
 ~~~~~~~~
 
-* :doc:`Creating Webooks <webhooks>`
+* :doc:`Creating Receivers <receivers>`
 * :doc:`Browsing Events <events>`
