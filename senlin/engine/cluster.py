@@ -40,11 +40,11 @@ class Cluster(object):
     '''
 
     STATUSES = (
-        INIT, ACTIVE, DELETED, CREATING, UPDATING, DELETING,
-        CRITICAL, ERROR, WARNING,
+        INIT, ACTIVE, DELETED, CREATING, UPDATING, RESIZING,
+        DELETING, CRITICAL, ERROR, WARNING,
     ) = (
-        'INIT', 'ACTIVE', 'DELETED', 'CREATING', 'UPDATING', 'DELETING',
-        'CRITICAL', 'ERROR', 'WARNING',
+        'INIT', 'ACTIVE', 'DELETED', 'CREATING', 'UPDATING', 'RESIZING',
+        'DELETING', 'CRITICAL', 'ERROR', 'WARNING',
     )
 
     def __init__(self, name, desired_capacity, profile_id,

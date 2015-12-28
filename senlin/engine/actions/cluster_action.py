@@ -449,7 +449,7 @@ class ClusterAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        self.cluster.set_status(self.context, self.cluster.UPDATING,
+        self.cluster.set_status(self.context, self.cluster.RESIZING,
                                 reason='Cluster resize started.')
         node_list = self.cluster.nodes
         current_size = len(node_list)
@@ -503,7 +503,7 @@ class ClusterAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        self.cluster.set_status(self.context, self.cluster.UPDATING,
+        self.cluster.set_status(self.context, self.cluster.RESIZING,
                                 reason='Cluster scale out started.')
         # We use policy output if any, or else the count is
         # set to 1 as default.
@@ -547,7 +547,7 @@ class ClusterAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        self.cluster.set_status(self.context, self.cluster.UPDATING,
+        self.cluster.set_status(self.context, self.cluster.RESIZING,
                                 reason='Cluster scale in started.')
         # We use policy data if any, deletion policy and scaling policy might
         # be attached.
