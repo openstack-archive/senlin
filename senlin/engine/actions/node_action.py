@@ -215,7 +215,7 @@ class NodeAction(base.Action):
             if self.cause == base.CAUSE_RPC:
                 res = senlin_lock.cluster_lock_acquire(
                     self.context,
-                    self.node.cluster_id, self.id,
+                    self.node.cluster_id, self.id, self.owner,
                     senlin_lock.NODE_SCOPE, False)
                 if not res:
                     return self.RES_RETRY, _('Failed in locking cluster')
@@ -233,7 +233,7 @@ class NodeAction(base.Action):
         reason = ''
         try:
             res = senlin_lock.node_lock_acquire(self.context, self.node.id,
-                                                self.id, False)
+                                                self.id, self.owner, False)
             if not res:
                 res = self.RES_ERROR
                 reason = _('Failed in locking node')

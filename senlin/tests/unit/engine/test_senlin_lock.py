@@ -10,12 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
 import mock
 from oslo_config import cfg
 
 from senlin.db.sqlalchemy import api as db_api
-from senlin.engine.actions import base as action
-from senlin.engine import dispatcher
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock as lockm
 from senlin.tests.unit.common import base
@@ -28,8 +27,10 @@ class SenlinLockTest(base.SenlinTestCase):
         super(SenlinLockTest, self).setUp()
 
         self.ctx = utils.dummy_context()
-        self.stub_action = self.patchobject(lockm, 'action_on_dead_engine',
-                                            return_value=False)
+
+        self.stub_get = self.patchobject(
+            db_api, 'action_get',
+            return_value=mock.Mock(owner='ENGINE', id='ACTION_ABC'))
 
     @mock.patch.object(db_api, "cluster_lock_acquire")
     def test_cluster_lock_acquire_already_owner(self, mock_acquire):
@@ -41,28 +42,29 @@ class SenlinLockTest(base.SenlinTestCase):
         mock_acquire.assert_called_once_with('CLUSTER_A', 'ACTION_XYZ',
                                              lockm.CLUSTER_SCOPE)
 
-    @mock.patch.object(action.Action, 'load')
+    @mock.patch.object(lockm, 'is_engine_dead')
+    @mock.patch.object(scheduler, 'sleep')
+    @mock.patch.object(db_api, 'action_mark_failed')
     @mock.patch.object(db_api, "cluster_lock_acquire")
     @mock.patch.object(db_api, "cluster_lock_steal")
     def test_cluster_lock_acquire_dead_owner(self, mock_steal, mock_acquire,
-                                             mock_action_load):
-        # self.stub_action.return_value = True
-        # mock_acquire.side_effect = ['ACTION_ABC']
-        # mock_steal.side_effect = ['ACTION_XYZ']
-        # act = mock.Mock()
-        # mock_action_load.return_value = act
+                                             mock_action_fail, mock_sleep,
+                                             mock_dead):
+        mock_dead.return_value = True
+        mock_acquire.side_effect = ['ACTION_ABC', 'ACTION_ABC',
+                                    'ACTION_ABC', 'ACTION_ABC']
+        mock_steal.side_effect = ['ACTION_XYZ']
 
-        # res = lockm.cluster_lock_acquire(self.ctx, 'CLUSTER_A', 'ACTION_XYZ')
+        res = lockm.cluster_lock_acquire(self.ctx, 'CLUSTER_A', 'ACTION_XYZ',
+                                         'NEW_ENGINE')
 
-        # self.assertTrue(res)
-        # mock_acquire.assert_called_once_with('CLUSTER_A', 'ACTION_XYZ',
-        #                                      lockm.CLUSTER_SCOPE)
-        # mock_steal.assert_called_once_with('CLUSTER_A', 'ACTION_XYZ')
-        # act.set_status.assert_called_once_with(
-        #     result=action.Action.RES_ERROR,
-        #     reason='Engine died when executing this action.'
-        # )
-        pass
+        self.assertTrue(res)
+        self.assertEqual(4, mock_acquire.call_count)
+        self.assertEqual(3, mock_sleep.call_count)
+        mock_steal.assert_called_once_with('CLUSTER_A', 'ACTION_XYZ')
+        mock_action_fail.assert_called_once_with(
+            self.ctx, 'ACTION_ABC', mock.ANY,
+            'Engine died when executing this action.')
 
     @mock.patch.object(scheduler, 'sleep')
     @mock.patch.object(db_api, "cluster_lock_acquire")
@@ -80,10 +82,13 @@ class SenlinLockTest(base.SenlinTestCase):
         ]
         mock_acquire.assert_has_calls(acquire_calls * 3)
 
+    @mock.patch.object(lockm, 'is_engine_dead')
     @mock.patch.object(scheduler, 'sleep')
     @mock.patch.object(db_api, "cluster_lock_acquire")
-    def test_cluster_lock_acquire_max_retries(self, mock_acquire, mock_sleep):
+    def test_cluster_lock_acquire_max_retries(self, mock_acquire, mock_sleep,
+                                              mock_dead):
         cfg.CONF.set_override('lock_retry_times', 2, enforce_type=True)
+        mock_dead.return_value = False
         mock_acquire.side_effect = [
             'ACTION_ABC', 'ACTION_ABC', 'ACTION_ABC', 'ACTION_XYZ'
         ]
@@ -121,12 +126,14 @@ class SenlinLockTest(base.SenlinTestCase):
         mock_acquire.assert_has_calls(acquire_calls * 3)
         mock_steal.assert_called_once_with('CLUSTER_A', 'ACTION_XY')
 
+    @mock.patch.object(lockm, 'is_engine_dead')
     @mock.patch.object(scheduler, 'sleep')
     @mock.patch.object(db_api, "cluster_lock_acquire")
     @mock.patch.object(db_api, "cluster_lock_steal")
     def test_cluster_lock_acquire_steal_failed(self, mock_steal, mock_acquire,
-                                               mock_sleep):
+                                               mock_sleep, mock_dead):
         cfg.CONF.set_override('lock_retry_times', 2, enforce_type=True)
+        mock_dead.return_value = False
         mock_acquire.side_effect = ['ACTION_ABC', 'ACTION_ABC', 'ACTION_ABC']
         mock_steal.return_value = []
 
@@ -159,27 +166,26 @@ class SenlinLockTest(base.SenlinTestCase):
         self.assertTrue(res)
         mock_acquire.assert_called_once_with('NODE_A', 'ACTION_XYZ')
 
-    @mock.patch.object(action.Action, 'load')
+    @mock.patch.object(lockm, 'is_engine_dead')
+    @mock.patch.object(db_api, 'action_mark_failed')
     @mock.patch.object(db_api, "node_lock_acquire")
     @mock.patch.object(db_api, "node_lock_steal")
     def test_node_lock_acquire_dead_owner(self, mock_steal, mock_acquire,
-                                          mock_action_load):
-        # self.stub_action.return_value = True
-        # mock_acquire.side_effect = 'ACTION_ABC'
-        # mock_steal.return_value = 'ACTION_XYZ'
-        # act = mock.Mock()
-        # mock_action_load.return_value = act
+                                          mock_action_fail, mock_dead):
+        mock_dead.return_value = True
+        mock_acquire.side_effect = ['ACTION_ABC', 'ACTION_ABC',
+                                    'ACTION_ABC', 'ACTION_ABC']
+        mock_steal.return_value = 'ACTION_XYZ'
 
-        # res = lockm.node_lock_acquire(self.ctx, 'NODE_A', 'ACTION_XYZ')
+        res = lockm.node_lock_acquire(self.ctx, 'NODE_A', 'ACTION_XYZ',
+                                      'NEW_ENGINE')
 
-        # self.assertTrue(res)
-        # mock_acquire.assert_called_once_with('NODE_A', 'ACTION_XYZ')
-        # mock_steal.assert_called_once_with('NODE_A', 'ACTION_XYZ')
-        # act.set_status.assert_called_once_with(
-        #     result=action.Action.RES_ERROR,
-        #     reason='Engine died when executing this action.'
-        # )
-        pass
+        self.assertTrue(res)
+        self.assertEqual(4, mock_acquire.call_count)
+        mock_steal.assert_called_once_with('NODE_A', 'ACTION_XYZ')
+        mock_action_fail.assert_called_once_with(
+            self.ctx, 'ACTION_ABC', mock.ANY,
+            'Engine died when executing this action.')
 
     @mock.patch.object(scheduler, 'sleep')
     @mock.patch.object(db_api, "node_lock_acquire")
@@ -194,10 +200,13 @@ class SenlinLockTest(base.SenlinTestCase):
         acquire_calls = [mock.call('NODE_A', 'ACTION_XYZ')]
         mock_acquire.assert_has_calls(acquire_calls * 3)
 
+    @mock.patch.object(lockm, 'is_engine_dead')
     @mock.patch.object(scheduler, 'sleep')
     @mock.patch.object(db_api, "node_lock_acquire")
-    def test_node_lock_acquire_max_retries(self, mock_acquire, mock_sleep):
+    def test_node_lock_acquire_max_retries(self, mock_acquire, mock_sleep,
+                                           mock_dead):
         cfg.CONF.set_override('lock_retry_times', 2, enforce_type=True)
+        mock_dead.return_value = False
         mock_acquire.side_effect = [
             'ACTION_ABC', 'ACTION_ABC', 'ACTION_ABC', 'ACTION_XYZ'
         ]
@@ -231,12 +240,14 @@ class SenlinLockTest(base.SenlinTestCase):
         mock_acquire.assert_has_calls(acquire_calls * 3)
         mock_steal.assert_called_once_with('NODE_A', 'ACTION_XY')
 
+    @mock.patch.object(db_api, 'action_get')
     @mock.patch.object(scheduler, 'sleep')
     @mock.patch.object(db_api, "node_lock_acquire")
     @mock.patch.object(db_api, "node_lock_steal")
     def test_node_lock_acquire_steal_failed(self, mock_steal, mock_acquire,
-                                            mock_sleep):
+                                            mock_sleep, mock_get):
         cfg.CONF.set_override('lock_retry_times', 2, enforce_type=True)
+        mock_get.return_value = mock.Mock(owner='ENGINE')
         mock_acquire.side_effect = ['ACTION_ABC', 'ACTION_ABC', 'ACTION_ABC']
         mock_steal.return_value = None
 
@@ -258,30 +269,29 @@ class SenlinLockTest(base.SenlinTestCase):
         mock_release.assert_called_once_with('C', 'A')
 
 
-class SenlinLockActionCheckTest(base.SenlinTestCase):
+class SenlinLockEnginCheckTest(base.SenlinTestCase):
 
     def setUp(self):
-        super(SenlinLockActionCheckTest, self).setUp()
-
+        super(SenlinLockEnginCheckTest, self).setUp()
         self.ctx = utils.dummy_context()
 
-    @mock.patch.object(dispatcher, 'notify')
-    @mock.patch.object(db_api, 'action_get')
-    def test_action_on_live_engine(self, mock_action, mock_notify):
-        mock_notify.return_value = True
-        ret = mock.MagicMock()
-        ret.owner = 'fake_engine_id'
-        mock_action.return_value = ret
-        self.assertIs(False,
-                      lockm.action_on_dead_engine(self.ctx, 'fake_action'))
-        mock_notify.assert_called_once_with('listening', 'fake_engine_id')
+    @mock.patch.object(db_api, 'service_get')
+    def test_engine_is_none(self, mock_service):
+        mock_service.return_value = None
+        self.assertTrue(lockm.is_engine_dead(self.ctx, 'fake_engine_id'))
+        mock_service.assert_called_once_with(self.ctx, 'fake_engine_id')
 
-    @mock.patch.object(dispatcher, 'notify')
-    @mock.patch.object(db_api, 'action_get')
-    def test_action_on_dead_engine(self, mock_action, mock_notify):
-        mock_notify.return_value = False
-        ret = mock.MagicMock()
-        ret.owner = 'fake_engine_id'
-        mock_action.return_value = ret
-        self.assertTrue(lockm.action_on_dead_engine(self.ctx, 'fake_action'))
-        mock_notify.assert_called_once_with('listening', 'fake_engine_id')
+    @mock.patch.object(db_api, 'service_get')
+    def test_engine_is_dead(self, mock_service):
+        update_time = (datetime.datetime.utcnow() - datetime.timedelta(
+            seconds=3 * cfg.CONF.periodic_interval))
+        mock_service.return_value = mock.Mock(updated_at=update_time)
+        self.assertTrue(lockm.is_engine_dead(self.ctx, 'fake_engine_id'))
+        mock_service.assert_called_once_with(self.ctx, 'fake_engine_id')
+
+    @mock.patch.object(db_api, 'service_get')
+    def test_engine_is_alive(self, mock_service):
+        mock_service.return_value = mock.Mock(
+            updated_at=datetime.datetime.utcnow())
+        self.assertFalse(lockm.is_engine_dead(self.ctx, 'fake_engine_id'))
+        mock_service.assert_called_once_with(self.ctx, 'fake_engine_id')

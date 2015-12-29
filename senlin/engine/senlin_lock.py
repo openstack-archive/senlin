@@ -12,12 +12,13 @@
 
 from oslo_config import cfg
 from oslo_log import log as logging
+from oslo_utils import timeutils
+import time
 
-# from senlin.common.i18n import _
+from senlin.common.i18n import _
 from senlin.common.i18n import _LE
+from senlin.common.i18n import _LI
 from senlin.db import api as db_api
-# from senlin.engine.actions import base
-from senlin.engine import dispatcher
 from senlin.engine import scheduler
 
 CONF = cfg.CONF
@@ -34,18 +35,26 @@ LOCK_SCOPES = (
 )
 
 
-def action_on_dead_engine(context, action):
-    action = db_api.action_get(context, action)
-    if action and action.owner:
-        return not dispatcher.notify('listening', action.owner)
+def is_engine_dead(ctx, engine_id, period_time=None):
+    # if engine didn't report its status for peirod_time, will consider it
+    # as a dead engine.
+    if period_time is None:
+        period_time = 2 * CONF.periodic_interval
+    eng = db_api.service_get(ctx, engine_id)
+    if not eng:
+        return True
+    if (timeutils.utcnow() - eng.updated_at).total_seconds() > period_time:
+        return True
+    return False
 
 
-def cluster_lock_acquire(context, cluster_id, action_id, scope=CLUSTER_SCOPE,
-                         forced=False):
+def cluster_lock_acquire(context, cluster_id, action_id, engine=None,
+                         scope=CLUSTER_SCOPE, forced=False):
     """Try to lock the specified cluster.
 
     :param cluster_id: ID of the cluster to be locked.
     :param action_id: ID of the action which wants to lock the cluster.
+    :param engine: ID of the engine which wants to lock the cluster.
     :param scope: scope of lock, could be cluster wide lock, or node-wide
                   lock.
     :param forced: set to True to cancel current action that owns the lock,
@@ -58,19 +67,6 @@ def cluster_lock_acquire(context, cluster_id, action_id, scope=CLUSTER_SCOPE,
     owners = db_api.cluster_lock_acquire(cluster_id, action_id, scope)
     if action_id in owners:
         return True
-    # Will reach here only because scope == CLUSTER_SCOPE
-    # if action_on_dead_engine(context, owners[0]):
-    #     LOG.debug(_('The cluster %(c)s is locked by dead action %(a)s, '
-    #                 'try to steal the lock.') % {
-    #         'c': cluster_id,
-    #         'a': owners[0]
-    #     })
-    #     act = base.Action.load(context, owners[0])
-    #     reason = _('Engine died when executing this action.')
-    #     act.set_status(result=base.Action.RES_ERROR,
-    #                    reason=reason)
-    #     owners = db_api.cluster_lock_steal(cluster_id, action_id)
-    #     return action_id in owners
 
     # Step 2: retry using global configuration options
     retries = cfg.CONF.lock_retry_times
@@ -78,6 +74,7 @@ def cluster_lock_acquire(context, cluster_id, action_id, scope=CLUSTER_SCOPE,
 
     while retries > 0:
         scheduler.sleep(retry_interval)
+        LOG.debug('Acquire lock for cluster %s again' % cluster_id)
         owners = db_api.cluster_lock_acquire(cluster_id, action_id, scope)
         if action_id in owners:
             return True
@@ -85,6 +82,21 @@ def cluster_lock_acquire(context, cluster_id, action_id, scope=CLUSTER_SCOPE,
 
     # Step 3: Last resort is 'forced locking', only needed when retry failed
     if forced:
+        owners = db_api.cluster_lock_steal(cluster_id, action_id)
+        return action_id in owners
+
+    # Will reach here only because scope == CLUSTER_SCOPE
+    action = db_api.action_get(context, owners[0])
+    if (action and action.owner and action.owner != engine and
+            is_engine_dead(context, action.owner)):
+        LOG.info(_LI('The cluster %(c)s is locked by dead action %(a)s, '
+                     'try to steal the lock.'), {
+            'c': cluster_id,
+            'a': owners[0]
+        })
+        reason = _('Engine died when executing this action.')
+        db_api.action_mark_failed(context, action.id, time.time(),
+                                  reason=reason)
         owners = db_api.cluster_lock_steal(cluster_id, action_id)
         return action_id in owners
 
@@ -105,12 +117,14 @@ def cluster_lock_release(cluster_id, action_id, scope):
     return db_api.cluster_lock_release(cluster_id, action_id, scope)
 
 
-def node_lock_acquire(context, node_id, action_id, forced=False):
+def node_lock_acquire(context, node_id, action_id, engine=None,
+                      forced=False):
     """Try to lock the specified node.
 
     :param context: the context used for DB operations;
     :param node_id: ID of the node to be locked.
     :param action_id: ID of the action that attempts to lock the node.
+    :param engine: ID of the engine that attempts to lock the node.
     :param forced: set to True to cancel current action that owns the lock,
                    if any.
     :returns: True if lock is acquired, or False otherwise.
@@ -120,18 +134,6 @@ def node_lock_acquire(context, node_id, action_id, forced=False):
     owner = db_api.node_lock_acquire(node_id, action_id)
     if action_id == owner:
         return True
-    # if action_on_dead_engine(context, owner):
-    #     LOG.debug(_('The node %(n)s is locked by dead action %(a)s, '
-    #                 'try to steal the lock.') % {
-    #         'n': node_id,
-    #         'a': owner
-    #     })
-    #     act = base.Action.load(context, owner)
-    #     reason = _('Engine died when executing this action.')
-    #     act.set_status(result=base.Action.RES_ERROR,
-    #                    reason=reason)
-    #     db_api.node_lock_steal(node_id, action_id)
-    #     return True
 
     # Step 2: retry using global configuration options
     retries = cfg.CONF.lock_retry_times
@@ -139,6 +141,7 @@ def node_lock_acquire(context, node_id, action_id, forced=False):
 
     while retries > 0:
         scheduler.sleep(retry_interval)
+        LOG.debug('Acquire lock for node %s again' % node_id)
         owner = db_api.node_lock_acquire(node_id, action_id)
         if action_id == owner:
             return True
@@ -148,6 +151,21 @@ def node_lock_acquire(context, node_id, action_id, forced=False):
     if forced:
         owner = db_api.node_lock_steal(node_id, action_id)
         return action_id == owner
+
+    # if this node lock by dead engine
+    action = db_api.action_get(context, owner)
+    if (action and action.owner and action.owner != engine and
+            is_engine_dead(context, action.owner)):
+        LOG.info(_LI('The node %(n)s is locked by dead action %(a)s, '
+                     'try to steal the lock.'), {
+            'n': node_id,
+            'a': owner
+        })
+        reason = _('Engine died when executing this action.')
+        db_api.action_mark_failed(context, action.id, time.time(),
+                                  reason=reason)
+        db_api.node_lock_steal(node_id, action_id)
+        return True
 
     LOG.error(_LE('Node is already locked by action %(old)s, '
                   'action %(new)s failed grabbing the lock'),
