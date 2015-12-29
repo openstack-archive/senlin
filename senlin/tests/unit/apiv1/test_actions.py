@@ -126,6 +126,8 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {
             'name': 'fake name',
             'target': '1111-2222-3333',
+            'action': 'CLUSTER_CREATE',
+            'status': 'SUCCEEDED',
             'balrog': 'you shall not pass!'
         }
         req = self._get('/actions', params=params)
@@ -138,9 +140,11 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('filters', engine_args)
 
         filters = engine_args['filters']
-        self.assertEqual(2, len(filters))
+        self.assertEqual(4, len(filters))
         self.assertIn('name', filters)
+        self.assertIn('action', filters)
         self.assertIn('target', filters)
+        self.assertIn('status', filters)
         self.assertNotIn('balrog', filters)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')

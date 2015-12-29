@@ -73,6 +73,7 @@ class ActionController(object):
             'name': 'mixed',
             'target': 'mixed',
             'action': 'mixed',
+            'status': 'mixed',
         }
         param_whitelist = {
             'limit': 'single',
