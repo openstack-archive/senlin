@@ -178,6 +178,7 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual(node.status_reason, node_info.status_reason)
         self.assertEqual(node.meta_data, node_info.metadata)
         self.assertEqual(node.data, node_info.data)
+        self.assertEqual(self.profile.name, node_info.rt['profile'].name)
 
     def test_node_load_diff_project(self):
         self._create_node('NODE_ID')
@@ -228,10 +229,40 @@ class TestNode(base.SenlinTestCase):
             'status_reason': node.status_reason,
             'data': node.data,
             'metadata': node.meta_data,
+            'profile_name': self.profile.name,
         }
         result = nodem.Node.load(self.context, 'NODE1')
         dt = result.to_dict()
-        del dt['profile_name']
+        self.assertEqual(expected, dt)
+
+    @mock.patch.object(db_api, 'profile_get')
+    def test_node_to_dict_no_profile(self, mock_profile_get):
+        node = self._create_node('NODE1')
+        self.assertIsNotNone(node.id)
+        expected = {
+            'id': node.id,
+            'name': node.name,
+            'cluster_id': node.cluster_id,
+            'physical_id': node.physical_id,
+            'profile_id': node.profile_id,
+            'user': node.user,
+            'project': node.project,
+            'domain': node.domain,
+            'index': node.index,
+            'role': node.role,
+            'init_time': common_utils.format_time(node.init_time),
+            'created_time': common_utils.format_time(node.created_time),
+            'updated_time': common_utils.format_time(node.updated_time),
+            'deleted_time': common_utils.format_time(node.deleted_time),
+            'status': node.status,
+            'status_reason': node.status_reason,
+            'data': node.data,
+            'metadata': node.meta_data,
+            'profile_name': 'Unknown',
+        }
+        mock_profile_get.return_value = None
+        result = nodem.Node.load(self.context, 'NODE1')
+        dt = result.to_dict()
         self.assertEqual(expected, dt)
 
     def test_node_set_status(self):

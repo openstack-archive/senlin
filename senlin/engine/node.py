@@ -79,12 +79,16 @@ class Node(object):
             self._load_runtime_data(context)
 
     def _load_runtime_data(self, context):
-        self.rt = {
+        profile = None
+        try:
             # TODO(Yanyan Hu): Use permission to control access privilege
             # of profile.
-            'profile': profile_base.Profile.load(context, self.profile_id,
-                                                 project_safe=False),
-        }
+            profile = profile_base.Profile.load(context, self.profile_id,
+                                                project_safe=False)
+        except exception.ProfileNotFound:
+            LOG.debug(_('Profile not found: %s'), self.profile_id)
+
+        self.rt = {'profile': profile}
 
     def store(self, context):
         '''Store the node record into database table.
@@ -173,7 +177,6 @@ class Node(object):
                  limit=None, marker=None, sort_keys=None, sort_dir=None,
                  filters=None, project_safe=True):
         '''Retrieve all nodes of from database.'''
-
         records = db_api.node_get_all(context, cluster_id=cluster_id,
                                       show_deleted=show_deleted,
                                       limit=limit, marker=marker,
@@ -184,6 +187,10 @@ class Node(object):
         return [cls._from_db_record(context, record) for record in records]
 
     def to_dict(self):
+        if self.rt['profile']:
+            profile_name = self.rt['profile'].name
+        else:
+            profile_name = 'Unknown'
         node_dict = {
             'id': self.id,
             'name': self.name,
@@ -203,7 +210,7 @@ class Node(object):
             'status_reason': self.status_reason,
             'data': self.data,
             'metadata': self.metadata,
-            'profile_name': self.rt['profile'].name,
+            'profile_name': profile_name,
         }
         return node_dict
 
