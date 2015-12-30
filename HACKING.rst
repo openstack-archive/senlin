@@ -8,6 +8,9 @@ Senlin Style Commandments
 Senlin Specific Commandments
 ----------------------------
 
+- [S318] Change assertEqual(A, None) or assertEqual(None, A) by optimal assert
+  like assertIsNone(A)
+
 Working on APIs
 ---------------
 

@@ -749,7 +749,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         del new_spec['properties']['adminPass']
         new_profile = server.ServerProfile('t', new_spec)
-        self.assertEqual(new_profile.properties['adminPass'], None)
+        self.assertIsNone(new_profile.properties['adminPass'])
         res = profile.do_update(obj, new_profile)
         self.assertTrue(res)
         mock_update_image.assert_called_with(obj, 'FAKE_IMAGE',
