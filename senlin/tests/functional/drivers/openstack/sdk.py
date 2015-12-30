@@ -16,3 +16,29 @@ class FakeResourceObject(object):
     def __init__(self, params):
         for key in params:
             setattr(self, key, params[key])
+
+    def to_dict(self):
+        data = {
+            'image': {
+                'id': 'FAKE_IMAGE'
+            },
+            'flavor': {
+                'id': 'FAKE_FLAVOR'
+            },
+            'addresses': {
+                'private': [
+                    {
+                        'OS-EXT-IPS:type': 'fixed',
+                        'addr': '10.0.0.5',
+                        'version': 4
+                    }
+                ]
+            },
+            'security_groups': [
+                {
+                    'name': 'default'
+                }
+            ]
+        }
+
+        return data
