@@ -128,6 +128,27 @@ class TestNovaServerProfile(base.SenlinTestCase):
         res = profile.do_validate(mock.Mock())
         self.assertTrue(res)
 
+    def test_do_check(self):
+        profile = server.ServerProfile('t', self.spec)
+
+        nc = mock.Mock()
+        nc.server_get.return_value = None
+        profile._novaclient = nc
+
+        test_server = mock.Mock()
+        test_server.physical_id = 'FAKE_ID'
+
+        res = profile.do_check(test_server)
+        nc.server_get.assert_called_once_with('FAKE_ID')
+        self.assertFalse(res)
+
+        return_server = mock.Mock()
+        return_server.status = 'ACTIVE'
+        nc.server_get.return_value = return_server
+        res = profile.do_check(test_server)
+        nc.server_get.assert_called_with('FAKE_ID')
+        self.assertTrue(res)
+
     def test_do_create(self):
         novaclient = mock.Mock()
         neutronclient = mock.Mock()
@@ -938,12 +959,6 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         # Test path where server doesn't already exist
         res = profile.do_update(test_server, new_profile)
-        self.assertTrue(res)
-
-    def test_do_check(self):
-        # Not implemented in server profile yet.
-        profile = server.ServerProfile('t', self.spec)
-        res = profile.do_check(mock.Mock())
         self.assertTrue(res)
 
     def test_do_get_details(self):

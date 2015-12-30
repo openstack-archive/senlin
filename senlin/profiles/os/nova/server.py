@@ -551,7 +551,20 @@ class ServerProfile(base.Profile):
         return
 
     def do_check(self, obj):
-        # TODO(anyone): Check server status
+        if not obj.physical_id:
+            return False
+
+        self.server_id = obj.physical_id
+
+        try:
+            server = self.nova(obj).server_get(self.server_id)
+        except Exception as ex:
+            LOG.error('Error: %s' % six.text_type(ex))
+            return False
+
+        if (server is None or server.status != 'ACTIVE'):
+            return False
+
         return True
 
     def do_get_details(self, obj):
