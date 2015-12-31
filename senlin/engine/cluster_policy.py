@@ -10,13 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo_log import log as logging
 from oslo_utils import timeutils
 
 from senlin.common import exception
 from senlin.db import api as db_api
-
-LOG = logging.getLogger(__name__)
 
 
 class ClusterPolicy(object):
