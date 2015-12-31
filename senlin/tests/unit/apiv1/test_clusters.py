@@ -10,13 +10,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import json
-
 import mock
-from oslo_config import cfg
 import six
 import webob
 from webob import exc
+
+from oslo_config import cfg
+from oslo_serialization import jsonutils
 
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import clusters
@@ -460,7 +460,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
 
-        req = self._post('/clusters', json.dumps(body))
+        req = self._post('/clusters', jsonutils.dumps(body))
 
         engine_response = {
             'id': 'FAKE_ID',
@@ -509,7 +509,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'timeout': None,
         }
 
-        req = self._post('/clusters', json.dumps(body))
+        req = self._post('/clusters', jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
@@ -535,7 +535,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'timeout': None,
             }
         }
-        req = self._post('/clusters', json.dumps(body))
+        req = self._post('/clusters', jsonutils.dumps(body))
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create,
@@ -558,7 +558,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'timeout': None,
             }
         }
-        req = self._post('/clusters', json.dumps(body))
+        req = self._post('/clusters', jsonutils.dumps(body))
 
         error = senlin_exc.InvalidParameter(name='desired_capacity', value=-1)
         self.patchobject(rpc_client.EngineClient, 'call', side_effect=error)
@@ -584,7 +584,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'timeout': None,
             }
         }
-        req = self._post('/clusters', json.dumps(body))
+        req = self._post('/clusters', jsonutils.dumps(body))
 
         error = senlin_exc.HTTPExceptionDisguise(webob.exc.HTTPBadRequest())
         self.controller.create = mock.MagicMock(side_effect=error)
@@ -728,7 +728,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
@@ -755,7 +755,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {'profile_id': 'xxxx-yyyy-zzzz'}
 
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'cluster_update')
         ex = self.assertRaises(exc.HTTPBadRequest,
@@ -774,7 +774,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {'cluster': {'timeout': '10min'}}
 
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'cluster_update')
         ex = self.assertRaises(senlin_exc.InvalidParameter,
@@ -791,7 +791,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'non-existent-cluster'
         body = {'cluster': {'profile_id': 'xxxx-yyyy-zzzz'}}
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         error = senlin_exc.ClusterNotFound(cluster=cid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
@@ -809,7 +809,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'aaaa-bbbb-cccc'
         body = {'cluster': {'profile_id': 'xxxx-yyyy-zzzz'}}
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         error = senlin_exc.FeatureNotSupported(feature='Wrong status')
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
@@ -827,7 +827,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'aaaa-bbbb-cccc'
         body = {'cluster': {'profile_id': 'not-a-profile'}}
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         error = senlin_exc.ProfileNotFound(profile='not-a-profile')
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
@@ -845,7 +845,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'aaaa-bbbb-cccc'
         body = {'cluster': {'profile_id': 'profile-of-diff-type'}}
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         error = senlin_exc.ProfileTypeNotMatch(message='not matching')
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
@@ -864,7 +864,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {'cluster': {'profile_id': 'xxxx-yyyy-zzzz'}}
 
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,
@@ -885,7 +885,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         eng_resp = {'action': 'action-id'}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
-                        'cluster_id': cid}, json.dumps(body))
+                        'cluster_id': cid}, jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=eng_resp)
@@ -910,7 +910,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {'add_nodes': {'somearg': 'somevalue'}}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
-                        'cluster_id': cid}, json.dumps(body))
+                        'cluster_id': cid}, jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
 
@@ -927,7 +927,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {'add_nodes': {'nodes': []}}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
-                        'cluster_id': cid}, json.dumps(body))
+                        'cluster_id': cid}, jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
 
@@ -944,7 +944,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {'add_nodes': {'nodes': ['bad-node-1']}}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
-                        'cluster_id': cid}, json.dumps(body))
+                        'cluster_id': cid}, jsonutils.dumps(body))
 
         error = senlin_exc.SenlinBadRequest(msg='Nodes not found: bad-node-1')
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
@@ -971,7 +971,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         eng_resp = {'action': 'action-id'}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
-                        'cluster_id': cid}, json.dumps(body))
+                        'cluster_id': cid}, jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=eng_resp)
@@ -996,7 +996,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {'del_nodes': {'somearg': 'somevalue'}}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
-                        'cluster_id': cid}, json.dumps(body))
+                        'cluster_id': cid}, jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
 
@@ -1013,7 +1013,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {'del_nodes': {'nodes': []}}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
-                        'cluster_id': cid}, json.dumps(body))
+                        'cluster_id': cid}, jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
 
@@ -1030,7 +1030,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {'del_nodes': {'nodes': ['bad-node-1']}}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
-                        'cluster_id': cid}, json.dumps(body))
+                        'cluster_id': cid}, jsonutils.dumps(body))
 
         error = senlin_exc.SenlinBadRequest(msg='Nodes not found: bad-node-1')
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
@@ -1062,7 +1062,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         eng_resp = {'action': 'action-id'}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
-                        'cluster_id': cid}, json.dumps(body))
+                        'cluster_id': cid}, jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=eng_resp)
@@ -1109,7 +1109,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
         req = self._put('/clusters/%(cluster_id)s/action' % {
-                        'cluster_id': cid}, json.dumps(body))
+                        'cluster_id': cid}, jsonutils.dumps(body))
 
         error = senlin_exc.InvalidParameter(name='adjustment_type',
                                             value='NOT_QUITE_SURE')
@@ -1135,7 +1135,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'adjustment_type': 'EXACT_CAPACITY',
             }
         }
-        req = self._put('/clusters/%s/action' % cid, json.dumps(body))
+        req = self._put('/clusters/%s/action' % cid, jsonutils.dumps(body))
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
@@ -1150,7 +1150,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         cid = 'aaaa-bbbb-cccc'
         body = {'resize': {'number': 2}}
-        req = self._put('/clusters/%s/action' % cid, json.dumps(body))
+        req = self._put('/clusters/%s/action' % cid, jsonutils.dumps(body))
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
@@ -1171,7 +1171,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
         body['resize'][param] = 'BOGUS'
-        req = self._put('/clusters/%s/action' % cid, json.dumps(body))
+        req = self._put('/clusters/%s/action' % cid, jsonutils.dumps(body))
 
         ex = self.assertRaises(senlin_exc.InvalidParameter,
                                self.controller.action,
@@ -1198,7 +1198,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         cid = 'aaaa-bbbb-cccc'
         body = {'resize': {'min_size': -1}}
-        req = self._put('/clusters/%s/action' % cid, json.dumps(body))
+        req = self._put('/clusters/%s/action' % cid, jsonutils.dumps(body))
 
         ex = self.assertRaises(senlin_exc.InvalidParameter,
                                self.controller.action,
@@ -1212,7 +1212,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         cid = 'aaaa-bbbb-cccc'
         body = {'resize': {'max_size': -1}}
-        req = self._put('/clusters/%s/action' % cid, json.dumps(body))
+        req = self._put('/clusters/%s/action' % cid, jsonutils.dumps(body))
 
         eng_resp = {'action': {'id': 'action-id', 'target': cid}}
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -1239,7 +1239,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         cid = 'aaaa-bbbb-cccc'
         body = {'resize': {'min_size': 2, 'max_size': 1}}
-        req = self._put('/clusters/%s/action' % cid, json.dumps(body))
+        req = self._put('/clusters/%s/action' % cid, jsonutils.dumps(body))
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
@@ -1253,7 +1253,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         cid = 'aaaa-bbbb-cccc'
         body = {'resize': {'min_size': 2, 'max_size': -1}}
-        req = self._put('/clusters/%s/action' % cid, json.dumps(body))
+        req = self._put('/clusters/%s/action' % cid, jsonutils.dumps(body))
 
         eng_resp = {'action': {'id': 'action-id', 'target': cid}}
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -1281,7 +1281,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         cid = 'aaaa-bbbb-cccc'
         body = {'resize': {'strict': 'yes'}}
-        req = self._put('/clusters/%s/action' % cid, json.dumps(body))
+        req = self._put('/clusters/%s/action' % cid, jsonutils.dumps(body))
 
         ex = self.assertRaises(senlin_exc.InvalidParameter,
                                self.controller.action,
@@ -1298,7 +1298,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         eng_resp = {'action': {'id': 'action-id', 'target': cid}}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
-                        'cluster_id': cid}, json.dumps(body))
+                        'cluster_id': cid}, jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=eng_resp)
@@ -1321,7 +1321,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         eng_resp = {'action': {'id': 'action-id', 'target': cid}}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
-                        'cluster_id': cid}, json.dumps(body))
+                        'cluster_id': cid}, jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=eng_resp)
@@ -1342,7 +1342,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {action: {'count': 'abc'}}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
-                        'cluster_id': cid}, json.dumps(body))
+                        'cluster_id': cid}, jsonutils.dumps(body))
 
         error = senlin_exc.InvalidParameter(name='count', value='abc')
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
@@ -1407,7 +1407,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         eng_resp = {'action': 'action-id'}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
-                        'cluster_id': cid}, json.dumps(body))
+                        'cluster_id': cid}, jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=eng_resp)
@@ -1437,7 +1437,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         eng_resp = {'action': 'action-id'}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
-                        'cluster_id': cid}, json.dumps(body))
+                        'cluster_id': cid}, jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=eng_resp)
@@ -1461,7 +1461,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'aaaa-bbbb-cccc'
         body = {'policy_attach': {'policy_id': 'not-a-policy'}}
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         error = senlin_exc.PolicyNotFound(policy='not-a-policy')
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
@@ -1482,7 +1482,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         eng_resp = {'action': 'action-id'}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
-                        'cluster_id': cid}, json.dumps(body))
+                        'cluster_id': cid}, jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=eng_resp)
@@ -1506,7 +1506,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'aaaa-bbbb-cccc'
         body = {'policy_detach': {'policy': 'fake-policy'}}
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
@@ -1519,7 +1519,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'aaaa-bbbb-cccc'
         body = {'policy_detach': {'policy_id': 'not-a-policy'}}
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         error = senlin_exc.PolicyNotFound(policy='not-a-policy')
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
@@ -1543,7 +1543,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         eng_resp = {'action': 'action-id'}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
-                        'cluster_id': cid}, json.dumps(body))
+                        'cluster_id': cid}, jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=eng_resp)
@@ -1571,7 +1571,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
-                        'cluster_id': cid}, json.dumps(body))
+                        'cluster_id': cid}, jsonutils.dumps(body))
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
@@ -1585,7 +1585,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'aaaa-bbbb-cccc'
         body = {'policy_update': {'policy_id': 'not-a-policy'}}
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         error = senlin_exc.PolicyNotFound(policy='not-a-policy')
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
@@ -1603,7 +1603,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'non-existent-cluster'
         body = {'add_nodes': {'nodes': ['xxxx-yyyy-zzzz']}}
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         error = senlin_exc.ClusterNotFound(cluster=cid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
@@ -1621,7 +1621,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'aaaa-bbbb-cccc'
         body = {}
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
@@ -1635,7 +1635,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'aaaa-bbbb-cccc'
         body = {'action_1': {}, 'action_2': {}}
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
@@ -1649,7 +1649,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'aaaa-bbbb-cccc'
         body = {'fly': None}
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
@@ -1665,7 +1665,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {'someaction': {'param': 'value'}}
 
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.action,

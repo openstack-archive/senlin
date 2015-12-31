@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import json
+from oslo_serialization import jsonutils
 
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import mutable
@@ -82,12 +82,12 @@ class Dict(types.TypeDecorator):
             return self.impl
 
     def process_bind_param(self, value, dialect):
-        return json.dumps(value)
+        return jsonutils.dumps(value)
 
     def process_result_value(self, value, dialect):
         if value is None:
             return None
-        return json.loads(value)
+        return jsonutils.loads(value)
 
 
 class List(types.TypeDecorator):
@@ -100,12 +100,12 @@ class List(types.TypeDecorator):
             return self.impl
 
     def process_bind_param(self, value, dialect):
-        return json.dumps(value)
+        return jsonutils.dumps(value)
 
     def process_result_value(self, value, dialect):
         if value is None:
             return None
-        return json.loads(value)
+        return jsonutils.loads(value)
 
 
 mutable.MutableDict.associate_with(Dict)

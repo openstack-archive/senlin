@@ -10,10 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import json
 import mock
 import six
 from webob import exc
+
+from oslo_serialization import jsonutils
 
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import receivers
@@ -236,7 +237,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
             },
         }
 
-        req = self._post('/receivers', json.dumps(body))
+        req = self._post('/receivers', jsonutils.dumps(body))
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 
@@ -264,7 +265,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {'name': 'test_receiver'}
 
-        req = self._post('/receivers', json.dumps(body))
+        req = self._post('/receivers', jsonutils.dumps(body))
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
@@ -286,7 +287,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'action': 'test_action',
             }
         }
-        req = self._post('/receivers', json.dumps(body))
+        req = self._post('/receivers', jsonutils.dumps(body))
 
         msg = _('receiver obj_type (%s) is unsupported') % r_type
         error = senlin_exc.SenlinBadRequest(msg=msg)
@@ -319,7 +320,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'action': 'test_action',
             }
         }
-        req = self._post('/receivers', json.dumps(body))
+        req = self._post('/receivers', jsonutils.dumps(body))
 
         error = senlin_exc.ClusterNotFound(cluster=cluster_id)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -351,7 +352,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'action': action,
             }
         }
-        req = self._post('/receivers', json.dumps(body))
+        req = self._post('/receivers', jsonutils.dumps(body))
 
         msg = _('Illegal action (%s) specified.') % action
         error = senlin_exc.SenlinBadRequest(msg=msg)
@@ -384,7 +385,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'action': action,
             }
         }
-        req = self._post('/receivers', json.dumps(body))
+        req = self._post('/receivers', jsonutils.dumps(body))
 
         msg = 'Action BAD is not applicable clusters.'
         error = senlin_exc.SenlinBadRequest(msg=msg)

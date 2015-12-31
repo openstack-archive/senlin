@@ -10,8 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import json
 import mock
+from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 from six.moves import http_client
 import webob
@@ -53,7 +53,7 @@ class VersionControllerTest(base.SenlinTestCase):
                 }]
             }]
         }
-        expected_body = json.dumps(expected_dict)
+        expected_body = jsonutils.dumps(expected_dict)
 
         resp = controller(req)
 
