@@ -45,6 +45,7 @@ class EventController(object):
             'obj_id': 'mixed',
             'cluster_id': 'mixed',
             'action': 'mixed',
+            'level': 'mixed',
         }
         param_whitelist = {
             'limit': 'single',
