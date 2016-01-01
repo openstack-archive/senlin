@@ -65,7 +65,7 @@ def request_context(func):
 class EngineService(service.Service):
     '''Lifecycle manager for a running service engine.
 
-    - All the methods in here are called from the RPC client.
+    - All the contained methods here are called from the RPC client.
     - If a RPC call does not have a corresponding method here, an exception
       will be thrown.
     - Arguments to these calls are added dynamically and will be treated as
@@ -80,8 +80,8 @@ class EngineService(service.Service):
         self.dispatcher_topic = consts.ENGINE_DISPATCHER_TOPIC
         self.health_mgr_topic = consts.ENGINE_HEALTH_MGR_TOPIC
 
-        # The following are initialized here, but assigned in start() which
-        # happens after the fork when spawning multiple worker processes
+        # The following are initialized here and will be assigned in start()
+        # which happens after the fork when spawning multiple worker processes
         self.engine_id = None
         self.TG = None
         self.target = None
@@ -980,7 +980,7 @@ class EngineService(service.Service):
         return db_cluster.id
 
     def node_find(self, context, identity, show_deleted=False):
-        '''Find a cluster with the given identity (could be name or ID).'''
+        '''Find a node with the given identity (could be name or ID).'''
 
         if uuidutils.is_uuid_like(identity):
             node = db_api.node_get(context, identity,
