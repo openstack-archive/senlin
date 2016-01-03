@@ -167,6 +167,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'obj_id': 'fake ID',
             'cluster_id': 'another fake ID',
             'action': 'fake action',
+            'level': 30,
             'balrog': 'you shall not pass!'
         }
         req = self._get('/events', params=params)
@@ -180,12 +181,13 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('filters', engine_args)
 
         filters = engine_args['filters']
-        self.assertEqual(5, len(filters))
+        self.assertEqual(6, len(filters))
         self.assertIn('obj_name', filters)
         self.assertIn('obj_id', filters)
         self.assertIn('obj_type', filters)
         self.assertIn('cluster_id', filters)
         self.assertIn('action', filters)
+        self.assertIn('level', filters)
         self.assertNotIn('tenant', filters)
         self.assertNotIn('balrog', filters)
 
