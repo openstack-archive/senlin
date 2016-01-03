@@ -50,9 +50,7 @@ A cluster can have one of the following statuses during its lifecycle:
     providing services as expected. Senlin cannot recover it from its current
     status. The best way to deal with this cluster is to delete it and then
     re-create it if needed.
-  - ``DELETING``: the cluster deletion is ongoing, i.e. cluster is
-    transitioning to the ``DELETED`` status;
-  - ``DELETED``: the cluster has been marked as deleted;
+  - ``DELETING``: the cluster deletion is ongoing;
   - ``WARNING``: the cluster is operational, but there are some warnings
     detected during past operations. In this case, human involvement is
     suggested but not required.

@@ -35,10 +35,10 @@ class Node(object):
     '''
 
     statuses = (
-        INIT, ACTIVE, ERROR, DELETED, WARNING,
+        INIT, ACTIVE, ERROR, WARNING,
         CREATING, UPDATING, DELETING,
     ) = (
-        'INIT', 'ACTIVE', 'ERROR', 'DELETED', 'WARNING',
+        'INIT', 'ACTIVE', 'ERROR', 'WARNING',
         'CREATING', 'UPDATING', 'DELETING',
     )
 

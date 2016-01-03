@@ -40,11 +40,11 @@ class Cluster(object):
     '''
 
     STATUSES = (
-        INIT, ACTIVE, DELETED, CREATING, UPDATING, RESIZING,
-        DELETING, CRITICAL, ERROR, WARNING,
+        INIT, ACTIVE, CREATING, UPDATING, RESIZING, DELETING,
+        CRITICAL, ERROR, WARNING,
     ) = (
-        'INIT', 'ACTIVE', 'DELETED', 'CREATING', 'UPDATING', 'RESIZING',
-        'DELETING', 'CRITICAL', 'ERROR', 'WARNING',
+        'INIT', 'ACTIVE', 'CREATING', 'UPDATING', 'RESIZING', 'DELETING',
+        'CRITICAL', 'ERROR', 'WARNING',
     )
 
     def __init__(self, name, desired_capacity, profile_id,
@@ -293,11 +293,9 @@ class Cluster(object):
         return True
 
     def do_delete(self, context, **kwargs):
-        '''Additional logic at the end of cluster deletion process.
+        """Additional logic at the end of cluster deletion process."""
 
-        Set cluster status to DELETED.
-        '''
-        self.set_status(context, self.DELETED, reason='Deletion succeeded')
+        db_api.cluster_delete(context, self.id)
         return True
 
     def do_update(self, context, **kwargs):

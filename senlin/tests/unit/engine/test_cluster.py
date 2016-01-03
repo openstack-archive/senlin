@@ -320,13 +320,6 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual('BOOM', cluster.status)
         self.assertEqual(reason, cluster.status_reason)
 
-        # Delete
-        cluster.do_delete(self.context)
-        self.assertEqual(cluster.DELETED, cluster.status)
-        self.assertEqual('Deletion succeeded', cluster.status_reason)
-        self.assertIsNotNone(cluster.created_time)
-        self.assertIsNotNone(cluster.updated_time)
-
     def test_cluster_set_status_with_new_profile(self):
         cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
                                    project=self.context.project)
