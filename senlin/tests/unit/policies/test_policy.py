@@ -104,7 +104,6 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual({}, policy.data)
         self.assertIsNone(policy.created_time)
         self.assertIsNone(policy.updated_time)
-        self.assertIsNone(policy.deleted_time)
         self.assertTrue(policy.singleton)
 
         spec_data = policy.spec_data
@@ -143,7 +142,6 @@ class TestPolicyBase(base.SenlinTestCase):
 
         self.assertEqual(policy.created_time, result.created_time)
         self.assertEqual(policy.updated_time, result.updated_time)
-        self.assertEqual(policy.deleted_time, result.deleted_time)
 
     def test_load_diff_project(self):
         policy = self._create_db_policy()
@@ -252,7 +250,6 @@ class TestPolicyBase(base.SenlinTestCase):
 
         self.assertIsNotNone(result.created_time)
         self.assertIsNone(result.updated_time)
-        self.assertIsNone(result.deleted_time)
 
     def test_store_for_update(self):
         policy = self._create_policy('test-policy')
@@ -296,7 +293,6 @@ class TestPolicyBase(base.SenlinTestCase):
             'data': policy.data,
             'created_time': common_utils.format_time(policy.created_time),
             'updated_time': None,
-            'deleted_time': None,
         }
 
         result = policy_base.Policy.load(self.ctx, policy_id=policy.id)

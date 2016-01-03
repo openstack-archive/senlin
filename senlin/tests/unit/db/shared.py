@@ -101,7 +101,6 @@ def create_node(ctx, cluster, profile, **kwargs):
         'role': None,
         'created_time': None,
         'updated_time': None,
-        'deleted_time': None,
         'status': 'ACTIVE',
         'status_reason': 'create complete',
         'metadata': json.loads('{"foo": "123"}'),
@@ -118,7 +117,6 @@ def create_webhook(ctx, obj_id, obj_type, action, **kwargs):
         'project': ctx.project,
         'domain': ctx.domain,
         'created_time': None,
-        'deleted_time': None,
         'obj_id': obj_id,
         'obj_type': obj_type,
         'action': action,
@@ -174,7 +172,6 @@ def create_policy(ctx, **kwargs):
 def create_event(ctx, **kwargs):
     values = {
         'timestamp': tu.utcnow(),
-        'deleted_time': None,
         'obj_id': 'FAKE_ID',
         'obj_name': 'FAKE_NAME',
         'obj_type': 'CLUSTER',

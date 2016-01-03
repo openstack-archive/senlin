@@ -106,8 +106,6 @@ An action has the following properties when created:
   success, the actions listed in this property will get notified.
 - ``created_time``: the timestamp when the action was created;
 - ``updated_time``: the timestamp when the action was last updated;
-- ``deleted_time``: the timestamp when the action was deleted. Note that a
-  non-empty value of this property alway indicates that the action is deleted.
 
 *TODO*: Add support for scheduled action execution.
 
@@ -257,8 +255,7 @@ following query parameters in the query string:
   * ``action``: the builtin action for matching where the value can be a
     string or a list of strings;
   * ``created_time``: the timestamp the action was created;
-  * ``updated_time``: the timestamp the action as last updated;
-  * ``deleted_time``: the timestamp the action was deleted.
+  * ``updated_time``: the timestamp the action as last updated.
 
 - ``limit``: a number that restricts the maximum number of action records to be
   returned from the query. It is useful for displaying the records in pages

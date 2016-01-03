@@ -87,7 +87,6 @@ class TestScalingPolicy(base.SenlinTestCase):
                 'role': None,
                 'created_time': timeutils.utcnow(),
                 'updated_time': None,
-                'deleted_time': None,
                 'status': 'ACTIVE',
                 'status_reason': 'create complete',
                 'metadata': {'foo': '123'},

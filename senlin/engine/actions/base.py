@@ -147,7 +147,6 @@ class Action(object):
 
         self.created_time = kwargs.get('created_time', None)
         self.updated_time = kwargs.get('updated_time', None)
-        self.deleted_time = kwargs.get('deleted_time', None)
 
         self.data = kwargs.get('data', {})
 
@@ -173,7 +172,6 @@ class Action(object):
             'outputs': self.outputs,
             'created_time': self.created_time,
             'updated_time': self.updated_time,
-            'deleted_time': self.deleted_time,
             'data': self.data,
         }
 
@@ -212,7 +210,6 @@ class Action(object):
             'outputs': record.outputs or {},
             'created_time': record.created_time,
             'updated_time': record.updated_time,
-            'deleted_time': record.deleted_time,
             'data': record.data,
         }
 
@@ -462,7 +459,6 @@ class Action(object):
             'depended_by': dep_by,
             'created_time': self.created_time,
             'updated_time': self.updated_time,
-            'deleted_time': self.deleted_time,
             'data': self.data,
         }
         return action_dict

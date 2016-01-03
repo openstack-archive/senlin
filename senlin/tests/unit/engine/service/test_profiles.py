@@ -52,7 +52,6 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual(self.spec, result['spec'])
         self.assertIsNone(result['permission'])
         self.assertIsNone(result['updated_time'])
-        self.assertIsNone(result['deleted_time'])
         self.assertIsNotNone(result['created_time'])
         self.assertIsNotNone(result['id'])
 
@@ -229,10 +228,6 @@ class ProfileTest(base.SenlinTestCase):
         result = self.eng.profile_list(self.ctx)
         self.assertEqual(0, len(result))
 
-        result = self.eng.profile_list(self.ctx, show_deleted=True)
-        self.assertEqual(1, len(result))
-        self.assertEqual(p1['id'], result[0]['id'])
-
     def test_profile_list_with_filters(self):
         self.eng.profile_create(self.ctx, 'p-B', self.spec,
                                 permission='1111')
@@ -299,10 +294,6 @@ class ProfileTest(base.SenlinTestCase):
         for identity in [pid[:6], 'p-1']:
             self.assertRaises(exception.ProfileNotFound,
                               self.eng.profile_find, self.ctx, identity)
-
-        # ID based finding is okay with show_deleted
-        result = self.eng.profile_find(self.ctx, pid, show_deleted=True)
-        self.assertIsNotNone(result)
 
     def test_profile_update_fields(self):
         p1 = self.eng.profile_create(self.ctx, 'p-1', self.spec,

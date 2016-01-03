@@ -56,29 +56,6 @@ class DBAPIProfileTest(base.SenlinTestCase):
         profile = db_api.profile_get(self.ctx, 'BogusProfileID')
         self.assertIsNone(profile)
 
-    def test_profile_get_show_deleted(self):
-        profile_id = shared.create_profile(self.ctx).id
-
-        # check created
-        profile = db_api.profile_get(self.ctx, profile_id)
-        self.assertIsNotNone(profile)
-
-        # Now, delete it
-        db_api.profile_delete(self.ctx, profile_id)
-
-        # default equivalent to false
-        profile = db_api.profile_get(self.ctx, profile_id)
-        self.assertIsNone(profile)
-
-        # explicit false
-        profile = db_api.profile_get(self.ctx, profile_id, show_deleted=False)
-        self.assertIsNone(profile)
-
-        # explicit true
-        profile = db_api.profile_get(self.ctx, profile_id, show_deleted=True)
-        self.assertIsNotNone(profile)
-        self.assertEqual(profile_id, profile.id)
-
     def test_profile_get_by_name(self):
         profile_name = 'my_best_profile'
 
@@ -109,28 +86,6 @@ class DBAPIProfileTest(base.SenlinTestCase):
                                          project_safe=False)
         self.assertIsNotNone(res)
         self.assertEqual(profile_name, res.name)
-
-    def test_profile_get_by_name_show_deleted(self):
-        profile_name = 'my_best_profile'
-
-        profile_id = shared.create_profile(self.ctx, name=profile_name).id
-
-        db_api.profile_delete(self.ctx, profile_id)
-
-        # default case
-        profile = db_api.profile_get_by_name(self.ctx, profile_name)
-        self.assertIsNone(profile)
-
-        # explicit false
-        profile = db_api.profile_get_by_name(self.ctx, profile_name,
-                                             show_deleted=False)
-        self.assertIsNone(profile)
-
-        # explicit true
-        profile = db_api.profile_get_by_name(self.ctx, profile_name,
-                                             show_deleted=True)
-        self.assertIsNotNone(profile)
-        self.assertEqual(profile_id, profile.id)
 
     def test_profile_get_by_short_id(self):
         profile_ids = ['same-part-unique-part',
@@ -185,26 +140,17 @@ class DBAPIProfileTest(base.SenlinTestCase):
         for pid in ids:
             self.assertIn(pid, profile_ids)
 
-        # test show_deleted here
         db_api.profile_delete(self.ctx, profiles[1].id)
 
         # after delete one of them
         profiles = db_api.profile_get_all(self.ctx)
         self.assertEqual(1, len(profiles))
 
-        profiles = db_api.profile_get_all(self.ctx, show_deleted=False)
-        self.assertEqual(1, len(profiles))
-
-        profiles = db_api.profile_get_all(self.ctx, show_deleted=True)
-        self.assertEqual(2, len(profiles))
-
         # after delete both profiles
         db_api.profile_delete(self.ctx, profiles[0].id)
 
         profiles = db_api.profile_get_all(self.ctx)
         self.assertEqual(0, len(profiles))
-        profiles = db_api.profile_get_all(self.ctx, show_deleted=True)
-        self.assertEqual(2, len(profiles))
 
     def test_profile_get_all_diff_project(self):
         ids = ['profile1', 'profile2']
@@ -254,14 +200,14 @@ class DBAPIProfileTest(base.SenlinTestCase):
 
         mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
         sort_keys = ['type', 'name', 'permission', 'metadata',
-                     'created_time', 'updated_time', 'deleted_time']
+                     'created_time', 'updated_time']
 
         db_api.profile_get_all(self.ctx, sort_keys=sort_keys)
 
         args = mock_paginate.call_args[0]
         used_sort_keys = set(args[3])
         expected_keys = set(['id', 'type', 'name', 'permission',
-                             'created_time', 'updated_time', 'deleted_time'])
+                             'created_time', 'updated_time'])
         self.assertEqual(expected_keys, used_sort_keys)
 
     def test_profile_get_all_sort_keys_wont_change(self):

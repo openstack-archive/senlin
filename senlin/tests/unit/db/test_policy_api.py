@@ -90,29 +90,6 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         retobj = db_api.policy_get(self.ctx, 'BogusID')
         self.assertIsNone(retobj)
 
-    def test_policy_get_show_deleted(self):
-        data = self.new_policy_data()
-        policy_id = db_api.policy_create(self.ctx, data).id
-
-        # check created
-        policy = db_api.policy_get(self.ctx, policy_id)
-        self.assertIsNotNone(policy)
-
-        db_api.policy_delete(self.ctx, policy_id)
-
-        # default equivalent to false
-        policy = db_api.policy_get(self.ctx, policy_id)
-        self.assertIsNone(policy)
-
-        # explicit false
-        policy = db_api.policy_get(self.ctx, policy_id, show_deleted=False)
-        self.assertIsNone(policy)
-
-        # explicit true
-        policy = db_api.policy_get(self.ctx, policy_id, show_deleted=True)
-        self.assertIsNotNone(policy)
-        self.assertEqual(policy_id, policy.id)
-
     def test_policy_get_by_name(self):
         policy_name = 'my_best_policy'
         data = self.new_policy_data(name=policy_name)
@@ -144,28 +121,6 @@ class DBAPIPolicyTest(base.SenlinTestCase):
                                         project_safe=False)
         self.assertIsNotNone(res)
         self.assertEqual(policy.id, res.id)
-
-    def test_policy_get_by_name_show_deleted(self):
-        policy_name = 'my_best_policy'
-        data = self.new_policy_data(name=policy_name)
-        policy_id = db_api.policy_create(self.ctx, data).id
-
-        db_api.policy_delete(self.ctx, policy_id)
-
-        # default case
-        policy = db_api.policy_get_by_name(self.ctx, policy_name)
-        self.assertIsNone(policy)
-
-        # explicit false
-        policy = db_api.policy_get_by_name(self.ctx, policy_name,
-                                           show_deleted=False)
-        self.assertIsNone(policy)
-
-        # explicit true
-        policy = db_api.policy_get_by_name(self.ctx, policy_name,
-                                           show_deleted=True)
-        self.assertIsNotNone(policy)
-        self.assertEqual(policy_id, policy.id)
 
     def test_policy_get_by_short_id(self):
         policy_ids = ['same-part-unique-part',
@@ -225,26 +180,17 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         for spec in specs:
             self.assertIn(spec['name'], names)
 
-        # test show_deleted here
         db_api.policy_delete(self.ctx, policies[1].id)
 
         # after delete one of them
         policies = db_api.policy_get_all(self.ctx)
         self.assertEqual(1, len(policies))
 
-        policies = db_api.policy_get_all(self.ctx, show_deleted=False)
-        self.assertEqual(1, len(policies))
-
-        policies = db_api.policy_get_all(self.ctx, show_deleted=True)
-        self.assertEqual(2, len(policies))
-
         # after delete both policies
         db_api.policy_delete(self.ctx, policies[0].id)
 
         policies = db_api.policy_get_all(self.ctx)
         self.assertEqual(0, len(policies))
-        policies = db_api.policy_get_all(self.ctx, show_deleted=True)
-        self.assertEqual(2, len(policies))
 
     def test_policy_get_all_diff_project(self):
         specs = [
@@ -301,14 +247,14 @@ class DBAPIPolicyTest(base.SenlinTestCase):
 
         mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
         sort_keys = ['type', 'name', 'level', 'cooldown', 'created_time',
-                     'updated_time', 'deleted_time']
+                     'updated_time']
 
         db_api.policy_get_all(self.ctx, sort_keys=sort_keys)
 
         args = mock_paginate.call_args[0]
         used_sort_keys = set(args[3])
         expected_keys = set(['id', 'type', 'name', 'level', 'cooldown',
-                             'created_time', 'updated_time', 'deleted_time'])
+                             'created_time', 'updated_time'])
         self.assertEqual(expected_keys, used_sort_keys)
 
     def test_policy_get_all_sort_keys_wont_change(self):

@@ -90,7 +90,6 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                     u'password': u'test-pass',
                 },
                 u'created_time': u'2015-02-24T19:17:22Z',
-                u'deleted_time': None,
                 u'params': {},
                 'channel': {
                     'alarm_url': 'http://somewhere/on/earth',
@@ -466,7 +465,6 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 u'password': u'test-pass',
             },
             u'created_time': u'2015-02-24T19:17:22Z',
-            u'deleted_time': None,
             u'params': {},
             u'channel': {
                 u'alarm_url': u'http://somewhere/on/earth',

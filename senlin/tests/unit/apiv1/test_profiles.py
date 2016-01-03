@@ -91,7 +91,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 u'permission': '',
                 u'created_time': u'2015-02-24T19:17:22Z',
                 u'updated_time': None,
-                u'deleted_time': None,
                 u'metadata': {},
             }
         ]
@@ -395,7 +394,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'permission': '',
             u'created_time': u'2015-02-24T19:17:22Z',
             u'updated_time': None,
-            u'deleted_time': None,
             u'metadata': {},
         }
 
@@ -467,7 +465,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'permission': '',
             u'created_time': u'2015-02-25T16:20:13Z',
             u'updated_time': None,
-            u'deleted_time': None,
             u'metadata': {u'author': u'thomas j'},
         }
 
@@ -536,7 +533,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'permission': 'xxx',
             u'created_time': u'2015-02-25T16:20:13Z',
             u'updated_time': u'2015-02-25T16:50:22Z',
-            u'deleted_time': None,
             u'metadata': {u'author': u'john d'},
         }
 

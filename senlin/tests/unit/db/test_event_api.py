@@ -33,7 +33,7 @@ class DBAPIEventTest(base.SenlinTestCase):
 
     def create_event(self, ctx, timestamp=None, level=logging.INFO,
                      entity=None, action=None, status=None,
-                     status_reason=None, deleted_time=None):
+                     status_reason=None):
 
         fake_timestamp = tu.parse_strtime(
             '2014-12-19 11:51:54.670244', '%Y-%m-%d %H:%M:%S.%f')
@@ -62,7 +62,6 @@ class DBAPIEventTest(base.SenlinTestCase):
             'status_reason': status_reason or '',
             'user': ctx.user,
             'project': ctx.project,
-            'deleted_time': deleted_time,
         }
 
         # Make sure all fields can be customized
@@ -216,23 +215,6 @@ class DBAPIEventTest(base.SenlinTestCase):
         self.assertEqual(event1.id, events[1].id)
         self.assertEqual(event2.id, events[0].id)
         self.assertEqual(event3.id, events[2].id)
-
-    def test_event_get_all_show_deleted(self):
-        cluster1 = shared.create_cluster(self.ctx, self.profile)
-        cluster2 = shared.create_cluster(self.ctx, self.profile)
-
-        # Simulate deleted events by setting 'deleted_time' to not-None
-        now = tu.utcnow()
-        self.create_event(self.ctx, entity=cluster1, deleted_time=now)
-        self.create_event(self.ctx, entity=cluster1)
-        self.create_event(self.ctx, entity=cluster2, deleted_time=now)
-
-        # Default show_deleted is False
-        events = db_api.event_get_all(self.ctx)
-        self.assertEqual(1, len(events))
-
-        events = db_api.event_get_all(self.ctx, show_deleted=True)
-        self.assertEqual(3, len(events))
 
     def test_event_get_all_project_safe(self):
         self.ctx.project = 'project_1'

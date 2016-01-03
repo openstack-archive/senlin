@@ -172,23 +172,6 @@ class ActionTest(base.SenlinTestCase):
                          "asc-nullsfirst, asc-nullslast, desc-nullsfirst, "
                          "desc-nullslast", six.text_type(ex))
 
-    def test_action_list_show_deleted(self):
-        a1 = self.eng.action_create(self.ctx, 'a1', self.target, 'CUST_ACT')
-
-        result = self.eng.action_list(self.ctx)
-
-        self.assertEqual(1, len(result))
-        self.assertEqual(a1['id'], result[0]['id'])
-
-        self.eng.action_delete(self.ctx, a1['id'])
-
-        result = self.eng.action_list(self.ctx)
-        self.assertEqual(0, len(result))
-
-        result = self.eng.action_list(self.ctx, show_deleted=True)
-        self.assertEqual(1, len(result))
-        self.assertEqual(a1['id'], result[0]['id'])
-
     def test_action_list_with_filters(self):
         t1 = mock.Mock()
         t2 = mock.Mock()

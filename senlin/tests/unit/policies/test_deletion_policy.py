@@ -84,7 +84,6 @@ class TestDeletionPolicy(base.SenlinTestCase):
                 'role': kwargs.get('role', None),
                 'created_time': timeutils.utcnow(),
                 'updated_time': None,
-                'deleted_time': None,
                 'status': kwargs.get('status', 'ACTIVE'),
                 'status_reason': kwargs.get('status_reason',
                                             'create complete'),

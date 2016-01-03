@@ -99,7 +99,6 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 u'level': 30,
                 u'created_time': u'2015-02-24T19:17:22Z',
                 u'updated_time': None,
-                u'deleted_time': None,
                 u'cooldown': 60,
             }
         ]
@@ -372,7 +371,6 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'level': 30,
             u'created_time': u'2015-02-24T19:17:22Z',
             u'updated_time': None,
-            u'deleted_time': None,
             u'cooldown': 60,
         }
 
@@ -440,7 +438,6 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'level': 60,
             u'created_time': u'2015-02-25T16:20:13Z',
             u'updated_time': None,
-            u'deleted_time': None,
             u'cooldown': 70,
         }
 

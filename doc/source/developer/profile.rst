@@ -56,7 +56,6 @@ A profile object has the following properties:
 - ``metadata``: a map of key-value pairs associated with the profile;
 - ``created_time``: the timestamp when the profile was created;
 - ``updated_time``: the timestamp when the profile was last updated;
-- ``deleted_time``: the timestamp when the profile was deleted.
 
 The ``spec`` property is the most important property for a profile. It is
 immutable, i.e. the only way to "change" the ``spec`` property is to create
@@ -92,7 +91,6 @@ When querying the profiles, users can provide any of the following parameters:
   - ``type``: profile type for matching;
   - ``created_time``: timestamp of profile creation for matching;
   - ``updated_time``: timestamp of last update operation;
-  - ``deleted_time``: timestamp of profile deletion;
   - ``permission``: a string for profile permission matching;
   - ``metadata``: a string for matching profile metadata.
 

@@ -54,11 +54,6 @@ that more useful information can be shown on a single line. To show the *full
 ID* in the list, you can add the :option:`-F` (or :option:`--full-id`) option
 to the command.
 
-By default, the command :command:`policy-list` filters out policy objects
-that have been soft deleted. However, you can add the `--show-deleted` (or
-:option:`-D`) option to the command to indicate that soft-deleted policies
-be included in the list.
-
 In case you have a huge collection of policy objects, you can limit the number
 of policies returned from Senlin server, using the option :option:`--limit` (or
 (or `-l`). For example::
@@ -121,7 +116,6 @@ following command::
   +--------------+----------------------------------------------------------------------------------------+
   | cooldown     | 0                                                                                      |
   | created_time | None                                                                                   |
-  | deleted_time | None                                                                                   |
   | id           | c2e3cd74-bb69-4286-bf06-05d802c8ec12                                                   |
   | level        | 0                                                                                      |
   | name         | dp01                                                                                   |
@@ -155,7 +149,6 @@ the ID, the name or the "short ID" of a policy object. For example::
   +--------------+----------------------------------------------------------------------------------------+
   | cooldown     | 0                                                                                      |
   | created_time | 2015-07-11T04:24:34                                                                    |
-  | deleted_time | None                                                                                   |
   | id           | c2e3cd74-bb69-4286-bf06-05d802c8ec12                                                   |
   | level        | 0                                                                                      |
   | name         | dp01                                                                                   |

@@ -75,15 +75,12 @@ instructs the :program:`senlin` command line to sort nodes using the
   +----------+---------+--------+------------+-------------+--------------+---------------------+--------------+
 
 For sorting the node list, the valid keys are: ``index``, ``name``,
-``status``, ``created_time``, ``updated_time`` and ``deleted_time``, the
-valid sorting directions are: ``asc`` and ``desc``.
+``status``, ``created_time`` and ``updated_time``, the valid sorting
+directions are: ``asc`` and ``desc``.
 
 
 Filtering the List
 ------------------
-
-You can specify the option :option:`--show-deleted` (or :option:`-D`) to
-indicate that soft-deleted nodes be included in the list result.
 
 You can specify the option :option:`--cluster <CLUSTER>` (or :option:`-c
 <CLUSTER>`) to list nodes that are members of a specific cluster. For
@@ -141,7 +138,6 @@ using a profile named ``pstack``::
   | cluster_id    | None                                 |
   | created_time  | None                                 |
   | data          | {}                                   |
-  | deleted_time  | None                                 |
   | details       | None                                 |
   | id            | 1984b5a0-9dd7-4dda-b1e6-e8c1f640598f |
   | index         | -1                                   |
@@ -219,7 +215,6 @@ An example is shown below::
   | cluster_id    | None                                 |
   | created_time  | 2015-07-09T11:41:20                  |
   | data          | {}                                   |
-  | deleted_time  | None                                 |
   | details       | {}                                   |
   | id            | 1984b5a0-9dd7-4dda-b1e6-e8c1f640598f |
   | index         | -1                                   |

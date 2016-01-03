@@ -353,22 +353,6 @@ class ClusterTest(base.SenlinTestCase):
                          "desc-nullslast", six.text_type(ex))
 
     @mock.patch.object(dispatcher, 'start_action')
-    def test_cluster_list_show_deleted(self, notify):
-        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
-        result = self.eng.cluster_list(self.ctx)
-        self.assertEqual(1, len(result))
-        self.assertEqual(c['id'], result[0]['id'])
-
-        db_api.cluster_delete(self.ctx, c['id'])
-
-        result = self.eng.cluster_list(self.ctx)
-        self.assertEqual(0, len(result))
-
-        result = self.eng.cluster_list(self.ctx, show_deleted=True)
-        self.assertEqual(1, len(result))
-        self.assertEqual(c['id'], result[0]['id'])
-
-    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_list_show_nested(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'],
                                     parent='other-cluster')
@@ -485,10 +469,6 @@ class ClusterTest(base.SenlinTestCase):
             self.assertRaises(exception.ClusterNotFound,
                               self.eng.cluster_find, self.ctx, identity)
 
-        # ID based finding is okay with show_deleted
-        result = self.eng.cluster_find(self.ctx, cid, show_deleted=True)
-        self.assertIsNotNone(result)
-
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_simple_success(self, notify):
         c1 = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
@@ -535,13 +515,14 @@ class ClusterTest(base.SenlinTestCase):
     def test_cluster_update_cluster_bad_status(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         cluster = cluster_mod.Cluster.load(self.ctx, c['id'])
-        cluster.set_status(self.ctx, cluster.DELETED, reason='test')
+        db_api.cluster_update(self.ctx, c['id'], {'status': cluster.ERROR})
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_update, self.ctx, c['id'],
-                               name='new name')
-
-        self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
+                               profile_id='new profile')
+        self.assertEqual(exception.FeatureNotSupported, ex.exc_info[0])
+        self.assertEqual('Updating a cluster in error state is not supported.',
+                         six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_parent_not_found(self, notify):
@@ -695,7 +676,6 @@ class ClusterTest(base.SenlinTestCase):
                 'role': None,
                 'created_time': None,
                 'updated_time': None,
-                'deleted_time': None,
                 'status': 'ACTIVE',
                 'status_reason': 'create complete',
                 'metadata': {'foo': '123'},

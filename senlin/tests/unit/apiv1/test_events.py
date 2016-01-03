@@ -49,7 +49,6 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
             {
                 "action": "create",
                 "cluster_id": None,
-                "deleted_time": None,
                 "id": "2d255b9c-8f36-41a2-a137-c0175ccc29c3",
                 "level": "20",
                 "obj_id": "0df0931b-e251-4f2e-8719-4ebfda3627ba",
@@ -248,7 +247,6 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         engine_resp = {
             "action": "create",
             "cluster_id": None,
-            "deleted_time": None,
             "id": "2d255b9c-8f36-41a2-a137-c0175ccc29c3",
             "level": "20",
             "obj_id": "0df0931b-e251-4f2e-8719-4ebfda3627ba",
