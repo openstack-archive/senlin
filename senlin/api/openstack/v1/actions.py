@@ -76,7 +76,6 @@ class ActionController(object):
             'marker': 'single',
             'sort_dir': 'single',
             'sort_keys': 'multi',
-            'show_deleted': 'single',
         }
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)

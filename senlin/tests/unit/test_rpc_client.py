@@ -165,7 +165,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'sort_keys': mock.ANY,
             'sort_dir': mock.ANY,
             'filters': mock.ANY,
-            'show_deleted': mock.ANY,
         }
         self._test_engine_api('profile_list', 'call', **default_args)
 
@@ -210,7 +209,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'sort_keys': mock.ANY,
             'sort_dir': mock.ANY,
             'filters': mock.ANY,
-            'show_deleted': mock.ANY,
         }
         self._test_engine_api('policy_list', 'call', **default_args)
 
@@ -249,7 +247,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'sort_dir': mock.ANY,
             'filters': mock.ANY,
             'project_safe': mock.ANY,
-            'show_deleted': mock.ANY,
             'show_nested': mock.ANY,
         }
         self._test_engine_api('cluster_list', 'call', **default_args)
@@ -311,7 +308,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
     def test_node_list(self):
         default_args = {
             'cluster_id': mock.ANY,
-            'show_deleted': mock.ANY,
             'limit': mock.ANY,
             'marker': mock.ANY,
             'sort_keys': mock.ANY,
@@ -369,7 +365,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'marker': mock.ANY,
             'sort_keys': mock.ANY,
             'sort_dir': mock.ANY,
-            'show_deleted': mock.ANY,
         }
         self._test_engine_api('action_list', 'call', **default_args)
 
@@ -444,7 +439,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'sort_dir': mock.ANY,
             'filters': mock.ANY,
             'project_safe': mock.ANY,
-            'show_deleted': mock.ANY,
         }
         self._test_engine_api('receiver_list', 'call', **default_args)
 
@@ -462,8 +456,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
 
     def test_receiver_get(self):
         self._test_engine_api('receiver_get', 'call',
-                              identity='wh_name', project_safe=True,
-                              show_deleted=False)
+                              identity='wh_name', project_safe=True)
 
     def test_receiver_delete_cast(self):
         self._test_engine_api('receiver_delete', 'cast', identity='wh_name')
@@ -483,7 +476,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'sort_keys': mock.ANY,
             'sort_dir': mock.ANY,
             'project_safe': mock.ANY,
-            'show_deleted': mock.ANY,
         }
         self._test_engine_api('event_list', 'call', **default_args)
 

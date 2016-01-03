@@ -146,16 +146,11 @@ class ClusterController(object):
             'marker': 'single',
             'sort_dir': 'single',
             'sort_keys': 'multi',
-            'show_deleted': 'single',
             'show_nested': 'single',
             'global_project': 'single',
         }
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)
-
-        key = consts.PARAM_SHOW_DELETED
-        if key in params:
-            params[key] = utils.parse_bool_param(key, params[key])
 
         key = consts.PARAM_SHOW_NESTED
         if key in params:

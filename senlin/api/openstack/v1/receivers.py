@@ -87,7 +87,6 @@ class ReceiverController(object):
             'marker': 'single',
             'sort_keys': 'multi',
             'sort_dir': 'single',
-            'show_deleted': 'single',
             'global_project': 'single',
         }
         params = util.get_allowed_params(req.params, param_whitelist)
@@ -96,10 +95,6 @@ class ReceiverController(object):
         key = consts.PARAM_LIMIT
         if key in params:
             params[key] = utils.parse_int_param(key, params[key])
-
-        key = consts.PARAM_SHOW_DELETED
-        if key in params:
-            params[key] = utils.parse_bool_param(key, params[key])
 
         key = consts.PARAM_GLOBAL_PROJECT
         if key in params:

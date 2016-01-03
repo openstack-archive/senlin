@@ -282,8 +282,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
                         'sort_dir': None, 'filters': None,
-                        'project_safe': True, 'show_deleted': False,
-                        'show_nested': False}
+                        'project_safe': True, 'show_nested': False}
         mock_call.assert_called_once_with(
             req.context, ('cluster_list', default_args))
 
@@ -291,10 +290,12 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test_index_whitelists_pagination_params(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
+            'name': 'whatever',
             'limit': 'fake limit',
             'marker': 'fake marker',
             'sort_keys': 'fake sort keys',
             'sort_dir': 'fake sort dir',
+            'show_nested': False,
             'balrog': 'you shall not pass!'
         }
         req = self._get('/clusters', params=params)
@@ -304,11 +305,12 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         rpc_call_args, w = mock_call.call_args
         engine_args = rpc_call_args[1][1]
-        self.assertEqual(8, len(engine_args))
+        self.assertEqual(7, len(engine_args))
         self.assertIn('limit', engine_args)
-        self.assertIn('sort_keys', engine_args)
         self.assertIn('marker', engine_args)
+        self.assertIn('sort_keys', engine_args)
         self.assertIn('sort_dir', engine_args)
+        self.assertIn('show_nested', engine_args)
         self.assertIn('filters', engine_args)
         self.assertIn('project_safe', engine_args)
         self.assertNotIn('balrog', engine_args)
@@ -335,28 +337,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('status', filters)
         self.assertIn('name', filters)
         self.assertNotIn('balrog', filters)
-
-    def test_index_show_deleted_false(self, mock_enforce):
-        rpc_client = self.controller.rpc_client
-        rpc_client.cluster_list = mock.Mock(return_value=[])
-
-        params = {'show_deleted': 'False'}
-        req = self._get('/clusters', params=params)
-        self.controller.index(req)
-        rpc_client.cluster_list.assert_called_once_with(mock.ANY,
-                                                        filters=mock.ANY,
-                                                        show_deleted=False)
-
-    def test_index_show_deleted_true(self, mock_enforce):
-        rpc_client = self.controller.rpc_client
-        rpc_client.cluster_list = mock.Mock(return_value=[])
-
-        params = {'show_deleted': 'True'}
-        req = self._get('/clusters', params=params)
-        self.controller.index(req)
-        rpc_client.cluster_list.assert_called_once_with(mock.ANY,
-                                                        filters=mock.ANY,
-                                                        show_deleted=True)
 
     def test_index_show_nested_false(self, mock_enforce):
         rpc_client = self.controller.rpc_client

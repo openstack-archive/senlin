@@ -68,8 +68,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         resp = self.controller.index(req)
 
         kwargs = {'limit': None, 'marker': None, 'filters': None,
-                  'sort_keys': None, 'sort_dir': None,
-                  'project_safe': True, 'show_deleted': False}
+                  'sort_keys': None, 'sort_dir': None, 'project_safe': True}
         mock_call.assert_called_once_with(req.context,
                                           ('event_list', kwargs))
         self.assertEqual(resp, {'events': engine_resp})
@@ -83,7 +82,6 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'sort_dir': 'fake sort dir',
             'filters': 'fake filters',
             'global_project': False,
-            'show_deleted': False,
             'balrog': 'you shall not pass!'
         }
         req = self._get('/events', params=params)
@@ -96,14 +94,13 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         rpc_call_args, w = mock_call.call_args
         engine_args = rpc_call_args[1][1]
 
-        self.assertEqual(7, len(engine_args))
+        self.assertEqual(6, len(engine_args))
         self.assertIn('limit', engine_args)
         self.assertIn('marker', engine_args)
         self.assertIn('sort_keys', engine_args)
         self.assertIn('sort_dir', engine_args)
         self.assertIn('filters', engine_args)
         self.assertIn('project_safe', engine_args)
-        self.assertIn('show_deleted', engine_args)
         self.assertNotIn('balrog', engine_args)
 
     def test_event_index_global_project_true(self, mock_enforce):
@@ -189,45 +186,6 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('level', filters)
         self.assertNotIn('tenant', filters)
         self.assertNotIn('balrog', filters)
-
-    def test_event_index_show_deleted_false(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'index', True)
-        params = {'show_deleted': 'False'}
-        req = self._get('/events', params=params)
-
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        self.controller.index(req)
-
-        call_args, w = mock_call.call_args
-        call_args = call_args[1][1]
-        self.assertIn('show_deleted', call_args)
-        self.assertFalse(call_args['show_deleted'])
-
-    def test_event_index_show_deleted_true(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'index', True)
-        params = {'show_deleted': 'True'}
-        req = self._get('/events', params=params)
-
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        self.controller.index(req)
-
-        call_args, w = mock_call.call_args
-        call_args = call_args[1][1]
-        self.assertIn('show_deleted', call_args)
-        self.assertTrue(call_args['show_deleted'])
-
-    def test_event_index_show_deleted_not_bool(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'index', True)
-        params = {'show_deleted': 'Okay'}
-        req = self._get('/events', params=params)
-
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        ex = self.assertRaises(senlin_exc.InvalidParameter,
-                               self.controller.index, req)
-
-        self.assertEqual("Invalid value 'Okay' specified for 'show_deleted'",
-                         six.text_type(ex))
-        self.assertFalse(mock_call.called)
 
     def test_index_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)

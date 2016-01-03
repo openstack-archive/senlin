@@ -101,7 +101,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         default_args = {'cluster_id': None, 'limit': None, 'marker': None,
                         'sort_keys': None, 'sort_dir': None, 'filters': None,
-                        'project_safe': True, 'show_deleted': False}
+                        'project_safe': True}
 
         mock_call.assert_called_with(req.context, ('node_list', default_args))
 
@@ -112,6 +112,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test_node_index_whitelists_params(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
+            'name': 'node111',
+            'status': 'active',
             'cluster_id': 'id or name of a cluster',
             'limit': 10,
             'marker': 'fake marker',
@@ -128,15 +130,14 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
 
-        self.assertEqual(8, len(engine_args))
+        self.assertEqual(7, len(engine_args))
         self.assertIn('cluster_id', engine_args)
         self.assertIn('limit', engine_args)
-        self.assertIn('sort_keys', engine_args)
         self.assertIn('marker', engine_args)
+        self.assertIn('sort_keys', engine_args)
         self.assertIn('sort_dir', engine_args)
         self.assertIn('filters', engine_args)
         self.assertIn('project_safe', engine_args)
-        self.assertIn('show_deleted', engine_args)
         self.assertNotIn('balrog', engine_args)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -214,44 +215,6 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('name', filters)
         self.assertNotIn('project', filters)
         self.assertNotIn('balrog', filters)
-
-    @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_node_index_show_deleted_false(self, mock_call, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'index', True)
-        params = {'show_deleted': 'False'}
-        req = self._get('/nodes', params=params)
-
-        self.controller.index(req)
-        call_args, w = mock_call.call_args
-        call_args = call_args[1][1]
-        self.assertIn('show_deleted', call_args)
-        self.assertFalse(call_args['show_deleted'])
-
-    @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_node_index_show_deleted_true(self, mock_call, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'index', True)
-        params = {'show_deleted': 'True'}
-        req = self._get('/nodes', params=params)
-
-        self.controller.index(req)
-
-        call_args, w = mock_call.call_args
-        call_args = call_args[1][1]
-        self.assertIn('show_deleted', call_args)
-        self.assertTrue(call_args['show_deleted'])
-
-    @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_node_index_show_deleted_not_bool(self, mock_call, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'index', True)
-        params = {'show_deleted': 'Okay'}
-        req = self._get('/nodes', params=params)
-
-        ex = self.assertRaises(senlin_exc.InvalidParameter,
-                               self.controller.index, req)
-
-        self.assertEqual("Invalid value 'Okay' specified for 'show_deleted'",
-                         six.text_type(ex))
-        self.assertFalse(mock_call.called)
 
     def test_node_index_cluster_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)

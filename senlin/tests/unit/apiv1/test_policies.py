@@ -110,7 +110,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         default_args = {'limit': None, 'marker': None,
                         'sort_keys': None, 'sort_dir': None,
-                        'filters': None, 'show_deleted': False}
+                        'filters': None}
 
         mock_call.assert_called_with(req.context,
                                      ('policy_list', default_args))
@@ -121,11 +121,14 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test_policy_index_whitelists_params(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
+            'name': 'FAKE',
+            'type': 'TYPE',
+            'level': 40,
+            'cooldown': 50,
             'limit': 20,
             'marker': 'fake marker',
             'sort_keys': 'fake sort keys',
             'sort_dir': 'fake sort dir',
-            'show_deleted': False,
             'balrog': 'you shall not pass!'
         }
         req = self._get('/policies', params=params)
@@ -138,13 +141,12 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         rpc_call_args, w = mock_call.call_args
         engine_args = rpc_call_args[1][1]
 
-        self.assertEqual(6, len(engine_args))
+        self.assertEqual(5, len(engine_args))
         self.assertIn('limit', engine_args)
         self.assertIn('marker', engine_args)
         self.assertIn('sort_keys', engine_args)
         self.assertIn('sort_dir', engine_args)
         self.assertIn('filters', engine_args)
-        self.assertIn('show_deleted', engine_args)
         self.assertNotIn('tenant_safe', engine_args)
         self.assertNotIn('balrog', engine_args)
 
@@ -171,40 +173,6 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('name', filters)
         self.assertIn('type', filters)
         self.assertNotIn('balrog', filters)
-
-    def test_policy_index_show_deleted_false(self, mock_enforce):
-        mock_call = self.patchobject(rpc_client.EngineClient, 'policy_list',
-                                     return_value=[])
-
-        params = {'show_deleted': 'False'}
-        req = self._get('/policies', params=params)
-        self.controller.index(req)
-        mock_call.assert_called_once_with(mock.ANY,
-                                          filters=mock.ANY,
-                                          show_deleted=False)
-
-    def test_policy_index_show_deleted_true(self, mock_enforce):
-        mock_call = self.patchobject(rpc_client.EngineClient, 'policy_list',
-                                     return_value=[])
-
-        params = {'show_deleted': 'True'}
-        req = self._get('/policies', params=params)
-        self.controller.index(req)
-        mock_call.assert_called_once_with(mock.ANY,
-                                          filters=mock.ANY,
-                                          show_deleted=True)
-
-    def test_policy_index_show_deleted_non_bool(self, mock_enforce):
-        mock_call = self.patchobject(rpc_client.EngineClient, 'policy_list',
-                                     return_value=[])
-
-        params = {'show_deleted': 'yes'}
-        req = self._get('/policies', params=params)
-        ex = self.assertRaises(senlin_exc.InvalidParameter,
-                               self.controller.index, req)
-        self.assertIn("Invalid value 'yes' specified for 'show_deleted'",
-                      six.text_type(ex))
-        self.assertFalse(mock_call.called)
 
     def test_policy_index_limit_non_int(self, mock_enforce):
         mock_call = self.patchobject(rpc_client.EngineClient, 'policy_list',

@@ -67,8 +67,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         result = self.controller.index(req)
 
         default_args = {'limit': None, 'marker': None, 'sort_keys': None,
-                        'sort_dir': None, 'filters': None,
-                        'show_deleted': False}
+                        'sort_dir': None, 'filters': None}
 
         mock_call.assert_called_with(req.context,
                                      ('action_list', default_args))
@@ -84,7 +83,6 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'marker': 'fake marker',
             'sort_keys': 'fake sort keys',
             'sort_dir': 'fake sort dir',
-            'show_deleted': False,
             'filters': None,
             'balrog': 'you shall not pass!'
         }
@@ -96,13 +94,12 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
 
-        self.assertEqual(6, len(engine_args))
+        self.assertEqual(5, len(engine_args))
         self.assertIn('limit', engine_args)
         self.assertIn('marker', engine_args)
         self.assertIn('sort_keys', engine_args)
         self.assertIn('sort_dir', engine_args)
         self.assertIn('filters', engine_args)
-        self.assertIn('show_deleted', engine_args)
         self.assertNotIn('balrog', engine_args)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -145,44 +142,6 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('target', filters)
         self.assertIn('status', filters)
         self.assertNotIn('balrog', filters)
-
-    @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_action_index_show_deleted_false(self, mock_call, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'index', True)
-        params = {'show_deleted': 'False'}
-        req = self._get('/actions', params=params)
-
-        self.controller.index(req)
-        call_args, w = mock_call.call_args
-        call_args = call_args[1][1]
-        self.assertIn('show_deleted', call_args)
-        self.assertFalse(call_args['show_deleted'])
-
-    @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_action_index_show_deleted_true(self, mock_call, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'index', True)
-        params = {'show_deleted': 'True'}
-        req = self._get('/actions', params=params)
-
-        self.controller.index(req)
-
-        call_args, w = mock_call.call_args
-        call_args = call_args[1][1]
-        self.assertIn('show_deleted', call_args)
-        self.assertTrue(call_args['show_deleted'])
-
-    @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_action_index_show_deleted_not_bool(self, mock_call, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'index', True)
-        params = {'show_deleted': 'Okay'}
-        req = self._get('/actions', params=params)
-
-        ex = self.assertRaises(senlin_exc.InvalidParameter,
-                               self.controller.index, req)
-
-        self.assertEqual("Invalid value 'Okay' specified for 'show_deleted'",
-                         six.text_type(ex))
-        self.assertFalse(mock_call.called)
 
     def test_action_index_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)

@@ -100,9 +100,8 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         result = self.controller.index(req)
 
-        default_args = {'limit': None, 'marker': None,
-                        'sort_keys': None, 'sort_dir': None,
-                        'filters': None, 'show_deleted': False}
+        default_args = {'limit': None, 'marker': None, 'filters': None,
+                        'sort_keys': None, 'sort_dir': None}
 
         mock_call.assert_called_with(req.context,
                                      ('profile_list', default_args))
@@ -117,7 +116,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'marker': 'fake marker',
             'sort_keys': 'fake sort keys',
             'sort_dir': 'fake sort dir',
-            'show_deleted': False,
             'filters': None,
             'balrog': 'you shall not pass!'
         }
@@ -131,13 +129,12 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
 
-        self.assertEqual(6, len(engine_args))
+        self.assertEqual(5, len(engine_args))
         self.assertIn('limit', engine_args)
         self.assertIn('marker', engine_args)
         self.assertIn('sort_keys', engine_args)
         self.assertIn('sort_dir', engine_args)
         self.assertIn('filters', engine_args)
-        self.assertIn('show_deleted', engine_args)
         self.assertNotIn('tenant_safe', engine_args)
         self.assertNotIn('balrog', engine_args)
 
@@ -164,40 +161,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('name', filters)
         self.assertIn('type', filters)
         self.assertNotIn('balrog', filters)
-
-    def test_profile_index_show_deleted_false(self, mock_enforce):
-        mock_call = self.patchobject(rpc_client.EngineClient, 'profile_list',
-                                     return_value=[])
-
-        params = {'show_deleted': 'False'}
-        req = self._get('/profiles', params=params)
-        self.controller.index(req)
-        mock_call.assert_called_once_with(mock.ANY,
-                                          filters=mock.ANY,
-                                          show_deleted=False)
-
-    def test_profile_index_show_deleted_true(self, mock_enforce):
-        mock_call = self.patchobject(rpc_client.EngineClient, 'profile_list',
-                                     return_value=[])
-
-        params = {'show_deleted': 'True'}
-        req = self._get('/profiles', params=params)
-        self.controller.index(req)
-        mock_call.assert_called_once_with(mock.ANY,
-                                          filters=mock.ANY,
-                                          show_deleted=True)
-
-    def test_profile_index_show_deleted_non_bool(self, mock_enforce):
-        mock_call = self.patchobject(rpc_client.EngineClient, 'profile_list',
-                                     return_value=[])
-
-        params = {'show_deleted': 'yes'}
-        req = self._get('/profiles', params=params)
-        ex = self.assertRaises(senlin_exc.InvalidParameter,
-                               self.controller.index, req)
-        self.assertIn("Invalid value 'yes' specified for 'show_deleted'",
-                      six.text_type(ex))
-        self.assertFalse(mock_call.called)
 
     def test_profile_index_limit_non_int(self, mock_enforce):
         mock_call = self.patchobject(rpc_client.EngineClient, 'profile_list',

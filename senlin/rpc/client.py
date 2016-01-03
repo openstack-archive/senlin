@@ -77,12 +77,11 @@ class EngineClient(object):
                                              type_name=type_name))
 
     def profile_list(self, ctxt, limit=None, marker=None, sort_keys=None,
-                     sort_dir=None, filters=None, show_deleted=False):
+                     sort_dir=None, filters=None):
         return self.call(ctxt,
                          self.make_msg('profile_list', limit=limit,
                                        marker=marker, sort_keys=sort_keys,
-                                       sort_dir=sort_dir, filters=filters,
-                                       show_deleted=show_deleted))
+                                       sort_dir=sort_dir, filters=filters))
 
     def profile_create(self, ctxt, name, spec, permission, metadata):
         return self.call(ctxt,
@@ -115,12 +114,11 @@ class EngineClient(object):
                                              type_name=type_name))
 
     def policy_list(self, ctxt, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None, show_deleted=False):
+                    sort_dir=None, filters=None):
         return self.call(ctxt,
                          self.make_msg('policy_list', limit=limit,
                                        marker=marker, sort_keys=sort_keys,
-                                       sort_dir=sort_dir, filters=filters,
-                                       show_deleted=show_deleted))
+                                       sort_dir=sort_dir, filters=filters))
 
     def policy_create(self, ctxt, name, spec, level, cooldown):
         return self.call(ctxt,
@@ -145,7 +143,7 @@ class EngineClient(object):
 
     def cluster_list(self, ctxt, limit=None, marker=None, sort_keys=None,
                      sort_dir=None, filters=None, project_safe=True,
-                     show_deleted=False, show_nested=False):
+                     show_nested=False):
         # We keep the project_safe param here for the moment
         return self.call(ctxt,
                          self.make_msg('cluster_list',
@@ -153,7 +151,6 @@ class EngineClient(object):
                                        sort_keys=sort_keys, sort_dir=sort_dir,
                                        filters=filters,
                                        project_safe=project_safe,
-                                       show_deleted=show_deleted,
                                        show_nested=show_nested))
 
     def cluster_get(self, ctxt, identity):
@@ -219,13 +216,11 @@ class EngineClient(object):
                           self.make_msg('cluster_delete',
                                         identity=identity))
 
-    def node_list(self, ctxt, cluster_id=None, show_deleted=False,
-                  limit=None, marker=None,
+    def node_list(self, ctxt, cluster_id=None, limit=None, marker=None,
                   sort_keys=None, sort_dir=None,
                   filters=None, project_safe=True):
         return self.call(ctxt,
                          self.make_msg('node_list', cluster_id=cluster_id,
-                                       show_deleted=show_deleted,
                                        limit=limit, marker=marker,
                                        sort_keys=sort_keys, sort_dir=sort_dir,
                                        filters=filters,
@@ -265,12 +260,12 @@ class EngineClient(object):
                                         force=force))
 
     def action_list(self, ctxt, filters=None, limit=None, marker=None,
-                    sort_keys=None, sort_dir=None, show_deleted=False):
+                    sort_keys=None, sort_dir=None):
         return self.call(ctxt,
                          self.make_msg('action_list', filters=filters,
                                        limit=limit, marker=marker,
-                                       sort_keys=sort_keys, sort_dir=sort_dir,
-                                       show_deleted=show_deleted))
+                                       sort_keys=sort_keys,
+                                       sort_dir=sort_dir))
 
     def cluster_policy_list(self, ctxt, cluster_id, filters=None,
                             sort_dir=None, sort_keys=None):
@@ -320,16 +315,14 @@ class EngineClient(object):
         return self.call(ctxt,
                          self.make_msg('action_get', identity=identity))
 
-    def receiver_list(self, ctxt, limit=None, marker=None, show_deleted=False,
-                      sort_keys=None, sort_dir=None, filters=None,
-                      project_safe=True):
+    def receiver_list(self, ctxt, limit=None, marker=None, filters=None,
+                      sort_keys=None, sort_dir=None, project_safe=True):
         return self.call(ctxt,
                          self.make_msg('receiver_list',
                                        limit=limit, marker=marker,
                                        sort_keys=sort_keys, sort_dir=sort_dir,
                                        filters=filters,
-                                       project_safe=project_safe,
-                                       show_deleted=show_deleted))
+                                       project_safe=project_safe))
 
     def receiver_create(self, ctxt, name, type_name, cluster_id, action,
                         actor=None, params=None):
@@ -339,11 +332,9 @@ class EngineClient(object):
                                        cluster_id=cluster_id, action=action,
                                        actor=actor, params=params))
 
-    def receiver_get(self, ctxt, identity, project_safe=True,
-                     show_deleted=False):
+    def receiver_get(self, ctxt, identity, project_safe=True):
         return self.call(ctxt, self.make_msg('receiver_get', identity=identity,
-                                             project_safe=project_safe,
-                                             show_deleted=show_deleted))
+                                             project_safe=project_safe))
 
     def receiver_delete(self, ctxt, identity, cast=True):
         rpc_method = self.cast if cast else self.call
@@ -356,14 +347,12 @@ class EngineClient(object):
                                        params=params))
 
     def event_list(self, ctxt, filters=None, limit=None, marker=None,
-                   sort_keys=None, sort_dir=None, project_safe=True,
-                   show_deleted=False):
+                   sort_keys=None, sort_dir=None, project_safe=True):
         return self.call(ctxt,
                          self.make_msg('event_list', filters=filters,
                                        limit=limit, marker=marker,
                                        sort_keys=sort_keys, sort_dir=sort_dir,
-                                       project_safe=project_safe,
-                                       show_deleted=show_deleted))
+                                       project_safe=project_safe))
 
     def event_get(self, ctxt, identity):
         return self.call(ctxt,
