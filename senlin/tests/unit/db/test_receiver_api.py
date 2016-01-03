@@ -107,20 +107,6 @@ class DBAPIReceiverTest(base.SenlinTestCase):
         self.assertIsNotNone(res)
         self.assertEqual(rid, res.id)
 
-    def test_receiver_get_by_short_id_show_deleted(self):
-        rid = 'this-is-a-unique-id'
-        self._create_receiver(self.ctx, id=rid)
-
-        res = db_api.receiver_get_by_short_id(self.ctx, rid[:5])
-        self.assertEqual(rid, res.id)
-        res = db_api.receiver_get_by_short_id(self.ctx, rid[:7])
-        self.assertEqual(rid, res.id)
-
-        db_api.receiver_delete(self.ctx, rid)
-
-        res = db_api.receiver_get_by_short_id(self.ctx, rid[:5])
-        self.assertIsNone(res)
-
     def test_receiver_get_by_name(self):
         rname = 'fake_receiver_name'
         self._create_receiver(self.ctx, name=rname)
@@ -142,20 +128,6 @@ class DBAPIReceiverTest(base.SenlinTestCase):
         res = db_api.receiver_get_by_name(new_ctx, rname, project_safe=False)
         self.assertIsNotNone(res)
         self.assertEqual(rname, res.name)
-
-    def test_receiver_get_by_name_show_deleted(self):
-        rname = 'fake_receiver_name'
-        self._create_receiver(self.ctx, name=rname)
-
-        receiver = db_api.receiver_get_by_name(self.ctx, rname)
-        self.assertIsNotNone(receiver)
-        self.assertEqual(rname, receiver.name)
-
-        rid = receiver.id
-        db_api.receiver_delete(self.ctx, rid)
-
-        res = db_api.receiver_get_by_name(self.ctx, rname)
-        self.assertIsNone(res)
 
     def test_receiver_get_all(self):
         values = [{'name': 'receiver1'},

@@ -18,16 +18,16 @@ RPC_ATTRS = (
 ) = (
     'senlin-engine',
     'engine-dispatcher',
-    'engine-health_mgr',
+    'engine-health-mgr',
     '1.0',
 )
 
 RPC_PARAMS = (
-    PARAM_SHOW_DELETED, PARAM_SHOW_NESTED, PARAM_LIMIT, PARAM_MARKER,
+    PARAM_SHOW_NESTED, PARAM_LIMIT, PARAM_MARKER,
     PARAM_GLOBAL_PROJECT, PARAM_SHOW_DETAILS,
     PARAM_SORT_DIR, PARAM_SORT_KEYS,
 ) = (
-    'show_deleted', 'show_nested', 'limit', 'marker',
+    'show_nested', 'limit', 'marker',
     'global_project', 'show_details',
     'sort_dir', 'sort_keys',
 )

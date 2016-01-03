@@ -40,9 +40,8 @@ def cluster_create(context, values):
     return IMPL.cluster_create(context, values)
 
 
-def cluster_get(context, cluster_id, show_deleted=False, project_safe=True):
-    return IMPL.cluster_get(context, cluster_id, show_deleted=show_deleted,
-                            project_safe=project_safe)
+def cluster_get(context, cluster_id, project_safe=True):
+    return IMPL.cluster_get(context, cluster_id, project_safe=project_safe)
 
 
 def cluster_get_by_name(context, cluster_name, project_safe=True):
@@ -57,11 +56,10 @@ def cluster_get_by_short_id(context, short_id, project_safe=True):
 
 def cluster_get_all(context, limit=None, marker=None, sort_keys=None,
                     sort_dir=None, filters=None, project_safe=True,
-                    show_deleted=False, show_nested=False):
+                    show_nested=False):
     return IMPL.cluster_get_all(context, limit=limit, marker=marker,
                                 sort_keys=sort_keys, sort_dir=sort_dir,
                                 filters=filters, project_safe=project_safe,
-                                show_deleted=show_deleted,
                                 show_nested=show_nested)
 
 
@@ -70,10 +68,9 @@ def cluster_next_index(context, cluster_id):
 
 
 def cluster_count_all(context, filters=None, project_safe=True,
-                      show_deleted=False, show_nested=False):
+                      show_nested=False):
     return IMPL.cluster_count_all(context, filters=filters,
                                   project_safe=project_safe,
-                                  show_deleted=show_deleted,
                                   show_nested=show_nested)
 
 
@@ -90,28 +87,23 @@ def node_create(context, values):
     return IMPL.node_create(context, values)
 
 
-def node_get(context, node_id, show_deleted=False, project_safe=True):
-    return IMPL.node_get(context, node_id, show_deleted=show_deleted,
-                         project_safe=project_safe)
+def node_get(context, node_id, project_safe=True):
+    return IMPL.node_get(context, node_id, project_safe=project_safe)
 
 
-def node_get_by_name(context, name, show_deleted=False, project_safe=True):
-    return IMPL.node_get_by_name(context, name, show_deleted=show_deleted,
-                                 project_safe=project_safe)
+def node_get_by_name(context, name, project_safe=True):
+    return IMPL.node_get_by_name(context, name, project_safe=project_safe)
 
 
-def node_get_by_short_id(context, short_id, show_deleted=False,
-                         project_safe=True):
+def node_get_by_short_id(context, short_id, project_safe=True):
     return IMPL.node_get_by_short_id(context, short_id,
-                                     show_deleted=show_deleted,
                                      project_safe=project_safe)
 
 
-def node_get_all(context, cluster_id=None, show_deleted=False,
-                 limit=None, marker=None, sort_keys=None, sort_dir=None,
+def node_get_all(context, cluster_id=None, limit=None, marker=None,
+                 sort_keys=None, sort_dir=None,
                  filters=None, project_safe=True):
     return IMPL.node_get_all(context, cluster_id=cluster_id,
-                             show_deleted=show_deleted,
                              limit=limit, marker=marker,
                              sort_keys=sort_keys, sort_dir=sort_dir,
                              filters=filters, project_safe=project_safe)
@@ -176,30 +168,24 @@ def policy_create(context, values):
     return IMPL.policy_create(context, values)
 
 
-def policy_get(context, policy_id, show_deleted=False, project_safe=True):
-    return IMPL.policy_get(context, policy_id, show_deleted=show_deleted,
-                           project_safe=project_safe)
+def policy_get(context, policy_id, project_safe=True):
+    return IMPL.policy_get(context, policy_id, project_safe=project_safe)
 
 
-def policy_get_by_name(context, name, show_deleted=False, project_safe=True):
-    return IMPL.policy_get_by_name(context, name, show_deleted=show_deleted,
-                                   project_safe=project_safe)
+def policy_get_by_name(context, name, project_safe=True):
+    return IMPL.policy_get_by_name(context, name, project_safe=project_safe)
 
 
-def policy_get_by_short_id(context, short_id, show_deleted=False,
-                           project_safe=True):
+def policy_get_by_short_id(context, short_id, project_safe=True):
     return IMPL.policy_get_by_short_id(context, short_id,
-                                       show_deleted=show_deleted,
                                        project_safe=project_safe)
 
 
 def policy_get_all(context, limit=None, marker=None, sort_keys=None,
-                   sort_dir=None, filters=None, show_deleted=False,
-                   project_safe=True):
+                   sort_dir=None, filters=None, project_safe=True):
     return IMPL.policy_get_all(context, limit=limit, marker=marker,
                                sort_keys=sort_keys, sort_dir=sort_dir,
-                               filters=filters, show_deleted=show_deleted,
-                               project_safe=project_safe)
+                               filters=filters, project_safe=project_safe)
 
 
 def policy_update(context, policy_id, values):
@@ -238,14 +224,12 @@ def profile_create(context, values):
     return IMPL.profile_create(context, values)
 
 
-def profile_get(context, profile_id, show_deleted=False, project_safe=True):
-    return IMPL.profile_get(context, profile_id, show_deleted=show_deleted,
-                            project_safe=project_safe)
+def profile_get(context, profile_id, project_safe=True):
+    return IMPL.profile_get(context, profile_id, project_safe=project_safe)
 
 
-def profile_get_by_name(context, name, show_deleted=False, project_safe=True):
-    return IMPL.profile_get_by_name(context, name, show_deleted=show_deleted,
-                                    project_safe=project_safe)
+def profile_get_by_name(context, name, project_safe=True):
+    return IMPL.profile_get_by_name(context, name, project_safe=project_safe)
 
 
 def profile_get_by_short_id(context, short_id, project_safe=True):
@@ -254,12 +238,10 @@ def profile_get_by_short_id(context, short_id, project_safe=True):
 
 
 def profile_get_all(context, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None, show_deleted=False,
-                    project_safe=True):
+                    sort_dir=None, filters=None, project_safe=True):
     return IMPL.profile_get_all(context, limit=limit, marker=marker,
                                 sort_keys=sort_keys, sort_dir=sort_dir,
-                                filters=filters, show_deleted=show_deleted,
-                                project_safe=project_safe)
+                                filters=filters, project_safe=project_safe)
 
 
 def profile_update(context, profile_id, values):
@@ -302,13 +284,10 @@ def event_get_by_short_id(context, short_id, project_safe=True):
 
 
 def event_get_all(context, limit=None, marker=None, sort_keys=None,
-                  sort_dir=None, filters=None, project_safe=True,
-                  show_deleted=False):
-
+                  sort_dir=None, filters=None, project_safe=True):
     return IMPL.event_get_all(context, limit=limit, marker=marker,
                               sort_keys=sort_keys, sort_dir=sort_dir,
-                              filters=filters, project_safe=project_safe,
-                              show_deleted=show_deleted)
+                              filters=filters, project_safe=project_safe)
 
 
 def event_count_by_cluster(context, cluster_id, project_safe=True):
@@ -336,9 +315,8 @@ def action_update(context, action_id, values):
     return IMPL.action_update(context, action_id, values)
 
 
-def action_get(context, action_id, show_deleted=False, refresh=False):
-    return IMPL.action_get(context, action_id, show_deleted=show_deleted,
-                           refresh=refresh)
+def action_get(context, action_id, refresh=False):
+    return IMPL.action_get(context, action_id, refresh=refresh)
 
 
 def action_get_by_name(context, name):
@@ -354,11 +332,10 @@ def action_get_all_by_owner(context, owner):
 
 
 def action_get_all(context, filters=None, limit=None, marker=None,
-                   sort_keys=None, sort_dir=None, show_deleted=False):
+                   sort_keys=None, sort_dir=None):
     return IMPL.action_get_all(context, filters=filters,
                                limit=limit, marker=marker,
-                               sort_keys=sort_keys, sort_dir=sort_dir,
-                               show_deleted=show_deleted)
+                               sort_keys=sort_keys, sort_dir=sort_dir)
 
 
 def dependency_add(context, depended, dependent):
@@ -420,28 +397,22 @@ def receiver_create(context, values):
     return IMPL.receiver_create(context, values)
 
 
-def receiver_get(context, receiver_id, show_deleted=False, project_safe=True):
-    return IMPL.receiver_get(context, receiver_id, show_deleted=show_deleted,
-                             project_safe=project_safe)
+def receiver_get(context, receiver_id, project_safe=True):
+    return IMPL.receiver_get(context, receiver_id, project_safe=project_safe)
 
 
-def receiver_get_by_name(context, name, show_deleted=False, project_safe=True):
-    return IMPL.receiver_get_by_name(context, name, show_deleted=show_deleted,
-                                     project_safe=project_safe)
+def receiver_get_by_name(context, name, project_safe=True):
+    return IMPL.receiver_get_by_name(context, name, project_safe=project_safe)
 
 
-def receiver_get_by_short_id(context, short_id, show_deleted=False,
-                             project_safe=True):
+def receiver_get_by_short_id(context, short_id, project_safe=True):
     return IMPL.receiver_get_by_short_id(context, short_id,
-                                         show_deleted=show_deleted,
                                          project_safe=project_safe)
 
 
-def receiver_get_all(context, show_deleted=False, limit=None,
-                     marker=None, sort_keys=None, sort_dir=None,
-                     filters=None, project_safe=True):
-    return IMPL.receiver_get_all(context, show_deleted=show_deleted,
-                                 limit=limit, marker=marker,
+def receiver_get_all(context, limit=None, marker=None, filters=None,
+                     sort_keys=None, sort_dir=None, project_safe=True):
+    return IMPL.receiver_get_all(context, limit=limit, marker=marker,
                                  sort_keys=sort_keys, sort_dir=sort_dir,
                                  filters=filters, project_safe=project_safe)
 

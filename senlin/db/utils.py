@@ -42,4 +42,4 @@ IMPL = LazyPluggable('backend', sqlalchemy='senlin.db.sqlalchemy.api')
 
 
 def purge_deleted(age, unit='days'):
-    IMPL.purge_deleted(age, unit)
+    pass
