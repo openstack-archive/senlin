@@ -88,7 +88,6 @@ class TestNode(base.SenlinTestCase):
         self.assertIsNone(node.init_time)
         self.assertIsNone(node.created_time)
         self.assertIsNone(node.updated_time)
-        self.assertIsNone(node.deleted_time)
 
         self.assertEqual('INIT', node.status)
         self.assertEqual('Initializing', node.status_reason)
@@ -125,7 +124,6 @@ class TestNode(base.SenlinTestCase):
         self.assertIsNotNone(node_info.init_time)
         self.assertIsNone(node_info.created_time)
         self.assertIsNone(node_info.updated_time)
-        self.assertIsNone(node_info.deleted_time)
 
         self.assertEqual('INIT', node_info.status)
         self.assertEqual('Initializing', node_info.status_reason)
@@ -172,7 +170,6 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual(node.init_time, node_info.init_time)
         self.assertEqual(node.created_time, node_info.created_time)
         self.assertEqual(node.updated_time, node_info.updated_time)
-        self.assertEqual(node.deleted_time, node_info.deleted_time)
 
         self.assertEqual(node.status, node_info.status)
         self.assertEqual(node.status_reason, node_info.status_reason)
@@ -224,7 +221,6 @@ class TestNode(base.SenlinTestCase):
             'init_time': common_utils.format_time(node.init_time),
             'created_time': common_utils.format_time(node.created_time),
             'updated_time': common_utils.format_time(node.updated_time),
-            'deleted_time': common_utils.format_time(node.deleted_time),
             'status': node.status,
             'status_reason': node.status_reason,
             'data': node.data,
@@ -253,7 +249,6 @@ class TestNode(base.SenlinTestCase):
             'init_time': common_utils.format_time(node.init_time),
             'created_time': common_utils.format_time(node.created_time),
             'updated_time': common_utils.format_time(node.updated_time),
-            'deleted_time': common_utils.format_time(node.deleted_time),
             'status': node.status,
             'status_reason': node.status_reason,
             'data': node.data,
@@ -281,7 +276,6 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual('Creation in progress', node.status_reason)
         self.assertIsNone(node.created_time)
         self.assertIsNone(node.updated_time)
-        self.assertIsNone(node.deleted_time)
 
         node.set_status(self.context, node.ACTIVE,
                         reason='Creation succeeded')
@@ -289,7 +283,6 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual('Creation succeeded', node.status_reason)
         self.assertIsNotNone(node.created_time)
         self.assertIsNone(node.updated_time)
-        self.assertIsNone(node.deleted_time)
 
         # update
         node.set_status(self.context, node.UPDATING,
@@ -297,7 +290,6 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual('UPDATING', node.status)
         self.assertEqual('Update in progress', node.status_reason)
         self.assertIsNotNone(node.created_time)
-        self.assertIsNone(node.deleted_time)
         self.assertIsNone(node.updated_time)
 
         node.set_status(self.context, node.ACTIVE,
@@ -305,13 +297,11 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual('ACTIVE', node.status)
         self.assertEqual('Update succeeded', node.status_reason)
         self.assertIsNotNone(node.created_time)
-        self.assertIsNone(node.deleted_time)
         self.assertIsNotNone(node.updated_time)
 
         node.set_status(self.context, node.ACTIVE)
         self.assertEqual('ACTIVE', node.status)
         self.assertIsNotNone(node.created_time)
-        self.assertIsNone(node.deleted_time)
         self.assertIsNotNone(node.updated_time)
 
         # delete
@@ -320,14 +310,12 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual('DELETING', node.status)
         self.assertEqual('Deletion in progress', node.status_reason)
         self.assertIsNotNone(node.created_time)
-        self.assertIsNone(node.deleted_time)
 
         node.set_status(self.context, node.DELETED,
                         reason='Deletion succeeded')
         self.assertEqual('DELETED', node.status)
         self.assertEqual('Deletion succeeded', node.status_reason)
         self.assertIsNotNone(node.created_time)
-        self.assertIsNotNone(node.deleted_time)
 
     @mock.patch.object(profiles_base.Profile, 'get_details')
     def test_node_get_details(self, mock_details):

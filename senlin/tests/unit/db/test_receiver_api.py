@@ -36,7 +36,6 @@ class DBAPIReceiverTest(base.SenlinTestCase):
             'domain': ctx.domain,
             'created_time': None,
             'updated_time': None,
-            'deleted_time': None,
             'cluster_id': cluster_id or self.cluster_id,
             'action': action or self.action,
             'actor': {'username': 'john', 'password': 'secrete1'},
@@ -58,7 +57,6 @@ class DBAPIReceiverTest(base.SenlinTestCase):
         self.assertEqual(self.ctx.domain, r.domain)
         self.assertIsNone(r.created_time)
         self.assertIsNone(r.updated_time)
-        self.assertIsNone(r.deleted_time)
         self.assertEqual(self.action, r.action)
         self.assertEqual({'username': 'john', 'password': 'secrete1'}, r.actor)
         self.assertEqual({'key1': 'value1'}, r.params)
@@ -77,23 +75,6 @@ class DBAPIReceiverTest(base.SenlinTestCase):
 
         res = db_api.receiver_get(self.ctx, r.id)
         self.assertEqual(r.id, res.id)
-
-    def test_recevier_get_show_deleted(self):
-        res = self._create_receiver(self.ctx)
-        rid = res.id
-        receiver = db_api.receiver_get(self.ctx, rid)
-        self.assertIsNotNone(receiver)
-
-        db_api.receiver_delete(self.ctx, rid)
-
-        receiver = db_api.receiver_get(self.ctx, rid)
-        self.assertIsNone(receiver)
-
-        receiver = db_api.receiver_get(self.ctx, rid, show_deleted=False)
-        self.assertIsNone(receiver)
-
-        receiver = db_api.receiver_get(self.ctx, rid, show_deleted=True)
-        self.assertEqual(rid, receiver.id)
 
     def test_receiver_get_by_short_id(self):
         receiver_id1 = 'same-part-unique-part'
@@ -139,12 +120,6 @@ class DBAPIReceiverTest(base.SenlinTestCase):
 
         res = db_api.receiver_get_by_short_id(self.ctx, rid[:5])
         self.assertIsNone(res)
-        res = db_api.receiver_get_by_short_id(self.ctx, rid[:5],
-                                              show_deleted=False)
-        self.assertIsNone(res)
-        res = db_api.receiver_get_by_short_id(self.ctx, rid[:5],
-                                              show_deleted=True)
-        self.assertEqual(rid, res.id)
 
     def test_receiver_get_by_name(self):
         rname = 'fake_receiver_name'
@@ -182,12 +157,6 @@ class DBAPIReceiverTest(base.SenlinTestCase):
         res = db_api.receiver_get_by_name(self.ctx, rname)
         self.assertIsNone(res)
 
-        res = db_api.receiver_get_by_name(self.ctx, rname, show_deleted=False)
-        self.assertIsNone(res)
-
-        res = db_api.receiver_get_by_name(self.ctx, rname, show_deleted=True)
-        self.assertEqual(rid, res.id)
-
     def test_receiver_get_all(self):
         values = [{'name': 'receiver1'},
                   {'name': 'receiver2'},
@@ -200,23 +169,6 @@ class DBAPIReceiverTest(base.SenlinTestCase):
         names = [receiver.name for receiver in receivers]
         for val in values:
             self.assertIn(val['name'], names)
-
-    def test_receiver_get_all_show_deleted(self):
-        values = [
-            {'id': 'receiver1'}, {'id': 'receiver2'}, {'id': 'receiver3'}
-        ]
-        [self._create_receiver(self.ctx, **v) for v in values]
-
-        db_api.receiver_delete(self.ctx, 'receiver2')
-
-        receivers = db_api.receiver_get_all(self.ctx)
-        self.assertEqual(2, len(receivers))
-
-        receivers = db_api.receiver_get_all(self.ctx, show_deleted=False)
-        self.assertEqual(2, len(receivers))
-
-        receivers = db_api.receiver_get_all(self.ctx, show_deleted=True)
-        self.assertEqual(3, len(receivers))
 
     def test_receiver_get_all_with_limit_marker(self):
         receiver_ids = ['receiver1', 'receiver2', 'receiver3']

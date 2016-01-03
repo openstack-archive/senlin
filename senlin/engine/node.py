@@ -61,7 +61,6 @@ class Node(object):
         self.init_time = kwargs.get('init_time', None)
         self.created_time = kwargs.get('created_time', None)
         self.updated_time = kwargs.get('updated_time', None)
-        self.deleted_time = kwargs.get('deleted_time', None)
 
         self.status = kwargs.get('status', self.INIT)
         self.status_reason = kwargs.get('status_reason', 'Initializing')
@@ -110,7 +109,6 @@ class Node(object):
             'init_time': self.init_time,
             'created_time': self.created_time,
             'updated_time': self.updated_time,
-            'deleted_time': self.deleted_time,
             'status': self.status,
             'status_reason': self.status_reason,
             'meta_data': self.metadata,
@@ -149,7 +147,6 @@ class Node(object):
             'init_time': record.init_time,
             'created_time': record.created_time,
             'updated_time': record.updated_time,
-            'deleted_time': record.deleted_time,
             'status': record.status,
             'status_reason': record.status_reason,
             'data': record.data,
@@ -205,7 +202,6 @@ class Node(object):
             'init_time': utils.format_time(self.init_time),
             'created_time': utils.format_time(self.created_time),
             'updated_time': utils.format_time(self.updated_time),
-            'deleted_time': utils.format_time(self.deleted_time),
             'status': self.status,
             'status_reason': self.status_reason,
             'data': self.data,
@@ -223,8 +219,6 @@ class Node(object):
             self.created_time = values['created_time'] = now
         elif status == self.ACTIVE and self.status == self.UPDATING:
             self.updated_time = values['updated_time'] = now
-        elif status == self.DELETED:
-            self.deleted_time = values['deleted_time'] = now
 
         self.status = status
         values['status'] = status

@@ -57,7 +57,6 @@ class ActionBaseTest(base.SenlinTestCase):
             'outputs': {'key': 'output_value'},
             'created_time': None,
             'updated_time': None,
-            'deleted_time': None,
             'data': {'data_key': 'data_value'},
         }
 
@@ -79,7 +78,6 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual({}, obj.outputs)
         self.assertIsNone(obj.created_time)
         self.assertIsNone(obj.updated_time)
-        self.assertIsNone(obj.deleted_time)
         self.assertEqual({}, obj.data)
 
     @mock.patch.object(node_mod.Node, 'load')
@@ -95,7 +93,6 @@ class ActionBaseTest(base.SenlinTestCase):
         values['description'] = 'FAKE_DESC'
         values['created_time'] = 'FAKE_CREATED_TIME'
         values['updated_time'] = 'FAKE_UPDATED_TIME'
-        values['deleted_time'] = 'FAKE_DELETED_TIME'
 
         obj = action_base.Action('OBJID', 'OBJECT_ACTION', self.ctx,
                                  **values)
@@ -116,7 +113,6 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual({'key': 'output_value'}, obj.outputs)
         self.assertEqual('FAKE_CREATED_TIME', obj.created_time)
         self.assertEqual('FAKE_UPDATED_TIME', obj.updated_time)
-        self.assertEqual('FAKE_DELETED_TIME', obj.deleted_time)
         self.assertEqual({'data_key': 'data_value'}, obj.data)
 
     @mock.patch.object(context.RequestContext, 'from_dict')
@@ -146,7 +142,6 @@ class ActionBaseTest(base.SenlinTestCase):
 
         self.assertIsNone(obj.created_time)
         self.assertIsNone(obj.updated_time)
-        self.assertIsNone(obj.deleted_time)
 
         # store for creation
         res = obj.store(self.ctx)
@@ -154,7 +149,6 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual(obj.id, res)
         self.assertIsNotNone(obj.created_time)
         self.assertIsNone(obj.updated_time)
-        self.assertIsNone(obj.deleted_time)
 
     def test_action_store_for_update(self):
         values = copy.deepcopy(self.action_values)
@@ -165,7 +159,6 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertIsNotNone(obj_id)
         self.assertIsNotNone(obj.created_time)
         self.assertIsNone(obj.updated_time)
-        self.assertIsNone(obj.deleted_time)
 
         # store for creation
         res = obj.store(self.ctx)
@@ -174,7 +167,6 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual(obj.id, res)
         self.assertIsNotNone(obj.created_time)
         self.assertIsNotNone(obj.updated_time)
-        self.assertIsNone(obj.deleted_time)
 
     def test_from_db_record(self):
         values = copy.deepcopy(self.action_values)
@@ -202,7 +194,6 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual(obj.outputs, action_obj.outputs)
         self.assertEqual(obj.created_time, action_obj.created_time)
         self.assertEqual(obj.updated_time, action_obj.updated_time)
-        self.assertEqual(obj.deleted_time, action_obj.deleted_time)
         self.assertEqual(obj.data, action_obj.data)
 
     def test_from_db_record_with_empty_fields(self):
@@ -595,7 +586,6 @@ class ActionBaseTest(base.SenlinTestCase):
             'depended_by': ['ACTION_2'],
             'created_time': None,
             'updated_time': None,
-            'deleted_time': None,
             'data': {'data_key': 'data_value'},
         }
 

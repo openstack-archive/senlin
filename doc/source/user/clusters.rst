@@ -45,11 +45,6 @@ The following command shows the clusters managed by the Senlin service::
   | 092d0955 | c2   | ACTIVE | 2015-05-05T13:27:48 |
   +----------+------+--------+---------------------+
 
-The :program:`senlin` command line supports various options for the command
-:command:`cluster-list`. You can specify the option :option:`--show-deleted`
-(or :option:`-D`) to indicate that soft-deleted clusters be included in the
-list result.
-
 Note that the first column in the output table is a *short ID* of a cluster
 object. Senlin command line use short IDs to save real estate on screen so
 that more useful information can be shown on a single line. To show the *full
@@ -152,7 +147,6 @@ associated with the cluster. For example::
   +------------------+--------------------------------------+
   | created_time     | None                                 |
   | data             | {}                                   |
-  | deleted_time     | None                                 |
   | desired_capacity | 0                                    |
   | domain           | None                                 |
   | id               | 60424eb3-6adf-4fc3-b9a1-4a035bf171ac |
@@ -246,7 +240,6 @@ An example is shown below::
   +------------------+--------------------------------------+
   | created_time     | 2015-07-07T03:30:53                  |
   | data             | {}                                   |
-  | deleted_time     | None                                 |
   | desired_capacity | 0                                    |
   | domain           | None                                 |
   | id               | 2b7e9294-b5cd-470f-b191-b18f7e672495 |

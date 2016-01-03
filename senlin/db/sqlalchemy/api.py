@@ -14,7 +14,6 @@
 Implementation of SQLAlchemy backend.
 '''
 
-import datetime
 import six
 import sys
 
@@ -22,9 +21,6 @@ from oslo_config import cfg
 from oslo_db.sqlalchemy import session as db_session
 from oslo_db.sqlalchemy import utils
 from oslo_log import log as logging
-from oslo_utils import timeutils
-
-import sqlalchemy
 from sqlalchemy.orm import session as orm_session
 
 from senlin.common import consts
@@ -104,24 +100,10 @@ def _paginate_query(context, query, model, limit=None, marker=None,
     return query
 
 
-def soft_delete_aware_query(context, *args, **kwargs):
-    """Object query helper that accounts for the `show_deleted` field.
-
-    :param show_deleted: if True, overrides context's show_deleted field.
-    """
-
-    query = model_query(context, *args)
-    show_deleted = kwargs.get('show_deleted') or context.show_deleted
-
-    if (not show_deleted) or show_deleted in ('False', 'false', 'no', 'No'):
-        query = query.filter_by(deleted_time=None)
-    return query
-
-
 # TODO(Yanyan Hu): Set default value of project_safe to True
 def query_by_short_id(context, model, short_id, project_safe=False,
                       show_deleted=False):
-    q = soft_delete_aware_query(context, model, show_deleted=show_deleted)
+    q = model_query(context, model)
     q = q.filter(model.id.like('%s%%' % short_id))
 
     if project_safe:
@@ -138,7 +120,7 @@ def query_by_short_id(context, model, short_id, project_safe=False,
 # TODO(Yanyan Hu): Set default value of project_safe to True
 def query_by_name(context, model, name, project_safe=False,
                   show_deleted=False):
-    q = soft_delete_aware_query(context, model, show_deleted=show_deleted)
+    q = model_query(context, model)
     q = q.filter_by(name=name)
 
     if project_safe:
@@ -168,8 +150,7 @@ def cluster_get(context, cluster_id, show_deleted=False, project_safe=True):
     query = model_query(context, models.Cluster)
     cluster = query.get(cluster_id)
 
-    deleted_ok = show_deleted or context.show_deleted
-    if cluster is None or cluster.deleted_time is not None and not deleted_ok:
+    if cluster is None:
         return None
 
     if project_safe and (cluster is not None):
@@ -190,8 +171,7 @@ def cluster_get_by_short_id(context, short_id, project_safe=True):
 
 def _query_cluster_get_all(context, project_safe=True, show_deleted=False,
                            show_nested=False):
-    query = soft_delete_aware_query(context, models.Cluster,
-                                    show_deleted=show_deleted)
+    query = model_query(context, models.Cluster)
 
     if not show_nested:
         query = query.filter_by(parent=None)
@@ -259,7 +239,7 @@ def cluster_delete(context, cluster_id):
     session = _session(context)
 
     cluster = session.query(models.Cluster).get(cluster_id)
-    if cluster is None or cluster.deleted_time is not None:
+    if cluster is None:
         raise exception.ClusterNotFound(cluster=cluster_id)
 
     query = session.query(models.Node).filter_by(cluster_id=cluster_id)
@@ -274,10 +254,8 @@ def cluster_delete(context, cluster_id):
         session.delete(cp)
 
     # Do soft delete and set the status
-    cluster.update_and_save({'deleted_time': timeutils.utcnow(),
-                             'status': 'DELETED',
-                             'status_reason': 'Cluster deletion succeeded'
-                             }, session=session)
+    cluster.delete(session=session)
+    session.flush()
 
 
 # Nodes
@@ -293,9 +271,6 @@ def node_create(context, values):
 def node_get(context, node_id, show_deleted=False, project_safe=True):
     node = model_query(context, models.Node).get(node_id)
     if not node:
-        return None
-
-    if not show_deleted and node.deleted_time is not None:
         return None
 
     if project_safe:
@@ -320,8 +295,7 @@ def node_get_by_short_id(context, short_id, show_deleted=False,
 
 def _query_node_get_all(context, project_safe=True, show_deleted=False,
                         cluster_id=None):
-    query = soft_delete_aware_query(context, models.Node,
-                                    show_deleted=show_deleted)
+    query = model_query(context, models.Node)
 
     if cluster_id:
         query = query.filter_by(cluster_id=cluster_id)
@@ -347,7 +321,6 @@ def node_get_all(context, cluster_id=None, show_deleted=False,
         consts.NODE_NAME: models.Node.name.key,
         consts.NODE_CREATED_TIME: models.Node.created_time.key,
         consts.NODE_UPDATED_TIME: models.Node.updated_time.key,
-        consts.NODE_DELETED_TIME: models.Node.deleted_time.key,
         consts.NODE_STATUS: models.Node.status.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
@@ -360,13 +333,7 @@ def node_get_all(context, cluster_id=None, show_deleted=False,
 
 def node_get_all_by_cluster(context, cluster_id, show_deleted=False,
                             project_safe=True):
-    if show_deleted:
-        query = model_query(context,
-                            models.Node).filter_by(cluster_id=cluster_id)
-    else:
-        query = model_query(context,
-                            models.Node).filter_by(cluster_id=cluster_id,
-                                                   deleted_time=None)
+    query = model_query(context, models.Node).filter_by(cluster_id=cluster_id)
 
     if project_safe:
         query = query.filter_by(project=context.project)
@@ -456,10 +423,7 @@ def node_delete(context, node_id, force=False):
         cluster = session.query(models.Cluster).get(node.cluster_id)
         cluster.save(session)
 
-    node.update_and_save({'deleted_time': timeutils.utcnow(),
-                          'status': 'DELETED',
-                          'status_reason': 'Node deletion succeeded'},
-                         session=session)
+    node.delete(session=session)
     session.flush()
 
 
@@ -594,8 +558,7 @@ def policy_create(context, values):
 
 
 def policy_get(context, policy_id, show_deleted=False, project_safe=True):
-    policy = soft_delete_aware_query(context, models.Policy,
-                                     show_deleted=show_deleted)
+    policy = model_query(context, models.Policy)
     policy = policy.filter_by(id=policy_id).first()
 
     if project_safe and policy is not None:
@@ -621,8 +584,7 @@ def policy_get_by_short_id(context, short_id, show_deleted=False,
 def policy_get_all(context, limit=None, marker=None, sort_keys=None,
                    sort_dir=None, filters=None, show_deleted=False,
                    project_safe=True):
-    query = soft_delete_aware_query(context, models.Policy,
-                                    show_deleted=show_deleted)
+    query = model_query(context, models.Policy)
 
     if project_safe:
         query = query.filter_by(project=context.project)
@@ -637,7 +599,6 @@ def policy_get_all(context, limit=None, marker=None, sort_keys=None,
         consts.POLICY_COOLDOWN: models.Policy.cooldown.key,
         consts.POLICY_CREATED_TIME: models.Policy.created_time.key,
         consts.POLICY_UPDATED_TIME: models.Policy.updated_time.key,
-        consts.POLICY_DELETED_TIME: models.Policy.deleted_time.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
@@ -672,7 +633,7 @@ def policy_delete(context, policy_id, force=False):
 
     session = orm_session.Session.object_session(policy)
 
-    policy.soft_delete(session=session)
+    policy.delete(session=session)
     session.flush()
 
 
@@ -752,8 +713,7 @@ def profile_create(context, values):
 
 
 def profile_get(context, profile_id, show_deleted=False, project_safe=True):
-    query = soft_delete_aware_query(context, models.Profile,
-                                    show_deleted=show_deleted)
+    query = model_query(context, models.Profile)
     profile = query.filter_by(id=profile_id).first()
 
     if project_safe and profile is not None:
@@ -779,8 +739,7 @@ def profile_get_by_short_id(context, short_id, show_deleted=False,
 def profile_get_all(context, limit=None, marker=None, sort_keys=None,
                     sort_dir=None, filters=None, show_deleted=False,
                     project_safe=True):
-    query = soft_delete_aware_query(context, models.Profile,
-                                    show_deleted=show_deleted)
+    query = model_query(context, models.Profile)
 
     if project_safe:
         query = query.filter_by(project=context.project)
@@ -794,7 +753,6 @@ def profile_get_all(context, limit=None, marker=None, sort_keys=None,
         consts.PROFILE_PERMISSION: models.Profile.permission.key,
         consts.PROFILE_CREATED_TIME: models.Profile.created_time.key,
         consts.PROFILE_UPDATED_TIME: models.Profile.updated_time.key,
-        consts.PROFILE_DELETED_TIME: models.Profile.deleted_time.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
@@ -822,21 +780,21 @@ def profile_delete(context, profile_id, force=False):
 
     # used by any clusters?
     query = model_query(context, models.Cluster)
-    clusters = query.filter_by(profile_id=profile_id, deleted_time=None)
+    clusters = query.filter_by(profile_id=profile_id)
     if clusters.count() > 0:
         raise exception.ResourceBusyError(resource_type='profile',
                                           resource_id=profile_id)
 
     # used by any nodes?
     query = model_query(context, models.Node)
-    nodes = query.filter_by(profile_id=profile_id, deleted_time=None)
+    nodes = query.filter_by(profile_id=profile_id)
     if nodes.count() > 0:
         raise exception.ResourceBusyError(resource_type='profile',
                                           resource_id=profile_id)
 
     session = orm_session.Session.object_session(profile)
 
-    profile.soft_delete(session=session)
+    profile.delete(session=session)
     session.flush()
 
 
@@ -937,8 +895,7 @@ def _event_filter_paginate_query(context, query, filters=None,
 def event_get_all(context, limit=None, marker=None, sort_keys=None,
                   sort_dir=None, filters=None, project_safe=True,
                   show_deleted=False):
-    query = soft_delete_aware_query(context, models.Event,
-                                    show_deleted=show_deleted)
+    query = model_query(context, models.Event)
     if project_safe:
         query = query.filter_by(project=context.project)
 
@@ -997,8 +954,6 @@ def action_get(context, action_id, show_deleted=False, refresh=False):
     if action is None:
         return None
     session.refresh(action)
-    if action.deleted_time is not None and not show_deleted:
-        return None
     return action
 
 
@@ -1018,8 +973,7 @@ def action_get_all_by_owner(context, owner_id):
 
 def action_get_all(context, filters=None, limit=None, marker=None,
                    sort_keys=None, sort_dir=None, show_deleted=False):
-    query = soft_delete_aware_query(context, models.Action,
-                                    show_deleted=show_deleted)
+    query = model_query(context, models.Action)
 
     if filters is None:
         filters = {}
@@ -1271,7 +1225,7 @@ def action_delete(context, action_id, force=False):
         raise exception.ResourceBusyError(resource_type='action',
                                           resource_id=action_id)
 
-    action.soft_delete(session=session)
+    action.delete(session=session)
     session.flush()
 
 
@@ -1288,9 +1242,6 @@ def receiver_get(context, receiver_id, show_deleted=False, project_safe=True):
     if not receiver:
         return None
 
-    if not show_deleted and receiver.deleted_time is not None:
-        return None
-
     if project_safe:
         if context.project != receiver.project:
             return None
@@ -1301,9 +1252,7 @@ def receiver_get(context, receiver_id, show_deleted=False, project_safe=True):
 def receiver_get_all(context, show_deleted=False, limit=None,
                      marker=None, sort_keys=None, sort_dir=None,
                      filters=None, project_safe=True):
-    query = soft_delete_aware_query(context, models.Receiver,
-                                    show_deleted=show_deleted)
-
+    query = model_query(context, models.Receiver)
     if project_safe:
         query = query.filter_by(project=context.project)
 
@@ -1344,7 +1293,7 @@ def receiver_delete(context, receiver_id, force=False):
     if not receiver:
         return
 
-    receiver.soft_delete(session=session)
+    receiver.delete(session=session)
     session.flush()
 
 
@@ -1357,70 +1306,3 @@ def db_sync(engine, version=None):
 def db_version(engine):
     """Display the current database version."""
     return migration.db_version(engine)
-
-
-def purge_deleted(age, unit='days'):
-    """Delete objects that were marked as soft-deleted.
-
-    :param age: An integer to be interpreted as a length of time period.
-    :param unit: A string for the granularity of the 'age' param.
-    """
-    try:
-        age = int(age)
-    except ValueError:
-        raise exception.Error(_("age should be an integer"))
-
-    if age < 0:
-        raise exception.Error(_("age should be a positive integer"))
-
-    if unit not in ('days', 'hours', 'minutes', 'seconds'):
-        raise exception.Error(
-            _("unit must be one of days, hours, minutes, or seconds"))
-
-    if unit == 'days':
-        age = age * 86400
-    elif unit == 'hours':
-        age = age * 3600
-    elif unit == 'minutes':
-        age = age * 60
-
-    timeline = timeutils.utcnow() - datetime.timedelta(seconds=age)
-    engine = get_engine()
-    meta = sqlalchemy.MetaData()
-    meta.bind = engine
-
-    profile = sqlalchemy.Table('profile', meta, autoload=True)
-    policy = sqlalchemy.Table('policy', meta, autoload=True)
-    cluster = sqlalchemy.Table('cluster', meta, autoload=True)
-    node = sqlalchemy.Table('node', meta, autoload=True)
-    action = sqlalchemy.Table('action', meta, autoload=True)
-    receiver = sqlalchemy.Table('receiver', meta, autoload=True)
-    event = sqlalchemy.Table('event', meta, autoload=True)
-
-    # delete policies
-    policy_del = policy.delete().where(policy.c.deleted_time < timeline)
-    engine.execute(policy_del)
-
-    # delete events
-    event_del = event.delete().where(event.c.deleted_time < timeline)
-    engine.execute(event_del)
-
-    # delete actions
-    action_del = action.delete().where(action.c.deleted_time < timeline)
-    engine.execute(action_del)
-
-    # delete receivers
-    receiver_del = receiver.delete().where(receiver.c.deleted_time < timeline)
-    engine.execute(receiver_del)
-
-    # delete nodes
-    node_del = node.delete().where(node.c.deleted_time < timeline)
-    engine.execute(node_del)
-
-    # delete clusters
-    cluster_del = cluster.delete().where(cluster.c.deleted_time < timeline)
-    engine.execute(cluster_del)
-
-    # delete profiles
-    profile_del = profile.delete().where(profile.c.deleted_time < timeline)
-    engine.execute(profile_del)

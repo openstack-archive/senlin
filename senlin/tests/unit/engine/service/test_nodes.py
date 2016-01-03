@@ -273,22 +273,6 @@ class NodeTest(base.SenlinTestCase):
                          "desc-nullslast", six.text_type(ex))
 
     @mock.patch.object(dispatcher, 'start_action')
-    def test_node_list_show_deleted(self, notify):
-        node = self.eng.node_create(self.ctx, 'n1', self.profile['id'])
-        result = self.eng.node_list(self.ctx)
-        self.assertEqual(1, len(result))
-        self.assertEqual(node['id'], result[0]['id'])
-
-        db_api.node_delete(self.ctx, node['id'])
-
-        result = self.eng.node_list(self.ctx)
-        self.assertEqual(0, len(result))
-
-        result = self.eng.node_list(self.ctx, show_deleted=True)
-        self.assertEqual(1, len(result))
-        self.assertEqual(node['id'], result[0]['id'])
-
-    @mock.patch.object(dispatcher, 'start_action')
     def test_node_list_project_safe(self, notify):
         new_ctx = utils.dummy_context(project='a_diff_project')
         spec = {
@@ -406,10 +390,6 @@ class NodeTest(base.SenlinTestCase):
         for identity in [nodeid[:6], 'n-1']:
             self.assertRaises(exception.NodeNotFound,
                               self.eng.node_find, self.ctx, identity)
-
-        # ID based finding is okay with show_deleted
-        result = self.eng.node_find(self.ctx, nodeid, show_deleted=True)
-        self.assertIsNotNone(result)
 
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(dispatcher, 'start_action')

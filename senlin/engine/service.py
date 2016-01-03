@@ -602,8 +602,9 @@ class EngineService(service.Service):
             LOG.info(_LI("Cluster '%s' is updated."), identity)
             return cluster.to_dict()
 
+        LOG.error('******* %s' % cluster.status)
         if cluster.status == cluster.ERROR:
-            msg = _('Cannot update a cluster when it is in error state.')
+            msg = _('Updating a cluster in error state')
             LOG.error(msg)
             raise exception.FeatureNotSupported(feature=msg)
 

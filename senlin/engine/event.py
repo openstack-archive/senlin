@@ -43,7 +43,6 @@ class Event(object):
         self.action = kwargs.get('action', None)
         self.status = kwargs.get('status', None)
         self.status_reason = kwargs.get('status_reason', None)
-        self.deleted_time = kwargs.get('deleted_time', None)
 
         # we deal with deserialization first
         self.obj_id = kwargs.get('obj_id', None)
@@ -92,7 +91,6 @@ class Event(object):
             'action': record.action,
             'status': record.status,
             'status_reason': record.status_reason,
-            'deleted_time': record.deleted_time,
             'metadata': record.meta_data,
         }
         return cls(record.timestamp, record.level, **kwargs)
@@ -138,7 +136,6 @@ class Event(object):
             'action': self.action,
             'status': self.status,
             'status_reason': self.status_reason,
-            'deleted_time': self.deleted_time,
             'meta_data': self.metadata,
         }
 
@@ -167,7 +164,6 @@ class Event(object):
             'action': self.action,
             'status': self.status,
             'status_reason': self.status_reason,
-            'deleted_time': utils.format_time(self.deleted_time),
             'metadata': self.metadata,
         }
         return evt

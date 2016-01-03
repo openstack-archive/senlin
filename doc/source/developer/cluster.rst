@@ -33,11 +33,7 @@ A cluster has the following timestamps when instantiated:
    Senlin database, but the actual cluster creation has not yet started;
  - ``created_time``: the timestamp when the cluster object is created, i.e.
    the ``CLUSTER_CREATE`` action has completed;
- - ``updated_time``: the timestamp when the cluster was last updated;
- - ``deleted_time``: the timestamp when the cluster was deleted, if not None.
-   Cluster objects are always soft-deleted, which means once the
-   ``deleted_time`` field is set to a non-empty value, the cluster will be
-   treated as deleted.
+ - ``updated_time``: the timestamp when the cluster was last updated.
 
 
 Cluster Statuses

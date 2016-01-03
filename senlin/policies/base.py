@@ -152,7 +152,6 @@ class Policy(object):
 
         self.created_time = kwargs.get('created_time', None)
         self.updated_time = kwargs.get('updated_time', None)
-        self.deleted_time = kwargs.get('deleted_time', None)
 
         self.spec_data = schema.Spec(self.spec_schema, spec)
         self.properties = schema.Spec(self.properties_schema,
@@ -173,7 +172,6 @@ class Policy(object):
             'cooldown': record.cooldown,
             'created_time': record.created_time,
             'updated_time': record.updated_time,
-            'deleted_time': record.deleted_time,
             'data': record.data,
         }
 
@@ -330,7 +328,6 @@ class Policy(object):
             'cooldown': self.cooldown,
             'created_time': utils.format_time(self.created_time),
             'updated_time': utils.format_time(self.updated_time),
-            'deleted_time': utils.format_time(self.deleted_time),
             'data': self.data,
         }
         return pb_dict

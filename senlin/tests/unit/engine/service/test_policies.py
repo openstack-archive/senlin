@@ -65,7 +65,6 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual(policy_base.SHOULD, result['level'])
         self.assertIsNone(result['cooldown'])
         self.assertIsNone(result['updated_time'])
-        self.assertIsNone(result['deleted_time'])
         self.assertIsNotNone(result['created_time'])
         self.assertIsNotNone(result['id'])
 
@@ -223,21 +222,6 @@ class PolicyTest(base.SenlinTestCase):
                          "asc-nullsfirst, asc-nullslast, desc-nullsfirst, "
                          "desc-nullslast", six.text_type(ex))
 
-    def test_policy_list_show_deleted(self):
-        p1 = self.eng.policy_create(self.ctx, 'p-1', self.spec)
-        result = self.eng.policy_list(self.ctx)
-        self.assertEqual(1, len(result))
-        self.assertEqual(p1['id'], result[0]['id'])
-
-        self.eng.policy_delete(self.ctx, p1['id'])
-
-        result = self.eng.policy_list(self.ctx)
-        self.assertEqual(0, len(result))
-
-        result = self.eng.policy_list(self.ctx, show_deleted=True)
-        self.assertEqual(1, len(result))
-        self.assertEqual(p1['id'], result[0]['id'])
-
     def test_policy_list_with_filters(self):
         self.eng.policy_create(self.ctx, 'p-B', self.spec, cooldown=60)
         self.eng.policy_create(self.ctx, 'p-A', self.spec, cooldown=60)
@@ -301,10 +285,6 @@ class PolicyTest(base.SenlinTestCase):
         for identity in [pid[:6], 'p-1']:
             self.assertRaises(exception.PolicyNotFound,
                               self.eng.policy_find, self.ctx, identity)
-
-        # ID based finding is okay with show_deleted
-        result = self.eng.policy_find(self.ctx, pid, show_deleted=True)
-        self.assertIsNotNone(result)
 
     def test_policy_update_fields(self):
         p1 = self.eng.policy_create(self.ctx, 'p-1', self.spec, cooldown=60,

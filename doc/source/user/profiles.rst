@@ -62,11 +62,6 @@ to the command::
   | 9b127538-a675-4271-ab9b-f24f54cfe173 | pstack   | os.heat.stack-1.0  | 2015-06-25T12:59:01 |
   +--------------------------------------+----------+--------------------+---------------------+
 
-By default, the command :command:`profile-list` filters out profile objects
-that have been soft deleted. However, you can add the option :option:`-D`
-(or :option:`--show-deleted`) to the command to indicate that soft-deleted
-profiles should be included in the list.
-
 In case you have a huge collection of profile objects, you can limit the
 number of profiles returned from Senlin server, using the option :option:`-l
 <LIMIT>` (or :option:`--limit <LIMIT>`). For example::
@@ -123,7 +118,6 @@ Now you can create a profile using the following command::
   | Property     | Value                                                              |
   +--------------+--------------------------------------------------------------------+
   | created_time | 2015-07-01T03:13:23                                                |
-  | deleted_time | None                                                               |
   | id           | c0389712-9c1a-4c58-8ba7-caa61b34b8b0                               |
   | metadata     | {}                                                                 |
   | name         | my_stack                                                           |
@@ -208,7 +202,6 @@ command to show the properties of a profile::
   | Property     | Value                                                   |
   +--------------+---------------------------------------------------------+
   | created_time | 2015-07-01T03:18:58                                     |
-  | deleted_time | None                                                    |
   | id           | 70a36cc7-9fc7-460e-98f6-d44e3302e604                    |
   | metadata     | {}                                                      |
   | name         | my_server                                               |

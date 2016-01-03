@@ -40,8 +40,6 @@ A policy object has the following properties:
   when it is checked/enforced;
 - ``created_time``: timestamp of the object creation;
 - ``updated_time``: timestamp of last update to the object;
-- ``deleted_time``: timestamp of the object deletion; a non-empty value
-  indicates that the object has been deleted;
 - ``data``: a map containing some private data for the policy object;
 
 The policy enforcement levels are defined as an integer. Some predefined
@@ -97,7 +95,6 @@ combined:
     integers;
   * ``created_time``: timestamp when the object was created;
   * ``updated_time``: timestamp when the policy object was last updated;
-  * ``deleted_time``: timestamp when the policy object was deleted;
 
 - ``limit``: a number that restricts the maximum number of records to be
   returned from the query. It is useful for displaying the records in pages

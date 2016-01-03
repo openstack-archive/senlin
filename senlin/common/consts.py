@@ -72,46 +72,46 @@ CLUSTER_ATTRS = (
     CLUSTER_NAME, CLUSTER_PROFILE, CLUSTER_DESIRED_CAPACITY,
     CLUSTER_MIN_SIZE, CLUSTER_MAX_SIZE, CLUSTER_ID, CLUSTER_PARENT,
     CLUSTER_DOMAIN, CLUSTER_PROJECT, CLUSTER_USER,
-    CLUSTER_CREATED_TIME, CLUSTER_UPDATED_TIME, CLUSTER_DELETED_TIME,
+    CLUSTER_CREATED_TIME, CLUSTER_UPDATED_TIME,
     CLUSTER_STATUS, CLUSTER_STATUS_REASON, CLUSTER_TIMEOUT,
     CLUSTER_METADATA,
 ) = (
     'name', 'profile_id', 'desired_capacity',
     'min_size', 'max_size', 'id', 'parent',
     'domain', 'project', 'user',
-    'created_time', 'updated_time', 'deleted_time',
+    'created_time', 'updated_time',
     'status', 'status_reason', 'timeout',
     'metadata',
 )
 
 NODE_ATTRS = (
     NODE_INDEX, NODE_NAME, NODE_PROFILE_ID, NODE_CLUSTER_ID,
-    NODE_CREATED_TIME, NODE_UPDATED_TIME, NODE_DELETED_TIME,
+    NODE_CREATED_TIME, NODE_UPDATED_TIME,
     NODE_STATUS, NODE_ROLE, NODE_METADATA,
 ) = (
     'index', 'name', 'profile_id', 'cluster_id',
-    'created_time', 'updated_time', 'deleted_time',
+    'created_time', 'updated_time',
     'status', 'role', 'metadata',
 )
 
 PROFILE_ATTRS = (
     PROFILE_ID, PROFILE_NAME, PROFILE_TYPE, PROFILE_PERMISSION,
-    PROFILE_CREATED_TIME, PROFILE_UPDATED_TIME, PROFILE_DELETED_TIME,
+    PROFILE_CREATED_TIME, PROFILE_UPDATED_TIME,
     PROFILE_SPEC, PROFILE_METADATA, PROFILE_CONTEXT,
 ) = (
     'id', 'name', 'type', 'permission',
-    'created_time', 'updated_time', 'deleted_time',
+    'created_time', 'updated_time',
     'spec', 'metadata', 'context',
 )
 
 POLICY_ATTRS = (
     POLICY_ID, POLICY_NAME, POLICY_TYPE,
     POLICY_SPEC, POLICY_LEVEL, POLICY_COOLDOWN,
-    POLICY_CREATED_TIME, POLICY_UPDATED_TIME, POLICY_DELETED_TIME,
+    POLICY_CREATED_TIME, POLICY_UPDATED_TIME,
 ) = (
     'id', 'name', 'type',
     'spec', 'level', 'cooldown',
-    'created_time', 'updated_time', 'deleted_time',
+    'created_time', 'updated_time',
 )
 
 CLUSTER_POLICY_ATTRS = (
@@ -120,29 +120,13 @@ CLUSTER_POLICY_ATTRS = (
     'policy_id', 'priority', 'level', 'cooldown', 'enabled',
 )
 
-TRIGGER_ATTRS = (
-    TRIGGER_NAME, TRIGGER_TYPE, TRIGGER_DESC, TRIGGER_STATE,
-    TRIGGER_ENABLED, TRIGGER_SEVERITY, TRIGGER_SPEC, TRIGGER_DESCRIPTION,
-    TRIGGER_CREATED_TIME, TRIGGER_UPDATED_TIME, TRIGGER_DELETED_TIME,
-) = (
-    'name', 'type', 'desc', 'state',
-    'enabled', 'severity', 'spec', 'description',
-    'created_time', 'updated_time', 'deleted_time',
-)
-
 WEBHOOK_ATTRS = (
     WEBHOOK_NAME, WEBHOOK_OBJ_ID, WEBHOOK_OBJ_TYPE, WEBHOOK_ACTION,
     WEBHOOK_CREDENTIAL, WEBHOOK_PARAMS,
-    WEBHOOK_CREATED_TIME, WEBHOOK_DELETED_TIME,
+    WEBHOOK_CREATED_TIME,
 ) = (
     'name', 'obj_id', 'obj_type', 'action', 'credential',
-    'params', 'created_time', 'deleted_time',
-)
-
-WEBHOOK_OBJ_TYPES = (
-    WEBHOOK_OBJ_TYPE_CLUSTER, WEBHOOK_OBJ_TYPE_NODE,
-) = (
-    'cluster', 'node'
+    'params', 'created_time',
 )
 
 EVENT_ATTRS = (
@@ -160,13 +144,13 @@ ACTION_ATTRS = (
     ACTION_INTERVAL, ACTION_START_TIME, ACTION_END_TIME,
     ACTION_TIMEOUT, ACTION_STATUS, ACTION_STATUS_REASON,
     ACTION_INPUTS, ACTION_OUTPUTS, ACTION_DEPENDS_ON, ACTION_DEPENDED_BY,
-    ACTION_CREATED_TIME, ACTION_UPDATED_TIME, ACTION_DELETED_TIME,
+    ACTION_CREATED_TIME, ACTION_UPDATED_TIME,
 ) = (
     'name', 'target', 'action', 'cause',
     'interval', 'start_time', 'end_time',
     'timeout', 'status', 'status_reason',
     'inputs', 'outputs', 'depends_on', 'depended_by',
-    'created_time', 'updated_time', 'deleted_time',
+    'created_time', 'updated_time',
 )
 
 RECEIVER_TYPES = (
@@ -177,11 +161,11 @@ RECEIVER_TYPES = (
 
 RECEIVER_ATTRS = (
     RECEIVER_NAME, RECEIVER_TYPE, RECEIVER_CLUSTER, RECEIVER_CLUSTER_ID,
-    RECEIVER_CREATED_TIME, RECEIVER_UPDATED_TIME, RECEIVER_DELETED_TIME,
+    RECEIVER_CREATED_TIME, RECEIVER_UPDATED_TIME,
     RECEIVER_ACTOR, RECEIVER_ACTION, RECEIVER_PARAMS, RECEIVER_CHANNEL,
 ) = (
     'name', 'type', 'cluster', 'cluster_id',
-    'created_time', 'updated_time', 'deleted_time',
+    'created_time', 'updated_time',
     'actor', 'action', 'params', 'channel',
 )
 

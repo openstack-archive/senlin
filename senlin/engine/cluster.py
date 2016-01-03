@@ -67,7 +67,6 @@ class Cluster(object):
         self.init_time = kwargs.get('init_time', None)
         self.created_time = kwargs.get('created_time', None)
         self.updated_time = kwargs.get('updated_time', None)
-        self.deleted_time = kwargs.get('deleted_time', None)
 
         self.min_size = (kwargs.get('min_size') or
                          consts.CLUSTER_DEFAULT_MIN_SIZE)
@@ -95,7 +94,7 @@ class Cluster(object):
             self._load_runtime_data(context)
 
     def _load_runtime_data(self, context):
-        if self.id is None or self.deleted_time is not None:
+        if self.id is None:
             return
 
         policies = []
@@ -130,7 +129,6 @@ class Cluster(object):
             'init_time': self.init_time,
             'created_time': self.created_time,
             'updated_time': self.updated_time,
-            'deleted_time': self.deleted_time,
             'min_size': self.min_size,
             'max_size': self.max_size,
             'desired_capacity': self.desired_capacity,
@@ -173,7 +171,6 @@ class Cluster(object):
             'init_time': record.init_time,
             'created_time': record.created_time,
             'updated_time': record.updated_time,
-            'deleted_time': record.deleted_time,
             'min_size': record.min_size,
             'max_size': record.max_size,
             'next_index': record.next_index,
@@ -230,7 +227,6 @@ class Cluster(object):
             'init_time': utils.format_time(self.init_time),
             'created_time': utils.format_time(self.created_time),
             'updated_time': utils.format_time(self.updated_time),
-            'deleted_time': utils.format_time(self.deleted_time),
             'min_size': self.min_size,
             'max_size': self.max_size,
             'desired_capacity': self.desired_capacity,
@@ -265,9 +261,6 @@ class Cluster(object):
         if status == self.ACTIVE and self.status == self.CREATING:
             self.created_time = now
             values['created_time'] = now
-        elif status == self.DELETED:
-            self.deleted_time = now
-            values['deleted_time'] = now
         elif status == self.ACTIVE and self.status == self.UPDATING:
             self.updated_time = now
             values['updated_time'] = now

@@ -93,7 +93,6 @@ class Profile(object):
 
         self.created_time = kwargs.get('created_time', None)
         self.updated_time = kwargs.get('updated_time', None)
-        self.deleted_time = kwargs.get('deleted_time', None)
 
         self.spec_data = schema.Spec(self.spec_schema, self.spec)
         self.properties = schema.Spec(self.properties_schema,
@@ -122,7 +121,6 @@ class Profile(object):
             'metadata': record.meta_data,
             'created_time': record.created_time,
             'updated_time': record.updated_time,
-            'deleted_time': record.deleted_time,
         }
 
         return cls(record.name, record.spec, **kwargs)
@@ -308,7 +306,6 @@ class Profile(object):
             'metadata': self.metadata,
             'created_time': utils.format_time(self.created_time),
             'updated_time': utils.format_time(self.updated_time),
-            'deleted_time': utils.format_time(self.deleted_time),
         }
         return pb_dict
 

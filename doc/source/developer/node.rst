@@ -46,8 +46,6 @@ properties are always available on a node:
 - ``init_time``: The timestamp when the node object was initialized.
 - ``created_time``: The timestamp when the node was created.
 - ``updated_time``: The timestamp when last time the node was updated.
-- ``deleted_time``: The timestamp when the cluster is deleted. Once this
-  property is set to a non-empty value, the cluster is regarded as deleted.
 - ``metadata``: A list of key-value pairs that are associated with the node.
 - ``physical_id``: The UUID of the physical object that backs this node. The
   property value is empty if there is no physical objects associated with it.

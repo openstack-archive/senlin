@@ -15,7 +15,6 @@ from oslo_config import cfg
 import six
 
 from senlin.common import exception
-from senlin.common import utils as common_utils
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import cluster as clusterm
 from senlin.engine import cluster_policy as cp_mod
@@ -76,7 +75,6 @@ class TestCluster(base.SenlinTestCase):
         self.assertIsNone(cluster.init_time)
         self.assertIsNone(cluster.created_time)
         self.assertIsNone(cluster.updated_time)
-        self.assertIsNone(cluster.deleted_time)
 
         self.assertEqual(0, cluster.min_size)
         self.assertEqual(-1, cluster.max_size)
@@ -133,7 +131,6 @@ class TestCluster(base.SenlinTestCase):
         self.assertIsNotNone(result.init_time)
         self.assertIsNone(result.created_time)
         self.assertIsNone(result.updated_time)
-        self.assertIsNone(result.deleted_time)
 
         self.assertEqual(0, result.min_size)
         self.assertEqual(-1, result.max_size)
@@ -211,7 +208,6 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual(cluster.init_time, result.init_time)
         self.assertEqual(cluster.created_time, result.created_time)
         self.assertEqual(cluster.updated_time, result.updated_time)
-        self.assertEqual(cluster.deleted_time, result.deleted_time)
         self.assertEqual(0, result.min_size)
         self.assertEqual(-1, result.max_size)
         self.assertEqual(cluster.desired_capacity, result.desired_capacity)
@@ -265,7 +261,6 @@ class TestCluster(base.SenlinTestCase):
             'init_time': cluster.init_time,
             'created_time': cluster.created_time,
             'updated_time': cluster.updated_time,
-            'deleted_time': cluster.deleted_time,
             'min_size': 0,
             'max_size': -1,
             'desired_capacity': cluster.desired_capacity,
@@ -280,16 +275,6 @@ class TestCluster(base.SenlinTestCase):
         }
 
         result = clusterm.Cluster.load(self.context, cluster_id='CLUSTER123')
-        self.assertEqual(expected, result.to_dict())
-
-        db_api.cluster_delete(self.context, cluster_id='CLUSTER123')
-        result = clusterm.Cluster.load(self.context, cluster_id='CLUSTER123',
-                                       show_deleted=True)
-        expected.update({'profile_name': None})
-        expected.update({'status': 'DELETED'})
-        deleted_time = common_utils.format_time(cluster.deleted_time)
-        expected.update({'deleted_time': deleted_time})
-        expected.update({'status_reason': 'Cluster deletion succeeded'})
         self.assertEqual(expected, result.to_dict())
 
     def test_cluster_set_status(self):
@@ -341,7 +326,6 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual('Deletion succeeded', cluster.status_reason)
         self.assertIsNotNone(cluster.created_time)
         self.assertIsNotNone(cluster.updated_time)
-        self.assertIsNotNone(cluster.deleted_time)
 
     def test_cluster_set_status_with_new_profile(self):
         cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,

@@ -44,7 +44,6 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
             {
                 'action': 'NODE_CREATE',
                 'cause': 'RPC_Request',
-                'deleted_time': None,
                 'depended_by': [],
                 'depends_on': [],
                 'end_time': 1425555000.0,
@@ -203,7 +202,6 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         engine_resp = {
             'action': 'NODE_CREATE',
             'cause': 'RPC_Request',
-            'deleted_time': None,
             'depended_by': [],
             'depends_on': [],
             'end_time': 1425555000.0,
