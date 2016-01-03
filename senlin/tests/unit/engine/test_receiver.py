@@ -48,8 +48,8 @@ class TestReceiver(base.SenlinTestCase):
             'user': self.context.user,
             'project': self.context.project,
             'domain': self.context.domain,
-            'created_time': timeutils.utcnow(),
-            'updated_time': None,
+            'created_at': timeutils.utcnow(),
+            'updated_at': None,
             'actor': self.actor,
             'params': self.params,
             'channel': None,
@@ -64,8 +64,8 @@ class TestReceiver(base.SenlinTestCase):
             'user': 'test-user',
             'project': 'test-project',
             'domain': 'test-domain',
-            'created_time': timeutils.utcnow(),
-            'updated_time': None,
+            'created_at': timeutils.utcnow(),
+            'updated_at': None,
             'actor': self.actor,
             'params': self.params,
             'channel': {'alarm_url': 'http://url1'},
@@ -82,8 +82,8 @@ class TestReceiver(base.SenlinTestCase):
         self.assertEqual(kwargs['project'], receiver.project)
         self.assertEqual(kwargs['domain'], receiver.domain)
 
-        self.assertEqual(kwargs['created_time'], receiver.created_time)
-        self.assertEqual(kwargs['updated_time'], receiver.updated_time)
+        self.assertEqual(kwargs['created_at'], receiver.created_at)
+        self.assertEqual(kwargs['updated_at'], receiver.updated_at)
 
         self.assertEqual('FAKE_CLUSTER', receiver.cluster_id)
         self.assertEqual('test-action', receiver.action)
@@ -101,8 +101,8 @@ class TestReceiver(base.SenlinTestCase):
         self.assertEqual('', receiver.project)
         self.assertEqual('', receiver.domain)
 
-        self.assertIsNone(receiver.created_time)
-        self.assertIsNone(receiver.updated_time)
+        self.assertIsNone(receiver.created_at)
+        self.assertIsNone(receiver.updated_at)
 
         self.assertEqual('FAKE_CLUSTER', receiver.cluster_id)
         self.assertEqual('test-action', receiver.action)
@@ -130,8 +130,8 @@ class TestReceiver(base.SenlinTestCase):
         self.assertEqual(receiver.user, result.user)
         self.assertEqual(receiver.project, result.project)
         self.assertEqual(receiver.domain, result.domain)
-        self.assertEqual(receiver.created_time, result.created_time)
-        self.assertEqual(receiver.updated_time, result.updated_time)
+        self.assertEqual(receiver.created_at, result.created_at)
+        self.assertEqual(receiver.updated_at, result.updated_at)
         self.assertEqual(receiver.action, result.action)
         self.assertEqual(receiver.actor, result.actor)
         self.assertEqual(receiver.params, result.params)
@@ -155,8 +155,8 @@ class TestReceiver(base.SenlinTestCase):
         self.assertEqual(receiver.project, result.project)
         self.assertEqual(receiver.domain, result.domain)
 
-        self.assertEqual(receiver.created_time, result.created_time)
-        self.assertEqual(receiver.updated_time, result.updated_time)
+        self.assertEqual(receiver.created_at, result.created_at)
+        self.assertEqual(receiver.updated_at, result.updated_at)
 
         self.assertEqual(receiver.cluster_id, result.cluster_id)
         self.assertEqual(receiver.actor, result.actor)
@@ -236,8 +236,8 @@ class TestReceiver(base.SenlinTestCase):
             'action': receiver.action,
             'actor': receiver.actor,
             'params': receiver.params,
-            'created_time': common_utils.format_time(receiver.created_time),
-            'updated_time': receiver.updated_time,
+            'created_at': common_utils.format_time(receiver.created_at),
+            'updated_at': receiver.updated_at,
             'channel': None,
         }
 

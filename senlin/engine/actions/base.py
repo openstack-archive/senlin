@@ -145,8 +145,8 @@ class Action(object):
         self.inputs = kwargs.get('inputs', {})
         self.outputs = kwargs.get('outputs', {})
 
-        self.created_time = kwargs.get('created_time', None)
-        self.updated_time = kwargs.get('updated_time', None)
+        self.created_at = kwargs.get('created_at', None)
+        self.updated_at = kwargs.get('updated_at', None)
 
         self.data = kwargs.get('data', {})
 
@@ -170,18 +170,18 @@ class Action(object):
             'status_reason': self.status_reason,
             'inputs': self.inputs,
             'outputs': self.outputs,
-            'created_time': self.created_time,
-            'updated_time': self.updated_time,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at,
             'data': self.data,
         }
 
         if self.id:
-            self.updated_time = timestamp
-            values['updated_time'] = timestamp
+            self.updated_at = timestamp
+            values['updated_at'] = timestamp
             db_api.action_update(context, self.id, values)
         else:
-            self.created_time = timestamp
-            values['created_time'] = timestamp
+            self.created_at = timestamp
+            values['created_at'] = timestamp
             action = db_api.action_create(context, values)
             self.id = action.id
 
@@ -208,8 +208,8 @@ class Action(object):
             'status_reason': record.status_reason,
             'inputs': record.inputs or {},
             'outputs': record.outputs or {},
-            'created_time': record.created_time,
-            'updated_time': record.updated_time,
+            'created_at': record.created_at,
+            'updated_at': record.updated_at,
             'data': record.data,
         }
 
@@ -454,8 +454,8 @@ class Action(object):
             'outputs': self.outputs,
             'depends_on': dep_on,
             'depended_by': dep_by,
-            'created_time': self.created_time,
-            'updated_time': self.updated_time,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at,
             'data': self.data,
         }
         return action_dict

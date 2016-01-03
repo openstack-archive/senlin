@@ -175,9 +175,10 @@ class ClusterPolicies(BASE, SenlinBase):
     last_op = Column(DateTime)
 
 
-class Receiver(BASE, SenlinBase):
+class Receiver(BASE, TimestampMixin, models.ModelBase):
     """Represents a receiver associated with a Senlin cluster."""
 
+    __table_args__ = {'mysql_engine': 'InnoDB'}
     __tablename__ = 'receiver'
 
     id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
@@ -186,9 +187,6 @@ class Receiver(BASE, SenlinBase):
     user = Column(String(32))
     project = Column(String(32))
     domain = Column(String(32))
-
-    created_time = Column(DateTime)
-    updated_time = Column(DateTime)
 
     cluster_id = Column(String(36), ForeignKey('cluster.id'))
     actor = Column(types.Dict)
@@ -220,9 +218,10 @@ class ActionDependency(BASE, SenlinBase):
                        nullable=False)
 
 
-class Action(BASE, SenlinBase):
-    '''An action persisted in the Senlin database.'''
+class Action(BASE, TimestampMixin, models.ModelBase):
+    """An action persisted in the Senlin database."""
 
+    __table_args__ = {'mysql_engine': 'InnoDB'}
     __tablename__ = 'action'
 
     id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
@@ -242,8 +241,6 @@ class Action(BASE, SenlinBase):
     control = Column(String(255))
     inputs = Column(types.Dict)
     outputs = Column(types.Dict)
-    created_time = Column(DateTime)
-    updated_time = Column(DateTime)
     data = Column(types.Dict)
 
 

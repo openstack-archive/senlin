@@ -34,8 +34,8 @@ class DBAPIReceiverTest(base.SenlinTestCase):
             'user': ctx.user,
             'project': ctx.project,
             'domain': ctx.domain,
-            'created_time': None,
-            'updated_time': None,
+            'created_at': None,
+            'updated_at': None,
             'cluster_id': cluster_id or self.cluster_id,
             'action': action or self.action,
             'actor': {'username': 'john', 'password': 'secrete1'},
@@ -55,8 +55,8 @@ class DBAPIReceiverTest(base.SenlinTestCase):
         self.assertEqual(self.ctx.user, r.user)
         self.assertEqual(self.ctx.project, r.project)
         self.assertEqual(self.ctx.domain, r.domain)
-        self.assertIsNone(r.created_time)
-        self.assertIsNone(r.updated_time)
+        self.assertIsNone(r.created_at)
+        self.assertIsNone(r.updated_at)
         self.assertEqual(self.action, r.action)
         self.assertEqual({'username': 'john', 'password': 'secrete1'}, r.actor)
         self.assertEqual({'key1': 'value1'}, r.params)
@@ -145,7 +145,7 @@ class DBAPIReceiverTest(base.SenlinTestCase):
     def test_receiver_get_all_with_limit_marker(self):
         receiver_ids = ['receiver1', 'receiver2', 'receiver3']
         for v in receiver_ids:
-            self._create_receiver(self.ctx, id=v, created_time=tu.utcnow())
+            self._create_receiver(self.ctx, id=v, created_at=tu.utcnow())
 
         receivers = db_api.receiver_get_all(self.ctx, limit=1)
         self.assertEqual(1, len(receivers))
@@ -175,13 +175,13 @@ class DBAPIReceiverTest(base.SenlinTestCase):
             self._create_receiver(self.ctx, id=v)
 
         mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
-        sort_keys = ['name', 'type', 'cluster_id', 'action', 'created_time']
+        sort_keys = ['name', 'type', 'cluster_id', 'action', 'created_at']
 
         db_api.receiver_get_all(self.ctx, sort_keys=sort_keys)
         args = mock_paginate.call_args[0]
         used_sort_keys = set(args[3])
         expected_keys = set(['id', 'name', 'type', 'cluster_id', 'action',
-                             'created_time'])
+                             'created_at'])
         self.assertEqual(expected_keys, used_sort_keys)
 
     def test_receiver_get_all_sort_keys_wont_change(self):

@@ -55,8 +55,8 @@ class ActionBaseTest(base.SenlinTestCase):
             'status_reason': 'FAKE_STATUS_REASON',
             'inputs': {'param': 'value'},
             'outputs': {'key': 'output_value'},
-            'created_time': None,
-            'updated_time': None,
+            'created_at': None,
+            'updated_at': None,
             'data': {'data_key': 'data_value'},
         }
 
@@ -76,8 +76,8 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual('', obj.status_reason)
         self.assertEqual({}, obj.inputs)
         self.assertEqual({}, obj.outputs)
-        self.assertIsNone(obj.created_time)
-        self.assertIsNone(obj.updated_time)
+        self.assertIsNone(obj.created_at)
+        self.assertIsNone(obj.updated_at)
         self.assertEqual({}, obj.data)
 
     @mock.patch.object(node_mod.Node, 'load')
@@ -91,8 +91,8 @@ class ActionBaseTest(base.SenlinTestCase):
         values = copy.deepcopy(self.action_values)
         values['id'] = 'FAKE_ID'
         values['description'] = 'FAKE_DESC'
-        values['created_time'] = 'FAKE_CREATED_TIME'
-        values['updated_time'] = 'FAKE_UPDATED_TIME'
+        values['created_at'] = 'FAKE_CREATED_TIME'
+        values['updated_at'] = 'FAKE_UPDATED_TIME'
 
         obj = action_base.Action('OBJID', 'OBJECT_ACTION', self.ctx,
                                  **values)
@@ -111,8 +111,8 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual('FAKE_STATUS_REASON', obj.status_reason)
         self.assertEqual({'param': 'value'}, obj.inputs)
         self.assertEqual({'key': 'output_value'}, obj.outputs)
-        self.assertEqual('FAKE_CREATED_TIME', obj.created_time)
-        self.assertEqual('FAKE_UPDATED_TIME', obj.updated_time)
+        self.assertEqual('FAKE_CREATED_TIME', obj.created_at)
+        self.assertEqual('FAKE_UPDATED_TIME', obj.updated_at)
         self.assertEqual({'data_key': 'data_value'}, obj.data)
 
     @mock.patch.object(context.RequestContext, 'from_dict')
@@ -140,15 +140,15 @@ class ActionBaseTest(base.SenlinTestCase):
         obj = action_base.Action('OBJID', 'OBJECT_ACTION', self.ctx,
                                  **values)
 
-        self.assertIsNone(obj.created_time)
-        self.assertIsNone(obj.updated_time)
+        self.assertIsNone(obj.created_at)
+        self.assertIsNone(obj.updated_at)
 
         # store for creation
         res = obj.store(self.ctx)
         self.assertIsNotNone(res)
         self.assertEqual(obj.id, res)
-        self.assertIsNotNone(obj.created_time)
-        self.assertIsNone(obj.updated_time)
+        self.assertIsNotNone(obj.created_at)
+        self.assertIsNone(obj.updated_at)
 
     def test_action_store_for_update(self):
         values = copy.deepcopy(self.action_values)
@@ -157,16 +157,16 @@ class ActionBaseTest(base.SenlinTestCase):
                                  **values)
         obj_id = obj.store(self.ctx)
         self.assertIsNotNone(obj_id)
-        self.assertIsNotNone(obj.created_time)
-        self.assertIsNone(obj.updated_time)
+        self.assertIsNotNone(obj.created_at)
+        self.assertIsNone(obj.updated_at)
 
         # store for creation
         res = obj.store(self.ctx)
         self.assertIsNotNone(res)
         self.assertEqual(obj_id, res)
         self.assertEqual(obj.id, res)
-        self.assertIsNotNone(obj.created_time)
-        self.assertIsNotNone(obj.updated_time)
+        self.assertIsNotNone(obj.created_at)
+        self.assertIsNotNone(obj.updated_at)
 
     def test_from_db_record(self):
         values = copy.deepcopy(self.action_values)
@@ -192,8 +192,8 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual(obj.status_reason, action_obj.status_reason)
         self.assertEqual(obj.inputs, action_obj.inputs)
         self.assertEqual(obj.outputs, action_obj.outputs)
-        self.assertEqual(obj.created_time, action_obj.created_time)
-        self.assertEqual(obj.updated_time, action_obj.updated_time)
+        self.assertEqual(obj.created_at, action_obj.created_at)
+        self.assertEqual(obj.updated_at, action_obj.updated_at)
         self.assertEqual(obj.data, action_obj.data)
 
     def test_from_db_record_with_empty_fields(self):
@@ -581,8 +581,8 @@ class ActionBaseTest(base.SenlinTestCase):
             'outputs': {'key': 'output_value'},
             'depends_on': ['ACTION_1'],
             'depended_by': ['ACTION_2'],
-            'created_time': None,
-            'updated_time': None,
+            'created_at': None,
+            'updated_at': None,
             'data': {'data_key': 'data_value'},
         }
 

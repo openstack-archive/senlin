@@ -964,7 +964,7 @@ def action_get_all(context, filters=None, limit=None, marker=None,
         consts.ACTION_NAME: models.Action.name.key,
         consts.ACTION_TARGET: models.Action.target.key,
         consts.ACTION_ACTION: models.Action.action.key,
-        consts.ACTION_CREATED_TIME: models.Action.created_time.key,
+        consts.ACTION_CREATED_AT: models.Action.created_at.key,
         consts.ACTION_STATUS: models.Action.status.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
@@ -973,7 +973,7 @@ def action_get_all(context, filters=None, limit=None, marker=None,
     return _paginate_query(context, query, models.Action,
                            limit=limit, marker=marker,
                            sort_keys=keys, sort_dir=sort_dir,
-                           default_sort_keys=['created_time']).all()
+                           default_sort_keys=['created_at']).all()
 
 
 def dependency_get_depended(context, action_id):
@@ -1245,7 +1245,7 @@ def receiver_get_all(context, limit=None, marker=None, filters=None,
         consts.RECEIVER_TYPE: models.Receiver.type.key,
         consts.RECEIVER_ACTION: models.Receiver.action.key,
         consts.RECEIVER_CLUSTER_ID: models.Receiver.cluster_id.key,
-        consts.RECEIVER_CREATED_TIME: models.Receiver.created_time.key,
+        consts.RECEIVER_CREATED_AT: models.Receiver.created_at.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
     query = db_filters.exact_filter(query, models.Receiver, filters)

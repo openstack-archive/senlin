@@ -144,13 +144,13 @@ ACTION_ATTRS = (
     ACTION_INTERVAL, ACTION_START_TIME, ACTION_END_TIME,
     ACTION_TIMEOUT, ACTION_STATUS, ACTION_STATUS_REASON,
     ACTION_INPUTS, ACTION_OUTPUTS, ACTION_DEPENDS_ON, ACTION_DEPENDED_BY,
-    ACTION_CREATED_TIME, ACTION_UPDATED_TIME,
+    ACTION_CREATED_AT, ACTION_UPDATED_AT,
 ) = (
     'name', 'target', 'action', 'cause',
     'interval', 'start_time', 'end_time',
     'timeout', 'status', 'status_reason',
     'inputs', 'outputs', 'depends_on', 'depended_by',
-    'created_time', 'updated_time',
+    'created_at', 'updated_at',
 )
 
 RECEIVER_TYPES = (
@@ -161,11 +161,11 @@ RECEIVER_TYPES = (
 
 RECEIVER_ATTRS = (
     RECEIVER_NAME, RECEIVER_TYPE, RECEIVER_CLUSTER, RECEIVER_CLUSTER_ID,
-    RECEIVER_CREATED_TIME, RECEIVER_UPDATED_TIME,
+    RECEIVER_CREATED_AT, RECEIVER_UPDATED_AT,
     RECEIVER_ACTOR, RECEIVER_ACTION, RECEIVER_PARAMS, RECEIVER_CHANNEL,
 ) = (
     'name', 'type', 'cluster', 'cluster_id',
-    'created_time', 'updated_time',
+    'created_at', 'updated_at',
     'actor', 'action', 'params', 'channel',
 )
 

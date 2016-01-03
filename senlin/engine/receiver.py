@@ -51,8 +51,8 @@ class Receiver(object):
         self.project = kwargs.get('project', '')
         self.domain = kwargs.get('domain', '')
 
-        self.created_time = kwargs.get('created_time', None)
-        self.updated_time = kwargs.get('updated_time', None)
+        self.created_at = kwargs.get('created_at', None)
+        self.updated_at = kwargs.get('updated_at', None)
 
         self.cluster_id = cluster_id
         self.action = action
@@ -65,7 +65,7 @@ class Receiver(object):
 
         :param context: Context for DB operations.
         """
-        self.created_time = timeutils.utcnow()
+        self.created_at = timeutils.utcnow()
         values = {
             'id': self.id,
             'name': self.name,
@@ -73,8 +73,8 @@ class Receiver(object):
             'user': self.user,
             'project': self.project,
             'domain': self.domain,
-            'created_time': self.created_time,
-            'updated_time': self.updated_time,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at,
             'cluster_id': self.cluster_id,
             'actor': self.actor,
             'action': self.action,
@@ -123,8 +123,8 @@ class Receiver(object):
             'user': record.user,
             'project': record.project,
             'domain': record.domain,
-            'created_time': record.created_time,
-            'updated_time': record.updated_time,
+            'created_at': record.created_at,
+            'updated_at': record.updated_at,
             'actor': record.actor,
             'params': record.params,
             'channel': record.channel,
@@ -175,8 +175,8 @@ class Receiver(object):
             'user': self.user,
             'project': self.project,
             'domain': self.domain,
-            'created_time': utils.format_time(self.created_time),
-            'updated_time': utils.format_time(self.updated_time),
+            'created_at': utils.format_time(self.created_at),
+            'updated_at': utils.format_time(self.updated_at),
             'cluster_id': self.cluster_id,
             'actor': self.actor,
             'action': self.action,
