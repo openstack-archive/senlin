@@ -342,12 +342,15 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         m_conn.assert_called_once_with(cluster)
         m_load.assert_called_once_with('action_context', cid, policy.id)
         m_extract.assert_called_once_with(cp_data)
-        calls_node_load = [mock.call('action_context', node_id=n,
-                                     show_deleted=True
-                                     ) for n in ['NODE1_ID', 'NODE2_ID']]
+        calls_node_load = [
+            mock.call('action_context', node_id='NODE1_ID'),
+            mock.call('action_context', node_id='NODE2_ID')
+        ]
         m_node_load.assert_has_calls(calls_node_load)
-        calls_member_add = [mock.call(n, 'LB_ID', 'POOL_ID', 80, 'test-subnet'
-                                      ) for n in [node1, node2]]
+        calls_member_add = [
+            mock.call(node1, 'LB_ID', 'POOL_ID', 80, 'test-subnet'),
+            mock.call(node2, 'LB_ID', 'POOL_ID', 80, 'test-subnet'),
+        ]
         self.lb_driver.member_add.assert_has_calls(calls_member_add)
         node1.store.assert_called_once_with('action_context')
         node2.store.assert_called_once_with('action_context')
@@ -459,8 +462,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         m_load.assert_called_once_with('action_context', cluster_id, policy.id)
         m_extract.assert_called_once_with(cp_data)
         calls_node_load = [
-            mock.call(mock.ANY, node_id='NODE1_ID', show_deleted=True),
-            mock.call(mock.ANY, node_id='NODE2_ID', show_deleted=True)
+            mock.call(mock.ANY, node_id='NODE1_ID'),
+            mock.call(mock.ANY, node_id='NODE2_ID')
         ]
         m_node_load.assert_has_calls(calls_node_load)
         calls_member_del = [

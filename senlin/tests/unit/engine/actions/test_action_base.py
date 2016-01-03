@@ -266,8 +266,7 @@ class ActionBaseTest(base.SenlinTestCase):
 
         results = action_base.Action.load_all(
             self.ctx, filters='FAKE_FILTER', limit='FAKE_LIMIT',
-            marker='FAKE_MARKER', sort_keys='FAKE_KEYS', sort_dir='FAKE_DIR',
-            show_deleted='FAKE_SHOW_DELETED')
+            marker='FAKE_MARKER', sort_keys='FAKE_KEYS', sort_dir='FAKE_DIR')
 
         # the following line is important, or else the generator won't get
         # called.
@@ -275,7 +274,7 @@ class ActionBaseTest(base.SenlinTestCase):
         mock_call.assert_called_once_with(
             self.ctx, filters='FAKE_FILTER', limit='FAKE_LIMIT',
             marker='FAKE_MARKER', sort_keys='FAKE_KEYS', sort_dir='FAKE_DIR',
-            show_deleted='FAKE_SHOW_DELETED')
+            show_deleted=False)
 
     def test_action_delete(self):
         result = action_base.Action.delete(self.ctx, 'non-existent')

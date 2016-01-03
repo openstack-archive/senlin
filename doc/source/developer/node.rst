@@ -128,8 +128,6 @@ individually or combined:
   either ``asc`` or ``desc`` as its value.
 - ``sort_keys``: A string or a list of strings where each string gives a node
   property name used for sorting.
-- ``show_deleted``: A boolean indicating whether deleted nodes should be
-  included in the results. The default is False.
 - ``show_nested``: A boolean indicating whether nested clusters should be
   included in the results. The default is True. This feature is yet to be
   supported.

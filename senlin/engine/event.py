@@ -109,15 +109,13 @@ class Event(object):
 
     @classmethod
     def load_all(cls, context, filters=None, limit=None, marker=None,
-                 sort_keys=None, sort_dir=None, project_safe=True,
-                 show_deleted=False):
+                 sort_keys=None, sort_dir=None, project_safe=True):
         '''Retrieve all events from database.'''
 
         records = db_api.event_get_all(context, limit=limit, marker=marker,
                                        sort_keys=sort_keys, sort_dir=sort_dir,
                                        filters=filters,
-                                       project_safe=project_safe,
-                                       show_deleted=show_deleted)
+                                       project_safe=project_safe)
 
         for record in records:
             yield cls.from_db_record(record)

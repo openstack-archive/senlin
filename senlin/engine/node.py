@@ -157,28 +157,24 @@ class Node(object):
                    context=context, **kwargs)
 
     @classmethod
-    def load(cls, context, node_id=None, node=None, show_deleted=False,
-             project_safe=True):
+    def load(cls, context, node_id=None, node=None, project_safe=True):
         '''Retrieve a node from database.'''
         if node is None:
-            node = db_api.node_get(context, node_id,
-                                   show_deleted=show_deleted,
-                                   project_safe=project_safe)
+            node = db_api.node_get(context, node_id, project_safe=project_safe)
             if node is None:
                 raise exception.NodeNotFound(node=node_id)
 
         return cls._from_db_record(context, node)
 
     @classmethod
-    def load_all(cls, context, cluster_id=None, show_deleted=False,
+    def load_all(cls, context, cluster_id=None, filters=None,
                  limit=None, marker=None, sort_keys=None, sort_dir=None,
-                 filters=None, project_safe=True):
+                 project_safe=True):
         '''Retrieve all nodes of from database.'''
         records = db_api.node_get_all(context, cluster_id=cluster_id,
-                                      show_deleted=show_deleted,
+                                      filters=filters,
                                       limit=limit, marker=marker,
                                       sort_keys=sort_keys, sort_dir=sort_dir,
-                                      filters=filters,
                                       project_safe=project_safe)
 
         return [cls._from_db_record(context, record) for record in records]

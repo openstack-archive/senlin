@@ -216,12 +216,10 @@ class Action(object):
         return cls(record.target, record.action, context=context, **kwargs)
 
     @classmethod
-    def load(cls, context, action_id=None, db_action=None, show_deleted=False):
+    def load(cls, context, action_id=None, db_action=None):
         '''Retrieve an action from database.'''
         if db_action is None:
-            db_action = db_api.action_get(context, action_id,
-                                          show_deleted=show_deleted)
-
+            db_action = db_api.action_get(context, action_id)
             if db_action is None:
                 raise exception.ActionNotFound(action=action_id)
 
@@ -229,14 +227,13 @@ class Action(object):
 
     @classmethod
     def load_all(cls, context, filters=None, limit=None, marker=None,
-                 sort_keys=None, sort_dir=None, show_deleted=False):
+                 sort_keys=None, sort_dir=None):
         '''Retrieve all actions of from database.'''
 
         records = db_api.action_get_all(context, filters=filters,
                                         limit=limit, marker=marker,
                                         sort_keys=sort_keys,
-                                        sort_dir=sort_dir,
-                                        show_deleted=show_deleted)
+                                        sort_dir=sort_dir)
 
         for record in records:
             yield cls._from_db_record(record)

@@ -134,21 +134,18 @@ class Receiver(object):
 
     @classmethod
     def load(cls, context, receiver_id=None, receiver_obj=None,
-             show_deleted=False, project_safe=True):
+             project_safe=True):
         """Retrieve a receiver from database.
 
         :param context: the context for db operations.
         :param receiver_id: the unique ID of the receiver to retrieve.
         :param receiver_obj: the DB object of a receiver to retrieve.
-        :param show_deleted: boolean indicating whether deleted objects
-                             should be returned or not. Default is False.
         :param project_safe: Optional parameter specifying whether only
                              receiver belong to the context.project will be
                              loaded.
         """
         if receiver_obj is None:
             receiver_obj = db_api.receiver_get(context, receiver_id,
-                                               show_deleted=show_deleted,
                                                project_safe=project_safe)
             if receiver_obj is None:
                 raise exception.ReceiverNotFound(receiver=receiver_id)
@@ -157,12 +154,10 @@ class Receiver(object):
 
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort_keys=None,
-                 sort_dir=None, filters=None, show_deleted=False,
-                 project_safe=True):
+                 sort_dir=None, filters=None, project_safe=True):
         """Retrieve all receivers from database."""
 
-        records = db_api.receiver_get_all(context, show_deleted=show_deleted,
-                                          limit=limit, marker=marker,
+        records = db_api.receiver_get_all(context, limit=limit, marker=marker,
                                           sort_keys=sort_keys,
                                           sort_dir=sort_dir,
                                           filters=filters,

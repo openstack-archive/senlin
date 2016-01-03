@@ -267,8 +267,6 @@ following query parameters in the query string:
   either ``asc`` or ``desc`` as its value.
 - ``sort_keys``: A string or a list of strings where each string gives an
   action property name used for sorting.
-- ``show_deleted``: A boolean indicating whether deleted actions should be
-  included in the results. The default is False.
 
 
 Getting An Action

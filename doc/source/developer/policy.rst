@@ -106,8 +106,6 @@ combined:
   either ``asc`` or ``desc`` as its value.
 - ``sort_keys``: A string or a list of strings where each string gives a
   policy property name used for sorting.
-- ``show_deleted``: A boolean indicating whether deleted policies should be
-  included in the results. The default is False.
 
 The Senlin API performs some basic checks on the data type and values of the
 provided parameters and then passes the request to Senlin engine. When there

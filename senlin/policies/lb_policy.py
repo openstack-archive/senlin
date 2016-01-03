@@ -296,9 +296,12 @@ class LoadBalancingPolicy(base.Policy):
         subnet = self.pool_spec.get(self.POOL_SUBNET)
 
         # Remove nodes that have been deleted from lb pool
+        # FIXME(someone): This logic is broken since we remove soft-delete
+        #                 support from DB. The correct logic should be that
+        #                 nodes are removed from load-balancer *before* nodes
+        #                 are deleted.
         for node_id in nodes_removed:
-            node = node_mod.Node.load(action.context, node_id=node_id,
-                                      show_deleted=True)
+            node = node_mod.Node.load(action.context, node_id=node_id)
             member_id = node.data.get('lb_member', None)
             if member_id is None:
                 LOG.warning(_LW('Node %(n)s not found in lb pool %(p)s.'),
@@ -314,8 +317,7 @@ class LoadBalancingPolicy(base.Policy):
 
         # Add new nodes to lb pool
         for node_id in nodes_added:
-            node = node_mod.Node.load(action.context, node_id=node_id,
-                                      show_deleted=True)
+            node = node_mod.Node.load(action.context, node_id=node_id)
             member_id = node.data.get('lb_member', None)
             if member_id:
                 LOG.warning(_LW('Node %(n)s already in lb pool %(p)s.'),

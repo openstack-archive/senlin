@@ -199,15 +199,12 @@ class Policy(object):
 
     @classmethod
     def load_all(cls, context, limit=None, sort_keys=None, marker=None,
-                 sort_dir=None, filters=None, show_deleted=False,
-                 project_safe=True):
+                 sort_dir=None, filters=None, project_safe=True):
         '''Retrieve all policies from database.'''
 
         records = db_api.policy_get_all(context, limit=limit, marker=marker,
-                                        sort_keys=sort_keys,
-                                        sort_dir=sort_dir,
+                                        sort_keys=sort_keys, sort_dir=sort_dir,
                                         filters=filters,
-                                        show_deleted=show_deleted,
                                         project_safe=project_safe)
 
         for record in records:

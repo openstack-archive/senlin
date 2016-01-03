@@ -185,12 +185,10 @@ class Cluster(object):
                    context=context, **kwargs)
 
     @classmethod
-    def load(cls, context, cluster_id=None, cluster=None, show_deleted=False,
-             project_safe=True):
+    def load(cls, context, cluster_id=None, cluster=None, project_safe=True):
         '''Retrieve a cluster from database.'''
         if cluster is None:
             cluster = db_api.cluster_get(context, cluster_id,
-                                         show_deleted=show_deleted,
                                          project_safe=project_safe)
             if cluster is None:
                 raise exception.ClusterNotFound(cluster=cluster_id)
@@ -200,7 +198,7 @@ class Cluster(object):
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort_keys=None,
                  sort_dir=None, filters=None, project_safe=True,
-                 show_deleted=False, show_nested=False):
+                 show_nested=False):
         '''Retrieve all clusters from database.'''
 
         records = db_api.cluster_get_all(context, limit=limit, marker=marker,
@@ -208,7 +206,6 @@ class Cluster(object):
                                          sort_dir=sort_dir,
                                          filters=filters,
                                          project_safe=project_safe,
-                                         show_deleted=show_deleted,
                                          show_nested=show_nested)
 
         for record in records:

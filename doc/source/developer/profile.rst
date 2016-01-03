@@ -102,8 +102,6 @@ When querying the profiles, users can provide any of the following parameters:
   sorted;
 - ``sort_dir``: a string giving the sorting direction which can take value
   ``asc`` or ``desc``.
-- ``show_deleted``: a boolean flag indicating whether a profile list include
-  those deleted ones.
 
 If there are profiles matching the query criteria, Senlin API returns a list
 named ``profiles`` where each entry is a JSON map containing details about a
@@ -148,7 +146,3 @@ profile when requesting a profile object to be deleted. Senlin engine will
 check if there are still any clusters or nodes using the specific profile.
 Since a profile in use cannot be deleted, if any such clusters or nodes are
 found, an error message will be returned to user.
-
-In current design, Senlin profiles are always soft-deleted. That means you can
-still list them using the ``show_deleted`` parameter in the ``profile_list``
-API.
