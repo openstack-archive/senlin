@@ -114,6 +114,5 @@ class TestLBPolicy(base.SenlinFunctionalTest):
 
         # Delete cluster
         test_api.delete_cluster(self.client, cluster['id'])
-        cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
-                                             cluster['id'], 'DELETED',
-                                             ignore_missing=True)
+        cluster = test_utils.wait_for_delete(test_api.get_cluster, self.client,
+                                             cluster['id'])

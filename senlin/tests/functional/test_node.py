@@ -65,18 +65,15 @@ class TestNode(base.SenlinFunctionalTest):
 
         # Delete node1 from cluster
         test_api.delete_node(self.client, node1['id'])
-        test_utils.wait_for_status(test_api.get_node, self.client,
-                                   node1['id'], 'DELETED',
-                                   ignore_missing=True)
+        test_utils.wait_for_delete(test_api.get_node, self.client, node1['id'])
         cluster = test_api.get_cluster(self.client, cluster['id'])
         self.assertEqual(1, len(cluster['nodes']))
         self.assertNotIn(node1['id'], cluster['nodes'])
 
         # Delete cluster
         test_api.delete_cluster(self.client, cluster['id'])
-        test_utils.wait_for_status(test_api.get_cluster, self.client,
-                                   cluster['id'], 'DELETED',
-                                   ignore_missing=True)
+        test_utils.wait_for_delete(test_api.get_cluster, self.client,
+                                   cluster['id'])
 
     def test_node_create_join_leave_cluster(self):
         # Create a cluster
@@ -121,12 +118,9 @@ class TestNode(base.SenlinFunctionalTest):
 
         # Delete node1
         test_api.delete_node(self.client, node1['id'])
-        test_utils.wait_for_status(test_api.get_node, self.client,
-                                   node1['id'], 'DELETED',
-                                   ignore_missing=True)
+        test_utils.wait_for_delete(test_api.get_node, self.client, node1['id'])
 
         # Delete cluster
         test_api.delete_cluster(self.client, cluster['id'])
-        test_utils.wait_for_status(test_api.get_cluster, self.client,
-                                   cluster['id'], 'DELETED',
-                                   ignore_missing=True)
+        test_utils.wait_for_delete(test_api.get_cluster, self.client,
+                                   cluster['id'])
