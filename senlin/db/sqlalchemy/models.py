@@ -14,12 +14,12 @@
 SQLAlchemy models for Senlin data.
 """
 
-import uuid
-
 from oslo_db.sqlalchemy import models
 from oslo_utils import timeutils
+from oslo_utils import uuidutils
 import six
-import sqlalchemy
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer
+from sqlalchemy import String, Text
 from sqlalchemy.ext import declarative
 from sqlalchemy.orm import backref
 from sqlalchemy.orm import relationship
@@ -28,6 +28,7 @@ from sqlalchemy.orm import session as orm_session
 from senlin.db.sqlalchemy import types
 
 BASE = declarative.declarative_base()
+UUID4 = uuidutils.generate_uuid
 
 
 def get_session():
@@ -87,32 +88,29 @@ class Cluster(BASE, SenlinBase, SoftDelete):
 
     __tablename__ = 'cluster'
 
-    id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
-                           default=lambda: str(uuid.uuid4()))
-    name = sqlalchemy.Column('name', sqlalchemy.String(255))
-    profile_id = sqlalchemy.Column(sqlalchemy.String(36),
-                                   sqlalchemy.ForeignKey('profile.id'),
-                                   nullable=False)
-    user = sqlalchemy.Column(sqlalchemy.String(32), nullable=False)
-    project = sqlalchemy.Column(sqlalchemy.String(32), nullable=False)
-    domain = sqlalchemy.Column(sqlalchemy.String(32))
-    parent = sqlalchemy.Column(sqlalchemy.String(36))
+    id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
+    name = Column('name', String(255))
+    profile_id = Column(String(36), ForeignKey('profile.id'), nullable=False)
+    user = Column(String(32), nullable=False)
+    project = Column(String(32), nullable=False)
+    domain = Column(String(32))
+    parent = Column(String(36))
 
-    init_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    created_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
+    init_time = Column(DateTime)
+    created_time = Column(DateTime)
+    updated_time = Column(DateTime)
+    deleted_time = Column(DateTime)
 
-    min_size = sqlalchemy.Column(sqlalchemy.Integer)
-    max_size = sqlalchemy.Column(sqlalchemy.Integer)
-    desired_capacity = sqlalchemy.Column(sqlalchemy.Integer)
-    next_index = sqlalchemy.Column(sqlalchemy.Integer)
-    timeout = sqlalchemy.Column(sqlalchemy.Integer)
+    min_size = Column(Integer)
+    max_size = Column(Integer)
+    desired_capacity = Column(Integer)
+    next_index = Column(Integer)
+    timeout = Column(Integer)
 
-    status = sqlalchemy.Column(sqlalchemy.String(255))
-    status_reason = sqlalchemy.Column(sqlalchemy.Text)
-    meta_data = sqlalchemy.Column(types.Dict)
-    data = sqlalchemy.Column(types.Dict)
+    status = Column(String(255))
+    status_reason = Column(Text)
+    meta_data = Column(types.Dict)
+    data = Column(types.Dict)
 
 
 class Node(BASE, SenlinBase, SoftDelete):
@@ -120,29 +118,26 @@ class Node(BASE, SenlinBase, SoftDelete):
 
     __tablename__ = 'node'
 
-    id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
-                           default=lambda: str(uuid.uuid4()))
-    name = sqlalchemy.Column(sqlalchemy.String(255))
-    physical_id = sqlalchemy.Column(sqlalchemy.String(36))
-    cluster_id = sqlalchemy.Column(sqlalchemy.String(36),
-                                   sqlalchemy.ForeignKey('cluster.id'))
-    profile_id = sqlalchemy.Column(sqlalchemy.String(36),
-                                   sqlalchemy.ForeignKey('profile.id'))
-    user = sqlalchemy.Column(sqlalchemy.String(32), nullable=False)
-    project = sqlalchemy.Column(sqlalchemy.String(32), nullable=False)
-    domain = sqlalchemy.Column(sqlalchemy.String(32))
-    index = sqlalchemy.Column(sqlalchemy.Integer)
-    role = sqlalchemy.Column(sqlalchemy.String(64))
+    id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
+    name = Column(String(255))
+    physical_id = Column(String(36))
+    cluster_id = Column(String(36), ForeignKey('cluster.id'))
+    profile_id = Column(String(36), ForeignKey('profile.id'))
+    user = Column(String(32), nullable=False)
+    project = Column(String(32), nullable=False)
+    domain = Column(String(32))
+    index = Column(Integer)
+    role = Column(String(64))
 
-    init_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    created_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
+    init_time = Column(DateTime)
+    created_time = Column(DateTime)
+    updated_time = Column(DateTime)
+    deleted_time = Column(DateTime)
 
-    status = sqlalchemy.Column(sqlalchemy.String(255))
-    status_reason = sqlalchemy.Column(sqlalchemy.Text)
-    meta_data = sqlalchemy.Column(types.Dict)
-    data = sqlalchemy.Column(types.Dict)
+    status = Column(String(255))
+    status_reason = Column(Text)
+    meta_data = Column(types.Dict)
+    data = Column(types.Dict)
 
 
 class ClusterLock(BASE, SenlinBase):
@@ -153,11 +148,10 @@ class ClusterLock(BASE, SenlinBase):
 
     __tablename__ = 'cluster_lock'
 
-    cluster_id = sqlalchemy.Column(sqlalchemy.String(36),
-                                   sqlalchemy.ForeignKey('cluster.id'),
-                                   primary_key=True, nullable=False)
-    action_ids = sqlalchemy.Column(types.List)
-    semaphore = sqlalchemy.Column(sqlalchemy.Integer)
+    cluster_id = Column(String(36), ForeignKey('cluster.id'), primary_key=True,
+                        nullable=False)
+    action_ids = Column(types.List)
+    semaphore = Column(Integer)
 
 
 class NodeLock(BASE, SenlinBase):
@@ -168,10 +162,9 @@ class NodeLock(BASE, SenlinBase):
 
     __tablename__ = 'node_lock'
 
-    node_id = sqlalchemy.Column(sqlalchemy.String(36),
-                                sqlalchemy.ForeignKey('node.id'),
-                                primary_key=True, nullable=False)
-    action_id = sqlalchemy.Column(sqlalchemy.String(36))
+    node_id = Column(String(36), ForeignKey('node.id'), primary_key=True,
+                     nullable=False)
+    action_id = Column(String(36))
 
 
 class Policy(BASE, SenlinBase, SoftDelete):
@@ -179,20 +172,19 @@ class Policy(BASE, SenlinBase, SoftDelete):
 
     __tablename__ = 'policy'
 
-    id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
-                           default=lambda: str(uuid.uuid4()))
-    user = sqlalchemy.Column(sqlalchemy.String(32), nullable=False)
-    project = sqlalchemy.Column(sqlalchemy.String(32), nullable=False)
-    domain = sqlalchemy.Column(sqlalchemy.String(32))
-    name = sqlalchemy.Column(sqlalchemy.String(255))
-    type = sqlalchemy.Column(sqlalchemy.String(255))
-    cooldown = sqlalchemy.Column(sqlalchemy.Integer)
-    level = sqlalchemy.Column(sqlalchemy.Integer)
-    created_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    spec = sqlalchemy.Column(types.Dict)
-    data = sqlalchemy.Column(types.Dict)
+    id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
+    user = Column(String(32), nullable=False)
+    project = Column(String(32), nullable=False)
+    domain = Column(String(32))
+    name = Column(String(255))
+    type = Column(String(255))
+    cooldown = Column(Integer)
+    level = Column(Integer)
+    created_time = Column(DateTime)
+    updated_time = Column(DateTime)
+    deleted_time = Column(DateTime)
+    spec = Column(types.Dict)
+    data = Column(types.Dict)
 
 
 class ClusterPolicies(BASE, SenlinBase):
@@ -200,44 +192,37 @@ class ClusterPolicies(BASE, SenlinBase):
 
     __tablename__ = 'cluster_policy'
 
-    id = sqlalchemy.Column('id', sqlalchemy.String(36),
-                           primary_key=True,
-                           default=lambda: str(uuid.uuid4()))
-    cluster_id = sqlalchemy.Column(sqlalchemy.String(36),
-                                   sqlalchemy.ForeignKey('cluster.id'),
-                                   nullable=False)
-    policy_id = sqlalchemy.Column(sqlalchemy.String(36),
-                                  sqlalchemy.ForeignKey('policy.id'),
-                                  nullable=False)
+    id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
+    cluster_id = Column(String(36), ForeignKey('cluster.id'), nullable=False)
+    policy_id = Column(String(36), ForeignKey('policy.id'), nullable=False)
     cluster = relationship(Cluster, backref=backref('policies'))
     policy = relationship(Policy, backref=backref('bindings'))
-    cooldown = sqlalchemy.Column(sqlalchemy.Integer)
-    priority = sqlalchemy.Column(sqlalchemy.Integer)
-    level = sqlalchemy.Column(sqlalchemy.Integer)
-    enabled = sqlalchemy.Column(sqlalchemy.Boolean)
-    data = sqlalchemy.Column(types.Dict)
-    last_op = sqlalchemy.Column(sqlalchemy.DateTime)
+    cooldown = Column(Integer)
+    priority = Column(Integer)
+    level = Column(Integer)
+    enabled = Column(Boolean)
+    data = Column(types.Dict)
+    last_op = Column(DateTime)
 
 
 class Profile(BASE, SenlinBase, SoftDelete):
-    '''A profile managed by the Senlin engine.'''
+    """A profile managed by the Senlin engine."""
 
     __tablename__ = 'profile'
 
-    id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
-                           default=lambda: str(uuid.uuid4()))
-    name = sqlalchemy.Column(sqlalchemy.String(255))
-    type = sqlalchemy.Column(sqlalchemy.String(255))
-    context = sqlalchemy.Column(types.Dict)
-    spec = sqlalchemy.Column(types.Dict)
-    user = sqlalchemy.Column(sqlalchemy.String(32), nullable=False)
-    project = sqlalchemy.Column(sqlalchemy.String(32), nullable=False)
-    domain = sqlalchemy.Column(sqlalchemy.String(32))
-    permission = sqlalchemy.Column(sqlalchemy.String(32))
-    meta_data = sqlalchemy.Column(types.Dict)
-    created_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
+    id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
+    name = Column(String(255))
+    type = Column(String(255))
+    context = Column(types.Dict)
+    spec = Column(types.Dict)
+    user = Column(String(32), nullable=False)
+    project = Column(String(32), nullable=False)
+    domain = Column(String(32))
+    permission = Column(String(32))
+    meta_data = Column(types.Dict)
+    created_time = Column(DateTime)
+    updated_time = Column(DateTime)
+    deleted_time = Column(DateTime)
 
 
 class Receiver(BASE, SenlinBase, SoftDelete):
@@ -245,24 +230,22 @@ class Receiver(BASE, SenlinBase, SoftDelete):
 
     __tablename__ = 'receiver'
 
-    id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
-                           default=lambda: str(uuid.uuid4()))
-    name = sqlalchemy.Column('name', sqlalchemy.String(255))
-    type = sqlalchemy.Column(sqlalchemy.String(255))
-    user = sqlalchemy.Column(sqlalchemy.String(32))
-    project = sqlalchemy.Column(sqlalchemy.String(32))
-    domain = sqlalchemy.Column(sqlalchemy.String(32))
+    id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
+    name = Column('name', String(255))
+    type = Column(String(255))
+    user = Column(String(32))
+    project = Column(String(32))
+    domain = Column(String(32))
 
-    created_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
+    created_time = Column(DateTime)
+    updated_time = Column(DateTime)
+    deleted_time = Column(DateTime)
 
-    cluster_id = sqlalchemy.Column(sqlalchemy.String(36),
-                                   sqlalchemy.ForeignKey('cluster.id'))
-    actor = sqlalchemy.Column(types.Dict)
-    action = sqlalchemy.Column(sqlalchemy.Text)
-    params = sqlalchemy.Column(types.Dict)
-    channel = sqlalchemy.Column(types.Dict)
+    cluster_id = Column(String(36), ForeignKey('cluster.id'))
+    actor = Column(types.Dict)
+    action = Column(Text)
+    params = Column(types.Dict)
+    channel = Column(types.Dict)
 
 
 class Credential(BASE, SenlinBase):
@@ -270,12 +253,10 @@ class Credential(BASE, SenlinBase):
 
     __tablename__ = 'credential'
 
-    user = sqlalchemy.Column(sqlalchemy.String(32), primary_key=True,
-                             nullable=False)
-    project = sqlalchemy.Column(sqlalchemy.String(32), primary_key=True,
-                                nullable=False)
-    cred = sqlalchemy.Column(types.Dict, nullable=False)
-    data = sqlalchemy.Column(types.Dict)
+    user = Column(String(32), primary_key=True, nullable=False)
+    project = Column(String(32), primary_key=True, nullable=False)
+    cred = Column(types.Dict, nullable=False)
+    data = Column(types.Dict)
 
 
 class ActionDependency(BASE, SenlinBase):
@@ -283,14 +264,11 @@ class ActionDependency(BASE, SenlinBase):
 
     __tablename__ = 'dependency'
 
-    id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
-                           default=lambda: str(uuid.uuid4()))
-    depended = sqlalchemy.Column('depended', sqlalchemy.String(36),
-                                 sqlalchemy.ForeignKey('action.id'),
-                                 nullable=False)
-    dependent = sqlalchemy.Column('dependent', sqlalchemy.String(36),
-                                  sqlalchemy.ForeignKey('action.id'),
-                                  nullable=False)
+    id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
+    depended = Column('depended', String(36), ForeignKey('action.id'),
+                      nullable=False)
+    dependent = Column('dependent', String(36), ForeignKey('action.id'),
+                       nullable=False)
 
 
 class Action(BASE, SenlinBase, SoftDelete):
@@ -298,28 +276,27 @@ class Action(BASE, SenlinBase, SoftDelete):
 
     __tablename__ = 'action'
 
-    id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
-                           default=lambda: str(uuid.uuid4()))
-    name = sqlalchemy.Column(sqlalchemy.String(63))
-    context = sqlalchemy.Column(types.Dict)
-    target = sqlalchemy.Column(sqlalchemy.String(36))
-    action = sqlalchemy.Column(sqlalchemy.Text)
-    cause = sqlalchemy.Column(sqlalchemy.String(255))
-    owner = sqlalchemy.Column(sqlalchemy.String(36))
-    interval = sqlalchemy.Column(sqlalchemy.Integer)
+    id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
+    name = Column(String(63))
+    context = Column(types.Dict)
+    target = Column(String(36))
+    action = Column(Text)
+    cause = Column(String(255))
+    owner = Column(String(36))
+    interval = Column(Integer)
     # FIXME: Don't specify fixed precision.
-    start_time = sqlalchemy.Column(sqlalchemy.Float(precision='24,8'))
-    end_time = sqlalchemy.Column(sqlalchemy.Float(precision='24,8'))
-    timeout = sqlalchemy.Column(sqlalchemy.Integer)
-    status = sqlalchemy.Column(sqlalchemy.String(255))
-    status_reason = sqlalchemy.Column(sqlalchemy.Text)
-    control = sqlalchemy.Column(sqlalchemy.String(255))
-    inputs = sqlalchemy.Column(types.Dict)
-    outputs = sqlalchemy.Column(types.Dict)
-    created_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    updated_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    data = sqlalchemy.Column(types.Dict)
+    start_time = Column(Float(precision='24,8'))
+    end_time = Column(Float(precision='24,8'))
+    timeout = Column(Integer)
+    status = Column(String(255))
+    status_reason = Column(Text)
+    control = Column(String(255))
+    inputs = Column(types.Dict)
+    outputs = Column(types.Dict)
+    created_time = Column(DateTime)
+    updated_time = Column(DateTime)
+    deleted_time = Column(DateTime)
+    data = Column(types.Dict)
 
 
 class Event(BASE, SenlinBase, SoftDelete):
@@ -327,22 +304,18 @@ class Event(BASE, SenlinBase, SoftDelete):
 
     __tablename__ = 'event'
 
-    id = sqlalchemy.Column('id', sqlalchemy.String(36),
-                           primary_key=True,
-                           default=lambda: str(uuid.uuid4()))
-    timestamp = sqlalchemy.Column(sqlalchemy.DateTime)
-    deleted_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    obj_id = sqlalchemy.Column(sqlalchemy.String(36))
-    obj_name = sqlalchemy.Column(sqlalchemy.String(255))
-    obj_type = sqlalchemy.Column(sqlalchemy.String(36))
-    cluster_id = sqlalchemy.Column(sqlalchemy.String(36),
-                                   sqlalchemy.ForeignKey('cluster.id'),
-                                   nullable=True)
+    id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
+    timestamp = Column(DateTime)
+    deleted_time = Column(DateTime)
+    obj_id = Column(String(36))
+    obj_name = Column(String(255))
+    obj_type = Column(String(36))
+    cluster_id = Column(String(36), ForeignKey('cluster.id'), nullable=True)
     cluster = relationship(Cluster, backref=backref('events'))
-    level = sqlalchemy.Column(sqlalchemy.String(64))
-    user = sqlalchemy.Column(sqlalchemy.String(32))
-    project = sqlalchemy.Column(sqlalchemy.String(32))
-    action = sqlalchemy.Column(sqlalchemy.String(36))
-    status = sqlalchemy.Column(sqlalchemy.String(255))
-    status_reason = sqlalchemy.Column(sqlalchemy.Text)
-    meta_data = sqlalchemy.Column(types.Dict)
+    level = Column(String(64))
+    user = Column(String(32))
+    project = Column(String(32))
+    action = Column(String(36))
+    status = Column(String(255))
+    status_reason = Column(Text)
+    meta_data = Column(types.Dict)
