@@ -311,12 +311,6 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual('Deletion in progress', node.status_reason)
         self.assertIsNotNone(node.created_time)
 
-        node.set_status(self.context, node.DELETED,
-                        reason='Deletion succeeded')
-        self.assertEqual('DELETED', node.status)
-        self.assertEqual('Deletion succeeded', node.status_reason)
-        self.assertIsNotNone(node.created_time)
-
     @mock.patch.object(profiles_base.Profile, 'get_details')
     def test_node_get_details(self, mock_details):
         node = nodem.Node('node1', self.profile.id, None)
