@@ -64,8 +64,8 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual(self.spec, result['spec'])
         self.assertEqual(policy_base.SHOULD, result['level'])
         self.assertIsNone(result['cooldown'])
-        self.assertIsNone(result['updated_time'])
-        self.assertIsNotNone(result['created_time'])
+        self.assertIsNone(result['updated_at'])
+        self.assertIsNotNone(result['created_at'])
         self.assertIsNotNone(result['id'])
 
     def test_policy_create_already_exists(self):
@@ -168,7 +168,7 @@ class PolicyTest(base.SenlinTestCase):
         p2 = self.eng.policy_create(self.ctx, 'p-A', self.spec, cooldown=60)
         p3 = self.eng.policy_create(self.ctx, 'p-C', self.spec, cooldown=120)
 
-        # default by created_time
+        # default by created_at
         result = self.eng.policy_list(self.ctx)
         self.assertEqual(p1['id'], result[0]['id'])
         self.assertEqual(p2['id'], result[1]['id'])
@@ -198,12 +198,12 @@ class PolicyTest(base.SenlinTestCase):
         p2 = self.eng.policy_create(self.ctx, 'p-A', self.spec)
         p3 = self.eng.policy_create(self.ctx, 'p-C', self.spec)
 
-        # default by created_time, ascending
+        # default by created_at, ascending
         result = self.eng.policy_list(self.ctx)
         self.assertEqual(p1['id'], result[0]['id'])
         self.assertEqual(p2['id'], result[1]['id'])
 
-        # sort by created_time, descending
+        # sort by created_at, descending
         result = self.eng.policy_list(self.ctx, sort_dir='desc')
         self.assertEqual(p3['id'], result[0]['id'])
         self.assertEqual(p2['id'], result[1]['id'])

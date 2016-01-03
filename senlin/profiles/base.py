@@ -91,8 +91,8 @@ class Profile(object):
         self.permission = kwargs.get('permission', '')
         self.metadata = kwargs.get('metadata', {})
 
-        self.created_time = kwargs.get('created_time', None)
-        self.updated_time = kwargs.get('updated_time', None)
+        self.created_at = kwargs.get('created_at', None)
+        self.updated_at = kwargs.get('updated_at', None)
 
         self.spec_data = schema.Spec(self.spec_schema, self.spec)
         self.properties = schema.Spec(self.properties_schema,
@@ -119,8 +119,8 @@ class Profile(object):
             'domain': record.domain,
             'permission': record.permission,
             'metadata': record.meta_data,
-            'created_time': record.created_time,
-            'updated_time': record.updated_time,
+            'created_at': record.created_at,
+            'updated_at': record.updated_at,
         }
 
         return cls(record.name, record.spec, **kwargs)
@@ -170,12 +170,12 @@ class Profile(object):
         }
 
         if self.id:
-            self.updated_time = timestamp
-            values['updated_time'] = timestamp
+            self.updated_at = timestamp
+            values['updated_at'] = timestamp
             db_api.profile_update(ctx, self.id, values)
         else:
-            self.created_time = timestamp
-            values['created_time'] = timestamp
+            self.created_at = timestamp
+            values['created_at'] = timestamp
             profile = db_api.profile_create(ctx, values)
             self.id = profile.id
 
@@ -301,8 +301,8 @@ class Profile(object):
             'permission': self.permission,
             'spec': self.spec,
             'metadata': self.metadata,
-            'created_time': utils.format_time(self.created_time),
-            'updated_time': utils.format_time(self.updated_time),
+            'created_at': utils.format_time(self.created_at),
+            'updated_at': utils.format_time(self.updated_at),
         }
         return pb_dict
 

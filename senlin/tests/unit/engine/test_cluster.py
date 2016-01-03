@@ -72,9 +72,9 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual('', cluster.domain)
         self.assertEqual('', cluster.parent)
 
-        self.assertIsNone(cluster.init_time)
-        self.assertIsNone(cluster.created_time)
-        self.assertIsNone(cluster.updated_time)
+        self.assertIsNone(cluster.init_at)
+        self.assertIsNone(cluster.created_at)
+        self.assertIsNone(cluster.updated_at)
 
         self.assertEqual(0, cluster.min_size)
         self.assertEqual(-1, cluster.max_size)
@@ -128,9 +128,9 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual('', result.domain)
         self.assertEqual('', result.parent)
 
-        self.assertIsNotNone(result.init_time)
-        self.assertIsNone(result.created_time)
-        self.assertIsNone(result.updated_time)
+        self.assertIsNotNone(result.init_at)
+        self.assertIsNone(result.created_at)
+        self.assertIsNone(result.updated_at)
 
         self.assertEqual(0, result.min_size)
         self.assertEqual(-1, result.max_size)
@@ -205,9 +205,9 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual(cluster.project, result.project)
         self.assertEqual(cluster.domain, result.domain)
         self.assertEqual(cluster.parent, result.parent)
-        self.assertEqual(cluster.init_time, result.init_time)
-        self.assertEqual(cluster.created_time, result.created_time)
-        self.assertEqual(cluster.updated_time, result.updated_time)
+        self.assertEqual(cluster.init_at, result.init_at)
+        self.assertEqual(cluster.created_at, result.created_at)
+        self.assertEqual(cluster.updated_at, result.updated_at)
         self.assertEqual(0, result.min_size)
         self.assertEqual(-1, result.max_size)
         self.assertEqual(cluster.desired_capacity, result.desired_capacity)
@@ -258,9 +258,9 @@ class TestCluster(base.SenlinTestCase):
             'project': cluster.project,
             'domain': cluster.domain,
             'parent': cluster.parent,
-            'init_time': cluster.init_time,
-            'created_time': cluster.created_time,
-            'updated_time': cluster.updated_time,
+            'init_at': cluster.init_at,
+            'created_at': cluster.created_at,
+            'updated_at': cluster.updated_at,
             'min_size': 0,
             'max_size': -1,
             'desired_capacity': cluster.desired_capacity,
@@ -282,36 +282,36 @@ class TestCluster(base.SenlinTestCase):
                                    project=self.context.project)
         cluster.store(self.context)
         self.assertEqual(clusterm.Cluster.INIT, cluster.status)
-        self.assertIsNotNone(cluster.init_time)
-        self.assertIsNone(cluster.created_time)
-        self.assertIsNone(cluster.updated_time)
+        self.assertIsNotNone(cluster.init_at)
+        self.assertIsNone(cluster.created_at)
+        self.assertIsNone(cluster.updated_at)
 
         # create
         cluster.do_create(self.context)
         self.assertEqual(cluster.CREATING, cluster.status)
         self.assertEqual('Creation in progress', cluster.status_reason)
-        self.assertIsNone(cluster.created_time)
-        self.assertIsNone(cluster.updated_time)
+        self.assertIsNone(cluster.created_at)
+        self.assertIsNone(cluster.updated_at)
 
         cluster.set_status(self.context, cluster.ACTIVE, 'Creation succeeded')
         self.assertEqual(cluster.ACTIVE, cluster.status)
         self.assertEqual('Creation succeeded', cluster.status_reason)
-        self.assertIsNotNone(cluster.created_time)
-        self.assertIsNone(cluster.updated_time)
+        self.assertIsNotNone(cluster.created_at)
+        self.assertIsNone(cluster.updated_at)
 
         # update
         cluster.do_update(self.context)
         self.assertEqual(cluster.UPDATING, cluster.status)
         self.assertEqual('Update in progress', cluster.status_reason)
-        self.assertIsNotNone(cluster.created_time)
-        self.assertIsNone(cluster.updated_time)
+        self.assertIsNotNone(cluster.created_at)
+        self.assertIsNone(cluster.updated_at)
 
         cluster.set_status(self.context, cluster.ACTIVE, 'Update succeeded',
                            data={'key': 'value'})
         self.assertEqual(cluster.ACTIVE, cluster.status)
         self.assertEqual('Update succeeded', cluster.status_reason)
-        self.assertIsNotNone(cluster.created_time)
-        self.assertIsNotNone(cluster.updated_time)
+        self.assertIsNotNone(cluster.created_at)
+        self.assertIsNotNone(cluster.updated_at)
         self.assertEqual({'key': 'value'}, cluster.data)
 
         # set status without a reason
@@ -332,7 +332,7 @@ class TestCluster(base.SenlinTestCase):
 
         self.assertEqual(cluster.ACTIVE, cluster.status)
         self.assertEqual('Update succeeded', cluster.status_reason)
-        self.assertIsNotNone(cluster.updated_time)
+        self.assertIsNotNone(cluster.updated_at)
         self.assertEqual('NEW_PROFILE', cluster.profile_id)
         self.assertEqual('NEW_PROFILE', cluster.rt['profile'].id)
 

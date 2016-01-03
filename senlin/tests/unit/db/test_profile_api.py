@@ -167,7 +167,7 @@ class DBAPIProfileTest(base.SenlinTestCase):
         ids = ['profile1', 'profile2', 'profile3']
         for pid in ids:
             timestamp = tu.utcnow()
-            shared.create_profile(self.ctx, id=pid, created_time=timestamp)
+            shared.create_profile(self.ctx, id=pid, created_at=timestamp)
 
         # different limit settings
         profiles = db_api.profile_get_all(self.ctx, limit=1)
@@ -200,14 +200,14 @@ class DBAPIProfileTest(base.SenlinTestCase):
 
         mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
         sort_keys = ['type', 'name', 'permission', 'metadata',
-                     'created_time', 'updated_time']
+                     'created_at', 'updated_at']
 
         db_api.profile_get_all(self.ctx, sort_keys=sort_keys)
 
         args = mock_paginate.call_args[0]
         used_sort_keys = set(args[3])
         expected_keys = set(['id', 'type', 'name', 'permission',
-                             'created_time', 'updated_time'])
+                             'created_at', 'updated_at'])
         self.assertEqual(expected_keys, used_sort_keys)
 
     def test_profile_get_all_sort_keys_wont_change(self):
@@ -250,7 +250,7 @@ class DBAPIProfileTest(base.SenlinTestCase):
     def test_profile_get_all_default_sort_dir(self):
         profiles = []
         for x in range(3):
-            profile = shared.create_profile(self.ctx, created_time=tu.utcnow())
+            profile = shared.create_profile(self.ctx, created_at=tu.utcnow())
             profiles.append(profile)
 
         results = db_api.profile_get_all(self.ctx, sort_dir='asc')

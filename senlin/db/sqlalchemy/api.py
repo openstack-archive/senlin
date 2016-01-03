@@ -188,15 +188,15 @@ def cluster_get_all(context, limit=None, marker=None, sort_keys=None,
     sort_key_map = {
         consts.CLUSTER_NAME: models.Cluster.name.key,
         consts.CLUSTER_STATUS: models.Cluster.status.key,
-        consts.CLUSTER_CREATED_TIME: models.Cluster.created_time.key,
-        consts.CLUSTER_UPDATED_TIME: models.Cluster.updated_time.key,
+        consts.CLUSTER_CREATED_AT: models.Cluster.created_at.key,
+        consts.CLUSTER_UPDATED_AT: models.Cluster.updated_at.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
     query = db_filters.exact_filter(query, models.Cluster, filters)
     return _paginate_query(context, query, models.Cluster, limit=limit,
                            marker=marker, sort_keys=keys, sort_dir=sort_dir,
-                           default_sort_keys=['init_time']).all()
+                           default_sort_keys=['init_at']).all()
 
 
 def cluster_next_index(context, cluster_id):
@@ -308,8 +308,8 @@ def node_get_all(context, cluster_id=None, limit=None, marker=None,
     sort_key_map = {
         consts.NODE_INDEX: models.Node.index.key,
         consts.NODE_NAME: models.Node.name.key,
-        consts.NODE_CREATED_TIME: models.Node.created_time.key,
-        consts.NODE_UPDATED_TIME: models.Node.updated_time.key,
+        consts.NODE_CREATED_AT: models.Node.created_at.key,
+        consts.NODE_UPDATED_AT: models.Node.updated_at.key,
         consts.NODE_STATUS: models.Node.status.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
@@ -317,7 +317,7 @@ def node_get_all(context, cluster_id=None, limit=None, marker=None,
     return _paginate_query(context, query, models.Node,
                            limit=limit, marker=marker,
                            sort_keys=keys, sort_dir=sort_dir,
-                           default_sort_keys=['init_time']).all()
+                           default_sort_keys=['init_at']).all()
 
 
 def node_get_all_by_cluster(context, cluster_id, project_safe=True):
@@ -394,7 +394,7 @@ def node_migrate(context, node_id, to_cluster, timestamp, role=None):
         cluster2.next_index += 1
         node.index = index
     node.cluster_id = to_cluster
-    node.updated_time = timestamp
+    node.updated_at = timestamp
     node.role = role
     session.commit()
     return node
@@ -547,8 +547,8 @@ def policy_get(context, policy_id, project_safe=True):
     policy = model_query(context, models.Policy)
     policy = policy.filter_by(id=policy_id).first()
 
-    if project_safe and policy is not None:
-        if context.project != policy.project:
+    if policy is not None:
+        if project_safe and context.project != policy.project:
             return None
 
     return policy
@@ -579,8 +579,8 @@ def policy_get_all(context, limit=None, marker=None, sort_keys=None,
         consts.POLICY_NAME: models.Policy.name.key,
         consts.POLICY_LEVEL: models.Policy.level.key,
         consts.POLICY_COOLDOWN: models.Policy.cooldown.key,
-        consts.POLICY_CREATED_TIME: models.Policy.created_time.key,
-        consts.POLICY_UPDATED_TIME: models.Policy.updated_time.key,
+        consts.POLICY_CREATED_AT: models.Policy.created_at.key,
+        consts.POLICY_UPDATED_AT: models.Policy.updated_at.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
@@ -588,7 +588,7 @@ def policy_get_all(context, limit=None, marker=None, sort_keys=None,
     return _paginate_query(context, query, models.Policy,
                            limit=limit, marker=marker,
                            sort_keys=keys, sort_dir=sort_dir,
-                           default_sort_keys=['created_time']).all()
+                           default_sort_keys=['created_at']).all()
 
 
 def policy_update(context, policy_id, values):
@@ -730,8 +730,8 @@ def profile_get_all(context, limit=None, marker=None, sort_keys=None,
         consts.PROFILE_TYPE: models.Profile.type.key,
         consts.PROFILE_NAME: models.Profile.name.key,
         consts.PROFILE_PERMISSION: models.Profile.permission.key,
-        consts.PROFILE_CREATED_TIME: models.Profile.created_time.key,
-        consts.PROFILE_UPDATED_TIME: models.Profile.updated_time.key,
+        consts.PROFILE_CREATED_AT: models.Profile.created_at.key,
+        consts.PROFILE_UPDATED_AT: models.Profile.updated_at.key,
     }
     keys = _get_sort_keys(sort_keys, sort_key_map)
 
@@ -739,7 +739,7 @@ def profile_get_all(context, limit=None, marker=None, sort_keys=None,
     return _paginate_query(context, query, models.Profile,
                            limit=limit, marker=marker,
                            sort_keys=keys, sort_dir=sort_dir,
-                           default_sort_keys=['created_time']).all()
+                           default_sort_keys=['created_at']).all()
 
 
 def profile_update(context, profile_id, values):

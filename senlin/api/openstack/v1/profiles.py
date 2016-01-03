@@ -119,7 +119,7 @@ class ProfileController(object):
 
     @util.policy_enforce
     def update(self, req, profile_id, body):
-        '''The update operation actually creates a new profile.'''
+
         profile_data = body.get('profile', None)
         if profile_data is None:
             raise exc.HTTPBadRequest(_("Malformed request data, missing "

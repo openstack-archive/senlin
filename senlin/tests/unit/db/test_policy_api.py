@@ -212,7 +212,7 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         ids = ['policy1', 'policy2', 'policy3']
         for pid in ids:
             timestamp = tu.utcnow()
-            data = self.new_policy_data(id=pid, created_time=timestamp)
+            data = self.new_policy_data(id=pid, created_at=timestamp)
             db_api.policy_create(self.ctx, data)
 
         # different limit settings
@@ -246,15 +246,15 @@ class DBAPIPolicyTest(base.SenlinTestCase):
             db_api.policy_create(self.ctx, data)
 
         mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
-        sort_keys = ['type', 'name', 'level', 'cooldown', 'created_time',
-                     'updated_time']
+        sort_keys = ['type', 'name', 'level', 'cooldown', 'created_at',
+                     'updated_at']
 
         db_api.policy_get_all(self.ctx, sort_keys=sort_keys)
 
         args = mock_paginate.call_args[0]
         used_sort_keys = set(args[3])
         expected_keys = set(['id', 'type', 'name', 'level', 'cooldown',
-                             'created_time', 'updated_time'])
+                             'created_at', 'updated_at'])
         self.assertEqual(expected_keys, used_sort_keys)
 
     def test_policy_get_all_sort_keys_wont_change(self):
@@ -298,7 +298,7 @@ class DBAPIPolicyTest(base.SenlinTestCase):
     def test_policy_get_all_default_sort_dir(self):
         policies = []
         for x in range(3):
-            data = self.new_policy_data(created_time=tu.utcnow())
+            data = self.new_policy_data(created_at=tu.utcnow())
             policies.append(db_api.policy_create(self.ctx, data))
 
         results = db_api.policy_get_all(self.ctx, sort_dir='asc')

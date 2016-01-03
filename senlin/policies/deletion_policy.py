@@ -142,7 +142,7 @@ class DeletionPolicy(base.Policy):
 
         # Node age based selection
         if self.criteria in [self.OLDEST_FIRST, self.YOUNGEST_FIRST]:
-            sorted_list = sorted(nodes, key=lambda r: (r.created_time, r.name))
+            sorted_list = sorted(nodes, key=lambda r: (r.created_at, r.name))
             for i in range(count):
                 if self.criteria == self.OLDEST_FIRST:
                     candidates.append(sorted_list[i].id)
@@ -154,7 +154,7 @@ class DeletionPolicy(base.Policy):
         node_map = []
         for node in nodes:
             profile = db_api.profile_get(context, node.profile_id)
-            created_at = profile.created_time
+            created_at = profile.created_at
             node_map.append({'id': node.id, 'created_at': created_at})
         sorted_map = sorted(node_map, key=lambda m: m['created_at'])
         for i in range(count):

@@ -51,8 +51,8 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual('TestProfile-1.0', result['type'])
         self.assertEqual(self.spec, result['spec'])
         self.assertIsNone(result['permission'])
-        self.assertIsNone(result['updated_time'])
-        self.assertIsNotNone(result['created_time'])
+        self.assertIsNone(result['updated_at'])
+        self.assertIsNotNone(result['created_at'])
         self.assertIsNotNone(result['id'])
 
     def test_profile_create_already_exists(self):
@@ -160,7 +160,7 @@ class ProfileTest(base.SenlinTestCase):
         p3 = self.eng.profile_create(self.ctx, 'p-C', self.spec,
                                      permission='0000')
 
-        # default by created_time
+        # default by created_at
         result = self.eng.profile_list(self.ctx)
         self.assertEqual(p1['id'], result[0]['id'])
         self.assertEqual(p2['id'], result[1]['id'])
@@ -193,12 +193,12 @@ class ProfileTest(base.SenlinTestCase):
         p3 = self.eng.profile_create(self.ctx, 'p-C', self.spec,
                                      permission='0000')
 
-        # default by created_time, ascending
+        # default by created_at, ascending
         result = self.eng.profile_list(self.ctx)
         self.assertEqual(p1['id'], result[0]['id'])
         self.assertEqual(p2['id'], result[1]['id'])
 
-        # sort by created_time, descending
+        # sort by created_at, descending
         result = self.eng.profile_list(self.ctx, sort_dir='desc')
         self.assertEqual(p3['id'], result[0]['id'])
         self.assertEqual(p2['id'], result[1]['id'])

@@ -85,9 +85,9 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual(-1, node.index)
         self.assertEqual('first_node', node.role)
 
-        self.assertIsNone(node.init_time)
-        self.assertIsNone(node.created_time)
-        self.assertIsNone(node.updated_time)
+        self.assertIsNone(node.init_at)
+        self.assertIsNone(node.created_at)
+        self.assertIsNone(node.updated_at)
 
         self.assertEqual('INIT', node.status)
         self.assertEqual('Initializing', node.status_reason)
@@ -121,9 +121,9 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual(1, node_info.index)
         self.assertEqual('first_node', node.role)
 
-        self.assertIsNotNone(node_info.init_time)
-        self.assertIsNone(node_info.created_time)
-        self.assertIsNone(node_info.updated_time)
+        self.assertIsNotNone(node_info.init_at)
+        self.assertIsNone(node_info.created_at)
+        self.assertIsNone(node_info.updated_at)
 
         self.assertEqual('INIT', node_info.status)
         self.assertEqual('Initializing', node_info.status_reason)
@@ -167,9 +167,9 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual(node.index, node_info.index)
         self.assertEqual(node.role, node_info.role)
 
-        self.assertEqual(node.init_time, node_info.init_time)
-        self.assertEqual(node.created_time, node_info.created_time)
-        self.assertEqual(node.updated_time, node_info.updated_time)
+        self.assertEqual(node.init_at, node_info.init_at)
+        self.assertEqual(node.created_at, node_info.created_at)
+        self.assertEqual(node.updated_at, node_info.updated_at)
 
         self.assertEqual(node.status, node_info.status)
         self.assertEqual(node.status_reason, node_info.status_reason)
@@ -218,9 +218,9 @@ class TestNode(base.SenlinTestCase):
             'domain': node.domain,
             'index': node.index,
             'role': node.role,
-            'init_time': common_utils.format_time(node.init_time),
-            'created_time': common_utils.format_time(node.created_time),
-            'updated_time': common_utils.format_time(node.updated_time),
+            'init_at': common_utils.format_time(node.init_at),
+            'created_at': common_utils.format_time(node.created_at),
+            'updated_at': common_utils.format_time(node.updated_at),
             'status': node.status,
             'status_reason': node.status_reason,
             'data': node.data,
@@ -246,9 +246,9 @@ class TestNode(base.SenlinTestCase):
             'domain': node.domain,
             'index': node.index,
             'role': node.role,
-            'init_time': common_utils.format_time(node.init_time),
-            'created_time': common_utils.format_time(node.created_time),
-            'updated_time': common_utils.format_time(node.updated_time),
+            'init_at': common_utils.format_time(node.init_at),
+            'created_at': common_utils.format_time(node.created_at),
+            'updated_at': common_utils.format_time(node.updated_at),
             'status': node.status,
             'status_reason': node.status_reason,
             'data': node.data,
@@ -265,51 +265,51 @@ class TestNode(base.SenlinTestCase):
                           self.context)
         node.store(self.context)
         self.assertEqual(nodem.Node.INIT, node.status)
-        self.assertIsNotNone(node.init_time)
-        self.assertIsNone(node.created_time)
-        self.assertIsNone(node.updated_time)
+        self.assertIsNotNone(node.init_at)
+        self.assertIsNone(node.created_at)
+        self.assertIsNone(node.updated_at)
 
         # create
         node.set_status(self.context, node.CREATING,
                         reason='Creation in progress')
         self.assertEqual('CREATING', node.status)
         self.assertEqual('Creation in progress', node.status_reason)
-        self.assertIsNone(node.created_time)
-        self.assertIsNone(node.updated_time)
+        self.assertIsNone(node.created_at)
+        self.assertIsNone(node.updated_at)
 
         node.set_status(self.context, node.ACTIVE,
                         reason='Creation succeeded')
         self.assertEqual('ACTIVE', node.status)
         self.assertEqual('Creation succeeded', node.status_reason)
-        self.assertIsNotNone(node.created_time)
-        self.assertIsNone(node.updated_time)
+        self.assertIsNotNone(node.created_at)
+        self.assertIsNone(node.updated_at)
 
         # update
         node.set_status(self.context, node.UPDATING,
                         reason='Update in progress')
         self.assertEqual('UPDATING', node.status)
         self.assertEqual('Update in progress', node.status_reason)
-        self.assertIsNotNone(node.created_time)
-        self.assertIsNone(node.updated_time)
+        self.assertIsNotNone(node.created_at)
+        self.assertIsNone(node.updated_at)
 
         node.set_status(self.context, node.ACTIVE,
                         reason='Update succeeded')
         self.assertEqual('ACTIVE', node.status)
         self.assertEqual('Update succeeded', node.status_reason)
-        self.assertIsNotNone(node.created_time)
-        self.assertIsNotNone(node.updated_time)
+        self.assertIsNotNone(node.created_at)
+        self.assertIsNotNone(node.updated_at)
 
         node.set_status(self.context, node.ACTIVE)
         self.assertEqual('ACTIVE', node.status)
-        self.assertIsNotNone(node.created_time)
-        self.assertIsNotNone(node.updated_time)
+        self.assertIsNotNone(node.created_at)
+        self.assertIsNotNone(node.updated_at)
 
         # delete
         node.set_status(self.context, node.DELETING,
                         reason='Deletion in progress')
         self.assertEqual('DELETING', node.status)
         self.assertEqual('Deletion in progress', node.status_reason)
-        self.assertIsNotNone(node.created_time)
+        self.assertIsNotNone(node.created_at)
 
     @mock.patch.object(profiles_base.Profile, 'get_details')
     def test_node_get_details(self, mock_details):
@@ -522,7 +522,7 @@ class TestNode(base.SenlinTestCase):
         res = node.do_join(self.context, self.cluster.id)
         self.assertTrue(res)
         self.assertEqual(1, node.index)
-        self.assertIsNone(node.updated_time)
+        self.assertIsNone(node.updated_at)
         self.assertFalse(mock_migrate.called)
 
     @mock.patch.object(timeutils, 'utcnow')
@@ -540,7 +540,7 @@ class TestNode(base.SenlinTestCase):
                                                   'NEW_CLUSTER_ID')
         self.assertEqual('NEW_CLUSTER_ID', node.cluster_id)
         self.assertEqual(mock_migrate.return_value.index, node.index)
-        self.assertIsNotNone(node.updated_time)
+        self.assertIsNotNone(node.updated_at)
 
     @mock.patch.object(db_api, 'node_migrate')
     def test_node_leave_no_cluster(self, mock_migrate):
@@ -548,7 +548,7 @@ class TestNode(base.SenlinTestCase):
         self.assertTrue(node.do_leave(self.context))
         self.assertFalse(mock_migrate.called)
         self.assertIsNone(node.cluster_id)
-        self.assertIsNone(node.updated_time)
+        self.assertIsNone(node.updated_at)
 
     @mock.patch.object(timeutils, 'utcnow')
     @mock.patch.object(profiles_base.Profile, 'leave_cluster')
@@ -559,7 +559,7 @@ class TestNode(base.SenlinTestCase):
         res = node.do_leave(self.context)
         self.assertTrue(res)
         self.assertIsNone(node.cluster_id)
-        self.assertIsNotNone(node.updated_time)
+        self.assertIsNotNone(node.updated_at)
         self.assertEqual(-1, node.index)
         mock_migrate.assert_called_once_with(self.context, node.id,
                                              None, mock_time(), None)

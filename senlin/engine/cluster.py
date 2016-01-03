@@ -64,9 +64,9 @@ class Cluster(object):
         self.domain = kwargs.get('domain', '')
         self.parent = kwargs.get('parent', '')
 
-        self.init_time = kwargs.get('init_time', None)
-        self.created_time = kwargs.get('created_time', None)
-        self.updated_time = kwargs.get('updated_time', None)
+        self.init_at = kwargs.get('init_at', None)
+        self.created_at = kwargs.get('created_at', None)
+        self.updated_at = kwargs.get('updated_at', None)
 
         self.min_size = (kwargs.get('min_size') or
                          consts.CLUSTER_DEFAULT_MIN_SIZE)
@@ -126,9 +126,9 @@ class Cluster(object):
             'project': self.project,
             'domain': self.domain,
             'parent': self.parent,
-            'init_time': self.init_time,
-            'created_time': self.created_time,
-            'updated_time': self.updated_time,
+            'init_at': self.init_at,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at,
             'min_size': self.min_size,
             'max_size': self.max_size,
             'desired_capacity': self.desired_capacity,
@@ -142,12 +142,12 @@ class Cluster(object):
 
         timestamp = timeutils.utcnow()
         if self.id:
-            values['updated_time'] = timestamp
+            values['updated_at'] = timestamp
             db_api.cluster_update(context, self.id, values)
             event_mod.info(context, self, 'update')
         else:
-            self.init_time = timestamp
-            values['init_time'] = timestamp
+            self.init_at = timestamp
+            values['init_at'] = timestamp
             cluster = db_api.cluster_create(context, values)
             self.id = cluster.id
             event_mod.info(context, self, 'create')
@@ -168,9 +168,9 @@ class Cluster(object):
             'project': record.project,
             'domain': record.domain,
             'parent': record.parent,
-            'init_time': record.init_time,
-            'created_time': record.created_time,
-            'updated_time': record.updated_time,
+            'init_at': record.init_at,
+            'created_at': record.created_at,
+            'updated_at': record.updated_at,
             'min_size': record.min_size,
             'max_size': record.max_size,
             'next_index': record.next_index,
@@ -221,9 +221,9 @@ class Cluster(object):
             'project': self.project,
             'domain': self.domain,
             'parent': self.parent,
-            'init_time': utils.format_time(self.init_time),
-            'created_time': utils.format_time(self.created_time),
-            'updated_time': utils.format_time(self.updated_time),
+            'init_at': utils.format_time(self.init_at),
+            'created_at': utils.format_time(self.created_at),
+            'updated_at': utils.format_time(self.updated_at),
             'min_size': self.min_size,
             'max_size': self.max_size,
             'desired_capacity': self.desired_capacity,
@@ -256,11 +256,11 @@ class Cluster(object):
         values = {}
         now = timeutils.utcnow()
         if status == self.ACTIVE and self.status == self.CREATING:
-            self.created_time = now
-            values['created_time'] = now
+            self.created_at = now
+            values['created_at'] = now
         elif status == self.ACTIVE and self.status == self.UPDATING:
-            self.updated_time = now
-            values['updated_time'] = now
+            self.updated_at = now
+            values['updated_at'] = now
 
         self.status = status
         values['status'] = status

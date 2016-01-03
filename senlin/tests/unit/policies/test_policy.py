@@ -102,8 +102,8 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual(policy_base.SHOULD, policy.level)
         self.assertEqual(0, policy.cooldown)
         self.assertEqual({}, policy.data)
-        self.assertIsNone(policy.created_time)
-        self.assertIsNone(policy.updated_time)
+        self.assertIsNone(policy.created_at)
+        self.assertIsNone(policy.updated_at)
         self.assertTrue(policy.singleton)
 
         spec_data = policy.spec_data
@@ -140,8 +140,8 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual(policy.data, result.data)
         self.assertEqual({'key1': 'value1', 'key2': 2}, result.properties)
 
-        self.assertEqual(policy.created_time, result.created_time)
-        self.assertEqual(policy.updated_time, result.updated_time)
+        self.assertEqual(policy.created_at, result.created_at)
+        self.assertEqual(policy.updated_at, result.updated_at)
 
     def test_load_diff_project(self):
         policy = self._create_db_policy()
@@ -246,8 +246,8 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual(policy.spec, result.spec)
         self.assertEqual(policy.data, result.data)
 
-        self.assertIsNotNone(result.created_time)
-        self.assertIsNone(result.updated_time)
+        self.assertIsNotNone(result.created_at)
+        self.assertIsNone(result.updated_at)
 
     def test_store_for_update(self):
         policy = self._create_policy('test-policy')
@@ -271,8 +271,8 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual(10, result.level)
         self.assertEqual(60, result.cooldown)
         self.assertEqual({'kk': 'vv'}, policy.data)
-        self.assertIsNotNone(policy.created_time)
-        self.assertIsNotNone(policy.updated_time)
+        self.assertIsNotNone(policy.created_at)
+        self.assertIsNotNone(policy.updated_at)
 
     def test_to_dict(self):
         policy = self._create_policy('test-policy')
@@ -289,8 +289,8 @@ class TestPolicyBase(base.SenlinTestCase):
             'level': policy.level,
             'cooldown': policy.cooldown,
             'data': policy.data,
-            'created_time': common_utils.format_time(policy.created_time),
-            'updated_time': None,
+            'created_at': common_utils.format_time(policy.created_at),
+            'updated_at': None,
         }
 
         result = policy_base.Policy.load(self.ctx, policy_id=policy.id)

@@ -150,8 +150,8 @@ class Policy(object):
         self.cooldown = kwargs.get('cooldown', 0)
         self.data = kwargs.get('data', {})
 
-        self.created_time = kwargs.get('created_time', None)
-        self.updated_time = kwargs.get('updated_time', None)
+        self.created_at = kwargs.get('created_at', None)
+        self.updated_at = kwargs.get('updated_at', None)
 
         self.spec_data = schema.Spec(self.spec_schema, spec)
         self.properties = schema.Spec(self.properties_schema,
@@ -170,8 +170,8 @@ class Policy(object):
             'domain': record.domain,
             'level': record.level,
             'cooldown': record.cooldown,
-            'created_time': record.created_time,
-            'updated_time': record.updated_time,
+            'created_at': record.created_at,
+            'updated_at': record.updated_at,
             'data': record.data,
         }
 
@@ -231,12 +231,12 @@ class Policy(object):
         }
 
         if self.id is not None:
-            self.updated_time = timestamp
-            values['updated_time'] = timestamp
+            self.updated_at = timestamp
+            values['updated_at'] = timestamp
             db_api.policy_update(context, self.id, values)
         else:
-            self.created_time = timestamp
-            values['created_time'] = timestamp
+            self.created_at = timestamp
+            values['created_at'] = timestamp
             policy = db_api.policy_create(context, values)
             self.id = policy.id
 
@@ -323,8 +323,8 @@ class Policy(object):
             'spec': self.spec,
             'level': self.level,
             'cooldown': self.cooldown,
-            'created_time': utils.format_time(self.created_time),
-            'updated_time': utils.format_time(self.updated_time),
+            'created_at': utils.format_time(self.created_at),
+            'updated_at': utils.format_time(self.updated_at),
             'data': self.data,
         }
         return pb_dict

@@ -45,9 +45,9 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertEqual(0, cluster.desired_capacity)
         self.assertEqual('INIT', cluster.status)
         self.assertEqual('Just Initialized', cluster.status_reason)
-        self.assertIsNone(cluster.created_time)
-        self.assertIsNone(cluster.updated_time)
-        self.assertIsNotNone(cluster.init_time)
+        self.assertIsNone(cluster.created_at)
+        self.assertIsNone(cluster.updated_at)
+        self.assertIsNotNone(cluster.init_at)
         self.assertEqual({}, cluster.metadata)
         self.assertIsNone(cluster.data)
 
@@ -241,7 +241,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
 
     def test_cluster_get_all_default_sort_dir(self):
         clusters = [shared.create_cluster(self.ctx, self.profile,
-                                          init_time=tu.utcnow())
+                                          init_at=tu.utcnow())
                     for x in range(3)]
 
         st_db = db_api.cluster_get_all(self.ctx, sort_dir='asc')
@@ -252,10 +252,10 @@ class DBAPIClusterTest(base.SenlinTestCase):
 
     def test_cluster_get_all_str_sort_keys(self):
         clusters = [shared.create_cluster(self.ctx, self.profile,
-                                          created_time=tu.utcnow())
+                                          created_at=tu.utcnow())
                     for x in range(3)]
 
-        st_db = db_api.cluster_get_all(self.ctx, sort_keys='created_time')
+        st_db = db_api.cluster_get_all(self.ctx, sort_keys='created_at')
         self.assertEqual(3, len(st_db))
         self.assertEqual(clusters[0].id, st_db[0].id)
         self.assertEqual(clusters[1].id, st_db[1].id)
@@ -263,19 +263,19 @@ class DBAPIClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(db_api.utils, 'paginate_query')
     def test_cluster_get_all_filters_sort_keys(self, mock_paginate):
-        sort_keys = ['name', 'status', 'created_time',
-                     'updated_time', 'parent']
+        sort_keys = ['name', 'status', 'created_at',
+                     'updated_at', 'parent']
         db_api.cluster_get_all(self.ctx, sort_keys=sort_keys)
 
         args = mock_paginate.call_args[0]
         used_sort_keys = set(args[3])
-        expected_keys = set(['name', 'status', 'created_time',
-                             'updated_time', 'id'])
+        expected_keys = set(['name', 'status', 'created_at',
+                             'updated_at', 'id'])
         self.assertEqual(expected_keys, used_sort_keys)
 
     def test_cluster_get_all_marker(self):
         clusters = [shared.create_cluster(self.ctx, self.profile,
-                                          created_time=tu.utcnow())
+                                          created_at=tu.utcnow())
                     for x in range(3)]
         cl_db = db_api.cluster_get_all(self.ctx, marker=clusters[1].id)
         self.assertEqual(1, len(cl_db))

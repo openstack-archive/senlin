@@ -58,9 +58,9 @@ class Node(object):
         self.index = kwargs.get('index', -1)
         self.role = kwargs.get('role', '')
 
-        self.init_time = kwargs.get('init_time', None)
-        self.created_time = kwargs.get('created_time', None)
-        self.updated_time = kwargs.get('updated_time', None)
+        self.init_at = kwargs.get('init_at', None)
+        self.created_at = kwargs.get('created_at', None)
+        self.updated_at = kwargs.get('updated_at', None)
 
         self.status = kwargs.get('status', self.INIT)
         self.status_reason = kwargs.get('status_reason', 'Initializing')
@@ -106,9 +106,9 @@ class Node(object):
             'domain': self.domain,
             'index': self.index,
             'role': self.role,
-            'init_time': self.init_time,
-            'created_time': self.created_time,
-            'updated_time': self.updated_time,
+            'init_at': self.init_at,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at,
             'status': self.status,
             'status_reason': self.status_reason,
             'meta_data': self.metadata,
@@ -119,9 +119,9 @@ class Node(object):
             db_api.node_update(context, self.id, values)
             event_mod.info(context, self, 'update')
         else:
-            init_time = timeutils.utcnow()
-            self.init_time = init_time
-            values['init_time'] = init_time
+            init_at = timeutils.utcnow()
+            self.init_at = init_at
+            values['init_at'] = init_at
             node = db_api.node_create(context, values)
             event_mod.info(context, self, 'create')
             self.id = node.id
@@ -144,9 +144,9 @@ class Node(object):
             'domain': record.domain,
             'index': record.index,
             'role': record.role,
-            'init_time': record.init_time,
-            'created_time': record.created_time,
-            'updated_time': record.updated_time,
+            'init_at': record.init_at,
+            'created_at': record.created_at,
+            'updated_at': record.updated_at,
             'status': record.status,
             'status_reason': record.status_reason,
             'data': record.data,
@@ -195,9 +195,9 @@ class Node(object):
             'domain': self.domain,
             'index': self.index,
             'role': self.role,
-            'init_time': utils.format_time(self.init_time),
-            'created_time': utils.format_time(self.created_time),
-            'updated_time': utils.format_time(self.updated_time),
+            'init_at': utils.format_time(self.init_at),
+            'created_at': utils.format_time(self.created_at),
+            'updated_at': utils.format_time(self.updated_at),
             'status': self.status,
             'status_reason': self.status_reason,
             'data': self.data,
@@ -212,9 +212,9 @@ class Node(object):
         values = {}
         now = timeutils.utcnow()
         if status == self.ACTIVE and self.status == self.CREATING:
-            self.created_time = values['created_time'] = now
+            self.created_at = values['created_at'] = now
         elif status == self.ACTIVE and self.status == self.UPDATING:
-            self.updated_time = values['updated_time'] = now
+            self.updated_at = values['updated_at'] = now
 
         self.status = status
         values['status'] = status
@@ -330,7 +330,7 @@ class Node(object):
         db_node = db_api.node_migrate(context, self.id, cluster_id,
                                       timestamp)
         self.cluster_id = cluster_id
-        self.updated_time = timestamp
+        self.updated_at = timestamp
         self.index = db_node.index
 
         profile_base.Profile.join_cluster(context, self, cluster_id)
@@ -343,7 +343,7 @@ class Node(object):
         timestamp = timeutils.utcnow()
         db_api.node_migrate(context, self.id, None, timestamp)
         self.cluster_id = None
-        self.updated_time = timestamp
+        self.updated_at = timestamp
         self.index = -1
 
         profile_base.Profile.leave_cluster(context, self)

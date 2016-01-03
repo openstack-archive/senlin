@@ -43,8 +43,8 @@ class DBAPINodeTest(base.SenlinTestCase):
         self.assertEqual(UUID1, node.physical_id)
         self.assertEqual(1, node.index)
         self.assertIsNone(node.role)
-        self.assertIsNone(node.created_time)
-        self.assertIsNone(node.updated_time)
+        self.assertIsNone(node.created_at)
+        self.assertIsNone(node.updated_at)
         self.assertEqual('ACTIVE', node.status)
         self.assertEqual('create complete', node.status_reason)
         self.assertEqual('{"foo": "123"}', json.dumps(node.metadata))
@@ -158,7 +158,7 @@ class DBAPINodeTest(base.SenlinTestCase):
         node_ids = ['node1', 'node2', 'node3']
         for v in node_ids:
             shared.create_node(self.ctx, self.cluster, self.profile,
-                               id=v, init_time=tu.utcnow())
+                               id=v, init_at=tu.utcnow())
 
         nodes = db_api.node_get_all(self.ctx, limit=1)
         self.assertEqual(1, len(nodes))
@@ -187,12 +187,12 @@ class DBAPINodeTest(base.SenlinTestCase):
             shared.create_node(self.ctx, self.cluster, self.profile, id=v)
 
         mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
-        sort_keys = ['index', 'name', 'created_time', 'updated_time', 'status']
+        sort_keys = ['index', 'name', 'created_at', 'updated_at', 'status']
 
         db_api.node_get_all(self.ctx, sort_keys=sort_keys)
         args = mock_paginate.call_args[0]
         used_sort_keys = set(args[3])
-        expected_keys = set(['index', 'name', 'created_time', 'updated_time',
+        expected_keys = set(['index', 'name', 'created_at', 'updated_at',
                              'status', 'id'])
         self.assertEqual(expected_keys, used_sort_keys)
 
@@ -234,7 +234,7 @@ class DBAPINodeTest(base.SenlinTestCase):
 
     def test_node_get_all_default_sort_dir(self):
         nodes = [shared.create_node(self.ctx, None, self.profile,
-                                    init_time=tu.utcnow())
+                                    init_at=tu.utcnow())
                  for x in range(3)]
 
         results = db_api.node_get_all(self.ctx, sort_dir='asc')
@@ -437,7 +437,7 @@ class DBAPINodeTest(base.SenlinTestCase):
         node = db_api.node_migrate(self.ctx, node_orphan.id, self.cluster.id,
                                    timestamp, 'NEW-ROLE')
         cluster = db_api.cluster_get(self.ctx, self.cluster.id)
-        self.assertEqual(timestamp, node.updated_time)
+        self.assertEqual(timestamp, node.updated_at)
         self.assertEqual(self.cluster.id, node.cluster_id)
         self.assertEqual(2, cluster.next_index)
         nodes = db_api.node_get_all_by_cluster(self.ctx, self.cluster.id)
@@ -449,7 +449,7 @@ class DBAPINodeTest(base.SenlinTestCase):
         timestamp = tu.utcnow()
 
         node_new = db_api.node_migrate(self.ctx, node.id, None, timestamp)
-        self.assertEqual(timestamp, node_new.updated_time)
+        self.assertEqual(timestamp, node_new.updated_at)
         self.assertIsNone(node_new.cluster_id)
         nodes = db_api.node_get_all_by_cluster(self.ctx, self.cluster.id)
         self.assertEqual(0, len(nodes))
@@ -472,7 +472,7 @@ class DBAPINodeTest(base.SenlinTestCase):
                                        timestamp)
         cluster1 = db_api.cluster_get(self.ctx, cluster1.id)
         cluster2 = db_api.cluster_get(self.ctx, cluster2.id)
-        self.assertEqual(timestamp, node_new.updated_time)
+        self.assertEqual(timestamp, node_new.updated_at)
         self.assertEqual(cluster2.id, node_new.cluster_id)
         self.assertIsNone(node_new.role)
         nodes = db_api.node_get_all_by_cluster(self.ctx, cluster1.id)
@@ -489,7 +489,7 @@ class DBAPINodeTest(base.SenlinTestCase):
                                        timestamp, 'FAKE-ROLE')
         cluster1 = db_api.cluster_get(self.ctx, cluster1.id)
         cluster2 = db_api.cluster_get(self.ctx, cluster2.id)
-        self.assertEqual(timestamp, node_new.updated_time)
+        self.assertEqual(timestamp, node_new.updated_at)
         self.assertEqual(cluster1.id, node_new.cluster_id)
         self.assertEqual('FAKE-ROLE', node_new.role)
         nodes = db_api.node_get_all_by_cluster(self.ctx, cluster1.id)

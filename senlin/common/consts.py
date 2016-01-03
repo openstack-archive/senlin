@@ -72,46 +72,46 @@ CLUSTER_ATTRS = (
     CLUSTER_NAME, CLUSTER_PROFILE, CLUSTER_DESIRED_CAPACITY,
     CLUSTER_MIN_SIZE, CLUSTER_MAX_SIZE, CLUSTER_ID, CLUSTER_PARENT,
     CLUSTER_DOMAIN, CLUSTER_PROJECT, CLUSTER_USER,
-    CLUSTER_CREATED_TIME, CLUSTER_UPDATED_TIME,
+    CLUSTER_CREATED_AT, CLUSTER_UPDATED_AT,
     CLUSTER_STATUS, CLUSTER_STATUS_REASON, CLUSTER_TIMEOUT,
     CLUSTER_METADATA,
 ) = (
     'name', 'profile_id', 'desired_capacity',
     'min_size', 'max_size', 'id', 'parent',
     'domain', 'project', 'user',
-    'created_time', 'updated_time',
+    'created_at', 'updated_at',
     'status', 'status_reason', 'timeout',
     'metadata',
 )
 
 NODE_ATTRS = (
     NODE_INDEX, NODE_NAME, NODE_PROFILE_ID, NODE_CLUSTER_ID,
-    NODE_CREATED_TIME, NODE_UPDATED_TIME,
+    NODE_CREATED_AT, NODE_UPDATED_AT,
     NODE_STATUS, NODE_ROLE, NODE_METADATA,
 ) = (
     'index', 'name', 'profile_id', 'cluster_id',
-    'created_time', 'updated_time',
+    'created_at', 'updated_at',
     'status', 'role', 'metadata',
 )
 
 PROFILE_ATTRS = (
     PROFILE_ID, PROFILE_NAME, PROFILE_TYPE, PROFILE_PERMISSION,
-    PROFILE_CREATED_TIME, PROFILE_UPDATED_TIME,
+    PROFILE_CREATED_AT, PROFILE_UPDATED_AT,
     PROFILE_SPEC, PROFILE_METADATA, PROFILE_CONTEXT,
 ) = (
     'id', 'name', 'type', 'permission',
-    'created_time', 'updated_time',
+    'created_at', 'updated_at',
     'spec', 'metadata', 'context',
 )
 
 POLICY_ATTRS = (
     POLICY_ID, POLICY_NAME, POLICY_TYPE,
     POLICY_SPEC, POLICY_LEVEL, POLICY_COOLDOWN,
-    POLICY_CREATED_TIME, POLICY_UPDATED_TIME,
+    POLICY_CREATED_AT, POLICY_UPDATED_AT,
 ) = (
     'id', 'name', 'type',
     'spec', 'level', 'cooldown',
-    'created_time', 'updated_time',
+    'created_at', 'updated_at',
 )
 
 CLUSTER_POLICY_ATTRS = (

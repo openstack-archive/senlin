@@ -33,14 +33,20 @@ def get_session():
     return db_api.get_session()
 
 
+class TimestampMixin(object):
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+
+
 class SenlinBase(models.ModelBase):
     """Base class for Senlin Models."""
     __table_args__ = {'mysql_engine': 'InnoDB'}
 
 
-class Profile(BASE, SenlinBase):
+class Profile(BASE, TimestampMixin, models.ModelBase):
     """A profile managed by the Senlin engine."""
 
+    __table_args__ = {'mysql_engine': 'InnoDB'}
     __tablename__ = 'profile'
 
     id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
@@ -53,13 +59,30 @@ class Profile(BASE, SenlinBase):
     domain = Column(String(32))
     permission = Column(String(32))
     meta_data = Column(types.Dict)
-    created_time = Column(DateTime)
-    updated_time = Column(DateTime)
 
 
-class Cluster(BASE, SenlinBase):
+class Policy(BASE, TimestampMixin, models.ModelBase):
+    """A policy managed by the Senlin engine."""
+
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+    __tablename__ = 'policy'
+
+    id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
+    user = Column(String(32), nullable=False)
+    project = Column(String(32), nullable=False)
+    domain = Column(String(32))
+    name = Column(String(255))
+    type = Column(String(255))
+    cooldown = Column(Integer)
+    level = Column(Integer)
+    spec = Column(types.Dict)
+    data = Column(types.Dict)
+
+
+class Cluster(BASE, TimestampMixin, models.ModelBase):
     """Represents a cluster created by the Senlin engine."""
 
+    __table_args__ = {'mysql_engine': 'InnoDB'}
     __tablename__ = 'cluster'
 
     id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
@@ -70,9 +93,7 @@ class Cluster(BASE, SenlinBase):
     domain = Column(String(32))
     parent = Column(String(36))
 
-    init_time = Column(DateTime)
-    created_time = Column(DateTime)
-    updated_time = Column(DateTime)
+    init_at = Column(DateTime)
 
     min_size = Column(Integer)
     max_size = Column(Integer)
@@ -86,9 +107,10 @@ class Cluster(BASE, SenlinBase):
     data = Column(types.Dict)
 
 
-class Node(BASE, SenlinBase):
+class Node(BASE, TimestampMixin, models.ModelBase):
     """Represents a Node created by the Senlin engine."""
 
+    __table_args__ = {'mysql_engine': 'InnoDB'}
     __tablename__ = 'node'
 
     id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
@@ -102,9 +124,7 @@ class Node(BASE, SenlinBase):
     index = Column(Integer)
     role = Column(String(64))
 
-    init_time = Column(DateTime)
-    created_time = Column(DateTime)
-    updated_time = Column(DateTime)
+    init_at = Column(DateTime)
 
     status = Column(String(255))
     status_reason = Column(Text)
@@ -135,25 +155,6 @@ class NodeLock(BASE, SenlinBase):
 
     node_id = Column(String(36), primary_key=True, nullable=False)
     action_id = Column(String(36))
-
-
-class Policy(BASE, SenlinBase):
-    '''A policy managed by the Senlin engine.'''
-
-    __tablename__ = 'policy'
-
-    id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
-    user = Column(String(32), nullable=False)
-    project = Column(String(32), nullable=False)
-    domain = Column(String(32))
-    name = Column(String(255))
-    type = Column(String(255))
-    cooldown = Column(Integer)
-    level = Column(Integer)
-    created_time = Column(DateTime)
-    updated_time = Column(DateTime)
-    spec = Column(types.Dict)
-    data = Column(types.Dict)
 
 
 class ClusterPolicies(BASE, SenlinBase):
