@@ -416,11 +416,6 @@ class ClusterTest(base.SenlinTestCase):
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_list, self.ctx,
-                               show_deleted='no')
-        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_list, self.ctx,
                                show_nested='no')
         self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
 
@@ -453,21 +448,6 @@ class ClusterTest(base.SenlinTestCase):
         # others
         self.assertRaises(exception.ClusterNotFound,
                           self.eng.cluster_find, self.ctx, 'Bogus')
-
-    @mock.patch.object(dispatcher, 'start_action')
-    def test_cluster_find_show_deleted(self, notify):
-        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
-        cid = c['id']
-        db_api.cluster_delete(self.ctx, cid)
-
-        for identity in [cid, cid[:6], 'c-1']:
-            self.assertRaises(exception.ClusterNotFound,
-                              self.eng.cluster_find, self.ctx, identity)
-
-        # short id and name based finding does not support show_deleted
-        for identity in [cid[:6], 'c-1']:
-            self.assertRaises(exception.ClusterNotFound,
-                              self.eng.cluster_find, self.ctx, identity)
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_simple_success(self, notify):

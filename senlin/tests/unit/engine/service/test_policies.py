@@ -243,11 +243,6 @@ class PolicyTest(base.SenlinTestCase):
                                self.eng.policy_list, self.ctx, limit='no')
         self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
 
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_list, self.ctx,
-                               show_deleted='no')
-        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
-
     def test_policy_list_empty(self):
         result = self.eng.policy_list(self.ctx)
         self.assertIsInstance(result, list)
@@ -271,20 +266,6 @@ class PolicyTest(base.SenlinTestCase):
         # others
         self.assertRaises(exception.PolicyNotFound,
                           self.eng.policy_find, self.ctx, 'Bogus')
-
-    def test_policy_find_show_deleted(self):
-        p = self.eng.policy_create(self.ctx, 'p-1', self.spec)
-        pid = p['id']
-        self.eng.policy_delete(self.ctx, pid)
-
-        for identity in [pid, pid[:6], 'p-1']:
-            self.assertRaises(exception.PolicyNotFound,
-                              self.eng.policy_find, self.ctx, identity)
-
-        # short id and name based finding does not support show_deleted
-        for identity in [pid[:6], 'p-1']:
-            self.assertRaises(exception.PolicyNotFound,
-                              self.eng.policy_find, self.ctx, identity)
 
     def test_policy_update_fields(self):
         p1 = self.eng.policy_create(self.ctx, 'p-1', self.spec, cooldown=60,

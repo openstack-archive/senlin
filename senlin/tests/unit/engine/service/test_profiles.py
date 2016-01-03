@@ -217,17 +217,6 @@ class ProfileTest(base.SenlinTestCase):
                          "asc-nullsfirst, asc-nullslast, desc-nullsfirst, "
                          "desc-nullslast", six.text_type(ex))
 
-    def test_profile_list_show_deleted(self):
-        p1 = self.eng.profile_create(self.ctx, 'p-1', self.spec)
-        result = self.eng.profile_list(self.ctx)
-        self.assertEqual(1, len(result))
-        self.assertEqual(p1['id'], result[0]['id'])
-
-        self.eng.profile_delete(self.ctx, p1['id'])
-
-        result = self.eng.profile_list(self.ctx)
-        self.assertEqual(0, len(result))
-
     def test_profile_list_with_filters(self):
         self.eng.profile_create(self.ctx, 'p-B', self.spec,
                                 permission='1111')
@@ -250,11 +239,6 @@ class ProfileTest(base.SenlinTestCase):
     def test_profile_list_bad_param(self):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.profile_list, self.ctx, limit='no')
-        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_list, self.ctx,
-                               show_deleted='no')
         self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
 
     def test_profile_list_empty(self):
@@ -280,20 +264,6 @@ class ProfileTest(base.SenlinTestCase):
         # others
         self.assertRaises(exception.ProfileNotFound,
                           self.eng.profile_find, self.ctx, 'Bogus')
-
-    def test_profile_find_show_deleted(self):
-        p = self.eng.profile_create(self.ctx, 'p-1', self.spec)
-        pid = p['id']
-        self.eng.profile_delete(self.ctx, pid)
-
-        for identity in [pid, pid[:6], 'p-1']:
-            self.assertRaises(exception.ProfileNotFound,
-                              self.eng.profile_find, self.ctx, identity)
-
-        # short id and name based finding does not support show_deleted
-        for identity in [pid[:6], 'p-1']:
-            self.assertRaises(exception.ProfileNotFound,
-                              self.eng.profile_find, self.ctx, identity)
 
     def test_profile_update_fields(self):
         p1 = self.eng.profile_create(self.ctx, 'p-1', self.spec,

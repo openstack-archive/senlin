@@ -201,11 +201,6 @@ class ActionTest(base.SenlinTestCase):
                                self.eng.action_list, self.ctx, limit='no')
         self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
 
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.action_list, self.ctx,
-                               show_deleted='no')
-        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
-
     def test_action_list_empty(self):
         result = self.eng.action_list(self.ctx)
         self.assertIsInstance(result, list)

@@ -343,11 +343,6 @@ class NodeTest(base.SenlinTestCase):
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_list, self.ctx,
-                               show_deleted='no')
-        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_list, self.ctx,
                                project_safe='no')
         self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
 
@@ -375,21 +370,6 @@ class NodeTest(base.SenlinTestCase):
         # others
         self.assertRaises(exception.NodeNotFound,
                           self.eng.node_find, self.ctx, 'Bogus')
-
-    @mock.patch.object(dispatcher, 'start_action')
-    def test_node_find_show_deleted(self, notify):
-        node = self.eng.node_create(self.ctx, 'n1', self.profile['id'])
-        nodeid = node['id']
-        db_api.node_delete(self.ctx, nodeid)
-
-        for identity in [nodeid, nodeid[:6], 'n1']:
-            self.assertRaises(exception.NodeNotFound,
-                              self.eng.node_find, self.ctx, identity)
-
-        # short id and name based finding does not support show_deleted
-        for identity in [nodeid[:6], 'n-1']:
-            self.assertRaises(exception.NodeNotFound,
-                              self.eng.node_find, self.ctx, identity)
 
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(dispatcher, 'start_action')

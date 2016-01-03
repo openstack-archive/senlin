@@ -164,11 +164,10 @@ class EngineService(service.Service):
             'schema': data,
         }
 
-    def profile_find(self, context, identity, show_deleted=False):
+    def profile_find(self, context, identity):
         '''Find a profile with the given identity (could be name or ID).'''
         if uuidutils.is_uuid_like(identity):
-            profile = db_api.profile_get(context, identity,
-                                         show_deleted=show_deleted)
+            profile = db_api.profile_get(context, identity)
             if not profile:
                 profile = db_api.profile_get_by_name(context, identity)
         else:
@@ -183,18 +182,14 @@ class EngineService(service.Service):
 
     @request_context
     def profile_list(self, context, limit=None, marker=None, sort_keys=None,
-                     sort_dir=None, filters=None, show_deleted=False):
+                     sort_dir=None, filters=None):
         if limit is not None:
             limit = utils.parse_int_param('limit', limit)
-        if show_deleted is not None:
-            show_deleted = utils.parse_bool_param('show_deleted',
-                                                  show_deleted)
         profiles = profile_base.Profile.load_all(context, limit=limit,
                                                  marker=marker,
                                                  sort_keys=sort_keys,
                                                  sort_dir=sort_dir,
-                                                 filters=filters,
-                                                 show_deleted=show_deleted)
+                                                 filters=filters)
 
         return [p.to_dict() for p in profiles]
 
@@ -296,12 +291,11 @@ class EngineService(service.Service):
             'schema': data
         }
 
-    def policy_find(self, context, identity, show_deleted=False):
+    def policy_find(self, context, identity):
         '''Find a policy with the given identity (could be name or ID).'''
 
         if uuidutils.is_uuid_like(identity):
-            policy = db_api.policy_get(context, identity,
-                                       show_deleted=show_deleted)
+            policy = db_api.policy_get(context, identity)
             if not policy:
                 policy = db_api.policy_get_by_name(context, identity)
         else:
@@ -316,18 +310,14 @@ class EngineService(service.Service):
 
     @request_context
     def policy_list(self, context, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None, show_deleted=None):
+                    sort_dir=None, filters=None):
         if limit is not None:
             limit = utils.parse_int_param('limit', limit)
-        if show_deleted is not None:
-            show_deleted = utils.parse_bool_param('show_deleted',
-                                                  show_deleted)
         policies = policy_base.Policy.load_all(context, limit=limit,
                                                marker=marker,
                                                sort_keys=sort_keys,
                                                sort_dir=sort_dir,
-                                               filters=filters,
-                                               show_deleted=show_deleted)
+                                               filters=filters)
 
         return [p.to_dict() for p in policies]
 
@@ -426,10 +416,9 @@ class EngineService(service.Service):
     @request_context
     def cluster_list(self, context, limit=None, marker=None, sort_keys=None,
                      sort_dir=None, filters=None, project_safe=True,
-                     show_deleted=False, show_nested=False):
+                     show_nested=False):
         limit = utils.parse_int_param('limit', limit)
         project_safe = utils.parse_bool_param('project_safe', project_safe)
-        show_deleted = utils.parse_bool_param('show_deleted', show_deleted)
         show_nested = utils.parse_bool_param('show_nested', show_nested)
         clusters = cluster_mod.Cluster.load_all(context, limit=limit,
                                                 marker=marker,
@@ -437,19 +426,15 @@ class EngineService(service.Service):
                                                 sort_dir=sort_dir,
                                                 filters=filters,
                                                 project_safe=project_safe,
-                                                show_deleted=show_deleted,
                                                 show_nested=show_nested)
 
         return [cluster.to_dict() for cluster in clusters]
 
-    def cluster_find(self, context, identity, show_deleted=False):
+    def cluster_find(self, context, identity):
         '''Find a cluster with the given identity (could be name or ID).'''
 
         if uuidutils.is_uuid_like(identity):
-            cluster = db_api.cluster_get(context, identity,
-                                         show_deleted=show_deleted)
-            # maybe the name is in uuid format, so if get by id returns None,
-            # we should get the info by name again
+            cluster = db_api.cluster_get(context, identity)
             if not cluster:
                 cluster = db_api.cluster_get_by_name(context, identity)
         else:
@@ -602,7 +587,6 @@ class EngineService(service.Service):
             LOG.info(_LI("Cluster '%s' is updated."), identity)
             return cluster.to_dict()
 
-        LOG.error('******* %s' % cluster.status)
         if cluster.status == cluster.ERROR:
             msg = _('Updating a cluster in error state')
             LOG.error(msg)
@@ -980,12 +964,11 @@ class EngineService(service.Service):
 
         return db_cluster.id
 
-    def node_find(self, context, identity, show_deleted=False):
+    def node_find(self, context, identity):
         '''Find a node with the given identity (could be name or ID).'''
 
         if uuidutils.is_uuid_like(identity):
-            node = db_api.node_get(context, identity,
-                                   show_deleted=show_deleted)
+            node = db_api.node_get(context, identity)
             if not node:
                 node = db_api.node_get_by_name(context, identity)
         else:
@@ -999,20 +982,18 @@ class EngineService(service.Service):
         return node
 
     @request_context
-    def node_list(self, context, cluster_id=None, show_deleted=False,
+    def node_list(self, context, cluster_id=None, filters=None,
                   limit=None, marker=None, sort_keys=None, sort_dir=None,
-                  filters=None, project_safe=True):
+                  project_safe=True):
 
         limit = utils.parse_int_param('limit', limit)
         project_safe = utils.parse_bool_param('project_safe', project_safe)
-        show_deleted = utils.parse_bool_param('show_deleted', show_deleted)
 
         # Maybe the cluster_id is a name or a short ID
         if cluster_id is not None:
             db_cluster = self.cluster_find(context, cluster_id)
             cluster_id = db_cluster.id
         nodes = node_mod.Node.load_all(context, cluster_id=cluster_id,
-                                       show_deleted=show_deleted,
                                        limit=limit, marker=marker,
                                        sort_keys=sort_keys, sort_dir=sort_dir,
                                        filters=filters,
@@ -1407,7 +1388,7 @@ class EngineService(service.Service):
 
         return {'action': action.id}
 
-    def action_find(self, context, identity, show_deleted=False):
+    def action_find(self, context, identity):
         '''Find an action with the given identity (could be name or ID).'''
         if uuidutils.is_uuid_like(identity):
             action = db_api.action_get(context, identity)
@@ -1425,15 +1406,13 @@ class EngineService(service.Service):
 
     @request_context
     def action_list(self, context, filters=None, limit=None, marker=None,
-                    sort_keys=None, sort_dir=None, show_deleted=False):
+                    sort_keys=None, sort_dir=None):
 
         limit = utils.parse_int_param('limit', limit)
-        show_deleted = utils.parse_bool_param('show_deleted', show_deleted)
         all_actions = action_mod.Action.load_all(context, filters=filters,
                                                  limit=limit, marker=marker,
                                                  sort_keys=sort_keys,
-                                                 sort_dir=sort_dir,
-                                                 show_deleted=show_deleted)
+                                                 sort_dir=sort_dir)
 
         results = []
         for action in all_actions:
@@ -1467,8 +1446,8 @@ class EngineService(service.Service):
         return act.to_dict()
 
     @request_context
-    def action_get(self, context, identity, show_deleted=False):
-        db_action = self.action_find(context, identity, show_deleted=False)
+    def action_get(self, context, identity):
+        db_action = self.action_find(context, identity)
         action = action_mod.Action.load(context, db_action=db_action)
         return action.to_dict()
 
@@ -1484,13 +1463,11 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Action '%s' is deleted."), identity)
 
-    def receiver_find(self, context, identity, project_safe=True,
-                      show_deleted=False):
+    def receiver_find(self, context, identity, project_safe=True):
         """Find a receiver with the given identity (could be name or ID)."""
         if uuidutils.is_uuid_like(identity):
             receiver = db_api.receiver_get(context, identity,
-                                           project_safe=project_safe,
-                                           show_deleted=show_deleted)
+                                           project_safe=project_safe)
             if not receiver:
                 receiver = db_api.receiver_get_by_name(
                     context, identity, project_safe=project_safe)
@@ -1508,21 +1485,17 @@ class EngineService(service.Service):
 
     @request_context
     def receiver_list(self, context, limit=None, marker=None, sort_keys=None,
-                      sort_dir=None, filters=None, show_deleted=False,
-                      project_safe=True):
+                      sort_dir=None, filters=None, project_safe=True):
         if limit is not None:
             limit = utils.parse_int_param('limit', limit)
         if project_safe is not None:
             project_safe = utils.parse_bool_param('project_safe', project_safe)
-        if show_deleted is not None:
-            show_deleted = utils.parse_bool_param('show_deleted', show_deleted)
 
         receivers = receiver_mod.Receiver.load_all(context, limit=limit,
                                                    marker=marker,
                                                    sort_keys=sort_keys,
                                                    sort_dir=sort_dir,
                                                    filters=filters,
-                                                   show_deleted=show_deleted,
                                                    project_safe=project_safe)
         return [r.to_dict() for r in receivers]
 
@@ -1595,15 +1568,12 @@ class EngineService(service.Service):
         return receiver.to_dict()
 
     @request_context
-    def receiver_get(self, context, identity, project_safe=True,
-                     show_deleted=False):
+    def receiver_get(self, context, identity, project_safe=True):
         db_receiver = self.receiver_find(context, identity,
-                                         project_safe=project_safe,
-                                         show_deleted=show_deleted)
+                                         project_safe=project_safe)
         receiver = receiver_mod.Receiver.load(context,
                                               receiver_obj=db_receiver,
-                                              project_safe=project_safe,
-                                              show_deleted=show_deleted)
+                                              project_safe=project_safe)
         return receiver.to_dict()
 
     @request_context
@@ -1649,7 +1619,7 @@ class EngineService(service.Service):
 
         return {'action': action.id}
 
-    def event_find(self, context, identity, show_deleted=False):
+    def event_find(self, context, identity):
         '''Find a event with the given identity (could ID or short ID).'''
         if uuidutils.is_uuid_like(identity):
             event = db_api.event_get(context, identity)
@@ -1665,14 +1635,12 @@ class EngineService(service.Service):
 
     @request_context
     def event_list(self, context, filters=None, limit=None, marker=None,
-                   sort_keys=None, sort_dir=None, project_safe=True,
-                   show_deleted=False):
+                   sort_keys=None, sort_dir=None, project_safe=True):
         all_events = event_mod.Event.load_all(context, filters=filters,
                                               limit=limit, marker=marker,
                                               sort_keys=sort_keys,
                                               sort_dir=sort_dir,
-                                              project_safe=project_safe,
-                                              show_deleted=show_deleted)
+                                              project_safe=project_safe)
 
         results = [event.to_dict() for event in all_events]
         return results
