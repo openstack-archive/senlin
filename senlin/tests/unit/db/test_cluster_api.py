@@ -66,12 +66,11 @@ class DBAPIClusterTest(base.SenlinTestCase):
         cluster = shared.create_cluster(self.ctx, self.profile)
         self.ctx.project = 'abc'
         ret_cluster = db_api.cluster_get(self.ctx, cluster.id,
-                                         show_deleted=False,
                                          project_safe=False)
         self.assertEqual(cluster.id, ret_cluster.id)
         self.assertEqual('db_test_cluster_name', ret_cluster.name)
 
-        cluster = db_api.cluster_get(self.ctx, cluster.id, show_deleted=False)
+        cluster = db_api.cluster_get(self.ctx, cluster.id)
         self.assertIsNone(cluster)
 
     def test_cluster_get_by_name(self):

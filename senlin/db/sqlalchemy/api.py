@@ -101,8 +101,7 @@ def _paginate_query(context, query, model, limit=None, marker=None,
 
 
 # TODO(Yanyan Hu): Set default value of project_safe to True
-def query_by_short_id(context, model, short_id, project_safe=False,
-                      show_deleted=False):
+def query_by_short_id(context, model, short_id, project_safe=False):
     q = model_query(context, model)
     q = q.filter(model.id.like('%s%%' % short_id))
 
@@ -118,8 +117,7 @@ def query_by_short_id(context, model, short_id, project_safe=False,
 
 
 # TODO(Yanyan Hu): Set default value of project_safe to True
-def query_by_name(context, model, name, project_safe=False,
-                  show_deleted=False):
+def query_by_name(context, model, name, project_safe=False):
     q = model_query(context, model)
     q = q.filter_by(name=name)
 
@@ -146,7 +144,7 @@ def cluster_create(context, values):
     return cluster_ref
 
 
-def cluster_get(context, cluster_id, show_deleted=False, project_safe=True):
+def cluster_get(context, cluster_id, project_safe=True):
     query = model_query(context, models.Cluster)
     cluster = query.get(cluster_id)
 
@@ -169,8 +167,7 @@ def cluster_get_by_short_id(context, short_id, project_safe=True):
                              project_safe=project_safe)
 
 
-def _query_cluster_get_all(context, project_safe=True, show_deleted=False,
-                           show_nested=False):
+def _query_cluster_get_all(context, project_safe=True, show_nested=False):
     query = model_query(context, models.Cluster)
 
     if not show_nested:
@@ -183,9 +180,8 @@ def _query_cluster_get_all(context, project_safe=True, show_deleted=False,
 
 def cluster_get_all(context, limit=None, marker=None, sort_keys=None,
                     sort_dir=None, filters=None, project_safe=True,
-                    show_deleted=False, show_nested=False):
+                    show_nested=False):
     query = _query_cluster_get_all(context, project_safe=project_safe,
-                                   show_deleted=show_deleted,
                                    show_nested=show_nested)
     if filters is None:
         filters = {}
@@ -217,9 +213,8 @@ def cluster_next_index(context, cluster_id):
 
 
 def cluster_count_all(context, filters=None, project_safe=True,
-                      show_deleted=False, show_nested=False):
+                      show_nested=False):
     query = _query_cluster_get_all(context, project_safe=project_safe,
-                                   show_deleted=show_deleted,
                                    show_nested=show_nested)
     query = db_filters.exact_filter(query, models.Cluster, filters)
     return query.count()
@@ -253,7 +248,7 @@ def cluster_delete(context, cluster_id):
     for cp in cluster.policies:
         session.delete(cp)
 
-    # Do soft delete and set the status
+    # Delete cluster
     cluster.delete(session=session)
     session.flush()
 
@@ -268,33 +263,27 @@ def node_create(context, values):
     return node
 
 
-def node_get(context, node_id, show_deleted=False, project_safe=True):
+def node_get(context, node_id, project_safe=True):
     node = model_query(context, models.Node).get(node_id)
     if not node:
         return None
 
-    if project_safe:
-        if context.project != node.project:
-            return None
+    if project_safe and context.project != node.project:
+        return None
 
     return node
 
 
-def node_get_by_name(context, name, show_deleted=False, project_safe=True):
-    return query_by_name(context, models.Node, name,
-                         show_deleted=show_deleted,
-                         project_safe=project_safe)
+def node_get_by_name(context, name, project_safe=True):
+    return query_by_name(context, models.Node, name, project_safe=project_safe)
 
 
-def node_get_by_short_id(context, short_id, show_deleted=False,
-                         project_safe=True):
+def node_get_by_short_id(context, short_id, project_safe=True):
     return query_by_short_id(context, models.Node, short_id,
-                             show_deleted=show_deleted,
                              project_safe=project_safe)
 
 
-def _query_node_get_all(context, project_safe=True, show_deleted=False,
-                        cluster_id=None):
+def _query_node_get_all(context, project_safe=True, cluster_id=None):
     query = model_query(context, models.Node)
 
     if cluster_id:
@@ -306,11 +295,10 @@ def _query_node_get_all(context, project_safe=True, show_deleted=False,
     return query
 
 
-def node_get_all(context, cluster_id=None, show_deleted=False,
-                 limit=None, marker=None, sort_keys=None, sort_dir=None,
-                 filters=None, project_safe=True):
+def node_get_all(context, cluster_id=None, limit=None, marker=None,
+                 sort_keys=None, sort_dir=None, filters=None,
+                 project_safe=True):
     query = _query_node_get_all(context, project_safe=project_safe,
-                                show_deleted=show_deleted,
                                 cluster_id=cluster_id)
 
     if filters is None:
@@ -331,8 +319,7 @@ def node_get_all(context, cluster_id=None, show_deleted=False,
                            default_sort_keys=['init_time']).all()
 
 
-def node_get_all_by_cluster(context, cluster_id, show_deleted=False,
-                            project_safe=True):
+def node_get_all_by_cluster(context, cluster_id, project_safe=True):
     query = model_query(context, models.Node).filter_by(cluster_id=cluster_id)
 
     if project_safe:
@@ -557,7 +544,7 @@ def policy_create(context, values):
     return policy
 
 
-def policy_get(context, policy_id, show_deleted=False, project_safe=True):
+def policy_get(context, policy_id, project_safe=True):
     policy = model_query(context, models.Policy)
     policy = policy.filter_by(id=policy_id).first()
 
@@ -568,22 +555,18 @@ def policy_get(context, policy_id, show_deleted=False, project_safe=True):
     return policy
 
 
-def policy_get_by_name(context, name, show_deleted=False, project_safe=True):
+def policy_get_by_name(context, name, project_safe=True):
     return query_by_name(context, models.Policy, name,
-                         show_deleted=show_deleted,
                          project_safe=project_safe)
 
 
-def policy_get_by_short_id(context, short_id, show_deleted=False,
-                           project_safe=True):
+def policy_get_by_short_id(context, short_id, project_safe=True):
     return query_by_short_id(context, models.Policy, short_id,
-                             show_deleted=show_deleted,
                              project_safe=project_safe)
 
 
 def policy_get_all(context, limit=None, marker=None, sort_keys=None,
-                   sort_dir=None, filters=None, show_deleted=False,
-                   project_safe=True):
+                   sort_dir=None, filters=None, project_safe=True):
     query = model_query(context, models.Policy)
 
     if project_safe:
@@ -712,7 +695,7 @@ def profile_create(context, values):
     return profile
 
 
-def profile_get(context, profile_id, show_deleted=False, project_safe=True):
+def profile_get(context, profile_id, project_safe=True):
     query = model_query(context, models.Profile)
     profile = query.filter_by(id=profile_id).first()
 
@@ -723,22 +706,18 @@ def profile_get(context, profile_id, show_deleted=False, project_safe=True):
     return profile
 
 
-def profile_get_by_name(context, name, show_deleted=False, project_safe=True):
+def profile_get_by_name(context, name, project_safe=True):
     return query_by_name(context, models.Profile, name,
-                         show_deleted=show_deleted,
                          project_safe=project_safe)
 
 
-def profile_get_by_short_id(context, short_id, show_deleted=False,
-                            project_safe=True):
+def profile_get_by_short_id(context, short_id, project_safe=True):
     return query_by_short_id(context, models.Profile, short_id,
-                             show_deleted=show_deleted,
                              project_safe=project_safe)
 
 
 def profile_get_all(context, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None, show_deleted=False,
-                    project_safe=True):
+                    sort_dir=None, filters=None, project_safe=True):
     query = model_query(context, models.Profile)
 
     if project_safe:
@@ -774,7 +753,7 @@ def profile_update(context, profile_id, values):
 
 
 def profile_delete(context, profile_id, force=False):
-    profile = profile_get(context, profile_id, show_deleted=False)
+    profile = profile_get(context, profile_id)
     if profile is None:
         return
 
@@ -893,8 +872,7 @@ def _event_filter_paginate_query(context, query, filters=None,
 
 
 def event_get_all(context, limit=None, marker=None, sort_keys=None,
-                  sort_dir=None, filters=None, project_safe=True,
-                  show_deleted=False):
+                  sort_dir=None, filters=None, project_safe=True):
     query = model_query(context, models.Event)
     if project_safe:
         query = query.filter_by(project=context.project)
@@ -948,7 +926,7 @@ def action_update(context, action_id, values):
     action.save(session)
 
 
-def action_get(context, action_id, show_deleted=False, refresh=False):
+def action_get(context, action_id, refresh=False):
     session = get_session()
     action = session.query(models.Action).get(action_id)
     if action is None:
@@ -972,7 +950,7 @@ def action_get_all_by_owner(context, owner_id):
 
 
 def action_get_all(context, filters=None, limit=None, marker=None,
-                   sort_keys=None, sort_dir=None, show_deleted=False):
+                   sort_keys=None, sort_dir=None):
     query = model_query(context, models.Action)
 
     if filters is None:
@@ -1237,21 +1215,19 @@ def receiver_create(context, values):
     return receiver
 
 
-def receiver_get(context, receiver_id, show_deleted=False, project_safe=True):
+def receiver_get(context, receiver_id, project_safe=True):
     receiver = model_query(context, models.Receiver).get(receiver_id)
     if not receiver:
         return None
 
-    if project_safe:
-        if context.project != receiver.project:
-            return None
+    if project_safe and context.project != receiver.project:
+        return None
 
     return receiver
 
 
-def receiver_get_all(context, show_deleted=False, limit=None,
-                     marker=None, sort_keys=None, sort_dir=None,
-                     filters=None, project_safe=True):
+def receiver_get_all(context, limit=None, marker=None, filters=None,
+                     sort_keys=None, sort_dir=None, project_safe=True):
     query = model_query(context, models.Receiver)
     if project_safe:
         query = query.filter_by(project=context.project)
@@ -1274,16 +1250,13 @@ def receiver_get_all(context, show_deleted=False, limit=None,
                            default_sort_keys=['name']).all()
 
 
-def receiver_get_by_name(context, name, show_deleted=False, project_safe=True):
+def receiver_get_by_name(context, name, project_safe=True):
     return query_by_name(context, models.Receiver, name,
-                         show_deleted=show_deleted,
                          project_safe=project_safe)
 
 
-def receiver_get_by_short_id(context, short_id, show_deleted=False,
-                             project_safe=True):
+def receiver_get_by_short_id(context, short_id, project_safe=True):
     return query_by_short_id(context, models.Receiver, short_id,
-                             show_deleted=show_deleted,
                              project_safe=project_safe)
 
 

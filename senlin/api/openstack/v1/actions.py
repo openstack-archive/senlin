@@ -84,10 +84,6 @@ class ActionController(object):
         if key in params:
             params[key] = utils.parse_int_param(key, params[key])
 
-        key = consts.PARAM_SHOW_DELETED
-        if key in params:
-            params[key] = utils.parse_bool_param(key, params[key])
-
         if not filters:
             filters = None
 

@@ -273,8 +273,7 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual([], list(results))
         mock_call.assert_called_once_with(
             self.ctx, filters='FAKE_FILTER', limit='FAKE_LIMIT',
-            marker='FAKE_MARKER', sort_keys='FAKE_KEYS', sort_dir='FAKE_DIR',
-            show_deleted=False)
+            marker='FAKE_MARKER', sort_keys='FAKE_KEYS', sort_dir='FAKE_DIR')
 
     def test_action_delete(self):
         result = action_base.Action.delete(self.ctx, 'non-existent')
@@ -441,7 +440,6 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual('FAKE_STATUS', res)
         self.assertEqual('FAKE_STATUS', action.status)
         mock_get.assert_called_once_with(action.context, 'FAKE_ID',
-                                         show_deleted=False,
                                          refresh=True)
 
     @mock.patch.object(action_base, 'wallclock')
