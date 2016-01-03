@@ -21,7 +21,6 @@ from oslo_config import cfg
 from oslo_db.sqlalchemy import session as db_session
 from oslo_db.sqlalchemy import utils
 from oslo_log import log as logging
-from sqlalchemy.orm import session as orm_session
 
 from senlin.common import consts
 from senlin.common import exception
@@ -237,6 +236,7 @@ def cluster_delete(context, cluster_id):
     if cluster is None:
         raise exception.ClusterNotFound(cluster=cluster_id)
 
+    session.begin()
     query = session.query(models.Node).filter_by(cluster_id=cluster_id)
     nodes = query.all()
 
@@ -249,7 +249,8 @@ def cluster_delete(context, cluster_id):
         session.delete(cp)
 
     # Delete cluster
-    cluster.delete(session=session)
+    session.delete(cluster)
+    session.commit()
     session.flush()
 
 
@@ -406,11 +407,9 @@ def node_delete(context, node_id, force=False):
         # Note: this is okay, because the node may have already gone
         return
 
-    if node.cluster_id is not None:
-        cluster = session.query(models.Cluster).get(node.cluster_id)
-        cluster.save(session)
-
-    node.delete(session=session)
+    session.begin()
+    session.delete(node)
+    session.commit()
     session.flush()
 
 
@@ -603,20 +602,20 @@ def policy_update(context, policy_id, values):
 
 
 def policy_delete(context, policy_id, force=False):
-    policy = policy_get(context, policy_id)
+    session = _session(context)
+    policy = session.query(models.Policy).get(policy_id)
 
     if not policy:
         return
 
-    query = model_query(context, models.ClusterPolicies)
-    bindings = query.filter_by(policy_id=policy_id)
+    bindings = session.query(models.ClusterPolicies).filter_by(
+        policy_id=policy_id)
     if bindings.count():
         raise exception.ResourceBusyError(resource_type='policy',
                                           resource_id=policy_id)
-
-    session = orm_session.Session.object_session(policy)
-
-    policy.delete(session=session)
+    session.begin()
+    session.delete(policy)
+    session.commit()
     session.flush()
 
 
@@ -668,8 +667,9 @@ def cluster_policy_detach(context, cluster_id, policy_id):
                                policy_id=policy_id).first()
     if bindings is None:
         return
-
+    session.begin()
     session.delete(bindings)
+    session.commit()
     session.flush()
 
 
@@ -753,27 +753,26 @@ def profile_update(context, profile_id, values):
 
 
 def profile_delete(context, profile_id, force=False):
-    profile = profile_get(context, profile_id)
+    session = _session(context)
+    profile = session.query(models.Profile).get(profile_id)
     if profile is None:
         return
 
     # used by any clusters?
-    query = model_query(context, models.Cluster)
-    clusters = query.filter_by(profile_id=profile_id)
+    clusters = session.query(models.Cluster).filter_by(profile_id=profile_id)
     if clusters.count() > 0:
         raise exception.ResourceBusyError(resource_type='profile',
                                           resource_id=profile_id)
 
     # used by any nodes?
-    query = model_query(context, models.Node)
-    nodes = query.filter_by(profile_id=profile_id)
+    nodes = session.query(models.Node).filter_by(profile_id=profile_id)
     if nodes.count() > 0:
         raise exception.ResourceBusyError(resource_type='profile',
                                           resource_id=profile_id)
 
-    session = orm_session.Session.object_session(profile)
-
-    profile.delete(session=session)
+    session.begin()
+    session.delete(profile)
+    session.commit()
     session.flush()
 
 
@@ -797,10 +796,15 @@ def cred_update(context, user, project, values):
 
 
 def cred_delete(context, user, project):
-    cred = model_query(context, models.Credential).get((user, project))
+    session = _session(context)
+    cred = session.query(models.Credential).get((user, project))
     if cred is None:
         return None
-    cred.delete()
+
+    session.begin()
+    session.delete(cred)
+    session.commit()
+    session.flush()
 
 
 # Events
@@ -1202,8 +1206,9 @@ def action_delete(context, action_id, force=False):
 
         raise exception.ResourceBusyError(resource_type='action',
                                           resource_id=action_id)
-
-    action.delete(session=session)
+    session.begin()
+    session.delete(action)
+    session.commit()
     session.flush()
 
 
@@ -1266,7 +1271,9 @@ def receiver_delete(context, receiver_id, force=False):
     if not receiver:
         return
 
-    receiver.delete(session=session)
+    session.begin()
+    session.delete(receiver)
+    session.commit()
     session.flush()
 
 

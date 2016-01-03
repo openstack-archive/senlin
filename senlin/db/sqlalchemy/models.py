@@ -16,13 +16,11 @@ SQLAlchemy models for Senlin data.
 
 from oslo_db.sqlalchemy import models
 from oslo_utils import uuidutils
-import six
 from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer
 from sqlalchemy import String, Text
 from sqlalchemy.ext import declarative
 from sqlalchemy.orm import backref
 from sqlalchemy.orm import relationship
-from sqlalchemy.orm import session as orm_session
 
 from senlin.db.sqlalchemy import types
 
@@ -38,41 +36,6 @@ def get_session():
 class SenlinBase(models.ModelBase):
     """Base class for Senlin Models."""
     __table_args__ = {'mysql_engine': 'InnoDB'}
-
-    def expire(self, session=None, attrs=None):
-        if not session:
-            session = orm_session.Session.object_session(self)
-            if not session:
-                session = get_session()
-        session.expire(self, attrs)
-
-    def refresh(self, session=None, attrs=None):
-        """Refresh this object."""
-        if not session:
-            session = orm_session.Session.object_session(self)
-            if not session:
-                session = get_session()
-        session.refresh(self, attrs)
-
-    def delete(self, session=None):
-        """Delete this object."""
-        if not session:
-            session = orm_session.Session.object_session(self)
-            if not session:
-                session = get_session()
-        session.begin()
-        session.delete(self)
-        session.commit()
-
-    def update_and_save(self, values, session=None):
-        if not session:
-            session = orm_session.Session.object_session(self)
-            if not session:
-                session = get_session()
-        session.begin()
-        for k, v in six.iteritems(values):
-            setattr(self, k, v)
-        session.commit()
 
 
 class Profile(BASE, SenlinBase):
@@ -157,8 +120,7 @@ class ClusterLock(BASE, SenlinBase):
 
     __tablename__ = 'cluster_lock'
 
-    cluster_id = Column(String(36), ForeignKey('cluster.id'), primary_key=True,
-                        nullable=False)
+    cluster_id = Column(String(36), primary_key=True, nullable=False)
     action_ids = Column(types.List)
     semaphore = Column(Integer)
 
@@ -171,8 +133,7 @@ class NodeLock(BASE, SenlinBase):
 
     __tablename__ = 'node_lock'
 
-    node_id = Column(String(36), ForeignKey('node.id'), primary_key=True,
-                     nullable=False)
+    node_id = Column(String(36), primary_key=True, nullable=False)
     action_id = Column(String(36))
 
 

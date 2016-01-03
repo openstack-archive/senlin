@@ -89,8 +89,7 @@ def upgrade(migrate_engine):
 
     cluster_lock = Table(
         'cluster_lock', meta,
-        Column('cluster_id', String(36), ForeignKey('cluster.id'),
-               primary_key=True, nullable=False),
+        Column('cluster_id', String(36), primary_key=True, nullable=False),
         Column('action_ids', types.List),
         Column('semaphore', Integer),
         mysql_engine='InnoDB',
@@ -99,8 +98,7 @@ def upgrade(migrate_engine):
 
     node_lock = Table(
         'node_lock', meta,
-        Column('node_id', String(36), ForeignKey('node.id'), primary_key=True,
-               nullable=False),
+        Column('node_id', String(36), primary_key=True, nullable=False),
         Column('action_id', String(36)),
         mysql_engine='InnoDB',
         mysql_charset='utf8'
