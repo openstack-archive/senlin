@@ -30,7 +30,7 @@ class Node(object):
     '''A node is an object that can belong to at most one single cluster.
 
     All operations are performed without further checking because the
-    checkings are supposed to be de done before/after/during an action is
+    checkings are supposed to be done before/after/during an action is
     excuted.
     '''
 

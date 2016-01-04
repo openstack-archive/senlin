@@ -35,7 +35,7 @@ class Cluster(object):
     '''A cluster is a set of homogeneous objects of the same profile.
 
     All operations are performed without further checking because the
-    checkings are supposed to be de done before/after/during an action is
+    checkings are supposed to be done before/after/during an action is
     excuted.
     '''
 
@@ -51,7 +51,7 @@ class Cluster(object):
                  context=None, **kwargs):
         '''Intialize a cluster object.
 
-        The cluster defaults to have 0 nodes with no profile assigned.
+        The cluster defaults to have 0 node with no profile assigned.
         '''
 
         self.id = kwargs.get('id', None)
