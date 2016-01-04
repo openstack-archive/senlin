@@ -22,7 +22,7 @@ For Users
 ---------
 
 If you want to install Senlin for a try out, please refer to the documents
-under the ``doc/source/getting_started/`` subdirectory.
+under the ``doc/source/user/`` subdirectory.
 
 --------------
 For Developers
