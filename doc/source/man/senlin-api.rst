@@ -17,7 +17,7 @@ senlin-api provides an external REST API to the Senlin service.
 INVENTORY
 ~~~~~~~~~
 
-senlin-api is a WSGI application that exposes an external ReST style API to
+senlin-api is a WSGI application that exposes an external REST style API to
 the Senlin service. senlin-api communicates with senlin-engine using Remote
 Procedure Calls (RPC), which is based on AMQP protocol.
 
