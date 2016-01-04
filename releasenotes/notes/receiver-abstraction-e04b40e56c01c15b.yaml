@@ -1,0 +1,11 @@
+---
+features:
+  - New abstraction 'receiver' has been added as a generic way to notify the
+    senlin engine that something interesting has happended.
+upgrade:
+  - Webhook abstraction is removed. New usage model of webhooks is through the
+    'receiver' abstraction.
+other:
+  - Added user documentation for 'receiver'.
+  - Added developer documentation for 'receiver'.
+  - Removed documentation for 'webhook'.

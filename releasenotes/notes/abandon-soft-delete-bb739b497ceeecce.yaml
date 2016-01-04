@@ -1,0 +1,7 @@
+---
+features:
+  - We no longer support soft-delete in senlin database. Marking an entity as
+    soft-deleted is causing more problems than brining any convenience.
+upgrade:
+  - Database tables have to be recreated as we have removed soft-delete support
+    from both the DB layer and the engine layer.

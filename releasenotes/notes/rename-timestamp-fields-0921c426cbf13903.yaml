@@ -1,0 +1,4 @@
+---
+upgrade:
+  - Timestamp fields like 'created_time' and 'udpated_time' are renamed to
+    'created_at' and 'updated_at' respectively.
