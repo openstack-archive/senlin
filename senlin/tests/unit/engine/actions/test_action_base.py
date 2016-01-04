@@ -567,7 +567,6 @@ class ActionBaseTest(base.SenlinTestCase):
             'id': 'FAKE_ID',
             'name': 'FAKE_NAME',
             'action': 'OBJECT_ACTION',
-            'context': self.ctx.to_dict(),
             'target': 'OBJID',
             'cause': 'FAKE_CAUSE',
             'owner': 'FAKE_OWNER',

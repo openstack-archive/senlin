@@ -1414,13 +1414,7 @@ class EngineService(service.Service):
                                                  sort_keys=sort_keys,
                                                  sort_dir=sort_dir)
 
-        results = []
-        for action in all_actions:
-            raw = action.to_dict()
-            del raw['context']
-            results.append(raw)
-
-        return results
+        return [a.to_dict() for a in all_actions]
 
     @request_context
     def action_create(self, context, name, target, action, inputs=None):
