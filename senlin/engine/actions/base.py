@@ -439,7 +439,6 @@ class Action(object):
             'id': self.id,
             'name': self.name,
             'action': self.action,
-            'context': self.context.to_dict(),
             'target': self.target,
             'cause': self.cause,
             'owner': self.owner,
