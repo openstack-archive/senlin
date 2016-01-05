@@ -13,8 +13,6 @@
 import mock
 from oslo_config import cfg
 
-from openstack.compute.v2 import server_metadata
-
 from senlin.drivers.openstack import nova_v2
 from senlin.drivers.openstack import sdk
 from senlin.tests.unit.common import base
@@ -349,20 +347,33 @@ class TestNovaV2(base.SenlinTestCase):
         d.server_ip_list(k='v')
         self.compute.server_ips.assert_called_once_with(k='v')
 
-    def test_server_metadata_get(self):
-        mock_metadata = mock.Mock()
-        mock_obj = self.patchobject(server_metadata.ServerMetadata, 'new',
-                                    return_value=mock_metadata)
+    def test_server_metadata_create(self):
+        server = mock.Mock()
         d = nova_v2.NovaClient(self.conn_params)
-        d.server_metadata_get(server_id='fake_id')
-        mock_obj.assert_called_once_with(server_id='fake_id')
-        mock_metadata.get.assert_called_once_with(self.mock_conn.session)
+        d.server_metadata_create(server, {'k1': 'v1'})
+        self.compute.create_server_metadata.assert_called_once_with(
+            server, k1='v1')
+
+    def test_server_metadata_get(self):
+        server = mock.Mock()
+        d = nova_v2.NovaClient(self.conn_params)
+        d.server_metadata_get(server)
+        self.compute.get_server_metadata.assert_called_once_with(server)
 
     def test_server_metadata_update(self):
-        mock_metadata = mock.Mock()
-        mock_obj = self.patchobject(server_metadata.ServerMetadata, 'new',
-                                    return_value=mock_metadata)
+        server = mock.Mock()
         d = nova_v2.NovaClient(self.conn_params)
-        d.server_metadata_update(server_id='fake_id')
-        mock_obj.assert_called_once_with(server_id='fake_id')
-        mock_metadata.update.assert_called_once_with(self.mock_conn.session)
+        d.server_metadata_update(server, {'k1': 'v1'})
+        self.compute.update_server_metadata.assert_called_once_with(
+            server, k1='v1')
+
+        d.server_metadata_update(server, {})
+        self.compute.replace_server_metadata.assert_called_once_with(
+            server, {})
+
+    def test_server_metadata_delete(self):
+        server = mock.Mock()
+        d = nova_v2.NovaClient(self.conn_params)
+        d.server_metadata_delete(server, 'k1')
+        self.compute.delete_server_metadata.assert_called_once_with(
+            server, 'k1')

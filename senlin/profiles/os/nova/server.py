@@ -378,17 +378,9 @@ class ServerProfile(base.Profile):
         # TODO(anyone): Validate the new profile
         # TODO(Yanyan Hu): Update all server properties changed in new profile
 
-        # Update server name
-        name = self.properties[self.NAME]
-        new_name = new_profile.properties[self.NAME]
-        if new_name != name:
-            attrs = {'name': new_name if new_name else obj.name}
-            try:
-                self.nova(obj).server_update(self.server_id, **attrs)
-            except Exception as ex:
-                LOG.exception(_('Failed in updating server name: %s'),
-                              six.text_type(ex))
-                return False
+        # Update basic properties of server
+        if not self._update_basic_properties(obj, new_profile):
+            return False
 
         # Update server flavor
         flavor = self.properties[self.FLAVOR]
@@ -433,6 +425,37 @@ class ServerProfile(base.Profile):
                 self._update_network(obj, networks_create, networks_delete)
             except Exception as ex:
                 LOG.exception(_('Failed in updating server network: %s'),
+                              six.text_type(ex))
+                return False
+
+        return True
+
+    def _update_basic_properties(self, obj, new_profile):
+        '''Updating basic server properties including name, metadata'''
+
+        # Update server metadata
+        metadata = self.properties[self.METADATA]
+        new_metadata = new_profile.properties[self.METADATA]
+        if new_metadata != metadata:
+            if new_metadata is None:
+                new_metadata = {}
+            try:
+                self.nova(obj).server_metadata_update(self.server_id,
+                                                      new_metadata)
+            except Exception as ex:
+                LOG.exception(_('Failed in updating server metadata: %s'),
+                              six.text_type(ex))
+                return False
+
+        # Update server name
+        name = self.properties[self.NAME]
+        new_name = new_profile.properties[self.NAME]
+        if new_name != name:
+            attrs = {'name': new_name if new_name else obj.name}
+            try:
+                self.nova(obj).server_update(self.server_id, **attrs)
+            except Exception as ex:
+                LOG.exception(_('Failed in updating server name: %s'),
                               six.text_type(ex))
                 return False
 
