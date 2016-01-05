@@ -124,7 +124,7 @@ clusters with IDs that is or come before the one you specify. You can use the
 option :option:`--marker <ID>` (or :option:`-m <ID>`) for this purpose. For
 example::
 
-  $ senlin profile-list -l 1 -m 2959122e-11c7-4e82-b12f-f49dc5dac270
+  $ senlin cluster-list -l 1 -m 2959122e-11c7-4e82-b12f-f49dc5dac270
   +----------+------+--------+---------------------+
   | id       | name | status | created_time        |
   +----------+------+--------+---------------------+
