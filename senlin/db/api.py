@@ -114,18 +114,6 @@ def node_get_all_by_cluster(context, cluster_id, project_safe=True):
                                         project_safe=project_safe)
 
 
-def node_get_by_name_and_cluster(context, node_name, cluster_id,
-                                 project_safe=True):
-    return IMPL.node_get_by_name_and_cluster(context,
-                                             node_name, cluster_id,
-                                             project_safe=project_safe)
-
-
-def node_get_by_physical_id(context, physical_id, project_safe=True):
-    return IMPL.node_get_by_physical_id(context, physical_id,
-                                        project_safe=project_safe)
-
-
 def node_update(context, node_id, values):
     return IMPL.node_update(context, node_id, values)
 

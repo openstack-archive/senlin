@@ -331,26 +331,6 @@ def node_get_all_by_cluster(context, cluster_id, project_safe=True):
     return nodes
 
 
-def node_get_by_name_and_cluster(context, node_name, cluster_id,
-                                 project_safe=True):
-    query = model_query(context, models.Node).filter_by(name=node_name)
-
-    if project_safe:
-        query = query.filter_by(project=context.project)
-
-    node = query.filter_by(cluster_id=cluster_id).first()
-    return node
-
-
-def node_get_by_physical_id(context, phy_id, project_safe=True):
-    query = model_query(context, models.Node).filter_by(physical_id=phy_id)
-
-    if project_safe:
-        query = query.filter_by(project=context.project)
-
-    return query.first()
-
-
 def node_update(context, node_id, values):
     '''Update a node with new property values.
 
