@@ -331,6 +331,19 @@ def node_get_all_by_cluster(context, cluster_id, project_safe=True):
     return nodes
 
 
+def node_get_all_by_cluster_and_status(context, cluster_id, status,
+                                       project_safe=True):
+    query = model_query(context, models.Node).filter_by(cluster_id=cluster_id,
+                                                        status=status)
+
+    if project_safe:
+        query = query.filter_by(project=context.project)
+
+    nodes = query.all()
+
+    return nodes
+
+
 def node_update(context, node_id, values):
     '''Update a node with new property values.
 

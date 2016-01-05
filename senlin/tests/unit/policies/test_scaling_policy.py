@@ -283,6 +283,50 @@ class TestScalingPolicy(base.SenlinTestCase):
         action.data.update.assert_called_with(pd)
         action.store.assert_called_with(self.context)
 
+    def test_pre_op_with_bad_nodes(self):
+        node_id = self.nodes[0]
+        db_api.node_update(self.context, node_id,
+                           {'status': 'ERROR'})
+
+        action = mock.Mock()
+        action.context = self.context
+        action.action = consts.CLUSTER_SCALE_IN
+        action.inputs = {}
+        adjustment = self.spec['properties']['adjustment']
+        adjustment['type'] = consts.EXACT_CAPACITY
+        adjustment['number'] = 1
+        policy = sp.ScalingPolicy('test-policy', self.spec)
+
+        policy.pre_op(self.cluster['id'], action)
+        pd = {
+            'deletion': {
+                'count': 1,
+            },
+            'reason': 'Scaling request validated.',
+            'status': policy_base.CHECK_OK,
+        }
+        action.data.update.assert_called_with(pd)
+        action.store.assert_called_with(self.context)
+
+        node_id = self.nodes[1]
+        db_api.node_update(self.context, node_id,
+                           {'status': 'ERROR'})
+        node_id = self.nodes[2]
+        db_api.node_update(self.context, node_id,
+                           {'status': 'ERROR'})
+
+        policy = sp.ScalingPolicy('test-policy', self.spec)
+
+        policy.pre_op(self.cluster['id'], action)
+        reason = _('Count (-1) invalid for action CLUSTER_SCALE_IN.')
+
+        pd = {
+            'reason': reason,
+            'status': policy_base.CHECK_ERROR,
+        }
+        action.data.update.assert_called_with(pd)
+        action.store.assert_called_with(self.context)
+
     def test_need_check_in_event(self):
         action = mock.Mock()
         action.context = self.context

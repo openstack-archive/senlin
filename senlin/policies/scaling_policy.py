@@ -131,7 +131,9 @@ class ScalingPolicy(base.Policy):
         reason = _('Scaling request validated.')
 
         cluster = db_api.cluster_get(action.context, cluster_id)
-        nodes = db_api.node_get_all_by_cluster(action.context, cluster_id)
+        nodes = db_api.node_get_all_by_cluster_and_status(action.context,
+                                                          cluster_id,
+                                                          'ACTIVE')
         current_size = len(nodes)
         count = self._calculate_adjustment_count(current_size)
 

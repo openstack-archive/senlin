@@ -319,6 +319,58 @@ class DBAPINodeTest(base.SenlinTestCase):
                                                project_safe=False)
         self.assertEqual(2, len(nodes))
 
+    def test_node_get_all_by_cluster_and_status(self):
+        cluster1 = shared.create_cluster(self.ctx, self.profile)
+
+        node0 = shared.create_node(self.ctx, None, self.profile)
+        node1 = shared.create_node(self.ctx, self.cluster, self.profile)
+        node2 = shared.create_node(self.ctx, self.cluster, self.profile)
+        node3 = shared.create_node(self.ctx, cluster1, self.profile)
+
+        status = 'ACTIVE'
+
+        nodes = db_api.node_get_all_by_cluster_and_status(self.ctx,
+                                                          self.cluster.id,
+                                                          status)
+        self.assertEqual(2, len(nodes))
+        self.assertEqual(set([node1.id, node2.id]),
+                         set([nodes[0].id, nodes[1].id]))
+
+        nodes = db_api.node_get_all_by_cluster_and_status(self.ctx,
+                                                          None,
+                                                          status)
+        self.assertEqual(1, len(nodes))
+        self.assertEqual(node0.id, nodes[0].id)
+
+        nodes = db_api.node_get_all_by_cluster_and_status(self.ctx,
+                                                          cluster1.id,
+                                                          status)
+        self.assertEqual(1, len(nodes))
+        self.assertEqual(node3.id, nodes[0].id)
+
+        nodes = db_api.node_get_all_by_cluster_and_status(self.ctx,
+                                                          self.cluster.id,
+                                                          'ERROR')
+        self.assertEqual(0, len(nodes))
+
+    def test_node_get_all_by_cluster_and_status_diff_project(self):
+        shared.create_cluster(self.ctx, self.profile)
+
+        shared.create_node(self.ctx, self.cluster, self.profile)
+
+        status = 'ACTIVE'
+
+        ctx_new = utils.dummy_context(project='a_different_project')
+        nodes = db_api.node_get_all_by_cluster_and_status(ctx_new,
+                                                          self.cluster.id,
+                                                          status)
+        self.assertEqual(0, len(nodes))
+        nodes = db_api.node_get_all_by_cluster_and_status(ctx_new,
+                                                          self.cluster.id,
+                                                          status,
+                                                          project_safe=False)
+        self.assertEqual(1, len(nodes))
+
     def test_node_update(self):
         node = shared.create_node(self.ctx, self.cluster, self.profile)
         new_attributes = {
