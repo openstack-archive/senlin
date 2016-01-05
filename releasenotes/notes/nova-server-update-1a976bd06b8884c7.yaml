@@ -1,0 +1,4 @@
+---
+features:
+  - Enabled update to the 'flavor' of a nova server profile.
+  - Enabled update to the 'name' of a nova server profile.
