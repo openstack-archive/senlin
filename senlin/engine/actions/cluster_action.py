@@ -19,6 +19,7 @@ from oslo_log import log as logging
 from senlin.common import consts
 from senlin.common import exception
 from senlin.common.i18n import _
+from senlin.common.i18n import _LI
 from senlin.common import scaleutils
 from senlin.db import api as db_api
 from senlin.engine.actions import base
@@ -205,38 +206,55 @@ class ClusterAction(base.Action):
             self.cluster.set_status(self.context, self.cluster.ERROR, reason)
             return self.RES_ERROR, reason
 
+        name = self.inputs.get('name')
+        metadata = self.inputs.get('metadata')
+        parent = self.inputs.get('parent')
+        timeout = self.inputs.get('timeout')
         profile_id = self.inputs.get('new_profile_id')
 
-        child_actions = []
-        for node in self.cluster.nodes:
-            kwargs = {
-                'name': 'node_update_%s' % node.id[:8],
-                'cause': base.CAUSE_DERIVED,
-                'inputs': {
-                    'new_profile_id': profile_id,
-                },
-                'user': self.context.user,
-                'project': self.context.project,
-                'domain': self.context.domain,
-            }
-            action = base.Action(node.id, 'NODE_UPDATE', **kwargs)
-            action.store(self.context)
-            child_actions.append(action)
+        if name is not None:
+            self.cluster.name = name
+        if parent is not None:
+            self.cluster.parent = parent
+        if metadata is not None:
+            self.cluster.metadata = metadata
+        if timeout is not None:
+            self.cluster.timeout = timeout
+        self.cluster.store(self.context)
 
-        if child_actions:
-            db_api.dependency_add(self.context,
-                                  [c.id for c in child_actions],
-                                  self.id)
-            for child in child_actions:
-                db_api.action_update(self.context, child.id,
-                                     {'status': child.READY})
-                dispatcher.start_action(action_id=child.id)
+        if profile_id is not None:
+            fmt = _LI("Updating cluster '%(cluster)s': profile='%(profile)s'.")
+            LOG.info(fmt, {'cluster': self.cluster.id, 'profile': profile_id})
+            child_actions = []
+            for node in self.cluster.nodes:
+                kwargs = {
+                    'name': 'node_update_%s' % node.id[:8],
+                    'cause': base.CAUSE_DERIVED,
+                    'inputs': {
+                        'new_profile_id': profile_id,
+                    },
+                    'user': self.context.user,
+                    'project': self.context.project,
+                    'domain': self.context.domain,
+                }
+                action = base.Action(node.id, 'NODE_UPDATE', **kwargs)
+                action.store(self.context)
+                child_actions.append(action)
 
-            result, new_reason = self._wait_for_dependents()
-            if result != self.RES_OK:
-                self.cluster.set_status(self.context, self.cluster.WARNING,
-                                        new_reason)
-                return result, new_reason
+            if child_actions:
+                db_api.dependency_add(self.context,
+                                      [c.id for c in child_actions],
+                                      self.id)
+                for child in child_actions:
+                    db_api.action_update(self.context, child.id,
+                                         {'status': child.READY})
+                    dispatcher.start_action(action_id=child.id)
+
+                result, new_reason = self._wait_for_dependents()
+                if result != self.RES_OK:
+                    self.cluster.set_status(self.context, self.cluster.WARNING,
+                                            new_reason)
+                    return result, new_reason
 
         reason = _('Cluster update completed.')
         self.cluster.set_status(self.context, self.cluster.ACTIVE, reason,

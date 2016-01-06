@@ -547,69 +547,48 @@ class EngineService(service.Service):
     def cluster_update(self, context, identity, name=None, profile_id=None,
                        parent=None, metadata=None, timeout=None):
 
-        def update_cluster_properties(cluster):
-            # Check if fields other than profile_id need update
-            changed = False
-            if name is not None and name != cluster.name:
-                cluster.name = name
-                changed = True
-
-            if parent is not None:
-                db_parent = self.cluster_find(context, parent)
-                if cluster.parent != db_parent.id:
-                    cluster.parent = db_parent.id
-                    changed = True
-
-            if metadata is not None:
-                old = cluster.metadata or {}
-                if metadata != old:
-                    old.update(metadata)
-                    cluster.metadata = old
-                    changed = True
-
-            if timeout is not None:
-                val = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
-                if val != cluster.timeout:
-                    cluster.timeout = val
-                    changed = True
-
-            if changed is True:
-                cluster.store(context)
-
         LOG.info(_LI("Updating cluster '%s'."), identity)
         # Get the database representation of the existing cluster
         db_cluster = self.cluster_find(context, identity)
         cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
-
-        if profile_id is None or profile_id == cluster.profile_id:
-            # Only update the other properties except profile
-            update_cluster_properties(cluster)
-            LOG.info(_LI("Cluster '%s' is updated."), identity)
-            return cluster.to_dict()
-
         if cluster.status == cluster.ERROR:
             msg = _('Updating a cluster in error state')
             LOG.error(msg)
             raise exception.FeatureNotSupported(feature=msg)
 
-        old_profile = self.profile_find(context, cluster.profile_id)
-        try:
-            new_profile = self.profile_find(context, profile_id)
-        except exception.ProfileNotFound:
-            msg = _("The specified profile '%s' is not found.") % profile_id
-            raise exception.SenlinBadRequest(msg=msg)
+        inputs = {}
+        if profile_id is not None:
+            old_profile = self.profile_find(context, cluster.profile_id)
+            try:
+                new_profile = self.profile_find(context, profile_id)
+            except exception.ProfileNotFound:
+                msg = _("The specified profile '%s' is "
+                        "not found.") % profile_id
+                raise exception.SenlinBadRequest(msg=msg)
 
-        if new_profile.type != old_profile.type:
-            msg = _('Cannot update a cluster to a different profile type, '
-                    'operation aborted.')
-            raise exception.ProfileTypeNotMatch(message=msg)
+            if new_profile.type != old_profile.type:
+                msg = _('Cannot update a cluster to a different profile type, '
+                        'operation aborted.')
+                raise exception.ProfileTypeNotMatch(message=msg)
+            if old_profile.id != new_profile.id:
+                inputs['new_profile_id'] = new_profile.id
 
-        profile_id = new_profile.id
+        if metadata is not None and metadata != cluster.metadata:
+            md = cluster.metadata
+            md.update(metadata)
+            inputs['metadata'] = md
 
-        fmt = _LI("Updating cluster '%(cluster)s': profile='%(profile)s'.")
-        LOG.info(fmt, {'cluster': identity, 'profile': profile_id})
+        if parent is not None:
+            db_parent = self.cluster_find(context, parent)
+            inputs['parent'] = db_parent.id
 
-        inputs = {'new_profile_id': profile_id}
+        if timeout is not None:
+            timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
+            inputs['timeout'] = timeout
+
+        if name is not None:
+            inputs['name'] = name
+
         kwargs = {
             'user': context.user,
             'project': context.project,
@@ -622,13 +601,11 @@ class EngineService(service.Service):
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
-        # Update the other properties after profile's update
-        # TODO(xuhaiwei): move the other properties update into start_action
-        update_cluster_properties(cluster)
 
         LOG.info(_LI("Cluster update action queued: %s."), action.id)
-
-        return cluster.to_dict()
+        resp = cluster.to_dict()
+        resp['action'] = action.id
+        return resp
 
     @request_context
     def cluster_add_nodes(self, context, identity, nodes):

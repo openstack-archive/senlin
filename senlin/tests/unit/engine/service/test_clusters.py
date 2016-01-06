@@ -452,38 +452,20 @@ class ClusterTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_simple_success(self, notify):
         c1 = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
-        cid = c1['id']
-
-        # 1. update name
-        self.eng.cluster_update(self.ctx, cid, name='c-2')
-        c = self.eng.cluster_get(self.ctx, cid)
-        self.assertEqual(cid, c['id'])
-        self.assertEqual('c-2', c['name'])
-
-        # 2. update parent
         p = self.eng.cluster_create(self.ctx, 'parent', 0, self.profile['id'])
-        self.eng.cluster_update(self.ctx, cid, parent=p['id'])
-        c = self.eng.cluster_get(self.ctx, cid)
-        self.assertEqual(cid, c['id'])
-        self.assertEqual(p['id'], c['parent'])
-
-        # 3.1 update metadata
-        self.eng.cluster_update(self.ctx, cid, metadata={'k': 'v'})
-        c = self.eng.cluster_get(self.ctx, cid)
-        self.assertEqual(cid, c['id'])
-        self.assertEqual({'k': 'v'}, c['metadata'])
-
-        # 3.2 update existing metadata
-        self.eng.cluster_update(self.ctx, cid, metadata={'k': 'v1'})
-        c = self.eng.cluster_get(self.ctx, cid)
-        self.assertEqual(cid, c['id'])
-        self.assertEqual({'k': 'v1'}, c['metadata'])
-
-        # 4. update timeout
-        self.eng.cluster_update(self.ctx, cid, timeout=119)
-        c = self.eng.cluster_get(self.ctx, cid)
-        self.assertEqual(cid, c['id'])
-        self.assertEqual(119, c['timeout'])
+        cid = c1['id']
+        new_params = {
+            'name': 'c-2',
+            'metadata': {'k': 'v'},
+            'parent': p['id'],
+            'timeout': 119,
+        }
+        resp = self.eng.cluster_update(self.ctx, cid,
+                                       **new_params)
+        action = db_api.action_get(self.ctx, resp['action'])
+        self._verify_action(action, 'CLUSTER_UPDATE',
+                            'cluster_update_%s' % cid[:8], cid,
+                            action_mod.CAUSE_RPC, inputs=new_params)
 
     def test_cluster_update_cluster_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,
@@ -539,14 +521,17 @@ class ClusterTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_update_to_same_profile(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
+        cid = c['id']
         result = self.eng.cluster_update(self.ctx, c['id'],
                                          profile_id=self.profile['id'])
         cluster = self.eng.cluster_get(self.ctx, c['id'])
         self.assertEqual(c['id'], cluster['id'])
         self.assertEqual(c['profile_id'], cluster['profile_id'])
-
-        # No new action is generated during 'cluster_update' progress
-        self.assertTrue('action' not in result)
+        action_id = result['action']
+        action = db_api.action_get(self.ctx, action_id)
+        self._verify_action(action, 'CLUSTER_UPDATE',
+                            'cluster_update_%s' % cid[:8], cid,
+                            action_mod.CAUSE_RPC, inputs={})
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_update_to_diff_profile_type(self, notify):
@@ -595,19 +580,16 @@ class ClusterTest(base.SenlinTestCase):
         new_profile = self.eng.profile_create(self.ctx, 'p-new', new_spec)
 
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
-        self.eng.cluster_update(self.ctx, c['id'],
-                                profile_id=new_profile['id'])
+        result = self.eng.cluster_update(self.ctx, c['id'],
+                                         profile_id=new_profile['id'])
 
-        # TODO(anyone): uncomment the following lines when cluster-update
-        # is implemented
-        # action_id = result['action']
-        # action = self.eng.action_get(self.ctx, action_id)
-        # self._verify_action(action, 'CLUSTER_UPDATE',
-        #                     'cluster_update_%s' % c['id'][:8],
-        #                     result['id'],
-        #                     cause=action_mod.CAUSE_RPC)
-
-        # notify.assert_called_once_with(self.ctx, action_id=action_id)
+        action_id = result['action']
+        action = self.eng.action_get(self.ctx, action_id)
+        self._verify_action(action, 'CLUSTER_UPDATE',
+                            'cluster_update_%s' % c['id'][:8],
+                            result['id'],
+                            cause=action_mod.CAUSE_RPC,
+                            inputs={'new_profile_id': new_profile['id']})
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_delete(self, notify):
