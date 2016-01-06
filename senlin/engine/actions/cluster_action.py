@@ -450,7 +450,7 @@ class ClusterAction(base.Action):
         :returns: A tuple containing the result and the corresponding reason.
         """
         self.cluster.set_status(self.context, self.cluster.RESIZING,
-                                reason='Cluster resize started.')
+                                'Cluster resize started.')
         node_list = self.cluster.nodes
         current_size = len(node_list)
         count, desired, candidates = self._get_action_data(current_size)
@@ -460,6 +460,9 @@ class ClusterAction(base.Action):
         if count == 0:
             result, reason = scaleutils.parse_resize_params(self, self.cluster)
             if result != self.RES_OK:
+                status_reason = _('Cluster resizing failed: %s') % reason
+                self.cluster.set_status(self.context, self.cluster.ACTIVE,
+                                        status_reason)
                 return result, reason
             count, desired, candidates = self._get_action_data(current_size)
         elif 'deletion' in self.data:
@@ -478,13 +481,13 @@ class ClusterAction(base.Action):
             if grace_period is not None:
                 self._wait_before_deletion(grace_period)
             result, reason = self._delete_nodes(candidates)
-            if result != self.RES_OK:
-                return result, reason
         # Create new nodes if desired_capacity increased
         else:
             result, reason = self._create_nodes(count)
-            if result != self.RES_OK:
-                return result, reason
+
+        if result != self.RES_OK:
+            self.cluster.set_status(self.context, self.cluster.WARNING, reason)
+            return result, reason
 
         reason = _('Cluster resize succeeded.')
         kwargs = {'desired_capacity': desired}
@@ -504,7 +507,7 @@ class ClusterAction(base.Action):
         :returns: A tuple containing the result and the corresponding reason.
         """
         self.cluster.set_status(self.context, self.cluster.RESIZING,
-                                reason='Cluster scale out started.')
+                                'Cluster scale out started.')
         # We use policy output if any, or else the count is
         # set to 1 as default.
         pd = self.data.get('creation', None)
@@ -517,6 +520,9 @@ class ClusterAction(base.Action):
 
         if count <= 0:
             reason = _('Invalid count (%s) for scaling out.') % count
+            status_reason = _('Cluster scaling failed: %s') % reason
+            self.cluster.set_status(self.context, self.cluster.ACTIVE,
+                                    status_reason)
             return self.RES_ERROR, reason
 
         # check provided params against current properties
@@ -527,6 +533,9 @@ class ClusterAction(base.Action):
         result = scaleutils.check_size_params(self.cluster, new_size,
                                               None, None, True)
         if result != '':
+            status_reason = _('Cluster scaling failed: %s') % result
+            self.cluster.set_status(self.context, self.cluster.ACTIVE,
+                                    status_reason)
             return self.RES_ERROR, result
 
         result, reason = self._create_nodes(count)
@@ -548,7 +557,7 @@ class ClusterAction(base.Action):
         :returns: A tuple containing the result and the corresponding reason.
         """
         self.cluster.set_status(self.context, self.cluster.RESIZING,
-                                reason='Cluster scale in started.')
+                                'Cluster scale in started.')
         # We use policy data if any, deletion policy and scaling policy might
         # be attached.
         pd = self.data.get('deletion', None)
@@ -565,6 +574,9 @@ class ClusterAction(base.Action):
 
         if count <= 0:
             reason = _('Invalid count (%s) for scaling in.') % count
+            status_reason = _('Cluster scaling failed: %s') % reason
+            self.cluster.set_status(self.context, self.cluster.ACTIVE,
+                                    status_reason)
             return self.RES_ERROR, reason
 
         # check provided params against current properties
@@ -580,6 +592,9 @@ class ClusterAction(base.Action):
         result = scaleutils.check_size_params(self.cluster, new_size,
                                               None, None, False)
         if result != '':
+            status_reason = _('Cluster scaling failed: %s') % result
+            self.cluster.set_status(self.context, self.cluster.ACTIVE,
+                                    status_reason)
             return self.RES_ERROR, result
 
         # Choose victims randomly
