@@ -20,6 +20,7 @@ import six
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.drivers import base as driver_base
+from senlin.profiles import base as profiles_base
 from senlin.profiles.os.nova import server
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -1234,3 +1235,119 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertEqual('Boom', res)
         nc.server_metadata_get.assert_called_once_with(server_id='FAKE_ID')
         nc.server_metadata_update.assert_called_once_with(FOO='BAR')
+
+    def test_do_rebuild(self):
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+        profile = server.ServerProfile('t', self.spec)
+
+        return_server = mock.Mock()
+        nc = mock.Mock()
+        nc.server_get.return_value = return_server
+        nc.server_rebuild.return_value = True
+        profile._novaclient = nc
+
+        test_server = mock.Mock()
+        test_server.physical_id = 'FAKE_ID'
+
+        mock_image = {'id': '123'}
+        return_server.image = mock_image
+
+        res = profile.do_rebuild(test_server)
+        nc.server_get.assert_called_with('FAKE_ID')
+        nc.server_rebuild.assert_called_once_with('FAKE_ID',
+                                                  '123',
+                                                  'FAKE_SERVER_NAME',
+                                                  'adminpass')
+        self.assertTrue(res)
+
+    def test_do_rebuild_no_serverfind(self):
+        msg = "FAKE_ID is not found"
+        ex = exception.InternalError(code=404, message=msg)
+
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+        profile = server.ServerProfile('t', self.spec)
+
+        nc = mock.Mock()
+        nc.server_get.side_effect = ex
+
+        test_server = mock.Mock()
+        test_server.physical_id = 'FAKE_ID'
+
+        res = profile.do_rebuild(test_server)
+        self.assertFalse(res)
+
+    def test_do_rebuild_failed(self):
+        msg = "FAKE_SERVER_IMAGE is not found"
+        ex = exception.InternalError(code=404, message=msg)
+
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+        profile = server.ServerProfile('t', self.spec)
+
+        return_server = mock.Mock()
+        nc = mock.Mock()
+        nc.server_get.return_value = return_server
+        nc.server_rebuild.side_effect = ex
+        profile._novaclient = nc
+
+        test_server = mock.Mock()
+        test_server.physical_id = 'FAKE_ID'
+
+        mock_image = {'id': '123'}
+        return_server.image = mock_image
+
+        res = profile.do_rebuild(test_server)
+        self.assertFalse(res)
+
+    def test_do_rebuild_no_physical_id(self):
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = mock.Mock()
+
+        test_server = mock.Mock()
+        test_server.physical_id = None
+        # Test path where server doesn't already exist
+        res = profile.do_rebuild(test_server)
+        self.assertFalse(res)
+
+    @mock.patch.object(server.ServerProfile, 'do_rebuild')
+    @mock.patch.object(profiles_base.Profile, 'do_recover')
+    def test_do_recover(self, mock_base_recover, mock_rebuild):
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+        profile = server.ServerProfile('t', self.spec)
+
+        mock_rebuild.return_value = True
+        nova_server = mock.Mock()
+        nova_server.id = 'FAKE_NOVA_SERVER_ID'
+        mock_base_recover.return_value = nova_server.id
+
+        test_server = mock.Mock()
+        test_server.physical_id = 'FAKE_ID'
+
+        options = {'operation': 'REBUILD'}
+        res = profile.do_recover(test_server, **options)
+        mock_rebuild.assert_called_once_with(test_server)
+        self.assertTrue(res)
+
+        options = {'operation': 'RECREATE'}
+        res = profile.do_recover(test_server, **options)
+        mock_base_recover.assert_called_once_with(test_server,
+                                                  **options)
+        self.assertEqual(nova_server.id, res)
+
+    @mock.patch.object(profiles_base.Profile, 'do_recover')
+    def test_do_recover_failed(self, mock_base_recover):
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+        profile = server.ServerProfile('t', self.spec)
+
+        mock_base_recover.return_value = False
+
+        test_server = mock.Mock()
+        test_server.physical_id = 'FAKE_ID'
+
+        options = {'operation': 'RECREATE'}
+        res = profile.do_recover(test_server, **options)
+        self.assertFalse(res)

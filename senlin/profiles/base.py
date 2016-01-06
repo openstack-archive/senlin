@@ -13,7 +13,9 @@
 import copy
 
 from oslo_context import context as oslo_context
+from oslo_log import log as logging
 from oslo_utils import timeutils
+import six
 
 from senlin.common import context
 from senlin.common import exception
@@ -22,6 +24,8 @@ from senlin.common import schema
 from senlin.common import utils
 from senlin.db import api as db_api
 from senlin.engine import environment
+
+LOG = logging.getLogger(__name__)
 
 
 class Profile(object):
@@ -200,6 +204,11 @@ class Profile(object):
         return profile.do_update(obj, new_profile, **params)
 
     @classmethod
+    def recover_object(cls, ctx, obj, **options):
+        profile = cls.load(ctx, obj.profile_id)
+        return profile.do_recover(obj, **options)
+
+    @classmethod
     def get_details(cls, ctx, obj):
         profile = cls.load(ctx, obj.profile_id)
         return profile.do_get_details(obj)
@@ -289,6 +298,29 @@ class Profile(object):
     def do_leave(self, obj):
         '''For subclass to override.'''
         return NotImplemented
+
+    def do_rebuild(self, obj):
+        '''For subclass to override.'''
+        return NotImplemented
+
+    def do_recover(self, obj, **options):
+        '''For subclass to override.'''
+
+        if 'operation' in options:
+            if options['operation'] != 'RECREATE':
+                return NotImplemented
+
+        res = self.do_delete(obj)
+
+        if res:
+            try:
+                res = self.do_create(obj)
+            except Exception as ex:
+                LOG.exception(_('Failed at recovering obj: %s '),
+                              six.text_type(ex))
+                return False
+
+        return res
 
     def to_dict(self):
         pb_dict = {
