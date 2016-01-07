@@ -639,8 +639,9 @@ class ServerProfile(base.Profile):
 
         # process security groups
         sgroups = []
-        for sg in server_data['security_groups']:
-            sgroups.append(sg['name'])
+        if 'security_groups' in server_data:
+            for sg in server_data['security_groups']:
+                sgroups.append(sg['name'])
         if len(sgroups) == 0:
             details['security_groups'] = ''
         elif len(sgroups) == 1:
