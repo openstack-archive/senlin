@@ -1046,7 +1046,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
             'metadata': {},
             'name': 'FAKE_NAME',
             'os-extended-volumes:volumes_attached': [],
-            'private network': '10.0.0.3',
+            'addresses': {'private': ['10.0.0.3']},
             'progress': 0,
             'security_groups': 'default',
             'updated': 'UPDATE_TIMESTAMP',
@@ -1082,6 +1082,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
             'flavor': 'FAKE_FLAVOR',
             'id': 'FAKE_ID',
             'image': 'FAKE_IMAGE',
+            'addresses': {},
             'security_groups': '',
         }
         self.assertEqual(expected, res)
@@ -1129,8 +1130,9 @@ class TestNovaServerProfile(base.SenlinTestCase):
             'flavor': 'FAKE_FLAVOR',
             'id': 'FAKE_ID',
             'image': 'FAKE_IMAGE',
-            'private network': ['10.0.0.3', '192.168.43.3'],
-            'public network': '172.16.5.3',
+            'addresses': {
+                'private': ['10.0.0.3', '192.168.43.3'],
+                'public': ['172.16.5.3']},
             'security_groups': ['default', 'webserver'],
         }
         self.assertEqual(expected, res)
