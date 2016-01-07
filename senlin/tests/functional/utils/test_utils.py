@@ -82,7 +82,18 @@ def wait_for_status(func, client, obj_id, expected_status, timeout=60,
         time.sleep(5)
         timeout -= 5
 
-    raise Exception('Waiting for status timeout.')
+    raise Exception('Timeout waiting for status.')
+
+
+def wait_for_delete(func, client, obj, timeout=60):
+    while timeout > 0:
+        res = func(client, obj, ignore_missing=True)
+        if res.status == 404:
+            return res
+        time.sleep(5)
+        timeout -= 5
+
+    raise Exception('Timeout waiting for deletion.')
 
 
 def random_name(prefix, len_postfix=8):

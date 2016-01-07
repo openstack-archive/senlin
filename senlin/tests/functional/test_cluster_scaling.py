@@ -121,9 +121,8 @@ class TestClusterScaling(base.SenlinFunctionalTest):
 
         # Delete cluster
         test_api.delete_cluster(self.client, cluster['id'])
-        cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
-                                             cluster['id'], 'DELETED',
-                                             ignore_missing=True)
+        cluster = test_utils.wait_for_delete(test_api.get_cluster, self.client,
+                                             cluster['id'])
 
     def test_cluster_resize_basic(self):
         # Create cluster
@@ -184,9 +183,8 @@ class TestClusterScaling(base.SenlinFunctionalTest):
 
         # Delete cluster
         test_api.delete_cluster(self.client, cluster['id'])
-        cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
-                                             cluster['id'], 'DELETED',
-                                             ignore_missing=True)
+        cluster = test_utils.wait_for_delete(test_api.get_cluster, self.client,
+                                             cluster['id'])
 
     def test_cluster_resize_with_constraint_breaking(self):
         # Create cluster
@@ -270,9 +268,8 @@ class TestClusterScaling(base.SenlinFunctionalTest):
 
         # Delete cluster
         test_api.delete_cluster(self.client, cluster['id'])
-        cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
-                                             cluster['id'], 'DELETED',
-                                             ignore_missing=True)
+        cluster = test_utils.wait_for_delete(test_api.get_cluster, self.client,
+                                             cluster['id'])
 
     def test_cluster_resize_with_constraint_adjusting(self):
         # Create cluster
@@ -353,9 +350,8 @@ class TestClusterScaling(base.SenlinFunctionalTest):
 
         # Delete cluster
         test_api.delete_cluster(self.client, cluster['id'])
-        cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
-                                             cluster['id'], 'DELETED',
-                                             ignore_missing=True)
+        cluster = test_utils.wait_for_delete(test_api.get_cluster, self.client,
+                                             cluster['id'])
 
     def test_cluster_resize_with_invalid_constraint_provided(self):
         # Create cluster
@@ -416,6 +412,5 @@ class TestClusterScaling(base.SenlinFunctionalTest):
 
         # Delete cluster
         test_api.delete_cluster(self.client, cluster['id'])
-        cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
-                                             cluster['id'], 'DELETED',
-                                             ignore_missing=True)
+        cluster = test_utils.wait_for_delete(test_api.get_cluster, self.client,
+                                             cluster['id'])

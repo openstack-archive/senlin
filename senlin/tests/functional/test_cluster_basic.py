@@ -66,9 +66,7 @@ class TestClusterBasic(base.SenlinFunctionalTest):
         # Delete cluster
         test_api.delete_cluster(self.client, cluster['id'])
         test_api.delete_cluster(self.client, cluster2['id'])
-        test_utils.wait_for_status(test_api.get_cluster, self.client,
-                                   cluster['id'], 'DELETED',
-                                   ignore_missing=True)
-        test_utils.wait_for_status(test_api.get_cluster, self.client,
-                                   cluster2['id'], 'DELETED',
-                                   ignore_missing=True)
+        test_utils.wait_for_delete(test_api.get_cluster, self.client,
+                                   cluster['id'])
+        test_utils.wait_for_delete(test_api.get_cluster, self.client,
+                                   cluster2['id'])
