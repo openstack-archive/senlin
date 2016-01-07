@@ -1,0 +1,12 @@
+# Sample placement policy for cross-region placement
+type: senlin.policy.region_placement
+version: 1.0
+description: A policy for node placement across regions
+properties:
+  regions:
+    - name: RegionOne
+      weight: 100
+      cap: 150
+    - name: RegionTwo
+      weight: 100
+      cap: 200
