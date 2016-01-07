@@ -390,25 +390,25 @@ class DBAPIClusterTest(base.SenlinTestCase):
 
     def test_get_sort_keys_returns_empty_list_if_no_keys(self):
         sort_keys = None
-        mapping = {}
+        valid_keys = ['foo', 'bar']
 
-        filtered_keys = db_api._get_sort_keys(sort_keys, mapping)
-        self.assertEqual([], filtered_keys)
+        filtered_keys = db_api._get_sort_keys(sort_keys, valid_keys)
+        self.assertIsNone(filtered_keys)
 
     def test_get_sort_keys_whitelists_single_key(self):
-        sort_key = 'foo'
-        mapping = {'foo': 'Foo'}
+        sort_keys = 'foo'
+        valid_keys = ['foo', 'bar']
 
-        filtered_keys = db_api._get_sort_keys(sort_key, mapping)
-        self.assertEqual(['Foo'], filtered_keys)
+        filtered_keys = db_api._get_sort_keys(sort_keys, valid_keys)
+        self.assertEqual(['foo'], filtered_keys)
 
     def test_get_sort_keys_whitelists_multiple_keys(self):
         sort_keys = ['foo', 'bar', 'nope']
-        mapping = {'foo': 'Foo', 'bar': 'Bar'}
+        valid_keys = ['foo', 'bar']
 
-        filtered_keys = db_api._get_sort_keys(sort_keys, mapping)
-        self.assertIn('Foo', filtered_keys)
-        self.assertIn('Bar', filtered_keys)
+        filtered_keys = db_api._get_sort_keys(sort_keys, valid_keys)
+        self.assertIn('foo', filtered_keys)
+        self.assertIn('bar', filtered_keys)
         self.assertEqual(2, len(filtered_keys))
 
     @mock.patch.object(db_api.utils, 'paginate_query')

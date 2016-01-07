@@ -65,16 +65,19 @@ def model_query(context, *args):
     return query
 
 
-def _get_sort_keys(sort_keys, mapping):
-    '''Returns an array containing only whitelisted keys
+def _get_sort_keys(keys, whitelist):
+    """Returns an array containing only whitelisted keys
 
-    :param sort_keys: an array of strings
-    :param mapping: a mapping from keys to DB column names
+    :param keys: an array of strings or a single string
+    :param whitelist: a list of allowed keys
     :returns: filtered list of sort keys
-    '''
-    if isinstance(sort_keys, six.string_types):
-        sort_keys = [sort_keys]
-    return [mapping[key] for key in sort_keys or [] if key in mapping]
+    """
+    if keys is None:
+        return None
+
+    if isinstance(keys, six.string_types):
+        keys = [keys]
+    return [k for k in keys if k in whitelist]
 
 
 def _paginate_query(context, query, model, limit=None, marker=None,
@@ -185,14 +188,7 @@ def cluster_get_all(context, limit=None, marker=None, sort_keys=None,
     if filters is None:
         filters = {}
 
-    sort_key_map = {
-        consts.CLUSTER_NAME: models.Cluster.name.key,
-        consts.CLUSTER_STATUS: models.Cluster.status.key,
-        consts.CLUSTER_CREATED_AT: models.Cluster.created_at.key,
-        consts.CLUSTER_UPDATED_AT: models.Cluster.updated_at.key,
-    }
-    keys = _get_sort_keys(sort_keys, sort_key_map)
-
+    keys = _get_sort_keys(sort_keys, consts.CLUSTER_SORT_KEYS)
     query = db_filters.exact_filter(query, models.Cluster, filters)
     return _paginate_query(context, query, models.Cluster, limit=limit,
                            marker=marker, sort_keys=keys, sort_dir=sort_dir,
@@ -305,14 +301,7 @@ def node_get_all(context, cluster_id=None, limit=None, marker=None,
     if filters is None:
         filters = {}
 
-    sort_key_map = {
-        consts.NODE_INDEX: models.Node.index.key,
-        consts.NODE_NAME: models.Node.name.key,
-        consts.NODE_CREATED_AT: models.Node.created_at.key,
-        consts.NODE_UPDATED_AT: models.Node.updated_at.key,
-        consts.NODE_STATUS: models.Node.status.key,
-    }
-    keys = _get_sort_keys(sort_keys, sort_key_map)
+    keys = _get_sort_keys(sort_keys, consts.NODE_SORT_KEYS)
     query = db_filters.exact_filter(query, models.Node, filters)
     return _paginate_query(context, query, models.Node,
                            limit=limit, marker=marker,
@@ -567,16 +556,7 @@ def policy_get_all(context, limit=None, marker=None, sort_keys=None,
     if filters is None:
         filters = {}
 
-    sort_key_map = {
-        consts.POLICY_TYPE: models.Policy.type.key,
-        consts.POLICY_NAME: models.Policy.name.key,
-        consts.POLICY_LEVEL: models.Policy.level.key,
-        consts.POLICY_COOLDOWN: models.Policy.cooldown.key,
-        consts.POLICY_CREATED_AT: models.Policy.created_at.key,
-        consts.POLICY_UPDATED_AT: models.Policy.updated_at.key,
-    }
-    keys = _get_sort_keys(sort_keys, sort_key_map)
-
+    keys = _get_sort_keys(sort_keys, consts.POLICY_SORT_KEYS)
     query = db_filters.exact_filter(query, models.Policy, filters)
     return _paginate_query(context, query, models.Policy,
                            limit=limit, marker=marker,
@@ -627,14 +607,7 @@ def cluster_policy_get_all(context, cluster_id, filters=None,
     if filters is None:
         filters = {}
 
-    sort_key_map = {
-        consts.CP_PRIORITY: models.ClusterPolicies.priority.key,
-        consts.CP_LEVEL: models.ClusterPolicies.level.key,
-        consts.CP_COOLDOWN: models.ClusterPolicies.cooldown.key,
-        consts.CP_ENABLED: models.ClusterPolicies.enabled.key,
-    }
-
-    keys = _get_sort_keys(sort_keys, sort_key_map)
+    keys = _get_sort_keys(sort_keys, consts.CLUSTER_POLICY_SORT_KEYS)
     query = db_filters.exact_filter(query, models.ClusterPolicies, filters)
 
     if sort_dir is None and sort_keys is None:
@@ -719,15 +692,7 @@ def profile_get_all(context, limit=None, marker=None, sort_keys=None,
     if filters is None:
         filters = {}
 
-    sort_key_map = {
-        consts.PROFILE_TYPE: models.Profile.type.key,
-        consts.PROFILE_NAME: models.Profile.name.key,
-        consts.PROFILE_PERMISSION: models.Profile.permission.key,
-        consts.PROFILE_CREATED_AT: models.Profile.created_at.key,
-        consts.PROFILE_UPDATED_AT: models.Profile.updated_at.key,
-    }
-    keys = _get_sort_keys(sort_keys, sort_key_map)
-
+    keys = _get_sort_keys(sort_keys, consts.PROFILE_SORT_KEYS)
     query = db_filters.exact_filter(query, models.Profile, filters)
     return _paginate_query(context, query, models.Profile,
                            limit=limit, marker=marker,
@@ -851,15 +816,7 @@ def _event_filter_paginate_query(context, query, filters=None,
     if filters is None:
         filters = {}
 
-    sort_key_map = {
-        consts.EVENT_TIMESTAMP: models.Event.timestamp.key,
-        consts.EVENT_LEVEL: models.Event.level.key,
-        consts.EVENT_OBJ_TYPE: models.Event.obj_type.key,
-        consts.EVENT_OBJ_NAME: models.Event.obj_name.key,
-        consts.EVENT_USER: models.Event.user.key,
-        consts.EVENT_ACTION: models.Event.action.key,
-    }
-    keys = _get_sort_keys(sort_keys, sort_key_map)
+    keys = _get_sort_keys(sort_keys, consts.EVENT_SORT_KEYS)
 
     query = db_filters.exact_filter(query, models.Event, filters)
     return _paginate_query(context, query, models.Event,
@@ -953,14 +910,7 @@ def action_get_all(context, filters=None, limit=None, marker=None,
     if filters is None:
         filters = {}
 
-    sort_key_map = {
-        consts.ACTION_NAME: models.Action.name.key,
-        consts.ACTION_TARGET: models.Action.target.key,
-        consts.ACTION_ACTION: models.Action.action.key,
-        consts.ACTION_CREATED_AT: models.Action.created_at.key,
-        consts.ACTION_STATUS: models.Action.status.key,
-    }
-    keys = _get_sort_keys(sort_keys, sort_key_map)
+    keys = _get_sort_keys(sort_keys, consts.ACTION_SORT_KEYS)
 
     query = db_filters.exact_filter(query, models.Action, filters)
     return _paginate_query(context, query, models.Action,
@@ -1233,14 +1183,7 @@ def receiver_get_all(context, limit=None, marker=None, filters=None,
     if filters is None:
         filters = {}
 
-    sort_key_map = {
-        consts.RECEIVER_NAME: models.Receiver.name.key,
-        consts.RECEIVER_TYPE: models.Receiver.type.key,
-        consts.RECEIVER_ACTION: models.Receiver.action.key,
-        consts.RECEIVER_CLUSTER_ID: models.Receiver.cluster_id.key,
-        consts.RECEIVER_CREATED_AT: models.Receiver.created_at.key,
-    }
-    keys = _get_sort_keys(sort_keys, sort_key_map)
+    keys = _get_sort_keys(sort_keys, consts.RECEIVER_SORT_KEYS)
     query = db_filters.exact_filter(query, models.Receiver, filters)
     return _paginate_query(context, query, models.Receiver,
                            limit=limit, marker=marker,
