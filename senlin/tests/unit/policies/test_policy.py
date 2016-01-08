@@ -198,17 +198,17 @@ class TestPolicyBase(base.SenlinTestCase):
         res = list(policy_base.Policy.load_all(self.ctx))
         self.assertEqual([], res)
         mock_get.assert_called_once_with(self.ctx, limit=None, marker=None,
-                                         sort_keys=None, sort_dir=None,
-                                         filters=None, project_safe=True)
+                                         sort=None, filters=None,
+                                         project_safe=True)
         mock_get.reset_mock()
 
-        res = list(policy_base.Policy.load_all(
-            self.ctx, limit=1, marker='MARKER', sort_keys=['K1'],
-            sort_dir='asc', filters={'level': 30}))
+        res = list(policy_base.Policy.load_all(self.ctx, limit=1,
+                                               marker='MARKER', sort='K1:asc',
+                                               filters={'level': 30}))
         self.assertEqual([], res)
-        mock_get.assert_called_once_with(
-            self.ctx, limit=1, marker='MARKER', sort_keys=['K1'],
-            sort_dir='asc', filters={'level': 30}, project_safe=True)
+        mock_get.assert_called_once_with(self.ctx, limit=1, marker='MARKER',
+                                         sort='K1:asc', filters={'level': 30},
+                                         project_safe=True)
 
     def test_delete(self):
         policy = self._create_db_policy()

@@ -309,16 +309,14 @@ class EngineService(service.Service):
         return policy
 
     @request_context
-    def policy_list(self, context, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None):
+    def policy_list(self, context, limit=None, marker=None, sort=None,
+                    filters=None, project_safe=True):
         if limit is not None:
             limit = utils.parse_int_param('limit', limit)
-        policies = policy_base.Policy.load_all(context, limit=limit,
-                                               marker=marker,
-                                               sort_keys=sort_keys,
-                                               sort_dir=sort_dir,
-                                               filters=filters)
-
+        policies = policy_base.Policy.load_all(context,
+                                               limit=limit, marker=marker,
+                                               sort=sort, filters=filters,
+                                               project_safe=project_safe)
         return [p.to_dict() for p in policies]
 
     @request_context

@@ -12,6 +12,7 @@
 
 from oslo_utils import timeutils as tu
 
+from senlin.common import consts
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
 from senlin.tests.unit.common import base
@@ -246,23 +247,16 @@ class DBAPIPolicyTest(base.SenlinTestCase):
             db_api.policy_create(self.ctx, data)
 
         mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
-        sort_keys = ['type', 'name', 'level', 'cooldown', 'created_at',
-                     'updated_at']
-
-        db_api.policy_get_all(self.ctx, sort_keys=sort_keys)
+        sort_keys = consts.POLICY_SORT_KEYS
+        db_api.policy_get_all(self.ctx, sort=','.join(sort_keys))
 
         args = mock_paginate.call_args[0]
         used_sort_keys = set(args[3])
-        expected_keys = set(['id', 'type', 'name', 'level', 'cooldown',
-                             'created_at', 'updated_at'])
+        sort_keys.append('id')
+        expected_keys = set(sort_keys)
         self.assertEqual(expected_keys, used_sort_keys)
 
-    def test_policy_get_all_sort_keys_wont_change(self):
-        sort_keys = ['id']
-        db_api.policy_get_all(self.ctx, sort_keys=sort_keys)
-        self.assertEqual(['id'], sort_keys)
-
-    def test_policy_get_all_sort_keys_and_dir(self):
+    def test_policy_get_all_sorting(self):
         values = [{'id': '001', 'name': 'policy1', 'level': 50},
                   {'id': '002', 'name': 'policy3', 'level': 20},
                   {'id': '003', 'name': 'policy2', 'level': 40}]
@@ -271,37 +265,34 @@ class DBAPIPolicyTest(base.SenlinTestCase):
             data = self.new_policy_data(**v)
             db_api.policy_create(self.ctx, data)
 
-        policies = db_api.policy_get_all(self.ctx, sort_keys=['name', 'level'],
-                                         sort_dir='asc')
+        policies = db_api.policy_get_all(self.ctx, sort='name,level')
         self.assertEqual(3, len(policies))
         # Sorted by name
         self.assertEqual('001', policies[0].id)
         self.assertEqual('003', policies[1].id)
         self.assertEqual('002', policies[2].id)
 
-        policies = db_api.policy_get_all(self.ctx, sort_keys=['level', 'name'],
-                                         sort_dir='asc')
+        policies = db_api.policy_get_all(self.ctx, sort='level,name')
         self.assertEqual(3, len(policies))
         # Sorted by levels (ascending)
         self.assertEqual('002', policies[0].id)
         self.assertEqual('003', policies[1].id)
         self.assertEqual('001', policies[2].id)
 
-        policies = db_api.policy_get_all(self.ctx, sort_keys=['level', 'name'],
-                                         sort_dir='desc')
+        policies = db_api.policy_get_all(self.ctx, sort='level:desc,name:desc')
         self.assertEqual(3, len(policies))
         # Sorted by statuses (descending)
         self.assertEqual('001', policies[0].id)
         self.assertEqual('003', policies[1].id)
         self.assertEqual('002', policies[2].id)
 
-    def test_policy_get_all_default_sort_dir(self):
+    def test_policy_get_all_default_sorting(self):
         policies = []
         for x in range(3):
             data = self.new_policy_data(created_at=tu.utcnow())
             policies.append(db_api.policy_create(self.ctx, data))
 
-        results = db_api.policy_get_all(self.ctx, sort_dir='asc')
+        results = db_api.policy_get_all(self.ctx)
         self.assertEqual(3, len(results))
         self.assertEqual(policies[0].id, results[0].id)
         self.assertEqual(policies[1].id, results[1].id)
