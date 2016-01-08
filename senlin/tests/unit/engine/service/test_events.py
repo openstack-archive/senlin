@@ -11,7 +11,6 @@
 # under the License.
 
 from oslo_utils import timeutils
-import six
 
 from senlin.common import exception
 from senlin.engine import event as event_mod
@@ -76,7 +75,7 @@ class EventTest(base.SenlinTestCase):
         result = self.eng.event_list(self.ctx, limit=2, marker=e1.id)
         self.assertEqual(2, len(result))
 
-    def test_event_list_with_sort_keys(self):
+    def test_event_list_with_sorting(self):
         e1 = event_mod.Event(timeutils.utcnow(), 50, status='GOOD',
                              context=self.ctx)
         e1.store(self.ctx)
@@ -93,26 +92,25 @@ class EventTest(base.SenlinTestCase):
         self.assertEqual(e2.id, result[1]['id'])
 
         # use level for sorting
-        result = self.eng.event_list(self.ctx, sort_keys=['level'])
+        result = self.eng.event_list(self.ctx, sort='level')
         self.assertEqual(e2.id, result[0]['id'])
         self.assertEqual(e1.id, result[1]['id'])
 
-        # use status for sorting
-        result = self.eng.event_list(self.ctx, sort_keys=['status'])
-        self.assertEqual(e3.id, result[2]['id'])
+        # use status for sorting, ascending
+        result = self.eng.event_list(self.ctx, sort='status')
+        self.assertEqual(e3.id, result[0]['id'])
 
         # use level and status for sorting
-        result = self.eng.event_list(self.ctx,
-                                     sort_keys=['status', 'level'])
-        self.assertEqual(e3.id, result[2]['id'])
-        self.assertEqual(e2.id, result[0]['id'])
-        self.assertEqual(e1.id, result[1]['id'])
+        result = self.eng.event_list(self.ctx, sort='status,level')
+        self.assertEqual(e3.id, result[0]['id'])
+        self.assertEqual(e2.id, result[1]['id'])
+        self.assertEqual(e1.id, result[2]['id'])
 
         # unknown keys will be ignored
-        result = self.eng.event_list(self.ctx, sort_keys=['duang'])
+        result = self.eng.event_list(self.ctx, sort='duang')
         self.assertIsNotNone(result)
 
-    def test_event_list_with_sort_dir(self):
+    def test_event_list_with_sorting_dir(self):
         e1 = event_mod.Event(timeutils.utcnow(), 50, status='GOOD',
                              context=self.ctx)
         e1.store(self.ctx)
@@ -128,24 +126,14 @@ class EventTest(base.SenlinTestCase):
         self.assertEqual(e1.id, result[0]['id'])
         self.assertEqual(e2.id, result[1]['id'])
 
-        # sort by created_time, descending
-        result = self.eng.event_list(self.ctx, sort_dir='desc')
+        # sort by timestamp, descending
+        result = self.eng.event_list(self.ctx, sort='timestamp:desc')
         self.assertEqual(e3.id, result[0]['id'])
         self.assertEqual(e2.id, result[1]['id'])
 
-        # use name for sorting, descending
-        result = self.eng.event_list(self.ctx, sort_keys=['name'],
-                                     sort_dir='desc')
-        self.assertEqual(e3.id, result[0]['id'])
-        self.assertEqual(e1.id, result[2]['id'])
-
-        # use permission for sorting
-        ex = self.assertRaises(ValueError,
-                               self.eng.event_list, self.ctx,
-                               sort_dir='Bogus')
-        self.assertEqual("Unknown sort direction, must be one of: "
-                         "asc-nullsfirst, asc-nullslast, desc-nullsfirst, "
-                         "desc-nullslast", six.text_type(ex))
+        # use status for sorting, descending
+        result = self.eng.event_list(self.ctx, sort='status:desc')
+        self.assertEqual(e3.id, result[2]['id'])
 
     def test_event_list_with_filters(self):
         e1 = event_mod.Event(timeutils.utcnow(), 50, status='GOOD',

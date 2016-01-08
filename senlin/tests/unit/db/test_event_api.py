@@ -181,7 +181,7 @@ class DBAPIEventTest(base.SenlinTestCase):
         self.assertEqual(1, len(events))
         self.assertEqual(event2_id, events[0].id)
 
-    def test_event_get_all_with_sort_keys_and_dir(self):
+    def test_event_get_all_with_sorting(self):
         cluster1 = shared.create_cluster(self.ctx, self.profile)
 
         event1 = self.create_event(self.ctx, entity=cluster1,
@@ -194,24 +194,22 @@ class DBAPIEventTest(base.SenlinTestCase):
                                    timestamp=tu.utcnow(),
                                    action='action1')
 
-        events = db_api.event_get_all(self.ctx, sort_keys=['timestamp'])
+        events = db_api.event_get_all(self.ctx, sort='timestamp')
         self.assertEqual(event1.id, events[0].id)
         self.assertEqual(event2.id, events[1].id)
         self.assertEqual(event3.id, events[2].id)
 
-        events = db_api.event_get_all(self.ctx, sort_keys=['timestamp'],
-                                      sort_dir='desc')
+        events = db_api.event_get_all(self.ctx, sort='timestamp:desc')
         self.assertEqual(event1.id, events[2].id)
         self.assertEqual(event2.id, events[1].id)
         self.assertEqual(event3.id, events[0].id)
 
-        events = db_api.event_get_all(self.ctx, sort_keys=['action'])
+        events = db_api.event_get_all(self.ctx, sort='action')
         self.assertEqual(event1.id, events[1].id)
         self.assertEqual(event2.id, events[2].id)
         self.assertEqual(event3.id, events[0].id)
 
-        events = db_api.event_get_all(self.ctx, sort_keys=['action'],
-                                      sort_dir='desc')
+        events = db_api.event_get_all(self.ctx, sort='action:desc')
         self.assertEqual(event1.id, events[1].id)
         self.assertEqual(event2.id, events[0].id)
         self.assertEqual(event3.id, events[2].id)

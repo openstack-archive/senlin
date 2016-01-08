@@ -272,10 +272,9 @@ def event_get_by_short_id(context, short_id, project_safe=True):
                                       project_safe=project_safe)
 
 
-def event_get_all(context, limit=None, marker=None, sort_keys=None,
-                  sort_dir=None, filters=None, project_safe=True):
-    return IMPL.event_get_all(context, limit=limit, marker=marker,
-                              sort_keys=sort_keys, sort_dir=sort_dir,
+def event_get_all(context, limit=None, marker=None, sort=None, filters=None,
+                  project_safe=True):
+    return IMPL.event_get_all(context, limit=limit, marker=marker, sort=sort,
                               filters=filters, project_safe=project_safe)
 
 
@@ -285,13 +284,9 @@ def event_count_by_cluster(context, cluster_id, project_safe=True):
 
 
 def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
-                             sort_keys=None, sort_dir=None, filters=None,
-                             project_safe=True):
-    return IMPL.event_get_all_by_cluster(context, cluster_id,
-                                         limit=limit, marker=marker,
-                                         sort_keys=sort_keys,
-                                         sort_dir=sort_dir,
-                                         filters=filters,
+                             sort=None, filters=None, project_safe=True):
+    return IMPL.event_get_all_by_cluster(context, cluster_id, filters=filters,
+                                         limit=limit, marker=marker, sort=sort,
                                          project_safe=project_safe)
 
 
