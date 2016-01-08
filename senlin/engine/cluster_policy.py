@@ -99,13 +99,10 @@ class ClusterPolicy(object):
         return cls._from_db_record(context, binding)
 
     @classmethod
-    def load_all(cls, context, cluster_id, filters=None,
-                 sort_keys=None, sort_dir=None):
-        '''Retrieve all policies attached to a specific cluster.'''
+    def load_all(cls, context, cluster_id, filters=None, sort=None):
+        """Retrieve all policies attached to a specific cluster."""
         bindings = db_api.cluster_policy_get_all(context, cluster_id,
-                                                 filters=filters,
-                                                 sort_keys=sort_keys,
-                                                 sort_dir=sort_dir)
+                                                 filters=filters, sort=sort)
 
         return [cls._from_db_record(context, b) for b in bindings]
 

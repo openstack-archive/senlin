@@ -1212,13 +1212,11 @@ class EngineService(service.Service):
         return {'action': action.id}
 
     @request_context
-    def cluster_policy_list(self, context, identity, filters=None,
-                            sort_keys=None, sort_dir=None):
-        db_cluster = self.cluster_find(context, identity)
+    def cluster_policy_list(self, context, identity, filters=None, sort=None):
 
+        db_cluster = self.cluster_find(context, identity)
         bindings = cluster_policy.ClusterPolicy.load_all(
-            context, db_cluster.id, filters=filters,
-            sort_keys=sort_keys, sort_dir=sort_dir)
+            context, db_cluster.id, filters=filters, sort=sort)
 
         return [binding.to_dict() for binding in bindings]
 

@@ -12,6 +12,7 @@
 
 from oslo_utils import timeutils as tu
 
+from senlin.common import consts
 from senlin.db.sqlalchemy import api as db_api
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -154,8 +155,8 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
 
         bindings = db_api.cluster_policy_get_all(self.ctx, self.cluster.id)
 
-        self.assertEqual(binding1.id, bindings[1].id)
-        self.assertEqual(binding2.id, bindings[0].id)
+        self.assertEqual(binding1.id, bindings[0].id)
+        self.assertEqual(binding2.id, bindings[1].id)
 
     def test_policy_get_all_with_filters(self):
         values = {'policy1': {'level': 40, 'priority': 40},
@@ -208,18 +209,16 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
 
         mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
 
-        sort_keys = ['level', 'priority', 'cooldown', 'enabled']
+        sort = consts.CLUSTER_POLICY_SORT_KEYS
         db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
-                                      sort_keys=sort_keys)
+                                      sort=','.join(sort))
 
         # Check sort_keys used
         args = mock_paginate.call_args[0]
-        used_sort_keys = set(args[3])
-        expected_keys = set(['id', 'level', 'priority', 'cooldown',
-                             'enabled'])
-        self.assertEqual(expected_keys, used_sort_keys)
+        sort.append('id')
+        self.assertEqual(set(sort), set(args[3]))
 
-    def test_policy_get_all_with_sort_key_and_dir(self):
+    def test_policy_get_all_with_sorting(self):
         values = {
             'policy1': {'level': 40, 'priority': 40, 'cooldown': 10,
                         'enabled': True},
@@ -237,53 +236,46 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
                                          value)
 
         # sorted by level
-        sort_keys = ['level']
         results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
-                                                sort_keys=sort_keys)
+                                                sort='level')
         self.assertEqual('policy2', results[0].policy_id)
         self.assertEqual('policy1', results[1].policy_id)
         self.assertEqual('policy3', results[2].policy_id)
 
         # sorted by priority
-        sort_keys = ['priority']
         results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
-                                                sort_keys=sort_keys)
+                                                sort='priority')
         self.assertEqual('policy3', results[0].policy_id)
         self.assertEqual('policy1', results[1].policy_id)
         self.assertEqual('policy2', results[2].policy_id)
 
         # sorted by cooldown
-        sort_keys = ['cooldown']
         results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
-                                                sort_keys=sort_keys)
+                                                sort='cooldown')
         self.assertEqual('policy1', results[0].policy_id)
         self.assertEqual('policy2', results[1].policy_id)
         self.assertEqual('policy3', results[2].policy_id)
 
         # sorted by enabled, the 2nd and 3rd are unpredictable
-        sort_keys = ['enabled']
         results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
-                                                sort_keys=sort_keys)
+                                                sort='enabled')
         self.assertEqual('policy3', results[0].policy_id)
 
         # sorted by enabled, the 2nd and 3rd are ordered by priority
-        sort_keys = ['enabled', 'priority']
         results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
-                                                sort_keys=sort_keys)
+                                                sort='enabled,priority')
         self.assertEqual('policy3', results[0].policy_id)
         self.assertEqual('policy1', results[1].policy_id)
         self.assertEqual('policy2', results[2].policy_id)
 
         # sorted by cooldown, descending
-        sort_keys = ['cooldown']
         results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
-                                                sort_keys=sort_keys,
-                                                sort_dir='desc')
+                                                sort='cooldown:desc')
         self.assertEqual('policy3', results[0].policy_id)
         self.assertEqual('policy2', results[1].policy_id)
         self.assertEqual('policy1', results[2].policy_id)
 
-    def test_policy_get_all_with_default_sort_keys(self):
+    def test_policy_get_all_with_default_sorting(self):
         values = {'policy1': {'level': 40, 'priority': 40},
                   'policy2': {'level': 30, 'priority': 60}}
 
@@ -293,7 +285,5 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
             db_api.cluster_policy_attach(self.ctx, self.cluster.id, policy_id,
                                          value)
 
-        filters = None
-        results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
-                                                filters=filters)
+        results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id)
         self.assertEqual(2, len(results))
