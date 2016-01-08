@@ -74,8 +74,8 @@ class ActionController(object):
         param_whitelist = {
             'limit': 'single',
             'marker': 'single',
-            'sort_dir': 'single',
-            'sort_keys': 'multi',
+            'sort': 'single',
+            'global_project': 'single',
         }
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)
@@ -84,11 +84,16 @@ class ActionController(object):
         if key in params:
             params[key] = utils.parse_int_param(key, params[key])
 
+        key = consts.PARAM_GLOBAL_PROJECT
+        if key in params:
+            global_project = utils.parse_bool_param(key, params[key])
+            params.pop(key)
+            params['project_safe'] = not global_project
+
         if not filters:
             filters = None
 
-        actions = self.rpc_client.action_list(req.context,
-                                              filters=filters,
+        actions = self.rpc_client.action_list(req.context, filters=filters,
                                               **params)
 
         return {'actions': actions}

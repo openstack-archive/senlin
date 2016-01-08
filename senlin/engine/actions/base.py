@@ -227,13 +227,12 @@ class Action(object):
 
     @classmethod
     def load_all(cls, context, filters=None, limit=None, marker=None,
-                 sort_keys=None, sort_dir=None):
-        '''Retrieve all actions of from database.'''
+                 sort=None, project_safe=True):
+        """Retrieve all actions of from database."""
 
-        records = db_api.action_get_all(context, filters=filters,
+        records = db_api.action_get_all(context, filters=filters, sort=sort,
                                         limit=limit, marker=marker,
-                                        sort_keys=sort_keys,
-                                        sort_dir=sort_dir)
+                                        project_safe=project_safe)
 
         for record in records:
             yield cls._from_db_record(record)

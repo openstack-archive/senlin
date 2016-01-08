@@ -361,8 +361,8 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'filters': mock.ANY,
             'limit': mock.ANY,
             'marker': mock.ANY,
-            'sort_keys': mock.ANY,
-            'sort_dir': mock.ANY,
+            'sort': mock.ANY,
+            'project_safe': mock.ANY,
         }
         self._test_engine_api('action_list', 'call', **default_args)
 
