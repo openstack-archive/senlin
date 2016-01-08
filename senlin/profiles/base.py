@@ -137,13 +137,12 @@ class Profile(object):
         return cls.from_db_record(profile)
 
     @classmethod
-    def load_all(cls, ctx, limit=None, sort_keys=None, marker=None,
-                 sort_dir=None, filters=None, project_safe=True):
-        '''Retrieve all profiles from database.'''
+    def load_all(cls, ctx, limit=None, marker=None, sort=None, filters=None,
+                 project_safe=True):
+        """Retrieve all profiles from database."""
 
         records = db_api.profile_get_all(ctx, limit=limit, marker=marker,
-                                         sort_keys=sort_keys,
-                                         sort_dir=sort_dir, filters=filters,
+                                         sort=sort, filters=filters,
                                          project_safe=project_safe)
 
         for record in records:

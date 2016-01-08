@@ -101,7 +101,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         result = self.controller.index(req)
 
         default_args = {'limit': None, 'marker': None, 'filters': None,
-                        'sort_keys': None, 'sort_dir': None}
+                        'sort': None, 'project_safe': True}
 
         mock_call.assert_called_with(req.context,
                                      ('profile_list', default_args))
@@ -114,9 +114,9 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {
             'limit': 20,
             'marker': 'fake marker',
-            'sort_keys': 'fake sort keys',
-            'sort_dir': 'fake sort dir',
+            'sort': 'fake sorting string',
             'filters': None,
+            'global_project': False,
             'balrog': 'you shall not pass!'
         }
         req = self._get('/profiles', params=params)
@@ -132,10 +132,9 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(5, len(engine_args))
         self.assertIn('limit', engine_args)
         self.assertIn('marker', engine_args)
-        self.assertIn('sort_keys', engine_args)
-        self.assertIn('sort_dir', engine_args)
+        self.assertIn('sort', engine_args)
         self.assertIn('filters', engine_args)
-        self.assertNotIn('tenant_safe', engine_args)
+        self.assertIn('project_safe', engine_args)
         self.assertNotIn('balrog', engine_args)
 
     def test_profile_index_whitelist_filter_params(self, mock_enforce):

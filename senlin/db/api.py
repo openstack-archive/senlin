@@ -227,11 +227,11 @@ def profile_get_by_short_id(context, short_id, project_safe=True):
                                         project_safe=project_safe)
 
 
-def profile_get_all(context, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None, project_safe=True):
+def profile_get_all(context, limit=None, marker=None, sort=None, filters=None,
+                    project_safe=True):
     return IMPL.profile_get_all(context, limit=limit, marker=marker,
-                                sort_keys=sort_keys, sort_dir=sort_dir,
-                                filters=filters, project_safe=project_safe)
+                                sort=sort, filters=filters,
+                                project_safe=project_safe)
 
 
 def profile_update(context, profile_id, values):

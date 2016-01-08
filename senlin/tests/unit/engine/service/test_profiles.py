@@ -166,26 +166,24 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual(p2['id'], result[1]['id'])
 
         # use name for sorting
-        result = self.eng.profile_list(self.ctx, sort_keys=['name'])
+        result = self.eng.profile_list(self.ctx, sort='name')
         self.assertEqual(p2['id'], result[0]['id'])
         self.assertEqual(p1['id'], result[1]['id'])
 
         # use permission for sorting
-        result = self.eng.profile_list(self.ctx, sort_keys=['permission'])
+        result = self.eng.profile_list(self.ctx, sort='permission')
         self.assertEqual(p3['id'], result[0]['id'])
 
         # use name and permission for sorting
-        result = self.eng.profile_list(self.ctx,
-                                       sort_keys=['permission', 'name'])
+        result = self.eng.profile_list(self.ctx, sort='permission,name')
         self.assertEqual(p3['id'], result[0]['id'])
         self.assertEqual(p2['id'], result[1]['id'])
         self.assertEqual(p1['id'], result[2]['id'])
 
-        # unknown keys will be ignored
-        result = self.eng.profile_list(self.ctx, sort_keys=['duang'])
+        result = self.eng.profile_list(self.ctx, sort='duang')
         self.assertIsNotNone(result)
 
-    def test_profile_list_with_sort_dir(self):
+    def test_profile_list_with_sorting(self):
         p1 = self.eng.profile_create(self.ctx, 'p-B', self.spec,
                                      permission='1111')
         p2 = self.eng.profile_create(self.ctx, 'p-A', self.spec,
@@ -199,23 +197,14 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual(p2['id'], result[1]['id'])
 
         # sort by created_at, descending
-        result = self.eng.profile_list(self.ctx, sort_dir='desc')
+        result = self.eng.profile_list(self.ctx, sort='created_at:desc')
         self.assertEqual(p3['id'], result[0]['id'])
         self.assertEqual(p2['id'], result[1]['id'])
 
         # use name for sorting, descending
-        result = self.eng.profile_list(self.ctx, sort_keys=['name'],
-                                       sort_dir='desc')
+        result = self.eng.profile_list(self.ctx, sort='name:desc')
         self.assertEqual(p3['id'], result[0]['id'])
         self.assertEqual(p1['id'], result[1]['id'])
-
-        # use permission for sorting
-        ex = self.assertRaises(ValueError,
-                               self.eng.profile_list, self.ctx,
-                               sort_dir='Bogus')
-        self.assertEqual("Unknown sort direction, must be one of: "
-                         "asc-nullsfirst, asc-nullslast, desc-nullsfirst, "
-                         "desc-nullslast", six.text_type(ex))
 
     def test_profile_list_with_filters(self):
         self.eng.profile_create(self.ctx, 'p-B', self.spec,

@@ -709,8 +709,8 @@ def profile_get_by_short_id(context, short_id, project_safe=True):
                              project_safe=project_safe)
 
 
-def profile_get_all(context, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None, project_safe=True):
+def profile_get_all(context, limit=None, marker=None, sort=None, filters=None,
+                    project_safe=True):
     query = model_query(context, models.Profile)
 
     if project_safe:
@@ -719,12 +719,12 @@ def profile_get_all(context, limit=None, marker=None, sort_keys=None,
     if filters is None:
         filters = {}
 
-    keys = _get_sort_keys(sort_keys, consts.PROFILE_SORT_KEYS)
+    keys, dirs = _get_sort_params(sort, consts.PROFILE_SORT_KEYS, 'created_at')
     query = db_filters.exact_filter(query, models.Profile, filters)
-    return _paginate_query(context, query, models.Profile,
-                           limit=limit, marker=marker,
-                           sort_keys=keys, sort_dir=sort_dir,
-                           default_sort_keys=['created_at']).all()
+    if marker:
+        marker = model_query(context, models.Profile).get(marker)
+    return utils.paginate_query(query, models.Profile, limit, keys,
+                                marker=marker, sort_dirs=dirs).all()
 
 
 def profile_update(context, profile_id, values):
