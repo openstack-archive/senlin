@@ -308,18 +308,18 @@ class ClusterTest(base.SenlinTestCase):
         c1 = self.eng.cluster_create(self.ctx, 'CC', 0, self.profile['id'])
         c2 = self.eng.cluster_create(self.ctx, 'BB', 0, self.profile['id'])
 
-        # default by created_time
+        # default by init_at
         result = self.eng.cluster_list(self.ctx)
         self.assertEqual(c1['id'], result[0]['id'])
         self.assertEqual(c2['id'], result[1]['id'])
 
         # use name for sorting
-        result = self.eng.cluster_list(self.ctx, sort_keys=['name'])
+        result = self.eng.cluster_list(self.ctx, sort='name')
         self.assertEqual(c2['id'], result[0]['id'])
         self.assertEqual(c1['id'], result[1]['id'])
 
         # unknown keys will be ignored
-        result = self.eng.cluster_list(self.ctx, sort_keys=['duang'])
+        result = self.eng.cluster_list(self.ctx, sort='duang')
         self.assertIsNotNone(result)
 
     @mock.patch.object(dispatcher, 'start_action')
@@ -328,29 +328,20 @@ class ClusterTest(base.SenlinTestCase):
         c2 = self.eng.cluster_create(self.ctx, 'AA', 0, self.profile['id'])
         c3 = self.eng.cluster_create(self.ctx, 'CC', 0, self.profile['id'])
 
-        # default by created_time, ascending
+        # default by init_at, ascending
         result = self.eng.cluster_list(self.ctx)
         self.assertEqual(c1['id'], result[0]['id'])
         self.assertEqual(c2['id'], result[1]['id'])
 
-        # sort by created_time, descending
-        result = self.eng.cluster_list(self.ctx, sort_dir='desc')
+        # sort by init_at, descending
+        result = self.eng.cluster_list(self.ctx, sort='init_at:desc')
         self.assertEqual(c3['id'], result[0]['id'])
         self.assertEqual(c2['id'], result[1]['id'])
 
         # use name for sorting, descending
-        result = self.eng.cluster_list(self.ctx, sort_keys=['name'],
-                                       sort_dir='desc')
+        result = self.eng.cluster_list(self.ctx, sort='name:desc')
         self.assertEqual(c3['id'], result[0]['id'])
         self.assertEqual(c1['id'], result[1]['id'])
-
-        # use permission for sorting
-        ex = self.assertRaises(ValueError,
-                               self.eng.cluster_list, self.ctx,
-                               sort_dir='Bogus')
-        self.assertEqual("Unknown sort direction, must be one of: "
-                         "asc-nullsfirst, asc-nullslast, desc-nullsfirst, "
-                         "desc-nullslast", six.text_type(ex))
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_list_show_nested(self, notify):

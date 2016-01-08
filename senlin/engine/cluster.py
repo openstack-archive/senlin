@@ -196,15 +196,12 @@ class Cluster(object):
         return cls._from_db_record(context, cluster)
 
     @classmethod
-    def load_all(cls, context, limit=None, marker=None, sort_keys=None,
-                 sort_dir=None, filters=None, project_safe=True,
-                 show_nested=False):
+    def load_all(cls, context, limit=None, marker=None, sort=None,
+                 filters=None, project_safe=True, show_nested=False):
         '''Retrieve all clusters from database.'''
 
         records = db_api.cluster_get_all(context, limit=limit, marker=marker,
-                                         sort_keys=sort_keys,
-                                         sort_dir=sort_dir,
-                                         filters=filters,
+                                         sort=sort, filters=filters,
                                          project_safe=project_safe,
                                          show_nested=show_nested)
 

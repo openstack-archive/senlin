@@ -244,7 +244,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
                                           init_at=tu.utcnow())
                     for x in range(3)]
 
-        st_db = db_api.cluster_get_all(self.ctx, sort_dir='asc')
+        st_db = db_api.cluster_get_all(self.ctx)
         self.assertEqual(3, len(st_db))
         self.assertEqual(clusters[0].id, st_db[0].id)
         self.assertEqual(clusters[1].id, st_db[1].id)
@@ -255,7 +255,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
                                           created_at=tu.utcnow())
                     for x in range(3)]
 
-        st_db = db_api.cluster_get_all(self.ctx, sort_keys='created_at')
+        st_db = db_api.cluster_get_all(self.ctx, sort='created_at')
         self.assertEqual(3, len(st_db))
         self.assertEqual(clusters[0].id, st_db[0].id)
         self.assertEqual(clusters[1].id, st_db[1].id)
@@ -263,9 +263,8 @@ class DBAPIClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(db_api.utils, 'paginate_query')
     def test_cluster_get_all_filters_sort_keys(self, mock_paginate):
-        sort_keys = ['name', 'status', 'created_at',
-                     'updated_at', 'parent']
-        db_api.cluster_get_all(self.ctx, sort_keys=sort_keys)
+        sort = 'name,status,created_at,updated_at,parent'
+        db_api.cluster_get_all(self.ctx, sort=sort)
 
         args = mock_paginate.call_args[0]
         used_sort_keys = set(args[3])
@@ -286,12 +285,6 @@ class DBAPIClusterTest(base.SenlinTestCase):
         uuid = "this cluster doesn't exist"
         st_db = db_api.cluster_get_all(self.ctx, marker=uuid)
         self.assertEqual(3, len(st_db))
-
-    def test_cluster_get_all_doesnt_mutate_sort_keys(self):
-        [shared.create_cluster(self.ctx, self.profile) for x in range(3)]
-        sort_keys = ['id']
-        db_api.cluster_get_all(self.ctx, sort_keys=sort_keys)
-        self.assertEqual(['id'], sort_keys)
 
     def test_cluster_next_index(self):
         cluster = shared.create_cluster(self.ctx, self.profile)

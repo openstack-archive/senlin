@@ -72,20 +72,21 @@ CLUSTER_ATTRS = (
     CLUSTER_NAME, CLUSTER_PROFILE, CLUSTER_DESIRED_CAPACITY,
     CLUSTER_MIN_SIZE, CLUSTER_MAX_SIZE, CLUSTER_ID, CLUSTER_PARENT,
     CLUSTER_DOMAIN, CLUSTER_PROJECT, CLUSTER_USER,
-    CLUSTER_CREATED_AT, CLUSTER_UPDATED_AT,
+    CLUSTER_INIT_AT, CLUSTER_CREATED_AT, CLUSTER_UPDATED_AT,
     CLUSTER_STATUS, CLUSTER_STATUS_REASON, CLUSTER_TIMEOUT,
     CLUSTER_METADATA,
 ) = (
     'name', 'profile_id', 'desired_capacity',
     'min_size', 'max_size', 'id', 'parent',
     'domain', 'project', 'user',
-    'created_at', 'updated_at',
+    'init_at', 'created_at', 'updated_at',
     'status', 'status_reason', 'timeout',
     'metadata',
 )
 
 CLUSTER_SORT_KEYS = [
-    CLUSTER_NAME, CLUSTER_STATUS, CLUSTER_CREATED_AT, CLUSTER_UPDATED_AT,
+    CLUSTER_NAME, CLUSTER_STATUS,
+    CLUSTER_INIT_AT, CLUSTER_CREATED_AT, CLUSTER_UPDATED_AT,
 ]
 
 NODE_ATTRS = (

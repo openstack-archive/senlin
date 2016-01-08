@@ -414,16 +414,13 @@ class EngineService(service.Service):
         LOG.info(_LI("Policy '%s' is deleted."), identity)
 
     @request_context
-    def cluster_list(self, context, limit=None, marker=None, sort_keys=None,
-                     sort_dir=None, filters=None, project_safe=True,
-                     show_nested=False):
+    def cluster_list(self, context, limit=None, marker=None, sort=None,
+                     filters=None, project_safe=True, show_nested=False):
         limit = utils.parse_int_param('limit', limit)
         project_safe = utils.parse_bool_param('project_safe', project_safe)
         show_nested = utils.parse_bool_param('show_nested', show_nested)
         clusters = cluster_mod.Cluster.load_all(context, limit=limit,
-                                                marker=marker,
-                                                sort_keys=sort_keys,
-                                                sort_dir=sort_dir,
+                                                marker=marker, sort=sort,
                                                 filters=filters,
                                                 project_safe=project_safe,
                                                 show_nested=show_nested)
