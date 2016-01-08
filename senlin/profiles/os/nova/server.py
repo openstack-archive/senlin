@@ -625,17 +625,14 @@ class ServerProfile(base.Profile):
                 details[key] = val if val else '-'
 
         # process network addresses
+        details['addresses'] = {}
         for net in server_data['addresses']:
-            network = '%s network' % net
             addresses = []
             for addr in server_data['addresses'][net]:
-                addresses.append(addr['addr'])
-            if len(addresses) == 0:
-                details[network] = ''
-            elif len(addresses) == 1:
-                details[network] = addresses[0]
-            else:
-                details[network] = addresses
+                # Ignore IPv6 address
+                if addr['version'] == 4:
+                    addresses.append(addr['addr'])
+            details['addresses'][net] = addresses
 
         # process security groups
         sgroups = []
