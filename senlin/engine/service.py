@@ -979,9 +979,8 @@ class EngineService(service.Service):
         return node
 
     @request_context
-    def node_list(self, context, cluster_id=None, filters=None,
-                  limit=None, marker=None, sort_keys=None, sort_dir=None,
-                  project_safe=True):
+    def node_list(self, context, cluster_id=None, filters=None, sort=None,
+                  limit=None, marker=None, project_safe=True):
 
         limit = utils.parse_int_param('limit', limit)
         project_safe = utils.parse_bool_param('project_safe', project_safe)
@@ -991,8 +990,7 @@ class EngineService(service.Service):
             db_cluster = self.cluster_find(context, cluster_id)
             cluster_id = db_cluster.id
         nodes = node_mod.Node.load_all(context, cluster_id=cluster_id,
-                                       limit=limit, marker=marker,
-                                       sort_keys=sort_keys, sort_dir=sort_dir,
+                                       limit=limit, marker=marker, sort=sort,
                                        filters=filters,
                                        project_safe=project_safe)
 

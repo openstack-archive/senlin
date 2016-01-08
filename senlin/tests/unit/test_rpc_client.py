@@ -309,8 +309,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'cluster_id': mock.ANY,
             'limit': mock.ANY,
             'marker': mock.ANY,
-            'sort_keys': mock.ANY,
-            'sort_dir': mock.ANY,
+            'sort': mock.ANY,
             'filters': mock.ANY,
             'project_safe': mock.ANY,
         }

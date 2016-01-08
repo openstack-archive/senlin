@@ -167,14 +167,12 @@ class Node(object):
         return cls._from_db_record(context, node)
 
     @classmethod
-    def load_all(cls, context, cluster_id=None, filters=None,
-                 limit=None, marker=None, sort_keys=None, sort_dir=None,
-                 project_safe=True):
+    def load_all(cls, context, cluster_id=None, limit=None, marker=None,
+                 sort=None, filters=None, project_safe=True):
         '''Retrieve all nodes of from database.'''
         records = db_api.node_get_all(context, cluster_id=cluster_id,
-                                      filters=filters,
+                                      filters=filters, sort=sort,
                                       limit=limit, marker=marker,
-                                      sort_keys=sort_keys, sort_dir=sort_dir,
                                       project_safe=project_safe)
 
         return [cls._from_db_record(context, record) for record in records]

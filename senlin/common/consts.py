@@ -91,16 +91,17 @@ CLUSTER_SORT_KEYS = [
 
 NODE_ATTRS = (
     NODE_INDEX, NODE_NAME, NODE_PROFILE_ID, NODE_CLUSTER_ID,
-    NODE_CREATED_AT, NODE_UPDATED_AT,
+    NODE_INIT_AT, NODE_CREATED_AT, NODE_UPDATED_AT,
     NODE_STATUS, NODE_ROLE, NODE_METADATA,
 ) = (
     'index', 'name', 'profile_id', 'cluster_id',
-    'created_at', 'updated_at',
+    'init_at', 'created_at', 'updated_at',
     'status', 'role', 'metadata',
 )
 
 NODE_SORT_KEYS = [
-    NODE_INDEX, NODE_NAME, NODE_CREATED_AT, NODE_UPDATED_AT, NODE_STATUS,
+    NODE_INDEX, NODE_NAME, NODE_STATUS,
+    NODE_INIT_AT, NODE_CREATED_AT, NODE_UPDATED_AT,
 ]
 
 PROFILE_ATTRS = (

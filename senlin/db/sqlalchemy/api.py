@@ -218,13 +218,9 @@ def cluster_get_all(context, limit=None, marker=None, sort=None, filters=None,
     query = db_filters.exact_filter(query, models.Cluster, filters)
     if marker:
         marker = model_query(context, models.Cluster).get(marker)
-    try:
-        query = utils.paginate_query(query, models.Cluster, limit, keys,
-                                     marker=marker, sort_dirs=dirs)
-    except utils.InvalidSortKey:
-        raise exception.InvalidParameter(name='sort_keys', value=keys)
 
-    return query.all()
+    return utils.paginate_query(query, models.Cluster, limit, keys,
+                                marker=marker, sort_dirs=dirs).all()
 
 
 def cluster_next_index(context, cluster_id):
@@ -324,21 +320,20 @@ def _query_node_get_all(context, project_safe=True, cluster_id=None):
     return query
 
 
-def node_get_all(context, cluster_id=None, limit=None, marker=None,
-                 sort_keys=None, sort_dir=None, filters=None,
-                 project_safe=True):
+def node_get_all(context, cluster_id=None, limit=None, marker=None, sort=None,
+                 filters=None, project_safe=True):
     query = _query_node_get_all(context, project_safe=project_safe,
                                 cluster_id=cluster_id)
 
     if filters is None:
         filters = {}
 
-    keys = _get_sort_keys(sort_keys, consts.NODE_SORT_KEYS)
+    keys, dirs = _get_sort_params(sort, consts.NODE_SORT_KEYS, 'init_at')
     query = db_filters.exact_filter(query, models.Node, filters)
-    return _paginate_query(context, query, models.Node,
-                           limit=limit, marker=marker,
-                           sort_keys=keys, sort_dir=sort_dir,
-                           default_sort_keys=['init_at']).all()
+    if marker:
+        marker = model_query(context, models.Node).get(marker)
+    return utils.paginate_query(query, models.Node, limit, keys,
+                                marker=marker, sort_dirs=dirs).all()
 
 
 def node_get_all_by_cluster(context, cluster_id, project_safe=True):

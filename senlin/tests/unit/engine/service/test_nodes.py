@@ -234,12 +234,12 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(node2['id'], result[1]['id'])
 
         # use name for sorting
-        result = self.eng.node_list(self.ctx, sort_keys=['name'])
+        result = self.eng.node_list(self.ctx, sort='name')
         self.assertEqual(node2['id'], result[0]['id'])
         self.assertEqual(node1['id'], result[1]['id'])
 
         # unknown keys will be ignored
-        result = self.eng.node_list(self.ctx, sort_keys=['duang'])
+        result = self.eng.node_list(self.ctx, sort='duang')
         self.assertIsNotNone(result)
 
     @mock.patch.object(dispatcher, 'start_action')
@@ -248,29 +248,20 @@ class NodeTest(base.SenlinTestCase):
         node2 = self.eng.node_create(self.ctx, 'AA', self.profile['id'])
         node3 = self.eng.node_create(self.ctx, 'CC', self.profile['id'])
 
-        # default by created_time, ascending
+        # default by init_at, ascending
         result = self.eng.node_list(self.ctx)
         self.assertEqual(node1['id'], result[0]['id'])
         self.assertEqual(node2['id'], result[1]['id'])
 
-        # sort by created_time, descending
-        result = self.eng.node_list(self.ctx, sort_dir='desc')
+        # sort by init_at, descending
+        result = self.eng.node_list(self.ctx, sort='init_at:desc')
         self.assertEqual(node3['id'], result[0]['id'])
         self.assertEqual(node2['id'], result[1]['id'])
 
         # use name for sorting, descending
-        result = self.eng.node_list(self.ctx, sort_keys=['name'],
-                                    sort_dir='desc')
+        result = self.eng.node_list(self.ctx, sort='name:desc')
         self.assertEqual(node3['id'], result[0]['id'])
         self.assertEqual(node1['id'], result[1]['id'])
-
-        # use permission for sorting
-        ex = self.assertRaises(ValueError,
-                               self.eng.node_list, self.ctx,
-                               sort_dir='Bogus')
-        self.assertEqual("Unknown sort direction, must be one of: "
-                         "asc-nullsfirst, asc-nullslast, desc-nullsfirst, "
-                         "desc-nullslast", six.text_type(ex))
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_node_list_project_safe(self, notify):

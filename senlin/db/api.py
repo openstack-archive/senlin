@@ -98,13 +98,11 @@ def node_get_by_short_id(context, short_id, project_safe=True):
                                      project_safe=project_safe)
 
 
-def node_get_all(context, cluster_id=None, limit=None, marker=None,
-                 sort_keys=None, sort_dir=None,
+def node_get_all(context, cluster_id=None, limit=None, marker=None, sort=None,
                  filters=None, project_safe=True):
-    return IMPL.node_get_all(context, cluster_id=cluster_id,
-                             limit=limit, marker=marker,
-                             sort_keys=sort_keys, sort_dir=sort_dir,
-                             filters=filters, project_safe=project_safe)
+    return IMPL.node_get_all(context, cluster_id=cluster_id, filters=filters,
+                             limit=limit, marker=marker, sort=sort,
+                             project_safe=project_safe)
 
 
 def node_get_all_by_cluster(context, cluster_id, project_safe=True):
