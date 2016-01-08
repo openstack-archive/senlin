@@ -153,14 +153,12 @@ class Receiver(object):
         return cls._from_db_record(receiver_obj)
 
     @classmethod
-    def load_all(cls, context, limit=None, marker=None, sort_keys=None,
-                 sort_dir=None, filters=None, project_safe=True):
+    def load_all(cls, context, limit=None, marker=None, sort=None,
+                 filters=None, project_safe=True):
         """Retrieve all receivers from database."""
 
         records = db_api.receiver_get_all(context, limit=limit, marker=marker,
-                                          sort_keys=sort_keys,
-                                          sort_dir=sort_dir,
-                                          filters=filters,
+                                          sort=sort, filters=filters,
                                           project_safe=project_safe)
 
         for record in records:

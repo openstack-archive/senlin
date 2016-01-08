@@ -306,13 +306,11 @@ class EngineClient(object):
                          self.make_msg('action_get', identity=identity))
 
     def receiver_list(self, ctxt, limit=None, marker=None, filters=None,
-                      sort_keys=None, sort_dir=None, project_safe=True):
+                      sort=None, project_safe=True):
         return self.call(ctxt,
-                         self.make_msg('receiver_list',
+                         self.make_msg('receiver_list', filters=filters,
                                        limit=limit, marker=marker,
-                                       sort_keys=sort_keys, sort_dir=sort_dir,
-                                       filters=filters,
-                                       project_safe=project_safe))
+                                       sort=sort, project_safe=project_safe))
 
     def receiver_create(self, ctxt, name, type_name, cluster_id, action,
                         actor=None, params=None):

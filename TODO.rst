@@ -47,8 +47,6 @@ MIDDLE PRIORITY
 
 API
 ---
-  - Revise the API for sorting, based on the following guideline:
-    https://github.com/openstack/api-wg/blob/master/guidelines/pagination_filter_sort.rst
   - According to the guidelines from API WG, we need to support `page_reverse`
     as a pagination parameter. https://review.openstack.org/190743
   - According to the proposal (https://review.openstack.org/#/c/234994/),
