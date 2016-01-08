@@ -15,6 +15,7 @@ import six
 
 from oslo_utils import timeutils as tu
 
+from senlin.common import consts
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
 from senlin.tests.unit.common import base
@@ -187,57 +188,50 @@ class DBAPINodeTest(base.SenlinTestCase):
             shared.create_node(self.ctx, self.cluster, self.profile, id=v)
 
         mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
-        sort_keys = ['index', 'name', 'created_at', 'updated_at', 'status']
+        sort = ','.join(consts.NODE_SORT_KEYS)
 
-        db_api.node_get_all(self.ctx, sort_keys=sort_keys)
+        db_api.node_get_all(self.ctx, sort=sort)
         args = mock_paginate.call_args[0]
         used_sort_keys = set(args[3])
-        expected_keys = set(['index', 'name', 'created_at', 'updated_at',
-                             'status', 'id'])
+        sort_keys = consts.NODE_SORT_KEYS
+        sort_keys.append('id')
+        expected_keys = set(sort_keys)
         self.assertEqual(expected_keys, used_sort_keys)
 
-    def test_node_get_all_sort_keys_wont_change(self):
-        sort_keys = ['id']
-        db_api.node_get_all(self.ctx, sort_keys=sort_keys)
-        self.assertEqual(['id'], sort_keys)
-
-    def test_node_get_all_sort_keys_and_dir(self):
+    def test_node_get_all_sorting(self):
         values = [{'id': '001', 'name': 'node1', 'status': 'ACTIVE'},
                   {'id': '002', 'name': 'node3', 'status': 'ERROR'},
                   {'id': '003', 'name': 'node2', 'status': 'UPDATING'}]
         for v in values:
             shared.create_node(self.ctx, self.cluster, self.profile, **v)
 
-        nodes = db_api.node_get_all(self.ctx, sort_keys=['name', 'status'],
-                                    sort_dir='asc')
+        nodes = db_api.node_get_all(self.ctx, sort='name,status')
         self.assertEqual(3, len(nodes))
         # Sorted by name
         self.assertEqual('001', nodes[0].id)
         self.assertEqual('003', nodes[1].id)
         self.assertEqual('002', nodes[2].id)
 
-        nodes = db_api.node_get_all(self.ctx, sort_keys=['status', 'name'],
-                                    sort_dir='asc')
+        nodes = db_api.node_get_all(self.ctx, sort='status,name')
         self.assertEqual(3, len(nodes))
         # Sorted by statuses (ascending)
         self.assertEqual('001', nodes[0].id)
         self.assertEqual('002', nodes[1].id)
         self.assertEqual('003', nodes[2].id)
 
-        nodes = db_api.node_get_all(self.ctx, sort_keys=['status', 'name'],
-                                    sort_dir='desc')
+        nodes = db_api.node_get_all(self.ctx, sort='status:desc,name:desc')
         self.assertEqual(3, len(nodes))
         # Sorted by statuses (descending)
         self.assertEqual('003', nodes[0].id)
         self.assertEqual('002', nodes[1].id)
         self.assertEqual('001', nodes[2].id)
 
-    def test_node_get_all_default_sort_dir(self):
+    def test_node_get_all_default_sorting(self):
         nodes = [shared.create_node(self.ctx, None, self.profile,
                                     init_at=tu.utcnow())
                  for x in range(3)]
 
-        results = db_api.node_get_all(self.ctx, sort_dir='asc')
+        results = db_api.node_get_all(self.ctx)
         self.assertEqual(3, len(results))
         self.assertEqual(nodes[0].id, results[0].id)
         self.assertEqual(nodes[1].id, results[1].id)

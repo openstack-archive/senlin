@@ -83,8 +83,7 @@ class NodeController(object):
             'cluster_id': 'single',
             'limit': 'single',
             'marker': 'single',
-            'sort_dir': 'single',
-            'sort_keys': 'multi',
+            'sort': 'single',
             'global_project': 'single',
         }
         params = util.get_allowed_params(req.params, param_whitelist)

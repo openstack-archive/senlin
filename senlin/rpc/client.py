@@ -213,12 +213,10 @@ class EngineClient(object):
                                         identity=identity))
 
     def node_list(self, ctxt, cluster_id=None, limit=None, marker=None,
-                  sort_keys=None, sort_dir=None,
-                  filters=None, project_safe=True):
+                  sort=None, filters=None, project_safe=True):
         return self.call(ctxt,
                          self.make_msg('node_list', cluster_id=cluster_id,
-                                       limit=limit, marker=marker,
-                                       sort_keys=sort_keys, sort_dir=sort_dir,
+                                       limit=limit, marker=marker, sort=sort,
                                        filters=filters,
                                        project_safe=project_safe))
 
