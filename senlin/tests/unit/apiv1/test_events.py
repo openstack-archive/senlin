@@ -68,7 +68,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         resp = self.controller.index(req)
 
         kwargs = {'limit': None, 'marker': None, 'filters': None,
-                  'sort_keys': None, 'sort_dir': None, 'project_safe': True}
+                  'sort': None, 'project_safe': True}
         mock_call.assert_called_once_with(req.context,
                                           ('event_list', kwargs))
         self.assertEqual(resp, {'events': engine_resp})
@@ -78,8 +78,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {
             'limit': 10,
             'marker': 'fake marker',
-            'sort_keys': 'fake sort keys',
-            'sort_dir': 'fake sort dir',
+            'sort': 'fake sorting options',
             'filters': 'fake filters',
             'global_project': False,
             'balrog': 'you shall not pass!'
@@ -94,11 +93,10 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         rpc_call_args, w = mock_call.call_args
         engine_args = rpc_call_args[1][1]
 
-        self.assertEqual(6, len(engine_args))
+        self.assertEqual(5, len(engine_args))
         self.assertIn('limit', engine_args)
         self.assertIn('marker', engine_args)
-        self.assertIn('sort_keys', engine_args)
-        self.assertIn('sort_dir', engine_args)
+        self.assertIn('sort', engine_args)
         self.assertIn('filters', engine_args)
         self.assertIn('project_safe', engine_args)
         self.assertNotIn('balrog', engine_args)

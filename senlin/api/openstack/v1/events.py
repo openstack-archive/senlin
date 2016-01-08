@@ -46,8 +46,7 @@ class EventController(object):
         param_whitelist = {
             'limit': 'single',
             'marker': 'single',
-            'sort_dir': 'single',
-            'sort_keys': 'multi',
+            'sort': 'single',
             'global_project': 'single',
         }
         params = util.get_allowed_params(req.params, param_whitelist)
@@ -66,8 +65,7 @@ class EventController(object):
         if not filters:
             filters = None
 
-        events = self.rpc_client.event_list(req.context,
-                                            filters=filters,
+        events = self.rpc_client.event_list(req.context, filters=filters,
                                             **params)
 
         return {'events': events}

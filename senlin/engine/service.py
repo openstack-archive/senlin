@@ -1619,11 +1619,10 @@ class EngineService(service.Service):
 
     @request_context
     def event_list(self, context, filters=None, limit=None, marker=None,
-                   sort_keys=None, sort_dir=None, project_safe=True):
+                   sort=None, project_safe=True):
         all_events = event_mod.Event.load_all(context, filters=filters,
                                               limit=limit, marker=marker,
-                                              sort_keys=sort_keys,
-                                              sort_dir=sort_dir,
+                                              sort=sort,
                                               project_safe=project_safe)
 
         results = [event.to_dict() for event in all_events]

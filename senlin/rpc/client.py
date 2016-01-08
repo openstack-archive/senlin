@@ -338,12 +338,11 @@ class EngineClient(object):
                                        params=params))
 
     def event_list(self, ctxt, filters=None, limit=None, marker=None,
-                   sort_keys=None, sort_dir=None, project_safe=True):
+                   sort=None, project_safe=True):
         return self.call(ctxt,
                          self.make_msg('event_list', filters=filters,
                                        limit=limit, marker=marker,
-                                       sort_keys=sort_keys, sort_dir=sort_dir,
-                                       project_safe=project_safe))
+                                       sort=sort, project_safe=project_safe))
 
     def event_get(self, ctxt, identity):
         return self.call(ctxt,
