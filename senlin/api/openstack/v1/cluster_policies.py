@@ -17,6 +17,7 @@ ClusterPolicies endpoint for Senlin v1 ReST API.
 from webob import exc
 
 from senlin.api.openstack.v1 import util
+from senlin.common import consts
 from senlin.common import serializers
 from senlin.common import utils
 from senlin.common import wsgi
@@ -45,12 +46,11 @@ class ClusterPolicyController(object):
             'enabled': 'single',
         }
         param_whitelist = {
-            'sort_dir': 'single',
-            'sort_keys': 'multi',
+            'sort': 'single',
         }
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)
-        key = 'enabled'
+        key = consts.CP_ENABLED
         if key in filters:
             filters[key] = utils.parse_bool_param(key, filters[key])
 

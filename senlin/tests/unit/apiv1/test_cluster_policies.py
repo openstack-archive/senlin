@@ -66,9 +66,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         result = self.controller.index(req, cluster_id=cid)
 
-        default_args = {'sort_keys': None, 'sort_dir': None,
-                        'filters': None, 'identity': cid}
-
+        default_args = {'sort': None, 'filters': None, 'identity': cid}
         mock_call.assert_called_with(req.context,
                                      ('cluster_policy_list', default_args))
 
@@ -81,8 +79,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         cid = 'FAKE_CLUSTER'
         params = {
-            'sort_keys': 'fake sort keys',
-            'sort_dir': 'fake sort dir',
+            'sort': 'fake sorting string',
             'filters': None,
             'balrog': 'you shall not pass!'
         }
@@ -94,9 +91,8 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
 
-        self.assertEqual(4, len(engine_args))
-        self.assertIn('sort_keys', engine_args)
-        self.assertIn('sort_dir', engine_args)
+        self.assertEqual(3, len(engine_args))
+        self.assertIn('sort', engine_args)
         self.assertIn('filters', engine_args)
         self.assertNotIn('balrog', engine_args)
 

@@ -261,13 +261,10 @@ class EngineClient(object):
                                        sort_keys=sort_keys,
                                        sort_dir=sort_dir))
 
-    def cluster_policy_list(self, ctxt, cluster_id, filters=None,
-                            sort_dir=None, sort_keys=None):
+    def cluster_policy_list(self, ctxt, cluster_id, filters=None, sort=None):
         return self.call(ctxt, self.make_msg('cluster_policy_list',
                                              identity=cluster_id,
-                                             filters=filters,
-                                             sort_keys=sort_keys,
-                                             sort_dir=sort_dir))
+                                             filters=filters, sort=sort))
 
     def cluster_policy_attach(self, ctxt, cluster_id, policy_id, priority=50,
                               level=None, cooldown=None, enabled=True):

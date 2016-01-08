@@ -370,8 +370,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         kwargs = {
             'cluster_id': 'a-cluster',
             'filters': mock.ANY,
-            'sort_keys': mock.ANY,
-            'sort_dir': mock.ANY,
+            'sort': mock.ANY,
         }
         call_kwargs = copy.deepcopy(kwargs)
         call_kwargs['identity'] = 'a-cluster'

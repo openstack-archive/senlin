@@ -627,21 +627,19 @@ def cluster_policy_get(context, cluster_id, policy_id):
     return bindings.first()
 
 
-def cluster_policy_get_all(context, cluster_id, filters=None,
-                           sort_keys=None, sort_dir=None):
+def cluster_policy_get_all(context, cluster_id, filters=None, sort=None):
+
     query = model_query(context, models.ClusterPolicies)
     query = query.filter_by(cluster_id=cluster_id)
     if filters is None:
         filters = {}
 
-    keys = _get_sort_keys(sort_keys, consts.CLUSTER_POLICY_SORT_KEYS)
+    keys, dirs = _get_sort_params(sort, consts.CLUSTER_POLICY_SORT_KEYS,
+                                  'priority')
     query = db_filters.exact_filter(query, models.ClusterPolicies, filters)
 
-    if sort_dir is None and sort_keys is None:
-        sort_dir = 'desc'
-    return _paginate_query(context, query, models.ClusterPolicies,
-                           sort_keys=keys, sort_dir=sort_dir,
-                           default_sort_keys=['priority']).all()
+    return utils.paginate_query(query, models.ClusterPolicies, None, keys,
+                                sort_dirs=dirs).all()
 
 
 def cluster_policy_attach(context, cluster_id, policy_id, values):

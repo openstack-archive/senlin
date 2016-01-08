@@ -171,9 +171,9 @@ class TestClusterPolicy(base.SenlinTestCase):
         #       already covered that
         result = cpm.ClusterPolicy.load_all(self.context, 'CLUSTER')
         self.assertEqual(2, len(result))
-        self.assertEqual('P1', result[0].policy_id)
+        self.assertEqual('P2', result[0].policy_id)
         self.assertEqual('CLUSTER', result[0].cluster_id)
-        self.assertEqual('P2', result[1].policy_id)
+        self.assertEqual('P1', result[1].policy_id)
         self.assertEqual('CLUSTER', result[1].cluster_id)
 
     def test_cluster_policy_to_dict(self):

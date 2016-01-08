@@ -345,7 +345,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.assertIsInstance(result, list)
         self.assertEqual(0, len(result))
 
-    def test_cluster_policy_list_default_sort(self):
+    def test_cluster_policy_list_default_sorting(self):
         cluster_id = self.cluster['id']
         policy1 = self._prepare_policy('p-1', 'Type1')
         policy2 = self._prepare_policy('p-2', 'Type2')
@@ -357,8 +357,8 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
         result = self.eng.cluster_policy_list(self.ctx, cluster_id)
         policy_ids = [b['policy_id'] for b in result]
-        self.assertEqual(policy1['id'], policy_ids[0])
-        self.assertEqual(policy2['id'], policy_ids[1])
+        self.assertEqual(policy2['id'], policy_ids[0])
+        self.assertEqual(policy1['id'], policy_ids[1])
 
     def test_cluster_policy_list_filters(self):
         cluster_id = self.cluster['id']
@@ -403,53 +403,49 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual(1, len(policy_ids))
         self.assertIn(policy1['id'], policy_ids)
 
-    def test_cluster_policy_list_sort_keys_and_dir(self):
-        cluster_id = self.cluster['id']
+    def test_cluster_policy_list_sorting(self):
+        cid = self.cluster['id']
         policy1 = self._prepare_policy('p-1', 'Type1')
         policy2 = self._prepare_policy('p-2', 'Type2')
         policy3 = self._prepare_policy('p-3', 'Type3')
 
         v = {'priority': 50, 'level': 30, 'cooldown': 60, 'enabled': True}
-        db_api.cluster_policy_attach(self.ctx, cluster_id, policy1['id'], v)
+        db_api.cluster_policy_attach(self.ctx, cid, policy1['id'], v)
         v = {'priority': 40, 'level': 40, 'cooldown': 60, 'enabled': False}
-        db_api.cluster_policy_attach(self.ctx, cluster_id, policy2['id'], v)
+        db_api.cluster_policy_attach(self.ctx, cid, policy2['id'], v)
         v = {'priority': 30, 'level': 40, 'cooldown': 0, 'enabled': False}
-        db_api.cluster_policy_attach(self.ctx, cluster_id, policy3['id'], v)
+        db_api.cluster_policy_attach(self.ctx, cid, policy3['id'], v)
 
         # sort by level
-        result = self.eng.cluster_policy_list(self.ctx, cluster_id,
-                                              sort_keys=['level'])
+        result = self.eng.cluster_policy_list(self.ctx, cid, sort='level')
         policy_ids = [b['policy_id'] for b in result]
         self.assertIn(policy1['id'], policy_ids[0])
 
         # sort by cooldown
-        result = self.eng.cluster_policy_list(self.ctx, cluster_id,
-                                              sort_keys=['cooldown'])
+        result = self.eng.cluster_policy_list(self.ctx, cid, sort='cooldown')
         policy_ids = [b['policy_id'] for b in result]
         self.assertIn(policy3['id'], policy_ids[0])
 
         # sort by enabled
-        result = self.eng.cluster_policy_list(self.ctx, cluster_id,
-                                              sort_keys=['enabled'])
+        result = self.eng.cluster_policy_list(self.ctx, cid, sort='enabled')
         policy_ids = [b['policy_id'] for b in result]
         self.assertIn(policy1['id'], policy_ids[2])
 
         # sort by cooldown and enabled
-        result = self.eng.cluster_policy_list(
-            self.ctx, cluster_id, sort_keys=['cooldown', 'enabled'])
+        result = self.eng.cluster_policy_list(self.ctx, cid,
+                                              sort='cooldown,enabled')
         policy_ids = [b['policy_id'] for b in result]
-        self.assertIn(policy3['id'], policy_ids[0])
-        self.assertIn(policy2['id'], policy_ids[1])
-        self.assertIn(policy1['id'], policy_ids[2])
+        self.assertEqual(policy3['id'], policy_ids[0])
+        self.assertEqual(policy2['id'], policy_ids[1])
+        self.assertEqual(policy1['id'], policy_ids[2])
 
         # sort by cooldown and level, descending
-        result = self.eng.cluster_policy_list(
-            self.ctx, cluster_id, sort_keys=['cooldown', 'level'],
-            sort_dir='desc')
+        result = self.eng.cluster_policy_list(self.ctx, cid,
+                                              sort='cooldown,level')
         policy_ids = [b['policy_id'] for b in result]
-        self.assertIn(policy2['id'], policy_ids[0])
-        self.assertIn(policy1['id'], policy_ids[1])
-        self.assertIn(policy3['id'], policy_ids[2])
+        self.assertEqual(policy3['id'], policy_ids[0])
+        self.assertEqual(policy1['id'], policy_ids[1])
+        self.assertEqual(policy2['id'], policy_ids[2])
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_policy_update(self, notify):
