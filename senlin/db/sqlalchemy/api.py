@@ -25,6 +25,7 @@ from oslo_log import log as logging
 from senlin.common import consts
 from senlin.common import exception
 from senlin.common.i18n import _
+from senlin.common import utils as common_utils
 from senlin.db.sqlalchemy import filters as db_filters
 from senlin.db.sqlalchemy import migration
 from senlin.db.sqlalchemy import models
@@ -63,6 +64,32 @@ def model_query(context, *args):
     session = _session(context)
     query = session.query(*args)
     return query
+
+
+def _get_sort_params(value, whitelist, default_key=None):
+    """Parse a string into a list of sort_keys and a list of sort_dirs.
+
+    :param value: A string that contains the sorting parameters.
+    :param whitelist: A list of permitted sorting keys.
+    :param default_key: An optional key set as the default sorting key.
+
+    :return: A list of sorting keys and a list of sort_dirs.
+    """
+    keys, dirs = common_utils.parse_sort_param(value)
+    if not keys:
+        if default_key:
+            return [default_key, 'id'], ['asc', 'asc']
+        return ['id'], ['asc']
+
+    for i in reversed(range(len(keys))):
+        if keys[i] not in whitelist:
+            keys.pop(i)
+            dirs.pop(i)
+
+    keys.append('id')
+    dirs.append('asc')
+
+    return keys, dirs
 
 
 def _get_sort_keys(keys, whitelist):
@@ -180,19 +207,24 @@ def _query_cluster_get_all(context, project_safe=True, show_nested=False):
     return query
 
 
-def cluster_get_all(context, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None, project_safe=True,
-                    show_nested=False):
+def cluster_get_all(context, limit=None, marker=None, sort=None, filters=None,
+                    project_safe=True, show_nested=False):
     query = _query_cluster_get_all(context, project_safe=project_safe,
                                    show_nested=show_nested)
     if filters is None:
         filters = {}
 
-    keys = _get_sort_keys(sort_keys, consts.CLUSTER_SORT_KEYS)
+    keys, dirs = _get_sort_params(sort, consts.CLUSTER_SORT_KEYS, 'init_at')
     query = db_filters.exact_filter(query, models.Cluster, filters)
-    return _paginate_query(context, query, models.Cluster, limit=limit,
-                           marker=marker, sort_keys=keys, sort_dir=sort_dir,
-                           default_sort_keys=['init_at']).all()
+    if marker:
+        marker = model_query(context, models.Cluster).get(marker)
+    try:
+        query = utils.paginate_query(query, models.Cluster, limit, keys,
+                                     marker=marker, sort_dirs=dirs)
+    except utils.InvalidSortKey:
+        raise exception.InvalidParameter(name='sort_keys', value=keys)
+
+    return query.all()
 
 
 def cluster_next_index(context, cluster_id):

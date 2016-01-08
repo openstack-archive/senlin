@@ -144,8 +144,7 @@ class ClusterController(object):
         param_whitelist = {
             'limit': 'single',
             'marker': 'single',
-            'sort_dir': 'single',
-            'sort_keys': 'multi',
+            'sort': 'single',
             'show_nested': 'single',
             'global_project': 'single',
         }
@@ -165,8 +164,7 @@ class ClusterController(object):
         if not filters:
             filters = None
 
-        clusters = self.rpc_client.cluster_list(req.context,
-                                                filters=filters,
+        clusters = self.rpc_client.cluster_list(req.context, filters=filters,
                                                 **params)
         return {'clusters': clusters}
 

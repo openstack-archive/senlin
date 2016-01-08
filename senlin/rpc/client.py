@@ -141,15 +141,11 @@ class EngineClient(object):
                           self.make_msg('policy_delete',
                                         identity=identity))
 
-    def cluster_list(self, ctxt, limit=None, marker=None, sort_keys=None,
-                     sort_dir=None, filters=None, project_safe=True,
-                     show_nested=False):
-        # We keep the project_safe param here for the moment
+    def cluster_list(self, ctxt, limit=None, marker=None, sort=None,
+                     filters=None, project_safe=True, show_nested=False):
         return self.call(ctxt,
-                         self.make_msg('cluster_list',
-                                       limit=limit, marker=marker,
-                                       sort_keys=sort_keys, sort_dir=sort_dir,
-                                       filters=filters,
+                         self.make_msg('cluster_list', filters=filters,
+                                       limit=limit, marker=marker, sort=sort,
                                        project_safe=project_safe,
                                        show_nested=show_nested))
 

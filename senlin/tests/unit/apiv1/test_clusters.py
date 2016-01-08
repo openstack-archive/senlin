@@ -280,9 +280,14 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         expected = {u'clusters': engine_resp}
         self.assertEqual(expected, result)
 
-        default_args = {'limit': None, 'sort_keys': None, 'marker': None,
-                        'sort_dir': None, 'filters': None,
-                        'project_safe': True, 'show_nested': False}
+        default_args = {
+            'limit': None,
+            'marker': None,
+            'filters': None,
+            'sort': None,
+            'project_safe': True,
+            'show_nested': False
+        }
         mock_call.assert_called_once_with(
             req.context, ('cluster_list', default_args))
 
@@ -293,8 +298,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'name': 'whatever',
             'limit': 'fake limit',
             'marker': 'fake marker',
-            'sort_keys': 'fake sort keys',
-            'sort_dir': 'fake sort dir',
+            'sort': 'fake sort option',
             'show_nested': False,
             'balrog': 'you shall not pass!'
         }
@@ -305,11 +309,10 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         rpc_call_args, w = mock_call.call_args
         engine_args = rpc_call_args[1][1]
-        self.assertEqual(7, len(engine_args))
+        self.assertEqual(6, len(engine_args))
         self.assertIn('limit', engine_args)
         self.assertIn('marker', engine_args)
-        self.assertIn('sort_keys', engine_args)
-        self.assertIn('sort_dir', engine_args)
+        self.assertIn('sort', engine_args)
         self.assertIn('show_nested', engine_args)
         self.assertIn('filters', engine_args)
         self.assertIn('project_safe', engine_args)
