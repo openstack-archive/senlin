@@ -133,16 +133,23 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
 
     def test__get_current_dist(self):
         node1 = mock.Mock()
+        node1.data = {}
         node1.get_details.return_value = {
             'OS-EXT-AZ:availability_zone': 'AZ1',
         }
         node2 = mock.Mock()
-        node2.get_details.return_value = {
+        node2.data = {
             'foobar': 'irrelevant'
+        }
+        node3 = mock.Mock()
+        node3.data = {
+            'placement': {
+                'zone': 'AZ2'
+            }
         }
 
         cluster = mock.Mock()
-        cluster.nodes = [node1, node2]
+        cluster.nodes = [node1, node2, node3]
 
         policy = zp.ZonePlacementPolicy('test-policy', self.spec)
         zones = policy.zones
@@ -150,7 +157,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
 
         self.assertEqual(4, len(result))
         self.assertEqual(1, result['AZ1'])
-        self.assertEqual(0, result['AZ2'])
+        self.assertEqual(1, result['AZ2'])
         self.assertEqual(0, result['AZ3'])
         self.assertEqual(0, result['AZ4'])
 
