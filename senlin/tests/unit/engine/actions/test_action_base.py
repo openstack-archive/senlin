@@ -266,14 +266,15 @@ class ActionBaseTest(base.SenlinTestCase):
 
         results = action_base.Action.load_all(
             self.ctx, filters='FAKE_FILTER', limit='FAKE_LIMIT',
-            marker='FAKE_MARKER', sort_keys='FAKE_KEYS', sort_dir='FAKE_DIR')
+            marker='FAKE_MARKER', sort='FAKE_SORT')
 
         # the following line is important, or else the generator won't get
         # called.
         self.assertEqual([], list(results))
         mock_call.assert_called_once_with(
             self.ctx, filters='FAKE_FILTER', limit='FAKE_LIMIT',
-            marker='FAKE_MARKER', sort_keys='FAKE_KEYS', sort_dir='FAKE_DIR')
+            marker='FAKE_MARKER', sort='FAKE_SORT',
+            project_safe=True)
 
     def test_action_delete(self):
         result = action_base.Action.delete(self.ctx, 'non-existent')

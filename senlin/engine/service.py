@@ -1396,13 +1396,13 @@ class EngineService(service.Service):
 
     @request_context
     def action_list(self, context, filters=None, limit=None, marker=None,
-                    sort_keys=None, sort_dir=None):
+                    sort=None, project_safe=True):
 
         limit = utils.parse_int_param('limit', limit)
         all_actions = action_mod.Action.load_all(context, filters=filters,
                                                  limit=limit, marker=marker,
-                                                 sort_keys=sort_keys,
-                                                 sort_dir=sort_dir)
+                                                 sort=sort,
+                                                 project_safe=project_safe)
 
         return [a.to_dict() for a in all_actions]
 

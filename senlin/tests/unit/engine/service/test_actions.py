@@ -12,7 +12,6 @@
 
 import mock
 from oslo_messaging.rpc import dispatcher as rpc
-import six
 
 from senlin.common import exception
 from senlin.engine.actions import base as action_base
@@ -98,7 +97,7 @@ class ActionTest(base.SenlinTestCase):
         result = self.eng.action_list(self.ctx, limit=2, marker=a1['id'])
         self.assertEqual(2, len(result))
 
-    def test_action_list_with_sort_keys(self):
+    def test_action_list_with_sorting(self):
         t1 = mock.Mock()
         t2 = mock.Mock()
         t1.id = 'Node1'
@@ -111,28 +110,28 @@ class ActionTest(base.SenlinTestCase):
         a2 = self.eng.action_create(self.ctx, 'A', t2, 'CUST_ACT')
         a3 = self.eng.action_create(self.ctx, 'C', t1, 'CUST_ACT')
 
-        # default by created_time
+        # default by created_at
         result = self.eng.action_list(self.ctx)
         self.assertEqual(a1['id'], result[0]['id'])
         self.assertEqual(a2['id'], result[1]['id'])
 
         # use name for sorting
-        result = self.eng.action_list(self.ctx, sort_keys=['name'])
+        result = self.eng.action_list(self.ctx, sort='name')
         self.assertEqual(a2['id'], result[0]['id'])
         self.assertEqual(a1['id'], result[1]['id'])
 
-        # use permission for sorting
-        result = self.eng.action_list(self.ctx, sort_keys=['target'])
+        # use target for sorting
+        result = self.eng.action_list(self.ctx, sort='target')
         self.assertEqual(a3['id'], result[0]['id'])
 
-        # use name and permission for sorting
-        result = self.eng.action_list(self.ctx, sort_keys=['target', 'name'])
+        # use target and name for sorting
+        result = self.eng.action_list(self.ctx, sort='target,name')
         self.assertEqual(a3['id'], result[0]['id'])
         self.assertEqual(a2['id'], result[1]['id'])
         self.assertEqual(a1['id'], result[2]['id'])
 
         # unknown keys will be ignored
-        result = self.eng.action_list(self.ctx, sort_keys=['duang'])
+        result = self.eng.action_list(self.ctx, sort='duang')
         self.assertIsNotNone(result)
 
     def test_action_list_with_sort_dir(self):
@@ -148,29 +147,20 @@ class ActionTest(base.SenlinTestCase):
         a2 = self.eng.action_create(self.ctx, 'A', t2, 'CUST_ACT')
         a3 = self.eng.action_create(self.ctx, 'C', t1, 'CUST_ACT')
 
-        # default by created_time, ascending
+        # default by created_at, ascending
         result = self.eng.action_list(self.ctx)
         self.assertEqual(a1['id'], result[0]['id'])
         self.assertEqual(a2['id'], result[1]['id'])
 
-        # sort by created_time, descending
-        result = self.eng.action_list(self.ctx, sort_dir='desc')
+        # sort by created_at, descending
+        result = self.eng.action_list(self.ctx, sort='created_at:desc')
         self.assertEqual(a3['id'], result[0]['id'])
         self.assertEqual(a2['id'], result[1]['id'])
 
         # use name for sorting, descending
-        result = self.eng.action_list(self.ctx, sort_keys=['name'],
-                                      sort_dir='desc')
+        result = self.eng.action_list(self.ctx, sort='name:desc')
         self.assertEqual(a3['id'], result[0]['id'])
         self.assertEqual(a1['id'], result[1]['id'])
-
-        # use permission for sorting
-        ex = self.assertRaises(ValueError,
-                               self.eng.action_list, self.ctx,
-                               sort_dir='Bogus')
-        self.assertEqual("Unknown sort direction, must be one of: "
-                         "asc-nullsfirst, asc-nullslast, desc-nullsfirst, "
-                         "desc-nullslast", six.text_type(ex))
 
     def test_action_list_with_filters(self):
         t1 = mock.Mock()

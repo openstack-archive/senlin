@@ -254,12 +254,11 @@ class EngineClient(object):
                                         force=force))
 
     def action_list(self, ctxt, filters=None, limit=None, marker=None,
-                    sort_keys=None, sort_dir=None):
+                    sort=None, project_safe=True):
         return self.call(ctxt,
                          self.make_msg('action_list', filters=filters,
                                        limit=limit, marker=marker,
-                                       sort_keys=sort_keys,
-                                       sort_dir=sort_dir))
+                                       sort=sort, project_safe=project_safe))
 
     def cluster_policy_list(self, ctxt, cluster_id, filters=None, sort=None):
         return self.call(ctxt, self.make_msg('cluster_policy_list',

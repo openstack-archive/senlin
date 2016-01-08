@@ -315,11 +315,11 @@ def action_get_all_by_owner(context, owner):
     return IMPL.action_get_all_by_owner(context, owner)
 
 
-def action_get_all(context, filters=None, limit=None, marker=None,
-                   sort_keys=None, sort_dir=None):
-    return IMPL.action_get_all(context, filters=filters,
+def action_get_all(context, filters=None, limit=None, marker=None, sort=None,
+                   project_safe=True):
+    return IMPL.action_get_all(context, filters=filters, sort=sort,
                                limit=limit, marker=marker,
-                               sort_keys=sort_keys, sort_dir=sort_dir)
+                               project_safe=project_safe)
 
 
 def dependency_add(context, depended, dependent):

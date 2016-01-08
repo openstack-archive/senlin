@@ -921,20 +921,23 @@ def action_get_all_by_owner(context, owner_id):
     return query.all()
 
 
-def action_get_all(context, filters=None, limit=None, marker=None,
-                   sort_keys=None, sort_dir=None):
+def action_get_all(context, filters=None, limit=None, marker=None, sort=None,
+                   project_safe=True):
+
     query = model_query(context, models.Action)
+    # TODO(Qiming): Enable multi-tenancy for actions
+    # if project_safe:
+    #    query = query.filter_by(project=context.project)
 
     if filters is None:
         filters = {}
 
-    keys = _get_sort_keys(sort_keys, consts.ACTION_SORT_KEYS)
-
+    keys, dirs = _get_sort_params(sort, consts.ACTION_SORT_KEYS, 'created_at')
     query = db_filters.exact_filter(query, models.Action, filters)
-    return _paginate_query(context, query, models.Action,
-                           limit=limit, marker=marker,
-                           sort_keys=keys, sort_dir=sort_dir,
-                           default_sort_keys=['created_at']).all()
+    if marker:
+        marker = model_query(context, models.Action).get(marker)
+    return utils.paginate_query(query, models.Action, limit, keys,
+                                marker=marker, sort_dirs=dirs).all()
 
 
 def dependency_get_depended(context, action_id):
