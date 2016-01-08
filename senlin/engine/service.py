@@ -1468,8 +1468,8 @@ class EngineService(service.Service):
         return receiver
 
     @request_context
-    def receiver_list(self, context, limit=None, marker=None, sort_keys=None,
-                      sort_dir=None, filters=None, project_safe=True):
+    def receiver_list(self, context, limit=None, marker=None, sort=None,
+                      filters=None, project_safe=True):
         if limit is not None:
             limit = utils.parse_int_param('limit', limit)
         if project_safe is not None:
@@ -1477,9 +1477,7 @@ class EngineService(service.Service):
 
         receivers = receiver_mod.Receiver.load_all(context, limit=limit,
                                                    marker=marker,
-                                                   sort_keys=sort_keys,
-                                                   sort_dir=sort_dir,
-                                                   filters=filters,
+                                                   sort=sort, filters=filters,
                                                    project_safe=project_safe)
         return [r.to_dict() for r in receivers]
 

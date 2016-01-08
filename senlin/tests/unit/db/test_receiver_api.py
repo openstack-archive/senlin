@@ -12,6 +12,7 @@
 
 from oslo_utils import timeutils as tu
 
+from senlin.common import consts
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
 from senlin.tests.unit.common import base
@@ -175,21 +176,14 @@ class DBAPIReceiverTest(base.SenlinTestCase):
             self._create_receiver(self.ctx, id=v)
 
         mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
-        sort_keys = ['name', 'type', 'cluster_id', 'action', 'created_at']
+        sort_keys = consts.RECEIVER_SORT_KEYS
 
-        db_api.receiver_get_all(self.ctx, sort_keys=sort_keys)
+        db_api.receiver_get_all(self.ctx, sort=','.join(sort_keys))
         args = mock_paginate.call_args[0]
-        used_sort_keys = set(args[3])
-        expected_keys = set(['id', 'name', 'type', 'cluster_id', 'action',
-                             'created_at'])
-        self.assertEqual(expected_keys, used_sort_keys)
+        sort_keys.append('id')
+        self.assertEqual(set(sort_keys), set(args[3]))
 
-    def test_receiver_get_all_sort_keys_wont_change(self):
-        sort_keys = ['id']
-        db_api.receiver_get_all(self.ctx, sort_keys=sort_keys)
-        self.assertEqual(['id'], sort_keys)
-
-    def test_receiver_get_all_sort_keys_and_dir(self):
+    def test_receiver_get_all_sorting(self):
         values = [{'id': '001', 'name': 'receiver1'},
                   {'id': '002', 'name': 'receiver3'},
                   {'id': '003', 'name': 'receiver2'}]
@@ -199,18 +193,14 @@ class DBAPIReceiverTest(base.SenlinTestCase):
         for v in values:
             self._create_receiver(self.ctx, cluster_id=obj_ids[v['name']], **v)
 
-        receivers = db_api.receiver_get_all(self.ctx,
-                                            sort_keys=['name', 'cluster_id'],
-                                            sort_dir='asc')
+        receivers = db_api.receiver_get_all(self.ctx, sort='name,cluster_id')
         self.assertEqual(3, len(receivers))
         # Sorted by name (ascending)
         self.assertEqual('001', receivers[0].id)
         self.assertEqual('003', receivers[1].id)
         self.assertEqual('002', receivers[2].id)
 
-        receivers = db_api.receiver_get_all(self.ctx,
-                                            sort_keys=['cluster_id', 'name'],
-                                            sort_dir='asc')
+        receivers = db_api.receiver_get_all(self.ctx, sort='cluster_id,name')
         self.assertEqual(3, len(receivers))
         # Sorted by obj_id (ascending)
         self.assertEqual('002', receivers[0].id)
@@ -218,15 +208,14 @@ class DBAPIReceiverTest(base.SenlinTestCase):
         self.assertEqual('001', receivers[2].id)
 
         receivers = db_api.receiver_get_all(self.ctx,
-                                            sort_keys=['cluster_id', 'name'],
-                                            sort_dir='desc')
+                                            sort='cluster_id:desc,name:desc')
         self.assertEqual(3, len(receivers))
         # Sorted by obj_id (descending)
         self.assertEqual('001', receivers[0].id)
         self.assertEqual('003', receivers[1].id)
         self.assertEqual('002', receivers[2].id)
 
-    def test_receiver_get_all_default_sort_dir(self):
+    def test_receiver_get_all_sorting_default(self):
         values = [{'id': '001', 'name': 'receiver1'},
                   {'id': '002', 'name': 'receiver2'},
                   {'id': '003', 'name': 'receiver3'}]
@@ -236,7 +225,7 @@ class DBAPIReceiverTest(base.SenlinTestCase):
         for v in values:
             self._create_receiver(self.ctx, cluster_id=obj_ids[v['name']], **v)
 
-        receivers = db_api.receiver_get_all(self.ctx, sort_dir='asc')
+        receivers = db_api.receiver_get_all(self.ctx)
         self.assertEqual(3, len(receivers))
         self.assertEqual(values[0]['id'], receivers[0].id)
         self.assertEqual(values[1]['id'], receivers[1].id)

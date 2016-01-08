@@ -102,8 +102,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         result = self.controller.index(req)
 
-        default_args = {'limit': None, 'marker': None,
-                        'sort_keys': None, 'sort_dir': None,
+        default_args = {'limit': None, 'marker': None, 'sort': None,
                         'filters': None, 'project_safe': True}
 
         mock_call.assert_called_with(req.context,
@@ -117,8 +116,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {
             'limit': 20,
             'marker': 'fake marker',
-            'sort_keys': 'fake sort keys',
-            'sort_dir': 'fake sort dir',
+            'sort': 'fake sorting string',
             'project_safe': True,
             'filters': None,
             'balrog': 'you shall not pass!'
@@ -133,11 +131,10 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
 
-        self.assertEqual(6, len(engine_args))
+        self.assertEqual(5, len(engine_args))
         self.assertIn('limit', engine_args)
         self.assertIn('marker', engine_args)
-        self.assertIn('sort_keys', engine_args)
-        self.assertIn('sort_dir', engine_args)
+        self.assertIn('sort', engine_args)
         self.assertIn('filters', engine_args)
         self.assertIn('project_safe', engine_args)
         self.assertNotIn('tenant_safe', engine_args)

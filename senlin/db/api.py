@@ -394,11 +394,11 @@ def receiver_get_by_short_id(context, short_id, project_safe=True):
                                          project_safe=project_safe)
 
 
-def receiver_get_all(context, limit=None, marker=None, filters=None,
-                     sort_keys=None, sort_dir=None, project_safe=True):
+def receiver_get_all(context, limit=None, marker=None, filters=None, sort=None,
+                     project_safe=True):
     return IMPL.receiver_get_all(context, limit=limit, marker=marker,
-                                 sort_keys=sort_keys, sort_dir=sort_dir,
-                                 filters=filters, project_safe=project_safe)
+                                 sort=sort, filters=filters,
+                                 project_safe=project_safe)
 
 
 def receiver_delete(context, receiver_id, force=False):

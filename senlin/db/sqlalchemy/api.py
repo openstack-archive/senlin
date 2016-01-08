@@ -60,6 +60,10 @@ def get_backend():
     return sys.modules[__name__]
 
 
+def _session(context):
+    return (context and context.session) or get_session()
+
+
 def model_query(context, *args):
     session = _session(context)
     query = session.query(*args)
@@ -92,43 +96,6 @@ def _get_sort_params(value, whitelist, default_key=None):
     return keys, dirs
 
 
-def _get_sort_keys(keys, whitelist):
-    """Returns an array containing only whitelisted keys
-
-    :param keys: an array of strings or a single string
-    :param whitelist: a list of allowed keys
-    :returns: filtered list of sort keys
-    """
-    if keys is None:
-        return None
-
-    if isinstance(keys, six.string_types):
-        keys = [keys]
-    return [k for k in keys if k in whitelist]
-
-
-def _paginate_query(context, query, model, limit=None, marker=None,
-                    sort_keys=None, sort_dir=None, default_sort_keys=None):
-    if not sort_keys:
-        sort_keys = default_sort_keys or []
-        if not sort_dir:
-            sort_dir = 'asc'
-
-    # This assures the order of the clusters will always be the same
-    # even for sort_key values that are not unique in the database
-    sort_keys = sort_keys + ['id']
-
-    model_marker = None
-    if marker:
-        model_marker = model_query(context, model).get(marker)
-    try:
-        query = utils.paginate_query(query, model, limit, sort_keys,
-                                     model_marker, sort_dir)
-    except utils.InvalidSortKey:
-        raise exception.InvalidParameter(name='sort_keys', value=sort_keys)
-    return query
-
-
 # TODO(Yanyan Hu): Set default value of project_safe to True
 def query_by_short_id(context, model, short_id, project_safe=False):
     q = model_query(context, model)
@@ -159,10 +126,6 @@ def query_by_name(context, model, name, project_safe=False):
         return None
     else:
         raise exception.MultipleChoices(arg=name)
-
-
-def _session(context):
-    return (context and context.session) or get_session()
 
 
 # Clusters
@@ -211,11 +174,10 @@ def cluster_get_all(context, limit=None, marker=None, sort=None, filters=None,
                     project_safe=True, show_nested=False):
     query = _query_cluster_get_all(context, project_safe=project_safe,
                                    show_nested=show_nested)
-    if filters is None:
-        filters = {}
+    if filters:
+        query = db_filters.exact_filter(query, models.Cluster, filters)
 
     keys, dirs = _get_sort_params(sort, consts.CLUSTER_SORT_KEYS, 'init_at')
-    query = db_filters.exact_filter(query, models.Cluster, filters)
     if marker:
         marker = model_query(context, models.Cluster).get(marker)
 
@@ -325,11 +287,10 @@ def node_get_all(context, cluster_id=None, limit=None, marker=None, sort=None,
     query = _query_node_get_all(context, project_safe=project_safe,
                                 cluster_id=cluster_id)
 
-    if filters is None:
-        filters = {}
+    if filters:
+        query = db_filters.exact_filter(query, models.Node, filters)
 
     keys, dirs = _get_sort_params(sort, consts.NODE_SORT_KEYS, 'init_at')
-    query = db_filters.exact_filter(query, models.Node, filters)
     if marker:
         marker = model_query(context, models.Node).get(marker)
     return utils.paginate_query(query, models.Node, limit, keys,
@@ -580,11 +541,10 @@ def policy_get_all(context, limit=None, marker=None, sort=None, filters=None,
     if project_safe:
         query = query.filter_by(project=context.project)
 
-    if filters is None:
-        filters = {}
+    if filters:
+        query = db_filters.exact_filter(query, models.Policy, filters)
 
     keys, dirs = _get_sort_params(sort, consts.POLICY_SORT_KEYS, 'created_at')
-    query = db_filters.exact_filter(query, models.Policy, filters)
     if marker:
         marker = model_query(context, models.Policy).get(marker)
     return utils.paginate_query(query, models.Policy, limit, keys,
@@ -631,13 +591,12 @@ def cluster_policy_get_all(context, cluster_id, filters=None, sort=None):
 
     query = model_query(context, models.ClusterPolicies)
     query = query.filter_by(cluster_id=cluster_id)
-    if filters is None:
-        filters = {}
+
+    if filters:
+        query = db_filters.exact_filter(query, models.ClusterPolicies, filters)
 
     keys, dirs = _get_sort_params(sort, consts.CLUSTER_POLICY_SORT_KEYS,
                                   'priority')
-    query = db_filters.exact_filter(query, models.ClusterPolicies, filters)
-
     return utils.paginate_query(query, models.ClusterPolicies, None, keys,
                                 sort_dirs=dirs).all()
 
@@ -714,11 +673,10 @@ def profile_get_all(context, limit=None, marker=None, sort=None, filters=None,
     if project_safe:
         query = query.filter_by(project=context.project)
 
-    if filters is None:
-        filters = {}
+    if filters:
+        query = db_filters.exact_filter(query, models.Profile, filters)
 
     keys, dirs = _get_sort_params(sort, consts.PROFILE_SORT_KEYS, 'created_at')
-    query = db_filters.exact_filter(query, models.Profile, filters)
     if marker:
         marker = model_query(context, models.Profile).get(marker)
     return utils.paginate_query(query, models.Profile, limit, keys,
@@ -837,11 +795,10 @@ def event_get_by_short_id(context, short_id, project_safe=True):
 
 def _event_filter_paginate_query(context, query, filters=None,
                                  limit=None, marker=None, sort=None):
-    if filters is None:
-        filters = {}
+    if filters:
+        query = db_filters.exact_filter(query, models.Event, filters)
 
     keys, dirs = _get_sort_params(sort, consts.EVENT_SORT_KEYS, 'timestamp')
-    query = db_filters.exact_filter(query, models.Event, filters)
     if marker:
         marker = model_query(context, models.Event).get(marker)
     return utils.paginate_query(query, models.Event, limit, keys,
@@ -929,11 +886,10 @@ def action_get_all(context, filters=None, limit=None, marker=None, sort=None,
     # if project_safe:
     #    query = query.filter_by(project=context.project)
 
-    if filters is None:
-        filters = {}
+    if filters:
+        query = db_filters.exact_filter(query, models.Action, filters)
 
     keys, dirs = _get_sort_params(sort, consts.ACTION_SORT_KEYS, 'created_at')
-    query = db_filters.exact_filter(query, models.Action, filters)
     if marker:
         marker = model_query(context, models.Action).get(marker)
     return utils.paginate_query(query, models.Action, limit, keys,
@@ -1195,21 +1151,20 @@ def receiver_get(context, receiver_id, project_safe=True):
     return receiver
 
 
-def receiver_get_all(context, limit=None, marker=None, filters=None,
-                     sort_keys=None, sort_dir=None, project_safe=True):
+def receiver_get_all(context, limit=None, marker=None, filters=None, sort=None,
+                     project_safe=True):
     query = model_query(context, models.Receiver)
     if project_safe:
         query = query.filter_by(project=context.project)
 
-    if filters is None:
-        filters = {}
+    if filters:
+        query = db_filters.exact_filter(query, models.Receiver, filters)
 
-    keys = _get_sort_keys(sort_keys, consts.RECEIVER_SORT_KEYS)
-    query = db_filters.exact_filter(query, models.Receiver, filters)
-    return _paginate_query(context, query, models.Receiver,
-                           limit=limit, marker=marker,
-                           sort_keys=keys, sort_dir=sort_dir,
-                           default_sort_keys=['name']).all()
+    keys, dirs = _get_sort_params(sort, consts.RECEIVER_SORT_KEYS, 'name')
+    if marker:
+        marker = model_query(context, models.Receiver).get(marker)
+    return utils.paginate_query(query, models.Receiver, limit, keys,
+                                marker=marker, sort_dirs=dirs).all()
 
 
 def receiver_get_by_name(context, name, project_safe=True):

@@ -85,8 +85,7 @@ class ReceiverController(object):
         param_whitelist = {
             'limit': 'single',
             'marker': 'single',
-            'sort_keys': 'multi',
-            'sort_dir': 'single',
+            'sort': 'single',
             'global_project': 'single',
         }
         params = util.get_allowed_params(req.params, param_whitelist)
