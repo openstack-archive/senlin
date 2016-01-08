@@ -10,10 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_utils import timeutils as tu
 import six
 
-from oslo_utils import timeutils as tu
-
+from senlin.common import consts
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import parser
@@ -199,23 +199,14 @@ class DBAPIProfileTest(base.SenlinTestCase):
             shared.create_profile(self.ctx, id=pid)
 
         mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
-        sort_keys = ['type', 'name', 'permission', 'metadata',
-                     'created_at', 'updated_at']
-
-        db_api.profile_get_all(self.ctx, sort_keys=sort_keys)
+        sort_keys = consts.PROFILE_SORT_KEYS
+        db_api.profile_get_all(self.ctx, sort=','.join(sort_keys))
 
         args = mock_paginate.call_args[0]
-        used_sort_keys = set(args[3])
-        expected_keys = set(['id', 'type', 'name', 'permission',
-                             'created_at', 'updated_at'])
-        self.assertEqual(expected_keys, used_sort_keys)
+        sort_keys.append('id')
+        self.assertEqual(set(sort_keys), set(args[3]))
 
-    def test_profile_get_all_sort_keys_wont_change(self):
-        sort_keys = ['id']
-        db_api.profile_get_all(self.ctx, sort_keys=sort_keys)
-        self.assertEqual(['id'], sort_keys)
-
-    def test_profile_get_all_sort_keys_and_dir(self):
+    def test_profile_get_all_sorting(self):
         values = [{'id': '001', 'name': 'profile1', 'type': 'C'},
                   {'id': '002', 'name': 'profile3', 'type': 'B'},
                   {'id': '003', 'name': 'profile2', 'type': 'A'}]
@@ -223,37 +214,34 @@ class DBAPIProfileTest(base.SenlinTestCase):
         for v in values:
             shared.create_profile(self.ctx, **v)
 
-        profiles = db_api.profile_get_all(self.ctx, sort_keys=['name', 'type'],
-                                          sort_dir='asc')
+        profiles = db_api.profile_get_all(self.ctx, sort='name,type')
         self.assertEqual(3, len(profiles))
         # Sorted by name
         self.assertEqual('001', profiles[0].id)
         self.assertEqual('003', profiles[1].id)
         self.assertEqual('002', profiles[2].id)
 
-        profiles = db_api.profile_get_all(self.ctx, sort_keys=['type', 'name'],
-                                          sort_dir='asc')
+        profiles = db_api.profile_get_all(self.ctx, sort='type,name')
         self.assertEqual(3, len(profiles))
         # Sorted by levels (ascending)
         self.assertEqual('003', profiles[0].id)
         self.assertEqual('002', profiles[1].id)
         self.assertEqual('001', profiles[2].id)
 
-        profiles = db_api.profile_get_all(self.ctx, sort_keys=['type', 'name'],
-                                          sort_dir='desc')
+        profiles = db_api.profile_get_all(self.ctx, sort='type:desc,name:desc')
         self.assertEqual(3, len(profiles))
         # Sorted by statuses (descending)
         self.assertEqual('001', profiles[0].id)
         self.assertEqual('002', profiles[1].id)
         self.assertEqual('003', profiles[2].id)
 
-    def test_profile_get_all_default_sort_dir(self):
+    def test_profile_get_all_default_sorting(self):
         profiles = []
         for x in range(3):
             profile = shared.create_profile(self.ctx, created_at=tu.utcnow())
             profiles.append(profile)
 
-        results = db_api.profile_get_all(self.ctx, sort_dir='asc')
+        results = db_api.profile_get_all(self.ctx)
         self.assertEqual(3, len(results))
         self.assertEqual(profiles[0].id, results[0].id)
         self.assertEqual(profiles[1].id, results[1].id)

@@ -76,12 +76,12 @@ class EngineClient(object):
         return self.call(ctxt, self.make_msg('profile_type_get',
                                              type_name=type_name))
 
-    def profile_list(self, ctxt, limit=None, marker=None, sort_keys=None,
-                     sort_dir=None, filters=None):
+    def profile_list(self, ctxt, limit=None, marker=None, sort=None,
+                     filters=None, project_safe=True):
         return self.call(ctxt,
-                         self.make_msg('profile_list', limit=limit,
-                                       marker=marker, sort_keys=sort_keys,
-                                       sort_dir=sort_dir, filters=filters))
+                         self.make_msg('profile_list', filters=filters,
+                                       limit=limit, marker=marker, sort=sort,
+                                       project_safe=project_safe))
 
     def profile_create(self, ctxt, name, spec, permission, metadata):
         return self.call(ctxt,

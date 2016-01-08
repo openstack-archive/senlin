@@ -162,9 +162,9 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         default_args = {
             'limit': mock.ANY,
             'marker': mock.ANY,
-            'sort_keys': mock.ANY,
-            'sort_dir': mock.ANY,
+            'sort': mock.ANY,
             'filters': mock.ANY,
+            'project_safe': mock.ANY,
         }
         self._test_engine_api('profile_list', 'call', **default_args)
 

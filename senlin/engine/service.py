@@ -181,15 +181,14 @@ class EngineService(service.Service):
         return profile
 
     @request_context
-    def profile_list(self, context, limit=None, marker=None, sort_keys=None,
-                     sort_dir=None, filters=None):
+    def profile_list(self, context, limit=None, marker=None, sort=None,
+                     filters=None, project_safe=True):
         if limit is not None:
             limit = utils.parse_int_param('limit', limit)
-        profiles = profile_base.Profile.load_all(context, limit=limit,
-                                                 marker=marker,
-                                                 sort_keys=sort_keys,
-                                                 sort_dir=sort_dir,
-                                                 filters=filters)
+        profiles = profile_base.Profile.load_all(context,
+                                                 limit=limit, marker=marker,
+                                                 sort=sort, filters=filters,
+                                                 project_safe=project_safe)
 
         return [p.to_dict() for p in profiles]
 
