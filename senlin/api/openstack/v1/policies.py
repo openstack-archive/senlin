@@ -77,8 +77,8 @@ class PolicyController(object):
         param_whitelist = {
             'limit': 'single',
             'marker': 'single',
-            'sort_dir': 'single',
-            'sort_keys': 'multi',
+            'sort': 'single',
+            'global_project': 'single',
         }
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)
@@ -87,11 +87,16 @@ class PolicyController(object):
         if key in params:
             params[key] = utils.parse_int_param(key, params[key])
 
+        key = consts.PARAM_GLOBAL_PROJECT
+        if key in params:
+            project_safe = not utils.parse_bool_param(key, params[key])
+            del params[key]
+            params['project_safe'] = project_safe
+
         if not filters:
             filters = None
 
-        policies = self.rpc_client.policy_list(req.context,
-                                               filters=filters,
+        policies = self.rpc_client.policy_list(req.context, filters=filters,
                                                **params)
 
         return {'policies': policies}

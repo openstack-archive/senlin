@@ -198,13 +198,12 @@ class Policy(object):
         return cls._from_db_record(db_policy)
 
     @classmethod
-    def load_all(cls, context, limit=None, sort_keys=None, marker=None,
-                 sort_dir=None, filters=None, project_safe=True):
-        '''Retrieve all policies from database.'''
+    def load_all(cls, context, limit=None, marker=None, sort=None,
+                 filters=None, project_safe=True):
+        """Retrieve all policies from database."""
 
         records = db_api.policy_get_all(context, limit=limit, marker=marker,
-                                        sort_keys=sort_keys, sort_dir=sort_dir,
-                                        filters=filters,
+                                        sort=sort, filters=filters,
                                         project_safe=project_safe)
 
         for record in records:

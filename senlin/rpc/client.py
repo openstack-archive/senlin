@@ -113,12 +113,12 @@ class EngineClient(object):
         return self.call(ctxt, self.make_msg('policy_type_get',
                                              type_name=type_name))
 
-    def policy_list(self, ctxt, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None):
+    def policy_list(self, ctxt, limit=None, marker=None, sort=None,
+                    filters=None, project_safe=True):
         return self.call(ctxt,
-                         self.make_msg('policy_list', limit=limit,
-                                       marker=marker, sort_keys=sort_keys,
-                                       sort_dir=sort_dir, filters=filters))
+                         self.make_msg('policy_list', filters=filters,
+                                       limit=limit, marker=marker, sort=sort,
+                                       project_safe=project_safe))
 
     def policy_create(self, ctxt, name, spec, level, cooldown):
         return self.call(ctxt,

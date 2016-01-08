@@ -573,8 +573,8 @@ def policy_get_by_short_id(context, short_id, project_safe=True):
                              project_safe=project_safe)
 
 
-def policy_get_all(context, limit=None, marker=None, sort_keys=None,
-                   sort_dir=None, filters=None, project_safe=True):
+def policy_get_all(context, limit=None, marker=None, sort=None, filters=None,
+                   project_safe=True):
     query = model_query(context, models.Policy)
 
     if project_safe:
@@ -583,12 +583,12 @@ def policy_get_all(context, limit=None, marker=None, sort_keys=None,
     if filters is None:
         filters = {}
 
-    keys = _get_sort_keys(sort_keys, consts.POLICY_SORT_KEYS)
+    keys, dirs = _get_sort_params(sort, consts.POLICY_SORT_KEYS, 'created_at')
     query = db_filters.exact_filter(query, models.Policy, filters)
-    return _paginate_query(context, query, models.Policy,
-                           limit=limit, marker=marker,
-                           sort_keys=keys, sort_dir=sort_dir,
-                           default_sort_keys=['created_at']).all()
+    if marker:
+        marker = model_query(context, models.Policy).get(marker)
+    return utils.paginate_query(query, models.Policy, limit, keys,
+                                marker=marker, sort_dirs=dirs).all()
 
 
 def policy_update(context, policy_id, values):
