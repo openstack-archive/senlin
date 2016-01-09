@@ -1378,7 +1378,7 @@ class EngineService(service.Service):
         """
         if cfg.CONF.name_unique:
             if db_api.receiver_get_by_name(context, name):
-                msg = _("A receiver named (%s) already exists.") % name
+                msg = _("A receiver named '%s' already exists.") % name
                 raise exception.SenlinBadRequest(msg=msg)
 
         LOG.info(_LI("Creating receiver %(n)s: \n"
@@ -1387,7 +1387,7 @@ class EngineService(service.Service):
 
         rtype = type_name.lower()
         if rtype not in consts.RECEIVER_TYPES:
-            msg = _('Receiver type (%s) is not supported.') % rtype
+            msg = _("Receiver type '%s' is not supported.") % rtype
             raise exception.SenlinBadRequest(msg=msg)
 
         # Check whether cluster identified by cluster_id does exist
@@ -1395,7 +1395,7 @@ class EngineService(service.Service):
         try:
             cluster = self.cluster_find(context, cluster_id)
         except exception.ClusterNotFound:
-            msg = _("The referenced cluster (%s) is not found.") % cluster_id
+            msg = _("The referenced cluster '%s' is not found.") % cluster_id
             raise exception.SenlinBadRequest(msg=msg)
 
         # permission checking
@@ -1404,16 +1404,15 @@ class EngineService(service.Service):
 
         # Check action name
         if action not in consts.ACTION_NAMES:
-            msg = _('Illegal action (%s) specified.') % action
+            msg = _("Illegal action '%s' specified.") % action
             raise exception.SenlinBadRequest(msg=msg)
 
         if action.lower().split('_')[0] != 'cluster':
-            msg = _('Action %s is not applicable to clusters.') % action
+            msg = _("Action '%s' is not applicable to clusters.") % action
             raise exception.SenlinBadRequest(msg=msg)
 
         if not params:
             params = {}
-
         kwargs = {
             'name': name,
             'user': context.user,
@@ -1439,7 +1438,7 @@ class EngineService(service.Service):
         return receiver.to_dict()
 
     @request_context
-    def receiver_delete(self, context, identity, force=False):
+    def receiver_delete(self, context, identity):
         db_receiver = self.receiver_find(context, identity)
         LOG.info(_LI("Deleting receiver %s."), identity)
         db_api.receiver_delete(context, db_receiver.id)

@@ -399,8 +399,8 @@ def receiver_get_all(context, limit=None, marker=None, filters=None, sort=None,
                                  project_safe=project_safe)
 
 
-def receiver_delete(context, receiver_id, force=False):
-    return IMPL.receiver_delete(context, receiver_id, force=force)
+def receiver_delete(context, receiver_id):
+    return IMPL.receiver_delete(context, receiver_id)
 
 
 def db_sync(engine, version=None):
