@@ -666,3 +666,44 @@ class ServerProfile(base.Profile):
         if 'cluster' in metadata:
             del metadata['cluster']
         return self.nova(obj).server_metadata_update(**metadata)
+
+    def do_rebuild(self, obj):
+        if not obj.physical_id:
+            return False
+
+        self.server_id = obj.physical_id
+
+        try:
+            server = self.nova(obj).server_get(self.server_id)
+        except Exception as ex:
+            LOG.exception(_('Failed at getting server: %s'),
+                          six.text_type(ex))
+            return False
+
+        if server is None or server.image is None:
+            return False
+
+        image_id = server.image['id']
+        admin_pass = self.properties.get(self.ADMIN_PASS)
+
+        try:
+            self.nova(obj).server_rebuild(self.server_id, image_id,
+                                          self.properties.get(self.NAME),
+                                          admin_pass)
+        except Exception as ex:
+            LOG.exception(_('Failed at rebuilding server: %s'),
+                          six.text_type(ex))
+            return False
+
+        return True
+
+    def do_recover(self, obj, **options):
+
+        if 'operation' in options:
+            if options['operation'] == 'REBUILD':
+                return self.do_rebuild(obj)
+
+        res = super(ServerProfile, self).do_recover(
+            obj, **options)
+
+        return res
