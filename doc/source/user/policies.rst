@@ -54,6 +54,29 @@ that more useful information can be shown on a single line. To show the *full
 ID* in the list, you can add the :option:`-F` (or :option:`--full-id`) option
 to the command.
 
+
+Sorting the List
+----------------
+
+You can specify the sorting keys and sorting direction when list policies,
+using the option :option:`--sort` (or :option:`-o`). The :option:`--sort`
+option accepts a string of format ``key1[:dir1],key2[:dir2],key3[:dir3]``,
+where the keys used are policy properties and the dirs can be one of ``asc``
+and ``desc``. When omitted, Senlin sorts a given key using ``asc`` as the
+default direction.
+
+For example, the following command instructs the :program:`senlin` command
+line to sort policies using the ``name`` property in descending order::
+
+  $ senlin policy-list -o name:desc
+
+When sorting the list of policies, you can use one of ``type``, ``name``,
+``level``, ``cooldown``, ``created_at`` and ``updated_at``.
+
+
+Paginating the List
+-------------------
+
 In case you have a huge collection of policy objects, you can limit the number
 of policies returned from Senlin server, using the option :option:`--limit` (or
 (or `-l`). For example::

@@ -22,8 +22,59 @@ or events so that a specific :term:`Action` can be initiated on a senlin
 cluster automatically. For example, when workload on a cluster climbs high,
 a receiver can change the size of a specified cluster.
 
-How to use
-~~~~~~~~~~
+
+Listing Receivers
+~~~~~~~~~~~~~~~~~
+
+The :program:`senlin` command line provides a command :command:`receiver-list`
+that can be used to enumerate receiver objects known to the service. For
+example::
+
+  $ senlin receiver-list
+
+
+Sorting the List
+----------------
+
+You can specify the sorting keys and sorting direction when list receivers,
+using the option :option:`--sort` (or :option:`-o`). The :option:`--sort`
+option accepts a string of format ``key1[:dir1],key2[:dir2],key3[:dir3]``,
+where the keys used are receiver properties and the dirs can be one of ``asc``
+and ``desc``. When omitted, Senlin sorts a given key using ``asc`` as the
+default direction.
+
+For example, the following command instructs the :program:`senlin` command
+line to sort receivers using the ``name`` property in descending order::
+
+  $ senlin receiver-list -o name:desc
+
+When sorting the list of receivers, you can use one of ``type``, ``name``,
+``action``, ``cluster_id``, ``created_at``.
+
+
+Paginating the List
+-------------------
+
+In case you have a huge collection of receiver objects, you can limit the
+number of receivers returned from Senlin server, using the option
+:option:`--limit` (or (or `-l`). For example::
+
+  $ senlin receiver-list -l 1
+
+Yet another option you can specify is the ID of a receiver object after which
+you want to see the list starts. In other words, you don't want to see those
+receivers with IDs that is or come before the one you specify. You can use the
+option :option:`--marker <ID>` (or option:`-m <ID>`) for this purpose. For
+example::
+
+  $ senlin receiver-list -l 1 -m 239d7212-6196-4a89-9446-44d28717d7de
+
+Combining the :option:`-m` and the :option:`-l` enables you to do pagination
+on the results returned from the server.
+
+
+Creating a Receiver
+~~~~~~~~~~~~~~~~~~~
 
 1. Create a cluster named "``test_cluster``", with its desired capacity set to
    2, its minimum size set to 1 and its maximum size set to 5, e.g.

@@ -71,18 +71,20 @@ events.
 Sorting the List
 ----------------
 
-You can specify the sorting keys and sorting direction when list events, using
-the option :option:`--sort-keys` (or :option:`-k`) and/or the option
-:option:`--sort-dir` (or :option:`-s`). For example, the following command
-instructs the :program:`senlin` command line to sort events using the
-``timestamp`` property in descending order::
+You can specify the sorting keys and sorting direction when list events,
+using the option :option:`--sort` (or :option:`-o`). The :option:`--sort`
+option accepts a string of format ``key1[:dir1],key2[:dir2],key3[:dir3]``,
+where the keys used are event properties and the dirs can be one of ``asc``
+and ``desc``. When omitted, Senlin sorts a given key using ``asc`` as the
+default direction.
 
-  $ senlin event-list -k timestamp -s desc
+For example, the following command instructs the :program:`senlin` command
+line to sort events using the ``timestamp`` property in descending order::
+
+  $ senlin event-list -o timestamp:desc
 
 When sorting the list of events, you can use one of ``timestamp``, ``level``,
-``obj_type``, ``obj_name``, ``user`` and ``action`` or any combinations of
-these strings as the keys. You can use ``asc`` or ``desc`` as the sorting
-direction.
+``obj_type``, ``obj_name``, ``user``, ``action`` and ``status``.
 
 
 Filtering the List

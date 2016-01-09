@@ -63,23 +63,20 @@ to the command::
 Sorting the List
 ----------------
 
-You can specify the sorting keys and sorting direction for the cluster list,
-using the option :option:`--sort-keys` (or :option:`-k`) and/or the option
-:option:`--sort-dir` (or :option:`-s`). For example, the following command
-instructs the :program:`senlin` command line to sort clusters using the
-``name`` property in descending order::
+You can specify the sorting keys and sorting direction when list clusters,
+using the option :option:`--sort` (or :option:`-o`). The :option:`--sort`
+option accepts a string of format ``key1[:dir1],key2[:dir2],key3[:dir3]``,
+where the keys used are cluster properties and the dirs can be one of ``asc``
+and ``desc``. When omitted, Senlin sorts a given key using ``asc`` as the
+default direction.
 
-  $ senlin cluster-list -k name -s desc
-  +----------+------+--------+---------------------+
-  | id       | name | status | created_time        |
-  +----------+------+--------+---------------------+
-  | 2959122e | c1   | ACTIVE | 2015-05-05T13:27:28 |
-  | 092d0955 | c2   | ACTIVE | 2015-05-05T13:27:48 |
-  +----------+------+--------+---------------------+
+For example, the following command instructs the :program:`senlin` command
+line to sort clusters using the ``name`` property in descending order::
 
-For sorting the cluster list, the valid keys are: ``name``, ``status``,
-``created_time`` and ``updated_time``, the valid sorting directions are:
-``asc`` and ``desc``.
+  $ senlin cluster-list -o name:desc
+
+When sorting the list of clusters, you can use one of ``name``, ``status``,
+``init_at``, ``created_at`` and ``updated_at``.
 
 
 Filtering the List
