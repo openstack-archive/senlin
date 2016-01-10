@@ -723,7 +723,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'profile_id': 'xxxx-yyyy-zzzz',
             'desired_capacity': 5,
             'min_size': 0,
-            'max_size': -1
+            'max_size': -1,
+            'action': 'fake_action',
         }
 
         req = self._put('/clusters/%(cluster_id)s' % {'cluster_id': cid},
@@ -745,7 +746,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context,
                                           ('cluster_update', args))
         self.assertEqual(engine_resp, res['cluster'])
-        self.assertEqual('/clusters/%s' % cid, res['location'])
+        self.assertEqual('/actions/fake_action', res['location'])
 
     def test_cluster_update_missing_cluster_key(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)

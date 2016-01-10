@@ -213,10 +213,10 @@ class ClusterController(object):
         cluster = self.rpc_client.cluster_update(
             req.context, cluster_id, data.name, data.profile, data.parent,
             data.metadata, data.timeout)
-
+        action_id = cluster.pop('action')
         result = {
             'cluster': cluster,
-            'location': '/clusters/%s' % cluster['id'],
+            'location': '/actions/%s' % action_id,
         }
         return result
 
