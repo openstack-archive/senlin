@@ -82,16 +82,19 @@ Sorting the List
 ----------------
 
 You can specify the sorting keys and sorting direction when list actions,
-using the option :option:`--sort-keys` (or :option:`-k`) and/or the option
-:option:`--sort-dir` (or :option:`-s`). For example, the following command
-instructs the :program:`senlin` command line to sort actions using the
-``name`` property in descending order::
+using the option :option:`--sort` (or :option:`-o`). The :option:`--sort`
+option accepts a string of format ``key1[:dir1],key2[:dir2],key3[:dir3]``,
+where the keys used are action properties and the dirs can be one of ``asc``
+and ``desc``. When omitted, Senlin sorts a given key using ``asc`` as the
+default direction.
 
-  $ senlin action-list -k name -s desc
+For example, the following command instructs the :program:`senlin` command
+line to sort actions using the ``name`` property in descending order::
+
+  $ senlin action-list -o name:desc
 
 When sorting the list of actions, you can use one of ``name``, ``target``,
-``action``, ``created_time`` and ``status``, or any combinations of these
-strings as the keys. You can use ``asc`` or ``desc`` as the sorting direction.
+``action``, ``created_at`` and ``status``.
 
 
 Filtering the List

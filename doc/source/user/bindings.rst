@@ -50,23 +50,21 @@ cluster ``webservers``::
 Sorting the List
 ----------------
 
-You specify the sorting keys and sorting directions for the policy list,
-using the option :option:`--sort-keys` (or :option:`-k`) and the option
-:option:`--sort-dir` (or :option:`-s`). For example, the following command
-instructs the :program:`senlin` command line to sort policies using the
-``priority`` property in descending order::
+You can specify the sorting keys and sorting direction when list cluster
+policies, using the option :option:`--sort` (or :option:`-o`). The
+:option:`--sort` option accepts a string of format
+``key1[:dir1],key2[:dir2],key3[:dir3]``, where the keys used are properties
+of the policy bound to a cluster and the dirs can be one of ``asc`` and
+``desc``. When omitted, Senlin sorts a given key using ``asc`` as the default
+direction.
 
-  $ senlin cluster-policy-list -k priority -s desc c3
-  +--------------------------------------+--------+----------------+----------+-------+----------+---------+
-  | policy_id                            | policy | type           | priority | level | cooldown | enabled |
-  +--------------------------------------+--------+----------------+----------+-------+----------+---------+
-  | 239d7212-6196-4a89-9446-44d28717d7de | dp01   | DeletionPolicy | 40       | 50    | 60       | True    |
-  | 0705f0f4-629e-4417-84d7-30569d23b271 | up01   | UpdatePolicy   | 20       | 50    | 60       | True    |
-  +--------------------------------------+--------+----------------+----------+-------+----------+---------+
+For example, the following command instructs the :program:`senlin` command
+line to sort policy bindings using the ``level`` property in descending order::
 
-For sorting the policy list, the valid keys are: ``priority``, ``level``,
-``cooldown`` and ``enabled``, the valid sorting directions are: ``asc`` and
-``desc``.
+  $ senlin cluster-policy-list -o level:desc 
+
+When sorting the list of policies, you can use one of ``priority``, ``level``,
+``cooldown``, and ``enabled``.
 
 
 Filtering the List

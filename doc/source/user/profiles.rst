@@ -62,6 +62,28 @@ to the command::
   | 9b127538-a675-4271-ab9b-f24f54cfe173 | pstack   | os.heat.stack-1.0  | 2015-06-25T12:59:01 |
   +--------------------------------------+----------+--------------------+---------------------+
 
+Sorting the List
+----------------
+
+You can specify the sorting keys and sorting direction when list profiles,
+using the option :option:`--sort` (or :option:`-o`). The :option:`--sort`
+option accepts a string of format ``key1[:dir1],key2[:dir2],key3[:dir3]``,
+where the keys used are profile properties and the dirs can be one of ``asc``
+and ``desc``. When omitted, Senlin sorts a given key using ``asc`` as the
+default direction.
+
+For example, the following command instructs the :program:`senlin` command
+line to sort profiles using the ``name`` property in descending order::
+
+  $ senlin profile-list -o name:desc
+
+When sorting the list of profiles, you can use one of ``type``, ``name``,
+``permission``, ``created_at`` and ``updated_at``.
+
+
+Paginating the List
+-------------------
+
 In case you have a huge collection of profile objects, you can limit the
 number of profiles returned from Senlin server, using the option :option:`-l
 <LIMIT>` (or :option:`--limit <LIMIT>`). For example::

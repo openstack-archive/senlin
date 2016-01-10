@@ -58,25 +58,20 @@ you can add the option :option:`--full-id` (or :option:`-F`) to the command.
 Sorting the List
 ----------------
 
-You can specify the sorting keys and sorting direction for the node list,
-using the option :option:`--sort-keys` (or :option:`-k`) and/or the option
-:option:`--sort-dir` (or :option:`-s`). For example, the following command
-instructs the :program:`senlin` command line to sort nodes using the
-``name`` property in descending order::
+You can specify the sorting keys and sorting direction when list nodes,
+using the option :option:`--sort` (or :option:`-o`). The :option:`--sort`
+option accepts a string of format ``key1[:dir1],key2[:dir2],key3[:dir3]``,
+where the keys used are node properties and the dirs can be one of ``asc``
+and ``desc``. When omitted, Senlin sorts a given key using ``asc`` as the
+default direction.
 
-  $ senlin node-list -k name -s desc
-  +----------+---------+--------+------------+-------------+--------------+---------------------+--------------+
-  | id       | name    | status | cluster_id | physical_id | profile_name | created_time        | updated_time |
-  +----------+---------+--------+------------+-------------+--------------+---------------------+--------------+
-  | 4be10a88 | stack2  | ACTIVE | 2b7e9294   | 7c87f545    | qstack       | 2015-07-07T05:27:54 | None         |
-  | b28692a5 | stack1  | ACTIVE | 2b7e9294   | fdf028a6    | qstack       | 2015-07-07T05:23:40 | None         |
-  | e1b39a08 | node1   | ACTIVE |            | 89ce0d2b    | mystack      | 2015-05-26T01:12:26 | None         |
-  | 57962220 | node-34 | ACTIVE |            | 3386e306    | mystack      | 2015-05-27T02:18:01 | None         |
-  +----------+---------+--------+------------+-------------+--------------+---------------------+--------------+
+For example, the following command instructs the :program:`senlin` command
+line to sort nodes using the ``status`` property in descending order::
 
-For sorting the node list, the valid keys are: ``index``, ``name``,
-``status``, ``created_time`` and ``updated_time``, the valid sorting
-directions are: ``asc`` and ``desc``.
+  $ senlin node-list -o status:desc
+
+When sorting the list of nodes, you can use one of ``index``, ``name``,
+``status``, ``init_at``, ``created_at`` and ``updated_at``.
 
 
 Filtering the List
