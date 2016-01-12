@@ -18,29 +18,13 @@ API
 
 POLICY
 ------
-  - Implement a deletion policy that supports cross-az/region node deleting.
-  - Investigate the impact of node-create and node-delete on certain policies.
-
-Health Management
------------------
-  - Provide an option for user to define the threshold of cluster health status
-    classification.
-  - Support do_check/do_recover in profiles.
-  - Support cluster/node health status refresh and expose API interface: By
-    default, 'cached' health status of Senlin objects will be provided to user.
-    Object health status will only be refreshed when user requests initiatively.
-
-TEST
-----
-  - Complete unit test of senlinclient
+  - [???] Investigate the impact of node-create and node-delete on certain policies.
 
 DOC
 -----
   - Provide document(or docstring) for policy data passing for developers.
   - Provide documentation for existing policies.
-  - Get Senlin APIs published on the official website:
-    http://developer.openstack.org/api-ref.html
-  - Add gate job for API docs
+
 
 MIDDLE PRIORITY
 ===============
@@ -49,14 +33,11 @@ API
 ---
   - According to the guidelines from API WG, we need to support `page_reverse`
     as a pagination parameter. https://review.openstack.org/190743
-  - According to the proposal (https://review.openstack.org/#/c/234994/),
-    actions are to follow a guideline. We may need to revise our actions API
-    and those related to asynchronous operations.
 
 
 PROFILE
 -------
-  - Add support to template_url for heat stack profile. If template and template_url
+  - [???] Add support to template_url for heat stack profile. If template and template_url
     are both specified, use template. Need to refer to heat api test for testing heat
     profile.
 
@@ -70,18 +51,12 @@ POLICY
 
 DB
 --
-  - Add db purge (senlin-manage) for deleting old db entries, especially for events
-    and actions because they accumulate very fast.
+  - Add db purge (senlin-manage) for deleting events and actions because they
+    accumulate very fast.
 
 
 LOW PRIORITY
 ============
-
-API
----
-  - Allow forced deletion of objects (cluster, node, policy, profile). The
-    current problem is due to the limitations of the HTTP DELETE requests. We
-    need to investigate whether a DELETE verb can carry query strings.
 
 ENGINE
 ------
@@ -97,16 +72,11 @@ POLICY
   - Scaling policy: allow a cluster to scale to existing nodes.
   - Batching policy: create batchs for node creation/deletion/update.
 
-Trigger
--------
-  - Zaqar queue based triggers.
+Reciever
+--------
+  - Zaqar queue based receiver.
 
-EVENT
------
-  - Complete event log generation.
 
 DOC
 -----
   - Provide a sample conf file for customizing senlin options.
-  - Give a sample end-to-end story to demonstrate how to use Senlin for autoscaling
-    scenario.
