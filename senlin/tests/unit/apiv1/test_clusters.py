@@ -1389,42 +1389,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual("The 'policy_id' field is missing in the request.",
                          six.text_type(ex))
 
-    def test__sanitize_policy_bad_priority(self, mock_enforce):
-        data = {
-            'policy_id': 'FAKE',
-        }
-
-        for value in ['high', '-1', '200']:
-            data['priority'] = value
-            ex = self.assertRaises(exc.HTTPBadRequest,
-                                   self.controller._sanitize_policy, data)
-            expected = "Invalid value '%s' specified for 'priority'" % value
-            self.assertEqual(expected, six.text_type(ex))
-
-    def test__sanitize_policy_bad_level(self, mock_enforce):
-        data = {
-            'policy_id': 'FAKE',
-        }
-
-        for value in ['high', '-1', '200']:
-            data['level'] = value
-            ex = self.assertRaises(exc.HTTPBadRequest,
-                                   self.controller._sanitize_policy, data)
-            expected = "Invalid value '%s' specified for 'level'" % value
-            self.assertEqual(expected, six.text_type(ex))
-
-    def test__sanitize_policy_bad_cooldown(self, mock_enforce):
-        data = {
-            'policy_id': 'FAKE',
-        }
-
-        for value in ['long', '-1']:
-            data['cooldown'] = value
-            ex = self.assertRaises(exc.HTTPBadRequest,
-                                   self.controller._sanitize_policy, data)
-            expected = "Invalid value '%s' specified for 'cooldown'" % value
-            self.assertEqual(expected, six.text_type(ex))
-
     def test__sanitize_policy_bad_enabled_value(self, mock_enforce):
         data = {
             'policy_id': 'FAKE',
@@ -1455,9 +1419,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(
             req.context,
             ('cluster_policy_attach', {
-                'identity': cid, 'policy': 'xxxx-yyyy',
-                'level': None, 'enabled': True, 'cooldown': None,
-                'priority': 50,
+                'identity': cid, 'policy': 'xxxx-yyyy', 'enabled': True,
             })
         )
         result = {
@@ -1471,9 +1433,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'aaaa-bbbb-cccc'
         body = {'policy_attach': {
             'policy_id': 'xxxx-yyyy',
-            'priority': 40,
-            'cooldown': 20,
-            'level': 30,
             'enabled': False,
         }}
 
@@ -1490,9 +1449,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(
             req.context,
             ('cluster_policy_attach', {
-                'identity': cid, 'policy': 'xxxx-yyyy',
-                'level': 30, 'enabled': False, 'cooldown': 20,
-                'priority': 40,
+                'identity': cid, 'policy': 'xxxx-yyyy', 'enabled': False,
             })
         )
         result = {
@@ -1582,7 +1539,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'aaaa-bbbb-cccc'
         body = {'policy_update': {
             'policy_id': 'xxxx-yyyy',
-            'priority': 99,
+            'enabled': True,
         }}
 
         eng_resp = {'action': 'action-id'}
@@ -1598,9 +1555,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(
             req.context,
             ('cluster_policy_update', {
-                'identity': cid, 'policy': 'xxxx-yyyy',
-                'priority': 99, 'level': None, 'enabled': None,
-                'cooldown': None,
+                'identity': cid, 'policy': 'xxxx-yyyy', 'enabled': True,
             })
         )
         result = {
@@ -1614,7 +1569,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'aaaa-bbbb-cccc'
         body = {'policy_update': {
             'policy_id': 'xxxx-yyyy',
-            'priority': 'abc',
+            'enabled': 'good',
         }}
 
         req = self._put('/clusters/%(cluster_id)s/action' % {
@@ -1624,7 +1579,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.action,
                                req, cluster_id=cid, body=body)
 
-        self.assertIn("Invalid value 'abc' specified for 'priority'",
+        self.assertIn("Invalid value 'good' specified for 'enabled'",
                       six.text_type(ex))
 
     def test_cluster_action_update_policy_not_found(self, mock_enforce):

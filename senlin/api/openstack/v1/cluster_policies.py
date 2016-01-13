@@ -40,9 +40,6 @@ class ClusterPolicyController(object):
     @util.policy_enforce
     def index(self, req, cluster_id):
         filter_whitelist = {
-            'priority': 'single',
-            'level': 'single',
-            'cooldown': 'single',
             'enabled': 'single',
         }
         param_whitelist = {

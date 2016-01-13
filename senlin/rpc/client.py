@@ -265,14 +265,10 @@ class EngineClient(object):
                                              identity=cluster_id,
                                              filters=filters, sort=sort))
 
-    def cluster_policy_attach(self, ctxt, cluster_id, policy_id, priority=50,
-                              level=None, cooldown=None, enabled=True):
+    def cluster_policy_attach(self, ctxt, cluster_id, policy_id, enabled=True):
         return self.call(ctxt, self.make_msg('cluster_policy_attach',
                                              identity=cluster_id,
                                              policy=policy_id,
-                                             priority=priority,
-                                             level=level,
-                                             cooldown=cooldown,
                                              enabled=enabled))
 
     def cluster_policy_detach(self, ctxt, cluster_id, policy_id):
@@ -285,14 +281,10 @@ class EngineClient(object):
                                              identity=cluster_id,
                                              policy_id=policy_id))
 
-    def cluster_policy_update(self, ctxt, cluster_id, policy_id, priority=None,
-                              level=None, cooldown=None, enabled=None):
+    def cluster_policy_update(self, ctxt, cluster_id, policy_id, enabled=None):
         return self.call(ctxt, self.make_msg('cluster_policy_update',
                                              identity=cluster_id,
                                              policy=policy_id,
-                                             priority=priority,
-                                             level=level,
-                                             cooldown=cooldown,
                                              enabled=enabled))
 
     def action_create(self, ctxt, name, target, action, params):
