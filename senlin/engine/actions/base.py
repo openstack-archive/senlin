@@ -342,10 +342,9 @@ class Action(object):
     def is_resumed(self):
         return self._check_signal() == self.SIG_RESUME
 
-    def _check_result(self, level, name):
+    def _check_result(self, name):
         """Check policy check status and generate event.
 
-        :param level: Enforcement level of the policy (when bound to cluster).
         :param name: Name of policy checked
         :return: True if the policy checking can be continued, or False if the
                  policy checking should be aborted.
@@ -358,21 +357,12 @@ class Action(object):
             method = EVENT.debug
             status = 'CHECK OK'
             reason = self.data['reason']
-        elif level >= policy_mod.MUST:
-            method = EVENT.critical
-        elif level >= policy_mod.SHOULD:
-            method = EVENT.error
-        elif level >= policy_mod.WOULD:
-            method = EVENT.warning
-        elif level >= policy_mod.MIGHT:
-            method = EVENT.info
         else:
-            method = EVENT.debug
+            method = EVENT.error
 
         method(self.context, self, self.action, status, reason)
 
-        if ((self.data['status'] == policy_mod.CHECK_OK) or
-                (level < policy_mod.SHOULD)):
+        if self.data['status'] == policy_mod.CHECK_OK:
             return True
         else:
             return False
@@ -413,16 +403,17 @@ class Action(object):
             else:  # target == 'AFTER'
                 method = getattr(policy, 'post_op', None)
 
-            if pb.cooldown_inprogress():
-                self.data['status'] = policy_mod.CHECK_ERROR
-                self.data['reason'] = _('Policy %(id)s cooldown is still '
-                                        'in progress.') % {'id': policy.id}
+            if getattr(policy, 'cooldown', None):
+                if pb.cooldown_inprogress(policy.cooldown):
+                    self.data['status'] = policy_mod.CHECK_ERROR
+                    self.data['reason'] = _('Policy %s cooldown is still '
+                                            'in progress.') % policy.id
                 return
 
             if method is not None:
                 method(cluster_id, self)
 
-            res = self._check_result(pb.level, policy.name)
+            res = self._check_result(policy.name)
             if res is False:
                 return
         return

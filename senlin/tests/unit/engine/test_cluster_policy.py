@@ -29,9 +29,6 @@ class TestClusterPolicy(base.SenlinTestCase):
 
     def test_cluster_policy_init(self):
         values = {
-            'priority': 12,
-            'cooldown': 34,
-            'level': 56,
             'enabled': True,
         }
         cp = cpm.ClusterPolicy('fake-cluster', 'fake-policy', **values)
@@ -39,9 +36,6 @@ class TestClusterPolicy(base.SenlinTestCase):
         self.assertIsNone(cp.id)
         self.assertEqual('fake-cluster', cp.cluster_id)
         self.assertEqual('fake-policy', cp.policy_id)
-        self.assertEqual(12, cp.priority)
-        self.assertEqual(34, cp.cooldown)
-        self.assertEqual(56, cp.level)
         self.assertTrue(True, cp.enabled)
         self.assertEqual({}, cp.data)
         self.assertIsNone(cp.last_op)
@@ -53,9 +47,6 @@ class TestClusterPolicy(base.SenlinTestCase):
         cluster = self._create_cluster('fake-cluster')
         policy = self._create_policy('fake-policy')
         values = {
-            'priority': 12,
-            'cooldown': 34,
-            'level': 56,
             'enabled': True,
         }
         cp = cpm.ClusterPolicy(cluster.id, policy.id, **values)
@@ -67,17 +58,11 @@ class TestClusterPolicy(base.SenlinTestCase):
                                            'fake-policy')
 
         self.assertIsNotNone(result)
-        self.assertEqual(12, result.priority)
-        self.assertEqual(34, result.cooldown)
-        self.assertEqual(56, result.level)
         self.assertTrue(result.enabled)
         self.assertEqual({}, result.data)
         self.assertIsNone(result.last_op)
 
         # do an update
-        cp.cooldown = 60
-        cp.priority = 60
-        cp.level = 40
         cp.enabled = False
         cp.data = {'foo': 'bar'}
         timestamp = timeutils.utcnow()
@@ -90,9 +75,6 @@ class TestClusterPolicy(base.SenlinTestCase):
                                            'fake-policy')
 
         self.assertIsNotNone(result)
-        self.assertEqual(60, result.cooldown)
-        self.assertEqual(60, result.priority)
-        self.assertEqual(40, result.level)
         self.assertFalse(result.enabled)
         self.assertEqual({'foo': 'bar'}, result.data)
         self.assertEqual(timestamp, result.last_op)
@@ -130,9 +112,6 @@ class TestClusterPolicy(base.SenlinTestCase):
         policy = self._create_policy('POLICY_ID')
 
         values = {
-            'priority': 12,
-            'cooldown': 34,
-            'level': 56,
             'enabled': True,
         }
         cp = cpm.ClusterPolicy(cluster.id, policy.id, **values)
@@ -144,9 +123,6 @@ class TestClusterPolicy(base.SenlinTestCase):
         self.assertEqual(cp_id, result.id)
         self.assertEqual(cluster.id, result.cluster_id)
         self.assertEqual(policy.id, result.policy_id)
-        self.assertEqual(12, result.priority)
-        self.assertEqual(34, result.cooldown)
-        self.assertEqual(56, result.level)
         self.assertTrue(True, result.enabled)
         self.assertEqual({}, result.data)
         self.assertIsNone(result.last_op)
@@ -162,25 +138,18 @@ class TestClusterPolicy(base.SenlinTestCase):
         policy1 = self._create_policy('P1')
         policy2 = self._create_policy('P2')
 
-        b1 = cpm.ClusterPolicy(cluster.id, policy1.id, priority=60)
+        b1 = cpm.ClusterPolicy(cluster.id, policy1.id, enabled=True)
         b1.store(self.context)
-        b2 = cpm.ClusterPolicy(cluster.id, policy2.id, priority=30)
+        b2 = cpm.ClusterPolicy(cluster.id, policy2.id, enabled=False)
         b2.store(self.context)
 
         # NOTE: we don't test all other parameters because the db api tests
         #       already covered that
         result = cpm.ClusterPolicy.load_all(self.context, 'CLUSTER')
         self.assertEqual(2, len(result))
-        self.assertEqual('P2', result[0].policy_id)
-        self.assertEqual('CLUSTER', result[0].cluster_id)
-        self.assertEqual('P1', result[1].policy_id)
-        self.assertEqual('CLUSTER', result[1].cluster_id)
 
     def test_cluster_policy_to_dict(self):
         values = {
-            'priority': 12,
-            'cooldown': 34,
-            'level': 56,
             'enabled': True,
         }
         cp = cpm.ClusterPolicy('fake-cluster', 'fake-policy', **values)
@@ -189,9 +158,6 @@ class TestClusterPolicy(base.SenlinTestCase):
             'id': None,
             'cluster_id': 'fake-cluster',
             'policy_id': 'fake-policy',
-            'priority': 12,
-            'cooldown': 34,
-            'level': 56,
             'enabled': True,
             'data': {},
             'last_op': None,
@@ -204,13 +170,10 @@ class TestClusterPolicy(base.SenlinTestCase):
 
     def test_cooldown_inprogress(self):
         values = {
-            'priority': 12,
-            'cooldown': 34,
-            'level': 56,
             'enabled': True,
             'last_op': timeutils.utcnow(),
         }
         cp = cpm.ClusterPolicy('fake-cluster', 'fake-policy', **values)
-        self.assertTrue(cp.cooldown_inprogress())
+        self.assertTrue(cp.cooldown_inprogress(60))
         cp.last_op -= timedelta(hours=1)
-        self.assertFalse(cp.cooldown_inprogress())
+        self.assertFalse(cp.cooldown_inprogress(60))
