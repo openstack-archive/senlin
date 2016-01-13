@@ -319,18 +319,12 @@ class EngineService(service.Service):
         return [p.to_dict() for p in policies]
 
     @request_context
-    def policy_create(self, context, name, spec, level=None, cooldown=None):
+    def policy_create(self, context, name, spec):
         if cfg.CONF.name_unique:
             if db_api.policy_get_by_name(context, name):
                 msg = _("The policy (%(name)s) already exists."
                         ) % {"name": name}
                 raise exception.SenlinBadRequest(msg=msg)
-
-        if level is None:
-            level = policy_base.SHOULD
-        else:
-            level = utils.parse_int_param('level', level, upper_limit=100)
-        cooldown = utils.parse_int_param('cooldown', cooldown)
 
         type_name, version = schema.get_spec_version(spec)
         try:
@@ -347,8 +341,6 @@ class EngineService(service.Service):
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
-            'level': level,
-            'cooldown': cooldown,
         }
         policy = plugin(name, spec, **kwargs)
 
@@ -371,30 +363,21 @@ class EngineService(service.Service):
         return policy.to_dict()
 
     @request_context
-    def policy_update(self, context, identity, name=None, level=None,
-                      cooldown=None):
-        LOG.info(_LI("Updating policy '%s'."), identity)
+    def policy_update(self, context, identity, name):
 
         db_policy = self.policy_find(context, identity)
         policy = policy_base.Policy.load(context, db_policy=db_policy)
-        changed = False
 
-        if name is not None and name != policy.name:
+        if not name:
+            msg = _('Policy name not specified.')
+            raise exception.SenlinBadRequest(msg=msg)
+
+        if name != policy.name:
+            LOG.info(_LI("Updating policy '%s'."), identity)
             policy.name = name
-            changed = True
-        if level is not None and level != policy.level:
-            level = utils.parse_int_param('level', level, upper_limit=100)
-            policy.level = level
-            changed = True
-        if cooldown is not None and cooldown != policy.cooldown:
-            cooldown = utils.parse_int_param('cooldown', cooldown)
-            policy.cooldown = cooldown
-            changed = True
-
-        if changed:
             policy.store(context)
+            LOG.info(_LI("Policy '%s' is updated."), identity)
 
-        LOG.info(_LI("Policy '%s' is updated."), identity)
         return policy.to_dict()
 
     @request_context

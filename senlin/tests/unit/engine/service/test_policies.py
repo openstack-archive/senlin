@@ -18,23 +18,9 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.engine import environment
 from senlin.engine import service
-from senlin.policies import base as policy_base
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 from senlin.tests.unit import fakes
-
-
-class PolicyLevelNameTest(base.SenlinTestCase):
-
-    def test_level_name(self):
-        names = []
-        for level in policy_base.POLICY_LEVELS:
-            name = policy_base.getLevelName(level)
-            names.append(name)
-
-        for name in names:
-            level = policy_base.getLevelName(name)
-            self.assertIn(level, policy_base.POLICY_LEVELS)
 
 
 class PolicyTest(base.SenlinTestCase):
@@ -62,8 +48,6 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual('p-1', result['name'])
         self.assertEqual('TestPolicy-1.0', result['type'])
         self.assertEqual(self.spec, result['spec'])
-        self.assertEqual(policy_base.SHOULD, result['level'])
-        self.assertIsNone(result['cooldown'])
         self.assertIsNone(result['updated_at'])
         self.assertIsNotNone(result['created_at'])
         self.assertIsNotNone(result['id'])
@@ -80,13 +64,6 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual(_("The request is malformed: The policy (p-1) "
                            "already exists."),
                          six.text_type(ex.exc_info[1]))
-
-    def test_policy_create_with_cooldown_and_level(self):
-        result = self.eng.policy_create(self.ctx, 'p-1', self.spec,
-                                        cooldown=60, level=20)
-        self.assertEqual(self.spec, result['spec'])
-        self.assertEqual(60, result['cooldown'])
-        self.assertEqual(20, result['level'])
 
     def test_policy_create_type_not_found(self):
         self.spec['type'] = 'Bogus'
@@ -163,10 +140,9 @@ class PolicyTest(base.SenlinTestCase):
         result = self.eng.policy_list(self.ctx, limit=2, marker=p1['id'])
         self.assertEqual(2, len(result))
 
-    def test_policy_list_with_sort_keys(self):
-        p1 = self.eng.policy_create(self.ctx, 'p-B', self.spec, cooldown=60)
-        p2 = self.eng.policy_create(self.ctx, 'p-A', self.spec, cooldown=60)
-        p3 = self.eng.policy_create(self.ctx, 'p-C', self.spec, cooldown=120)
+    def test_policy_list_with_sorting(self):
+        p1 = self.eng.policy_create(self.ctx, 'p-B', self.spec)
+        p2 = self.eng.policy_create(self.ctx, 'p-A', self.spec)
 
         # default by created_at
         result = self.eng.policy_list(self.ctx)
@@ -178,21 +154,11 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual(p2['id'], result[0]['id'])
         self.assertEqual(p1['id'], result[1]['id'])
 
-        # use permission for sorting
-        result = self.eng.policy_list(self.ctx, sort='cooldown')
-        self.assertEqual(p3['id'], result[2]['id'])
-
-        # use name and permission for sorting
-        result = self.eng.policy_list(self.ctx, sort='cooldown,name')
-        self.assertEqual(p2['id'], result[0]['id'])
-        self.assertEqual(p1['id'], result[1]['id'])
-        self.assertEqual(p3['id'], result[2]['id'])
-
         # unknown keys will be ignored
         result = self.eng.policy_list(self.ctx, sort='duang')
         self.assertIsNotNone(result)
 
-    def test_policy_list_with_sort_dir(self):
+    def test_policy_list_with_sorting_dir(self):
         p1 = self.eng.policy_create(self.ctx, 'p-B', self.spec)
         p2 = self.eng.policy_create(self.ctx, 'p-A', self.spec)
         p3 = self.eng.policy_create(self.ctx, 'p-C', self.spec)
@@ -213,9 +179,9 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual(p1['id'], result[1]['id'])
 
     def test_policy_list_with_filters(self):
-        self.eng.policy_create(self.ctx, 'p-B', self.spec, cooldown=60)
-        self.eng.policy_create(self.ctx, 'p-A', self.spec, cooldown=60)
-        self.eng.policy_create(self.ctx, 'p-C', self.spec, cooldown=0)
+        self.eng.policy_create(self.ctx, 'p-B', self.spec)
+        self.eng.policy_create(self.ctx, 'p-A', self.spec)
+        self.eng.policy_create(self.ctx, 'p-C', self.spec)
 
         result = self.eng.policy_list(self.ctx, filters={'name': 'p-B'})
         self.assertEqual(1, len(result))
@@ -223,10 +189,6 @@ class PolicyTest(base.SenlinTestCase):
 
         result = self.eng.policy_list(self.ctx, filters={'name': 'p-D'})
         self.assertEqual(0, len(result))
-
-        filters = {'cooldown': 60}
-        result = self.eng.policy_list(self.ctx, filters=filters)
-        self.assertEqual(2, len(result))
 
     def test_policy_list_bad_param(self):
         ex = self.assertRaises(rpc.ExpectedException,
@@ -257,9 +219,8 @@ class PolicyTest(base.SenlinTestCase):
         self.assertRaises(exception.PolicyNotFound,
                           self.eng.policy_find, self.ctx, 'Bogus')
 
-    def test_policy_update_fields(self):
-        p1 = self.eng.policy_create(self.ctx, 'p-1', self.spec, cooldown=60,
-                                    level=20)
+    def test_policy_update(self):
+        p1 = self.eng.policy_create(self.ctx, 'p-1', self.spec)
         pid = p1['id']
         self.assertEqual(self.spec, p1['spec'])
 
@@ -272,36 +233,6 @@ class PolicyTest(base.SenlinTestCase):
         p = self.eng.policy_get(self.ctx, pid)
         self.assertEqual('p-2', p['name'])
 
-        # 2. update cooldown
-        p2 = self.eng.policy_update(self.ctx, pid, cooldown=120)
-        self.assertEqual(pid, p2['id'])
-        self.assertEqual(120, p2['cooldown'])
-
-        # check persisted into db
-        p = self.eng.policy_get(self.ctx, pid)
-        self.assertEqual(120, p['cooldown'])
-
-        # invalid cooldown value
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_update, self.ctx, pid,
-                               cooldown=-1)
-        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
-
-        # 3. update level
-        p2 = self.eng.policy_update(self.ctx, pid, level=50)
-        self.assertEqual(pid, p2['id'])
-        self.assertEqual(50, p2['level'])
-
-        # check persisted into db
-        p = self.eng.policy_get(self.ctx, pid)
-        self.assertEqual(50, p['level'])
-
-        # invalid enforcement level
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_update, self.ctx, pid,
-                               level=150)
-        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
-
     def test_policy_update_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.policy_update,
@@ -309,38 +240,13 @@ class PolicyTest(base.SenlinTestCase):
 
         self.assertEqual(exception.PolicyNotFound, ex.exc_info[0])
 
-    def test_policy_update_using_find(self):
-        p1 = self.eng.policy_create(self.ctx, 'p-1', self.spec)
-        pid = p1['id']
-
-        p2 = self.eng.policy_update(self.ctx, pid, name='p-2')
-        self.assertEqual(pid, p2['id'])
-        self.assertEqual('p-2', p2['name'])
-
-        # use short id
-        p3 = self.eng.policy_update(self.ctx, pid[:6], name='p-3')
-        self.assertEqual(pid, p3['id'])
-        self.assertEqual('p-3', p3['name'])
-
-        p4 = self.eng.policy_update(self.ctx, 'p-3', name='p-4')
-        self.assertEqual(pid, p4['id'])
-        self.assertEqual('p-4', p4['name'])
-
-    def test_policy_update_err_validate(self):
-        p1 = self.eng.policy_create(self.ctx, 'p-1', self.spec)
-        pid = p1['id']
-
+    def test_policy_update_name_not_specified(self):
+        self.eng.policy_create(self.ctx, 'p-1', self.spec)
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.policy_update,
-                               self.ctx, pid, cooldown='yes')
+                               self.ctx, 'p-1', None)
 
-        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_update,
-                               self.ctx, pid, level='high')
-
-        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
 
     def test_policy_delete(self):
         p1 = self.eng.policy_create(self.ctx, 'p-1', self.spec)
