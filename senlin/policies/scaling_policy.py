@@ -10,16 +10,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo_log import log as logging
-
 from senlin.common import constraints
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.db import api as db_api
 from senlin.policies import base
-
-LOG = logging.getLogger(__name__)
 
 
 class ScalingPolicy(base.Policy):
