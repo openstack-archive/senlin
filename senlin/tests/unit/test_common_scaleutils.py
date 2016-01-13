@@ -35,7 +35,7 @@ class ScaleUtilsTest(base.SenlinTestCase):
                 number = self.getUniqueInteger()
                 res = su.calculate_desired(current, consts.CHANGE_IN_CAPACITY,
                                            number, None)
-                self.assertEqual(current+number, res)
+                self.assertEqual(current + number, res)
 
     def test_calculate_desired_percentage_positive(self):
         # CHANGE_IN_PERCENTAGE, positive

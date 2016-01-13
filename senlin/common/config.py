@@ -116,7 +116,7 @@ authentication_opts = [
                help=_('Name of the domain for the service user.')),
     cfg.StrOpt('service_project_domain', default='Default',
                help=_('Name of the domain for the service project.')),
-    ]
+]
 
 revision_group = cfg.OptGroup('revision')
 revision_opts = [

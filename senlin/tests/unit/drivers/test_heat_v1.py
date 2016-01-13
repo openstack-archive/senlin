@@ -40,7 +40,7 @@ class TestHeatV1(base.SenlinTestCase):
         fake_params = {
             'disable_rollback': True,
             'stack_name': 'fake_stack',
-            }
+        }
         self.hc.stack_create(**fake_params)
         self.orch.create_stack.assert_called_once_with(**fake_params)
 

@@ -513,7 +513,7 @@ class NodeActionTest(base.SenlinTestCase):
         mock_release.assert_called_once_with('FAKE_CLUSTER', 'ACTION_ID',
                                              lock.NODE_SCOPE)
         mock_acquire_node.assert_called_once_with(self.ctx, 'NODE_ID',
-                                                  'ACTION_ID',  False)
+                                                  'ACTION_ID', False)
         mock_release_node.assert_called_once_with('NODE_ID', 'ACTION_ID')
         mock_check.assert_called_once_with('FAKE_CLUSTER', 'BEFORE')
 

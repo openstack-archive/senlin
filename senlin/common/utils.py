@@ -176,7 +176,7 @@ def random_name(length=8):
 
     lead = random.choice(string.ascii_letters)
     tail = ''.join(random.choice(string.ascii_letters + string.digits)
-                   for i in range(length-1))
+                   for i in range(length - 1))
     return lead + tail
 
 

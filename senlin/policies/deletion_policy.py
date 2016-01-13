@@ -147,7 +147,7 @@ class DeletionPolicy(base.Policy):
                 if self.criteria == self.OLDEST_FIRST:
                     candidates.append(sorted_list[i].id)
                 else:  # YOUNGEST_FIRST
-                    candidates.append(sorted_list[-1-i].id)
+                    candidates.append(sorted_list[-1 - i].id)
             return candidates
 
         # Node profile based selection

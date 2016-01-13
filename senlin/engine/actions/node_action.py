@@ -59,7 +59,7 @@ class NodeAction(base.Action):
             cluster = cluster_mod.Cluster.load(self.context,
                                                self.node.cluster_id)
             result = scaleutils.check_size_params(
-                cluster, cluster.desired_capacity+1, None, None, True)
+                cluster, cluster.desired_capacity + 1, None, None, True)
 
             if result != '':
                 return self.RES_ERROR, result
@@ -86,7 +86,7 @@ class NodeAction(base.Action):
             cluster = cluster_mod.Cluster.load(self.context,
                                                self.node.cluster_id)
             result = scaleutils.check_size_params(cluster,
-                                                  cluster.desired_capacity-1,
+                                                  cluster.desired_capacity - 1,
                                                   None, None, True)
             if result != '':
                 return self.RES_ERROR, result

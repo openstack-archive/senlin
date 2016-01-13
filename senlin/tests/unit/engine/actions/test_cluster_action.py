@@ -421,7 +421,7 @@ class ClusterActionTest(base.SenlinTestCase):
         # assertions
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Cluster update completed.', res_msg)
-        self.assertEqual(2,  mock_action.call_count)
+        self.assertEqual(2, mock_action.call_count)
         n_action_1.store.assert_called_once_with(action.context)
         n_action_2.store.assert_called_once_with(action.context)
         self.assertEqual(1, mock_dep.call_count)
@@ -483,7 +483,7 @@ class ClusterActionTest(base.SenlinTestCase):
         # assertions
         self.assertEqual(action.RES_TIMEOUT, res_code)
         self.assertEqual('Timeout', res_msg)
-        self.assertEqual(1,  mock_action.call_count)
+        self.assertEqual(1, mock_action.call_count)
         n_action.store.assert_called_once_with(action.context)
         self.assertEqual(1, mock_dep.call_count)
         mock_update.assert_called_once_with(

@@ -254,7 +254,7 @@ class LoadBalancerDriver(base.DriverBase):
                       ) % {'resource': resource, 'msg': six.text_type(ex)}
             LOG.exception(msg)
             event.warning(oslo_context.get_current(), self,
-                          resource.upper()+'_GET', 'ERROR', msg)
+                          resource.upper() + '_GET', 'ERROR', msg)
             return None
         net_name = net.name
 

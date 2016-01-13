@@ -12,7 +12,6 @@
 
 import random
 import string
-import uuid
 
 from oslo_config import cfg
 from oslo_db import options
@@ -23,19 +22,6 @@ from senlin.db import api as db_api
 from senlin.engine import node as node_mod
 
 get_engine = db_api.get_engine
-
-
-class UUIDStub(object):
-    def __init__(self, value):
-        self.value = value
-
-    def __enter__(self):
-        self.uuid4 = uuid.uuid4
-        uuid_stub = lambda: self.value
-        uuid.uuid4 = uuid_stub
-
-    def __exit__(self, *exc_info):
-        uuid.uuid4 = self.uuid4
 
 
 def random_name():

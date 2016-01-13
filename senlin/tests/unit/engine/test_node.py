@@ -68,7 +68,7 @@ class TestNode(base.SenlinTestCase):
             'project': self.context.project,
             'name': 'node1',
             'role': 'test_node',
-            }
+        }
         return db_api.node_create(self.context, values)
 
     def test_node_init(self):

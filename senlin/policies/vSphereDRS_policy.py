@@ -159,7 +159,7 @@ class vSphereDRSPolicy(policy_base.Policy):
 
         if data.get('group_id') is None:
             # to add into nova driver
-            rule = placement_group.get('placement_rule',  'anti-affinity')
+            rule = placement_group.get('placement_rule', 'anti-affinity')
 
             try:
                 server_group = nv_client.create_server_group(rule)

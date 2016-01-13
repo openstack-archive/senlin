@@ -124,13 +124,13 @@ def check_size_params(cluster, desired, min_size, max_size, strict):
                      "current desired_capacity of the cluster.")
 
     if max_size is not None:
-        if (min_size is None and max_size >= 0
-                and max_size < cluster.min_size):
+        if (min_size is None and max_size >= 0 and
+                max_size < cluster.min_size):
             return _("The specified max_size is less than the "
                      "current min_size of the cluster.")
 
-        if (desired is None and max_size >= 0
-                and max_size < cluster.desired_capacity):
+        if (desired is None and max_size >= 0 and
+                max_size < cluster.desired_capacity):
             return _("The specified max_size is less than the "
                      "current desired_capacity of the cluster.")
 
