@@ -25,34 +25,6 @@ from senlin.common import wsgi
 from senlin.rpc import client as rpc_client
 
 
-class PolicyData(object):
-    '''The data accompanying a POST/PUT request to create/update a policy.'''
-    def __init__(self, data):
-        self.data = data
-
-    def name(self):
-        if consts.POLICY_NAME not in self.data:
-            raise exc.HTTPBadRequest(_("No policy name specified"))
-        return self.data[consts.POLICY_NAME]
-
-    def spec(self):
-        if consts.POLICY_SPEC not in self.data:
-            raise exc.HTTPBadRequest(_("No policy spec provided"))
-        return self.data[consts.POLICY_SPEC]
-
-    def level(self):
-        value = self.data.get(consts.POLICY_LEVEL, None)
-        if value is not None:
-            value = utils.parse_int_param('level', value)
-        return value
-
-    def cooldown(self):
-        value = self.data.get(consts.POLICY_COOLDOWN, None)
-        if value is not None:
-            value = utils.parse_int_param('cooldown', value)
-        return value
-
-
 class PolicyController(object):
     '''WSGI controller for policy resource in Senlin v1 API.'''
 
@@ -71,8 +43,6 @@ class PolicyController(object):
         filter_whitelist = {
             'name': 'mixed',
             'type': 'mixed',
-            'level': 'mixed',
-            'cooldown': 'mixed',
         }
         param_whitelist = {
             'limit': 'single',
@@ -103,15 +73,18 @@ class PolicyController(object):
 
     @util.policy_enforce
     def create(self, req, body):
-        policy_data = body.get('policy', None)
-        if policy_data is None:
+        data = body.get('policy', None)
+        if data is None:
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'policy' key in request body."))
+        name = data.get(consts.POLICY_NAME, None)
+        if not name:
+            raise exc.HTTPBadRequest(_("No policy name specified"))
+        spec = data.get(consts.POLICY_SPEC, None)
+        if not spec:
+            raise exc.HTTPBadRequest(_("No policy spec provided"))
 
-        data = PolicyData(policy_data)
-        result = self.rpc_client.policy_create(req.context, data.name(),
-                                               data.spec(), data.level(),
-                                               data.cooldown())
+        result = self.rpc_client.policy_create(req.context, name, spec)
 
         return {'policy': result}
 
@@ -122,29 +95,23 @@ class PolicyController(object):
 
     @util.policy_enforce
     def update(self, req, policy_id, body):
-        policy_data = body.get('policy', None)
-        if policy_data is None:
+        data = body.get('policy', None)
+        if data is None:
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'policy' key in request body."))
 
-        spec = policy_data.get(consts.POLICY_SPEC)
+        spec = data.get(consts.POLICY_SPEC)
         if spec is not None:
             msg = _("Updating the spec of a policy is not supported because "
                     "it may cause state conflicts in engine.")
             raise exc.HTTPBadRequest(msg)
 
-        name = policy_data.get(consts.POLICY_NAME, None)
+        # Name is the only property that can be updated
+        name = data.get(consts.POLICY_NAME, None)
+        if not name:
+            raise exc.HTTPBadRequest(_("Policy name not specified."))
 
-        level = policy_data.get(consts.POLICY_LEVEL, None)
-        if level is not None:
-            level = utils.parse_int_param(consts.POLICY_LEVEL, level)
-
-        cooldown = policy_data.get(consts.POLICY_COOLDOWN, None)
-        if cooldown is not None:
-            cooldown = utils.parse_int_param(consts.POLICY_COOLDOWN, cooldown)
-
-        policy = self.rpc_client.policy_update(req.context, policy_id, name,
-                                               level, cooldown)
+        policy = self.rpc_client.policy_update(req.context, policy_id, name)
 
         return {'policy': policy}
 
