@@ -197,28 +197,3 @@ Deleting a Node
 A node can be deleted no matter if it is a member of a cluster or not. Node
 deletion is handled asynchronously in Senlin. When the Senlin engine receives
 a request, it will create an Action to be executed by a worker thread.
-
-
-Cluster Membership
-~~~~~~~~~~~~~~~~~~
-
-Senlin service provides APIs for users to add a node to a cluster or remove a
-node from a cluster. From a node's perspective, it means a node can "join" an
-existing cluster or "leave" from its owning cluster.
-
-Upon receiving the ``node_join`` request, the Senlin API checks if the target
-cluster does exists and whether the node and the cluster share the same profile
-type. After the request passes these validations, it is transformed into an
-internal Action object and persisted into Senlin database. When receiving a
-``node_leave`` request, the Senlin API only checks if the node does exists.
-
-When the ``NODE_JOIN`` action is executed, the node's ``cluster_id`` property
-is set to the UUID of the cluster and its ``index`` property will be assigned
-with a value that can uniquely identify the node in the cluster.
-
-Similarly, when a ``NODE_LEAVE`` action is executed, the node's ``cluster_id``
-property is set to empty, and its ``index`` property is set to -1.
-
-Both a ``NODE_JOIN`` and a ``NODE_LEAVE`` actoin will be propagated to the
-profile layer so that the profile object has an opportunity to perform
-additional operations over the physical object that backs the node.

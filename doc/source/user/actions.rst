@@ -47,8 +47,6 @@ A node object supports the following actions:
 * ``CREATE``: creates a node;
 * ``DELETE``: deletes a node;
 * ``UPDATE``: updates the properties and/or the profile used by a node;
-* ``JOIN``: add the node to a cluster;
-* ``LEAVE``: remove the node from its current cluster.
 
 In future, Senlin may support user defined actions (UDAs).
 

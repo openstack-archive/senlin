@@ -116,15 +116,6 @@ Before Senlin engine performs the cluster membership changes, it will verify
 if the nodes to be added have the same :term:`profile type` with the target
 cluster. If the profile types don't match, you will get an error message.
 
-As an alternative, you can use the command :command:`node-join` to join an
-existing node to a target cluster. For example, the following command joins a
-node to the cluster ``webservers``::
-
-  $ senlin node-join -c webservers node33
-
-When performing this operation, the Senlin engine will check the profile types
-of the node and the cluster to see if they match.
-
 When nodes are added to a cluster, they will get new ``index`` property values
 that can be used to uniquely identify them within the cluster.
 
@@ -145,12 +136,6 @@ When performing this operation, Senlin engine will check if the specified
 nodes are actually members of the specified cluster. If any node from the
 specified node list does not belong to the target cluster, you will get an
 error message and the command fails.
-
-As an alternative, you can use the command :command:`node-leave` to instruct
-a node to leave from its owning cluster. For example, the following command
-removes a node from the cluster ``webservers``::
-
-  $ senlin node-leave node31
 
 When nodes are removed from a cluster, they will get their ``index`` property
 reset to -1.
