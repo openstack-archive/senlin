@@ -381,7 +381,6 @@ class Action(object):
 
         # TODO(Anyone): This could use the cluster's runtime data
         bindings = cp_mod.ClusterPolicy.load_all(self.context, cluster_id,
-                                                 sort_keys=['priority'],
                                                  filters={'enabled': True})
         # default values
         self.data['status'] = policy_mod.CHECK_OK
