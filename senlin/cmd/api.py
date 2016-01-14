@@ -15,20 +15,7 @@
 """
 Senlin API Server.
 """
-
-import eventlet
-eventlet.monkey_patch(os=False)
-
-import os
 import sys
-
-# If ../senlin/__init__.py exists, add ../ to Python search path, so that
-# it will override what happens to be installed in /usr/(local/)lib/python...
-possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
-                                   os.pardir,
-                                   os.pardir))
-if os.path.exists(os.path.join(possible_topdir, 'senlin', '__init__.py')):
-    sys.path.insert(0, possible_topdir)
 
 from oslo_config import cfg
 from oslo_i18n import _lazy
@@ -46,7 +33,8 @@ _lazy.enable_lazy()
 
 LOG = logging.getLogger('senlin.api')
 
-if __name__ == '__main__':
+
+def main():
     try:
         logging.register_options(cfg.CONF)
         cfg.CONF(project='senlin', prog='senlin-api',
