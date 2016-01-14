@@ -236,15 +236,6 @@ class EngineClient(object):
                                        name=name, profile_id=profile_id,
                                        role=role, metadata=metadata))
 
-    def node_join(self, ctxt, identity, cluster_id):
-        return self.call(ctxt,
-                         self.make_msg('node_join', identity=identity,
-                                       cluster_id=cluster_id))
-
-    def node_leave(self, ctxt, identity):
-        return self.call(ctxt,
-                         self.make_msg('node_leave', identity=identity))
-
     def node_delete(self, ctxt, identity, force=False, cast=True):
         rpc_method = self.cast if cast else self.call
         return rpc_method(ctxt,

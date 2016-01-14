@@ -60,12 +60,6 @@ class NodeController(object):
 
     REQUEST_SCOPE = 'nodes'
 
-    SUPPORTED_ACTIONS = (
-        NODE_JOIN, NODE_LEAVE,
-    ) = (
-        'join', 'leave',
-    )
-
     def __init__(self, options):
         self.options = options
         self.rpc_client = rpc_client.EngineClient()
@@ -161,33 +155,6 @@ class NodeController(object):
             'location': '/nodes/%s' % node['id'],
         }
         return result
-
-    @util.policy_enforce
-    def action(self, req, node_id, body=None):
-        '''Perform specified action on a node.'''
-        body = body or {}
-        if len(body) == 0:
-            raise exc.HTTPBadRequest(_('No action specified.'))
-
-        if len(body) > 1:
-            raise exc.HTTPBadRequest(_('Multiple actions specified.'))
-
-        this_action = list(body.keys())[0]
-        if this_action not in self.SUPPORTED_ACTIONS:
-            msg = _('Unrecognized action "%s" specified') % this_action
-            raise exc.HTTPBadRequest(msg)
-
-        if this_action == self.NODE_JOIN:
-            cluster_id = body.get(this_action).get('cluster_id')
-            if cluster_id is None:
-                raise exc.HTTPBadRequest(_('No cluster specified.'))
-            res = self.rpc_client.node_join(req.context, node_id, cluster_id)
-        else:    # self.NODE_LEAVE
-            res = self.rpc_client.node_leave(req.context, node_id)
-
-        location = {'location': '/actions/%s' % res['action']}
-        res.update(location)
-        return res
 
     @util.policy_enforce
     def delete(self, req, node_id):
