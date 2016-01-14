@@ -81,8 +81,6 @@ class TestPolicyBase(base.SenlinTestCase):
             'user': self.ctx.user,
             'project': self.ctx.project,
             'domain': self.ctx.domain,
-            'level': policy_base.SHOULD,
-            'cooldown': 0,
             'data': {}
         }
 
@@ -99,8 +97,6 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual(self.ctx.user, policy.user)
         self.assertEqual(self.ctx.project, policy.project)
         self.assertEqual(self.ctx.domain, policy.domain)
-        self.assertEqual(policy_base.SHOULD, policy.level)
-        self.assertEqual(0, policy.cooldown)
         self.assertEqual({}, policy.data)
         self.assertIsNone(policy.created_at)
         self.assertIsNone(policy.updated_at)
@@ -134,8 +130,6 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual(policy.user, result.user)
         self.assertEqual(policy.project, result.project)
         self.assertEqual(policy.domain, result.domain)
-        self.assertEqual(policy.level, result.level)
-        self.assertEqual(policy.cooldown, result.cooldown)
         self.assertEqual(policy.spec, result.spec)
         self.assertEqual(policy.data, result.data)
         self.assertEqual({'key1': 'value1', 'key2': 2}, result.properties)
@@ -202,12 +196,11 @@ class TestPolicyBase(base.SenlinTestCase):
                                          project_safe=True)
         mock_get.reset_mock()
 
-        res = list(policy_base.Policy.load_all(self.ctx, limit=1,
-                                               marker='MARKER', sort='K1:asc',
-                                               filters={'level': 30}))
+        res = list(policy_base.Policy.load_all(
+            self.ctx, limit=1, marker='MARKER', sort='K1:asc'))
         self.assertEqual([], res)
         mock_get.assert_called_once_with(self.ctx, limit=1, marker='MARKER',
-                                         sort='K1:asc', filters={'level': 30},
+                                         sort='K1:asc', filters=None,
                                          project_safe=True)
 
     def test_delete(self):
@@ -241,8 +234,6 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual(policy.user, result.user)
         self.assertEqual(policy.project, result.project)
         self.assertEqual(policy.domain, result.domain)
-        self.assertEqual(policy.level, result.level)
-        self.assertEqual(policy.cooldown, result.cooldown)
         self.assertEqual(policy.spec, result.spec)
         self.assertEqual(policy.data, result.data)
 
@@ -258,8 +249,6 @@ class TestPolicyBase(base.SenlinTestCase):
 
         # do an update
         policy.name = 'test-policy-1'
-        policy.level = 10
-        policy.cooldown = 60
         policy.data = {'kk': 'vv'}
 
         new_id = policy.store(self.ctx)
@@ -268,8 +257,6 @@ class TestPolicyBase(base.SenlinTestCase):
         result = db_api.policy_get(self.ctx, policy_id)
         self.assertIsNotNone(result)
         self.assertEqual('test-policy-1', result.name)
-        self.assertEqual(10, result.level)
-        self.assertEqual(60, result.cooldown)
         self.assertEqual({'kk': 'vv'}, policy.data)
         self.assertIsNotNone(policy.created_at)
         self.assertIsNotNone(policy.updated_at)
@@ -286,8 +273,6 @@ class TestPolicyBase(base.SenlinTestCase):
             'project': policy.project,
             'domain': policy.domain,
             'spec': policy.spec,
-            'level': policy.level,
-            'cooldown': policy.cooldown,
             'data': policy.data,
             'created_at': common_utils.format_time(policy.created_at),
             'updated_at': None,

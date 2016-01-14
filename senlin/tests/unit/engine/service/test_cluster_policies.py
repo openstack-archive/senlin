@@ -54,8 +54,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
             'version': '1.0',
             'properties': {'KEY2': 5},
         }
-        self.policy = self.eng.policy_create(self.ctx, 'policy_1', policy_spec,
-                                             cooldown=6, level=5)
+        self.policy = self.eng.policy_create(self.ctx, 'policy_1', policy_spec)
 
         self.cluster = self.eng.cluster_create(self.ctx, 'c-1', 0,
                                                self.profile['id'])
@@ -107,8 +106,8 @@ class ClusterPolicyTest(base.SenlinTestCase):
         inputs = {
             'policy_id': policy_id,
             'priority': cfg.CONF.default_policy_priority,
-            'level': self.policy['level'],
-            'cooldown': self.policy['cooldown'],
+            'level': None,
+            'cooldown': None,
             'enabled': True
         }
         self._verify_action(action, 'CLUSTER_ATTACH_POLICY',
@@ -295,22 +294,19 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                cluster=self.cluster['id'])),
                          six.text_type(ex.exc_info[1]))
 
-    def _prepare_policy(self, name, type_name=None, cooldown=None, level=None):
+    def _prepare_policy(self, name, type_name=None):
         if type_name is not None:
             env = environment.global_env()
             env.register_policy(type_name, fakes.TestPolicy)
         else:
             type_name = 'TestPolicy'
+
         spec = {
             'type': type_name,
             'version': '1.0',
             'properties': {'KEY2': 5}
         }
-        policy = self.eng.policy_create(self.ctx, name, spec,
-                                        cooldown=cooldown or 60,
-                                        level=level or 50)
-
-        return policy
+        return self.eng.policy_create(self.ctx, name, spec)
 
     def test_cluster_policy_list(self):
         cluster_id = self.cluster['id']
