@@ -80,7 +80,7 @@ line to sort profiles using the ``name`` property in descending order::
   $ senlin profile-list -o name:desc
 
 When sorting the list of profiles, you can use one of ``type``, ``name``,
-``permission``, ``created_at`` and ``updated_at``.
+``created_at`` and ``updated_at``.
 
 
 Paginating the List

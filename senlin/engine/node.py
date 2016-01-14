@@ -80,8 +80,6 @@ class Node(object):
     def _load_runtime_data(self, context):
         profile = None
         try:
-            # TODO(Yanyan Hu): Use permission to control access privilege
-            # of profile.
             profile = profile_base.Profile.load(context, self.profile_id,
                                                 project_safe=False)
         except exception.ProfileNotFound:

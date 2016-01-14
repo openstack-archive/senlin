@@ -50,9 +50,6 @@ A profile object has the following properties:
 - ``spec``: a map of key-value pairs that contains the specification for
   object creation. The content of this property is dictated by the
   corresponding profile type.
-- ``permission``: a string representing the access permissions assigned to
-  different user and/or user groups. The supporting feature is still under
-  design.
 - ``metadata``: a map of key-value pairs associated with the profile;
 - ``created_at``: the timestamp when the profile was created;
 - ``updated_at``: the timestamp when the profile was last updated;
@@ -91,7 +88,6 @@ When querying the profiles, users can provide any of the following parameters:
   - ``type``: profile type for matching;
   - ``created_at``: timestamp of profile creation for matching;
   - ``updated_at``: timestamp of last update operation;
-  - ``permission``: a string for profile permission matching;
   - ``metadata``: a string for matching profile metadata.
 
 - ``limit``: an integer that specifies the maximum number of records to be
@@ -140,9 +136,9 @@ Updating A Profile
 ~~~~~~~~~~~~~~~~~~
 
 Once a profile object is created, a user can request its properties to be
-updated. Updates to the ``name``, ``permission`` or ``metadata`` properties
-are applied on the specified profile object directly. Changing the ``spec``
-property of a profile object is not permitted.
+updated. Updates to the ``name`` or ``metadata`` properties are applied on
+the specified profile object directly. Changing the ``spec`` property of a
+profile object is not permitted.
 
 
 Deleting A Profile

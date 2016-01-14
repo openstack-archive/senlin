@@ -26,7 +26,7 @@ from senlin.rpc import client as rpc_client
 
 
 class ProfileData(object):
-    '''The data accompanying a POST/PUT request to create/update a profile.'''
+    """The data accompanying a POST/PUT request to create/update a profile."""
 
     def __init__(self, data):
         self.data = data
@@ -40,9 +40,6 @@ class ProfileData(object):
         if consts.PROFILE_SPEC not in self.data:
             raise exc.HTTPBadRequest(_("No profile spec provided"))
         return self.data[consts.PROFILE_SPEC]
-
-    def permission(self):
-        return self.data.get(consts.PROFILE_PERMISSION, None)
 
     def metadata(self):
         return self.data.get(consts.PROFILE_METADATA, None)
@@ -69,7 +66,6 @@ class ProfileController(object):
         filter_whitelist = {
             'name': 'mixed',
             'type': 'mixed',
-            'permission': 'mixed',
             'metadata': 'mixed',
         }
         param_whitelist = {
@@ -110,7 +106,6 @@ class ProfileController(object):
         result = self.rpc_client.profile_create(req.context,
                                                 data.name(),
                                                 data.spec(),
-                                                data.permission(),
                                                 data.metadata())
 
         return {'profile': result}
@@ -131,11 +126,10 @@ class ProfileController(object):
                                        "'profile' key in request body."))
         # We ignore the 'spec' property even if it is specified.
         name = profile_data.get(consts.PROFILE_NAME, None)
-        permission = profile_data.get(consts.PROFILE_PERMISSION, None)
         metadata = profile_data.get(consts.PROFILE_METADATA, None)
         # We don't check if type is specified or not
         profile = self.rpc_client.profile_update(req.context, profile_id,
-                                                 name, permission, metadata)
+                                                 name, metadata)
 
         return {'profile': profile}
 

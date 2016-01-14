@@ -126,14 +126,13 @@ def delete_node(client, node_id):
     return
 
 
-def create_profile(client, name, spec, permission=None, metadata={}):
+def create_profile(client, name, spec, metadata={}):
     rel_url = 'profiles'
     status = [201]
     data = {
         'profile': {
             'name': name,
             'spec': spec,
-            'permission': permission,
             'metadata': metadata,
         }
     }

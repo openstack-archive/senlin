@@ -40,13 +40,11 @@ class ProfileDataTest(base.SenlinTestCase):
                     'param2': 'value2',
                 }
             },
-            'permission': None,
             'metadata': {}
         }
         data = profiles.ProfileData(body)
         self.assertEqual('test_profile', data.name())
         self.assertEqual(body['spec'], data.spec())
-        self.assertIsNone(data.permission())
         self.assertEqual({}, data.metadata())
         self.assertEqual({'region': 'region1'}, data.context())
 
@@ -55,7 +53,6 @@ class ProfileDataTest(base.SenlinTestCase):
         data = profiles.ProfileData(body)
         self.assertRaises(exc.HTTPBadRequest, data.name)
         self.assertRaises(exc.HTTPBadRequest, data.spec)
-        self.assertIsNone(data.permission())
         self.assertIsNone(data.metadata())
         self.assertIsNone(data.context())
 
@@ -88,7 +85,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                     u'param_1': u'value1',
                     u'param_2': u'value2',
                 },
-                u'permission': '',
                 u'created_time': u'2015-02-24T19:17:22Z',
                 u'updated_time': None,
                 u'metadata': {},
@@ -196,7 +192,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                         'param_2': 2,
                     },
                 },
-                'permission': None,
                 'metadata': {},
             }
         }
@@ -213,7 +208,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                     'param_2': 2,
                 }
             },
-            'permission': None,
             'metadata': {},
         }
 
@@ -235,7 +229,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                         'param_2': 2
                     },
                 },
-                'permission': None,
                 'metadata': {},
             })
         )
@@ -270,7 +263,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                     'properties': {'param': 'value'},
                 },
                 'spec': {'param': 'value'},
-                'permission': None,
                 'metadata': {},
             }
         }
@@ -300,7 +292,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                     'version': '1.0',
                     'properties': {'param': 'value'},
                 },
-                'permission': None,
                 'metadata': {},
             }
         }
@@ -353,7 +344,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 u'param_1': u'value1',
                 u'param_2': u'value2',
             },
-            u'permission': '',
             u'created_time': u'2015-02-24T19:17:22Z',
             u'updated_time': None,
             u'metadata': {},
@@ -424,7 +414,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 u'param_1': u'value1',
                 u'param_2': u'value3',
             },
-            u'permission': '',
             u'created_time': u'2015-02-25T16:20:13Z',
             u'updated_time': None,
             u'metadata': {u'author': u'thomas j'},
@@ -436,7 +425,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         args = copy.deepcopy(body['profile'])
         args['profile_id'] = pid
-        args['permission'] = None
         del args['spec']
         mock_call.assert_called_with(req.context, ('profile_update', args))
 
@@ -478,7 +466,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'profile': {
                 'name': 'new_profile',
                 'metadata': {'author': 'john d'},
-                'permission': 'xxx',
             }
         }
         req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
@@ -492,7 +479,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 u'param_1': u'value1',
                 u'param_2': u'value3',
             },
-            u'permission': 'xxx',
             u'created_time': u'2015-02-25T16:20:13Z',
             u'updated_time': u'2015-02-25T16:50:22Z',
             u'metadata': {u'author': u'john d'},
@@ -516,7 +502,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'profile': {
                 'name': 'new_profile',
                 'metadata': {'author': 'john d'},
-                'permission': 'xxx',
             }
         }
         req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},

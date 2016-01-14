@@ -50,7 +50,6 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual('p-1', result['name'])
         self.assertEqual('TestProfile-1.0', result['type'])
         self.assertEqual(self.spec, result['spec'])
-        self.assertIsNone(result['permission'])
         self.assertIsNone(result['updated_at'])
         self.assertIsNotNone(result['created_at'])
         self.assertIsNotNone(result['id'])
@@ -68,13 +67,10 @@ class ProfileTest(base.SenlinTestCase):
                            "already exists."),
                          six.text_type(ex.exc_info[1]))
 
-    def test_profile_create_with_perm_and_metadata(self):
-        permission = 'fake permission'
+    def test_profile_create_with_metadata(self):
         metadata = {'group': 'mars'}
         result = self.eng.profile_create(self.ctx, 'p-1', self.spec,
-                                         permission=permission,
                                          metadata=metadata)
-        self.assertEqual(permission, result['permission'])
         self.assertEqual(metadata, result['metadata'])
 
     def test_profile_create_type_not_found(self):
@@ -152,13 +148,10 @@ class ProfileTest(base.SenlinTestCase):
         result = self.eng.profile_list(self.ctx, limit=2, marker=p1['id'])
         self.assertEqual(2, len(result))
 
-    def test_profile_list_with_sort_keys(self):
-        p1 = self.eng.profile_create(self.ctx, 'p-B', self.spec,
-                                     permission='1111')
-        p2 = self.eng.profile_create(self.ctx, 'p-A', self.spec,
-                                     permission='1111')
-        p3 = self.eng.profile_create(self.ctx, 'p-C', self.spec,
-                                     permission='0000')
+    def test_profile_list_with_sorting(self):
+        p1 = self.eng.profile_create(self.ctx, 'p-B', self.spec)
+        p2 = self.eng.profile_create(self.ctx, 'p-A', self.spec)
+        p3 = self.eng.profile_create(self.ctx, 'p-C', self.spec)
 
         # default by created_at
         result = self.eng.profile_list(self.ctx)
@@ -170,49 +163,17 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual(p2['id'], result[0]['id'])
         self.assertEqual(p1['id'], result[1]['id'])
 
-        # use permission for sorting
-        result = self.eng.profile_list(self.ctx, sort='permission')
+        # use name for sorting (descending)
+        result = self.eng.profile_list(self.ctx, sort='name:desc')
         self.assertEqual(p3['id'], result[0]['id'])
-
-        # use name and permission for sorting
-        result = self.eng.profile_list(self.ctx, sort='permission,name')
-        self.assertEqual(p3['id'], result[0]['id'])
-        self.assertEqual(p2['id'], result[1]['id'])
-        self.assertEqual(p1['id'], result[2]['id'])
 
         result = self.eng.profile_list(self.ctx, sort='duang')
         self.assertIsNotNone(result)
 
-    def test_profile_list_with_sorting(self):
-        p1 = self.eng.profile_create(self.ctx, 'p-B', self.spec,
-                                     permission='1111')
-        p2 = self.eng.profile_create(self.ctx, 'p-A', self.spec,
-                                     permission='1111')
-        p3 = self.eng.profile_create(self.ctx, 'p-C', self.spec,
-                                     permission='0000')
-
-        # default by created_at, ascending
-        result = self.eng.profile_list(self.ctx)
-        self.assertEqual(p1['id'], result[0]['id'])
-        self.assertEqual(p2['id'], result[1]['id'])
-
-        # sort by created_at, descending
-        result = self.eng.profile_list(self.ctx, sort='created_at:desc')
-        self.assertEqual(p3['id'], result[0]['id'])
-        self.assertEqual(p2['id'], result[1]['id'])
-
-        # use name for sorting, descending
-        result = self.eng.profile_list(self.ctx, sort='name:desc')
-        self.assertEqual(p3['id'], result[0]['id'])
-        self.assertEqual(p1['id'], result[1]['id'])
-
     def test_profile_list_with_filters(self):
-        self.eng.profile_create(self.ctx, 'p-B', self.spec,
-                                permission='1111')
-        self.eng.profile_create(self.ctx, 'p-A', self.spec,
-                                permission='1111')
-        self.eng.profile_create(self.ctx, 'p-C', self.spec,
-                                permission='0000')
+        self.eng.profile_create(self.ctx, 'p-B', self.spec)
+        self.eng.profile_create(self.ctx, 'p-A', self.spec)
+        self.eng.profile_create(self.ctx, 'p-C', self.spec)
 
         result = self.eng.profile_list(self.ctx, filters={'name': 'p-B'})
         self.assertEqual(1, len(result))
@@ -220,10 +181,6 @@ class ProfileTest(base.SenlinTestCase):
 
         result = self.eng.profile_list(self.ctx, filters={'name': 'p-D'})
         self.assertEqual(0, len(result))
-
-        filters = {'permission': '1111'}
-        result = self.eng.profile_list(self.ctx, filters=filters)
-        self.assertEqual(2, len(result))
 
     def test_profile_list_bad_param(self):
         ex = self.assertRaises(rpc.ExpectedException,
@@ -256,7 +213,6 @@ class ProfileTest(base.SenlinTestCase):
 
     def test_profile_update_fields(self):
         p1 = self.eng.profile_create(self.ctx, 'p-1', self.spec,
-                                     permission='1111',
                                      metadata={'foo': 'bar'})
         pid = p1['id']
         self.assertEqual(self.spec, p1['spec'])
@@ -270,16 +226,7 @@ class ProfileTest(base.SenlinTestCase):
         p = self.eng.profile_get(self.ctx, pid)
         self.assertEqual('p-2', p['name'])
 
-        # 2. update permission
-        p2 = self.eng.profile_update(self.ctx, pid, permission='1100')
-        self.assertEqual(pid, p2['id'])
-        self.assertEqual('1100', p2['permission'])
-
-        # check persisted into db
-        p = self.eng.profile_get(self.ctx, pid)
-        self.assertEqual('1100', p['permission'])
-
-        # 3. update metadata
+        # 2. update metadata
         p2 = self.eng.profile_update(self.ctx, pid, metadata={'bar': 'foo'})
         self.assertEqual(pid, p2['id'])
         self.assertEqual({'bar': 'foo'}, p2['metadata'])
@@ -297,7 +244,6 @@ class ProfileTest(base.SenlinTestCase):
 
     def test_profile_update_using_find(self):
         p1 = self.eng.profile_create(self.ctx, 'p-1', self.spec,
-                                     permission='1111',
                                      metadata={'foo': 'bar'})
         pid = p1['id']
 
@@ -316,7 +262,6 @@ class ProfileTest(base.SenlinTestCase):
 
     def test_profile_delete(self):
         p1 = self.eng.profile_create(self.ctx, 'p-1', self.spec,
-                                     permission='1111',
                                      metadata={'foo': 'bar'})
         pid = p1['id']
         result = self.eng.profile_delete(self.ctx, pid)

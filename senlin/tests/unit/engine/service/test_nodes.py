@@ -48,8 +48,7 @@ class NodeTest(base.SenlinTestCase):
                 'STR': 'string'
             }
         }
-        self.profile = self.eng.profile_create(
-            self.ctx, 'p-test', self.spec, permission='1111')
+        self.profile = self.eng.profile_create(self.ctx, 'p-test', self.spec)
 
     def _verify_action(self, obj, action, name, target, cause, inputs=None):
         if inputs is None:
@@ -132,8 +131,7 @@ class NodeTest(base.SenlinTestCase):
                                           self.profile['id'])
 
         ctx_node = utils.dummy_context(project='a-different-project')
-        profile_node = self.eng.profile_create(
-            ctx_node, 'p-test', self.spec, permission='1111')
+        profile_node = self.eng.profile_create(ctx_node, 'p-test', self.spec)
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_create,
                                ctx_node, 'n-1', profile_node['id'],
@@ -270,10 +268,8 @@ class NodeTest(base.SenlinTestCase):
             'version': '1.0',
             'properties': {'INT': 10, 'STR': 'string'},
         }
-        p1 = self.eng.profile_create(self.ctx, 'p-test-1', spec,
-                                     permission='1111')
-        p2 = self.eng.profile_create(new_ctx, 'p-test-2', spec,
-                                     permission='1111')
+        p1 = self.eng.profile_create(self.ctx, 'p-test-1', spec)
+        p2 = self.eng.profile_create(new_ctx, 'p-test-2', spec)
         node1 = self.eng.node_create(self.ctx, 'n1', p1['id'])
         node2 = self.eng.node_create(new_ctx, 'n2', p2['id'])
 

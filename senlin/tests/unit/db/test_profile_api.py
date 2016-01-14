@@ -34,7 +34,6 @@ class DBAPIProfileTest(base.SenlinTestCase):
         self.assertEqual(data['name'], profile.name)
         self.assertEqual(data['type'], profile.type)
         self.assertEqual(data['spec'], profile.spec)
-        self.assertEqual(data['permission'], profile.permission)
 
     def test_profile_get(self):
         profile = shared.create_profile(self.ctx)
@@ -284,7 +283,6 @@ class DBAPIProfileTest(base.SenlinTestCase):
                     'myfile': 'new contents',
                 },
             },
-            'permission': 'yyyyxxxx',
         }
 
         old_profile = shared.create_profile(self.ctx)
