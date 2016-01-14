@@ -11,6 +11,7 @@
 # under the License.
 
 from oslo_context import context as oslo_context
+from oslo_utils import reflection
 from oslo_utils import timeutils
 
 from senlin.common import context as senlin_context
@@ -252,7 +253,7 @@ class Policy(object):
                     for name, schema in cls.properties_schema.items())
 
     def _build_policy_data(self, data):
-        clsname = self.__class__.__name__
+        clsname = reflection.get_class_name(self, fully_qualified=False)
         version = self.VERSION
         result = {
             clsname: {
@@ -263,7 +264,7 @@ class Policy(object):
         return result
 
     def _extract_policy_data(self, policy_data):
-        clsname = self.__class__.__name__
+        clsname = reflection.get_class_name(self, fully_qualified=False)
         if clsname not in policy_data:
             return None
         data = policy_data.get(clsname)
