@@ -27,10 +27,9 @@ policy usually contains rules to be checked/enforced when certain
 :term:`action` is about to be executed or has been executed.
 
 One policy can be attached to many clusters, and one cluster can be attached
-with many policies. When more than one policy is attached to a cluster, you
-can specify the relative "priority" among the policy objects on the cluster.
-In addition to this, a policy on a cluster can be dynamically enabled or
-disabled. Please refer to :ref:`guide-bindings` for details.
+with many policies. In addition to this, a policy on a cluster can be
+dynamically enabled or disabled. Please refer to :ref:`guide-bindings` for
+details.
 
 
 Listing Policies
@@ -41,12 +40,12 @@ that can be used to enumerate profile objects known to the service. For
 example::
 
   $ senlin policy-list
-  +----------+------+-----------------------------+-------+----------+---------------------+
-  | id       | name | type                        | level | cooldown | created_time        |
-  +----------+------+-----------------------------+-------+----------+---------------------+
-  | 239d7212 | dp01 | senlin.policy.deletion-1.0  | 0     | 0        | 2015-07-11T04:24:34 |
-  | 7ecfd026 | lb01 | senlin.policy.placement-1.0 | 0     | 0        | 2015-07-11T04:25:28 |
-  +----------+------+-----------------------------+-------+----------+---------------------+
+  +----------+------+-----------------------------+---------------------+
+  | id       | name | type                        | created_time        |
+  +----------+------+-----------------------------+---------------------+
+  | 239d7212 | dp01 | senlin.policy.deletion-1.0  | 2015-07-11T04:24:34 |
+  | 7ecfd026 | lb01 | senlin.policy.placement-1.0 | 2015-07-11T04:25:28 |
+  +----------+------+-----------------------------+---------------------+
 
 Note that the first column in the output table is a *short ID* of a policy
 object. Senlin command line use short IDs to save real estate on screen so
@@ -71,7 +70,7 @@ line to sort policies using the ``name`` property in descending order::
   $ senlin policy-list -o name:desc
 
 When sorting the list of policies, you can use one of ``type``, ``name``,
-``level``, ``cooldown``, ``created_at`` and ``updated_at``.
+``created_at`` and ``updated_at``.
 
 
 Paginating the List
@@ -82,11 +81,11 @@ of policies returned from Senlin server, using the option :option:`--limit` (or
 (or `-l`). For example::
 
   $ senlin policy-list -l 1
-  +----------+------+----------------------------+-------+----------+---------------------+
-  | id       | name | type                       | level | cooldown | created_time        |
-  +----------+------+----------------------------+-------+----------+---------------------+
-  | 239d7212 | dp01 | senlin.policy.deletion-1.0 | 0     | 0        | 2015-07-11T04:24:34 |
-  +----------+------+----------------------------+-------+----------+---------------------+
+  +----------+------+----------------------------+---------------------+
+  | id       | name | type                       | created_time        |
+  +----------+------+----------------------------+---------------------+
+  | 239d7212 | dp01 | senlin.policy.deletion-1.0 | 2015-07-11T04:24:34 |
+  +----------+------+----------------------------+---------------------+
 
 Yet another option you can specify is the ID of a policy object after which
 you want to see the list starts. In other words, you don't want to see those
@@ -134,28 +133,26 @@ policy type. To create a policy object using this "spec" file, you can use the
 following command::
 
   $ senlin policy-create -s deletion_policy.yaml dp01
-  +--------------+----------------------------------------------------------------------------------------+
-  | Property     | Value                                                                                  |
-  +--------------+----------------------------------------------------------------------------------------+
-  | cooldown     | 0                                                                                      |
-  | created_time | None                                                                                   |
-  | id           | c2e3cd74-bb69-4286-bf06-05d802c8ec12                                                   |
-  | level        | 0                                                                                      |
-  | name         | dp01                                                                                   |
-  | spec         | {                                                                                      |
-  |              |   "version": 1.0,                                                                      |
-  |              |   "type": "senlin.policy.deletion",                                                    |
-  |              |   "description": "A policy for choosing victim node(s) from a cluster for deletion.",  |
-  |              |   "properties": {                                                                      |
-  |              |     "destroy_after_deletion": true,                                                    |
-  |              |     "grace_period": 60,                                                                |
-  |              |     "reduce_desired_capacity": false,                                                  |
-  |              |     "criteria": "OLDEST_FIRST"                                                         |
-  |              |   }                                                                                    |
-  |              | }                                                                                      |
-  | type         | None                                                                                   |
-  | updated_time | None                                                                                   |
-  +--------------+----------------------------------------------------------------------------------------+
+  +------------+-----------------------------------------------------------+
+  | Property   | Value                                                     |
+  +------------+-----------------------------------------------------------+
+  | created_at | None                                                      |
+  | id         | c2e3cd74-bb69-4286-bf06-05d802c8ec12                      |
+  | name       | dp01                                                      |
+  | spec       | {                                                         |
+  |            |   "version": 1.0,                                         |
+  |            |   "type": "senlin.policy.deletion",                       |
+  |            |   "description": "A policy for choosing victim node(s).", |
+  |            |   "properties": {                                         |
+  |            |     "destroy_after_deletion": true,                       |
+  |            |     "grace_period": 60,                                   |
+  |            |     "reduce_desired_capacity": false,                     |
+  |            |     "criteria": "OLDEST_FIRST"                            |
+  |            |   }                                                       |
+  |            | }                                                         |
+  | type       | None                                                      |
+  | updated_at | None                                                      |
+  +------------+-----------------------------------------------------------+
 
 
 Showing the Details of a Policy
@@ -167,29 +164,26 @@ line to indicate the policy object you want to examine. The identifier can be
 the ID, the name or the "short ID" of a policy object. For example::
 
   $ senlin policy-show dp01
-  +--------------+----------------------------------------------------------------------------------------+
-  | Property     | Value                                                                                  |
-  +--------------+----------------------------------------------------------------------------------------+
-  | cooldown     | 0                                                                                      |
-  | created_time | 2015-07-11T04:24:34                                                                    |
-  | id           | c2e3cd74-bb69-4286-bf06-05d802c8ec12                                                   |
-  | level        | 0                                                                                      |
-  | name         | dp01                                                                                   |
-  | spec         | {                                                                                      |
-  |              |   "version": 1.0,                                                                      |
-  |              |   "type": "senlin.policy.deletion",                                                    |
-  |              |   "description": "A policy for choosing victim node(s) from a cluster for deletion.",  |
-  |              |   "properties": {                                                                      |
-  |              |     "destroy_after_deletion": true,                                                    |
-  |              |     "grace_period": 60,                                                                |
-  |              |     "reduce_desired_capacity": false,                                                  |
-  |              |     "criteria": "OLDEST_FIRST"                                                         |
-  |              |   }                                                                                    |
-  |              | }                                                                                      |
-  | type         | None                                                                                   |
-  | updated_time | None                                                                                   |
-  +--------------+----------------------------------------------------------------------------------------+
-
+  +------------+------------------------------------------------------------+
+  | Property   | Value                                                      |
+  +------------+------------------------------------------------------------+
+  | created_at | 2015-07-11T04:24:34                                        |
+  | id         | c2e3cd74-bb69-4286-bf06-05d802c8ec12                       |
+  | name       | dp01                                                       |
+  | spec       | {                                                          |
+  |            |   "version": 1.0,                                          |
+  |            |   "type": "senlin.policy.deletion",                        |
+  |            |   "description": "A policy for choosing victim node(s).",  |
+  |            |   "properties": {                                          |
+  |            |     "destroy_after_deletion": true,                        |
+  |            |     "grace_period": 60,                                    |
+  |            |     "reduce_desired_capacity": false,                      |
+  |            |     "criteria": "OLDEST_FIRST"                             |
+  |            |   }                                                        |
+  |            | }                                                          |
+  | type       | None                                                       |
+  | updated_at | None                                                       |
+  +------------+------------------------------------------------------------+
 
 When there is no policy object matching the identifier, you will get an error
 message. When there are more than one object matching the identifier, you will
@@ -200,17 +194,11 @@ Updating a Policy
 ~~~~~~~~~~~~~~~~~
 
 After a policy object is created, you may want to change some properties of it.
-You can use the :command:`policy-update` to change the "cooldown", the "name",
-or the "enforcement level" of a policy by specifying an identifier. For
+You can use the :command:`policy-update` to change the "name" of a policy. For
 example, the following command renames a policy object from "``dp01``" to
 "``dp01_bak``"::
 
   $ senlin policy-update -n dp01_bak dp01
-
-The Senlin engine will validate if the new value for the named property is
-acceptable. For example, the value for option :option:`--enforcement-level`
-(or :option:`-l`) must be a value between 0 and 100; the value for the option
-:option:`--cooldown` (or :option:`-c`) must be greater than or equal to 0.
 
 If the named policy object could not be found or the parameter value fails the
 validation, you will get an error message.
