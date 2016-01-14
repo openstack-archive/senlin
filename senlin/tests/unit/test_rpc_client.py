@@ -395,9 +395,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         kwargs = {
             'cluster_id': 'a-cluster',
             'policy_id': 'a-policy',
-            'priority': 77,
-            'level': 88,
-            'cooldown': 120,
             'enabled': True
         }
 

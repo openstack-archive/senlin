@@ -285,33 +285,6 @@ class ClusterController(object):
             msg = _("The 'policy_id' field is missing in the request.")
             raise exc.HTTPBadRequest(msg)
 
-        if consts.CP_PRIORITY in data:
-            pri = data.get(consts.CP_PRIORITY)
-            try:
-                pri = utils.parse_int_param('priority', pri, lower_limit=0,
-                                            upper_limit=100)
-            except senlin_exc.InvalidParameter as ex:
-                raise exc.HTTPBadRequest(six.text_type(ex))
-
-            data[consts.CP_PRIORITY] = pri
-
-        if consts.CP_LEVEL in data:
-            lvl = data.get(consts.CP_LEVEL)
-            try:
-                lvl = utils.parse_int_param('level', lvl, lower_limit=0,
-                                            upper_limit=100)
-            except senlin_exc.InvalidParameter as ex:
-                raise exc.HTTPBadRequest(six.text_type(ex))
-            data[consts.CP_LEVEL] = lvl
-
-        if consts.CP_COOLDOWN in data:
-            cdn = data.get(consts.CP_COOLDOWN)
-            try:
-                cdn = utils.parse_int_param('cooldown', cdn, lower_limit=0)
-            except senlin_exc.InvalidParameter as ex:
-                raise exc.HTTPBadRequest(six.text_type(ex))
-            data[consts.CP_COOLDOWN] = cdn
-
         if consts.CP_ENABLED in data:
             enb = data.get(consts.CP_ENABLED)
             try:

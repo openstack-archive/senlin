@@ -102,8 +102,6 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         cid = 'FAKE_CLUSTER'
         params = {
-            'priority': 20,
-            'level': 50,
             'enabled': 'True',
             'balrog': 'you shall not pass!'
         }
@@ -117,10 +115,8 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('filters', engine_args)
 
         filters = engine_args['filters']
-        self.assertEqual(3, len(filters))
+        self.assertEqual(1, len(filters))
         self.assertTrue(filters['enabled'])
-        self.assertIn('priority', filters)
-        self.assertIn('level', filters)
         self.assertNotIn('balrog', filters)
 
     def test_cluster_policy_index_denied_policy(self, mock_enforce):
