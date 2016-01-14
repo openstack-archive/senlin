@@ -1,0 +1,10 @@
+# Sample placement policy for cross-availability-zone placement
+type: senlin.policy.zone_placement
+version: 1.0
+description: A policy for node placement across availability zones
+properties:
+  zones:
+    - name: zone1
+      weight: 100
+    - name: zone2
+      weight: 100
