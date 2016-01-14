@@ -326,14 +326,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         self._test_engine_api('node_get', 'call', identity='a-node',
                               show_details=mock.ANY)
 
-    def test_node_join(self):
-        self._test_engine_api('node_join', 'call',
-                              identity='a-node',
-                              cluster_id='another-cluster')
-
-    def test_node_leave(self):
-        self._test_engine_api('node_leave', 'call', identity='a-node')
-
     def test_node_update(self):
         kwargs = {
             'identity': 'a-cluster',
