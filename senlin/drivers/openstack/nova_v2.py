@@ -12,8 +12,6 @@
 
 from oslo_config import cfg
 
-from openstack.compute.v2 import server_metadata
-
 from senlin.drivers import base
 from senlin.drivers.openstack import sdk
 
@@ -178,14 +176,23 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.server_ips(**query)
 
     @sdk.translate_exception
-    def server_metadata_get(self, **params):
-        obj = server_metadata.ServerMetadata.new(**params)
-        return obj.get(self.session)
+    def server_metadata_create(self, server, metadata):
+        self.conn.compute.create_server_metadata(server, **metadata)
 
     @sdk.translate_exception
-    def server_metadata_update(self, **params):
-        obj = server_metadata.ServerMetadata.new(**params)
-        return obj.update(self.session)
+    def server_metadata_get(self, server):
+        return self.conn.compute.get_server_metadata(server)
+
+    @sdk.translate_exception
+    def server_metadata_update(self, server, metadata):
+        if metadata == {}:
+            self.conn.compute.replace_server_metadata(server, {})
+        else:
+            self.conn.compute.update_server_metadata(server, **metadata)
+
+    @sdk.translate_exception
+    def server_metadata_delete(self, server, key):
+        self.conn.compute.delete_server_metadata(server, key)
 
     @sdk.translate_exception
     def availability_zone_list(self, **query):
