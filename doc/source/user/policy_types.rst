@@ -59,16 +59,17 @@ Senlin server comes with some built-in policy types. You can check the list
 of policy types using the following command::
 
   $ senlin policy-type-list
-  +---------------------------+
-  | name                      |
-  +---------------------------+
-  | senlin.policy.batch       |
-  | senlin.policy.deletion    |
-  | senlin.policy.health      |
-  | senlin.policy.loadbalance |
-  | senlin.policy.placement   |
-  | senlin.policy.scaling     |
-  +---------------------------+
+  +--------------------------------+
+  | name                           |
+  +--------------------------------+
+  | senlin.policy.batch            |
+  | senlin.policy.deletion         |
+  | senlin.policy.health           |
+  | senlin.policy.loadbalance      |
+  | senlin.policy.region_placement |
+  | senlin.policy.scaling          |
+  | senlin.policy.zone_placement   |
+  +--------------------------------+
 
 The output is a list of policy types supported by the Senlin server.
 

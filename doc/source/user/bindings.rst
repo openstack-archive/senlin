@@ -25,12 +25,6 @@ A :term:`Policy` object can attached to at least one :term:`Cluster` at the
 same time. A cluster at any time can have more than one Policy objects
 attached to it.
 
-When created, a policy object has a default ``enforcement-level`` value and a
-default ``cooldown`` value. When attaching the policy to a cluster, you can
-specify a different value for the ``enforcement-level`` property and/or a
-different value for the ``cooldown`` property. These new values can be treated
-as a customization of the policy for the cluster.
-
 After a policy object is attached to a cluster, you can still enable or
 disable it or update some properties of the policy object.
 
@@ -59,12 +53,13 @@ of the policy bound to a cluster and the dirs can be one of ``asc`` and
 direction.
 
 For example, the following command instructs the :program:`senlin` command
-line to sort policy bindings using the ``level`` property in descending order::
+line to sort policy bindings using the ``enabled`` property in descending
+order::
 
-  $ senlin cluster-policy-list -o level:desc 
+  $ senlin cluster-policy-list -o enabled:desc 
 
-When sorting the list of policies, you can use one of ``priority``, ``level``,
-``cooldown``, and ``enabled``.
+When sorting the list of policies, ``enabled`` is the only key you can specify
+for sorting.
 
 
 Filtering the List
@@ -73,19 +68,19 @@ Filtering the List
 The :program:`senlin` command line also provides options for filtering the
 policy list at the server side. The option :option:`--filters` (or
 :option:`-f`) can be used for this purpose. For example, the following command
-filters clusters by the ``priority`` field::
+filters clusters by the ``enabled`` field::
 
-  $ senlin cluster-policy-list -f priority=20 c3
-  +--------------------------------------+--------+----------------+----------+-------+----------+---------+
-  | policy_id                            | policy | type           | priority | level | cooldown | enabled |
-  +--------------------------------------+--------+----------------+----------+-------+----------+---------+
-  | 0705f0f4-629e-4417-84d7-30569d23b271 | up01   | UpdatePolicy   | 20       | 50    | 60       | True    |
-  +--------------------------------------+--------+----------------+----------+-------+----------+---------+
+  $ senlin cluster-policy-list -f enabled=True c3
+  +-----------+--------+-----------------------+---------+
+  | policy_id | policy | type                  | enabled |
+  +-----------+--------+-----------------------+---------+
+  | 0705f0f4  | up01   | senlin.policy.scaling | True    |
+  +-----------+--------+-----------------------+---------+
 
 The option :option:`--filters` accepts a list of key-value pairs separated by
 semicolon (``;``), where each key-value pair is expected to be of format
-``<key>=<value>``. The valid keys for filtering include: ``priority``,
-``level``, ``cooldown``, ``enabled``.
+``<key>=<value>``. The only key that can be used for filtering as of today is
+``enabled``.
 
 
 Attaching a Policy to a Cluster
@@ -94,32 +89,24 @@ Attaching a Policy to a Cluster
 Senlin permits policy objects to be attached to clusters and to be detached
 from clusters dynamically. When attaching a policy object to a cluster, you
 can customize the policy properties for the particular cluster. For example,
-you can specify a different value for the "``level``" property from the
-default value in the policy. This value will be used to indicate the
-enforcement level of a policy object on this cluster.
+you can specify whether the policy should be enabled once attached. 
 
 The following options are supported for the :command:`cluster-policy-attach`
 command:
 
-- :option:`--priority` (or :option:`-r`): specifies the relative priority
-  among all policies attached to the same cluster. Policies with a lower
-  priority value (higher priority) will be evaluated before those with a
-  higher value (lower priority).
-- :option:`--level` (or :option:`-l`): specifies the enforcement level of the
-  policy object. It must be a value between 0 and 100.
-- :option:`--cooldown` (or :option:`-c`): an integer indicating the cooldown
-  seconds once the policy is effected.
 - :option:`--enabled` (or :option:`-e`): a boolean indicating whether the
   policy to be enabled once attached.
 
 For example, the following command attaches a policy named ``up01`` to the
-cluster ``c3``, with the policy's priority set to 20, its cooldown set to 60
-(seconds) and its enforcement level set to 50::
+cluster ``c3``, with its enabled status set to ``True``::
 
-  $ senlin cluster-policy-attach -r 20 -l 50 -c 60 -e -p up01 c3
+  $ senlin cluster-policy-attach -e -p up01 c3
 
-Note that currently, Senlin doesn't more than one policy of the same type to
-be attached to the same cluster. In future, this restriction may be removed.
+Note that most of the time, Senlin doesn't more than one policy of the same
+type to be attached to the same cluster. This restriction is relaxed for some
+policy types. For example, when working with policies about scaling, you can
+actually attach more than one policy instances to the same cluster, each of
+which is about a specific scenario.
 
 For the identifiers specified for the cluster and the policy, you can use the
 name, the ID or the "short ID" of an object. The Senlin engine will try make a
@@ -140,13 +127,10 @@ policy identifier and the cluster identifier specified. For example::
   +--------------+--------------------------------------+
   | cluster_id   | 2b7e9294-b5cd-470f-b191-b18f7e672495 |
   | cluster_name | c3                                   |
-  | cooldown     | 60                                   |
   | enabled      | True                                 |
-  | level        | 50                                   |
   | policy       | dp01                                 |
   | policy_id    | 239d7212-6196-4a89-9446-44d28717d7de |
-  | priority     | 40                                   |
-  | type         | DeletionPolicy                       |
+  | type         | senlin.policy.deletion-1.0           |
   +--------------+--------------------------------------+
 
 You can use the name, the ID or the "short ID" of a policy and/or a cluster to
@@ -157,32 +141,17 @@ Updating Policy Properties on a Cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Once a policy is attached to a cluster, you can request its property on this
-cluster be changed by using the command :command:`cluster-policy-update`. For
-this command, you can specify the ``priority``, the ``cooldown``, the
-``level`` and or the ``enabled`` property to be updated. The arguments
-acceptable are identical to those for the :command:`cluster-policy-attach`
-command.
+cluster be changed by using the command :command:`cluster-policy-update`. At 
+this stage, you can specify the ``enabled`` property to be updated.
 
-For example, the following command updates a policy's priority to 60 on the
-specified cluster::
+For example, the following command disables a policy on the specified cluster::
 
-  $ senlin cluster-policy-update -r 60 -p deletion_polity mycluster
+  $ senlin cluster-policy-update -e False -p dp01 mycluster
 
 The Senlin engine will perform validation of the arguments in the same way as
 that for the policy attach operation. You can use the name, the ID or the
 "short ID" of an entity to reference it, as you do with the policy attach
 operation as well.
-
-The :program:`senlin` command line also provides two convenient commands for
-toggling the ``enabled`` status of a policy on a cluster. For example, the
-following two commands temporarily disables a policy on a cluster and then
-reenable it::
-
-  $ senlin cluster-policy-disable -p dp01 mycluster
-  $ senlin cluster-policy-enable -p dp01 mycluster
-
-For these two commands, you can use the name, the ID or the "short ID" of an
-object to name it as well.
 
 
 Detach a Policy from a Cluster
