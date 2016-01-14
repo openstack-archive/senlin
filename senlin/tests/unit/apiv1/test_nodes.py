@@ -562,7 +562,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.update,
                                req, node_id=nid, body=body)
         self.assertEqual('Updating cluster_id is not allowed, please invoke '
-                         'node join/leave actions if needed.',
+                         'cluster add/remove node actions if needed.',
                          six.text_type(ex))
         self.assertFalse(mock_call.called)
 

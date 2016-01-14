@@ -140,8 +140,8 @@ class NodeController(object):
         cluster_id = node_data.get(consts.NODE_CLUSTER_ID)
         if cluster_id is not None:
             raise exc.HTTPBadRequest(_("Updating cluster_id is not allowed, "
-                                       "please invoke node join/leave actions "
-                                       "if needed."))
+                                       "please invoke cluster add/remove "
+                                       "node actions if needed."))
 
         name = node_data.get(consts.NODE_NAME, None)
         profile_id = node_data.get(consts.NODE_PROFILE_ID, None)
