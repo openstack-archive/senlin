@@ -54,10 +54,7 @@ class TestLBPolicy(base.SenlinFunctionalTest):
 
         # Attach scaling in/out policies to cluster
         params = {
-            "priority": 50,
-            "level": 50,
             "enabled": True,
-            "cooldown": 0,
             "policy_id": lb_policy['id']
         }
         action_id = test_api.action_cluster(self.client, cluster['id'],
