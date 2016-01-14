@@ -1932,7 +1932,7 @@ class ClusterActionTest(base.SenlinTestCase):
         cluster.id = 'FAKE_CLUSTER'
         mock_load.return_value = cluster
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
-        action.inputs = {'priority': 30}
+        action.inputs = {'enabled': True}
 
         # do it
         res_code, res_msg = action.do_update_policy()

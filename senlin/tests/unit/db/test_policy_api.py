@@ -41,8 +41,6 @@ class DBAPIPolicyTest(base.SenlinTestCase):
             'project': self.ctx.project,
             'domain': self.ctx.domain,
             'spec': sample_spec,
-            'level': 50,
-            'cooldown': 60,
             'data': None,
         }
 
@@ -56,8 +54,6 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         self.assertIsNotNone(policy)
         self.assertEqual(data['name'], policy.name)
         self.assertEqual(data['type'], policy.type)
-        self.assertEqual(data['cooldown'], policy.cooldown)
-        self.assertEqual(data['level'], policy.level)
         self.assertEqual(data['spec'], policy.spec)
         self.assertEqual(10, policy.spec['max_size'])
         self.assertIsNone(policy.data)
@@ -70,8 +66,6 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         self.assertIsNotNone(retobj)
         self.assertEqual(data['name'], retobj.name)
         self.assertEqual(data['type'], retobj.type)
-        self.assertEqual(data['cooldown'], retobj.cooldown)
-        self.assertEqual(data['level'], retobj.level)
         self.assertEqual(data['spec'], retobj.spec)
         self.assertEqual(10, retobj.spec['max_size'])
         self.assertIsNone(retobj.data)
@@ -257,34 +251,35 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         self.assertEqual(expected_keys, used_sort_keys)
 
     def test_policy_get_all_sorting(self):
-        values = [{'id': '001', 'name': 'policy1', 'level': 50},
-                  {'id': '002', 'name': 'policy3', 'level': 20},
-                  {'id': '003', 'name': 'policy2', 'level': 40}]
+        values = [{'id': '001', 'name': 'policy1'},
+                  {'id': '002', 'name': 'policy3'},
+                  {'id': '003', 'name': 'policy2'}]
 
         for v in values:
+            v['created_at'] = tu.utcnow()
             data = self.new_policy_data(**v)
             db_api.policy_create(self.ctx, data)
 
-        policies = db_api.policy_get_all(self.ctx, sort='name,level')
-        self.assertEqual(3, len(policies))
         # Sorted by name
+        policies = db_api.policy_get_all(self.ctx, sort='name')
+        self.assertEqual(3, len(policies))
         self.assertEqual('001', policies[0].id)
         self.assertEqual('003', policies[1].id)
         self.assertEqual('002', policies[2].id)
 
-        policies = db_api.policy_get_all(self.ctx, sort='level,name')
+        # Sorted by created_at and name (ascending)
+        policies = db_api.policy_get_all(self.ctx, sort='created_at,name')
         self.assertEqual(3, len(policies))
-        # Sorted by levels (ascending)
+        self.assertEqual('001', policies[0].id)
+        self.assertEqual('002', policies[1].id)
+        self.assertEqual('003', policies[2].id)
+
+        # Sorted by name (descending)
+        policies = db_api.policy_get_all(self.ctx, sort='name:desc')
+        self.assertEqual(3, len(policies))
         self.assertEqual('002', policies[0].id)
         self.assertEqual('003', policies[1].id)
         self.assertEqual('001', policies[2].id)
-
-        policies = db_api.policy_get_all(self.ctx, sort='level:desc,name:desc')
-        self.assertEqual(3, len(policies))
-        # Sorted by statuses (descending)
-        self.assertEqual('001', policies[0].id)
-        self.assertEqual('003', policies[1].id)
-        self.assertEqual('002', policies[2].id)
 
     def test_policy_get_all_default_sorting(self):
         policies = []
@@ -326,12 +321,9 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         another_policy = {
             'name': 'new_scaling_policy',
             'type': 'ScalingPolicy',
-            'cooldown': 11,
-            'level': 60,
             'spec': {
                 'min_size': 5,
                 'max_size': 15,
-                'pause_time': 'PT10M',
             }
         }
         old_data = self.new_policy_data()
@@ -343,7 +335,6 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         self.assertEqual(old_policy.id, new_policy.id)
         self.assertEqual(new_data['name'], new_policy.name)
         self.assertEqual('new_scaling_policy', new_policy.name)
-        self.assertEqual(11, new_policy.cooldown)
 
     def test_policy_update_not_found(self):
         self.assertRaises(exception.PolicyNotFound,
@@ -370,7 +361,6 @@ class DBAPIPolicyTest(base.SenlinTestCase):
 
         fields = {
             'enabled': True,
-            'level': 50
         }
         db_api.cluster_policy_attach(self.ctx, self.cluster.id, policy.id,
                                      fields)

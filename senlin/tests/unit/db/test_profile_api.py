@@ -214,23 +214,23 @@ class DBAPIProfileTest(base.SenlinTestCase):
         for v in values:
             shared.create_profile(self.ctx, **v)
 
+        # Sorted by name,type
         profiles = db_api.profile_get_all(self.ctx, sort='name,type')
         self.assertEqual(3, len(profiles))
-        # Sorted by name
         self.assertEqual('001', profiles[0].id)
         self.assertEqual('003', profiles[1].id)
         self.assertEqual('002', profiles[2].id)
 
+        # Sorted by type,name (ascending)
         profiles = db_api.profile_get_all(self.ctx, sort='type,name')
         self.assertEqual(3, len(profiles))
-        # Sorted by levels (ascending)
         self.assertEqual('003', profiles[0].id)
         self.assertEqual('002', profiles[1].id)
         self.assertEqual('001', profiles[2].id)
 
+        # Sorted by type,name (descending)
         profiles = db_api.profile_get_all(self.ctx, sort='type:desc,name:desc')
         self.assertEqual(3, len(profiles))
-        # Sorted by statuses (descending)
         self.assertEqual('001', profiles[0].id)
         self.assertEqual('002', profiles[1].id)
         self.assertEqual('003', profiles[2].id)

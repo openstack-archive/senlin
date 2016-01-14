@@ -436,18 +436,12 @@ class TestCluster(base.SenlinTestCase):
         binding = mock.Mock()
         mock_cp.return_value = binding
 
-        values = {
-            'priority': 10,
-            'cooldown': 20,
-            'level': 30,
-            'enabled': True
-        }
+        values = {'enabled': True}
         res, reason = cluster.attach_policy(self.context, 'FAKE_POLICY',
                                             values)
         policy.attach.assert_called_once_with(cluster)
         mock_load.assert_called_once_with(self.context, 'FAKE_POLICY')
         mock_cp.assert_called_once_with('FAKE_CLUSTER', 'FAKE_POLICY',
-                                        priority=10, cooldown=20, level=30,
                                         enabled=True, data=None)
         binding.store.assert_called_once_with(self.context)
         self.assertIn(policy, cluster.policies)
@@ -516,12 +510,7 @@ class TestCluster(base.SenlinTestCase):
         binding = mock.Mock()
         mock_cp.return_value = binding
 
-        values = {
-            'priority': 10,
-            'cooldown': 20,
-            'level': 30,
-            'enabled': True
-        }
+        values = {'enabled': True}
 
         # do it
         res, reason = cluster.attach_policy(self.context, 'FAKE_1', values)
@@ -533,7 +522,6 @@ class TestCluster(base.SenlinTestCase):
         policy.attach.assert_called_once_with(cluster)
         mock_load.assert_called_once_with(self.context, 'FAKE_1')
         mock_cp.assert_called_once_with(cluster.id, 'FAKE_1',
-                                        priority=10, cooldown=20, level=30,
                                         enabled=True, data=None)
         binding.store.assert_called_once_with(self.context)
         self.assertIn(policy, cluster.policies)
@@ -616,9 +604,6 @@ class TestCluster(base.SenlinTestCase):
         existing.id = 'FAKE_POLICY'
         cluster.rt['policies'] = [existing]
         values = {
-            'cooldown': 10,
-            'level': 20,
-            'priority': 30,
             'enabled': False
         }
         res, reason = cluster.update_policy(self.context, 'FAKE_POLICY',
@@ -626,8 +611,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertTrue(res)
         self.assertEqual('Policy updated.', reason)
         mock_update.assert_called_once_with(
-            self.context, 'FAKE_CLUSTER', 'FAKE_POLICY',
-            {'cooldown': 10, 'level': 20, 'priority': 30, 'enabled': False})
+            self.context, 'FAKE_CLUSTER', 'FAKE_POLICY', {'enabled': False})
 
     def test_update_policy_not_attached(self):
         cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
@@ -635,7 +619,7 @@ class TestCluster(base.SenlinTestCase):
         cluster.rt['policies'] = []
 
         # do it
-        values = {'level': 20}
+        values = {'enabled': False}
         res, reason = cluster.update_policy(self.context, 'FAKE_POLICY',
                                             **values)
         self.assertFalse(res)

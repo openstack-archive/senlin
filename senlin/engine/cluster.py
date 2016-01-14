@@ -339,9 +339,6 @@ class Cluster(object):
             return False, data
 
         kwargs = {
-            'priority': values['priority'],
-            'cooldown': values['cooldown'],
-            'level': values['level'],
             'enabled': values['enabled'],
             'data': data,
         }
@@ -373,21 +370,11 @@ class Cluster(object):
         if not found:
             return False, _('Policy not attached.')
 
-        params = {}
-        cooldown = values.get('cooldown')
-        if cooldown is not None:
-            params['cooldown'] = cooldown
-        level = values.get('level')
-        if level is not None:
-            params['level'] = level
-        priority = values.get('priority')
-        if priority is not None:
-            params['priority'] = priority
-        enabled = values.get('enabled')
-        if enabled is not None:
-            params['enabled'] = bool(enabled)
-        if not params:
+        enabled = values.get('enabled', None)
+        if enabled is None:
             return True, _('No update is needed.')
+
+        params = {'enabled': bool(enabled)}
 
         db_api.cluster_policy_update(ctx, self.id, policy_id, params)
         return True, _('Policy updated.')

@@ -1366,8 +1366,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test__sanitize_policy(self, mock_enforce):
         data = {
             'policy_id': 'FOO',
-            'priority': 50,
-            'level': 50,
             'enabled': True
         }
         res = self.controller._sanitize_policy(data)
