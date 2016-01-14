@@ -1195,8 +1195,7 @@ class EngineService(service.Service):
         return binding.to_dict()
 
     @request_context
-    def cluster_policy_attach(self, context, identity, policy, priority=None,
-                              level=None, cooldown=None, enabled=True):
+    def cluster_policy_attach(self, context, identity, policy, enabled=True):
         '''Attach policy to cluster.
 
         This is done via an action because a cluster lock is needed.
@@ -1212,14 +1211,8 @@ class EngineService(service.Service):
             msg = _("The specified policy (%s) is not found.") % policy
             raise exception.SenlinBadRequest(msg=msg)
 
-        def_pri = cfg.CONF.default_policy_priority
-        def_lvl = db_policy.level
-        def_cld = db_policy.cooldown
         inputs = {
             'policy_id': db_policy.id,
-            'priority': utils.parse_int_param('priority', priority) or def_pri,
-            'level': utils.parse_int_param('level', level) or def_lvl,
-            'cooldown': utils.parse_int_param('cooldown', cooldown) or def_cld,
             'enabled': utils.parse_bool_param('enabled', enabled) or True,
         }
 
@@ -1286,8 +1279,7 @@ class EngineService(service.Service):
         return {'action': action.id}
 
     @request_context
-    def cluster_policy_update(self, context, identity, policy, priority=None,
-                              level=None, cooldown=None, enabled=None):
+    def cluster_policy_update(self, context, identity, policy, enabled=None):
         '''Update an existing policy binding on a cluster.
 
         This is done via an action because cluster lock is needed.
@@ -1310,12 +1302,6 @@ class EngineService(service.Service):
             raise exception.SenlinBadRequest(msg=msg)
 
         inputs = {'policy_id': db_policy.id}
-        if priority is not None:
-            inputs['priority'] = utils.parse_int_param('priority', priority)
-        if level is not None:
-            inputs['level'] = utils.parse_int_param('level', level)
-        if cooldown is not None:
-            inputs['cooldown'] = utils.parse_int_param('cooldown', cooldown)
         if enabled is not None:
             inputs['enabled'] = utils.parse_bool_param('enabled', enabled)
 

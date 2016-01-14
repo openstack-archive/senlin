@@ -701,8 +701,9 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         policy = mock.Mock()
         policy.id = 'FAKE_POLICY_ID'
         policy.TARGET = [('AFTER', 'OBJECT_ACTION')]
+        policy.cooldown = 0
         # Note: policy binding is created but not stored
-        pb = self._create_cp_binding(cluster_id, policy.id, cooldown=0)
+        pb = self._create_cp_binding(cluster_id, policy.id)
         self.assertIsNone(pb.last_op)
         mock_load_all.return_value = [pb]
         mock_load.return_value = policy

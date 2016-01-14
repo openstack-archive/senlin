@@ -11,7 +11,6 @@
 # under the License.
 
 import mock
-from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher as rpc
 import six
 
@@ -73,16 +72,13 @@ class ClusterPolicyTest(base.SenlinTestCase):
         cluster_id = self.cluster['id']
         policy_id = self.policy['id']
         action = self.eng.cluster_policy_attach(
-            self.ctx, cluster_id, policy_id, 50, 50, 40, False)
+            self.ctx, cluster_id, policy_id, False)
 
         action_id = action['action']
         action = db_api.action_get(self.ctx, action_id)
         self.assertIsNotNone(action)
         inputs = {
             'policy_id': policy_id,
-            'priority': 50,
-            'level': 50,
-            'cooldown': 40,
             'enabled': True
         }
         self._verify_action(action, 'CLUSTER_ATTACH_POLICY',
@@ -105,9 +101,6 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.assertIsNotNone(action)
         inputs = {
             'policy_id': policy_id,
-            'priority': cfg.CONF.default_policy_priority,
-            'level': None,
-            'cooldown': None,
             'enabled': True
         }
         self._verify_action(action, 'CLUSTER_ATTACH_POLICY',
@@ -138,45 +131,6 @@ class ClusterPolicyTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
-    def test_cluster_policy_attach_priority_not_int(self, notify):
-        cluster_id = self.cluster['id']
-        policy_id = self.policy['id']
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_attach,
-                               self.ctx, cluster_id, policy_id,
-                               priority='High')
-        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
-        self.assertEqual("Invalid value 'High' specified for 'priority'",
-                         six.text_type(ex.exc_info[1]))
-
-    @mock.patch.object(dispatcher, 'start_action')
-    def test_cluster_policy_attach_level_not_int(self, notify):
-        cluster_id = self.cluster['id']
-        policy_id = self.policy['id']
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_attach,
-                               self.ctx, cluster_id, policy_id,
-                               level='High')
-        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
-        self.assertEqual("Invalid value 'High' specified for 'level'",
-                         six.text_type(ex.exc_info[1]))
-
-    @mock.patch.object(dispatcher, 'start_action')
-    def test_cluster_policy_attach_cooldown_not_int(self, notify):
-        cluster_id = self.cluster['id']
-        policy_id = self.policy['id']
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_attach,
-                               self.ctx, cluster_id, policy_id,
-                               cooldown='1min')
-        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
-        self.assertEqual("Invalid value '1min' specified for 'cooldown'",
-                         six.text_type(ex.exc_info[1]))
-
-    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_policy_attach_enabled_not_boolean(self, notify):
         cluster_id = self.cluster['id']
         policy_id = self.policy['id']
@@ -194,12 +148,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         cluster_id = self.cluster['id']
         policy_id = self.policy['id']
 
-        values = {
-            'priority': 50,
-            'level': 50,
-            'cooldown': 0,
-            'enabled': True
-        }
+        values = {'enabled': True}
         db_api.cluster_policy_attach(self.ctx, cluster_id, policy_id, values)
         action = self.eng.cluster_policy_detach(self.ctx, cluster_id,
                                                 policy_id)
@@ -249,9 +198,6 @@ class ClusterPolicyTest(base.SenlinTestCase):
         cluster_id = self.cluster['id']
         policy_id = self.policy['id']
         values = {
-            'priority': 50,
-            'level': 50,
-            'cooldown': 0,
             'enabled': True
         }
         db_api.cluster_policy_attach(self.ctx, cluster_id, policy_id, values)
@@ -262,9 +208,6 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual(self.cluster['name'], result['cluster_name'])
         self.assertEqual(self.policy['type'], result['policy_type'])
         self.assertEqual(self.policy['name'], result['policy_name'])
-        self.assertEqual(50, result['priority'])
-        self.assertEqual(50, result['level'])
-        self.assertEqual(0, result['cooldown'])
         self.assertTrue(result['enabled'])
 
     def test_cluster_policy_get_cluster_not_found(self):
@@ -313,9 +256,6 @@ class ClusterPolicyTest(base.SenlinTestCase):
         policy1 = self._prepare_policy('p-1', 'Type1')
         policy2 = self._prepare_policy('p-2', 'Type2')
         v = {
-            'priority': 50,
-            'level': 50,
-            'cooldown': 0,
             'enabled': True
         }
         db_api.cluster_policy_attach(self.ctx, cluster_id, policy1['id'], v)
@@ -341,56 +281,15 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.assertIsInstance(result, list)
         self.assertEqual(0, len(result))
 
-    def test_cluster_policy_list_default_sorting(self):
-        cluster_id = self.cluster['id']
-        policy1 = self._prepare_policy('p-1', 'Type1')
-        policy2 = self._prepare_policy('p-2', 'Type2')
-
-        v = {'priority': 50}
-        db_api.cluster_policy_attach(self.ctx, cluster_id, policy1['id'], v)
-        v = {'priority': 40}
-        db_api.cluster_policy_attach(self.ctx, cluster_id, policy2['id'], v)
-
-        result = self.eng.cluster_policy_list(self.ctx, cluster_id)
-        policy_ids = [b['policy_id'] for b in result]
-        self.assertEqual(policy2['id'], policy_ids[0])
-        self.assertEqual(policy1['id'], policy_ids[1])
-
     def test_cluster_policy_list_filters(self):
         cluster_id = self.cluster['id']
         policy1 = self._prepare_policy('p-1', 'Type1')
         policy2 = self._prepare_policy('p-2', 'Type2')
-        policy3 = self._prepare_policy('p-3', 'Type3')
 
-        v = {'priority': 50, 'level': 30, 'cooldown': 60, 'enabled': True}
+        v = {'enabled': True}
         db_api.cluster_policy_attach(self.ctx, cluster_id, policy1['id'], v)
-        v = {'priority': 40, 'level': 40, 'cooldown': 60, 'enabled': False}
+        v = {'enabled': False}
         db_api.cluster_policy_attach(self.ctx, cluster_id, policy2['id'], v)
-        v = {'priority': 40, 'level': 40, 'cooldown': 0, 'enabled': False}
-        db_api.cluster_policy_attach(self.ctx, cluster_id, policy3['id'], v)
-
-        # filter by priority
-        result = self.eng.cluster_policy_list(self.ctx, cluster_id,
-                                              filters={'priority': 40})
-        policy_ids = [b['policy_id'] for b in result]
-        self.assertEqual(2, len(policy_ids))
-        self.assertIn(policy2['id'], policy_ids)
-        self.assertIn(policy3['id'], policy_ids)
-
-        # filter by level
-        result = self.eng.cluster_policy_list(self.ctx, cluster_id,
-                                              filters={'level': 30})
-        policy_ids = [b['policy_id'] for b in result]
-        self.assertEqual(1, len(policy_ids))
-        self.assertIn(policy1['id'], policy_ids)
-
-        # filter by cooldown
-        result = self.eng.cluster_policy_list(self.ctx, cluster_id,
-                                              filters={'cooldown': 60})
-        policy_ids = [b['policy_id'] for b in result]
-        self.assertEqual(2, len(policy_ids))
-        self.assertIn(policy1['id'], policy_ids)
-        self.assertIn(policy2['id'], policy_ids)
 
         # filter by enabled
         result = self.eng.cluster_policy_list(self.ctx, cluster_id,
@@ -403,61 +302,28 @@ class ClusterPolicyTest(base.SenlinTestCase):
         cid = self.cluster['id']
         policy1 = self._prepare_policy('p-1', 'Type1')
         policy2 = self._prepare_policy('p-2', 'Type2')
-        policy3 = self._prepare_policy('p-3', 'Type3')
 
-        v = {'priority': 50, 'level': 30, 'cooldown': 60, 'enabled': True}
+        v = {'enabled': True}
         db_api.cluster_policy_attach(self.ctx, cid, policy1['id'], v)
-        v = {'priority': 40, 'level': 40, 'cooldown': 60, 'enabled': False}
+        v = {'enabled': False}
         db_api.cluster_policy_attach(self.ctx, cid, policy2['id'], v)
-        v = {'priority': 30, 'level': 40, 'cooldown': 0, 'enabled': False}
-        db_api.cluster_policy_attach(self.ctx, cid, policy3['id'], v)
-
-        # sort by level
-        result = self.eng.cluster_policy_list(self.ctx, cid, sort='level')
-        policy_ids = [b['policy_id'] for b in result]
-        self.assertIn(policy1['id'], policy_ids[0])
-
-        # sort by cooldown
-        result = self.eng.cluster_policy_list(self.ctx, cid, sort='cooldown')
-        policy_ids = [b['policy_id'] for b in result]
-        self.assertIn(policy3['id'], policy_ids[0])
 
         # sort by enabled
         result = self.eng.cluster_policy_list(self.ctx, cid, sort='enabled')
         policy_ids = [b['policy_id'] for b in result]
-        self.assertIn(policy1['id'], policy_ids[2])
-
-        # sort by cooldown and enabled
-        result = self.eng.cluster_policy_list(self.ctx, cid,
-                                              sort='cooldown,enabled')
-        policy_ids = [b['policy_id'] for b in result]
-        self.assertEqual(policy3['id'], policy_ids[0])
-        self.assertEqual(policy2['id'], policy_ids[1])
-        self.assertEqual(policy1['id'], policy_ids[2])
-
-        # sort by cooldown and level, descending
-        result = self.eng.cluster_policy_list(self.ctx, cid,
-                                              sort='cooldown,level')
-        policy_ids = [b['policy_id'] for b in result]
-        self.assertEqual(policy3['id'], policy_ids[0])
-        self.assertEqual(policy1['id'], policy_ids[1])
-        self.assertEqual(policy2['id'], policy_ids[2])
+        self.assertIn(policy1['id'], policy_ids[1])
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_policy_update(self, notify):
         cluster_id = self.cluster['id']
         policy_id = self.policy['id']
         values = {
-            'priority': 50,
-            'level': 50,
-            'cooldown': 0,
-            'enabled': True
+            'enabled': False
         }
         db_api.cluster_policy_attach(self.ctx, cluster_id, policy_id, values)
 
         action = self.eng.cluster_policy_update(
-            self.ctx, cluster_id, policy_id,
-            priority=100, level=10, cooldown=60, enabled=False)
+            self.ctx, cluster_id, policy_id, enabled=True)
 
         action_id = action['action']
         action = db_api.action_get(self.ctx, action_id)
@@ -465,19 +331,14 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self._verify_action(action, 'CLUSTER_UPDATE_POLICY',
                             'update_policy_%s' % cluster_id[:8],
                             cluster_id, cause=action_mod.CAUSE_RPC,
-                            inputs={
-                                'policy_id': policy_id,
-                                'priority': 100,
-                                'level': 10,
-                                'cooldown': 60,
-                                'enabled': False})
+                            inputs={'policy_id': policy_id, 'enabled': True})
         notify.assert_called_once_with(action_id=action_id)
 
     def test_cluster_policy_update_cluster_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_policy_update,
                                self.ctx, 'Bogus', self.policy['id'],
-                               priority=10)
+                               enabled=True)
         self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
         self.assertEqual("The cluster (Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
@@ -486,7 +347,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_policy_update,
                                self.ctx, self.cluster['id'], 'Bogus',
-                               priority=10)
+                               enabled=True)
         self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: The specified policy "
                          "(Bogus) is not found.",
@@ -497,7 +358,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.eng.cluster_policy_update,
                                self.ctx,
                                self.cluster['id'], self.policy['id'],
-                               priority=10)
+                               enabled=True)
         self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
         self.assertEqual(("The request is malformed: The policy (%(p)s) is "
                           "not attached to the specified cluster (%(c)s)." %
@@ -507,41 +368,8 @@ class ClusterPolicyTest(base.SenlinTestCase):
     def test_cluster_policy_update_parameter_invalid(self):
         cluster_id = self.cluster['id']
         policy_id = self.policy['id']
-        values = {
-            'priority': 50,
-            'level': 50,
-            'cooldown': 0,
-            'enabled': True
-        }
+        values = {'enabled': True}
         db_api.cluster_policy_attach(self.ctx, cluster_id, policy_id, values)
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_update,
-                               self.ctx, cluster_id, policy_id,
-                               priority='High')
-
-        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
-        self.assertEqual("Invalid value 'High' specified for 'priority'",
-                         six.text_type(ex.exc_info[1]))
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_update,
-                               self.ctx, cluster_id, policy_id,
-                               cooldown='Long')
-
-        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
-        self.assertEqual("Invalid value 'Long' specified for 'cooldown'",
-                         six.text_type(ex.exc_info[1]))
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_update,
-                               self.ctx, cluster_id, policy_id,
-                               level='Warning')
-
-        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
-        self.assertEqual("Invalid value 'Warning' specified for 'level'",
-                         six.text_type(ex.exc_info[1]))
-
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_policy_update,
                                self.ctx, cluster_id, policy_id,

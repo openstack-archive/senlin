@@ -595,8 +595,7 @@ def cluster_policy_get_all(context, cluster_id, filters=None, sort=None):
     if filters:
         query = db_filters.exact_filter(query, models.ClusterPolicies, filters)
 
-    keys, dirs = _get_sort_params(sort, consts.CLUSTER_POLICY_SORT_KEYS,
-                                  'priority')
+    keys, dirs = _get_sort_params(sort, consts.CLUSTER_POLICY_SORT_KEYS)
     return utils.paginate_query(query, models.ClusterPolicies, None, keys,
                                 sort_dirs=dirs).all()
 

@@ -26,9 +26,6 @@ class ClusterPolicy(object):
 
         self.cluster_id = cluster_id
         self.policy_id = policy_id
-        self.priority = kwargs.get('priority')
-        self.cooldown = kwargs.get('cooldown')
-        self.level = kwargs.get('level')
         self.enabled = kwargs.get('enabled')
         self.data = kwargs.get('data', {})
         self.last_op = kwargs.get('last_op', None)
@@ -41,9 +38,6 @@ class ClusterPolicy(object):
     def store(self, context):
         '''Store the binding record into database table.'''
         values = {
-            'priority': self.priority,
-            'cooldown': self.cooldown,
-            'level': self.level,
             'enabled': self.enabled,
             'data': self.data,
             'last_op': self.last_op,
@@ -71,9 +65,6 @@ class ClusterPolicy(object):
         '''
         kwargs = {
             'id': record.id,
-            'priority': record.priority,
-            'cooldown': record.cooldown,
-            'level': record.level,
             'enabled': record.enabled,
             'data': record.data,
             'last_op': record.last_op,
@@ -106,9 +97,9 @@ class ClusterPolicy(object):
 
         return [cls._from_db_record(context, b) for b in bindings]
 
-    def cooldown_inprogress(self):
-        if self.cooldown and self.last_op:
-            if not timeutils.is_older_than(self.last_op, self.cooldown):
+    def cooldown_inprogress(self, cooldown):
+        if self.last_op:
+            if not timeutils.is_older_than(self.last_op, cooldown):
                 return True
 
         return False
@@ -122,9 +113,6 @@ class ClusterPolicy(object):
             'id': self.id,
             'cluster_id': self.cluster_id,
             'policy_id': self.policy_id,
-            'cooldown': self.cooldown,
-            'priority': self.priority,
-            'level': self.level,
             'enabled': self.enabled,
             'data': self.data,
             'last_op': self.last_op,

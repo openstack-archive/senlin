@@ -142,22 +142,6 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual(1, len(bindings))
         self.assertEqual(timestamp, bindings[0].last_op)
 
-    def test_policy_get_all_prioritized(self):
-        policy = self.create_policy()
-
-        fields = {'enabled': True, 'level': 50, 'priority': 20}
-        binding1 = db_api.cluster_policy_attach(self.ctx, self.cluster.id,
-                                                policy.id, fields)
-
-        fields = {'enabled': True, 'level': 50, 'priority': 40}
-        binding2 = db_api.cluster_policy_attach(self.ctx, self.cluster.id,
-                                                policy.id, fields)
-
-        bindings = db_api.cluster_policy_get_all(self.ctx, self.cluster.id)
-
-        self.assertEqual(binding1.id, bindings[0].id)
-        self.assertEqual(binding2.id, bindings[1].id)
-
     def test_policy_get_all_with_filters(self):
         values = {'policy1': {'level': 40, 'priority': 40},
                   'policy2': {'level': 30, 'priority': 60}}
