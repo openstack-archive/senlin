@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import subprocess
 import sys
 
 import openstackdocstheme
@@ -65,8 +66,10 @@ release = '1.0'
 #   bug_project: Launchpad project to file bugs against.
 # These variables are passed to the logabug code via html_context.
 giturl = u'http://git.openstack.org/cgit/openstack/senlin/tree/doc/source'
-git_cmd = "/usr/bin/git log | head -n1 | cut -f2 -d' '"
-gitsha = os.popen(git_cmd).read().strip('\n')
+git_cmd = ["/usr/bin/git", "log", "|", "head", "-n1", "|", "cut", "-f2",
+           "-d'", "'"]
+gitsha = subprocess.Popen(git_cmd,
+                          stdout=subprocess.PIPE).communicate()[0]
 bug_tag = "docs"
 
 # source tree
