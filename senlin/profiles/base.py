@@ -92,7 +92,6 @@ class Profile(object):
         self.project = kwargs.get('project')
         self.domain = kwargs.get('domain')
 
-        self.permission = kwargs.get('permission', '')
         self.metadata = kwargs.get('metadata', {})
 
         self.created_at = kwargs.get('created_at', None)
@@ -121,7 +120,6 @@ class Profile(object):
             'user': record.user,
             'project': record.project,
             'domain': record.domain,
-            'permission': record.permission,
             'metadata': record.meta_data,
             'created_at': record.created_at,
             'updated_at': record.updated_at,
@@ -168,7 +166,6 @@ class Profile(object):
             'user': self.user,
             'project': self.project,
             'domain': self.domain,
-            'permission': self.permission,
             'meta_data': self.metadata,
         }
 
@@ -329,7 +326,6 @@ class Profile(object):
             'user': self.user,
             'project': self.project,
             'domain': self.domain,
-            'permission': self.permission,
             'spec': self.spec,
             'metadata': self.metadata,
             'created_at': utils.format_time(self.created_at),

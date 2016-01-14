@@ -172,7 +172,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         default_args = {
             'name': mock.ANY,
             'spec': mock.ANY,
-            'permission': mock.ANY,
             'metadata': mock.ANY,
         }
         self._test_engine_api('profile_create', 'call', **default_args)
@@ -184,7 +183,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         default_args = {
             'profile_id': 'aaaa-bbbb-cccc',
             'name': mock.ANY,
-            'permission': mock.ANY,
             'metadata': mock.ANY,
         }
         self._test_engine_api('profile_update', 'call', **default_args)

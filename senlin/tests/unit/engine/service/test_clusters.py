@@ -47,8 +47,7 @@ class ClusterTest(base.SenlinTestCase):
             'version': '1.0',
             'properties': {'INT': 10, 'STR': 'string'},
         }
-        self.profile = self.eng.profile_create(self.ctx, 'p-test', spec,
-                                               permission='1111')
+        self.profile = self.eng.profile_create(self.ctx, 'p-test', spec)
         spec = {
             'type': 'TestPolicy',
             'version': '1.0',
@@ -361,10 +360,8 @@ class ClusterTest(base.SenlinTestCase):
             'version': '1.0',
             'properties': {'INT': 10, 'STR': 'string'},
         }
-        p1 = self.eng.profile_create(self.ctx, 'p-test-1', spec,
-                                     permission='1111')
-        p2 = self.eng.profile_create(new_ctx, 'p-test-2', spec,
-                                     permission='1111')
+        p1 = self.eng.profile_create(self.ctx, 'p-test-1', spec)
+        p2 = self.eng.profile_create(new_ctx, 'p-test-2', spec)
         c1 = self.eng.cluster_create(self.ctx, 'c1', 0, p1['id'])
         c2 = self.eng.cluster_create(new_ctx, 'c2', 0, p2['id'])
 
@@ -533,8 +530,7 @@ class ClusterTest(base.SenlinTestCase):
             'version': '1.0',
             'properties': {'INT': 10, 'STR': 'string'},
         }
-        new_profile = self.eng.profile_create(
-            self.ctx, 'p-test-2', new_spec, permission='1111')
+        new_profile = self.eng.profile_create(self.ctx, 'p-test-2', new_spec)
 
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         ex = self.assertRaises(rpc.ExpectedException,
@@ -746,8 +742,7 @@ class ClusterTest(base.SenlinTestCase):
             'version': '1.0',
             'properties': {'INT': 10, 'STR': 'string'},
         }
-        new_profile = self.eng.profile_create(
-            self.ctx, 'p-test-2', new_spec, permission='1111')
+        new_profile = self.eng.profile_create(self.ctx, 'p-test-2', new_spec)
         nodes = self._prepare_nodes(self.ctx, count=1,
                                     profile_id=new_profile['id'])
 

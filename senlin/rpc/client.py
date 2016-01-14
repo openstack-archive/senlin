@@ -83,22 +83,20 @@ class EngineClient(object):
                                        limit=limit, marker=marker, sort=sort,
                                        project_safe=project_safe))
 
-    def profile_create(self, ctxt, name, spec, permission, metadata):
+    def profile_create(self, ctxt, name, spec, metadata):
         return self.call(ctxt,
                          self.make_msg('profile_create', name=name,
-                                       spec=spec, permission=permission,
-                                       metadata=metadata))
+                                       spec=spec, metadata=metadata))
 
     def profile_get(self, ctxt, identity):
         return self.call(ctxt,
                          self.make_msg('profile_get', identity=identity))
 
-    def profile_update(self, ctxt, profile_id, name, permission, metadata):
+    def profile_update(self, ctxt, profile_id, name, metadata):
         return self.call(ctxt,
                          self.make_msg('profile_update',
                                        profile_id=profile_id,
-                                       name=name, permission=permission,
-                                       metadata=metadata))
+                                       name=name, metadata=metadata))
 
     def profile_delete(self, ctxt, identity, cast=True):
         rpc_method = self.cast if cast else self.call

@@ -193,8 +193,7 @@ class EngineService(service.Service):
         return [p.to_dict() for p in profiles]
 
     @request_context
-    def profile_create(self, context, name, spec, permission=None,
-                       metadata=None):
+    def profile_create(self, context, name, spec, metadata=None):
         if cfg.CONF.name_unique:
             if db_api.profile_get_by_name(context, name):
                 msg = _("The profile (%(name)s) already exists."
@@ -216,7 +215,6 @@ class EngineService(service.Service):
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
-            'permission': permission,
             'metadata': metadata,
         }
         profile = plugin(name, spec, **kwargs)
@@ -241,8 +239,7 @@ class EngineService(service.Service):
         return profile.to_dict()
 
     @request_context
-    def profile_update(self, context, profile_id, name=None, permission=None,
-                       metadata=None):
+    def profile_update(self, context, profile_id, name=None, metadata=None):
         LOG.info(_LI("Updating profile '%(id)s.'"), {'id': profile_id})
 
         db_profile = self.profile_find(context, profile_id)
@@ -250,9 +247,6 @@ class EngineService(service.Service):
         changed = False
         if name is not None and name != profile.name:
             profile.name = name
-            changed = True
-        if permission is not None and permission != profile.permission:
-            profile.permission = permission
             changed = True
         if metadata is not None and metadata != profile.metadata:
             profile.metadata = metadata
