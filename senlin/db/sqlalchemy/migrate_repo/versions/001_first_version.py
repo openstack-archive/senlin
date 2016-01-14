@@ -187,6 +187,8 @@ def upgrade(migrate_engine):
         Column('status_reason', Text),
         Column('inputs', types.Dict),
         Column('outputs', types.Dict),
+        Column('depends_on', types.List),
+        Column('depended_by', types.List),
         Column('created_at', DateTime),
         Column('updated_at', DateTime),
         Column('data', types.Dict),
