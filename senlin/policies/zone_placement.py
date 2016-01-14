@@ -151,10 +151,15 @@ class ZonePlacementPolicy(base.Policy):
         dist = dict.fromkeys(zones.keys(), 0)
 
         for node in cluster.nodes:
-            details = node.get_details(ctx)
-            zname = details.get('OS-EXT-AZ:availability_zone', None)
-            if zname and zname in dist:
-                dist[zname] += 1
+            placement = node.data.get('placement', {})
+            if placement and 'zone' in placement:
+                zone = placement['zone']
+                dist[zone] += 1
+            else:
+                details = node.get_details(ctx)
+                zname = details.get('OS-EXT-AZ:availability_zone', None)
+                if zname and zname in dist:
+                    dist[zname] += 1
 
         return dist
 
