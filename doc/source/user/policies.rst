@@ -41,7 +41,7 @@ example::
 
   $ senlin policy-list
   +----------+------+-----------------------------+---------------------+
-  | id       | name | type                        | created_time        |
+  | id       | name | type                        | created_at          |
   +----------+------+-----------------------------+---------------------+
   | 239d7212 | dp01 | senlin.policy.deletion-1.0  | 2015-07-11T04:24:34 |
   | 7ecfd026 | lb01 | senlin.policy.placement-1.0 | 2015-07-11T04:25:28 |
@@ -82,7 +82,7 @@ of policies returned from Senlin server, using the option :option:`--limit` (or
 
   $ senlin policy-list -l 1
   +----------+------+----------------------------+---------------------+
-  | id       | name | type                       | created_time        |
+  | id       | name | type                       | created_at          |
   +----------+------+----------------------------+---------------------+
   | 239d7212 | dp01 | senlin.policy.deletion-1.0 | 2015-07-11T04:24:34 |
   +----------+------+----------------------------+---------------------+

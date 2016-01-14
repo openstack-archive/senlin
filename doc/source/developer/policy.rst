@@ -34,30 +34,9 @@ A policy object has the following properties:
 - ``name``: a string containing the name of the policy object;
 - ``type``: a string containing the name of the policy type;
 - ``spec``: a map containing the validated specification for the object;
-- ``cooldown``: an integer representing the default policy cooldown in
-  seconds.
-- ``level``: an integer that specifies default enforcement level of the policy
-  when it is checked/enforced;
-- ``created_time``: timestamp of the object creation;
-- ``updated_time``: timestamp of last update to the object;
+- ``created_at``: timestamp of the object creation;
+- ``updated_at``: timestamp of last update to the object;
 - ``data``: a map containing some private data for the policy object;
-
-The policy enforcement levels are defined as an integer. Some predefined
-values for the levels are:
-
-- ``MUST`` (50): the policy must be enforced. A violation may render the
-  cluster not functional and Senlin has no known way of recovery.
-- ``SHOULD`` (40): the policy should be enforced. A violation of a policy at
-  this level will render the cluster into an ``ERROR`` status. Manual
-  intervention to recover the cluster might be possible.
-- ``WOULD`` (30): the policy would be enforced, but a violation of this policy
-  may or may not cause negative impact on the cluster. A cluster will be put
-  into a ``WARNING`` status so that operators will notice this.
-- ``MIGHT`` (20): the policy might be enforced but it is not a requirement.
-  A violation of a policy at this level will not cause any negative impact to
-  the related cluster. There would be some ``INFO`` or ``DEBUG`` level events
-  generated when this policy is enforced.
-
 
 Creating a Policy
 ~~~~~~~~~~~~~~~~~
@@ -89,12 +68,8 @@ combined:
 
   * ``name``: name of policies to list, can be a string or a list of strings;
   * ``type``: type name of policies, can be a string or a list of strings;
-  * ``level``: enforcement level of policies, can be an integer of a list of
-    integers;
-  * ``cooldown``: cooldown value of policies, can be an integer of a list of
-    integers;
-  * ``created_time``: timestamp when the object was created;
-  * ``updated_time``: timestamp when the policy object was last updated;
+  * ``created_at``: timestamp when the object was created;
+  * ``updated_at``: timestamp when the policy object was last updated;
 
 - ``limit``: a number that restricts the maximum number of records to be
   returned from the query. It is useful for displaying the records in pages
@@ -102,10 +77,18 @@ combined:
 - ``marker``: A string that represents the last seen UUID of policies in
   previous queries. This query will only return results appearing after the
   specified UUID. This is useful for displaying records in pages.
-- ``sort_dir``: A string to enforce sorting of the results. It can accept
-  either ``asc`` or ``desc`` as its value.
-- ``sort_keys``: A string or a list of strings where each string gives a
-  policy property name used for sorting.
+- ``sort``: A string to enforce sorting of the results. It can accept a list of
+  known property names as sorting keys separated by commas. For each sorting
+  key, you can append either ``:asc`` or ``:desc`` as its sorting order. By
+  default, ``:asc`` is assumed to be the sorting direction.
+- ``global_project``: A boolean indicating whether policy listing should be
+  done in a tenant-safe way. When this value is specified as False (the
+  default), only policies from the current project that match the other
+  criteria will be returned. When this value is specified as True, policies
+  that matching all other criteria would be returned, no matter in which
+  project a policy was created. Only a user with admin privilege is permitted
+  to do a global listing.
+
 
 The Senlin API performs some basic checks on the data type and values of the
 provided parameters and then passes the request to Senlin engine. When there
@@ -133,8 +116,7 @@ Updating a Policy
 After a policy is created, a user can send requests to the Senlin API for
 changing some of its properties. To avoid potential state conflicts inside the
 Senlin engine, we currently don't allow changes to the ``spec`` property of
-a policy. However, changing the ``name``, ``cooldown`` or ``level`` property
-is permitted.
+a policy. However, changing the ``name`` property is permitted.
 
 When validating the requester provided parameters, Senlin API will check if
 the values are of valid data types and whether the values fall in allowed

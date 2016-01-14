@@ -37,7 +37,7 @@ are members of a specific cluster. For example, to list nodes in cluster
 
   $ senlin cluster-node-list c3
   +----------+--------+-------+--------+-------------+---------------------+
-  | id       | name   | index | status | physical_id | created_time        |
+  | id       | name   | index | status | physical_id | created_at          |
   +----------+--------+-------+--------+-------------+---------------------+
   | b28692a5 | stack1 | 1     | ACTIVE | fdf028a6    | 2015-07-07T05:23:40 |
   | 4be10a88 | stack2 | 2     | ACTIVE | 7c87f545    | 2015-07-07T05:27:54 |
@@ -53,12 +53,12 @@ are shown as "short ID"s by default. If you want to see the full IDs, you can
 specify the :option:`--full-id` (or :option:`-F`) option to indicate that::
 
   $ senlin cluster-node-list -F c3
-  +--------------------------------------+--------+-------+--------+--------------------------------------+---------------------+
-  | id                                   | name   | index | status | physical_id                          | created_time        |
-  +--------------------------------------+--------+-------+--------+--------------------------------------+---------------------+
-  | b28692a5-2536-4921-985b-1142d6045e1f | stack1 | -1    | ACTIVE | fdf028a6-1af6-49c3-9773-cdd72af97350 | 2015-07-07T05:23:40 |
-  | 4be10a88-e340-4518-a9e1-d742c53ac37f | stack2 | -1    | ACTIVE | 7c87f545-450a-4875-b9eb-dbe5a083d74e | 2015-07-07T05:27:54 |
-  +--------------------------------------+--------+-------+--------+--------------------------------------+---------------------+
+  +------------...-+--------+-------+--------+-------------+-----------..-+
+  | id             | name   | index | status | physical_id | created_at   |
+  +------------...-+--------+-------+--------+-------------+-----------..-+
+  | b28692a5-25... | stack1 | -1    | ACTIVE | fdf0...     | 2015-07-07.. |
+  | 4be10a88-e3... | stack2 | -1    | ACTIVE | 7c87...     | 2015-07-07.. |
+  +------------...-+--------+-------+--------+-------------+-----------..-+
 
 In cases where you want to list nodes that have been soft-deleted, you can add
 the option :option:`--show-deleted` (or :option:`-D`) for this purpose. For
@@ -75,7 +75,7 @@ start; and the ``limit`` option value specifies the number of nodes you want
 to include in the resulted list. For example, the following command lists the
 nodes starting behind a specific node ID with the length of the list set to 10::
 
-  $ senlin cluster-node-list -m b28692a5-2536-4921-985b-1142d6045e1f -l 10 webservers
+  $ senlin cluster-node-list -m b28692a5 -l 10 webservers
 
 Another useful option for listing nodes is the :option:`--filters <FILTERS>`
 (or :option:`-f <FILTERS>`) option. The option value accepts a string of

@@ -39,7 +39,7 @@ The following command shows the clusters managed by the Senlin service::
 
   $ senlin cluster-list
   +----------+------+--------+---------------------+
-  | id       | name | status | created_time        |
+  | id       | name | status | created_at          |
   +----------+------+--------+---------------------+
   | 2959122e | c1   | ACTIVE | 2015-05-05T13:27:28 |
   | 092d0955 | c2   | ACTIVE | 2015-05-05T13:27:48 |
@@ -52,12 +52,12 @@ ID* in the list, you can add the :option:`-F` (or :option:`--full-id`) option
 to the command::
 
   $ senlin cluster-list -F
-  +--------------------------------------+------+--------+---------------------+--------------+
-  | id                                   | name | status | created_time        | updated_time |
-  +--------------------------------------+------+--------+---------------------+--------------+
-  | 2959122e-11c7-4e82-b12f-f49dc5dac270 | c1   | ACTIVE | 2015-05-05T13:27:28 | None         |
-  | 092d0955-2645-461a-b8fa-6a44655cdb2c | c2   | ACTIVE | 2015-05-05T13:27:48 | None         |
-  +--------------------------------------+------+--------+---------------------+--------------+
+  +--------------------+------+--------+---------------------+------------+
+  | id                 | name | status | created_at          | updated_at |
+  +--------------------+------+--------+---------------------+------------+
+  | 2959122e-11c7-.... | c1   | ACTIVE | 2015-05-05T13:27:28 | None       |
+  | 092d0955-2645-.... | c2   | ACTIVE | 2015-05-05T13:27:48 | None       |
+  +--------------------+------+--------+---------------------+------------+
 
 
 Sorting the List
@@ -89,7 +89,7 @@ filters clusters by the ``status`` field::
 
   $ senlin cluster-list -f status=ACTIVE
   +----------+------+--------+---------------------+
-  | id       | name | status | created_time        |
+  | id       | name | status | created_at        |
   +----------+------+--------+---------------------+
   | 2959122e | c1   | ACTIVE | 2015-05-05T13:27:28 |
   | 092d0955 | c2   | ACTIVE | 2015-05-05T13:27:48 |
@@ -110,7 +110,7 @@ clusters returned from Senlin server each time, using the option
 
   $ senlin cluster-list -l 1
   +----------+------+--------+---------------------+
-  | id       | name | status | created_time        |
+  | id       | name | status | created_at          |
   +----------+------+--------+---------------------+
   | 2959122e | c1   | ACTIVE | 2015-05-05T13:27:28 |
   +----------+------+--------+---------------------+
@@ -123,7 +123,7 @@ example::
 
   $ senlin cluster-list -l 1 -m 2959122e-11c7-4e82-b12f-f49dc5dac270
   +----------+------+--------+---------------------+
-  | id       | name | status | created_time        |
+  | id       | name | status | created_at          |
   +----------+------+--------+---------------------+
   | 092d0955 | c2   | ACTIVE | 2015-05-05T13:27:48 |
   +----------+------+--------+---------------------+
@@ -142,7 +142,7 @@ associated with the cluster. For example::
   +------------------+--------------------------------------+
   | Property         | Value                                |
   +------------------+--------------------------------------+
-  | created_time     | None                                 |
+  | created_at       | None                                 |
   | data             | {}                                   |
   | desired_capacity | 0                                    |
   | domain           | None                                 |
@@ -159,7 +159,7 @@ associated with the cluster. For example::
   | status           | INIT                                 |
   | status_reason    | Initializing                         |
   | timeout          | None                                 |
-  | updated_time     | None                                 |
+  | updated_at       | None                                 |
   | user             | 0b82043b57014cd58add97a2ef79dac3     |
   +------------------+--------------------------------------+
 
@@ -235,7 +235,7 @@ An example is shown below::
   +------------------+--------------------------------------+
   | Property         | Value                                |
   +------------------+--------------------------------------+
-  | created_time     | 2015-07-07T03:30:53                  |
+  | created_at       | 2015-07-07T03:30:53                  |
   | data             | {}                                   |
   | desired_capacity | 0                                    |
   | domain           | None                                 |
@@ -253,7 +253,7 @@ An example is shown below::
   | status           | ACTIVE                               |
   | status_reason    | Node stack2: Creation succeeded      |
   | timeout          | None                                 |
-  | updated_time     | None                                 |
+  | updated_at       | None                                 |
   | user             | 0b82043b57014cd58add97a2ef79dac3     |
   +------------------+--------------------------------------+
 
