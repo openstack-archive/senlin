@@ -40,14 +40,14 @@ To list nodes that are managed by the Senlin service, you will use the command
 :command:`node-list`. For example::
 
   $ senlin node-list
-  +----------+---------+--------+------------+-------------+--------------+---------------------+--------------+
-  | id       | name    | status | cluster_id | physical_id | profile_name | created_time        | updated_time |
-  +----------+---------+--------+------------+-------------+--------------+---------------------+--------------+
-  | e1b39a08 | node1   | ACTIVE |            | 89ce0d2b    | mystack      | 2015-05-26T01:12:26 | None         |
-  | 57962220 | node-34 | ACTIVE |            | 3386e306    | mystack      | 2015-05-27T02:18:01 | None         |
-  | b28692a5 | stack1  | ACTIVE | 2b7e9294   | fdf028a6    | qstack       | 2015-07-07T05:23:40 | None         |
-  | 4be10a88 | stack2  | ACTIVE | 2b7e9294   | 7c87f545    | qstack       | 2015-07-07T05:27:54 | None         |
-  +----------+---------+--------+------------+-------------+--------------+---------------------+--------------+
+  +----------+--------+--------+----------+-------------+---------+...
+  | id       | name   | status | cluster  | physical_id | profile |
+  +----------+--------+--------+----------+-------------+---------+...
+  | e1b39a08 | node1  | ACTIVE |          | 89ce0d2b    | mystack |
+  | 57962220 | node-3 | ACTIVE |          | 3386e306    | mystack |
+  | b28692a5 | stack1 | ACTIVE | 2b7e9294 | fdf028a6    | qstack  |
+  | 4be10a88 | stack2 | ACTIVE | 2b7e9294 | 7c87f545    | qstack  |
+  +----------+--------+--------+----------+-------------+---------+...
 
 Note that some columns in the output table are *short ID* of objects. Senlin
 command line use short IDs to save real estate on screen so that more useful
@@ -82,12 +82,12 @@ You can specify the option :option:`--cluster <CLUSTER>` (or :option:`-c
 example::
 
   $ senlin node-list --cluster c3
-  +----------+---------+--------+------------+-------------+--------------+---------------------+--------------+
-  | id       | name    | status | cluster_id | physical_id | profile_name | created_time        | updated_time |
-  +----------+---------+--------+------------+-------------+--------------+---------------------+--------------+
-  | b28692a5 | stack1  | ACTIVE | 2b7e9294   | fdf028a6    | qstack       | 2015-07-07T05:23:40 | None         |
-  | 4be10a88 | stack2  | ACTIVE | 2b7e9294   | 7c87f545    | qstack       | 2015-07-07T05:27:54 | None         |
-  +----------+---------+--------+------------+-------------+--------------+---------------------+--------------+
+  +----------+---------+--------+----------+-------------+---------+...
+  | id       | name    | status | cluster  | physical_id | profile |
+  +----------+---------+--------+----------+-------------+---------+...
+  | b28692a5 | stack1  | ACTIVE | 2b7e9294 | fdf028a6    | qstack  |
+  | 4be10a88 | stack2  | ACTIVE | 2b7e9294 | 7c87f545    | qstack  |
+  +----------+---------+--------+----------+-------------+---------+...
 
 Besides these two options, you can add the option :option:`--filters
 <K1=V1;K2=V2...>` (or :option:`-f`) to the command :command:`node-list` to
@@ -131,12 +131,12 @@ using a profile named ``pstack``::
   | Property      | Value                                |
   +---------------+--------------------------------------+
   | cluster_id    | None                                 |
-  | created_time  | None                                 |
+  | created_at    | None                                 |
   | data          | {}                                   |
   | details       | None                                 |
   | id            | 1984b5a0-9dd7-4dda-b1e6-e8c1f640598f |
   | index         | -1                                   |
-  | init_time     | 2015-07-09T11:41:18                  |
+  | init_at       | 2015-07-09T11:41:18                  |
   | metadata      | {}                                   |
   | name          | test_node                            |
   | physical_id   |                                      |
@@ -146,7 +146,7 @@ using a profile named ``pstack``::
   | role          | None                                 |
   | status        | CREATING                             |
   | status_reason | Creation in progress                 |
-  | updated_time  | None                                 |
+  | updated_at    | None                                 |
   +---------------+--------------------------------------+
 
 When processing this request, Senlin engine will verify if the profile value
@@ -208,12 +208,12 @@ An example is shown below::
   | Property      | Value                                |
   +---------------+--------------------------------------+
   | cluster_id    | None                                 |
-  | created_time  | 2015-07-09T11:41:20                  |
+  | created_at    | 2015-07-09T11:41:20                  |
   | data          | {}                                   |
   | details       | {}                                   |
   | id            | 1984b5a0-9dd7-4dda-b1e6-e8c1f640598f |
   | index         | -1                                   |
-  | init_time     | 2015-07-09T11:41:18                  |
+  | init_at       | 2015-07-09T11:41:18                  |
   | metadata      | {}                                   |
   | name          | test_node                            |
   | physical_id   | 0e444642-b280-4c88-8be4-76ad0d158dac |
@@ -223,7 +223,7 @@ An example is shown below::
   | role          | None                                 |
   | status        | ACTIVE                               |
   | status_reason | Creation succeeded                   |
-  | updated_time  | None                                 |
+  | updated_at    | None                                 |
   +---------------+--------------------------------------+
 
 From the output, you can see the ``physical_id`` of a node (if it has been

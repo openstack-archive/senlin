@@ -43,9 +43,9 @@ properties are always available on a node:
 - ``user``: ID of the user who is the creator (owner) of the node.
 - ``project``: ID of the Keystone project in which the node was created.
 - ``domain``: ID of the Keystone domain in which the node was created.
-- ``init_time``: The timestamp when the node object was initialized.
-- ``created_time``: The timestamp when the node was created.
-- ``updated_time``: The timestamp when last time the node was updated.
+- ``init_at``: The timestamp when the node object was initialized.
+- ``created_at``: The timestamp when the node was created.
+- ``updated_at``: The timestamp when last time the node was updated.
 - ``metadata``: A list of key-value pairs that are associated with the node.
 - ``physical_id``: The UUID of the physical object that backs this node. The
   property value is empty if there is no physical objects associated with it.
@@ -124,10 +124,10 @@ individually or combined:
 - ``marker``: A string that represents the last seen UUID of nodes in previous
   queries. This query will only return results appearing after the
   specified UUID. This is useful for displaying records in pages.
-- ``sort_dir``: A string to enforce sorting of the results. It can accept
-  either ``asc`` or ``desc`` as its value.
-- ``sort_keys``: A string or a list of strings where each string gives a node
-  property name used for sorting.
+- ``sort``: A string to enforce sorting of the results. It accepts a list of
+  known property names of a node as sorting keys separated by commas. Each
+  sorting key can optionally have either ``:asc`` or ``:desc`` appended to the
+  key for controlling the sorting direction.
 - ``show_nested``: A boolean indicating whether nested clusters should be
   included in the results. The default is True. This feature is yet to be
   supported.
@@ -137,10 +137,6 @@ individually or combined:
   returned. When this value is specified as True, nodes that matching all other
   criteria would be returned, no matter in which project the node was created.
   Only a user with admin privilege is permitted to do a global listing.
-
-**NOTE**: The ``sort_keys`` and ``sort_dir`` parameters are deprecating. In
-future, sorting parameters will be specified in a more generic way as
-suggested by the API working group.
 
 
 Getting a Node

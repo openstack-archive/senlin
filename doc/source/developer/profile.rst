@@ -54,8 +54,8 @@ A profile object has the following properties:
   different user and/or user groups. The supporting feature is still under
   design.
 - ``metadata``: a map of key-value pairs associated with the profile;
-- ``created_time``: the timestamp when the profile was created;
-- ``updated_time``: the timestamp when the profile was last updated;
+- ``created_at``: the timestamp when the profile was created;
+- ``updated_at``: the timestamp when the profile was last updated;
 
 The ``spec`` property is the most important property for a profile. It is
 immutable, i.e. the only way to "change" the ``spec`` property is to create
@@ -89,8 +89,8 @@ When querying the profiles, users can provide any of the following parameters:
 
   - ``name``: profile name for matching;
   - ``type``: profile type for matching;
-  - ``created_time``: timestamp of profile creation for matching;
-  - ``updated_time``: timestamp of last update operation;
+  - ``created_at``: timestamp of profile creation for matching;
+  - ``updated_at``: timestamp of last update operation;
   - ``permission``: a string for profile permission matching;
   - ``metadata``: a string for matching profile metadata.
 
@@ -98,10 +98,17 @@ When querying the profiles, users can provide any of the following parameters:
   returned from the API call;
 - ``marker``: a string specifying the UUID of the last seen record; only those
   records that appear after the given value will be returned;
-- ``sort_keys``: a list of field names on which the resulted list will be
-  sorted;
-- ``sort_dir``: a string giving the sorting direction which can take value
-  ``asc`` or ``desc``.
+- ``sort``: A string to enforce sorting of the results. It accepts a list of
+  known property names of a profile as sorting keys separated by commas. Each
+  sorting key can optionally have either ``:asc`` or ``:desc`` appended to the
+  key for controlling the sorting direction.
+- ``global_project``: A boolean indicating whether profile listing should be
+  done in a tenant-safe way. When this value is specified as False (the
+  default), only profiles from the current project that match the other
+  criteria will be returned. When this value is specified as True, profiles
+  that matching all other criteria would be returned, no matter in which
+  project a profile was created. Only a user with admin privilege is permitted
+  to do a global listing.
 
 If there are profiles matching the query criteria, Senlin API returns a list
 named ``profiles`` where each entry is a JSON map containing details about a

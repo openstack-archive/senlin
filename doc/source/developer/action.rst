@@ -45,9 +45,6 @@ actions are supported at the time of this design:
 - ``NODE_UPDATE``: An action for updating the properties of an existing node;
 - ``NODE_JOIN``: An action for joining a node to an existing cluster;
 - ``NODE_LEAVE``: An action for a node to leave its current owning cluster;
-- ``POLICY_ENABLE``: An action for globally enabling a policy;
-- ``POLICY_DISABLE``: An action for globally disabling a policy;
-- ``POLICY_UPDATE``: An action for updating the properties of a policy.
 
 
 Action Properties
@@ -104,8 +101,8 @@ An action has the following properties when created:
 - ``depended_by``: a UUID list for the actions that depends on the successful
   completion of current action. When the current action is completed with a
   success, the actions listed in this property will get notified.
-- ``created_time``: the timestamp when the action was created;
-- ``updated_time``: the timestamp when the action was last updated;
+- ``created_at``: the timestamp when the action was created;
+- ``updated_at``: the timestamp when the action was last updated;
 
 *TODO*: Add support for scheduled action execution.
 
@@ -125,9 +122,10 @@ action is picked up for execution, the following sequence will happen:
 
 1) When the action is about to be executed, the worker thread checks all
    policies that have registered a "pre_op" on this action type.
-2) Based on priority setting, the "pre_op" of the scaling policy is invoked,
-   and the policy determines the number of nodes to be deleted. This decision
-   is saved to the action's ``data`` property in the following format:
+2) Based on the built-in priority setting, the "pre_op" of the scaling policy
+   is invoked, and the policy determines the number of nodes to be deleted.
+   This decision is saved to the action's ``data`` property in the following
+   format:
 
 ::
 
@@ -135,13 +133,13 @@ action is picked up for execution, the following sequence will happen:
      "count": 2
    }
 
-3) Based on the priority setting, the deletion policy is evaluated next. When
-   the "pre_op" method of the deletion policy is invoked, it first checks the
-   ``data`` property of the action where it finds out the number of nodes to
-   delete. Then it will calculate the list of candidates to be deleted using
-   its selection criteria (e.g. ``OLDEST_FIRST``). Finally, it saves the list
-   of candidate nodes to be deleted to the ``data`` property of the action, in
-   the following format:
+3) Based on the built-in priority setting, the deletion policy is evaluated
+   next. When the "pre_op" method of the deletion policy is invoked, it first
+   checks the ``data`` property of the action where it finds out the number of
+   nodes to delete. Then it will calculate the list of candidates to be
+   deleted using its selection criteria (e.g. ``OLDEST_FIRST``). Finally, it
+   saves the list of candidate nodes to be deleted to the ``data`` property of
+   the action, in the following format:
 
 ::
 
@@ -150,11 +148,11 @@ action is picked up for execution, the following sequence will happen:
      "candidates": ["1234-4567-9900", "3232-5656-1111"]
    }
 
-4) According to priority setting, the load-balancing policy is evaluated last.
-   When invoked, its "pre_op" method checks the ``data`` property of the
-   action and finds out the candidate nodes to be removed from the cluster.
-   With this information, the method removes the nodes from the load-balancer
-   maintained by the policy.
+4) According to the built-in priority setting, the load-balancing policy is
+   evaluated last.  When invoked, its "pre_op" method checks the ``data``
+   property of the action and finds out the candidate nodes to be removed from
+   the cluster. With this information, the method removes the nodes from the
+   load-balancer maintained by the policy.
 
 5) The action's ``execute()`` method is now invoked and it removes the nodes
    as given in its ``data`` property, updates the cluster's last update
@@ -254,8 +252,8 @@ following query parameters in the query string:
     can be a string or a list of strings;
   * ``action``: the builtin action for matching where the value can be a
     string or a list of strings;
-  * ``created_time``: the timestamp the action was created;
-  * ``updated_time``: the timestamp the action as last updated.
+  * ``created_at``: the timestamp the action was created;
+  * ``updated_at``: the timestamp the action as last updated.
 
 - ``limit``: a number that restricts the maximum number of action records to be
   returned from the query. It is useful for displaying the records in pages
@@ -263,10 +261,10 @@ following query parameters in the query string:
 - ``marker``: A string that represents the last seen UUID of actions in
   previous queries. This query will only return results appearing after the
   specified UUID. This is useful for displaying records in pages.
-- ``sort_dir``: A string to enforce sorting of the results. It can accept
-  either ``asc`` or ``desc`` as its value.
-- ``sort_keys``: A string or a list of strings where each string gives an
-  action property name used for sorting.
+- ``sort``: A string to enforce sorting of the results. It accepts a list of
+  known property names of an action as sorting keys separated by commas. Each
+  sorting key can optionally have either ``:asc`` or ``:desc`` appended to the
+  key for controlling the sorting direction.
 
 
 Getting An Action

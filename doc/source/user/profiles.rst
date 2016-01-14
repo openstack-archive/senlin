@@ -40,7 +40,7 @@ use the following command::
 
   $ senlin profile-list
   +----------+----------+--------------------+---------------------+
-  | id       | name     | type               | created_time        |
+  | id       | name     | type               | created_at          |
   +----------+----------+--------------------+---------------------+
   | 560a8f9d | myserver | os.nova.server-1.0 | 2015-05-05T13:26:00 |
   | ceda64bd | mystack  | os.heat.stack-1.0  | 2015-05-05T13:26:25 |
@@ -54,13 +54,15 @@ ID* in the list, you can add the :option:`-F` (or :option:`--full-id`) option
 to the command::
 
   $ senlin profile-list -F
-  +--------------------------------------+----------+--------------------+---------------------+
-  | id                                   | name     | type               | created_time        |
-  +--------------------------------------+----------+--------------------+---------------------+
-  | 560a8f9d-7596-4a32-85e8-03645fa7be13 | myserver | os.nova.server-1.0 | 2015-05-05T13:26:00 |
-  | ceda64bd-70b7-4711-9526-77d5d51241c5 | mystack  | os.heat.stack-1.0  | 2015-05-05T13:26:25 |
-  | 9b127538-a675-4271-ab9b-f24f54cfe173 | pstack   | os.heat.stack-1.0  | 2015-06-25T12:59:01 |
-  +--------------------------------------+----------+--------------------+---------------------+
+  +-------------------+----------+--------------------+---------------------+
+  | id                | name     | type               | created_at        |
+  +-------------------+----------+--------------------+---------------------+
+  | 560a8f9d-7596-... | myserver | os.nova.server-1.0 | 2015-05-05T13:26:00 |
+  | ceda64bd-70b7-... | mystack  | os.heat.stack-1.0  | 2015-05-05T13:26:25 |
+  | 9b127538-a675-... | pstack   | os.heat.stack-1.0  | 2015-06-25T12:59:01 |
+  +-------------------+----------+--------------------+---------------------+
+
+The ``id`` column above contains the full UUID of profiles.
 
 Sorting the List
 ----------------
@@ -90,7 +92,7 @@ number of profiles returned from Senlin server, using the option :option:`-l
 
   $ senlin profile-list -l 1
   +----------+----------+--------------------+---------------------+
-  | id       | name     | type               | created_time        |
+  | id       | name     | type               | created_at          |
   +----------+----------+--------------------+---------------------+
   | 560a8f9d | myserver | os.nova.server-1.0 | 2015-05-05T13:26:00 |
   +----------+----------+--------------------+---------------------+
@@ -102,7 +104,7 @@ profiles with IDs is or come before the one you specify. You can use the option
 
   $ senlin profile-list -l 1 -m ceda64bd-70b7-4711-9526-77d5d51241c5
   +----------+--------+-------------------+---------------------+
-  | id       | name   | type              | created_time        |
+  | id       | name   | type              | created_at          |
   +----------+--------+-------------------+---------------------+
   | 9b127538 | pstack | os.heat.stack-1.0 | 2015-06-25T12:59:01 |
   +----------+--------+-------------------+---------------------+
@@ -136,67 +138,66 @@ Now you can create a profile using the following command::
 
   $ cd /opt/stack/senlin/examples/profiles
   $ senlin profile-create -s heat_stack_random_string.yaml my_stack
-  +--------------+--------------------------------------------------------------------+
-  | Property     | Value                                                              |
-  +--------------+--------------------------------------------------------------------+
-  | created_time | 2015-07-01T03:13:23                                                |
-  | id           | c0389712-9c1a-4c58-8ba7-caa61b34b8b0                               |
-  | metadata     | {}                                                                 |
-  | name         | my_stack                                                           |
-  | permission   |                                                                    |
-  | spec         | +------------+---------------------------------------------------+ |
-  |              | | property   | value                                             | |
-  |              | +------------+---------------------------------------------------+ |
-  |              | | version    | 1.0                                               | |
-  |              | | type       | "os.heat.stack"                                   | |
-  |              | | properties | {                                                 | |
-  |              | |            |   "files": {                                      | |
-  |              | |            |     "file:///...": "<file contents>"              | |
-  |              | |            |   },                                              | |
-  |              | |            |   "disable_rollback": true,                       | |
-  |              | |            |   "template": {                                   | |
-  |              | |            |     "outputs": {                                  | |
-  |              | |            |       "result": {                                 | |
-  |              | |            |         "value": {                                | |
-  |              | |            |           "get_attr": [                           | |
-  |              | |            |             "random",                             | |
-  |              | |            |             "value"                               | |
-  |              | |            |           ]                                       | |
-  |              | |            |         }                                         | |
-  |              | |            |       }                                           | |
-  |              | |            |     },                                            | |
-  |              | |            |     "heat_template_version": "2014-10-16",        | |
-  |              | |            |     "resources": {                                | |
-  |              | |            |       "random": {                                 | |
-  |              | |            |         "type": "OS::Heat::RandomString",         | |
-  |              | |            |         "properties": {                           | |
-  |              | |            |           "length": 64                            | |
-  |              | |            |         }                                         | |
-  |              | |            |       }                                           | |
-  |              | |            |     },                                            | |
-  |              | |            |     "parameters": {                               | |
-  |              | |            |       "file": {                                   | |
-  |              | |            |         "default": {                              | |
-  |              | |            |           "get_file": "file:///..."               | |
-  |              | |            |         },                                        | |
-  |              | |            |         "type": "string"                          | |
-  |              | |            |       }                                           | |
-  |              | |            |     }                                             | |
-  |              | |            |   },                                              | |
-  |              | |            |   "parameters": {},                               | |
-  |              | |            |   "timeout": 60,                                  | |
-  |              | |            |   "environment": {                                | |
-  |              | |            |     "resource_registry": {                        | |
-  |              | |            |       "os.heat.server": "OS::Heat::Server"        | |
-  |              | |            |     }                                             | |
-  |              | |            |   },                                              | |
-  |              | |            |   "context": {                                    | |
-  |              | |            |     "region_name": "RegionOne"                    | |
-  |              | |            |   }                                               | |
-  |              | |            | }                                                 | |
-  |              | +------------+---------------------------------------------------+ |
-  | type         | os.heat.stack-1.0                                                  |
-  +--------------+--------------------------------------------------------------------+
+  +--------------+-----------------------------------------------------------+
+  | Property     | Value                                                     |
+  +--------------+-----------------------------------------------------------+
+  | created_at | 2015-07-01T03:13:23                                         |
+  | id         | c0389712-9c1a-4c58-8ba7-caa61b34b8b0                        |
+  | metadata   | {}                                                          |
+  | name       | my_stack                                                    |
+  | spec       | +------------+--------------------------------------------+ |
+  |            | | property   | value                                      | |
+  |            | +------------+--------------------------------------------+ |
+  |            | | version    | 1.0                                        | |
+  |            | | type       | "os.heat.stack"                            | |
+  |            | | properties | {                                          | |
+  |            | |            |   "files": {                               | |
+  |            | |            |     "file:///...": "<file contents>"       | |
+  |            | |            |   },                                       | |
+  |            | |            |   "disable_rollback": true,                | |
+  |            | |            |   "template": {                            | |
+  |            | |            |     "outputs": {                           | |
+  |            | |            |       "result": {                          | |
+  |            | |            |         "value": {                         | |
+  |            | |            |           "get_attr": [                    | |
+  |            | |            |             "random",                      | |
+  |            | |            |             "value"                        | |
+  |            | |            |           ]                                | |
+  |            | |            |         }                                  | |
+  |            | |            |       }                                    | |
+  |            | |            |     },                                     | |
+  |            | |            |     "heat_template_version": "2014-10-16", | |
+  |            | |            |     "resources": {                         | |
+  |            | |            |       "random": {                          | |
+  |            | |            |         "type": "OS::Heat::RandomString",  | |
+  |            | |            |         "properties": {                    | |
+  |            | |            |           "length": 64                     | |
+  |            | |            |         }                                  | |
+  |            | |            |       }                                    | |
+  |            | |            |     },                                     | |
+  |            | |            |     "parameters": {                        | |
+  |            | |            |       "file": {                            | |
+  |            | |            |         "default": {                       | |
+  |            | |            |           "get_file": "file:///..."        | |
+  |            | |            |         },                                 | |
+  |            | |            |         "type": "string"                   | |
+  |            | |            |       }                                    | |
+  |            | |            |     }                                      | |
+  |            | |            |   },                                       | |
+  |            | |            |   "parameters": {},                        | |
+  |            | |            |   "timeout": 60,                           | |
+  |            | |            |   "environment": {                         | |
+  |            | |            |     "resource_registry": {                 | |
+  |            | |            |       "os.heat.server": "OS::Heat::Server" | |
+  |            | |            |     }                                      | |
+  |            | |            |   },                                       | |
+  |            | |            |   "context": {                             | |
+  |            | |            |     "region_name": "RegionOne"             | |
+  |            | |            |   }                                        | |
+  |            | |            | }                                          | |
+  |            | +------------+--------------------------------------------+ |
+  | type         | os.heat.stack-1.0                                         |
+  +--------------+-----------------------------------------------------------+
 
 From the outputs, you can see that the profile is created with a new ``id``
 generated. The ``spec`` property is dumped for the purpose of verification.
@@ -220,33 +221,32 @@ Once there are profile objects in Senlin database, you can use the following
 command to show the properties of a profile::
 
   $ senlin profile-show myserver
-  +--------------+---------------------------------------------------------+
-  | Property     | Value                                                   |
-  +--------------+---------------------------------------------------------+
-  | created_time | 2015-07-01T03:18:58                                     |
-  | id           | 70a36cc7-9fc7-460e-98f6-d44e3302e604                    |
-  | metadata     | {}                                                      |
-  | name         | my_server                                               |
-  | permission   |                                                         |
-  | spec         | +------------+----------------------------------------+ |
-  |              | | property   | value                                  | |
-  |              | +------------+----------------------------------------+ |
-  |              | | version    | 1.0                                    | |
-  |              | | type       | "os.nova.server"                       | |
-  |              | | properties | {                                      | |
-  |              | |            |   "key_name": "oskey",                 | |
-  |              | |            |   "flavor": 1,                         | |
-  |              | |            |   "networks": [                        | |
-  |              | |            |     {                                  | |
-  |              | |            |       "network": "private"             | |
-  |              | |            |     }                                  | |
-  |              | |            |   ],                                   | |
-  |              | |            |   "image": "cirros-0.3.2-x86_64-uec",  | |
-  |              | |            |   "name": "cirros_server"              | |
-  |              | |            | }                                      | |
-  |              | +------------+----------------------------------------+ |
-  | type         | os.nova.server-1.0                                      |
-  +--------------+---------------------------------------------------------+
+  +------------+---------------------------------------------------------+
+  | Property   | Value                                                   |
+  +------------+---------------------------------------------------------+
+  | created_at | 2015-07-01T03:18:58                                     |
+  | id         | 70a36cc7-9fc7-460e-98f6-d44e3302e604                    |
+  | metadata   | {}                                                      |
+  | name       | my_server                                               |
+  | spec       | +------------+----------------------------------------+ |
+  |            | | property   | value                                  | |
+  |            | +------------+----------------------------------------+ |
+  |            | | version    | 1.0                                    | |
+  |            | | type       | "os.nova.server"                       | |
+  |            | | properties | {                                      | |
+  |            | |            |   "key_name": "oskey",                 | |
+  |            | |            |   "flavor": 1,                         | |
+  |            | |            |   "networks": [                        | |
+  |            | |            |     {                                  | |
+  |            | |            |       "network": "private"             | |
+  |            | |            |     }                                  | |
+  |            | |            |   ],                                   | |
+  |            | |            |   "image": "cirros-0.3.2-x86_64-uec",  | |
+  |            | |            |   "name": "cirros_server"              | |
+  |            | |            | }                                      | |
+  |            | +------------+----------------------------------------+ |
+  | type       | os.nova.server-1.0                                      |
+  +------------+---------------------------------------------------------+
 
 Note that :program:`senlin` command line accepts one of the following values
 when retrieving a profile object:
@@ -266,13 +266,13 @@ of an UUID as the "short ID" for query. For example::
 
   $ senlin profile-show 560a8f9d
   +----------+----------+--------------------+---------------------+
-  | id       | name     | type               | created_time        |
+  | id       | name     | type               | created_at          |
   +----------+----------+--------------------+---------------------+
   | 560a8f9d | myserver | os.nova.server-1.0 | 2015-05-05T13:26:00 |
   +----------+----------+--------------------+---------------------+
   $ senlin profile-show 560a
   +----------+----------+--------------------+---------------------+
-  | id       | name     | type               | created_time        |
+  | id       | name     | type               | created_at          |
   +----------+----------+--------------------+---------------------+
   | 560a8f9d | myserver | os.nova.server-1.0 | 2015-05-05T13:26:00 |
   +----------+----------+--------------------+---------------------+

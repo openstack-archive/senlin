@@ -29,11 +29,11 @@ Keystone project (tenant) which is the default project of the user.
 
 A cluster has the following timestamps when instantiated:
 
- - ``init_time``: the timestamp when a cluster object is initialized in the
+ - ``init_at``: the timestamp when a cluster object is initialized in the
    Senlin database, but the actual cluster creation has not yet started;
- - ``created_time``: the timestamp when the cluster object is created, i.e.
+ - ``created_at``: the timestamp when the cluster object is created, i.e.
    the ``CLUSTER_CREATE`` action has completed;
- - ``updated_time``: the timestamp when the cluster was last updated.
+ - ``updated_at``: the timestamp when the cluster was last updated.
 
 
 Cluster Statuses
@@ -136,17 +136,20 @@ individually or combined:
 - ``marker``: A string that represents the last seen UUID of clusters in
   previous queries. This query will only return results appearing after the
   specified UUID. This is useful for displaying records in pages.
-- ``sort_dir``: A string to enforce sorting of the results. It can accept
-  either ``asc`` or ``desc`` as its value.
-- ``sort_keys``: A string or a list of strings where each string gives a
-  cluster property name used for sorting.
+- ``sort``: A string to enforce sorting of the results. It accepts a list of
+  known property names of a cluster as sorting keys separated by commas. Each
+  sorting key can optionally have either ``:asc`` or ``:desc`` appended to the
+  key for controlling the sorting direction.
 - ``show_nested``: A boolean indicating whether nested clusters should be
   included in the results. The default is True. This feature is yet to be
   supported.
-
-**NOTE**: The ``sort_keys`` and ``sort_dir`` parameters are deprecating. In
-future, sorting parameters will be specified in a more generic way as
-suggested by the API working group.
+- ``global_project``: A boolean indicating whether cluster listing should be
+  done in a tenant-safe way. When this value is specified as False (the
+  default), only clusters from the current project that match the other
+  criteria will be returned. When this value is specified as True, clusters
+  that matching all other criteria would be returned, no matter in which
+  project a cluster was created. Only a user with admin privilege is permitted
+  to do a global listing.
 
 
 Getting a Cluster
@@ -500,15 +503,6 @@ related actions are performed on that cluster, unless the policy is
 When attaching a policy to a cluster, the following properties can be
 specified:
 
-- ``priority``: a non-negative integer specifying the relative priority among
-  all policies attached to a cluster. The value must be less than 100. A
-  larger value indicates a higher priority. A policy attached with a higher
-  priority is always checked before those with a lower priority for policies
-  that are checked for the same action.
-- ``level``: the enforcement level for the particular binding. When specified,
-  it will override the default enforcement level of the policy.
-- ``cooldown``: the cooldown interval in seconds. When specified, it will
-  override the default cooldown setting for the policy.
 - ``enabled``: a boolean indicating whether the policy should be enabled on
   the cluster once attached. Default is True. When specified, it will override
   the default setting for the policy.
@@ -570,16 +564,6 @@ When a policy is attached to a cluster, there are some properties pertaining
 to the binding. These properties can be updated as long as the policy is still
 attached to the cluster. The properties that can be updated include:
 
-- ``priority``: the relative priority of the policy among the policies that
-  are attached to the same cluster and enforced for the same action. A larger
-  value means a higher priority, thus a privilege to be evaluated before any
-  other policies with a lower priority.
-- ``level``: each policy's enforcement level may get customized when attached
-  to a cluster. This enforcement level can be changed after the binding
-  relationship is established.
-- ``cooldown``: the cooldown property of a policy can be customized when the
-  policy is attached to a cluster, and this new cooldown value can be changed
-  as long as the policy is still attached to the cluster.
 - ``enabled``: a boolean value indicating whether the policy should be enabled
   or disabled. There are cases where some policies have to be temporarily
   disabled when other manual operations going on.
