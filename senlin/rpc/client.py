@@ -120,20 +120,18 @@ class EngineClient(object):
                                        limit=limit, marker=marker, sort=sort,
                                        project_safe=project_safe))
 
-    def policy_create(self, ctxt, name, spec, level, cooldown):
+    def policy_create(self, ctxt, name, spec):
         return self.call(ctxt,
-                         self.make_msg('policy_create', name=name, spec=spec,
-                                       level=level, cooldown=cooldown))
+                         self.make_msg('policy_create', name=name, spec=spec))
 
     def policy_get(self, ctxt, identity):
         return self.call(ctxt,
                          self.make_msg('policy_get', identity=identity))
 
-    def policy_update(self, ctxt, identity, name, level, cooldown):
+    def policy_update(self, ctxt, identity, name):
         return self.call(ctxt,
                          self.make_msg('policy_update', identity=identity,
-                                       name=name, level=level,
-                                       cooldown=cooldown))
+                                       name=name))
 
     def policy_delete(self, ctxt, identity, cast=True):
         rpc_method = self.cast if cast else self.call

@@ -216,8 +216,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         default_args = {
             'name': mock.ANY,
             'spec': mock.ANY,
-            'level': mock.ANY,
-            'cooldown': mock.ANY,
         }
         self._test_engine_api('policy_create', 'call', **default_args)
 
@@ -228,8 +226,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         default_args = {
             'identity': 'aaaa-bbbb-cccc',
             'name': mock.ANY,
-            'level': mock.ANY,
-            'cooldown': mock.ANY,
         }
         self._test_engine_api('policy_update', 'call', **default_args)
 

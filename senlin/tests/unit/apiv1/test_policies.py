@@ -26,48 +26,6 @@ from senlin.tests.unit.apiv1 import shared
 from senlin.tests.unit.common import base
 
 
-class PolicyDataTest(base.SenlinTestCase):
-    def test_policy_data(self):
-        body = {
-            'name': 'test_policy',
-            'spec': {
-                'type': 'policy_type',
-                'version': '1.0',
-                'properties': {
-                    'param1': 'value1',
-                    'param2': 'value2',
-                }
-            },
-            'level': 10,
-            'cooldown': 60,
-        }
-
-        data = policies.PolicyData(body)
-        self.assertEqual('test_policy', data.name())
-        self.assertEqual(body['spec'], data.spec())
-        self.assertEqual(10, data.level())
-        self.assertEqual(60, data.cooldown())
-
-    def test_required_fields_missing(self):
-        body = {'not a policy name': 'wibble'}
-
-        data = policies.PolicyData(body)
-        self.assertRaises(exc.HTTPBadRequest, data.name)
-        self.assertRaises(exc.HTTPBadRequest, data.spec)
-        self.assertIsNone(data.level())
-        self.assertIsNone(data.cooldown())
-
-    def test_level_invalid(self):
-        body = {
-            'name': 'test_policy',
-            'level': -1,
-            'cooldown': 'long',
-        }
-        data = policies.PolicyData(body)
-        self.assertRaises(senlin_exc.InvalidParameter, data.level)
-        self.assertRaises(senlin_exc.InvalidParameter, data.cooldown)
-
-
 @mock.patch.object(policy, 'enforce')
 class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def setUp(self):
@@ -96,10 +54,8 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                     u'param_1': u'value1',
                     u'param_2': u'value2',
                 },
-                u'level': 30,
                 u'created_time': u'2015-02-24T19:17:22Z',
                 u'updated_time': None,
-                u'cooldown': 60,
             }
         ]
 
@@ -122,8 +78,6 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {
             'name': 'FAKE',
             'type': 'TYPE',
-            'level': 40,
-            'cooldown': 50,
             'limit': 20,
             'marker': 'fake marker',
             'sort': 'fake sorting string',
@@ -207,8 +161,6 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                         'param_2': 2,
                     }
                 },
-                'level': 30,
-                'cooldown': 60,
             }
         }
 
@@ -224,8 +176,6 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                     'param_2': 2,
                 },
             },
-            'level': 30,
-            'cooldown': 60,
         }
 
         req = self._post('/policies', json.dumps(body))
@@ -243,8 +193,6 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                     'version': '1.0',
                     'properties': {'param_1': 'value1', 'param_2': 2}
                 },
-                'level': 30,
-                'cooldown': 60
             })
         )
 
@@ -290,8 +238,6 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, body=body)
 
         expected_args = body['policy']
-        expected_args['cooldown'] = None
-        expected_args['level'] = None
         mock_call.assert_called_once_with(req.context,
                                           ('policy_create', expected_args))
         self.assertEqual(400, resp.json['code'])
@@ -334,10 +280,8 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                     u'param_2': u'value2',
                 }
             },
-            u'level': 30,
             u'created_time': u'2015-02-24T19:17:22Z',
             u'updated_time': None,
-            u'cooldown': 60,
         }
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -385,8 +329,6 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {
             'policy': {
                 'name': 'policy-2',
-                'level': 20,
-                'cooldown': 70,
             }
         }
 
@@ -401,10 +343,8 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 u'param_1': u'value1',
                 u'param_2': u'value3',
             },
-            u'level': 60,
             u'created_time': u'2015-02-25T16:20:13Z',
             u'updated_time': None,
-            u'cooldown': 70,
         }
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -413,35 +353,28 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         args = copy.deepcopy(body['policy'])
         args['identity'] = pid
-        args['level'] = 20
-        args['cooldown'] = 70
         mock_call.assert_called_with(req.context, ('policy_update', args))
 
         expected = {'policy': engine_resp}
         self.assertEqual(expected, result)
 
-    def test_policy_update_with_no_level(self, mock_enforce):
+    def test_policy_update_with_no_name(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         pid = 'aaaa-bbbb-cccc'
-        body = {'policy': {'cooldown': 70}}
+        body = {'policy': {}}
 
         req = self._put('/policies/%(pid)s' % {'pid': pid}, json.dumps(body))
 
         engine_resp = mock.Mock()
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
-        result = self.controller.update(req, policy_id=pid, body=body)
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.update,
+                               req, policy_id=pid, body=body)
 
-        args = {
-            'identity': pid,
-            'name': None,
-            'level': None,
-            'cooldown': 70,
-        }
-        mock_call.assert_called_with(req.context, ('policy_update', args))
-
-        expected = {'policy': engine_resp}
-        self.assertEqual(expected, result)
+        self.assertEqual("Policy name not specified.",
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     def test_policy_update_with_bad_body(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -462,7 +395,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         pid = 'aaaa-bbbb-cccc'
         body = {
-            'policy': {'spec': {'param_2': 'value3'}, 'level': 50}
+            'policy': {'spec': {'param_2': 'value3'}}
         }
 
         req = self._patch('/policies/%(policy_id)s' % {'policy_id': pid},
@@ -485,7 +418,6 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {
             'policy': {
                 'name': 'new_policy',
-                'level': 70,
             }
         }
         req = self._patch('/policies/%(policy_id)s' % {'policy_id': pid},
