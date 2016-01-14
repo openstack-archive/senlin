@@ -59,6 +59,9 @@ operations:
   * ``leave_cluster()``: a hook API that will be invoked when an object is
     removed from its current cluster; the purpose is to give the profile type
     implementation a chance to make changes to the object accordingly;
+  * ``recover_object()``: recover an object with operation given by inputs from
+    the profile object. By default, ``recreate`` is used if no operation is
+    provided to to delete firstly then create the object.
 
 
 Abstract Methods
@@ -84,6 +87,9 @@ indicates the method is not implemented.
 - ``do_leave(obj)``: a method for implementation to override so that profile
   type specific changes can be made to the object when object leaves its
   cluster.
+- ``do_recover(obj)``: an object recover method for a profile type
+  implementation to override. Nova server, for example, overrides the recover
+  operation by ``REBUILD``.
 
 
 The ``context`` Property
