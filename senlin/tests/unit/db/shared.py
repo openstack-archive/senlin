@@ -160,8 +160,6 @@ def create_policy(ctx, **kwargs):
                 'count': 1,
             }
         },
-        'level': 50,
-        'cooldown': 60,
         'data': None,
     }
 

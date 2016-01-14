@@ -609,14 +609,8 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         policy.store(self.ctx)
         return policy
 
-    def _create_cp_binding(self, cluster_id, policy_id,
-                           priority=30, cooldown=60):
-        values = {
-            'priority': priority,
-            'cooldown': cooldown,
-            'level': 50,
-            'enabled': True,
-        }
+    def _create_cp_binding(self, cluster_id, policy_id):
+        values = {'enabled': True}
 
         pb = cp_mod.ClusterPolicy(cluster_id, policy_id, **values)
         pb.id = 'FAKE_BINDING_ID'
@@ -771,8 +765,8 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         action = action_base.Action(cluster_id, 'OBJECT_ACTION', self.ctx)
 
         # Note: policy binding is created but not stored
-        pb1 = self._create_cp_binding(cluster_id, policy1.id, 50, 0)
-        pb2 = self._create_cp_binding(cluster_id, policy2.id, 40, 0)
+        pb1 = self._create_cp_binding(cluster_id, policy1.id)
+        pb2 = self._create_cp_binding(cluster_id, policy2.id)
         mock_load_all.return_value = [pb1, pb2]
         # mock return value for two calls
         mock_load.side_effect = [policy1, policy2]

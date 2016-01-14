@@ -38,8 +38,6 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
                 'max_size': 10,
                 'paust_time': 'PT10M',
             },
-            'level': 50,
-            'cooldown': 60,
             'data': None,
         }
 
@@ -51,7 +49,6 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
 
         fields = {
             'enabled': True,
-            'level': 50
         }
         db_api.cluster_policy_attach(self.ctx, self.cluster.id, policy.id,
                                      fields)
@@ -73,7 +70,6 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
 
         fields = {
             'enabled': True,
-            'level': 50
         }
         db_api.cluster_policy_attach(self.ctx, self.cluster.id, policy.id,
                                      fields)
@@ -142,28 +138,6 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual(1, len(bindings))
         self.assertEqual(timestamp, bindings[0].last_op)
 
-    def test_policy_get_all_with_filters(self):
-        values = {'policy1': {'level': 40, 'priority': 40},
-                  'policy2': {'level': 30, 'priority': 60}}
-
-        for key in values:
-            value = values[key]
-            policy_id = self.create_policy(id=key).id
-            db_api.cluster_policy_attach(self.ctx, self.cluster.id, policy_id,
-                                         value)
-
-        filters = {'policy_id': ['policy1', 'policyx']}
-        results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
-                                                filters=filters)
-        self.assertEqual(1, len(results))
-        self.assertEqual('policy1', results[0].policy_id)
-
-        filters = {'priority': 60}
-        results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
-                                                filters=filters)
-        self.assertEqual(1, len(results))
-        self.assertEqual('policy2', results[0].policy_id)
-
     def test_policy_get_all_with_empty_filters(self):
         for pid in ['policy1', 'policy2']:
             self.create_policy(id=pid)
@@ -176,12 +150,9 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
 
     def test_policy_get_all_with_sort_key_are_used(self):
         values = {
-            'policy1': {'level': 40, 'priority': 40, 'cooldown': 1,
-                        'enabled': True},
-            'policy2': {'level': 30, 'priority': 60, 'cooldown': 2,
-                        'enabled': True},
-            'policy3': {'level': 50, 'priority': 10, 'cooldown': 3,
-                        'enabled': True}
+            'policy1': {'enabled': True},
+            'policy2': {'enabled': True},
+            'policy3': {'enabled': True}
         }
 
         # prepare
@@ -204,12 +175,9 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
 
     def test_policy_get_all_with_sorting(self):
         values = {
-            'policy1': {'level': 40, 'priority': 40, 'cooldown': 10,
-                        'enabled': True},
-            'policy2': {'level': 30, 'priority': 60, 'cooldown': 20,
-                        'enabled': True},
-            'policy3': {'level': 50, 'priority': 10, 'cooldown': 30,
-                        'enabled': False}
+            'policy1': {'enabled': True},
+            'policy2': {'enabled': True},
+            'policy3': {'enabled': False}
         }
 
         # prepare
@@ -219,55 +187,7 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
             db_api.cluster_policy_attach(self.ctx, self.cluster.id, policy_id,
                                          value)
 
-        # sorted by level
-        results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
-                                                sort='level')
-        self.assertEqual('policy2', results[0].policy_id)
-        self.assertEqual('policy1', results[1].policy_id)
-        self.assertEqual('policy3', results[2].policy_id)
-
-        # sorted by priority
-        results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
-                                                sort='priority')
-        self.assertEqual('policy3', results[0].policy_id)
-        self.assertEqual('policy1', results[1].policy_id)
-        self.assertEqual('policy2', results[2].policy_id)
-
-        # sorted by cooldown
-        results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
-                                                sort='cooldown')
-        self.assertEqual('policy1', results[0].policy_id)
-        self.assertEqual('policy2', results[1].policy_id)
-        self.assertEqual('policy3', results[2].policy_id)
-
         # sorted by enabled, the 2nd and 3rd are unpredictable
         results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
                                                 sort='enabled')
         self.assertEqual('policy3', results[0].policy_id)
-
-        # sorted by enabled, the 2nd and 3rd are ordered by priority
-        results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
-                                                sort='enabled,priority')
-        self.assertEqual('policy3', results[0].policy_id)
-        self.assertEqual('policy1', results[1].policy_id)
-        self.assertEqual('policy2', results[2].policy_id)
-
-        # sorted by cooldown, descending
-        results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
-                                                sort='cooldown:desc')
-        self.assertEqual('policy3', results[0].policy_id)
-        self.assertEqual('policy2', results[1].policy_id)
-        self.assertEqual('policy1', results[2].policy_id)
-
-    def test_policy_get_all_with_default_sorting(self):
-        values = {'policy1': {'level': 40, 'priority': 40},
-                  'policy2': {'level': 30, 'priority': 60}}
-
-        for key in values:
-            value = values[key]
-            policy_id = self.create_policy(id=key).id
-            db_api.cluster_policy_attach(self.ctx, self.cluster.id, policy_id,
-                                         value)
-
-        results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id)
-        self.assertEqual(2, len(results))

@@ -158,15 +158,13 @@ def list_policy_types(client, **query):
     return resp.body['policy_types']
 
 
-def create_policy(client, name, spec, level=0, cooldown=0):
+def create_policy(client, name, spec):
     rel_url = 'policies'
     status = [201]
     data = {
         'policy': {
             'name': name,
             'spec': spec,
-            'level': level,
-            'cooldown': cooldown,
         }
     }
     body = jsonutils.dumps(data)

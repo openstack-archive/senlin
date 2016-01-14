@@ -120,28 +120,26 @@ PROFILE_SORT_KEYS = [
 ]
 
 POLICY_ATTRS = (
-    POLICY_ID, POLICY_NAME, POLICY_TYPE,
-    POLICY_SPEC, POLICY_LEVEL, POLICY_COOLDOWN,
+    POLICY_ID, POLICY_NAME, POLICY_TYPE, POLICY_SPEC,
     POLICY_CREATED_AT, POLICY_UPDATED_AT,
 ) = (
-    'id', 'name', 'type',
-    'spec', 'level', 'cooldown',
+    'id', 'name', 'type', 'spec',
     'created_at', 'updated_at',
 )
 
 POLICY_SORT_KEYS = [
-    POLICY_TYPE, POLICY_NAME, POLICY_LEVEL, POLICY_COOLDOWN,
+    POLICY_TYPE, POLICY_NAME,
     POLICY_CREATED_AT, POLICY_UPDATED_AT,
 ]
 
 CLUSTER_POLICY_ATTRS = (
-    CP_POLICY_ID, CP_PRIORITY, CP_LEVEL, CP_COOLDOWN, CP_ENABLED,
+    CP_POLICY_ID, CP_ENABLED,
 ) = (
-    'policy_id', 'priority', 'level', 'cooldown', 'enabled',
+    'policy_id', 'enabled',
 )
 
 CLUSTER_POLICY_SORT_KEYS = [
-    CP_PRIORITY, CP_LEVEL, CP_COOLDOWN, CP_ENABLED,
+    CP_ENABLED,
 ]
 
 WEBHOOK_ATTRS = (

@@ -68,9 +68,6 @@ engine_opts = [
                default=10,
                help=_('Maximum number of actions per batch when operating a '
                       'cluster.')),
-    cfg.IntOpt('default_policy_priority',
-               default=50,
-               help=_('Default priority for policies attached to a cluster.')),
     cfg.IntOpt('lock_retry_times',
                default=3,
                help=_('Number of times trying to grab a lock.')),

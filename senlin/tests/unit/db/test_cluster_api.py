@@ -423,8 +423,6 @@ class DBAPIClusterTest(base.SenlinTestCase):
             'user': self.ctx.user,
             'project': self.ctx.project,
             'spec': {'foo': 'bar'},
-            'level': 50,
-            'cooldown': 60,
             'data': None,
         }
         policy = db_api.policy_create(self.ctx, policy_data)
@@ -433,7 +431,6 @@ class DBAPIClusterTest(base.SenlinTestCase):
         # attach policy
         fields = {
             'enabled': True,
-            'priority': 77,
         }
         db_api.cluster_policy_attach(self.ctx, cluster_id, policy.id, fields)
         binding = db_api.cluster_policy_get(self.ctx, cluster_id, policy.id)
