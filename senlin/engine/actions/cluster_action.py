@@ -353,7 +353,7 @@ class ClusterAction(base.Action):
             except exception.NodeNotFound:
                 errors.append(_('Node [%s] is not found.') % node_id)
                 continue
-            if node.cluster_id is not None:
+            if node.cluster_id:
                 errors.append(_('Node [%(n)s] is already owned by cluster '
                                 '[%(c)s].') % {'n': node_id,
                                                'c': node.cluster_id})
@@ -430,7 +430,7 @@ class ClusterAction(base.Action):
             except exception.NodeNotFound:
                 errors.append(_('Node [%s] is not found.') % node_id)
                 continue
-            if ((node.cluster_id is None) or
+            if ((not node.cluster_id) or
                     (node.cluster_id != self.cluster.id)):
                 nodes.remove(node_id)
 

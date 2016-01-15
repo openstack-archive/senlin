@@ -957,6 +957,9 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Creating node '%s'."), name)
 
+        if cluster_id is None:
+            cluster_id = ''
+
         index = -1
         try:
             node_profile = self.profile_find(context, profile_id)
@@ -964,7 +967,7 @@ class EngineService(service.Service):
             msg = _("The specified profile (%s) is not found.") % profile_id
             raise exception.SenlinBadRequest(msg=msg)
 
-        if cluster_id is not None:
+        if cluster_id:
             try:
                 db_cluster = self.cluster_find(context, cluster_id)
             except exception.ClusterNotFound:
