@@ -66,7 +66,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual('n-1', node['name'])
         self.assertEqual(-1, node['index'])
         self.assertEqual(self.profile['id'], node['profile_id'])
-        self.assertIsNone(node['cluster_id'])
+        self.assertEqual('', node['cluster_id'])
         self.assertIsNone(node['role'])
         self.assertEqual({}, node['metadata'])
 

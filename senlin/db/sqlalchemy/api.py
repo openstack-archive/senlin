@@ -273,7 +273,7 @@ def node_get_by_short_id(context, short_id, project_safe=True):
 def _query_node_get_all(context, project_safe=True, cluster_id=None):
     query = model_query(context, models.Node)
 
-    if cluster_id:
+    if cluster_id is not None:
         query = query.filter_by(cluster_id=cluster_id)
 
     if project_safe:
@@ -298,27 +298,8 @@ def node_get_all(context, cluster_id=None, limit=None, marker=None, sort=None,
 
 
 def node_get_all_by_cluster(context, cluster_id, project_safe=True):
-    query = model_query(context, models.Node).filter_by(cluster_id=cluster_id)
-
-    if project_safe:
-        query = query.filter_by(project=context.project)
-
-    nodes = query.all()
-
-    return nodes
-
-
-def node_get_all_by_cluster_and_status(context, cluster_id, status,
-                                       project_safe=True):
-    query = model_query(context, models.Node).filter_by(cluster_id=cluster_id,
-                                                        status=status)
-
-    if project_safe:
-        query = query.filter_by(project=context.project)
-
-    nodes = query.all()
-
-    return nodes
+    return _query_node_get_all(context, cluster_id=cluster_id,
+                               project_safe=project_safe).all()
 
 
 def node_update(context, node_id, values):
@@ -356,14 +337,14 @@ def node_migrate(context, node_id, to_cluster, timestamp, role=None):
 
     node = session.query(models.Node).get(node_id)
     from_cluster = node.cluster_id
-    if from_cluster is not None:
+    if from_cluster:
         node.index = -1
-    if to_cluster is not None:
+    if to_cluster:
         cluster2 = session.query(models.Cluster).get(to_cluster)
         index = cluster2.next_index
         cluster2.next_index += 1
         node.index = index
-    node.cluster_id = to_cluster
+    node.cluster_id = to_cluster if to_cluster else ''
     node.updated_at = timestamp
     node.role = role
     session.commit()

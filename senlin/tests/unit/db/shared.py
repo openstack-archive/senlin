@@ -87,7 +87,7 @@ def create_node(ctx, cluster, profile, **kwargs):
         cluster_id = cluster.id
         index = db_api.cluster_next_index(ctx, cluster_id)
     else:
-        cluster_id = None
+        cluster_id = ''
         index = -1
 
     values = {
