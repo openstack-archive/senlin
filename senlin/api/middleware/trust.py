@@ -10,9 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from senlin.api.common import wsgi
 from senlin.common import context
 from senlin.common import exception
-from senlin.common import wsgi
 from senlin.db import api as db_api
 from senlin.drivers import base as driver_base
 

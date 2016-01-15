@@ -16,8 +16,8 @@ from oslo_utils import encodeutils
 from six.moves import http_client
 import webob
 
+from senlin.api.common import wsgi
 from senlin.api.openstack import versions
-from senlin.common import wsgi
 from senlin.tests.unit.common import base
 
 

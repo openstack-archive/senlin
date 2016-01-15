@@ -17,8 +17,8 @@ from oslo_log import log
 from oslo_messaging._drivers import common as rpc_common
 from oslo_utils import encodeutils
 
+from senlin.api.common import wsgi
 from senlin.common import consts
-from senlin.common import wsgi
 from senlin.tests.unit.common import utils
 
 

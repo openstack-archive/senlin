@@ -18,11 +18,11 @@ return
 """
 
 import re
-import webob
 
 from oslo_log import log as logging
+import webob
 
-from senlin.common import wsgi
+from senlin.api.common import wsgi
 
 LOG = logging.getLogger(__name__)
 

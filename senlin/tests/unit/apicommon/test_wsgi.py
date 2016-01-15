@@ -10,19 +10,19 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import fixtures
-import json
-import mock
-import six
 import socket
+
+import fixtures
+import mock
+from oslo_config import cfg
+from oslo_utils import encodeutils
+import six
 import stubout
 import webob
 
-from oslo_config import cfg
-from oslo_utils import encodeutils
-
+from senlin.api.common import serializers
+from senlin.api.common import wsgi
 from senlin.common import exception
-from senlin.common import wsgi
 from senlin.tests.unit.common import base
 
 
@@ -166,7 +166,7 @@ class ResourceTest(base.SenlinTestCase):
         request = wsgi.Request.blank('/tests/123', environ=env)
         request.body = encodeutils.safe_encode('{"foo" : "value"}')
         resource = wsgi.Resource(Controller(),
-                                 wsgi.JSONRequestDeserializer(),
+                                 serializers.JSONRequestDeserializer(),
                                  None)
 
         # The Resource does not throw webob.HTTPExceptions, since they
@@ -190,7 +190,7 @@ class ResourceTest(base.SenlinTestCase):
         translated_ex = webob.exc.HTTPBadRequest(message_es)
 
         resource = wsgi.Resource(Controller(),
-                                 wsgi.JSONRequestDeserializer(),
+                                 serializers.JSONRequestDeserializer(),
                                  None)
 
         def fake_translate_exception(ex, locale):
@@ -230,140 +230,11 @@ class ResourceExceptionHandlingTest(base.SenlinTestCase):
         request = wsgi.Request.blank('/tests/123', environ=env)
         request.body = encodeutils.safe_encode('{"foo": "value"}')
         resource = wsgi.Resource(Controller(self.exception),
-                                 wsgi.JSONRequestDeserializer(),
+                                 serializers.JSONRequestDeserializer(),
                                  None)
         e = self.assertRaises(self.exception_catch, resource, request)
         e = e.exc if hasattr(e, 'exc') else e
         self.assertNotIn(six.text_type(e), self.LOG.output)
-
-
-class JSONRequestDeserializerTest(base.SenlinTestCase):
-
-    def test_has_body_no_content_length(self):
-        request = wsgi.Request.blank('/')
-        request.method = 'POST'
-        request.body = encodeutils.safe_encode('asdf')
-        request.headers.pop('Content-Length')
-        request.headers['Content-Type'] = 'application/json'
-        self.assertFalse(wsgi.JSONRequestDeserializer().has_body(request))
-
-    def test_has_body_zero_content_length(self):
-        request = wsgi.Request.blank('/')
-        request.method = 'POST'
-        request.body = encodeutils.safe_encode('asdf')
-        request.headers['Content-Length'] = 0
-        request.headers['Content-Type'] = 'application/json'
-        self.assertFalse(wsgi.JSONRequestDeserializer().has_body(request))
-
-    def test_has_body_has_content_length_no_content_type(self):
-        request = wsgi.Request.blank('/')
-        request.method = 'POST'
-        request.body = encodeutils.safe_encode('{"key": "value"}')
-        self.assertIn('Content-Length', request.headers)
-        self.assertTrue(wsgi.JSONRequestDeserializer().has_body(request))
-
-    def test_has_body_has_content_length_plain_content_type(self):
-        request = wsgi.Request.blank('/')
-        request.method = 'POST'
-        request.body = encodeutils.safe_encode('{"key": "value"}')
-        self.assertIn('Content-Length', request.headers)
-        request.headers['Content-Type'] = 'text/plain'
-        self.assertTrue(wsgi.JSONRequestDeserializer().has_body(request))
-
-    def test_has_body_has_content_type_malformed(self):
-        request = wsgi.Request.blank('/')
-        request.method = 'POST'
-        request.body = encodeutils.safe_encode('asdf')
-        self.assertIn('Content-Length', request.headers)
-        request.headers['Content-Type'] = 'application/json'
-        self.assertFalse(wsgi.JSONRequestDeserializer().has_body(request))
-
-    def test_has_body_has_content_type(self):
-        request = wsgi.Request.blank('/')
-        request.method = 'POST'
-        request.body = encodeutils.safe_encode('{"key": "value"}')
-        self.assertIn('Content-Length', request.headers)
-        request.headers['Content-Type'] = 'application/json'
-        self.assertTrue(wsgi.JSONRequestDeserializer().has_body(request))
-
-    def test_has_body_has_wrong_content_type(self):
-        request = wsgi.Request.blank('/')
-        request.method = 'POST'
-        request.body = encodeutils.safe_encode('{"key": "value"}')
-        self.assertIn('Content-Length', request.headers)
-        request.headers['Content-Type'] = 'application/xml'
-        self.assertFalse(wsgi.JSONRequestDeserializer().has_body(request))
-
-    def test_has_body_has_aws_content_type_only(self):
-        request = wsgi.Request.blank('/?ContentType=JSON')
-        request.method = 'GET'
-        request.body = encodeutils.safe_encode('{"key": "value"}')
-        self.assertIn('Content-Length', request.headers)
-        self.assertTrue(wsgi.JSONRequestDeserializer().has_body(request))
-
-    def test_has_body_content_type_with_get(self):
-        request = wsgi.Request.blank('/')
-        request.method = 'GET'
-        request.body = encodeutils.safe_encode('{"key": "value"}')
-        self.assertIn('Content-Length', request.headers)
-        self.assertTrue(wsgi.JSONRequestDeserializer().has_body(request))
-
-    def test_no_body_no_content_length(self):
-        request = wsgi.Request.blank('/')
-        self.assertFalse(wsgi.JSONRequestDeserializer().has_body(request))
-
-    def test_from_json(self):
-        fixture = '{"key": "value"}'
-        expected = {"key": "value"}
-        actual = wsgi.JSONRequestDeserializer().from_json(fixture)
-        self.assertEqual(expected, actual)
-
-    def test_from_json_malformed(self):
-        fixture = 'kjasdklfjsklajf'
-        self.assertRaises(webob.exc.HTTPBadRequest,
-                          wsgi.JSONRequestDeserializer().from_json, fixture)
-
-    def test_default_no_body(self):
-        request = wsgi.Request.blank('/')
-        actual = wsgi.JSONRequestDeserializer().default(request)
-        expected = {}
-        self.assertEqual(expected, actual)
-
-    def test_default_with_body(self):
-        request = wsgi.Request.blank('/')
-        request.method = 'POST'
-        request.body = encodeutils.safe_encode('{"key": "value"}')
-        actual = wsgi.JSONRequestDeserializer().default(request)
-        expected = {"body": {"key": "value"}}
-        self.assertEqual(expected, actual)
-
-    def test_default_with_get_with_body(self):
-        request = wsgi.Request.blank('/')
-        request.method = 'GET'
-        request.body = encodeutils.safe_encode('{"key": "value"}')
-        actual = wsgi.JSONRequestDeserializer().default(request)
-        expected = {"body": {"key": "value"}}
-        self.assertEqual(expected, actual)
-
-    def test_default_with_get_with_body_with_aws(self):
-        request = wsgi.Request.blank('/?ContentType=JSON')
-        request.method = 'GET'
-        request.body = encodeutils.safe_encode('{"key": "value"}')
-        actual = wsgi.JSONRequestDeserializer().default(request)
-        expected = {"body": {"key": "value"}}
-        self.assertEqual(expected, actual)
-
-    def test_from_json_exceeds_max_json_mb(self):
-        cfg.CONF.set_override('max_json_body_size', 10, enforce_type=True)
-        body = json.dumps(['a'] * cfg.CONF.max_json_body_size)
-        self.assertTrue(len(body) > cfg.CONF.max_json_body_size)
-        error = self.assertRaises(exception.RequestLimitExceeded,
-                                  wsgi.JSONRequestDeserializer().from_json,
-                                  body)
-        msg = ('Request limit exceeded: JSON body size '
-               '(%s bytes) exceeds maximum allowed size (%s bytes).'
-               ) % (len(body), cfg.CONF.max_json_body_size)
-        self.assertEqual(msg, six.text_type(error))
 
 
 class GetSocketTestCase(base.SenlinTestCase):
@@ -371,16 +242,16 @@ class GetSocketTestCase(base.SenlinTestCase):
     def setUp(self):
         super(GetSocketTestCase, self).setUp()
         self.useFixture(fixtures.MonkeyPatch(
-            "senlin.common.wsgi.get_bind_addr",
+            "senlin.api.common.wsgi.get_bind_addr",
             lambda x, y: ('192.168.0.13', 1234)))
         addr_info_list = [(2, 1, 6, '', ('192.168.0.13', 80)),
                           (2, 2, 17, '', ('192.168.0.13', 80)),
                           (2, 3, 0, '', ('192.168.0.13', 80))]
         self.useFixture(fixtures.MonkeyPatch(
-            "senlin.common.wsgi.socket.getaddrinfo",
+            "senlin.api.common.wsgi.socket.getaddrinfo",
             lambda *x: addr_info_list))
         self.useFixture(fixtures.MonkeyPatch(
-            "senlin.common.wsgi.time.time",
+            "senlin.api.common.wsgi.time.time",
             mock.Mock(side_effect=[0, 1, 5, 10, 20, 35])))
         wsgi.cfg.CONF.senlin_api.cert_file = '/etc/ssl/cert'
         wsgi.cfg.CONF.senlin_api.key_file = '/etc/ssl/key'
@@ -390,10 +261,10 @@ class GetSocketTestCase(base.SenlinTestCase):
     def test_correct_configure_socket(self):
         mock_socket = mock.Mock()
         self.useFixture(fixtures.MonkeyPatch(
-            'senlin.common.wsgi.ssl.wrap_socket',
+            'senlin.api.common.wsgi.ssl.wrap_socket',
             mock_socket))
         self.useFixture(fixtures.MonkeyPatch(
-            'senlin.common.wsgi.eventlet.listen',
+            'senlin.api.common.wsgi.eventlet.listen',
             lambda *x, **y: mock_socket))
         server = wsgi.Server(name='senlin-api', conf=cfg.CONF.senlin_api)
         server.default_port = 1234
@@ -417,11 +288,11 @@ class GetSocketTestCase(base.SenlinTestCase):
 
     def test_get_socket_with_bind_problems(self):
         self.useFixture(fixtures.MonkeyPatch(
-            'senlin.common.wsgi.eventlet.listen',
+            'senlin.api.common.wsgi.eventlet.listen',
             mock.Mock(side_effect=(
                 [wsgi.socket.error(socket.errno.EADDRINUSE)] * 3 + [None]))))
         self.useFixture(fixtures.MonkeyPatch(
-            'senlin.common.wsgi.ssl.wrap_socket',
+            'senlin.api.common.wsgi.ssl.wrap_socket',
             lambda *x, **y: None))
 
         self.assertRaises(RuntimeError,
@@ -429,10 +300,10 @@ class GetSocketTestCase(base.SenlinTestCase):
 
     def test_get_socket_with_unexpected_socket_errno(self):
         self.useFixture(fixtures.MonkeyPatch(
-            'senlin.common.wsgi.eventlet.listen',
+            'senlin.api.common.wsgi.eventlet.listen',
             mock.Mock(side_effect=wsgi.socket.error(socket.errno.ENOMEM))))
         self.useFixture(fixtures.MonkeyPatch(
-            'senlin.common.wsgi.ssl.wrap_socket',
+            'senlin.api.common.wsgi.ssl.wrap_socket',
             lambda *x, **y: None))
         self.assertRaises(wsgi.socket.error, wsgi.get_socket,
                           wsgi.cfg.CONF.senlin_api, 1234)

@@ -14,10 +14,10 @@ from oslo_log import log as logging
 import six
 from six.moves.urllib import parse as urlparse
 
+from senlin.api.common import wsgi
 from senlin.common import context
 from senlin.common import exception as exc
 from senlin.common.i18n import _
-from senlin.common import wsgi
 from senlin.drivers import base as driver_base
 from senlin.rpc import client as rpc
 

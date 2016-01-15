@@ -13,6 +13,7 @@
 
 import routes
 
+from senlin.api.common import wsgi
 from senlin.api.openstack.v1 import actions
 from senlin.api.openstack.v1 import build_info
 from senlin.api.openstack.v1 import cluster_policies
@@ -25,7 +26,6 @@ from senlin.api.openstack.v1 import profile_types
 from senlin.api.openstack.v1 import profiles
 from senlin.api.openstack.v1 import receivers
 from senlin.api.openstack.v1 import webhooks
-from senlin.common import wsgi
 
 
 class API(wsgi.Router):

@@ -13,10 +13,10 @@
 import mock
 from webob import exc
 
-from senlin.api.openstack.v1 import util
+from senlin.api.common import util
+from senlin.api.common import wsgi
 from senlin.common import context
 from senlin.common import policy
-from senlin.common import wsgi
 from senlin.tests.unit.common import base
 
 

@@ -21,8 +21,8 @@ import socket
 from oslo_config import cfg
 from oslo_log import log as logging
 
+from senlin.api.common import wsgi
 from senlin.common.i18n import _
-from senlin.common import wsgi
 
 paste_deploy_group = cfg.OptGroup('paste_deploy')
 paste_deploy_opts = [
