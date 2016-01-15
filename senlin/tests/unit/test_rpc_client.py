@@ -366,6 +366,38 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         kwargs['expected_message'] = expected_message
         self._test_engine_api('cluster_policy_list', 'call', **kwargs)
 
+    def test_cluster_policy_attach(self):
+        kwargs = {
+            'cluster_id': 'a-cluster',
+            'policy_id': 'a-policy',
+            'enabled': mock.ANY,
+        }
+
+        call_kwargs = {
+            'identity': 'a-cluster',
+            'policy': 'a-policy',
+            'enabled': mock.ANY,
+        }
+        expected_message = self.rpcapi.make_msg('cluster_policy_attach',
+                                                **call_kwargs)
+        kwargs['expected_message'] = expected_message
+        self._test_engine_api('cluster_policy_attach', 'call', **kwargs)
+
+    def test_cluster_policy_detach(self):
+        kwargs = {
+            'cluster_id': 'a-cluster',
+            'policy_id': 'a-policy',
+        }
+
+        call_kwargs = {
+            'identity': 'a-cluster',
+            'policy': 'a-policy',
+        }
+        expected_message = self.rpcapi.make_msg('cluster_policy_detach',
+                                                **call_kwargs)
+        kwargs['expected_message'] = expected_message
+        self._test_engine_api('cluster_policy_detach', 'call', **kwargs)
+
     def test_cluster_policy_get(self):
         kwargs = {
             'cluster_id': 'a-cluster',
