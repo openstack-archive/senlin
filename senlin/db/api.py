@@ -196,6 +196,11 @@ def cluster_policy_get_all(context, cluster_id, filters=None, sort=None):
                                        sort=sort)
 
 
+def cluster_policy_get_by_type(context, cluster_id, policy_type, filters=None):
+    return IMPL.cluster_policy_get_by_type(context, cluster_id, policy_type,
+                                           filters=filters)
+
+
 def cluster_policy_attach(context, cluster_id, policy_id, values):
     return IMPL.cluster_policy_attach(context, cluster_id, policy_id, values)
 

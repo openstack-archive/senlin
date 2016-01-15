@@ -191,3 +191,34 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
         results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
                                                 sort='enabled')
         self.assertEqual('policy3', results[0].policy_id)
+
+    def test_policy_get_all_by_policy_type(self):
+        for pid in ['policy1', 'policy2']:
+            self.create_policy(id=pid)
+            db_api.cluster_policy_attach(self.ctx, self.cluster.id, pid, {})
+
+        results = db_api.cluster_policy_get_by_type(self.ctx, self.cluster.id,
+                                                    'ScalingPolicy')
+        self.assertEqual(2, len(results))
+
+        results = db_api.cluster_policy_get_by_type(self.ctx, self.cluster.id,
+                                                    'UnknownPolicy')
+        self.assertEqual(0, len(results))
+
+    def test_policy_get_all_by_policy_type_with_filter(self):
+        for pid in ['policy1', 'policy2']:
+            self.create_policy(id=pid)
+            db_api.cluster_policy_attach(self.ctx, self.cluster.id, pid,
+                                         {'enabled': True})
+
+        filters = {'enabled': True}
+        results = db_api.cluster_policy_get_by_type(self.ctx, self.cluster.id,
+                                                    'ScalingPolicy',
+                                                    filters=filters)
+        self.assertEqual(2, len(results))
+
+        filters = {'enabled': False}
+        results = db_api.cluster_policy_get_by_type(self.ctx, self.cluster.id,
+                                                    'ScalingPolicy',
+                                                    filters=filters)
+        self.assertEqual(0, len(results))

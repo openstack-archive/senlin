@@ -600,6 +600,19 @@ def cluster_policy_get_all(context, cluster_id, filters=None, sort=None):
                                 sort_dirs=dirs).all()
 
 
+def cluster_policy_get_by_type(context, cluster_id, policy_type, filters=None):
+
+    query = model_query(context, models.ClusterPolicies)
+    query = query.filter_by(cluster_id=cluster_id)
+
+    if filters:
+        query = db_filters.exact_filter(query, models.ClusterPolicies, filters)
+
+    query = query.join(models.Policy).filter(models.Policy.type == policy_type)
+
+    return query.all()
+
+
 def cluster_policy_attach(context, cluster_id, policy_id, values):
     binding = models.ClusterPolicies()
     binding.cluster_id = cluster_id
