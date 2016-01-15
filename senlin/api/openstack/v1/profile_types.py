@@ -10,15 +10,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-'''
+"""
 Profile type endpoint for Senlin v1 ReST API.
-'''
+"""
 
 from webob import exc
 
-from senlin.api.openstack.v1 import util
-from senlin.common import serializers
-from senlin.common import wsgi
+from senlin.api.common import serializers
+from senlin.api.common import util
+from senlin.api.common import wsgi
 from senlin.rpc import client as rpc_client
 
 
@@ -48,8 +48,8 @@ class ProfileTypeController(object):
 
 
 def create_resource(options):
-    '''Profile types resource factory method.'''
+    """Profile types resource factory method."""
 
     return wsgi.Resource(ProfileTypeController(options),
-                         wsgi.JSONRequestDeserializer(),
+                         serializers.JSONRequestDeserializer(),
                          serializers.JSONResponseSerializer())

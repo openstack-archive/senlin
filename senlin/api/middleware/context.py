@@ -14,9 +14,9 @@ from oslo_config import cfg
 from oslo_middleware import request_id as oslo_request_id
 from oslo_utils import encodeutils
 
+from senlin.api.common import wsgi
 from senlin.common import context
 from senlin.common import exception
-from senlin.common import wsgi
 
 
 class ContextMiddleware(wsgi.Middleware):

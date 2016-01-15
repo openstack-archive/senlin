@@ -12,11 +12,11 @@
 
 from webob import exc
 
-from senlin.api.openstack.v1 import util
+from senlin.api.common import serializers
+from senlin.api.common import util
+from senlin.api.common import wsgi
 from senlin.common import consts
-from senlin.common import serializers
 from senlin.common import utils
-from senlin.common import wsgi
 from senlin.rpc import client as rpc_client
 
 
@@ -80,5 +80,5 @@ def create_resource(options):
     '''Events factory method.'''
 
     return wsgi.Resource(EventController(options),
-                         wsgi.JSONRequestDeserializer(),
+                         serializers.JSONRequestDeserializer(),
                          serializers.JSONResponseSerializer())

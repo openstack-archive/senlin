@@ -22,9 +22,9 @@ from oslo_config import cfg
 import six
 import webob
 
+from senlin.api.common import serializers
+from senlin.api.common import wsgi
 from senlin.common import exception
-from senlin.common import serializers
-from senlin.common import wsgi
 
 
 class Fault(object):

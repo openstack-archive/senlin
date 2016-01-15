@@ -19,13 +19,13 @@ from oslo_config import cfg
 import six
 from webob import exc
 
-from senlin.api.openstack.v1 import util
+from senlin.api.common import serializers
+from senlin.api.common import util
+from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common import exception as senlin_exc
 from senlin.common.i18n import _
-from senlin.common import serializers
 from senlin.common import utils
-from senlin.common import wsgi
 from senlin.rpc import client as rpc_client
 
 
@@ -366,8 +366,8 @@ class ClusterController(object):
 
 
 def create_resource(options):
-    '''Clusters resource factory method.'''
+    """Clusters resource factory method."""
 
     return wsgi.Resource(ClusterController(options),
-                         wsgi.JSONRequestDeserializer(),
+                         serializers.JSONRequestDeserializer(),
                          serializers.JSONResponseSerializer())

@@ -36,10 +36,10 @@ from oslo_log import log as logging
 from oslo_service import systemd
 import six
 
+from senlin.api.common import wsgi
 from senlin.common import config
 from senlin.common.i18n import _LI
 from senlin.common import messaging
-from senlin.common import wsgi
 from senlin import version
 
 _lazy.enable_lazy()

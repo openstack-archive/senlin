@@ -13,9 +13,9 @@
 
 from oslo_config import cfg
 
-from senlin.api.openstack.v1 import util
-from senlin.common import serializers
-from senlin.common import wsgi
+from senlin.api.common import serializers
+from senlin.api.common import util
+from senlin.api.common import wsgi
 from senlin.rpc import client as rpc_client
 
 
@@ -43,7 +43,7 @@ class BuildInfoController(object):
 def create_resource(options):
     '''BuildInfo factory method.'''
 
-    deserializer = wsgi.JSONRequestDeserializer()
+    deserializer = serializers.JSONRequestDeserializer()
     serializer = serializers.JSONResponseSerializer()
     return wsgi.Resource(BuildInfoController(options), deserializer,
                          serializer)
