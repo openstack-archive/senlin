@@ -187,6 +187,11 @@ class Profile(object):
         return profile.do_create(obj)
 
     @classmethod
+    def check_object(cls, ctx, obj):
+        profile = cls.load(ctx, obj.profile_id)
+        return profile.do_check(obj)
+
+    @classmethod
     def delete_object(cls, ctx, obj):
         profile = cls.load(ctx, obj.profile_id)
         return profile.do_delete(obj)
