@@ -424,4 +424,4 @@ def get_spec_version(spec):
         msg = _("The 'version' key is missing from the provided spec map.")
         raise exception.SpecValidationFailed(message=msg)
 
-    return (spec['type'], spec['version'])
+    return (spec['type'], six.text_type(spec['version']))

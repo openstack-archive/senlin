@@ -59,7 +59,7 @@ class TestPolicyBase(base.SenlinTestCase):
     def setUp(self):
         super(TestPolicyBase, self).setUp()
         self.ctx = utils.dummy_context()
-        environment.global_env().register_policy('senlin.policy.dummy',
+        environment.global_env().register_policy('senlin.policy.dummy-1.0',
                                                  DummyPolicy)
         self.spec = parser.simple_parse(sample_policy)
 

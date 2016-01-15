@@ -39,8 +39,8 @@ class ClusterTest(base.SenlinTestCase):
         self.eng.dispatcher = mock.Mock()
 
         env = environment.global_env()
-        env.register_profile('TestProfile', fakes.TestProfile)
-        env.register_policy('TestPolicy', fakes.TestPolicy)
+        env.register_profile('TestProfile-1.0', fakes.TestProfile)
+        env.register_policy('TestPolicy-1.0', fakes.TestPolicy)
 
         spec = {
             'type': 'TestProfile',
@@ -524,7 +524,7 @@ class ClusterTest(base.SenlinTestCase):
     def test_cluster_update_update_to_diff_profile_type(self, notify):
         # Register a different profile
         env = environment.global_env()
-        env.register_profile('DiffProfileType', fakes.TestProfile)
+        env.register_profile('DiffProfileType-1.0', fakes.TestProfile)
         new_spec = {
             'type': 'DiffProfileType',
             'version': '1.0',
@@ -736,7 +736,7 @@ class ClusterTest(base.SenlinTestCase):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
         # Register a different profile
         env = environment.global_env()
-        env.register_profile('DiffProfileType', fakes.TestProfile)
+        env.register_profile('DiffProfileType-1.0', fakes.TestProfile)
         new_spec = {
             'type': 'DiffProfileType',
             'version': '1.0',

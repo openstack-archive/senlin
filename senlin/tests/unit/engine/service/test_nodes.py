@@ -38,7 +38,7 @@ class NodeTest(base.SenlinTestCase):
         self.eng.dispatcher = mock.Mock()
 
         env = environment.global_env()
-        env.register_profile('TestProfile', fakes.TestProfile)
+        env.register_profile('TestProfile-1.0', fakes.TestProfile)
 
         self.spec = {
             'type': 'TestProfile',
@@ -146,7 +146,7 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'start_action')
     def test_node_create_profile_type_not_match(self, notify):
         env = environment.global_env()
-        env.register_profile('SecondProfile', fakes.TestProfile)
+        env.register_profile('SecondProfile-1.0', fakes.TestProfile)
         new_spec = {
             'type': 'SecondProfile',
             'version': '1.0',
@@ -448,7 +448,7 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'start_action')
     def test_node_update_with_diff_profile_type(self, notify):
         env = environment.global_env()
-        env.register_profile('NewProfileType', fakes.TestProfile)
+        env.register_profile('NewProfileType-1.0', fakes.TestProfile)
         new_spec = {
             'type': 'NewProfileType',
             'version': '1.0',
