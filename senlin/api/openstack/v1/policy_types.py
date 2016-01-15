@@ -16,9 +16,7 @@ Policy type endpoint for Senlin v1 ReST API.
 
 from webob import exc
 
-from senlin.api.common import serializers
 from senlin.api.common import util
-from senlin.api.common import wsgi
 from senlin.rpc import client as rpc_client
 
 
@@ -43,11 +41,3 @@ class PolicyTypeController(object):
     def get(self, req, type_name):
         content = self.rpc_client.policy_type_get(req.context, type_name)
         return {'policy_type': content}
-
-
-def create_resource(options):
-    """Policy type resource factory method."""
-
-    return wsgi.Resource(PolicyTypeController(options),
-                         serializers.JSONRequestDeserializer(),
-                         serializers.JSONResponseSerializer())

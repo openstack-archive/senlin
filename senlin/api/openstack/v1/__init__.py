@@ -36,8 +36,8 @@ class API(wsgi.Router):
         mapper = routes.Mapper()
 
         # Profile_types
-        profile_types_resource = profile_types.create_resource(conf)
-        with mapper.submapper(controller=profile_types_resource) as sub_mapper:
+        res = wsgi.Resource(profile_types.ProfileTypeController(conf))
+        with mapper.submapper(controller=res) as sub_mapper:
 
             sub_mapper.connect("profile_type_index",
                                "/profile-types",
@@ -49,8 +49,8 @@ class API(wsgi.Router):
                                conditions={'method': 'GET'})
 
         # Profiles
-        profiles_resource = profiles.create_resource(conf)
-        with mapper.submapper(controller=profiles_resource) as sub_mapper:
+        res = wsgi.Resource(profiles.ProfileController(conf))
+        with mapper.submapper(controller=res) as sub_mapper:
 
             sub_mapper.connect("profile_index",
                                "/profiles",
@@ -76,8 +76,8 @@ class API(wsgi.Router):
                                success=204)
 
         # Policy Types
-        policy_types_resource = policy_types.create_resource(conf)
-        with mapper.submapper(controller=policy_types_resource) as sub_mapper:
+        res = wsgi.Resource(policy_types.PolicyTypeController(conf))
+        with mapper.submapper(controller=res) as sub_mapper:
             # Policy collection
             sub_mapper.connect("policy_type_index",
                                "/policy-types",
@@ -89,8 +89,8 @@ class API(wsgi.Router):
                                conditions={'method': 'GET'})
 
         # Policies
-        policies_resource = policies.create_resource(conf)
-        with mapper.submapper(controller=policies_resource) as sub_mapper:
+        res = wsgi.Resource(policies.PolicyController(conf))
+        with mapper.submapper(controller=res) as sub_mapper:
 
             sub_mapper.connect("policy_index",
                                "/policies",
@@ -116,8 +116,8 @@ class API(wsgi.Router):
                                success=204)
 
         # Clusters
-        clusters_resource = clusters.create_resource(conf)
-        with mapper.submapper(controller=clusters_resource) as sub_mapper:
+        res = wsgi.Resource(clusters.ClusterController(conf))
+        with mapper.submapper(controller=res) as sub_mapper:
 
             sub_mapper.connect("cluster_index",
                                "/clusters",
@@ -149,8 +149,8 @@ class API(wsgi.Router):
                                success=202)
 
         # Nodes
-        nodes_resource = nodes.create_resource(conf)
-        with mapper.submapper(controller=nodes_resource) as sub_mapper:
+        res = wsgi.Resource(nodes.NodeController(conf))
+        with mapper.submapper(controller=res) as sub_mapper:
 
             sub_mapper.connect("node_index",
                                "/nodes",
@@ -177,9 +177,9 @@ class API(wsgi.Router):
                                success=202)
 
         # Cluster Policies
-        cluster_policies_resource = cluster_policies.create_resource(conf)
+        res = wsgi.Resource(cluster_policies.ClusterPolicyController(conf))
         policies_path = "/clusters/{cluster_id}"
-        with mapper.submapper(controller=cluster_policies_resource,
+        with mapper.submapper(controller=res,
                               path_prefix=policies_path) as sub_mapper:
             sub_mapper.connect("cluster_policy_list",
                                "/policies",
@@ -191,8 +191,8 @@ class API(wsgi.Router):
                                conditions={'method': 'GET'})
 
         # Actions
-        actions_resource = actions.create_resource(conf)
-        with mapper.submapper(controller=actions_resource) as sub_mapper:
+        res = wsgi.Resource(actions.ActionController(conf))
+        with mapper.submapper(controller=res) as sub_mapper:
 
             sub_mapper.connect("action_index",
                                "/actions",
@@ -209,8 +209,8 @@ class API(wsgi.Router):
                                conditions={'method': 'GET'})
 
         # Receivers
-        receivers_resource = receivers.create_resource(conf)
-        with mapper.submapper(controller=receivers_resource) as sub_mapper:
+        res = wsgi.Resource(receivers.ReceiverController(conf))
+        with mapper.submapper(controller=res) as sub_mapper:
 
             sub_mapper.connect("receivers_index",
                                "/receivers",
@@ -232,8 +232,8 @@ class API(wsgi.Router):
                                success=204)
 
         # Webhooks
-        webhooks_resource = webhooks.create_resource(conf)
-        with mapper.submapper(controller=webhooks_resource) as sub_mapper:
+        res = wsgi.Resource(webhooks.WebhookController(conf))
+        with mapper.submapper(controller=res) as sub_mapper:
 
             sub_mapper.connect("webhook_trigger",
                                "/webhooks/{webhook_id}/trigger",
@@ -242,8 +242,8 @@ class API(wsgi.Router):
                                success=202)
 
         # Events
-        events_resource = events.create_resource(conf)
-        with mapper.submapper(controller=events_resource) as sub_mapper:
+        res = wsgi.Resource(events.EventController(conf))
+        with mapper.submapper(controller=res) as sub_mapper:
 
             sub_mapper.connect("event_index",
                                "/events",
@@ -255,8 +255,8 @@ class API(wsgi.Router):
                                conditions={'method': 'GET'})
 
         # Info
-        info_resource = build_info.create_resource(conf)
-        with mapper.submapper(controller=info_resource) as sub_mapper:
+        res = wsgi.Resource(build_info.BuildInfoController(conf))
+        with mapper.submapper(controller=res) as sub_mapper:
 
             sub_mapper.connect("build_info",
                                "/build-info",

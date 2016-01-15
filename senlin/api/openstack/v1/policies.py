@@ -16,9 +16,7 @@ Policy endpoint for Senlin v1 ReST API.
 
 from webob import exc
 
-from senlin.api.common import serializers
 from senlin.api.common import util
-from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import utils
@@ -118,11 +116,3 @@ class PolicyController(object):
     @util.policy_enforce
     def delete(self, req, policy_id):
         self.rpc_client.policy_delete(req.context, policy_id, cast=False)
-
-
-def create_resource(options):
-    """Policies resource factory method."""
-
-    return wsgi.Resource(PolicyController(options),
-                         serializers.JSONRequestDeserializer(),
-                         serializers.JSONResponseSerializer())

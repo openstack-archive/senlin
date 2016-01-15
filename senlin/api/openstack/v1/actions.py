@@ -13,9 +13,7 @@
 
 from webob import exc
 
-from senlin.api.common import serializers
 from senlin.api.common import util
-from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import utils
@@ -116,11 +114,3 @@ class ActionController(object):
             raise exc.HTTPNotFound()
 
         return {'action': action}
-
-
-def create_resource(options):
-    """Actions factory method."""
-
-    return wsgi.Resource(ActionController(options),
-                         serializers.JSONRequestDeserializer(),
-                         serializers.JSONResponseSerializer())

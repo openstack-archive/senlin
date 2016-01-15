@@ -16,9 +16,7 @@ Node endpoint for Senlin v1 ReST API.
 
 from webob import exc
 
-from senlin.api.common import serializers
 from senlin.api.common import util
-from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import utils
@@ -163,11 +161,3 @@ class NodeController(object):
                                            cast=False)
         result = {'location': '/nodes/%s' % node}
         return result
-
-
-def create_resource(options):
-    """Nodes resource factory method."""
-
-    return wsgi.Resource(NodeController(options),
-                         serializers.JSONRequestDeserializer(),
-                         serializers.JSONResponseSerializer())

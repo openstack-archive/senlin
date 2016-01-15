@@ -12,9 +12,7 @@
 
 from webob import exc
 
-from senlin.api.common import serializers
 from senlin.api.common import util
-from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common import utils
 from senlin.rpc import client as rpc_client
@@ -74,11 +72,3 @@ class EventController(object):
     def get(self, req, event_id):
         event = self.rpc_client.event_get(req.context, event_id)
         return {'event': event}
-
-
-def create_resource(options):
-    '''Events factory method.'''
-
-    return wsgi.Resource(EventController(options),
-                         serializers.JSONRequestDeserializer(),
-                         serializers.JSONResponseSerializer())

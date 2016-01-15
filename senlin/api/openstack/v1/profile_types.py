@@ -16,9 +16,7 @@ Profile type endpoint for Senlin v1 ReST API.
 
 from webob import exc
 
-from senlin.api.common import serializers
 from senlin.api.common import util
-from senlin.api.common import wsgi
 from senlin.rpc import client as rpc_client
 
 
@@ -45,11 +43,3 @@ class ProfileTypeController(object):
         '''Gets the interface schema for a specified profile type.'''
         content = self.rpc_client.profile_type_get(req.context, type_name)
         return {'profile_type': content}
-
-
-def create_resource(options):
-    """Profile types resource factory method."""
-
-    return wsgi.Resource(ProfileTypeController(options),
-                         serializers.JSONRequestDeserializer(),
-                         serializers.JSONResponseSerializer())

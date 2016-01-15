@@ -16,9 +16,7 @@ Profile endpoint for Senlin v1 ReST API.
 
 from webob import exc
 
-from senlin.api.common import serializers
 from senlin.api.common import util
-from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import utils
@@ -136,11 +134,3 @@ class ProfileController(object):
     @util.policy_enforce
     def delete(self, req, profile_id):
         self.rpc_client.profile_delete(req.context, profile_id, cast=False)
-
-
-def create_resource(options):
-    '''Profiles resource factory method.'''
-
-    return wsgi.Resource(ProfileController(options),
-                         serializers.JSONRequestDeserializer(),
-                         serializers.JSONResponseSerializer())

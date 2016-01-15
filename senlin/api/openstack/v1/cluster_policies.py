@@ -16,9 +16,7 @@ ClusterPolicies endpoint for Senlin v1 ReST API.
 
 from webob import exc
 
-from senlin.api.common import serializers
 from senlin.api.common import util
-from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common import utils
 from senlin.rpc import client as rpc_client
@@ -65,11 +63,3 @@ class ClusterPolicyController(object):
         cluster_policy = self.rpc_client.cluster_policy_get(
             req.context, cluster_id=cluster_id, policy_id=policy_id)
         return {'cluster_policy': cluster_policy}
-
-
-def create_resource(options):
-    '''ClusterPolicies resource factory method.'''
-
-    return wsgi.Resource(ClusterPolicyController(options),
-                         serializers.JSONRequestDeserializer(),
-                         serializers.JSONResponseSerializer())
