@@ -63,11 +63,12 @@ class Profile(object):
         :returns: An instance of a specific sub-class of Profile.
         """
         type_name, version = schema.get_spec_version(spec)
+        type_str = "-".join([type_name, version])
 
         if cls != Profile:
             ProfileClass = cls
         else:
-            ProfileClass = environment.global_env().get_profile(type_name)
+            ProfileClass = environment.global_env().get_profile(type_str)
 
         return super(Profile, cls).__new__(ProfileClass)
 
@@ -81,12 +82,13 @@ class Profile(object):
         """
 
         type_name, version = schema.get_spec_version(spec)
+        type_str = "-".join([type_name, version])
 
         self.name = name
         self.spec = spec
 
         self.id = kwargs.get('id', None)
-        self.type = kwargs.get('type', '%s-%s' % (type_name, version))
+        self.type = kwargs.get('type', type_str)
 
         self.user = kwargs.get('user')
         self.project = kwargs.get('project')

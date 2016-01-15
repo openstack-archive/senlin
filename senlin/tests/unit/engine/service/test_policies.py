@@ -30,7 +30,7 @@ class PolicyTest(base.SenlinTestCase):
         self.ctx = utils.dummy_context(project='policy_test_project')
         self.eng = service.EngineService('host-a', 'topic-a')
         self.eng.init_tgm()
-        environment.global_env().register_policy('TestPolicy',
+        environment.global_env().register_policy('TestPolicy-1.0',
                                                  fakes.TestPolicy)
         self.spec = {
             'type': 'TestPolicy',
@@ -72,7 +72,7 @@ class PolicyTest(base.SenlinTestCase):
                                self.ctx, 'p-2', self.spec)
         self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: The specified policy "
-                         "type (Bogus) is not supported.",
+                         "type (Bogus-1.0) is not supported.",
                          six.text_type(ex.exc_info[1]))
 
     def test_policy_create_invalid_spec(self):

@@ -201,15 +201,16 @@ class EngineService(service.Service):
                 raise exception.SenlinBadRequest(msg=msg)
 
         type_name, version = schema.get_spec_version(spec)
+        type_str = "-".join([type_name, version])
         try:
-            plugin = environment.global_env().get_profile(type_name)
+            plugin = environment.global_env().get_profile(type_str)
         except exception.ProfileTypeNotFound:
             msg = _("The specified profile type (%(name)s) is not supported."
-                    ) % {"name": type_name}
+                    ) % {"name": type_str}
             raise exception.SenlinBadRequest(msg=msg)
 
         LOG.info(_LI("Creating profile %(type)s '%(name)s'."),
-                 {'type': type_name, 'name': name})
+                 {'type': type_str, 'name': name})
 
         kwargs = {
             'user': context.user,
@@ -321,15 +322,16 @@ class EngineService(service.Service):
                 raise exception.SenlinBadRequest(msg=msg)
 
         type_name, version = schema.get_spec_version(spec)
+        type_str = "-".join([type_name, version])
         try:
-            plugin = environment.global_env().get_policy(type_name)
+            plugin = environment.global_env().get_policy(type_str)
         except exception.PolicyTypeNotFound:
             msg = _("The specified policy type (%(name)s) is not supported."
-                    ) % {"name": type_name}
+                    ) % {"name": type_str}
             raise exception.SenlinBadRequest(msg=msg)
 
         LOG.info(_LI("Creating policy %(type)s '%(name)s'"),
-                 {'type': type_name, 'name': name})
+                 {'type': type_str, 'name': name})
 
         kwargs = {
             'user': context.user,

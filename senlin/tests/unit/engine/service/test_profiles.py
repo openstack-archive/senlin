@@ -30,7 +30,7 @@ class ProfileTest(base.SenlinTestCase):
         self.ctx = utils.dummy_context(project='profile_test_project')
         self.eng = service.EngineService('host-a', 'topic-a')
         self.eng.init_tgm()
-        environment.global_env().register_profile('TestProfile',
+        environment.global_env().register_profile('TestProfile-1.0',
                                                   fakes.TestProfile)
 
         self.spec = {
@@ -80,7 +80,7 @@ class ProfileTest(base.SenlinTestCase):
                                self.ctx, 'p', self.spec)
         self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: The specified profile "
-                         "type (Bogus) is not supported.",
+                         "type (Bogus-1.0) is not supported.",
                          six.text_type(ex.exc_info[1]))
 
     def test_profile_create_invalid_spec(self):

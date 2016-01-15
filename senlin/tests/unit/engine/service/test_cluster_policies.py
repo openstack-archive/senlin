@@ -37,8 +37,8 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.patchobject(dispatcher, 'notify')
 
         env = environment.global_env()
-        env.register_profile('TestProfile', fakes.TestProfile)
-        env.register_policy('TestPolicy', fakes.TestPolicy)
+        env.register_profile('TestProfile-1.0', fakes.TestProfile)
+        env.register_policy('TestPolicy-1.0', fakes.TestPolicy)
 
         profile_spec = {
             'type': 'TestProfile',
@@ -237,10 +237,11 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                cluster=self.cluster['id'])),
                          six.text_type(ex.exc_info[1]))
 
-    def _prepare_policy(self, name, type_name=None):
+    def _prepare_policy(self, name, type_name=None, version=None):
         if type_name is not None:
             env = environment.global_env()
-            env.register_policy(type_name, fakes.TestPolicy)
+            type_str = "-".join([type_name, version])
+            env.register_policy(type_str, fakes.TestPolicy)
         else:
             type_name = 'TestPolicy'
 
@@ -253,8 +254,8 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
     def test_cluster_policy_list(self):
         cluster_id = self.cluster['id']
-        policy1 = self._prepare_policy('p-1', 'Type1')
-        policy2 = self._prepare_policy('p-2', 'Type2')
+        policy1 = self._prepare_policy('p-1', 'Type1', '1.0')
+        policy2 = self._prepare_policy('p-2', 'Type2', '1.0')
         v = {
             'enabled': True
         }
@@ -283,8 +284,8 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
     def test_cluster_policy_list_filters(self):
         cluster_id = self.cluster['id']
-        policy1 = self._prepare_policy('p-1', 'Type1')
-        policy2 = self._prepare_policy('p-2', 'Type2')
+        policy1 = self._prepare_policy('p-1', 'Type1', '1.0')
+        policy2 = self._prepare_policy('p-2', 'Type2', '1.0')
 
         v = {'enabled': True}
         db_api.cluster_policy_attach(self.ctx, cluster_id, policy1['id'], v)
@@ -300,8 +301,8 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
     def test_cluster_policy_list_sorting(self):
         cid = self.cluster['id']
-        policy1 = self._prepare_policy('p-1', 'Type1')
-        policy2 = self._prepare_policy('p-2', 'Type2')
+        policy1 = self._prepare_policy('p-1', 'Type1', '1.0')
+        policy2 = self._prepare_policy('p-2', 'Type2', '1.0')
 
         v = {'enabled': True}
         db_api.cluster_policy_attach(self.ctx, cid, policy1['id'], v)

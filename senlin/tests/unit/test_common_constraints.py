@@ -319,7 +319,7 @@ class TestSpecVersionChecking(testtools.TestCase):
 
         spec = {'type': 'Foo', 'version': 1.5}
         res = schema.get_spec_version(spec)
-        self.assertEqual(('Foo', 1.5), res)
+        self.assertEqual(('Foo', '1.5'), res)
 
     def test_spec_version_not_dict(self):
         spec = 'a string'
