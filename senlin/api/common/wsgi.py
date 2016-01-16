@@ -653,18 +653,14 @@ class Resource(object):
     serialized by requested content type.
     """
 
-    def __init__(self, controller, deserializer, serializer=None):
+    def __init__(self, controller):
         """Initializer.
 
         :param controller: object that implement methods created by routes lib
-        :param deserializer: object that supports webob request deserialization
-                             through controller-like actions
-        :param serializer: object that supports webob response serialization
-                           through controller-like actions
         """
         self.controller = controller
-        self.deserializer = deserializer
-        self.serializer = serializer
+        self.deserializer = serializers.JSONRequestDeserializer()
+        self.serializer = serializers.JSONResponseSerializer()
 
     @webob.dec.wsgify(RequestClass=Request)
     def __call__(self, request):
@@ -714,7 +710,6 @@ class Resource(object):
             log_exception(err, sys.exc_info())
             raise translate_exception(err, request.best_match_language())
 
-        serializer = self.serializer or serializers.JSONResponseSerializer()
         try:
             response = webob.Response(request=request)
             # Customize status code if default (200) should be overridden
@@ -727,7 +722,7 @@ class Resource(object):
                     response.location = '/v1%s' % location
                 if not action_result:
                     action_result = None
-            self.dispatch(serializer, action, response, action_result)
+            self.dispatch(self.serializer, action, response, action_result)
             return response
 
         # return unserializable result (typically an exception)

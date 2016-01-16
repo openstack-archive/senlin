@@ -20,7 +20,6 @@ import six
 import stubout
 import webob
 
-from senlin.api.common import serializers
 from senlin.api.common import wsgi
 from senlin.common import exception
 from senlin.tests.unit.common import base
@@ -101,14 +100,14 @@ class ResourceTest(base.SenlinTestCase):
         }
 
         expected = {'action': 'update', 'id': 12}
-        actual = wsgi.Resource(None, None, None).get_action_args(env)
+        actual = wsgi.Resource(None).get_action_args(env)
 
         self.assertEqual(expected, actual)
 
     def test_get_action_args_invalid_index(self):
         env = {'wsgiorg.routing_args': []}
         expected = {}
-        actual = wsgi.Resource(None, None, None).get_action_args(env)
+        actual = wsgi.Resource(None).get_action_args(env)
         self.assertEqual(expected, actual)
 
     def test_get_action_args_del_controller_error(self):
@@ -117,14 +116,14 @@ class ResourceTest(base.SenlinTestCase):
                    'id': 12}
         env = {'wsgiorg.routing_args': [None, actions]}
         expected = {'action': 'update', 'id': 12}
-        actual = wsgi.Resource(None, None, None).get_action_args(env)
+        actual = wsgi.Resource(None).get_action_args(env)
         self.assertEqual(expected, actual)
 
     def test_get_action_args_del_format_error(self):
         actions = {'action': 'update', 'id': 12}
         env = {'wsgiorg.routing_args': [None, actions]}
         expected = {'action': 'update', 'id': 12}
-        actual = wsgi.Resource(None, None, None).get_action_args(env)
+        actual = wsgi.Resource(None).get_action_args(env)
         self.assertEqual(expected, actual)
 
     def test_dispatch(self):
@@ -132,7 +131,7 @@ class ResourceTest(base.SenlinTestCase):
             def index(self, shirt, pants=None):
                 return (shirt, pants)
 
-        resource = wsgi.Resource(None, None, None)
+        resource = wsgi.Resource(None)
         actual = resource.dispatch(Controller(), 'index', 'on', pants='off')
         expected = ('on', 'off')
         self.assertEqual(expected, actual)
@@ -142,7 +141,7 @@ class ResourceTest(base.SenlinTestCase):
             def default(self, shirt, pants=None):
                 return (shirt, pants)
 
-        resource = wsgi.Resource(None, None, None)
+        resource = wsgi.Resource(None)
         actual = resource.dispatch(Controller(), 'index', 'on', pants='off')
         expected = ('on', 'off')
         self.assertEqual(expected, actual)
@@ -152,7 +151,7 @@ class ResourceTest(base.SenlinTestCase):
             def show(self, shirt, pants=None):
                 return (shirt, pants)
 
-        resource = wsgi.Resource(None, None, None)
+        resource = wsgi.Resource(None)
         self.assertRaises(AttributeError, resource.dispatch, Controller(),
                           'index', 'on', pants='off')
 
@@ -165,9 +164,7 @@ class ResourceTest(base.SenlinTestCase):
         env = {'wsgiorg.routing_args': [None, actions]}
         request = wsgi.Request.blank('/tests/123', environ=env)
         request.body = encodeutils.safe_encode('{"foo" : "value"}')
-        resource = wsgi.Resource(Controller(),
-                                 serializers.JSONRequestDeserializer(),
-                                 None)
+        resource = wsgi.Resource(Controller())
 
         # The Resource does not throw webob.HTTPExceptions, since they
         # would be considered responses by wsgi and the request flow would end,
@@ -189,9 +186,7 @@ class ResourceTest(base.SenlinTestCase):
         message_es = "No Encontrado"
         translated_ex = webob.exc.HTTPBadRequest(message_es)
 
-        resource = wsgi.Resource(Controller(),
-                                 serializers.JSONRequestDeserializer(),
-                                 None)
+        resource = wsgi.Resource(Controller())
 
         def fake_translate_exception(ex, locale):
             return translated_ex
@@ -229,9 +224,7 @@ class ResourceExceptionHandlingTest(base.SenlinTestCase):
         env = {'wsgiorg.routing_args': [None, actions]}
         request = wsgi.Request.blank('/tests/123', environ=env)
         request.body = encodeutils.safe_encode('{"foo": "value"}')
-        resource = wsgi.Resource(Controller(self.exception),
-                                 serializers.JSONRequestDeserializer(),
-                                 None)
+        resource = wsgi.Resource(Controller(self.exception))
         e = self.assertRaises(self.exception_catch, resource, request)
         e = e.exc if hasattr(e, 'exc') else e
         self.assertNotIn(six.text_type(e), self.LOG.output)

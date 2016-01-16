@@ -16,9 +16,7 @@ Webhook endpoint for Senlin v1 ReST API.
 
 from webob import exc
 
-from senlin.api.common import serializers
 from senlin.api.common import util
-from senlin.api.common import wsgi
 from senlin.rpc import client as rpc_client
 
 
@@ -46,11 +44,3 @@ class WebhookController(object):
         location = {'location': '/actions/%s' % res['action']}
         res.update(location)
         return res
-
-
-def create_resource(options):
-    """Webhooks resource factory method."""
-
-    return wsgi.Resource(WebhookController(options),
-                         serializers.JSONRequestDeserializer(),
-                         serializers.JSONResponseSerializer())
