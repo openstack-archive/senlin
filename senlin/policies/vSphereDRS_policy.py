@@ -140,7 +140,7 @@ class vSphereDRSPolicy(policy_base.Policy):
 
         if group_name is None:
             profile = profile_base.Profile.load(
-                oslo_context.get_current(), cluster.profile_id)
+                oslo_context.get_current(), profile_id=cluster.profile_id)
             if 'scheduler_hints' in profile.spec:
                 hints = profile.spec['scheduler_hints']
                 group_name = hints.get('group', None)

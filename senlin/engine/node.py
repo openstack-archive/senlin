@@ -80,7 +80,8 @@ class Node(object):
     def _load_runtime_data(self, context):
         profile = None
         try:
-            profile = profile_base.Profile.load(context, self.profile_id,
+            profile = profile_base.Profile.load(context,
+                                                profile_id=self.profile_id,
                                                 project_safe=False)
         except exception.ProfileNotFound:
             LOG.debug(_('Profile not found: %s'), self.profile_id)

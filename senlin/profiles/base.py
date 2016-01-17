@@ -130,7 +130,7 @@ class Profile(object):
         return cls(record.name, record.spec, **kwargs)
 
     @classmethod
-    def load(cls, ctx, profile_id=None, profile=None, project_safe=True):
+    def load(cls, ctx, profile=None, profile_id=None, project_safe=True):
         '''Retrieve a profile object from database.'''
         if profile is None:
             profile = db_api.profile_get(ctx, profile_id,
@@ -241,13 +241,13 @@ class Profile(object):
 
     def _init_context(self):
         profile_context = {}
-        if self.CONTEXT in self.spec_data:
-            profile_context = self.spec_data[self.CONTEXT] or {}
+        if self.CONTEXT in self.properties:
+            profile_context = self.properties[self.CONTEXT] or {}
 
         ctx_dict = context.get_service_context(**profile_context)
 
-        ctx_dict.pop('project_name')
-        ctx_dict.pop('project_domain_name')
+        ctx_dict.pop('project_name', None)
+        ctx_dict.pop('project_domain_name', None)
 
         return ctx_dict
 
@@ -309,10 +309,11 @@ class Profile(object):
     def do_recover(self, obj, **options):
         '''For subclass to override.'''
 
-        if 'operation' in options:
-            if options['operation'] != 'RECREATE':
-                return NotImplemented
+        operation = options.get('operation', None)
+        if not operation or operation != 'RECREATE':
+            return NotImplemented
 
+        # NOTE: do_delete always returns a boolean
         res = self.do_delete(obj)
 
         if res:
@@ -339,9 +340,3 @@ class Profile(object):
             'updated_at': utils.format_time(self.updated_at),
         }
         return pb_dict
-
-    @classmethod
-    def from_dict(cls, **kwargs):
-        type_name = kwargs.pop('type')
-        name = kwargs.pop('name')
-        return cls(type_name, name, kwargs)

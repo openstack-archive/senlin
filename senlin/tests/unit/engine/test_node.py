@@ -30,7 +30,7 @@ class TestNode(base.SenlinTestCase):
 
     def setUp(self):
         super(TestNode, self).setUp()
-        self.context = utils.dummy_context()
+        self.context = utils.dummy_context(project='node_test_project')
         self.profile = self._create_profile('PROFILE_ID')
         self.cluster = self._create_cluster('CLUSTER_ID')
 

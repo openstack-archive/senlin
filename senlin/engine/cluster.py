@@ -105,7 +105,8 @@ class Cluster(object):
             policies.append(policy)
 
         self.rt = {
-            'profile': profile_base.Profile.load(context, self.profile_id,
+            'profile': profile_base.Profile.load(context,
+                                                 profile_id=self.profile_id,
                                                  project_safe=False),
             'nodes': node_mod.Node.load_all(context, cluster_id=self.id),
             'policies': policies
@@ -270,8 +271,9 @@ class Cluster(object):
 
         # There is a possibility that the profile id is changed
         if 'profile_id' in values:
-            self.rt['profile'] = profile_base.Profile.load(context,
-                                                           self.profile_id)
+            profile = profile_base.Profile.load(context,
+                                                profile_id=self.profile_id)
+            self.rt['profile'] = profile
         db_api.cluster_update(context, self.id, values)
         return
 

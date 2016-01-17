@@ -34,9 +34,9 @@ class TestvSphereDRSPolicy(base.SenlinTestCase):
             },
         }
         profile = mock.Mock()
-        profile.id = 'PROFILE_ID'
+        profile.id = 'PROFILE_ID_TEST'
         cluster = mock.Mock()
-        cluster.id = 'CLUSTER_ID'
+        cluster.id = 'CLUSTER_ID_TEST'
         self.profile = profile
         self.cluster = cluster
 
@@ -47,8 +47,9 @@ class TestvSphereDRSPolicy(base.SenlinTestCase):
         self.assertEqual('senlin.policy.vSphereDRSPolicy-1.0', policy.type)
         self.assertIsNone(policy._novaclient)
 
-    def test_attach_with_profile_info(self):
-        profile_base.Profile.load = mock.Mock(return_value=self.profile)
+    @mock.patch.object(profile_base.Profile, 'load')
+    def test_attach_with_profile_info(self, mock_load):
+        mock_load.return_value = self.profile
         profile_spec = {
             'scheduler_hints': {
                 'group': 'GP_NAME',
@@ -87,8 +88,9 @@ class TestvSphereDRSPolicy(base.SenlinTestCase):
         self.assertEqual('Failed in searching server_group',
                          data)
 
-    def test_attach_with_rule(self):
-        profile_base.Profile.load = mock.Mock(return_value=self.profile)
+    @mock.patch.object(profile_base.Profile, 'load')
+    def test_attach_with_rule(self, mock_load):
+        mock_load.return_value = self.profile
         profile_spec = {}
         self.profile.spec = profile_spec
 
@@ -134,8 +136,9 @@ class TestvSphereDRSPolicy(base.SenlinTestCase):
         self.assertEqual('Failed in creating server_group',
                          data)
 
-    def test_attach_with_group_name(self):
-        profile_base.Profile.load = mock.Mock(return_value=self.profile)
+    @mock.patch.object(profile_base.Profile, 'load')
+    def test_attach_with_group_name(self, mock_load):
+        mock_load.return_value = self.profile
         profile_spec = {}
         self.profile.spec = profile_spec
 

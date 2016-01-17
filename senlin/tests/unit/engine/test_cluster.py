@@ -28,7 +28,7 @@ class TestCluster(base.SenlinTestCase):
 
     def setUp(self):
         super(TestCluster, self).setUp()
-        self.context = utils.dummy_context()
+        self.context = utils.dummy_context(project='cluster_test_project')
         self.profile = self._create_profile('PROFILE_ID')
 
     def _create_cluster(self, cluster_id):
