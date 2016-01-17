@@ -196,8 +196,9 @@ class Webhook(Receiver):
         base = "http://%(h)s:%(p)s/v1" % {'h': host, 'p': port}
         webhook = "/webhooks/%(id)s/trigger" % {'id': self.id}
         if self.params:
-            params = parse.urlencode(self.params)
-            url = "".join([base, webhook, '?V=1&', params])
+            normalized = sorted(self.params.items(), key=lambda d: d[0])
+            qstr = parse.urlencode(normalized)
+            url = "".join([base, webhook, '?V=1&', qstr])
         else:
             url = "".join([base, webhook, '?V=1'])
 
