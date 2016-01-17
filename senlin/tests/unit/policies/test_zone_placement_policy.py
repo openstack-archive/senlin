@@ -212,11 +212,13 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
 
         action.data = {'creation': {'count': 7}}
         policy.pre_op(self.cluster.id, action)
-        placement = {'count': 7, 'placements': [{'zone': 'AZ1'},
-                                                {'zone': 'AZ1'},
-                                                {'zone': 'AZ1'},
-                                                {'zone': 'AZ2'},
-                                                {'zone': 'AZ2'},
-                                                {'zone': 'AZ3'},
-                                                {'zone': 'AZ4'}]}
-        self.assertEqual(placement, action.data['placement'])
+        expected = [
+            {'zone': 'AZ1'}, {'zone': 'AZ1'}, {'zone': 'AZ1'},
+            {'zone': 'AZ2'}, {'zone': 'AZ2'},
+            {'zone': 'AZ3'},
+            {'zone': 'AZ4'}
+        ]
+        self.assertEqual(7, action.data['placement']['count'])
+        placements = action.data['placement']['placements']
+        actual_sorted = sorted(placements, key=lambda x: x['zone'])
+        self.assertEqual(expected, actual_sorted)
