@@ -21,3 +21,6 @@ properties:
     # cluster size to min_size or increase cluster size to max_size
     # Default False means reject scaling request directly.
     best_effort: True
+
+    # Number of seconds before allowing the cluster to be resized again.
+    cooldown: 120

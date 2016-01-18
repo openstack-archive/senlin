@@ -50,8 +50,10 @@ class ScalingPolicy(base.Policy):
 
     _ADJUSTMENT_KEYS = (
         ADJUSTMENT_TYPE, ADJUSTMENT_NUMBER, MIN_STEP, BEST_EFFORT,
+        COOLDOWN,
     ) = (
         'type', 'number', 'min_step', 'best_effort',
+        'cooldown',
     )
 
     properties_schema = {
@@ -88,6 +90,12 @@ class ScalingPolicy(base.Policy):
                       'cluster will break the size limitation'),
                     default=False,
                 ),
+                COOLDOWN: schema.Integer(
+                    _('Number of seconds to hold the cluster for cool-down '
+                      'before allowing cluster to be resized again.'),
+                    default=0,
+                ),
+
             }
         ),
     }
@@ -103,6 +111,7 @@ class ScalingPolicy(base.Policy):
         self.adjustment_number = adjustment[self.ADJUSTMENT_NUMBER]
         self.adjustment_min_step = adjustment[self.MIN_STEP]
         self.best_effort = adjustment[self.BEST_EFFORT]
+        self.cooldown = adjustment[self.COOLDOWN]
 
     def _calculate_adjustment_count(self, current_size):
         '''Calculate adjustment count based on current_size'''
