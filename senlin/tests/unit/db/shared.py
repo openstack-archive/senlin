@@ -10,9 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import json
 import uuid
 
+from oslo_serialization import jsonutils
 from oslo_utils import timeutils as tu
 
 from senlin.db.sqlalchemy import api as db_api
@@ -102,8 +102,8 @@ def create_node(ctx, cluster, profile, **kwargs):
         'updated_at': None,
         'status': 'ACTIVE',
         'status_reason': 'create complete',
-        'metadata': json.loads('{"foo": "123"}'),
-        'data': json.loads('{"key1": "value1"}'),
+        'metadata': jsonutils.loads('{"foo": "123"}'),
+        'data': jsonutils.loads('{"key1": "value1"}'),
     }
     values.update(kwargs)
     return db_api.node_create(ctx, values)

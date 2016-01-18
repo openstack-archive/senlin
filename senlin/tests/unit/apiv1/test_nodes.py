@@ -10,10 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import json
 import mock
 import six
 from webob import exc
+
+from oslo_serialization import jsonutils
 
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import nodes
@@ -256,7 +257,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'metadata': {},
         }
 
-        req = self._post('/nodes', json.dumps(body))
+        req = self._post('/nodes', jsonutils.dumps(body))
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 
@@ -282,7 +283,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test_node_create_with_bad_body(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {'foo': 'bar'}
-        req = self._post('/nodes', json.dumps(body))
+        req = self._post('/nodes', jsonutils.dumps(body))
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
@@ -301,7 +302,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'metadata': {},
             }
         }
-        req = self._post('/nodes', json.dumps(body))
+        req = self._post('/nodes', jsonutils.dumps(body))
 
         error = senlin_exc.ProfileNotFound(profile='bad-profile')
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -327,7 +328,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'metadata': {},
             }
         }
-        req = self._post('/nodes', json.dumps(body))
+        req = self._post('/nodes', jsonutils.dumps(body))
 
         error = senlin_exc.ClusterNotFound(cluster='non-existent-cluster')
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -438,7 +439,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         engine_response = body['node']
 
         req = self._patch('/nodes/%(node_id)s' % {'node_id': nid},
-                          json.dumps(body))
+                          jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
@@ -467,7 +468,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {'name': 'new name'}
 
         req = self._patch('/nodes/%(node_id)s' % {'node_id': nid},
-                          json.dumps(body))
+                          jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
@@ -490,7 +491,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._patch('/nodes/%(node_id)s' % {'node_id': nid},
-                          json.dumps(body))
+                          jsonutils.dumps(body))
 
         error = senlin_exc.NodeNotFound(node=nid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -527,7 +528,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._patch('/nodes/%(node_id)s' % {'node_id': nid},
-                          json.dumps(body))
+                          jsonutils.dumps(body))
 
         error = senlin_exc.ProfileNotFound(profile=nid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -555,7 +556,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {'node': {'cluster_id': 'xxxx-yyyy-zzzz'}}
 
         req = self._patch('/nodes/%(node_id)s' % {'node_id': nid},
-                          json.dumps(body))
+                          jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
@@ -578,7 +579,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
         req = self._patch('/nodes/%(node_id)s' % {'node_id': node_id},
-                          json.dumps(body))
+                          jsonutils.dumps(body))
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,

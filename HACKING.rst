@@ -10,6 +10,7 @@ Senlin Specific Commandments
 
 - [S318] Change assertEqual(A, None) or assertEqual(None, A) by optimal assert
   like assertIsNone(A)
+- [N319] Ensure that jsonutils.%(fun)s must be used instead of json.%(fun)s
 
 Working on APIs
 ---------------

@@ -28,5 +28,17 @@ def assert_equal_none(logical_line):
                "sentences not allowed")
 
 
+def use_jsonutils(logical_line, filename):
+    msg = "S319: jsonutils.%(fun)s must be used instead of json.%(fun)s"
+
+    if "json." in logical_line:
+        json_funcs = ['dumps(', 'dump(', 'loads(', 'load(']
+        for f in json_funcs:
+            pos = logical_line.find('json.%s' % f)
+            if pos != -1:
+                yield (pos, msg % {'fun': f[:-1]})
+
+
 def factory(register):
     register(assert_equal_none)
+    register(use_jsonutils)

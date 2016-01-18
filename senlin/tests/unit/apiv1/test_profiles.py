@@ -11,10 +11,11 @@
 # under the License.
 
 import copy
-import json
 import mock
 import six
 from webob import exc
+
+from oslo_serialization import jsonutils
 
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import profiles
@@ -211,7 +212,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'metadata': {},
         }
 
-        req = self._post('/profiles', json.dumps(body))
+        req = self._post('/profiles', jsonutils.dumps(body))
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 
@@ -240,7 +241,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {'name': 'test_profile'}
 
-        req = self._post('/profiles', json.dumps(body))
+        req = self._post('/profiles', jsonutils.dumps(body))
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
@@ -266,7 +267,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'metadata': {},
             }
         }
-        req = self._post('/profiles', json.dumps(body))
+        req = self._post('/profiles', jsonutils.dumps(body))
 
         error = senlin_exc.ProfileTypeNotFound(profile_type=type_name)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -295,7 +296,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'metadata': {},
             }
         }
-        req = self._post('/profiles', json.dumps(body))
+        req = self._post('/profiles', jsonutils.dumps(body))
 
         msg = 'Spec validation error (param): value'
         error = senlin_exc.SpecValidationFailed(message=msg)
@@ -324,7 +325,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
 
-        req = self._post('/profiles', json.dumps(body))
+        req = self._post('/profiles', jsonutils.dumps(body))
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create,
                                               req)
@@ -404,7 +405,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         engine_resp = {
             u'id': pid,
@@ -436,7 +437,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         pid = 'aaaa-bbbb-cccc'
         body = {'foo': 'bar'}
         req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.update,
@@ -453,7 +454,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         self.patchobject(rpc_client.EngineClient, 'call', return_value={})
         result = self.controller.update(req, profile_id=pid, body=body)
@@ -469,7 +470,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
         req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         engine_response = {
             u'id': 'dddd-eeee-ffff',
@@ -505,7 +506,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
         req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         error = senlin_exc.ProfileNotFound(profile=pid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
@@ -526,7 +527,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'profile': {'name': 'test_profile', 'spec': {'param5': 'value5'}},
         }
         req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,

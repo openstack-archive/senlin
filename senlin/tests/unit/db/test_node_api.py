@@ -10,9 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import json
 import six
 
+from oslo_serialization import jsonutils
 from oslo_utils import timeutils as tu
 
 from senlin.common import consts
@@ -48,8 +48,8 @@ class DBAPINodeTest(base.SenlinTestCase):
         self.assertIsNone(node.updated_at)
         self.assertEqual('ACTIVE', node.status)
         self.assertEqual('create complete', node.status_reason)
-        self.assertEqual('{"foo": "123"}', json.dumps(node.metadata))
-        self.assertEqual('{"key1": "value1"}', json.dumps(node.data))
+        self.assertEqual('{"foo": "123"}', jsonutils.dumps(node.metadata))
+        self.assertEqual('{"key1": "value1"}', jsonutils.dumps(node.data))
         self.assertEqual(self.cluster.id, node.cluster_id)
         self.assertEqual(self.profile.id, node.profile_id)
 

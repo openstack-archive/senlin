@@ -10,8 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import json
 import mock
+
+from oslo_serialization import jsonutils
 
 from senlin.api.openstack.v1 import webhooks
 from senlin.common import policy
@@ -42,7 +43,7 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._post('/webhooks/test_webhook_id/trigger',
-                         json.dumps(body))
+                         jsonutils.dumps(body))
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 
@@ -69,7 +70,7 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
         engine_response = {'action': 'FAKE_ACTION'}
 
         req = self._post('/webhooks/test_webhook_id/trigger',
-                         json.dumps(body))
+                         jsonutils.dumps(body))
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 

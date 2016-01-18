@@ -11,10 +11,11 @@
 # under the License.
 
 import copy
-import json
 import mock
 import six
 from webob import exc
+
+from oslo_serialization import jsonutils
 
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import policies
@@ -178,7 +179,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             },
         }
 
-        req = self._post('/policies', json.dumps(body))
+        req = self._post('/policies', jsonutils.dumps(body))
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_response)
 
@@ -203,7 +204,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {'name': 'test_policy'}
 
-        req = self._post('/policies', json.dumps(body))
+        req = self._post('/policies', jsonutils.dumps(body))
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
@@ -226,7 +227,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 },
             }
         }
-        req = self._post('/policies', json.dumps(body))
+        req = self._post('/policies', jsonutils.dumps(body))
 
         msg = 'Spec validation error (param): value'
         error = senlin_exc.SpecValidationFailed(message=msg)
@@ -257,7 +258,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
 
-        req = self._post('/policies', json.dumps(body))
+        req = self._post('/policies', jsonutils.dumps(body))
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create, req)
         self.assertEqual(403, resp.status_int)
@@ -333,7 +334,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._put('/policies/%(policy_id)s' % {'policy_id': pid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         engine_resp = {
             u'id': pid,
@@ -363,7 +364,8 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         pid = 'aaaa-bbbb-cccc'
         body = {'policy': {}}
 
-        req = self._put('/policies/%(pid)s' % {'pid': pid}, json.dumps(body))
+        req = self._put('/policies/%(pid)s' % {'pid': pid},
+                        jsonutils.dumps(body))
 
         engine_resp = mock.Mock()
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -380,7 +382,8 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         pid = 'aaaa-bbbb-cccc'
         body = {'foo': 'bar'}
-        req = self._patch('/policies/%(pid)s' % {'pid': pid}, json.dumps(body))
+        req = self._patch('/policies/%(pid)s' % {'pid': pid},
+                          jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
@@ -399,7 +402,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._patch('/policies/%(policy_id)s' % {'policy_id': pid},
-                          json.dumps(body))
+                          jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
@@ -421,7 +424,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
         req = self._patch('/policies/%(policy_id)s' % {'policy_id': pid},
-                          json.dumps(body))
+                          jsonutils.dumps(body))
 
         error = senlin_exc.PolicyNotFound(policy=pid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
@@ -441,7 +444,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'policy': {'name': 'test_policy', 'spec': {'param5': 'value5'}},
         }
         req = self._put('/policies/%(policy_id)s' % {'policy_id': pid},
-                        json.dumps(body))
+                        jsonutils.dumps(body))
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,
