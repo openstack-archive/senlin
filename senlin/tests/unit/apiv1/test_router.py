@@ -11,7 +11,7 @@
 # under the License.
 
 
-from senlin.api.openstack import v1 as api_v1
+from senlin.api.openstack.v1 import router as api_v1
 from senlin.tests.unit.common import base
 
 
