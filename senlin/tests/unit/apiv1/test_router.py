@@ -33,6 +33,14 @@ class RoutesTest(base.SenlinTestCase):
         super(RoutesTest, self).setUp()
         self.m = api_v1.API({}).map
 
+    def test_version_handling(self):
+        self.assertRoute(
+            self.m,
+            '/',
+            'GET',
+            'version',
+            'VersionController')
+
     def test_profile_types_handling(self):
         self.assertRoute(
             self.m,

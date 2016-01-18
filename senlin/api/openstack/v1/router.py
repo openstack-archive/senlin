@@ -25,6 +25,7 @@ from senlin.api.openstack.v1 import policy_types
 from senlin.api.openstack.v1 import profile_types
 from senlin.api.openstack.v1 import profiles
 from senlin.api.openstack.v1 import receivers
+from senlin.api.openstack.v1 import version
 from senlin.api.openstack.v1 import webhooks
 
 
@@ -34,6 +35,15 @@ class API(wsgi.Router):
     def __init__(self, conf, **local_conf):
         self.conf = conf
         mapper = routes.Mapper()
+
+        # version
+        res = wsgi.Resource(version.VersionController(conf))
+        with mapper.submapper(controller=res) as sub_mapper:
+
+            sub_mapper.connect("version",
+                               "/",
+                               action="version",
+                               conditions={'method': 'GET'})
 
         # Profile_types
         res = wsgi.Resource(profile_types.ProfileTypeController(conf))
