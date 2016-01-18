@@ -185,45 +185,45 @@ class Profile(object):
 
     @classmethod
     def create_object(cls, ctx, obj):
-        profile = cls.load(ctx, obj.profile_id)
+        profile = cls.load(ctx, profile_id=obj.profile_id)
         return profile.do_create(obj)
 
     @classmethod
     def check_object(cls, ctx, obj):
-        profile = cls.load(ctx, obj.profile_id)
+        profile = cls.load(ctx, profile_id=obj.profile_id)
         return profile.do_check(obj)
 
     @classmethod
     def delete_object(cls, ctx, obj):
-        profile = cls.load(ctx, obj.profile_id)
+        profile = cls.load(ctx, profile_id=obj.profile_id)
         return profile.do_delete(obj)
 
     @classmethod
     def update_object(cls, ctx, obj, new_profile_id=None, **params):
-        profile = cls.load(ctx, obj.profile_id)
+        profile = cls.load(ctx, profile_id=obj.profile_id)
         new_profile = None
         if new_profile_id:
-            new_profile = cls.load(ctx, new_profile_id)
+            new_profile = cls.load(ctx, profile_id=new_profile_id)
         return profile.do_update(obj, new_profile, **params)
 
     @classmethod
     def recover_object(cls, ctx, obj, **options):
-        profile = cls.load(ctx, obj.profile_id)
+        profile = cls.load(ctx, profile_id=obj.profile_id)
         return profile.do_recover(obj, **options)
 
     @classmethod
     def get_details(cls, ctx, obj):
-        profile = cls.load(ctx, obj.profile_id)
+        profile = cls.load(ctx, profile_id=obj.profile_id)
         return profile.do_get_details(obj)
 
     @classmethod
     def join_cluster(cls, ctx, obj, cluster_id):
-        profile = cls.load(ctx, obj.profile_id)
+        profile = cls.load(ctx, profile_id=obj.profile_id)
         return profile.do_join(obj, cluster_id)
 
     @classmethod
     def leave_cluster(cls, ctx, obj):
-        profile = cls.load(ctx, obj.profile_id)
+        profile = cls.load(ctx, profile_id=obj.profile_id)
         return profile.do_leave(obj)
 
     def validate(self):

@@ -323,7 +323,7 @@ class TestProfileBase(base.SenlinTestCase):
 
         res = pb.Profile.create_object(self.ctx, obj)
 
-        mock_load.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_load.assert_called_once_with(self.ctx, profile_id='FAKE_ID')
         profile.do_create.assert_called_once_with(obj)
         res_obj = profile.do_create.return_value
         self.assertEqual(res_obj, res)
@@ -337,7 +337,7 @@ class TestProfileBase(base.SenlinTestCase):
 
         res = pb.Profile.check_object(self.ctx, obj)
 
-        mock_load.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_load.assert_called_once_with(self.ctx, profile_id='FAKE_ID')
         profile.do_check.assert_called_once_with(obj)
         res_obj = profile.do_check.return_value
         self.assertEqual(res_obj, res)
@@ -351,7 +351,7 @@ class TestProfileBase(base.SenlinTestCase):
 
         res = pb.Profile.delete_object(self.ctx, obj)
 
-        mock_load.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_load.assert_called_once_with(self.ctx, profile_id='FAKE_ID')
         profile.do_delete.assert_called_once_with(obj)
         res_obj = profile.do_delete.return_value
         self.assertEqual(res_obj, res)
@@ -369,8 +369,8 @@ class TestProfileBase(base.SenlinTestCase):
                                        new_profile_id='NEW_ID', foo='bar')
 
         mock_load.assert_has_calls([
-            mock.call(self.ctx, 'OLD_ID'),
-            mock.call(self.ctx, 'NEW_ID'),
+            mock.call(self.ctx, profile_id='OLD_ID'),
+            mock.call(self.ctx, profile_id='NEW_ID'),
         ])
 
         old_profile.do_update.assert_called_once_with(obj, new_profile,
@@ -388,7 +388,7 @@ class TestProfileBase(base.SenlinTestCase):
 
         res = pb.Profile.update_object(self.ctx, obj, foo='bar', zoo='car')
 
-        mock_load.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_load.assert_called_once_with(self.ctx, profile_id='FAKE_ID')
         profile.do_update.assert_called_once_with(obj, None,
                                                   foo='bar', zoo='car')
         res_obj = profile.do_update.return_value
@@ -403,7 +403,7 @@ class TestProfileBase(base.SenlinTestCase):
 
         res = pb.Profile.recover_object(self.ctx, obj, foo='bar', zoo='car')
 
-        mock_load.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_load.assert_called_once_with(self.ctx, profile_id='FAKE_ID')
         profile.do_recover.assert_called_once_with(obj, foo='bar', zoo='car')
         res_obj = profile.do_recover.return_value
         self.assertEqual(res_obj, res)
@@ -417,7 +417,7 @@ class TestProfileBase(base.SenlinTestCase):
 
         res = pb.Profile.get_details(self.ctx, obj)
 
-        mock_load.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_load.assert_called_once_with(self.ctx, profile_id='FAKE_ID')
         profile.do_get_details.assert_called_once_with(obj)
         res_obj = profile.do_get_details.return_value
         self.assertEqual(res_obj, res)
@@ -457,7 +457,7 @@ class TestProfileBase(base.SenlinTestCase):
 
         res = pb.Profile.join_cluster(self.ctx, obj, 'CLUSTER_ID')
 
-        mock_load.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_load.assert_called_once_with(self.ctx, profile_id='FAKE_ID')
         profile.do_join.assert_called_once_with(obj, 'CLUSTER_ID')
         res_obj = profile.do_join.return_value
         self.assertEqual(res_obj, res)
@@ -471,7 +471,7 @@ class TestProfileBase(base.SenlinTestCase):
 
         res = pb.Profile.leave_cluster(self.ctx, obj)
 
-        mock_load.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_load.assert_called_once_with(self.ctx, profile_id='FAKE_ID')
         profile.do_leave.assert_called_once_with(obj)
         res_obj = profile.do_leave.return_value
         self.assertEqual(res_obj, res)
