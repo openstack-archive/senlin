@@ -1,75 +1,168 @@
 # Translations template for senlin.
-# Copyright (C) 2015 ORGANIZATION
+# Copyright (C) 2016 ORGANIZATION
 # This file is distributed under the same license as the senlin project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2015.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2016.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: senlin 2015.2.0.dev2300\n"
+"Project-Id-Version: senlin 0.2.0.dev570\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-09-10 03:34-0400\n"
+"POT-Creation-Date: 2016-01-17 22:40-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.0\n"
+"Generated-By: Babel 2.1.1\n"
 
-#: senlin/api/middleware/webhook.py:113
+#: senlin/api/common/serializers.py:62
+#, python-format
+msgid ""
+"JSON body size (%(len)s bytes) exceeds maximum allowed size (%(limit)s "
+"bytes)."
+msgstr ""
+
+#: senlin/api/common/wsgi.py:55
+msgid ""
+"Address to bind the server. Useful when selecting a particular network "
+"interface."
+msgstr ""
+
+#: senlin/api/common/wsgi.py:58
+msgid "The port on which the server will listen."
+msgstr ""
+
+#: senlin/api/common/wsgi.py:60
+msgid "Number of backlog requests to configure the socket with."
+msgstr ""
+
+#: senlin/api/common/wsgi.py:63
+msgid "Location of the SSL certificate file to use for SSL mode."
+msgstr ""
+
+#: senlin/api/common/wsgi.py:66
+msgid "Location of the SSL key file to use for enabling SSL mode."
+msgstr ""
+
+#: senlin/api/common/wsgi.py:69
+msgid "Number of workers for Senlin service."
+msgstr ""
+
+#: senlin/api/common/wsgi.py:71
+msgid ""
+"Maximum line size of message headers to be accepted. max_header_line may "
+"need to be increased when using large tokens (typically those generated "
+"by the Keystone v3 API with big service catalogs)."
+msgstr ""
+
+#: senlin/api/common/wsgi.py:76
+msgid ""
+"The value for the socket option TCP_KEEPIDLE.  This is the time in "
+"seconds that the connection must be idle before TCP starts sending "
+"keepalive probes."
+msgstr ""
+
+#: senlin/api/common/wsgi.py:86
+msgid "If false, closes the client socket explicitly."
+msgstr ""
+
+#: senlin/api/common/wsgi.py:88
+msgid ""
+"Timeout for client connections' socket operations. If an incoming "
+"connection is idle for this number of seconds it will be closed. A value "
+"of '0' indicates waiting forever."
+msgstr ""
+
+#: senlin/api/common/wsgi.py:100
+msgid ""
+"Address for invoking webhooks. It is useful for cases where proxies are "
+"used for triggering webhooks. Default to the hostname of the API node."
+msgstr ""
+
+#: senlin/api/common/wsgi.py:104
+msgid ""
+"The port on which a webhook will be invoked. Useful when service is "
+"running behind a proxy."
+msgstr ""
+
+#: senlin/api/common/wsgi.py:112
+msgid ""
+"Maximum raw byte size of JSON request body. Should be larger than "
+"max_template_size."
+msgstr ""
+
+#: senlin/api/common/wsgi.py:150
+msgid ""
+"When running server in SSL mode, you must specify both a cert_file and "
+"key_file option value in your configuration file"
+msgstr ""
+
+#: senlin/api/common/wsgi.py:166
+#, python-format
+msgid "Could not bind to %(bind_addr)s after trying  30 seconds"
+msgstr ""
+
+#: senlin/api/common/wsgi.py:684
+msgid ""
+"The server could not comply with the request since it is either malformed"
+" or otherwise incorrect."
+msgstr ""
+
+#: senlin/api/middleware/webhook.py:94
 #, python-format
 msgid "Webhook failed authentication: %s."
 msgstr ""
 
-#: senlin/api/openstack/v1/actions.py:39
+#: senlin/api/openstack/v1/actions.py:33
 msgid "No action name specified"
 msgstr ""
 
-#: senlin/api/openstack/v1/actions.py:44
+#: senlin/api/openstack/v1/actions.py:38
 msgid "No target specified"
 msgstr ""
 
-#: senlin/api/openstack/v1/actions.py:49
-#: senlin/api/openstack/v1/clusters.py:271
+#: senlin/api/openstack/v1/actions.py:43
+#: senlin/api/openstack/v1/clusters.py:301
 msgid "No action specified"
 msgstr ""
 
-#: senlin/api/openstack/v1/clusters.py:72
+#: senlin/api/openstack/v1/clusters.py:68
 msgid "No cluster name specified."
 msgstr ""
 
-#: senlin/api/openstack/v1/clusters.py:75
+#: senlin/api/openstack/v1/clusters.py:71
 msgid "No cluster desired capacity provided."
 msgstr ""
 
-#: senlin/api/openstack/v1/clusters.py:79
+#: senlin/api/openstack/v1/clusters.py:75
 msgid "No cluster profile provided."
 msgstr ""
 
-#: senlin/api/openstack/v1/clusters.py:82
-#: senlin/api/openstack/v1/clusters.py:98
+#: senlin/api/openstack/v1/clusters.py:78
+#: senlin/api/openstack/v1/clusters.py:94
 msgid ""
 "Cluster min_size, if specified, must be less than or equal to its desired"
 " capacity."
 msgstr ""
 
-#: senlin/api/openstack/v1/clusters.py:88
-#: senlin/api/openstack/v1/clusters.py:104
+#: senlin/api/openstack/v1/clusters.py:84
+#: senlin/api/openstack/v1/clusters.py:100
 msgid ""
 "Cluster max_size, if specified, must be greater than or equal to its "
 "desired capacity. Setting max_size to -1 means no upper limit on cluster "
 "size."
 msgstr ""
 
-#: senlin/api/openstack/v1/clusters.py:113 senlin/engine/service.py:472
+#: senlin/api/openstack/v1/clusters.py:109 senlin/engine/service.py:458
 msgid ""
 "Cluster max_size, if specified, must be greater than or equal to its "
 "min_size. Setting max_size to -1 means no upper limit on cluster size."
 msgstr ""
 
-#: senlin/api/openstack/v1/clusters.py:183
-#: senlin/api/openstack/v1/clusters.py:209
+#: senlin/api/openstack/v1/clusters.py:175
+#: senlin/api/openstack/v1/clusters.py:205
 msgid "Malformed request data, missing 'cluster' key in request body."
 msgstr ""
 
@@ -88,129 +181,108 @@ msgid ""
 "(%(m)s)."
 msgstr ""
 
-#: senlin/api/openstack/v1/clusters.py:274
+#: senlin/api/openstack/v1/clusters.py:279
+msgid "The data provided is not a map."
+msgstr ""
+
+#: senlin/api/openstack/v1/clusters.py:283
+msgid "The 'policy_id' field is missing in the request."
+msgstr ""
+
+#: senlin/api/openstack/v1/clusters.py:304
 msgid "Multiple actions specified"
 msgstr ""
 
-#: senlin/api/openstack/v1/clusters.py:278
+#: senlin/api/openstack/v1/clusters.py:308
 #, python-format
 msgid "Unrecognized action '%s' specified"
 msgstr ""
 
-#: senlin/api/openstack/v1/clusters.py:284
+#: senlin/api/openstack/v1/clusters.py:314
 msgid "No node to add"
 msgstr ""
 
-#: senlin/api/openstack/v1/clusters.py:290
+#: senlin/api/openstack/v1/clusters.py:320
 msgid "No node to delete"
 msgstr ""
 
-#: senlin/api/openstack/v1/clusters.py:330
-msgid "Failed deleting cluster."
+#: senlin/api/openstack/v1/clusters.py:343
+msgid "No policy specified for detach."
 msgstr ""
 
-#: senlin/api/openstack/v1/nodes.py:44
+#: senlin/api/openstack/v1/nodes.py:38
 msgid "No node name specified."
 msgstr ""
 
-#: senlin/api/openstack/v1/nodes.py:52
+#: senlin/api/openstack/v1/nodes.py:46
 msgid "No profile ID provided."
 msgstr ""
 
-#: senlin/api/openstack/v1/nodes.py:124 senlin/api/openstack/v1/nodes.py:150
+#: senlin/api/openstack/v1/nodes.py:106 senlin/api/openstack/v1/nodes.py:136
 msgid "Malformed request data, missing 'node' key in request body."
 msgstr ""
 
-#: senlin/api/openstack/v1/nodes.py:154
+#: senlin/api/openstack/v1/nodes.py:140
 msgid ""
-"Updating cluster_id is not allowed, please invoke node join/leave actions"
-" if needed."
+"Updating cluster_id is not allowed, please invoke cluster add/remove node"
+" actions if needed."
 msgstr ""
 
-#: senlin/api/openstack/v1/nodes.py:173
-msgid "No action specified."
-msgstr ""
-
-#: senlin/api/openstack/v1/nodes.py:176
-msgid "Multiple actions specified."
-msgstr ""
-
-#: senlin/api/openstack/v1/nodes.py:180
-#, python-format
-msgid "Unrecognized action \"%s\" specified"
-msgstr ""
-
-#: senlin/api/openstack/v1/nodes.py:186
-msgid "No cluster specified."
-msgstr ""
-
-#: senlin/api/openstack/v1/policies.py:35
-msgid "No policy name specified"
-msgstr ""
-
-#: senlin/api/openstack/v1/policies.py:40
-msgid "No policy spec provided"
-msgstr ""
-
-#: senlin/api/openstack/v1/policies.py:105
-#: senlin/api/openstack/v1/policies.py:124
+#: senlin/api/openstack/v1/policies.py:76
+#: senlin/api/openstack/v1/policies.py:98
 msgid "Malformed request data, missing 'policy' key in request body."
 msgstr ""
 
-#: senlin/api/openstack/v1/policies.py:129
-#: senlin/tests/unit/apiv1/test_policies.py:516
+#: senlin/api/openstack/v1/policies.py:80
+msgid "No policy name specified"
+msgstr ""
+
+#: senlin/api/openstack/v1/policies.py:83
+msgid "No policy spec provided"
+msgstr ""
+
+#: senlin/api/openstack/v1/policies.py:103
+#: senlin/tests/unit/apiv1/test_policies.py:409
 msgid ""
 "Updating the spec of a policy is not supported because it may cause state"
 " conflicts in engine."
 msgstr ""
 
-#: senlin/api/openstack/v1/profiles.py:36
+#: senlin/api/openstack/v1/policies.py:110 senlin/engine/service.py:368
+msgid "Policy name not specified."
+msgstr ""
+
+#: senlin/api/openstack/v1/profiles.py:34
 msgid "No profile name specified"
 msgstr ""
 
-#: senlin/api/openstack/v1/profiles.py:41
+#: senlin/api/openstack/v1/profiles.py:39
 msgid "No profile spec provided"
 msgstr ""
 
-#: senlin/api/openstack/v1/profiles.py:109
-#: senlin/api/openstack/v1/profiles.py:133
+#: senlin/api/openstack/v1/profiles.py:100
+#: senlin/api/openstack/v1/profiles.py:123
 msgid "Malformed request data, missing 'profile' key in request body."
 msgstr ""
 
-#: senlin/api/openstack/v1/triggers.py:41
-msgid "No trigger name specified."
+#: senlin/api/openstack/v1/receivers.py:38
+msgid "Missing 'name' in request."
 msgstr ""
 
-#: senlin/api/openstack/v1/triggers.py:44
-msgid "No trigger spec provided."
+#: senlin/api/openstack/v1/receivers.py:43
+msgid "Missing 'cluster_id' in request."
 msgstr ""
 
-#: senlin/api/openstack/v1/triggers.py:96
-msgid "Sorting direction (sort_dir) must be either 'asc' or 'desc'."
+#: senlin/api/openstack/v1/receivers.py:48
+msgid "Missing 'type' in request."
 msgstr ""
 
-#: senlin/api/openstack/v1/triggers.py:118
-msgid "Malformed request data, missing 'trigger' key in request body."
+#: senlin/api/openstack/v1/receivers.py:53
+msgid "Missing 'action' in request."
 msgstr ""
 
-#: senlin/api/openstack/v1/webhooks.py:48
-msgid "No obj_id provided."
-msgstr ""
-
-#: senlin/api/openstack/v1/webhooks.py:53
-msgid "No obj_type provided."
-msgstr ""
-
-#: senlin/api/openstack/v1/webhooks.py:58
-msgid "No action provided."
-msgstr ""
-
-#: senlin/api/openstack/v1/webhooks.py:63
-msgid "No credential provided."
-msgstr ""
-
-#: senlin/api/openstack/v1/webhooks.py:128
-msgid "Malformed request data, missing 'webhook' key in request body."
+#: senlin/api/openstack/v1/receivers.py:114
+msgid "Malformed request data, missing 'receiver' key in request body."
 msgstr ""
 
 #: senlin/cmd/manage.py:61
@@ -218,7 +290,7 @@ msgid "How long to preserve deleted data."
 msgstr ""
 
 #: senlin/cmd/manage.py:65
-msgid "Granularity to use for age argument, defaults to days."
+msgid "Unit to use for age argument, defaults to days."
 msgstr ""
 
 #: senlin/common/config.py:30
@@ -268,74 +340,80 @@ msgid "Timeout in seconds for actions."
 msgstr ""
 
 #: senlin/common/config.py:69
-msgid "Default priority for policies attached to a cluster."
+msgid "Maximum number of actions per batch when operating a cluster."
 msgstr ""
 
-#: senlin/common/config.py:72
+#: senlin/common/config.py:73
 msgid "Number of times trying to grab a lock."
 msgstr ""
 
-#: senlin/common/config.py:75
+#: senlin/common/config.py:76
 msgid "Number of seconds between lock retries."
 msgstr ""
 
-#: senlin/common/config.py:78
+#: senlin/common/config.py:79
 msgid "Error wait time in seconds for cluster action (ie. create or update)."
 msgstr ""
 
-#: senlin/common/config.py:82
+#: senlin/common/config.py:83
 msgid ""
 "RPC timeout for the engine liveness check that is used for cluster "
 "locking."
 msgstr ""
 
-#: senlin/common/config.py:88
+#: senlin/common/config.py:87
+msgid ""
+"Flag to indicate whether to enforce unique names for Senlin objects "
+"belonging to the same project."
+msgstr ""
+
+#: senlin/common/config.py:93
 msgid ""
 "Name of the engine node. This can be an opaque identifier. It is not "
 "necessarily a hostname, FQDN, or IP address."
 msgstr ""
 
-#: senlin/common/config.py:95
+#: senlin/common/config.py:100
 msgid "Default cloud backend to use."
 msgstr ""
 
-#: senlin/common/config.py:100
+#: senlin/common/config.py:105
 msgid "Complete public identity V3 API endpoint."
 msgstr ""
 
-#: senlin/common/config.py:102
+#: senlin/common/config.py:107
 msgid "Senlin service user name"
 msgstr ""
 
-#: senlin/common/config.py:104
+#: senlin/common/config.py:109
 msgid "Password specified for the Senlin service user."
 msgstr ""
 
-#: senlin/common/config.py:106
+#: senlin/common/config.py:111
 msgid "Name of the service project."
 msgstr ""
 
-#: senlin/common/config.py:108
+#: senlin/common/config.py:113
 msgid "Name of the domain for the service user."
 msgstr ""
 
-#: senlin/common/config.py:110
+#: senlin/common/config.py:115
 msgid "Name of the domain for the service project."
 msgstr ""
 
-#: senlin/common/config.py:116
+#: senlin/common/config.py:121
 msgid "Senlin API revision."
 msgstr ""
 
-#: senlin/common/config.py:118
+#: senlin/common/config.py:123
 msgid "Senlin engine revision."
 msgstr ""
 
-#: senlin/common/config.py:168
+#: senlin/common/config.py:173
 msgid "Unable to locate config file"
 msgstr ""
 
-#: senlin/common/config.py:180
+#: senlin/common/config.py:185
 #, python-format
 msgid ""
 "Unable to load %(app_name)s from configuration file %(conf_file)s.\n"
@@ -360,194 +438,188 @@ msgstr ""
 msgid "An unknown exception occurred."
 msgstr ""
 
-#: senlin/common/exception.py:72
+#: senlin/common/exception.py:71
 msgid "System SIGHUP signal received."
 msgstr ""
 
-#: senlin/common/exception.py:76
+#: senlin/common/exception.py:75
 msgid "You are not authenticated."
 msgstr ""
 
-#: senlin/common/exception.py:80
+#: senlin/common/exception.py:79
 msgid "You are not authorized to complete this action."
 msgstr ""
 
-#: senlin/common/exception.py:84
-#: senlin/tests/unit/engine/service/test_clusters.py:752
+#: senlin/common/exception.py:83
+#: senlin/tests/unit/engine/service/test_clusters.py:704
 #, python-format
 msgid "The request is malformed: %(msg)s"
 msgstr ""
 
-#: senlin/common/exception.py:88
+#: senlin/common/exception.py:87
 #, python-format
 msgid ""
 "Multiple results found matching the query criteria %(arg)s. Please be "
 "more specific."
 msgstr ""
 
-#: senlin/common/exception.py:93
+#: senlin/common/exception.py:92
 #, python-format
 msgid "Invalid value '%(value)s' specified for '%(name)s'"
 msgstr ""
 
-#: senlin/common/exception.py:97
+#: senlin/common/exception.py:96
 #, python-format
 msgid "The cluster (%(cluster)s) could not be found."
 msgstr ""
 
-#: senlin/common/exception.py:101
+#: senlin/common/exception.py:100
 #, python-format
 msgid "The node (%(node)s) could not be found."
 msgstr ""
 
-#: senlin/common/exception.py:105
+#: senlin/common/exception.py:104
 #, python-format
 msgid "Profile type (%(profile_type)s) is not found."
 msgstr ""
 
-#: senlin/common/exception.py:109 senlin/common/exception.py:121
-#: senlin/common/exception.py:125 senlin/common/exception.py:154
-#: senlin/common/exception.py:158 senlin/common/exception.py:206
-#: senlin/common/exception.py:261 senlin/common/exception.py:265
+#: senlin/common/exception.py:108 senlin/common/exception.py:120
+#: senlin/common/exception.py:124 senlin/common/exception.py:149
+#: senlin/common/exception.py:153 senlin/common/exception.py:201
+#: senlin/common/exception.py:256 senlin/common/exception.py:260
 #, python-format
 msgid "%(message)s"
 msgstr ""
 
-#: senlin/common/exception.py:113
+#: senlin/common/exception.py:112
 #, python-format
 msgid "The profile (%(profile)s) could not be found."
 msgstr ""
 
-#: senlin/common/exception.py:117
+#: senlin/common/exception.py:116
 msgid "Profile not specified."
 msgstr ""
 
-#: senlin/common/exception.py:129 senlin/engine/actions/cluster_action.py:525
-#: senlin/engine/actions/cluster_action.py:570
-#: senlin/engine/actions/cluster_action.py:594
+#: senlin/common/exception.py:128 senlin/engine/actions/cluster_action.py:654
+#: senlin/engine/actions/cluster_action.py:668
+#: senlin/engine/actions/cluster_action.py:681
 msgid "Policy not specified."
 msgstr ""
 
-#: senlin/common/exception.py:133
+#: senlin/common/exception.py:132
 #, python-format
 msgid "Policy type (%(policy_type)s) is not found."
 msgstr ""
 
-#: senlin/common/exception.py:137
+#: senlin/common/exception.py:136
 #, python-format
 msgid "The policy (%(policy)s) could not be found."
 msgstr ""
 
-#: senlin/common/exception.py:141
+#: senlin/common/exception.py:140
 #, python-format
 msgid ""
 "The policy (%(policy)s) is not found attached to the specified cluster "
 "(%(identity)s)."
 msgstr ""
 
-#: senlin/common/exception.py:146
+#: senlin/common/exception.py:145
 #, python-format
 msgid "The policy with type (%(policy_type)s) already exists."
 msgstr ""
 
-#: senlin/common/exception.py:150
-#, python-format
-msgid "Trigger type (%(trigger_type)s) is not found."
-msgstr ""
-
-#: senlin/common/exception.py:162
-#, python-format
-msgid "The trigger (%(trigger)s) could not be found."
-msgstr ""
-
-#: senlin/common/exception.py:166
+#: senlin/common/exception.py:157
 #, python-format
 msgid "%(feature)s is not supported."
 msgstr ""
 
-#: senlin/common/exception.py:177
+#: senlin/common/exception.py:168
 #, python-format
 msgid "The %(resource_type)s (%(resource_id)s) is still in use."
 msgstr ""
 
-#: senlin/common/exception.py:181
+#: senlin/common/exception.py:172
 #, python-format
 msgid "Invalid content type %(content_type)s"
 msgstr ""
 
-#: senlin/common/exception.py:185
+#: senlin/common/exception.py:176
 #, python-format
 msgid "Request limit exceeded: %(message)s"
 msgstr ""
 
-#: senlin/common/exception.py:189
+#: senlin/common/exception.py:180
 #, python-format
 msgid "The webhook (%(webhook)s) could not be found."
 msgstr ""
 
-#: senlin/common/exception.py:193
+#: senlin/common/exception.py:184
+#, python-format
+msgid "The receiver (%(receiver)s) could not be found."
+msgstr ""
+
+#: senlin/common/exception.py:188
 #, python-format
 msgid "The action (%(action)s) could not be found."
 msgstr ""
 
-#: senlin/common/exception.py:197
+#: senlin/common/exception.py:192
 #, python-format
 msgid "Cluster %(cluster_name)s already has an action (%(action)s) in progress."
 msgstr ""
 
-#: senlin/common/exception.py:202
+#: senlin/common/exception.py:197
 #, python-format
 msgid "The event (%(event)s) could not be found."
 msgstr ""
 
-#: senlin/common/exception.py:216
+#: senlin/common/exception.py:211
 #, python-format
 msgid "ERROR %(code)s happens for %(message)s."
 msgstr ""
 
-#: senlin/common/exception.py:217
+#: senlin/common/exception.py:212
 msgid "Internal error happens"
 msgstr ""
 
-#: senlin/common/exception.py:227
+#: senlin/common/exception.py:222
 #, python-format
 msgid "The %(resource_type)s (%(resource_id)s) is busy now."
 msgstr ""
 
-#: senlin/common/exception.py:232
+#: senlin/common/exception.py:227
 #, python-format
 msgid "The trust for trustor (%(trustor)s) could not be found."
 msgstr ""
 
-#: senlin/common/exception.py:237
+#: senlin/common/exception.py:232
 #, python-format
 msgid "Failed in creating %(rtype)s."
 msgstr ""
 
-#: senlin/common/exception.py:242
+#: senlin/common/exception.py:237
 #, python-format
 msgid "Failed in updating %(resource)s."
 msgstr ""
 
-#: senlin/common/exception.py:247
+#: senlin/common/exception.py:242
 #, python-format
 msgid "Failed in deleting %(resource)s."
 msgstr ""
 
-#: senlin/common/exception.py:252 senlin/tests/unit/engine/test_webhook.py:339
-#: senlin/tests/unit/engine/test_webhook.py:356
+#: senlin/common/exception.py:247
 #, python-format
 msgid "The resource (%(resource)s) could not be found."
 msgstr ""
 
-#: senlin/common/exception.py:256
+#: senlin/common/exception.py:251
 #, python-format
 msgid ""
 "The resource %(resource_id)s is in error status - '%(status)s' due to "
 "'%(reason)s'."
 msgstr ""
 
-#: senlin/common/exception.py:269
+#: senlin/common/exception.py:264
 #, python-format
 msgid ""
 "The policy (%(policy)s) is not attached to the specified cluster "
@@ -624,229 +696,129 @@ msgid ""
 "cluster."
 msgstr ""
 
-#: senlin/common/schema.py:33
+#: senlin/common/schema.py:30
 #, python-format
 msgid "Invalid key %s"
 msgstr ""
 
-#: senlin/common/schema.py:67
+#: senlin/common/schema.py:64
 #, python-format
 msgid "Schema valid only for List or Map, not \"%s\""
 msgstr ""
 
-#: senlin/common/schema.py:98
+#: senlin/common/schema.py:95
 #, python-format
 msgid "Invalid default %(default)s (%(exc)s)"
 msgstr ""
 
-#: senlin/common/schema.py:174
+#: senlin/common/schema.py:171
 #, python-format
 msgid "The value \"%s\" is not a valid Boolean"
 msgstr ""
 
-#: senlin/common/schema.py:199
+#: senlin/common/schema.py:196
 #, python-format
 msgid "%s is not an intger."
 msgstr ""
 
-#: senlin/common/schema.py:207 senlin/tests/unit/test_common_constraints.py:283
+#: senlin/common/schema.py:204 senlin/tests/unit/test_common_constraints.py:283
 #, python-format
 msgid "The value \"%s\" cannot be converted into an integer."
 msgstr ""
 
-#: senlin/common/schema.py:236
+#: senlin/common/schema.py:233
 #, python-format
 msgid "The value \"%s\" cannot be converted into a string."
 msgstr ""
 
-#: senlin/common/schema.py:299 senlin/common/schema.py:305
+#: senlin/common/schema.py:296 senlin/common/schema.py:302
 #, python-format
 msgid "\"%s\" is not a List"
 msgstr ""
 
-#: senlin/common/schema.py:313 senlin/common/schema.py:345
-#: senlin/common/schema.py:351 senlin/common/schema.py:357
+#: senlin/common/schema.py:310 senlin/common/schema.py:342
+#: senlin/common/schema.py:348 senlin/common/schema.py:354
 #, python-format
 msgid "\"%s\" is not a Map"
 msgstr ""
 
-#: senlin/common/schema.py:377
+#: senlin/common/schema.py:374
 #, python-format
 msgid "Spec validation error (%(key)s): %(err)s"
 msgstr ""
 
-#: senlin/common/schema.py:383 senlin/tests/unit/test_common_constraints.py:296
+#: senlin/common/schema.py:380 senlin/tests/unit/test_common_constraints.py:296
 #, python-format
 msgid "Unrecognizable spec item \"%s\""
 msgstr ""
 
-#: senlin/common/schema.py:388
+#: senlin/common/schema.py:385
 #, python-format
 msgid "Invalid spec item: \"%s\""
 msgstr ""
 
-#: senlin/common/schema.py:397 senlin/tests/unit/test_common_constraints.py:309
+#: senlin/common/schema.py:394 senlin/tests/unit/test_common_constraints.py:309
 #, python-format
 msgid "Required spec item \"%s\" not assigned"
 msgstr ""
 
-#: senlin/common/schema.py:419
+#: senlin/common/schema.py:416
 msgid "The provided spec is not a map."
 msgstr ""
 
-#: senlin/common/schema.py:423
+#: senlin/common/schema.py:420
 msgid "The 'type' key is missing from the provided spec map."
 msgstr ""
 
-#: senlin/common/schema.py:427
+#: senlin/common/schema.py:424
 msgid "The 'version' key is missing from the provided spec map."
 msgstr ""
 
-#: senlin/common/utils.py:85
+#: senlin/common/utils.py:116
 #, python-format
 msgid "Invalid URL scheme %s"
 msgstr ""
 
-#: senlin/common/utils.py:91 senlin/common/utils.py:114
+#: senlin/common/utils.py:122 senlin/common/utils.py:145
 #, python-format
 msgid "Failed to retrieve data: %s"
 msgstr ""
 
-#: senlin/common/wsgi.py:62
-msgid ""
-"Address to bind the server. Useful when selecting a particular network "
-"interface."
-msgstr ""
-
-#: senlin/common/wsgi.py:65
-msgid "The port on which the server will listen."
-msgstr ""
-
-#: senlin/common/wsgi.py:67
-msgid "Number of backlog requests to configure the socket with."
-msgstr ""
-
-#: senlin/common/wsgi.py:70
-msgid "Location of the SSL certificate file to use for SSL mode."
-msgstr ""
-
-#: senlin/common/wsgi.py:73
-msgid "Location of the SSL key file to use for enabling SSL mode."
-msgstr ""
-
-#: senlin/common/wsgi.py:76
-msgid "Number of workers for Senlin service."
-msgstr ""
-
-#: senlin/common/wsgi.py:78
-msgid ""
-"Maximum line size of message headers to be accepted. max_header_line may "
-"need to be increased when using large tokens (typically those generated "
-"by the Keystone v3 API with big service catalogs)."
-msgstr ""
-
-#: senlin/common/wsgi.py:83
-msgid ""
-"The value for the socket option TCP_KEEPIDLE.  This is the time in "
-"seconds that the connection must be idle before TCP starts sending "
-"keepalive probes."
-msgstr ""
-
-#: senlin/common/wsgi.py:93
-msgid "If false, closes the client socket explicitly."
-msgstr ""
-
-#: senlin/common/wsgi.py:95
-msgid ""
-"Timeout for client connections' socket operations. If an incoming "
-"connection is idle for this number of seconds it will be closed. A value "
-"of '0' indicates waiting forever."
-msgstr ""
-
-#: senlin/common/wsgi.py:105
-msgid ""
-"Maximum raw byte size of JSON request body. Should be larger than "
-"max_template_size."
-msgstr ""
-
-#: senlin/common/wsgi.py:143
-msgid ""
-"When running server in SSL mode, you must specify both a cert_file and "
-"key_file option value in your configuration file"
-msgstr ""
-
-#: senlin/common/wsgi.py:159
-#, python-format
-msgid "Could not bind to %(bind_addr)s after trying  30 seconds"
-msgstr ""
-
-#: senlin/common/wsgi.py:662
-#, python-format
-msgid ""
-"JSON body size (%(len)s bytes) exceeds maximum allowed size (%(limit)s "
-"bytes)."
-msgstr ""
-
-#: senlin/common/wsgi.py:726
-msgid ""
-"The server could not comply with the request since it is either malformed"
-" or otherwise incorrect."
-msgstr ""
-
-#: senlin/db/sqlalchemy/api.py:411
+#: senlin/db/sqlalchemy/api.py:328
 #, python-format
 msgid "Node %(node)s: %(reason)s"
 msgstr ""
 
-#: senlin/db/sqlalchemy/api.py:1214
-msgid "The action is waiting for its dependency being completed."
-msgstr ""
-
-#: senlin/db/sqlalchemy/api.py:1226 senlin/db/sqlalchemy/api.py:1328
-#: senlin/db/sqlalchemy/api.py:1368
-#, python-format
-msgid "Action with id \"%s\" not found"
-msgstr ""
-
-#: senlin/db/sqlalchemy/api.py:1235
-msgid "The action becomes ready due to all dependencies have been satisfied."
-msgstr ""
-
-#: senlin/db/sqlalchemy/api.py:1242 senlin/db/sqlalchemy/api.py:1274
+#: senlin/db/sqlalchemy/api.py:907
 msgid "Multiple dependencies between lists not support"
 msgstr ""
 
-#: senlin/db/sqlalchemy/api.py:1314
+#: senlin/db/sqlalchemy/api.py:919 senlin/db/sqlalchemy/api.py:938
+msgid "Waiting for depended actions."
+msgstr ""
+
+#: senlin/db/sqlalchemy/api.py:951
 msgid "Action completed successfully."
 msgstr ""
 
-#: senlin/db/sqlalchemy/api.py:1353
+#: senlin/db/sqlalchemy/api.py:969
+msgid "All depended actions completed."
+msgstr ""
+
+#: senlin/db/sqlalchemy/api.py:983 senlin/db/sqlalchemy/api.py:1007
 msgid "Action execution failed"
 msgstr ""
 
-#: senlin/db/sqlalchemy/api.py:1357
-#, python-format
-msgid "Action %(id)s failed: %(reason)s"
-msgstr ""
-
-#: senlin/db/sqlalchemy/api.py:1373
-msgid "Dependent action was cancelled"
-msgstr ""
-
-#: senlin/db/sqlalchemy/api.py:1391
-msgid "Action execution was cancelled"
-msgstr ""
-
-#: senlin/db/sqlalchemy/api.py:1413
+#: senlin/db/sqlalchemy/api.py:1036
 #, python-format
 msgid "The action is not in an executable status: %s"
 msgstr ""
 
-#: senlin/db/sqlalchemy/api.py:1420
+#: senlin/db/sqlalchemy/api.py:1043 senlin/db/sqlalchemy/api.py:1060
 msgid "The action is being processed."
 msgstr ""
 
-#: senlin/db/sqlalchemy/api.py:1438
+#: senlin/db/sqlalchemy/api.py:1078
 msgid "The action was abandoned."
 msgstr ""
 
@@ -859,289 +831,11 @@ msgstr ""
 msgid "LB deletion succeeded"
 msgstr ""
 
-#: senlin/engine/environment.py:93
-#, python-format
-msgid "environment has unknown section \"%s\""
-msgstr ""
-
-#: senlin/engine/environment.py:113
-#, python-format
-msgid "%s type name not specified"
-msgstr ""
-
-#: senlin/engine/environment.py:116
-#, python-format
-msgid "%s type name is not a string"
-msgstr ""
-
-#: senlin/engine/environment.py:169
-#, python-format
-msgid "Driver plugin %(name)s is not found."
-msgstr ""
-
-#: senlin/engine/event.py:232
-#, python-format
-msgid "%(name)s[%(id)s] %(action)s - %(status)s: %(reason)s"
-msgstr ""
-
-#: senlin/engine/node.py:236
-#, python-format
-msgid "Profile failed in %(action)s resource (%(id)s) due to: %(msg)s"
-msgstr ""
-
-#: senlin/engine/node.py:241
-#, python-format
-msgid "Profile failed in creating node due to: %(msg)s"
-msgstr ""
-
-#: senlin/engine/parser.py:94
-#, python-format
-msgid "Error parsing input: %s"
-msgstr ""
-
-#: senlin/engine/parser.py:101
-msgid "The input is not a JSON object or YAML mapping."
-msgstr ""
-
-#: senlin/engine/service.py:130
-msgid "Attempting to stop engine service..."
-msgstr ""
-
-#: senlin/engine/service.py:459
-msgid ""
-"Cluster min_size, if specified, must be lesser than or equal to its "
-"desired_capacity."
-msgstr ""
-
-#: senlin/engine/service.py:465
-msgid ""
-"Cluster max_size, if specified, must be greater than or equal to its "
-"desired_capacity. Setting max_size to -1 means no upper limit on cluster "
-"size."
-msgstr ""
-
-#: senlin/engine/service.py:562
-msgid "Cannot update a cluster when it is in error state."
-msgstr ""
-
-#: senlin/engine/service.py:568
-msgid "Cannot update a cluster to a different profile type, operation aborted."
-msgstr ""
-
-#: senlin/engine/service.py:628
-#: senlin/tests/unit/engine/service/test_clusters.py:805
-#, python-format
-msgid "Profile type of nodes %s does not match with cluster"
-msgstr ""
-
-#: senlin/engine/service.py:632
-#: senlin/tests/unit/engine/service/test_clusters.py:770
-#: senlin/tests/unit/engine/service/test_clusters.py:780
-#, python-format
-msgid ""
-"Nodes %s owned by other cluster, need to delete them from those clusters "
-"first."
-msgstr ""
-
-#: senlin/engine/service.py:636
-#: senlin/tests/unit/engine/service/test_clusters.py:751
-#, python-format
-msgid "Nodes are not ACTIVE: %s"
-msgstr ""
-
-#: senlin/engine/service.py:638 senlin/engine/service.py:676
-#, python-format
-msgid "Nodes not found: %s"
-msgstr ""
-
-#: senlin/engine/service.py:640
-#, python-format
-msgid "No nodes to add: %s"
-msgstr ""
-
-#: senlin/engine/service.py:678
-#, python-format
-msgid "Nodes not members of specified cluster: %s"
-msgstr ""
-
-#: senlin/engine/service.py:680
-msgid "No nodes specified."
-msgstr ""
-
-#: senlin/engine/service.py:734
-msgid "Missing number value for size adjustment."
-msgstr ""
-
-#: senlin/engine/service.py:738
-msgid "Missing adjustment_type value for size adjustment."
-msgstr ""
-
-#: senlin/engine/service.py:851
-#, python-format
-msgid ""
-"Cluster %(id)s is not allowed to be deleted without detaching all "
-"policies."
-msgstr ""
-
-#: senlin/engine/service.py:919 senlin/engine/service.py:1024
-msgid "Node and cluster have different profile type, operation aborted."
-msgstr ""
-
-#: senlin/engine/service.py:975
-msgid "Cannot update a node to a different profile type, operation aborted."
-msgstr ""
-
-#: senlin/engine/service.py:1045
-#, python-format
-msgid "Node is already an orphan node: %s."
-msgstr ""
-
-#: senlin/engine/service.py:1239
-#, python-format
-msgid "Webhook obj_type %s is not supported."
-msgstr ""
-
-#: senlin/engine/service.py:1257
-#, python-format
-msgid "Illegal action name (%s) specified."
-msgstr ""
-
-#: senlin/engine/service.py:1262
-#, python-format
-msgid "Action %(a)s is not applicable to object of type %(t)s."
-msgstr ""
-
-#: senlin/engine/webhook.py:191 senlin/tests/unit/engine/test_webhook.py:338
-msgid "service:type=clustering,name=senlin"
-msgstr ""
-
-#: senlin/engine/webhook.py:197 senlin/tests/unit/engine/test_webhook.py:351
-#, python-format
-msgid "endpoint: service=%(service)s,region=%(region)s,visibility=%(interface)s"
-msgstr ""
-
-#: senlin/engine/actions/base.py:267
-#, python-format
-msgid ""
-"Action (%(action)s) is in unexpected status (%(actual)s) while expected "
-"status should be one of (%(expected)s)."
-msgstr ""
-
-#: senlin/engine/actions/base.py:362
-#, python-format
-msgid "Failed policy '%(name)s': %(reason)s."
-msgstr ""
-
-#: senlin/engine/actions/base.py:405
-msgid "Completed policy checking."
-msgstr ""
-
-#: senlin/engine/actions/base.py:425
-#, python-format
-msgid "Policy %(id)s cooldown is still in progress."
-msgstr ""
-
-#: senlin/engine/actions/base.py:498
-#, python-format
-msgid ""
-"Unexpected exception occurred during action %(action)s (%(id)s) "
-"execution: %(reason)s"
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:59
-#, python-format
-msgid "%(action)s [%(id)s] failed"
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:67
-#, python-format
-msgid "%(action)s [%(id)s] cancelled"
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:74
-#, python-format
-msgid "%(action)s [%(id)s] timeout"
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:141
-msgid "Cluster creation failed."
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:148
-msgid "Cluster creation succeeded."
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:179
-msgid "Cluster update completed."
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:224
-msgid "Deletion in progress."
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:240
-msgid "Cannot delete cluster object."
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:259
-#: senlin/engine/actions/cluster_action.py:311
-#, python-format
-msgid "Node [%s] is not found."
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:267
-#, python-format
-msgid "Node [%(n)s] is already owned by cluster [%(c)s]."
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:272
-#, python-format
-msgid "Node [%s] is not in ACTIVE status."
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:279
-msgid "Completed adding nodes."
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:319
-msgid "Completed deleting nodes."
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:353
-msgid "Cluster properties updated."
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:415
-msgid "Cluster resize succeeded."
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:431
-#, python-format
-msgid "Invalid count (%s) for scaling out."
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:451
-#: senlin/engine/actions/cluster_action.py:510
-msgid "Cluster scaling succeeded."
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:474
-#, python-format
-msgid "Invalid count (%s) for scaling in."
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:481
-#, python-format
-msgid ""
-"Triming count (%(count)s) to current cluster size (%(curr)s) for scaling "
-"in"
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:532
+#: senlin/engine/cluster.py:323
 msgid "Policy already attached."
 msgstr ""
 
-#: senlin/engine/actions/cluster_action.py:536
+#: senlin/engine/cluster.py:327
 #, python-format
 msgid ""
 "Only one instance of policy type (%(ptype)s) can be attached to a "
@@ -1149,122 +843,461 @@ msgid ""
 "cluster (%(cluster)s) already."
 msgstr ""
 
-#: senlin/engine/actions/cluster_action.py:563
+#: senlin/engine/cluster.py:352
 msgid "Policy attached."
 msgstr ""
 
-#: senlin/engine/actions/cluster_action.py:579
-#: senlin/engine/actions/cluster_action.py:603
+#: senlin/engine/cluster.py:371 senlin/engine/cluster.py:399
 msgid "Policy not attached."
 msgstr ""
 
-#: senlin/engine/actions/cluster_action.py:589
-msgid "Policy detached."
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:619
+#: senlin/engine/cluster.py:375
 msgid "No update is needed."
 msgstr ""
 
-#: senlin/engine/actions/cluster_action.py:624
+#: senlin/engine/cluster.py:380
 msgid "Policy updated."
 msgstr ""
 
-#: senlin/engine/actions/cluster_action.py:630
-#: senlin/engine/actions/cluster_action.py:649
+#: senlin/engine/cluster.py:409
+msgid "Policy detached."
+msgstr ""
+
+#: senlin/engine/environment.py:88
+#, python-format
+msgid "environment has unknown section \"%s\""
+msgstr ""
+
+#: senlin/engine/environment.py:107
+#, python-format
+msgid "%s type name not specified"
+msgstr ""
+
+#: senlin/engine/environment.py:110
+#, python-format
+msgid "%s type name is not a string"
+msgstr ""
+
+#: senlin/engine/environment.py:149
+#, python-format
+msgid "Driver plugin %(name)s is not found."
+msgstr ""
+
+#: senlin/engine/event.py:235
+#, python-format
+msgid "%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s"
+msgstr ""
+
+#: senlin/engine/node.py:87
+#, python-format
+msgid "Profile not found: %s"
+msgstr ""
+
+#: senlin/engine/node.py:233
+#, python-format
+msgid "Profile failed in %(action)s resource (%(id)s) due to: %(msg)s"
+msgstr ""
+
+#: senlin/engine/node.py:238 senlin/tests/unit/engine/test_node.py:420
+#, python-format
+msgid "Profile failed in creating node due to: %(msg)s"
+msgstr ""
+
+#: senlin/engine/node.py:252
+#, python-format
+msgid "Failed in creating server: %s"
+msgstr ""
+
+#: senlin/engine/parser.py:73
+#, python-format
+msgid "Error parsing input: %s"
+msgstr ""
+
+#: senlin/engine/parser.py:80
+msgid "The input is not a JSON object or YAML mapping."
+msgstr ""
+
+#: senlin/engine/service.py:199
+#, python-format
+msgid "The profile (%(name)s) already exists."
+msgstr ""
+
+#: senlin/engine/service.py:208
+#, python-format
+msgid "The specified profile type (%(name)s) is not supported."
+msgstr ""
+
+#: senlin/engine/service.py:320
+#, python-format
+msgid "The policy (%(name)s) already exists."
+msgstr ""
+
+#: senlin/engine/service.py:329
+#, python-format
+msgid "The specified policy type (%(name)s) is not supported."
+msgstr ""
+
+#: senlin/engine/service.py:445
+msgid ""
+"Cluster min_size, if specified, must be lesser than or equal to its "
+"desired_capacity."
+msgstr ""
+
+#: senlin/engine/service.py:451
+msgid ""
+"Cluster max_size, if specified, must be greater than or equal to its "
+"desired_capacity. Setting max_size to -1 means no upper limit on cluster "
+"size."
+msgstr ""
+
+#: senlin/engine/service.py:471
+#, python-format
+msgid "The cluster (%(name)s) already exists."
+msgstr ""
+
+#: senlin/engine/service.py:478 senlin/engine/service.py:538
+#, python-format
+msgid "The specified profile '%s' is not found."
+msgstr ""
+
+#: senlin/engine/service.py:528
+msgid "Updating a cluster in error state"
+msgstr ""
+
+#: senlin/engine/service.py:543
+msgid "Cannot update a cluster to a different profile type, operation aborted."
+msgstr ""
+
+#: senlin/engine/service.py:621
+#: senlin/tests/unit/engine/service/test_clusters.py:754
+#, python-format
+msgid "Profile type of nodes %s does not match with cluster"
+msgstr ""
+
+#: senlin/engine/service.py:626
+#: senlin/tests/unit/engine/service/test_clusters.py:722
+#: senlin/tests/unit/engine/service/test_clusters.py:731
+#, python-format
+msgid "Nodes %s already owned by some cluster"
+msgstr ""
+
+#: senlin/engine/service.py:630
+#: senlin/tests/unit/engine/service/test_clusters.py:703
+#, python-format
+msgid "Nodes are not ACTIVE: %s"
+msgstr ""
+
+#: senlin/engine/service.py:632 senlin/engine/service.py:678
+#, python-format
+msgid "Nodes not found: %s"
+msgstr ""
+
+#: senlin/engine/service.py:634
+#, python-format
+msgid "No nodes to add: %s"
+msgstr ""
+
+#: senlin/engine/service.py:680
+#, python-format
+msgid "Nodes not members of specified cluster: %s"
+msgstr ""
+
+#: senlin/engine/service.py:682
+msgid "No nodes specified."
+msgstr ""
+
+#: senlin/engine/service.py:747
+msgid "Missing number value for size adjustment."
+msgstr ""
+
+#: senlin/engine/service.py:751
+msgid "Missing adjustment_type value for size adjustment."
+msgstr ""
+
+#: senlin/engine/service.py:894
+#, python-format
+msgid "Cluster %(id)s cannot be deleted without having all policies detached."
+msgstr ""
+
+#: senlin/engine/service.py:957
+#, python-format
+msgid "The node (%(name)s) already exists."
+msgstr ""
+
+#: senlin/engine/service.py:969 senlin/engine/service.py:1046
+#, python-format
+msgid "The specified profile (%s) is not found."
+msgstr ""
+
+#: senlin/engine/service.py:976
+#, python-format
+msgid "The specified cluster (%s) is not found."
+msgstr ""
+
+#: senlin/engine/service.py:985
+msgid "Node and cluster have different profile type, operation aborted."
+msgstr ""
+
+#: senlin/engine/service.py:1054
+msgid "Cannot update a node to a different profile type, operation aborted."
+msgstr ""
+
+#: senlin/engine/service.py:1145 senlin/engine/service.py:1186
+#: senlin/engine/service.py:1228
+#, python-format
+msgid "The specified policy (%s) is not found."
+msgstr ""
+
+#: senlin/engine/service.py:1192 senlin/engine/service.py:1234
+#, python-format
+msgid "The policy (%(p)s) is not attached to the specified cluster (%(c)s)."
+msgstr ""
+
+#: senlin/engine/service.py:1381
+#, python-format
+msgid "A receiver named '%s' already exists."
+msgstr ""
+
+#: senlin/engine/service.py:1390
+#, python-format
+msgid "Receiver type '%s' is not supported."
+msgstr ""
+
+#: senlin/engine/service.py:1398
+#, python-format
+msgid "The referenced cluster '%s' is not found."
+msgstr ""
+
+#: senlin/engine/service.py:1407
+#, python-format
+msgid "Illegal action '%s' specified."
+msgstr ""
+
+#: senlin/engine/service.py:1411
+#, python-format
+msgid "Action '%s' is not applicable to clusters."
+msgstr ""
+
+#: senlin/engine/service.py:1456
+#, python-format
+msgid "The referenced cluster (%s) is not found."
+msgstr ""
+
+#: senlin/engine/actions/base.py:258
+#, python-format
+msgid ""
+"Action (%(action)s) is in unexpected status (%(actual)s) while expected "
+"status should be one of (%(expected)s)."
+msgstr ""
+
+#: senlin/engine/actions/base.py:354
+#, python-format
+msgid "Failed policy '%(name)s': %(reason)s."
+msgstr ""
+
+#: senlin/engine/actions/base.py:387
+msgid "Completed policy checking."
+msgstr ""
+
+#: senlin/engine/actions/base.py:408
+#, python-format
+msgid "Policy %s cooldown is still in progress."
+msgstr ""
+
+#: senlin/engine/actions/base.py:475
+#, python-format
+msgid ""
+"Unexpected exception occurred during action %(action)s (%(id)s) "
+"execution: %(reason)s"
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:79
+#, python-format
+msgid "%(action)s [%(id)s] failed"
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:87
+#, python-format
+msgid "%(action)s [%(id)s] cancelled"
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:94
+#, python-format
+msgid "%(action)s [%(id)s] timeout"
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:181
+msgid "Cluster creation failed."
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:188
+msgid "Cluster creation succeeded."
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:205
+msgid "Cluster update failed."
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:259
+msgid "Cluster update completed."
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:313
+msgid "Deletion in progress."
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:329
+msgid "Cannot delete cluster object."
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:354
+#: senlin/engine/actions/cluster_action.py:431
+#, python-format
+msgid "Node [%s] is not found."
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:357
+#, python-format
+msgid "Node [%(n)s] is already owned by cluster [%(c)s]."
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:362
+#, python-format
+msgid "Node [%s] is not in ACTIVE status."
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:370
+msgid "Completed adding nodes."
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:440
+msgid "Completed deleting nodes."
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:481
+#, python-format
+msgid "Cluster resizing failed: %s"
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:510
+msgid "Cluster resize succeeded."
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:540
+#, python-format
+msgid "Invalid count (%s) for scaling out."
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:541
+#: senlin/engine/actions/cluster_action.py:554
+#: senlin/engine/actions/cluster_action.py:595
+#: senlin/engine/actions/cluster_action.py:613
+#, python-format
+msgid "Cluster scaling failed: %s"
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:561
+#: senlin/engine/actions/cluster_action.py:634
+msgid "Cluster scaling succeeded."
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:594
+#, python-format
+msgid "Invalid count (%s) for scaling in."
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:604
+#, python-format
+msgid ""
+"Triming count (%(count)s) to current cluster size (%(curr)s) for scaling "
+"in"
+msgstr ""
+
+#: senlin/engine/actions/cluster_action.py:698
+#: senlin/engine/actions/cluster_action.py:719
 #, python-format
 msgid "Policy check failure: %s"
 msgstr ""
 
-#: senlin/engine/actions/cluster_action.py:639
+#: senlin/engine/actions/cluster_action.py:708
 #, python-format
 msgid "Unsupported action: %s."
 msgstr ""
 
-#: senlin/engine/actions/cluster_action.py:667
-#, python-format
-msgid "Cluster (%(id)s) is not found"
-msgstr ""
-
-#: senlin/engine/actions/cluster_action.py:677
+#: senlin/engine/actions/cluster_action.py:742
 msgid "Failed in locking cluster."
 msgstr ""
 
-#: senlin/engine/actions/node_action.py:42
-msgid "Node created successfully"
-msgstr ""
-
-#: senlin/engine/actions/node_action.py:44
-msgid "Node creation failed"
-msgstr ""
-
-#: senlin/engine/actions/node_action.py:49
-msgid "Node deleted successfully"
-msgstr ""
-
-#: senlin/engine/actions/node_action.py:51
-msgid "Node deletion failed"
-msgstr ""
-
-#: senlin/engine/actions/node_action.py:57
-msgid "Node updated successfully"
-msgstr ""
-
-#: senlin/engine/actions/node_action.py:59
-msgid "Node update failed"
+#: senlin/engine/actions/node_action.py:74
+msgid "Node created successfully."
 msgstr ""
 
 #: senlin/engine/actions/node_action.py:76
-msgid "Node successfully joined cluster"
+msgid "Node creation failed."
 msgstr ""
 
-#: senlin/engine/actions/node_action.py:78
-msgid "Node failed in joining cluster"
+#: senlin/engine/actions/node_action.py:101
+msgid "Node deleted successfully."
 msgstr ""
 
-#: senlin/engine/actions/node_action.py:94
-msgid "Node successfully left cluster"
+#: senlin/engine/actions/node_action.py:103
+msgid "Node deletion failed."
 msgstr ""
 
-#: senlin/engine/actions/node_action.py:96
-msgid "Node failed in leaving cluster"
+#: senlin/engine/actions/node_action.py:113
+msgid "Node updated successfully."
 msgstr ""
 
-#: senlin/engine/actions/node_action.py:104
+#: senlin/engine/actions/node_action.py:115
+msgid "Node update failed."
+msgstr ""
+
+#: senlin/engine/actions/node_action.py:138
+msgid "Node successfully joined cluster."
+msgstr ""
+
+#: senlin/engine/actions/node_action.py:140
+msgid "Node failed in joining cluster."
+msgstr ""
+
+#: senlin/engine/actions/node_action.py:163
+msgid "Node successfully left cluster."
+msgstr ""
+
+#: senlin/engine/actions/node_action.py:165
+msgid "Node failed in leaving cluster."
+msgstr ""
+
+#: senlin/engine/actions/node_action.py:175
 #, python-format
 msgid "Unsupported action: %s"
 msgstr ""
 
-#: senlin/engine/actions/node_action.py:114
-#, python-format
-msgid "Node with id (%s) is not found"
-msgstr ""
-
-#: senlin/engine/actions/node_action.py:123
+#: senlin/engine/actions/node_action.py:197
 msgid "Failed in locking cluster"
 msgstr ""
 
-#: senlin/engine/actions/node_action.py:140
+#: senlin/engine/actions/node_action.py:215
 msgid "Failed in locking node"
 msgstr ""
 
-#: senlin/policies/base.py:93 senlin/profiles/base.py:40
+#: senlin/policies/base.py:44
 msgid "Name of the policy type."
 msgstr ""
 
-#: senlin/policies/base.py:97 senlin/profiles/base.py:44
+#: senlin/policies/base.py:48
 msgid "Version number of the policy type."
 msgstr ""
 
-#: senlin/policies/base.py:101
+#: senlin/policies/base.py:52
 msgid "A text description of policy."
 msgstr ""
 
-#: senlin/policies/base.py:105 senlin/profiles/base.py:48
+#: senlin/policies/base.py:56
 msgid "Properties for the policy."
 msgstr ""
 
-#: senlin/policies/base.py:286
+#: senlin/policies/base.py:232
 #, python-format
 msgid "Policy not applicable on profile type: %s"
 msgstr ""
@@ -1281,27 +1314,27 @@ msgstr ""
 msgid "Number of seconds between update batches if any."
 msgstr ""
 
-#: senlin/policies/deletion_policy.py:83
+#: senlin/policies/deletion_policy.py:85
 msgid "Criteria used in selecting candidates for deletion"
 msgstr ""
 
-#: senlin/policies/deletion_policy.py:90
+#: senlin/policies/deletion_policy.py:92
 msgid ""
-"Whether a node should be completely destroyed after deletion. Default to"
-" True"
+"Whether a node should be completely destroyed after deletion. Default to "
+"True"
 msgstr ""
 
-#: senlin/policies/deletion_policy.py:95
+#: senlin/policies/deletion_policy.py:97
 msgid "Number of seconds before real deletion happens."
 msgstr ""
 
-#: senlin/policies/deletion_policy.py:99
+#: senlin/policies/deletion_policy.py:101
 msgid ""
 "Whether the desired capacity of the cluster should be reduced along the "
 "deletion. Default to False."
 msgstr ""
 
-#: senlin/policies/deletion_policy.py:172
+#: senlin/policies/deletion_policy.py:189
 msgid "Candidates generated"
 msgstr ""
 
@@ -1339,133 +1372,216 @@ msgstr ""
 msgid "Service to be fenced."
 msgstr ""
 
-#: senlin/policies/lb_policy.py:98
+#: senlin/policies/lb_policy.py:99
 msgid "LB pool properties."
 msgstr ""
 
-#: senlin/policies/lb_policy.py:101
+#: senlin/policies/lb_policy.py:102
 msgid "Protocol used for load balancing."
 msgstr ""
 
-#: senlin/policies/lb_policy.py:108
+#: senlin/policies/lb_policy.py:109
 msgid "Port on which servers are running on the nodes."
 msgstr ""
 
-#: senlin/policies/lb_policy.py:112
+#: senlin/policies/lb_policy.py:113
 msgid "Name or ID of subnet for the port on which nodes can be connected."
 msgstr ""
 
-#: senlin/policies/lb_policy.py:117
+#: senlin/policies/lb_policy.py:118
 msgid "Load balancing algorithm."
 msgstr ""
 
-#: senlin/policies/lb_policy.py:124
+#: senlin/policies/lb_policy.py:125
 msgid "Administrative state of the pool."
 msgstr ""
 
-#: senlin/policies/lb_policy.py:128
+#: senlin/policies/lb_policy.py:129
 msgid "Session pesistence configuration."
 msgstr ""
 
-#: senlin/policies/lb_policy.py:131
+#: senlin/policies/lb_policy.py:132
 msgid "Type of session persistence implementation."
 msgstr ""
 
-#: senlin/policies/lb_policy.py:137
+#: senlin/policies/lb_policy.py:138
 msgid "Name of cookie if type set to APP_COOKIE."
 msgstr ""
 
-#: senlin/policies/lb_policy.py:145
+#: senlin/policies/lb_policy.py:146
 msgid "VIP address and port of the pool."
 msgstr ""
 
-#: senlin/policies/lb_policy.py:148
+#: senlin/policies/lb_policy.py:149
 msgid "Name or ID of Subnet on which the VIP address will be allocated."
 msgstr ""
 
-#: senlin/policies/lb_policy.py:153
+#: senlin/policies/lb_policy.py:154
 msgid "IP address of the VIP."
 msgstr ""
 
-#: senlin/policies/lb_policy.py:157
+#: senlin/policies/lb_policy.py:158
 msgid "Maximum number of connections per second allowed for this VIP"
 msgstr ""
 
-#: senlin/policies/lb_policy.py:162
+#: senlin/policies/lb_policy.py:163
 msgid "Protocol used for VIP."
 msgstr ""
 
-#: senlin/policies/lb_policy.py:169
+#: senlin/policies/lb_policy.py:170
 msgid "TCP port to listen on."
 msgstr ""
 
-#: senlin/policies/lb_policy.py:173
+#: senlin/policies/lb_policy.py:174
 msgid "Administrative state of the VIP."
 msgstr ""
 
-#: senlin/policies/lb_policy.py:246
+#: senlin/policies/lb_policy.py:247
 msgid "LB resources deletion succeeded."
 msgstr ""
 
-#: senlin/policies/lb_policy.py:307
-msgid "Failed in removing deleted node from lb pool"
+#: senlin/policies/lb_policy.py:314
+msgid "Failed in removing deleted node(s) from lb pool."
 msgstr ""
 
-#: senlin/policies/lb_policy.py:325
-msgid "Failed in adding new node into lb pool"
+#: senlin/policies/lb_policy.py:331
+msgid "Failed in adding new node(s) into lb pool."
 msgstr ""
 
-#: senlin/policies/scaling_policy.py:63
+#: senlin/policies/region_placement.py:87
+msgid "List of regions to choose from."
+msgstr ""
+
+#: senlin/policies/region_placement.py:89
+msgid "An region as a candidate."
+msgstr ""
+
+#: senlin/policies/region_placement.py:92
+msgid "Name of a region."
+msgstr ""
+
+#: senlin/policies/region_placement.py:95
+msgid "Weight of the region. The default is 100."
+msgstr ""
+
+#: senlin/policies/region_placement.py:99
+msgid ""
+"Maximum number of nodes in this region. The default is -1 which means no "
+"cap set."
+msgstr ""
+
+#: senlin/policies/region_placement.py:234
+msgid "No region is found usable."
+msgstr ""
+
+#: senlin/policies/region_placement.py:245
+msgid "There is no feasible plan to accommodate all nodes."
+msgstr ""
+
+#: senlin/policies/scaling_policy.py:59
 msgid ""
 "Event that will trigger this policy. Must be one of CLUSTER_SCALE_IN and "
 "CLUSTER_SCALE_OUT."
 msgstr ""
 
-#: senlin/policies/scaling_policy.py:71
+#: senlin/policies/scaling_policy.py:67
 msgid "Detailed specification for scaling adjustments."
 msgstr ""
 
-#: senlin/policies/scaling_policy.py:74
+#: senlin/policies/scaling_policy.py:70
 msgid "Type of adjustment when scaling is triggered."
 msgstr ""
 
-#: senlin/policies/scaling_policy.py:81
+#: senlin/policies/scaling_policy.py:77
 msgid "A number specifying the amount of adjustment."
 msgstr ""
 
-#: senlin/policies/scaling_policy.py:85
+#: senlin/policies/scaling_policy.py:81
 msgid ""
 "When adjustment type is set to \"CHANGE_IN_PERCENTAGE\", this specifies "
 "the cluster size will be decreased by at least this number of nodes."
 msgstr ""
 
-#: senlin/policies/scaling_policy.py:91
+#: senlin/policies/scaling_policy.py:87
 msgid ""
 "Whether do best effort scaling when new size of cluster will break the "
 "size limitation"
 msgstr ""
 
-#: senlin/policies/scaling_policy.py:131
+#: senlin/policies/scaling_policy.py:127
 msgid "Scaling request validated."
 msgstr ""
 
-#: senlin/policies/scaling_policy.py:149
+#: senlin/policies/scaling_policy.py:140
 #, python-format
 msgid "Count (%(count)s) invalid for action %(action)s."
 msgstr ""
 
-#: senlin/policies/scaling_policy.py:158 senlin/policies/scaling_policy.py:167
-#: senlin/tests/unit/policies/test_scaling_policy.py:276
+#: senlin/policies/scaling_policy.py:149 senlin/policies/scaling_policy.py:158
+#: senlin/tests/unit/policies/test_scaling_policy.py:274
 msgid "Do best effort scaling."
 msgstr ""
 
-#: senlin/policies/scaling_policy.py:161
-#: senlin/tests/unit/policies/test_scaling_policy.py:255
+#: senlin/policies/scaling_policy.py:152
+#: senlin/tests/unit/policies/test_scaling_policy.py:253
 msgid "Attempted scaling below minimum size."
 msgstr ""
 
-#: senlin/policies/scaling_policy.py:170
+#: senlin/policies/scaling_policy.py:161
 msgid "Attempted scaling above maximum size."
+msgstr ""
+
+#: senlin/policies/vSphereDRS_policy.py:99
+msgid "group where place nodes"
+msgstr ""
+
+#: senlin/policies/vSphereDRS_policy.py:102
+msgid "the name of given server_group"
+msgstr ""
+
+#: senlin/policies/vSphereDRS_policy.py:105
+msgid "the affinity or anti-affintiy control rule"
+msgstr ""
+
+#: senlin/policies/vSphereDRS_policy.py:188
+msgid "Server group resources deletion succeeded"
+msgstr ""
+
+#: senlin/policies/zone_placement.py:87
+msgid "List of availability zones to choose from."
+msgstr ""
+
+#: senlin/policies/zone_placement.py:89
+msgid "An availability zone as candidate."
+msgstr ""
+
+#: senlin/policies/zone_placement.py:92
+msgid "Name of an availability zone."
+msgstr ""
+
+#: senlin/policies/zone_placement.py:95
+msgid "Weight of the availability zone (default is 100)."
+msgstr ""
+
+#: senlin/policies/zone_placement.py:220
+msgid "No availability zone found available."
+msgstr ""
+
+#: senlin/profiles/base.py:42
+msgid "Name of the profile type."
+msgstr ""
+
+#: senlin/profiles/base.py:46
+msgid "Version number of the profile type."
+msgstr ""
+
+#: senlin/profiles/base.py:50
+msgid "Properties for the profile."
+msgstr ""
+
+#: senlin/profiles/base.py:323
+#, python-format
+msgid "Failed at recovering obj: %s "
 msgstr ""
 
 #: senlin/profiles/os/heat/stack.py:45
@@ -1503,142 +1619,235 @@ msgstr ""
 msgid "Failed validate stack template due to \"%s\""
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:75
+#: senlin/profiles/os/nova/server.py:84
 msgid "Customized security context for operating servers."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:78
+#: senlin/profiles/os/nova/server.py:87
 msgid "Password for the administrator account."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:81
+#: senlin/profiles/os/nova/server.py:90
 msgid "Whether the disk partition is done automatically."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:85
+#: senlin/profiles/os/nova/server.py:94
 msgid "Name of availability zone for running the server."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:88
+#: senlin/profiles/os/nova/server.py:97 senlin/profiles/os/nova/server.py:113
 msgid ""
 "A list specifying the properties of block devices to be used for this "
 "server."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:91
+#: senlin/profiles/os/nova/server.py:100 senlin/profiles/os/nova/server.py:116
 msgid ""
 "A map specifying the properties of a block device to be used by the "
 "server."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:95
+#: senlin/profiles/os/nova/server.py:104
 msgid "Block device name, should be <=255 chars."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:98
+#: senlin/profiles/os/nova/server.py:107
 msgid "Block device size in GB."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:104
+#: senlin/profiles/os/nova/server.py:120
+msgid "ID of the source image, snapshot or volume"
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:123
+msgid "Volume source type, should be image, snapshot, volume or blank"
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:128
+msgid "Volume destination type, should be volume or local"
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:133
+msgid "Bus of the device."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:136
+msgid "Name of the device(e.g. vda, xda, ....)."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:139
+msgid "Size of the block device in MB(for swap) and in GB(for other formats)"
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:144
+msgid "Specifies the disk file system format(e.g. swap, ephemeral, ...)."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:148
+msgid "Define the boot order of the device"
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:151
+msgid "Type of the device(e.g. disk, cdrom, ...)."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:154
+msgid "Whether to delete the volume when the server stops."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:161
 msgid "Whether config drive should be enabled for the server."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:107
+#: senlin/profiles/os/nova/server.py:164
 msgid "ID of flavor used for the server."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:113
+#: senlin/profiles/os/nova/server.py:171
 msgid "ID of image to be used for the new server."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:116
+#: senlin/profiles/os/nova/server.py:175
 msgid "Name of Nova keypair to be injected to server."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:119
+#: senlin/profiles/os/nova/server.py:178
 msgid ""
 "A collection of key/value pairs to be associated with the server created."
 " Both key and value should be <=255 chars."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:123
+#: senlin/profiles/os/nova/server.py:182
 msgid "Name of the server."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:127
+#: senlin/profiles/os/nova/server.py:186
 msgid "List of networks for the server."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:129
+#: senlin/profiles/os/nova/server.py:188
 msgid "A map specifying the properties of a network for uses."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:132
+#: senlin/profiles/os/nova/server.py:191
 msgid "Name or ID of network to create a port on."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:135
+#: senlin/profiles/os/nova/server.py:194
 msgid "Port ID to be used by the network."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:138
+#: senlin/profiles/os/nova/server.py:197
 msgid "Fixed IP to be used by the network."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:144
+#: senlin/profiles/os/nova/server.py:204
 msgid "List of files to be injected into the server, where each."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:146
+#: senlin/profiles/os/nova/server.py:206
 msgid "A map specifying the path & contents for an injected file."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:150
+#: senlin/profiles/os/nova/server.py:210
 msgid "In-instance path for the file to be injected."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:154
+#: senlin/profiles/os/nova/server.py:214
 msgid "Contents of the file to be injected."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:161
+#: senlin/profiles/os/nova/server.py:221
 msgid ""
 "A collection of key/value pairs to be associated with the Scheduler "
 "hints. Both key and value should be <=255 chars."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:166
+#: senlin/profiles/os/nova/server.py:226
 msgid "List of security groups."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:168
+#: senlin/profiles/os/nova/server.py:228
 msgid "Name of a security group"
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:173
-msgid "Time out threshold for server operations."
-msgstr ""
-
-#: senlin/profiles/os/nova/server.py:177
+#: senlin/profiles/os/nova/server.py:233
 msgid "User data to be exposed by the metadata server."
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:193
+#: senlin/profiles/os/nova/server.py:392
 #, python-format
-msgid "Value of the 'timeout' property must be lower than the upper limit (%s)."
+msgid "Failed in updating server flavor: %s"
 msgstr ""
 
-#: senlin/profiles/os/nova/server.py:286
+#: senlin/profiles/os/nova/server.py:407
 #, python-format
-msgid "Failed in creating server: %s"
+msgid "Failed in updating server image: %s"
 msgstr ""
 
-#: senlin/tests/functional/test_cluster_scaling.py:82
+#: senlin/profiles/os/nova/server.py:427
+#, python-format
+msgid "Failed in updating server network: %s"
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:446
+#, python-format
+msgid "Failed in updating server metadata: %s"
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:458
+#, python-format
+msgid "Failed in updating server name: %s"
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:477
+#, python-format
+msgid "Server resizing failed, revert it: %s"
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:508
+msgid "Updating Nova server with image set to None is not supported by Nova."
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:702
+#, python-format
+msgid "Failed at getting server: %s"
+msgstr ""
+
+#: senlin/profiles/os/nova/server.py:717
+#, python-format
+msgid "Failed at rebuilding server: %s"
+msgstr ""
+
+#: senlin/tests/functional/test_cluster_scaling.py:76
+#: senlin/tests/functional/test_cluster_scaling.py:213
 msgid "The target capacity (6) is greater than the cluster's max_size (5)."
 msgstr ""
 
-#: senlin/tests/functional/test_cluster_scaling.py:119
+#: senlin/tests/functional/test_cluster_scaling.py:113
+#: senlin/tests/functional/test_cluster_scaling.py:247
+#: senlin/tests/unit/engine/actions/test_cluster_action.py:1754
 msgid "The target capacity (0) is less than the cluster's min_size (1)."
+msgstr ""
+
+#: senlin/tests/functional/test_cluster_scaling.py:342
+msgid "The target capacity (1) is less than the specified min_size (2)."
+msgstr ""
+
+#: senlin/tests/functional/test_cluster_scaling.py:380
+msgid "The target capacity (4) is less than the specified min_size (5)."
+msgstr ""
+
+#: senlin/tests/functional/test_cluster_scaling.py:396
+msgid "The target capacity (3) is greater than the specified max_size (0)."
+msgstr ""
+
+#: senlin/tests/functional/test_cluster_scaling.py:405
+msgid "The specified min_size (5) is greater than the specified max_size (3)."
+msgstr ""
+
+#: senlin/tests/functional/test_scaling_policy.py:143
+msgid "Policy check failure: Attempted scaling below minimum size."
 msgstr ""
 
 #: senlin/tests/functional/common/client.py:46
@@ -1649,22 +1858,22 @@ msgid ""
 "Body: %(body)s"
 msgstr ""
 
-#: senlin/tests/functional/common/client.py:113
+#: senlin/tests/functional/common/client.py:118
 #, python-format
 msgid "Doing authentication: auth_url %(auth_url)s, status %(http_status)s."
 msgstr ""
 
-#: senlin/tests/functional/common/client.py:118
+#: senlin/tests/functional/common/client.py:123
 #, python-format
 msgid "Authentication failed: %s"
 msgstr ""
 
-#: senlin/tests/functional/common/client.py:143
+#: senlin/tests/functional/common/client.py:149
 #, python-format
 msgid "Admin endpoint of clustering service in %(region)s was not found."
 msgstr ""
 
-#: senlin/tests/functional/common/client.py:156
+#: senlin/tests/functional/common/client.py:162
 #, python-format
 msgid "request url %(url)s, status_code %(status)s, response body %(body)s"
 msgstr ""
@@ -1686,244 +1895,115 @@ msgstr ""
 msgid "Testing message %(text)s"
 msgstr ""
 
-#: senlin/tests/unit/apiv1/test_clusters.py:791
+#: senlin/tests/unit/test_common_scaleutils.py:180
+msgid "The target capacity (11) is greater than the specified max_size (10)."
+msgstr ""
+
+#: senlin/tests/unit/apiv1/test_clusters.py:784
 msgid "Invalid value '10min' specified for 'timeout'"
 msgstr ""
 
-#: senlin/tests/unit/apiv1/test_webhooks.py:335
+#: senlin/tests/unit/apiv1/test_receivers.py:291
 #, python-format
-msgid "webhook obj_type %s is unsupported"
+msgid "receiver obj_type (%s) is unsupported"
 msgstr ""
 
-#: senlin/tests/unit/apiv1/test_webhooks.py:408
+#: senlin/tests/unit/apiv1/test_receivers.py:356
 #, python-format
-msgid "illegal action name %s"
+msgid "Illegal action (%s) specified."
 msgstr ""
 
-#: senlin/tests/unit/apiv1/test_webhooks.py:446
-#, python-format
-msgid "Action %(action)s is not applicable to object %(obj_type)s"
-msgstr ""
-
-#: senlin/tests/unit/apiv1/test_webhooks.py:481
-msgid "The credential parameter is missing"
-msgstr ""
-
-#: senlin/tests/unit/driver/test_lbaas_driver.py:164
+#: senlin/tests/unit/drivers/test_lbaas_driver.py:164
 #, python-format
 msgid "Failed in creating load balancer (%s)."
 msgstr ""
 
-#: senlin/tests/unit/driver/test_lbaas_driver.py:177
+#: senlin/tests/unit/drivers/test_lbaas_driver.py:177
 msgid "Failed in getting subnet: GET FAILED."
 msgstr ""
 
-#: senlin/tests/unit/driver/test_lbaas_driver.py:186
+#: senlin/tests/unit/drivers/test_lbaas_driver.py:186
 msgid "Failed in creating loadbalancer: CREATE FAILED."
 msgstr ""
 
-#: senlin/tests/unit/driver/test_lbaas_driver.py:211
+#: senlin/tests/unit/drivers/test_lbaas_driver.py:211
 #, python-format
 msgid "Failed in creating listener (%s)."
 msgstr ""
 
-#: senlin/tests/unit/driver/test_lbaas_driver.py:229
+#: senlin/tests/unit/drivers/test_lbaas_driver.py:229
 msgid "Failed in creating lb listener: CREATE FAILED."
 msgstr ""
 
-#: senlin/tests/unit/driver/test_lbaas_driver.py:256
+#: senlin/tests/unit/drivers/test_lbaas_driver.py:256
 #, python-format
 msgid "Failed in creating pool (%s)."
 msgstr ""
 
-#: senlin/tests/unit/driver/test_lbaas_driver.py:277
+#: senlin/tests/unit/drivers/test_lbaas_driver.py:277
 msgid "Failed in creating lb pool: CREATE FAILED."
 msgstr ""
 
-#: senlin/tests/unit/driver/test_lbaas_driver.py:314
+#: senlin/tests/unit/drivers/test_lbaas_driver.py:314
 msgid "Failed in deleting healthmonitor: DELETE FAILED."
 msgstr ""
 
-#: senlin/tests/unit/driver/test_lbaas_driver.py:332
+#: senlin/tests/unit/drivers/test_lbaas_driver.py:332
 msgid "Failed in deleting lb pool: DELETE FAILED."
 msgstr ""
 
-#: senlin/tests/unit/driver/test_lbaas_driver.py:350
+#: senlin/tests/unit/drivers/test_lbaas_driver.py:350
 msgid "Failed in deleting listener: DELETE FAILED."
 msgstr ""
 
-#: senlin/tests/unit/engine/test_webhook.py:326
-#, python-format
-msgid "HTTP://HOST_IP:PORT/V1/%(tenant_id)s/webhooks/%(webhook_id)s/trigger?key=%(key)s"
+#: senlin/tests/unit/engine/actions/test_cluster_action.py:1337
+msgid "The target capacity (8) is less than the specified min_size (10)."
 msgstr ""
 
-#: senlin/tests/unit/engine/service/test_clusters.py:647
+#: senlin/tests/unit/engine/actions/test_cluster_action.py:1512
+msgid "The target capacity (5) is greater than the cluster's max_size (4)."
+msgstr ""
+
+#: senlin/tests/unit/engine/service/test_clusters.py:95
+msgid "The request is malformed: The cluster (c-1) already exists."
+msgstr ""
+
+#: senlin/tests/unit/engine/service/test_clusters.py:600
 #, python-format
 msgid ""
-"The request is malformed: Cluster %(id)s is not allowed to be deleted "
-"without detaching all policies."
+"The request is malformed: Cluster %(id)s cannot be deleted without having"
+" all policies detached."
 msgstr ""
 
-#: senlin/tests/unit/policies/test_scaling_policy.py:235
+#: senlin/tests/unit/engine/service/test_nodes.py:113
+msgid "The request is malformed: The node (n-1) already exists."
+msgstr ""
+
+#: senlin/tests/unit/engine/service/test_policies.py:64
+msgid "The request is malformed: The policy (p-1) already exists."
+msgstr ""
+
+#: senlin/tests/unit/engine/service/test_profiles.py:66
+msgid "The request is malformed: The profile (p-1) already exists."
+msgstr ""
+
+#: senlin/tests/unit/engine/service/test_receivers.py:212
+msgid "The request is malformed: A receiver named 'r1' already exists."
+msgstr ""
+
+#: senlin/tests/unit/engine/service/test_receivers.py:222
+msgid "The request is malformed: Receiver type 'rocket' is not supported."
+msgstr ""
+
+#: senlin/tests/unit/policies/test_scaling_policy.py:233
 msgid "Count (-2) invalid for action CLUSTER_SCALE_IN."
 msgstr ""
 
-#: senlin/triggers/base.py:45
-msgid "Type name of the trigger type."
+#: senlin/tests/unit/policies/test_scaling_policy.py:321
+msgid "Count (-1) invalid for action CLUSTER_SCALE_IN."
 msgstr ""
 
-#: senlin/triggers/base.py:49
-msgid "Version number string of the trigger type."
-msgstr ""
-
-#: senlin/triggers/base.py:53
-msgid "Rule collection for the trigger."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:92
-msgid ""
-"Whether the actions should be re-triggered on each evaluation cycle. "
-"Default to False."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:98
-msgid "A map of time constraint settings."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:101
-msgid "Name of the time constraint."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:104
-msgid "A description of the time constraint."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:107
-msgid ""
-"Start point of the time constraint, expressed as a string in cron "
-"expression format."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:112
-msgid "How long the constraint should last, in seconds."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:116
-msgid "Time zone of the constraint."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:140
-#, python-format
-msgid ""
-"Invalid cron expression specified for property '%(property)s' (%(exp)s): "
-"%(ex)s"
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:150
-#, python-format
-msgid ""
-"Invalid timezone value specified for property '%(property)s' (%(tz)s): "
-"%(ex)s"
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:214
-msgid "Name of a meter to evaluate against."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:218
-#: senlin/triggers/ceilometer/alarm.py:306
-#: senlin/triggers/ceilometer/alarm.py:358
-#: senlin/triggers/ceilometer/alarm.py:401
-msgid "Comparison operator for evaluation."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:225
-#: senlin/triggers/ceilometer/alarm.py:313
-#: senlin/triggers/ceilometer/alarm.py:365
-#: senlin/triggers/ceilometer/alarm.py:408
-msgid "Threshold for evaluation."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:229
-#: senlin/triggers/ceilometer/alarm.py:369
-#: senlin/triggers/ceilometer/alarm.py:412
-msgid "Length of every evaluation period in seconds."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:233
-#: senlin/triggers/ceilometer/alarm.py:321
-#: senlin/triggers/ceilometer/alarm.py:373
-#: senlin/triggers/ceilometer/alarm.py:416
-msgid "Number of periods to evaluate over."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:237
-#: senlin/triggers/ceilometer/alarm.py:325
-#, python-format
-msgid "Statistics to evaluate. Must be one of %s, default to \"avg\"."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:245
-msgid "The query to find the dat afor computing statistics."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:249
-msgid "A field of a meter to query."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:253
-msgid "An operator for meter comparison."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:257
-msgid "A value for comparison."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:276
-#, python-format
-msgid "Operator for combination. Must be one of %s"
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:281
-msgid "List of alarm IDs for combination."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:283
-msgid "The ID of an alarm."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:302
-msgid "Name of a metric to evaluate against."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:317
-msgid "Length of each evaluation period in seconds."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:333
-#: senlin/triggers/ceilometer/alarm.py:428
-msgid "The resource type."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:337
-msgid "The ID of a resource."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:354
-msgid "Metrics to evaluate against."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:377
-#: senlin/triggers/ceilometer/alarm.py:420
-#, python-format
-msgid "Statistics to evaluate. Must be one of %s."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:397
-msgid "Metric to evaluate against."
-msgstr ""
-
-#: senlin/triggers/ceilometer/alarm.py:432
-msgid "Gnocchi resources search query filter."
+#: senlin/tests/unit/profiles/test_nova_server.py:1001
+msgid "Failed in updating FAKE_ID."
 msgstr ""
 
