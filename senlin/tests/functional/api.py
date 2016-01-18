@@ -16,7 +16,9 @@ import requests
 
 def create_cluster(client, name, profile_id, desired_capacity,
                    min_size=0, max_size=-1, parent=None,
-                   metadata={}, timeout=120):
+                   metadata=None, timeout=120):
+    if not metadata:
+        metadata = {}
     rel_url = 'clusters'
     status = [202]
     data = {
@@ -126,7 +128,9 @@ def delete_node(client, node_id):
     return
 
 
-def create_profile(client, name, spec, metadata={}):
+def create_profile(client, name, spec, metadata=None):
+    if not metadata:
+        metadata = {}
     rel_url = 'profiles'
     status = [201]
     data = {
