@@ -39,7 +39,3 @@ class LazyPluggable(object):
 
 
 IMPL = LazyPluggable('backend', sqlalchemy='senlin.db.sqlalchemy.api')
-
-
-def purge_deleted(age, unit='days'):
-    pass
