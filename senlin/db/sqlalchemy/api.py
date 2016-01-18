@@ -1170,7 +1170,7 @@ def receiver_get_by_short_id(context, short_id, project_safe=True):
                              project_safe=project_safe)
 
 
-def receiver_delete(context, receiver_id, force=False):
+def receiver_delete(context, receiver_id):
     session = _session(context)
     receiver = session.query(models.Receiver).get(receiver_id)
     if not receiver:
