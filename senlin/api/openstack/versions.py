@@ -22,7 +22,7 @@ import webob.dec
 
 
 class Controller(object):
-    '''A controller that produces information on the senlin API versions.'''
+    """A controller that produces information on the senlin API versions."""
 
     def __init__(self, conf):
         self.conf = conf
@@ -32,12 +32,19 @@ class Controller(object):
         """Respond to a request for all OpenStack API versions."""
         version_objs = [
             {
-                "id": "v1.0",
+                "id": "1.0",
                 "status": "CURRENT",
+                "updated": "2016-01-18T00:00:00Z",
+                "media-types": [
+                    {
+                        "base": "application/json",
+                        "type": "application/vnd.openstack.clustering-v1+json"
+                    }
+                ],
                 "links": [
                     {
                         "rel": "self",
-                        "href": self.get_href(req)
+                        "href": "/v1/"
                     }]
             }]
 
@@ -49,6 +56,3 @@ class Controller(object):
         response.body = encodeutils.safe_encode(body)
 
         return response
-
-    def get_href(self, req):
-        return "%s/v1/" % req.host_url

@@ -38,18 +38,24 @@ class VersionControllerTest(base.SenlinTestCase):
             'REQUEST_METHOD': 'GET',
             'SERVER_NAME': 'host',
             'SERVER_PORT': 8778,
-            'SCRIPT_NAME': '/v1',
-            'PATH_INFO': '/versions',
+            'SCRIPT_NAME': '/',
+            'PATH_INFO': '/',
             'wsgi.url_scheme': 'http',
         }
         req = wsgi.Request(environ)
         expected_dict = {
             'versions': [{
-                'id': 'v1.0',
+                'id': '1.0',
                 'status': 'CURRENT',
+                'updated': '2016-01-18T00:00:00Z',
+                'media-types': [{
+                    'base': 'application/json',
+                    'type': 'application/vnd.openstack.clustering-v1+json'
+
+                }],
                 'links': [{
                     'rel': 'self',
-                    'href': 'http://host:8778/v1/'
+                    'href': '/v1/'
                 }]
             }]
         }
@@ -61,12 +67,3 @@ class VersionControllerTest(base.SenlinTestCase):
         self.assertEqual(expected_body, encodeutils.safe_decode(resp.body))
         self.assertEqual(http_client.MULTIPLE_CHOICES, resp.status_code)
         self.assertEqual('application/json', resp.content_type)
-
-    def test_get_href(self):
-        controller = versions.Controller(mock.Mock())
-        req = mock.Mock()
-        req.host_url = 'FAKE_URL'
-
-        res = controller.get_href(req)
-
-        self.assertEqual('FAKE_URL/v1/', res)
