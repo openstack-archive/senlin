@@ -67,7 +67,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
 
     @mock.patch.object(policy_base.Policy, '_build_conn_params')
     @mock.patch.object(driver_base, 'SenlinDriver')
-    def test_keystone(self, mock_sd, mock_conn):
+    def test__keystone(self, mock_sd, mock_conn):
         params = mock.Mock()
         mock_conn.return_value = params
         kc = mock.Mock()
@@ -77,7 +77,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         cluster = mock.Mock()
         policy = rp.RegionPlacementPolicy('p1', self.spec)
 
-        res = policy.keystone(cluster)
+        res = policy._keystone(cluster)
 
         self.assertEqual(kc, res)
         self.assertEqual(kc, policy._keystoneclient)
@@ -85,80 +85,47 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         mock_sd.assert_called_once_with()
         driver.identity.assert_called_once_with(params)
 
-    def test__validate_regions(self):
-        cluster = mock.Mock()
-        kc = mock.Mock()
-        kc.region_list.return_value = [
-            {'id': 'R1', 'parent_region_id': None},
-            {'id': 'R2', 'parent_region_id': None},
-            {'id': 'R3', 'parent_region_id': 'R1'},
-        ]
-
-        policy = rp.RegionPlacementPolicy('p1', self.spec)
-        policy._keystoneclient = kc
-
-        result = policy._validate_regions(cluster)
-
-        for r in ['R1', 'R2', 'R3']:
-            self.assertIn(r, result)
-        self.assertNotIn('R4', result)
-
-    def test__get_current_dist(self):
-        node1 = mock.Mock()
-        node1.data = {
-            'placement': {
-                'region_name': 'R1'
-            }
-        }
-        node2 = mock.Mock()
-        node2.data = {
-            'placement': {
-                'region_name': 'R2',
-            }
-        }
-        node3 = mock.Mock()
-        node3.data = {'key': 'value'}
-
-        nodes = [node1, node2, node3]
-
-        policy = rp.RegionPlacementPolicy('p1', self.spec)
-        regions = policy.regions
-        result = policy._get_current_dist(regions, nodes)
-
-        self.assertEqual(4, len(result))
-        self.assertEqual(1, result['R1'])
-        self.assertEqual(1, result['R2'])
-        self.assertEqual(0, result['R3'])
-        self.assertEqual(0, result['R4'])
-
     def test__create_plan(self):
         policy = rp.RegionPlacementPolicy('p1', self.spec)
         regions = policy.regions
 
         current = {'R1': 2, 'R2': 2, 'R3': 2, 'R4': 1}
-        plan = policy._create_plan(current, regions, 5)
-        answer = {'R1': 4, 'R2': 1, 'R3': 0, 'R4': 0}
+        result = policy._create_plan(current, regions, 5, True)
+        expected = {'R1': 4, 'R2': 1}
+        self.assertEqual(expected, result)
+
+        current = {'R1': 2, 'R2': 2, 'R3': 0, 'R4': 1}
+        plan = policy._create_plan(current, regions, 5, True)
+        answer = {'R1': 3, 'R2': 1, 'R3': 1}
         self.assertEqual(answer, plan)
 
         current = {'R1': 2, 'R2': 2, 'R3': 0, 'R4': 1}
-        plan = policy._create_plan(current, regions, 5)
-        answer = {'R1': 3, 'R2': 1, 'R3': 1, 'R4': 0}
+        plan = policy._create_plan(current, regions, 3, False)
+        answer = {'R2': 2, 'R4': 1}
         self.assertEqual(answer, plan)
 
+        current = {'R1': 4, 'R2': 2, 'R3': 1, 'R4': 1}
+        plan = policy._create_plan(current, regions, 3, False)
+        answer = {'R2': 1, 'R3': 1, 'R4': 1}
+        self.assertEqual(answer, plan)
+
+    @mock.patch.object(rp.RegionPlacementPolicy, '_keystone')
     @mock.patch.object(cluster_mod.Cluster, 'load')
-    def test_pre_op(self, mock_load):
+    def test_pre_op(self, mock_load, mock_keystone):
         # test pre_op method whether returns the correct action.data
         policy = rp.RegionPlacementPolicy('p1', self.spec)
         regions = policy.regions
-        plan = {'R1': 1, 'R2': 0, 'R3': 2, 'R4': 0}
-        current_dist = {'R1': 0, 'R2': 0, 'R3': 0, 'R4': 0}
-        self.patchobject(policy, '_validate_regions', return_value=regions)
+
+        kc = mock.Mock()
+        kc.validate_regions.return_value = regions.keys()
+        mock_keystone.return_value = kc
+
+        plan = {'R1': 1, 'R3': 2}
         self.patchobject(policy, '_create_plan', return_value=plan)
-        self.patchobject(policy, '_get_current_dist',
-                         return_value=current_dist)
 
         action = mock.Mock()
         action.context = self.context
+        action.action = 'CLUSTER_SCALE_OUT'
         action.inputs = {}
         action.data = {
             'creation': {
@@ -167,70 +134,71 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         }
 
         cluster = mock.Mock()
+        current_dist = {'R1': 0, 'R2': 0, 'R3': 0, 'R4': 0}
+        cluster.get_region_distribution.return_value = current_dist
         mock_load.return_value = cluster
 
         res = policy.pre_op('FAKE_CLUSTER', action)
 
         self.assertIsNone(res)
 
-        self.assertEqual(3, action.data['placement']['count'])
-        self.assertEqual(3, len(action.data['placement']['placements']))
-        self.assertIn({'region_name': 'R1'},
-                      action.data['placement']['placements'])
-        self.assertIn({'region_name': 'R3'},
-                      action.data['placement']['placements'])
-        self.assertNotIn({'region_name': 'R2'},
-                         action.data['placement']['placements'])
-        self.assertNotIn({'region_name': 'R4'},
-                         action.data['placement']['placements'])
+        self.assertEqual(3, action.data['creation']['count'])
+        dist = action.data['creation']['regions']
+        self.assertEqual(2, len(dist))
+        self.assertEqual(1, dist['R1'])
+        self.assertEqual(2, dist['R3'])
 
         mock_load.assert_called_once_with(action.context, 'FAKE_CLUSTER')
-        policy._validate_regions.assert_called_once_with(cluster)
-        policy._get_current_dist.assert_called_once_with(policy.regions,
-                                                         cluster.nodes)
-        policy._create_plan.assert_called_once_with(current_dist, regions, 3)
+        kc.validate_regions.assert_called_once_with(regions.keys())
+        cluster.get_region_distribution.assert_called_once_with(regions.keys())
+        policy._create_plan.assert_called_once_with(
+            current_dist, regions, 3, True)
 
+    @mock.patch.object(rp.RegionPlacementPolicy, '_keystone')
     @mock.patch.object(cluster_mod.Cluster, 'load')
-    def test_pre_op_count_from_inputs(self, mock_load):
+    def test_pre_op_count_from_inputs(self, mock_load, mock_keystone):
         # test pre_op method whether returns the correct action.data
         policy = rp.RegionPlacementPolicy('p1', self.spec)
         regions = policy.regions
-        plan = {'R1': 1, 'R2': 0, 'R3': 2, 'R4': 0}
+
+        kc = mock.Mock()
+        kc.validate_regions.return_value = regions.keys()
+        mock_keystone.return_value = kc
+
+        cluster = mock.Mock()
         current_dist = {'R1': 0, 'R2': 0, 'R3': 0, 'R4': 0}
-        self.patchobject(policy, '_validate_regions', return_value=regions)
+        cluster.get_region_distribution.return_value = current_dist
+        mock_load.return_value = cluster
+
+        plan = {'R1': 1, 'R3': 2}
         self.patchobject(policy, '_create_plan', return_value=plan)
-        self.patchobject(policy, '_get_current_dist',
-                         return_value=current_dist)
 
         action = mock.Mock()
         action.context = self.context
+        action.action = 'CLUSTER_SCALE_OUT'
         action.inputs = {'count': 3}
         action.data = {}
-
-        cluster = mock.Mock()
-        mock_load.return_value = cluster
 
         res = policy.pre_op('FAKE_CLUSTER', action)
 
         self.assertIsNone(res)
-        self.assertEqual(3, action.data['placement']['count'])
-        self.assertEqual(3, len(action.data['placement']['placements']))
-        self.assertIn({'region_name': 'R1'},
-                      action.data['placement']['placements'])
-        self.assertIn({'region_name': 'R3'},
-                      action.data['placement']['placements'])
-        self.assertNotIn({'region_name': 'R2'},
-                         action.data['placement']['placements'])
-        self.assertNotIn({'region_name': 'R4'},
-                         action.data['placement']['placements'])
+        self.assertEqual(3, action.data['creation']['count'])
+        dist = action.data['creation']['regions']
+        self.assertEqual(2, len(dist))
+        self.assertEqual(1, dist['R1'])
+        self.assertEqual(2, dist['R3'])
 
+    @mock.patch.object(rp.RegionPlacementPolicy, '_keystone')
     @mock.patch.object(cluster_mod.Cluster, 'load')
-    def test_pre_op_no_regions(self, mock_load):
+    def test_pre_op_no_regions(self, mock_load, mock_keystone):
         # test pre_op method whether returns the correct action.data
         policy = rp.RegionPlacementPolicy('p1', self.spec)
-        self.patchobject(policy, '_validate_regions', return_value=[])
+        kc = mock.Mock()
+        kc.validate_regions.return_value = []
+        mock_keystone.return_value = kc
 
         action = mock.Mock()
+        action.action = 'CLUSTER_SCALE_OUT'
         action.context = self.context
         action.data = {'creation': {'count': 3}}
 
@@ -243,23 +211,28 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         self.assertEqual('ERROR', action.data['status'])
         self.assertEqual('No region is found usable.', action.data['reason'])
 
+    @mock.patch.object(rp.RegionPlacementPolicy, '_keystone')
     @mock.patch.object(cluster_mod.Cluster, 'load')
-    def test_pre_op_no_feasible_plan(self, mock_load):
+    def test_pre_op_no_feasible_plan(self, mock_load, mock_keystone):
         # test pre_op method whether returns the correct action.data
         policy = rp.RegionPlacementPolicy('p1', self.spec)
         regions = policy.regions
-        current_dist = {'R1': 0, 'R2': 0, 'R3': 0, 'R4': 0}
-        self.patchobject(policy, '_validate_regions', return_value=regions)
+
+        kc = mock.Mock()
+        kc.validate_regions.return_value = regions.keys()
+        mock_keystone.return_value = kc
+
         self.patchobject(policy, '_create_plan', return_value=None)
-        self.patchobject(policy, '_get_current_dist',
-                         return_value=current_dist)
 
         action = mock.Mock()
+        action.action = 'CLUSTER_SCALE_OUT'
         action.context = self.context
         action.inputs = {}
         action.data = {'creation': {'count': 3}}
 
         cluster = mock.Mock()
+        current_dist = {'R1': 0, 'R2': 0, 'R3': 0, 'R4': 0}
+        cluster.get_region_distribution.return_value = current_dist
         mock_load.return_value = cluster
 
         res = policy.pre_op('FAKE_CLUSTER', action)
@@ -267,11 +240,11 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         self.assertIsNone(res)
 
         self.assertEqual('ERROR', action.data['status'])
-        self.assertEqual('There is no feasible plan to accommodate all nodes.',
+        self.assertEqual('There is no feasible plan to handle all nodes.',
                          action.data['reason'])
 
         mock_load.assert_called_once_with(action.context, 'FAKE_CLUSTER')
-        policy._validate_regions.assert_called_once_with(cluster)
-        policy._get_current_dist.assert_called_once_with(policy.regions,
-                                                         cluster.nodes)
-        policy._create_plan.assert_called_once_with(current_dist, regions, 3)
+        kc.validate_regions.assert_called_once_with(regions.keys())
+        cluster.get_region_distribution.assert_called_once_with(regions.keys())
+        policy._create_plan.assert_called_once_with(
+            current_dist, regions, 3, True)

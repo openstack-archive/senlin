@@ -11,7 +11,7 @@
 # under the License.
 
 """
-Policy for placing nodes across multiple regions.
+Policy for scheduling nodes across multiple regions.
 
 NOTE: How placement policy works
 Input:
@@ -20,22 +20,33 @@ Input:
     - count: number of nodes to create; it can be decision from a scaling
              policy. If no scaling policy is in effect, the count will be
              assumed to be 1.
+  action.data['deletion']:
+    - count: number of nodes to delete. It can be a decision from a scaling
+             policy. If there is no scaling policy in effect, we assume the
+             count value to be 1.
 Output:
-  stored in action.data: A dictionary containing scheduling decisions made.
+  action.data: A dictionary containing scheduling decisions made.
+
+  For actions that increase the size of a cluster, the output will look like::
+
   {
     'status': 'OK',
-    'placement': {
+    'creation': {
       'count': 2,
-      'placements': [
-        {
-          'region': 'RegionOne',
-        },
-        {
-          'region': 'RegionTwo',
-        }
-      ]
+      'regions': {'RegionOne': 1, 'RegionTwo': 1}
     }
   }
+
+  For actions that shrink the size of a cluster, the output will look like::
+
+  {
+    'status': 'OK',
+    'deletion': {
+      'count': 3,
+      'regions': {'RegionOne': 1, 'RegionTwo': 2}
+    }
+  }
+
 """
 
 import math
@@ -44,7 +55,6 @@ from oslo_log import log as logging
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
-from senlin.common.i18n import _LW
 from senlin.common import schema
 
 from senlin.drivers import base as driver_base
@@ -65,6 +75,7 @@ class RegionPlacementPolicy(base.Policy):
     TARGET = [
         # TODO(anyone): enable this to handle CLUSTER_RESIZE action
         ('BEFORE', consts.CLUSTER_SCALE_OUT),
+        ('BEFORE', consts.CLUSTER_SCALE_IN),
     ]
 
     PROFILE_TYPE = [
@@ -119,7 +130,7 @@ class RegionPlacementPolicy(base.Policy):
             }
         self.regions = regions
 
-    def keystone(self, obj):
+    def _keystone(self, obj):
         """Construct keystone client based on object.
 
         :param obj: Object for which the client is created. It is expected to
@@ -132,55 +143,25 @@ class RegionPlacementPolicy(base.Policy):
         self._keystoneclient = driver_base.SenlinDriver().identity(params)
         return self._keystoneclient
 
-    def _validate_regions(self, cluster):
-        """check whether regions in spec are valid.
-
-        :param cluster: the cluster object that policy attached to.
-        :returns: A list of regions that are found available on Nova.
-        """
-        known_regions = [r['id'] for r in self.keystone(cluster).region_list()]
-
-        regions = {}
-        for r in self.regions:
-            if r not in known_regions:
-                LOG.warning(_LW('Region %s is not found.'), r)
-            else:
-                regions[r] = self.regions[r]
-
-        return regions
-
-    def _get_current_dist(self, regions, nodes):
-        """Calculate the region distribution for exiting nodes.
-
-        :param regions: list of regions to check.
-        :param nodes: the nodes for which the distribution is checked.
-
-        :returns: a dict containing region-count pairs.
-        """
-        dist = dict.fromkeys(regions.keys(), 0)
-
-        for node in nodes:
-            placement = node.data.get('placement', {})
-            if placement and 'region_name' in placement:
-                region = placement['region_name']
-                dist[region] += 1
-
-        return dist
-
-    def _create_plan(self, current, regions, count):
+    def _create_plan(self, current, regions, count, expand):
         """Compute a placement plan based on the weights of regions.
 
         :param current: Distribution of existing nodes.
         :param regions: Usable regions for node creation.
-        :param count: Number of nodes to create in this plan.
+        :param count: Number of nodes to create/delete in this plan.
+        :param expand: True if the plan is for inflating the cluster, False
+                       otherwise.
 
-        :returns: A dict that contains a placement plan.
+        :returns: A list of region names selected for the nodes.
         """
         # sort candidate regions by distribution and covert it into a list
         candidates = sorted(regions.items(), key=lambda x: x[1]['weight'],
-                            reverse=True)
+                            reverse=expand)
         sum_weight = sum(r['weight'] for r in regions.values())
-        total = count + sum(current.values())
+        if expand:
+            total = count + sum(current.values())
+        else:
+            total = sum(current.values()) - count
         remain = count
         plan = dict.fromkeys(regions.keys(), 0)
 
@@ -191,12 +172,16 @@ class RegionPlacementPolicy(base.Policy):
             r_cap = region[1]['cap']
 
             # maximum number of nodes on current region
-            quota = int(math.ceil(total * r_weight / float(sum_weight)))
-            # respect the cap setting, if any
-            if r_cap >= 0:
-                quota = min(quota, r_cap)
-            # number of nodes that can be allocated to region candidates[i]
-            headroom = quota - current[r_name]
+            q = total * r_weight / float(sum_weight)
+            if expand:
+                quota = int(math.ceil(q))
+                # respect the cap setting, if any
+                if r_cap >= 0:
+                    quota = min(quota, r_cap)
+                headroom = quota - current[r_name]
+            else:
+                quota = int(math.floor(q))
+                headroom = current[r_name] - quota
 
             if headroom <= 0:
                 continue
@@ -206,59 +191,76 @@ class RegionPlacementPolicy(base.Policy):
                 remain -= headroom
             else:
                 plan[r_name] = remain if remain > 0 else 0
-                return plan
+                remain = 0
+                break
 
-        # we have leftovers that cannot fit into any region
+        # we have leftovers
         if remain > 0:
             return None
 
-        return plan
+        result = {}
+        for reg, count in plan.items():
+            if count > 0:
+                result[reg] = count
+
+        return result
 
     def pre_op(self, cluster_id, action):
-        """Callback function when new nodes are to be created for a cluster.
+        """Callback function when cluster membership is about to change.
 
         :param cluster_id: ID of the target cluster.
         :param action: The action that triggers this policy check.
         :returns: ``None``.
         """
-        pd = action.data.get('creation', None)
-        if pd:
-            count = pd.get('count', 1)
+        if action.action == consts.CLUSTER_SCALE_IN:
+            expand = False
+            # use action input directly if available
+            count = action.inputs.get('count', None)
+            if not count:
+                # check if policy decisions available
+                pd = action.data.get('deletion', None)
+                count = pd.get('count', 1) if pd else 1
         else:
-            # If no scaling policy is attached, use the input count directly
-            count = action.inputs.get('count', 1)
+            # this is an action that inflates the cluster
+            expand = True
+            count = action.inputs.get('count', None)
+            if not count:
+                # check if policy decisions available
+                pd = action.data.get('creation', None)
+                count = pd.get('count', 1) if pd else 1
 
         cluster = cluster_mod.Cluster.load(action.context, cluster_id)
 
-        regions = self._validate_regions(cluster)
-        if len(regions) == 0:
+        kc = self._keystone(cluster)
+
+        regions_good = kc.validate_regions(self.regions.keys())
+        if len(regions_good) == 0:
             action.data['status'] = base.CHECK_ERROR
             action.data['reason'] = _('No region is found usable.')
             LOG.error(_LE('No region is found usable.'))
             return
 
-        # Calculate AZ distribution for exiting nodes
-        current_dist = self._get_current_dist(regions, cluster.nodes)
+        regions = {}
+        for r in self.regions.items():
+            if r[0] in regions_good:
+                regions[r[0]] = r[1]
 
-        # Calculate placement plan for new nodes
-        plan = self._create_plan(current_dist, regions, count)
-        if plan is None:
+        current_dist = cluster.get_region_distribution(regions_good)
+        result = self._create_plan(current_dist, regions, count, expand)
+        if not result:
             action.data['status'] = base.CHECK_ERROR
             action.data['reason'] = _('There is no feasible plan to '
-                                      'accommodate all nodes.')
-            LOG.error(_LE('There is no feasible plan to accommodate all '
-                          'nodes.'))
+                                      'handle all nodes.')
+            LOG.error(_LE('There is no feasible plan to handle all nodes.'))
             return
 
-        placement = action.data.get('placement', {})
-        placement['count'] = count
-        placement['placements'] = []
-
-        for az, count in plan.items():
-            if count > 0:
-                entry = {'region_name': az}
-                placement['placements'].extend([entry] * count)
-
-        action.data.update({'placement': placement})
-
-        return
+        if expand:
+            if 'creation' not in action.data:
+                action.data['creation'] = {}
+            action.data['creation']['count'] = count
+            action.data['creation']['regions'] = result
+        else:
+            if 'deletion' not in action.data:
+                action.data['deletion'] = {}
+            action.data['deletion']['count'] = count
+            action.data['deletion']['regions'] = result
