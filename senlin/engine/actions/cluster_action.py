@@ -40,13 +40,13 @@ class ClusterAction(base.Action):
     ACTIONS = (
         CLUSTER_CREATE, CLUSTER_DELETE, CLUSTER_UPDATE,
         CLUSTER_ADD_NODES, CLUSTER_DEL_NODES,
-        CLUSTER_RESIZE,
+        CLUSTER_RESIZE, CLUSTER_CHECK, CLUSTER_RECOVER,
         CLUSTER_SCALE_OUT, CLUSTER_SCALE_IN,
         CLUSTER_ATTACH_POLICY, CLUSTER_DETACH_POLICY, CLUSTER_UPDATE_POLICY
     ) = (
         consts.CLUSTER_CREATE, consts.CLUSTER_DELETE, consts.CLUSTER_UPDATE,
         consts.CLUSTER_ADD_NODES, consts.CLUSTER_DEL_NODES,
-        consts.CLUSTER_RESIZE,
+        consts.CLUSTER_RESIZE, consts.CLUSTER_CHECK, consts.CLUSTER_RECOVER,
         consts.CLUSTER_SCALE_OUT, consts.CLUSTER_SCALE_IN,
         consts.CLUSTER_ATTACH_POLICY, consts.CLUSTER_DETACH_POLICY,
         consts.CLUSTER_UPDATE_POLICY,
@@ -461,6 +461,108 @@ class ClusterAction(base.Action):
         else:
             return 0, 0, None
         return count, desired, candidates
+
+    def do_check(self):
+        """Handler for CLUSTER_CHECK action.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
+        saved_status = self.cluster.status
+        saved_reason = self.cluster.status_reason
+        self.cluster.do_check(self.context)
+
+        child_actions = []
+        for node in self.cluster.nodes:
+            node_id = node.id
+            kwargs = {
+                'name': 'node_check_%s' % node_id[:8],
+                'cause': base.CAUSE_DERIVED,
+                'user': self.context.user,
+                'project': self.context.project,
+                'domain': self.context.domain,
+            }
+            action = base.Action(node_id, 'NODE_CHECK', **kwargs)
+            action.store(self.context)
+            child_actions.append(action)
+
+        if child_actions:
+            db_api.dependency_add(self.context,
+                                  [c.id for c in child_actions],
+                                  self.id)
+            for child in child_actions:
+                db_api.action_update(self.context, child.id,
+                                     {'status': child.READY})
+                dispatcher.start_action(action_id=child.id)
+
+        # Wait for dependent action if any
+        res, reason = self._wait_for_dependents()
+
+        self.cluster.set_status(self.context, saved_status, saved_reason)
+
+        return res, reason
+
+    def do_recover(self):
+        """Handler for the CLUSTER_RECOVER action.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
+        res = self.cluster.do_recover(self.context)
+
+        # process data from health_policy
+        pd = self.data.get('health', None)
+        if pd is None:
+            pd = {
+                'health': {
+                    'recover_action': 'RECREATE',
+                }
+            }
+            self.data.update(pd)
+        recover_action = pd.get('recover_action', 'RECREATE')
+
+        reason = _('Cluster recovery succeeded.')
+
+        child_actions = []
+        for node in self.cluster.nodes:
+            if node.status == 'ACTIVE':
+                continue
+            node_id = node.id
+            kwargs = {
+                'name': 'node_recover_%s' % node_id[:8],
+                'cause': base.CAUSE_DERIVED,
+                'inputs': {
+                    'operation': recover_action,
+                },
+                'user': self.context.user,
+                'project': self.context.project,
+                'domain': self.context.domain,
+            }
+            action = base.Action(node_id, 'NODE_RECOVER', **kwargs)
+            action.store(self.context)
+            child_actions.append(action)
+
+        if child_actions:
+            db_api.dependency_add(self.context,
+                                  [c.id for c in child_actions],
+                                  self.id)
+            for child in child_actions:
+                db_api.action_update(self.context, child.id,
+                                     {'status': child.READY})
+                dispatcher.start_action(action_id=child.id)
+
+        # Wait for dependent action if any
+        res, new_reason = self._wait_for_dependents()
+
+        if res == self.RES_OK:
+            self.cluster.set_status(self.context, self.cluster.ACTIVE,
+                                    reason)
+
+            return res, reason
+
+        reason = new_reason
+        self.cluster.set_status(self.context, self.cluster.ERROR,
+                                reason)
+
+        return res, reason
 
     def do_resize(self):
         """Handler for the CLUSTER_RESIZE action.
