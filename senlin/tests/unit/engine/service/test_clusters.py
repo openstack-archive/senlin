@@ -602,6 +602,26 @@ class ClusterTest(base.SenlinTestCase):
                            'detached.') % {'id': cid},
                          six.text_type(ex.exc_info[1]))
 
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(db_api, 'cluster_policy_get_all')
+    @mock.patch.object(db_api, 'receiver_get_all')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_delete_with_receiver(self, notify, mock_receiver_get,
+                                          mock_policy_get, mock_find):
+        c = mock.Mock(id='c-1')
+        receiver = mock.Mock(id='r-1')
+        mock_find.return_value = c
+        mock_policy_get.return_value = []
+        mock_receiver_get.return_value = [receiver]
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_delete, self.ctx, c.id)
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(_('The request is malformed: Cluster %(id)s cannot '
+                           'be deleted without having all receivers '
+                           'deleted.') % {'id': c.id},
+                         six.text_type(ex.exc_info[1]))
+
     def test_cluster_delete_not_found(self):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_delete, self.ctx, 'Bogus')
