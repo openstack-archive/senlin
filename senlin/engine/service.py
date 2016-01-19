@@ -896,6 +896,14 @@ class EngineService(service.Service):
             LOG.error(msg)
             raise exception.SenlinBadRequest(msg=msg)
 
+        receivers = db_api.receiver_get_all(context, filters={'cluster_id':
+                                            db_cluster.id})
+        if len(receivers) > 0:
+            msg = _('Cluster %(id)s cannot be deleted without having all '
+                    'receivers deleted.') % {'id': identity}
+            LOG.error(msg)
+            raise exception.SenlinBadRequest(msg=msg)
+
         action_name = 'cluster_delete_%s' % db_cluster.id[:8]
         params = {
             'user': context.user,
