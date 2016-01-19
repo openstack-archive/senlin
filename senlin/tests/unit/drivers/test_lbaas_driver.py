@@ -366,56 +366,9 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.lb_driver._wait_for_lb_ready.assert_called_once_with(
             'LB_ID', ignore_not_found=True)
 
-    @mock.patch.object(oslo_context, 'get_current')
-    def test_get_node_address(self, mock_get_current):
-        node = mock.Mock()
-        node_detail = {
-            'name': 'node-01',
-            'addresses': {
-                'network1': [
-                    {
-                        'version': 4,
-                        'addr': 'ip_addr1'
-                    },
-                    {
-                        'version': 6,
-                        'addr': 'ip_addr3'
-                    }
-                ],
-                'network2': [
-                    {
-                        'version': 4,
-                        'addr': 'ip_addr2'
-                    },
-                ]
-            }
-        }
-        node.get_details.return_value = node_detail
-
-        res = self.lb_driver._get_node_address(node, version=4)
-        expected_addr = {
-            'network1': 'ip_addr1',
-            'network2': 'ip_addr2'
-        }
-        self.assertEqual(expected_addr, res)
-
-        res = self.lb_driver._get_node_address(node, version=6)
-        expected_addr = {
-            'network1': 'ip_addr3',
-        }
-        self.assertEqual(expected_addr, res)
-
-        node_detail['addresses'] = {}
-        res = self.lb_driver._get_node_address(node, version=4)
-        self.assertEqual({}, res)
-
-        node_detail.pop('addresses')
-        res = self.lb_driver._get_node_address(node, version=4)
-        self.assertEqual({}, res)
-
     @mock.patch.object(event, 'warning')
-    @mock.patch.object(lbaas.LoadBalancerDriver, '_get_node_address')
-    def test_member_add(self, mock_get_node_address, mock_event):
+    @mock.patch.object(oslo_context, 'get_current')
+    def test_member_add(self, mock_get_current, mock_event):
         node = mock.Mock()
         lb_id = 'LB_ID'
         pool_id = 'POOL_ID'
@@ -428,11 +381,17 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         network_obj = mock.Mock()
         network_obj.name = 'network1'
         network_obj.id = 'NETWORK_ID'
-        addresses = {'network1': 'ipaddr_net1', 'network2': 'ipaddr_net2'}
         member = mock.Mock()
         member.id = 'MEMBER_ID'
+        node_detail = {
+            'name': 'node-01',
+            'addresses': {
+                'network1': ['ipaddr_net1'],
+                'network2': ['ipaddr_net2']
+            }
+        }
+        node.get_details.return_value = node_detail
 
-        mock_get_node_address.return_value = addresses
         self.nc.subnet_get.return_value = subnet_obj
         self.nc.network_get.return_value = network_obj
         self.nc.pool_member_create.return_value = member
@@ -441,7 +400,6 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
 
         res = self.lb_driver.member_add(node, lb_id, pool_id, port, subnet)
         self.assertEqual('MEMBER_ID', res)
-        mock_get_node_address.assert_called_once_with(node, version=4)
         self.nc.subnet_get.assert_called_once_with(subnet)
         self.nc.network_get.assert_called_once_with('NETWORK_ID')
         self.nc.pool_member_create.assert_called_once_with(
@@ -474,23 +432,8 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.assertIsNone(res)
         self.assertTrue(mock_event.called)
 
-    @mock.patch.object(lbaas.LoadBalancerDriver, '_get_node_address')
-    def test_member_add_node_no_address(self, mock_get_node_address):
-        node = mock.Mock()
-        lb_id = 'LB_ID'
-        pool_id = 'POOL_ID'
-        port = '80'
-        subnet = 'subnet1'
-
-        mock_get_node_address.return_value = {}
-        self.lb_driver._wait_for_lb_ready = mock.Mock()
-        self.lb_driver._wait_for_lb_ready.return_value = True
-
-        res = self.lb_driver.member_add(node, lb_id, pool_id, port, subnet)
-        self.assertIsNone(res)
-
-    @mock.patch.object(lbaas.LoadBalancerDriver, '_get_node_address')
-    def test_member_add_node_not_in_subnet(self, mock_get_node_address):
+    @mock.patch.object(oslo_context, 'get_current')
+    def test_member_add_node_not_in_subnet(self, mock_get_current):
         node = mock.Mock()
         lb_id = 'LB_ID'
         pool_id = 'POOL_ID'
@@ -499,10 +442,16 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         network_obj = mock.Mock()
         network_obj.name = 'network3'
         network_obj.id = 'NETWORK_ID'
-        addresses = {'network1': 'ipaddr_net1', 'network2': 'ipaddr_net2'}
+        node_detail = {
+            'name': 'node-01',
+            'addresses': {
+                'network1': ['ipaddr_net1'],
+                'network2': ['ipaddr_net2']
+            }
+        }
+        node.get_details.return_value = node_detail
 
         self.nc.network_get.return_value = network_obj
-        mock_get_node_address.return_value = addresses
         self.lb_driver._wait_for_lb_ready = mock.Mock()
         self.lb_driver._wait_for_lb_ready.return_value = True
 

@@ -238,12 +238,6 @@ class LoadBalancerDriver(base.DriverBase):
         :param subnet: The subnet to be used by the new LB member.
         :returns: The ID of the new LB member or None if errors occurred.
         """
-        addresses = self._get_node_address(node, version=4)
-        if not addresses:
-            LOG.error(_LE('Node (%(n)s) does not have valid IPv4 address.'),
-                      {'n': node.id})
-            return None
-
         try:
             subnet_obj = self.nc().subnet_get(subnet)
             net_id = subnet_obj.network_id
@@ -258,12 +252,15 @@ class LoadBalancerDriver(base.DriverBase):
             return None
         net_name = net.name
 
+        node_detail = node.get_details(oslo_context.get_current())
+        addresses = node_detail.get('addresses')
         if net_name not in addresses:
             LOG.error(_LE('Node is not in subnet %(subnet)s'),
                       {'subnet': subnet})
             return None
 
-        address = addresses[net_name]
+        # Use the first IP address if more than one are found in target network
+        address = addresses[net_name][0]
         try:
             member = self.nc().pool_member_create(pool_id, address, port,
                                                   subnet_obj.id)
@@ -305,18 +302,3 @@ class LoadBalancerDriver(base.DriverBase):
             return None
 
         return True
-
-    def _get_node_address(self, node, version=4):
-        """Get IP address of node with specific version"""
-
-        node_detail = node.get_details(oslo_context.get_current())
-        node_addresses = node_detail.get('addresses', {})
-
-        address = {}
-
-        for network in node_addresses:
-            for addr in node_addresses[network]:
-                if addr['version'] == version:
-                    address[network] = addr['addr']
-
-        return address
