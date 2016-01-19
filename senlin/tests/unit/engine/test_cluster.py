@@ -639,3 +639,61 @@ class TestCluster(base.SenlinTestCase):
 
         self.assertTrue(res)
         self.assertEqual('No update is needed.', reason)
+
+    def test_get_region_distribution(self):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+
+        node1 = mock.Mock()
+        node1.data = {'placement': {'region_name': 'R1'}}
+        node2 = mock.Mock()
+        node2.data = {'placement': {'region_name': 'R2'}}
+        node3 = mock.Mock()
+        node3.data = {'key': 'value'}
+
+        node4 = mock.Mock()
+        node4.data = {'placement': {'region_name': 'BAD'}}
+
+        nodes = [node1, node2, node3, node4]
+        for n in nodes:
+            cluster.add_node(n)
+
+        result = cluster.get_region_distribution(['R1', 'R2', 'R3'])
+
+        self.assertEqual(3, len(result))
+        self.assertEqual(1, result['R1'])
+        self.assertEqual(1, result['R2'])
+        self.assertEqual(0, result['R3'])
+
+    def test_get_zone_distribution(self):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+        node1 = mock.Mock()
+        node1.data = {}
+        node1.get_details.return_value = {
+            'OS-EXT-AZ:availability_zone': 'AZ1',
+        }
+        node2 = mock.Mock()
+        node2.data = {
+            'foobar': 'irrelevant'
+        }
+        node3 = mock.Mock()
+        node3.data = {
+            'placement': {
+                'zone': 'AZ2'
+            }
+        }
+
+        nodes = [node1, node2, node3]
+        for n in nodes:
+            cluster.add_node(n)
+
+        result = cluster.get_zone_distribution(self.context,
+                                               ['AZ1', 'AZ2', 'AZ3'])
+
+        self.assertEqual(3, len(result))
+        self.assertEqual(1, result['AZ1'])
+        self.assertEqual(1, result['AZ2'])
+        self.assertEqual(0, result['AZ3'])
+
+        node1.get_details.assert_called_once_with(self.context)
