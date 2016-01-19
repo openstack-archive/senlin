@@ -38,6 +38,7 @@ class TestScalingPolicy(base.SenlinTestCase):
                     'number': 1,
                     'min_step': 1,
                     'best_effort': False,
+                    'cooldown': 3,
                 }
             }
         }
@@ -109,6 +110,7 @@ class TestScalingPolicy(base.SenlinTestCase):
         self.assertEqual(adjustment['number'], policy.adjustment_number)
         self.assertEqual(adjustment['min_step'], policy.adjustment_min_step)
         self.assertEqual(adjustment['best_effort'], policy.best_effort)
+        self.assertEqual(adjustment['cooldown'], policy.cooldown)
 
     def test_policy_init_default_value(self):
         self.spec['properties']['adjustment'] = {}
@@ -121,6 +123,7 @@ class TestScalingPolicy(base.SenlinTestCase):
         self.assertEqual(1, policy.adjustment_number)
         self.assertEqual(1, policy.adjustment_min_step)
         self.assertFalse(policy.best_effort)
+        self.assertEqual(0, policy.cooldown)
 
     def test_calculate_adjustment_count(self):
         adjustment = self.spec['properties']['adjustment']
