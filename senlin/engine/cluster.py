@@ -431,3 +431,44 @@ class Cluster(object):
     @property
     def policies(self):
         return self.rt['policies']
+
+    def get_region_distribution(self, regions):
+        """Get node distribution regarding given regions.
+
+        :param regions: list of region names to check.
+        :return: a dict containing region and number as key value pairs.
+        """
+        dist = dict.fromkeys(regions, 0)
+
+        for node in self.nodes:
+            placement = node.data.get('placement', {})
+            if placement:
+                region = placement.get('region_name', None)
+                if region and region in regions:
+                    dist[region] += 1
+
+        return dist
+
+    def get_zone_distribution(self, ctx, zones):
+        """Get node distribution regarding the given the availability zones.
+
+        The availability zone information is only available for some profiles.
+
+        :param ctx: context used to access node details.
+        :param zones: list of zone names to check.
+        :returns: a dict containing zone and number as key-value pairs.
+        """
+        dist = dict.fromkeys(zones, 0)
+
+        for node in self.nodes:
+            placement = node.data.get('placement', {})
+            if placement and 'zone' in placement:
+                zone = placement['zone']
+                dist[zone] += 1
+            else:
+                details = node.get_details(ctx)
+                zname = details.get('OS-EXT-AZ:availability_zone', None)
+                if zname and zname in dist:
+                    dist[zname] += 1
+
+        return dist
