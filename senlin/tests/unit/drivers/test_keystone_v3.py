@@ -259,3 +259,21 @@ class TestKeystoneV3(base.SenlinTestCase):
             key1='value1', password='NEW_PASSWORD')
 
         self.assertEqual(new_expected, actual)
+
+    def test_validate_regions(self, mock_create):
+        self.conn.identity.regions.return_value = [
+            {'id': 'R1', 'parent_region_id': None},
+            {'id': 'R2', 'parent_region_id': None},
+            {'id': 'R3', 'parent_region_id': 'R1'},
+        ]
+        mock_create.return_value = self.conn
+
+        kc = kv3.KeystoneClient({'k': 'v'})
+
+        res = kc.validate_regions(['R1', 'R4'])
+
+        self.assertIn('R1', res)
+        self.assertNotIn('R4', res)
+
+        res = kc.validate_regions([])
+        self.assertEqual([], res)

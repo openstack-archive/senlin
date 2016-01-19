@@ -11,10 +11,13 @@
 # under the License.
 
 from oslo_config import cfg
+from oslo_log import log
 
+from senlin.common.i18n import _LW
 from senlin.drivers import base
 from senlin.drivers.openstack import sdk
 
+LOG = log.getLogger(__name__)
 CONF = cfg.CONF
 
 
@@ -164,3 +167,20 @@ class KeystoneClient(base.DriverBase):
         }
         creds.update(**kwargs)
         return creds
+
+    def validate_regions(self, regions):
+        """Check whether the given regions are valid.
+
+        :param regions: A list of regions for validation.
+        :returns: A list of regions that are found available on keystone.
+        """
+        known = [r['id'] for r in self.region_list()]
+
+        validated = []
+        for r in regions:
+            if r in known:
+                validated.append(r)
+            else:
+                LOG.warning(_LW('Region %s is not found.'), r)
+
+        return validated
