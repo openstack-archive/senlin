@@ -38,6 +38,7 @@ SENLIN_API_HOST=${SENLIN_API_HOST:-$HOST_IP}
 SENLIN_API_PORT=${SENLIN_API_PORT:-8778}
 
 SENLIN_DIR=$DEST/senlin
+SENLIN_BIN_DIR=$(get_python_exec_prefix)
 SENLIN_REPO=${SENLIN_REPO:-${GIT_BASE}/openstack/senlin.git}
 SENLIN_BRANCH=${SENLIN_BRANCH:-master}
 
@@ -122,7 +123,7 @@ function init_senlin {
     # (re)create senlin database
     recreate_database senlin utf8
 
-    $SENLIN_DIR/bin/senlin-manage db_sync
+    $SENLIN_BIN_DIR/senlin-manage db_sync
     create_senlin_cache_dir
 }
 
@@ -151,8 +152,8 @@ function install_senlin {
 
 # start_senlin() - Start running processes, including screen
 function start_senlin {
-    run_process sl-eng "$SENLIN_DIR/bin/senlin-engine --config-file=$SENLIN_CONF"
-    run_process sl-api "$SENLIN_DIR/bin/senlin-api --config-file=$SENLIN_CONF"
+    run_process sl-eng "$SENLIN_BIN_DIR/senlin-engine --config-file=$SENLIN_CONF"
+    run_process sl-api "$SENLIN_BIN_DIR/senlin-api --config-file=$SENLIN_CONF"
 }
 
 # stop_senlin() - Stop running processes
