@@ -564,3 +564,42 @@ class TestNode(base.SenlinTestCase):
         mock_migrate.assert_called_once_with(self.context, node.id,
                                              None, mock_time(), None)
         mock_leave_cluster.assert_called_once_with(self.context, node)
+
+    @mock.patch.object(profiles_base.Profile, 'check_object')
+    def test_node_check(self, mock_check):
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        node.physical_id = 'fake_id'
+        mock_check.return_value = True
+        res = node.do_check(self.context)
+        self.assertTrue(res)
+        mock_check.assert_called_once_with(self.context, node)
+
+        mock_check.return_value = False
+        res = node.do_check(self.context)
+        self.assertFalse(res)
+        self.assertEqual('ERROR', node.status)
+
+    @mock.patch.object(nodem.Node, 'set_status')
+    @mock.patch.object(profiles_base.Profile, 'recover_object')
+    def test_node_recover(self, mock_recover, mock_status):
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        node.physical_id = 'fake_id'
+        mock_recover.return_value = 'new_physical_id'
+        res = node.do_recover(self.context)
+        self.assertTrue(res)
+        mock_recover.assert_called_once_with(self.context, node)
+        self.assertEqual('node1', node.name)
+        self.assertEqual('new_physical_id', node.physical_id)
+        self.assertEqual(self.profile.id, node.profile_id)
+        mock_status.assert_any_call(self.context, 'RECOVERING',
+                                    reason='Recover in progress')
+        mock_status.assert_any_call(self.context, node.ACTIVE,
+                                    reason='Recover succeeded')
+
+        mock_recover.return_value = None
+        res = node.do_recover(self.context)
+        self.assertFalse(res)
+        mock_status.assert_any_call(self.context, node.ERROR,
+                                    reason='Recover failed')

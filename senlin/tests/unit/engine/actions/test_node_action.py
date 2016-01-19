@@ -78,6 +78,27 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual(1, cluster.desired_capacity)
         cluster.add_node.assert_called_once_with(node)
 
+    def test_do_check(self, mock_load):
+        node = mock.Mock()
+        node.id = 'NID'
+        mock_load.return_value = node
+        action = node_action.NodeAction(node.id, 'ACTION', self.ctx)
+
+        # Test node check failure path
+        node.do_check = mock.Mock(return_value=False)
+        res_code, res_msg = action.do_check()
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('Node status is not ACTIVE.', res_msg)
+        node.do_check.assert_called_once_with(action.context)
+        node.reset_mock()
+
+        # Test node check success path
+        node.do_check = mock.Mock(return_value=True)
+        res_code, res_msg = action.do_check()
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Node status is ACTIVE.', res_msg)
+        node.do_check.assert_called_once_with(action.context)
+
     def test_do_delete(self, mock_load):
         node = mock.Mock()
         node.id = 'NID'
@@ -279,6 +300,27 @@ class NodeActionTest(base.SenlinTestCase):
         mock_c_load.assert_called_once_with(action.context, 'FAKE_ID')
         mock_check.assert_called_once_with(cluster, 99, None, None, True)
         self.assertEqual(0, node.do_leave.call_count)
+
+    def test_do_recover(self, mock_load):
+        node = mock.Mock()
+        node.id = 'NID'
+        mock_load.return_value = node
+        action = node_action.NodeAction(node.id, 'ACTION', self.ctx)
+
+        # Test node recover failure path
+        node.do_recover = mock.Mock(return_value=False)
+        res_code, res_msg = action.do_recover()
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('Node recover failed.', res_msg)
+        node.do_recover.assert_called_once_with(action.context)
+        node.reset_mock()
+
+        # Test node recover success path
+        node.do_recover = mock.Mock(return_value=True)
+        res_code, res_msg = action.do_recover()
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Node recovered successfully.', res_msg)
+        node.do_recover.assert_called_once_with(action.context)
 
     @mock.patch.object(cluster_mod.Cluster, 'load')
     @mock.patch.object(scaleutils, 'check_size_params')
