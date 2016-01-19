@@ -56,6 +56,8 @@ class DeletionPolicy(base.Policy):
 
     VERSION = '1.0'
 
+    PRIORITY = 400
+
     KEYS = (
         CRITERIA, DESTROY_AFTER_DELETION, GRACE_PERIOD,
         REDUCE_DESIRED_CAPACITY,

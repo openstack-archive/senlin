@@ -28,6 +28,7 @@ class ClusterPolicy(object):
         self.policy_id = policy_id
         self.enabled = kwargs.get('enabled')
         self.data = kwargs.get('data', {})
+        self.priority = kwargs.get('priority')
         self.last_op = kwargs.get('last_op', None)
 
         # derived data from binding, put here for convenience
@@ -41,6 +42,7 @@ class ClusterPolicy(object):
             'enabled': self.enabled,
             'data': self.data,
             'last_op': self.last_op,
+            'priority': self.priority
         }
 
         if self.id:
@@ -68,6 +70,7 @@ class ClusterPolicy(object):
             'enabled': record.enabled,
             'data': record.data,
             'last_op': record.last_op,
+            'priority': record.priority,
 
             # derived data
             'cluster_name': record.cluster.name,
@@ -93,7 +96,8 @@ class ClusterPolicy(object):
     def load_all(cls, context, cluster_id, filters=None, sort=None):
         """Retrieve all policies attached to a specific cluster."""
         bindings = db_api.cluster_policy_get_all(context, cluster_id,
-                                                 filters=filters, sort=sort)
+                                                 filters=filters,
+                                                 sort=sort)
 
         return [cls._from_db_record(context, b) for b in bindings]
 

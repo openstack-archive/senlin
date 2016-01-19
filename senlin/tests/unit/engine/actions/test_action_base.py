@@ -553,6 +553,7 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertIsNone(res)
         self.assertEqual(policy_mod.CHECK_OK, action.data['status'])
         mock_load.assert_called_once_with(action.context, 'FAKE_CLUSTER',
+                                          sort='priority',
                                           filters={'enabled': True})
 
     @mock.patch.object(db_api, 'dependency_get_depended')
@@ -646,7 +647,8 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         self.assertIsNone(res)
         self.assertEqual(policy_mod.CHECK_OK, action.data['status'])
         mock_load_all.assert_called_once_with(
-            action.context, cluster_id, filters={'enabled': True})
+            action.context, cluster_id, sort='priority',
+            filters={'enabled': True})
         mock_load.assert_called_once_with(action.context, policy.id)
         # last_op was updated anyway
         self.assertIsNotNone(pb.last_op)
@@ -679,7 +681,8 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         self.assertIsNone(res)
         self.assertEqual(policy_mod.CHECK_OK, action.data['status'])
         mock_load_all.assert_called_once_with(
-            action.context, cluster_id, filters={'enabled': True})
+            action.context, cluster_id, sort='priority',
+            filters={'enabled': True})
         mock_load.assert_called_once_with(action.context, policy.id)
         # last_op was not updated
         self.assertIsNone(pb.last_op)
@@ -705,7 +708,8 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         self.assertIsNone(res)
         self.assertEqual(policy_mod.CHECK_OK, action.data['status'])
         mock_load_all.assert_called_once_with(
-            action.context, cluster_id, filters={'enabled': True})
+            action.context, cluster_id, sort='priority',
+            filters={'enabled': True})
         mock_load.assert_called_once_with(action.context, policy.id)
         # last_op was updated for POST check
         self.assertIsNotNone(pb.last_op)
@@ -736,7 +740,8 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         self.assertEqual('Policy FAKE_POLICY_ID cooldown is still in '
                          'progress.', six.text_type(action.data['reason']))
         mock_load_all.assert_called_once_with(
-            action.context, cluster_id, filters={'enabled': True})
+            action.context, cluster_id, sort='priority',
+            filters={'enabled': True})
         mock_load.assert_called_once_with(action.context, policy.id)
         # last_op was updated for POST check
         self.assertIsNotNone(pb.last_op)
@@ -781,7 +786,8 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         self.assertEqual(0, policy2.post_op.call_count)
 
         mock_load_all.assert_called_once_with(
-            action.context, cluster_id, filters={'enabled': True})
+            action.context, cluster_id, sort='priority',
+            filters={'enabled': True})
         calls = [mock.call(action.context, policy1.id)]
         mock_load.assert_has_calls(calls)
 

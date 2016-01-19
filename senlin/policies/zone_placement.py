@@ -61,6 +61,8 @@ class ZonePlacementPolicy(base.Policy):
 
     VERSION = '1.0'
 
+    PRIORITY = 300
+
     TARGET = [
         # TODO(anyone): enable this to handle CLUSTER_RESIZE action
         ('BEFORE', consts.CLUSTER_SCALE_OUT),

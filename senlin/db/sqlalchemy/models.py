@@ -168,6 +168,7 @@ class ClusterPolicies(BASE, SenlinBase):
     cluster = relationship(Cluster, backref=backref('policies'))
     policy = relationship(Policy, backref=backref('bindings'))
     enabled = Column(Boolean)
+    priority = Column(Integer)
     data = Column(types.Dict)
     last_op = Column(DateTime)
 

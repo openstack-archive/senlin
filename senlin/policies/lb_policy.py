@@ -36,6 +36,8 @@ class LoadBalancingPolicy(base.Policy):
     '''
     VERSION = '1.0'
 
+    PRIORITY = 500
+
     TARGET = [
         ('AFTER', consts.CLUSTER_ADD_NODES),
         ('AFTER', consts.CLUSTER_DEL_NODES),

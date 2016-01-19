@@ -27,6 +27,8 @@ class ScalingPolicy(base.Policy):
 
     VERSION = '1.0'
 
+    PRIORITY = 100
+
     TARGET = [
         ('BEFORE', consts.CLUSTER_SCALE_IN),
         ('BEFORE', consts.CLUSTER_SCALE_OUT),

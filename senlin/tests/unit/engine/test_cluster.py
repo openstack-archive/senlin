@@ -431,6 +431,7 @@ class TestCluster(base.SenlinTestCase):
         cluster.id = 'FAKE_CLUSTER'
         policy = mock.Mock()
         policy.attach.return_value = (True, None)
+        policy.PRIORITY = 10
         mock_load.return_value = policy
 
         binding = mock.Mock()
@@ -442,6 +443,7 @@ class TestCluster(base.SenlinTestCase):
         policy.attach.assert_called_once_with(cluster)
         mock_load.assert_called_once_with(self.context, 'FAKE_POLICY')
         mock_cp.assert_called_once_with('FAKE_CLUSTER', 'FAKE_POLICY',
+                                        priority=10,
                                         enabled=True, data=None)
         binding.store.assert_called_once_with(self.context)
         self.assertIn(policy, cluster.policies)
@@ -505,6 +507,7 @@ class TestCluster(base.SenlinTestCase):
         policy.singleton = False
         policy.type = 'POLICY_TYPE_ONE'
         policy.attach.return_value = (True, None)
+        policy.PRIORITY = 10
         mock_load.return_value = policy
 
         binding = mock.Mock()
@@ -522,6 +525,7 @@ class TestCluster(base.SenlinTestCase):
         policy.attach.assert_called_once_with(cluster)
         mock_load.assert_called_once_with(self.context, 'FAKE_1')
         mock_cp.assert_called_once_with(cluster.id, 'FAKE_1',
+                                        priority=10,
                                         enabled=True, data=None)
         binding.store.assert_called_once_with(self.context)
         self.assertIn(policy, cluster.policies)
