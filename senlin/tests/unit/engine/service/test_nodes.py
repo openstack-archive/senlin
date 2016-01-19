@@ -489,3 +489,59 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(exception.NodeNotFound, ex.exc_info[0])
         self.assertEqual('The node (Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(node_mod.Node, 'load')
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_node_check(self, notify, mock_find, mock_load):
+        node = mock.Mock()
+        node.id = 'nid'
+        nodeid = node.id
+        node.to_dict = mock.Mock(return_value={'id': nodeid})
+        mock_load.return_value = node
+
+        result = self.eng.node_check(self.ctx, nodeid)
+        self.assertEqual(node.id, result.get('id'))
+
+        notify.assert_called_once_with(action_id=mock.ANY)
+
+    @mock.patch.object(node_mod.Node, 'load')
+    def test_node_check_not_found(self, mock_load):
+        nid = 'Bogus'
+        exp = exception.NodeNotFound(node=nid)
+        mock_load.side_effect = exp
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_check, self.ctx, nid)
+
+        self.assertEqual(exception.NodeNotFound, ex.exc_info[0])
+        self.assertEqual('The node (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(node_mod.Node, 'load')
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_node_recover(self, notify, mock_find, mock_load):
+        node = mock.Mock()
+        node.id = 'nid'
+        nodeid = node.id
+        node.to_dict = mock.Mock(return_value={'id': nodeid})
+        mock_load.return_value = node
+
+        result = self.eng.node_recover(self.ctx, nodeid)
+        self.assertEqual(node.id, result.get('id'))
+
+        notify.assert_called_once_with(action_id=mock.ANY)
+
+    @mock.patch.object(node_mod.Node, 'load')
+    def test_node_recover_not_found(self, mock_load):
+        nid = 'Bogus'
+        exp = exception.NodeNotFound(node=nid)
+        mock_load.side_effect = exp
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_recover, self.ctx, nid)
+
+        self.assertEqual(exception.NodeNotFound, ex.exc_info[0])
+        self.assertEqual('The node (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))

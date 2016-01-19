@@ -298,6 +298,12 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
     def test_cluster_delete_call(self):
         self._test_engine_api('cluster_delete', 'call', identity='a-cluster')
 
+    def test_cluster_check(self):
+        self._test_engine_api('cluster_check', 'call', identity='a-cluster')
+
+    def test_cluster_recover(self):
+        self._test_engine_api('cluster_recover', 'call', identity='a-cluster')
+
     def test_node_list(self):
         default_args = {
             'cluster_id': mock.ANY,
@@ -341,6 +347,12 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
     def test_node_delete_call(self):
         self._test_engine_api('node_delete', 'call', identity='a-node',
                               force=False)
+
+    def test_node_check(self):
+        self._test_engine_api('node_check', 'call', identity='a-node')
+
+    def test_node_recover(self):
+        self._test_engine_api('node_recover', 'call', identity='a-node')
 
     def test_action_list(self):
         default_args = {

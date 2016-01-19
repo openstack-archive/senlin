@@ -985,3 +985,63 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
         self.assertEqual("Invalid value '0' specified for 'count'",
                          six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_check(self, notify, mock_find):
+        cluster = mock.Mock()
+        cluster.id = 'cid'
+        cid = cluster.id
+        mock_find.return_value = cluster
+
+        result = self.eng.cluster_check(self.ctx, cid)
+
+        # verify action is fired
+        action_id = result['action']
+        action = self.eng.action_get(self.ctx, action_id)
+        self._verify_action(action, 'CLUSTER_CHECK',
+                            'cluster_check_%s' % cid[:8],
+                            cid, cause=action_mod.CAUSE_RPC)
+
+        notify.assert_called_once_with(action_id=mock.ANY)
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_check_cluster_not_found(self, mock_find):
+        cid = 'Bogus'
+        exp = exception.ClusterNotFound(cluster=cid)
+        mock_find.side_effect = exp
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_check,
+                               self.ctx, cid)
+        self.assertEqual(exp, ex.exc_info[1])
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_recover(self, notify, mock_find):
+        cluster = mock.Mock()
+        cluster.id = 'cid'
+        cid = cluster.id
+        mock_find.return_value = cluster
+
+        result = self.eng.cluster_recover(self.ctx, cid)
+
+        # verify action is fired
+        action_id = result['action']
+        action = self.eng.action_get(self.ctx, action_id)
+        self._verify_action(action, 'CLUSTER_RECOVER',
+                            'cluster_recover_%s' % cid[:8],
+                            cid, cause=action_mod.CAUSE_RPC)
+
+        notify.assert_called_once_with(action_id=mock.ANY)
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_recover_cluster_not_found(self, mock_find):
+        cid = 'Bogus'
+        exp = exception.ClusterNotFound(cluster=cid)
+        mock_find.side_effect = exp
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_recover,
+                               self.ctx, cid)
+        self.assertEqual(exp, ex.exc_info[1])

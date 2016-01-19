@@ -172,6 +172,14 @@ class EngineClient(object):
                                              identity=identity,
                                              nodes=nodes))
 
+    def cluster_check(self, ctxt, identity):
+        return self.call(ctxt, self.make_msg('cluster_check',
+                                             identity=identity))
+
+    def cluster_recover(self, ctxt, identity):
+        return self.call(ctxt, self.make_msg('cluster_recover',
+                                             identity=identity))
+
     def cluster_resize(self, ctxt, identity, adj_type=None, number=None,
                        min_size=None, max_size=None, min_step=None,
                        strict=True):
@@ -239,6 +247,14 @@ class EngineClient(object):
         return rpc_method(ctxt,
                           self.make_msg('node_delete', identity=identity,
                                         force=force))
+
+    def node_check(self, ctxt, identity):
+        return self.call(ctxt, self.make_msg('node_check',
+                                             identity=identity))
+
+    def node_recover(self, ctxt, identity):
+        return self.call(ctxt, self.make_msg('node_recover',
+                                             identity=identity))
 
     def action_list(self, ctxt, filters=None, limit=None, marker=None,
                     sort=None, project_safe=True):
