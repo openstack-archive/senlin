@@ -41,10 +41,10 @@ class Cluster(object):
 
     STATUSES = (
         INIT, ACTIVE, CREATING, UPDATING, RESIZING, DELETING,
-        CRITICAL, ERROR, WARNING,
+        CHECKING, RECOVERING, CRITICAL, ERROR, WARNING,
     ) = (
         'INIT', 'ACTIVE', 'CREATING', 'UPDATING', 'RESIZING', 'DELETING',
-        'CRITICAL', 'ERROR', 'WARNING',
+        'CHECKING', 'RECOVERING', 'CRITICAL', 'ERROR', 'WARNING',
     )
 
     def __init__(self, name, desired_capacity, profile_id,
@@ -301,6 +301,23 @@ class Cluster(object):
         This method is intended to be called only from an action.
         '''
         self.set_status(context, self.UPDATING, reason='Update in progress')
+        return True
+
+    def do_check(self, context, **kwargs):
+        '''Additional logic at the beginning of cluster checking process.
+
+        Set cluster status to CHECKING.
+        '''
+        self.set_status(context, self.CHECKING, reason=_('Check in progress'))
+        return True
+
+    def do_recover(self, context, **kwargs):
+        '''Additional logic at the beginning of cluster recovering process.
+
+        Set cluster status to RECOVERING.
+        '''
+        self.set_status(context, self.RECOVERING,
+                        reason=_('Recovery in progress'))
         return True
 
     def attach_policy(self, ctx, policy_id, values):
