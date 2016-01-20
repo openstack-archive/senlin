@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import random
+
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import timeutils
@@ -490,3 +492,33 @@ class Cluster(object):
                     dist[zname] += 1
 
         return dist
+
+    def select_random_nodes(self, context, count):
+        """Select given number of nodes from cluster randomly.
+
+        :param context: context used to get node list of cluster.
+        :param count: number of nodes to select.
+        :returns: a list of selected nodes.
+        """
+        random.seed()
+        candidates = []
+        nodes = db_api.node_get_all_by_cluster(context, self.id)
+        if count > len(nodes):
+            count = len(nodes)
+
+        err_nodes = [n for n in nodes if n.status == 'ERROR']
+        nodes = [n for n in nodes if n.status != 'ERROR']
+        if count <= len(err_nodes):
+            return [n.id for n in err_nodes[:count]]
+
+        candidates.extend([n.id for n in err_nodes])
+        count -= len(err_nodes)
+
+        i = count
+        while i > 0:
+            rand = random.randrange(len(nodes))
+            candidates.append(nodes[rand].id)
+            nodes.remove(nodes[rand])
+            i = i - 1
+
+        return candidates

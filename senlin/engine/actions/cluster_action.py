@@ -12,7 +12,6 @@
 
 import copy
 import eventlet
-import random
 
 from oslo_log import log as logging
 
@@ -589,12 +588,8 @@ class ClusterAction(base.Action):
             grace_period = self.data['deletion']['grace_period']
         if candidates is not None and len(candidates) == 0:
             # Choose victims randomly
-            i = count
-            while i > 0:
-                r = random.randrange(len(node_list))
-                candidates.append(node_list[r].id)
-                node_list.remove(node_list[r])
-                i = i - 1
+            candidates = self.cluster.select_random_candidates(self.context,
+                                                               count)
 
         # delete nodes if necessary
         if desired < current_size:
@@ -719,13 +714,8 @@ class ClusterAction(base.Action):
 
         # Choose victims randomly
         if len(candidates) == 0:
-            ids = [node.id for node in self.cluster.nodes]
-            i = count
-            while i > 0:
-                r = random.randrange(len(ids))
-                candidates.append(ids[r])
-                ids.remove(ids[r])
-                i = i - 1
+            candidates = self.cluster.select_random_candidates(self.context,
+                                                               count)
 
         if grace_period is not None:
             self._wait_before_deletion(grace_period)
