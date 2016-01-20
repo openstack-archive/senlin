@@ -40,10 +40,11 @@ class LoadBalancingPolicy(base.Policy):
 
     TARGET = [
         ('AFTER', consts.CLUSTER_ADD_NODES),
-        ('AFTER', consts.CLUSTER_DEL_NODES),
         ('AFTER', consts.CLUSTER_SCALE_OUT),
-        ('AFTER', consts.CLUSTER_SCALE_IN),
         ('AFTER', consts.CLUSTER_RESIZE),
+        ('BEFORE', consts.CLUSTER_DEL_NODES),
+        ('BEFORE', consts.CLUSTER_SCALE_IN),
+        ('BEFORE', consts.CLUSTER_RESIZE),
     ]
 
     PROFILE_TYPE = [
@@ -270,8 +271,8 @@ class LoadBalancingPolicy(base.Policy):
 
         return True, reason
 
-    def post_op(self, cluster_id, action):
-        """Routine to be called after an action has been executed.
+    def pre_op(self, cluster_id, action):
+        """Routine to be called before an action has been executed.
 
         For this particular policy, we take this chance to update the pool
         maintained by the load-balancer.
@@ -281,9 +282,9 @@ class LoadBalancingPolicy(base.Policy):
         :param action: The action object that triggered this operation.
         :returns: Nothing.
         """
-        nodes_added = action.outputs.get('nodes_added', [])
+        # TODO(YanyanHu): get deleted nodes list from action.data
         nodes_removed = action.outputs.get('nodes_removed', [])
-        if ((len(nodes_added) == 0) and (len(nodes_removed) == 0)):
+        if len(nodes_removed) == 0:
             return
 
         db_cluster = db_api.cluster_get(action.context, cluster_id)
@@ -294,14 +295,8 @@ class LoadBalancingPolicy(base.Policy):
         policy_data = self._extract_policy_data(cp.data)
         lb_id = policy_data['loadbalancer']
         pool_id = policy_data['pool']
-        port = self.pool_spec.get(self.POOL_PROTOCOL_PORT)
-        subnet = self.pool_spec.get(self.POOL_SUBNET)
 
-        # Remove nodes that have been deleted from lb pool
-        # FIXME(someone): This logic is broken since we remove soft-delete
-        #                 support from DB. The correct logic should be that
-        #                 nodes are removed from load-balancer *before* nodes
-        #                 are deleted.
+        # Remove nodes that will be deleted from lb pool
         for node_id in nodes_removed:
             node = node_mod.Node.load(action.context, node_id=node_id)
             member_id = node.data.get('lb_member', None)
@@ -316,6 +311,35 @@ class LoadBalancingPolicy(base.Policy):
                 action.data['reason'] = _('Failed in removing deleted '
                                           'node(s) from lb pool.')
                 return
+
+        return
+
+    def post_op(self, cluster_id, action):
+        """Routine to be called after an action has been executed.
+
+        For this particular policy, we take this chance to update the pool
+        maintained by the load-balancer.
+
+        :param cluster_id: The ID of the cluster on which a relevant action
+            has been executed.
+        :param action: The action object that triggered this operation.
+        :returns: Nothing.
+        """
+        # TODO(YanyanHu): get added nodes list from action.data
+        nodes_added = action.outputs.get('nodes_added', [])
+        if len(nodes_added) == 0:
+            return
+
+        db_cluster = db_api.cluster_get(action.context, cluster_id)
+        params = self._build_conn_params(db_cluster)
+        lb_driver = driver_base.SenlinDriver().loadbalancing(params)
+        cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
+                                               self.id)
+        policy_data = self._extract_policy_data(cp.data)
+        lb_id = policy_data['loadbalancer']
+        pool_id = policy_data['pool']
+        port = self.pool_spec.get(self.POOL_PROTOCOL_PORT)
+        subnet = self.pool_spec.get(self.POOL_SUBNET)
 
         # Add new nodes to lb pool
         for node_id in nodes_added:
