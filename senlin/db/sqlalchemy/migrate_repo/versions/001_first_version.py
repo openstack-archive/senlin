@@ -68,7 +68,7 @@ def upgrade(migrate_engine):
         Column('id', String(36), primary_key=True, nullable=False),
         Column('name', String(255)),
         Column('physical_id', String(36)),
-        Column('cluster_id', String(36), ForeignKey('cluster.id')),
+        Column('cluster_id', String(36)),
         Column('profile_id', String(36), ForeignKey('profile.id'),
                nullable=False),
         Column('user', String(32)),

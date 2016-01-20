@@ -116,7 +116,7 @@ class Node(BASE, TimestampMixin, models.ModelBase):
     id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
     name = Column(String(255))
     physical_id = Column(String(36))
-    cluster_id = Column(String(36), ForeignKey('cluster.id'))
+    cluster_id = Column(String(36))
     profile_id = Column(String(36), ForeignKey('profile.id'))
     user = Column(String(32), nullable=False)
     project = Column(String(32), nullable=False)
