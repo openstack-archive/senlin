@@ -1,0 +1,4 @@
+---
+upgrade:
+  - Removed cluster policy enable/disable support. We will use more generic
+    interface cluster policy update for these use cases.

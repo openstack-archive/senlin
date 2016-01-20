@@ -1,0 +1,3 @@
+---
+upgrade:
+  - Node actions NODE_JOIN and NODE_LEAVE are removed from API surface.
