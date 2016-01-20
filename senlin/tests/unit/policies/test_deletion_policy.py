@@ -11,12 +11,11 @@
 # under the License.
 
 import mock
-from oslo_utils import timeutils
-import six
 
 from senlin.common import consts
-from senlin.common import scaleutils
+from senlin.common import scaleutils as su
 from senlin.db.sqlalchemy import api as db_api
+from senlin.engine import cluster as cluster_mod
 from senlin.policies import deletion_policy as dp
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -37,65 +36,6 @@ class TestDeletionPolicy(base.SenlinTestCase):
                 'reduce_desired_capacity': False
             }
         }
-        self.profile1 = self._create_profile('PROFILE1')
-        self.profile2 = self._create_profile('PROFILE2')
-        self.profile3 = self._create_profile('PROFILE3')
-        self.cluster = self._create_cluster('CLUSTER1',
-                                            self.profile1['id'])
-        self.nodes_p1 = self._create_nodes(self.cluster['id'],
-                                           self.profile1['id'], 3)
-        self.nodes_p2 = self._create_nodes(self.cluster['id'],
-                                           self.profile2['id'], 3)
-
-    def _create_profile(self, profile_id):
-        values = {
-            'id': profile_id,
-            'type': 'os.heat.stack',
-            'name': 'test-profile',
-            'created_at': timeutils.utcnow(),
-            'user': self.context.user,
-            'project': self.context.project,
-        }
-        return db_api.profile_create(self.context, values)
-
-    def _create_cluster(self, cluster_id, profile_id):
-        values = {
-            'id': cluster_id,
-            'profile_id': profile_id,
-            'name': 'test-cluster',
-            'user': self.context.user,
-            'project': self.context.project,
-            'next_index': 1,
-        }
-
-        return db_api.cluster_create(self.context, values)
-
-    def _create_nodes(self, cluster_id, profile_id, count, **kwargs):
-        nodes = []
-        for i in range(count):
-            values = {
-                'id': 'FAKE_NODE_%s_%s' % (profile_id, (i + 1)),
-                'name': 'test_node_%s' % (i + 1),
-                'physical_id': 'FAKE_PHY_ID_%s' % (i + 1),
-                'cluster_id': cluster_id,
-                'profile_id': profile_id,
-                'project': self.context.project,
-                'index': i + 1,
-                'role': kwargs.get('role', None),
-                'created_at': timeutils.utcnow(),
-                'updated_at': None,
-                'status': kwargs.get('status', 'ACTIVE'),
-                'status_reason': kwargs.get('status_reason',
-                                            'create complete'),
-                'metadata': kwargs.get('metadata', {'foo': '123'}),
-                'data': kwargs.get('data', {'key1': 'value1'}),
-            }
-            db_node = db_api.node_create(self.context, values)
-            nodes.append(six.text_type(db_node.id))
-        return nodes
-
-    def _delete_nodes(self, node_id):
-        db_api.node_delete(self.context, node_id)
 
     def test_policy_init(self):
         policy = dp.DeletionPolicy('test-policy', self.spec)
@@ -103,195 +43,516 @@ class TestDeletionPolicy(base.SenlinTestCase):
         self.assertIsNone(policy.id)
         self.assertEqual('test-policy', policy.name)
         self.assertEqual('senlin.policy.deletion-1.0', policy.type)
-        self.assertEqual(self.spec['properties']['criteria'], policy.criteria)
-        self.assertEqual(self.spec['properties']['destroy_after_deletion'],
-                         policy.destroy_after_deletion)
-        self.assertEqual(self.spec['properties']['grace_period'],
-                         policy.grace_period)
-        self.assertEqual(self.spec['properties']['reduce_desired_capacity'],
-                         policy.reduce_desired_capacity)
+        self.assertEqual('OLDEST_FIRST', policy.criteria)
+        self.assertTrue(policy.destroy_after_deletion)
+        self.assertEqual(60, policy.grace_period)
+        self.assertFalse(policy.reduce_desired_capacity)
 
-    def test_select_candidates_oldest_first(self):
-        self.spec['properties']['criteria'] = dp.DeletionPolicy.OLDEST_FIRST
+    @mock.patch.object(su, 'nodes_by_random')
+    def test__victims_by_regions_random(self, mock_select):
+        cluster = mock.Mock()
+        node1 = mock.Mock(id=1)
+        node2 = mock.Mock(id=2)
+        node3 = mock.Mock(id=3)
+        cluster.nodes_by_region.side_effect = [
+            [node1], [node2, node3]
+        ]
+
+        mock_select.side_effect = [['1'], ['2', '3']]
+
+        self.spec['properties']['criteria'] = 'RANDOM'
         policy = dp.DeletionPolicy('test-policy', self.spec)
 
-        nodes = policy._select_candidates(self.context, self.cluster['id'], 1)
-        self.assertEqual(1, len(nodes))
-        self.assertEqual(self.nodes_p1[0], nodes[0])
+        res = policy._victims_by_regions(cluster, {'R1': 1, 'R2': 2})
+        self.assertEqual(['1', '2', '3'], res)
+        mock_select.assert_has_calls([
+            mock.call([node1], 1),
+            mock.call([node2, node3], 2)
+        ])
+        cluster.nodes_by_region.assert_has_calls([
+            mock.call('R1'), mock.call('R2')])
 
-        nodes = policy._select_candidates(self.context, self.cluster['id'], 2)
-        self.assertEqual(2, len(nodes))
-        self.assertEqual(self.nodes_p1[0], nodes[0])
-        self.assertEqual(self.nodes_p1[1], nodes[1])
+    @mock.patch.object(su, 'nodes_by_profile_age')
+    def test__victims_by_regions_profile_age(self, mock_select):
+        cluster = mock.Mock()
+        node1 = mock.Mock(id=1)
+        node2 = mock.Mock(id=2)
+        node3 = mock.Mock(id=3)
+        cluster.nodes_by_region.side_effect = [
+            [node1], [node2, node3]
+        ]
 
-    def test_select_candidates_youngest_first(self):
-        self.spec['properties']['criteria'] = dp.DeletionPolicy.YOUNGEST_FIRST
+        mock_select.side_effect = [['1'], ['2', '3']]
+
+        self.spec['properties']['criteria'] = 'OLDEST_PROFILE_FIRST'
         policy = dp.DeletionPolicy('test-policy', self.spec)
 
-        nodes = policy._select_candidates(self.context, self.cluster['id'], 1)
-        self.assertEqual(1, len(nodes))
-        self.assertEqual(self.nodes_p2[2], nodes[0])
+        res = policy._victims_by_regions(cluster, {'R1': 1, 'R2': 2})
+        self.assertEqual(['1', '2', '3'], res)
+        mock_select.assert_has_calls([
+            mock.call([node1], 1),
+            mock.call([node2, node3], 2)
+        ])
+        cluster.nodes_by_region.assert_has_calls([
+            mock.call('R1'), mock.call('R2')])
 
-        nodes = policy._select_candidates(self.context, self.cluster['id'], 2)
-        self.assertEqual(2, len(nodes))
-        self.assertEqual(self.nodes_p2[2], nodes[0])
-        self.assertEqual(self.nodes_p2[1], nodes[1])
+    @mock.patch.object(su, 'nodes_by_age')
+    def test__victims_by_regions_age_oldest(self, mock_select):
+        cluster = mock.Mock()
+        node1 = mock.Mock(id=1)
+        node2 = mock.Mock(id=2)
+        node3 = mock.Mock(id=3)
+        cluster.nodes_by_region.side_effect = [
+            [node1], [node2, node3]
+        ]
 
-    def test_select_candidates_oldest_profile_first(self):
-        criteria = dp.DeletionPolicy.OLDEST_PROFILE_FIRST
-        self.spec['properties']['criteria'] = criteria
+        mock_select.side_effect = [['1'], ['2', '3']]
+
+        self.spec['properties']['criteria'] = 'OLDEST_FIRST'
         policy = dp.DeletionPolicy('test-policy', self.spec)
 
-        nodes = policy._select_candidates(self.context, self.cluster['id'], 1)
-        self.assertEqual(1, len(nodes))
-        self.assertEqual(self.nodes_p1[0], nodes[0])
+        res = policy._victims_by_regions(cluster, {'R1': 1, 'R2': 2})
+        self.assertEqual(['1', '2', '3'], res)
+        mock_select.assert_has_calls([
+            mock.call([node1], 1, True),
+            mock.call([node2, node3], 2, True)
+        ])
+        cluster.nodes_by_region.assert_has_calls([
+            mock.call('R1'), mock.call('R2')])
 
-        nodes = policy._select_candidates(self.context, self.cluster['id'], 2)
-        self.assertEqual(2, len(nodes))
-        self.assertEqual(self.nodes_p1[0], nodes[0])
-        self.assertEqual(self.nodes_p1[1], nodes[1])
+    @mock.patch.object(su, 'nodes_by_age')
+    def test__victims_by_regions_age_youngest(self, mock_select):
+        cluster = mock.Mock()
+        node1 = mock.Mock(id=1)
+        node2 = mock.Mock(id=2)
+        node3 = mock.Mock(id=3)
+        cluster.nodes_by_region.side_effect = [
+            [node1], [node2, node3]
+        ]
 
-    def test_select_candidates_random(self):
-        self.spec['properties']['criteria'] = dp.DeletionPolicy.RANDOM
+        mock_select.side_effect = [['1'], ['2', '3']]
+
+        self.spec['properties']['criteria'] = 'YOUNGEST_FIRST'
         policy = dp.DeletionPolicy('test-policy', self.spec)
 
-        random_nodes = []
-        for i in range(10):
-            nodes = policy._select_candidates(self.context,
-                                              self.cluster['id'], 1)
-            self.assertEqual(1, len(nodes))
-            random_nodes.append(nodes[0])
-        random_nodes = list(set(random_nodes))
-        self.assertTrue(len(random_nodes) > 1)
+        res = policy._victims_by_regions(cluster, {'R1': 1, 'R2': 2})
+        self.assertEqual(['1', '2', '3'], res)
+        mock_select.assert_has_calls([
+            mock.call([node1], 1, False),
+            mock.call([node2, node3], 2, False)
+        ])
+        cluster.nodes_by_region.assert_has_calls([
+            mock.call('R1'), mock.call('R2')])
 
-        nodes = policy._select_candidates(self.context, self.cluster['id'], 3)
-        self.assertEqual(3, len(nodes))
-        nodes = policy._select_candidates(self.context, self.cluster['id'], 10)
-        self.assertEqual(6, len(nodes))
+    @mock.patch.object(su, 'nodes_by_random')
+    def test__victims_by_zones_random(self, mock_select):
+        cluster = mock.Mock()
+        node1 = mock.Mock(id=1)
+        node2 = mock.Mock(id=2)
+        node3 = mock.Mock(id=3)
+        cluster.nodes_by_zone.side_effect = [
+            [node1], [node2, node3]
+        ]
 
-    def test_select_candidates_error_nodes_first(self):
-        kwargs = {
-            'status': 'ERROR',
-            'status_reason': 'Unknown',
+        mock_select.side_effect = [['1'], ['3']]
+
+        self.spec['properties']['criteria'] = 'RANDOM'
+        policy = dp.DeletionPolicy('test-policy', self.spec)
+
+        res = policy._victims_by_zones(cluster, {'AZ1': 1, 'AZ2': 1})
+        self.assertEqual(['1', '3'], res)
+        mock_select.assert_has_calls([
+            mock.call([node1], 1),
+            mock.call([node2, node3], 1)
+        ])
+        cluster.nodes_by_zone.assert_has_calls([
+            mock.call('AZ1'), mock.call('AZ2')
+        ])
+
+    @mock.patch.object(su, 'nodes_by_profile_age')
+    def test__victims_by_zones_profile_age(self, mock_select):
+        cluster = mock.Mock()
+        node1 = mock.Mock(id=1)
+        node2 = mock.Mock(id=2)
+        node3 = mock.Mock(id=3)
+        cluster.nodes_by_zone.side_effect = [
+            [node1], [node2, node3]
+        ]
+
+        mock_select.side_effect = [['1'], ['2']]
+
+        self.spec['properties']['criteria'] = 'OLDEST_PROFILE_FIRST'
+        policy = dp.DeletionPolicy('test-policy', self.spec)
+
+        res = policy._victims_by_zones(cluster, {'AZ1': 1, 'AZ2': 1})
+        self.assertEqual(['1', '2'], res)
+        mock_select.assert_has_calls(
+            [
+                mock.call([node1], 1),
+                mock.call([node2, node3], 1)
+            ],
+            any_order=True
+        )
+        cluster.nodes_by_zone.assert_has_calls(
+            [mock.call('AZ1'), mock.call('AZ2')],
+            any_order=True
+        )
+
+    @mock.patch.object(su, 'nodes_by_age')
+    def test__victims_by_zones_age_oldest(self, mock_select):
+        cluster = mock.Mock()
+        node1 = mock.Mock(id=1)
+        node2 = mock.Mock(id=2)
+        node3 = mock.Mock(id=3)
+        cluster.nodes_by_zone.side_effect = [
+            [node1], [node2, node3]
+        ]
+
+        mock_select.side_effect = [['1'], ['3']]
+
+        self.spec['properties']['criteria'] = 'OLDEST_FIRST'
+        policy = dp.DeletionPolicy('test-policy', self.spec)
+
+        res = policy._victims_by_zones(cluster, {'AZ1': 1, 'AZ8': 1})
+        self.assertEqual(['1', '3'], res)
+        mock_select.assert_has_calls([
+            mock.call([node1], 1, True),
+            mock.call([node2, node3], 1, True)
+        ])
+        cluster.nodes_by_zone.assert_has_calls(
+            [mock.call('AZ1'), mock.call('AZ8')],
+            any_order=True
+        )
+
+    @mock.patch.object(su, 'nodes_by_age')
+    def test__victims_by_zones_age_youngest(self, mock_select):
+        cluster = mock.Mock()
+        node1 = mock.Mock(id=1)
+        node2 = mock.Mock(id=3)
+        node3 = mock.Mock(id=5)
+        cluster.nodes_by_zone.side_effect = [
+            [node1], [node2, node3]
+        ]
+
+        mock_select.side_effect = [['1'], ['3', '5']]
+
+        self.spec['properties']['criteria'] = 'YOUNGEST_FIRST'
+        policy = dp.DeletionPolicy('test-policy', self.spec)
+
+        res = policy._victims_by_zones(cluster, {'AZ5': 1, 'AZ6': 2})
+        self.assertEqual(['1', '3', '5'], res)
+        mock_select.assert_has_calls(
+            [
+                mock.call([node1], 1, False),
+                mock.call([node2, node3], 2, False)
+            ],
+            any_order=True
+        )
+        cluster.nodes_by_zone.assert_has_calls(
+            [mock.call('AZ5'), mock.call('AZ6')],
+            any_order=True
+        )
+
+    def test__update_action_clean(self):
+        action = mock.Mock()
+        action.data = {}
+
+        policy = dp.DeletionPolicy('test-policy', self.spec)
+
+        policy._update_action(action, ['N1', 'N2'])
+
+        pd = {
+            'status': 'OK',
+            'reason': 'Candidates generated',
+            'deletion': {
+                'count': 2,
+                'candidates': ['N1', 'N2'],
+                'destroy_after_deletion': True,
+                'grace_period': 60,
+            }
+        }
+        self.assertEqual(pd, action.data)
+        action.store.assert_called_with(action.context)
+
+    def test__update_action_override(self):
+        action = mock.Mock()
+        action.data = {
+            'deletion': {
+                'count': 3,
+            }
         }
 
-        self.nodes_p3 = self._create_nodes(self.cluster['id'],
-                                           self.profile3['id'], 1,
-                                           **kwargs)
-        self.spec['properties']['criteria'] = \
-            dp.DeletionPolicy.OLDEST_PROFILE_FIRST
         policy = dp.DeletionPolicy('test-policy', self.spec)
 
-        nodes = policy._select_candidates(self.context, self.cluster['id'], 2)
-        self.assertEqual(2, len(nodes))
-        self.assertEqual(self.nodes_p3[0], nodes[0])
-        self.assertEqual(self.nodes_p1[0], nodes[1])
-        self._delete_nodes(self.nodes_p3[0])
+        policy._update_action(action, ['N1', 'N2'])
 
-    @mock.patch.object(scaleutils, 'parse_resize_params')
-    @mock.patch.object(db_api, 'cluster_get')
-    def test_pre_op(self, mock_cluster, mock_parse):
+        pd = {
+            'status': 'OK',
+            'reason': 'Candidates generated',
+            'deletion': {
+                'count': 2,
+                'candidates': ['N1', 'N2'],
+                'destroy_after_deletion': True,
+                'grace_period': 60,
+            }
+        }
+        self.assertEqual(pd, action.data)
+        action.store.assert_called_with(action.context)
+
+    @mock.patch.object(dp.DeletionPolicy, '_update_action')
+    def test_pre_op_del_nodes(self, mock_update):
+        action = mock.Mock()
+        action.context = self.context
+        action.inputs = {
+            'count': 2,
+            'candidates': ['N1', 'N2'],
+        }
+        action.data = {}
+
+        policy = dp.DeletionPolicy('test-policy', self.spec)
+        policy.pre_op('FAKE_ID', action)
+        mock_update.assert_called_once_with(action, ['N1', 'N2'])
+
+    @mock.patch.object(dp.DeletionPolicy, '_update_action')
+    @mock.patch.object(su, 'nodes_by_age')
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    def test_pre_op_with_count_decisions(self, mock_load, mock_select,
+                                         mock_update):
         action = mock.Mock()
         action.context = self.context
         action.inputs = {}
+        action.data = {'deletion': {'count': 2}}
+
+        cluster = mock.Mock(nodes=['a', 'b', 'c'])
+        mock_load.return_value = cluster
+        mock_select.return_value = ['NODE1', 'NODE2']
+
         policy = dp.DeletionPolicy('test-policy', self.spec)
-        mock_parse.return_value = 'OK', ''
+        policy.pre_op('FAKE_ID', action)
 
-        # CLUSTER_SCALE_IN or ClUSTER_DEL_NODES action
-        # action data doesn't have 'deletion' field
-        action.data = {}
-        action.action = consts.CLUSTER_SCALE_IN
-        policy.pre_op(self.cluster['id'], action)
-        pd = {
-            'status': 'OK',
-            'reason': 'Candidates generated',
-            'deletion': {
-                'candidates': [self.nodes_p1[0]],
-                'destroy_after_deletion': True,
-                'grace_period': 60,
-            }
-        }
-        self.assertEqual(pd, action.data)
+        mock_update.assert_called_once_with(action, ['NODE1', 'NODE2'])
+        mock_load.assert_called_once_with(action.context,
+                                          cluster=None, cluster_id='FAKE_ID')
+        mock_select.assert_called_once_with(cluster.nodes, 2, True)
 
-        # action data has 'deletion' field, but 'count' is not provided
-        action.data = {'abc': 123}
-        action.inputs = {'nodes': [self.nodes_p1[0]]}
-        action.action = consts.CLUSTER_DEL_NODES
-        policy.pre_op(self.cluster['id'], action)
-        pd = {
-            'status': 'OK',
-            'reason': 'Candidates generated',
-            'deletion': {
-                'candidates': [self.nodes_p1[0]],
-                'destroy_after_deletion': True,
-                'grace_period': 60,
-            },
-            'abc': 123
-        }
-        self.assertEqual(pd, action.data)
-
-        # 'count' is provided in inputs field of action
-        action.inputs = {'count': 2}
-        action.action = consts.CLUSTER_SCALE_IN
-        action.data = {}
-        policy.pre_op(self.cluster['id'], action)
-        pd = {
-            'status': 'OK',
-            'reason': 'Candidates generated',
-            'deletion': {
-                'candidates': [self.nodes_p1[0], self.nodes_p1[1]],
-                'destroy_after_deletion': True,
-                'grace_period': 60,
-            }
-        }
-        self.assertEqual(pd, action.data)
-        action.store.assert_called_with(self.context)
-        # CLUSTER_RESIZE action
-        # delete nodes
-        action.action = consts.CLUSTER_RESIZE
-        action.data = {'deletion': {'count': 1}}
-        policy.pre_op(self.cluster['id'], action)
-        pd = {
-            'status': 'OK',
-            'reason': 'Candidates generated',
-            'deletion': {
-                'candidates': [self.nodes_p1[0]],
-                'destroy_after_deletion': True,
-                'grace_period': 60,
-                'count': 1,
-            }
-        }
-        self.assertEqual(pd, action.data)
-        action.store.assert_called_with(self.context)
-
-    def test_pre_op_candidates_provided(self):
+    @mock.patch.object(dp.DeletionPolicy, '_update_action')
+    @mock.patch.object(dp.DeletionPolicy, '_victims_by_regions')
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    def test_pre_op_with_region_decisions(self, mock_load, mock_select,
+                                          mock_update):
         action = mock.Mock()
         action.context = self.context
-        policy = dp.DeletionPolicy('test-policy', self.spec)
-
-        # Both 'count' and 'candidates' are provided in deletion
-        # field of action data
+        action.inputs = {}
         action.data = {
             'deletion': {
                 'count': 2,
+                'regions': {
+                    'R1': 1,
+                    'R2': 1
+                }
             }
         }
-        action.inputs = {
-            'candidates': [
-                self.nodes_p1[0],
-                self.nodes_p2[2],
-            ],
-        }
-        policy.pre_op(self.cluster['id'], action)
-        pd = {
-            'status': 'OK',
-            'reason': 'Candidates generated',
+
+        cluster = mock.Mock(nodes=['a', 'b', 'c'])
+        mock_load.return_value = cluster
+        mock_select.return_value = ['NODE1', 'NODE2']
+
+        policy = dp.DeletionPolicy('test-policy', self.spec)
+        policy.pre_op('FAKE_ID', action)
+
+        mock_update.assert_called_once_with(action, ['NODE1', 'NODE2'])
+        mock_load.assert_called_once_with(action.context,
+                                          cluster=None, cluster_id='FAKE_ID')
+        mock_select.assert_called_once_with(cluster, {'R1': 1, 'R2': 1})
+
+    @mock.patch.object(dp.DeletionPolicy, '_update_action')
+    @mock.patch.object(dp.DeletionPolicy, '_victims_by_zones')
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    def test_pre_op_with_zone_decisions(self, mock_load, mock_select,
+                                        mock_update):
+        action = mock.Mock()
+        action.context = self.context
+        action.inputs = {}
+        action.data = {
             'deletion': {
                 'count': 2,
-                'candidates': [self.nodes_p1[0], self.nodes_p2[2]],
-                'destroy_after_deletion': True,
-                'grace_period': 60,
+                'zones': {
+                    'AZ1': 1,
+                    'AZ2': 1
+                }
             }
         }
-        self.assertEqual(pd, action.data)
-        action.store.assert_called_with(self.context)
+
+        cluster = mock.Mock(nodes=['a', 'b', 'c'])
+        mock_load.return_value = cluster
+        mock_select.return_value = ['NODE1', 'NODE2']
+
+        policy = dp.DeletionPolicy('test-policy', self.spec)
+        policy.pre_op('FAKE_ID', action)
+
+        mock_update.assert_called_once_with(action, ['NODE1', 'NODE2'])
+        mock_load.assert_called_once_with(action.context,
+                                          cluster=None, cluster_id='FAKE_ID')
+        mock_select.assert_called_once_with(cluster, {'AZ1': 1, 'AZ2': 1})
+
+    @mock.patch.object(dp.DeletionPolicy, '_update_action')
+    @mock.patch.object(su, 'nodes_by_age')
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    def test_pre_op_scale_in_with_count(self, mock_load, mock_select,
+                                        mock_update):
+        action = mock.Mock()
+        action.action = consts.CLUSTER_SCALE_IN
+        action.context = self.context
+        action.data = {}
+        action.inputs = {'count': 2}
+
+        cluster = mock.Mock(nodes=[mock.Mock()])
+        mock_load.return_value = cluster
+        mock_select.return_value = ['NODE_ID']
+
+        policy = dp.DeletionPolicy('test-policy', self.spec)
+        policy.pre_op('FAKE_ID', action)
+
+        mock_load.assert_called_once_with(action.context,
+                                          cluster=None, cluster_id='FAKE_ID')
+        mock_update.assert_called_once_with(action, ['NODE_ID'])
+        # the following was invoked with 1 because the input count is
+        # greater than the cluster size
+        mock_select.assert_called_once_with(cluster.nodes, 1, True)
+
+    @mock.patch.object(dp.DeletionPolicy, '_update_action')
+    @mock.patch.object(su, 'nodes_by_age')
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    def test_pre_op_scale_in_without_count(self, mock_load, mock_select,
+                                           mock_update):
+        action = mock.Mock()
+        action.context = self.context
+        action.action = consts.CLUSTER_SCALE_IN
+        action.data = {}
+        action.inputs = {}
+
+        cluster = mock.Mock(nodes=[mock.Mock()])
+        mock_load.return_value = cluster
+        mock_select.return_value = ['NODE_ID']
+
+        policy = dp.DeletionPolicy('test-policy', self.spec)
+        policy.pre_op('FAKE_ID', action)
+
+        mock_load.assert_called_once_with(action.context,
+                                          cluster=None, cluster_id='FAKE_ID')
+        mock_update.assert_called_once_with(action, ['NODE_ID'])
+        # the following was invoked with 1 because the input count is
+        # not specified so 1 becomes the default
+        mock_select.assert_called_once_with(cluster.nodes, 1, True)
+
+    @mock.patch.object(dp.DeletionPolicy, '_update_action')
+    @mock.patch.object(su, 'parse_resize_params')
+    @mock.patch.object(db_api, 'cluster_get')
+    def test_pre_op_resize_not_deletion(self, mock_get, mock_parse,
+                                        mock_update):
+        action = mock.Mock()
+        action.context = self.context
+        action.action = consts.CLUSTER_RESIZE
+        action.inputs = {}
+
+        db_cluster = mock.Mock()
+        mock_get.return_value = db_cluster
+
+        policy = dp.DeletionPolicy('test-policy', self.spec)
+        # a simulation of non-deletion RESZIE
+        action.data = {}
+
+        policy.pre_op('FAKE_ID', action)
+
+        mock_get.assert_called_once_with(action.context, 'FAKE_ID',
+                                         project_safe=True)
+        mock_parse.assert_called_once_with(action, db_cluster)
+        self.assertEqual(0, mock_update.call_count)
+
+    @mock.patch.object(dp.DeletionPolicy, '_update_action')
+    @mock.patch.object(su, 'nodes_by_age')
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    @mock.patch.object(db_api, 'cluster_get')
+    def test_pre_op_resize_with_count(self, mock_get, mock_load,
+                                      mock_select, mock_update):
+        def fake_parse(dummy, obj):
+            action.data = {
+                'deletion': {
+                    'count': 2
+                }
+            }
+
+        action = mock.Mock()
+        action.context = self.context
+        action.action = consts.CLUSTER_RESIZE
+        action.inputs = {}
+        action.data = {}
+
+        db_cluster = mock.Mock()
+        mock_get.return_value = db_cluster
+
+        cluster = mock.Mock(nodes=[mock.Mock(), mock.Mock()])
+        mock_load.return_value = cluster
+
+        mock_select.return_value = ['NID']
+
+        policy = dp.DeletionPolicy('test-policy', self.spec)
+
+        mock_parse = self.patchobject(su, 'parse_resize_params',
+                                      side_effect=fake_parse)
+
+        policy.pre_op('FAKE_ID', action)
+
+        mock_get.assert_called_once_with(action.context, 'FAKE_ID',
+                                         project_safe=True)
+        mock_parse.assert_called_once_with(action, db_cluster)
+        mock_load.assert_called_once_with(action.context,
+                                          cluster=db_cluster,
+                                          cluster_id='FAKE_ID')
+        mock_update.assert_called_once_with(action, ['NID'])
+
+    @mock.patch.object(dp.DeletionPolicy, '_update_action')
+    @mock.patch.object(su, 'nodes_by_random')
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    def test_pre_op_do_random(self, mock_load, mock_select, mock_update):
+        action = mock.Mock()
+        action.context = self.context
+        action.inputs = {}
+        action.data = {'deletion': {'count': 2}}
+
+        cluster = mock.Mock(nodes=['a', 'b', 'c'])
+        mock_select.return_value = ['NODE1', 'NODE2']
+        mock_load.return_value = cluster
+
+        self.spec['properties']['criteria'] = 'RANDOM'
+        policy = dp.DeletionPolicy('test-policy', self.spec)
+        policy.pre_op('FAKE_ID', action)
+
+        mock_load.assert_called_once_with(action.context,
+                                          cluster=None, cluster_id='FAKE_ID')
+        mock_select.assert_called_once_with(cluster.nodes, 2)
+        mock_update.assert_called_once_with(action, ['NODE1', 'NODE2'])
+
+    @mock.patch.object(dp.DeletionPolicy, '_update_action')
+    @mock.patch.object(su, 'nodes_by_profile_age')
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    def test_pre_op_do_oldest_profile(self, mock_load, mock_select,
+                                      mock_update):
+        action = mock.Mock()
+        action.context = self.context
+        action.inputs = {}
+        action.data = {'deletion': {'count': 2}}
+
+        mock_select.return_value = ['NODE1', 'NODE2']
+
+        cluster = mock.Mock(nodes=['a', 'b', 'c'])
+        mock_load.return_value = cluster
+
+        self.spec['properties']['criteria'] = 'OLDEST_PROFILE_FIRST'
+        policy = dp.DeletionPolicy('test-policy', self.spec)
+        policy.pre_op('FAKE_ID', action)
+
+        mock_load.assert_called_once_with(action.context,
+                                          cluster=None, cluster_id='FAKE_ID')
+        mock_select.assert_called_once_with(cluster.nodes, 2)
+        mock_update.assert_called_once_with(action, ['NODE1', 'NODE2'])
