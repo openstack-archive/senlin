@@ -35,11 +35,11 @@ class Node(object):
     '''
 
     statuses = (
-        INIT, ACTIVE, ERROR, WARNING,
-        CREATING, UPDATING, DELETING,
+        INIT, ACTIVE, ERROR, WARNING, CREATING, UPDATING, DELETING,
+        RECOVERING
     ) = (
-        'INIT', 'ACTIVE', 'ERROR', 'WARNING',
-        'CREATING', 'UPDATING', 'DELETING',
+        'INIT', 'ACTIVE', 'ERROR', 'WARNING', 'CREATING', 'UPDATING',
+        'DELETING', 'RECOVERING'
     )
 
     def __init__(self, name, profile_id, cluster_id, context=None, **kwargs):
@@ -344,4 +344,46 @@ class Node(object):
         self.index = -1
 
         profile_base.Profile.leave_cluster(context, self)
+        return True
+
+    def do_check(self, context):
+        if not self.physical_id:
+            return False
+
+        res = profile_base.Profile.check_object(context, self)
+
+        if not res:
+            self.status = 'ERROR'
+            self.status_reason = _('Physical node is not ACTIVE!')
+            self.store(context)
+
+        return res
+
+    def do_recover(self, context, **options):
+        """recover a node.
+
+        This function is supposed to be invoked from a NODE_RECOVER action.
+        """
+        if not self.physical_id:
+            return False
+
+        self.set_status(context, self.RECOVERING,
+                        reason=_('Recover in progress'))
+
+        try:
+            physical_id = profile_base.Profile.recover_object(context, self,
+                                                              **options)
+        except exception.ResourceStatusError as ex:
+            self._handle_exception(context, 'recover', self.ERROR, ex)
+            return False
+
+        if not physical_id:
+            self.set_status(context, self.ERROR, reason=_('Recover failed'))
+            return False
+
+        self.set_status(context, self.ACTIVE, reason=_('Recover succeeded'))
+        if self.physical_id != physical_id:
+            self.physical_id = physical_id
+            self.store(context)
+
         return True
