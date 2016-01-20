@@ -493,21 +493,51 @@ class Cluster(object):
 
         return dist
 
-    def select_random_nodes(self, context, count):
+    def nodes_by_region(self, region):
+        """Get list of nodes that belong to the specified region.
+
+        :param region: Name of region for filtering.
+        :return: A list of nodes that are from the specified region.
+        """
+        result = []
+        for node in self.nodes:
+            placement = node.data.get('placement', {})
+            if placement and 'region_name' in placement:
+                if region == placement['region_name']:
+                    result.append(node)
+        return result
+
+    def nodes_by_zone(self, zone):
+        """Get list of nodes that reside in the specified availability zone.
+
+        :param zone: Name of availability zone for filtering.
+        :return: A list of nodes that reside in the specified AZ.
+        """
+        # TODO(anyone): Improve this to do a forced refresh via get_details?
+        result = []
+        for node in self.nodes:
+            placement = node.data.get('placement', {})
+            if placement and 'zone' in placement:
+                if zone == placement['zone']:
+                    result.append(node)
+        return result
+
+    def nodes_by_random(self, count):
         """Select given number of nodes from cluster randomly.
 
-        :param context: context used to get node list of cluster.
         :param count: number of nodes to select.
         :returns: a list of selected nodes.
         """
+
+        # TODO(anyone): This routine currently assumes higher priorities for
+        # ERROR nodes. It should be changed.
         random.seed()
         candidates = []
-        nodes = db_api.node_get_all_by_cluster(context, self.id)
-        if count > len(nodes):
-            count = len(nodes)
+        if count > len(self.nodes):
+            count = len(self.nodes)
 
-        err_nodes = [n for n in nodes if n.status == 'ERROR']
-        nodes = [n for n in nodes if n.status != 'ERROR']
+        err_nodes = [n for n in self.nodes if n.status == 'ERROR']
+        nodes = [n for n in self.nodes if n.status != 'ERROR']
         if count <= len(err_nodes):
             return [n.id for n in err_nodes[:count]]
 

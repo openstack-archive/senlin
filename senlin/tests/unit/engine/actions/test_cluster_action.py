@@ -1368,7 +1368,7 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual('Cluster resize succeeded.', res_msg)
 
         mock_delete.assert_called_once_with(mock.ANY)
-        cluster.select_random_candidates.assert_called_once_with(self.ctx, 2)
+        cluster.nodes_by_random.assert_called_once_with(2)
         self.assertEqual({'deletion': {'count': 2}}, action.data)
         cluster.set_status.assert_has_calls([
             mock.call(action.context, 'RESIZING', 'Cluster resize started.'),
@@ -1456,7 +1456,7 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual('Bad things happened.', res_msg)
 
         mock_delete.assert_called_once_with(mock.ANY)
-        cluster.select_random_candidates.assert_called_once_with(self.ctx, 2)
+        cluster.nodes_by_random.assert_called_once_with(2)
         self.assertEqual({'deletion': {'count': 2, 'grace_period': 2}},
                          action.data)
         self.assertEqual(2, cluster.set_status.call_count)
@@ -1663,7 +1663,7 @@ class ClusterActionTest(base.SenlinTestCase):
 
         # deleting 1 nodes
         mock_delete.assert_called_once_with(mock.ANY)
-        cluster.select_random_candidates.assert_called_once_with(self.ctx, 1)
+        cluster.nodes_by_random.assert_called_once_with(1)
         cluster.set_status.assert_has_calls([
             mock.call(action.context, cluster.RESIZING,
                       'Cluster scale in started.'),
@@ -1740,7 +1740,7 @@ class ClusterActionTest(base.SenlinTestCase):
 
         # deleting 3 nodes
         mock_delete.assert_called_once_with(mock.ANY)
-        cluster.select_random_candidates.assert_called_once_with(self.ctx, 3)
+        cluster.nodes_by_random.assert_called_once_with(3)
         cluster.set_status.assert_has_calls([
             mock.call(action.context, cluster.RESIZING,
                       'Cluster scale in started.'),
@@ -1801,7 +1801,7 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Cluster scaling succeeded.', res_msg)
         mock_delete.assert_called_once_with(mock.ANY)
-        cluster.select_random_candidates.assert_called_once_with(self.ctx, 2)
+        cluster.nodes_by_random.assert_called_once_with(2)
         cluster.set_status.assert_has_calls([
             mock.call(action.context, cluster.RESIZING,
                       'Cluster scale in started.'),
@@ -1882,8 +1882,8 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual('Not good time!', res_msg)
         self.assertEqual(1, cluster.set_status.call_count)
         mock_delete.assert_called_once_with(mock.ANY)
-        expected_calls = [mock.call(self.ctx, 2) * 3]
-        cluster.select_random_candidates.has_calls(expected_calls)
+        cluster.nodes_by_random.has_calls(
+            [mock.call(2), mock.call(2), mock.call(2)])
 
     def test_do_attach_policy(self, mock_load):
         cluster = mock.Mock()

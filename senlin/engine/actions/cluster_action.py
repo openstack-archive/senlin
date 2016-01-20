@@ -588,8 +588,7 @@ class ClusterAction(base.Action):
             grace_period = self.data['deletion']['grace_period']
         if candidates is not None and len(candidates) == 0:
             # Choose victims randomly
-            candidates = self.cluster.select_random_candidates(self.context,
-                                                               count)
+            candidates = self.cluster.nodes_by_random(count)
 
         # delete nodes if necessary
         if desired < current_size:
@@ -714,8 +713,7 @@ class ClusterAction(base.Action):
 
         # Choose victims randomly
         if len(candidates) == 0:
-            candidates = self.cluster.select_random_candidates(self.context,
-                                                               count)
+            candidates = self.cluster.nodes_by_random(count)
 
         if grace_period is not None:
             self._wait_before_deletion(grace_period)
