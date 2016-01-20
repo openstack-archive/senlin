@@ -15,6 +15,7 @@ Utilities for scaling actions and related policies.
 '''
 
 import math
+import random
 
 from oslo_log import log as logging
 
@@ -179,3 +180,97 @@ def parse_resize_params(action, cluster):
         })
 
     return action.RES_OK, ''
+
+
+def filter_error_nodes(nodes):
+    """Filter out ERROR nodes from the given node list.
+
+    :param nodes: candidate nodes for filter.
+    :param count: maximum number of nodes for selection.
+    :return: a tuple containing the chosen nodes' IDs and the undecided
+             (good) nodes.
+    """
+    good = []
+    bad = []
+    for n in nodes:
+        if n.status == 'ERROR':
+            bad.append(n.id)
+        else:
+            good.append(n)
+
+    return bad, good
+
+
+def nodes_by_random(nodes, count):
+    """Select nodes based on random number.
+
+    :param nodes: list of candidate nodes.
+    :param count: maximum number of nodes for selection.
+    :return: a list of IDs for victim nodes.
+    """
+    selected, candidates = filter_error_nodes(nodes)
+    if count <= len(selected):
+        return selected[:count]
+
+    count -= len(selected)
+    random.seed()
+
+    i = count
+    while i > 0:
+        rand = random.randrange(len(candidates))
+        selected.append(candidates[rand].id)
+        candidates.remove(candidates[rand])
+        i = i - 1
+
+    return selected
+
+
+def nodes_by_age(nodes, count, old_first):
+    """Select nodes based on node creation time.
+
+    :param nodes: list of candidate nodes.
+    :param count: maximum number of nodes for selection.
+    :param old_first: whether old nodes should appear before young ones.
+    :return: a list of IDs for victim nodes.
+    """
+    selected, candidates = filter_error_nodes(nodes)
+    if count <= len(selected):
+        return selected[:count]
+
+    count -= len(selected)
+    sorted_list = sorted(candidates, key=lambda r: r.created_at)
+    for i in range(count):
+        if old_first:
+            selected.append(sorted_list[i].id)
+        else:  # YOUNGEST_FIRST
+            selected.append(sorted_list[-1 - i].id)
+    return selected
+
+
+def nodes_by_profile_age(nodes, count):
+    """Select nodes based on node profile creation time.
+
+    Note that old nodes will come before young ones.
+
+    :param nodes: list of candidate nodes.
+    :param count: maximum number of nodes for selection.
+    :return: a list of IDs for victim nodes.
+    """
+    selected, nodes = filter_error_nodes(nodes)
+    if count <= len(selected):
+        return selected[:count]
+
+    count -= len(selected)
+    node_map = []
+    for node in nodes:
+        entry = {
+            'id': node.id,
+            'created_at': node.rt['profile'].created_at
+        }
+        node_map.append(entry)
+
+    sorted_map = sorted(node_map, key=lambda m: m['created_at'])
+    for i in range(count):
+        selected.append(sorted_map[i]['id'])
+
+    return selected

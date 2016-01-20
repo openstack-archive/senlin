@@ -10,8 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import random
-
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import timeutils
@@ -521,34 +519,3 @@ class Cluster(object):
                 if zone == placement['zone']:
                     result.append(node)
         return result
-
-    def nodes_by_random(self, count):
-        """Select given number of nodes from cluster randomly.
-
-        :param count: number of nodes to select.
-        :returns: a list of selected nodes.
-        """
-
-        # TODO(anyone): This routine currently assumes higher priorities for
-        # ERROR nodes. It should be changed.
-        random.seed()
-        candidates = []
-        if count > len(self.nodes):
-            count = len(self.nodes)
-
-        err_nodes = [n for n in self.nodes if n.status == 'ERROR']
-        nodes = [n for n in self.nodes if n.status != 'ERROR']
-        if count <= len(err_nodes):
-            return [n.id for n in err_nodes[:count]]
-
-        candidates.extend([n.id for n in err_nodes])
-        count -= len(err_nodes)
-
-        i = count
-        while i > 0:
-            rand = random.randrange(len(nodes))
-            candidates.append(nodes[rand].id)
-            nodes.remove(nodes[rand])
-            i = i - 1
-
-        return candidates

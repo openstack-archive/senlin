@@ -181,6 +181,110 @@ class ScaleUtilsTest(base.SenlinTestCase):
                 'the specified max_size (10).')
         self.assertEqual(msg, reason)
 
+    def test_filter_error_nodes(self):
+        nodes = [
+            mock.Mock(id='N1', status='ACTIVE'),
+            mock.Mock(id='N2', status='ACTIVE'),
+            mock.Mock(id='N3', status='ERROR'),
+            mock.Mock(id='N4', status='ACTIVE'),
+            mock.Mock(id='N5', status='WARNING'),
+            mock.Mock(id='N6', status='ERROR'),
+        ]
+        res = su.filter_error_nodes(nodes)
+        self.assertIn('N3', res[0])
+        self.assertIn('N6', res[0])
+        self.assertEqual(4, len(res[1]))
+
+    @mock.patch.object(su, 'filter_error_nodes')
+    def test_nodes_by_random(self, mock_filter):
+        good_nodes = [
+            mock.Mock(id='N11', created_at=110),
+            mock.Mock(id='N15', created_at=150),
+            mock.Mock(id='N12', created_at=120),
+            mock.Mock(id='N13', created_at=130),
+            mock.Mock(id='N14', created_at=None),
+        ]
+        mock_filter.return_value = (['N1', 'N2'], good_nodes)
+
+        nodes = mock.Mock()
+
+        res = su.nodes_by_random(nodes, 1)
+        self.assertEqual(['N1'], res)
+
+        res = su.nodes_by_random(nodes, 2)
+        self.assertEqual(['N1', 'N2'], res)
+
+        res = su.nodes_by_random(nodes, 5)
+        self.assertIn('N1', res)
+        self.assertIn('N2', res)
+        self.assertEqual(5, len(res))
+
+    @mock.patch.object(su, 'filter_error_nodes')
+    def test_nodes_by_age_oldest(self, mock_filter):
+        good_nodes = [
+            mock.Mock(id='N11', created_at=110),
+            mock.Mock(id='N15', created_at=150),
+            mock.Mock(id='N12', created_at=120),
+            mock.Mock(id='N13', created_at=130),
+            mock.Mock(id='N14', created_at=100),
+        ]
+        mock_filter.return_value = (['N1', 'N2'], good_nodes)
+
+        nodes = mock.Mock()
+
+        res = su.nodes_by_age(nodes, 1, True)
+        self.assertEqual(['N1'], res)
+
+        res = su.nodes_by_age(nodes, 2, True)
+        self.assertEqual(['N1', 'N2'], res)
+
+        res = su.nodes_by_age(nodes, 5, True)
+        self.assertEqual(['N1', 'N2', 'N14', 'N11', 'N12'], res)
+
+    @mock.patch.object(su, 'filter_error_nodes')
+    def test_nodes_by_age_youngest(self, mock_filter):
+        good_nodes = [
+            mock.Mock(id='N11', created_at=110),
+            mock.Mock(id='N15', created_at=150),
+            mock.Mock(id='N12', created_at=120),
+            mock.Mock(id='N13', created_at=130),
+            mock.Mock(id='N14', created_at=100),
+        ]
+        mock_filter.return_value = (['N1', 'N2'], good_nodes)
+
+        nodes = mock.Mock()
+
+        res = su.nodes_by_age(nodes, 1, False)
+        self.assertEqual(['N1'], res)
+
+        res = su.nodes_by_age(nodes, 2, False)
+        self.assertEqual(['N1', 'N2'], res)
+
+        res = su.nodes_by_age(nodes, 5, False)
+        self.assertEqual(['N1', 'N2', 'N15', 'N13', 'N12'], res)
+
+    @mock.patch.object(su, 'filter_error_nodes')
+    def test__victims_by_profile_age_oldest(self, mock_filter):
+        good_nodes = [
+            mock.Mock(id='N11', rt={'profile': mock.Mock(created_at=110)}),
+            mock.Mock(id='N15', rt={'profile': mock.Mock(created_at=150)}),
+            mock.Mock(id='N12', rt={'profile': mock.Mock(created_at=120)}),
+            mock.Mock(id='N13', rt={'profile': mock.Mock(created_at=130)}),
+            mock.Mock(id='N14', rt={'profile': mock.Mock(created_at=140)}),
+        ]
+        mock_filter.return_value = (['N1', 'N2'], good_nodes)
+
+        nodes = mock.Mock()
+
+        res = su.nodes_by_profile_age(nodes, 1)
+        self.assertEqual(['N1'], res)
+
+        res = su.nodes_by_profile_age(nodes, 2)
+        self.assertEqual(['N1', 'N2'], res)
+
+        res = su.nodes_by_profile_age(nodes, 5)
+        self.assertEqual(['N1', 'N2', 'N11', 'N12', 'N13'], res)
+
 
 class CheckSizeParamsTest(base.SenlinTestCase):
 

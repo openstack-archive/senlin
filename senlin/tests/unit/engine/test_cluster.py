@@ -12,7 +12,6 @@
 
 import mock
 from oslo_config import cfg
-from oslo_utils import timeutils
 import six
 
 from senlin.common import exception
@@ -748,41 +747,3 @@ class TestCluster(base.SenlinTestCase):
 
         result = cluster.nodes_by_region('AZ3')
         self.assertEqual(0, len(result))
-
-    def test_nodes_by_random(self):
-        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
-                                   project=self.context.project)
-        for i in range(6):
-            node = mock.Mock()
-            node.created_at = timeutils.utcnow()
-            node.status = 'ACTIVE'
-            node.id = str(i)
-            cluster.add_node(node)
-
-        random_nodes = []
-        for i in range(10):
-            nodes = cluster.nodes_by_random(1)
-            self.assertEqual(1, len(nodes))
-            random_nodes.append(nodes[0])
-
-        random_nodes = list(set(random_nodes))
-        self.assertTrue(len(random_nodes) > 1)
-
-        nodes = cluster.nodes_by_random(3)
-        self.assertEqual(3, len(nodes))
-        nodes = cluster.nodes_by_random(10)
-        self.assertEqual(6, len(nodes))
-
-    def test_nodes_by_random_error_nodes_first(self):
-        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
-                                   project=self.context.project)
-        for i in range(3):
-            node = mock.Mock()
-            node.created_at = timeutils.utcnow()
-            node.status = 'ERROR' if i == 1 else 'ACTIVE'
-            node.id = str(i)
-            cluster.add_node(node)
-
-        nodes = cluster.nodes_by_random(2)
-        self.assertEqual(2, len(nodes))
-        self.assertEqual('1', nodes[0])
