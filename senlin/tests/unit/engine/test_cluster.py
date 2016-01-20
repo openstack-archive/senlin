@@ -12,6 +12,7 @@
 
 import mock
 from oslo_config import cfg
+from oslo_utils import timeutils
 import six
 
 from senlin.common import exception
@@ -701,3 +702,47 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual(0, result['AZ3'])
 
         node1.get_details.assert_called_once_with(self.context)
+
+    @mock.patch.object(db_api, 'node_get_all_by_cluster')
+    def test_select_candidates_random(self, mock_node_get_all):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+        mock_nodes = []
+        for i in range(6):
+            node = mock.Mock()
+            node.created_at = timeutils.utcnow()
+            node.status = 'ACTIVE'
+            node.id = str(i)
+            mock_nodes.append(node)
+        mock_node_get_all.return_value = mock_nodes
+
+        random_nodes = []
+        for i in range(10):
+            nodes = cluster.select_random_nodes(self.context, 1)
+            self.assertEqual(1, len(nodes))
+            random_nodes.append(nodes[0])
+        random_nodes = list(set(random_nodes))
+        self.assertTrue(len(random_nodes) > 1)
+
+        nodes = cluster.select_random_nodes(self.context, 3)
+        self.assertEqual(3, len(nodes))
+        nodes = cluster.select_random_nodes(self.context, 10)
+        self.assertEqual(6, len(nodes))
+
+    @mock.patch.object(db_api, 'node_get_all_by_cluster')
+    def test_select_candidates_error_nodes_first(self, mock_node_get_all):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+        mock_nodes = []
+        for i in range(3):
+            node = mock.Mock()
+            node.created_at = timeutils.utcnow()
+            node.status = 'ACTIVE'
+            node.id = str(i)
+            mock_nodes.append(node)
+        mock_nodes[1].status = 'ERROR'
+        mock_node_get_all.return_value = mock_nodes
+
+        nodes = cluster.select_random_nodes(self.context, 2)
+        self.assertEqual(2, len(nodes))
+        self.assertEqual('1', nodes[0])
