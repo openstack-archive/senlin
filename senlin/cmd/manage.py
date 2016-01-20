@@ -10,18 +10,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-'''
+"""
 CLI interface for senlin management.
-'''
+"""
 
 import sys
 
 from oslo_config import cfg
 from oslo_log import log as logging
 
-from senlin.common.i18n import _
 from senlin.db import api
-from senlin.db import utils
 from senlin import version
 
 CONF = cfg.CONF
@@ -40,12 +38,6 @@ def do_db_sync():
     api.db_sync(api.get_engine(), CONF.command.version)
 
 
-def purge_deleted():
-    """Remove database records that have been previously soft deleted."""
-
-    utils.purge_deleted(CONF.command.age, CONF.command.unit)
-
-
 def add_command_parsers(subparsers):
     parser = subparsers.add_parser('db_version')
     parser.set_defaults(func=do_db_version)
@@ -54,15 +46,6 @@ def add_command_parsers(subparsers):
     parser.set_defaults(func=do_db_sync)
     parser.add_argument('version', nargs='?')
     parser.add_argument('current_version', nargs='?')
-
-    parser = subparsers.add_parser('purge_deleted')
-    parser.set_defaults(func=purge_deleted)
-    parser.add_argument('age', nargs='?', default='90',
-                        help=_('How long to preserve deleted data.'))
-    parser.add_argument(
-        '-u', '--unit', default='days',
-        choices=['days', 'hours', 'minutes', 'seconds'],
-        help=_('Unit to use for age argument, defaults to days.'))
 
 command_opt = cfg.SubCommandOpt('command',
                                 title='Commands',

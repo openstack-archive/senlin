@@ -27,8 +27,7 @@ Run with `-h` or `--help` to see a list of available commands:
 
 ``senlin-manage -h``
 
-Commands are `db_version`, `db_sync` and `purge_deleted`. Below are some
-detailed descriptions.
+Commands are `db_version`, `db_sync` . Below are some detailed descriptions.
 
 
 Senlin DB version
@@ -41,10 +40,6 @@ Senlin DB version
 ``senlin-manage db_sync``
 
     Sync the database up to the most recent version.
-
-``senlin-manage purge_deleted [-g {days,hours,minutes,seconds}] [age]``
-
-    Purge db entries marked as deleted and older than [age].
 
 
 FILES
