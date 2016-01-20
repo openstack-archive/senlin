@@ -15,21 +15,6 @@
 """
 Senlin Engine Server.
 """
-
-import eventlet
-eventlet.monkey_patch()
-
-import os
-import sys
-
-# If ../senlin/__init__.py exists, add ../ to Python search path, so that
-# it will override what happens to be installed in /usr/(local/)lib/python...
-POSSIBLE_TOPDIR = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
-                                   os.pardir,
-                                   os.pardir))
-if os.path.exists(os.path.join(POSSIBLE_TOPDIR, 'senlin', '__init__.py')):
-    sys.path.insert(0, POSSIBLE_TOPDIR)
-
 from oslo_config import cfg
 from oslo_i18n import _lazy
 from oslo_log import log as logging
@@ -42,7 +27,8 @@ _lazy.enable_lazy()
 
 LOG = logging.getLogger('senlin.engine')
 
-if __name__ == '__main__':
+
+def main():
     logging.register_options(cfg.CONF)
     cfg.CONF(project='senlin', prog='senlin-engine')
     logging.setup(cfg.CONF, 'senlin-engine')
