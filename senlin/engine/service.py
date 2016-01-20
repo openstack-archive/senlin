@@ -708,6 +708,52 @@ class EngineService(service.Service):
         return {'action': action.id}
 
     @request_context
+    def cluster_check(self, context, identity, **params):
+        LOG.info(_LI("Checking Cluster '%(cluster)s'."),
+                 {'cluster': identity})
+        db_cluster = self.cluster_find(context, identity)
+
+        action_name = 'cluster_check_%s' % db_cluster.id[:8]
+        new_params = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': params
+        }
+        action = action_mod.Action(db_cluster.id, consts.CLUSTER_CHECK,
+                                   **new_params)
+        action.status = action.READY
+        action.store(context)
+        dispatcher.start_action(action_id=action.id)
+        LOG.info(_LI("Cluster check action queued: %s."), action.id)
+        return {'action': action.id}
+
+    @request_context
+    def cluster_recover(self, context, identity, **params):
+        LOG.info(_LI("Recovering cluster '%(cluster)s'."),
+                 {'cluster': identity})
+        db_cluster = self.cluster_find(context, identity)
+
+        action_name = 'cluster_recover_%s' % db_cluster.id[:8]
+        new_params = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': params
+        }
+        action = action_mod.Action(db_cluster.id, consts.CLUSTER_RECOVER,
+                                   **new_params)
+        action.status = action.READY
+        action.store(context)
+        dispatcher.start_action(action_id=action.id)
+        LOG.info(_LI("Cluster recover action queued: %s."), action.id)
+        return {'action': action.id}
+
+    @request_context
     def cluster_resize(self, context, identity, adj_type=None, number=None,
                        min_size=None, max_size=None, min_step=None,
                        strict=True):
@@ -1112,6 +1158,56 @@ class EngineService(service.Service):
         LOG.info(_LI("Node delete action is queued: %s."), action.id)
 
         return db_node.id
+
+    @request_context
+    def node_check(self, context, identity, **params):
+
+        LOG.info(_LI("Checking node '%s'."), identity)
+
+        db_node = self.node_find(context, identity)
+        node = node_mod.Node.load(context, node=db_node)
+
+        new_params = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': 'node_check_%s' % node.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': params
+        }
+        action = action_mod.Action(node.id, consts.NODE_CHECK, **new_params)
+        action.status = action.READY
+        action.store(context)
+        dispatcher.start_action(action_id=action.id)
+
+        LOG.info(_LI("Node check action is queued: %s."), action.id)
+
+        return node.to_dict()
+
+    @request_context
+    def node_recover(self, context, identity, **params):
+
+        LOG.info(_LI("Recovering node '%s'."), identity)
+
+        db_node = self.node_find(context, identity)
+        node = node_mod.Node.load(context, node=db_node)
+
+        new_params = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'name': 'node_recover_%s' % node.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': params
+        }
+        action = action_mod.Action(node.id, consts.NODE_RECOVER, **new_params)
+        action.status = action.READY
+        action.store(context)
+        dispatcher.start_action(action_id=action.id)
+
+        LOG.info(_LI("Node recover action is queued: %s."), action.id)
+
+        return node.to_dict()
 
     @request_context
     def cluster_policy_list(self, context, identity, filters=None, sort=None):
