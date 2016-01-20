@@ -19,7 +19,6 @@ import sqlalchemy
 
 from senlin.common import context
 from senlin.db import api as db_api
-from senlin.engine import node as node_mod
 
 get_engine = db_api.get_engine
 
@@ -67,33 +66,3 @@ def dummy_context(user='test_username', project='test_project_id',
         'region_name': region_name,
         'domain': domain
     })
-
-
-class PhysName(object):
-    mock_short_id = 'x' * 12
-
-    def __init__(self, cluster_name, node_name, limit=255):
-        name = '%s-%s-%s' % (cluster_name,
-                             node_name,
-                             self.mock_short_id)
-        self._physname = node_mod.Node.reduce_physical_node_name(
-            name, limit)
-        self.cluster, self.res, self.sid = self._physname.rsplit('-', 2)
-
-    def __eq__(self, physical_name):
-        try:
-            stk, res, short_id = str(physical_name).rsplit('-', 2)
-        except ValueError:
-            return False
-
-        if len(short_id) != len(self.mock_short_id):
-            return False
-
-        # ignore the cluster portion of the name, as it may have been truncated
-        return res == self.res
-
-    def __ne__(self, physical_name):
-        return not self.__eq__(physical_name)
-
-    def __repr__(self):
-        return self._physname
