@@ -703,46 +703,86 @@ class TestCluster(base.SenlinTestCase):
 
         node1.get_details.assert_called_once_with(self.context)
 
-    @mock.patch.object(db_api, 'node_get_all_by_cluster')
-    def test_select_candidates_random(self, mock_node_get_all):
+    def test_nodes_by_region(self):
         cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
                                    project=self.context.project)
-        mock_nodes = []
+        node1 = mock.Mock(data={'placement': {'region_name': 'R1'}})
+        node2 = mock.Mock(data={'placement': {'region_name': 'R2'}})
+        node3 = mock.Mock(data={'key': 'value'})
+        node4 = mock.Mock(data={'placement': {'region_name': 'BAD'}})
+
+        nodes = [node1, node2, node3, node4]
+        for n in nodes:
+            cluster.add_node(n)
+
+        result = cluster.nodes_by_region('R1')
+        self.assertEqual(1, len(result))
+        self.assertEqual(node1, result[0])
+
+        result = cluster.nodes_by_region('R2')
+        self.assertEqual(1, len(result))
+        self.assertEqual(node2, result[0])
+
+        result = cluster.nodes_by_region('R3')
+        self.assertEqual(0, len(result))
+
+    def test_nodes_by_zone(self):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
+        node1 = mock.Mock(data={'placement': {'zone': 'AZ1'}})
+        node2 = mock.Mock(data={'placement': {'zone': 'AZ2'}})
+        node3 = mock.Mock(data={'key': 'value'})
+        node4 = mock.Mock(data={'placement': {'zone': 'BAD'}})
+
+        nodes = [node1, node2, node3, node4]
+        for n in nodes:
+            cluster.add_node(n)
+
+        result = cluster.nodes_by_zone('AZ1')
+        self.assertEqual(1, len(result))
+        self.assertEqual(node1, result[0])
+
+        result = cluster.nodes_by_zone('AZ2')
+        self.assertEqual(1, len(result))
+        self.assertEqual(node2, result[0])
+
+        result = cluster.nodes_by_region('AZ3')
+        self.assertEqual(0, len(result))
+
+    def test_nodes_by_random(self):
+        cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
+                                   project=self.context.project)
         for i in range(6):
             node = mock.Mock()
             node.created_at = timeutils.utcnow()
             node.status = 'ACTIVE'
             node.id = str(i)
-            mock_nodes.append(node)
-        mock_node_get_all.return_value = mock_nodes
+            cluster.add_node(node)
 
         random_nodes = []
         for i in range(10):
-            nodes = cluster.select_random_nodes(self.context, 1)
+            nodes = cluster.nodes_by_random(1)
             self.assertEqual(1, len(nodes))
             random_nodes.append(nodes[0])
+
         random_nodes = list(set(random_nodes))
         self.assertTrue(len(random_nodes) > 1)
 
-        nodes = cluster.select_random_nodes(self.context, 3)
+        nodes = cluster.nodes_by_random(3)
         self.assertEqual(3, len(nodes))
-        nodes = cluster.select_random_nodes(self.context, 10)
+        nodes = cluster.nodes_by_random(10)
         self.assertEqual(6, len(nodes))
 
-    @mock.patch.object(db_api, 'node_get_all_by_cluster')
-    def test_select_candidates_error_nodes_first(self, mock_node_get_all):
+    def test_nodes_by_random_error_nodes_first(self):
         cluster = clusterm.Cluster('test-cluster', 0, self.profile.id,
                                    project=self.context.project)
-        mock_nodes = []
         for i in range(3):
             node = mock.Mock()
             node.created_at = timeutils.utcnow()
-            node.status = 'ACTIVE'
+            node.status = 'ERROR' if i == 1 else 'ACTIVE'
             node.id = str(i)
-            mock_nodes.append(node)
-        mock_nodes[1].status = 'ERROR'
-        mock_node_get_all.return_value = mock_nodes
+            cluster.add_node(node)
 
-        nodes = cluster.select_random_nodes(self.context, 2)
+        nodes = cluster.nodes_by_random(2)
         self.assertEqual(2, len(nodes))
         self.assertEqual('1', nodes[0])
