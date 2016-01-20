@@ -358,6 +358,7 @@ class Cluster(object):
         kwargs = {
             'enabled': values['enabled'],
             'data': data,
+            'priority': policy.PRIORITY
         }
 
         cp = cp_mod.ClusterPolicy(self.id, policy_id, **kwargs)

@@ -132,13 +132,13 @@ POLICY_SORT_KEYS = [
 ]
 
 CLUSTER_POLICY_ATTRS = (
-    CP_POLICY_ID, CP_ENABLED,
+    CP_POLICY_ID, CP_ENABLED, CP_PRIORITY,
 ) = (
-    'policy_id', 'enabled',
+    'policy_id', 'enabled', 'priority'
 )
 
 CLUSTER_POLICY_SORT_KEYS = [
-    CP_ENABLED,
+    CP_ENABLED, CP_PRIORITY,
 ]
 
 WEBHOOK_ATTRS = (
