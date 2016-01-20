@@ -11,9 +11,13 @@
 # under the License.
 
 from oslo_config import cfg
+from oslo_log import log
 
+from senlin.common.i18n import _LW
 from senlin.drivers import base
 from senlin.drivers.openstack import sdk
+
+LOG = log.getLogger(__name__)
 
 
 class NovaClient(base.DriverBase):
@@ -197,3 +201,22 @@ class NovaClient(base.DriverBase):
     @sdk.translate_exception
     def availability_zone_list(self, **query):
         return self.conn.compute.availability_zones(**query)
+
+    def validate_azs(self, azs):
+        """check whether availability zones provided are valid.
+
+        :param azs: A list of availability zone names for checking.
+        :returns: A list of zones that are found available on Nova.
+        """
+        known = self.availability_zone_list()
+        names = [az['zoneName'] for az in known
+                 if az['zoneState']['available']]
+
+        found = []
+        for az in azs:
+            if az in names:
+                found.append(az)
+            else:
+                LOG.warning(_LW("Availability zone '%s' is not available."),
+                            az)
+        return found

@@ -377,3 +377,18 @@ class TestNovaV2(base.SenlinTestCase):
         d.server_metadata_delete(server, 'k1')
         self.compute.delete_server_metadata.assert_called_once_with(
             server, 'k1')
+
+    def test_validate_azs(self):
+        nc = nova_v2.NovaClient(self.conn_params)
+
+        fake_azs = [
+            {'zoneState': {'available': 1}, 'zoneName': 'AZ1'},
+            {'zoneState': {'available': 1}, 'zoneName': 'AZ2'},
+            {'zoneState': {'available': 1}, 'zoneName': 'AZ3'},
+            {'zoneState': {'available': 1}, 'zoneName': 'AZ4'}
+        ]
+
+        self.patchobject(nc, 'availability_zone_list', return_value=fake_azs)
+
+        result = nc.validate_azs(['AZ1', 'AZ2', 'AZ5'])
+        self.assertEqual(['AZ1', 'AZ2'], result)
