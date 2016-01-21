@@ -21,6 +21,6 @@ class TestProfileType(base.SenlinFunctionalTest):
         status = [200]
         resp = self.client.api_request('GET', rel_url, resp_status=status)
         profile_types = resp.body['profile_types']
-        expected_profile_types = [{'name': 'os.nova.server'},
-                                  {'name': 'os.heat.stack'}]
+        expected_profile_types = [{'name': 'os.nova.server-1.0'},
+                                  {'name': 'os.heat.stack-1.0'}]
         self.assertEqual(expected_profile_types, profile_types)

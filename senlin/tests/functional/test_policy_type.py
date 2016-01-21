@@ -20,5 +20,5 @@ class TestPolicyType(base.SenlinFunctionalTest):
         # Check that listing policy types works.
         policy_types = test_api.list_policy_types(self.client)
         policy_names = [p['name'] for p in policy_types]
-        self.assertIn('senlin.policy.deletion', policy_names)
-        self.assertIn('senlin.policy.scaling', policy_names)
+        self.assertIn('senlin.policy.deletion-1.0', policy_names)
+        self.assertIn('senlin.policy.scaling-1.0', policy_names)

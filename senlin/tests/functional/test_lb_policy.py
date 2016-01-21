@@ -50,7 +50,7 @@ class TestLBPolicy(base.SenlinFunctionalTest):
         spec = test_utils.spec_lb_policy
         lb_policy = test_api.create_policy(self.client,
                                            test_utils.random_name('lb-policy'),
-                                           spec, 0, 0)
+                                           spec)
 
         # Attach scaling in/out policies to cluster
         params = {
