@@ -17,6 +17,7 @@ from senlin.common import constraints
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common.i18n import _LW
+from senlin.common import scaleutils
 from senlin.common import schema
 from senlin.db import api as db_api
 from senlin.drivers import base as driver_base
@@ -271,6 +272,40 @@ class LoadBalancingPolicy(base.Policy):
 
         return True, reason
 
+    def _get_delete_candidates(self, cluster_id, action):
+        deletion = action.data.get('deletion', None)
+        # No deletion field in action.data which means no scaling
+        # policy or deletion policy is attached.
+        if deletion is None:
+            candidates = None
+            if action.action == consts.CLUSTER_DEL_NODES:
+                # Get candidates from action.input
+                candidates = action.inputs.get('candidates', [])
+                count = len(candidates)
+            elif action.action == consts.CLUSTER_RESIZE:
+                # Calculate deletion count based on action input
+                db_cluster = db_api.cluster_get(action.context, cluster_id)
+                scaleutils.parse_resize_params(action, db_cluster)
+                if 'deletion' not in action.data:
+                    return []
+                else:
+                    count = action.data['deletion']['count']
+            else:  # action.action == consts.CLUSTER_SCALE_IN
+                count = 1
+        else:
+            count = deletion.get('count', 0)
+            candidates = deletion.get('candidates', None)
+
+        # Still no candidates available, pick count of nodes randomly
+        if candidates is None:
+            nodes = db_api.node_get_all_by_cluster(action.context,
+                                                   cluster_id=cluster_id)
+            if count > len(nodes):
+                count = len(nodes)
+            candidates = scaleutils.nodes_by_random(nodes, count)
+
+        return candidates
+
     def pre_op(self, cluster_id, action):
         """Routine to be called before an action has been executed.
 
@@ -282,9 +317,9 @@ class LoadBalancingPolicy(base.Policy):
         :param action: The action object that triggered this operation.
         :returns: Nothing.
         """
-        # TODO(YanyanHu): get deleted nodes list from action.data
-        nodes_removed = action.outputs.get('nodes_removed', [])
-        if len(nodes_removed) == 0:
+
+        candidates = self._get_delete_candidates(cluster_id, action)
+        if len(candidates) == 0:
             return
 
         db_cluster = db_api.cluster_get(action.context, cluster_id)
@@ -297,7 +332,7 @@ class LoadBalancingPolicy(base.Policy):
         pool_id = policy_data['pool']
 
         # Remove nodes that will be deleted from lb pool
-        for node_id in nodes_removed:
+        for node_id in candidates:
             node = node_mod.Node.load(action.context, node_id=node_id)
             member_id = node.data.get('lb_member', None)
             if member_id is None:
@@ -312,6 +347,10 @@ class LoadBalancingPolicy(base.Policy):
                                           'node(s) from lb pool.')
                 return
 
+        deletion = action.data.get('deletion', {})
+        deletion.update({'count': len(candidates), 'candidates': candidates})
+        action.data.update({'deletion': deletion})
+
         return
 
     def post_op(self, cluster_id, action):
@@ -325,8 +364,11 @@ class LoadBalancingPolicy(base.Policy):
         :param action: The action object that triggered this operation.
         :returns: Nothing.
         """
-        # TODO(YanyanHu): get added nodes list from action.data
-        nodes_added = action.outputs.get('nodes_added', [])
+
+        # TODO(Yanyanhu): Need special handling for cross-az scenario
+        # which is supported by Neutron lbaas.
+        creation = action.data.get('creation', None)
+        nodes_added = creation.get('nodes', []) if creation else []
         if len(nodes_added) == 0:
             return
 
