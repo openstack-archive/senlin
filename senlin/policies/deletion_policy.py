@@ -35,14 +35,13 @@ Output: stored in action.data
   }
 """
 
-import random
-
 from senlin.common import constraints
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import scaleutils
 from senlin.common import schema
 from senlin.db import api as db_api
+from senlin.engine import cluster as cluster_mod
 from senlin.policies import base
 
 
@@ -69,7 +68,7 @@ class DeletionPolicy(base.Policy):
     CRITERIA_VALUES = (
         OLDEST_FIRST, OLDEST_PROFILE_FIRST, YOUNGEST_FIRST, RANDOM,
     ) = (
-        'OLDEST_FIRST', 'OLDEST_PROFILE_FRIST', 'YOUNGEST_FIRST', 'RANDOM',
+        'OLDEST_FIRST', 'OLDEST_PROFILE_FIRST', 'YOUNGEST_FIRST', 'RANDOM',
     )
 
     TARGET = [
@@ -115,75 +114,45 @@ class DeletionPolicy(base.Policy):
             self.DESTROY_AFTER_DELETION]
         self.reduce_desired_capacity = self.properties[
             self.REDUCE_DESIRED_CAPACITY]
-        random.seed()
 
-    def _select_candidates(self, context, cluster_id, count):
-        candidates = []
-        nodes = db_api.node_get_all_by_cluster(context, cluster_id)
-        if count > len(nodes):
-            count = len(nodes)
+    def _victims_by_regions(self, cluster, regions):
+        victims = []
+        for region, count in regions.items():
+            nodes = cluster.nodes_by_region(region)
+            if self.criteria == self.RANDOM:
+                candidates = scaleutils.nodes_by_random(nodes, count)
+            elif self.criteria == self.OLDEST_PROFILE_FIRST:
+                candidates = scaleutils.nodes_by_profile_age(nodes, count)
+            elif self.criteria == self.OLDEST_FIRST:
+                candidates = scaleutils.nodes_by_age(nodes, count, True)
+            else:
+                candidates = scaleutils.nodes_by_age(nodes, count, False)
 
-        err_nodes = [n for n in nodes if n.status == 'ERROR']
-        nodes = [n for n in nodes if n.status != 'ERROR']
-        if count <= len(err_nodes):
-            return [n.id for n in err_nodes[:count]]
+            victims.extend(candidates)
 
-        candidates.extend([n.id for n in err_nodes])
-        count -= len(err_nodes)
+        return victims
 
-        # Random selection
-        if self.criteria == self.RANDOM:
-            i = count
-            while i > 0:
-                rand = random.randrange(len(nodes))
-                candidates.append(nodes[rand].id)
-                nodes.remove(nodes[rand])
-                i = i - 1
+    def _victims_by_zones(self, cluster, zones):
+        victims = []
+        for zone, count in zones.items():
+            nodes = cluster.nodes_by_zone(zone)
+            if self.criteria == self.RANDOM:
+                candidates = scaleutils.nodes_by_random(nodes, count)
+            elif self.criteria == self.OLDEST_PROFILE_FIRST:
+                candidates = scaleutils.nodes_by_profile_age(nodes, count)
+            elif self.criteria == self.OLDEST_FIRST:
+                candidates = scaleutils.nodes_by_age(nodes, count, True)
+            else:
+                candidates = scaleutils.nodes_by_age(nodes, count, False)
 
-            return candidates
+            victims.extend(candidates)
 
-        # Node age based selection
-        if self.criteria in [self.OLDEST_FIRST, self.YOUNGEST_FIRST]:
-            sorted_list = sorted(nodes, key=lambda r: (r.created_at, r.name))
-            for i in range(count):
-                if self.criteria == self.OLDEST_FIRST:
-                    candidates.append(sorted_list[i].id)
-                else:  # YOUNGEST_FIRST
-                    candidates.append(sorted_list[-1 - i].id)
-            return candidates
+        return victims
 
-        # Node profile based selection
-        node_map = []
-        for node in nodes:
-            profile = db_api.profile_get(context, node.profile_id)
-            created_at = profile.created_at
-            node_map.append({'id': node.id, 'created_at': created_at})
-        sorted_map = sorted(node_map, key=lambda m: m['created_at'])
-        for i in range(count):
-            candidates.append(sorted_map[i]['id'])
-
-        return candidates
-
-    def pre_op(self, cluster_id, action):
-        '''Choose victims that can be deleted.'''
-
-        if action.action == consts.CLUSTER_RESIZE:
-            cluster = db_api.cluster_get(action.context, cluster_id)
-            scaleutils.parse_resize_params(action, cluster)
-            if 'deletion' not in action.data:
-                return
-            count = action.data['deletion']['count']
-        else:  # CLUSTER_SCALE_IN or CLUSTER_DEL_NODES
-            count = action.inputs.get('count', 1)
-        candidates = action.inputs.get('candidates', [])
-
-        # For CLUSTER_RESIZE and CLUSTER_SCALE_IN actions, use policy
-        # creteria to selete candidates.
-        if len(candidates) == 0:
-            candidates = self._select_candidates(action.context, cluster_id,
-                                                 count)
+    def _update_action(self, action, victims):
         pd = action.data.get('deletion', {})
-        pd['candidates'] = candidates
+        pd['count'] = len(victims)
+        pd['candidates'] = victims
         pd['destroy_after_deletion'] = self.destroy_after_deletion
         pd['grace_period'] = self.grace_period
         action.data.update({
@@ -193,4 +162,66 @@ class DeletionPolicy(base.Policy):
         })
         action.store(action.context)
 
+    def pre_op(self, cluster_id, action):
+        """Choose victims that can be deleted.
+
+        :param cluster_id: ID of the cluster to be handled.
+        :param action: The action object that triggered this policy.
+        """
+
+        victims = action.inputs.get('candidates', [])
+        if len(victims) > 0:
+            self._update_action(action, victims)
+            return
+
+        db_cluster = None
+        regions = None
+        zones = None
+
+        deletion = action.data.get('deletion', {})
+        if deletion:
+            # there are policy decisions
+            count = deletion['count']
+            regions = deletion.get('regions', None)
+            zones = deletion.get('zones', None)
+        # No policy decision, check action itself: SCALE_IN
+        elif action.action == consts.CLUSTER_SCALE_IN:
+            count = action.inputs.get('count', 1)
+
+        # No policy decision, check action itself: RESIZE
+        else:
+            db_cluster = db_api.cluster_get(action.context, cluster_id)
+            scaleutils.parse_resize_params(action, db_cluster)
+            if 'deletion' not in action.data:
+                return
+            count = action.data['deletion']['count']
+
+        cluster = cluster_mod.Cluster.load(action.context,
+                                           cluster=db_cluster,
+                                           cluster_id=cluster_id)
+        # Cross-region
+        if regions:
+            victims = self._victims_by_regions(cluster, regions)
+            self._update_action(action, victims)
+            return
+
+        # Cross-AZ
+        if zones:
+            victims = self._victims_by_zones(cluster, zones)
+            self._update_action(action, victims)
+            return
+
+        if count > len(cluster.nodes):
+            count = len(cluster.nodes)
+
+        if self.criteria == self.RANDOM:
+            victims = scaleutils.nodes_by_random(cluster.nodes, count)
+        elif self.criteria == self.OLDEST_PROFILE_FIRST:
+            victims = scaleutils.nodes_by_profile_age(cluster.nodes, count)
+        elif self.criteria == self.OLDEST_FIRST:
+            victims = scaleutils.nodes_by_age(cluster.nodes, count, True)
+        else:
+            victims = scaleutils.nodes_by_age(cluster.nodes, count, False)
+
+        self._update_action(action, victims)
         return
