@@ -10,13 +10,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
+import mock
 import uuid
 
-import mock
+from oslo_utils import timeutils
 
 from senlin.common import consts
 from senlin.common import context
 from senlin.common import messaging as rpc_messaging
+from senlin.db import api as db_api
 from senlin.engine import service
 from senlin.tests.unit.common import base
 
@@ -103,3 +106,34 @@ class EngineBasicTest(base.SenlinTestCase):
 
         mock_disp.stop.assert_called_once_with()
         mock_hm.stop.assert_called_once_with()
+
+    @mock.patch.object(db_api, 'service_create')
+    @mock.patch.object(db_api, 'service_update')
+    @mock.patch.object(db_api, 'service_get')
+    def test_service_manage_report(self, mock_get, mock_update,
+                                   mock_create, mock_msg_cls,
+                                   mock_hm_cls, mock_disp_cls):
+        mock_get.side_effect = [
+            None,
+            mock.Mock()
+        ]
+        self.eng.service_manage_report()
+        expected_args = dict(host=self.eng.host,
+                             binary='senlin-engine',
+                             service_id=self.eng.engine_id,
+                             topic=self.eng.topic)
+        mock_create.assert_called_once_with(**expected_args)
+        self.eng.service_manage_report()
+        self.assertTrue(mock_update.called)
+
+    @mock.patch.object(db_api, 'service_get_all')
+    @mock.patch.object(db_api, 'service_delete')
+    def test_service_manage_report_cleanup(self, mock_delete, mock_get_all,
+                                           mock_msg_cls, mock_hm_cls,
+                                           mock_disp_cls):
+        ages_a_go = timeutils.utcnow() - datetime.timedelta(
+            seconds=4000)
+        mock_get_all.return_value = [{'id': 'foo',
+                                      'updated_at': ages_a_go}]
+        self.eng.service_manage_cleanup()
+        mock_delete.assert_called_once_with('foo')
