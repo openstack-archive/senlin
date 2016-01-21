@@ -40,11 +40,18 @@ actions are supported at the time of this design:
 - ``CLUSTER_DETACH_POLICY``: An action to detach a policy from a cluster;
 - ``CLUSTER_UPDATE_POLICY``: An action to update the properties of a binding
   between a cluster and a policy;
+- ``CLUSTER_CHECK``: An action for checking a cluster and execute ``NODE_CHECK``
+  for all its nodes;
+- ``CLUSTER_RECOVER``: An action for recovering a cluster and execute
+  ``NODE_RECOVER`` for all the nodes in 'ERROR' status;
 - ``NODE_CREATE``: An action for creating a new node;
 - ``NODE_DELETE``: An action for deleting an existing node;
 - ``NODE_UPDATE``: An action for updating the properties of an existing node;
 - ``NODE_JOIN``: An action for joining a node to an existing cluster;
 - ``NODE_LEAVE``: An action for a node to leave its current owning cluster;
+- ``NODE_CHECK``: An action for checking a node to see if its physical node is
+ 'ACTIVE' and update its status with 'ERROR' if not;
+- ``NODE_RECOVER``: An action for recovering a node;
 
 
 Action Properties
