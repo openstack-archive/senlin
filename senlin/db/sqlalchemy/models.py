@@ -261,3 +261,16 @@ class Event(BASE, SenlinBase):
     status = Column(String(255))
     status_reason = Column(Text)
     meta_data = Column(types.Dict)
+
+
+class Service(BASE, TimestampMixin, models.ModelBase):
+
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+    __tablename__ = 'service'
+
+    id = Column('id', String(36), primary_key=True, nullable=False)
+    host = Column(String(255), nullable=False)
+    binary = Column(String(255), nullable=False)
+    topic = Column(String(255), nullable=False)
+    disabled = Column(Boolean, default=False)
+    disabled_reason = Column(String(255))
