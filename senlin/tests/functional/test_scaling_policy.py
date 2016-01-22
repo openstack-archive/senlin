@@ -53,7 +53,7 @@ class TestScalingPolicy(base.SenlinFunctionalTest):
             }
         }
         scaling_out_policy = test_api.create_policy(
-            self.client, test_utils.random_name('policy'), spec, 0, 0)
+            self.client, test_utils.random_name('policy'), spec)
 
         # Create a scaling policy targets on CLUSTER_SCALE_IN action
         spec['properties'] = {
@@ -66,7 +66,7 @@ class TestScalingPolicy(base.SenlinFunctionalTest):
             }
         }
         scaling_in_policy = test_api.create_policy(
-            self.client, test_utils.random_name('policy'), spec, 0, 0)
+            self.client, test_utils.random_name('policy'), spec)
 
         # Attach scaling in/out policies to cluster
         for policy in [scaling_in_policy, scaling_out_policy]:
