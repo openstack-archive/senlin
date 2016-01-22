@@ -14,6 +14,7 @@ import re
 
 asse_equal_end_with_none_re = re.compile(r"assertEqual\(.*?,\s+None\)$")
 asse_equal_start_with_none_re = re.compile(r"assertEqual\(None,")
+mutable_default_args = re.compile(r"^\s*def .+\((.+=\{\}|.+=\[\])")
 
 
 def assert_equal_none(logical_line):
@@ -39,6 +40,13 @@ def use_jsonutils(logical_line, filename):
                 yield (pos, msg % {'fun': f[:-1]})
 
 
+def no_mutable_default_args(logical_line):
+    msg = "S320: Method's default argument shouldn't be mutable!"
+    if mutable_default_args.match(logical_line):
+        yield (0, msg)
+
+
 def factory(register):
     register(assert_equal_none)
     register(use_jsonutils)
+    register(no_mutable_default_args)

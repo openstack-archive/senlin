@@ -38,3 +38,13 @@ class HackingTestCase(base.SenlinTestCase):
                 "jsonx.%s(" % method, "./senlin/engine/cluster.py"))))
         self.assertEqual(0, len(list(checks.use_jsonutils(
             "json.dumb", "./senlin/engine/cluster.py"))))
+
+    def test_no_mutable_default_args(self):
+        self.assertEqual(1, len(list(checks.no_mutable_default_args(
+            "def create_cluster(mapping={}, **params)"))))
+
+        self.assertEqual(0, len(list(checks.no_mutable_default_args(
+            "defined = []"))))
+
+        self.assertEqual(0, len(list(checks.no_mutable_default_args(
+            "defined, undefined = [], {}"))))
