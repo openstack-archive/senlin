@@ -1,0 +1,3 @@
+---
+features:
+  - Supporting engine status scheck, with senlin-manage command.
