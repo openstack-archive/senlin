@@ -403,6 +403,26 @@ def receiver_delete(context, receiver_id):
     return IMPL.receiver_delete(context, receiver_id)
 
 
+def service_create(service_id=None, host=None, binary=None, topic=None):
+    return IMPL.service_create(service_id, host, binary, topic)
+
+
+def service_update(service_id, values=None):
+    return IMPL.service_update(service_id, values)
+
+
+def service_delete(service_id):
+    return IMPL.service_delete(service_id)
+
+
+def service_get(service_id):
+    return IMPL.service_get(service_id)
+
+
+def service_get_all():
+    return IMPL.service_get_all()
+
+
 def db_sync(engine, version=None):
     """Migrate the database to `version` or the most recent version."""
     return IMPL.db_sync(engine, version=version)

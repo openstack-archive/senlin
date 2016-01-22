@@ -21,6 +21,7 @@ from oslo_config import cfg
 from oslo_db.sqlalchemy import session as db_session
 from oslo_db.sqlalchemy import utils
 from oslo_log import log as logging
+from oslo_utils import timeutils
 
 from senlin.common import consts
 from senlin.common import exception
@@ -1180,6 +1181,52 @@ def receiver_delete(context, receiver_id):
     session.delete(receiver)
     session.commit()
     session.flush()
+
+
+def service_create(service_id=None, host=None, binary=None,
+                   topic=None):
+    session = get_session()
+    session.begin()
+    time_now = timeutils.utcnow()
+    svc = models.Service(id=service_id, host=host, binary=binary,
+                         topic=topic, created_at=time_now,
+                         updated_at=time_now)
+    session.add(svc)
+    session.commit()
+    return svc
+
+
+def service_update(service_id, values=None):
+    if values is None:
+        values = {}
+    session = get_session()
+    service = service_get(service_id)
+    values.update({'updated_at': timeutils.utcnow()})
+    service.update(values)
+    service.save(session)
+    return service
+
+
+def service_delete(service_id):
+    session = get_session()
+    svc = session.query(models.Service).get(service_id)
+    if not svc:
+        return None
+    session.begin()
+    session.delete(svc)
+    session.commit()
+
+
+def service_get(service_id):
+    session = get_session()
+    svc = session.query(models.Service).get(service_id)
+    return svc
+
+
+def service_get_all():
+    session = get_session()
+    svcs = session.query(models.Service).all()
+    return svcs
 
 
 # Utils
