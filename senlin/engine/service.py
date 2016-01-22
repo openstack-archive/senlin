@@ -11,6 +11,7 @@
 # under the License.
 
 import copy
+import datetime
 import functools
 import uuid
 
@@ -18,6 +19,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
 from oslo_service import service
+from oslo_utils import timeutils
 from oslo_utils import uuidutils
 import six
 
@@ -119,6 +121,9 @@ class EngineService(service.Service):
         self.target = target
         self._rpc_server = rpc_messaging.get_rpc_server(target, self)
         self._rpc_server.start()
+        self.service_manage_cleanup()
+        self.TG.add_timer(cfg.CONF.periodic_interval,
+                          self.service_manage_report)
         super(EngineService, self).start()
 
     def _stop_rpc_server(self):
@@ -145,6 +150,37 @@ class EngineService(service.Service):
 
         self.TG.stop()
         super(EngineService, self).stop()
+
+    def service_manage_report(self):
+        svc = db_api.service_get(self.engine_id)
+        if svc is None:
+            params = dict(host=self.host,
+                          binary='senlin-engine',
+                          service_id=self.engine_id,
+                          topic=self.topic)
+            db_api.service_create(**params)
+            LOG.debug('Service %s is started' % self.engine_id)
+        else:
+            try:
+                db_api.service_update(self.engine_id)
+                LOG.debug('Service %s is updated' % self.engine_id)
+            except Exception as ex:
+                LOG.error(_LE('Service %(service_id)s update '
+                              'failed: %(error)s'),
+                          {'service_id': self.engine_id, 'error': ex})
+
+    def service_manage_cleanup(self):
+        last_updated_window = (3 * cfg.CONF.periodic_interval)
+        time_line = timeutils.utcnow() - datetime.timedelta(
+            seconds=last_updated_window)
+        svcs = db_api.service_get_all()
+        for svc in svcs:
+            if svc['id'] == self.engine_id:
+                continue
+            if svc['updated_at'] < time_line:
+                # hasn't been updated, assuming it's died.
+                LOG.info(_LI('Service %s was aborted'), svc['id'])
+                db_api.service_delete(svc['id'])
 
     @request_context
     def get_revision(self, context):
