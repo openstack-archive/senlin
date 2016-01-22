@@ -11,7 +11,6 @@
 # under the License.
 
 from oslo_serialization import jsonutils
-import requests
 
 
 def create_cluster(client, name, profile_id, desired_capacity,
@@ -175,55 +174,6 @@ def create_policy(client, name, spec):
 
 def delete_policy(client, policy_id):
     rel_url = 'policies/%(id)s' % {'id': policy_id}
-    status = [204]
-    client.api_request('DELETE', rel_url, resp_status=status)
-    return
-
-
-def create_webhook(client, name, obj_type, obj_id, action,
-                   credential=None, params=None):
-    rel_url = 'webhooks'
-    status = [201]
-    data = {
-        'webhook': {
-            'name': name,
-            'obj_type': obj_type,
-            'obj_id': obj_id,
-            'action': action,
-            'credential': credential,
-            'params': params
-        }
-    }
-    body = jsonutils.dumps(data)
-    resp = client.api_request('POST', rel_url, body=body,
-                              resp_status=status)
-
-    webhook = resp.body['webhook']
-    return webhook
-
-
-def get_webhook(client, webhook_id, ignore_missing=False):
-    rel_url = 'webhooks/%(id)s' % {'id': webhook_id}
-    status = [200, 404] if ignore_missing else [200]
-    resp = client.api_request('GET', rel_url, resp_status=status)
-    return resp if ignore_missing else resp.body['webhook']
-
-
-def trigger_webhook(webhook_url, params=None):
-    body = None
-    if params is not None:
-        body = jsonutils.dumps(params)
-    resp = requests.request('POST', webhook_url, data=body)
-    if resp.content:
-        resp_body = jsonutils.loads(resp.content)
-        if 'action' in resp_body:
-            return resp_body['action']
-
-    raise Exception('Webhook %s triggering failed.' % webhook_url)
-
-
-def delete_webhook(client, webhook_id):
-    rel_url = 'webhooks/%(id)s' % {'id': webhook_id}
     status = [204]
     client.api_request('DELETE', rel_url, resp_status=status)
     return
