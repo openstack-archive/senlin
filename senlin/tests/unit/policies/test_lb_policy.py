@@ -419,8 +419,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(db_api, 'cluster_get')
-    def test_post_op_del_nodes_ok(self, m_cluster_get, m_node_load, m_extract,
-                                  m_load, m_conn):
+    def test_pre_op_del_nodes_ok(self, m_cluster_get, m_node_load, m_extract,
+                                 m_load, m_conn):
         cluster_id = 'CLUSTER_ID'
         cluster = mock.Mock()
         m_cluster_get.return_value = cluster
@@ -454,7 +454,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
 
-        res = policy.post_op(cluster_id, action)
+        res = policy.pre_op(cluster_id, action)
 
         self.assertIsNone(res)
         m_cluster_get.assert_called_once_with('action_context', 'CLUSTER_ID')
@@ -474,8 +474,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(db_api, 'cluster_get')
-    def test_post_op_del_nodes_not_in_pool(self, m_cluster_get, m_node_load,
-                                           m_extract, m_load, m_conn):
+    def test_pre_op_del_nodes_not_in_pool(self, m_cluster_get, m_node_load,
+                                          m_extract, m_load, m_conn):
         cluster_id = 'CLUSTER_ID'
         node1 = mock.Mock()
         node2 = mock.Mock()
@@ -495,15 +495,15 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         }
 
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
-        res = policy.post_op(cluster_id, action)
+        res = policy.pre_op(cluster_id, action)
         self.assertIsNone(res)
         self.lb_driver.member_remove.assert_called_once_with(
             'LB_ID', 'POOL_ID', 'MEMBER2_ID')
 
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(db_api, 'cluster_get')
-    def test_post_op_del_nodes_failed(self, m_cluster_get, m_node_load,
-                                      m_extract, m_load, m_conn):
+    def test_pre_op_del_nodes_failed(self, m_cluster_get, m_node_load,
+                                     m_extract, m_load, m_conn):
         cluster_id = 'CLUSTER_ID'
         node1 = mock.Mock()
         node1.data = {'lb_member': 'MEMBER1_ID'}
@@ -523,7 +523,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
 
-        res = policy.post_op(cluster_id, action)
+        res = policy.pre_op(cluster_id, action)
 
         self.assertIsNone(res)
         self.assertEqual(policy_base.CHECK_ERROR, action.data['status'])
