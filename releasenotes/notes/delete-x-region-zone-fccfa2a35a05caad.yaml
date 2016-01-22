@@ -1,0 +1,4 @@
+---
+features:
+  - The builtin deletion policy can handle cross-region and cross-zone nodes
+    selection.

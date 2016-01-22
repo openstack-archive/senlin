@@ -1,0 +1,3 @@
+---
+upgrade:
+  - Senlin binaries are all made as console script entries.
