@@ -161,7 +161,11 @@ class ClusterAction(base.Action):
             # Wait for cluster creation to complete
             res, reason = self._wait_for_dependents()
             if res == self.RES_OK:
-                self.outputs['nodes_added'] = [n.id for n in nodes]
+                nodes_added = [n.id for n in nodes]
+                self.outputs['nodes_added'] = nodes_added
+                creation = self.data.get('creation', {})
+                creation['nodes'] = nodes_added
+                self.data['creation'] = creation
                 for node in nodes:
                     self.cluster.add_node(node)
 
@@ -395,7 +399,11 @@ class ClusterAction(base.Action):
         if result != self.RES_OK:
             reason = new_reason
         else:
-            self.outputs['nodes_added'] = [node.id for node in nodes]
+            nodes_added = [n.id for n in nodes]
+            self.outputs['nodes_added'] = nodes_added
+            creation = self.data.get('creation', {})
+            creation['nodes'] = nodes_added
+            self.data['creation'] = creation
             for node in nodes:
                 self.cluster.add_node(node)
 
@@ -585,7 +593,7 @@ class ClusterAction(base.Action):
                 return result, reason
             count, desired, candidates = self._get_action_data(current_size)
         elif 'deletion' in self.data:
-            grace_period = self.data['deletion']['grace_period']
+            grace_period = self.data['deletion'].get('grace_period', None)
         if candidates is not None and len(candidates) == 0:
             # Choose victims randomly
             candidates = scaleutils.nodes_by_random(self.cluster.nodes, count)
