@@ -877,3 +877,51 @@ def paste_deploy_app(paste_config_file, app_name, conf):
         return deploy.loadapp("config:%s" % paste_config_file, name=app_name)
     finally:
         teardown_paste_factories()
+
+
+def _get_deployment_config_file():
+    """Retrieve item from deployment_config_file.
+
+    The retrieved item is formatted as an absolute pathname.
+    """
+    config_path = cfg.CONF.find_file(
+        cfg.CONF.paste_deploy['api_paste_config'])
+    if config_path is None:
+        return None
+
+    return os.path.abspath(config_path)
+
+
+def load_paste_app(app_name=None):
+    """Builds and returns a WSGI app from a paste config file.
+
+    We assume the last config file specified in the supplied ConfigOpts
+    object is the paste config file.
+
+    :param app_name: name of the application to load
+
+    :raises RuntimeError when config file cannot be located or application
+            cannot be loaded from config file
+    """
+    if app_name is None:
+        app_name = cfg.CONF.prog
+
+    conf_file = _get_deployment_config_file()
+    if conf_file is None:
+        raise RuntimeError(_("Unable to locate config file"))
+
+    try:
+        app = paste_deploy_app(conf_file, app_name, cfg.CONF)
+
+        # Log the options used when starting if we're in debug mode...
+        if cfg.CONF.debug:
+            cfg.CONF.log_opt_values(logging.getLogger(app_name),
+                                    std_logging.DEBUG)
+
+        return app
+    except (LookupError, ImportError) as e:
+        raise RuntimeError(_("Unable to load %(app_name)s from "
+                             "configuration file %(conf_file)s."
+                             "\nGot: %(e)r") % {'app_name': app_name,
+                                                'conf_file': conf_file,
+                                                'e': e})

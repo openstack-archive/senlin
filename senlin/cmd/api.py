@@ -24,7 +24,6 @@ from oslo_service import systemd
 import six
 
 from senlin.api.common import wsgi
-from senlin.common import config
 from senlin.common.i18n import _LI
 from senlin.common import messaging
 from senlin import version
@@ -42,7 +41,7 @@ def main():
         logging.setup(cfg.CONF, 'senlin-api')
         messaging.setup()
 
-        app = config.load_paste_app()
+        app = wsgi.load_paste_app()
 
         host = cfg.CONF.senlin_api.bind_host
         port = cfg.CONF.senlin_api.bind_port
