@@ -6,7 +6,7 @@ Overview
 --------
 
 Senlin is a clustering service for OpenStack clouds. It creates and operates
-clusters of homogenous objects exposed by other OpenStack services. The goal
+clusters of homogeneous objects exposed by other OpenStack services. The goal
 is to make the orchestration of collections of similar objects easier.
 
 Senlin provides RESTful APIs to users so that they can associate various
