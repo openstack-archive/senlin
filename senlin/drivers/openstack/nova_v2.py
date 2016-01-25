@@ -190,8 +190,10 @@ class NovaClient(base.DriverBase):
     @sdk.translate_exception
     def server_metadata_update(self, server, metadata):
         if metadata == {}:
-            self.conn.compute.replace_server_metadata(server, {})
+            # clean server metadata
+            self.conn.compute.replace_server_metadata(server)
         else:
+            # update metadata to given dictionary
             self.conn.compute.update_server_metadata(server, **metadata)
 
     @sdk.translate_exception
