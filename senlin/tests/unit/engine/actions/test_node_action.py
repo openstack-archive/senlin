@@ -79,6 +79,31 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual(1, cluster.desired_capacity)
         cluster.add_node.assert_called_once_with(node)
 
+    @mock.patch.object(scaleutils, 'check_size_params')
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    def test_do_create_with_node_create_failed(self, mock_c_load,
+                                               mock_check, mock_load):
+        cluster = mock.Mock()
+        cluster.id = 'CID'
+        cluster.desired_capacity = 0
+        mock_c_load.return_value = cluster
+        node = mock.Mock()
+        node.id = 'NID'
+        node.do_create = mock.Mock(return_value=None)
+        node.cluster_id = cluster.id
+        mock_load.return_value = node
+        mock_check.return_value = ''
+        action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
+                                        cause=base_action.CAUSE_RPC)
+
+        node.do_create = mock.Mock(return_value=False)
+        res_code, res_msg = action.do_create()
+        self.assertEqual(action.RES_ERROR, res_code)
+        mock_check.assert_called_once_with(cluster, 1, None, None, True)
+        mock_c_load.assert_called_once_with(action.context, 'CID')
+        cluster.store.assert_called_once_with(action.context)
+        self.assertEqual(1, cluster.desired_capacity)
+
     def test_do_check(self, mock_load):
         node = mock.Mock()
         node.id = 'NID'
