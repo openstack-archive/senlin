@@ -165,9 +165,9 @@ class TestDeletionPolicy(base.SenlinTestCase):
             mock.call([node1], 1),
             mock.call([node2, node3], 1)
         ])
-        cluster.nodes_by_zone.assert_has_calls([
-            mock.call('AZ1'), mock.call('AZ2')
-        ])
+        cluster.nodes_by_zone.assert_has_calls(
+            [mock.call('AZ1'), mock.call('AZ2')],
+        )
 
     @mock.patch.object(su, 'nodes_by_profile_age')
     def test__victims_by_zones_profile_age(self, mock_select):
@@ -191,11 +191,9 @@ class TestDeletionPolicy(base.SenlinTestCase):
                 mock.call([node1], 1),
                 mock.call([node2, node3], 1)
             ],
-            any_order=True
         )
         cluster.nodes_by_zone.assert_has_calls(
             [mock.call('AZ1'), mock.call('AZ2')],
-            any_order=True
         )
 
     @mock.patch.object(su, 'nodes_by_age')
@@ -221,7 +219,6 @@ class TestDeletionPolicy(base.SenlinTestCase):
         ])
         cluster.nodes_by_zone.assert_has_calls(
             [mock.call('AZ1'), mock.call('AZ8')],
-            any_order=True
         )
 
     @mock.patch.object(su, 'nodes_by_age')
@@ -246,11 +243,9 @@ class TestDeletionPolicy(base.SenlinTestCase):
                 mock.call([node1], 1, False),
                 mock.call([node2, node3], 2, False)
             ],
-            any_order=True
         )
         cluster.nodes_by_zone.assert_has_calls(
             [mock.call('AZ5'), mock.call('AZ6')],
-            any_order=True
         )
 
     def test__update_action_clean(self):

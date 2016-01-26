@@ -117,7 +117,8 @@ class DeletionPolicy(base.Policy):
 
     def _victims_by_regions(self, cluster, regions):
         victims = []
-        for region, count in regions.items():
+        for region in sorted(regions.keys()):
+            count = regions[region]
             nodes = cluster.nodes_by_region(region)
             if self.criteria == self.RANDOM:
                 candidates = scaleutils.nodes_by_random(nodes, count)
@@ -134,7 +135,8 @@ class DeletionPolicy(base.Policy):
 
     def _victims_by_zones(self, cluster, zones):
         victims = []
-        for zone, count in zones.items():
+        for zone in sorted(zones.keys()):
+            count = zones[zone]
             nodes = cluster.nodes_by_zone(zone)
             if self.criteria == self.RANDOM:
                 candidates = scaleutils.nodes_by_random(nodes, count)
