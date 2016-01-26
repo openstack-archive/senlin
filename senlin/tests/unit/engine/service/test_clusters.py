@@ -637,7 +637,7 @@ class ClusterTest(base.SenlinTestCase):
             values = {
                 'name': 'test_node_name',
                 'physical_id': 'fake-phy-id-%s' % (i + 1),
-                'cluster_id': None,
+                'cluster_id': '',
                 'profile_id': profile_id or self.profile['id'],
                 'project': ctx.project,
                 'index': i + 1,

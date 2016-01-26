@@ -637,7 +637,7 @@ class EngineService(service.Service):
                 # Skip node in the same cluster already
                 if db_node.status != node_mod.Node.ACTIVE:
                     bad_nodes.append(db_node.id)
-                elif db_node.cluster_id is not None:
+                elif len(db_node.cluster_id) != 0:
                     owned_nodes.append(db_node.id)
                 else:
                     # check profile type matching
