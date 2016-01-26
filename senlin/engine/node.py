@@ -323,28 +323,32 @@ class Node(object):
     def do_join(self, context, cluster_id):
         if self.cluster_id == cluster_id:
             return True
-        timestamp = timeutils.utcnow()
-        db_node = db_api.node_migrate(context, self.id, cluster_id,
-                                      timestamp)
-        self.cluster_id = cluster_id
-        self.updated_at = timestamp
-        self.index = db_node.index
-
-        profile_base.Profile.join_cluster(context, self, cluster_id)
-        return True
+        res = profile_base.Profile.join_cluster(context, self, cluster_id)
+        if res:
+            timestamp = timeutils.utcnow()
+            db_node = db_api.node_migrate(context, self.id, cluster_id,
+                                          timestamp)
+            self.cluster_id = cluster_id
+            self.updated_at = timestamp
+            self.index = db_node.index
+            return True
+        else:
+            return False
 
     def do_leave(self, context):
-        if self.cluster_id is None:
+        if self.cluster_id == '':
             return True
 
-        timestamp = timeutils.utcnow()
-        db_api.node_migrate(context, self.id, None, timestamp)
-        self.cluster_id = None
-        self.updated_at = timestamp
-        self.index = -1
-
-        profile_base.Profile.leave_cluster(context, self)
-        return True
+        res = profile_base.Profile.leave_cluster(context, self)
+        if res:
+            timestamp = timeutils.utcnow()
+            db_api.node_migrate(context, self.id, None, timestamp)
+            self.cluster_id = ''
+            self.updated_at = timestamp
+            self.index = -1
+            return True
+        else:
+            return False
 
     def do_check(self, context):
         if not self.physical_id:

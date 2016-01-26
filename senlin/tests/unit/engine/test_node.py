@@ -531,6 +531,7 @@ class TestNode(base.SenlinTestCase):
     def test_node_join(self, mock_migrate, mock_join_cluster, mock_time):
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
                           self.context)
+        mock_join_cluster.return_value = True
         res = node.do_join(self.context, 'NEW_CLUSTER_ID')
         self.assertTrue(res)
         mock_migrate.assert_called_once_with(self.context, node.id,
@@ -542,12 +543,24 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual(mock_migrate.return_value.index, node.index)
         self.assertIsNotNone(node.updated_at)
 
+    @mock.patch.object(profiles_base.Profile, 'join_cluster')
+    def test_node_join_fail_update_server_metadata(self, mock_join):
+        node = nodem.Node('node1', self.profile.id, None, self.context)
+        mock_join.return_value = False
+        res = node.do_join(self.context, 'NEW_CLUSTER_ID')
+        self.assertFalse(res)
+        self.assertIsNone(node.cluster_id)
+        self.assertEqual(-1, node.index)
+        self.assertIsNone(node.updated_at)
+        mock_join.assert_called_once_with(self.context, node,
+                                          'NEW_CLUSTER_ID')
+
     @mock.patch.object(db_api, 'node_migrate')
     def test_node_leave_no_cluster(self, mock_migrate):
-        node = nodem.Node('node1', self.profile.id, None, self.context)
+        node = nodem.Node('node1', self.profile.id, '', self.context)
         self.assertTrue(node.do_leave(self.context))
         self.assertFalse(mock_migrate.called)
-        self.assertIsNone(node.cluster_id)
+        self.assertEqual('', node.cluster_id)
         self.assertIsNone(node.updated_at)
 
     @mock.patch.object(timeutils, 'utcnow')
@@ -556,14 +569,26 @@ class TestNode(base.SenlinTestCase):
     def test_node_leave(self, mock_migrate, mock_leave_cluster, mock_time):
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
                           self.context)
+        mock_leave_cluster.return_value = True
         res = node.do_leave(self.context)
         self.assertTrue(res)
-        self.assertIsNone(node.cluster_id)
+        self.assertEqual('', node.cluster_id)
         self.assertIsNotNone(node.updated_at)
         self.assertEqual(-1, node.index)
         mock_migrate.assert_called_once_with(self.context, node.id,
                                              None, mock_time(), None)
         mock_leave_cluster.assert_called_once_with(self.context, node)
+
+    @mock.patch.object(profiles_base.Profile, 'leave_cluster')
+    def test_node_leave_fail_update_server_metadata(self, mock_leave):
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context, index=1)
+        mock_leave.return_value = False
+        res = node.do_leave(self.context)
+        self.assertFalse(res)
+        self.assertNotEqual('', node.cluster_id)
+        self.assertIsNone(node.updated_at)
+        self.assertEqual(1, node.index)
 
     @mock.patch.object(profiles_base.Profile, 'check_object')
     def test_node_check(self, mock_check):
