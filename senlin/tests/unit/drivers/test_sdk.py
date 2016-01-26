@@ -34,7 +34,7 @@ class OpenStackSDKTest(base.SenlinTestCase):
                 'message': 'Resource BAR is not found.'
             }
         })
-        raw = sdk.exc.ResourceNotFound('A message', details, 404)
+        raw = sdk.exc.ResourceNotFound('A message', details, http_status=404)
         ex = self.assertRaises(senlin_exc.InternalError,
                                sdk.parse_exception, raw)
 
@@ -57,7 +57,7 @@ class OpenStackSDKTest(base.SenlinTestCase):
     def test_parser_exception_http_exception_no_details(self):
         details = "An error message"
 
-        raw = sdk.exc.ResourceNotFound('A message.', details, 404)
+        raw = sdk.exc.ResourceNotFound('A message.', details, http_status=404)
         ex = self.assertRaises(senlin_exc.InternalError,
                                sdk.parse_exception, raw)
 

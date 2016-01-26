@@ -36,8 +36,8 @@ def parse_exception(ex):
 
     if isinstance(ex, sdk_exc.HttpException):
         # some exceptions don't contain status_code
-        if ex.status_code is not None:
-            code = ex.status_code
+        if ex.http_status is not None:
+            code = ex.http_status
         message = ex.message
         data = {}
         try:
