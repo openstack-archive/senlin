@@ -368,8 +368,7 @@ class TestNovaV2(base.SenlinTestCase):
             server, k1='v1')
 
         d.server_metadata_update(server, {})
-        self.compute.replace_server_metadata.assert_called_once_with(
-            server, {})
+        self.compute.replace_server_metadata.assert_called_once_with(server)
 
     def test_server_metadata_delete(self):
         server = mock.Mock()

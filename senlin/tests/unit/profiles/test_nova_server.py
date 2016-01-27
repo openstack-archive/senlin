@@ -1237,9 +1237,9 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         res = profile.do_join(obj, cluster_id)
         self.assertEqual('Boom', res)
-        nc.server_metadata_get.assert_called_once_with(server_id='FAKE_ID')
+        nc.server_metadata_get.assert_called_once_with('FAKE_ID')
         nc.server_metadata_update.assert_called_once_with(
-            FOO='BAR', cluster='FAKE_CLUSTER_ID')
+            'FAKE_ID', {'cluster': 'FAKE_CLUSTER_ID', 'FOO': 'BAR'})
 
     def test_do_join_server_not_created(self):
         # Test path where server not specified
@@ -1264,8 +1264,9 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         res = profile.do_leave(obj)
         self.assertEqual('Boom', res)
-        nc.server_metadata_get.assert_called_once_with(server_id='FAKE_ID')
-        nc.server_metadata_update.assert_called_once_with(FOO='BAR')
+        nc.server_metadata_get.assert_called_once_with('FAKE_ID')
+        nc.server_metadata_update.assert_called_once_with('FAKE_ID',
+                                                          {'FOO': 'BAR'})
 
     def test_do_leave_no_physical_id(self):
         # Test path where server not specified
@@ -1288,8 +1289,9 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         res = profile.do_leave(obj)
         self.assertEqual('Boom', res)
-        nc.server_metadata_get.assert_called_once_with(server_id='FAKE_ID')
-        nc.server_metadata_update.assert_called_once_with(FOO='BAR')
+        nc.server_metadata_get.assert_called_once_with('FAKE_ID')
+        nc.server_metadata_update.assert_called_once_with('FAKE_ID',
+                                                          {'FOO': 'BAR'})
 
     def test_do_rebuild(self):
         obj = mock.Mock()
