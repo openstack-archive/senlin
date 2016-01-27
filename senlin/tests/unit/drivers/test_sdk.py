@@ -72,7 +72,8 @@ class OpenStackSDKTest(base.SenlinTestCase):
             }
         })
 
-        raw = sdk.exc.HttpException('A message.', details)
+        raw = sdk.exc.HttpException(message='A message.', details=details,
+                                    http_status=400)
         ex = self.assertRaises(senlin_exc.InternalError,
                                sdk.parse_exception, raw)
 

@@ -583,7 +583,7 @@ class ClusterTest(base.SenlinTestCase):
         cid = c['id']
 
         result = self.eng.cluster_delete(self.ctx, cid)
-        self.assertEqual(cid, result)
+        self.assertIsNotNone(result['action'])
         expected_call = mock.call(action_id=mock.ANY)
         # two calls: one for create, the other for delete
         notify.assert_has_calls([expected_call] * 2)

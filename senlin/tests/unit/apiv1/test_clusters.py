@@ -670,10 +670,10 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._delete('/clusters/%(cluster_id)s' % {'cluster_id': cid})
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        mock_call.return_value = cid
+        mock_call.return_value = {'action': 'FAKE_ID'}
 
         res = self.controller.delete(req, cluster_id=cid)
-        result = {'location': '/clusters/%s' % cid}
+        result = {'location': '/actions/FAKE_ID'}
         self.assertEqual(result, res)
         mock_call.assert_called_with(req.context,
                                      ('cluster_delete', {'identity': cid}))

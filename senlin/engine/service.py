@@ -1002,7 +1002,7 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Cluster delete action queued: %s"), action.id)
 
-        return db_cluster.id
+        return {'action': action.id}
 
     def node_find(self, context, identity):
         '''Find a node with the given identity (could be name or ID).'''
