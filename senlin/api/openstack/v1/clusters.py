@@ -356,8 +356,8 @@ class ClusterController(object):
 
     @util.policy_enforce
     def delete(self, req, cluster_id):
-        cluster = self.rpc_client.cluster_delete(req.context,
-                                                 cluster_id,
-                                                 cast=False)
-        result = {'location': '/clusters/%s' % cluster}
+        res = self.rpc_client.cluster_delete(req.context, cluster_id,
+                                             cast=False)
+        action_id = res.pop('action')
+        result = {'location': '/actions/%s' % action_id}
         return result
