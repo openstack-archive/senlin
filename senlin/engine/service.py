@@ -464,41 +464,6 @@ class EngineService(service.Service):
         cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
         return cluster.to_dict()
 
-    def _validate_cluster_size_params(self, desired_capacity, min_size,
-                                      max_size):
-        # validate data type first
-        if desired_capacity is not None:
-            desired_capacity = utils.parse_int_param(
-                consts.CLUSTER_DESIRED_CAPACITY, desired_capacity)
-        if min_size is not None:
-            min_size = utils.parse_int_param(consts.CLUSTER_MIN_SIZE, min_size)
-        if max_size is not None:
-            max_size = utils.parse_int_param(consts.CLUSTER_MAX_SIZE, max_size,
-                                             allow_negative=True)
-
-        # validate parameter range
-        if min_size is not None and desired_capacity is not None:
-            if min_size > desired_capacity:
-                msg = _("Cluster min_size, if specified, must be lesser than "
-                        "or equal to its desired_capacity.")
-                raise exception.SenlinBadRequest(msg=msg)
-
-        if max_size is not None and desired_capacity is not None:
-            if max_size >= 0 and max_size < desired_capacity:
-                msg = _("Cluster max_size, if specified, must be greater than"
-                        " or equal to its desired_capacity. Setting max_size"
-                        " to -1 means no upper limit on cluster size.")
-                raise exception.SenlinBadRequest(msg=msg)
-
-        if min_size is not None and max_size is not None:
-            if max_size >= 0 and max_size < min_size:
-                msg = _("Cluster max_size, if specified, must be greater than"
-                        " or equal to its min_size. Setting max_size to -1"
-                        " means no upper limit on cluster size.")
-                raise exception.SenlinBadRequest(msg=msg)
-
-        return (desired_capacity, min_size, max_size)
-
     @request_context
     def cluster_create(self, context, name, desired_capacity, profile_id,
                        min_size=None, max_size=None, parent=None,
@@ -859,12 +824,19 @@ class EngineService(service.Service):
                 min_step = utils.parse_int_param(consts.ADJUSTMENT_MIN_STEP,
                                                  min_step)
 
-        # validate min_size and max_size
-        (_d, min_size, max_size) = self._validate_cluster_size_params(
-            None, min_size, max_size)
+        if min_size is not None:
+            min_size = utils.parse_int_param(consts.CLUSTER_MIN_SIZE, min_size)
+        if max_size is not None:
+            max_size = utils.parse_int_param(consts.CLUSTER_MAX_SIZE, max_size,
+                                             allow_negative=True)
 
-        # Get the database representation of the existing cluster
         db_cluster = self.cluster_find(context, identity)
+        desired = su.calculate_desired(db_cluster.desired_capacity, adj_type,
+                                       number, min_step)
+        res = su.check_size_params(db_cluster, desired, min_size, max_size,
+                                   strict)
+        if res:
+            raise exception.SenlinBadRequest(msg=res)
 
         fmt = _LI("Resizing cluster '%(cluster)s': type=%(adj_type)s, "
                   "number=%(number)s, min_size=%(min_size)s, "
