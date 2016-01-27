@@ -17,6 +17,7 @@ import six
 
 from senlin.common import exception
 from senlin.common.i18n import _
+from senlin.common import scaleutils as su
 from senlin.db import api as db_api
 from senlin.engine.actions import base as action_mod
 from senlin.engine import cluster as cluster_mod
@@ -841,6 +842,24 @@ class ClusterTest(base.SenlinTestCase):
         # two calls: one for create, the other for scaling operation
         notify.assert_has_calls([expected_call] * 2)
 
+    @mock.patch.object(su, 'check_size_params')
+    def test_cluster_scale_out_failed_size_check(self, mock_check):
+        cluster = mock.Mock()
+        cluster.desired_capacity = 1
+        mock_find = self.patchobject(self.eng, 'cluster_find',
+                                     return_value=cluster)
+        mock_check.return_value = 'size limit'
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_scale_out,
+                               self.ctx, 'FAKE_ID', 2)
+
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_check.assert_called_once_with(cluster, 3)
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: size limit",
+                         six.text_type(ex.exc_info[1]))
+
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_scale_out_count_not_int_or_zero(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
@@ -911,6 +930,24 @@ class ClusterTest(base.SenlinTestCase):
 
         # two calls: one for create, the other for scaling operation
         notify.assert_has_calls([expected_call] * 2)
+
+    @mock.patch.object(su, 'check_size_params')
+    def test_cluster_scale_in_failed_size_check(self, mock_check):
+        cluster = mock.Mock()
+        cluster.desired_capacity = 2
+        mock_find = self.patchobject(self.eng, 'cluster_find',
+                                     return_value=cluster)
+        mock_check.return_value = 'size limit'
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_scale_in,
+                               self.ctx, 'FAKE_ID', 1)
+
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_check.assert_called_once_with(cluster, 1)
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: size limit",
+                         six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_scale_in_count_not_int_or_zero(self, notify):

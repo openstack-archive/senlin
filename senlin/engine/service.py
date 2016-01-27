@@ -881,12 +881,16 @@ class EngineService(service.Service):
         LOG.info(_LI("Scaling out cluster '%s'."), identity)
         # Validation
         db_cluster = self.cluster_find(context, identity)
-        delta = utils.parse_int_param('count', count, allow_zero=False)
+        if count is not None:
+            count = utils.parse_int_param('count', count, allow_zero=False)
+            err = su.check_size_params(db_cluster,
+                                       db_cluster.desired_capacity + count)
+            if err:
+                raise exception.SenlinBadRequest(msg=err)
 
-        if delta is not None:
             LOG.info(_LI('Scaling out cluster %(name)s by %(delta)s nodes'),
-                     {'name': identity, 'delta': delta})
-            inputs = {'count': delta}
+                     {'name': identity, 'delta': count})
+            inputs = {'count': count}
         else:
             LOG.info(_LI('Scaling out cluster %s'), db_cluster.name)
             inputs = {}
@@ -916,13 +920,17 @@ class EngineService(service.Service):
         LOG.info(_LI("Scaling in cluster '%s'."), identity)
 
         db_cluster = self.cluster_find(context, identity)
-        # delta must be positive integer
-        delta = utils.parse_int_param('count', count, allow_zero=False)
 
-        if delta is not None:
+        if count is not None:
+            count = utils.parse_int_param('count', count, allow_zero=False)
+            err = su.check_size_params(db_cluster,
+                                       db_cluster.desired_capacity - count)
+            if err:
+                raise exception.SenlinBadRequest(msg=err)
+
             LOG.info(_LI('Scaling in cluster %(name)s by %(delta)s nodes'),
-                     {'name': identity, 'delta': delta})
-            inputs = {'count': delta}
+                     {'name': identity, 'delta': count})
+            inputs = {'count': count}
         else:
             LOG.info(_LI('Scaling in cluster %s'), db_cluster.name)
             inputs = {}
