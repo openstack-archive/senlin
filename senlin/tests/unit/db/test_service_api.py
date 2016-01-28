@@ -65,6 +65,12 @@ class DBAPIServiceTest(base.SenlinTestCase):
         self.assertEqual('host-updated', new_service.host)
         self.assertGreater(new_service.updated_at, old_updated_time)
 
+    def test_service_update_values_none(self):
+        old_service = self._create_service()
+        old_updated_time = old_service.updated_at
+        new_service = db_api.service_update(self.ctx, old_service.id)
+        self.assertGreater(new_service.updated_at, old_updated_time)
+
     def test_service_delete(self):
         service = self._create_service()
         db_api.service_delete(self.ctx, service.id)

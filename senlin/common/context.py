@@ -120,3 +120,8 @@ def get_service_context(**kwargs):
     '''
     identity_service = driver_base.SenlinDriver().identity
     return identity_service.get_service_credentials(**kwargs)
+
+
+def get_admin_context():
+    """Create an administrator context."""
+    return RequestContext(is_admin=True)

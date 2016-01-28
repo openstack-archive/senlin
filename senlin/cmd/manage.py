@@ -20,6 +20,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import timeutils
 
+from senlin.common import context
 from senlin.common.i18n import _
 from senlin.db import api
 from senlin import version
@@ -41,13 +42,17 @@ def do_db_sync():
 
 
 class ServiceManageCommand(object):
+    def __init__(self):
+        self.ctx = context.get_admin_context()
+
     def _format_service(self, service):
         if service is None:
             return
 
         status = 'down'
-        if ((timeutils.utcnow() - service.updated_at).total_seconds() <=
-                CONF.periodic_interval):
+        seconds_since_update = (timeutils.utcnow() -
+                                service.updated_at).total_seconds()
+        if seconds_since_update <= 2 * CONF.periodic_interval:
             status = 'up'
 
         result = {
@@ -63,7 +68,7 @@ class ServiceManageCommand(object):
 
     def service_list(self):
         services = [self._format_service(service)
-                    for service in api.service_get_all()]
+                    for service in api.service_get_all(self.ctx)]
 
         print_format = "%-36s %-24s %-16s %-16s %-10s %-24s %-24s"
         print(print_format % (_('Service ID'),
@@ -84,7 +89,7 @@ class ServiceManageCommand(object):
                                   svc['updated_at']))
 
     def service_clean(self):
-        for service in api.service_get_all():
+        for service in api.service_get_all(self.ctx):
             svc = self._format_service(service)
             if svc['status'] == 'down':
                 print(_('Dead service %s is removed.') % svc['service_id'])

@@ -1184,7 +1184,7 @@ def receiver_delete(context, receiver_id):
     session.flush()
 
 
-def service_create(context, service_id=None, host=None, binary=None,
+def service_create(context, service_id, host=None, binary=None,
                    topic=None):
     time_now = timeutils.utcnow()
     svc = models.Service(id=service_id, host=host, binary=binary,

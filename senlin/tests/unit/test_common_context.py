@@ -81,3 +81,7 @@ class TestRequestContext(base.SenlinTestCase):
             override = '%s_override' % k
             setattr(ctx, k, override)
             self.assertEqual(override, ctx.to_dict().get(k))
+
+    def test_get_admin_context(self):
+        ctx1 = context.get_admin_context()
+        self.assertTrue(ctx1.is_admin)

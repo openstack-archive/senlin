@@ -14,6 +14,7 @@ import datetime
 import mock
 import uuid
 
+from oslo_config import cfg
 from oslo_utils import timeutils
 
 from senlin.common import consts
@@ -107,32 +108,47 @@ class EngineBasicTest(base.SenlinTestCase):
         mock_disp.stop.assert_called_once_with()
         mock_hm.stop.assert_called_once_with()
 
+
+class EngineStatusTest(base.SenlinTestCase):
+    def setUp(self):
+        super(EngineStatusTest, self).setUp()
+        self.eng = service.EngineService('host-a', 'topic-a')
+        self.gen_id = self.patchobject(uuid, 'uuid4', return_value='1234')
+
+        self.fake_rpc_server = mock.Mock()
+        self.get_rpc = self.patchobject(rpc_messaging, 'get_rpc_server',
+                                        return_value=self.fake_rpc_server)
+
     @mock.patch.object(db_api, 'service_create')
     @mock.patch.object(db_api, 'service_update')
-    @mock.patch.object(db_api, 'service_get')
-    def test_service_manage_report(self, mock_get, mock_update,
-                                   mock_create, mock_msg_cls,
-                                   mock_hm_cls, mock_disp_cls):
-        mock_get.side_effect = [
-            None,
-            mock.Mock()
-        ]
+    def test_service_manage_report_create(self, mock_update, mock_create):
+        mock_update.return_value = None
         self.eng.service_manage_report()
         expected_args = dict(host=self.eng.host,
                              binary='senlin-engine',
                              service_id=self.eng.engine_id,
                              topic=self.eng.topic)
         mock_create.assert_called_once_with(mock.ANY, **expected_args)
+
+    @mock.patch.object(db_api, 'service_update')
+    def test_service_manage_report_update(self, mock_update):
+        mock_update.return_value = mock.Mock()
         self.eng.service_manage_report()
-        self.assertTrue(mock_update.called)
+        mock_update.assert_called_once_with(mock.ANY, self.eng.engine_id)
+
+    @mock.patch.object(db_api, 'service_update')
+    def test_service_manage_report_error(self, mock_update):
+        mock_update.side_effect = [Exception]
+        self.eng.service_manage_report()
+        mock_update.assert_called_once_with(mock.ANY, self.eng.engine_id)
+        expect_str = 'Service %s update failed' % self.eng.engine_id
+        self.assertIn(expect_str, self.LOG.output)
 
     @mock.patch.object(db_api, 'service_get_all')
     @mock.patch.object(db_api, 'service_delete')
-    def test_service_manage_report_cleanup(self, mock_delete, mock_get_all,
-                                           mock_msg_cls, mock_hm_cls,
-                                           mock_disp_cls):
+    def test_service_manage_report_cleanup(self, mock_delete, mock_get_all):
         ages_a_go = timeutils.utcnow() - datetime.timedelta(
-            seconds=4000)
+            seconds=2 * cfg.CONF.periodic_interval)
         mock_get_all.return_value = [{'id': 'foo',
                                       'updated_at': ages_a_go}]
         self.eng.service_manage_cleanup()

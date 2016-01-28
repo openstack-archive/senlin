@@ -269,8 +269,8 @@ class Service(BASE, TimestampMixin, models.ModelBase):
     __tablename__ = 'service'
 
     id = Column('id', String(36), primary_key=True, nullable=False)
-    host = Column(String(255), nullable=False)
-    binary = Column(String(255), nullable=False)
-    topic = Column(String(255), nullable=False)
+    host = Column(String(255))
+    binary = Column(String(255))
+    topic = Column(String(255))
     disabled = Column(Boolean, default=False)
     disabled_reason = Column(String(255))
