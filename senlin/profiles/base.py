@@ -310,7 +310,7 @@ class Profile(object):
         '''For subclass to override.'''
 
         operation = options.get('operation', None)
-        if not operation or operation != 'RECREATE':
+        if operation and operation != 'RECREATE':
             return NotImplemented
 
         # NOTE: do_delete always returns a boolean
