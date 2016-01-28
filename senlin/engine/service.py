@@ -30,6 +30,7 @@ from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.common.i18n import _LI
 from senlin.common import messaging as rpc_messaging
+from senlin.common import scaleutils as su
 from senlin.common import schema
 from senlin.common import utils
 from senlin.db import api as db_api
@@ -514,12 +515,21 @@ class EngineService(service.Service):
             msg = _("The specified profile '%s' is not found.") % profile_id
             raise exception.SenlinBadRequest(msg=msg)
 
-        LOG.info(_LI("Creating cluster '%s'."), name)
-        (init_size, min_size, max_size) = self._validate_cluster_size_params(
-            desired_capacity, min_size, max_size)
-
+        init_size = utils.parse_int_param(consts.CLUSTER_DESIRED_CAPACITY,
+                                          desired_capacity)
+        if min_size is not None:
+            min_size = utils.parse_int_param(consts.CLUSTER_MIN_SIZE, min_size)
+        if max_size is not None:
+            max_size = utils.parse_int_param(consts.CLUSTER_MAX_SIZE, max_size,
+                                             allow_negative=True)
         if timeout is not None:
             timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
+
+        res = su.check_size_params(None, init_size, min_size, max_size, True)
+        if res:
+            raise exception.SenlinBadRequest(msg=res)
+
+        LOG.info(_LI("Creating cluster '%s'."), name)
 
         kwargs = {
             'user': context.user,
