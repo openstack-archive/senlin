@@ -65,7 +65,7 @@ class NodeActionTest(base.SenlinTestCase):
         node.do_create = mock.Mock(return_value=None)
         node.cluster_id = cluster.id
         mock_load.return_value = node
-        mock_check.return_value = ''
+        mock_check.return_value = None
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
                                         cause=base_action.CAUSE_RPC)
 
@@ -134,7 +134,7 @@ class NodeActionTest(base.SenlinTestCase):
         node.do_delete = mock.Mock(return_value=None)
         node.cluster_id = cluster.id
         mock_load.return_value = node
-        mock_check.return_value = ''
+        mock_check.return_value = None
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
                                         cause=base_action.CAUSE_RPC)
 
@@ -184,7 +184,7 @@ class NodeActionTest(base.SenlinTestCase):
         cluster = mock.Mock()
         cluster.desired_capacity = 100
         mock_c_load.return_value = cluster
-        mock_check.return_value = ''
+        mock_check.return_value = None
         node.do_join = mock.Mock(return_value=True)
 
         # Test failed node join path
@@ -237,7 +237,7 @@ class NodeActionTest(base.SenlinTestCase):
         cluster = mock.Mock()
         cluster.desired_capacity = 100
         mock_c_load.return_value = cluster
-        mock_check.return_value = ''
+        mock_check.return_value = None
         node.do_join = mock.Mock(return_value=False)
 
         # Test failed node join path
@@ -261,7 +261,7 @@ class NodeActionTest(base.SenlinTestCase):
         cluster.id = 'FAKE_ID'
         cluster.desired_capacity = 100
         mock_c_load.return_value = cluster
-        mock_check.return_value = ''
+        mock_check.return_value = None
         node.do_leave = mock.Mock(return_value=True)
 
         # Test failed node join path
@@ -334,7 +334,7 @@ class NodeActionTest(base.SenlinTestCase):
         cluster = mock.Mock()
         cluster.desired_capacity = 100
         mock_c_load.return_value = cluster
-        mock_check.return_value = ''
+        mock_check.return_value = None
         node.do_leave = mock.Mock(return_value=False)
 
         # Test failed node join path

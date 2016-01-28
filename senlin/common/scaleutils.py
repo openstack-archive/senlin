@@ -77,15 +77,26 @@ def truncate_desired(cluster, desired, min_size, max_size):
     return desired
 
 
-def check_size_params(cluster, desired, min_size, max_size, strict):
-    '''Validate provided arguments with cluster properties.
+def check_size_params(cluster=None, desired=None, min_size=None, max_size=None,
+                      strict=True):
+    """Validate provided arguments against cluster properties.
 
     Sanity Checking 1: the desired, min_size, max_size parameters must
                        form a reasonable relationship among themselves,
                        if specified.
     Sanity Checking 2: the desired_capacity must be within the existing
                        range of the cluster, if new range is not provided.
-    '''
+
+    :param cluster: The cluster object if provided.
+    :param desired: The desired capacity for an operation if provided.
+    :param min_size: The new min_size property for the cluster, if provided.
+    :param max_size: The new max_size property for the cluster, if provided.
+    :param strict: Whether we are doing a strict checking.
+
+    :return: A string of error message if failed checking or None if passed
+        the checking.
+    """
+
     if desired is not None:
         # recalculate/validate desired based on strict setting
         if (min_size is not None and desired < min_size):
@@ -93,7 +104,8 @@ def check_size_params(cluster, desired, min_size, max_size, strict):
             return _("The target capacity (%(d)s) is less than "
                      "the specified min_size (%(m)s).") % v
 
-        if min_size is None and desired < cluster.min_size:
+        if (min_size is None and cluster is not None and
+                desired < cluster.min_size):
             v = {'d': desired, 'm': cluster.min_size}
             return _("The target capacity (%(d)s) is less than "
                      "the cluster's min_size (%(m)s).") % v
@@ -104,7 +116,7 @@ def check_size_params(cluster, desired, min_size, max_size, strict):
             return _("The target capacity (%(d)s) is greater "
                      "than the specified max_size (%(m)s).") % v
 
-        if (max_size is None and
+        if (max_size is None and cluster is not None and
                 desired > cluster.max_size and cluster.max_size >= 0):
             v = {'d': desired, 'm': cluster.max_size}
             return _("The target capacity (%(d)s) is greater "
@@ -115,27 +127,28 @@ def check_size_params(cluster, desired, min_size, max_size, strict):
             return _("The specified min_size is greater than the "
                      "specified max_size.")
 
-        if (max_size is None and cluster.max_size >= 0 and
-                min_size > cluster.max_size):
+        if (max_size is None and cluster is not None and
+                cluster.max_size >= 0 and min_size > cluster.max_size):
             return _("The specified min_size is greater than the "
                      "current max_size of the cluster.")
 
-        if desired is None and min_size > cluster.desired_capacity:
+        if (desired is None and cluster is not None and
+                min_size > cluster.desired_capacity):
             return _("The specified min_size is greater than the "
                      "current desired_capacity of the cluster.")
 
     if max_size is not None:
-        if (min_size is None and max_size >= 0 and
-                max_size < cluster.min_size):
+        if (min_size is None and cluster is not None and
+                max_size >= 0 and max_size < cluster.min_size):
             return _("The specified max_size is less than the "
                      "current min_size of the cluster.")
 
-        if (desired is None and max_size >= 0 and
-                max_size < cluster.desired_capacity):
+        if (desired is None and cluster is not None and
+                max_size >= 0 and max_size < cluster.desired_capacity):
             return _("The specified max_size is less than the "
                      "current desired_capacity of the cluster.")
 
-    return ''
+    return None
 
 
 def parse_resize_params(action, cluster):
@@ -160,7 +173,7 @@ def parse_resize_params(action, cluster):
     # check provided params against current properties
     # desired is checked when strict is True
     result = check_size_params(cluster, desired, min_size, max_size, strict)
-    if result != '':
+    if result:
         return action.RES_ERROR, result
 
     # save sanitized properties

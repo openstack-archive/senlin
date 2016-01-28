@@ -63,7 +63,7 @@ class NodeAction(base.Action):
             result = scaleutils.check_size_params(
                 cluster, cluster.desired_capacity + 1, None, None, True)
 
-            if result != '':
+            if result:
                 return self.RES_ERROR, result
 
         res = self.node.do_create(self.context)
@@ -101,7 +101,7 @@ class NodeAction(base.Action):
             result = scaleutils.check_size_params(cluster,
                                                   cluster.desired_capacity - 1,
                                                   None, None, True)
-            if result != '':
+            if result:
                 return self.RES_ERROR, result
 
         res = self.node.do_delete(self.context)
@@ -138,7 +138,7 @@ class NodeAction(base.Action):
         desired_capacity = cluster.desired_capacity + 1
         result = scaleutils.check_size_params(cluster, desired_capacity,
                                               None, None, True)
-        if result != '':
+        if result:
             return self.RES_ERROR, result
 
         result = self.node.do_join(self.context, cluster_id)
@@ -163,7 +163,7 @@ class NodeAction(base.Action):
         desired_capacity = cluster.desired_capacity - 1
         result = scaleutils.check_size_params(cluster, desired_capacity,
                                               None, None, True)
-        if result != '':
+        if result:
             return self.RES_ERROR, result
 
         res = self.node.do_leave(self.context)

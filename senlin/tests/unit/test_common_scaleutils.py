@@ -324,40 +324,40 @@ class CheckSizeParamsTest(base.SenlinTestCase):
         # The following are okay cases
         ('x_x_x_x', dict(
             desired=None, min_size=None, max_size=None, strict=True,
-            result='')),
+            result=None)),
         ('18_x_x_x', dict(
             desired=18, min_size=None, max_size=None, strict=True,
-            result='')),
+            result=None)),
         ('30_x_40_x', dict(
             desired=30, min_size=None, max_size=40, strict=True,
-            result='')),
+            result=None)),
         ('x_x_40_x', dict(
             desired=None, min_size=None, max_size=40, strict=True,
-            result='')),
+            result=None)),
         ('x_5_x_x', dict(
             desired=None, min_size=5, max_size=None, strict=True,
-            result='')),
+            result=None)),
         ('x_15_x_x', dict(
             desired=None, min_size=15, max_size=None, strict=True,
-            result='')),
+            result=None)),
         ('5_5_x_x', dict(
             desired=5, min_size=5, max_size=None, strict=True,
-            result='')),
+            result=None)),
         ('20_x_x_x', dict(
             desired=20, min_size=None, max_size=None, strict=True,
-            result='')),
+            result=None)),
         ('30_x_30_x', dict(
             desired=30, min_size=None, max_size=30, strict=True,
-            result='')),
+            result=None)),
         ('30_x_-1_x', dict(
             desired=30, min_size=None, max_size=-1, strict=True,
-            result='')),
+            result=None)),
         ('40_30_-1_x', dict(
             desired=40, min_size=30, max_size=-1, strict=True,
-            result='')),
+            result=None)),
         ('x_x_-1_x', dict(
             desired=None, min_size=None, max_size=-1, strict=True,
-            result='')),
+            result=None)),
     ]
 
     def test_check_size_params(self):
