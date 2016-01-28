@@ -792,6 +792,9 @@ class ClusterTest(base.SenlinTestCase):
                          "specified cluster: %s" % nodes,
                          six.text_type(ex.exc_info[1]))
 
+    def test_cluster_resize(self):
+        pass
+
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_scale_out(self, notify):
         c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
