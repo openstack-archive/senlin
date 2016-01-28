@@ -44,7 +44,8 @@ def get_facade():
     global _facade
 
     if not _facade:
-        _facade = db_session.EngineFacade.from_config(CONF)
+        _facade = db_session.EngineFacade.from_config(CONF,
+                                                      expire_on_commit=True)
     return _facade
 
 
