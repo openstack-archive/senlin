@@ -64,11 +64,13 @@ class KeystoneClient(base.DriverBase):
 
     @sdk.translate_exception
     def service_get(self, service_type):
-        '''Utility function to get service detail based on type.'''
-        services = [s for s in self.conn.identity.services()]
-        for service in services:
-            if service['type'] == service_type:
-                return service
+        """Utility function to get service detail based on type.
+
+        :param service_type: A string specifying the service type for
+            retrieval.
+        :return: An openstack.identity.v3.Service object.
+        """
+        return self.conn.identity.services(type=service_type)
 
     @sdk.translate_exception
     def trust_get_by_trustor(self, trustor, trustee=None, project=None):

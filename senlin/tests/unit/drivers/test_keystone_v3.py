@@ -107,15 +107,16 @@ class TestKeystoneV3(base.SenlinTestCase):
             service_id='FAKE_ID')
 
     def test_service_get(self, mock_create):
-        services = [{'name': 'nova', 'type': 'compute', 'id': 'id1'},
-                    {'name': 'senlin', 'type': 'clustering', 'id': 'id2'}]
-        self.conn.identity.services.return_value = services
+        svc = mock.Mock()
+        self.conn.identity.services.return_value = svc
         mock_create.return_value = self.conn
+
         kc = kv3.KeystoneClient({'k': 'v'})
 
         res = kc.service_get('clustering')
-        self.assertEqual(services[1], res)
-        self.assertTrue(self.conn.identity.services.called)
+
+        self.assertEqual(svc, res)
+        self.conn.identity.services.assert_called_once_with(type='clustering')
 
     def test_trust_get_by_trustor(self, mock_create):
         trust1 = mock.Mock()
