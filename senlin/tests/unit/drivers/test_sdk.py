@@ -27,7 +27,7 @@ class OpenStackSDKTest(base.SenlinTestCase):
     def setUp(self):
         super(OpenStackSDKTest, self).setUp()
 
-    def test_parser_exception_http_exception_with_details(self):
+    def test_parse_exception_http_exception_with_details(self):
         details = jsonutils.dumps({
             'error': {
                 'code': 404,
@@ -54,7 +54,7 @@ class OpenStackSDKTest(base.SenlinTestCase):
         self.assertEqual(403, ex.code)
         self.assertEqual('Quota exceeded for instances.', six.text_type(ex))
 
-    def test_parser_exception_http_exception_no_details(self):
+    def test_parse_exception_http_exception_no_details(self):
         details = "An error message"
 
         raw = sdk.exc.ResourceNotFound('A message.', details, http_status=404)
@@ -64,7 +64,7 @@ class OpenStackSDKTest(base.SenlinTestCase):
         self.assertEqual(404, ex.code)
         self.assertEqual('A message.', six.text_type(ex))
 
-    def test_parser_exception_http_exception_code_displaced(self):
+    def test_parse_exception_http_exception_code_displaced(self):
         details = jsonutils.dumps({
             'code': 400,
             'error': {
@@ -80,7 +80,7 @@ class OpenStackSDKTest(base.SenlinTestCase):
         self.assertEqual(400, ex.code)
         self.assertEqual('Resource BAR is in error state.', six.text_type(ex))
 
-    def test_parser_exception_sdk_exception(self):
+    def test_parse_exception_sdk_exception(self):
         raw = sdk.exc.InvalidResponse('INVALID')
 
         ex = self.assertRaises(senlin_exc.InternalError,
@@ -89,7 +89,7 @@ class OpenStackSDKTest(base.SenlinTestCase):
         self.assertEqual(500, ex.code)
         self.assertEqual('InvalidResponse', six.text_type(ex))
 
-    def test_parser_exception_request_exception(self):
+    def test_parse_exception_request_exception(self):
         raw = req_exc.HTTPError(401, 'ERROR')
 
         ex = self.assertRaises(senlin_exc.InternalError,
@@ -98,7 +98,7 @@ class OpenStackSDKTest(base.SenlinTestCase):
         self.assertEqual(401, ex.code)
         self.assertEqual('[Errno 401] ERROR', ex.message)
 
-    def test_parser_exception_other_exceptions(self):
+    def test_parse_exception_other_exceptions(self):
         raw = Exception('Unknown Error')
 
         ex = self.assertRaises(senlin_exc.InternalError,

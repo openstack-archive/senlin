@@ -71,7 +71,8 @@ def parse_exception(ex):
         # Exceptions that are not captured by SDK
         code = ex.errno
         message = six.text_type(ex)
-    elif isinstance(ex, Exception):
+    else:
+        # This could be a generic exception or something we don't understand
         message = six.text_type(ex)
 
     raise senlin_exc.InternalError(code=code, message=message)
