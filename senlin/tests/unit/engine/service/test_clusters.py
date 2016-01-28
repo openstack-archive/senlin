@@ -15,6 +15,7 @@ from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher as rpc
 import six
 
+from senlin.common import consts
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import scaleutils as su
@@ -792,8 +793,294 @@ class ClusterTest(base.SenlinTestCase):
                          "specified cluster: %s" % nodes,
                          six.text_type(ex.exc_info[1]))
 
-    def test_cluster_resize(self):
-        pass
+    @mock.patch.object(su, 'calculate_desired')
+    @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch('senlin.engine.actions.base.Action')
+    def test_cluster_resize_exact_capacity(self, mock_action, notify,
+                                           mock_check, mock_calc):
+        cluster = mock.Mock()
+        cluster.id = '12345678ABCDEFGH'
+        cluster.desired_capacity = 3
+
+        mock_find = self.patchobject(self.eng, 'cluster_find',
+                                     return_value=cluster)
+        mock_calc.return_value = 5
+        mock_check.return_value = None
+
+        action = mock.Mock()
+        action.id = 'FAKE_ACTION'
+        action.READY = 'READY'
+        mock_action.return_value = action
+
+        res = self.eng.cluster_resize(self.ctx, 'FAKE_CLUSTER',
+                                      adj_type=consts.EXACT_CAPACITY,
+                                      number=5)
+
+        self.assertEqual({'action': 'FAKE_ACTION'}, res)
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
+        mock_calc.assert_called_once_with(3, consts.EXACT_CAPACITY, 5, None)
+        mock_check.assert_called_once_with(cluster, 5, None, None, True)
+        mock_action.assert_called_once_with(
+            '12345678ABCDEFGH',
+            consts.CLUSTER_RESIZE,
+            user=self.ctx.user,
+            project=self.ctx.project,
+            domain=self.ctx.domain,
+            name='cluster_resize_12345678',
+            cause=action_mod.CAUSE_RPC,
+            inputs={
+                consts.ADJUSTMENT_TYPE: consts.EXACT_CAPACITY,
+                consts.ADJUSTMENT_NUMBER: 5,
+                consts.ADJUSTMENT_MIN_SIZE: None,
+                consts.ADJUSTMENT_MAX_SIZE: None,
+                consts.ADJUSTMENT_MIN_STEP: None,
+                consts.ADJUSTMENT_STRICT: True
+            }
+        )
+        self.assertEqual('READY', action.status)
+        action.store.assert_called_once_with(self.ctx)
+        notify.assert_called_once_with(action_id='FAKE_ACTION')
+
+    @mock.patch.object(su, 'calculate_desired')
+    @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch('senlin.engine.actions.base.Action')
+    def test_cluster_resize_change_in_capacity(self, mock_action, notify,
+                                               mock_check, mock_calc):
+        cluster = mock.Mock()
+        cluster.id = '12345678ABCDEFGH'
+        cluster.desired_capacity = 4
+
+        mock_find = self.patchobject(self.eng, 'cluster_find',
+                                     return_value=cluster)
+        mock_calc.return_value = 9
+        mock_check.return_value = None
+
+        action = mock.Mock()
+        action.id = 'FAKE_ACTION'
+        action.READY = 'READY'
+        mock_action.return_value = action
+
+        res = self.eng.cluster_resize(self.ctx, 'FAKE_CLUSTER',
+                                      adj_type=consts.CHANGE_IN_CAPACITY,
+                                      number=5)
+
+        self.assertEqual({'action': 'FAKE_ACTION'}, res)
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
+        mock_calc.assert_called_once_with(4, consts.CHANGE_IN_CAPACITY, 5,
+                                          None)
+        mock_check.assert_called_once_with(cluster, 9, None, None, True)
+        mock_action.assert_called_once_with(
+            '12345678ABCDEFGH',
+            consts.CLUSTER_RESIZE,
+            user=self.ctx.user,
+            project=self.ctx.project,
+            domain=self.ctx.domain,
+            name='cluster_resize_12345678',
+            cause=action_mod.CAUSE_RPC,
+            inputs={
+                consts.ADJUSTMENT_TYPE: consts.CHANGE_IN_CAPACITY,
+                consts.ADJUSTMENT_NUMBER: 5,
+                consts.ADJUSTMENT_MIN_SIZE: None,
+                consts.ADJUSTMENT_MAX_SIZE: None,
+                consts.ADJUSTMENT_MIN_STEP: None,
+                consts.ADJUSTMENT_STRICT: True
+            }
+        )
+        self.assertEqual('READY', action.status)
+        action.store.assert_called_once_with(self.ctx)
+        notify.assert_called_once_with(action_id='FAKE_ACTION')
+
+    @mock.patch.object(su, 'calculate_desired')
+    @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch('senlin.engine.actions.base.Action')
+    def test_cluster_resize_change_in_percentage(self, mock_action, notify,
+                                                 mock_check, mock_calc):
+        cluster = mock.Mock()
+        cluster.id = '12345678ABCDEFGH'
+        cluster.desired_capacity = 10
+
+        mock_find = self.patchobject(self.eng, 'cluster_find',
+                                     return_value=cluster)
+        mock_calc.return_value = 8
+        mock_check.return_value = None
+
+        action = mock.Mock()
+        action.id = 'FAKE_ACTION'
+        action.READY = 'READY'
+        mock_action.return_value = action
+
+        res = self.eng.cluster_resize(self.ctx, 'FAKE_CLUSTER',
+                                      adj_type=consts.CHANGE_IN_PERCENTAGE,
+                                      number=15.81)
+
+        self.assertEqual({'action': 'FAKE_ACTION'}, res)
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
+        mock_calc.assert_called_once_with(10, consts.CHANGE_IN_PERCENTAGE,
+                                          15.81, None)
+        mock_check.assert_called_once_with(cluster, 8, None, None, True)
+        mock_action.assert_called_once_with(
+            '12345678ABCDEFGH',
+            consts.CLUSTER_RESIZE,
+            user=self.ctx.user,
+            project=self.ctx.project,
+            domain=self.ctx.domain,
+            name='cluster_resize_12345678',
+            cause=action_mod.CAUSE_RPC,
+            inputs={
+                consts.ADJUSTMENT_TYPE: consts.CHANGE_IN_PERCENTAGE,
+                consts.ADJUSTMENT_NUMBER: 15.81,
+                consts.ADJUSTMENT_MIN_SIZE: None,
+                consts.ADJUSTMENT_MAX_SIZE: None,
+                consts.ADJUSTMENT_MIN_STEP: None,
+                consts.ADJUSTMENT_STRICT: True
+            }
+        )
+        self.assertEqual('READY', action.status)
+        action.store.assert_called_once_with(self.ctx)
+        notify.assert_called_once_with(action_id='FAKE_ACTION')
+
+    def test_cluster_resize_bad_adj_type(self):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_resize,
+                               self.ctx, 'FAKE_CLUSTER',
+                               adj_type='BOOMBOOM')
+        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
+        self.assertEqual("Invalid value 'BOOMBOOM' specified for "
+                         "'adjustment_type'", six.text_type(ex.exc_info[1]))
+
+    def test_cluster_resize_missing_number(self):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_resize,
+                               self.ctx, 'FAKE_CLUSTER',
+                               adj_type=consts.EXACT_CAPACITY)
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Missing number value for "
+                         "size adjustment.", six.text_type(ex.exc_info[1]))
+
+    def test_cluster_resize_number_without_type(self):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_resize,
+                               self.ctx, 'FAKE_CLUSTER', number=10)
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Missing adjustment_type "
+                         "value for size adjustment.",
+                         six.text_type(ex.exc_info[1]))
+
+    def test_cluster_resize_bad_number_for_exact_capacity(self):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_resize,
+                               self.ctx, 'FAKE_CLUSTER',
+                               adj_type=consts.EXACT_CAPACITY,
+                               number='BIGGER')
+        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
+        self.assertEqual("Invalid value 'BIGGER' specified for 'number'",
+                         six.text_type(ex.exc_info[1]))
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_resize,
+                               self.ctx, 'FAKE_CLUSTER',
+                               adj_type=consts.EXACT_CAPACITY,
+                               number=-10)
+        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
+        self.assertEqual("Invalid value '-10' specified for 'number'",
+                         six.text_type(ex.exc_info[1]))
+
+    def test_cluster_resize_bad_number_for_change_capacity(self):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_resize,
+                               self.ctx, 'FAKE_CLUSTER',
+                               adj_type=consts.CHANGE_IN_CAPACITY,
+                               number='BIGGER')
+        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
+        self.assertEqual("Invalid value 'BIGGER' specified for 'number'",
+                         six.text_type(ex.exc_info[1]))
+
+    def test_cluster_resize_bad_number_for_change_percentage(self):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_resize,
+                               self.ctx, 'FAKE_CLUSTER',
+                               adj_type=consts.CHANGE_IN_PERCENTAGE,
+                               number='BIGGER')
+
+        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
+        self.assertEqual("Invalid value 'BIGGER' specified for 'number'",
+                         six.text_type(ex.exc_info[1]))
+
+    def test_cluster_resize_bad_step_for_change_percentage(self):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_resize,
+                               self.ctx, 'FAKE_CLUSTER',
+                               adj_type=consts.CHANGE_IN_PERCENTAGE,
+                               number=10.2, min_step='SMALL')
+
+        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
+        self.assertEqual("Invalid value 'SMALL' specified for 'min_step'",
+                         six.text_type(ex.exc_info[1]))
+
+    def test_cluster_resize_bad_min_size(self):
+        # we intentionally omit adj_type and number here because we allow
+        # the use case where only min_size/max_size is specified
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_resize,
+                               self.ctx, 'FAKE_CLUSTER', min_size='SMALL')
+
+        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
+        self.assertEqual("Invalid value 'SMALL' specified for 'min_size'",
+                         six.text_type(ex.exc_info[1]))
+
+    def test_cluster_resize_bad_max_size(self):
+        # we intentionally omit adj_type and number here because we allow
+        # the use case where only min_size/max_size is specified
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_resize,
+                               self.ctx, 'FAKE_CLUSTER', max_size='INF')
+
+        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
+        self.assertEqual("Invalid value 'INF' specified for 'max_size'",
+                         six.text_type(ex.exc_info[1]))
+
+    def test_cluster_resize_bad_strict(self):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_resize,
+                               self.ctx, 'FAKE_CLUSTER', strict='YES')
+
+        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
+        self.assertEqual("Invalid value 'YES' specified for 'strict'",
+                         six.text_type(ex.exc_info[1]))
+
+    def test_cluster_resize_cluster_not_found(self):
+        err = exception.ClusterNotFound(cluster='FAKE_CLUSTER')
+        mock_find = self.patchobject(self.eng, 'cluster_find', side_effect=err)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_resize,
+                               self.ctx, 'FAKE_CLUSTER',
+                               adj_type=consts.EXACT_CAPACITY, number=10)
+
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
+        self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
+        self.assertEqual("The cluster (FAKE_CLUSTER) could not be found.",
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(su, 'check_size_params')
+    def test_cluster_resize_failing_size_check(self, mock_check):
+        cluster = mock.Mock()
+        mock_find = self.patchobject(self.eng, 'cluster_find',
+                                     return_value=cluster)
+        mock_check.return_value = 'size check.'
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_resize,
+                               self.ctx, 'FAKE_CLUSTER',
+                               adj_type=consts.EXACT_CAPACITY, number=10)
+
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
+        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: size check.",
+                         six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_scale_out(self, notify):

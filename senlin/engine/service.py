@@ -833,10 +833,13 @@ class EngineService(service.Service):
                                                  min_step)
 
         if min_size is not None:
-            min_size = utils.parse_int_param(consts.CLUSTER_MIN_SIZE, min_size)
+            min_size = utils.parse_int_param(consts.ADJUSTMENT_MIN_SIZE,
+                                             min_size)
         if max_size is not None:
-            max_size = utils.parse_int_param(consts.CLUSTER_MAX_SIZE, max_size,
-                                             allow_negative=True)
+            max_size = utils.parse_int_param(consts.ADJUSTMENT_MAX_SIZE,
+                                             max_size, allow_negative=True)
+        if strict is not None:
+            strict = utils.parse_bool_param(consts.ADJUSTMENT_STRICT, strict)
 
         db_cluster = self.cluster_find(context, identity)
         desired = db_cluster.desired_capacity
