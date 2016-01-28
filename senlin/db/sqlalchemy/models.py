@@ -28,11 +28,6 @@ BASE = declarative.declarative_base()
 UUID4 = uuidutils.generate_uuid
 
 
-def get_session():
-    from senlin.db.sqlalchemy import api as db_api
-    return db_api.get_session()
-
-
 class TimestampMixin(object):
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
