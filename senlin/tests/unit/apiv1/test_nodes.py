@@ -594,10 +594,10 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._delete('/node/%(node_id)s' % {'node_id': nid})
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        mock_call.return_value = nid
+        mock_call.return_value = {'action': 'FAKE_ID'}
 
         res = self.controller.delete(req, node_id=nid)
-        result = {'location': '/nodes/%s' % nid}
+        result = {'location': '/actions/FAKE_ID'}
         self.assertEqual(res, result)
         mock_call.assert_called_with(
             req.context, ('node_delete', {'identity': nid, 'force': False}))

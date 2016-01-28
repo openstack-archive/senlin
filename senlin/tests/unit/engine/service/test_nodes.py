@@ -474,7 +474,9 @@ class NodeTest(base.SenlinTestCase):
         nodeid = node['id']
 
         result = self.eng.node_delete(self.ctx, nodeid)
-        self.assertEqual(nodeid, result)
+
+        action_id = result['action']
+        self.assertIsNotNone(action_id)
 
         # verify action is fired
         expected_call = mock.call(action_id=mock.ANY)

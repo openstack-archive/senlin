@@ -1193,7 +1193,7 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Node delete action is queued: %s."), action.id)
 
-        return db_node.id
+        return {'action': action.id}
 
     @request_context
     def node_check(self, context, identity, **params):
