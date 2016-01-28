@@ -1183,50 +1183,48 @@ def receiver_delete(context, receiver_id):
     session.flush()
 
 
-def service_create(service_id=None, host=None, binary=None,
+def service_create(context, service_id=None, host=None, binary=None,
                    topic=None):
-    session = get_session()
-    session.begin()
     time_now = timeutils.utcnow()
     svc = models.Service(id=service_id, host=host, binary=binary,
                          topic=topic, created_at=time_now,
                          updated_at=time_now)
-    session.add(svc)
-    session.commit()
+    svc.save(_session(context))
     return svc
 
 
-def service_update(service_id, values=None):
+def service_update(context, service_id, values=None):
+
+    service = service_get(context, service_id)
+    if not service:
+        return
+
     if values is None:
         values = {}
-    session = get_session()
-    service = service_get(service_id)
+
     values.update({'updated_at': timeutils.utcnow()})
     service.update(values)
-    service.save(session)
+    service.save(_session(context))
     return service
 
 
-def service_delete(service_id):
-    session = get_session()
+def service_delete(context, service_id):
+    session = _session(context)
     svc = session.query(models.Service).get(service_id)
     if not svc:
         return None
     session.begin()
     session.delete(svc)
     session.commit()
+    session.flush()
 
 
-def service_get(service_id):
-    session = get_session()
-    svc = session.query(models.Service).get(service_id)
-    return svc
+def service_get(context, service_id):
+    return model_query(context, models.Service).get(service_id)
 
 
-def service_get_all():
-    session = get_session()
-    svcs = session.query(models.Service).all()
-    return svcs
+def service_get_all(context):
+    return model_query(context, models.Service).all()
 
 
 # Utils

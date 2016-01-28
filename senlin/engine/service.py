@@ -152,17 +152,20 @@ class EngineService(service.Service):
         super(EngineService, self).stop()
 
     def service_manage_report(self):
-        svc = db_api.service_get(self.engine_id)
+        cred = senlin_context.get_service_context()
+        cred['is_admin'] = True
+        ctx = senlin_context.RequestContext.from_dict(cred)
+        svc = db_api.service_get(ctx, self.engine_id)
         if svc is None:
             params = dict(host=self.host,
                           binary='senlin-engine',
                           service_id=self.engine_id,
                           topic=self.topic)
-            db_api.service_create(**params)
+            db_api.service_create(ctx, **params)
             LOG.debug('Service %s is started' % self.engine_id)
         else:
             try:
-                db_api.service_update(self.engine_id)
+                db_api.service_update(ctx, self.engine_id)
                 LOG.debug('Service %s is updated' % self.engine_id)
             except Exception as ex:
                 LOG.error(_LE('Service %(service_id)s update '
@@ -170,17 +173,20 @@ class EngineService(service.Service):
                           {'service_id': self.engine_id, 'error': ex})
 
     def service_manage_cleanup(self):
+        cred = senlin_context.get_service_context()
+        cred['is_admin'] = True
+        ctx = senlin_context.RequestContext.from_dict(cred)
         last_updated_window = (3 * cfg.CONF.periodic_interval)
         time_line = timeutils.utcnow() - datetime.timedelta(
             seconds=last_updated_window)
-        svcs = db_api.service_get_all()
+        svcs = db_api.service_get_all(ctx)
         for svc in svcs:
             if svc['id'] == self.engine_id:
                 continue
             if svc['updated_at'] < time_line:
                 # hasn't been updated, assuming it's died.
                 LOG.info(_LI('Service %s was aborted'), svc['id'])
-                db_api.service_delete(svc['id'])
+                db_api.service_delete(ctx, svc['id'])
 
     @request_context
     def get_revision(self, context):
