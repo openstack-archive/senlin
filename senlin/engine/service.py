@@ -774,7 +774,7 @@ class EngineService(service.Service):
     def cluster_resize(self, context, identity, adj_type=None, number=None,
                        min_size=None, max_size=None, min_step=None,
                        strict=True):
-        '''Adjust cluster size parameters.
+        """Adjust cluster size parameters.
 
         :param identity: cluster dentity which can be name, id or short ID;
         :param adj_type: optional; if specified, must be one of the strings
@@ -799,7 +799,9 @@ class EngineService(service.Service):
                        should try a best-effort style resizing or just
                        reject the request when scaling beyond its current
                        size constraint.
-        '''
+
+        :return: A dict containing the ID of an action fired.
+        """
 
         # check adj_type
         if adj_type is not None:
@@ -837,8 +839,10 @@ class EngineService(service.Service):
                                              allow_negative=True)
 
         db_cluster = self.cluster_find(context, identity)
-        desired = su.calculate_desired(db_cluster.desired_capacity, adj_type,
-                                       number, min_step)
+        desired = db_cluster.desired_capacity
+        if adj_type is not None:
+            desired = su.calculate_desired(desired, adj_type, number, min_step)
+
         res = su.check_size_params(db_cluster, desired, min_size, max_size,
                                    strict)
         if res:
@@ -883,8 +887,17 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_scale_out(self, context, identity, count=None):
+        """Inflate the size of a cluster by given count (optional).
 
-        LOG.info(_LI("Scaling out cluster '%s'."), identity)
+        :param context: Request context for the call.
+        :param identity: The name, ID or short ID of a cluster.
+        :param count: The number of nodes to add to the cluster. When omitted,
+            a policy gets a chance to decide the count number. When specified,
+            a policy would have to respect this input.
+
+        :return: A dict with the ID of the action fired.
+        """
+
         # Validation
         db_cluster = self.cluster_find(context, identity)
         if count is not None:
@@ -922,9 +935,18 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_scale_in(self, context, identity, count=None):
+        """Deflate the size of a cluster by given count (optional).
 
-        LOG.info(_LI("Scaling in cluster '%s'."), identity)
+        :param context: Request context for the call.
+        :param identity: The name, ID or short ID of a cluster.
+        :param count: The number of nodes to remove from the cluster. When
+            omitted, a policy gets a chance to decide the count number. When
+            specified, a policy would have to respect this input.
 
+        :return: A dict with the ID of the action fired.
+        """
+
+        # Validation
         db_cluster = self.cluster_find(context, identity)
 
         if count is not None:
