@@ -50,6 +50,7 @@ from senlin.common.i18n import _LW
 LOG = logging.getLogger(__name__)
 URL_LENGTH_LIMIT = 50000
 
+# senlin_api, api opts
 api_opts = [
     cfg.IPOpt('bind_host', default='0.0.0.0',
               help=_('Address to bind the server. Useful when '
@@ -81,6 +82,15 @@ api_group = cfg.OptGroup('senlin_api')
 cfg.CONF.register_group(api_group)
 cfg.CONF.register_opts(api_opts, group=api_group)
 
+# Paste-deploy, paste-deploy
+paste_deploy_group = cfg.OptGroup('paste_deploy')
+paste_deploy_opts = [
+    cfg.StrOpt('api_paste_config', default="api-paste.ini",
+               help=_("The API paste config file to use."))]
+cfg.CONF.register_group(paste_deploy_group)
+cfg.CONF.register_opts(paste_deploy_opts, group=paste_deploy_group)
+
+# eventlet_opts, eventlet
 wsgi_eventlet_opts = [
     cfg.BoolOpt('wsgi_keep_alive', default=True,
                 help=_("If false, closes the client socket explicitly.")),
@@ -94,20 +104,6 @@ wsgi_eventlet_group = cfg.OptGroup('eventlet_opts')
 cfg.CONF.register_group(wsgi_eventlet_group)
 cfg.CONF.register_opts(wsgi_eventlet_opts, group=wsgi_eventlet_group)
 
-webhook_opts = [
-    cfg.StrOpt('host',
-               default=socket.gethostname(),
-               help=_('Address for invoking webhooks. It is useful for cases '
-                      'where proxies are used for triggering webhooks. '
-                      'Default to the hostname of the API node.')),
-    cfg.PortOpt('port', default=8778,
-                help=_('The port on which a webhook will be invoked. Useful '
-                       'when service is running behind a proxy.'))
-]
-webhook_group = cfg.OptGroup('webhook')
-cfg.CONF.register_group(webhook_group)
-cfg.CONF.register_opts(webhook_opts, group=webhook_group)
-
 json_size_opt = cfg.IntOpt('max_json_body_size', default=1048576,
                            help=_('Maximum raw byte size of JSON request body.'
                                   ' Should be larger than max_template_size.'))
@@ -116,8 +112,9 @@ cfg.CONF.register_opt(json_size_opt)
 
 def list_opts():
     yield None, [json_size_opt]
-    yield 'senlin_api', api_opts
-    yield 'eventlet_opts', wsgi_eventlet_opts
+    yield paste_deploy_group.name, paste_deploy_opts
+    yield api_group.name, api_opts
+    yield wsgi_eventlet_group.name, wsgi_eventlet_opts
 
 
 def get_bind_addr(conf, default_port=None):
