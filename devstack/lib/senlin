@@ -80,7 +80,6 @@ function configure_senlin {
     cp $SENLIN_DIR/etc/senlin/policy.json $SENLIN_POLICY_FILE
 
     # common options
-    iniset $SENLIN_CONF DEFAULT verbose "True"
     iniset $SENLIN_CONF DEFAULT debug "$ENABLE_DEBUG_LOG_LEVEL"
     iniset $SENLIN_CONF DEFAULT auth_encryption_key $(generate_hex_string 16)
     iniset $SENLIN_CONF DEFAULT region_name_for_services "$REGION_NAME"
