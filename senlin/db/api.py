@@ -403,24 +403,26 @@ def receiver_delete(context, receiver_id):
     return IMPL.receiver_delete(context, receiver_id)
 
 
-def service_create(service_id=None, host=None, binary=None, topic=None):
-    return IMPL.service_create(service_id, host, binary, topic)
+def service_create(context, service_id=None, host=None, binary=None,
+                   topic=None):
+    return IMPL.service_create(context, service_id=service_id, host=host,
+                               binary=binary, topic=topic)
 
 
-def service_update(service_id, values=None):
-    return IMPL.service_update(service_id, values)
+def service_update(context, service_id, values=None):
+    return IMPL.service_update(context, service_id, values=values)
 
 
-def service_delete(service_id):
-    return IMPL.service_delete(service_id)
+def service_delete(context, service_id):
+    return IMPL.service_delete(context, service_id)
 
 
-def service_get(service_id):
-    return IMPL.service_get(service_id)
+def service_get(context, service_id):
+    return IMPL.service_get(context, service_id)
 
 
-def service_get_all():
-    return IMPL.service_get_all()
+def service_get_all(context):
+    return IMPL.service_get_all(context)
 
 
 def db_sync(engine, version=None):

@@ -74,7 +74,7 @@ class DBAPIEventTest(base.SenlinTestCase):
         tst_timestamp = tu.parse_strtime('2014-12-19 11:51:54.670244',
                                          '%Y-%m-%d %H:%M:%S.%f')
         self.assertEqual(tst_timestamp, ret_event.timestamp)
-        self.assertEqual(logging.INFO, ret_event.level)
+        self.assertEqual(20, ret_event.level)
         self.assertEqual('', ret_event.obj_id)
         self.assertEqual('', ret_event.obj_type)
         self.assertEqual('', ret_event.obj_name)

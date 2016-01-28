@@ -122,7 +122,7 @@ class EngineBasicTest(base.SenlinTestCase):
                              binary='senlin-engine',
                              service_id=self.eng.engine_id,
                              topic=self.eng.topic)
-        mock_create.assert_called_once_with(**expected_args)
+        mock_create.assert_called_once_with(mock.ANY, **expected_args)
         self.eng.service_manage_report()
         self.assertTrue(mock_update.called)
 
@@ -136,4 +136,4 @@ class EngineBasicTest(base.SenlinTestCase):
         mock_get_all.return_value = [{'id': 'foo',
                                       'updated_at': ages_a_go}]
         self.eng.service_manage_cleanup()
-        mock_delete.assert_called_once_with('foo')
+        mock_delete.assert_called_once_with(mock.ANY, 'foo')

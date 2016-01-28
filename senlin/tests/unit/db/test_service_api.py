@@ -31,11 +31,11 @@ class DBAPIServiceTest(base.SenlinTestCase):
         }
 
         values.update(kwargs)
-        return db_api.service_create(**values)
+        return db_api.service_create(self.ctx, **values)
 
     def test_service_create_get(self):
         service = self._create_service()
-        ret_service = db_api.service_get(service.id)
+        ret_service = db_api.service_get(self.ctx, service.id)
         self.assertIsNotNone(ret_service)
         self.assertEqual(service.id, ret_service.id)
         self.assertEqual(service.binary, ret_service.binary)
@@ -54,18 +54,19 @@ class DBAPIServiceTest(base.SenlinTestCase):
 
         [self._create_service(**val) for val in values]
 
-        services = db_api.service_get_all()
+        services = db_api.service_get_all(self.ctx)
         self.assertEqual(4, len(services))
 
     def test_service_update(self):
         old_service = self._create_service()
         old_updated_time = old_service.updated_at
         values = {'host': 'host-updated'}
-        new_service = db_api.service_update(old_service.id, values)
+        new_service = db_api.service_update(self.ctx, old_service.id, values)
         self.assertEqual('host-updated', new_service.host)
         self.assertGreater(new_service.updated_at, old_updated_time)
 
     def test_service_delete(self):
         service = self._create_service()
-        db_api.service_delete(service.id)
-        self.assertIsNone(db_api.service_get(service.id))
+        db_api.service_delete(self.ctx, service.id)
+        res = db_api.service_get(self.ctx, service.id)
+        self.assertIsNone(res)
