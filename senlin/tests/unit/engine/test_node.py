@@ -549,7 +549,7 @@ class TestNode(base.SenlinTestCase):
         mock_join.return_value = False
         res = node.do_join(self.context, 'NEW_CLUSTER_ID')
         self.assertFalse(res)
-        self.assertIsNone(node.cluster_id)
+        self.assertEqual('', node.cluster_id)
         self.assertEqual(-1, node.index)
         self.assertIsNone(node.updated_at)
         mock_join.assert_called_once_with(self.context, node,
@@ -592,39 +592,93 @@ class TestNode(base.SenlinTestCase):
 
     @mock.patch.object(profiles_base.Profile, 'check_object')
     def test_node_check(self, mock_check):
-        node = nodem.Node('node1', self.profile.id, self.cluster.id,
-                          self.context)
+        node = nodem.Node('node1', self.profile.id, '')
         node.physical_id = 'fake_id'
         mock_check.return_value = True
+
         res = node.do_check(self.context)
+
         self.assertTrue(res)
         mock_check.assert_called_once_with(self.context, node)
 
+    @mock.patch.object(nodem.Node, 'store')
+    @mock.patch.object(profiles_base.Profile, 'check_object')
+    def test_node_check_failed_check(self, mock_check, mock_store):
+        node = nodem.Node('node1', self.profile.id, '')
+        node.physical_id = 'fake_id'
         mock_check.return_value = False
+
         res = node.do_check(self.context)
+
         self.assertFalse(res)
         self.assertEqual('ERROR', node.status)
 
+    def test_node_check_no_physical_id(self):
+        node = nodem.Node('node1', self.profile.id, '')
+
+        res = node.do_check(self.context)
+
+        self.assertFalse(res)
+
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(profiles_base.Profile, 'recover_object')
-    def test_node_recover(self, mock_recover, mock_status):
-        node = nodem.Node('node1', self.profile.id, self.cluster.id,
-                          self.context)
+    def test_node_recover_new_object(self, mock_recover, mock_status):
+        node = nodem.Node('node1', self.profile.id, '')
         node.physical_id = 'fake_id'
         mock_recover.return_value = 'new_physical_id'
+
         res = node.do_recover(self.context)
+
         self.assertTrue(res)
         mock_recover.assert_called_once_with(self.context, node)
         self.assertEqual('node1', node.name)
         self.assertEqual('new_physical_id', node.physical_id)
         self.assertEqual(self.profile.id, node.profile_id)
-        mock_status.assert_any_call(self.context, 'RECOVERING',
-                                    reason='Recover in progress')
-        mock_status.assert_any_call(self.context, node.ACTIVE,
-                                    reason='Recover succeeded')
+        mock_status.assert_has_calls([
+            mock.call(self.context, 'RECOVERING',
+                      reason='Recover in progress'),
+            mock.call(self.context, node.ACTIVE,
+                      reason='Recover succeeded')])
 
-        mock_recover.return_value = None
+    @mock.patch.object(nodem.Node, 'set_status')
+    @mock.patch.object(profiles_base.Profile, 'recover_object')
+    def test_node_recover_in_place(self, mock_recover, mock_status):
+        node = nodem.Node('node1', self.profile.id, '')
+        node.physical_id = 'fake_id'
+        mock_recover.return_value = 'fake_id'
+
         res = node.do_recover(self.context)
+
+        self.assertTrue(res)
+        mock_recover.assert_called_once_with(self.context, node)
+        self.assertEqual('node1', node.name)
+        self.assertEqual('fake_id', node.physical_id)
+        self.assertEqual(self.profile.id, node.profile_id)
+        mock_status.assert_has_calls([
+            mock.call(self.context, 'RECOVERING',
+                      reason='Recover in progress'),
+            mock.call(self.context, node.ACTIVE,
+                      reason='Recover succeeded')])
+
+    @mock.patch.object(nodem.Node, 'set_status')
+    @mock.patch.object(profiles_base.Profile, 'recover_object')
+    def test_node_recover_failed_recover(self, mock_recover, mock_status):
+        node = nodem.Node('node1', self.profile.id, '')
+        node.physical_id = 'fake_id'
+        mock_recover.return_value = None
+
+        res = node.do_recover(self.context)
+
         self.assertFalse(res)
-        mock_status.assert_any_call(self.context, node.ERROR,
-                                    reason='Recover failed')
+        mock_status.assert_has_calls([
+            mock.call(self.context, 'RECOVERING',
+                      reason='Recover in progress'),
+            mock.call(self.context, node.ERROR,
+                      reason='Recover failed')])
+
+    def test_node_recover_no_physical_id(self):
+        node = nodem.Node('node1', self.profile.id, '')
+
+        res = node.do_recover(self.context)
+
+        self.assertFalse(res)
