@@ -551,3 +551,25 @@ class TestDeletionPolicy(base.SenlinTestCase):
                                           cluster=None, cluster_id='FAKE_ID')
         mock_select.assert_called_once_with(cluster.nodes, 2)
         mock_update.assert_called_once_with(action, ['NODE1', 'NODE2'])
+
+    @mock.patch.object(dp.DeletionPolicy, '_update_action')
+    @mock.patch.object(su, 'nodes_by_age')
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    def test_pre_op_do_oldest_first(self, mock_load, mock_select, mock_update):
+        action = mock.Mock()
+        action.context = self.context
+        action.inputs = {}
+        action.data = {'deletion': {'count': 2}}
+
+        cluster = mock.Mock(nodes=['a', 'b', 'c'])
+        mock_select.return_value = ['NODE1', 'NODE2']
+        mock_load.return_value = cluster
+
+        self.spec['properties']['criteria'] = 'OLDEST_FIRST'
+        policy = dp.DeletionPolicy('test-policy', self.spec)
+        policy.pre_op('FAKE_ID', action)
+
+        mock_load.assert_called_once_with(action.context,
+                                          cluster=None, cluster_id='FAKE_ID')
+        mock_select.assert_called_once_with(cluster.nodes, 2, True)
+        mock_update.assert_called_once_with(action, ['NODE1', 'NODE2'])
