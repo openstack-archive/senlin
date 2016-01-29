@@ -438,6 +438,21 @@ class ClusterActionTest(base.SenlinTestCase):
             action.context, 'ACTIVE', 'Cluster update completed.',
             profile_id='FAKE_PROFILE')
 
+    def test_do_update_not_profile(self, mock_load):
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_ID'
+        cluster.nodes = []
+        cluster.ACTIVE = 'ACTIVE'
+        mock_load.return_value = cluster
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
+        action.inputs = {}
+        res_code, res_msg = action.do_update()
+
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Cluster update completed.', res_msg)
+        cluster.set_status.assert_called_once_with(
+            action.context, 'ACTIVE', 'Cluster update completed.')
+
     def test_do_update_empty_cluster(self, mock_load):
         cluster = mock.Mock()
         cluster.id = 'FAKE_ID'
