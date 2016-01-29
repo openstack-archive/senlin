@@ -211,14 +211,11 @@ class ClusterAction(base.Action):
 
         name = self.inputs.get('name')
         metadata = self.inputs.get('metadata')
-        parent = self.inputs.get('parent')
         timeout = self.inputs.get('timeout')
         profile_id = self.inputs.get('new_profile_id')
 
         if name is not None:
             self.cluster.name = name
-        if parent is not None:
-            self.cluster.parent = parent
         if metadata is not None:
             self.cluster.metadata = metadata
         if timeout is not None:

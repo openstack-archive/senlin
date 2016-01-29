@@ -62,7 +62,6 @@ class Cluster(object):
         self.user = kwargs.get('user', '')
         self.project = kwargs.get('project', '')
         self.domain = kwargs.get('domain', '')
-        self.parent = kwargs.get('parent', '')
 
         self.init_at = kwargs.get('init_at', None)
         self.created_at = kwargs.get('created_at', None)
@@ -124,7 +123,6 @@ class Cluster(object):
             'user': self.user,
             'project': self.project,
             'domain': self.domain,
-            'parent': self.parent,
             'init_at': self.init_at,
             'created_at': self.created_at,
             'updated_at': self.updated_at,
@@ -166,7 +164,6 @@ class Cluster(object):
             'user': record.user,
             'project': record.project,
             'domain': record.domain,
-            'parent': record.parent,
             'init_at': record.init_at,
             'created_at': record.created_at,
             'updated_at': record.updated_at,
@@ -196,13 +193,12 @@ class Cluster(object):
 
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort=None,
-                 filters=None, project_safe=True, show_nested=False):
+                 filters=None, project_safe=True):
         '''Retrieve all clusters from database.'''
 
         records = db_api.cluster_get_all(context, limit=limit, marker=marker,
                                          sort=sort, filters=filters,
-                                         project_safe=project_safe,
-                                         show_nested=show_nested)
+                                         project_safe=project_safe)
 
         for record in records:
             cluster = cls._from_db_record(context, record)
@@ -216,7 +212,6 @@ class Cluster(object):
             'user': self.user,
             'project': self.project,
             'domain': self.domain,
-            'parent': self.parent,
             'init_at': utils.format_time(self.init_at),
             'created_at': utils.format_time(self.created_at),
             'updated_at': utils.format_time(self.updated_at),

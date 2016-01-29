@@ -70,7 +70,6 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual('', cluster.user)
         self.assertEqual('', cluster.project)
         self.assertEqual('', cluster.domain)
-        self.assertEqual('', cluster.parent)
 
         self.assertIsNone(cluster.init_at)
         self.assertIsNone(cluster.created_at)
@@ -106,7 +105,6 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual('', cluster.user)
         self.assertEqual('', cluster.project)
         self.assertEqual('', cluster.domain)
-        self.assertEqual('', cluster.parent)
 
     def test_cluster_store_init(self):
         mock_info = self.patchobject(eventm, 'info')
@@ -126,7 +124,6 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual(self.context.user, result.user)
         self.assertEqual(self.context.project, result.project)
         self.assertEqual('', result.domain)
-        self.assertEqual('', result.parent)
 
         self.assertIsNotNone(result.init_at)
         self.assertIsNone(result.created_at)
@@ -159,7 +156,6 @@ class TestCluster(base.SenlinTestCase):
 
         # do an update
         cluster.name = 'test-cluster-1'
-        cluster.parent = 'another-cluster'
 
         cluster.min_size = 1
         cluster.max_size = 3
@@ -177,7 +173,6 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual('test-cluster-1', result.name)
         self.assertEqual(self.context.user, result.user)
         self.assertEqual(self.context.project, result.project)
-        self.assertEqual('another-cluster', result.parent)
 
         self.assertEqual(1, result.min_size)
         self.assertEqual(3, result.max_size)
@@ -204,7 +199,6 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual(cluster.user, result.user)
         self.assertEqual(cluster.project, result.project)
         self.assertEqual(cluster.domain, result.domain)
-        self.assertEqual(cluster.parent, result.parent)
         self.assertEqual(cluster.init_at, result.init_at)
         self.assertEqual(cluster.created_at, result.created_at)
         self.assertEqual(cluster.updated_at, result.updated_at)
@@ -257,7 +251,6 @@ class TestCluster(base.SenlinTestCase):
             'user': cluster.user,
             'project': cluster.project,
             'domain': cluster.domain,
-            'parent': cluster.parent,
             'init_at': cluster.init_at,
             'created_at': cluster.created_at,
             'updated_at': cluster.updated_at,

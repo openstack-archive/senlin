@@ -75,7 +75,6 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(self.profile['id'], result['profile_id'])
         self.assertEqual(self.ctx.user, result['user'])
         self.assertEqual('cluster_test_project', result['project'])
-        self.assertIsNone(result['parent'])
         self.assertEqual(result['timeout'], cfg.CONF.default_action_timeout)
         self.assertEqual(result['metadata'], {})
 
@@ -130,16 +129,6 @@ class ClusterTest(base.SenlinTestCase):
                                self.profile['id'])
 
         self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
-
-    @mock.patch.object(dispatcher, 'start_action')
-    def test_cluster_create_with_parent(self, notify):
-        result = self.eng.cluster_create(self.ctx, 'c-1', 2,
-                                         self.profile['id'],
-                                         parent='fake id')
-
-        self.assertIsNotNone(result)
-        self.assertEqual('c-1', result['name'])
-        self.assertEqual('fake id', result['parent'])
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_create_with_metadata(self, notify):
@@ -270,17 +259,6 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(c1['id'], result[1]['id'])
 
     @mock.patch.object(dispatcher, 'start_action')
-    def test_cluster_list_show_nested(self, notify):
-        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'],
-                                    parent='other-cluster')
-        result = self.eng.cluster_list(self.ctx)
-        self.assertEqual(0, len(result))
-
-        result = self.eng.cluster_list(self.ctx, show_nested=True)
-        self.assertEqual(1, len(result))
-        self.assertEqual(c['id'], result[0]['id'])
-
-    @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_list_project_safe(self, notify):
         new_ctx = utils.dummy_context(project='a_diff_project')
         spec = {
@@ -331,11 +309,6 @@ class ClusterTest(base.SenlinTestCase):
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_list, self.ctx,
-                               show_nested='no')
-        self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_list, self.ctx,
                                project_safe='no')
         self.assertEqual(exception.InvalidParameter, ex.exc_info[0])
 
@@ -367,12 +340,10 @@ class ClusterTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_simple_success(self, notify):
         c1 = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
-        p = self.eng.cluster_create(self.ctx, 'parent', 0, self.profile['id'])
         cid = c1['id']
         new_params = {
             'name': 'c-2',
             'metadata': {'k': 'v'},
-            'parent': p['id'],
             'timeout': 119,
         }
         resp = self.eng.cluster_update(self.ctx, cid,
@@ -400,16 +371,6 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(exception.FeatureNotSupported, ex.exc_info[0])
         self.assertEqual('Updating a cluster in error state is not supported.',
                          six.text_type(ex.exc_info[1]))
-
-    @mock.patch.object(dispatcher, 'start_action')
-    def test_cluster_update_parent_not_found(self, notify):
-        c = self.eng.cluster_create(self.ctx, 'c-1', 0, self.profile['id'])
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_update, self.ctx, c['id'],
-                               parent='Bogus')
-
-        self.assertEqual(exception.ClusterNotFound, ex.exc_info[0])
 
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_timeout_not_integer(self, notify):

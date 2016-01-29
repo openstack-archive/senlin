@@ -23,13 +23,11 @@ RPC_ATTRS = (
 )
 
 RPC_PARAMS = (
-    PARAM_SHOW_NESTED, PARAM_LIMIT, PARAM_MARKER,
-    PARAM_GLOBAL_PROJECT, PARAM_SHOW_DETAILS,
-    PARAM_SORT_DIR, PARAM_SORT_KEYS,
+    PARAM_LIMIT, PARAM_MARKER, PARAM_GLOBAL_PROJECT,
+    PARAM_SHOW_DETAILS, PARAM_SORT_DIR, PARAM_SORT_KEYS,
 ) = (
-    'show_nested', 'limit', 'marker',
-    'global_project', 'show_details',
-    'sort_dir', 'sort_keys',
+    'limit', 'marker', 'global_project',
+    'show_details', 'sort_dir', 'sort_keys',
 )
 
 ACTION_NAMES = (
@@ -70,14 +68,14 @@ ADJUSTMENT_TYPES = (
 
 CLUSTER_ATTRS = (
     CLUSTER_NAME, CLUSTER_PROFILE, CLUSTER_DESIRED_CAPACITY,
-    CLUSTER_MIN_SIZE, CLUSTER_MAX_SIZE, CLUSTER_ID, CLUSTER_PARENT,
+    CLUSTER_MIN_SIZE, CLUSTER_MAX_SIZE, CLUSTER_ID,
     CLUSTER_DOMAIN, CLUSTER_PROJECT, CLUSTER_USER,
     CLUSTER_INIT_AT, CLUSTER_CREATED_AT, CLUSTER_UPDATED_AT,
     CLUSTER_STATUS, CLUSTER_STATUS_REASON, CLUSTER_TIMEOUT,
     CLUSTER_METADATA,
 ) = (
     'name', 'profile_id', 'desired_capacity',
-    'min_size', 'max_size', 'id', 'parent',
+    'min_size', 'max_size', 'id',
     'domain', 'project', 'user',
     'init_at', 'created_at', 'updated_at',
     'status', 'status_reason', 'timeout',
