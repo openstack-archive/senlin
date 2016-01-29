@@ -277,6 +277,17 @@ class RoutesTest(base.SenlinTestCase):
 
         self.assertRoute(
             self.m,
+            '/nodes/bbbb/actions',
+            'POST',
+            'action',
+            'NodeController',
+            {
+                'node_id': 'bbbb',
+                'success': '202',
+            })
+
+        self.assertRoute(
+            self.m,
             '/nodes/bbbb',
             'DELETE',
             'delete',
