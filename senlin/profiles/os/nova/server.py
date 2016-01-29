@@ -305,7 +305,7 @@ class ServerProfile(base.Profile):
             kwargs['name'] = obj.name
 
         metadata = self.properties[self.METADATA] or {}
-        if obj.cluster_id is not None:
+        if obj.cluster_id:
             metadata['cluster'] = obj.cluster_id
         kwargs['metadata'] = metadata
 
@@ -673,20 +673,30 @@ class ServerProfile(base.Profile):
 
     def do_join(self, obj, cluster_id):
         if not obj.physical_id:
-            return {}
+            return False
 
         metadata = self.nova(obj).server_metadata_get(obj.physical_id) or {}
         metadata['cluster'] = cluster_id
-        return self.nova(obj).server_metadata_update(obj.physical_id, metadata)
+        new_meta = self.nova(obj).server_metadata_update(obj.physical_id,
+                                                         metadata)
+        return 'cluster' in new_meta and new_meta['cluster'] == cluster_id
+
+    def _check_metadata(self, obj):
+        metadata = self.nova(obj).server_metadata_get(obj.physical_id)
+        return 'cluster' in metadata
 
     def do_leave(self, obj):
         if not obj.physical_id:
             return
 
-        metadata = self.nova(obj).server_metadata_get(obj.physical_id) or {}
-        if 'cluster' in metadata:
-            del metadata['cluster']
-        return self.nova(obj).server_metadata_update(obj.physical_id, metadata)
+        if not self._check_metadata(obj):
+            return False
+        else:
+            self.nova(obj).server_metadata_delete(obj.physical_id, 'cluster')
+            if not self._check_metadata(obj):
+                return True
+            else:
+                return False
 
     def do_rebuild(self, obj):
         if not obj.physical_id:
