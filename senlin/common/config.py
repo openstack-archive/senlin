@@ -20,11 +20,8 @@ from oslo_config import cfg
 
 from senlin.common.i18n import _
 
-paste_deploy_group = cfg.OptGroup('paste_deploy')
-paste_deploy_opts = [
-    cfg.StrOpt('api_paste_config', default="api-paste.ini",
-               help=_("The API paste config file to use."))]
 
+# DEFAULT, service
 service_opts = [
     cfg.IntOpt('periodic_interval',
                default=60,
@@ -40,7 +37,9 @@ service_opts = [
     cfg.IntOpt('num_engine_workers',
                default=1,
                help=_('Number of senlin-engine processes to fork and run.'))]
+cfg.CONF.register_opts(service_opts)
 
+# DEFAULT, engine
 engine_opts = [
     cfg.StrOpt('environment_dir',
                default='/etc/senlin/environments',
@@ -82,18 +81,23 @@ engine_opts = [
                 default=False,
                 help=_('Flag to indicate whether to enforce unique names for '
                        'Senlin objects belonging to the same project.'))]
+cfg.CONF.register_opts(engine_opts)
 
+# DEFAULT, cloud_backend
 rpc_opts = [
     cfg.StrOpt('host',
                default=socket.gethostname(),
                help=_('Name of the engine node. This can be an opaque '
                       'identifier. It is not necessarily a hostname, FQDN, '
                       'or IP address.'))]
+cfg.CONF.register_opts(rpc_opts)
 
+# DEFAULT, cloud_backend
 cloud_backend_opts = [
     cfg.StrOpt('cloud_backend',
                default='openstack',
                help=_('Default cloud backend to use.'))]
+cfg.CONF.register_opts(cloud_backend_opts)
 
 authentication_group = cfg.OptGroup('authentication')
 authentication_opts = [
@@ -110,13 +114,33 @@ authentication_opts = [
     cfg.StrOpt('service_project_domain', default='Default',
                help=_('Name of the domain for the service project.')),
 ]
+cfg.CONF.register_group(authentication_group)
+cfg.CONF.register_opts(authentication_opts, group=authentication_group)
 
+# Revision group
 revision_group = cfg.OptGroup('revision')
 revision_opts = [
     cfg.StrOpt('senlin_api_revision', default='1.0',
                help=_('Senlin API revision.')),
     cfg.StrOpt('senlin_engine_revision', default='1.0',
                help=_('Senlin engine revision.'))]
+cfg.CONF.register_group(revision_group)
+cfg.CONF.register_opts(revision_opts, group=revision_group)
+
+# Webhook group
+webhook_group = cfg.OptGroup('webhook')
+webhook_opts = [
+    cfg.StrOpt('host',
+               default=socket.gethostname(),
+               help=_('Address for invoking webhooks. It is useful for cases '
+                      'where proxies are used for triggering webhooks. '
+                      'Default to the hostname of the API node.')),
+    cfg.PortOpt('port', default=8778,
+                help=_('The port on which a webhook will be invoked. Useful '
+                       'when service is running behind a proxy.'))
+]
+cfg.CONF.register_group(webhook_group)
+cfg.CONF.register_opts(webhook_opts, group=webhook_group)
 
 
 def list_opts():
@@ -124,14 +148,6 @@ def list_opts():
     yield None, rpc_opts
     yield None, engine_opts
     yield None, service_opts
-    yield paste_deploy_group.name, paste_deploy_opts
     yield authentication_group.name, authentication_opts
     yield revision_group.name, revision_opts
-
-
-cfg.CONF.register_group(paste_deploy_group)
-cfg.CONF.register_group(authentication_group)
-cfg.CONF.register_group(revision_group)
-
-for group, opts in list_opts():
-    cfg.CONF.register_opts(opts, group=group)
+    yield webhook_group.name, webhook_opts
