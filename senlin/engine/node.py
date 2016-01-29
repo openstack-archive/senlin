@@ -42,12 +42,18 @@ class Node(object):
         'DELETING', 'RECOVERING'
     )
 
-    def __init__(self, name, profile_id, cluster_id, context=None, **kwargs):
+    def __init__(self, name, profile_id, cluster_id=None, context=None,
+                 **kwargs):
         self.id = kwargs.get('id', None)
         if name:
             self.name = name
         else:
             self.name = 'node-' + utils.random_name(8)
+
+        # This is a safe guard to ensure that we have orphan node's cluster
+        # correctly set to an empty string
+        if cluster_id is None:
+            cluster_id = ''
 
         self.physical_id = kwargs.get('physical_id', '')
         self.profile_id = profile_id
