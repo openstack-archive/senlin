@@ -55,15 +55,19 @@ def list_clusters(client, **query):
 
 def action_cluster(client, cluster_id, action_name, params=None):
     rel_url = 'clusters/%(id)s/actions' % {'id': cluster_id}
-    status = [202]
+    status = [202, 400]
     data = {
         action_name: {} if params is None else params
     }
     body = jsonutils.dumps(data)
     resp = client.api_request('POST', rel_url, body=body,
                               resp_status=status)
-    action_id = resp.body['action']
-    return action_id
+    if resp.status == 202:
+        res = resp.body['action']
+    else:  # resp.status == 400
+        res = resp.body['error']['message']
+
+    return res
 
 
 def delete_cluster(client, cluster_id):
