@@ -105,7 +105,7 @@ def check_size_params(cluster=None, desired=None, min_size=None, max_size=None,
                      "the specified min_size (%(m)s).") % v
 
         if (min_size is None and cluster is not None and
-                desired < cluster.min_size):
+                desired < cluster.min_size and strict):
             v = {'d': desired, 'm': cluster.min_size}
             return _("The target capacity (%(d)s) is less than "
                      "the cluster's min_size (%(m)s).") % v
@@ -117,36 +117,43 @@ def check_size_params(cluster=None, desired=None, min_size=None, max_size=None,
                      "than the specified max_size (%(m)s).") % v
 
         if (max_size is None and cluster is not None and
-                desired > cluster.max_size and cluster.max_size >= 0):
+                desired > cluster.max_size and
+                cluster.max_size >= 0 and strict):
             v = {'d': desired, 'm': cluster.max_size}
             return _("The target capacity (%(d)s) is greater "
                      "than the cluster's max_size (%(m)s).") % v
 
     if min_size is not None:
         if max_size is not None and max_size >= 0 and min_size > max_size:
-            return _("The specified min_size is greater than the "
-                     "specified max_size.")
+            v = {'n': min_size, 'm': max_size}
+            return _("The specified min_size (%(n)s) is greater than the "
+                     "specified max_size (%(m)s).") % v
 
         if (max_size is None and cluster is not None and
                 cluster.max_size >= 0 and min_size > cluster.max_size):
-            return _("The specified min_size is greater than the "
-                     "current max_size of the cluster.")
+            v = {'n': min_size, 'm': cluster.max_size}
+            return _("The specified min_size (%(n)s) is greater than the "
+                     "current max_size (%(m)s) of the cluster.") % v
 
         if (desired is None and cluster is not None and
-                min_size > cluster.desired_capacity):
-            return _("The specified min_size is greater than the "
-                     "current desired_capacity of the cluster.")
+                min_size > cluster.desired_capacity and strict):
+            v = {'n': min_size, 'd': cluster.desired_capacity}
+            return _("The specified min_size (%(n)s) is greater than the "
+                     "current desired_capacity (%(d)s) of the cluster.") % v
 
     if max_size is not None:
         if (min_size is None and cluster is not None and
                 max_size >= 0 and max_size < cluster.min_size):
-            return _("The specified max_size is less than the "
-                     "current min_size of the cluster.")
+            v = {'m': max_size, 'n': cluster.min_size}
+            return _("The specified max_size (%(m)s) is less than the "
+                     "current min_size (%(n)s) of the cluster.") % v
 
         if (desired is None and cluster is not None and
-                max_size >= 0 and max_size < cluster.desired_capacity):
-            return _("The specified max_size is less than the "
-                     "current desired_capacity of the cluster.")
+                max_size >= 0 and max_size < cluster.desired_capacity and
+                strict):
+            v = {'m': max_size, 'd': cluster.desired_capacity}
+            return _("The specified max_size (%(m)s) is less than the "
+                     "current desired_capacity (%(d)s) of the cluster.") % v
 
     return None
 
