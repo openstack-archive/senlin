@@ -225,6 +225,7 @@ class ClusterAction(base.Action):
             self.cluster.timeout = timeout
         self.cluster.store(self.context)
 
+        reason = _('Cluster update completed.')
         if profile_id is not None:
             fmt = _LI("Updating cluster '%(cluster)s': profile='%(profile)s'.")
             LOG.info(fmt, {'cluster': self.cluster.id, 'profile': profile_id})
@@ -258,10 +259,11 @@ class ClusterAction(base.Action):
                     self.cluster.set_status(self.context, self.cluster.WARNING,
                                             new_reason)
                     return result, new_reason
+            self.cluster.set_status(self.context, self.cluster.ACTIVE,
+                                    reason, profile_id=profile_id)
+            return self.RES_OK, reason
 
-        reason = _('Cluster update completed.')
-        self.cluster.set_status(self.context, self.cluster.ACTIVE, reason,
-                                profile_id=profile_id)
+        self.cluster.set_status(self.context, self.cluster.ACTIVE, reason)
         return self.RES_OK, reason
 
     def _delete_nodes(self, node_ids):
