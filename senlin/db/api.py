@@ -403,7 +403,7 @@ def receiver_delete(context, receiver_id):
     return IMPL.receiver_delete(context, receiver_id)
 
 
-def service_create(context, service_id=None, host=None, binary=None,
+def service_create(context, service_id, host=None, binary=None,
                    topic=None):
     return IMPL.service_create(context, service_id=service_id, host=host,
                                binary=binary, topic=topic)
