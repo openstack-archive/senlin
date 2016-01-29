@@ -839,9 +839,11 @@ class EngineService(service.Service):
                                              allow_negative=True)
 
         db_cluster = self.cluster_find(context, identity)
-        desired = db_cluster.desired_capacity
+        current = db_cluster.desired_capacity
         if adj_type is not None:
-            desired = su.calculate_desired(desired, adj_type, number, min_step)
+            desired = su.calculate_desired(current, adj_type, number, min_step)
+        else:
+            desired = None
 
         res = su.check_size_params(db_cluster, desired, min_size, max_size,
                                    strict)
