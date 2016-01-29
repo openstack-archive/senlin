@@ -33,8 +33,8 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.create_flavor(**attrs)
 
     @sdk.translate_exception
-    def flavor_get(self, value):
-        return self.conn.compute.get_flavor(value)
+    def flavor_get(self, flavor):
+        return self.conn.compute.get_flavor(flavor)
 
     @sdk.translate_exception
     def flavor_find(self, name_or_id, ignore_missing=False):
@@ -45,16 +45,16 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.flavors(details, **query)
 
     @sdk.translate_exception
-    def flavor_update(self, value, **attrs):
-        return self.conn.compute.update_flavor(value, **attrs)
+    def flavor_update(self, flavor, **attrs):
+        return self.conn.compute.update_flavor(flavor, **attrs)
 
     @sdk.translate_exception
-    def flavor_delete(self, value, ignore_missing=True):
-        return self.conn.compute.delete_flavor(value, ignore_missing)
+    def flavor_delete(self, flavor, ignore_missing=True):
+        return self.conn.compute.delete_flavor(flavor, ignore_missing)
 
     @sdk.translate_exception
-    def image_get(self, value):
-        return self.conn.compute.get_image(value)
+    def image_get(self, image):
+        return self.conn.compute.get_image(image)
 
     @sdk.translate_exception
     def image_find(self, name_or_id, ignore_missing=False):
@@ -65,16 +65,16 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.images(details, **query)
 
     @sdk.translate_exception
-    def image_delete(self, value, ignore_missing=True):
-        return self.conn.compute.delete_image(value, ignore_missing)
+    def image_delete(self, image, ignore_missing=True):
+        return self.conn.compute.delete_image(image, ignore_missing)
 
     @sdk.translate_exception
     def keypair_create(self, **attrs):
         return self.conn.compute.create_keypair(**attrs)
 
     @sdk.translate_exception
-    def keypair_get(self, value):
-        return self.conn.compute.get_keypair(value)
+    def keypair_get(self, image):
+        return self.conn.compute.get_keypair(image)
 
     @sdk.translate_exception
     def keypair_get_by_name(self, name_or_id, ignore_missing=False):
@@ -85,12 +85,12 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.keypairs(**query)
 
     @sdk.translate_exception
-    def keypair_update(self, value, **attrs):
-        return self.conn.compute.update_keypair(value, **attrs)
+    def keypair_update(self, keypair, **attrs):
+        return self.conn.compute.update_keypair(keypair, **attrs)
 
     @sdk.translate_exception
-    def keypair_delete(self, value, ignore_missing=True):
-        return self.conn.compute.delete_keypair(value, ignore_missing)
+    def keypair_delete(self, keypair, ignore_missing=True):
+        return self.conn.compute.delete_keypair(keypair, ignore_missing)
 
     @sdk.translate_exception
     def server_create(self, **attrs):
@@ -98,13 +98,13 @@ class NovaClient(base.DriverBase):
         return server_obj
 
     @sdk.translate_exception
-    def wait_for_server(self, value, status='ACTIVE', failures=['ERROR'],
+    def wait_for_server(self, server, status='ACTIVE', failures=['ERROR'],
                         interval=2, timeout=None):
         '''Wait for server creation complete'''
         if timeout is None:
             timeout = cfg.CONF.default_action_timeout
 
-        server_obj = self.conn.compute.find_server(value, False)
+        server_obj = self.conn.compute.find_server(server, False)
         self.conn.compute.wait_for_server(server_obj, status=status,
                                           failures=failures,
                                           interval=interval,
@@ -112,47 +112,47 @@ class NovaClient(base.DriverBase):
         return
 
     @sdk.translate_exception
-    def server_get(self, value):
-        return self.conn.compute.get_server(value)
+    def server_get(self, server):
+        return self.conn.compute.get_server(server)
 
     @sdk.translate_exception
     def server_list(self, details=True, **query):
         return self.conn.compute.servers(details, **query)
 
     @sdk.translate_exception
-    def server_update(self, value, **attrs):
-        return self.conn.compute.update_server(value, **attrs)
+    def server_update(self, server, **attrs):
+        return self.conn.compute.update_server(server, **attrs)
 
     @sdk.translate_exception
-    def server_delete(self, value, ignore_missing=True):
-        return self.conn.compute.delete_server(value, ignore_missing)
+    def server_delete(self, server, ignore_missing=True):
+        return self.conn.compute.delete_server(server, ignore_missing)
 
     @sdk.translate_exception
-    def server_rebuild(self, value, imageref, name=None, admin_password=None,
+    def server_rebuild(self, server, imageref, name=None, admin_password=None,
                        **attrs):
-        return self.conn.compute.rebuild_server(value, imageref, name=name,
+        return self.conn.compute.rebuild_server(server, imageref, name=name,
                                                 admin_password=admin_password,
                                                 **attrs)
 
     @sdk.translate_exception
-    def server_resize(self, value, flavor):
-        return self.conn.compute.resize_server(value, flavor)
+    def server_resize(self, server, flavor):
+        return self.conn.compute.resize_server(server, flavor)
 
     @sdk.translate_exception
-    def server_resize_confirm(self, value):
-        return self.conn.compute.confirm_resize_server(value)
+    def server_resize_confirm(self, server):
+        return self.conn.compute.confirm_resize_server(server)
 
     @sdk.translate_exception
-    def server_resize_revert(self, value):
-        return self.conn.compute.revert_resize_server(value)
+    def server_resize_revert(self, server):
+        return self.conn.compute.revert_resize_server(server)
 
     @sdk.translate_exception
-    def wait_for_server_delete(self, value, timeout=None):
+    def wait_for_server_delete(self, server, timeout=None):
         '''Wait for server deleting complete'''
         if timeout is None:
             timeout = cfg.CONF.default_action_timeout
 
-        server_obj = self.conn.compute.find_server(value, True)
+        server_obj = self.conn.compute.find_server(server, True)
         if server_obj:
             self.conn.compute.wait_for_delete(server_obj, wait=timeout)
 
@@ -163,16 +163,16 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.create_server_interface(server, **attrs)
 
     @sdk.translate_exception
-    def server_interface_get(self, value, server):
-        return self.conn.compute.get_server_interface(value, server)
+    def server_interface_get(self, interface, server):
+        return self.conn.compute.get_server_interface(interface, server)
 
     @sdk.translate_exception
     def server_interface_list(self, server, **query):
         return self.conn.compute.server_interfaces(server, **query)
 
     @sdk.translate_exception
-    def server_interface_delete(self, value, server, ignore_missing=True):
-        return self.conn.compute.delete_server_interface(value, server,
+    def server_interface_delete(self, interface, server, ignore_missing=True):
+        return self.conn.compute.delete_server_interface(interface, server,
                                                          ignore_missing)
 
     @sdk.translate_exception
