@@ -78,7 +78,7 @@ def truncate_desired(cluster, desired, min_size, max_size):
 
 
 def check_size_params(cluster=None, desired=None, min_size=None, max_size=None,
-                      strict=True):
+                      strict=False):
     """Validate provided arguments against cluster properties.
 
     Sanity Checking 1: the desired, min_size, max_size parameters must

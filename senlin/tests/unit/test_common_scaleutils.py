@@ -381,3 +381,15 @@ class CheckSizeParamsTest(base.SenlinTestCase):
         actual = su.check_size_params(cluster, self.desired, self.min_size,
                                       self.max_size, self.strict)
         self.assertEqual(self.result, actual)
+
+    def test_check_size_params_default_strict(self):
+        cluster = mock.Mock()
+        cluster.min_size = 10
+        cluster.max_size = 20
+        cluster.desired_capacity = 15
+        desired = 5
+        min_size = None
+        max_size = None
+
+        actual = su.check_size_params(cluster, desired, min_size, max_size)
+        self.assertIsNone(actual)
