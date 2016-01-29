@@ -58,6 +58,12 @@ class NodeController(object):
 
     REQUEST_SCOPE = 'nodes'
 
+    SUPPORTED_ACTIONS = (
+        NODE_CHECK, NODE_RECOVER
+    ) = (
+        'check', 'recover'
+    )
+
     def __init__(self, options):
         self.options = options
         self.rpc_client = rpc_client.EngineClient()
@@ -162,3 +168,27 @@ class NodeController(object):
         action_id = res.pop('action')
         result = {'location': '/actions/%s' % action_id}
         return result
+
+    @util.policy_enforce
+    def action(self, req, node_id, body=None):
+        '''Perform specified action on a node.'''
+        body = body or {}
+        if len(body) == 0:
+            raise exc.HTTPBadRequest(_('No action specified.'))
+
+        if len(body) > 1:
+            raise exc.HTTPBadRequest(_('Multiple actions specified.'))
+
+        this_action = list(body.keys())[0]
+        if this_action not in self.SUPPORTED_ACTIONS:
+            msg = _('Unrecognized action "%s" specified') % this_action
+            raise exc.HTTPBadRequest(msg)
+
+        if this_action == self.NODE_CHECK:
+            res = self.rpc_client.node_check(req.context, node_id)
+        else:    # self.NODE_RECOVER
+            res = self.rpc_client.node_recover(req.context, node_id)
+
+        location = {'location': '/actions/%s' % res['action']}
+        res.update(location)
+        return res

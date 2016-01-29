@@ -14,6 +14,7 @@ import mock
 import six
 from webob import exc
 
+from oslo_config import cfg
 from oslo_serialization import jsonutils
 
 from senlin.api.middleware import fault
@@ -613,6 +614,139 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
+
+    def test_node_action_check_success(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        node_id = 'test-node-1'
+        body = {'check': {}}
+        req = self._post('/nodes/%(node_id)s/actions' % {'node_id': node_id},
+                         jsonutils.dumps(body))
+
+        engine_response = {'action': 'action-id'}
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=engine_response)
+
+        response = self.controller.action(req, node_id=node_id, body=body)
+
+        mock_call.assert_called_once_with(
+            req.context, ('node_check', {'identity': node_id}))
+
+        location = {'location': '/actions/action-id'}
+        engine_response.update(location)
+        self.assertEqual(engine_response, response)
+
+    def test_node_action_check_node_not_found(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        node_id = 'unknown-node'
+        body = {'check': {}}
+        req = self._post('/nodes/%(node_id)s/actions' % {'node_id': node_id},
+                         jsonutils.dumps(body))
+
+        error = senlin_exc.NodeNotFound(node=node_id)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.action,
+                                              req, node_id=node_id, body=body)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('NodeNotFound', resp.json['error']['type'])
+
+    def test_node_action_recover_success(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        node_id = 'xxxx-yyyy'
+        body = {'recover': {}}
+        req = self._post('/nodes/%(node_id)s/actions' % {'node_id': node_id},
+                         jsonutils.dumps(body))
+
+        engine_response = {'action': 'action-id'}
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=engine_response)
+
+        response = self.controller.action(req, node_id=node_id, body=body)
+
+        mock_call.assert_called_once_with(
+            req.context, ('node_recover', {'identity': node_id}))
+
+        location = {'location': '/actions/action-id'}
+        engine_response.update(location)
+        self.assertEqual(engine_response, response)
+
+    def test_node_action_missing_action(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cfg.CONF.set_override('debug', True, enforce_type=True)
+        node_id = 'xxxx-yyyy'
+        body = {}
+        req = self._post('/nodes/%(node_id)s/actions' % {'node_id': node_id},
+                         jsonutils.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action, req,
+                               node_id=node_id, body=body)
+
+        self.assertFalse(mock_call.called)
+        self.assertEqual(400, ex.code)
+        self.assertIn('No action specified.', six.text_type(ex))
+
+    def test_node_action_multiple_action(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cfg.CONF.set_override('debug', True, enforce_type=True)
+        node_id = 'xxxx-yyyy'
+        body = {'eat': {}, 'sleep': {}}
+        req = self._post('/nodes/%(node_id)s/actions' % {'node_id': node_id},
+                         jsonutils.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, node_id=node_id, body=body)
+
+        self.assertFalse(mock_call.called)
+        self.assertEqual(400, ex.code)
+        self.assertIn('Multiple actions specified.', six.text_type(ex))
+
+    def test_node_action_unknown_action(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cfg.CONF.set_override('debug', True, enforce_type=True)
+        node_id = 'xxxx-yyyy'
+        body = {'eat': None}
+        req = self._post('/nodes/%(node_id)s/action' % {'node_id': node_id},
+                         jsonutils.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, node_id=node_id, body=body)
+
+        self.assertFalse(mock_call.called)
+        self.assertEqual(400, ex.code)
+        self.assertIn('Unrecognized action "eat" specified',
+                      six.text_type(ex))
+
+    def test_node_action_recover_node_not_found(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        node_id = 'xxxx-yyyy'
+        body = {'recover': {}}
+        req = self._post('/nodes/%(node_id)s/actions' % {'node_id': node_id},
+                         jsonutils.dumps(body))
+
+        error = senlin_exc.NodeNotFound(node=node_id)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.action,
+                                              req, node_id=node_id, body=body)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('NodeNotFound', resp.json['error']['type'])
+
+        mock_call.assert_called_once_with(
+            req.context, ('node_recover', {'identity': node_id}))
 
     def test_node_delete_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)

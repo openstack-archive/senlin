@@ -180,6 +180,11 @@ class API(wsgi.Router):
                                action="update",
                                conditions={'method': 'PATCH'},
                                success=202)
+            sub_mapper.connect("node_action",
+                               "/nodes/{node_id}/actions",
+                               action="action",
+                               conditions={'method': 'POST'},
+                               success=202)
             sub_mapper.connect("node_delete",
                                "/nodes/{node_id}",
                                action="delete",
