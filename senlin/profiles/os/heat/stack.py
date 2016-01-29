@@ -49,28 +49,34 @@ class StackProfile(base.Profile):
         TEMPLATE: schema.Map(
             _('Heat stack template.'),
             required=True,
+            updatable=True,
         ),
         PARAMETERS: schema.Map(
             _('Parameters to be passed to Heat for stack operations.'),
             default={},
+            updatable=True,
         ),
         FILES: schema.Map(
             _('Contents of files referenced by the template, if any.'),
             default={},
+            updatable=True,
         ),
         TIMEOUT: schema.Integer(
             _('A integer that specifies the number of minutes that a '
               'stack operation times out.'),
+            updatable=True,
         ),
         DISABLE_ROLLBACK: schema.Boolean(
             _('A boolean specifying whether a stack operation can be '
               'rolled back.'),
             default=True,
+            updatable=True,
         ),
         ENVIRONMENT: schema.Map(
             _('A map that specifies the environment used for stack '
               'operations.'),
             default={},
+            updatable=True,
         )
     }
 
@@ -174,23 +180,42 @@ class StackProfile(base.Profile):
         if not self.stack_id:
             return True
 
-        # TODO(anyone): Check if template differs
-        # TODO(anyone): Check if params differs
-        fields = {
-            'parameters': new_profile.properties[new_profile.PARAMETERS],
-            'template': new_profile.properties[new_profile.TEMPLATE],
-            'timeout_mins': new_profile.properties[new_profile.TIMEOUT],
-            'disable_rollback': new_profile.properties[
-                new_profile.DISABLE_ROLLBACK],
-            'files': new_profile.properties[new_profile.FILES],
-            'environment': new_profile.properties[new_profile.ENVIRONMENT],
-        }
+        fields = {}
+        new_template = new_profile.properties[new_profile.TEMPLATE]
+        if new_template != self.properties[self.TEMPLATE]:
+            fields['template'] = new_template
 
-        self.heat(obj).stack_update(self.stack_id, **fields)
+        new_params = new_profile.properties[new_profile.PARAMETERS]
+        if new_params != self.properties[self.PARAMETERS]:
+            fields['parameters'] = new_params
 
-        # Wait for action to complete/fail
-        while not self._check_action_complete(obj, 'UPDATE'):
-            scheduler.sleep(1)
+        new_timeout = new_profile.properties[new_profile.TIMEOUT]
+        if new_timeout != self.properties[self.TIMEOUT]:
+            fields['timeout_mins'] = new_timeout
+
+        new_dr = new_profile.properties[new_profile.DISABLE_ROLLBACK]
+        if new_dr != self.properties[self.DISABLE_ROLLBACK]:
+            fields['disable_rollback'] = new_dr
+
+        new_files = new_profile.properties[new_profile.FILES]
+        if new_files != self.properties[self.FILES]:
+            fields['files'] = new_files
+
+        new_environment = new_profile.properties[new_profile.ENVIRONMENT]
+        if new_environment != self.properties[self.ENVIRONMENT]:
+            fields['environment'] = new_environment
+
+        if fields:
+            try:
+                self.heat(obj).stack_update(self.stack_id, **fields)
+            except Exception as ex:
+                LOG.exception(_('Failed in updating stack: %s'
+                                ), six.text_type(ex))
+                return False
+
+            # Wait for action to complete/fail
+            while not self._check_action_complete(obj, 'UPDATE'):
+                scheduler.sleep(1)
 
         return True
 

@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
 import mock
 
 from senlin.drivers import base as driver_base
@@ -165,6 +166,135 @@ class TestHeatStackProfile(base.SenlinTestCase):
         self.assertTrue(profile.do_update(test_stack, new_profile))
         self.assertTrue(profile.hc.stack_update.called)
         self.assertTrue(profile._check_action_complete.called)
+
+    def test_do_update_template(self):
+        profile = stack.StackProfile('t', self.spec)
+        hc = mock.Mock()
+        self.patchobject(profile, 'heat', return_value=hc)
+        mock_check = self.patchobject(profile, '_check_action_complete',
+                                      return_value=True)
+        stack_obj = mock.Mock()
+        stack_obj.physical_id = 'STACKID'
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['template'] = {"Template": "data update"}
+        new_profile = stack.StackProfile('u', new_spec)
+
+        profile.do_update(stack_obj, new_profile)
+        hc.stack_update.assert_called_once_with(
+            'STACKID', template={"Template": "data update"})
+        mock_check.assert_called_once_with(stack_obj, 'UPDATE')
+
+    def test_do_update_params(self):
+        profile = stack.StackProfile('t', self.spec)
+        hc = mock.Mock()
+        self.patchobject(profile, 'heat', return_value=hc)
+        mock_check = self.patchobject(profile, '_check_action_complete',
+                                      return_value=True)
+        stack_obj = mock.Mock()
+        stack_obj.physical_id = 'STACKID'
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['parameters'] = {"new": "params"}
+        new_profile = stack.StackProfile('u', new_spec)
+
+        profile.do_update(stack_obj, new_profile)
+        hc.stack_update.assert_called_once_with('STACKID',
+                                                parameters={"new": "params"})
+        mock_check.assert_called_once_with(stack_obj, 'UPDATE')
+
+    def test_do_update_timeout(self):
+        profile = stack.StackProfile('t', self.spec)
+        hc = mock.Mock()
+        self.patchobject(profile, 'heat', return_value=hc)
+        mock_check = self.patchobject(profile, '_check_action_complete',
+                                      return_value=True)
+        stack_obj = mock.Mock()
+        stack_obj.physical_id = 'STACKID'
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['timeout'] = 120
+        new_profile = stack.StackProfile('u', new_spec)
+
+        profile.do_update(stack_obj, new_profile)
+        hc.stack_update.assert_called_once_with('STACKID', timeout_mins=120)
+        mock_check.assert_called_once_with(stack_obj, 'UPDATE')
+
+    def test_do_update_disable_rollback(self):
+        profile = stack.StackProfile('t', self.spec)
+        hc = mock.Mock()
+        self.patchobject(profile, 'heat', return_value=hc)
+        mock_check = self.patchobject(profile, '_check_action_complete',
+                                      return_value=True)
+        stack_obj = mock.Mock()
+        stack_obj.physical_id = 'STACKID'
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['disable_rollback'] = False
+        new_profile = stack.StackProfile('u', new_spec)
+
+        profile.do_update(stack_obj, new_profile)
+        hc.stack_update.assert_called_once_with('STACKID',
+                                                disable_rollback=False)
+        mock_check.assert_called_once_with(stack_obj, 'UPDATE')
+
+    def test_do_update_files(self):
+        profile = stack.StackProfile('t', self.spec)
+        hc = mock.Mock()
+        self.patchobject(profile, 'heat', return_value=hc)
+        mock_check = self.patchobject(profile, '_check_action_complete',
+                                      return_value=True)
+        stack_obj = mock.Mock()
+        stack_obj.physical_id = 'STACKID'
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['files'] = {"new": "file1"}
+        new_profile = stack.StackProfile('u', new_spec)
+
+        profile.do_update(stack_obj, new_profile)
+        hc.stack_update.assert_called_once_with('STACKID',
+                                                files={"new": "file1"})
+        mock_check.assert_called_once_with(stack_obj, 'UPDATE')
+
+    def test_do_update_environment(self):
+        profile = stack.StackProfile('t', self.spec)
+        hc = mock.Mock()
+        self.patchobject(profile, 'heat', return_value=hc)
+        mock_check = self.patchobject(profile, '_check_action_complete',
+                                      return_value=True)
+        stack_obj = mock.Mock()
+        stack_obj.physical_id = 'STACKID'
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['environment'] = {"new": "env1"}
+        new_profile = stack.StackProfile('u', new_spec)
+
+        profile.do_update(stack_obj, new_profile)
+        hc.stack_update.assert_called_once_with('STACKID',
+                                                environment={"new": "env1"})
+        mock_check.assert_called_once_with(stack_obj, 'UPDATE')
+
+    def test_do_update_no_change(self):
+        profile = stack.StackProfile('t', self.spec)
+        hc = mock.Mock()
+        self.patchobject(profile, 'heat', return_value=hc)
+        stack_obj = mock.Mock()
+        stack_obj.physical_id = 'STACKID'
+        new_spec = copy.deepcopy(self.spec)
+        new_profile = stack.StackProfile('u', new_spec)
+
+        res = profile.do_update(stack_obj, new_profile)
+        self.assertTrue(res)
+
+    def test_do_update_failed(self):
+        profile = stack.StackProfile('t', self.spec)
+        hc = mock.Mock()
+        self.patchobject(profile, 'heat', return_value=hc)
+        hc.stack_update.side_effect = Exception('Stack update failed.')
+        stack_obj = mock.Mock()
+        stack_obj.physical_id = 'STACKID'
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['environment'] = {"new": "env1"}
+        new_profile = stack.StackProfile('u', new_spec)
+
+        res = profile.do_update(stack_obj, new_profile)
+        hc.stack_update.assert_called_once_with('STACKID',
+                                                environment={"new": "env1"})
+        self.assertFalse(res)
 
     def test_do_check(self):
         profile = stack.StackProfile('t', self.spec)
