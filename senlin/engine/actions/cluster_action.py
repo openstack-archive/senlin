@@ -712,7 +712,7 @@ class ClusterAction(base.Action):
         new_size = curr_size - count
 
         result = scaleutils.check_size_params(self.cluster, new_size,
-                                              None, None, False)
+                                              None, None, True)
         if result:
             status_reason = _('Cluster scaling failed: %s') % result
             self.cluster.set_status(self.context, self.cluster.ACTIVE,
