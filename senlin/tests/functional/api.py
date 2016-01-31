@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import requests
+
 from oslo_serialization import jsonutils
 
 
@@ -192,3 +194,50 @@ def get_action(client, action_id, ignore_missing=False):
     status = [200, 404] if ignore_missing else [200]
     resp = client.api_request('GET', rel_url, resp_status=status)
     return resp if ignore_missing else resp.body['action']
+
+
+def create_receiver(client, name, cluster_id, action, r_type, params=None):
+    rel_url = 'receivers'
+    status = [201]
+    data = {
+        'receiver': {
+            'name': name,
+            'cluster_id': cluster_id,
+            'action': action,
+            'params': params,
+            'type': r_type
+        }
+    }
+    body = jsonutils.dumps(data)
+    resp = client.api_request('POST', rel_url, body=body,
+                              resp_status=status)
+
+    receiver = resp.body['receiver']
+    return receiver
+
+
+def get_receiver(client, receiver_id, ignore_missing=False):
+    rel_url = 'receivers/%(id)s' % {'id': receiver_id}
+    status = [200, 404] if ignore_missing else [200]
+    resp = client.api_request('GET', rel_url, resp_status=status)
+    return resp if ignore_missing else resp.body['receiver']
+
+
+def trigger_webhook(webhook_url, params=None):
+    body = None
+    if params is not None:
+        body = jsonutils.dumps(params)
+    resp = requests.request('POST', webhook_url, data=body)
+    if resp.content:
+        resp_body = jsonutils.loads(resp.content)
+        if 'action' in resp_body:
+            return resp_body['action']
+
+    raise Exception('Webhook %s triggering failed.' % webhook_url)
+
+
+def delete_receiver(client, receiver_id):
+    rel_url = 'receivers/%(id)s' % {'id': receiver_id}
+    status = [204]
+    client.api_request('DELETE', rel_url, resp_status=status)
+    return
