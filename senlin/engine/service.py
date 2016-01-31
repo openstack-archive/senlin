@@ -426,15 +426,13 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_list(self, context, limit=None, marker=None, sort=None,
-                     filters=None, project_safe=True, show_nested=False):
+                     filters=None, project_safe=True):
         limit = utils.parse_int_param('limit', limit)
         project_safe = utils.parse_bool_param('project_safe', project_safe)
-        show_nested = utils.parse_bool_param('show_nested', show_nested)
         clusters = cluster_mod.Cluster.load_all(context, limit=limit,
                                                 marker=marker, sort=sort,
                                                 filters=filters,
-                                                project_safe=project_safe,
-                                                show_nested=show_nested)
+                                                project_safe=project_safe)
 
         return [cluster.to_dict() for cluster in clusters]
 
@@ -464,8 +462,8 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_create(self, context, name, desired_capacity, profile_id,
-                       min_size=None, max_size=None, parent=None,
-                       metadata=None, timeout=None):
+                       min_size=None, max_size=None, metadata=None,
+                       timeout=None):
         if cfg.CONF.name_unique:
             if db_api.cluster_get_by_name(context, name):
                 msg = _("The cluster (%(name)s) already exists."
@@ -498,7 +496,6 @@ class EngineService(service.Service):
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
-            'parent': parent,
             'min_size': min_size,
             'max_size': max_size,
             'timeout': timeout,
@@ -527,7 +524,7 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_update(self, context, identity, name=None, profile_id=None,
-                       parent=None, metadata=None, timeout=None):
+                       metadata=None, timeout=None):
 
         LOG.info(_LI("Updating cluster '%s'."), identity)
         # Get the database representation of the existing cluster
@@ -559,10 +556,6 @@ class EngineService(service.Service):
             md = cluster.metadata
             md.update(metadata)
             inputs['metadata'] = md
-
-        if parent is not None:
-            db_parent = self.cluster_find(context, parent)
-            inputs['parent'] = db_parent.id
 
         if timeout is not None:
             timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)

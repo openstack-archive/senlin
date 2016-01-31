@@ -240,7 +240,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'sort': mock.ANY,
             'filters': mock.ANY,
             'project_safe': mock.ANY,
-            'show_nested': mock.ANY,
         }
         self._test_engine_api('cluster_list', 'call', **default_args)
 
@@ -251,7 +250,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'profile_id': 'aaaa-bbbb-cccc',
             'min_size': 0,
             'max_size': 0,
-            'parent': None,
             'metadata': None,
             'timeout': None
         }
@@ -286,7 +284,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'identity': 'a-cluster',
             'name': 'new-name',
             'profile_id': 'new_profile',
-            'parent': 'another-cluster',
             'metadata': {'key': 'value'},
             'timeout': 120
         }

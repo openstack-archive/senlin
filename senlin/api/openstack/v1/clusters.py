@@ -33,7 +33,6 @@ class ClusterData(object):
     def __init__(self, data):
         self.name = data.get(consts.CLUSTER_NAME, None)
         self.profile = data.get(consts.CLUSTER_PROFILE, None)
-        self.parent = data.get(consts.CLUSTER_PARENT, None)
         self.metadata = data.get(consts.CLUSTER_METADATA, None)
 
         self.desired_capacity = data.get(consts.CLUSTER_DESIRED_CAPACITY, None)
@@ -143,15 +142,10 @@ class ClusterController(object):
             'limit': 'single',
             'marker': 'single',
             'sort': 'single',
-            'show_nested': 'single',
             'global_project': 'single',
         }
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)
-
-        key = consts.PARAM_SHOW_NESTED
-        if key in params:
-            params[key] = utils.parse_bool_param(key, params[key])
 
         key = consts.PARAM_GLOBAL_PROJECT
         if key in params:
@@ -180,8 +174,7 @@ class ClusterController(object):
 
         cluster = self.rpc_client.cluster_create(
             req.context, data.name, data.desired_capacity, data.profile,
-            data.min_size, data.max_size, data.parent, data.metadata,
-            data.timeout)
+            data.min_size, data.max_size, data.metadata, data.timeout)
 
         result = {
             'cluster': cluster,
@@ -209,8 +202,8 @@ class ClusterController(object):
         data.validate_for_update()
 
         cluster = self.rpc_client.cluster_update(
-            req.context, cluster_id, data.name, data.profile, data.parent,
-            data.metadata, data.timeout)
+            req.context, cluster_id, data.name, data.profile, data.metadata,
+            data.timeout)
         action_id = cluster.pop('action')
         result = {
             'cluster': cluster,

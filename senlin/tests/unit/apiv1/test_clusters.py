@@ -35,7 +35,6 @@ class ClusterDataTest(base.SenlinTestCase):
         self.body = {
             'name': 'test_cluster',
             'profile_id': 'some_profile',
-            'parent': 'another_cluster',
             'metadata': {'tag_key': 'tag_value'},
             'desired_capacity': 5,
             'max_size': 10,
@@ -47,7 +46,6 @@ class ClusterDataTest(base.SenlinTestCase):
         data = clusters.ClusterData(self.body)
         self.assertEqual('test_cluster', data.name)
         self.assertEqual('some_profile', data.profile)
-        self.assertEqual('another_cluster', data.parent)
         self.assertEqual({'tag_key': 'tag_value'}, data.metadata)
         self.assertEqual(5, data.desired_capacity)
         self.assertEqual(10, data.max_size)
@@ -256,7 +254,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'user': u'admin',
             u'project': u'123456abcd3555',
             u'domain': u'default',
-            u'parent': None,
             u'init_time': u'2015-01-09T09:13:11Z',
             u'created_time': u'2015-01-09T09:16:45Z',
             u'updated_time': None,
@@ -286,7 +283,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'filters': None,
             'sort': None,
             'project_safe': True,
-            'show_nested': False
         }
         mock_call.assert_called_once_with(
             req.context, ('cluster_list', default_args))
@@ -299,7 +295,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'limit': 'fake limit',
             'marker': 'fake marker',
             'sort': 'fake sort option',
-            'show_nested': False,
             'balrog': 'you shall not pass!'
         }
         req = self._get('/clusters', params=params)
@@ -309,11 +304,10 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         rpc_call_args, w = mock_call.call_args
         engine_args = rpc_call_args[1][1]
-        self.assertEqual(6, len(engine_args))
+        self.assertEqual(5, len(engine_args))
         self.assertIn('limit', engine_args)
         self.assertIn('marker', engine_args)
         self.assertIn('sort', engine_args)
-        self.assertIn('show_nested', engine_args)
         self.assertIn('filters', engine_args)
         self.assertIn('project_safe', engine_args)
         self.assertNotIn('balrog', engine_args)
@@ -340,28 +334,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('status', filters)
         self.assertIn('name', filters)
         self.assertNotIn('balrog', filters)
-
-    def test_index_show_nested_false(self, mock_enforce):
-        rpc_client = self.controller.rpc_client
-        rpc_client.cluster_list = mock.Mock(return_value=[])
-
-        params = {'show_nested': 'False'}
-        req = self._get('/clusters', params=params)
-        self.controller.index(req)
-        rpc_client.cluster_list.assert_called_once_with(mock.ANY,
-                                                        filters=mock.ANY,
-                                                        show_nested=False)
-
-    def test_index_show_nested_true(self, mock_enforce):
-        rpc_client = self.controller.rpc_client
-        rpc_client.cluster_list = mock.Mock(return_value=[])
-
-        params = {'show_nested': 'True'}
-        req = self._get('/clusters', params=params)
-        self.controller.index(req)
-        rpc_client.cluster_list.assert_called_once_with(mock.ANY,
-                                                        filters=mock.ANY,
-                                                        show_nested=True)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_global_project_true(self, mock_call, mock_enforce):
@@ -454,7 +426,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'profile_id': 'xxxx-yyyy',
                 'min_size': 0,
                 'max_size': 0,
-                'parent': None,
                 'metadata': {},
                 'timeout': None,
             }
@@ -469,7 +440,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'profile_id': 'xxxx-yyyy',
             'min_size': 0,
             'max_size': 0,
-            'parent': None,
             'metadata': {},
             'timeout': 60,
         }
@@ -487,7 +457,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'profile_id': 'xxxx-yyyy',
                 'min_size': 0,
                 'max_size': 0,
-                'parent': None,
                 'metadata': {},
                 'timeout': None
             })
@@ -504,7 +473,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'min_size': 0,
             'max_size': 0,
             'desired_capacity': 0,
-            'parent': None,
             'metadata': {},
             'timeout': None,
         }
@@ -530,7 +498,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'min_size': 0,
                 'max_size': 0,
                 'desired_capacity': 0,
-                'parent': None,
                 'metadata': {},
                 'timeout': None,
             }
@@ -553,7 +520,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'min_size': 0,
                 'max_size': 0,
                 'desired_capacity': -1,
-                'parent': None,
                 'metadata': {},
                 'timeout': None,
             }
@@ -579,7 +545,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'min_size': 0,
                 'max_size': 0,
                 'desired_capacity': 0,
-                'parent': None,
                 'metadata': {},
                 'timeout': None,
             }
@@ -609,7 +574,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'user': u'admin',
             u'project': u'123456abcd3555',
             u'domain': u'default',
-            u'parent': None,
             u'init_time': u'2015-01-09T09:13:11Z',
             u'created_time': u'2015-01-09T09:16:45Z',
             u'updated_time': None,
@@ -737,7 +701,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         args = {
             'name': None,
-            'parent': None,
             'metadata': None,
             'profile_id': 'xxxx-yyyy-zzzz',
             'timeout': cfg.CONF.default_action_timeout,

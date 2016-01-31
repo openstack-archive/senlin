@@ -138,27 +138,25 @@ class EngineClient(object):
                                         identity=identity))
 
     def cluster_list(self, ctxt, limit=None, marker=None, sort=None,
-                     filters=None, project_safe=True, show_nested=False):
+                     filters=None, project_safe=True):
         return self.call(ctxt,
                          self.make_msg('cluster_list', filters=filters,
                                        limit=limit, marker=marker, sort=sort,
-                                       project_safe=project_safe,
-                                       show_nested=show_nested))
+                                       project_safe=project_safe))
 
     def cluster_get(self, ctxt, identity):
         return self.call(ctxt,
                          self.make_msg('cluster_get', identity=identity))
 
     def cluster_create(self, ctxt, name, desired_capacity, profile_id,
-                       min_size=None, max_size=None, parent=None,
-                       metadata=None, timeout=None):
+                       min_size=None, max_size=None, metadata=None,
+                       timeout=None):
         return self.call(ctxt, self.make_msg('cluster_create',
                                              name=name,
                                              desired_capacity=desired_capacity,
                                              profile_id=profile_id,
                                              min_size=min_size,
                                              max_size=max_size,
-                                             parent=parent,
                                              metadata=metadata,
                                              timeout=timeout))
 
@@ -203,11 +201,11 @@ class EngineClient(object):
                                              count=count))
 
     def cluster_update(self, ctxt, identity, name=None, profile_id=None,
-                       parent=None, metadata=None, timeout=None):
+                       metadata=None, timeout=None):
         return self.call(ctxt, self.make_msg('cluster_update',
                                              identity=identity, name=name,
                                              profile_id=profile_id,
-                                             parent=parent, metadata=metadata,
+                                             metadata=metadata,
                                              timeout=timeout))
 
     def cluster_delete(self, ctxt, identity, cast=True):
