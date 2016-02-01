@@ -303,12 +303,14 @@ class Node(object):
                         reason='Update in progress')
 
         new_profile_id = params.pop('new_profile_id', None)
-        try:
-            res = profile_base.Profile.update_object(
-                context, self, new_profile_id, **params)
-        except exception.ResourceStatusError as ex:
-            self._handle_exception(context, 'update', self.ERROR, ex)
-            res = False
+        res = True
+        if new_profile_id:
+            try:
+                res = profile_base.Profile.update_object(
+                    context, self, new_profile_id, **params)
+            except exception.ResourceStatusError as ex:
+                self._handle_exception(context, 'update', self.ERROR, ex)
+                res = False
 
         if res:
             if 'name' in params:

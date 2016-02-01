@@ -473,7 +473,7 @@ class TestNode(base.SenlinTestCase):
 
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(profiles_base.Profile, 'update_object')
-    def test_node_update(self, mock_update, mock_status):
+    def test_node_update_new_profile(self, mock_update, mock_status):
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
                           self.context)
         new_profile = self._create_profile('NEW_PROFILE_ID')
@@ -484,6 +484,19 @@ class TestNode(base.SenlinTestCase):
                                             new_profile.id)
         self.assertEqual('NEW_PROFILE_ID', node.profile_id)
         self.assertEqual('NEW_PROFILE_ID', node.rt['profile'].id)
+        mock_status.assert_any_call(self.context, 'UPDATING',
+                                    reason='Update in progress')
+        mock_status.assert_any_call(self.context, 'ACTIVE',
+                                    reason='Update succeeded')
+
+    @mock.patch.object(nodem.Node, 'set_status')
+    def test_node_update_name(self, mock_status):
+        node = nodem.Node('node1', self.profile.id, self.cluster.id,
+                          self.context)
+        node.physical_id = 'fake_id'
+        res = node.do_update(self.context, {'name': 'new_name'})
+        self.assertTrue(res)
+        self.assertEqual(node.name, 'new_name')
         mock_status.assert_any_call(self.context, 'UPDATING',
                                     reason='Update in progress')
         mock_status.assert_any_call(self.context, 'ACTIVE',
