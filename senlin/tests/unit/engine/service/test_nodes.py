@@ -366,6 +366,7 @@ class NodeTest(base.SenlinTestCase):
         nodeid = node['id']
         node_obj = mock.Mock()
         node_obj.id = nodeid
+        node_obj.to_dict.return_value = {'id': nodeid}
         mock_node_load.return_value = node_obj
         params = {
             'user': self.ctx.user,
@@ -431,6 +432,7 @@ class NodeTest(base.SenlinTestCase):
 
         result = self.eng.node_update(self.ctx, node['id'],
                                       profile_id=new_profile['id'])
+        self.assertIsNotNone(result.pop('action'))
         self.assertEqual(node, result)
 
     @mock.patch.object(dispatcher, 'start_action')

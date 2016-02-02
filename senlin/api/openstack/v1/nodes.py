@@ -154,9 +154,10 @@ class NodeController(object):
 
         node = self.rpc_client.node_update(req.context, node_id, name,
                                            profile_id, role, metadata)
+        action_id = node.pop('action')
         result = {
             'node': node,
-            'location': '/nodes/%s' % node['id'],
+            'location': '/actions/%s' % action_id,
         }
         return result
 
