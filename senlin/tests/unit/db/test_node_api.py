@@ -287,7 +287,7 @@ class DBAPINodeTest(base.SenlinTestCase):
         self.assertEqual(set([node1.id, node2.id]),
                          set([nodes[0].id, nodes[1].id]))
 
-        # retreive orphan nodes
+        # retrieve orphan nodes
         nodes = db_api.node_get_all_by_cluster(self.ctx, '')
         self.assertEqual(1, len(nodes))
         self.assertEqual(node0.id, nodes[0].id)
