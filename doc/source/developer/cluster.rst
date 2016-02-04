@@ -88,8 +88,6 @@ JSON request body:
     value is -1, which means there is no upper limit on the number of nodes;
   - ``timeout``: the maximum number of seconds to wait for the cluster to
     become ready, i.e. ``ACTIVE``.
-  - ``parent``: the parent cluster for the cluster to be created. This feature
-    is still not supported. Default value is None.
   - ``metadata``: a list of key-value pairs to be associated with the cluster.
 
 The ``max_size`` and the ``min_size`` fields, when specified, will be checked
@@ -125,8 +123,6 @@ individually or combined:
   * ``status``: status of clusters, can be a string or a list of strings;
   * ``project``: ID of the project to which a cluster belongs, can be a string
     or a list of strings;
-  * ``parent``: the UUID of the parent cluster, if any. It can be a string or
-    a list of strings. This feature is not yet supported.
   * ``user``: ID of the user who is the owner of the clusters. It can be a
     string or a list of strings.
 
@@ -140,9 +136,6 @@ individually or combined:
   known property names of a cluster as sorting keys separated by commas. Each
   sorting key can optionally have either ``:asc`` or ``:desc`` appended to the
   key for controlling the sorting direction.
-- ``show_nested``: A boolean indicating whether nested clusters should be
-  included in the results. The default is True. This feature is yet to be
-  supported.
 - ``global_project``: A boolean indicating whether cluster listing should be
   done in a tenant-safe way. When this value is specified as False (the
   default), only clusters from the current project that match the other
@@ -196,8 +189,6 @@ for the following properties:
 
 - ``name``: new cluster name;
 - ``profile_id``: ID or name or short ID of a profile object to use;
-- ``parent``: ID or name or short ID of a parent cluster, this feature is yet
-  to be supported;
 - ``metadata``: a list of key-value pairs to be associated with the cluster,
   this dict will be merged with the existing key-value pairs based on keys.
 - ``desired_capacity``: new *desired* size for the cluster;
