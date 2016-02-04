@@ -16,8 +16,7 @@ from oslo_serialization import jsonutils
 
 
 def create_cluster(client, name, profile_id, desired_capacity,
-                   min_size=0, max_size=-1, parent=None,
-                   metadata=None, timeout=120):
+                   min_size=0, max_size=-1, metadata=None, timeout=120):
     if not metadata:
         metadata = {}
     rel_url = 'clusters'
@@ -29,7 +28,6 @@ def create_cluster(client, name, profile_id, desired_capacity,
             'desired_capacity': desired_capacity,
             'min_size': min_size,
             'max_size': max_size,
-            'parent': parent,
             'metadata': metadata,
             'timeout': timeout,
         }
