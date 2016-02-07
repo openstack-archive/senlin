@@ -8,10 +8,11 @@ Senlin Style Commandments
 Senlin Specific Commandments
 ----------------------------
 
-- [S318] Change assertEqual(A, None) or assertEqual(None, A) by optimal assert
-  like assertIsNone(A)
-- [S319] Ensure that jsonutils.%(fun)s must be used instead of json.%(fun)s
-- [S320] Method's default argument shouldn't be mutable!
+- [S318] Use assertion ``assertIsNone(A)`` instead of ``assertEqual(A, None)``
+         or ``assertEqual(None, A)``.
+- [S319] Use ``jsonutils`` functions rather than using the ``json`` package
+         directly.
+- [S320] Default arguments of a method should not be mutable.
 
 Working on APIs
 ---------------
@@ -25,14 +26,15 @@ Any work on improving Senlin's APIs to conform to the guidelines are welcomed.
 
 Creating Unit Tests
 -------------------
+
 For every new feature, unit tests should be created that both test and
-(implicitly) document the usage of said feature. If submitting a patch for a
-bug that had no unit test, a new passing unit test should be added. If a
-submitted bug fix does have a unit test, be sure to add a new one that fails
-without the patch and passes with the patch.
+(implicitly) document the usage of said feature. When submitting a patch to a
+bug without a unit test, a new unit test should be added. If a submitted bug
+fix does have a unit test, be sure to add a new one that fails without the
+patch and passes with the patch.
 
 For more information on creating and running unit tests , please read
-senlin/doc/source/testing.txt.
+senlin/doc/source/developer/testing.txt.
 
 
 Running Tests
@@ -43,18 +45,9 @@ canonical approach to running tests is to simply run the command `tox`.
 This will create virtual environments, populate them with dependencies and
 run all of the tests that OpenStack CI systems run.
 
-Behind the scenes, `tox` is running `testr run --parallel`, but is set up
-such that you can supply any additional `testr` arguments that are needed
-by `tox`. For example, the following command makes `tox` to tell `testr` to
-add `--analyze-isolation` to its argument list::
+Behind the scenes, `tox` is running `ostestr --slowest`, but is set up such
+that you can supply any additional arguments to the `ostestr` command.
+For example, the following command makes `tox` to tell `ostestr` to add
+`--analyze-isolation` to its argument list::
 
   tox -- --analyze-isolation
-
-It is also possible to run the tests inside of a virtual environment
-you have created, or it is possible that you have all of the dependencies
-installed locally already. In this case, you can interact with the testr
-command directly. Running `testr run` will run the entire test suite. `testr
-run --parallel` will run it in parallel (this is the default incantation tox
-uses.) More information about testr can be found at:
-http://wiki.openstack.org/testr
-
