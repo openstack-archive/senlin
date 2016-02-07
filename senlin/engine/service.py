@@ -1179,8 +1179,9 @@ class EngineService(service.Service):
         dispatcher.start_action(action_id=action.id)
 
         LOG.info(_LI("Node update action is queued: %s."), action.id)
-
-        return node.to_dict()
+        resp = node.to_dict()
+        resp['action'] = action.id
+        return resp
 
     @request_context
     def node_delete(self, context, identity, force=False):

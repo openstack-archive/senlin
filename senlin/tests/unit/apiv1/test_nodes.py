@@ -436,8 +436,10 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'metadata': {},
             }
         }
+        aid = 'xxxx-yyyy-zzzz'
 
-        engine_response = body['node']
+        engine_response = body['node'].copy()
+        engine_response['action'] = aid
 
         req = self._patch('/nodes/%(node_id)s' % {'node_id': nid},
                           jsonutils.dumps(body))
@@ -459,7 +461,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         )
         result = {
             'node': body['node'],
-            'location': '/nodes/%s' % nid,
+            'location': '/actions/%s' % aid,
         }
         self.assertEqual(result, res)
 
