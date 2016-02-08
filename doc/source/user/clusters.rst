@@ -98,7 +98,7 @@ filters clusters by the ``status`` field::
 The option :option:`--filters` accepts a list of key-value pairs separated by
 semicolon (``;``), where each key-value pair is expected to be of format
 ``<key>=<value>``. The valid keys for filtering include: ``status``, ``name``,
-``project``, ``parent`` and ``user``.
+``project`` and ``user``.
 
 
 Paginating the Query Results
@@ -152,7 +152,6 @@ associated with the cluster. For example::
   | min_size         | 0                                    |
   | name             | c3                                   |
   | nodes            |                                      |
-  | parent           | None                                 |
   | profile_id       | bf38dc9f-d204-46c9-b515-79caf1e45c4d |
   | profile_name     | qstack                               |
   | project          | 333acb15a43242f4a609a27cb097a8f2     |
@@ -213,10 +212,6 @@ using the :program:`senlin` command line tool, you can use the option
 default time out in number of seconds. This value would be the global setting
 for the cluster.
 
-Optionally, you can specify the option :option:`--parent <PARENT_ID>`` (or
-:option:`-o <PARENT_ID>`) when creating a cluster. This is a feature reserved
-for nested clusters. It is not supported yet at the time of this writing.
-
 
 Showing Details of a Cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -246,7 +241,6 @@ An example is shown below::
   | name             | c3                                   |
   | nodes            | b28692a5-2536-4921-985b-1142d6045e1f |
   |                  | 4be10a88-e340-4518-a9e1-d742c53ac37f |
-  | parent           | None                                 |
   | profile_id       | bf38dc9f-d204-46c9-b515-79caf1e45c4d |
   | profile_name     | qstack                               |
   | project          | 333acb15a43242f4a609a27cb097a8f2     |
@@ -273,8 +267,6 @@ you can use the following command::
 You can change the ``timeout`` property using option :option:`--timeout` (or
 :option:`-t`) for the ``cluster-update`` command. You can change the metadata
 associated with cluster using option :option:`--metadata` (or :option:`-M`).
-When cluster nesting is implemented, you will be able to change the parent
-cluster using the option :option:`--parent` (or :option:`-o`).
 
 Using the :command:`cluster-update` command, you can change the profile used
 by the cluster and its member nodes. The following example launches a global
