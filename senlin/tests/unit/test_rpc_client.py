@@ -442,7 +442,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
     def test_action_create(self):
         kwargs = {
             'name': 'myaction',
-            'target': 'aaaa-bbbb-cccc',
+            'cluster': 'aaaa-bbbb-cccc',
             'action': 'this is a script',
             'params': None,
         }

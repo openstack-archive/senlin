@@ -151,7 +151,11 @@ class Action(object):
         self.data = kwargs.get('data', {})
 
     def store(self, context):
-        '''Store the action record into database table.'''
+        """Store the action record into database table.
+
+        :param context: An instance of the request context.
+        :return: The ID of the stored object.
+        """
 
         timestamp = timeutils.utcnow()
 
@@ -189,11 +193,12 @@ class Action(object):
 
     @classmethod
     def _from_db_record(cls, record):
-        '''Construct a action object from database record.
+        """Construct a action object from database record.
 
         :param context: the context used for DB operations;
         :param record: a DB action object that contains all fields.
-        '''
+        :return: An `Action` object deserialized from the DB action object.
+        """
         context = req_context.RequestContext.from_dict(record.context)
         kwargs = {
             'id': record.id,
@@ -217,7 +222,13 @@ class Action(object):
 
     @classmethod
     def load(cls, context, action_id=None, db_action=None):
-        '''Retrieve an action from database.'''
+        """Retrieve an action from database.
+
+        :param context: Instance of request context.
+        :param action_id: An UUID for the action to deserialize.
+        :param db_action: An action object for the action to deserialize.
+        :return: A `Action` object instance.
+        """
         if db_action is None:
             db_action = db_api.action_get(context, action_id)
             if db_action is None:
@@ -228,7 +239,20 @@ class Action(object):
     @classmethod
     def load_all(cls, context, filters=None, limit=None, marker=None,
                  sort=None, project_safe=True):
-        """Retrieve all actions of from database."""
+        """Retrieve all actions of from database.
+
+        :param context: Instance of the request context.
+        :param filters: A dict of key-value pairs for filtering the resulted
+                        list of action objects.
+        :param limit: A number for restricting the number of records returned.
+        :param marker: The ID of the last seen action record. Only records
+                       that appear after this ID will be shown.
+        :param sort: A list of sorting keys (optionally with a sort dir),
+                     separated by commas.
+        :param project_safe: A boolean that indicates whether actions from
+                             other projects will be returned as well.
+        :return: A list of `Action` objects.
+        """
 
         records = db_api.action_get_all(context, filters=filters, sort=sort,
                                         limit=limit, marker=marker,
@@ -238,8 +262,14 @@ class Action(object):
             yield cls._from_db_record(record)
 
     @classmethod
-    def delete(cls, context, action_id, force=False):
-        db_api.action_delete(context, action_id, force)
+    def delete(cls, context, action_id):
+        """Delete an action from database.
+
+        :param context: An instance of the request context.
+        :param action_id: The UUID of the target action to be deleted.
+        :return: Nothing.
+        """
+        db_api.action_delete(context, action_id)
 
     def signal(self, cmd):
         '''Send a signal to the action.'''
