@@ -161,11 +161,8 @@ def cluster_get_by_short_id(context, short_id, project_safe=True):
                              project_safe=project_safe)
 
 
-def _query_cluster_get_all(context, project_safe=True, show_nested=False):
+def _query_cluster_get_all(context, project_safe=True):
     query = model_query(context, models.Cluster)
-
-    if not show_nested:
-        query = query.filter_by(parent=None)
 
     if project_safe:
         query = query.filter_by(project=context.project)
@@ -173,9 +170,8 @@ def _query_cluster_get_all(context, project_safe=True, show_nested=False):
 
 
 def cluster_get_all(context, limit=None, marker=None, sort=None, filters=None,
-                    project_safe=True, show_nested=False):
-    query = _query_cluster_get_all(context, project_safe=project_safe,
-                                   show_nested=show_nested)
+                    project_safe=True):
+    query = _query_cluster_get_all(context, project_safe=project_safe)
     if filters:
         query = db_filters.exact_filter(query, models.Cluster, filters)
 
@@ -199,10 +195,8 @@ def cluster_next_index(context, cluster_id):
     return next_index
 
 
-def cluster_count_all(context, filters=None, project_safe=True,
-                      show_nested=False):
-    query = _query_cluster_get_all(context, project_safe=project_safe,
-                                   show_nested=show_nested)
+def cluster_count_all(context, filters=None, project_safe=True):
+    query = _query_cluster_get_all(context, project_safe=project_safe)
     query = db_filters.exact_filter(query, models.Cluster, filters)
     return query.count()
 

@@ -199,23 +199,6 @@ class DBAPIClusterTest(base.SenlinTestCase):
         clusters = db_api.cluster_get_all(self.ctx, project_safe=False)
         self.assertEqual(5, len(clusters))
 
-    def test_cluster_get_all_show_nested(self):
-        cluster1 = shared.create_cluster(self.ctx, self.profile,
-                                         name='cluster1')
-        cluster2 = shared.create_cluster(self.ctx, self.profile,
-                                         name='cluster2',
-                                         parent=cluster1.id)
-
-        cl_db = db_api.cluster_get_all(self.ctx)
-        self.assertEqual(1, len(cl_db))
-        self.assertEqual(cluster1.id, cl_db[0].id)
-
-        cl_db = db_api.cluster_get_all(self.ctx, show_nested=True)
-        self.assertEqual(2, len(cl_db))
-        cl_ids = [s.id for s in cl_db]
-        self.assertIn(cluster1.id, cl_ids)
-        self.assertIn(cluster2.id, cl_ids)
-
     def test_cluster_get_all_with_filters(self):
         shared.create_cluster(self.ctx, self.profile, name='foo')
         shared.create_cluster(self.ctx, self.profile, name='bar')
@@ -343,16 +326,6 @@ class DBAPIClusterTest(base.SenlinTestCase):
 
         self.assertEqual(5, db_api.cluster_count_all(self.ctx,
                                                      project_safe=False))
-
-    def test_cluster_count_all_show_nested(self):
-        cluster1 = shared.create_cluster(self.ctx, self.profile, name='c1')
-        shared.create_cluster(self.ctx, self.profile, name='c2',
-                              parent=cluster1.id)
-
-        results = db_api.cluster_count_all(self.ctx)
-        self.assertEqual(1, results)
-        results = db_api.cluster_count_all(self.ctx, show_nested=True)
-        self.assertEqual(2, results)
 
     def test_cluster_count_all_with_filters(self):
         shared.create_cluster(self.ctx, self.profile, name='foo')

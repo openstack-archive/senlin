@@ -55,10 +55,9 @@ def cluster_get_by_short_id(context, short_id, project_safe=True):
 
 
 def cluster_get_all(context, limit=None, marker=None, sort=None, filters=None,
-                    project_safe=True, show_nested=False):
+                    project_safe=True):
     return IMPL.cluster_get_all(context, limit=limit, marker=marker, sort=sort,
-                                filters=filters, project_safe=project_safe,
-                                show_nested=show_nested)
+                                filters=filters, project_safe=project_safe)
 
 
 def cluster_next_index(context, cluster_id):
