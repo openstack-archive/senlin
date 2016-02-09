@@ -1256,7 +1256,16 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_policy_list(self, context, identity, filters=None, sort=None):
+        """List cluster-policy bindings given the cluster identity.
 
+        :param context: An instance of the request context.
+        :param identity: The ID, name or short ID of the target cluster.
+        :param filters: A list of key-value pairs for filtering out the result
+                        list.
+        :param sort: A list of sorting keys (optionally appended with sorting
+                     directions) separated by commas.
+        :return: A list containing dictionaries each representing a binding.
+        """
         db_cluster = self.cluster_find(context, identity)
         bindings = cluster_policy.ClusterPolicy.load_all(
             context, db_cluster.id, filters=filters, sort=sort)
@@ -1265,6 +1274,14 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_policy_get(self, context, identity, policy_id):
+        """Get the binding record giving the cluster and policy identity.
+
+        :param context: An instance of the request context.
+        :param identity: The ID, name or short ID of the target cluster.
+        :param policy_id: The ID, name or short ID of the target policy.
+        :return: A dictionary containing the binding record, or raises an
+                 exception of ``PolicyNotAttached``.
+        """
         db_cluster = self.cluster_find(context, identity)
         db_policy = self.policy_find(context, policy_id)
 
@@ -1279,10 +1296,17 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_policy_attach(self, context, identity, policy, enabled=True):
-        '''Attach policy to cluster.
+        """Attach a policy to the specified cluster.
 
         This is done via an action because a cluster lock is needed.
-        '''
+
+        :param context: An instance of request context.
+        :param identity: The ID, name or short ID of the target cluster.
+        :param policy: The ID, name or short ID of the target policy.
+        :param enabled: Optional parameter specifying whether the policy is
+                        enabled when attached.
+        :return: A dictionary containg the ID of the action fired.
+        """
         LOG.info(_LI("Attaching policy (%(policy)s) to cluster "
                      "(%(cluster)s)."),
                  {'policy': policy, 'cluster': identity})
@@ -1300,12 +1324,12 @@ class EngineService(service.Service):
         }
 
         params = {
+            'name': 'attach_policy_%s' % db_cluster.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': inputs,
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
-            'name': 'attach_policy_%s' % db_cluster.id[:8],
-            'cause': action_mod.CAUSE_RPC,
-            'inputs': inputs
         }
         action = action_mod.Action(db_cluster.id, consts.CLUSTER_ATTACH_POLICY,
                                    **params)
@@ -1319,11 +1343,15 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_policy_detach(self, context, identity, policy):
-        '''Detach policy from cluster.
+        """Detach a policy from the specified cluster.
 
         This is done via an action because cluster lock is needed.
-        '''
 
+        :param context: An instance of request context.
+        :param identity: The ID, name or short ID of the target cluster.
+        :param policy: The ID, name or short ID of the target policy.
+        :return: A dictionary containg the ID of the action fired.
+        """
         LOG.info(_LI("Detaching policy '%(policy)s' from cluster "
                      "'%(cluster)s'."),
                  {'policy': policy, 'cluster': identity})
@@ -1344,12 +1372,12 @@ class EngineService(service.Service):
 
         action_name = 'detach_policy_%s' % db_cluster.id[:8]
         params = {
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': {'policy_id': db_policy.id},
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
-            'name': action_name,
-            'cause': action_mod.CAUSE_RPC,
-            'inputs': {'policy_id': db_policy.id}
         }
         action = action_mod.Action(db_cluster.id, consts.CLUSTER_DETACH_POLICY,
                                    **params)
@@ -1363,10 +1391,16 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_policy_update(self, context, identity, policy, enabled=None):
-        '''Update an existing policy binding on a cluster.
+        """Update an existing policy binding on a cluster.
 
         This is done via an action because cluster lock is needed.
-        '''
+        :param context: An instance of request context.
+        :param identity: The ID, name or short ID of the target cluster.
+        :param policy: The ID, name or short ID of the target policy.
+        :param enabled: Optional parameter specifying whether the policy is
+                        enabled after the update.
+        :return: A dictionary containg the ID of the action fired.
+        """
         LOG.info(_LI("Updating policy '%(policy)s' on cluster '%(cluster)s.'"),
                  {'policy': policy, 'cluster': identity})
 
