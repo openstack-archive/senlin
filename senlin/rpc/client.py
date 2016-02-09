@@ -288,10 +288,10 @@ class EngineClient(object):
                                              policy=policy_id,
                                              enabled=enabled))
 
-    def action_create(self, ctxt, name, target, action, params):
+    def action_create(self, ctxt, name, cluster, action, params):
         return self.call(ctxt,
                          self.make_msg('action_create',
-                                       name=name, target=target,
+                                       name=name, cluster=cluster,
                                        action=action, params=params))
 
     def action_get(self, ctxt, identity):
