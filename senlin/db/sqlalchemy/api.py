@@ -851,7 +851,7 @@ def action_update(context, action_id, values):
 
 
 def action_get(context, action_id, refresh=False):
-    session = get_session()
+    session = _session(context)
     action = session.query(models.Action).get(action_id)
     if action is None:
         return None
@@ -892,13 +892,13 @@ def action_get_all(context, filters=None, limit=None, marker=None, sort=None,
 
 
 def dependency_get_depended(context, action_id):
-    session = get_session()
+    session = _session(context)
     q = session.query(models.ActionDependency).filter_by(dependent=action_id)
     return [d.depended for d in q.all()]
 
 
 def dependency_get_dependents(context, action_id):
-    session = get_session()
+    session = _session(context)
     q = session.query(models.ActionDependency).filter_by(depended=action_id)
     return [d.dependent for d in q.all()]
 
@@ -908,7 +908,7 @@ def dependency_add(context, depended, dependent):
         raise exception.NotSupport(
             _('Multiple dependencies between lists not support'))
 
-    session = get_session()
+    session = _session(context)
 
     if isinstance(depended, list):   # e.g. D depends on A,B,C
         session.begin()
@@ -943,7 +943,7 @@ def dependency_add(context, depended, dependent):
 
 
 def action_mark_succeeded(context, action_id, timestamp):
-    session = get_session()
+    session = _session(context)
     session.begin()
 
     query = session.query(models.Action).filter_by(id=action_id)
@@ -994,7 +994,7 @@ def _mark_failed(session, action_id, timestamp, reason=None):
 
 
 def action_mark_failed(context, action_id, timestamp, reason=None):
-    session = get_session()
+    session = _session(context)
     session.begin()
     _mark_failed(session, action_id, timestamp, reason)
     session.commit()
@@ -1018,7 +1018,7 @@ def _mark_cancelled(session, action_id, timestamp, reason=None):
 
 
 def action_mark_cancelled(context, action_id, timestamp, reason=None):
-    session = get_session()
+    session = _session(context)
     session.begin()
     _mark_cancelled(session, action_id, timestamp, reason)
     session.commit()
