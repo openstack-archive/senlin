@@ -424,20 +424,14 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Policy '%s' is deleted."), identity)
 
-    @request_context
-    def cluster_list(self, context, limit=None, marker=None, sort=None,
-                     filters=None, project_safe=True):
-        limit = utils.parse_int_param('limit', limit)
-        project_safe = utils.parse_bool_param('project_safe', project_safe)
-        clusters = cluster_mod.Cluster.load_all(context, limit=limit,
-                                                marker=marker, sort=sort,
-                                                filters=filters,
-                                                project_safe=project_safe)
-
-        return [cluster.to_dict() for cluster in clusters]
-
     def cluster_find(self, context, identity):
-        '''Find a cluster with the given identity (could be name or ID).'''
+        """Find a cluster with the given identity.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short ID of a cluster.
+        :return: An instance of `Cluster` class.
+        :raises: `ClusterNotFound` if no matching object can be found.
+        """
 
         if uuidutils.is_uuid_like(identity):
             cluster = db_api.cluster_get(context, identity)
@@ -455,7 +449,40 @@ class EngineService(service.Service):
         return cluster
 
     @request_context
+    def cluster_list(self, context, limit=None, marker=None, sort=None,
+                     filters=None, project_safe=True):
+        """List clusters matching the specified criteria.
+
+        :param context: An instance of request context.
+        :param limit: An integer specifying the maximum number of objects to
+                      return in a response.
+        :param marker: An UUID specifying the cluster after which the result
+                       list starts.
+        :param sort: A list of sorting keys (each optionally attached with a
+                     sorting direction) separated by commas.
+        :param filters: A dictionary of key-value pairs for filtering out the
+                        result list.
+        :param project_safe: A boolean indicating whether clusters from all
+                             projects will be returned.
+        :return: A list of `Cluster` object representations.
+        """
+        limit = utils.parse_int_param('limit', limit)
+        project_safe = utils.parse_bool_param('project_safe', project_safe)
+        clusters = cluster_mod.Cluster.load_all(context, limit=limit,
+                                                marker=marker, sort=sort,
+                                                filters=filters,
+                                                project_safe=project_safe)
+
+        return [cluster.to_dict() for cluster in clusters]
+
+    @request_context
     def cluster_get(self, context, identity):
+        """Retrieve the cluster specified.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-ID of a cluster.
+        :return: A dictionary containing the details about a cluster.
+        """
         db_cluster = self.cluster_find(context, identity)
         cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
         return cluster.to_dict()
@@ -464,6 +491,22 @@ class EngineService(service.Service):
     def cluster_create(self, context, name, desired_capacity, profile_id,
                        min_size=None, max_size=None, metadata=None,
                        timeout=None):
+        """Create a cluster.
+
+        :param context: An instance of the request context.
+        :param name: A string specifying the name of the cluster to be created.
+        :param desired_capacity: The desired capacity of the cluster.
+        :param profile_ID: The UUID, name or short-ID of the profile to use.
+        :param min_size: An integer specifying the minimum size of the cluster.
+        :param max_size: An integer specifying the maximum size of the cluster.
+        :param metadata: A dictionary containing key-value pairs to be
+                         associated with the cluster.
+        :param timeout: An optional integer specifying the operation timeout
+                        value in seconds.
+        :return: A dictionary containing the details about the cluster and the
+                 ID of the action triggered by this operation.
+        """
+
         if cfg.CONF.name_unique:
             if db_api.cluster_get_by_name(context, name):
                 msg = _("The cluster (%(name)s) already exists."
@@ -493,13 +536,13 @@ class EngineService(service.Service):
         LOG.info(_LI("Creating cluster '%s'."), name)
 
         kwargs = {
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
             'min_size': min_size,
             'max_size': max_size,
             'timeout': timeout,
             'metadata': metadata,
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
         }
 
         cluster = cluster_mod.Cluster(name, init_size, db_profile.id, **kwargs)
@@ -507,11 +550,11 @@ class EngineService(service.Service):
 
         # Build an Action for cluster creation
         kwargs = {
+            'name': 'cluster_create_%s' % cluster.id[:8],
+            'cause': action_mod.CAUSE_RPC,
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
-            'name': 'cluster_create_%s' % cluster.id[:8],
-            'cause': action_mod.CAUSE_RPC
         }
         action = action_mod.Action(cluster.id, consts.CLUSTER_CREATE, **kwargs)
         action.status = action.READY
@@ -519,14 +562,27 @@ class EngineService(service.Service):
         dispatcher.start_action(action_id=action.id)
 
         LOG.info(_LI("Cluster create action queued: %s."), action.id)
-
-        return cluster.to_dict()
+        result = cluster.to_dict()
+        result['action'] = action.id
+        return result
 
     @request_context
     def cluster_update(self, context, identity, name=None, profile_id=None,
                        metadata=None, timeout=None):
+        """Update a cluster.
 
-        LOG.info(_LI("Updating cluster '%s'."), identity)
+        :param context: An instance of the request context.
+        :param identity: The UUID, name, or short-ID or the target cluster.
+        :param name: A string specifying the new name of the cluster.
+        :param profile_id: The UUID, name or short-ID of the new profile.
+        :param metadata: A dictionary containing key-value pairs to be
+                         associated with the cluster.
+        :param timeout: An optional integer specifying the new operation
+                        timeout value in seconds.
+        :return: A dictionary containing the details about the cluster and the
+                 ID of the action triggered by this operation.
+        """
+
         # Get the database representation of the existing cluster
         db_cluster = self.cluster_find(context, identity)
         cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
@@ -534,6 +590,8 @@ class EngineService(service.Service):
             msg = _('Updating a cluster in error state')
             LOG.error(msg)
             raise exception.FeatureNotSupported(feature=msg)
+
+        LOG.info(_LI("Updating cluster '%s'."), identity)
 
         inputs = {}
         if profile_id is not None:
@@ -565,12 +623,12 @@ class EngineService(service.Service):
             inputs['name'] = name
 
         kwargs = {
+            'name': 'cluster_update_%s' % cluster.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': inputs,
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
-            'name': 'cluster_update_%s' % cluster.id[:8],
-            'cause': action_mod.CAUSE_RPC,
-            'inputs': inputs
         }
         action = action_mod.Action(cluster.id, consts.CLUSTER_UPDATE, **kwargs)
         action.status = action.READY
@@ -583,10 +641,63 @@ class EngineService(service.Service):
         return resp
 
     @request_context
-    def cluster_add_nodes(self, context, identity, nodes):
+    def cluster_delete(self, context, identity):
+        """Delete the specified cluster.
 
+        :param identity: The UUID, name or short-ID of the target cluster.
+        :return: A dictionary containing the ID of the action triggered.
+        """
+
+        LOG.info(_LI('Deleting cluster %s'), identity)
+
+        db_cluster = self.cluster_find(context, identity)
+
+        policies = db_api.cluster_policy_get_all(context, db_cluster.id)
+        if len(policies) > 0:
+            msg = _('Cluster %(id)s cannot be deleted without having all '
+                    'policies detached.') % {'id': identity}
+            LOG.error(msg)
+            raise exception.SenlinBadRequest(msg=msg)
+
+        receivers = db_api.receiver_get_all(context, filters={'cluster_id':
+                                            db_cluster.id})
+        if len(receivers) > 0:
+            msg = _('Cluster %(id)s cannot be deleted without having all '
+                    'receivers deleted.') % {'id': identity}
+            LOG.error(msg)
+            raise exception.SenlinBadRequest(msg=msg)
+
+        action_name = 'cluster_delete_%s' % db_cluster.id[:8]
+        params = {
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC,
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+        }
+        action = action_mod.Action(db_cluster.id, consts.CLUSTER_DELETE,
+                                   **params)
+        action.status = action.READY
+        action.store(context)
+        dispatcher.start_action(action_id=action.id)
+
+        LOG.info(_LI("Cluster delete action queued: %s"), action.id)
+
+        return {'action': action.id}
+
+    @request_context
+    def cluster_add_nodes(self, context, identity, nodes):
+        """Add specified nodes to the specified cluster.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of the target cluster.
+        :param nodes: A list of node identities where each item is the UUID,
+                      name or short-id of a node.
+        :return: A dictionary containing the ID of the action triggered.
+        """
         LOG.info(_LI("Adding nodes '%(nodes)s' to cluster '%(cluster)s'."),
                  {'cluster': identity, 'nodes': nodes})
+
         db_cluster = self.cluster_find(context, identity)
         db_cluster_profile = self.profile_find(context,
                                                db_cluster.profile_id)
@@ -620,20 +731,20 @@ class EngineService(service.Service):
 
         error = None
         if len(not_match_nodes) > 0:
-            error = _("Profile type of nodes %s does not match with "
-                      "cluster") % not_match_nodes
+            error = _("Profile type of nodes %s does not match that of the "
+                      "cluster.") % not_match_nodes
             LOG.error(error)
             raise exception.ProfileTypeNotMatch(message=error)
         elif len(owned_nodes) > 0:
-            error = _("Nodes %s already owned by some cluster") % owned_nodes
+            error = _("Nodes %s already owned by some cluster.") % owned_nodes
             LOG.error(error)
             raise exception.NodeNotOrphan(message=error)
         elif len(bad_nodes) > 0:
-            error = _("Nodes are not ACTIVE: %s") % bad_nodes
+            error = _("Nodes are not ACTIVE: %s.") % bad_nodes
         elif len(not_found) > 0:
-            error = _("Nodes not found: %s") % not_found
+            error = _("Nodes not found: %s.") % not_found
         elif len(found) == 0:
-            error = _("No nodes to add: %s") % nodes
+            error = _("No nodes to add: %s.") % nodes
 
         if error is not None:
             LOG.error(error)
@@ -641,12 +752,12 @@ class EngineService(service.Service):
 
         action_name = 'cluster_add_nodes_%s' % db_cluster.id[:8]
         params = {
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': {'nodes': found},
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
-            'name': action_name,
-            'cause': action_mod.CAUSE_RPC,
-            'inputs': {'nodes': found}
         }
         action = action_mod.Action(db_cluster.id, consts.CLUSTER_ADD_NODES,
                                    **params)
@@ -658,6 +769,13 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_del_nodes(self, context, identity, nodes):
+        """Delete specified nodes from the named cluster.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of the cluster.
+        :param nodes: A list containing the identities of the nodes to delete.
+        :return: A dictionary containing the ID of the action triggered.
+        """
         LOG.info(_LI("Deleting nodes '%(nodes)s' from cluster '%(cluster)s'."),
                  {'cluster': identity, 'nodes': nodes})
         db_cluster = self.cluster_find(context, identity)
@@ -677,9 +795,10 @@ class EngineService(service.Service):
 
         error = None
         if len(not_found):
-            error = _("Nodes not found: %s") % not_found
+            error = _("Nodes not found: %s.") % not_found
         elif len(bad_nodes):
-            error = _("Nodes not members of specified cluster: %s") % bad_nodes
+            error = _("Nodes not members of specified cluster: "
+                      "%s.") % bad_nodes
         elif len(found) == 0:
             error = _("No nodes specified.")
 
@@ -690,15 +809,15 @@ class EngineService(service.Service):
         action_name = 'cluster_del_nodes_%s' % db_cluster.id[:8]
         count = len(found)
         params = {
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
             'name': action_name,
             'cause': action_mod.CAUSE_RPC,
             'inputs': {
                 'candidates': found,
                 'count': count
-            }
+            },
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
         }
         action = action_mod.Action(db_cluster.id, consts.CLUSTER_DEL_NODES,
                                    **params)
@@ -707,52 +826,6 @@ class EngineService(service.Service):
         dispatcher.start_action(action_id=action.id)
 
         LOG.info(_LI("Cluster delete nodes action queued: %s."), action.id)
-        return {'action': action.id}
-
-    @request_context
-    def cluster_check(self, context, identity, **params):
-        LOG.info(_LI("Checking Cluster '%(cluster)s'."),
-                 {'cluster': identity})
-        db_cluster = self.cluster_find(context, identity)
-
-        action_name = 'cluster_check_%s' % db_cluster.id[:8]
-        new_params = {
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
-            'name': action_name,
-            'cause': action_mod.CAUSE_RPC,
-            'inputs': params
-        }
-        action = action_mod.Action(db_cluster.id, consts.CLUSTER_CHECK,
-                                   **new_params)
-        action.status = action.READY
-        action.store(context)
-        dispatcher.start_action(action_id=action.id)
-        LOG.info(_LI("Cluster check action queued: %s."), action.id)
-        return {'action': action.id}
-
-    @request_context
-    def cluster_recover(self, context, identity, **params):
-        LOG.info(_LI("Recovering cluster '%(cluster)s'."),
-                 {'cluster': identity})
-        db_cluster = self.cluster_find(context, identity)
-
-        action_name = 'cluster_recover_%s' % db_cluster.id[:8]
-        new_params = {
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
-            'name': action_name,
-            'cause': action_mod.CAUSE_RPC,
-            'inputs': params
-        }
-        action = action_mod.Action(db_cluster.id, consts.CLUSTER_RECOVER,
-                                   **new_params)
-        action.status = action.READY
-        action.store(context)
-        dispatcher.start_action(action_id=action.id)
-        LOG.info(_LI("Cluster recover action queued: %s."), action.id)
         return {'action': action.id}
 
     @request_context
@@ -858,12 +931,12 @@ class EngineService(service.Service):
 
         action_name = 'cluster_resize_%s' % db_cluster.id[:8]
         params = {
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': inputs,
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
-            'name': action_name,
-            'cause': action_mod.CAUSE_RPC,
-            'inputs': inputs
         }
         action = action_mod.Action(db_cluster.id, consts.CLUSTER_RESIZE,
                                    **params)
@@ -877,7 +950,7 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_scale_out(self, context, identity, count=None):
-        """Inflate the size of a cluster by given count (optional).
+        """Inflate the size of a cluster by then given number (optional).
 
         :param context: Request context for the call.
         :param identity: The name, ID or short ID of a cluster.
@@ -906,12 +979,12 @@ class EngineService(service.Service):
 
         action_name = 'cluster_scale_out_%s' % db_cluster.id[:8]
         params = {
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': inputs,
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
-            'name': action_name,
-            'cause': action_mod.CAUSE_RPC,
-            'inputs': inputs
         }
         action = action_mod.Action(db_cluster.id, consts.CLUSTER_SCALE_OUT,
                                    **params)
@@ -925,7 +998,7 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_scale_in(self, context, identity, count=None):
-        """Deflate the size of a cluster by given count (optional).
+        """Deflate the size of a cluster by given number (optional).
 
         :param context: Request context for the call.
         :param identity: The name, ID or short ID of a cluster.
@@ -936,7 +1009,6 @@ class EngineService(service.Service):
         :return: A dict with the ID of the action fired.
         """
 
-        # Validation
         db_cluster = self.cluster_find(context, identity)
 
         if count is not None:
@@ -973,43 +1045,65 @@ class EngineService(service.Service):
         return {'action': action.id}
 
     @request_context
-    def cluster_delete(self, context, identity):
+    def cluster_check(self, context, identity, **params):
+        """Check the status of a cluster.
 
-        LOG.info(_LI('Deleting cluster %s'), identity)
-
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of a cluster.
+        :param \*\*params: A dictionary containing additional parameters for
+                           the check operation.
+        :return: A dictionary containg the ID of the action triggered.
+        """
+        LOG.info(_LI("Checking Cluster '%(cluster)s'."),
+                 {'cluster': identity})
         db_cluster = self.cluster_find(context, identity)
 
-        policies = db_api.cluster_policy_get_all(context, db_cluster.id)
-        if len(policies) > 0:
-            msg = _('Cluster %(id)s cannot be deleted without having all '
-                    'policies detached.') % {'id': identity}
-            LOG.error(msg)
-            raise exception.SenlinBadRequest(msg=msg)
-
-        receivers = db_api.receiver_get_all(context, filters={'cluster_id':
-                                            db_cluster.id})
-        if len(receivers) > 0:
-            msg = _('Cluster %(id)s cannot be deleted without having all '
-                    'receivers deleted.') % {'id': identity}
-            LOG.error(msg)
-            raise exception.SenlinBadRequest(msg=msg)
-
-        action_name = 'cluster_delete_%s' % db_cluster.id[:8]
-        params = {
+        action_name = 'cluster_check_%s' % db_cluster.id[:8]
+        new_params = {
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': params,
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
-            'name': action_name,
-            'cause': action_mod.CAUSE_RPC
         }
-        action = action_mod.Action(db_cluster.id, consts.CLUSTER_DELETE,
-                                   **params)
+        action = action_mod.Action(db_cluster.id, consts.CLUSTER_CHECK,
+                                   **new_params)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
+        LOG.info(_LI("Cluster check action queued: %s."), action.id)
+        return {'action': action.id}
 
-        LOG.info(_LI("Cluster delete action queued: %s"), action.id)
+    @request_context
+    def cluster_recover(self, context, identity, **params):
+        """Recover a cluster to a healthy status.
 
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of a cluster.
+        :param \*\*params: A dictionary containing additional parameters for
+                           the check operation.
+        :return: A dictionary containg the ID of the action triggered.
+        """
+        LOG.info(_LI("Recovering cluster '%(cluster)s'."),
+                 {'cluster': identity})
+        db_cluster = self.cluster_find(context, identity)
+
+        action_name = 'cluster_recover_%s' % db_cluster.id[:8]
+        new_params = {
+            'name': action_name,
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': params,
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+        }
+        action = action_mod.Action(db_cluster.id, consts.CLUSTER_RECOVER,
+                                   **new_params)
+        action.status = action.READY
+        action.store(context)
+        dispatcher.start_action(action_id=action.id)
+        LOG.info(_LI("Cluster recover action queued: %s."), action.id)
         return {'action': action.id}
 
     def node_find(self, context, identity):
