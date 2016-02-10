@@ -31,9 +31,6 @@ service_opts = [
     cfg.IntOpt('max_response_size',
                default=524288,
                help=_('Maximum raw byte size of data from web response.')),
-    cfg.IntOpt('max_nested_cluster_depth',
-               default=3,
-               help=_('Maximum depth allowed when using nested clusters.')),
     cfg.IntOpt('num_engine_workers',
                default=1,
                help=_('Number of senlin-engine processes to fork and run.'))]
