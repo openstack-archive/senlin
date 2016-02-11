@@ -235,6 +235,9 @@ class Action(BASE, TimestampMixin, models.ModelBase):
     inputs = Column(types.Dict)
     outputs = Column(types.Dict)
     data = Column(types.Dict)
+    user = Column(String(32))
+    project = Column(String(32))
+    domain = Column(String(32))
 
 
 class Event(BASE, SenlinBase):
