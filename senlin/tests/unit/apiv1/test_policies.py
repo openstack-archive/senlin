@@ -243,7 +243,6 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                           ('policy_create', expected_args))
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('SpecValidationFailed', resp.json['error']['type'])
-        self.assertIsNone(resp.json['error']['traceback'])
 
     def test_policy_create_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', False)

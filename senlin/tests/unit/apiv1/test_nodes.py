@@ -316,7 +316,6 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                           ('node_create', body['node']))
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ProfileNotFound', resp.json['error']['type'])
-        self.assertIsNone(resp.json['error']['traceback'])
 
     def test_node_create_with_bad_cluster(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -343,7 +342,6 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                           ('node_create', body['node']))
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ClusterNotFound', resp.json['error']['type'])
-        self.assertIsNone(resp.json['error']['traceback'])
 
     def test_node_get_success(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)

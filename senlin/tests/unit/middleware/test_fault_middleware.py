@@ -46,7 +46,6 @@ class FaultMiddlewareTest(base.SenlinTestCase):
             'error': {
                 'code': 400,
                 'message': 'Error with \n newline',
-                'traceback': None,
                 'type': 'ErrorWithNewline'
             },
             'explanation': 'The server could not comply with the request '
@@ -64,7 +63,6 @@ class FaultMiddlewareTest(base.SenlinTestCase):
             'error': {
                 'code': 404,
                 'message': 'The cluster (a) could not be found.',
-                'traceback': None,
                 'type': 'ClusterNotFound'
             },
             'explanation': 'The resource could not be found.',
@@ -80,7 +78,6 @@ class FaultMiddlewareTest(base.SenlinTestCase):
             'error': {
                 'code': 500,
                 'message': 'Policy not specified.',
-                'traceback': None,
                 'type': 'PolicyNotSpecified'
             },
             'explanation': 'The server has either erred or is incapable of '
@@ -111,7 +108,6 @@ class FaultMiddlewareTest(base.SenlinTestCase):
         self.assertEqual('Internal Server Error', msg['title'])
 
     def test_remote_exception(self):
-        # We want tracebacks
         cfg.CONF.set_override('debug', True, enforce_type=True)
         error = senlin_exc.ClusterNotFound(cluster='a')
         exc_info = (type(error), error, None)
@@ -120,14 +116,12 @@ class FaultMiddlewareTest(base.SenlinTestCase):
             serialized, ["senlin.common.exception"])
         wrapper = fault.FaultWrapper(None)
         msg = wrapper._error(remote_error)
-        expected_message, expected_traceback = six.text_type(remote_error).\
-            split('\n', 1)
+        expected_message = six.text_type(remote_error).split('\n', 1)[0]
         expected = {
             'code': 404,
             'error': {
                 'code': 404,
                 'message': expected_message,
-                'traceback': expected_traceback,
                 'type': 'ClusterNotFound'
             },
             'explanation': 'The resource could not be found.',
@@ -148,7 +142,6 @@ class FaultMiddlewareTest(base.SenlinTestCase):
             'error': {
                 'code': 500,
                 'message': msg['error']['message'],
-                'traceback': None,
                 'type': 'RemoteError'
             },
             'explanation': msg['explanation'],
@@ -200,7 +193,6 @@ class FaultMiddlewareTest(base.SenlinTestCase):
             'error': {
                 'code': 404,
                 'message': 'The cluster (a) could not be found.',
-                'traceback': None,
                 'type': 'ClusterNotFoundChild'
             },
             'explanation': 'The resource could not be found.',
@@ -220,7 +212,6 @@ class FaultMiddlewareTest(base.SenlinTestCase):
             'error': {
                 'code': 500,
                 'message': u'A message',
-                'traceback': None,
                 'type': 'NotMappedException'
             },
             'explanation': ('The server has either erred or is incapable '
@@ -230,7 +221,6 @@ class FaultMiddlewareTest(base.SenlinTestCase):
         self.assertEqual(expected, msg)
 
     def test_should_not_ignore_parent_classes_even_for_remote_ones(self):
-        # We want tracebacks
         cfg.CONF.set_override('debug', True, enforce_type=True)
 
         error = ClusterNotFoundChild(cluster='a')
@@ -241,14 +231,12 @@ class FaultMiddlewareTest(base.SenlinTestCase):
 
         wrapper = fault.FaultWrapper(None)
         msg = wrapper._error(remote_error)
-        expected_message, expected_traceback = six.text_type(remote_error).\
-            split('\n', 1)
+        expected_message = six.text_type(remote_error).split('\n', 1)[0]
         expected = {
             'code': 404,
             'error': {
                 'code': 404,
                 'message': expected_message,
-                'traceback': expected_traceback,
                 'type': 'ClusterNotFoundChild'
             },
             'explanation': 'The resource could not be found.',

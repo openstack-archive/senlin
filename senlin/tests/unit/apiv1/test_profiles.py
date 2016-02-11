@@ -281,7 +281,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                           ('profile_create', body['profile']))
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ProfileTypeNotFound', resp.json['error']['type'])
-        self.assertIsNone(resp.json['error']['traceback'])
 
     def test_profile_create_with_spec_validation_failed(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -310,7 +309,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                           ('profile_create', body['profile']))
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('SpecValidationFailed', resp.json['error']['type'])
-        self.assertIsNone(resp.json['error']['traceback'])
 
     def test_profile_create_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', False)
