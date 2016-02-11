@@ -18,7 +18,7 @@ from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import cluster as clusterm
 from senlin.engine import cluster_policy as cp_mod
-from senlin.engine import event as eventm
+from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.policies import base as policy_base
 from senlin.profiles import base as profile_base
@@ -120,7 +120,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual([], cluster.rt['policies'])
 
     def test_store_for_create(self):
-        mock_info = self.patchobject(eventm, 'info')
+        mock_info = self.patchobject(EVENT, 'info')
 
         cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID',
                                    user=self.context.user,
@@ -158,7 +158,7 @@ class TestCluster(base.SenlinTestCase):
         mock_info.assert_called_once_with(self.context, cluster, 'create')
 
     def test_store_for_update(self):
-        mock_info = self.patchobject(eventm, 'info')
+        mock_info = self.patchobject(EVENT, 'info')
 
         cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID',
                                    user=self.context.user,

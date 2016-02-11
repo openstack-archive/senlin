@@ -13,7 +13,7 @@
 from oslo_utils import timeutils
 
 from senlin.common import exception
-from senlin.engine import event as event_mod
+from senlin.engine import event as EVENT
 from senlin.engine import service
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -29,9 +29,9 @@ class EventTest(base.SenlinTestCase):
 
     def test_event_list(self):
         ts = timeutils.utcnow()
-        e1 = event_mod.Event(ts, 50, status='GOOD', context=self.ctx)
+        e1 = EVENT.Event(ts, 50, status='GOOD', context=self.ctx)
         eid1 = e1.store(self.ctx)
-        e2 = event_mod.Event(ts, 50, status='BAD', context=self.ctx)
+        e2 = EVENT.Event(ts, 50, status='BAD', context=self.ctx)
         eid2 = e2.store(self.ctx)
 
         result = self.eng.event_list(self.ctx)
@@ -45,11 +45,11 @@ class EventTest(base.SenlinTestCase):
         self.assertIn(eid2, ids)
 
     def test_event_list_with_limit_marker(self):
-        e1 = event_mod.Event(timeutils.utcnow(), 50, status='GOOD',
-                             context=self.ctx)
+        e1 = EVENT.Event(timeutils.utcnow(), 50, status='GOOD',
+                         context=self.ctx)
         e1.store(self.ctx)
-        e2 = event_mod.Event(timeutils.utcnow(), 50, status='GOOD',
-                             context=self.ctx)
+        e2 = EVENT.Event(timeutils.utcnow(), 50, status='GOOD',
+                         context=self.ctx)
         e2.store(self.ctx)
 
         result = self.eng.event_list(self.ctx, limit=0)
@@ -67,8 +67,8 @@ class EventTest(base.SenlinTestCase):
         result = self.eng.event_list(self.ctx, marker=e2.id)
         self.assertEqual(0, len(result))
 
-        e3 = event_mod.Event(timeutils.utcnow(), 50, status='GOOD',
-                             context=self.ctx)
+        e3 = EVENT.Event(timeutils.utcnow(), 50, status='GOOD',
+                         context=self.ctx)
         e3.store(self.ctx)
         result = self.eng.event_list(self.ctx, limit=1, marker=e1.id)
         self.assertEqual(1, len(result))
@@ -76,14 +76,14 @@ class EventTest(base.SenlinTestCase):
         self.assertEqual(2, len(result))
 
     def test_event_list_with_sorting(self):
-        e1 = event_mod.Event(timeutils.utcnow(), 50, status='GOOD',
-                             context=self.ctx)
+        e1 = EVENT.Event(timeutils.utcnow(), 50, status='GOOD',
+                         context=self.ctx)
         e1.store(self.ctx)
-        e2 = event_mod.Event(timeutils.utcnow(), 40, status='GOOD',
-                             context=self.ctx)
+        e2 = EVENT.Event(timeutils.utcnow(), 40, status='GOOD',
+                         context=self.ctx)
         e2.store(self.ctx)
-        e3 = event_mod.Event(timeutils.utcnow(), 60, status='BAD',
-                             context=self.ctx)
+        e3 = EVENT.Event(timeutils.utcnow(), 60, status='BAD',
+                         context=self.ctx)
         e3.store(self.ctx)
 
         # default by timestamp
@@ -111,14 +111,14 @@ class EventTest(base.SenlinTestCase):
         self.assertIsNotNone(result)
 
     def test_event_list_with_sorting_dir(self):
-        e1 = event_mod.Event(timeutils.utcnow(), 50, status='GOOD',
-                             context=self.ctx)
+        e1 = EVENT.Event(timeutils.utcnow(), 50, status='GOOD',
+                         context=self.ctx)
         e1.store(self.ctx)
-        e2 = event_mod.Event(timeutils.utcnow(), 40, status='GOOD',
-                             context=self.ctx)
+        e2 = EVENT.Event(timeutils.utcnow(), 40, status='GOOD',
+                         context=self.ctx)
         e2.store(self.ctx)
-        e3 = event_mod.Event(timeutils.utcnow(), 60, status='BAD',
-                             context=self.ctx)
+        e3 = EVENT.Event(timeutils.utcnow(), 60, status='BAD',
+                         context=self.ctx)
         e3.store(self.ctx)
 
         # default by timestamp , ascending
@@ -136,14 +136,14 @@ class EventTest(base.SenlinTestCase):
         self.assertEqual(e3.id, result[2]['id'])
 
     def test_event_list_with_filters(self):
-        e1 = event_mod.Event(timeutils.utcnow(), 50, status='GOOD',
-                             context=self.ctx)
+        e1 = EVENT.Event(timeutils.utcnow(), 50, status='GOOD',
+                         context=self.ctx)
         e1.store(self.ctx)
-        e2 = event_mod.Event(timeutils.utcnow(), 40, status='GOOD',
-                             context=self.ctx)
+        e2 = EVENT.Event(timeutils.utcnow(), 40, status='GOOD',
+                         context=self.ctx)
         e2.store(self.ctx)
-        e3 = event_mod.Event(timeutils.utcnow(), 60, status='BAD',
-                             context=self.ctx)
+        e3 = EVENT.Event(timeutils.utcnow(), 60, status='BAD',
+                         context=self.ctx)
         e3.store(self.ctx)
 
         result = self.eng.event_list(self.ctx, filters={'level': 50})
@@ -162,8 +162,8 @@ class EventTest(base.SenlinTestCase):
         self.assertEqual(0, len(result))
 
     def test_event_find(self):
-        e1 = event_mod.Event(timeutils.utcnow(), 50, status='GOOD',
-                             context=self.ctx)
+        e1 = EVENT.Event(timeutils.utcnow(), 50, status='GOOD',
+                         context=self.ctx)
         eid = e1.store(self.ctx)
 
         result = self.eng.event_find(self.ctx, eid)

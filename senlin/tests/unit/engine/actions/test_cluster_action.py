@@ -20,7 +20,7 @@ from senlin.engine.actions import base as base_action
 from senlin.engine.actions import cluster_action as ca
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import dispatcher
-from senlin.engine import event as event_mod
+from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock
@@ -2065,7 +2065,7 @@ class ClusterActionTest(base.SenlinTestCase):
             mock.call('FAKE_CLUSTER', 'BEFORE'),
             mock.call('FAKE_CLUSTER', 'AFTER')])
 
-    @mock.patch.object(event_mod, 'error')
+    @mock.patch.object(EVENT, 'error')
     @mock.patch.object(base_action.Action, 'policy_check')
     def test_execute_failed_policy_check(self, mock_check, mock_error,
                                          mock_load):
@@ -2088,7 +2088,7 @@ class ClusterActionTest(base.SenlinTestCase):
             action.context, cluster, 'CLUSTER_FLY', 'Failed',
             'Policy check failure: Something is wrong.')
 
-    @mock.patch.object(event_mod, 'error')
+    @mock.patch.object(EVENT, 'error')
     @mock.patch.object(base_action.Action, 'policy_check')
     def test_execute_unsupported_action(self, mock_check, mock_error,
                                         mock_load):
@@ -2110,7 +2110,7 @@ class ClusterActionTest(base.SenlinTestCase):
             action.context, cluster, 'CLUSTER_DANCE', 'Failed',
             'Unsupported action: CLUSTER_DANCE.')
 
-    @mock.patch.object(event_mod, 'error')
+    @mock.patch.object(EVENT, 'error')
     def test_execute_post_check_failed(self, mock_error, mock_load):
         def fake_check(cluster_id, target):
             if target == 'BEFORE':

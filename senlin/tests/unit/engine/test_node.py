@@ -19,7 +19,7 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import utils as common_utils
 from senlin.db.sqlalchemy import api as db_api
-from senlin.engine import event as eventm
+from senlin.engine import event as EVENT
 from senlin.engine import node as nodem
 from senlin.profiles import base as profiles_base
 from senlin.tests.unit.common import base
@@ -100,7 +100,7 @@ class TestNode(base.SenlinTestCase):
         self.assertIsNotNone(node.name)
         self.assertEqual(13, len(node.name))
 
-    @mock.patch.object(eventm, 'info')
+    @mock.patch.object(EVENT, 'info')
     def test_node_store_init(self, mock_info):
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
                           self.context, role='first_node',
@@ -132,7 +132,7 @@ class TestNode(base.SenlinTestCase):
 
         mock_info.assert_called_once_with(self.context, node, 'create')
 
-    @mock.patch.object(eventm, 'info')
+    @mock.patch.object(EVENT, 'info')
     def test_node_store_update(self, mock_info):
         node = nodem.Node('node1', self.profile.id, None)
         node_id = node.store(self.context)
@@ -325,7 +325,7 @@ class TestNode(base.SenlinTestCase):
         mock_details.assert_called_once_with(self.context, node)
         self.assertEqual({'foo': 'bar'}, res)
 
-    @mock.patch.object(eventm, 'warning')
+    @mock.patch.object(EVENT, 'warning')
     def test_node_handle_exception(self, mock_warning):
         ex = exception.ResourceStatusError(resource_id='FAKE_ID',
                                            status='FAKE_STATUS',
@@ -357,7 +357,7 @@ class TestNode(base.SenlinTestCase):
         mock_warning.assert_called_with(self.context, node, 'CREATE',
                                         'STATUS', six.text_type(ex))
 
-    @mock.patch.object(eventm, 'info')
+    @mock.patch.object(EVENT, 'info')
     @mock.patch.object(nodem.Node, 'store')
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(profiles_base.Profile, 'create_object')
@@ -384,7 +384,7 @@ class TestNode(base.SenlinTestCase):
         res = node.do_create(self.context)
         self.assertFalse(res)
 
-    @mock.patch.object(eventm, 'info')
+    @mock.patch.object(EVENT, 'info')
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(profiles_base.Profile, 'create_object')
     def test_node_create_not_created(self, mock_create, mock_status,
@@ -398,8 +398,8 @@ class TestNode(base.SenlinTestCase):
                                             reason='Creation in progress')
         mock_event.assert_called_once_with(self.context, node, 'create')
 
-    @mock.patch.object(eventm, 'warning')
-    @mock.patch.object(eventm, 'info')
+    @mock.patch.object(EVENT, 'warning')
+    @mock.patch.object(EVENT, 'info')
     @mock.patch.object(nodem.Node, 'store')
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(profiles_base.Profile, 'create_object')
@@ -421,7 +421,7 @@ class TestNode(base.SenlinTestCase):
             'msg': six.text_type(ex)}
         mock_status.assert_any_call(self.context, node.ERROR, reason)
 
-    @mock.patch.object(eventm, 'info')
+    @mock.patch.object(EVENT, 'info')
     @mock.patch.object(db_api, 'node_delete')
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(profiles_base.Profile, 'delete_object')
@@ -449,7 +449,7 @@ class TestNode(base.SenlinTestCase):
         self.assertFalse(mock_delete.called)
         self.assertTrue(mock_db_delete.called)
 
-    @mock.patch.object(eventm, 'info')
+    @mock.patch.object(EVENT, 'info')
     @mock.patch.object(nodem.Node, '_handle_exception')
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(profiles_base.Profile, 'delete_object')

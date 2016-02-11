@@ -39,7 +39,7 @@ from senlin.engine import cluster as cluster_mod
 from senlin.engine import cluster_policy
 from senlin.engine import dispatcher
 from senlin.engine import environment
-from senlin.engine import event as event_mod
+from senlin.engine import event as EVENT
 from senlin.engine import health_manager
 from senlin.engine import node as node_mod
 from senlin.engine import receiver as receiver_mod
@@ -1785,10 +1785,10 @@ class EngineService(service.Service):
     @request_context
     def event_list(self, context, filters=None, limit=None, marker=None,
                    sort=None, project_safe=True):
-        all_events = event_mod.Event.load_all(context, filters=filters,
-                                              limit=limit, marker=marker,
-                                              sort=sort,
-                                              project_safe=project_safe)
+        all_events = EVENT.Event.load_all(context, filters=filters,
+                                          limit=limit, marker=marker,
+                                          sort=sort,
+                                          project_safe=project_safe)
 
         results = [event.to_dict() for event in all_events]
         return results
@@ -1796,5 +1796,5 @@ class EngineService(service.Service):
     @request_context
     def event_get(self, context, identity):
         db_event = self.event_find(context, identity)
-        event = event_mod.Event.load(context, db_event=db_event)
+        event = EVENT.Event.load(context, db_event=db_event)
         return event.to_dict()

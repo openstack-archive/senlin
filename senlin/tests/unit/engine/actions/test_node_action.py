@@ -16,7 +16,7 @@ from senlin.common import scaleutils
 from senlin.engine.actions import base as base_action
 from senlin.engine.actions import node_action
 from senlin.engine import cluster as cluster_mod
-from senlin.engine import event as event_mod
+from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.engine import senlin_lock as lock
 from senlin.policies import base as policy_mod
@@ -359,7 +359,7 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual('GOOD', res_msg)
         action.do_sing.assert_called_once_with()
 
-    @mock.patch.object(event_mod, 'error')
+    @mock.patch.object(EVENT, 'error')
     def test_execute_bad_action(self, mock_error, mock_load):
         node = mock.Mock()
         node.id = 'NID'
