@@ -10,11 +10,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
+import mock
 
-from oslo_utils import timeutils
+from oslo_messaging.rpc import dispatcher as rpc
+from oslo_utils import uuidutils
+import six
 
-from senlin.common import exception
+from senlin.common import exception as exc
+from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import event as EVENT
 from senlin.engine import service
 from senlin.tests.unit.common import base
@@ -27,154 +30,122 @@ class EventTest(base.SenlinTestCase):
         super(EventTest, self).setUp()
         self.ctx = utils.dummy_context(project='event_test_project')
         self.eng = service.EngineService('host-a', 'topic-a')
-        self.eng.init_tgm()
 
-    def test_event_list(self):
-        ts = timeutils.utcnow()
-        e1 = EVENT.Event(ts, 50, status='GOOD', context=self.ctx)
-        eid1 = e1.store(self.ctx)
-        e2 = EVENT.Event(ts, 50, status='BAD', context=self.ctx)
-        eid2 = e2.store(self.ctx)
+    @mock.patch.object(db_api, 'event_get')
+    def test_event_find_by_uuid(self, mock_get):
+        x_event = mock.Mock()
+        mock_get.return_value = x_event
+        aid = uuidutils.generate_uuid()
+
+        result = self.eng.event_find(self.ctx, aid)
+
+        self.assertEqual(x_event, result)
+        mock_get.assert_called_once_with(self.ctx, aid, project_safe=True)
+
+    @mock.patch.object(db_api, 'event_get_by_short_id')
+    @mock.patch.object(db_api, 'event_get')
+    def test_event_find_by_short_id(self, mock_get, mock_shortid):
+        mock_get.return_value = None
+        x_event = mock.Mock()
+        mock_shortid.return_value = x_event
+        aid = uuidutils.generate_uuid()
+
+        result = self.eng.event_find(self.ctx, aid)
+
+        self.assertEqual(x_event, result)
+        mock_get.assert_called_once_with(self.ctx, aid, project_safe=True)
+        mock_shortid.assert_called_once_with(self.ctx, aid, project_safe=True)
+
+    @mock.patch.object(db_api, 'event_get_by_short_id')
+    def test_event_find_by_short_id_directly(self, mock_shortid):
+        x_event = mock.Mock()
+        mock_shortid.return_value = x_event
+        aid = 'abcdef'
+
+        result = self.eng.event_find(self.ctx, aid)
+
+        self.assertEqual(x_event, result)
+        mock_shortid.assert_called_once_with(self.ctx, aid, project_safe=True)
+
+    @mock.patch.object(db_api, 'event_get_by_short_id')
+    def test_event_find_not_found(self, mock_shortid):
+        mock_shortid.return_value = None
+
+        ex = self.assertRaises(exc.EventNotFound,
+                               self.eng.event_find,
+                               self.ctx, 'BOGUS')
+        self.assertEqual("The event (BOGUS) could not be found.",
+                         six.text_type(ex))
+        mock_shortid.assert_called_once_with(self.ctx, 'BOGUS',
+                                             project_safe=True)
+
+    @mock.patch.object(EVENT.Event, 'load_all')
+    def test_event_list(self, mock_load):
+        obj_1 = mock.Mock()
+        obj_1.to_dict.return_value = {'k': 'v1'}
+        obj_2 = mock.Mock()
+        obj_2.to_dict.return_value = {'k': 'v2'}
+
+        mock_load.return_value = [obj_1, obj_2]
 
         result = self.eng.event_list(self.ctx)
 
-        self.assertIsInstance(result, list)
-        statuses = [e['status'] for e in result]
-        ids = [p['id'] for p in result]
-        self.assertIn(e1.status, statuses)
-        self.assertIn(e2.status, statuses)
-        self.assertIn(eid1, ids)
-        self.assertIn(eid2, ids)
+        self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, sort=None,
+                                          limit=None, marker=None,
+                                          project_safe=True)
 
-    def test_event_list_with_limit_marker(self):
-        e1 = EVENT.Event(timeutils.utcnow(), 50, status='GOOD',
-                         context=self.ctx)
-        e1.store(self.ctx)
-        e2 = EVENT.Event(timeutils.utcnow(), 50, status='GOOD',
-                         context=self.ctx)
-        e2.store(self.ctx)
+    @mock.patch.object(EVENT.Event, 'load_all')
+    def test_event_list_with_params(self, mock_load):
+        obj_1 = mock.Mock()
+        obj_1.to_dict.return_value = {'k': 'v1'}
+        obj_2 = mock.Mock()
+        obj_2.to_dict.return_value = {'k': 'v2'}
 
-        result = self.eng.event_list(self.ctx, limit=0)
+        mock_load.return_value = [obj_1, obj_2]
 
-        self.assertEqual(0, len(result))
-        result = self.eng.event_list(self.ctx, limit=1)
-        self.assertEqual(1, len(result))
-        result = self.eng.event_list(self.ctx, limit=2)
-        self.assertEqual(2, len(result))
-        result = self.eng.event_list(self.ctx, limit=3)
-        self.assertEqual(2, len(result))
+        result = self.eng.event_list(self.ctx, filters='FFF', sort='SSS',
+                                     limit=123, marker='MMM',
+                                     project_safe=False)
 
-        result = self.eng.event_list(self.ctx, marker=e1.id)
-        self.assertEqual(1, len(result))
-        result = self.eng.event_list(self.ctx, marker=e2.id)
-        self.assertEqual(0, len(result))
+        self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
+        mock_load.assert_called_once_with(self.ctx, filters='FFF', sort='SSS',
+                                          limit=123, marker='MMM',
+                                          project_safe=False)
 
-        e3 = EVENT.Event(timeutils.utcnow(), 50, status='GOOD',
-                         context=self.ctx)
-        e3.store(self.ctx)
-        result = self.eng.event_list(self.ctx, limit=1, marker=e1.id)
-        self.assertEqual(1, len(result))
-        result = self.eng.event_list(self.ctx, limit=2, marker=e1.id)
-        self.assertEqual(2, len(result))
+    @mock.patch.object(EVENT.Event, 'load_all')
+    def test_event_list_empty(self, mock_load):
+        mock_load.return_value = []
 
-    def test_event_list_with_sorting(self):
-        e1 = EVENT.Event(timeutils.utcnow(), 50, status='GOOD',
-                         context=self.ctx)
-        e1.store(self.ctx)
-        e2 = EVENT.Event(timeutils.utcnow(), 40, status='GOOD',
-                         context=self.ctx)
-        e2.store(self.ctx)
-        e3 = EVENT.Event(timeutils.utcnow(), 60, status='BAD',
-                         context=self.ctx)
-        e3.store(self.ctx)
-
-        # default by timestamp
         result = self.eng.event_list(self.ctx)
-        self.assertEqual(e1.id, result[0]['id'])
-        self.assertEqual(e2.id, result[1]['id'])
 
-        # use level for sorting
-        result = self.eng.event_list(self.ctx, sort='level')
-        self.assertEqual(e2.id, result[0]['id'])
-        self.assertEqual(e1.id, result[1]['id'])
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, sort=None,
+                                          limit=None, marker=None,
+                                          project_safe=True)
 
-        # use status for sorting, ascending
-        result = self.eng.event_list(self.ctx, sort='status')
-        self.assertEqual(e3.id, result[0]['id'])
+    @mock.patch.object(EVENT.Event, 'load')
+    @mock.patch.object(service.EngineService, 'event_find')
+    def test_event_get(self, mock_find, mock_load):
+        x_obj = mock.Mock()
+        mock_find.return_value = x_obj
+        x_event = mock.Mock()
+        x_event.to_dict.return_value = {'foo': 'bar'}
+        mock_load.return_value = x_event
 
-        # use level and status for sorting
-        result = self.eng.event_list(self.ctx, sort='status,level')
-        self.assertEqual(e3.id, result[0]['id'])
-        self.assertEqual(e2.id, result[1]['id'])
-        self.assertEqual(e1.id, result[2]['id'])
+        res = self.eng.event_get(self.ctx, 'EVENT')
 
-        # unknown keys will be ignored
-        result = self.eng.event_list(self.ctx, sort='duang')
-        self.assertIsNotNone(result)
+        self.assertEqual({'foo': 'bar'}, res)
+        mock_find.assert_called_once_with(self.ctx, 'EVENT')
+        mock_load.assert_called_once_with(self.ctx, db_event=x_obj)
 
-    def test_event_list_with_sorting_dir(self):
-        e1 = EVENT.Event(timeutils.utcnow(), 50, status='GOOD',
-                         context=self.ctx)
-        e1.store(self.ctx)
-        e2 = EVENT.Event(timeutils.utcnow(), 40, status='GOOD',
-                         context=self.ctx)
-        e2.store(self.ctx)
-        e3 = EVENT.Event(timeutils.utcnow(), 60, status='BAD',
-                         context=self.ctx)
-        e3.store(self.ctx)
+    @mock.patch.object(service.EngineService, 'event_find')
+    def test_event_get_not_found(self, mock_find):
+        mock_find.side_effect = exc.EventNotFound(event='BOGUS')
 
-        # default by timestamp , ascending
-        result = self.eng.event_list(self.ctx)
-        self.assertEqual(e1.id, result[0]['id'])
-        self.assertEqual(e2.id, result[1]['id'])
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.event_get,
+                               self.ctx, 'BOGUS')
 
-        # sort by timestamp, descending
-        result = self.eng.event_list(self.ctx, sort='timestamp:desc')
-        self.assertEqual(e3.id, result[0]['id'])
-        self.assertEqual(e2.id, result[1]['id'])
-
-        # use status for sorting, descending
-        result = self.eng.event_list(self.ctx, sort='status:desc')
-        self.assertEqual(e3.id, result[2]['id'])
-
-    def test_event_list_with_filters(self):
-        e1 = EVENT.Event(timeutils.utcnow(), logging.CRITICAL, status='GOOD',
-                         context=self.ctx)
-        e1.store(self.ctx)
-        e2 = EVENT.Event(timeutils.utcnow(), logging.WARNING, status='GOOD',
-                         context=self.ctx)
-        e2.store(self.ctx)
-        e3 = EVENT.Event(timeutils.utcnow(), logging.ERROR, status='BAD',
-                         context=self.ctx)
-        e3.store(self.ctx)
-
-        result = self.eng.event_list(self.ctx, filters={'level': 'CRITICAL'})
-        self.assertEqual(1, len(result))
-
-        result = self.eng.event_list(self.ctx, filters={'level': 'DEBUG'})
-        self.assertEqual(0, len(result))
-
-        filters = {'status': 'GOOD'}
-        result = self.eng.event_list(self.ctx, filters=filters)
-        self.assertEqual(2, len(result))
-
-    def test_event_list_empty(self):
-        result = self.eng.event_list(self.ctx)
-        self.assertIsInstance(result, list)
-        self.assertEqual(0, len(result))
-
-    def test_event_find(self):
-        e1 = EVENT.Event(timeutils.utcnow(), 50, status='GOOD',
-                         context=self.ctx)
-        eid = e1.store(self.ctx)
-
-        result = self.eng.event_find(self.ctx, eid)
-        self.assertIsNotNone(result)
-
-        # short id
-        result = self.eng.event_find(self.ctx, eid[:5])
-        self.assertIsNotNone(result)
-
-        # others
-        self.assertRaises(exception.EventNotFound,
-                          self.eng.event_find, self.ctx, 'Bogus')
+        self.assertEqual(exc.EventNotFound, ex.exc_info[0])
+        mock_find.assert_called_once_with(self.ctx, 'BOGUS')
