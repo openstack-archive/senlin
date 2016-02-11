@@ -98,8 +98,7 @@ def _get_sort_params(value, whitelist, default_key=None):
     return keys, dirs
 
 
-# TODO(Yanyan Hu): Set default value of project_safe to True
-def query_by_short_id(context, model, short_id, project_safe=False):
+def query_by_short_id(context, model, short_id, project_safe=True):
     q = model_query(context, model)
     q = q.filter(model.id.like('%s%%' % short_id))
 
@@ -114,8 +113,7 @@ def query_by_short_id(context, model, short_id, project_safe=False):
         raise exception.MultipleChoices(arg=short_id)
 
 
-# TODO(Yanyan Hu): Set default value of project_safe to True
-def query_by_name(context, model, name, project_safe=False):
+def query_by_name(context, model, name, project_safe=True):
     q = model_query(context, model)
     q = q.filter_by(name=name)
 
