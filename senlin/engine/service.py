@@ -1785,6 +1785,11 @@ class EngineService(service.Service):
     @request_context
     def event_list(self, context, filters=None, limit=None, marker=None,
                    sort=None, project_safe=True):
+        if filters and consts.EVENT_LEVEL in filters:
+            value = filters.pop(consts.EVENT_LEVEL)
+            value = utils.parse_level_values(value)
+            if value is not None:
+                filters[consts.EVENT_LEVEL] = value
         all_events = EVENT.Event.load_all(context, filters=filters,
                                           limit=limit, marker=marker,
                                           sort=sort,

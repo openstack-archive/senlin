@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import logging
+
 from oslo_utils import timeutils
 
 from senlin.common import exception
@@ -136,20 +138,20 @@ class EventTest(base.SenlinTestCase):
         self.assertEqual(e3.id, result[2]['id'])
 
     def test_event_list_with_filters(self):
-        e1 = EVENT.Event(timeutils.utcnow(), 50, status='GOOD',
+        e1 = EVENT.Event(timeutils.utcnow(), logging.CRITICAL, status='GOOD',
                          context=self.ctx)
         e1.store(self.ctx)
-        e2 = EVENT.Event(timeutils.utcnow(), 40, status='GOOD',
+        e2 = EVENT.Event(timeutils.utcnow(), logging.WARNING, status='GOOD',
                          context=self.ctx)
         e2.store(self.ctx)
-        e3 = EVENT.Event(timeutils.utcnow(), 60, status='BAD',
+        e3 = EVENT.Event(timeutils.utcnow(), logging.ERROR, status='BAD',
                          context=self.ctx)
         e3.store(self.ctx)
 
-        result = self.eng.event_list(self.ctx, filters={'level': 50})
+        result = self.eng.event_list(self.ctx, filters={'level': 'CRITICAL'})
         self.assertEqual(1, len(result))
 
-        result = self.eng.event_list(self.ctx, filters={'level': 10})
+        result = self.eng.event_list(self.ctx, filters={'level': 'DEBUG'})
         self.assertEqual(0, len(result))
 
         filters = {'status': 'GOOD'}

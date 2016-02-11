@@ -10,6 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import logging
+
+
 RPC_ATTRS = (
     ENGINE_TOPIC,
     ENGINE_DISPATCHER_TOPIC,
@@ -209,3 +212,11 @@ ACTION_STATUSES = (
     'INIT', 'WAITING', 'READY', 'RUNNING',
     'SUCCEEDED', 'FAILED', 'CANCELLED',
 )
+
+EVENT_LEVELS = {
+    'CRITICAL': logging.CRITICAL,
+    'ERROR': logging.ERROR,
+    'WARNING': logging.WARNING,
+    'INFO': logging.INFO,
+    'DEBUG': logging.DEBUG,
+}
