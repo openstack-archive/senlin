@@ -1768,7 +1768,12 @@ class EngineService(service.Service):
         return {'action': action.id}
 
     def event_find(self, context, identity):
-        '''Find a event with the given identity (could ID or short ID).'''
+        """Find an event with the given identity.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of the event.
+        :return: A dictionary containing the details of the event.
+        """
         if uuidutils.is_uuid_like(identity):
             event = db_api.event_get(context, identity)
             if not event:
