@@ -307,7 +307,6 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                           ('receiver_create', expected_args))
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('SenlinBadRequest', resp.json['error']['type'])
-        self.assertIsNone(resp.json['error']['traceback'])
 
     def test_receiver_create_with_cluster_id_notfound(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -339,7 +338,6 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                           ('receiver_create', expected_args))
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ClusterNotFound', resp.json['error']['type'])
-        self.assertIsNone(resp.json['error']['traceback'])
 
     def test_receiver_create_illegal_action(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -372,7 +370,6 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                           ('receiver_create', expected))
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('SenlinBadRequest', resp.json['error']['type'])
-        self.assertIsNone(resp.json['error']['traceback'])
 
     def test_receiver_create_unapplicable_action(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -405,7 +402,6 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                           ('receiver_create', expected))
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('SenlinBadRequest', resp.json['error']['type'])
-        self.assertIsNone(resp.json['error']['traceback'])
 
     def test_receiver_get_normal(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)

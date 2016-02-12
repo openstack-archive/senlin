@@ -16,9 +16,6 @@
 A middleware that turns exceptions into parsable string.
 '''
 
-import traceback
-
-from oslo_config import cfg
 import six
 import webob
 
@@ -83,14 +80,9 @@ class FaultWrapper(wsgi.Middleware):
         return self.error_map[class_exception.__name__]
 
     def _error(self, ex):
-        trace = None
         traceback_marker = 'Traceback (most recent call last)'
         webob_exc = None
         if isinstance(ex, exception.HTTPExceptionDisguise):
-            # An HTTP exception was disguised so it could make it here
-            # let's remove the disguise and set the original HTTP exception
-            if cfg.CONF.debug:
-                trace = ''.join(traceback.format_tb(ex.tb))
             ex = ex.exc
             webob_exc = ex
 
@@ -102,25 +94,15 @@ class FaultWrapper(wsgi.Middleware):
 
         full_message = six.text_type(ex)
         if '\n' in full_message and is_remote:
-            message, msg_trace = full_message.split('\n', 1)
+            message = full_message.split('\n', 1)[0]
         elif traceback_marker in full_message:
-            message, msg_trace = full_message.split(traceback_marker, 1)
+            message = full_message.split(traceback_marker, 1)[0]
             message = message.rstrip('\n')
-            msg_trace = traceback_marker + msg_trace
         else:
-            if six.PY3:
-                msg_trace = traceback.format_exception(type(ex), ex,
-                                                       ex.__traceback__)
-            else:
-                msg_trace = traceback.format_exc()
-
             message = full_message
 
         if isinstance(ex, exception.SenlinException):
             message = ex.message
-
-        if cfg.CONF.debug and not trace:
-            trace = msg_trace
 
         if not webob_exc:
             webob_exc = self._map_exception_to_error(ex.__class__)
@@ -133,7 +115,6 @@ class FaultWrapper(wsgi.Middleware):
                 'code': webob_exc.code,
                 'message': message,
                 'type': ex_type,
-                'traceback': trace,
             }
         }
 

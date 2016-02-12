@@ -560,7 +560,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('HTTPBadRequest', resp.json['error']['type'])
-        self.assertIsNotNone(resp.json['error']['traceback'])
 
     def test_cluster_get(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
