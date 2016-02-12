@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import logging
+
 from cryptography import fernet
 import requests
 from requests import exceptions
@@ -254,3 +256,34 @@ class TestRandomName(base.SenlinTestCase):
 
         result = utils.random_name(-9)
         self.assertEqual('', result)
+
+
+class TestParseLevelValues(base.SenlinTestCase):
+
+    def test_none(self):
+        res = utils.parse_level_values(None)
+        self.assertIsNone(res)
+
+    def test_empty_list(self):
+        res = utils.parse_level_values([])
+        self.assertIsNone(res)
+
+    def test_single_value(self):
+        res = utils.parse_level_values('ERROR')
+        self.assertEqual([logging.ERROR], res)
+
+    def test_multi_values(self):
+        res = utils.parse_level_values(['WARNING', 'ERROR'])
+        self.assertEqual([logging.WARNING, logging.ERROR], res)
+
+    def test_with_invalid_values(self):
+        res = utils.parse_level_values(['warn', 'ERROR'])
+        self.assertEqual([logging.ERROR], res)
+
+    def test_with_integers(self):
+        res = utils.parse_level_values(40)
+        self.assertEqual([40], res)
+
+    def test_with_only_invalid_values(self):
+        res = utils.parse_level_values(['warn'])
+        self.assertIsNone(res)

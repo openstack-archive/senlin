@@ -27,6 +27,7 @@ from oslo_log import log as logging
 from oslo_utils import encodeutils
 from oslo_utils import strutils
 
+from senlin.common import consts
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LI
@@ -98,6 +99,26 @@ def parse_sort_param(value):
         sort_dirs.append(s_dir)
 
     return sort_keys, sort_dirs
+
+
+def parse_level_values(values):
+    """Parse a given list of level values to numbers.
+
+    :param values: A list of event level values.
+    :return: A list of translated values.
+    """
+    if not isinstance(values, list):
+        values = [values]
+    result = []
+    for v in values:
+        if v in consts.EVENT_LEVELS:
+            result.append(consts.EVENT_LEVELS[v])
+        elif isinstance(v, int):
+            result.append(v)
+
+    if result == []:
+        return None
+    return result
 
 
 def url_fetch(url, allowed_schemes=('http', 'https')):
