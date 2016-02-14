@@ -17,14 +17,12 @@ Utilities module.
 import random
 import string
 
-from cryptography.fernet import Fernet
 import requests
 from requests import exceptions
 from six.moves import urllib
 
 from oslo_config import cfg
 from oslo_log import log as logging
-from oslo_utils import encodeutils
 from oslo_utils import strutils
 
 from senlin.common import consts
@@ -164,31 +162,6 @@ def url_fetch(url, allowed_schemes=('http', 'https')):
 
     except exceptions.RequestException as ex:
         raise URLFetchError(_('Failed to retrieve data: %s') % ex)
-
-
-def encrypt(msg):
-    '''Encrypt message with random key.
-
-    :param msg: message to be encrypted
-    :returns: encrypted msg and key to decrypt
-    '''
-    password = Fernet.generate_key()
-    f = Fernet(password)
-    key = f.encrypt(encodeutils.safe_encode(msg))
-    return encodeutils.safe_decode(password), encodeutils.safe_decode(key)
-
-
-def decrypt(msg, key):
-    '''Decrypt message using provided key.
-
-    :param msg: encrypted message
-    :param key: key used to decrypt
-    :returns: decrypted message string
-    '''
-    f = Fernet(encodeutils.safe_encode(msg))
-    msg = f.decrypt(encodeutils.safe_encode(key))
-
-    return encodeutils.safe_decode(msg)
 
 
 def random_name(length=8):
