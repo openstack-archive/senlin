@@ -227,7 +227,7 @@ class Node(object):
         db_api.node_update(context, self.id, values)
 
     def get_details(self, context):
-        if self.physical_id is None or self.physical_id == '':
+        if not self.physical_id:
             return {}
         return profile_base.Profile.get_details(context, self)
 

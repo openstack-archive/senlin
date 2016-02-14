@@ -1107,8 +1107,13 @@ class EngineService(service.Service):
         return {'action': action.id}
 
     def node_find(self, context, identity):
-        '''Find a node with the given identity (could be name or ID).'''
+        """Find a node with the given identity.
 
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of a node.
+        :return: A DB object of Node or an exception of `NodeNotFound` if no
+                 matching object is found.
+        """
         if uuidutils.is_uuid_like(identity):
             node = db_api.node_get(context, identity)
             if not node:
@@ -1126,12 +1131,28 @@ class EngineService(service.Service):
     @request_context
     def node_list(self, context, cluster_id=None, filters=None, sort=None,
                   limit=None, marker=None, project_safe=True):
+        """List node records matching the specified criteria.
 
+        :param context: An instance of the request context.
+        :param cluster_id: An optional parameter specifying the ID of the
+                           cluster from which nodes are chosen.
+        :param filters: A dictionary of key-value pairs for filtering out the
+                        result list.
+        :param sort: A list of sorting keys (each optionally attached with a
+                     sorting direction) separated by commas.
+        :param limit: An integer specifying the maximum number of objects to
+                      return in a response.
+        :param marker: An UUID specifying the cluster after which the result
+                       list starts.
+        :param project_safe: A boolean indicating whether nodes from all
+                             projects will be returned.
+        :return: A list of `Node` object representations.
+        """
         limit = utils.parse_int_param('limit', limit)
         project_safe = utils.parse_bool_param('project_safe', project_safe)
 
         # Maybe the cluster_id is a name or a short ID
-        if cluster_id is not None:
+        if cluster_id:
             db_cluster = self.cluster_find(context, cluster_id)
             cluster_id = db_cluster.id
         nodes = node_mod.Node.load_all(context, cluster_id=cluster_id,
@@ -1144,9 +1165,25 @@ class EngineService(service.Service):
     @request_context
     def node_create(self, context, name, profile_id, cluster_id=None,
                     role=None, metadata=None):
+        """Create a node with provided properties.
+
+        :param context: An instance of the request context.
+        :param name: Name for the node to be created.
+        :param profile_id: The ID, name or short-id of the profile to be used.
+        :param cluster_id: The ID, name or short-id of the cluster in which
+                           the new node will be a member. This could be None
+                           if the node is to be a orphan node.
+        :param role: The role for the node to play in the cluster.
+        :param metadata: A dictionary containing the key-value pairs to be
+                         associated with the node.
+        :return: A dictionary containing the details about the node to be
+                 created along with the ID of the action triggered by this
+                 request.
+        """
         if cfg.CONF.name_unique:
             if db_api.node_get_by_name(context, name):
-                msg = _("The node (%(name)s) already exists.") % {"name": name}
+                msg = _("The node named (%(name)s) already exists."
+                        ) % {"name": name}
                 raise exception.SenlinBadRequest(msg=msg)
 
         LOG.info(_LI("Creating node '%s'."), name)
@@ -1154,13 +1191,13 @@ class EngineService(service.Service):
         if cluster_id is None:
             cluster_id = ''
 
-        index = -1
         try:
             node_profile = self.profile_find(context, profile_id)
         except exception.ProfileNotFound:
             msg = _("The specified profile (%s) is not found.") % profile_id
             raise exception.SenlinBadRequest(msg=msg)
 
+        index = -1
         if cluster_id:
             try:
                 db_cluster = self.cluster_find(context, cluster_id)
@@ -1170,7 +1207,7 @@ class EngineService(service.Service):
                 raise exception.SenlinBadRequest(msg=msg)
 
             cluster_id = db_cluster.id
-            if profile_id != db_cluster.profile_id:
+            if node_profile.id != db_cluster.profile_id:
                 cluster_profile = self.profile_find(context,
                                                     db_cluster.profile_id)
                 if node_profile.type != cluster_profile.type:
@@ -1195,11 +1232,11 @@ class EngineService(service.Service):
         node.store(context)
 
         params = {
+            'name': 'node_create_%s' % node.id[:8],
+            'cause': action_mod.CAUSE_RPC,
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
-            'name': 'node_create_%s' % node.id[:8],
-            'cause': action_mod.CAUSE_RPC
         }
         action = action_mod.Action(node.id, consts.NODE_CREATE, **params)
         action.status = action.READY
@@ -1207,29 +1244,49 @@ class EngineService(service.Service):
         dispatcher.start_action(action_id=action.id)
 
         LOG.info(_LI("Node create action queued: %s."), action.id)
-
-        return node.to_dict()
+        result = node.to_dict()
+        result['action'] = action.id
+        return result
 
     @request_context
     def node_get(self, context, identity, show_details=False):
+        """Get the details about a node.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of a node.
+        :param show_details: Optional parameter indicating whether the details
+                             about the physical object should be returned.
+        :return: A dictionary containing the detailed information about a node
+                 or an exception of `NodeNotFound` if no matching node could
+                 be found.
+        """
         db_node = self.node_find(context, identity)
         node = node_mod.Node.load(context, node=db_node)
         res = node.to_dict()
-        if node.physical_id is not None and node.physical_id != '':
-            if show_details:
-                res['details'] = node.get_details(context)
-            else:
-                res['details'] = {}
+        if show_details and node.physical_id:
+            res['details'] = node.get_details(context)
         return res
 
     @request_context
     def node_update(self, context, identity, name=None, profile_id=None,
                     role=None, metadata=None):
+        """Update a node with new propertye values.
 
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of the node.
+        :param name: Optional string specifying the new name for the node.
+        :param profile_id: The UUID, name or short-id of the new profile to
+                           be used.
+        :param role: The new role for the node, if specified.
+        :param metadata: A dictionary of key-value pairs to be associated with
+                         the node.
+        :return: A dictionary containing the updated representation of the
+                 node along with the ID of the action triggered by this
+                 request.
+        """
         LOG.info(_LI("Updating node '%s'."), identity)
 
         db_node = self.node_find(context, identity)
-        node = node_mod.Node.load(context, node=db_node)
 
         if profile_id:
             try:
@@ -1241,52 +1298,65 @@ class EngineService(service.Service):
             profile_id = db_profile.id
 
             # check if profile_type matches
-            old_profile = self.profile_find(context, node.profile_id)
+            old_profile = self.profile_find(context, db_node.profile_id)
             if old_profile.type != db_profile.type:
                 msg = _('Cannot update a node to a different profile type, '
                         'operation aborted.')
                 LOG.error(msg)
                 raise exception.ProfileTypeNotMatch(message=msg)
 
-        inputs = {
-            'new_profile_id': profile_id,
-        }
-        if name is not None and name != node.name:
+            inputs = {'new_profile_id': profile_id}
+        else:
+            inputs = {}
+
+        if name is not None and name != db_node.name:
             inputs['name'] = name
-        if role is not None and role != node.role:
+        if role is not None and role != db_node.role:
             inputs['role'] = role
-        if metadata is not None and metadata != node.metadata:
+        if metadata is not None and metadata != db_node.metadata:
             inputs['metadata'] = metadata
 
+        if inputs == {}:
+            msg = _("No property needs an update.")
+            raise exception.SenlinBadRequest(msg=msg)
+
         params = {
+            'name': 'node_update_%s' % db_node.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': inputs,
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
-            'name': 'node_update_%s' % node.id[:8],
-            'cause': action_mod.CAUSE_RPC,
-            'inputs': inputs
         }
-        action = action_mod.Action(node.id, consts.NODE_UPDATE, **params)
+        action = action_mod.Action(db_node.id, consts.NODE_UPDATE, **params)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
 
         LOG.info(_LI("Node update action is queued: %s."), action.id)
+        node = node_mod.Node.load(context, node=db_node)
         resp = node.to_dict()
         resp['action'] = action.id
         return resp
 
     @request_context
-    def node_delete(self, context, identity, force=False):
+    def node_delete(self, context, identity):
+        """Delete the specified node.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of the node.
+        :return: A dictionary containing the ID of the action triggered by
+                 this request.
+        """
         LOG.info(_LI('Deleting node %s'), identity)
 
         db_node = self.node_find(context, identity)
         params = {
+            'name': 'node_delete_%s' % db_node.id[:8],
+            'cause': action_mod.CAUSE_RPC,
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
-            'name': 'node_delete_%s' % db_node.id[:8],
-            'cause': action_mod.CAUSE_RPC
         }
         action = action_mod.Action(db_node.id, consts.NODE_DELETE, **params)
         action.status = action.READY
@@ -1299,53 +1369,67 @@ class EngineService(service.Service):
 
     @request_context
     def node_check(self, context, identity, **params):
+        """Check the health status of specified node.
 
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of the node.
+        :param \*\*params: An optional dictionary providing additional input
+                           parameters for the checking operation.
+        :return: A dictionary containing the ID of the action triggered by
+                 this request.
+        """
         LOG.info(_LI("Checking node '%s'."), identity)
 
         db_node = self.node_find(context, identity)
-        node = node_mod.Node.load(context, node=db_node)
 
-        new_params = {
+        kwargs = {
+            'name': 'node_check_%s' % db_node.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'inputs': params,
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
-            'name': 'node_check_%s' % node.id[:8],
-            'cause': action_mod.CAUSE_RPC,
-            'inputs': params
         }
-        action = action_mod.Action(node.id, consts.NODE_CHECK, **new_params)
+        action = action_mod.Action(db_node.id, consts.NODE_CHECK, **kwargs)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
 
         LOG.info(_LI("Node check action is queued: %s."), action.id)
 
-        return node.to_dict()
+        return {'action': action.id}
 
     @request_context
     def node_recover(self, context, identity, **params):
+        """Recover the specified node.
 
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of a node.
+        :param \*\*params: A dictionary containing the optional parameters for
+                           the requested recover operation.
+        :return: A dictionary containing the ID of the action triggered by the
+                 recover request.
+        """
         LOG.info(_LI("Recovering node '%s'."), identity)
 
         db_node = self.node_find(context, identity)
-        node = node_mod.Node.load(context, node=db_node)
 
-        new_params = {
+        kwargs = {
             'user': context.user,
             'project': context.project,
             'domain': context.domain,
-            'name': 'node_recover_%s' % node.id[:8],
+            'name': 'node_recover_%s' % db_node.id[:8],
             'cause': action_mod.CAUSE_RPC,
             'inputs': params
         }
-        action = action_mod.Action(node.id, consts.NODE_RECOVER, **new_params)
+        action = action_mod.Action(db_node.id, consts.NODE_RECOVER, **kwargs)
         action.status = action.READY
         action.store(context)
         dispatcher.start_action(action_id=action.id)
 
         LOG.info(_LI("Node recover action is queued: %s."), action.id)
 
-        return node.to_dict()
+        return {'action': action.id}
 
     @request_context
     def cluster_policy_list(self, context, identity, filters=None, sort=None):
@@ -1789,6 +1873,21 @@ class EngineService(service.Service):
     @request_context
     def event_list(self, context, filters=None, limit=None, marker=None,
                    sort=None, project_safe=True):
+        """List event records matching the specified criteria.
+
+        :param context: An instance of the request context.
+        :param filters: A dictionary of key-value pairs for filtering out the
+                        result list.
+        :param limit: An integer specifying the maximum number of objects to
+                      return in a response.
+        :param marker: An UUID specifying the cluster after which the result
+                       list starts.
+        :param sort: A list of sorting keys (each optionally attached with a
+                     sorting direction) separated by commas.
+        :param project_safe: A boolean indicating whether events from all
+                             projects will be returned.
+        :return: A list of `Event` object representations.
+        """
         if filters and consts.EVENT_LEVEL in filters:
             value = filters.pop(consts.EVENT_LEVEL)
             value = utils.parse_level_values(value)
@@ -1804,6 +1903,14 @@ class EngineService(service.Service):
 
     @request_context
     def event_get(self, context, identity):
+        """Get the details about a specified event.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of an event.
+        :return: A dictionary containing the details about the event or an
+                 exception of `EventNotFound` if no matching record could be
+                 found.
+        """
         db_event = self.event_find(context, identity)
         event = EVENT.Event.load(context, db_event=db_event)
         return event.to_dict()
