@@ -21,7 +21,6 @@ from senlin.common.i18n import _LE
 from senlin.common import utils
 from senlin.db import api as db_api
 from senlin.engine import cluster_policy as cp_mod
-from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.policies import base as policy_base
 from senlin.profiles import base as profile_base
@@ -32,12 +31,12 @@ CONF = cfg.CONF
 
 
 class Cluster(object):
-    '''A cluster is a set of homogeneous objects of the same profile.
+    """A cluster is a collection of objects of the same profile type.
 
     All operations are performed without further checking because the
     checkings are supposed to be done before/after/during an action is
     excuted.
-    '''
+    """
 
     STATUSES = (
         INIT, ACTIVE, CREATING, UPDATING, RESIZING, DELETING,
@@ -141,13 +140,11 @@ class Cluster(object):
         if self.id:
             values['updated_at'] = timestamp
             db_api.cluster_update(context, self.id, values)
-            EVENT.info(context, self, 'update')
         else:
             self.init_at = timestamp
             values['init_at'] = timestamp
             cluster = db_api.cluster_create(context, values)
             self.id = cluster.id
-            EVENT.info(context, self, 'create')
 
         self._load_runtime_data(context)
         return self.id
