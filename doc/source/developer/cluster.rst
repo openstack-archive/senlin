@@ -160,7 +160,7 @@ specify one of the following keys for query:
   specified name.
 - short ID: Considering that UUID is a long string not so convenient to input,
   Senlin supports a short version of UUIDs for query. Senlin engine will use
-  the provided string as a prefix to attemp a matching in the database. When
+  the provided string as a prefix to attempt a matching in the database. When
   the "ID" is long enough to be unique, the details of the matching cluster is
   returned, or else Senlin will return an error message indicating that more
   than one cluster matching the short ID have been found.

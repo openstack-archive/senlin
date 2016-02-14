@@ -72,7 +72,7 @@ POLICY
   - Scaling policy: allow a cluster to scale to existing nodes.
   - Batching policy: create batchs for node creation/deletion/update.
 
-Reciever
+Receiver
 --------
   - Zaqar queue based receiver.
 
