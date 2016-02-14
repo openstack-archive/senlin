@@ -1888,6 +1888,8 @@ class EngineService(service.Service):
                              projects will be returned.
         :return: A list of `Event` object representations.
         """
+        limit = utils.parse_int_param('limit', limit)
+        project_safe = utils.parse_bool_param('project_safe', project_safe)
         if filters and consts.EVENT_LEVEL in filters:
             value = filters.pop(consts.EVENT_LEVEL)
             value = utils.parse_level_values(value)
