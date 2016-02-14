@@ -20,7 +20,6 @@ from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.common import utils
 from senlin.db import api as db_api
-from senlin.engine import event as EVENT
 from senlin.profiles import base as profile_base
 
 LOG = logging.getLogger(__name__)
@@ -122,13 +121,11 @@ class Node(object):
 
         if self.id:
             db_api.node_update(context, self.id, values)
-            EVENT.info(context, self, 'update')
         else:
             init_at = timeutils.utcnow()
             self.init_at = init_at
             values['init_at'] = init_at
             node = db_api.node_create(context, values)
-            EVENT.info(context, self, 'create')
             self.id = node.id
 
         self._load_runtime_data(context)
@@ -233,7 +230,6 @@ class Node(object):
 
     def _handle_exception(self, context, action, status, exception):
         msg = six.text_type(exception)
-        EVENT.warning(context, self, action, status, msg)
         self.physical_id = exception.kwargs.get('resource_id', None)
         if self.physical_id:
             reason = _('Profile failed in %(action)s resource (%(id)s) due '
@@ -251,7 +247,6 @@ class Node(object):
             LOG.error(_LE('Node is in status "%s"'), self.status)
             return False
         self.set_status(context, self.CREATING, reason='Creation in progress')
-        EVENT.info(context, self, 'create')
         try:
             physical_id = profile_base.Profile.create_object(context, self)
         except exception.InternalError as ex:
@@ -275,7 +270,6 @@ class Node(object):
 
         # TODO(Qiming): check if actions are working on it and can be canceled
         self.set_status(context, self.DELETING, reason='Deletion in progress')
-        EVENT.info(context, self, 'delete')
         try:
             res = profile_base.Profile.delete_object(context, self)
         except exception.ResourceStatusError as ex:
