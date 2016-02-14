@@ -565,7 +565,7 @@ class TestProfileBase(base.SenlinTestCase):
         res = profile._build_conn_params(user, project)
         expected = {
             'foo': 'bar',
-            'trust_id': 'TRUST_ID',
+            'trust_id': ['TRUST_ID'],
         }
         self.assertEqual(expected, res)
         mock_current.assert_called_once_with()
