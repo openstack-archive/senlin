@@ -19,7 +19,6 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import utils as common_utils
 from senlin.db.sqlalchemy import api as db_api
-from senlin.engine import event as EVENT
 from senlin.engine import node as nodem
 from senlin.profiles import base as profiles_base
 from senlin.tests.unit.common import base
@@ -100,8 +99,7 @@ class TestNode(base.SenlinTestCase):
         self.assertIsNotNone(node.name)
         self.assertEqual(13, len(node.name))
 
-    @mock.patch.object(EVENT, 'info')
-    def test_node_store_init(self, mock_info):
+    def test_node_store_init(self):
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
                           self.context, role='first_node',
                           index=1)
@@ -130,21 +128,14 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual({}, node_info.meta_data)
         self.assertEqual({}, node_info.data)
 
-        mock_info.assert_called_once_with(self.context, node, 'create')
-
-    @mock.patch.object(EVENT, 'info')
-    def test_node_store_update(self, mock_info):
+    def test_node_store_update(self):
         node = nodem.Node('node1', self.profile.id, None)
         node_id = node.store(self.context)
-
-        mock_info.assert_called_once_with(self.context, node, 'create')
-        mock_info.reset_mock()
 
         node.name = 'new_name'
         new_node_id = node.store(self.context)
 
         self.assertEqual(node_id, new_node_id)
-        mock_info.assert_called_once_with(self.context, node, 'update')
 
     def test_node_load(self):
         ex = self.assertRaises(exception.NodeNotFound,
@@ -325,8 +316,7 @@ class TestNode(base.SenlinTestCase):
         mock_details.assert_called_once_with(self.context, node)
         self.assertEqual({'foo': 'bar'}, res)
 
-    @mock.patch.object(EVENT, 'warning')
-    def test_node_handle_exception(self, mock_warning):
+    def test_node_handle_exception(self):
         ex = exception.ResourceStatusError(resource_id='FAKE_ID',
                                            status='FAKE_STATUS',
                                            reason='FAKE_REASON')
@@ -339,8 +329,6 @@ class TestNode(base.SenlinTestCase):
                          '(FAKE_ID) due to: %s' % six.text_type(ex),
                          db_node.status_reason)
         self.assertEqual('FAKE_ID', db_node.physical_id)
-        mock_warning.assert_called_with(self.context, node, 'ACTION',
-                                        'STATUS', six.text_type(ex))
 
         # Exception happens before physical node creation started.
         ex = exception.ResourceCreationFailure(rtype='stack',
@@ -354,15 +342,11 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual('Profile failed in creating node due to: '
                          '%s' % six.text_type(ex), db_node.status_reason)
         self.assertIsNone(db_node.physical_id)
-        mock_warning.assert_called_with(self.context, node, 'CREATE',
-                                        'STATUS', six.text_type(ex))
 
-    @mock.patch.object(EVENT, 'info')
     @mock.patch.object(nodem.Node, 'store')
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(profiles_base.Profile, 'create_object')
-    def test_node_create(self, mock_create, mock_status, mock_store,
-                         mock_event):
+    def test_node_create(self, mock_create, mock_status, mock_store):
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
                           self.context)
         physical_id = 'fake_id'
@@ -374,7 +358,6 @@ class TestNode(base.SenlinTestCase):
         mock_status.assert_any_call(self.context, node.ACTIVE,
                                     'Creation succeeded')
         mock_store.assert_called_once_with(self.context)
-        mock_event.assert_called_once_with(self.context, node, 'create')
         self.assertEqual(physical_id, node.physical_id)
 
     def test_node_create_not_init(self):
@@ -384,11 +367,10 @@ class TestNode(base.SenlinTestCase):
         res = node.do_create(self.context)
         self.assertFalse(res)
 
-    @mock.patch.object(EVENT, 'info')
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(profiles_base.Profile, 'create_object')
-    def test_node_create_not_created(self, mock_create, mock_status,
-                                     mock_event):
+    def test_node_create_not_created(self, mock_create, mock_status):
+
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
                           self.context)
         mock_create.return_value = None
@@ -396,16 +378,12 @@ class TestNode(base.SenlinTestCase):
         self.assertFalse(res)
         mock_status.assert_called_once_with(self.context, node.CREATING,
                                             reason='Creation in progress')
-        mock_event.assert_called_once_with(self.context, node, 'create')
 
-    @mock.patch.object(EVENT, 'warning')
-    @mock.patch.object(EVENT, 'info')
     @mock.patch.object(nodem.Node, 'store')
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(profiles_base.Profile, 'create_object')
-    def test_node_create_internal_error(self, mock_create,
-                                        mock_status, mock_store,
-                                        mock_info, mock_warning):
+    def test_node_create_internal_error(self, mock_create, mock_status,
+                                        mock_store):
         ex = exception.InternalError(code=500, message='internal error')
         mock_create.side_effect = ex
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
@@ -414,19 +392,14 @@ class TestNode(base.SenlinTestCase):
         self.assertFalse(res)
         mock_status.assert_any_call(self.context, node.CREATING,
                                     reason='Creation in progress')
-        mock_info.assert_called_once_with(self.context, node, 'create')
-        mock_warning.assert_called_once_with(
-            self.context, node, 'create', node.ERROR, six.text_type(ex))
         reason = _('Profile failed in creating node due to: %(msg)s') % {
             'msg': six.text_type(ex)}
         mock_status.assert_any_call(self.context, node.ERROR, reason)
 
-    @mock.patch.object(EVENT, 'info')
     @mock.patch.object(db_api, 'node_delete')
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(profiles_base.Profile, 'delete_object')
-    def test_node_delete(self, mock_delete, mock_status, mock_db_delete,
-                         mock_event):
+    def test_node_delete(self, mock_delete, mock_status, mock_db_delete):
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
                           self.context)
         node.physical_id = 'fake_id'
@@ -436,7 +409,6 @@ class TestNode(base.SenlinTestCase):
         mock_db_delete.assert_called_once_with(mock.ANY, node.id, False)
         mock_status.assert_called_once_with(self.context, node.DELETING,
                                             reason='Deletion in progress')
-        mock_event.assert_called_once_with(self.context, node, 'delete')
 
     @mock.patch.object(db_api, 'node_delete')
     @mock.patch.object(profiles_base.Profile, 'delete_object')
@@ -449,13 +421,11 @@ class TestNode(base.SenlinTestCase):
         self.assertFalse(mock_delete.called)
         self.assertTrue(mock_db_delete.called)
 
-    @mock.patch.object(EVENT, 'info')
     @mock.patch.object(nodem.Node, '_handle_exception')
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(profiles_base.Profile, 'delete_object')
     def test_node_delete_resource_status_error(self, mock_delete, mock_status,
-                                               mock_handle_exception,
-                                               mock_event):
+                                               mock_handle_exception):
         ex = exception.ResourceStatusError(resource_id='id', status='ERROR',
                                            reason='some reason')
         mock_delete.side_effect = ex
@@ -469,7 +439,6 @@ class TestNode(base.SenlinTestCase):
                                                       'ERROR', ex)
         mock_status.assert_any_call(self.context, 'ERROR',
                                     reason='Deletion failed')
-        mock_event.assert_called_once_with(self.context, node, 'delete')
 
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(profiles_base.Profile, 'update_object')
