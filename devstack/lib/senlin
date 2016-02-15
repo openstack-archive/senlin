@@ -82,7 +82,6 @@ function configure_senlin {
     # common options
     iniset $SENLIN_CONF DEFAULT debug "$ENABLE_DEBUG_LOG_LEVEL"
     iniset $SENLIN_CONF DEFAULT auth_encryption_key $(generate_hex_string 16)
-    iniset $SENLIN_CONF DEFAULT region_name_for_services "$REGION_NAME"
 
     iniset $SENLIN_CONF DEFAULT use_syslog $SYSLOG
     if [ "$LOG_COLOR" == "True" ] && [ "$SYSLOG" == "False" ]; then
