@@ -296,6 +296,11 @@ def node_get_all_by_cluster(context, cluster_id, project_safe=True):
                                project_safe=project_safe).all()
 
 
+def node_count_by_cluster(context, cluster_id, project_safe=True):
+    return _query_node_get_all(context, cluster_id=cluster_id,
+                               project_safe=project_safe).count()
+
+
 def node_update(context, node_id, values):
     '''Update a node with new property values.
 
