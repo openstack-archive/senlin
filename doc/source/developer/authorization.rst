@@ -190,17 +190,3 @@ needed.
 Senlin provides an internal database table to store the trust information. It
 may be removed in future when there are better ways to handle this sensitive
 information.
-
-
-Encryption of Credentials
--------------------------
-
-Since Senlin is creating a trust for each user. This trust information should
-be treated as sensitive information. When storing them into database, it has
-better be encrypted, and that is exactly how Senlin is doing now. In future,
-this kind of data may be migrated to the Barbican service.
-
-As of now, Senlin utilizes the `cryptography` package to do an encryption of
-the data. The encrypted data can be decrypted only using the generated key.
-Senlin will return the key to the requester, along with the UUID of the
-generated webhook.
