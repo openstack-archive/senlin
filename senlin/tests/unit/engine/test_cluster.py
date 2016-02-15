@@ -18,7 +18,6 @@ from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import cluster as clusterm
 from senlin.engine import cluster_policy as cp_mod
-from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.policies import base as policy_base
 from senlin.profiles import base as profile_base
@@ -120,8 +119,6 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual([], cluster.rt['policies'])
 
     def test_store_for_create(self):
-        mock_info = self.patchobject(EVENT, 'info')
-
         cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID',
                                    user=self.context.user,
                                    project=self.context.project)
@@ -155,11 +152,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual({}, result.data)
         self.assertEqual({}, result.meta_data)
 
-        mock_info.assert_called_once_with(self.context, cluster, 'create')
-
     def test_store_for_update(self):
-        mock_info = self.patchobject(EVENT, 'info')
-
         cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID',
                                    user=self.context.user,
                                    project=self.context.project)
@@ -169,8 +162,6 @@ class TestCluster(base.SenlinTestCase):
         cluster_id = cluster.store(self.context)
 
         self.assertIsNotNone(cluster_id)
-        mock_info.assert_called_once_with(self.context, cluster, 'create')
-        mock_info.reset_mock()
         mock_load.assert_called_once_with(self.context)
 
         # do an update
@@ -200,8 +191,6 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual(120, result.timeout)
         self.assertEqual({'FOO': 'BAR'}, result.data)
         self.assertEqual({'KEY': 'VALUE'}, result.meta_data)
-
-        mock_info.assert_called_once_with(self.context, cluster, 'update')
 
     @mock.patch.object(clusterm.Cluster, '_from_db_record')
     def test_load_via_db_object(self, mock_init):
