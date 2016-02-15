@@ -12,7 +12,6 @@
 
 import logging
 
-from cryptography import fernet
 import requests
 from requests import exceptions
 import six
@@ -192,38 +191,6 @@ class UrlFetchTest(base.SenlinTestCase):
         exception = self.assertRaises(utils.URLFetchError,
                                       utils.url_fetch, url)
         self.assertIn("Data exceeds", six.text_type(exception))
-
-
-class TestEncrypt(base.SenlinTestCase):
-    def test_encrypt(self):
-        msg = 'test-string'
-        msg_encrypted, key = utils.encrypt(msg)
-
-        self.assertIsInstance(msg_encrypted, six.string_types)
-        self.assertIsInstance(key, six.string_types)
-
-    def test_decrypt(self):
-        msg = 'test-string'
-        msg_encrypted, key = utils.encrypt(msg)
-
-        msg_decrypted = utils.decrypt(msg_encrypted, key)
-        self.assertEqual(msg, msg_decrypted)
-
-    def test_decrypt_invalid_key_msg(self):
-        msg = 'test-string'
-        msg_encrypted, key = utils.encrypt(msg)
-
-        invalid_key = 'fake-key'
-        self.assertRaises(fernet.InvalidToken, utils.decrypt,
-                          msg_encrypted, invalid_key)
-
-        invalid_msg = 'fake-msg'
-        self.assertRaises(ValueError, utils.decrypt,
-                          invalid_msg, key)
-
-        invalid_msg = fernet.Fernet.generate_key()
-        self.assertRaises(fernet.InvalidToken, utils.decrypt,
-                          invalid_msg, key)
 
 
 class TestRandomName(base.SenlinTestCase):
