@@ -956,6 +956,8 @@ class TestNovaServerProfile(base.SenlinTestCase):
                                                           '456',
                                                           'FAKE_SERVER_NAME',
                                                           'adminpass')
+        novaclient.wait_for_server.assert_called_once_with('FAKE_ID',
+                                                           'ACTIVE')
 
     def test_update_image_old_image_is_none(self):
         obj = mock.Mock()
@@ -983,6 +985,8 @@ class TestNovaServerProfile(base.SenlinTestCase):
                                                           '456',
                                                           'FAKE_SERVER_NAME',
                                                           'adminpass')
+        novaclient.wait_for_server.assert_called_once_with('FAKE_ID',
+                                                           'ACTIVE')
 
     def test_update_image_new_image_is_none(self):
         obj = mock.Mock()
@@ -1299,6 +1303,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
                                                   '123',
                                                   'FAKE_SERVER_NAME',
                                                   'adminpass')
+        nc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
         self.assertTrue(res)
 
     def test_do_rebuild_no_serverfind(self):
