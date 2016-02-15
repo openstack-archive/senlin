@@ -76,7 +76,7 @@ class NotAuthenticated(SenlinException):
 
 
 class Forbidden(SenlinException):
-    msg_fmt = _("You are not authorized to complete this action.")
+    msg_fmt = _("You are not authorized to complete this operation.")
 
 
 class SenlinBadRequest(SenlinException):

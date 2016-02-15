@@ -64,11 +64,9 @@ def cluster_next_index(context, cluster_id):
     return IMPL.cluster_next_index(context, cluster_id)
 
 
-def cluster_count_all(context, filters=None, project_safe=True,
-                      show_nested=False):
+def cluster_count_all(context, filters=None, project_safe=True):
     return IMPL.cluster_count_all(context, filters=filters,
-                                  project_safe=project_safe,
-                                  show_nested=show_nested)
+                                  project_safe=project_safe)
 
 
 def cluster_update(context, cluster_id, values):
