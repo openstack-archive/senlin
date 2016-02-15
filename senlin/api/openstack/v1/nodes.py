@@ -163,9 +163,7 @@ class NodeController(object):
 
     @util.policy_enforce
     def delete(self, req, node_id):
-        force = 'force' in req.params
-        res = self.rpc_client.node_delete(req.context, node_id, force=force,
-                                          cast=False)
+        res = self.rpc_client.node_delete(req.context, node_id, cast=False)
         action_id = res.pop('action')
         result = {'location': '/actions/%s' % action_id}
         return result

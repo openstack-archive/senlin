@@ -240,11 +240,10 @@ class EngineClient(object):
                                        name=name, profile_id=profile_id,
                                        role=role, metadata=metadata))
 
-    def node_delete(self, ctxt, identity, force=False, cast=True):
+    def node_delete(self, ctxt, identity, cast=True):
         rpc_method = self.cast if cast else self.call
         return rpc_method(ctxt,
-                          self.make_msg('node_delete', identity=identity,
-                                        force=force))
+                          self.make_msg('node_delete', identity=identity))
 
     def node_check(self, ctxt, identity):
         return self.call(ctxt, self.make_msg('node_check',
