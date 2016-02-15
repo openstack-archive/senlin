@@ -10,21 +10,21 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-'''
+"""
 Node endpoint for Senlin v1 ReST API.
-'''
+"""
 
 from webob import exc
 
 from senlin.api.common import util
+from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import utils
-from senlin.rpc import client as rpc_client
 
 
 class NodeData(object):
-    '''The data accompanying a PUT/POST request to create/update a node.'''
+    """The data accompanying a PUT/POST request to create/update a node."""
 
     PARAMS = (consts.NODE_NAME, consts.NODE_CLUSTER_ID,
               consts.NODE_PROFILE_ID, consts.NODE_ROLE,
@@ -53,8 +53,8 @@ class NodeData(object):
         return self.data.get(consts.NODE_METADATA, None)
 
 
-class NodeController(object):
-    '''WSGI controller for nodes resource in Senlin v1 API.'''
+class NodeController(wsgi.Controller):
+    """WSGI controller for nodes resource in Senlin v1 API."""
 
     REQUEST_SCOPE = 'nodes'
 
@@ -63,13 +63,6 @@ class NodeController(object):
     ) = (
         'check', 'recover'
     )
-
-    def __init__(self, options):
-        self.options = options
-        self.rpc_client = rpc_client.EngineClient()
-
-    def default(self, req, **args):
-        raise exc.HTTPNotFound()
 
     @util.policy_enforce
     def index(self, req):

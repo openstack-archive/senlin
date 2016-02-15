@@ -14,24 +14,15 @@
 Profile type endpoint for Senlin v1 ReST API.
 """
 
-from webob import exc
-
 from senlin.api.common import util
-from senlin.rpc import client as rpc_client
+from senlin.api.common import wsgi
 
 
-class ProfileTypeController(object):
-    '''WSGI controller for profile types resource in Senlin v1 API.'''
+class ProfileTypeController(wsgi.Controller):
+    """WSGI controller for profile types resource in Senlin v1 API."""
 
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'profile_types'
-
-    def __init__(self, options):
-        self.options = options
-        self.rpc_client = rpc_client.EngineClient()
-
-    def default(self, req, **args):
-        raise exc.HTTPNotFound()
 
     @util.policy_enforce
     def index(self, req):
@@ -40,6 +31,6 @@ class ProfileTypeController(object):
 
     @util.policy_enforce
     def get(self, req, type_name):
-        '''Gets the interface schema for a specified profile type.'''
+        """Gets the details about a specified profile type."""
         content = self.rpc_client.profile_type_get(req.context, type_name)
         return {'profile_type': content}

@@ -12,7 +12,6 @@
 
 import mock
 import six
-from webob import exc
 
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import events
@@ -36,10 +35,6 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         cfgopts = DummyConfig()
         self.controller = events.EventController(options=cfgopts)
-
-    def test_event_default(self, mock_enforce):
-        req = self._get('/EEEVVV')
-        self.assertRaises(exc.HTTPNotFound, self.controller.default, req)
 
     def test_event_index(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)

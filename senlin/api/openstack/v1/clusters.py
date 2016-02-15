@@ -20,11 +20,11 @@ import six
 from webob import exc
 
 from senlin.api.common import util
+from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common import exception as senlin_exc
 from senlin.common.i18n import _
 from senlin.common import utils
-from senlin.rpc import client as rpc_client
 
 
 class ClusterData(object):
@@ -111,8 +111,8 @@ class ClusterData(object):
                 raise exc.HTTPBadRequest(msg)
 
 
-class ClusterController(object):
-    '''WSGI controller for clusters resource in Senlin v1 API.'''
+class ClusterController(wsgi.Controller):
+    """WSGI controller for clusters resource in Senlin v1 API."""
 
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'clusters'
@@ -124,13 +124,6 @@ class ClusterController(object):
         'add_nodes', 'del_nodes', 'scale_out', 'scale_in', 'resize',
         'policy_attach', 'policy_detach', 'policy_update',
     )
-
-    def __init__(self, options):
-        self.options = options
-        self.rpc_client = rpc_client.EngineClient()
-
-    def default(self, req, **args):
-        raise exc.HTTPNotFound()
 
     @util.policy_enforce
     def index(self, req):

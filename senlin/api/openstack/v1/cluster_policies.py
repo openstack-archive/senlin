@@ -14,26 +14,17 @@
 ClusterPolicies endpoint for Senlin v1 ReST API.
 """
 
-from webob import exc
-
 from senlin.api.common import util
+from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common import utils
-from senlin.rpc import client as rpc_client
 
 
-class ClusterPolicyController(object):
-    '''WSGI controller for Cluster-Policy binding resource in Senlin v1 API.'''
+class ClusterPolicyController(wsgi.Controller):
+    """WSGI controller for Cluster-Policy binding in Senlin v1 API."""
 
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'cluster_policies'
-
-    def __init__(self, options):
-        self.options = options
-        self.rpc_client = rpc_client.EngineClient()
-
-    def default(self, req, **args):
-        raise exc.HTTPNotFound()
 
     @util.policy_enforce
     def index(self, req, cluster_id):

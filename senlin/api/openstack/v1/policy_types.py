@@ -14,23 +14,15 @@
 Policy type endpoint for Senlin v1 ReST API.
 """
 
-from webob import exc
-
 from senlin.api.common import util
-from senlin.rpc import client as rpc_client
+from senlin.api.common import wsgi
 
 
-class PolicyTypeController(object):
-    '''WSGI controller for policy types resource in Senlin v1 API.'''
+class PolicyTypeController(wsgi.Controller):
+    """WSGI controller for policy types resource in Senlin v1 API."""
+
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'policy_types'
-
-    def __init__(self, options):
-        self.options = options
-        self.rpc_client = rpc_client.EngineClient()
-
-    def default(self, req, **args):
-        raise exc.HTTPNotFound()
 
     @util.policy_enforce
     def index(self, req):

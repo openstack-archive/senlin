@@ -14,23 +14,14 @@
 Webhook endpoint for Senlin v1 ReST API.
 """
 
-from webob import exc
-
 from senlin.api.common import util
-from senlin.rpc import client as rpc_client
+from senlin.api.common import wsgi
 
 
-class WebhookController(object):
+class WebhookController(wsgi.Controller):
     """WSGI controller for webhooks resource in Senlin v1 API."""
 
     REQUEST_SCOPE = 'webhooks'
-
-    def __init__(self, options):
-        self.options = options
-        self.rpc_client = rpc_client.EngineClient()
-
-    def default(self, req, **args):
-        raise exc.HTTPNotFound()
 
     @util.policy_enforce
     def trigger(self, req, webhook_id, body=None):

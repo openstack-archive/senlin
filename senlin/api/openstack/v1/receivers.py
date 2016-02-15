@@ -17,10 +17,10 @@ Webhook endpoint for Senlin v1 ReST API.
 from webob import exc
 
 from senlin.api.common import util
+from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import utils
-from senlin.rpc import client as rpc_client
 
 
 class ReceiverData(object):
@@ -60,17 +60,10 @@ class ReceiverData(object):
         return self.data.get(consts.RECEIVER_PARAMS, None)
 
 
-class ReceiverController(object):
+class ReceiverController(wsgi.Controller):
     """WSGI controller for receiver resource in Senlin v1 API."""
 
     REQUEST_SCOPE = 'receivers'
-
-    def __init__(self, options):
-        self.options = options
-        self.rpc_client = rpc_client.EngineClient()
-
-    def default(self, req, **args):
-        raise exc.HTTPNotFound()
 
     @util.policy_enforce
     def index(self, req):

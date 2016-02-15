@@ -14,10 +14,10 @@
 from webob import exc
 
 from senlin.api.common import util
+from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import utils
-from senlin.rpc import client as rpc_client
 
 
 class ActionData(object):
@@ -48,18 +48,11 @@ class ActionData(object):
         return dict((k, v) for k, v in data if k not in self.PARAMS)
 
 
-class ActionController(object):
-    '''WSGI controller for Actions in Senlin v1 API.'''
+class ActionController(wsgi.Controller):
+    """WSGI controller for Actions in Senlin v1 API."""
 
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'actions'
-
-    def __init__(self, options):
-        self.options = options
-        self.rpc_client = rpc_client.EngineClient()
-
-    def default(self, req, **args):
-        raise exc.HTTPNotFound()
 
     @util.policy_enforce
     def index(self, req):

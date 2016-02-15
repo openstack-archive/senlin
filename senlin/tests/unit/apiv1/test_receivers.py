@@ -69,9 +69,6 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cfgopts = DummyConfig()
         self.controller = receivers.ReceiverController(options=cfgopts)
 
-    def test_default(self, mock_enforce):
-        self.assertRaises(exc.HTTPNotFound, self.controller.default, None)
-
     def test_receiver_index_normal(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/receivers')
