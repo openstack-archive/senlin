@@ -338,12 +338,10 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         self._test_engine_api('node_update', 'call', **kwargs)
 
     def test_node_delete_cast(self):
-        self._test_engine_api('node_delete', 'cast', identity='a-node',
-                              force=False)
+        self._test_engine_api('node_delete', 'cast', identity='a-node')
 
     def test_node_delete_call(self):
-        self._test_engine_api('node_delete', 'call', identity='a-node',
-                              force=False)
+        self._test_engine_api('node_delete', 'call', identity='a-node')
 
     def test_node_check(self):
         self._test_engine_api('node_check', 'call', identity='a-node')

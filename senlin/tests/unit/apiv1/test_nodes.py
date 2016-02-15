@@ -601,7 +601,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         result = {'location': '/actions/FAKE_ID'}
         self.assertEqual(res, result)
         mock_call.assert_called_with(
-            req.context, ('node_delete', {'identity': nid, 'force': False}))
+            req.context, ('node_delete', {'identity': nid}))
 
     def test_node_delete_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', False)
