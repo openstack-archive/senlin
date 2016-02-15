@@ -679,14 +679,14 @@ class ServerProfile(base.Profile):
         metadata = self.nova(obj).server_metadata_get(obj.physical_id) or {}
         metadata['cluster'] = cluster_id
         self.nova(obj).server_metadata_update(obj.physical_id, metadata)
-        return True
+        return super(ServerProfile, self).do_join(obj, cluster_id)
 
     def do_leave(self, obj):
         if not obj.physical_id:
             return False
 
         self.nova(obj).server_metadata_delete(obj.physical_id, 'cluster')
-        return True
+        return super(ServerProfile, self).do_leave(obj)
 
     def do_rebuild(self, obj):
         if not obj.physical_id:
