@@ -321,8 +321,13 @@ class EngineService(service.Service):
         }
 
     def policy_find(self, context, identity):
-        '''Find a policy with the given identity (could be name or ID).'''
+        """Find a policy with the given identity.
 
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of a profile.
+        :return: A DB object of policy or an exception of `PolicyNotFound` if
+                 no matching object is found.
+        """
         if uuidutils.is_uuid_like(identity):
             policy = db_api.policy_get(context, identity)
             if not policy:
@@ -340,8 +345,23 @@ class EngineService(service.Service):
     @request_context
     def policy_list(self, context, limit=None, marker=None, sort=None,
                     filters=None, project_safe=True):
-        if limit is not None:
-            limit = utils.parse_int_param('limit', limit)
+        """List policies matching the specified criteria.
+
+        :param context: An instance of request context.
+        :param limit: An integer specifying the maximum number of policies to
+                      return in a response.
+        :param marker: An UUID specifying the policy after which the result
+                       list starts.
+        :param sort: A list of sorting keys (each optionally attached with a
+                     sorting direction) separated by commas.
+        :param filters: A dictionary of key-value pairs for filtering out the
+                        result list.
+        :param project_safe: A boolean indicating whether policies from all
+                             projects will be returned.
+        :return: A list of `Policy` object representations.
+        """
+        limit = utils.parse_int_param('limit', limit)
+        project_safe = utils.parse_bool_param('project_safe', project_safe)
         policies = policy_base.Policy.load_all(context,
                                                limit=limit, marker=marker,
                                                sort=sort, filters=filters,
@@ -350,9 +370,17 @@ class EngineService(service.Service):
 
     @request_context
     def policy_create(self, context, name, spec):
+        """Create a policy with the given name and spec.
+
+        :param context: An instance of the request context.
+        :param name: The name for the policy to be created.
+        :param spec: A dictionary containing the spec for the policy.
+        :return: A dictionary containing the details of the policy object
+                 created.
+        """
         if cfg.CONF.name_unique:
             if db_api.policy_get_by_name(context, name):
-                msg = _("The policy (%(name)s) already exists."
+                msg = _("A policy named '%(name)s' already exists."
                         ) % {"name": name}
                 raise exception.SenlinBadRequest(msg=msg)
 
@@ -361,7 +389,7 @@ class EngineService(service.Service):
         try:
             plugin = environment.global_env().get_policy(type_str)
         except exception.PolicyTypeNotFound:
-            msg = _("The specified policy type (%(name)s) is not supported."
+            msg = _("The specified policy type (%(name)s) is not found."
                     ) % {"name": type_str}
             raise exception.SenlinBadRequest(msg=msg)
 
@@ -389,19 +417,34 @@ class EngineService(service.Service):
 
     @request_context
     def policy_get(self, context, identity):
+        """Retrieve the details about a policy.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of a policy.
+        :return: A dictionary containing the policy details, or an exception
+                 of type `PolicyNotFound` if no matching object is found.
+        """
         db_policy = self.policy_find(context, identity)
         policy = policy_base.Policy.load(context, db_policy=db_policy)
         return policy.to_dict()
 
     @request_context
     def policy_update(self, context, identity, name):
+        """Update the properties of a given policy.
 
-        db_policy = self.policy_find(context, identity)
-        policy = policy_base.Policy.load(context, db_policy=db_policy)
-
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of a policy.
+        :param name: The new name for the policy.
+        :returns: A dictionary containing the details of the updated policy or
+                  an exception `PolicyNotFound` if no matching poicy is found,
+                  or an exception `SenlinBadRequest` if name is not provided.
+        """
         if not name:
             msg = _('Policy name not specified.')
             raise exception.SenlinBadRequest(msg=msg)
+
+        db_policy = self.policy_find(context, identity)
+        policy = policy_base.Policy.load(context, db_policy=db_policy)
 
         if name != policy.name:
             LOG.info(_LI("Updating policy '%s'."), identity)
@@ -413,6 +456,13 @@ class EngineService(service.Service):
 
     @request_context
     def policy_delete(self, context, identity):
+        """Delete the specified policy.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of a policy.
+        :return: None if succeeded or an exception of `ResourceInUse` if
+                 policy is still attached to certain clusters.
+        """
         db_policy = self.policy_find(context, identity)
         LOG.info(_LI("Delete policy '%s'."), identity)
         try:
@@ -1142,7 +1192,7 @@ class EngineService(service.Service):
                      sorting direction) separated by commas.
         :param limit: An integer specifying the maximum number of objects to
                       return in a response.
-        :param marker: An UUID specifying the cluster after which the result
+        :param marker: An UUID specifying the node after which the result
                        list starts.
         :param project_safe: A boolean indicating whether nodes from all
                              projects will be returned.
@@ -1880,7 +1930,7 @@ class EngineService(service.Service):
                         result list.
         :param limit: An integer specifying the maximum number of objects to
                       return in a response.
-        :param marker: An UUID specifying the cluster after which the result
+        :param marker: An UUID specifying the event after which the result
                        list starts.
         :param sort: A list of sorting keys (each optionally attached with a
                      sorting direction) separated by commas.
