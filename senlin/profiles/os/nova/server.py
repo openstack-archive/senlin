@@ -502,6 +502,7 @@ class ServerProfile(base.Profile):
                 self.nova(obj).server_rebuild(obj.physical_id, new_image_id,
                                               self.properties.get(self.NAME),
                                               admin_password)
+                self.nova(obj).wait_for_server(obj.physical_id, 'ACTIVE')
         else:
             # TODO(Yanyan Hu): Allow server update with new_image
             # set to None if Nova service supports it
@@ -710,6 +711,7 @@ class ServerProfile(base.Profile):
             self.nova(obj).server_rebuild(self.server_id, image_id,
                                           self.properties.get(self.NAME),
                                           admin_pass)
+            self.nova(obj).wait_for_server(self.server_id, 'ACTIVE')
         except Exception as ex:
             LOG.exception(_('Failed at rebuilding server: %s'),
                           six.text_type(ex))
