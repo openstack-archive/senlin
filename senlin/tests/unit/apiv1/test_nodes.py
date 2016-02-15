@@ -66,10 +66,6 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cfgopts = DummyConfig()
         self.controller = nodes.NodeController(options=cfgopts)
 
-    def test_node_default(self, mock_enforce):
-        req = self._get('/nodes')
-        self.assertRaises(exc.HTTPNotFound, self.controller.default, req)
-
     def test_node_index(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/nodes')

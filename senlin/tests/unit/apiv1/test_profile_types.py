@@ -12,7 +12,6 @@
 
 import mock
 import six
-from webob import exc
 
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import profile_types
@@ -33,9 +32,6 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         cfgopts = DummyConfig()
         self.controller = profile_types.ProfileTypeController(options=cfgopts)
-
-    def test_default(self, mock_enforce):
-        self.assertRaises(exc.HTTPNotFound, self.controller.default, None)
 
     def test_profile_type_list(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)

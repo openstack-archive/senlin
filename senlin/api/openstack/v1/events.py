@@ -10,26 +10,21 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from webob import exc
+"""
+Event endpoint for Senlin v1 ReST API.
+"""
 
 from senlin.api.common import util
+from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common import utils
-from senlin.rpc import client as rpc_client
 
 
-class EventController(object):
-    '''WSGI controller for events in Senlin v1 API.'''
+class EventController(wsgi.Controller):
+    """WSGI controller for events in Senlin v1 API."""
 
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'events'
-
-    def __init__(self, options):
-        self.options = options
-        self.rpc_client = rpc_client.EngineClient()
-
-    def default(self, req, **args):
-        raise exc.HTTPNotFound()
 
     @util.policy_enforce
     def index(self, req):

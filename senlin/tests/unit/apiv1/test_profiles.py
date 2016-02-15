@@ -69,10 +69,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cfgopts = DummyConfig()
         self.controller = profiles.ProfileController(options=cfgopts)
 
-    def test_profile_default(self, mock_enforce):
-        req = self._get('/profiles')
-        self.assertRaises(exc.HTTPNotFound, self.controller.default, req)
-
     def test_profile_index_normal(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/profiles')

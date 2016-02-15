@@ -199,6 +199,26 @@ class ResourceTest(base.SenlinTestCase):
         self.assertEqual(message_es, six.text_type(e.exc))
 
 
+class ControllerTest(base.SenlinTestCase):
+
+    @mock.patch('senlin.rpc.client.EngineClient')
+    def test_init(self, mock_client):
+        x_client = mock.Mock()
+        mock_client.return_value = x_client
+        data = mock.Mock()
+
+        c = wsgi.Controller(data)
+
+        self.assertEqual(data, c.options)
+        self.assertEqual(x_client, c.rpc_client)
+
+    def test_default(self):
+        data = mock.Mock()
+        c = wsgi.Controller(data)
+
+        self.assertRaises(webob.exc.HTTPNotFound, c.default, mock.Mock())
+
+
 class ResourceExceptionHandlingTest(base.SenlinTestCase):
     scenarios = [
         ('client_exceptions', dict(

@@ -14,11 +14,12 @@
 from oslo_config import cfg
 
 from senlin.api.common import util
+from senlin.api.common import wsgi
 from senlin.rpc import client as rpc_client
 
 
-class BuildInfoController(object):
-    '''WSGI controller for BuildInfo in Senlin v1 API.'''
+class BuildInfoController(wsgi.Controller):
+    """WSGI controller for BuildInfo in Senlin v1 API."""
 
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'build_info'

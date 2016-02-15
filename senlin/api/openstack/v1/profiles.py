@@ -17,10 +17,10 @@ Profile endpoint for Senlin v1 ReST API.
 from webob import exc
 
 from senlin.api.common import util
+from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import utils
-from senlin.rpc import client as rpc_client
 
 
 class ProfileData(object):
@@ -46,18 +46,11 @@ class ProfileData(object):
         return self.data.get(consts.PROFILE_CONTEXT, None)
 
 
-class ProfileController(object):
-    '''WSGI controller for profiles resource in Senlin v1 API.'''
+class ProfileController(wsgi.Controller):
+    """WSGI controller for profiles resource in Senlin v1 API."""
 
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'profiles'
-
-    def __init__(self, options):
-        self.options = options
-        self.rpc_client = rpc_client.EngineClient()
-
-    def default(self, req, **args):
-        raise exc.HTTPNotFound()
 
     @util.policy_enforce
     def index(self, req):

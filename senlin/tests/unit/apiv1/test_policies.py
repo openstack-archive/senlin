@@ -38,10 +38,6 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cfgopts = DummyConfig()
         self.controller = policies.PolicyController(options=cfgopts)
 
-    def test_policy_default(self, mock_enforce):
-        req = self._get('/policies')
-        self.assertRaises(exc.HTTPNotFound, self.controller.default, req)
-
     def test_policy_index_normal(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/policies')
