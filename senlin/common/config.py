@@ -26,6 +26,8 @@ service_opts = [
     cfg.IntOpt('periodic_interval',
                default=60,
                help=_('Seconds between running periodic tasks.')),
+    cfg.StrOpt('default_region_name',
+               help=_('Default region name used to get services endpoints.')),
     cfg.IntOpt('max_response_size',
                default=524288,
                help=_('Maximum raw byte size of data from web response.')),
