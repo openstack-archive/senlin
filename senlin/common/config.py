@@ -26,8 +26,6 @@ service_opts = [
     cfg.IntOpt('periodic_interval',
                default=60,
                help=_('Seconds between running periodic tasks.')),
-    cfg.StrOpt('region_name_for_services',
-               help=_('Default region name used to get services endpoints.')),
     cfg.IntOpt('max_response_size',
                default=524288,
                help=_('Maximum raw byte size of data from web response.')),
@@ -66,10 +64,6 @@ engine_opts = [
     cfg.IntOpt('lock_retry_interval',
                default=10,
                help=_('Number of seconds between lock retries.')),
-    cfg.IntOpt('error_wait_time',
-               default=240,
-               help=_('Error wait time in seconds for cluster action (ie. '
-                      'create or update).')),
     cfg.IntOpt('engine_life_check_timeout',
                default=2,
                help=_('RPC timeout for the engine liveness check that is used'
