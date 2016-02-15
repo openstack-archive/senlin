@@ -154,10 +154,6 @@ class PolicyTest(base.SenlinTestCase):
 
     def test_policy_create_default(self):
         self._setup_fakes()
-
-        x_plugin = mock.Mock()
-        x_plugin.validate.return_value = None
-
         self.spec['properties'] = {'KEY2': 5}
 
         result = self.eng.policy_create(self.ctx, 'p-1', self.spec)

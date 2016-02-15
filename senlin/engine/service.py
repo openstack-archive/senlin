@@ -200,7 +200,13 @@ class EngineService(service.Service):
         }
 
     def profile_find(self, context, identity):
-        '''Find a profile with the given identity (could be name or ID).'''
+        """Find a profile with the given identity.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of a profile.
+        :return: A DB object of profile or an exception `ProfileNotFound` if
+                 no matching object is found.
+        """
         if uuidutils.is_uuid_like(identity):
             profile = db_api.profile_get(context, identity)
             if not profile:
@@ -218,8 +224,23 @@ class EngineService(service.Service):
     @request_context
     def profile_list(self, context, limit=None, marker=None, sort=None,
                      filters=None, project_safe=True):
-        if limit is not None:
-            limit = utils.parse_int_param('limit', limit)
+        """List profiles matching the specified criteria.
+
+        :param context: An instance of request context.
+        :param limit: An integer specifying the maximum number of profiles to
+                      return in a response.
+        :param marker: An UUID specifying the profile after which the result
+                       list starts.
+        :param sort: A list of sorting keys (each optionally attached with a
+                     sorting direction) separated by commas.
+        :param filters: A dictionary of key-value pairs for filtering out the
+                        result list.
+        :param project_safe: A boolean indicating whether profiles from all
+                             projects will be returned.
+        :return: A list of `Profile` object representations.
+        """
+        limit = utils.parse_int_param('limit', limit)
+        project_safe = utils.parse_bool_param('project_safe', project_safe)
         profiles = profile_base.Profile.load_all(context,
                                                  limit=limit, marker=marker,
                                                  sort=sort, filters=filters,
@@ -229,9 +250,19 @@ class EngineService(service.Service):
 
     @request_context
     def profile_create(self, context, name, spec, metadata=None):
+        """Create a profile with the given properties.
+
+        :param context: An instance of the request context.
+        :param name: The name for the profile to be created.
+        :param spec: A dictionary containing the spec for the profile.
+        :param metadata: A dictionary containing optional key-value pairs to
+                         be associated with the profile.
+        :return: A dictionary containing the details of the profile object
+                 created.
+        """
         if cfg.CONF.name_unique:
             if db_api.profile_get_by_name(context, name):
-                msg = _("The profile (%(name)s) already exists."
+                msg = _("A profile named '%(name)s' already exists."
                         ) % {"name": name}
                 raise exception.SenlinBadRequest(msg=msg)
 
@@ -240,7 +271,7 @@ class EngineService(service.Service):
         try:
             plugin = environment.global_env().get_profile(type_str)
         except exception.ProfileTypeNotFound:
-            msg = _("The specified profile type (%(name)s) is not supported."
+            msg = _("The specified profile type (%(name)s) is not found."
                     ) % {"name": type_str}
             raise exception.SenlinBadRequest(msg=msg)
 
@@ -270,12 +301,28 @@ class EngineService(service.Service):
 
     @request_context
     def profile_get(self, context, identity):
+        """Retrieve the details about a profile.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of a profile.
+        :return: A dictionary containing the policy details, or an exception
+                 of type `ProfileNotFound` if no matching object is found.
+        """
         db_profile = self.profile_find(context, identity)
         profile = profile_base.Profile.load(context, profile=db_profile)
         return profile.to_dict()
 
     @request_context
     def profile_update(self, context, profile_id, name=None, metadata=None):
+        """Update the properties of a given profile.
+
+        :param context: An instance of the request context.
+        :param profile_id: The UUID, name or short-id of a profile.
+        :param name: The new name for the profile.
+        :returns: A dictionary containing the details of the updated profile,
+                  or an exception `ProfileNotFound` if no matching profile is
+                  found.
+        """
         LOG.info(_LI("Updating profile '%(id)s.'"), {'id': profile_id})
 
         db_profile = self.profile_find(context, profile_id)
@@ -284,8 +331,8 @@ class EngineService(service.Service):
         if name is not None and name != profile.name:
             profile.name = name
             changed = True
-        if metadata is not None and metadata != profile.metadata:
-            profile.metadata = metadata
+        if metadata is not None:
+            profile.metadata.update(metadata)
             changed = True
         if changed:
             profile.store(context)
@@ -295,12 +342,19 @@ class EngineService(service.Service):
 
     @request_context
     def profile_delete(self, context, identity):
+        """Delete the specified profile.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of a profile.
+        :return: None if succeeded or an exception of `ResourceInUse` if
+                 profile is referenced by certain clusters/nodes.
+        """
         db_profile = self.profile_find(context, identity)
         LOG.info(_LI("Deleting profile '%s'."), identity)
         try:
             profile_base.Profile.delete(context, db_profile.id)
         except exception.ResourceBusyError:
-            LOG.error(_LI("Profile '%s' cannot be deleted."), identity)
+            LOG.error(_LI("The profile '%s' cannot be deleted."), identity)
             raise exception.ResourceInUse(resource_type='profile',
                                           resource_id=db_profile.id)
 
