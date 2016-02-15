@@ -14,6 +14,7 @@
 SDK Client
 '''
 import functools
+from oslo_config import cfg
 from oslo_log import log as logging
 import six
 
@@ -106,6 +107,8 @@ def create_connection(params=None):
     if 'region_name' in params:
         prof.set_region(prof.ALL, params['region_name'])
         params.pop('region_name')
+    elif cfg.CONF.default_region_name:
+        prof.set_region(prof.ALL, cfg.CONF.default_region_name)
     try:
         conn = connection.Connection(profile=prof, user_agent=USER_AGENT,
                                      auth_plugin=auth_plugin, **params)
