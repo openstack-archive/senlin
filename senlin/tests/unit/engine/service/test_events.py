@@ -113,6 +113,24 @@ class EventTest(base.SenlinTestCase):
                                           limit=123, marker='MMM',
                                           project_safe=False)
 
+    def test_event_list_bad_limit(self):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.event_list,
+                               self.ctx, limit='MANY')
+
+        self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
+        self.assertEqual("Invalid value 'MANY' specified for 'limit'",
+                         six.text_type(ex.exc_info[1]))
+
+    def test_event_list_bad_project_safe(self):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.event_list,
+                               self.ctx, project_safe='yes')
+
+        self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
+        self.assertEqual("Invalid value 'yes' specified for 'project_safe'",
+                         six.text_type(ex.exc_info[1]))
+
     @mock.patch.object(EVENT.Event, 'load_all')
     def test_event_list_empty(self, mock_load):
         mock_load.return_value = []
