@@ -295,12 +295,12 @@ class Profile(object):
         return NotImplemented
 
     def do_join(self, obj, cluster_id):
-        '''For subclass to override.'''
-        return NotImplemented
+        '''For subclass to override to perform extra operations.'''
+        return True
 
     def do_leave(self, obj):
-        '''For subclass to override.'''
-        return NotImplemented
+        '''For subclass to override to perform extra operations.'''
+        return True
 
     def do_rebuild(self, obj):
         '''For subclass to override.'''
