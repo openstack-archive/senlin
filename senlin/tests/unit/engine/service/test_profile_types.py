@@ -10,14 +10,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import mock
 from oslo_messaging.rpc import dispatcher as rpc
+import six
 
-from senlin.common import exception
+from senlin.common import exception as exc
 from senlin.engine import environment
 from senlin.engine import service
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
-from senlin.tests.unit import fakes
 
 
 class ProfileTypeTest(base.SenlinTestCase):
@@ -26,78 +27,51 @@ class ProfileTypeTest(base.SenlinTestCase):
         super(ProfileTypeTest, self).setUp()
         self.ctx = utils.dummy_context(project='profile_type_test_project')
         self.eng = service.EngineService('host-a', 'topic-a')
-        self.eng.init_tgm()
-        environment.global_env().register_profile('TestProfile',
-                                                  fakes.TestProfile)
 
-    def test_profile_type_list(self):
+    @mock.patch.object(environment, 'global_env')
+    def test_profile_type_list(self, mock_env):
+        x_env = mock.Mock()
+        x_env.get_profile_types.return_value = [{'foo': 'bar'}]
+        mock_env.return_value = x_env
+
         types = self.eng.profile_type_list(self.ctx)
-        self.assertIsInstance(types, list)
-        self.assertIn({'name': 'TestProfile'}, types)
-        self.assertNotIn({'name': 'some-weird-stuff'}, types)
+        self.assertEqual([{'foo': 'bar'}], types)
+        mock_env.assert_called_once_with()
+        x_env.get_profile_types.assert_called_once_with()
 
-    def test_profile_type_schema(self):
-        type_name = 'TestProfile'
-        expected = {
-            'schema': {
-                'INT': {
-                    'type': 'Integer',
-                    'readonly': False,
-                    'required': False,
-                    'description': 'int property',
-                    'default': 0,
-                },
-                'STR': {
-                    'type': 'String',
-                    'readonly': False,
-                    'required': False,
-                    'description': 'string property',
-                    'default': 'a string',
-                },
-                'LIST': {
-                    'type': 'List',
-                    'description': 'list property',
-                    'readonly': False,
-                    'required': False,
-                    'schema': {
-                        '*': {
-                            'type': 'String',
-                            'description': 'list item',
-                            'readonly': False,
-                            'required': False,
-                        },
-                    },
-                },
+    @mock.patch.object(environment, 'global_env')
+    def test_profile_type_get(self, mock_env):
+        x_env = mock.Mock()
+        x_profile_type = mock.Mock()
+        x_profile_type.get_schema.return_value = {'foo': 'bar'}
+        x_env.get_profile.return_value = x_profile_type
+        mock_env.return_value = x_env
 
-                'MAP': {
-                    'type': 'Map',
-                    'description': 'map property',
-                    'readonly': False,
-                    'required': False,
-                    'schema': {
-                        'KEY1': {
-                            'type': 'Integer',
-                            'description': 'key1',
-                            'readonly': False,
-                            'required': False,
-                        },
-                        'KEY2': {
-                            'type': 'String',
-                            'description': 'key2',
-                            'readonly': False,
-                            'required': False,
-                        },
-                    },
-                },
+        result = self.eng.profile_type_get(self.ctx, 'FAKE_TYPE')
+
+        self.assertEqual(
+            {
+                'name': 'FAKE_TYPE',
+                'schema': {'foo': 'bar'},
             },
-        }
+            result)
+        mock_env.assert_called_once_with()
+        x_env.get_profile.assert_called_once_with('FAKE_TYPE')
+        x_profile_type.get_schema.assert_called_once_with()
 
-        res = self.eng.profile_type_get(self.ctx, type_name=type_name)
-        self.assertEqual(expected['schema'], res['schema'])
-        self.assertEqual(type_name, res['name'])
+    @mock.patch.object(environment, 'global_env')
+    def test_profile_type_get_nonexist(self, mock_env):
+        x_env = mock.Mock()
+        err = exc.ProfileTypeNotFound(profile_type='FAKE_TYPE')
+        x_env.get_profile.side_effect = err
+        mock_env.return_value = x_env
 
-    def test_profile_type_get_nonexist(self):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.profile_type_get,
-                               self.ctx, type_name='Bogus')
-        self.assertEqual(exception.ProfileTypeNotFound, ex.exc_info[0])
+                               self.ctx, 'FAKE_TYPE')
+
+        self.assertEqual(exc.ProfileTypeNotFound, ex.exc_info[0])
+        self.assertEqual('Profile type (FAKE_TYPE) is not found.',
+                         six.text_type(ex.exc_info[1]))
+        mock_env.assert_called_once_with()
+        x_env.get_profile.assert_called_once_with('FAKE_TYPE')
