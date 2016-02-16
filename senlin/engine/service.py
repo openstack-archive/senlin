@@ -1736,7 +1736,13 @@ class EngineService(service.Service):
         return {'action': action.id}
 
     def action_find(self, context, identity):
-        '''Find an action with the given identity (could be name or ID).'''
+        """Find an action with the given identity.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of an action.
+        :return: A DB object of action or an exception `ActionNotFound` if no
+                 matching action is found.
+        """
         if uuidutils.is_uuid_like(identity):
             action = db_api.action_get(context, identity)
             if not action:
@@ -1754,14 +1760,29 @@ class EngineService(service.Service):
     @request_context
     def action_list(self, context, filters=None, limit=None, marker=None,
                     sort=None, project_safe=True):
+        """List action records matching the specified criteria.
 
+        :param context: An instance of the request context.
+        :param filters: A dictionary of key-value pairs for filtering out the
+                        result list.
+        :param limit: An integer specifying the maximum number of objects to
+                      return in a response.
+        :param marker: An UUID specifying the action after which the result
+                       list starts.
+        :param sort: A list of sorting keys (each optionally attached with a
+                     sorting direction) separated by commas.
+        :param project_safe: A boolean indicating whether actions from all
+                             projects will be returned.
+        :return: A list of `Action` object representations.
+        """
         limit = utils.parse_int_param('limit', limit)
-        all_actions = action_mod.Action.load_all(context, filters=filters,
-                                                 limit=limit, marker=marker,
-                                                 sort=sort,
-                                                 project_safe=project_safe)
+        project_safe = utils.parse_bool_param('project_safe', project_safe)
+        results = action_mod.Action.load_all(context, filters=filters,
+                                             limit=limit, marker=marker,
+                                             sort=sort,
+                                             project_safe=project_safe)
 
-        return [a.to_dict() for a in all_actions]
+        return [a.to_dict() for a in results]
 
     @request_context
     def action_create(self, context, name, cluster, action, inputs=None):
@@ -1799,12 +1820,26 @@ class EngineService(service.Service):
 
     @request_context
     def action_get(self, context, identity):
+        """Get the details about specified action.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of an action.
+        :return: A dictionary containing the details about an action, or an
+                 exception `ActionNotFound` if no matching action is found.
+        """
         db_action = self.action_find(context, identity)
         action = action_mod.Action.load(context, db_action=db_action)
         return action.to_dict()
 
     @request_context
     def action_delete(self, context, identity):
+        """Delete the specified action object.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of an action object.
+        :return: None if deletion was successful, or an exception of type
+                 `ResourceInUse`.
+        """
         db_action = self.action_find(context, identity)
         LOG.info(_LI("Deleting action '%s'."), identity)
         try:

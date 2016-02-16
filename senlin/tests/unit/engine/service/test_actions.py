@@ -123,10 +123,16 @@ class ActionTest(base.SenlinTestCase):
                                           marker='M', sort='S',
                                           project_safe=False)
 
-    def test_action_list_with_bad_limit(self):
+    def test_action_list_with_bad_params(self):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.action_list,
                                self.ctx, limit='large')
+
+        self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.action_list,
+                               self.ctx, project_safe='yes')
 
         self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
 
