@@ -10,14 +10,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import mock
 from oslo_messaging.rpc import dispatcher as rpc
+import six
 
-from senlin.common import exception
+from senlin.common import exception as exc
 from senlin.engine import environment
 from senlin.engine import service
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
-from senlin.tests.unit import fakes
 
 
 class PolicyTypeTest(base.SenlinTestCase):
@@ -26,42 +27,51 @@ class PolicyTypeTest(base.SenlinTestCase):
         super(PolicyTypeTest, self).setUp()
         self.ctx = utils.dummy_context(project='policy_type_test_project')
         self.eng = service.EngineService('host-a', 'topic-a')
-        self.eng.init_tgm()
-        environment.global_env().register_policy('TestPolicy',
-                                                 fakes.TestPolicy)
 
-    def test_policy_type_list(self):
+    @mock.patch.object(environment, 'global_env')
+    def test_policy_type_list(self, mock_env):
+        x_env = mock.Mock()
+        x_env.get_policy_types.return_value = [{'foo': 'bar'}]
+        mock_env.return_value = x_env
+
         types = self.eng.policy_type_list(self.ctx)
-        self.assertIsInstance(types, list)
-        self.assertIn({'name': 'TestPolicy'}, types)
-        self.assertNotIn({'name': 'some-weird-stuff'}, types)
+        self.assertEqual([{'foo': 'bar'}], types)
+        mock_env.assert_called_once_with()
+        x_env.get_policy_types.assert_called_once_with()
 
-    def test_policy_type_get(self):
-        type_name = 'TestPolicy'
-        expected = {
-            'name': 'TestPolicy',
-            'schema': {
-                'KEY1': {
-                    'type': 'String',
-                    'readonly': False,
-                    'required': False,
-                    'description': 'key1',
-                    'default': 'default1',
-                },
-                'KEY2': {
-                    'type': 'Integer',
-                    'readonly': False,
-                    'required': True,
-                    'description': 'key2',
-                },
-            }
-        }
+    @mock.patch.object(environment, 'global_env')
+    def test_policy_type_get(self, mock_env):
+        x_env = mock.Mock()
+        x_policy_type = mock.Mock()
+        x_policy_type.get_schema.return_value = {'foo': 'bar'}
+        x_env.get_policy.return_value = x_policy_type
+        mock_env.return_value = x_env
 
-        schema = self.eng.policy_type_get(self.ctx, type_name=type_name)
-        self.assertEqual(expected, schema)
+        result = self.eng.policy_type_get(self.ctx, 'FAKE_TYPE')
 
-    def test_policy_type_get_nonexist(self):
+        self.assertEqual(
+            {
+                'name': 'FAKE_TYPE',
+                'schema': {'foo': 'bar'},
+            },
+            result)
+        mock_env.assert_called_once_with()
+        x_env.get_policy.assert_called_once_with('FAKE_TYPE')
+        x_policy_type.get_schema.assert_called_once_with()
+
+    @mock.patch.object(environment, 'global_env')
+    def test_policy_type_get_nonexist(self, mock_env):
+        x_env = mock.Mock()
+        err = exc.PolicyTypeNotFound(policy_type='FAKE_TYPE')
+        x_env.get_policy.side_effect = err
+        mock_env.return_value = x_env
+
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.policy_type_get,
-                               self.ctx, type_name='Bogus')
-        self.assertEqual(exception.PolicyTypeNotFound, ex.exc_info[0])
+                               self.ctx, 'FAKE_TYPE')
+
+        self.assertEqual(exc.PolicyTypeNotFound, ex.exc_info[0])
+        self.assertEqual('Policy type (FAKE_TYPE) is not found.',
+                         six.text_type(ex.exc_info[1]))
+        mock_env.assert_called_once_with()
+        x_env.get_policy.assert_called_once_with('FAKE_TYPE')
