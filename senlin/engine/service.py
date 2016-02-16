@@ -591,6 +591,18 @@ class EngineService(service.Service):
         cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
         return cluster.to_dict()
 
+    def check_cluster_quota(self, context):
+        """Validate the number of clusters created in a project.
+
+        :param context: An instance of the request context.
+        :return: None if cluster creation is okay, or an exception of type
+                 `Forbbiden` if number of clusters reaches the maximum.
+        """
+        existing = db_api.cluster_count_all(context)
+        maximum = cfg.CONF.max_clusters_per_project
+        if existing >= maximum:
+            raise exception.Forbidden()
+
     @request_context
     def cluster_create(self, context, name, desired_capacity, profile_id,
                        min_size=None, max_size=None, metadata=None,
@@ -610,6 +622,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the details about the cluster and the
                  ID of the action triggered by this operation.
         """
+        self.check_cluster_quota(context)
 
         if cfg.CONF.name_unique:
             if db_api.cluster_get_by_name(context, name):

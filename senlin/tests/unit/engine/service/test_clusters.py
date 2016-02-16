@@ -162,13 +162,14 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, 'Bogus')
         self.assertEqual(exc.ClusterNotFound, ex.exc_info[0])
 
+    @mock.patch.object(service.EngineService, 'check_cluster_quota')
     @mock.patch.object(su, 'check_size_params')
     @mock.patch("senlin.engine.actions.base.Action")
     @mock.patch("senlin.engine.cluster.Cluster")
     @mock.patch.object(service.EngineService, 'profile_find')
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_create(self, notify, mock_profile, mock_cluster,
-                            mock_action, mock_check):
+                            mock_action, mock_check, mock_quota):
         x_profile = mock.Mock(id='PROFILE_ID')
         mock_profile.return_value = x_profile
         x_cluster = mock.Mock(id='12345678ABC')
@@ -177,6 +178,7 @@ class ClusterTest(base.SenlinTestCase):
         x_action = mock.Mock(id='ACTION_ID')
         mock_action.return_value = x_action
         mock_check.return_value = None
+        mock_quota.return_value = None
 
         result = self.eng.cluster_create(self.ctx, 'C1', 3, 'PROFILE')
 
@@ -201,8 +203,47 @@ class ClusterTest(base.SenlinTestCase):
         x_action.store.assert_called_once_with(self.ctx)
         notify.assert_called_once_with(action_id='ACTION_ID')
 
+    @mock.patch.object(db_api, 'cluster_count_all')
+    def test_check_cluster_quota(self, mock_count):
+        mock_count.return_value = 10
+        cfg.CONF.set_override('max_clusters_per_project', 11,
+                              enforce_type=True)
+
+        res = self.eng.check_cluster_quota(self.ctx)
+
+        self.assertIsNone(res)
+        mock_count.assert_called_once_with(self.ctx)
+
+    @mock.patch.object(db_api, 'cluster_count_all')
+    def test_check_cluster_quota_failed(self, mock_count):
+        mock_count.return_value = 11
+        cfg.CONF.set_override('max_clusters_per_project', 11,
+                              enforce_type=True)
+
+        ex = self.assertRaises(exc.Forbidden,
+                               self.eng.check_cluster_quota, self.ctx)
+        self.assertEqual("You are not authorized to complete this "
+                         "operation.",
+                         six.text_type(ex))
+
+    @mock.patch.object(service.EngineService, 'check_cluster_quota')
+    def test_cluster_create_exceeding_quota(self, mock_quota):
+        mock_quota.side_effect = exc.Forbidden()
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_create,
+                               self.ctx, 'CLUSTER', 123, 'PROFILE')
+
+        self.assertEqual(exc.Forbidden, ex.exc_info[0])
+        self.assertEqual("You are not authorized to complete this "
+                         "operation.",
+                         six.text_type(ex.exc_info[1]))
+        mock_quota.assert_called_once_with(self.ctx)
+
+    @mock.patch.object(service.EngineService, 'check_cluster_quota')
     @mock.patch.object(db_api, 'cluster_get_by_name')
-    def test_cluster_create_already_exists(self, mock_get):
+    def test_cluster_create_already_exists(self, mock_get, mock_quota):
+        mock_quota.return_value = None
         cfg.CONF.set_override('name_unique', True, enforce_type=True)
 
         x_cluster = mock.Mock()
@@ -218,8 +259,10 @@ class ClusterTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_get.assert_called_once_with(self.ctx, 'CLUSTER')
 
+    @mock.patch.object(service.EngineService, 'check_cluster_quota')
     @mock.patch.object(service.EngineService, 'profile_find')
-    def test_cluster_create_profile_not_found(self, mock_find):
+    def test_cluster_create_profile_not_found(self, mock_find, mock_quota):
+        mock_quota.return_value = None
         mock_find.side_effect = exc.ProfileNotFound(profile='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
@@ -232,8 +275,10 @@ class ClusterTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
+    @mock.patch.object(service.EngineService, 'check_cluster_quota')
     @mock.patch.object(service.EngineService, 'profile_find')
-    def test_cluster_create_bad_desired_capacity(self, mock_find):
+    def test_cluster_create_bad_desired_capacity(self, mock_find, mock_quota):
+        mock_quota.return_value = None
         mock_find.return_value = mock.Mock()
 
         ex = self.assertRaises(rpc.ExpectedException,
@@ -245,8 +290,10 @@ class ClusterTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'PROFILE')
 
+    @mock.patch.object(service.EngineService, 'check_cluster_quota')
     @mock.patch.object(service.EngineService, 'profile_find')
-    def test_cluster_create_bad_min_size(self, mock_find):
+    def test_cluster_create_bad_min_size(self, mock_find, mock_quota):
+        mock_quota.return_value = None
         mock_find.return_value = mock.Mock()
 
         ex = self.assertRaises(rpc.ExpectedException,
@@ -258,8 +305,10 @@ class ClusterTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'PROFILE')
 
+    @mock.patch.object(service.EngineService, 'check_cluster_quota')
     @mock.patch.object(service.EngineService, 'profile_find')
-    def test_cluster_create_bad_max_size(self, mock_find):
+    def test_cluster_create_bad_max_size(self, mock_find, mock_quota):
+        mock_quota.return_value = None
         mock_find.return_value = mock.Mock()
 
         ex = self.assertRaises(rpc.ExpectedException,
@@ -272,8 +321,10 @@ class ClusterTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'PROFILE')
 
+    @mock.patch.object(service.EngineService, 'check_cluster_quota')
     @mock.patch.object(service.EngineService, 'profile_find')
-    def test_cluster_create_bad_timeout(self, mock_find):
+    def test_cluster_create_bad_timeout(self, mock_find, mock_quota):
+        mock_quota.return_value = None
         mock_find.return_value = mock.Mock()
 
         ex = self.assertRaises(rpc.ExpectedException,
@@ -285,8 +336,10 @@ class ClusterTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'PROFILE')
 
+    @mock.patch.object(service.EngineService, 'check_cluster_quota')
     @mock.patch.object(service.EngineService, 'profile_find')
-    def test_cluster_create_failed_checking(self, mock_find):
+    def test_cluster_create_failed_checking(self, mock_find, mock_quota):
+        mock_quota.return_value = None
         mock_find.return_value = mock.Mock()
 
         ex = self.assertRaises(rpc.ExpectedException,
