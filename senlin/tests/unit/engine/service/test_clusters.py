@@ -1445,7 +1445,8 @@ class ClusterTest(base.SenlinTestCase):
         x_action = mock.Mock(id='ACTION_ID')
         mock_action.return_value = x_action
 
-        result = self.eng.cluster_check(self.ctx, 'CLUSTER', foo='bar')
+        params = {'foo': 'bar'}
+        result = self.eng.cluster_check(self.ctx, 'CLUSTER', params)
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
@@ -1484,7 +1485,8 @@ class ClusterTest(base.SenlinTestCase):
         x_action = mock.Mock(id='ACTION_ID')
         mock_action.return_value = x_action
 
-        result = self.eng.cluster_recover(self.ctx, 'CLUSTER', foo='bar')
+        params = {'foo': 'bar'}
+        result = self.eng.cluster_recover(self.ctx, 'CLUSTER', params)
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
