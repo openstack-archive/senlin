@@ -210,22 +210,29 @@ class EngineService(service.Service):
             'schema': data,
         }
 
-    def profile_find(self, context, identity):
+    def profile_find(self, context, identity, project_safe=True):
         """Find a profile with the given identity.
 
         :param context: An instance of the request context.
         :param identity: The UUID, name or short-id of a profile.
+        :param project_safe: A boolean indicating whether profile from
+                             projects other than the requesting one can be
+                             returned.
         :return: A DB object of profile or an exception `ProfileNotFound` if
                  no matching object is found.
         """
         if uuidutils.is_uuid_like(identity):
-            profile = db_api.profile_get(context, identity)
+            profile = db_api.profile_get(context, identity,
+                                         project_safe=project_safe)
             if not profile:
-                profile = db_api.profile_get_by_name(context, identity)
+                profile = db_api.profile_get_by_name(context, identity,
+                                                     project_safe=project_safe)
         else:
-            profile = db_api.profile_get_by_name(context, identity)
+            profile = db_api.profile_get_by_name(context, identity,
+                                                 project_safe=project_safe)
             if not profile:
-                profile = db_api.profile_get_by_short_id(context, identity)
+                profile = db_api.profile_get_by_short_id(
+                    context, identity, project_safe=project_safe)
 
         if not profile:
             raise exception.ProfileNotFound(profile=identity)
