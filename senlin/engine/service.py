@@ -1838,7 +1838,16 @@ class EngineService(service.Service):
         LOG.info(_LI("Action '%s' is deleted."), identity)
 
     def receiver_find(self, context, identity, project_safe=True):
-        """Find a receiver with the given identity (could be name or ID)."""
+        """Find a receiver with the given identity.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of a receiver.
+        :param project_safe: A boolean indicating whether receiver from other
+                             projects other than the requesting one can be
+                             returned.
+        :return: A DB object of receiver or an exception `ReceiverNotFound`
+                 if no matching reciever is found.
+        """
         if uuidutils.is_uuid_like(identity):
             receiver = db_api.receiver_get(context, identity,
                                            project_safe=project_safe)
@@ -1860,10 +1869,23 @@ class EngineService(service.Service):
     @request_context
     def receiver_list(self, context, limit=None, marker=None, sort=None,
                       filters=None, project_safe=True):
-        if limit is not None:
-            limit = utils.parse_int_param('limit', limit)
-        if project_safe is not None:
-            project_safe = utils.parse_bool_param('project_safe', project_safe)
+        """List receivers matching the specified criteria.
+
+        :param context: An instance of the request context.
+        :param limit: An integer specifying the maximum number of objects to
+                      return in a response.
+        :param marker: An UUID specifying the receiver after which the result
+                       list starts.
+        :param sort: A list of sorting keys (each optionally attached with a
+                     sorting direction) separated by commas.
+        :param filters: A dictionary of key-value pairs for filtering out the
+                        result list.
+        :param project_safe: A boolean indicating whether receivers from all
+                             projects will be returned.
+        :return: A list of `Receiver` object representations.
+        """
+        limit = utils.parse_int_param('limit', limit)
+        project_safe = utils.parse_bool_param('project_safe', project_safe)
 
         receivers = receiver_mod.Receiver.load_all(context, limit=limit,
                                                    marker=marker,
@@ -1876,15 +1898,17 @@ class EngineService(service.Service):
                         actor=None, params=None):
         """Create a receiver.
 
-        :param context: RPC context.
+        :param context: An instance of the request context.
         :param name: Name of the receiver.
         :param type_name: Name of the receiver type, subject to validation.
-        :param cluster_id: Name or ID of a cluster.
+        :param cluster_id: UUID, name or short-id of a cluster.
         :param action: Name or ID of an action, currently only builtin action
                        names are supported.
         :param actor: Future extension.
         :param params: A dictionary containing key-value pairs as inputs to
                        the action.
+        :return: A dictionary containing the details about the receiver
+                 created.
         """
         if cfg.CONF.name_unique:
             if db_api.receiver_get_by_name(context, name):
@@ -1933,13 +1957,22 @@ class EngineService(service.Service):
 
         receiver = receiver_mod.Receiver.create(context, rtype, cluster,
                                                 action, **kwargs)
-        LOG.info(_LI("Webhook (%(n)s) is created: %(i)s."),
+        LOG.info(_LI("Receiver (%(n)s) is created: %(i)s."),
                  {'n': name, 'i': receiver.id})
 
         return receiver.to_dict()
 
     @request_context
     def receiver_get(self, context, identity, project_safe=True):
+        """Get the details about a receiver.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of a receiver.
+        :param project_safe: Whether matching object from other projects can
+                             be returned.
+        :return: A dictionary containing the details about a receiver or
+                 an exception `ReceiverNotFound` if no matching object found.
+        """
         db_receiver = self.receiver_find(context, identity,
                                          project_safe=project_safe)
         receiver = receiver_mod.Receiver.load(context,
@@ -1949,6 +1982,13 @@ class EngineService(service.Service):
 
     @request_context
     def receiver_delete(self, context, identity):
+        """Delete the specified receiver.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of a receiver.
+        :return: None if successfully deleted the receiver or an exception of
+                 `ReceiverNotFound` if the object could not be found.
+        """
         db_receiver = self.receiver_find(context, identity)
         LOG.info(_LI("Deleting receiver %s."), identity)
         db_api.receiver_delete(context, db_receiver.id)
