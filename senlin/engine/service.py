@@ -187,10 +187,21 @@ class EngineService(service.Service):
 
     @request_context
     def profile_type_list(self, context):
+        """List known profile type implementations.
+
+        :param context: An instance of the request context.
+        :return: A list of profile types.
+        """
         return environment.global_env().get_profile_types()
 
     @request_context
     def profile_type_get(self, context, type_name):
+        """Get the details about a profile type.
+
+        :param context: An instance of the request context.
+        :param type_name: The name of a profile type.
+        :return: The details about a profile type.
+        """
         profile = environment.global_env().get_profile(type_name)
         data = profile.get_schema()
 
@@ -362,7 +373,7 @@ class EngineService(service.Service):
 
     @request_context
     def policy_type_list(self, context):
-        """List know policy type implementations.
+        """List known policy type implementations.
 
         :param context: An instance of the request context.
         :return: A list of policy types.
