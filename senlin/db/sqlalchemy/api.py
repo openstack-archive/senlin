@@ -847,21 +847,27 @@ def action_update(context, action_id, values):
     action.save(session)
 
 
-def action_get(context, action_id, refresh=False):
+def action_get(context, action_id, project_safe=True, refresh=False):
     session = _session(context)
     action = session.query(models.Action).get(action_id)
     if action is None:
         return None
+
+    if project_safe is True and action.project != context.project:
+        return None
+
     session.refresh(action)
     return action
 
 
-def action_get_by_name(context, name):
-    return query_by_name(context, models.Action, name)
+def action_get_by_name(context, name, project_safe=True):
+    return query_by_name(context, models.Action, name,
+                         project_safe=project_safe)
 
 
-def action_get_by_short_id(context, short_id):
-    return query_by_short_id(context, models.Action, short_id)
+def action_get_by_short_id(context, short_id, project_safe=True):
+    return query_by_short_id(context, models.Action, short_id,
+                             project_safe=project_safe)
 
 
 def action_get_all_by_owner(context, owner_id):

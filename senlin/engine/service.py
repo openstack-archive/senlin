@@ -1778,7 +1778,7 @@ class EngineService(service.Service):
 
         return {'action': action.id}
 
-    def action_find(self, context, identity):
+    def action_find(self, context, identity, project_safe=True):
         """Find an action with the given identity.
 
         :param context: An instance of the request context.
@@ -1787,13 +1787,17 @@ class EngineService(service.Service):
                  matching action is found.
         """
         if uuidutils.is_uuid_like(identity):
-            action = db_api.action_get(context, identity)
+            action = db_api.action_get(context, identity,
+                                       project_safe=project_safe)
             if not action:
-                action = db_api.action_get_by_name(context, identity)
+                action = db_api.action_get_by_name(context, identity,
+                                                   project_safe=project_safe)
         else:
-            action = db_api.action_get_by_name(context, identity)
+            action = db_api.action_get_by_name(context, identity,
+                                               project_safe=project_safe)
             if not action:
-                action = db_api.action_get_by_short_id(context, identity)
+                action = db_api.action_get_by_short_id(
+                    context, identity, project_safe=project_safe)
 
         if not action:
             raise exception.ActionNotFound(action=identity)

@@ -23,11 +23,11 @@ class CustomActionTest(base.SenlinTestCase):
         self.ctx = utils.dummy_context()
 
     def test_init(self):
-        obj = ca.CustomAction(self.ctx, 'OBJID', 'OBJECT_ACTION')
+        obj = ca.CustomAction('OBJID', 'OBJECT_ACTION', self.ctx)
         self.assertIsNotNone(obj)
 
     def test_execute(self):
-        obj = ca.CustomAction(self.ctx, 'OBJID', 'OBJECT_ACTION')
+        obj = ca.CustomAction('OBJID', 'OBJECT_ACTION', self.ctx)
 
         params = {'key': 'value'}
         res = obj.execute(**params)

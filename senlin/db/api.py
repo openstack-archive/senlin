@@ -299,16 +299,18 @@ def action_update(context, action_id, values):
     return IMPL.action_update(context, action_id, values)
 
 
-def action_get(context, action_id, refresh=False):
-    return IMPL.action_get(context, action_id, refresh=refresh)
+def action_get(context, action_id, project_safe=True, refresh=False):
+    return IMPL.action_get(context, action_id, project_safe=project_safe,
+                           refresh=refresh)
 
 
-def action_get_by_name(context, name):
-    return IMPL.action_get_by_name(context, name)
+def action_get_by_name(context, name, project_safe=True):
+    return IMPL.action_get_by_name(context, name, project_safe=project_safe)
 
 
-def action_get_by_short_id(context, short_id):
-    return IMPL.action_get_by_short_id(context, short_id)
+def action_get_by_short_id(context, short_id, project_safe=True):
+    return IMPL.action_get_by_short_id(context, short_id,
+                                       project_safe=project_safe)
 
 
 def action_get_all_by_owner(context, owner):

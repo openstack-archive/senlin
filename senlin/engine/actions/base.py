@@ -96,14 +96,20 @@ class Action(object):
 
         # TODO(Yanyan Hu): Replace context with DB session
         if not context:
+            self.user = kwargs.get('user')
+            self.project = kwargs.get('project')
+            self.domain = kwargs.get('domain')
             params = {
-                'user': kwargs.get('user'),
-                'project': kwargs.get('project'),
-                'domain': kwargs.get('domain'),
+                'user': self.user,
+                'project': self.project,
+                'domain': self.domain,
                 'is_admin': False
             }
             self.context = req_context.RequestContext.from_dict(params)
         else:
+            self.user = context.user
+            self.project = context.project
+            self.domain = context.domain
             self.context = context
 
         # TODO(Qiming): make description a db column
@@ -177,6 +183,9 @@ class Action(object):
             'created_at': self.created_at,
             'updated_at': self.updated_at,
             'data': self.data,
+            'user': self.user,
+            'project': self.project,
+            'domain': self.domain,
         }
 
         if self.id:
@@ -216,6 +225,9 @@ class Action(object):
             'created_at': record.created_at,
             'updated_at': record.updated_at,
             'data': record.data,
+            'user': record.user,
+            'project': record.project,
+            'domain': record.domain,
         }
 
         return cls(record.target, record.action, context=context, **kwargs)
