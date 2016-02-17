@@ -48,28 +48,42 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(db_api, 'node_get_by_name')
     @mock.patch.object(db_api, 'node_get')
-    def test_node_find_by_short_id(self, mock_get, mock_name):
+    def test_node_find_by_uuid_as_name(self, mock_get, mock_name):
         mock_get.return_value = None
         x_node = mock.Mock()
         mock_name.return_value = x_node
         aid = uuidutils.generate_uuid()
 
+        result = self.eng.node_find(self.ctx, aid, False)
+
+        self.assertEqual(x_node, result)
+        mock_get.assert_called_once_with(self.ctx, aid, project_safe=False)
+        mock_name.assert_called_once_with(self.ctx, aid, project_safe=False)
+
+    @mock.patch.object(db_api, 'node_get_by_name')
+    def test_node_find_by_name(self, mock_name):
+        x_node = mock.Mock()
+        mock_name.return_value = x_node
+        aid = 'not-a-uuid'
+
         result = self.eng.node_find(self.ctx, aid)
 
         self.assertEqual(x_node, result)
-        mock_get.assert_called_once_with(self.ctx, aid, project_safe=True)
         mock_name.assert_called_once_with(self.ctx, aid, project_safe=True)
 
     @mock.patch.object(db_api, 'node_get_by_short_id')
-    def test_node_find_by_short_id_directly(self, mock_shortid):
+    @mock.patch.object(db_api, 'node_get_by_name')
+    def test_node_find_by_short_id(self, mock_name, mock_shortid):
+        mock_name.return_value = None
         x_node = mock.Mock()
         mock_shortid.return_value = x_node
         aid = 'abcdef'
 
-        result = self.eng.node_find(self.ctx, aid)
+        result = self.eng.node_find(self.ctx, aid, False)
 
         self.assertEqual(x_node, result)
-        mock_shortid.assert_called_once_with(self.ctx, aid, project_safe=True)
+        mock_name.assert_called_once_with(self.ctx, aid, project_safe=False)
+        mock_shortid.assert_called_once_with(self.ctx, aid, project_safe=False)
 
     @mock.patch.object(db_api, 'node_get_by_short_id')
     def test_node_find_not_found(self, mock_shortid):

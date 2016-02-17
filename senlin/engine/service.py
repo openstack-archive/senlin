@@ -1259,22 +1259,29 @@ class EngineService(service.Service):
         LOG.info(_LI("Cluster recover action queued: %s."), action.id)
         return {'action': action.id}
 
-    def node_find(self, context, identity):
+    def node_find(self, context, identity, project_safe=True):
         """Find a node with the given identity.
 
         :param context: An instance of the request context.
         :param identity: The UUID, name or short-id of a node.
+        :param project_safe: A boolean indicating whether only nodes from the
+                             same project as the requesting one are qualified
+                             to be returned.
         :return: A DB object of Node or an exception of `NodeNotFound` if no
                  matching object is found.
         """
         if uuidutils.is_uuid_like(identity):
-            node = db_api.node_get(context, identity)
+            node = db_api.node_get(context, identity,
+                                   project_safe=project_safe)
             if not node:
-                node = db_api.node_get_by_name(context, identity)
+                node = db_api.node_get_by_name(context, identity,
+                                               project_safe=project_safe)
         else:
-            node = db_api.node_get_by_name(context, identity)
+            node = db_api.node_get_by_name(context, identity,
+                                           project_safe=project_safe)
             if not node:
-                node = db_api.node_get_by_short_id(context, identity)
+                node = db_api.node_get_by_short_id(
+                    context, identity, project_safe=project_safe)
 
         if node is None:
             raise exception.NodeNotFound(node=identity)
