@@ -1208,13 +1208,8 @@ def service_update(context, service_id, values=None):
 
 def service_delete(context, service_id):
     session = _session(context)
-    svc = session.query(models.Service).get(service_id)
-    if not svc:
-        return None
-    session.begin()
-    session.delete(svc)
-    session.commit()
-    session.flush()
+    session.query(models.Service).filter_by(
+        id=service_id).delete(synchronize_session='fetch')
 
 
 def service_get(context, service_id):
