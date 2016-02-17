@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import types
+
 import mock
 from openstack import connection
 from openstack import profile
@@ -109,11 +111,12 @@ class OpenStackSDKTest(base.SenlinTestCase):
 
     def test_translate_exception_wrapper(self):
 
-        test_func = mock.Mock()
-        test_func.__name__ = 'test_func'
+        @sdk.translate_exception
+        def test_func(driver):
+            return driver.__name__
 
         res = sdk.translate_exception(test_func)
-        self.assertEqual('function', res.__class__.__name__)
+        self.assertEqual(types.FunctionType, type(res))
 
     def test_translate_exception_with_exception(self):
 

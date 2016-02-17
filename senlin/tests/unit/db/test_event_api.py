@@ -12,6 +12,7 @@
 
 import logging
 
+from oslo_utils import reflection
 from oslo_utils import timeutils as tu
 
 from senlin.db.sqlalchemy import api as db_api
@@ -39,7 +40,8 @@ class DBAPIEventTest(base.SenlinTestCase):
             '2014-12-19 11:51:54.670244', '%Y-%m-%d %H:%M:%S.%f')
 
         if entity:
-            type_name = entity.__class__.__name__.upper()
+            e_name = reflection.get_class_name(entity, fully_qualified=False)
+            type_name = e_name.upper()
             if type_name == 'CLUSTER':
                 cluster_id = entity.id
             elif type_name == 'NODE':

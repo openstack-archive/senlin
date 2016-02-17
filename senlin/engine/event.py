@@ -13,6 +13,7 @@
 import logging
 
 from oslo_log import log
+from oslo_utils import reflection
 from oslo_utils import timeutils
 
 from senlin.common import exception
@@ -69,11 +70,12 @@ class Event(object):
             self.status = entity.status
         if self.status_reason is None:
             self.status_reason = entity.status_reason
-        entity_type = entity.__class__.__name__.upper()
-        self.obj_type = entity_type
-        if entity_type == 'CLUSTER':
+        e_type = reflection.get_class_name(entity, fully_qualified=False)
+        e_type = e_type.upper()
+        self.obj_type = e_type
+        if e_type == 'CLUSTER':
             self.cluster_id = entity.id
-        elif entity_type == 'NODE':
+        elif e_type == 'NODE':
             self.cluster_id = entity.cluster_id
 
     @classmethod
