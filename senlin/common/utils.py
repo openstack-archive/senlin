@@ -68,7 +68,7 @@ def parse_bool_param(name, value):
     return strutils.bool_from_string(value, strict=True)
 
 
-def parse_sort_param(value):
+def parse_sort_param(value, whitelist):
     """Parse a string value into list of keys and list of sorting dirs.
 
     :param value: A string as the input which should be one of the following
@@ -76,6 +76,7 @@ def parse_sort_param(value):
                   - 'key1,key2,key3'
                   - 'key1:asc,key2,key3:desc'
                   - 'key1:asc,key2:asc,key3:desc'
+    :param whitelist: A list of permitted sorting keys.
     :return: a list of keys and a list of sorting dirs.
     :rtype: tuple
     """
@@ -89,6 +90,8 @@ def parse_sort_param(value):
         s_key, _sep, s_dir = s.partition(':')
         if not s_key:
             raise exception.InvalidParameter(name='sort key', value='<None>')
+        if s_key not in whitelist:
+            raise exception.InvalidParameter(name='sort key', value=s_key)
         if not s_dir:
             s_dir = 'asc'
         elif s_dir not in ('asc', 'desc'):

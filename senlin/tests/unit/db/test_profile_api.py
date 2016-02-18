@@ -220,6 +220,13 @@ class DBAPIProfileTest(base.SenlinTestCase):
         self.assertEqual('003', profiles[1].id)
         self.assertEqual('002', profiles[2].id)
 
+        # Sorted by invalid sort_key
+        ex = self.assertRaises(exception.InvalidParameter,
+                               db_api.profile_get_all,
+                               self.ctx, sort='bad_key')
+        self.assertEqual("Invalid value 'bad_key' specified for 'sort key'",
+                         str(ex))
+
         # Sorted by type,name (ascending)
         profiles = db_api.profile_get_all(self.ctx, sort='type,name')
         self.assertEqual(3, len(profiles))
