@@ -25,6 +25,9 @@ from senlin.tests.unit.db import shared
 
 def _create_action(context, action=shared.sample_action, **kwargs):
     data = parser.simple_parse(action)
+    data['user'] = context.user
+    data['project'] = context.project
+    data['domain'] = context.domain
     data.update(kwargs)
     return db_api.action_create(context, data)
 
@@ -36,7 +39,7 @@ class DBAPIActionTest(base.SenlinTestCase):
 
     def test_action_create(self):
         data = parser.simple_parse(shared.sample_action)
-        action = db_api.action_create(self.ctx, data)
+        action = _create_action(self.ctx)
 
         self.assertIsNotNone(action)
         self.assertEqual(data['name'], action.name)
@@ -47,11 +50,13 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.assertEqual(data['status'], action.status)
         self.assertEqual(data['status_reason'], action.status_reason)
         self.assertEqual(10, action.inputs['max_size'])
+        self.assertEqual(self.ctx.user, action.user)
+        self.assertEqual(self.ctx.project, action.project)
+        self.assertEqual(self.ctx.domain, action.domain)
         self.assertIsNone(action.outputs)
 
     def test_action_update(self):
-        data = parser.simple_parse(shared.sample_action)
-        action = db_api.action_create(self.ctx, data)
+        action = _create_action(self.ctx)
         values = {
             'status': 'ERROR',
             'status_reason': 'Cluster creation failed',

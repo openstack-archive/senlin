@@ -195,6 +195,9 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual(obj.created_at, action_obj.created_at)
         self.assertEqual(obj.updated_at, action_obj.updated_at)
         self.assertEqual(obj.data, action_obj.data)
+        self.assertEqual(obj.user, action_obj.user)
+        self.assertEqual(obj.project, action_obj.project)
+        self.assertEqual(obj.domain, action_obj.domain)
 
     def test_from_db_record_with_empty_fields(self):
         values = copy.deepcopy(self.action_values)
@@ -441,7 +444,7 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual('FAKE_STATUS', res)
         self.assertEqual('FAKE_STATUS', action.status)
         mock_get.assert_called_once_with(action.context, 'FAKE_ID',
-                                         refresh=True)
+                                         project_safe=True, refresh=True)
 
     @mock.patch.object(action_base, 'wallclock')
     def test_is_timeout(self, mock_time):
