@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_utils import uuidutils
+
 from senlin.drivers import base
 from senlin.tests.functional.drivers.openstack import sdk
 
@@ -128,22 +130,36 @@ class NovaClient(base.DriverBase):
         return sdk.FakeResourceObject(self.fake_image)
 
     def server_create(self, **attrs):
+        self.fake_server_create['id'] = uuidutils.generate_uuid()
+        self.fake_server_get['id'] = self.fake_server_create['id']
         return sdk.FakeResourceObject(self.fake_server_create)
 
-    def server_get(self, value):
+    def server_get(self, server):
         return sdk.FakeResourceObject(self.fake_server_get)
 
-    def wait_for_server(self, value, timeout=None):
+    def wait_for_server(self, server, timeout=None):
         return
 
-    def wait_for_server_delete(self, value, timeout=None):
+    def wait_for_server_delete(self, server, timeout=None):
         return
 
-    def server_update(self, value, **attrs):
+    def server_update(self, server, **attrs):
         self.fake_server_get.update(attrs)
         return sdk.FakeResourceObject(self.fake_server_get)
 
-    def server_delete(self, value, ignore_missing=True):
+    def server_rebuild(self, server, imageref, name=None, admin_password=None,
+                       **attrs):
+        if imageref:
+            attrs['image']['id'] = imageref
+        if name:
+            attrs['name'] = name
+        if admin_password:
+            attrs['adminPass'] = admin_password
+        self.fake_server_get.update(attrs)
+
+        return sdk.FakeResourceObject(self.fake_server_get)
+
+    def server_delete(self, server, ignore_missing=True):
         return
 
     def server_metadata_get(self, server):
