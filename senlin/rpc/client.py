@@ -247,13 +247,15 @@ class EngineClient(object):
         return rpc_method(ctxt,
                           self.make_msg('node_delete', identity=identity))
 
-    def node_check(self, ctxt, identity):
+    def node_check(self, ctxt, identity, params=None):
         return self.call(ctxt, self.make_msg('node_check',
-                                             identity=identity))
+                                             identity=identity,
+                                             params=params))
 
-    def node_recover(self, ctxt, identity):
+    def node_recover(self, ctxt, identity, params=None):
         return self.call(ctxt, self.make_msg('node_recover',
-                                             identity=identity))
+                                             identity=identity,
+                                             params=params))
 
     def action_list(self, ctxt, filters=None, limit=None, marker=None,
                     sort=None, project_safe=True):

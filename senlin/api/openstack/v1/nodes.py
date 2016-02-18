@@ -177,9 +177,19 @@ class NodeController(wsgi.Controller):
             raise exc.HTTPBadRequest(msg)
 
         if this_action == self.NODE_CHECK:
-            res = self.rpc_client.node_check(req.context, node_id)
+            params = body.get(this_action)
+            if not isinstance(params, dict):
+                msg = _("The params provided is not a map.")
+                raise exc.HTTPBadRequest(msg)
+            res = self.rpc_client.node_check(req.context, node_id,
+                                             params=params)
         else:    # self.NODE_RECOVER
-            res = self.rpc_client.node_recover(req.context, node_id)
+            params = body.get(this_action)
+            if not isinstance(params, dict):
+                msg = _("The params provided is not a map.")
+                raise exc.HTTPBadRequest(msg)
+            res = self.rpc_client.node_recover(req.context, node_id,
+                                               params=params)
 
         location = {'location': '/actions/%s' % res['action']}
         res.update(location)

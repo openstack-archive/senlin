@@ -645,7 +645,8 @@ class NodeTest(base.SenlinTestCase):
         x_action = mock.Mock(id='ACTION_ID')
         mock_action.return_value = x_action
 
-        result = self.eng.node_check(self.ctx, 'FAKE_NODE')
+        params = {}
+        result = self.eng.node_check(self.ctx, 'FAKE_NODE', params)
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
@@ -682,7 +683,9 @@ class NodeTest(base.SenlinTestCase):
         x_action = mock.Mock(id='ACTION_ID')
         mock_action.return_value = x_action
 
-        result = self.eng.node_recover(self.ctx, 'FAKE_NODE')
+        params = {'foo': 'bar'}
+
+        result = self.eng.node_recover(self.ctx, 'FAKE_NODE', params)
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
@@ -690,7 +693,7 @@ class NodeTest(base.SenlinTestCase):
             '12345678AB', consts.NODE_RECOVER,
             name='node_recover_12345678',
             cause=action_mod.CAUSE_RPC,
-            inputs={},
+            inputs={'foo': 'bar'},
             user=self.ctx.user,
             project=self.ctx.project,
             domain=self.ctx.domain)

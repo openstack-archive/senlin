@@ -626,7 +626,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         response = self.controller.action(req, node_id=node_id, body=body)
 
         mock_call.assert_called_once_with(
-            req.context, ('node_check', {'identity': node_id}))
+            req.context,
+            ('node_check', {'identity': node_id, 'params': {}}))
 
         location = {'location': '/actions/action-id'}
         engine_response.update(location)
@@ -665,7 +666,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         response = self.controller.action(req, node_id=node_id, body=body)
 
         mock_call.assert_called_once_with(
-            req.context, ('node_recover', {'identity': node_id}))
+            req.context,
+            ('node_recover', {'identity': node_id, 'params': {}}))
 
         location = {'location': '/actions/action-id'}
         engine_response.update(location)
@@ -742,7 +744,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('NodeNotFound', resp.json['error']['type'])
 
         mock_call.assert_called_once_with(
-            req.context, ('node_recover', {'identity': node_id}))
+            req.context,
+            ('node_recover', {'identity': node_id, 'params': {}}))
 
     def test_node_delete_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
