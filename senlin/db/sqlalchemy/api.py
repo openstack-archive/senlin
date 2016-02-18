@@ -22,6 +22,7 @@ from oslo_db.sqlalchemy import session as db_session
 from oslo_db.sqlalchemy import utils
 from oslo_log import log as logging
 from oslo_utils import timeutils
+import sqlalchemy as sa
 
 from senlin.common import consts
 from senlin.common import exception
@@ -38,23 +39,38 @@ CONF = cfg.CONF
 CONF.import_opt('max_events_per_cluster', 'senlin.common.config')
 
 _facade = None
+_sa_create_engine_orig = sa.create_engine
 
 
-def get_facade():
+def _get_facade():
     global _facade
 
     if not _facade:
-        _facade = db_session.EngineFacade.from_config(CONF,
-                                                      expire_on_commit=True)
+        _facade = db_session.EngineFacade(
+            cfg.CONF.database.connection,
+            expire_on_commit=True,
+            **dict(six.iteritems(cfg.CONF.database))
+        )
     return _facade
 
 
+def _sa_create_engine_wrapper(*args, **kwargs):
+
+    if args[0].drivername != 'sqlite':
+        kwargs['isolation_level'] = 'READ_COMMITTED'
+
+    return _sa_create_engine_orig(*args, **kwargs)
+
+
 def get_engine():
-    return get_facade().get_engine()
+    if sa.create_engine != _sa_create_engine_wrapper:
+        sa.create_engine = _sa_create_engine_wrapper
+
+    return _get_facade().get_engine()
 
 
 def get_session():
-    return get_facade().get_session()
+    return _get_facade().get_session()
 
 
 def get_backend():
