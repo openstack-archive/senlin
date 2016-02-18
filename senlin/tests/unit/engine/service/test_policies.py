@@ -68,11 +68,12 @@ class PolicyTest(base.SenlinTestCase):
         mock_get.return_value = None
 
         aid = uuidutils.generate_uuid()
-        result = self.eng.policy_find(self.ctx, aid)
+        result = self.eng.policy_find(self.ctx, aid, project_safe=False)
 
         self.assertEqual(x_policy, result)
-        mock_get.assert_called_once_with(self.ctx, aid, project_safe=True)
-        mock_get_name.assert_called_once_with(self.ctx, aid, project_safe=True)
+        mock_get.assert_called_once_with(self.ctx, aid, project_safe=False)
+        mock_get_name.assert_called_once_with(self.ctx, aid,
+                                              project_safe=False)
 
     @mock.patch.object(db_api, 'policy_get_by_name')
     def test_policy_find_by_name(self, mock_get_name):
@@ -93,12 +94,13 @@ class PolicyTest(base.SenlinTestCase):
         mock_get_name.return_value = None
 
         aid = 'abcd-1234-abcd'
-        result = self.eng.policy_find(self.ctx, aid)
+        result = self.eng.policy_find(self.ctx, aid, project_safe=False)
 
         self.assertEqual(x_policy, result)
-        mock_get_name.assert_called_once_with(self.ctx, aid, project_safe=True)
+        mock_get_name.assert_called_once_with(self.ctx, aid,
+                                              project_safe=False)
         mock_get_shortid.assert_called_once_with(self.ctx, aid,
-                                                 project_safe=True)
+                                                 project_safe=False)
 
     @mock.patch.object(db_api, 'policy_get_by_name')
     def test_policy_find_not_found(self, mock_get_name):

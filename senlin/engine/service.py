@@ -403,22 +403,29 @@ class EngineService(service.Service):
             'schema': data
         }
 
-    def policy_find(self, context, identity):
+    def policy_find(self, context, identity, project_safe=True):
         """Find a policy with the given identity.
 
         :param context: An instance of the request context.
         :param identity: The UUID, name or short-id of a profile.
+        :param project_safe: A boolean indicating whether policies from
+                             projects other than the requesting one should be
+                             evaluated.
         :return: A DB object of policy or an exception of `PolicyNotFound` if
                  no matching object is found.
         """
         if uuidutils.is_uuid_like(identity):
-            policy = db_api.policy_get(context, identity)
+            policy = db_api.policy_get(context, identity,
+                                       project_safe=project_safe)
             if not policy:
-                policy = db_api.policy_get_by_name(context, identity)
+                policy = db_api.policy_get_by_name(context, identity,
+                                                   project_safe=project_safe)
         else:
-            policy = db_api.policy_get_by_name(context, identity)
+            policy = db_api.policy_get_by_name(context, identity,
+                                               project_safe=project_safe)
             if not policy:
-                policy = db_api.policy_get_by_short_id(context, identity)
+                policy = db_api.policy_get_by_short_id(
+                    context, identity, project_safe=project_safe)
 
         if not policy:
             raise exception.PolicyNotFound(policy=identity)
