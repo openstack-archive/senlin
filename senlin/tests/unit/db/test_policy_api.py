@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import mock
+from oslo_db.sqlalchemy import utils as sa_utils
 from oslo_utils import timeutils as tu
 
 from senlin.common import consts
@@ -234,13 +236,13 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         policies = db_api.policy_get_all(self.ctx, limit=1, marker='policy1')
         self.assertEqual(1, len(policies))
 
-    def test_policy_get_all_used_sort_keys(self):
+    @mock.patch.object(sa_utils, 'paginate_query')
+    def test_policy_get_all_used_sort_keys(self, mock_paginate):
         ids = ['policy1', 'policy2', 'policy3']
         for pid in ids:
             data = self.new_policy_data(id=pid)
             db_api.policy_create(self.ctx, data)
 
-        mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
         sort_keys = consts.POLICY_SORT_KEYS
         db_api.policy_get_all(self.ctx, sort=','.join(sort_keys))
 

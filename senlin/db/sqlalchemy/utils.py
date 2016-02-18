@@ -43,3 +43,30 @@ def exact_filter(query, model, filters):
         query = query.filter_by(**filter_dict)
 
     return query
+
+
+def get_sort_params(value, default_key=None):
+    """Parse a string into a list of sort_keys and a list of sort_dirs.
+
+    :param value: A string that contains the sorting parameters.
+    :param default_key: An optional key set as the default sorting key when
+                        no sorting option value is specified.
+
+    :return: A list of sorting keys and a list of sorting dirs.
+    """
+    keys = []
+    dirs = []
+    if value:
+        for s in value.split(','):
+            s_key, _s, s_dir = s.partition(':')
+            keys.append(s_key)
+            dirs.append(s_dir or 'asc')
+    elif default_key:
+        # use default if specified
+        return [default_key, 'id'], ['asc', 'asc']
+
+    if 'id' not in keys:
+        keys.append('id')
+        dirs.append('asc')
+
+    return keys, dirs

@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import mock
+from oslo_db.sqlalchemy import utils as sa_utils
 from oslo_utils import timeutils as tu
 
 from senlin.common import consts
@@ -148,7 +150,8 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
                                                 filters=filters)
         self.assertEqual(2, len(results))
 
-    def test_policy_get_all_with_sort_key_are_used(self):
+    @mock.patch.object(sa_utils, 'paginate_query')
+    def test_policy_get_all_with_sort_key_are_used(self, mock_paginate):
         values = {
             'policy1': {'enabled': True},
             'policy2': {'enabled': True},
@@ -161,8 +164,6 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
             policy_id = self.create_policy(id=key).id
             db_api.cluster_policy_attach(self.ctx, self.cluster.id, policy_id,
                                          value)
-
-        mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
 
         sort = consts.CLUSTER_POLICY_SORT_KEYS
         db_api.cluster_policy_get_all(self.ctx, self.cluster.id,

@@ -10,16 +10,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-'''
+"""
 Implementation of SQLAlchemy backend.
-'''
+"""
 
 import six
 import sys
 
 from oslo_config import cfg
 from oslo_db.sqlalchemy import session as db_session
-from oslo_db.sqlalchemy import utils
+from oslo_db.sqlalchemy import utils as sa_utils
 from oslo_log import log as logging
 from oslo_utils import timeutils
 import sqlalchemy as sa
@@ -27,10 +27,9 @@ import sqlalchemy as sa
 from senlin.common import consts
 from senlin.common import exception
 from senlin.common.i18n import _
-from senlin.common import utils as common_utils
-from senlin.db.sqlalchemy import filters as db_filters
 from senlin.db.sqlalchemy import migration
 from senlin.db.sqlalchemy import models
+from senlin.db.sqlalchemy import utils
 
 LOG = logging.getLogger(__name__)
 
@@ -86,27 +85,6 @@ def model_query(context, *args):
     session = _session(context)
     query = session.query(*args)
     return query
-
-
-def _get_sort_params(value, whitelist, default_key=None):
-    """Parse a string into a list of sort_keys and a list of sort_dirs.
-
-    :param value: A string that contains the sorting parameters.
-    :param whitelist: A list of permitted sorting keys.
-    :param default_key: An optional key set as the default sorting key.
-
-    :return: A list of sorting keys and a list of sort_dirs.
-    """
-    keys, dirs = common_utils.parse_sort_param(value, whitelist)
-    if not keys:
-        if default_key:
-            return [default_key, 'id'], ['asc', 'asc']
-        return ['id'], ['asc']
-
-    keys.append('id')
-    dirs.append('asc')
-
-    return keys, dirs
 
 
 def query_by_short_id(context, model, short_id, project_safe=True):
@@ -182,14 +160,14 @@ def cluster_get_all(context, limit=None, marker=None, sort=None, filters=None,
                     project_safe=True):
     query = _query_cluster_get_all(context, project_safe=project_safe)
     if filters:
-        query = db_filters.exact_filter(query, models.Cluster, filters)
+        query = utils.exact_filter(query, models.Cluster, filters)
 
-    keys, dirs = _get_sort_params(sort, consts.CLUSTER_SORT_KEYS, 'init_at')
+    keys, dirs = utils.get_sort_params(sort, consts.CLUSTER_INIT_AT)
     if marker:
         marker = model_query(context, models.Cluster).get(marker)
 
-    return utils.paginate_query(query, models.Cluster, limit, keys,
-                                marker=marker, sort_dirs=dirs).all()
+    return sa_utils.paginate_query(query, models.Cluster, limit, keys,
+                                   marker=marker, sort_dirs=dirs).all()
 
 
 def cluster_next_index(context, cluster_id):
@@ -206,7 +184,7 @@ def cluster_next_index(context, cluster_id):
 
 def cluster_count_all(context, filters=None, project_safe=True):
     query = _query_cluster_get_all(context, project_safe=project_safe)
-    query = db_filters.exact_filter(query, models.Cluster, filters)
+    query = utils.exact_filter(query, models.Cluster, filters)
     return query.count()
 
 
@@ -294,13 +272,13 @@ def node_get_all(context, cluster_id=None, limit=None, marker=None, sort=None,
                                 cluster_id=cluster_id)
 
     if filters:
-        query = db_filters.exact_filter(query, models.Node, filters)
+        query = utils.exact_filter(query, models.Node, filters)
 
-    keys, dirs = _get_sort_params(sort, consts.NODE_SORT_KEYS, 'init_at')
+    keys, dirs = utils.get_sort_params(sort, consts.NODE_INIT_AT)
     if marker:
         marker = model_query(context, models.Node).get(marker)
-    return utils.paginate_query(query, models.Node, limit, keys,
-                                marker=marker, sort_dirs=dirs).all()
+    return sa_utils.paginate_query(query, models.Node, limit, keys,
+                                   marker=marker, sort_dirs=dirs).all()
 
 
 def node_get_all_by_cluster(context, cluster_id, project_safe=True):
@@ -537,13 +515,13 @@ def policy_get_all(context, limit=None, marker=None, sort=None, filters=None,
         query = query.filter_by(project=context.project)
 
     if filters:
-        query = db_filters.exact_filter(query, models.Policy, filters)
+        query = utils.exact_filter(query, models.Policy, filters)
 
-    keys, dirs = _get_sort_params(sort, consts.POLICY_SORT_KEYS, 'created_at')
+    keys, dirs = utils.get_sort_params(sort, consts.POLICY_CREATED_AT)
     if marker:
         marker = model_query(context, models.Policy).get(marker)
-    return utils.paginate_query(query, models.Policy, limit, keys,
-                                marker=marker, sort_dirs=dirs).all()
+    return sa_utils.paginate_query(query, models.Policy, limit, keys,
+                                   marker=marker, sort_dirs=dirs).all()
 
 
 def policy_update(context, policy_id, values):
@@ -588,11 +566,11 @@ def cluster_policy_get_all(context, cluster_id, filters=None, sort=None):
     query = query.filter_by(cluster_id=cluster_id)
 
     if filters:
-        query = db_filters.exact_filter(query, models.ClusterPolicies, filters)
+        query = utils.exact_filter(query, models.ClusterPolicies, filters)
 
-    keys, dirs = _get_sort_params(sort, consts.CLUSTER_POLICY_SORT_KEYS)
-    return utils.paginate_query(query, models.ClusterPolicies, None, keys,
-                                sort_dirs=dirs).all()
+    keys, dirs = utils.get_sort_params(sort)
+    return sa_utils.paginate_query(query, models.ClusterPolicies, None, keys,
+                                   sort_dirs=dirs).all()
 
 
 def cluster_policy_get_by_type(context, cluster_id, policy_type, filters=None):
@@ -601,7 +579,7 @@ def cluster_policy_get_by_type(context, cluster_id, policy_type, filters=None):
     query = query.filter_by(cluster_id=cluster_id)
 
     if filters:
-        query = db_filters.exact_filter(query, models.ClusterPolicies, filters)
+        query = utils.exact_filter(query, models.ClusterPolicies, filters)
 
     query = query.join(models.Policy).filter(models.Policy.type == policy_type)
 
@@ -684,13 +662,13 @@ def profile_get_all(context, limit=None, marker=None, sort=None, filters=None,
         query = query.filter_by(project=context.project)
 
     if filters:
-        query = db_filters.exact_filter(query, models.Profile, filters)
+        query = utils.exact_filter(query, models.Profile, filters)
 
-    keys, dirs = _get_sort_params(sort, consts.PROFILE_SORT_KEYS, 'created_at')
+    keys, dirs = utils.get_sort_params(sort, consts.PROFILE_CREATED_AT)
     if marker:
         marker = model_query(context, models.Profile).get(marker)
-    return utils.paginate_query(query, models.Profile, limit, keys,
-                                marker=marker, sort_dirs=dirs).all()
+    return sa_utils.paginate_query(query, models.Profile, limit, keys,
+                                   marker=marker, sort_dirs=dirs).all()
 
 
 def profile_update(context, profile_id, values):
@@ -806,13 +784,13 @@ def event_get_by_short_id(context, short_id, project_safe=True):
 def _event_filter_paginate_query(context, query, filters=None,
                                  limit=None, marker=None, sort=None):
     if filters:
-        query = db_filters.exact_filter(query, models.Event, filters)
+        query = utils.exact_filter(query, models.Event, filters)
 
-    keys, dirs = _get_sort_params(sort, consts.EVENT_SORT_KEYS, 'timestamp')
+    keys, dirs = utils.get_sort_params(sort, consts.EVENT_TIMESTAMP)
     if marker:
         marker = model_query(context, models.Event).get(marker)
-    return utils.paginate_query(query, models.Event, limit, keys,
-                                marker=marker, sort_dirs=dirs).all()
+    return sa_utils.paginate_query(query, models.Event, limit, keys,
+                                   marker=marker, sort_dirs=dirs).all()
 
 
 def event_get_all(context, limit=None, marker=None, sort=None, filters=None,
@@ -904,13 +882,13 @@ def action_get_all(context, filters=None, limit=None, marker=None, sort=None,
     #    query = query.filter_by(project=context.project)
 
     if filters:
-        query = db_filters.exact_filter(query, models.Action, filters)
+        query = utils.exact_filter(query, models.Action, filters)
 
-    keys, dirs = _get_sort_params(sort, consts.ACTION_SORT_KEYS, 'created_at')
+    keys, dirs = utils.get_sort_params(sort, consts.ACTION_CREATED_AT)
     if marker:
         marker = model_query(context, models.Action).get(marker)
-    return utils.paginate_query(query, models.Action, limit, keys,
-                                marker=marker, sort_dirs=dirs).all()
+    return sa_utils.paginate_query(query, models.Action, limit, keys,
+                                   marker=marker, sort_dirs=dirs).all()
 
 
 def dependency_get_depended(context, action_id):
@@ -1176,13 +1154,13 @@ def receiver_get_all(context, limit=None, marker=None, filters=None, sort=None,
         query = query.filter_by(project=context.project)
 
     if filters:
-        query = db_filters.exact_filter(query, models.Receiver, filters)
+        query = utils.exact_filter(query, models.Receiver, filters)
 
-    keys, dirs = _get_sort_params(sort, consts.RECEIVER_SORT_KEYS, 'name')
+    keys, dirs = utils.get_sort_params(sort, consts.RECEIVER_NAME)
     if marker:
         marker = model_query(context, models.Receiver).get(marker)
-    return utils.paginate_query(query, models.Receiver, limit, keys,
-                                marker=marker, sort_dirs=dirs).all()
+    return sa_utils.paginate_query(query, models.Receiver, limit, keys,
+                                   marker=marker, sort_dirs=dirs).all()
 
 
 def receiver_get_by_name(context, name, project_safe=True):

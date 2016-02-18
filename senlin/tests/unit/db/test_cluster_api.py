@@ -12,6 +12,7 @@
 
 import mock
 
+from oslo_db.sqlalchemy import utils as sa_utils
 from oslo_utils import timeutils as tu
 
 from senlin.common import exception
@@ -244,7 +245,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertEqual(clusters[1].id, st_db[1].id)
         self.assertEqual(clusters[2].id, st_db[2].id)
 
-    @mock.patch.object(db_api.utils, 'paginate_query')
+    @mock.patch.object(sa_utils, 'paginate_query')
     def test_cluster_get_all_filters_sort_keys(self, mock_paginate):
         sort = 'name,status,created_at,updated_at'
         db_api.cluster_get_all(self.ctx, sort=sort)
@@ -254,14 +255,6 @@ class DBAPIClusterTest(base.SenlinTestCase):
         expected_keys = set(['name', 'status', 'created_at',
                              'updated_at', 'id'])
         self.assertEqual(expected_keys, used_sort_keys)
-
-        # Sorted by invalid sort_key
-        sort = 'name,status,created_at,updated_at,parent'
-        ex = self.assertRaises(exception.InvalidParameter,
-                               db_api.cluster_get_all,
-                               self.ctx, sort=sort)
-        self.assertEqual("Invalid value 'parent' specified for 'sort key'",
-                         str(ex))
 
     def test_cluster_get_all_marker(self):
         clusters = [shared.create_cluster(self.ctx, self.profile,
