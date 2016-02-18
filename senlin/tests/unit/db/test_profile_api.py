@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import mock
+from oslo_db.sqlalchemy import utils as sa_utils
 from oslo_utils import timeutils as tu
 import six
 
@@ -192,12 +194,12 @@ class DBAPIProfileTest(base.SenlinTestCase):
         profiles = db_api.profile_get_all(self.ctx, limit=1, marker='profile1')
         self.assertEqual(1, len(profiles))
 
-    def test_profile_get_all_used_sort_keys(self):
+    @mock.patch.object(sa_utils, 'paginate_query')
+    def test_profile_get_all_used_sort_keys(self, mock_paginate):
         ids = ['profile1', 'profile2', 'profile3']
         for pid in ids:
             shared.create_profile(self.ctx, id=pid)
 
-        mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
         sort_keys = consts.PROFILE_SORT_KEYS
         db_api.profile_get_all(self.ctx, sort=','.join(sort_keys))
 
@@ -219,13 +221,6 @@ class DBAPIProfileTest(base.SenlinTestCase):
         self.assertEqual('001', profiles[0].id)
         self.assertEqual('003', profiles[1].id)
         self.assertEqual('002', profiles[2].id)
-
-        # Sorted by invalid sort_key
-        ex = self.assertRaises(exception.InvalidParameter,
-                               db_api.profile_get_all,
-                               self.ctx, sort='bad_key')
-        self.assertEqual("Invalid value 'bad_key' specified for 'sort key'",
-                         str(ex))
 
         # Sorted by type,name (ascending)
         profiles = db_api.profile_get_all(self.ctx, sort='type,name')

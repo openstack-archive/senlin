@@ -10,10 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import six
-
+import mock
+from oslo_db.sqlalchemy import utils as sa_utils
 from oslo_serialization import jsonutils
 from oslo_utils import timeutils as tu
+import six
 
 from senlin.common import consts
 from senlin.common import exception
@@ -182,12 +183,12 @@ class DBAPINodeTest(base.SenlinTestCase):
         nodes = db_api.node_get_all(self.ctx, limit=1, marker='node1')
         self.assertEqual(1, len(nodes))
 
-    def test_node_get_all_used_sort_keys(self):
+    @mock.patch.object(sa_utils, 'paginate_query')
+    def test_node_get_all_used_sort_keys(self, mock_paginate):
         node_ids = ['node1', 'node2', 'node3']
         for v in node_ids:
             shared.create_node(self.ctx, self.cluster, self.profile, id=v)
 
-        mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
         sort = ','.join(consts.NODE_SORT_KEYS)
 
         db_api.node_get_all(self.ctx, sort=sort)

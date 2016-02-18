@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import mock
+from oslo_db.sqlalchemy import utils as sa_utils
 from oslo_utils import timeutils as tu
 
 from senlin.common import consts
@@ -170,12 +172,12 @@ class DBAPIReceiverTest(base.SenlinTestCase):
                                             marker='receiver1')
         self.assertEqual(1, len(receivers))
 
-    def test_receiver_get_all_used_sort_keys(self):
+    @mock.patch.object(sa_utils, 'paginate_query')
+    def test_receiver_get_all_used_sort_keys(self, mock_paginate):
         receiver_ids = ['receiver1', 'receiver2', 'receiver3']
         for v in receiver_ids:
             self._create_receiver(self.ctx, id=v)
 
-        mock_paginate = self.patchobject(db_api.utils, 'paginate_query')
         sort_keys = consts.RECEIVER_SORT_KEYS
 
         db_api.receiver_get_all(self.ctx, sort=','.join(sort_keys))
