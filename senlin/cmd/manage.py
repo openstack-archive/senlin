@@ -93,7 +93,7 @@ class ServiceManageCommand(object):
             svc = self._format_service(service)
             if svc['status'] == 'down':
                 print(_('Dead service %s is removed.') % svc['service_id'])
-                api.service_delete(svc['service_id'])
+                api.service_delete(self.ctx, svc['service_id'])
 
     @staticmethod
     def add_service_parsers(subparsers):
