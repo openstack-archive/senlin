@@ -73,6 +73,15 @@ class DBAPIClusterTest(base.SenlinTestCase):
         cluster = db_api.cluster_get(self.ctx, cluster.id)
         self.assertIsNone(cluster)
 
+    def test_cluster_get_with_admin_context(self):
+        cluster = shared.create_cluster(self.ctx, self.profile)
+        admin_ctx = utils.dummy_context(project='another-project',
+                                        is_admin=True)
+        ret_cluster = db_api.cluster_get(admin_ctx, cluster.id,
+                                         project_safe=True)
+        self.assertEqual(cluster.id, ret_cluster.id)
+        self.assertEqual('db_test_cluster_name', ret_cluster.name)
+
     def test_cluster_get_by_name(self):
         cluster = shared.create_cluster(self.ctx, self.profile)
         ret_cluster = db_api.cluster_get_by_name(self.ctx, cluster.name)
@@ -197,6 +206,21 @@ class DBAPIClusterTest(base.SenlinTestCase):
         [shared.create_cluster(self.ctx, self.profile, **v) for v in values]
 
         clusters = db_api.cluster_get_all(self.ctx, project_safe=False)
+        self.assertEqual(5, len(clusters))
+
+    def test_cluster_get_all_with_admin_context(self):
+        values = [
+            {'project': UUID1},
+            {'project': UUID1},
+            {'project': UUID2},
+            {'project': UUID2},
+            {'project': UUID2},
+        ]
+        [shared.create_cluster(self.ctx, self.profile, **v) for v in values]
+
+        admin_ctx = utils.dummy_context(project='another-project',
+                                        is_admin=True)
+        clusters = db_api.cluster_get_all(admin_ctx, project_safe=True)
         self.assertEqual(5, len(clusters))
 
     def test_cluster_get_all_with_filters(self):
@@ -334,6 +358,21 @@ class DBAPIClusterTest(base.SenlinTestCase):
 
         self.assertEqual(5, db_api.cluster_count_all(self.ctx,
                                                      project_safe=False))
+
+    def test_cluster_count_all_with_admin_context(self):
+        values = [
+            {'project': UUID1},
+            {'project': UUID1},
+            {'project': UUID2},
+            {'project': UUID2},
+            {'project': UUID2},
+        ]
+        [shared.create_cluster(self.ctx, self.profile, **v) for v in values]
+
+        admin_ctx = utils.dummy_context(project='another-project',
+                                        is_admin=True)
+        self.assertEqual(5, db_api.cluster_count_all(admin_ctx,
+                                                     project_safe=True))
 
     def test_cluster_count_all_with_filters(self):
         shared.create_cluster(self.ctx, self.profile, name='foo')

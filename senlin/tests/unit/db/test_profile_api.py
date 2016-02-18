@@ -51,6 +51,13 @@ class DBAPIProfileTest(base.SenlinTestCase):
         self.assertIsNotNone(res)
         self.assertEqual(profile.id, res.id)
 
+    def test_profile_get_admin_context(self):
+        profile = shared.create_profile(self.ctx)
+        admin_ctx = utils.dummy_context(project='a-different-project',
+                                        is_admin=True)
+        res = db_api.profile_get(admin_ctx, profile.id, project_safe=True)
+        self.assertIsNotNone(res)
+
     def test_profile_get_not_found(self):
         profile = db_api.profile_get(self.ctx, 'BogusProfileID')
         self.assertIsNone(profile)
@@ -160,6 +167,16 @@ class DBAPIProfileTest(base.SenlinTestCase):
         profiles = db_api.profile_get_all(new_ctx)
         self.assertEqual(0, len(profiles))
         profiles = db_api.profile_get_all(new_ctx, project_safe=False)
+        self.assertEqual(2, len(profiles))
+
+    def test_profile_get_all_admin_context(self):
+        ids = ['profile1', 'profile2']
+        for pid in ids:
+            shared.create_profile(self.ctx, id=pid)
+
+        admin_ctx = utils.dummy_context(project='a-different-project',
+                                        is_admin=True)
+        profiles = db_api.profile_get_all(admin_ctx, project_safe=True)
         self.assertEqual(2, len(profiles))
 
     def test_profile_get_all_with_limit_marker(self):

@@ -87,6 +87,22 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.assertEqual(10, retobj.inputs['max_size'])
         self.assertIsNone(retobj.outputs)
 
+    def test_action_get_project_safe(self):
+        parser.simple_parse(shared.sample_action)
+        action = _create_action(self.ctx)
+        new_ctx = utils.dummy_context(project='another-project')
+        retobj = db_api.action_get(new_ctx, action.id, project_safe=True)
+        self.assertIsNone(retobj)
+        retobj = db_api.action_get(new_ctx, action.id, project_safe=False)
+        self.assertIsNotNone(retobj)
+
+    def test_action_get_with_admin_context(self):
+        parser.simple_parse(shared.sample_action)
+        action = _create_action(self.ctx)
+        new_ctx = utils.dummy_context(project='another-project', is_admin=True)
+        retobj = db_api.action_get(new_ctx, action.id, project_safe=True)
+        self.assertIsNotNone(retobj)
+
     def test_action_acquire_1st_ready(self):
         specs = [
             {'name': 'A01', 'status': 'INIT'},
