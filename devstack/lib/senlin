@@ -11,16 +11,23 @@
 # Dependencies:
 #
 # - functions
+# - HORIZON_DIR
 
 # stack.sh
 # ---------
+# - config_senlin_dashboard
+# - configure_senlin
+# - cleanup_senlin
+# - cleanup_senlin_dashboard
+# - create_senlin_cache_dir
+# - create_senlin_accounts
+# - init_senlin
 # - install_senlinclient
 # - install_senlin
-# - configure_senlin
-# - init_senlin
+# - install_senlin_dashboard
+# - is_senlin_enabled
 # - start_senlin
 # - stop_senlin
-# - cleanup_senlin
 
 # Save trace setting
 XTRACE=$(set +o | grep xtrace)
@@ -45,6 +52,10 @@ SENLIN_BRANCH=${SENLIN_BRANCH:-master}
 SENLINCLIENT_DIR=$DEST/python-senlinclient
 SENLINCLIENT_REPO=${SENLINCLIENT_REPO:-${GIT_BASE}/openstack/python-senlinclient.git}
 SENLINCLIENT_BRANCH=${SENLINCLIENT_BRANCH:-master}
+
+SENLIN_DASHBOARD_DIR=$DEST/senlin-dashboard
+SENLIN_DASHBOARD_REPO=${SENLIN_DASHBOARD_REPO:-${GIT_BASE}/openstack/senlin-dashboard.git}
+SENLIN_DASHBOARD_BRANCH=${SENLIN_DASHBOARD_BRANCH:-master}
 
 
 # Functions
@@ -141,6 +152,33 @@ function install_senlinclient {
     else
         pip_install python-senlinclient
     fi
+}
+
+# install_senlin_dashboard() - Collect source and prepare
+function install_senlin_dashboard {
+    # NOTE(Liuqing): workaround for devstack bug: 1540328
+    # https://bugs.launchpad.net/devstack/+bug/1540328
+    # where devstack install 'test-requirements' but should not do it
+    # for senlin-dashboard project as it installs Horizon from url.
+    # Remove following two 'mv' commands when mentioned bug is fixed.
+
+    git_clone $SENLIN_DASHBOARD_REPO $SENLIN_DASHBOARD_DIR $SENLIN_DASHBOARD_BRANCH
+    mv $SENLIN_DASHBOARD_DIR/test-requirements.txt $SENLIN_DASHBOARD_DIR/_test-requirements.txt
+    setup_develop $SENLIN_DASHBOARD_DIR
+
+    mv $SENLIN_DASHBOARD_DIR/_test-requirements.txt $SENLIN_DASHBOARD_DIR/test-requirements.txt
+}
+
+# configure_senlin_dashboard() - Set config files
+function config_senlin_dashboard {
+    # Install Senlin Dashboard as plugin for Horizon
+    ln -sf $SENLIN_DASHBOARD_DIR/_50_senlin.py.example $HORIZON_DIR/openstack_dashboard/local/enabled/_50_senlin.py
+}
+
+# cleanup_senlin_dashboard() - Remove residual data files, anything left over from previous
+# runs that a clean run would need to clean up
+function cleanup_senlin_dashboard {
+    sudo rm -rf $HORIZON_DIR/openstack_dashboard/local/enabled/_50_senlin.py
 }
 
 # install_senlin() - Collect source and prepare
