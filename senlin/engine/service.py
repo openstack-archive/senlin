@@ -2086,20 +2086,23 @@ class EngineService(service.Service):
 
         return {'action': action.id}
 
-    def event_find(self, context, identity):
+    def event_find(self, context, identity, project_safe=True):
         """Find an event with the given identity.
 
         :param context: An instance of the request context.
         :param identity: The UUID, name or short-id of the event.
+        :param project_safe: A boolean specifying that only events from the
+                             same project as the requesting one are qualified
+                             to be returned.
         :return: A dictionary containing the details of the event.
         """
+        event = None
         if uuidutils.is_uuid_like(identity):
-            event = db_api.event_get(context, identity)
-            if not event:
-                event = db_api.event_get_by_short_id(context, identity)
-        else:
-            event = db_api.event_get_by_short_id(context, identity)
-
+            event = db_api.event_get(context, identity,
+                                     project_safe=project_safe)
+        if not event:
+            event = db_api.event_get_by_short_id(context, identity,
+                                                 project_safe=project_safe)
         if not event:
             raise exception.EventNotFound(event=identity)
 

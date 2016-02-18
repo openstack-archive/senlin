@@ -50,11 +50,11 @@ class EventTest(base.SenlinTestCase):
         mock_shortid.return_value = x_event
         aid = uuidutils.generate_uuid()
 
-        result = self.eng.event_find(self.ctx, aid)
+        result = self.eng.event_find(self.ctx, aid, False)
 
         self.assertEqual(x_event, result)
-        mock_get.assert_called_once_with(self.ctx, aid, project_safe=True)
-        mock_shortid.assert_called_once_with(self.ctx, aid, project_safe=True)
+        mock_get.assert_called_once_with(self.ctx, aid, project_safe=False)
+        mock_shortid.assert_called_once_with(self.ctx, aid, project_safe=False)
 
     @mock.patch.object(db_api, 'event_get_by_short_id')
     def test_event_find_by_short_id_directly(self, mock_shortid):
