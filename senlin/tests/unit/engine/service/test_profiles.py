@@ -186,7 +186,7 @@ class ProfileTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.profile_create,
                                self.ctx, 'FAKE_NAME', spec)
-        self.assertEqual(exc.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: A profile named "
                          "'FAKE_NAME' already exists.",
                          six.text_type(ex.exc_info[1]))
@@ -208,7 +208,7 @@ class ProfileTest(base.SenlinTestCase):
                                self.eng.profile_create,
                                self.ctx, 'p-2', spec)
 
-        self.assertEqual(exc.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: The specified profile "
                          "type (FakeProfile-1.0) is not found.",
                          six.text_type(ex.exc_info[1]))
@@ -236,7 +236,7 @@ class ProfileTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.profile_create,
                                self.ctx, 'p-2', self.spec)
-        self.assertEqual(exc.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual('The request is malformed: BOOM',
                          six.text_type(ex.exc_info[1]))
 

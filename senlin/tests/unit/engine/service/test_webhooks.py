@@ -93,7 +93,7 @@ class WebhookTest(base.SenlinTestCase):
                                self.eng.webhook_trigger,
                                self.ctx, 'RRR')
 
-        self.assertEqual(exception.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exception.BadRequest, ex.exc_info[0])
         self.assertEqual('The request is malformed: The referenced cluster '
                          '(BOGUS) is not found.',
                          six.text_type(ex.exc_info[1]))

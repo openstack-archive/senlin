@@ -183,7 +183,7 @@ class ReceiverTest(base.SenlinTestCase):
                                self.eng.receiver_create,
                                self.ctx, 'r1', 'webhook', 'C1',
                                'CLUSTER_RESIZE')
-        self.assertEqual(exc.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: A receiver named 'r1' "
                          "already exists.",
                          six.text_type(ex.exc_info[1]))
@@ -193,7 +193,7 @@ class ReceiverTest(base.SenlinTestCase):
                                self.eng.receiver_create,
                                self.ctx, 'r1', 'rocket', 'C1',
                                'CLUSTER_RESIZE')
-        self.assertEqual(exc.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: Receiver type 'rocket' "
                          "is not supported.",
                          six.text_type(ex.exc_info[1]))
@@ -204,7 +204,7 @@ class ReceiverTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.receiver_create,
                                self.ctx, 'r1', 'webhook', 'C1', 'whatever')
-        self.assertEqual(exc.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: The referenced cluster "
                          "'C1' is not found.",
                          six.text_type(ex.exc_info[1]))
@@ -244,7 +244,7 @@ class ReceiverTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.receiver_create,
                                self.ctx, 'r1', 'webhook', 'C1', 'DANCE')
-        self.assertEqual(exc.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: Illegal action 'DANCE' "
                          "specified.",
                          six.text_type(ex.exc_info[1]))
@@ -252,7 +252,7 @@ class ReceiverTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.receiver_create,
                                self.ctx, 'r1', 'webhook', 'C1', 'NODE_JOIN')
-        self.assertEqual(exc.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: Action 'NODE_JOIN' is "
                          "not applicable to clusters.",
                          six.text_type(ex.exc_info[1]))

@@ -905,7 +905,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._put('/clusters/%(cluster_id)s/action' % {
                         'cluster_id': cid}, jsonutils.dumps(body))
 
-        error = senlin_exc.SenlinBadRequest(msg='Nodes not found: bad-node-1')
+        error = senlin_exc.BadRequest(msg='Nodes not found: bad-node-1')
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -914,7 +914,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, cluster_id=cid, body=body)
 
         self.assertEqual(400, resp.json['code'])
-        self.assertEqual('SenlinBadRequest', resp.json['error']['type'])
+        self.assertEqual('BadRequest', resp.json['error']['type'])
         self.assertIn('Nodes not found: bad-node-1',
                       resp.json['error']['message'])
 
@@ -991,7 +991,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._put('/clusters/%(cluster_id)s/action' % {
                         'cluster_id': cid}, jsonutils.dumps(body))
 
-        error = senlin_exc.SenlinBadRequest(msg='Nodes not found: bad-node-1')
+        error = senlin_exc.BadRequest(msg='Nodes not found: bad-node-1')
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -1000,7 +1000,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, cluster_id=cid, body=body)
 
         self.assertEqual(400, resp.json['code'])
-        self.assertEqual('SenlinBadRequest', resp.json['error']['type'])
+        self.assertEqual('BadRequest', resp.json['error']['type'])
         self.assertIn('Nodes not found: bad-node-1',
                       resp.json['error']['message'])
 

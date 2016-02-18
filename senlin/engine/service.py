@@ -282,7 +282,7 @@ class EngineService(service.Service):
             if db_api.profile_get_by_name(context, name):
                 msg = _("A profile named '%(name)s' already exists."
                         ) % {"name": name}
-                raise exception.SenlinBadRequest(msg=msg)
+                raise exception.BadRequest(msg=msg)
 
         type_name, version = schema.get_spec_version(spec)
         type_str = "-".join([type_name, version])
@@ -291,7 +291,7 @@ class EngineService(service.Service):
         except exception.ProfileTypeNotFound:
             msg = _("The specified profile type (%(name)s) is not found."
                     ) % {"name": type_str}
-            raise exception.SenlinBadRequest(msg=msg)
+            raise exception.BadRequest(msg=msg)
 
         LOG.info(_LI("Creating profile %(type)s '%(name)s'."),
                  {'type': type_str, 'name': name})
@@ -308,7 +308,7 @@ class EngineService(service.Service):
         except exception.InvalidSpec as ex:
             msg = six.text_type(ex)
             LOG.error(_LE("Failed in creating profile: %s"), msg)
-            raise exception.SenlinBadRequest(msg=msg)
+            raise exception.BadRequest(msg=msg)
 
         profile.store(context)
 
@@ -465,7 +465,7 @@ class EngineService(service.Service):
             if db_api.policy_get_by_name(context, name):
                 msg = _("A policy named '%(name)s' already exists."
                         ) % {"name": name}
-                raise exception.SenlinBadRequest(msg=msg)
+                raise exception.BadRequest(msg=msg)
 
         type_name, version = schema.get_spec_version(spec)
         type_str = "-".join([type_name, version])
@@ -474,7 +474,7 @@ class EngineService(service.Service):
         except exception.PolicyTypeNotFound:
             msg = _("The specified policy type (%(name)s) is not found."
                     ) % {"name": type_str}
-            raise exception.SenlinBadRequest(msg=msg)
+            raise exception.BadRequest(msg=msg)
 
         LOG.info(_LI("Creating policy %(type)s '%(name)s'"),
                  {'type': type_str, 'name': name})
@@ -491,7 +491,7 @@ class EngineService(service.Service):
         except exception.InvalidSpec as ex:
             msg = six.text_type(ex)
             LOG.error(_LE("Failed in creating policy: %s"), msg)
-            raise exception.SenlinBadRequest(msg=msg)
+            raise exception.BadRequest(msg=msg)
 
         policy.store(context)
         LOG.info(_LI("Policy '%(name)s' is created: %(id)s."),
@@ -520,11 +520,11 @@ class EngineService(service.Service):
         :param name: The new name for the policy.
         :returns: A dictionary containing the details of the updated policy or
                   an exception `PolicyNotFound` if no matching poicy is found,
-                  or an exception `SenlinBadRequest` if name is not provided.
+                  or an exception `BadRequest` if name is not provided.
         """
         if not name:
             msg = _('Policy name not specified.')
-            raise exception.SenlinBadRequest(msg=msg)
+            raise exception.BadRequest(msg=msg)
 
         db_policy = self.policy_find(context, identity)
         policy = policy_base.Policy.load(context, db_policy=db_policy)
@@ -664,13 +664,13 @@ class EngineService(service.Service):
             if db_api.cluster_get_by_name(context, name):
                 msg = _("The cluster (%(name)s) already exists."
                         ) % {"name": name}
-                raise exception.SenlinBadRequest(msg=msg)
+                raise exception.BadRequest(msg=msg)
 
         try:
             db_profile = self.profile_find(context, profile_id)
         except exception.ProfileNotFound:
             msg = _("The specified profile '%s' is not found.") % profile_id
-            raise exception.SenlinBadRequest(msg=msg)
+            raise exception.BadRequest(msg=msg)
 
         init_size = utils.parse_int_param(consts.CLUSTER_DESIRED_CAPACITY,
                                           desired_capacity)
@@ -684,7 +684,7 @@ class EngineService(service.Service):
 
         res = su.check_size_params(None, init_size, min_size, max_size, True)
         if res:
-            raise exception.SenlinBadRequest(msg=res)
+            raise exception.BadRequest(msg=res)
 
         LOG.info(_LI("Creating cluster '%s'."), name)
 
@@ -752,9 +752,9 @@ class EngineService(service.Service):
             try:
                 new_profile = self.profile_find(context, profile_id)
             except exception.ProfileNotFound:
-                msg = _("The specified profile '%s' is "
-                        "not found.") % profile_id
-                raise exception.SenlinBadRequest(msg=msg)
+                msg = _("The specified profile '%s' is not found."
+                        ) % profile_id
+                raise exception.BadRequest(msg=msg)
 
             if new_profile.type != old_profile.type:
                 msg = _('Cannot update a cluster to a different profile type, '
@@ -810,7 +810,7 @@ class EngineService(service.Service):
             msg = _('Cluster %(id)s cannot be deleted without having all '
                     'policies detached.') % {'id': identity}
             LOG.error(msg)
-            raise exception.SenlinBadRequest(msg=msg)
+            raise exception.BadRequest(msg=msg)
 
         receivers = db_api.receiver_get_all(context, filters={'cluster_id':
                                             db_cluster.id})
@@ -818,7 +818,7 @@ class EngineService(service.Service):
             msg = _('Cluster %(id)s cannot be deleted without having all '
                     'receivers deleted.') % {'id': identity}
             LOG.error(msg)
-            raise exception.SenlinBadRequest(msg=msg)
+            raise exception.BadRequest(msg=msg)
 
         action_name = 'cluster_delete_%s' % db_cluster.id[:8]
         params = {
@@ -901,7 +901,7 @@ class EngineService(service.Service):
 
         if error is not None:
             LOG.error(error)
-            raise exception.SenlinBadRequest(msg=error)
+            raise exception.BadRequest(msg=error)
 
         action_name = 'cluster_add_nodes_%s' % db_cluster.id[:8]
         params = {
@@ -957,7 +957,7 @@ class EngineService(service.Service):
 
         if error is not None:
             LOG.error(error)
-            raise exception.SenlinBadRequest(msg=error)
+            raise exception.BadRequest(msg=error)
 
         action_name = 'cluster_del_nodes_%s' % db_cluster.id[:8]
         count = len(found)
@@ -1021,11 +1021,11 @@ class EngineService(service.Service):
                     name=consts.ADJUSTMENT_TYPE, value=adj_type)
             if number is None:
                 msg = _('Missing number value for size adjustment.')
-                raise exception.SenlinBadRequest(msg=msg)
+                raise exception.BadRequest(msg=msg)
         else:
             if number is not None:
                 msg = _('Missing adjustment_type value for size adjustment.')
-                raise exception.SenlinBadRequest(msg=msg)
+                raise exception.BadRequest(msg=msg)
 
         if adj_type == consts.EXACT_CAPACITY:
             number = utils.parse_int_param(consts.ADJUSTMENT_NUMBER, number)
@@ -1062,7 +1062,7 @@ class EngineService(service.Service):
         res = su.check_size_params(db_cluster, desired, min_size, max_size,
                                    strict)
         if res:
-            raise exception.SenlinBadRequest(msg=res)
+            raise exception.BadRequest(msg=res)
 
         fmt = _LI("Resizing cluster '%(cluster)s': type=%(adj_type)s, "
                   "number=%(number)s, min_size=%(min_size)s, "
@@ -1121,7 +1121,7 @@ class EngineService(service.Service):
             err = su.check_size_params(db_cluster,
                                        db_cluster.desired_capacity + count)
             if err:
-                raise exception.SenlinBadRequest(msg=err)
+                raise exception.BadRequest(msg=err)
 
             LOG.info(_LI('Scaling out cluster %(name)s by %(delta)s nodes'),
                      {'name': identity, 'delta': count})
@@ -1169,7 +1169,7 @@ class EngineService(service.Service):
             err = su.check_size_params(db_cluster,
                                        db_cluster.desired_capacity - count)
             if err:
-                raise exception.SenlinBadRequest(msg=err)
+                raise exception.BadRequest(msg=err)
 
             LOG.info(_LI('Scaling in cluster %(name)s by %(delta)s nodes'),
                      {'name': identity, 'delta': count})
@@ -1344,7 +1344,7 @@ class EngineService(service.Service):
             if db_api.node_get_by_name(context, name):
                 msg = _("The node named (%(name)s) already exists."
                         ) % {"name": name}
-                raise exception.SenlinBadRequest(msg=msg)
+                raise exception.BadRequest(msg=msg)
 
         LOG.info(_LI("Creating node '%s'."), name)
 
@@ -1355,7 +1355,7 @@ class EngineService(service.Service):
             node_profile = self.profile_find(context, profile_id)
         except exception.ProfileNotFound:
             msg = _("The specified profile (%s) is not found.") % profile_id
-            raise exception.SenlinBadRequest(msg=msg)
+            raise exception.BadRequest(msg=msg)
 
         index = -1
         if cluster_id:
@@ -1364,7 +1364,7 @@ class EngineService(service.Service):
             except exception.ClusterNotFound:
                 msg = _("The specified cluster (%s) is not found."
                         ) % cluster_id
-                raise exception.SenlinBadRequest(msg=msg)
+                raise exception.BadRequest(msg=msg)
 
             cluster_id = db_cluster.id
             if node_profile.id != db_cluster.profile_id:
@@ -1454,7 +1454,7 @@ class EngineService(service.Service):
             except exception.ProfileNotFound:
                 msg = _("The specified profile (%s) is not found."
                         ) % profile_id
-                raise exception.SenlinBadRequest(msg=msg)
+                raise exception.BadRequest(msg=msg)
             profile_id = db_profile.id
 
             # check if profile_type matches
@@ -1478,7 +1478,7 @@ class EngineService(service.Service):
 
         if inputs == {}:
             msg = _("No property needs an update.")
-            raise exception.SenlinBadRequest(msg=msg)
+            raise exception.BadRequest(msg=msg)
 
         params = {
             'name': 'node_update_%s' % db_node.id[:8],
@@ -1653,7 +1653,7 @@ class EngineService(service.Service):
             db_policy = self.policy_find(context, policy)
         except exception.PolicyNotFound:
             msg = _("The specified policy (%s) is not found.") % policy
-            raise exception.SenlinBadRequest(msg=msg)
+            raise exception.BadRequest(msg=msg)
 
         inputs = {
             'policy_id': db_policy.id,
@@ -1698,14 +1698,14 @@ class EngineService(service.Service):
             db_policy = self.policy_find(context, policy)
         except exception.PolicyNotFound:
             msg = _("The specified policy (%s) is not found.") % policy
-            raise exception.SenlinBadRequest(msg=msg)
+            raise exception.BadRequest(msg=msg)
 
         binding = db_api.cluster_policy_get(context, db_cluster.id,
                                             db_policy.id)
         if binding is None:
             msg = _("The policy (%(p)s) is not attached to the specified "
                     "cluster (%(c)s).") % {'p': policy, 'c': identity}
-            raise exception.SenlinBadRequest(msg=msg)
+            raise exception.BadRequest(msg=msg)
 
         action_name = 'detach_policy_%s' % db_cluster.id[:8]
         params = {
@@ -1746,14 +1746,14 @@ class EngineService(service.Service):
             db_policy = self.policy_find(context, policy)
         except exception.PolicyNotFound:
             msg = _("The specified policy (%s) is not found.") % policy
-            raise exception.SenlinBadRequest(msg=msg)
+            raise exception.BadRequest(msg=msg)
 
         binding = db_api.cluster_policy_get(context, db_cluster.id,
                                             db_policy.id)
         if binding is None:
             msg = _("The policy (%(p)s) is not attached to the specified "
                     "cluster (%(c)s).") % {'p': policy, 'c': identity}
-            raise exception.SenlinBadRequest(msg=msg)
+            raise exception.BadRequest(msg=msg)
 
         inputs = {'policy_id': db_policy.id}
         if enabled is not None:
@@ -1969,7 +1969,7 @@ class EngineService(service.Service):
         if cfg.CONF.name_unique:
             if db_api.receiver_get_by_name(context, name):
                 msg = _("A receiver named '%s' already exists.") % name
-                raise exception.SenlinBadRequest(msg=msg)
+                raise exception.BadRequest(msg=msg)
 
         LOG.info(_LI("Creating receiver %(n)s: \n"
                      "  type: %(t)s\n  cluster: %(c)s\n  action: %(a)s."),
@@ -1978,7 +1978,7 @@ class EngineService(service.Service):
         rtype = type_name.lower()
         if rtype not in consts.RECEIVER_TYPES:
             msg = _("Receiver type '%s' is not supported.") % rtype
-            raise exception.SenlinBadRequest(msg=msg)
+            raise exception.BadRequest(msg=msg)
 
         # Check whether cluster identified by cluster_id does exist
         cluster = None
@@ -1986,7 +1986,7 @@ class EngineService(service.Service):
             cluster = self.cluster_find(context, cluster_id)
         except exception.ClusterNotFound:
             msg = _("The referenced cluster '%s' is not found.") % cluster_id
-            raise exception.SenlinBadRequest(msg=msg)
+            raise exception.BadRequest(msg=msg)
 
         # permission checking
         if not context.is_admin and context.user != cluster.user:
@@ -1995,11 +1995,11 @@ class EngineService(service.Service):
         # Check action name
         if action not in consts.ACTION_NAMES:
             msg = _("Illegal action '%s' specified.") % action
-            raise exception.SenlinBadRequest(msg=msg)
+            raise exception.BadRequest(msg=msg)
 
         if action.lower().split('_')[0] != 'cluster':
             msg = _("Action '%s' is not applicable to clusters.") % action
-            raise exception.SenlinBadRequest(msg=msg)
+            raise exception.BadRequest(msg=msg)
 
         if not params:
             params = {}
@@ -2061,7 +2061,7 @@ class EngineService(service.Service):
         except exception.ClusterNotFound:
             msg = _("The referenced cluster (%s) is not found."
                     ) % receiver.cluster_id
-            raise exception.SenlinBadRequest(msg=msg)
+            raise exception.BadRequest(msg=msg)
 
         data = copy.deepcopy(receiver.params)
         if params:

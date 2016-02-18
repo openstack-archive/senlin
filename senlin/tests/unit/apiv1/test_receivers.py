@@ -286,8 +286,8 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
         req = self._post('/receivers', jsonutils.dumps(body))
 
-        msg = _('receiver obj_type (%s) is unsupported') % r_type
-        error = senlin_exc.SenlinBadRequest(msg=msg)
+        msg = _('receiver obj_type (%s) is unsupported.') % r_type
+        error = senlin_exc.BadRequest(msg=msg)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      side_effect=error)
 
@@ -303,7 +303,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context,
                                           ('receiver_create', expected_args))
         self.assertEqual(400, resp.json['code'])
-        self.assertEqual('SenlinBadRequest', resp.json['error']['type'])
+        self.assertEqual('BadRequest', resp.json['error']['type'])
 
     def test_receiver_create_with_cluster_id_notfound(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -350,7 +350,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._post('/receivers', jsonutils.dumps(body))
 
         msg = _('Illegal action (%s) specified.') % action
-        error = senlin_exc.SenlinBadRequest(msg=msg)
+        error = senlin_exc.BadRequest(msg=msg)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      side_effect=error)
 
@@ -366,7 +366,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context,
                                           ('receiver_create', expected))
         self.assertEqual(400, resp.json['code'])
-        self.assertEqual('SenlinBadRequest', resp.json['error']['type'])
+        self.assertEqual('BadRequest', resp.json['error']['type'])
 
     def test_receiver_create_unapplicable_action(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -382,7 +382,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._post('/receivers', jsonutils.dumps(body))
 
         msg = 'Action BAD is not applicable clusters.'
-        error = senlin_exc.SenlinBadRequest(msg=msg)
+        error = senlin_exc.BadRequest(msg=msg)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      side_effect=error)
 
@@ -398,7 +398,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context,
                                           ('receiver_create', expected))
         self.assertEqual(400, resp.json['code'])
-        self.assertEqual('SenlinBadRequest', resp.json['error']['type'])
+        self.assertEqual('BadRequest', resp.json['error']['type'])
 
     def test_receiver_get_normal(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)

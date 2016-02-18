@@ -332,7 +332,7 @@ class NodeTest(base.SenlinTestCase):
                                self.eng.node_create,
                                self.ctx, 'node-1', 'FAKE_PROFILE')
 
-        self.assertEqual(exc.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual(_("The request is malformed: The node named "
                            "(node-1) already exists."),
                          six.text_type(ex.exc_info[1]))
@@ -344,7 +344,7 @@ class NodeTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_create,
                                self.ctx, 'n-1', 'Bogus')
-        self.assertEqual(exc.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: The specified profile "
                          "(Bogus) is not found.",
                          six.text_type(ex.exc_info[1]))
@@ -361,7 +361,7 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, 'node-1', 'FAKE_PROFILE',
                                cluster_id='Bogus')
 
-        self.assertEqual(exc.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: The specified cluster "
                          "(Bogus) is not found.",
                          six.text_type(ex.exc_info[1]))
@@ -568,7 +568,7 @@ class NodeTest(base.SenlinTestCase):
                                self.eng.node_update,
                                self.ctx, 'FAKE_NODE', profile_id='Bogus')
 
-        self.assertEqual(exc.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual('The request is malformed: The specified profile '
                          '(Bogus) is not found.',
                          six.text_type(ex.exc_info[1]))
@@ -610,7 +610,7 @@ class NodeTest(base.SenlinTestCase):
                                self.eng.node_update,
                                self.ctx, 'FAKE_NODE')
 
-        self.assertEqual(exc.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual('The request is malformed: No property needs an '
                          'update.',
                          six.text_type(ex.exc_info[1]))
