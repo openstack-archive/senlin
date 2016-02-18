@@ -12,10 +12,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-'''
+"""
 A middleware that turns exceptions into parsable string.
-'''
+"""
 
+from oslo_utils import reflection
 import six
 import webob
 
@@ -86,7 +87,7 @@ class FaultWrapper(wsgi.Middleware):
             ex = ex.exc
             webob_exc = ex
 
-        ex_type = ex.__class__.__name__
+        ex_type = reflection.get_class_name(ex, fully_qualified=False)
 
         is_remote = ex_type.endswith('_Remote')
         if is_remote:
