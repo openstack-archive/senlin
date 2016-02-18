@@ -118,7 +118,7 @@ def query_by_short_id(context, model, short_id, project_safe=True):
     q = model_query(context, model)
     q = q.filter(model.id.like('%s%%' % short_id))
 
-    if project_safe:
+    if not context.is_admin and project_safe:
         q = q.filter_by(project=context.project)
 
     if q.count() == 1:
@@ -133,7 +133,7 @@ def query_by_name(context, model, name, project_safe=True):
     q = model_query(context, model)
     q = q.filter_by(name=name)
 
-    if project_safe:
+    if not context.is_admin and project_safe:
         q = q.filter_by(project=context.project)
 
     if q.count() == 1:
@@ -159,7 +159,7 @@ def cluster_get(context, cluster_id, project_safe=True):
     if cluster is None:
         return None
 
-    if project_safe and (cluster is not None):
+    if not context.is_admin and project_safe:
         if context.project != cluster.project:
             return None
     return cluster
@@ -178,7 +178,7 @@ def cluster_get_by_short_id(context, short_id, project_safe=True):
 def _query_cluster_get_all(context, project_safe=True):
     query = model_query(context, models.Cluster)
 
-    if project_safe:
+    if not context.is_admin and project_safe:
         query = query.filter_by(project=context.project)
     return query
 
@@ -265,8 +265,9 @@ def node_get(context, node_id, project_safe=True):
     if not node:
         return None
 
-    if project_safe and context.project != node.project:
-        return None
+    if not context.is_admin and project_safe:
+        if context.project != node.project:
+            return None
 
     return node
 
@@ -286,7 +287,7 @@ def _query_node_get_all(context, project_safe=True, cluster_id=None):
     if cluster_id is not None:
         query = query.filter_by(cluster_id=cluster_id)
 
-    if project_safe:
+    if not context.is_admin and project_safe:
         query = query.filter_by(project=context.project)
 
     return query
@@ -513,8 +514,11 @@ def policy_get(context, policy_id, project_safe=True):
     policy = model_query(context, models.Policy)
     policy = policy.filter_by(id=policy_id).first()
 
-    if policy is not None:
-        if project_safe and context.project != policy.project:
+    if policy is None:
+        return None
+
+    if not context.is_admin and project_safe:
+        if context.project != policy.project:
             return None
 
     return policy
@@ -534,7 +538,7 @@ def policy_get_all(context, limit=None, marker=None, sort=None, filters=None,
                    project_safe=True):
     query = model_query(context, models.Policy)
 
-    if project_safe:
+    if not context.is_admin and project_safe:
         query = query.filter_by(project=context.project)
 
     if filters:
@@ -657,7 +661,10 @@ def profile_get(context, profile_id, project_safe=True):
     query = model_query(context, models.Profile)
     profile = query.filter_by(id=profile_id).first()
 
-    if project_safe and profile is not None:
+    if profile is None:
+        return None
+
+    if not context.is_admin and project_safe:
         if context.project != profile.project:
             return None
 
@@ -678,7 +685,7 @@ def profile_get_all(context, limit=None, marker=None, sort=None, filters=None,
                     project_safe=True):
     query = model_query(context, models.Profile)
 
-    if project_safe:
+    if not context.is_admin and project_safe:
         query = query.filter_by(project=context.project)
 
     if filters:
@@ -789,7 +796,7 @@ def event_create(context, values):
 
 def event_get(context, event_id, project_safe=True):
     event = model_query(context, models.Event).get(event_id)
-    if project_safe and event is not None:
+    if not context.is_admin and project_safe and event is not None:
         if event.project != context.project:
             return None
 
@@ -816,7 +823,7 @@ def _event_filter_paginate_query(context, query, filters=None,
 def event_get_all(context, limit=None, marker=None, sort=None, filters=None,
                   project_safe=True):
     query = model_query(context, models.Event)
-    if project_safe:
+    if not context.is_admin and project_safe:
         query = query.filter_by(project=context.project)
 
     return _event_filter_paginate_query(context, query, filters=filters,
@@ -826,7 +833,7 @@ def event_get_all(context, limit=None, marker=None, sort=None, filters=None,
 def event_count_by_cluster(context, cluster_id, project_safe=True):
     query = model_query(context, models.Event)
 
-    if project_safe:
+    if not context.is_admin and project_safe:
         query = query.filter_by(project=context.project)
     count = query.filter_by(cluster_id=cluster_id).count()
 
@@ -838,7 +845,7 @@ def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
     query = model_query(context, models.Event)
     query = query.filter_by(cluster_id=cluster_id)
 
-    if project_safe:
+    if not context.is_admin and project_safe:
         query = query.filter_by(project=context.project)
 
     return _event_filter_paginate_query(context, query, filters=filters,
@@ -869,8 +876,9 @@ def action_get(context, action_id, project_safe=True, refresh=False):
     if action is None:
         return None
 
-    if project_safe is True and action.project != context.project:
-        return None
+    if not context.is_admin and project_safe:
+        if action.project != context.project:
+            return None
 
     session.refresh(action)
     return action
@@ -1159,8 +1167,9 @@ def receiver_get(context, receiver_id, project_safe=True):
     if not receiver:
         return None
 
-    if project_safe and context.project != receiver.project:
-        return None
+    if not context.is_admin and project_safe:
+        if context.project != receiver.project:
+            return None
 
     return receiver
 
@@ -1168,7 +1177,7 @@ def receiver_get(context, receiver_id, project_safe=True):
 def receiver_get_all(context, limit=None, marker=None, filters=None, sort=None,
                      project_safe=True):
     query = model_query(context, models.Receiver)
-    if project_safe:
+    if not context.is_admin and project_safe:
         query = query.filter_by(project=context.project)
 
     if filters:
