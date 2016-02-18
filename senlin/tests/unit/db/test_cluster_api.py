@@ -246,7 +246,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(db_api.utils, 'paginate_query')
     def test_cluster_get_all_filters_sort_keys(self, mock_paginate):
-        sort = 'name,status,created_at,updated_at,parent'
+        sort = 'name,status,created_at,updated_at'
         db_api.cluster_get_all(self.ctx, sort=sort)
 
         args = mock_paginate.call_args[0]
@@ -254,6 +254,14 @@ class DBAPIClusterTest(base.SenlinTestCase):
         expected_keys = set(['name', 'status', 'created_at',
                              'updated_at', 'id'])
         self.assertEqual(expected_keys, used_sort_keys)
+
+        # Sorted by invalid sort_key
+        sort = 'name,status,created_at,updated_at,parent'
+        ex = self.assertRaises(exception.InvalidParameter,
+                               db_api.cluster_get_all,
+                               self.ctx, sort=sort)
+        self.assertEqual("Invalid value 'parent' specified for 'sort key'",
+                         str(ex))
 
     def test_cluster_get_all_marker(self):
         clusters = [shared.create_cluster(self.ctx, self.profile,

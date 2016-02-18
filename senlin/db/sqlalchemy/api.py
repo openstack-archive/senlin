@@ -81,16 +81,11 @@ def _get_sort_params(value, whitelist, default_key=None):
 
     :return: A list of sorting keys and a list of sort_dirs.
     """
-    keys, dirs = common_utils.parse_sort_param(value)
+    keys, dirs = common_utils.parse_sort_param(value, whitelist)
     if not keys:
         if default_key:
             return [default_key, 'id'], ['asc', 'asc']
         return ['id'], ['asc']
-
-    for i in reversed(range(len(keys))):
-        if keys[i] not in whitelist:
-            keys.pop(i)
-            dirs.pop(i)
 
     keys.append('id')
     dirs.append('asc')

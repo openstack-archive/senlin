@@ -65,36 +65,38 @@ class TestParameterParsing(base.SenlinTestCase):
                               lower_limit=2, upper_limit=5)
 
     def test_parse_sort_param(self):
+        whitelist = 'foo,bar,zoo'
+
         # None case
-        actual = utils.parse_sort_param(None)
+        actual = utils.parse_sort_param(None, whitelist)
         self.assertEqual(2, len(actual))
         self.assertIsNone(actual[0])
         self.assertIsNone(actual[1])
 
         # single key
         value = 'foo'
-        actual = utils.parse_sort_param(value)
+        actual = utils.parse_sort_param(value, whitelist)
         self.assertEqual(2, len(actual))
         self.assertEqual(['foo'], actual[0])
         self.assertEqual(['asc'], actual[1])
 
         # multiple keys
         value = 'foo,bar,zoo'
-        actual = utils.parse_sort_param(value)
+        actual = utils.parse_sort_param(value, whitelist)
         self.assertEqual(2, len(actual))
         self.assertEqual(['foo', 'bar', 'zoo'], actual[0])
         self.assertEqual(['asc', 'asc', 'asc'], actual[1])
 
         # partial dirs
         value = 'foo:asc,bar,zoo:desc'
-        actual = utils.parse_sort_param(value)
+        actual = utils.parse_sort_param(value, whitelist)
         self.assertEqual(2, len(actual))
         self.assertEqual(['foo', 'bar', 'zoo'], actual[0])
         self.assertEqual(['asc', 'asc', 'desc'], actual[1])
 
         # all with dirs
         value = 'foo:asc,bar:desc,zoo:desc'
-        actual = utils.parse_sort_param(value)
+        actual = utils.parse_sort_param(value, whitelist)
         self.assertEqual(2, len(actual))
         self.assertEqual(['foo', 'bar', 'zoo'], actual[0])
         self.assertEqual(['asc', 'desc', 'desc'], actual[1])
@@ -102,12 +104,17 @@ class TestParameterParsing(base.SenlinTestCase):
         # missing key
         value = ':asc'
         self.assertRaises(exception.InvalidParameter,
-                          utils.parse_sort_param, value)
+                          utils.parse_sort_param, value, whitelist)
+
+        # bad key
+        value = 'bad_key'
+        self.assertRaises(exception.InvalidParameter,
+                          utils.parse_sort_param, value, whitelist)
 
         # bad sorting dir
         value = 'foo:inc'
         self.assertRaises(exception.InvalidParameter,
-                          utils.parse_sort_param, value)
+                          utils.parse_sort_param, value, whitelist)
 
 
 class Response(object):
