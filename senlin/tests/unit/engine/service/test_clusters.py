@@ -46,7 +46,7 @@ class ClusterTest(base.SenlinTestCase):
         result = self.eng.cluster_find(self.ctx, aid)
 
         self.assertEqual(x_cluster, result)
-        mock_get.assert_called_once_with(self.ctx, aid)
+        mock_get.assert_called_once_with(self.ctx, aid, project_safe=True)
 
     @mock.patch.object(db_api, 'cluster_get_by_name')
     @mock.patch.object(db_api, 'cluster_get')
@@ -56,11 +56,12 @@ class ClusterTest(base.SenlinTestCase):
         mock_get.return_value = None
 
         aid = uuidutils.generate_uuid()
-        result = self.eng.cluster_find(self.ctx, aid)
+        result = self.eng.cluster_find(self.ctx, aid, False)
 
         self.assertEqual(x_cluster, result)
-        mock_get.assert_called_once_with(self.ctx, aid)
-        mock_get_name.assert_called_once_with(self.ctx, aid)
+        mock_get.assert_called_once_with(self.ctx, aid, project_safe=False)
+        mock_get_name.assert_called_once_with(self.ctx, aid,
+                                              project_safe=False)
 
     @mock.patch.object(db_api, 'cluster_get_by_name')
     def test_cluster_find_by_name(self, mock_get_name):
@@ -71,7 +72,7 @@ class ClusterTest(base.SenlinTestCase):
         result = self.eng.cluster_find(self.ctx, aid)
 
         self.assertEqual(x_cluster, result)
-        mock_get_name.assert_called_once_with(self.ctx, aid)
+        mock_get_name.assert_called_once_with(self.ctx, aid, project_safe=True)
 
     @mock.patch.object(db_api, 'cluster_get_by_short_id')
     @mock.patch.object(db_api, 'cluster_get_by_name')
@@ -81,11 +82,13 @@ class ClusterTest(base.SenlinTestCase):
         mock_get_name.return_value = None
 
         aid = 'abcd-1234-abcd'
-        result = self.eng.cluster_find(self.ctx, aid)
+        result = self.eng.cluster_find(self.ctx, aid, False)
 
         self.assertEqual(x_cluster, result)
-        mock_get_name.assert_called_once_with(self.ctx, aid)
-        mock_get_shortid.assert_called_once_with(self.ctx, aid)
+        mock_get_name.assert_called_once_with(self.ctx, aid,
+                                              project_safe=False)
+        mock_get_shortid.assert_called_once_with(self.ctx, aid,
+                                                 project_safe=False)
 
     @mock.patch.object(db_api, 'cluster_get_by_name')
     def test_cluster_find_not_found(self, mock_get_name):
@@ -97,7 +100,8 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual('The cluster (bogus) could not be found.',
                          six.text_type(ex))
-        mock_get_name.assert_called_once_with(self.ctx, 'bogus')
+        mock_get_name.assert_called_once_with(self.ctx, 'bogus',
+                                              project_safe=True)
 
     @mock.patch.object(cluster_mod.Cluster, 'load_all')
     def test_cluster_list(self, mock_load):

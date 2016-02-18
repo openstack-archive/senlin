@@ -557,24 +557,31 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Policy '%s' is deleted."), identity)
 
-    def cluster_find(self, context, identity):
+    def cluster_find(self, context, identity, project_safe=True):
         """Find a cluster with the given identity.
 
         :param context: An instance of the request context.
         :param identity: The UUID, name or short ID of a cluster.
+        :param project_safe: A boolean parameter specifying whether only
+                             clusters from the same project are qualified to
+                             be returned.
         :return: An instance of `Cluster` class.
         :raises: `ClusterNotFound` if no matching object can be found.
         """
 
         if uuidutils.is_uuid_like(identity):
-            cluster = db_api.cluster_get(context, identity)
+            cluster = db_api.cluster_get(context, identity,
+                                         project_safe=project_safe)
             if not cluster:
-                cluster = db_api.cluster_get_by_name(context, identity)
+                cluster = db_api.cluster_get_by_name(context, identity,
+                                                     project_safe=project_safe)
         else:
-            cluster = db_api.cluster_get_by_name(context, identity)
+            cluster = db_api.cluster_get_by_name(context, identity,
+                                                 project_safe=project_safe)
             # maybe it is a short form of UUID
             if not cluster:
-                cluster = db_api.cluster_get_by_short_id(context, identity)
+                cluster = db_api.cluster_get_by_short_id(
+                    context, identity, project_safe=project_safe)
 
         if not cluster:
             raise exception.ClusterNotFound(cluster=identity)
