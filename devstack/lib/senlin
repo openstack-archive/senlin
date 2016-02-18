@@ -3,9 +3,10 @@
 # lib/senlin
 # Install and start **Senlin** service
 
-# To enable, add the following to localrc
+# To enable, add the following to local.conf
 #
-#   ENABLED_SERVICES+=,senlin,sl-api,sl-eng
+# [[local|localrc]]
+# enable_plugin senlin https://git.openstack.org/openstack/senlin
 
 # Dependencies:
 #
@@ -15,7 +16,6 @@
 # ---------
 # - install_senlinclient
 # - install_senlin
-# - configure_senlinclient
 # - configure_senlin
 # - init_senlin
 # - start_senlin
