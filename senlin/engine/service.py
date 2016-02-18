@@ -1203,8 +1203,8 @@ class EngineService(service.Service):
 
         :param context: An instance of the request context.
         :param identity: The UUID, name or short-id of a cluster.
-        :param \*\*params: A dictionary containing additional parameters for
-                           the check operation.
+        :param params: A dictionary containing additional parameters for
+                       the check operation.
         :return: A dictionary containg the ID of the action triggered.
         """
         LOG.info(_LI("Checking Cluster '%(cluster)s'."),
@@ -1234,8 +1234,8 @@ class EngineService(service.Service):
 
         :param context: An instance of the request context.
         :param identity: The UUID, name or short-id of a cluster.
-        :param \*\*params: A dictionary containing additional parameters for
-                           the check operation.
+        :param params: A dictionary containing additional parameters for
+                       the check operation.
         :return: A dictionary containg the ID of the action triggered.
         """
         LOG.info(_LI("Recovering cluster '%(cluster)s'."),
@@ -1528,13 +1528,13 @@ class EngineService(service.Service):
         return {'action': action.id}
 
     @request_context
-    def node_check(self, context, identity, **params):
+    def node_check(self, context, identity, params=None):
         """Check the health status of specified node.
 
         :param context: An instance of the request context.
         :param identity: The UUID, name or short-id of the node.
-        :param \*\*params: An optional dictionary providing additional input
-                           parameters for the checking operation.
+        :param params: An dictionary providing additional input parameters
+                       for the checking operation.
         :return: A dictionary containing the ID of the action triggered by
                  this request.
         """
@@ -1560,13 +1560,13 @@ class EngineService(service.Service):
         return {'action': action.id}
 
     @request_context
-    def node_recover(self, context, identity, **params):
+    def node_recover(self, context, identity, params=None):
         """Recover the specified node.
 
         :param context: An instance of the request context.
         :param identity: The UUID, name or short-id of a node.
-        :param \*\*params: A dictionary containing the optional parameters for
-                           the requested recover operation.
+        :param params: A dictionary containing the optional parameters for
+                       the requested recover operation.
         :return: A dictionary containing the ID of the action triggered by the
                  recover request.
         """

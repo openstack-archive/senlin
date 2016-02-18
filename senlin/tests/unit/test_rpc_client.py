@@ -351,10 +351,17 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         self._test_engine_api('node_delete', 'call', identity='a-node')
 
     def test_node_check(self):
-        self._test_engine_api('node_check', 'call', identity='a-node')
+        self._test_engine_api('node_check', 'call', identity='a-node',
+                              params=None)
 
     def test_node_recover(self):
-        self._test_engine_api('node_recover', 'call', identity='a-node')
+        self._test_engine_api('node_recover', 'call', identity='a-node',
+                              params=None)
+
+    def test_node_recover_with_params(self):
+        params = {'operation': 'REBUILD'}
+        self._test_engine_api('node_recover', 'call', identity='a-cluster',
+                              params=params)
 
     def test_action_list(self):
         default_args = {
