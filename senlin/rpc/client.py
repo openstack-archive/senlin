@@ -170,13 +170,15 @@ class EngineClient(object):
                                              identity=identity,
                                              nodes=nodes))
 
-    def cluster_check(self, ctxt, identity):
+    def cluster_check(self, ctxt, identity, params=None):
         return self.call(ctxt, self.make_msg('cluster_check',
-                                             identity=identity))
+                                             identity=identity,
+                                             params=params))
 
-    def cluster_recover(self, ctxt, identity):
+    def cluster_recover(self, ctxt, identity, params=None):
         return self.call(ctxt, self.make_msg('cluster_recover',
-                                             identity=identity))
+                                             identity=identity,
+                                             params=params))
 
     def cluster_resize(self, ctxt, identity, adj_type=None, number=None,
                        min_size=None, max_size=None, min_step=None,

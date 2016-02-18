@@ -1191,7 +1191,7 @@ class EngineService(service.Service):
         return {'action': action.id}
 
     @request_context
-    def cluster_check(self, context, identity, **params):
+    def cluster_check(self, context, identity, params=None):
         """Check the status of a cluster.
 
         :param context: An instance of the request context.
@@ -1222,7 +1222,7 @@ class EngineService(service.Service):
         return {'action': action.id}
 
     @request_context
-    def cluster_recover(self, context, identity, **params):
+    def cluster_recover(self, context, identity, params=None):
         """Recover a cluster to a healthy status.
 
         :param context: An instance of the request context.
