@@ -1958,6 +1958,7 @@ class EngineService(service.Service):
         :return: A list of `Receiver` object representations.
         """
         limit = utils.parse_int_param('limit', limit)
+        utils.validate_sort_param(sort, consts.RECEIVER_SORT_KEYS)
         project_safe = utils.parse_bool_param('project_safe', project_safe)
 
         receivers = receiver_mod.Receiver.load_all(context, limit=limit,

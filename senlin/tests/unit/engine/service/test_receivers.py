@@ -119,19 +119,25 @@ class ReceiverTest(base.SenlinTestCase):
         mock_load.return_value = [fake_obj]
 
         result = self.eng.receiver_list(self.ctx, limit=1, marker='MARKER',
-                                        sort='KEY', filters={'key1': 'value1'},
+                                        sort='name',
+                                        filters={'key1': 'value1'},
                                         project_safe=False)
 
         self.assertIsInstance(result, list)
         self.assertEqual([{'FOO': 'BAR'}], result)
         mock_load.assert_called_once_with(self.ctx, limit=1, marker='MARKER',
-                                          sort='KEY',
+                                          sort='name',
                                           filters={'key1': 'value1'},
                                           project_safe=False)
 
     def test_receiver_list_bad_params(self):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.receiver_list, self.ctx, limit='no')
+        self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.receiver_list,
+                               self.ctx, sort='crazykey')
         self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
 
         ex = self.assertRaises(rpc.ExpectedException,
