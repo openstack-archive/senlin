@@ -79,6 +79,14 @@ class DBAPIReceiverTest(base.SenlinTestCase):
         res = db_api.receiver_get(self.ctx, r.id)
         self.assertEqual(r.id, res.id)
 
+    def test_receiver_get_admin_context(self):
+        admin_ctx = utils.dummy_context(project='a-different-project',
+                                        is_admin=True)
+        r = self._create_receiver(self.ctx)
+
+        res = db_api.receiver_get(admin_ctx, r.id, project_safe=True)
+        self.assertIsNotNone(res)
+
     def test_receiver_get_by_short_id(self):
         receiver_id1 = 'same-part-unique-part'
         receiver_id2 = 'same-part-part-unique'
@@ -269,6 +277,15 @@ class DBAPIReceiverTest(base.SenlinTestCase):
 
         results = db_api.receiver_get_all(self.ctx, project_safe=True)
         self.assertEqual(0, len(results))
+
+    def test_receiver_get_all_with_admin_context(self):
+        self._create_receiver(self.ctx, name='receiver1')
+        self._create_receiver(self.ctx, name='receiver2')
+
+        admin_ctx = utils.dummy_context(project='a-different-project',
+                                        is_admin=True)
+        results = db_api.receiver_get_all(admin_ctx, project_safe=True)
+        self.assertEqual(2, len(results))
 
     def test_receiver_delete(self):
         res = self._create_receiver(self.ctx)

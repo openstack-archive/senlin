@@ -83,6 +83,15 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         self.assertIsNotNone(res)
         self.assertEqual(policy.id, res.id)
 
+    def test_policy_get_admin_context(self):
+        data = self.new_policy_data()
+        policy = db_api.policy_create(self.ctx, data)
+
+        admin_ctx = utils.dummy_context(project='a-different-project',
+                                        is_admin=True)
+        res = db_api.policy_get(admin_ctx, policy.id, project_safe=True)
+        self.assertIsNotNone(res)
+
     def test_policy_get_not_found(self):
         retobj = db_api.policy_get(self.ctx, 'BogusID')
         self.assertIsNone(retobj)
@@ -203,6 +212,21 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         policies = db_api.policy_get_all(new_ctx)
         self.assertEqual(0, len(policies))
         policies = db_api.policy_get_all(new_ctx, project_safe=False)
+        self.assertEqual(2, len(policies))
+
+    def test_policy_get_all_admin_context(self):
+        specs = [
+            {'name': 'policy_short', 'cooldown': '10'},
+            {'name': 'policy_long', 'cooldown': '100'},
+        ]
+
+        for spec in specs:
+            data = self.new_policy_data(**spec)
+            db_api.policy_create(self.ctx, data)
+
+        admin_ctx = utils.dummy_context(project='a-different-project',
+                                        is_admin=True)
+        policies = db_api.policy_get_all(admin_ctx, project_safe=True)
         self.assertEqual(2, len(policies))
 
     def test_policy_get_all_with_limit_marker(self):
