@@ -257,7 +257,8 @@ class EngineService(service.Service):
                              projects will be returned.
         :return: A list of `Profile` object representations.
         """
-        limit = utils.parse_int_param('limit', limit)
+        limit = utils.parse_int_param(consts.PARAM_LIMIT, limit)
+        utils.validate_sort_param(sort, consts.PROFILE_SORT_KEYS)
         project_safe = utils.parse_bool_param('project_safe', project_safe)
         profiles = profile_base.Profile.load_all(context,
                                                  limit=limit, marker=marker,
