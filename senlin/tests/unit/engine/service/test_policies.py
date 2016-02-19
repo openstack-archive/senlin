@@ -135,18 +135,24 @@ class PolicyTest(base.SenlinTestCase):
         mock_load.return_value = []
 
         result = self.eng.policy_list(self.ctx, limit=10, marker='KEY',
-                                      filters={'foo': 'bar'}, sort='k:asc',
+                                      filters={'foo': 'bar'}, sort='name:asc',
                                       project_safe=False)
 
         self.assertEqual([], result)
         mock_load.assert_called_once_with(self.ctx, limit=10, marker='KEY',
-                                          filters={'foo': 'bar'}, sort='k:asc',
+                                          filters={'foo': 'bar'},
+                                          sort='name:asc',
                                           project_safe=False)
 
     def test_policy_list_bad_param(self):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.policy_list,
                                self.ctx, limit='no')
+        self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.policy_list,
+                               self.ctx, sort='invalidkey')
         self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
 
         ex = self.assertRaises(rpc.ExpectedException,
