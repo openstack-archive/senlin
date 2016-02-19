@@ -1835,6 +1835,7 @@ class EngineService(service.Service):
         :return: A list of `Action` object representations.
         """
         limit = utils.parse_int_param('limit', limit)
+        utils.validate_sort_param(sort, consts.ACTION_SORT_KEYS)
         project_safe = utils.parse_bool_param('project_safe', project_safe)
         results = action_mod.Action.load_all(context, filters=filters,
                                              limit=limit, marker=marker,

@@ -118,26 +118,29 @@ class ActionTest(base.SenlinTestCase):
         mock_load.return_value = []
 
         result = self.eng.action_list(self.ctx, filters='F', limit=1,
-                                      marker='M', sort='S',
+                                      marker='M', sort='status',
                                       project_safe=False)
 
         self.assertEqual([], result)
 
         mock_load.assert_called_once_with(self.ctx, filters='F', limit=1,
-                                          marker='M', sort='S',
+                                          marker='M', sort='status',
                                           project_safe=False)
 
     def test_action_list_with_bad_params(self):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.action_list,
                                self.ctx, limit='large')
+        self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
 
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.action_list,
+                               self.ctx, sort='crazykey')
         self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.action_list,
                                self.ctx, project_safe='yes')
-
         self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
 
     @mock.patch.object(service.EngineService, 'cluster_find')
