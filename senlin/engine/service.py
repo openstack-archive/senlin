@@ -1319,6 +1319,7 @@ class EngineService(service.Service):
         :return: A list of `Node` object representations.
         """
         limit = utils.parse_int_param('limit', limit)
+        utils.validate_sort_param(sort, consts.NODE_SORT_KEYS)
         project_safe = utils.parse_bool_param('project_safe', project_safe)
 
         # Maybe the cluster_id is a name or a short ID

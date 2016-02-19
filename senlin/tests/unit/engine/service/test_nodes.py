@@ -124,14 +124,14 @@ class NodeTest(base.SenlinTestCase):
         mock_find.return_value = mock.Mock(id='FAKE_CLUSTER')
 
         result = self.eng.node_list(self.ctx, cluster_id='MY_CLUSTER',
-                                    filters={'K': 'V'}, sort='SSS',
+                                    filters={'K': 'V'}, sort='name',
                                     limit=123, marker='MMM',
                                     project_safe=False)
 
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
         mock_find.assert_called_once_with(self.ctx, 'MY_CLUSTER')
         mock_load.assert_called_once_with(self.ctx, cluster_id='FAKE_CLUSTER',
-                                          filters={'K': 'V'}, sort='SSS',
+                                          filters={'K': 'V'}, sort='name',
                                           limit=123, marker='MMM',
                                           project_safe=False)
 
@@ -145,12 +145,12 @@ class NodeTest(base.SenlinTestCase):
         mock_load.return_value = [obj_1, obj_2]
 
         result = self.eng.node_list(self.ctx, cluster_id=None, filters='FFF',
-                                    sort='SSS', limit=123, marker='MMM',
+                                    sort='status', limit=123, marker='MMM',
                                     project_safe=False)
 
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
         mock_load.assert_called_once_with(self.ctx, cluster_id=None,
-                                          filters='FFF', sort='SSS',
+                                          filters='FFF', sort='status',
                                           limit=123, marker='MMM',
                                           project_safe=False)
 
@@ -160,6 +160,14 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, limit='MANY')
         self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
         self.assertEqual("Invalid value 'MANY' specified for 'limit'",
+                         six.text_type(ex.exc_info[1]))
+
+    def test_node_list_bad_sort(self):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_list,
+                               self.ctx, sort='crazykey')
+        self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
+        self.assertEqual("Invalid value 'crazykey' specified for 'sort key'",
                          six.text_type(ex.exc_info[1]))
 
     def test_node_list_bad_project_safe(self):
