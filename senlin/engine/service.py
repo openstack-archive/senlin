@@ -452,6 +452,7 @@ class EngineService(service.Service):
         :return: A list of `Policy` object representations.
         """
         limit = utils.parse_int_param('limit', limit)
+        utils.validate_sort_param(sort, consts.POLICY_SORT_KEYS)
         project_safe = utils.parse_bool_param('project_safe', project_safe)
         policies = policy_base.Policy.load_all(context,
                                                limit=limit, marker=marker,
