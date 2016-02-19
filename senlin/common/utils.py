@@ -68,8 +68,8 @@ def parse_bool_param(name, value):
     return strutils.bool_from_string(value, strict=True)
 
 
-def parse_sort_param(value, whitelist):
-    """Parse a string value into list of keys and list of sorting dirs.
+def validate_sort_param(value, whitelist):
+    """Validate a string value and see if it is a valid sort param.
 
     :param value: A string as the input which should be one of the following
                   formats:
@@ -77,29 +77,19 @@ def parse_sort_param(value, whitelist):
                   - 'key1:asc,key2,key3:desc'
                   - 'key1:asc,key2:asc,key3:desc'
     :param whitelist: A list of permitted sorting keys.
-    :return: a list of keys and a list of sorting dirs.
-    :rtype: tuple
+    :return: None if validation succeeds or an exception of `InvalidParameter`
+             otherwise.
     """
 
     if value is None:
-        return None, None
+        return None
 
-    sort_keys = []
-    sort_dirs = []
     for s in value.split(','):
         s_key, _sep, s_dir = s.partition(':')
-        if not s_key:
-            raise exception.InvalidParameter(name='sort key', value='<None>')
-        if s_key not in whitelist:
+        if not s_key or s_key not in whitelist:
             raise exception.InvalidParameter(name='sort key', value=s_key)
-        if not s_dir:
-            s_dir = 'asc'
-        elif s_dir not in ('asc', 'desc'):
+        if s_dir and s_dir not in ('asc', 'desc'):
             raise exception.InvalidParameter(name='sort dir', value=s_dir)
-        sort_keys.append(s_key)
-        sort_dirs.append(s_dir)
-
-    return sort_keys, sort_dirs
 
 
 def parse_level_values(values):
