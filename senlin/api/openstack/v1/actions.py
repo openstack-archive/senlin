@@ -21,7 +21,7 @@ from senlin.common import utils
 
 
 class ActionData(object):
-    '''All required data fields for an action.'''
+    """All required data fields for an action."""
 
     PARAMS = (consts.ACTION_NAME, consts.ACTION_TARGET, consts.ACTION_ACTION)
 
@@ -57,16 +57,16 @@ class ActionController(wsgi.Controller):
     @util.policy_enforce
     def index(self, req):
         filter_whitelist = {
-            'name': 'mixed',
-            'target': 'mixed',
-            'action': 'mixed',
-            'status': 'mixed',
+            consts.ACTION_NAME: 'mixed',
+            consts.ACTION_TARGET: 'mixed',
+            consts.ACTION_ACTION: 'mixed',
+            consts.ACTION_STATUS: 'mixed',
         }
         param_whitelist = {
-            'limit': 'single',
-            'marker': 'single',
-            'sort': 'single',
-            'global_project': 'single',
+            consts.PARAM_LIMIT: 'single',
+            consts.PARAM_MARKER: 'single',
+            consts.PARAM_SORT: 'single',
+            consts.PARAM_GLOBAL_PROJECT: 'single',
         }
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)

@@ -67,15 +67,15 @@ class NodeController(wsgi.Controller):
     @util.policy_enforce
     def index(self, req):
         filter_whitelist = {
-            'status': 'mixed',
-            'name': 'mixed',
+            consts.NODE_NAME: 'mixed',
+            consts.NODE_STATUS: 'mixed',
         }
         param_whitelist = {
-            'cluster_id': 'single',
-            'limit': 'single',
-            'marker': 'single',
-            'sort': 'single',
-            'global_project': 'single',
+            consts.NODE_CLUSTER_ID: 'single',
+            consts.PARAM_LIMIT: 'single',
+            consts.PARAM_MARKER: 'single',
+            consts.PARAM_SORT: 'single',
+            consts.PARAM_GLOBAL_PROJECT: 'single',
         }
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)
@@ -163,7 +163,8 @@ class NodeController(wsgi.Controller):
 
     @util.policy_enforce
     def action(self, req, node_id, body=None):
-        '''Perform specified action on a node.'''
+        """Perform specified action on a node."""
+
         body = body or {}
         if len(body) == 0:
             raise exc.HTTPBadRequest(_('No action specified.'))

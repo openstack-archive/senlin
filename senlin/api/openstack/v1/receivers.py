@@ -68,16 +68,16 @@ class ReceiverController(wsgi.Controller):
     @util.policy_enforce
     def index(self, req):
         filter_whitelist = {
-            'name': 'mixed',
-            'type': 'mixed',
-            'cluster_id': 'mixed',
-            'action': 'mixed',
+            consts.RECEIVER_NAME: 'mixed',
+            consts.RECEIVER_TYPE: 'mixed',
+            consts.RECEIVER_CLUSTER_ID: 'mixed',
+            consts.RECEIVER_ACTION: 'mixed',
         }
         param_whitelist = {
-            'limit': 'single',
-            'marker': 'single',
-            'sort': 'single',
-            'global_project': 'single',
+            consts.PARAM_LIMIT: 'single',
+            consts.PARAM_MARKER: 'single',
+            consts.PARAM_SORT: 'single',
+            consts.PARAM_GLOBAL_PROJECT: 'single',
         }
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)
