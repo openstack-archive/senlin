@@ -150,7 +150,7 @@ class NovaClient(base.DriverBase):
     def server_rebuild(self, server, imageref, name=None, admin_password=None,
                        **attrs):
         if imageref:
-            attrs['image']['id'] = imageref
+            attrs['image'] = {'id': imageref}
         if name:
             attrs['name'] = name
         if admin_password:

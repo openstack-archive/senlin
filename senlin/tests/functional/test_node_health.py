@@ -28,7 +28,7 @@ class TestNodeHealth(base.SenlinFunctionalTest):
         test_api.delete_profile(self.client, self.profile['id'])
         super(TestNodeHealth, self).tearDown()
 
-    def test_node_create_delete_with_target_cluster(self):
+    def test_node_check_recover(self):
         # Create a node
         node1 = test_api.create_node(self.client,
                                      test_utils.random_name('node1'),
