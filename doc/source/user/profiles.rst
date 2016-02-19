@@ -55,7 +55,7 @@ to the command::
 
   $ senlin profile-list -F
   +-------------------+----------+--------------------+---------------------+
-  | id                | name     | type               | created_at        |
+  | id                | name     | type               | created_at          |
   +-------------------+----------+--------------------+---------------------+
   | 560a8f9d-7596-... | myserver | os.nova.server-1.0 | 2015-05-05T13:26:00 |
   | ceda64bd-70b7-... | mystack  | os.heat.stack-1.0  | 2015-05-05T13:26:25 |
