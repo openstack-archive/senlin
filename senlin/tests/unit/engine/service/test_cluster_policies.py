@@ -211,7 +211,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.eng.cluster_policy_attach,
                                self.ctx, 'FAKE_CLUSTER', 'BOGUS')
 
-        self.assertEqual(exc.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: The specified policy "
                          "(BOGUS) is not found.",
                          six.text_type(ex.exc_info[1]))
@@ -290,7 +290,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_policy_detach,
                                self.ctx, 'FAKE_CLUSTER', 'Bogus')
-        self.assertEqual(exc.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: The specified policy "
                          "(Bogus) is not found.",
                          six.text_type(ex.exc_info[1]))
@@ -309,7 +309,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_policy_detach,
                                self.ctx, 'C1', 'P1')
-        self.assertEqual(exc.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: The policy (P1) is "
                          "not attached to the specified cluster (C1).",
                          six.text_type(ex.exc_info[1]))
@@ -376,7 +376,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.eng.cluster_policy_update,
                                self.ctx, 'C1', 'Bogus', enabled=True)
 
-        self.assertEqual(exc.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: The specified policy "
                          "(Bogus) is not found.",
                          six.text_type(ex.exc_info[1]))
@@ -396,7 +396,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.eng.cluster_policy_update,
                                self.ctx, 'C1', 'P1', enabled=True)
 
-        self.assertEqual(exc.SenlinBadRequest, ex.exc_info[0])
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: The policy (P1) is "
                          "not attached to the specified cluster (C1).",
                          six.text_type(ex.exc_info[1]))

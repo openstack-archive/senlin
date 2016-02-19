@@ -79,7 +79,7 @@ class Forbidden(SenlinException):
     msg_fmt = _("You are not authorized to complete this operation.")
 
 
-class SenlinBadRequest(SenlinException):
+class BadRequest(SenlinException):
     msg_fmt = _("The request is malformed: %(msg)s")
 
 

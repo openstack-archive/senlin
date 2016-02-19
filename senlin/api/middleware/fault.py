@@ -66,7 +66,7 @@ class FaultWrapper(wsgi.Middleware):
         'ReceiverNotFound': webob.exc.HTTPNotFound,
         'RequestLimitExceeded': webob.exc.HTTPBadRequest,
         'ResourceInUse': webob.exc.HTTPConflict,
-        'SenlinBadRequest': webob.exc.HTTPBadRequest,
+        'BadRequest': webob.exc.HTTPBadRequest,
         'SpecValidationFailed': webob.exc.HTTPBadRequest,
         'WebhookNotFound': webob.exc.HTTPNotFound,
     }
