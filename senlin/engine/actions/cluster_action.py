@@ -500,8 +500,8 @@ class ClusterAction(base.Action):
                                      {'status': child.READY})
                 dispatcher.start_action(action_id=child.id)
 
-        # Wait for dependent action if any
-        res, reason = self._wait_for_dependents()
+            # Wait for dependent action if any
+            res, reason = self._wait_for_dependents()
 
         self.cluster.set_status(self.context, saved_status, saved_reason)
 
@@ -513,6 +513,10 @@ class ClusterAction(base.Action):
         :returns: A tuple containing the result and the corresponding reason.
         """
         res = self.cluster.do_recover(self.context)
+        if not res:
+            reason = _('Cluster recover failed.')
+            self.cluster.set_status(self.context, self.cluster.ERROR, reason)
+            return self.RES_ERROR, reason
 
         # process data from health_policy
         pd = self.data.get('health', None)
@@ -555,20 +559,17 @@ class ClusterAction(base.Action):
                                      {'status': child.READY})
                 dispatcher.start_action(action_id=child.id)
 
-        # Wait for dependent action if any
-        res, new_reason = self._wait_for_dependents()
+            # Wait for dependent action if any
+            res, reason = self._wait_for_dependents()
 
-        if res == self.RES_OK:
-            self.cluster.set_status(self.context, self.cluster.ACTIVE,
-                                    reason)
+            if res != self.RES_OK:
+                self.cluster.set_status(self.context, self.cluster.ERROR,
+                                        reason)
+                return res, reason
 
-            return res, reason
+        self.cluster.set_status(self.context, self.cluster.ACTIVE, reason)
 
-        reason = new_reason
-        self.cluster.set_status(self.context, self.cluster.ERROR,
-                                reason)
-
-        return res, reason
+        return self.RES_OK, reason
 
     def do_resize(self):
         """Handler for the CLUSTER_RESIZE action.
