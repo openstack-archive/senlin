@@ -2145,6 +2145,7 @@ class EngineService(service.Service):
         :return: A list of `Event` object representations.
         """
         limit = utils.parse_int_param('limit', limit)
+        utils.validate_sort_param(sort, consts.EVENT_SORT_KEYS)
         project_safe = utils.parse_bool_param('project_safe', project_safe)
         if filters and consts.EVENT_LEVEL in filters:
             value = filters.pop(consts.EVENT_LEVEL)
