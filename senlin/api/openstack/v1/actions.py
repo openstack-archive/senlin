@@ -68,6 +68,10 @@ class ActionController(wsgi.Controller):
             'sort': 'single',
             'global_project': 'single',
         }
+        for key in req.params.keys():
+            if (key not in param_whitelist.keys() and key not in
+                    filter_whitelist.keys()):
+                raise exc.HTTPBadRequest(_('Invalid parameter %s') % key)
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)
 

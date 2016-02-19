@@ -114,7 +114,6 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'marker': 'fake marker',
             'sort': 'fake sorting string',
             'global_project': False,
-            'balrog': 'you shall not pass!'
         }
         req = self._get('/nodes', params=params)
         mock_call.return_value = []
@@ -131,7 +130,21 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('sort', engine_args)
         self.assertIn('filters', engine_args)
         self.assertIn('project_safe', engine_args)
-        self.assertNotIn('balrog', engine_args)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_node_index_whitelists_invalid_params(self, mock_call,
+                                                  mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {
+            'balrog': 'you shall not pass!'
+        }
+        req = self._get('/nodes', params=params)
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index, req)
+
+        self.assertEqual("Invalid parameter balrog",
+                         str(ex))
+        self.assertFalse(mock_call.called)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_index_global_project_true(self, mock_call, mock_enforce):
@@ -191,7 +204,6 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {
             'status': 'fake status',
             'name': 'fake name',
-            'balrog': 'you shall not pass!'
         }
         req = self._get('/nodes', params=params)
         mock_call.return_value = []
@@ -206,8 +218,22 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(2, len(filters))
         self.assertIn('status', filters)
         self.assertIn('name', filters)
-        self.assertNotIn('project', filters)
-        self.assertNotIn('balrog', filters)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_node_index_whitelist_filter_invalid_params(self, mock_call,
+                                                        mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {
+            'balrog': 'you shall not pass!'
+        }
+        req = self._get('/nodes', params=params)
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index, req)
+
+        self.assertEqual("Invalid parameter balrog",
+                         str(ex))
+        self.assertFalse(mock_call.called)
 
     def test_node_index_cluster_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)

@@ -12,6 +12,7 @@
 
 import mock
 import six
+from webob import exc
 
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import actions
@@ -82,9 +83,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'limit': 10,
             'marker': 'fake marker',
             'sort': 'fake sorting option',
-            'filters': None,
             'global_project': True,
-            'balrog': 'you shall not pass!'
         }
         req = self._get('/actions', params=params)
         mock_call.return_value = []
@@ -99,8 +98,21 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('marker', engine_args)
         self.assertIn('sort', engine_args)
         self.assertIn('project_safe', engine_args)
-        self.assertIn('filters', engine_args)
-        self.assertNotIn('balrog', engine_args)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_action_index_whitelists_invalid_params(self, mock_call,
+                                                    mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {
+            'balrog': 'you shall not pass!',
+        }
+        req = self._get('/actions', params=params)
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index, req)
+
+        self.assertEqual("Invalid parameter balrog",
+                         str(ex))
+        self.assertFalse(mock_call.called)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_action_index_limit_not_int(self, mock_call, mock_enforce):
@@ -123,8 +135,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'name': 'fake name',
             'target': '1111-2222-3333',
             'action': 'CLUSTER_CREATE',
-            'status': 'SUCCEEDED',
-            'balrog': 'you shall not pass!'
+            'status': 'SUCCEEDED'
         }
         req = self._get('/actions', params=params)
         mock_call.return_value = []
@@ -141,7 +152,21 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('action', filters)
         self.assertIn('target', filters)
         self.assertIn('status', filters)
-        self.assertNotIn('balrog', filters)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_action_index_whitelist_filter_invalid_params(self, mock_call,
+                                                          mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {
+            'balrog': 'you shall not pass!'
+        }
+        req = self._get('/actions', params=params)
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index, req)
+
+        self.assertEqual("Invalid parameter balrog",
+                         str(ex))
+        self.assertFalse(mock_call.called)
 
     def test_action_index_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
