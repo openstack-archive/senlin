@@ -40,11 +40,13 @@ Launchpad Projects
 ------------------
 - Server: https://launchpad.net/senlin
 - Client: https://launchpad.net/python-senlinclient
+- Dashboard: https://launchpad.net/senlin-dashboard
 
 Code Repository
 ---------------
 - Server: https://git.openstack.org/cgit/openstack/senlin
 - Client: https://git.openstack.org/cgit/openstack/python-senlinclient
+- Dashboard: https://git.openstack.org/cgit/openstack/senlin-dashboard
 
 Blueprints
 ----------
