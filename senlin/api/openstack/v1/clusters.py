@@ -28,7 +28,7 @@ from senlin.common import utils
 
 
 class ClusterData(object):
-    '''The data accompanying a POST/PUT request to create/update a cluster.'''
+    """The data accompanying a POST/PUT request to create/update a cluster."""
 
     def __init__(self, data):
         self.name = data.get(consts.CLUSTER_NAME, None)
@@ -130,14 +130,14 @@ class ClusterController(wsgi.Controller):
     @util.policy_enforce
     def index(self, req):
         filter_whitelist = {
-            'status': 'mixed',
-            'name': 'mixed',
+            consts.CLUSTER_NAME: 'mixed',
+            consts.CLUSTER_STATUS: 'mixed',
         }
         param_whitelist = {
-            'limit': 'single',
-            'marker': 'single',
-            'sort': 'single',
-            'global_project': 'single',
+            consts.PARAM_LIMIT: 'single',
+            consts.PARAM_MARKER: 'single',
+            consts.PARAM_SORT: 'single',
+            consts.PARAM_GLOBAL_PROJECT: 'single',
         }
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)
@@ -157,7 +157,7 @@ class ClusterController(wsgi.Controller):
 
     @util.policy_enforce
     def create(self, req, body):
-        '''Create a new cluster.'''
+        """Create a new cluster."""
 
         cluster_data = body.get('cluster')
         if cluster_data is None:
@@ -179,14 +179,14 @@ class ClusterController(wsgi.Controller):
 
     @util.policy_enforce
     def get(self, req, cluster_id):
-        '''Gets detailed information for a cluster.'''
+        """Gets detailed information for a cluster."""
 
         cluster = self.rpc_client.cluster_get(req.context, cluster_id)
         return {'cluster': cluster}
 
     @util.policy_enforce
     def update(self, req, cluster_id, body):
-        '''Update an existing cluster with new parameters.'''
+        """Update an existing cluster with new parameters."""
 
         cluster_data = body.get('cluster')
         if cluster_data is None:
@@ -227,14 +227,15 @@ class ClusterController(wsgi.Controller):
                 msg = _("Missing adjustment_type value for resize "
                         "operation.")
                 raise exc.HTTPBadRequest(msg)
-            number = utils.parse_int_param('number', number,
+            number = utils.parse_int_param(consts.ADJUSTMENT_NUMBER, number,
                                            allow_negative=True)
 
         if min_size is not None:
-            min_size = utils.parse_int_param('min_size', min_size)
+            min_size = utils.parse_int_param(consts.ADJUSTMENT_MIN_SIZE,
+                                             min_size)
         if max_size is not None:
-            max_size = utils.parse_int_param('max_size', max_size,
-                                             allow_negative=True)
+            max_size = utils.parse_int_param(consts.ADJUSTMENT_MAX_SIZE,
+                                             max_size, allow_negative=True)
         if (min_size is not None and max_size is not None and
                 max_size > 0 and min_size > max_size):
             msg = _("The specified min_size (%(n)s) is greater than the "
@@ -243,9 +244,10 @@ class ClusterController(wsgi.Controller):
             raise exc.HTTPBadRequest(msg)
 
         if min_step is not None:
-            min_step = utils.parse_int_param('min_step', min_step)
+            min_step = utils.parse_int_param(consts.ADJUSTMENT_MIN_STEP,
+                                             min_step)
         if strict is not None:
-            strict = utils.parse_bool_param('strict', strict)
+            strict = utils.parse_bool_param(consts.ADJUSTMENT_STRICT, strict)
 
         result = self.rpc_client.cluster_resize(req.context, cluster_id,
                                                 adj_type, number, min_size,
@@ -272,18 +274,18 @@ class ClusterController(wsgi.Controller):
             raise exc.HTTPBadRequest(msg)
 
         if consts.CP_ENABLED in data:
-            enb = data.get(consts.CP_ENABLED)
+            enabled = data.get(consts.CP_ENABLED)
             try:
-                enb = utils.parse_bool_param('enabled', enb)
+                enabled = utils.parse_bool_param(consts.CP_ENABLED, enabled)
             except senlin_exc.InvalidParameter as ex:
                 raise exc.HTTPBadRequest(six.text_type(ex))
-            data[consts.CP_ENABLED] = enb
+            data[consts.CP_ENABLED] = enabled
 
         return data
 
     @util.policy_enforce
     def action(self, req, cluster_id, body=None):
-        '''Perform specified action on a cluster.'''
+        """Perform specified action on a cluster."""
         body = body or {}
         if len(body) < 1:
             raise exc.HTTPBadRequest(_('No action specified'))

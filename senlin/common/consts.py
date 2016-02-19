@@ -27,10 +27,10 @@ RPC_ATTRS = (
 
 RPC_PARAMS = (
     PARAM_LIMIT, PARAM_MARKER, PARAM_GLOBAL_PROJECT,
-    PARAM_SHOW_DETAILS, PARAM_SORT_DIR, PARAM_SORT_KEYS,
+    PARAM_SHOW_DETAILS, PARAM_SORT,
 ) = (
     'limit', 'marker', 'global_project',
-    'show_details', 'sort_dir', 'sort_keys',
+    'show_details', 'sort',
 )
 
 ACTION_NAMES = (
@@ -145,11 +145,11 @@ CLUSTER_POLICY_SORT_KEYS = [
 EVENT_ATTRS = (
     EVENT_TIMESTAMP, EVENT_OBJ_ID, EVENT_OBJ_NAME, EVENT_OBJ_TYPE,
     EVENT_USER, EVENT_ACTION, EVENT_STATUS, EVENT_STATUS_REASON,
-    EVENT_LEVEL,
+    EVENT_LEVEL, EVENT_CLUSTER_ID,
 ) = (
     'timestamp', 'obj_id', 'obj_name', 'obj_type',
     'user', 'action', 'status', 'status_reason',
-    'level',
+    'level', 'cluster_id',
 )
 
 EVENT_SORT_KEYS = [

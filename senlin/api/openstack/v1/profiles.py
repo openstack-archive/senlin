@@ -55,15 +55,15 @@ class ProfileController(wsgi.Controller):
     @util.policy_enforce
     def index(self, req):
         filter_whitelist = {
-            'name': 'mixed',
-            'type': 'mixed',
-            'metadata': 'mixed',
+            consts.PROFILE_NAME: 'mixed',
+            consts.PROFILE_TYPE: 'mixed',
+            consts.PROFILE_METADATA: 'mixed',
         }
         param_whitelist = {
-            'limit': 'single',
-            'marker': 'single',
-            'sort': 'single',
-            'global_project': 'single',
+            consts.PARAM_LIMIT: 'single',
+            consts.PARAM_MARKER: 'single',
+            consts.PARAM_SORT: 'single',
+            consts.PARAM_GLOBAL_PROJECT: 'single',
         }
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)

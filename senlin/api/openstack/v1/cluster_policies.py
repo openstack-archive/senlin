@@ -29,10 +29,10 @@ class ClusterPolicyController(wsgi.Controller):
     @util.policy_enforce
     def index(self, req, cluster_id):
         filter_whitelist = {
-            'enabled': 'single',
+            consts.CP_ENABLED: 'single',
         }
         param_whitelist = {
-            'sort': 'single',
+            consts.PARAM_SORT: 'single',
         }
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)
