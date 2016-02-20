@@ -86,8 +86,6 @@ When querying the profiles, users can provide any of the following parameters:
 
   - ``name``: profile name for matching;
   - ``type``: profile type for matching;
-  - ``created_at``: timestamp of profile creation for matching;
-  - ``updated_at``: timestamp of last update operation;
   - ``metadata``: a string for matching profile metadata.
 
 - ``limit``: an integer that specifies the maximum number of records to be
