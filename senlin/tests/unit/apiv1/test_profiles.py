@@ -135,6 +135,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {
             'type': 'some_type',
             'name': 'fake name',
+            'metadata': 'fake_data',
             'balrog': 'you shall not pass!'
         }
         req = self._get('/profiles', params=params)
@@ -149,9 +150,10 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('filters', engine_args)
 
         filters = engine_args['filters']
-        self.assertEqual(2, len(filters))
+        self.assertEqual(3, len(filters))
         self.assertIn('name', filters)
         self.assertIn('type', filters)
+        self.assertIn('metadata', filters)
         self.assertNotIn('balrog', filters)
 
     def test_profile_index_limit_non_int(self, mock_enforce):
