@@ -104,12 +104,13 @@ class EventTest(base.SenlinTestCase):
 
         mock_load.return_value = [obj_1, obj_2]
 
-        result = self.eng.event_list(self.ctx, filters='FFF', sort='SSS',
+        result = self.eng.event_list(self.ctx, filters='FFF', sort='level',
                                      limit=123, marker='MMM',
                                      project_safe=False)
 
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
-        mock_load.assert_called_once_with(self.ctx, filters='FFF', sort='SSS',
+        mock_load.assert_called_once_with(self.ctx,
+                                          filters='FFF', sort='level',
                                           limit=123, marker='MMM',
                                           project_safe=False)
 
@@ -120,6 +121,15 @@ class EventTest(base.SenlinTestCase):
 
         self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
         self.assertEqual("Invalid value 'MANY' specified for 'limit'",
+                         six.text_type(ex.exc_info[1]))
+
+    def test_event_list_bad_sort(self):
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.event_list,
+                               self.ctx, sort='crazykey')
+
+        self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
+        self.assertEqual("Invalid value 'crazykey' specified for 'sort key'",
                          six.text_type(ex.exc_info[1]))
 
     def test_event_list_bad_project_safe(self):
