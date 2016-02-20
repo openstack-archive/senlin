@@ -89,7 +89,7 @@ filters clusters by the ``status`` field::
 
   $ senlin cluster-list -f status=ACTIVE
   +----------+------+--------+---------------------+
-  | id       | name | status | created_at        |
+  | id       | name | status | created_at          |
   +----------+------+--------+---------------------+
   | 2959122e | c1   | ACTIVE | 2015-05-05T13:27:28 |
   | 092d0955 | c2   | ACTIVE | 2015-05-05T13:27:48 |
