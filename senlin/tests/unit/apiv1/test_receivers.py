@@ -115,9 +115,6 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'limit': 20,
             'marker': 'fake marker',
             'sort': 'fake sorting string',
-            'project_safe': True,
-            'filters': None,
-            'balrog': 'you shall not pass!'
         }
         req = self._get('/receivers', params=params)
 
@@ -133,10 +130,21 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('limit', engine_args)
         self.assertIn('marker', engine_args)
         self.assertIn('sort', engine_args)
-        self.assertIn('filters', engine_args)
-        self.assertIn('project_safe', engine_args)
-        self.assertNotIn('tenant_safe', engine_args)
-        self.assertNotIn('balrog', engine_args)
+
+    def test_receiver_index_whitelists_invalid_params(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {
+            'balrog': 'you shall not pass!'
+        }
+        req = self._get('/receivers', params=params)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index, req)
+
+        self.assertEqual("Invalid parameter balrog",
+                         str(ex))
+        self.assertFalse(mock_call.called)
 
     def test_receiver_index_whitelist_filter_params(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -145,7 +153,6 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'type': 'webhook',
             'cluster_id': 'test-id',
             'action': 'fake-action',
-            'balrog': 'you shall not pass!'
         }
         req = self._get('/receivers', params=params)
 
@@ -164,7 +171,22 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('type', filters)
         self.assertIn('cluster_id', filters)
         self.assertIn('action', filters)
-        self.assertNotIn('balrog', filters)
+
+    def test_receiver_index_whitelist_filter_invalid_params(self,
+                                                            mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {
+            'balrog': 'you shall not pass!'
+        }
+        req = self._get('/receivers', params=params)
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index, req)
+
+        self.assertEqual("Invalid parameter balrog",
+                         str(ex))
+        self.assertFalse(mock_call.called)
 
     def test_receiver_index_limit_non_int(self, mock_enforce):
         mock_call = self.patchobject(rpc_client.EngineClient, 'receiver_list',

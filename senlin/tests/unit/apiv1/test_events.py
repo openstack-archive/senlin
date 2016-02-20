@@ -12,6 +12,7 @@
 
 import mock
 import six
+from webob import exc
 
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import events
@@ -74,9 +75,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'limit': 10,
             'marker': 'fake marker',
             'sort': 'fake sorting options',
-            'filters': 'fake filters',
             'global_project': False,
-            'balrog': 'you shall not pass!'
         }
         req = self._get('/events', params=params)
 
@@ -92,9 +91,23 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('limit', engine_args)
         self.assertIn('marker', engine_args)
         self.assertIn('sort', engine_args)
-        self.assertIn('filters', engine_args)
         self.assertIn('project_safe', engine_args)
-        self.assertNotIn('balrog', engine_args)
+
+    def test_event_index_whitelists_invalid_params(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {
+            'balrog': 'you shall not pass!'
+        }
+        req = self._get('/events', params=params)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=[])
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index, req)
+
+        self.assertEqual("Invalid parameter balrog",
+                         str(ex))
+        self.assertFalse(mock_call.called)
 
     def test_event_index_global_project_true(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -157,7 +170,6 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'cluster_id': 'another fake ID',
             'action': 'fake action',
             'level': 30,
-            'balrog': 'you shall not pass!'
         }
         req = self._get('/events', params=params)
 
@@ -177,8 +189,22 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('cluster_id', filters)
         self.assertIn('action', filters)
         self.assertIn('level', filters)
-        self.assertNotIn('tenant', filters)
-        self.assertNotIn('balrog', filters)
+
+    def test_event_index_whitelist_filter_invalid_params(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {
+            'balrog': 'you shall not pass!'
+        }
+        req = self._get('/events', params=params)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=[])
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index, req)
+
+        self.assertEqual("Invalid parameter balrog",
+                         str(ex))
+        self.assertFalse(mock_call.called)
 
     def test_index_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
