@@ -36,7 +36,7 @@ Listing Policies
 ~~~~~~~~~~~~~~~~
 
 The :program:`senlin` command line provides a command :command:`policy-list`
-that can be used to enumerate profile objects known to the service. For
+that can be used to enumerate policy objects known to the service. For
 example::
 
   $ senlin policy-list
@@ -159,7 +159,7 @@ Showing the Details of a Policy
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can use the :command:`policy-show` command to show the properties of a
-profile. You need to provide an identifier to the :program:`senlin` command
+policy. You need to provide an identifier to the :program:`senlin` command
 line to indicate the policy object you want to examine. The identifier can be
 the ID, the name or the "short ID" of a policy object. For example::
 
