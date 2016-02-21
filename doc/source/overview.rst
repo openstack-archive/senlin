@@ -54,6 +54,11 @@ tool so you have a command line interface to communicate with
 the :program:`senlin-api` to manage clusters, nodes, profiles, policies,
 actions and events. End developers could also use the Senlin REST API directly.
 
+senlin-dashboard
+----------------
+The :program:`senlin-dashboard` is a Horizon plugin that provides a UI for
+senlin.
+
 senlin-api
 ----------
 
