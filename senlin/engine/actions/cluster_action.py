@@ -418,7 +418,7 @@ class ClusterAction(base.Action):
         pd = self.data.get('deletion', None)
         grace_period = None
         if pd is not None:
-            grace_period = self.data['deletion']['grace_period']
+            grace_period = self.data['deletion'].get('grace_period')
         else:  # if not, deleting nodes from cluster, don't destroy them
             data = {
                 'deletion': {
