@@ -1614,6 +1614,29 @@ class ClusterActionTest(base.SenlinTestCase):
             mock.call(action.context, 'ACTIVE',
                       'Cluster scaling failed: %s' % reason)])
 
+    def test_do_scale_out_count_invalid(self, mock_load):
+        cluster = mock.Mock()
+        cluster.ACTIVE = 'ACTIVE'
+        cluster.RESIZING = 'RESIZING'
+        cluster.id = 'CID'
+        mock_load.return_value = cluster
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
+        action.data = {}
+        action.inputs = {'count': 'tt'}
+
+        # do it
+        res_code, res_msg = action.do_scale_out()
+
+        # assertions
+        self.assertEqual(action.RES_ERROR, res_code)
+        reason = 'Invalid count (tt) for scaling out.'
+        self.assertEqual(reason, res_msg)
+        cluster.set_status.assert_has_calls([
+            mock.call(action.context, 'RESIZING',
+                      'Cluster scale out started.'),
+            mock.call(action.context, 'ACTIVE',
+                      'Cluster scaling failed: %s' % reason)])
+
     def test_do_scale_out_failed_checking(self, mock_load):
         cluster = mock.Mock()
         cluster.ACTIVE = 'ACTIVE'
@@ -1796,7 +1819,7 @@ class ClusterActionTest(base.SenlinTestCase):
             mock.call(action.context, cluster.ACTIVE,
                       'Cluster scaling succeeded.', desired_capacity=2)])
 
-    def test_do_scale_in_invalid_count(self, mock_load):
+    def test_do_scale_in_negative_count(self, mock_load):
         cluster = mock.Mock()
         cluster.ACTIVE = 'ACTIVE'
         cluster.RESIZING = 'RESIZING'
@@ -1818,6 +1841,36 @@ class ClusterActionTest(base.SenlinTestCase):
 
         # assertions
         reason = 'Invalid count (-3) for scaling in.'
+        self.assertEqual(reason, res_msg)
+        self.assertEqual(action.RES_ERROR, res_code)
+        cluster.set_status.assert_has_calls([
+            mock.call(action.context, 'RESIZING',
+                      'Cluster scale in started.'),
+            mock.call(action.context, 'ACTIVE',
+                      'Cluster scaling failed: %s' % reason)])
+
+    def test_do_scale_in_invalid_count(self, mock_load):
+        cluster = mock.Mock()
+        cluster.ACTIVE = 'ACTIVE'
+        cluster.RESIZING = 'RESIZING'
+        cluster.id = 'CID'
+        cluster.min_size = 1
+        cluster.max_size = -1
+        cluster.nodes = []
+        for i in range(5):
+            node = mock.Mock()
+            node.id = 'NODE_ID_%s' % (i + 1)
+            cluster.nodes.append(node)
+        mock_load.return_value = cluster
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
+        action.data = {}
+        action.inputs = {'count': 'tt'}
+
+        # do it
+        res_code, res_msg = action.do_scale_in()
+
+        # assertions
+        reason = 'Invalid count (tt) for scaling in.'
         self.assertEqual(reason, res_msg)
         self.assertEqual(action.RES_ERROR, res_code)
         cluster.set_status.assert_has_calls([
