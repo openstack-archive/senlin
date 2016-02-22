@@ -108,9 +108,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'limit': 20,
             'marker': 'fake marker',
             'sort': 'fake sorting string',
-            'filters': None,
-            'global_project': False,
-            'balrog': 'you shall not pass!'
+            'global_project': False
         }
         req = self._get('/profiles', params=params)
 
@@ -128,7 +126,21 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('sort', engine_args)
         self.assertIn('filters', engine_args)
         self.assertIn('project_safe', engine_args)
-        self.assertNotIn('balrog', engine_args)
+
+    def test_profile_index_whitelist_bad_params(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {
+            'balrog': 'fake_value'
+        }
+        req = self._get('/profiles', params=params)
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.return_value = []
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index, req)
+        self.assertEqual("Invalid parameter balrog", six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     def test_profile_index_whitelist_filter_params(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -136,7 +148,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'type': 'some_type',
             'name': 'fake name',
             'metadata': 'fake_data',
-            'balrog': 'you shall not pass!'
         }
         req = self._get('/profiles', params=params)
 
@@ -154,7 +165,20 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('name', filters)
         self.assertIn('type', filters)
         self.assertIn('metadata', filters)
-        self.assertNotIn('balrog', filters)
+
+    def test_profile_index_whitelist_filter_bad_params(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {
+            'balrog': 'fake_value'
+        }
+        req = self._get('/profiles', params=params)
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index, req)
+        self.assertEqual("Invalid parameter balrog", six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     def test_profile_index_limit_non_int(self, mock_enforce):
         mock_call = self.patchobject(rpc_client.EngineClient, 'profile_list',
