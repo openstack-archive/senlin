@@ -79,7 +79,6 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'marker': 'fake marker',
             'sort': 'fake sorting string',
             'global_project': True,
-            'balrog': 'you shall not pass!'
         }
         req = self._get('/policies', params=params)
 
@@ -97,14 +96,27 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('sort', engine_args)
         self.assertIn('filters', engine_args)
         self.assertIn('project_safe', engine_args)
-        self.assertNotIn('balrog', engine_args)
+
+    def test_policy_index_whitelist_bad_params(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {
+            'balrog': 'fake_value'
+        }
+        req = self._get('/policies', params=params)
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.return_value = []
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index, req)
+        self.assertEqual("Invalid parameter balrog", six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     def test_policy_index_whitelist_filter_params(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
             'type': 'some_type',
             'name': 'fake name',
-            'balrog': 'you shall not pass!'
         }
         req = self._get('/policies', params=params)
 
@@ -121,7 +133,20 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(2, len(filters))
         self.assertIn('name', filters)
         self.assertIn('type', filters)
-        self.assertNotIn('balrog', filters)
+
+    def test_policy_index_whitelist_filter_bad_params(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {
+            'balrog': 'fake_value'
+        }
+        req = self._get('/policies', params=params)
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index, req)
+        self.assertEqual("Invalid parameter balrog", six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     def test_policy_index_limit_non_int(self, mock_enforce):
         mock_call = self.patchobject(rpc_client.EngineClient, 'policy_list',
