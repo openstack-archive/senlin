@@ -13,6 +13,7 @@
 import os
 
 from oslo_config import cfg
+from oslo_config import fixture
 from oslo_middleware import request_id
 from oslo_policy import opts as policy_opts
 import webob
@@ -81,12 +82,8 @@ class RequestContextMiddlewareTest(base.SenlinTestCase):
 
     def setUp(self):
         super(RequestContextMiddlewareTest, self).setUp()
-        opts = [
-            cfg.StrOpt('config_dir', default=policy_path),
-            cfg.StrOpt('config_file', default='foo'),
-            cfg.StrOpt('project', default='senlin'),
-        ]
-        cfg.CONF.register_opts(opts)
+        self.fixture = self.useFixture(fixture.Config())
+        self.fixture.conf(args=['--config-dir', policy_path])
         policy_opts.set_defaults(cfg.CONF)
         cfg.CONF.set_override('policy_file', 'check_admin.json',
                               group='oslo_policy', enforce_type=True)
