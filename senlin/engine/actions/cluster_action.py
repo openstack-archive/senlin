@@ -20,6 +20,7 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LI
 from senlin.common import scaleutils
+from senlin.common import utils
 from senlin.db import api as db_api
 from senlin.engine.actions import base
 from senlin.engine import cluster as cluster_mod
@@ -639,13 +640,15 @@ class ClusterAction(base.Action):
             # If no scaling policy is attached, use the
             # input count directly
             count = self.inputs.get('count', 1)
-
-        if count <= 0:
-            reason = _('Invalid count (%s) for scaling out.') % count
-            status_reason = _('Cluster scaling failed: %s') % reason
-            self.cluster.set_status(self.context, self.cluster.ACTIVE,
-                                    status_reason)
-            return self.RES_ERROR, reason
+            try:
+                count = utils.parse_int_param('count', count,
+                                              allow_zero=False)
+            except exception.InvalidParameter:
+                reason = _('Invalid count (%s) for scaling out.') % count
+                status_reason = _('Cluster scaling failed: %s') % reason
+                self.cluster.set_status(self.context, self.cluster.ACTIVE,
+                                        status_reason)
+                return self.RES_ERROR, reason
 
         # check provided params against current properties
         # desired is checked when strict is True
@@ -691,15 +694,17 @@ class ClusterAction(base.Action):
             count = len(candidates) or pd['count']
         else:
             # If no scaling policy is attached, use the input count directly
-            count = self.inputs.get('count', 1)
             candidates = []
-
-        if count <= 0:
-            reason = _('Invalid count (%s) for scaling in.') % count
-            status_reason = _('Cluster scaling failed: %s') % reason
-            self.cluster.set_status(self.context, self.cluster.ACTIVE,
-                                    status_reason)
-            return self.RES_ERROR, reason
+            count = self.inputs.get('count', 1)
+            try:
+                count = utils.parse_int_param('count', count,
+                                              allow_zero=False)
+            except exception.InvalidParameter:
+                reason = _('Invalid count (%s) for scaling in.') % count
+                status_reason = _('Cluster scaling failed: %s') % reason
+                self.cluster.set_status(self.context, self.cluster.ACTIVE,
+                                        status_reason)
+                return self.RES_ERROR, reason
 
         # check provided params against current properties
         # desired is checked when strict is True
