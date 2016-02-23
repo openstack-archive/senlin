@@ -13,26 +13,8 @@
 """
 Policy for deleting node(s) from a cluster.
 
-NOTE: How deletion policy works
-Input:
-  cluster: cluster whose nodes can be deleted
-  action.data['deletion']:
-    - count: number of nodes to delete; it can be customized by a
-             scaling policy for example. If no scaling policy is in
-             effect, deletion count is assumed to be 1
-  self.criteria: list of criteria for sorting nodes
-Output: stored in action.data
-  {
-    'status': 'OK',
-    'deletion': {
-      'count': '2',
-      'candidates': [
-        'node-id-1',
-        'node-id-2'
-      ],
-      'destroy_after_delete': 'True',
-    }
-  }
+NOTE: For full documentation about how the deletion policy works, check:
+http://docs.openstack.org/developer/senlin/developer/policies/deletion_v1.html
 """
 
 from senlin.common import constraints
