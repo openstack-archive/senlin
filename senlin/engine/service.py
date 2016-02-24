@@ -100,7 +100,7 @@ class EngineService(service.Service):
         self.engine_id = str(uuid.uuid4())
         self.init_tgm()
 
-        # create a dispatcher greenthread for this engine.
+        # create a dispatcher RPC service for this engine.
         self.dispatcher = dispatcher.Dispatcher(self,
                                                 self.dispatcher_topic,
                                                 consts.RPC_API_VERSION,
@@ -108,11 +108,10 @@ class EngineService(service.Service):
         LOG.info(_LI("Starting dispatcher for engine %s"), self.engine_id)
         self.dispatcher.start()
 
-        # create a health manager greenthread for this engine.
-        self.health_mgr = health_manager.Health_Manager(self,
-                                                        self.health_mgr_topic,
-                                                        consts.RPC_API_VERSION,
-                                                        self.TG)
+        # create a health manager RPC service for this engine.
+        self.health_mgr = health_manager.HealthManager(
+            self, self.health_mgr_topic, consts.RPC_API_VERSION)
+
         LOG.info(_LI("Starting health manager for engine %s"), self.engine_id)
         self.health_mgr.start()
 

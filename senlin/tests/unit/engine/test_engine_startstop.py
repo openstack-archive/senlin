@@ -26,7 +26,7 @@ from senlin.tests.unit.common import base
 
 
 @mock.patch('senlin.engine.dispatcher.Dispatcher')
-@mock.patch('senlin.engine.health_manager.Health_Manager')
+@mock.patch('senlin.engine.health_manager.HealthManager')
 @mock.patch('oslo_messaging.Target')
 class EngineBasicTest(base.SenlinTestCase):
 
@@ -65,8 +65,7 @@ class EngineBasicTest(base.SenlinTestCase):
 
         mock_hm_cls.assert_called_once_with(self.eng,
                                             self.eng.health_mgr_topic,
-                                            consts.RPC_API_VERSION,
-                                            self.eng.TG)
+                                            consts.RPC_API_VERSION)
         self.assertEqual(mock_hm, self.eng.health_mgr)
         mock_hm.start.assert_called_once_with()
 
