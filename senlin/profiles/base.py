@@ -267,7 +267,7 @@ class Profile(object):
 
         # This is supposed to be trust-based authentication
         params = copy.deepcopy(self.context)
-        params['trust_id'] = [trust_id]
+        params['trust_id'] = trust_id
 
         return params
 
