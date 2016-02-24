@@ -12,18 +12,21 @@
 
 from senlin.common import constraints
 from senlin.common import consts
+from senlin.common import exception
 from senlin.common.i18n import _
+from senlin.common import scaleutils as su
 from senlin.common import schema
+from senlin.common import utils
 from senlin.db import api as db_api
 from senlin.policies import base
 
 
 class ScalingPolicy(base.Policy):
-    '''Policy for changing the size of a cluster.
+    """Policy for changing the size of a cluster.
 
     This policy is expected to be enforced before the node count of a cluster
     is changed.
-    '''
+    """
 
     VERSION = '1.0'
 
@@ -103,20 +106,35 @@ class ScalingPolicy(base.Policy):
     }
 
     def __init__(self, name, spec, **kwargs):
+        """Intialize a scaling policy object.
+
+        :param name: Name for the policy object.
+        :param spec: A dictionary containing the detailed specification for
+                     the policy.
+        :param \*\*kwargs: Other optional parameters for policy object
+                           creation.
+        :return: An object of `ScalingPolicy`.
+        """
         super(ScalingPolicy, self).__init__(name, spec, **kwargs)
 
-        self.event = self.properties[self.EVENT]
         self.singleton = False
-        adjustment = self.properties[self.ADJUSTMENT]
 
+        self.event = self.properties[self.EVENT]
+
+        adjustment = self.properties[self.ADJUSTMENT]
         self.adjustment_type = adjustment[self.ADJUSTMENT_TYPE]
         self.adjustment_number = adjustment[self.ADJUSTMENT_NUMBER]
         self.adjustment_min_step = adjustment[self.MIN_STEP]
+
         self.best_effort = adjustment[self.BEST_EFFORT]
         self.cooldown = adjustment[self.COOLDOWN]
 
     def _calculate_adjustment_count(self, current_size):
-        '''Calculate adjustment count based on current_size'''
+        """Calculate adjustment count based on current_size.
+
+        :param current_size: The current size of the target cluster.
+        :return: The number of nodes to add or to remove.
+        """
 
         if self.adjustment_type == consts.EXACT_CAPACITY:
             if self.event == consts.CLUSTER_SCALE_IN:
@@ -133,46 +151,61 @@ class ScalingPolicy(base.Policy):
         return count
 
     def pre_op(self, cluster_id, action):
+        """The hook function that is executed before the action.
 
-        status = base.CHECK_OK
-        reason = _('Scaling request validated.')
+        The checking result is stored in the ``data`` property of the action
+        object rather than returned directly from the function.
 
-        cluster = db_api.cluster_get(action.context, cluster_id)
-        nodes = db_api.node_get_all(action.context, cluster_id,
-                                    filters={'status': 'ACTIVE'})
-        current_size = len(nodes)
-        count = self._calculate_adjustment_count(current_size)
+        :param cluster_id: The ID of the target cluster.
+        :param action: Action instance against which the policy is being
+                       checked.
+        :return: None.
+        """
 
         # Use action input if count is provided
-        count = int(action.inputs.get('count', count))
+        count = action.inputs.get('count', None)
+        current = db_api.node_count_by_cluster(action.context, cluster_id)
+        if count is None:
+            # count not specified, calculate it
+            count = self._calculate_adjustment_count(current)
 
-        if count <= 0:
-            status = base.CHECK_ERROR
-            reason = _("Count (%(count)s) invalid for action %(action)s."
-                       ) % {'count': count, 'action': action.action}
+        # Count must be positive value
+        try:
+            count = utils.parse_int_param('count', count, allow_zero=False)
+        except exception.InvalidParameter:
+            action.data.update({
+                'status': base.CHECK_ERROR,
+                'reason': _("Invalid count (%(c)s) for action '%(a)s'."
+                            ) % {'c': count, 'a': action.action}
+            })
+            action.store(action.context)
+            return
 
         # Check size constraints
+        cluster = db_api.cluster_get(action.context, cluster_id)
         if action.action == consts.CLUSTER_SCALE_IN:
-            new_size = current_size - count
-            if (new_size < cluster.min_size):
-                if self.best_effort:
-                    count = current_size - cluster.min_size
-                    reason = _('Do best effort scaling.')
-                else:
-                    status = base.CHECK_ERROR
-                    reason = _('Attempted scaling below minimum size.')
+            if self.best_effort:
+                count = current - cluster.min_size
+            result = su.check_size_params(cluster, current - count,
+                                          strict=not self.best_effort)
         else:
-            new_size = current_size + count
-            if (new_size > cluster.max_size):
-                if self.best_effort:
-                    count = cluster.max_size - current_size
-                    reason = _('Do best effort scaling.')
-                else:
-                    status = base.CHECK_ERROR
-                    reason = _('Attempted scaling above maximum size.')
+            if self.best_effort:
+                count = cluster.max_size - current
+            result = su.check_size_params(cluster, current + count,
+                                          strict=not self.best_effort)
 
-        pd = {'status': status, 'reason': reason}
-        if status == base.CHECK_OK:
+        if result:
+            # failed validation
+            pd = {
+                'status': base.CHECK_ERROR,
+                'reason': result
+            }
+        else:
+            # passed validation
+            pd = {
+                'status': base.CHECK_OK,
+                'reason': _('Scaling request validated.'),
+            }
             if action.action == consts.CLUSTER_SCALE_IN:
                 pd['deletion'] = {'count': count}
             else:
