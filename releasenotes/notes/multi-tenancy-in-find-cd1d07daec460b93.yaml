@@ -1,0 +1,4 @@
+---
+features:
+  - Added support to multi-tenancy (aka. project_safe checking) when finding
+    resources.

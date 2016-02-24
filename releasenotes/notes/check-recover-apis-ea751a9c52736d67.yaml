@@ -1,0 +1,3 @@
+---
+features:
+  - Added new APIs for cluster/node check and recover.

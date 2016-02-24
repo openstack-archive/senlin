@@ -1,0 +1,3 @@
+---
+fixes:
+  - Fixed parameter checking when listing resources, such as sort and filters.
