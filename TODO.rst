@@ -18,12 +18,8 @@ API
 
 POLICY
 ------
-  - [???] Investigate the impact of node-create and node-delete on certain policies.
 
-DOC
------
-  - Provide document(or docstring) for policy data passing for developers.
-  - Provide documentation for existing policies.
+  - Investigate the impact of node-create and node-delete on certain policies.
 
 
 MIDDLE PRIORITY
@@ -31,13 +27,14 @@ MIDDLE PRIORITY
 
 API
 ---
-  - According to the guidelines from API WG, we need to support `page_reverse`
-    as a pagination parameter. https://review.openstack.org/190743
-
+  - Support advanced filters as suggested by the API WG:
+    `Filtering Guidelines`_
+  - Support to ``os-request-id`` when serving api requests.
 
 PROFILE
 -------
-  - [???] Add support to template_url for heat stack profile. If template and template_url
+
+  - Add support to template_url for heat stack profile. If template and template_url
     are both specified, use template. Need to refer to heat api test for testing heat
     profile.
 
@@ -64,8 +61,7 @@ ENGINE
     actions such as health checking.
   - Add support to replace a cluster node with another node.
   - Provide support to oslo.notification and allow nodes to receive and react
-    to those notifications accordingly.
-    [https://ask.openstack.org/en/question/46495/heat-autoscaling-adaptation-actions-on-existing-servers/]
+    to those notifications accordingly: `Autoscaling Notifications`_
 
 POLICY
 ------
@@ -80,3 +76,7 @@ Receiver
 DOC
 -----
   - Provide a sample conf file for customizing senlin options.
+
+
+.. _`Filtering Guidelines`: http://specs.openstack.org/openstack/api-wg/guidelines/pagination_filter_sort.html#filtering
+.. _`Autoscaling Notifications`: https://ask.openstack.org/en/question/46495/heat-autoscaling-adaptation-actions-on-existing-servers/
