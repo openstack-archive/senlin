@@ -168,6 +168,20 @@ class ClusterPolicies(BASE, SenlinBase):
     last_op = Column(DateTime)
 
 
+class HealthRegistry(BASE, SenlinBase):
+    """Clusters registered for health management."""
+
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+    __tablename__ = 'health_registry'
+
+    id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
+    cluster_id = Column(String(36), ForeignKey('cluster.id'), nullable=False)
+    check_type = Column('check_type', String(255))
+    interval = Column(Integer)
+    params = Column(types.Dict)
+    engine_id = Column('engine_id', String(36))
+
+
 class Receiver(BASE, TimestampMixin, models.ModelBase):
     """Represents a receiver associated with a Senlin cluster."""
 

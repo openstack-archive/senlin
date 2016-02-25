@@ -1224,6 +1224,47 @@ def service_get_all(context):
     return model_query(context, models.Service).all()
 
 
+# HealthRegistry
+def registry_claim(context, engine_id):
+    session = _session(context)
+    session.begin()
+    registries = session.query(models.HealthRegistry).all()
+    for registry in registries:
+        service = session.query(models.Service).filter_by(
+            id=registry.engine_id)
+        if service.count() == 0:
+            values = {'engine_id': engine_id}
+            registry.update(values)
+            registry.save(_session(context))
+    session.commit()
+    session.expire_all()
+    return registries
+
+
+def registry_delete(context, cluster_id):
+    session = _session(context)
+    registry = session.query(models.HealthRegistry).filter_by(
+        cluster_id=cluster_id).first()
+    if registry is None:
+        return
+    session.begin()
+    session.delete(registry)
+    session.commit()
+    session.flush()
+
+
+def registry_create(context, cluster_id, check_type, interval, params,
+                    engine_id):
+    registry = models.HealthRegistry()
+    registry.cluster_id = cluster_id
+    registry.check_type = check_type
+    registry.interval = interval
+    registry.params = params
+    registry.engine_id = engine_id
+    registry.save(_session(context))
+    return registry
+
+
 # Utils
 def db_sync(engine, version=None):
     """Migrate the database to `version` or the most recent version."""
