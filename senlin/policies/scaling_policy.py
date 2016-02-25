@@ -185,12 +185,12 @@ class ScalingPolicy(base.Policy):
         cluster = db_api.cluster_get(action.context, cluster_id)
         if action.action == consts.CLUSTER_SCALE_IN:
             if self.best_effort:
-                count = current - cluster.min_size
+                count = min(count, current - cluster.min_size)
             result = su.check_size_params(cluster, current - count,
                                           strict=not self.best_effort)
         else:
             if self.best_effort:
-                count = cluster.max_size - current
+                count = min(count, cluster.max_size - current)
             result = su.check_size_params(cluster, current + count,
                                           strict=not self.best_effort)
 
