@@ -140,8 +140,8 @@ class TestScalingPolicy(base.SenlinFunctionalTest):
         action = test_utils.wait_for_status(test_api.get_action, self.client,
                                             action_id, 'FAILED')
 
-        reason = _("Policy check failure: Attempted scaling below minimum "
-                   "size.")
+        reason = _("Policy check failure: The target capacity (-1) is less "
+                   "than the cluster's min_size (0).")
         self.assertEqual(reason, action['status_reason'])
 
         # Verify cluster scale in result
