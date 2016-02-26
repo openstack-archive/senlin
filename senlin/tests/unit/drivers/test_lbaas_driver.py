@@ -19,7 +19,6 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.drivers.openstack import lbaas
 from senlin.drivers.openstack import neutron_v2
-from senlin.engine import event as EVENT
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -163,8 +162,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.lb_driver._wait_for_lb_ready.assert_has_calls(
             calls, any_order=False)
 
-    @mock.patch.object(EVENT, 'warning')
-    def test_lb_create_loadbalancer_creation_failed(self, mock_event):
+    def test_lb_create_loadbalancer_creation_failed(self):
         lb_obj = mock.Mock()
         lb_obj.id = 'LB_ID'
         subnet_obj = mock.Mock()
@@ -204,11 +202,9 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.assertFalse(status)
         msg = _('Failed in creating loadbalancer: CREATE FAILED.')
         self.assertEqual(msg, res)
-        self.assertTrue(mock_event.called)
 
-    @mock.patch.object(EVENT, 'warning')
     @mock.patch.object(eventlet, 'sleep')
-    def test_lb_create_listener_creation_failed(self, mock_sleep, mock_event):
+    def test_lb_create_listener_creation_failed(self, mock_sleep):
         lb_obj = mock.Mock()
         listener_obj = mock.Mock()
         lb_obj.id = 'LB_ID'
@@ -247,10 +243,8 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.assertFalse(status)
         msg = _('Failed in creating lb listener: CREATE FAILED.')
         self.assertEqual(msg, res)
-        self.assertTrue(mock_event.called)
 
-    @mock.patch.object(EVENT, 'warning')
-    def test_lb_create_pool_creation_failed(self, mock_event):
+    def test_lb_create_pool_creation_failed(self):
         lb_obj = mock.Mock()
         listener_obj = mock.Mock()
         pool_obj = mock.Mock()
@@ -295,10 +289,8 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.assertFalse(status)
         msg = _('Failed in creating lb pool: CREATE FAILED.')
         self.assertEqual(msg, res)
-        self.assertTrue(mock_event.called)
 
-    @mock.patch.object(EVENT, 'warning')
-    def test_lb_create_healthmonitor_creation_failed(self, mock_event):
+    def test_lb_create_healthmonitor_creation_failed(self):
         lb_obj = mock.Mock()
         listener_obj = mock.Mock()
         pool_obj = mock.Mock()
@@ -339,7 +331,6 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.assertFalse(status)
         msg = _('Failed in creating lb health monitor: CREATE FAILED.')
         self.assertEqual(msg, res)
-        self.assertTrue(mock_event.called)
 
     def test_lb_delete(self):
         kwargs = {
@@ -362,8 +353,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.lb_driver._wait_for_lb_ready.assert_has_calls(
             calls, any_order=False)
 
-    @mock.patch.object(EVENT, 'warning')
-    def test_lb_healthmonitor_delete_internalerror(self, mock_event):
+    def test_lb_healthmonitor_delete_internalerror(self):
         kwargs = {
             'loadbalancer': 'LB_ID',
             'listener': 'LISTENER_ID',
@@ -376,10 +366,8 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.assertFalse(status)
         msg = _('Failed in deleting healthmonitor: DELETE FAILED.')
         self.assertEqual(msg, res)
-        self.assertTrue(mock_event.called)
 
-    @mock.patch.object(EVENT, 'warning')
-    def test_lb_pool_delete_internalerror(self, mock_event):
+    def test_lb_pool_delete_internalerror(self):
         kwargs = {
             'loadbalancer': 'LB_ID',
             'listener': 'LISTENER_ID',
@@ -394,10 +382,8 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.assertFalse(status)
         msg = _('Failed in deleting lb pool: DELETE FAILED.')
         self.assertEqual(msg, res)
-        self.assertTrue(mock_event.called)
 
-    @mock.patch.object(EVENT, 'warning')
-    def test_lb_listener_delete_internalerror(self, mock_event):
+    def test_lb_listener_delete_internalerror(self):
         kwargs = {
             'loadbalancer': 'LB_ID',
             'listener': 'LISTENER_ID',
@@ -412,7 +398,6 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.assertFalse(status)
         msg = _('Failed in deleting listener: DELETE FAILED.')
         self.assertEqual(msg, res)
-        self.assertTrue(mock_event.called)
 
     def test_lb_delete_no_physical_object(self):
         kwargs = {'loadbalancer': 'LB_ID'}
@@ -429,9 +414,8 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.lb_driver._wait_for_lb_ready.assert_called_once_with(
             'LB_ID', ignore_not_found=True)
 
-    @mock.patch.object(EVENT, 'warning')
     @mock.patch.object(oslo_context, 'get_current')
-    def test_member_add(self, mock_get_current, mock_event):
+    def test_member_add(self, mock_get_current):
         node = mock.Mock()
         lb_id = 'LB_ID'
         pool_id = 'POOL_ID'
@@ -473,7 +457,6 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
             code=500, message="Can't find subnet1")
         res = self.lb_driver.member_add(node, lb_id, pool_id, port, subnet)
         self.assertIsNone(res)
-        self.assertTrue(mock_event.called)
 
         # Exception happens in network_get
         self.nc.subnet_get.side_effect = None
@@ -482,7 +465,6 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
             code=500, message="Can't find NETWORK_ID")
         res = self.lb_driver.member_add(node, lb_id, pool_id, port, subnet)
         self.assertIsNone(res)
-        self.assertTrue(mock_event.called)
 
         # Exception happens in pool_member_create
         self.nc.subnet_get.side_effect = None
@@ -493,7 +475,6 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
             code=500, message="CREATE FAILED")
         res = self.lb_driver.member_add(node, lb_id, pool_id, port, subnet)
         self.assertIsNone(res)
-        self.assertTrue(mock_event.called)
 
     @mock.patch.object(oslo_context, 'get_current')
     def test_member_add_node_not_in_subnet(self, mock_get_current):
@@ -534,8 +515,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.nc.pool_member_delete.assert_called_once_with(pool_id, member_id)
         self.lb_driver._wait_for_lb_ready.assert_called_once_with(lb_id)
 
-    @mock.patch.object(EVENT, 'warning')
-    def test_member_remove_failed(self, mock_event):
+    def test_member_remove_failed(self):
         lb_id = 'LB_ID'
         pool_id = 'POOL_ID'
         member_id = 'MEMBER_ID'
@@ -547,7 +527,6 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         res = self.lb_driver.member_remove(lb_id, pool_id, member_id)
         self.assertFalse(res)
         self.nc.pool_member_delete.assert_called_once_with(pool_id, member_id)
-        self.assertTrue(mock_event.called)
 
         self.nc.pool_member_delete.side_effect = None
         self.lb_driver._wait_for_lb_ready.return_value = False
