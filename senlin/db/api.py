@@ -429,6 +429,23 @@ def service_get_all(context):
     return IMPL.service_get_all(context)
 
 
+def registry_create(context, cluster_id, check_type, interval, params,
+                    engine_id):
+    return IMPL.registry_create(context, cluster_id=cluster_id,
+                                check_type=check_type,
+                                interval=interval,
+                                params=params,
+                                engine_id=engine_id)
+
+
+def registry_delete(context, cluster_id):
+    return IMPL.registry_delete(context, cluster_id)
+
+
+def registry_claim(context, engine_id):
+    return IMPL.registry_claim(context, engine_id=engine_id)
+
+
 def db_sync(engine, version=None):
     """Migrate the database to `version` or the most recent version."""
     return IMPL.db_sync(engine, version=version)
