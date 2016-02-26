@@ -53,9 +53,9 @@ class LoadBalancingPolicy(base.Policy):
     ]
 
     KEYS = (
-        POOL, VIP,
+        POOL, VIP, HEALTH_MONITOR,
     ) = (
-        'pool', 'vip',
+        'pool', 'vip', 'health_monitor',
     )
 
     _POOL_KEYS = (
@@ -78,12 +78,32 @@ class LoadBalancingPolicy(base.Policy):
         'ROUND_ROBIN', 'LEAST_CONNECTIONS', 'SOURCE_IP',
     )
 
+    HEALTH_MONITOR_TYPES = (
+        PING, TCP, HTTP, HTTPS,
+    ) = (
+        'PING', 'TCP', 'HTTP', 'HTTPS',
+    )
+
+    HTTP_METHODS = (
+        GET, POST, PUT, DELETE,
+    ) = (
+        'GET', 'POST', 'PUT', 'DELETE',
+    )
+
     _VIP_KEYS = (
         VIP_SUBNET, VIP_ADDRESS, VIP_CONNECTION_LIMIT, VIP_PROTOCOL,
         VIP_PROTOCOL_PORT, VIP_ADMIN_STATE_UP,
     ) = (
         'subnet', 'address', 'connection_limit', 'protocol',
         'protocol_port', 'admin_state_up',
+    )
+
+    HEALTH_MONITOR_KEYS = (
+        HM_TYPE, HM_DELAY, HM_TIMEOUT, HM_MAX_RETRIES, HM_ADMIN_STATE_UP,
+        HM_HTTP_METHOD, HM_URL_PATH, HM_EXPECTED_CODES,
+    ) = (
+        'type', 'delay', 'timeout', 'max_retries', 'admin_state_up',
+        'http_method', 'url_path', 'expected_codes',
     )
 
     _SESSION_PERSISTENCE_KEYS = (
@@ -180,6 +200,51 @@ class LoadBalancingPolicy(base.Policy):
                 ),
             },
         ),
+        HEALTH_MONITOR: schema.Map(
+            _('Health monitor for loadbalancer.'),
+            schema={
+                HM_TYPE: schema.String(
+                    _('The type of probe sent by the load balancer to verify '
+                      'the member state.'),
+                    constraints=[
+                        constraints.AllowedValues(HEALTH_MONITOR_TYPES),
+                    ],
+                    default=PING,
+                ),
+                HM_DELAY: schema.Integer(
+                    _('The amount of time in seconds between sending '
+                      'probes to members.'),
+                    default=10,
+                ),
+                HM_TIMEOUT: schema.Integer(
+                    _('The maximum time in seconds that a monitor waits to '
+                      'connect before it times out.'),
+                    default=5,
+                ),
+                HM_MAX_RETRIES: schema.Integer(
+                    _('The number of allowed connection failures before '
+                      'changing the status of the member to INACTIVE.'),
+                    default=3,
+                ),
+                HM_ADMIN_STATE_UP: schema.Boolean(
+                    _('Administrative state of the health monitor.'),
+                    default=True,
+                ),
+                HM_HTTP_METHOD: schema.String(
+                    _('The HTTP method that the monitor uses for requests.'),
+                    constraints=[
+                        constraints.AllowedValues(HTTP_METHODS),
+                    ],
+                ),
+                HM_URL_PATH: schema.String(
+                    _('The HTTP path of the request sent by the monitor to '
+                      'test the health of a member.'),
+                ),
+                HM_EXPECTED_CODES: schema.String(
+                    _('Expected HTTP codes for a passing HTTP(S) monitor.'),
+                ),
+            },
+        ),
     }
 
     def __init__(self, name, spec, **kwargs):
@@ -187,6 +252,7 @@ class LoadBalancingPolicy(base.Policy):
 
         self.pool_spec = self.properties.get(self.POOL, {})
         self.vip_spec = self.properties.get(self.VIP, {})
+        self.hm_spec = self.properties.get(self.HEALTH_MONITOR, None)
         self.validate()
         self.lb = None
 
@@ -213,7 +279,8 @@ class LoadBalancingPolicy(base.Policy):
         params = self._build_conn_params(cluster)
         lb_driver = driver_base.SenlinDriver().loadbalancing(params)
 
-        res, data = lb_driver.lb_create(self.vip_spec, self.pool_spec)
+        res, data = lb_driver.lb_create(self.vip_spec, self.pool_spec,
+                                        self.hm_spec)
         if res is False:
             return False, data
 

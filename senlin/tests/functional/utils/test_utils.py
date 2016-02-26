@@ -63,6 +63,16 @@ spec_lb_policy = {
             "connection_limit": 100,
             "protocol": "HTTP",
             "protocol_port": 80
+        },
+        "health_monitor": {
+            "type": "HTTP",
+            "delay": "1",
+            "timeout": 1,
+            "max_retries": 5,
+            "admin_state_up": True,
+            "http_method": "GET",
+            "url_path": "/index.html",
+            "expected_codes": "200,201,202"
         }
     }
 }

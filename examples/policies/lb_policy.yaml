@@ -39,3 +39,29 @@ properties:
 
     # TCP port to listen on
     protocol_port: 80
+
+  health_monitor:
+    # The type of probe sent by the load balancer to verify the member state,
+    # can be PING, TCP, HTTP, or HTTPS.
+    type: 'PING'
+
+    # The amount of time, in seconds, between sending probes to members.
+    delay: 10
+
+    # The maximum time in seconds that a monitor waits to connect before it
+    # times out. This value must be less than the delay value.
+    timeout: 5
+
+    # The number of allowed connection failures before changing the status
+    # of the member to INACTIVE. A valid value is from 1 to 10.
+    max_retries: 4
+
+    # The HTTP method that the monitor uses for requests.
+    http_method: 'GET'
+
+    # The HTTP path of the request sent by the monitor to test the health of
+    # a member. A string value that must begin with the forward slash '/'.
+    url_path: '/index.html'
+
+    # Expected HTTP codes for a passing HTTP(S) monitor.
+    expected_codes: '200, 202'

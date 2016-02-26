@@ -52,6 +52,16 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
                     'protocol': 'HTTP',
                     'protocol_port': 80,
                     'admin_state_up': True,
+                },
+                'health_monitor': {
+                    'type': 'HTTP',
+                    'delay': 10,
+                    'timeout': 5,
+                    'max_retries': 3,
+                    'admin_state_up': True,
+                    'http_method': 'GET',
+                    'url_path': '/index.html',
+                    'expected_codes': '200,201,202'
                 }
             }
         }
@@ -145,7 +155,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         self.assertTrue(res)
         self.assertEqual('policy_data', data)
         self.lb_driver.lb_create.assert_called_once_with(policy.vip_spec,
-                                                         policy.pool_spec)
+                                                         policy.pool_spec,
+                                                         policy.hm_spec)
         m_load.assert_called_once_with(mock.ANY, cluster_id=cluster.id)
         member_add_calls = [
             mock.call(node1, 'LB_ID', 'POOL_ID', 80, 'test-subnet'),
@@ -343,6 +354,16 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
                     'protocol': 'HTTP',
                     'protocol_port': 80,
                     'admin_state_up': True,
+                },
+                'health_monitor': {
+                    'type': 'HTTP',
+                    'delay': '1',
+                    'timeout': 1,
+                    'max_retries': 5,
+                    'admin_state_up': True,
+                    'http_method': 'GET',
+                    'url_path': '/index.html',
+                    'expected_codes': '200,201,202'
                 }
             }
         }
