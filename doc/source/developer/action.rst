@@ -259,8 +259,6 @@ following query parameters in the query string:
     can be a string or a list of strings;
   * ``action``: the builtin action for matching where the value can be a
     string or a list of strings;
-  * ``created_at``: the timestamp the action was created;
-  * ``updated_at``: the timestamp the action as last updated.
 
 - ``limit``: a number that restricts the maximum number of action records to be
   returned from the query. It is useful for displaying the records in pages
