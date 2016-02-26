@@ -27,7 +27,7 @@ LOG = logging.getLogger(__name__)
 
 
 class LoadBalancerDriver(base.DriverBase):
-    """Load-balancing driver based on Neutron LBaaS service."""
+    """Load-balancing driver based on Neutron LBaaS V2 service."""
 
     def __init__(self, params):
         super(LoadBalancerDriver, self).__init__(params)
@@ -80,11 +80,12 @@ class LoadBalancerDriver(base.DriverBase):
 
         return False
 
-    def lb_create(self, vip, pool):
+    def lb_create(self, vip, pool, hm):
         """Create a LBaaS instance
 
         :param vip: A dict containing the properties for the VIP;
         :param pool: A dict describing the pool of load-balancer members.
+        :param pool: A dict describing the health monitor.
         """
         def _cleanup(msg, **kwargs):
             LOG.error(msg)
@@ -158,6 +159,28 @@ class LoadBalancerDriver(base.DriverBase):
         res = self._wait_for_lb_ready(lb.id)
         if res is False:
             msg = _LE('Failed in creating pool (%s).') % pool.id
+            _cleanup(msg, **result)
+            return res, msg
+
+        # Create health monitor
+        try:
+            health_monitor = self.nc().healthmonitor_create(
+                hm['type'], hm['delay'], hm['timeout'], hm['max_retries'],
+                pool.id, hm['admin_state_up'], hm['http_method'],
+                hm['url_path'], hm['expected_codes'])
+        except exception.InternalError as ex:
+            msg = _LE('Failed in creating lb health monitor: %s.'
+                      ) % six.text_type(ex)
+            LOG.exception(msg)
+            EVENT.warning(oslo_context.get_current(), self,
+                          'HEALTH_MONITOR_CREATE',
+                          'ERROR', msg)
+            return False, msg
+        result['healthmonitor'] = health_monitor.id
+        res = self._wait_for_lb_ready(lb.id)
+        if res is False:
+            msg = _LE('Failed in creating health monitor (%s).'
+                      ) % health_monitor.id
             _cleanup(msg, **result)
             return res, msg
 
