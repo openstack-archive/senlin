@@ -95,10 +95,10 @@ class Receiver(object):
             # use object owner if request is from admin
             cred = db_api.cred_get(context, cluster.user, cluster.project)
             trust_id = cred['cred']['openstack']['trust']
-            cdata['trust_id'] = [trust_id]
+            cdata['trust_id'] = trust_id
         else:
             # otherwise, use context user
-            cdata['trust_id'] = [context.trusts]
+            cdata['trust_id'] = context.trusts
 
         kwargs['id'] = uuidutils.generate_uuid()
         kwargs['actor'] = cdata
