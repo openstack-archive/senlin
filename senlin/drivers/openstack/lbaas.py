@@ -80,7 +80,7 @@ class LoadBalancerDriver(base.DriverBase):
 
         return False
 
-    def lb_create(self, vip, pool, hm):
+    def lb_create(self, vip, pool, hm=None):
         """Create a LBaaS instance
 
         :param vip: A dict containing the properties for the VIP;
@@ -161,6 +161,9 @@ class LoadBalancerDriver(base.DriverBase):
             msg = _LE('Failed in creating pool (%s).') % pool.id
             _cleanup(msg, **result)
             return res, msg
+
+        if not hm:
+            return True, result
 
         # Create health monitor
         try:
