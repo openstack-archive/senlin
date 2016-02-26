@@ -68,8 +68,6 @@ combined:
 
   * ``name``: name of policies to list, can be a string or a list of strings;
   * ``type``: type name of policies, can be a string or a list of strings;
-  * ``created_at``: timestamp when the object was created;
-  * ``updated_at``: timestamp when the policy object was last updated;
 
 - ``limit``: a number that restricts the maximum number of records to be
   returned from the query. It is useful for displaying the records in pages
