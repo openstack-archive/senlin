@@ -11,7 +11,7 @@
 # under the License.
 
 """
-Policy for placing nodes across AZs and/or regions.
+Policy for placing nodes based on Nova server groups.
 
 NOTE: How placement policy works
 Input:
@@ -49,6 +49,7 @@ import six
 
 from oslo_context import context as oslo_context
 from oslo_log import log as logging
+from senlin.common import constraints
 from senlin.common import consts
 from senlin.common import exception
 from senlin.common.i18n import _
@@ -65,13 +66,15 @@ LOG = logging.getLogger(__name__)
 
 
 class vSphereDRSPolicy(policy_base.Policy):
-    '''Policy for placing members of a cluster.
+    """Policy for placing members of a cluster based on server groups.
 
     This policy is expected to be enforced before new member(s) added to an
     existing cluster.
-    '''
+    """
 
     VERSION = '1.0'
+
+    PRIORITY = 300
 
     # TODO(Xinhui Li): support resize
     TARGET = [
@@ -83,26 +86,36 @@ class vSphereDRSPolicy(policy_base.Policy):
     ]
 
     KEYS = (
-        PLACEMENT_GROUP
+        SERVER_GROUP
     ) = (
-        'placement_group'
+        'server_group'
     )
 
     _GROUP_KEYS = (
-        GROUP_NAME, PLACEMENT_RULE,
+        GROUP_NAME, GROUP_POLICIES,
     ) = (
-        'group_name', 'placement_rule',
+        'name', 'policies',
+    )
+
+    _GROUP_POLICIES = (
+        AFFINITY, ANTI_AFFINITY,
+    ) = (
+        'affinity', 'anti-affinity',
     )
 
     properties_schema = {
-        PLACEMENT_GROUP: schema.Map(
-            _('group where place nodes'),
+        SERVER_GROUP: schema.Map(
+            _('Properties of the VM server group'),
             schema={
                 GROUP_NAME: schema.String(
-                    _('the name of given server_group'),
+                    _('The name of the server group'),
                 ),
-                PLACEMENT_RULE: schema.String(
-                    _('the affinity or anti-affintiy control rule'),
+                GROUP_POLICIES: schema.String(
+                    _('The server group policies.'),
+                    default=AFFINITY,
+                    constraints=[
+                        constraints.AllowedValues(_GROUP_POLICIES),
+                    ],
                 ),
             },
         ),
@@ -133,10 +146,10 @@ class vSphereDRSPolicy(policy_base.Policy):
                   message); otherwise, return a tuple (False, error).
         """
         data = {}
-        nv_client = self.nova(cluster)
+        nc = self.nova(cluster)
 
-        placement_group = self.properties.get(self.PLACEMENT_GROUP)
-        group_name = placement_group.get('group_name', None)
+        group = self.properties.get(self.SERVER_GROUP)
+        group_name = group.get(self.GROUP_NAME, None)
 
         if group_name is None:
             profile = profile_base.Profile.load(
@@ -146,11 +159,10 @@ class vSphereDRSPolicy(policy_base.Policy):
                 group_name = hints.get('group', None)
 
         if group_name is not None:
-            # to add into nova driver
             try:
-                server_group = nv_client.get_server_group(group_name)
+                server_group = nc.get_server_group(group_name)
             except exception.InternalError as ex:
-                msg = 'Failed in searching server_group'
+                msg = _('Failed in retrieving server group')
                 LOG.exception(_LE('%(msg)s: %(ex)s') % {
                     'msg': msg, 'ex': six.text_type(ex)})
                 return False, msg
@@ -158,13 +170,12 @@ class vSphereDRSPolicy(policy_base.Policy):
             data['inherited_group'] = True
 
         if data.get('group_id') is None:
-            # to add into nova driver
-            rule = placement_group.get('placement_rule', 'anti-affinity')
+            policies = group.get(self.GROUP_POLICIES, self.ANTI_AFFINITY)
 
             try:
-                server_group = nv_client.create_server_group(rule)
+                server_group = nc.create_server_group(policies)
             except exception.InternalError as ex:
-                msg = 'Failed in creating server_group'
+                msg = _('Failed in creating server group')
                 LOG.exception(_LE('%(msg)s: %(ex)s') % {
                     'msg': msg, 'ex': six.text_type(ex)})
                 return False, msg
@@ -201,10 +212,9 @@ class vSphereDRSPolicy(policy_base.Policy):
 
         if group_id and not inherited_group:
             try:
-                # to add into nova driver
                 self.nova(cluster).delete_server_group(group_id)
             except exception.InternalError as ex:
-                msg = 'Failed in deleting server_group'
+                msg = _('Failed in deleting server group')
                 LOG.exception(_LE('%(msg)s: %(ex)s') % {
                     'msg': msg, 'ex': six.text_type(ex)})
                 return False, msg
@@ -228,11 +238,11 @@ class vSphereDRSPolicy(policy_base.Policy):
 
         if not action.context.is_admin:
             action.data['status'] = policy_base.CHECK_ERROR
-            action.data['status_reason'] = 'Policy only applicable to ' \
-                                           'admin-owned clusters.'
+            action.data['status_reason'] = _('Policy only applicable to '
+                                             'admin-owned clusters.')
             return
 
-        pd = action.data.get('placement', None)
+        pd = action.data.get('creation', None)
 
         if pd is not None:
             self.count = pd.get('count', 1)
@@ -243,19 +253,21 @@ class vSphereDRSPolicy(policy_base.Policy):
             zone_name = 'nova'
 
         cluster = cluster_mod.Cluster.load(action.context, cluster_id)
-        nv_client = self.nova(cluster)
+        nc = self.nova(cluster)
 
-        hypervisors = nv_client.get_hypervisors()
-        hypervisor_id = ''
+        hypervisors = nc.get_hypervisors()
+        hv_id = ''
         pattern = re.compile(r'.*drs*', re.I)
         for hypervisor in hypervisors:
             match = pattern.match(hypervisor.hypervisor_hostname)
             if match:
-                hypervisor_id = hypervisor.id
+                hv_id = hypervisor.id
                 break
-        hypervisor_info = nv_client.get_hypervisor_by_id(hypervisor_id)
-        hypervisor_host_name = hypervisor_info['service']['host']
-        zone_host_name = zone_name + ":" + hypervisor_host_name
+
+        if hv_id:
+            hv_info = nc.get_hypervisor_by_id(hv_id)
+            hostname = hv_info['service']['host']
+            zone_host_name = ":".join([zone_name, hostname])
 
         cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
                                                self.id)

@@ -30,7 +30,7 @@ class TestvSphereDRSPolicy(base.SenlinTestCase):
             'type': 'senlin.policy.vSphereDRSPolicy',
             'version': '1.0',
             'properties': {
-                'placement_group': {}
+                'server_group': {}
             },
         }
         profile = mock.Mock()
@@ -85,8 +85,7 @@ class TestvSphereDRSPolicy(base.SenlinTestCase):
         res, data = policy.attach(self.cluster)
 
         self.assertFalse(res)
-        self.assertEqual('Failed in searching server_group',
-                         data)
+        self.assertEqual('Failed in retrieving server group', data)
 
     @mock.patch.object(profile_base.Profile, 'load')
     def test_attach_with_rule(self, mock_load):
@@ -98,8 +97,8 @@ class TestvSphereDRSPolicy(base.SenlinTestCase):
             'type': 'senlin.policy.vSphereDRSPolicy',
             'version': '1.0',
             'properties': {
-                'placement_group': {
-                    'placement_rule': 'anti_affinity',
+                'server_group': {
+                    'policies': 'anti_affinity',
                 },
             },
         }
@@ -133,8 +132,7 @@ class TestvSphereDRSPolicy(base.SenlinTestCase):
         res, data = policy.attach(self.cluster)
 
         self.assertFalse(res)
-        self.assertEqual('Failed in creating server_group',
-                         data)
+        self.assertEqual('Failed in creating server group', data)
 
     @mock.patch.object(profile_base.Profile, 'load')
     def test_attach_with_group_name(self, mock_load):
@@ -146,8 +144,8 @@ class TestvSphereDRSPolicy(base.SenlinTestCase):
             'type': 'senlin.policy.vSphereDRSPolicy',
             'version': '1.0',
             'properties': {
-                'placement_group': {
-                    'group_name': 'GP_NAME',
+                'server_group': {
+                    'name': 'GP_NAME',
                 },
             },
         }
@@ -181,8 +179,7 @@ class TestvSphereDRSPolicy(base.SenlinTestCase):
         res, data = policy.attach(self.cluster)
 
         self.assertFalse(res)
-        self.assertEqual('Failed in searching server_group',
-                         data)
+        self.assertEqual('Failed in retrieving server group', data)
 
     @mock.patch.object(cluster_policy.ClusterPolicy, 'load')
     def test_detach_no_policy_data(self, mock_load):
@@ -235,8 +232,7 @@ class TestvSphereDRSPolicy(base.SenlinTestCase):
         res, data = policy.detach(self.cluster)
 
         self.assertFalse(res)
-        self.assertEqual('Failed in deleting server_group',
-                         data)
+        self.assertEqual('Failed in deleting server group', data)
 
     @mock.patch.object(cluster_policy.ClusterPolicy, 'load')
     @mock.patch.object(cluster_base.Cluster, 'load')
@@ -278,7 +274,7 @@ class TestvSphereDRSPolicy(base.SenlinTestCase):
 
         action = mock.Mock()
         action.context = self.context
-        action.data = {'placement': {'count': 2}}
+        action.data = {'creation': {'count': 2}}
 
         policy.pre_op(self.cluster.id, action)
 
