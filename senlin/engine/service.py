@@ -259,6 +259,9 @@ class EngineService(service.Service):
         limit = utils.parse_int_param(consts.PARAM_LIMIT, limit)
         utils.validate_sort_param(sort, consts.PROFILE_SORT_KEYS)
         project_safe = utils.parse_bool_param('project_safe', project_safe)
+        if not project_safe and not context.is_admin:
+            raise exception.Forbidden()
+
         profiles = profile_base.Profile.load_all(context,
                                                  limit=limit, marker=marker,
                                                  sort=sort, filters=filters,
@@ -453,6 +456,8 @@ class EngineService(service.Service):
         limit = utils.parse_int_param('limit', limit)
         utils.validate_sort_param(sort, consts.POLICY_SORT_KEYS)
         project_safe = utils.parse_bool_param('project_safe', project_safe)
+        if not project_safe and not context.is_admin:
+            raise exception.Forbidden()
         policies = policy_base.Policy.load_all(context,
                                                limit=limit, marker=marker,
                                                sort=sort, filters=filters,
@@ -617,6 +622,8 @@ class EngineService(service.Service):
         limit = utils.parse_int_param('limit', limit)
         utils.validate_sort_param(sort, consts.CLUSTER_SORT_KEYS)
         project_safe = utils.parse_bool_param('project_safe', project_safe)
+        if not project_safe and not context.is_admin:
+            raise exception.Forbidden()
         clusters = cluster_mod.Cluster.load_all(context, limit=limit,
                                                 marker=marker, sort=sort,
                                                 filters=filters,
@@ -1320,6 +1327,8 @@ class EngineService(service.Service):
         limit = utils.parse_int_param('limit', limit)
         utils.validate_sort_param(sort, consts.NODE_SORT_KEYS)
         project_safe = utils.parse_bool_param('project_safe', project_safe)
+        if not project_safe and not context.is_admin:
+            raise exception.Forbidden()
 
         # Maybe the cluster_id is a name or a short ID
         if cluster_id:
@@ -1836,6 +1845,8 @@ class EngineService(service.Service):
         limit = utils.parse_int_param('limit', limit)
         utils.validate_sort_param(sort, consts.ACTION_SORT_KEYS)
         project_safe = utils.parse_bool_param('project_safe', project_safe)
+        if not project_safe and not context.is_admin:
+            raise exception.Forbidden()
         results = action_mod.Action.load_all(context, filters=filters,
                                              limit=limit, marker=marker,
                                              sort=sort,
@@ -1959,7 +1970,8 @@ class EngineService(service.Service):
         limit = utils.parse_int_param('limit', limit)
         utils.validate_sort_param(sort, consts.RECEIVER_SORT_KEYS)
         project_safe = utils.parse_bool_param('project_safe', project_safe)
-
+        if not project_safe and not context.is_admin:
+            raise exception.Forbidden()
         receivers = receiver_mod.Receiver.load_all(context, limit=limit,
                                                    marker=marker,
                                                    sort=sort, filters=filters,
@@ -2146,11 +2158,15 @@ class EngineService(service.Service):
         limit = utils.parse_int_param('limit', limit)
         utils.validate_sort_param(sort, consts.EVENT_SORT_KEYS)
         project_safe = utils.parse_bool_param('project_safe', project_safe)
+        if not project_safe and not context.is_admin:
+            raise exception.Forbidden()
+
         if filters and consts.EVENT_LEVEL in filters:
             value = filters.pop(consts.EVENT_LEVEL)
             value = utils.parse_level_values(value)
             if value is not None:
                 filters[consts.EVENT_LEVEL] = value
+
         all_events = EVENT.Event.load_all(context, filters=filters,
                                           limit=limit, marker=marker,
                                           sort=sort,

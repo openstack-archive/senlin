@@ -126,14 +126,14 @@ class NodeTest(base.SenlinTestCase):
         result = self.eng.node_list(self.ctx, cluster_id='MY_CLUSTER',
                                     filters={'K': 'V'}, sort='name',
                                     limit=123, marker='MMM',
-                                    project_safe=False)
+                                    project_safe=True)
 
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
         mock_find.assert_called_once_with(self.ctx, 'MY_CLUSTER')
         mock_load.assert_called_once_with(self.ctx, cluster_id='FAKE_CLUSTER',
                                           filters={'K': 'V'}, sort='name',
                                           limit=123, marker='MMM',
-                                          project_safe=False)
+                                          project_safe=True)
 
     @mock.patch.object(node_mod.Node, 'load_all')
     def test_node_list_with_params(self, mock_load):
@@ -146,13 +146,13 @@ class NodeTest(base.SenlinTestCase):
 
         result = self.eng.node_list(self.ctx, cluster_id=None, filters='FFF',
                                     sort='status', limit=123, marker='MMM',
-                                    project_safe=False)
+                                    project_safe=True)
 
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
         mock_load.assert_called_once_with(self.ctx, cluster_id=None,
                                           filters='FFF', sort='status',
                                           limit=123, marker='MMM',
-                                          project_safe=False)
+                                          project_safe=True)
 
     def test_node_list_bad_limit(self):
         ex = self.assertRaises(rpc.ExpectedException,
@@ -190,6 +190,44 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual("The cluster (BOGUS) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'BOGUS')
+
+    @mock.patch.object(node_mod.Node, 'load_all')
+    def test_node_list_with_project_safe(self, mock_load):
+        mock_load.return_value = []
+
+        result = self.eng.node_list(self.ctx)
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
+                                          sort=None, marker=None,
+                                          cluster_id=None, project_safe=True)
+        mock_load.reset_mock()
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_list,
+                               self.ctx, project_safe=False)
+        self.assertEqual(exc.Forbidden, ex.exc_info[0])
+
+        self.ctx.is_admin = True
+
+        result = self.eng.node_list(self.ctx)
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
+                                          sort=None, marker=None,
+                                          cluster_id=None, project_safe=True)
+        mock_load.reset_mock()
+
+        result = self.eng.node_list(self.ctx, project_safe=True)
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
+                                          sort=None, marker=None,
+                                          cluster_id=None, project_safe=True)
+        mock_load.reset_mock()
+
+        result = self.eng.node_list(self.ctx, project_safe=False)
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
+                                          sort=None, marker=None,
+                                          cluster_id=None, project_safe=False)
 
     @mock.patch.object(node_mod.Node, 'load_all')
     def test_node_list_empty(self, mock_load):

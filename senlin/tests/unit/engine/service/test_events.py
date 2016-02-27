@@ -106,13 +106,13 @@ class EventTest(base.SenlinTestCase):
 
         result = self.eng.event_list(self.ctx, filters='FFF', sort='level',
                                      limit=123, marker='MMM',
-                                     project_safe=False)
+                                     project_safe=True)
 
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
         mock_load.assert_called_once_with(self.ctx,
                                           filters='FFF', sort='level',
                                           limit=123, marker='MMM',
-                                          project_safe=False)
+                                          project_safe=True)
 
     def test_event_list_bad_limit(self):
         ex = self.assertRaises(rpc.ExpectedException,
@@ -140,6 +140,44 @@ class EventTest(base.SenlinTestCase):
         self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
         self.assertEqual("Invalid value 'yes' specified for 'project_safe'",
                          six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(EVENT.Event, 'load_all')
+    def test_event_list_with_project_safe(self, mock_load):
+        mock_load.return_value = []
+
+        result = self.eng.event_list(self.ctx)
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
+                                          sort=None, marker=None,
+                                          project_safe=True)
+        mock_load.reset_mock()
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.event_list,
+                               self.ctx, project_safe=False)
+        self.assertEqual(exc.Forbidden, ex.exc_info[0])
+
+        self.ctx.is_admin = True
+
+        result = self.eng.event_list(self.ctx)
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
+                                          sort=None, marker=None,
+                                          project_safe=True)
+        mock_load.reset_mock()
+
+        result = self.eng.event_list(self.ctx, project_safe=True)
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
+                                          sort=None, marker=None,
+                                          project_safe=True)
+        mock_load.reset_mock()
+
+        result = self.eng.event_list(self.ctx, project_safe=False)
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
+                                          sort=None, marker=None,
+                                          project_safe=False)
 
     @mock.patch.object(EVENT.Event, 'load_all')
     def test_event_list_empty(self, mock_load):
