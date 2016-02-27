@@ -41,12 +41,15 @@ def parse_exception(ex):
             code = ex.http_status
         message = ex.message
         data = {}
-        try:
-            data = jsonutils.loads(ex.details)
-        except Exception:
-            # Some exceptions don't have details record or
-            # are not in JSON format
-            pass
+        if ex.details is None:
+            data = ex.response.json()
+        else:
+            try:
+                data = jsonutils.loads(ex.details)
+            except Exception:
+                # Some exceptions don't have details record or
+                # are not in JSON format
+                pass
 
         # try dig more into the exception record
         # usually 'data' has two types of format :
