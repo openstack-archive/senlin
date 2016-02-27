@@ -313,7 +313,7 @@ class ClusterActionTest(base.SenlinTestCase):
 
         # assertions
         self.assertEqual(action.RES_ERROR, res_code)
-        self.assertEqual('Waiting timed out', res_msg)
+        self.assertEqual('Failed in creating nodes.', res_msg)
 
     def test_do_create_success(self, mock_load):
         cluster = mock.Mock()
@@ -497,7 +497,7 @@ class ClusterActionTest(base.SenlinTestCase):
 
         # assertions
         self.assertEqual(action.RES_TIMEOUT, res_code)
-        self.assertEqual('Timeout', res_msg)
+        self.assertEqual('Failed in updating nodes.', res_msg)
         self.assertEqual(1, mock_action.call_count)
         n_action.store.assert_called_once_with(action.context)
         self.assertEqual(1, mock_dep.call_count)
@@ -669,7 +669,7 @@ class ClusterActionTest(base.SenlinTestCase):
 
         # assertions (other assertions are skipped)
         self.assertEqual(action.RES_TIMEOUT, res_code)
-        self.assertEqual('Timeout!', res_msg)
+        self.assertEqual('Failed in deleting nodes.', res_msg)
         self.assertEqual({}, action.data)
 
     def test_do_delete_success(self, mock_load):
