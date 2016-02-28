@@ -274,6 +274,11 @@ class Action(object):
             yield cls._from_db_record(record)
 
     @classmethod
+    def create(cls, context, target, action, **kwargs):
+        obj = cls(target, action, context=context, **kwargs)
+        return obj.store(context)
+
+    @classmethod
     def delete(cls, context, action_id):
         """Delete an action from database.
 

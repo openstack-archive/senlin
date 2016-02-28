@@ -279,6 +279,16 @@ class ActionBaseTest(base.SenlinTestCase):
             marker='FAKE_MARKER', sort='FAKE_SORT',
             project_safe=True)
 
+    @mock.patch.object(action_base.Action, 'store')
+    def test_action_create(self, mock_store):
+        mock_store.return_value = 'FAKE_ID'
+
+        result = action_base.Action.create(self.ctx, 'OBJ_ID', 'CLUSTER_DANCE',
+                                           name='test')
+
+        self.assertEqual('FAKE_ID', result)
+        mock_store.assert_called_once_with(self.ctx)
+
     def test_action_delete(self):
         result = action_base.Action.delete(self.ctx, 'non-existent')
         self.assertIsNone(result)
