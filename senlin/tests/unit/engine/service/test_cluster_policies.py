@@ -237,7 +237,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual("Invalid value 'No' specified for 'enabled'",
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch('senlin.engine.actions.base.Action')
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(db_api, 'cluster_policy_get')
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(service.EngineService, 'policy_find')
@@ -246,9 +246,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                    mock_cp, mock_action):
         mock_cluster.return_value = mock.Mock(id='12345678abcd')
         mock_policy.return_value = mock.Mock(id='87654321abcd')
-        x_action = mock.Mock()
-        x_action.id = 'ACTION_ID'
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
         mock_cp.return_value = mock.Mock()
 
         result = self.eng.cluster_policy_detach(self.ctx, 'C1', 'P1')
@@ -259,16 +257,12 @@ class ClusterPolicyTest(base.SenlinTestCase):
         mock_cp.assert_called_once_with(self.ctx, '12345678abcd',
                                         '87654321abcd')
         mock_action.assert_called_once_with(
-            '12345678abcd', consts.CLUSTER_DETACH_POLICY,
+            self.ctx, '12345678abcd', consts.CLUSTER_DETACH_POLICY,
             name='detach_policy_12345678',
             cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY,
             inputs={'policy_id': '87654321abcd'},
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain
         )
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
         notify.assert_called_once_with(action_id='ACTION_ID')
 
     @mock.patch.object(service.EngineService, 'cluster_find')

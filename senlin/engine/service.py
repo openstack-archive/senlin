@@ -1657,24 +1657,19 @@ class EngineService(service.Service):
                     "cluster (%(c)s).") % {'p': policy, 'c': identity}
             raise exception.BadRequest(msg=msg)
 
-        action_name = 'detach_policy_%s' % db_cluster.id[:8]
         params = {
-            'name': action_name,
+            'name': 'detach_policy_%s' % db_cluster.id[:8],
             'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
             'inputs': {'policy_id': db_policy.id},
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
         }
-        action = action_mod.Action(db_cluster.id, consts.CLUSTER_DETACH_POLICY,
-                                   **params)
-        action.status = action.READY
-        action.store(context)
-        dispatcher.start_action(action_id=action.id)
+        action_id = action_mod.Action.create(context, db_cluster.id,
+                                             consts.CLUSTER_DETACH_POLICY,
+                                             **params)
+        dispatcher.start_action(action_id=action_id)
+        LOG.info(_LI("Policy dettach action queued: %s."), action_id)
 
-        LOG.info(_LI("Policy dettach action queued: %s."), action.id)
-
-        return {'action': action.id}
+        return {'action': action_id}
 
     @request_context
     def cluster_policy_update(self, context, identity, policy, enabled=None):
