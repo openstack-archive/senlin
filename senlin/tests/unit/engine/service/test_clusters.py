@@ -397,7 +397,7 @@ class ClusterTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'PROFILE')
 
-    @mock.patch("senlin.engine.actions.base.Action")
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(cluster_mod.Cluster, 'load')
     @mock.patch.object(service.EngineService, 'profile_find')
     @mock.patch.object(service.EngineService, 'cluster_find')
@@ -414,8 +414,7 @@ class ClusterTest(base.SenlinTestCase):
         old_profile = mock.Mock(type='FAKE_TYPE', id='ID_OLD')
         new_profile = mock.Mock(type='FAKE_TYPE', id='ID_NEW')
         mock_profile.side_effect = [old_profile, new_profile]
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
 
         # do it
         result = self.eng.cluster_update(self.ctx, 'FAKE_ID', name='new_name',
@@ -430,9 +429,10 @@ class ClusterTest(base.SenlinTestCase):
             mock.call(self.ctx, 'NEW_PROFILE'),
         ])
         mock_action.assert_called_once_with(
-            '12345678AB', 'CLUSTER_UPDATE',
+            self.ctx, '12345678AB', 'CLUSTER_UPDATE',
             name='cluster_update_12345678',
             cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY,
             inputs={
                 'new_profile_id': 'ID_NEW',
                 'metadata': {
@@ -442,12 +442,7 @@ class ClusterTest(base.SenlinTestCase):
                 'timeout': 120,
                 'name': 'new_name',
             },
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain
         )
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
         notify.assert_called_once_with(action_id='ACTION_ID')
 
     @mock.patch.object(service.EngineService, 'cluster_find')
@@ -533,7 +528,7 @@ class ClusterTest(base.SenlinTestCase):
             mock.call(self.ctx, 'NEW_PROFILE'),
         ])
 
-    @mock.patch("senlin.engine.actions.base.Action")
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(cluster_mod.Cluster, 'load')
     @mock.patch.object(service.EngineService, 'profile_find')
     @mock.patch.object(service.EngineService, 'cluster_find')
@@ -549,8 +544,7 @@ class ClusterTest(base.SenlinTestCase):
         old_profile = mock.Mock(type='FAKE_TYPE', id='ID_OLD')
         new_profile = mock.Mock(type='FAKE_TYPE', id='ID_OLD')
         mock_profile.side_effect = [old_profile, new_profile]
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
 
         # do it
         result = self.eng.cluster_update(self.ctx, 'FAKE_ID', name='new_name',
@@ -564,22 +558,18 @@ class ClusterTest(base.SenlinTestCase):
             mock.call(self.ctx, 'NEW_PROFILE'),
         ])
         mock_action.assert_called_once_with(
-            '12345678AB', 'CLUSTER_UPDATE',
+            self.ctx, '12345678AB', 'CLUSTER_UPDATE',
             name='cluster_update_12345678',
             cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY,
             inputs={
                 # Note profile_id is not shown in the inputs
                 'name': 'new_name',
             },
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain
         )
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
         notify.assert_called_once_with(action_id='ACTION_ID')
 
-    @mock.patch("senlin.engine.actions.base.Action")
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(cluster_mod.Cluster, 'load')
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(dispatcher, 'start_action')
@@ -591,8 +581,7 @@ class ClusterTest(base.SenlinTestCase):
                               metadata={'K': 'V'})
         x_cluster.to_dict.return_value = {'foo': 'bar'}
         mock_load.return_value = x_cluster
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
 
         # do it
         result = self.eng.cluster_update(self.ctx, 'FAKE_ID', name='new_name',
@@ -602,19 +591,15 @@ class ClusterTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'FAKE_ID')
         mock_load.assert_called_once_with(self.ctx, cluster=x_obj)
         mock_action.assert_called_once_with(
-            '12345678AB', 'CLUSTER_UPDATE',
+            self.ctx, '12345678AB', 'CLUSTER_UPDATE',
             name='cluster_update_12345678',
+            status=action_mod.Action.READY,
             cause=action_mod.CAUSE_RPC,
             inputs={
                 # Note metadata is not included in the inputs
                 'name': 'new_name',
             },
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain
         )
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
         notify.assert_called_once_with(action_id='ACTION_ID')
 
     @mock.patch.object(cluster_mod.Cluster, 'load')
