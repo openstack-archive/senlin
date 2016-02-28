@@ -1189,22 +1189,18 @@ class EngineService(service.Service):
                  {'cluster': identity})
         db_cluster = self.cluster_find(context, identity)
 
-        action_name = 'cluster_check_%s' % db_cluster.id[:8]
-        new_params = {
-            'name': action_name,
+        params = {
+            'name': 'cluster_check_%s' % db_cluster.id[:8],
             'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
             'inputs': params,
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
         }
-        action = action_mod.Action(db_cluster.id, consts.CLUSTER_CHECK,
-                                   **new_params)
-        action.status = action.READY
-        action.store(context)
-        dispatcher.start_action(action_id=action.id)
-        LOG.info(_LI("Cluster check action queued: %s."), action.id)
-        return {'action': action.id}
+        action_id = action_mod.Action.create(context, db_cluster.id,
+                                             consts.CLUSTER_CHECK, **params)
+        dispatcher.start_action(action_id=action_id)
+        LOG.info(_LI("Cluster check action queued: %s."), action_id)
+
+        return {'action': action_id}
 
     @request_context
     def cluster_recover(self, context, identity, params=None):
@@ -1216,26 +1212,21 @@ class EngineService(service.Service):
                        the check operation.
         :return: A dictionary containg the ID of the action triggered.
         """
-        LOG.info(_LI("Recovering cluster '%(cluster)s'."),
-                 {'cluster': identity})
+        LOG.info(_LI("Recovering cluster '%s'."), identity)
         db_cluster = self.cluster_find(context, identity)
 
-        action_name = 'cluster_recover_%s' % db_cluster.id[:8]
-        new_params = {
-            'name': action_name,
+        params = {
+            'name': 'cluster_recover_%s' % db_cluster.id[:8],
             'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
             'inputs': params,
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
         }
-        action = action_mod.Action(db_cluster.id, consts.CLUSTER_RECOVER,
-                                   **new_params)
-        action.status = action.READY
-        action.store(context)
-        dispatcher.start_action(action_id=action.id)
-        LOG.info(_LI("Cluster recover action queued: %s."), action.id)
-        return {'action': action.id}
+        action_id = action_mod.Action.create(context, db_cluster.id,
+                                             consts.CLUSTER_RECOVER, **params)
+        dispatcher.start_action(action_id=action_id)
+        LOG.info(_LI("Cluster recover action queued: %s."), action_id)
+
+        return {'action': action_id}
 
     def node_find(self, context, identity, project_safe=True):
         """Find a node with the given identity.

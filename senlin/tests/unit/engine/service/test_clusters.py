@@ -1411,14 +1411,13 @@ class ClusterTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
         mock_check.assert_called_once_with(x_cluster, 2)
 
-    @mock.patch('senlin.engine.actions.base.Action')
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_check(self, notify, mock_find, mock_action):
         x_cluster = mock.Mock(id='CID')
         mock_find.return_value = x_cluster
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
 
         params = {'foo': 'bar'}
         result = self.eng.cluster_check(self.ctx, 'CLUSTER', params)
@@ -1426,16 +1425,12 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_action.assert_called_once_with(
-            'CID', consts.CLUSTER_CHECK,
+            self.ctx, 'CID', consts.CLUSTER_CHECK,
             name='cluster_check_CID',
             cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY,
             inputs={'foo': 'bar'},
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain,
         )
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
         notify.assert_called_once_with(action_id='ACTION_ID')
 
     @mock.patch.object(service.EngineService, 'cluster_find')
@@ -1451,14 +1446,13 @@ class ClusterTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
-    @mock.patch('senlin.engine.actions.base.Action')
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_recover(self, notify, mock_find, mock_action):
         x_cluster = mock.Mock(id='CID')
         mock_find.return_value = x_cluster
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
 
         params = {'foo': 'bar'}
         result = self.eng.cluster_recover(self.ctx, 'CLUSTER', params)
@@ -1466,16 +1460,12 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_action.assert_called_once_with(
-            'CID', consts.CLUSTER_RECOVER,
+            self.ctx, 'CID', consts.CLUSTER_RECOVER,
             name='cluster_recover_CID',
             cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY,
             inputs={'foo': 'bar'},
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain,
         )
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
         notify.assert_called_once_with(action_id='ACTION_ID')
 
     @mock.patch.object(service.EngineService, 'cluster_find')
