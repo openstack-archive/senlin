@@ -490,7 +490,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(0, x_node.get_details.call_count)
 
     @mock.patch.object(dispatcher, 'start_action')
-    @mock.patch('senlin.engine.actions.base.Action')
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(service.EngineService, 'node_find')
     def test_node_update(self, mock_find, mock_load, mock_action, mock_start):
@@ -500,8 +500,7 @@ class NodeTest(base.SenlinTestCase):
         x_node = mock.Mock()
         x_node.to_dict.return_value = {'foo': 'bar'}
         mock_load.return_value = x_node
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
 
         # all properties changed except profile id
         result = self.eng.node_update(self.ctx, 'FAKE_NODE', name='NODE2',
@@ -510,26 +509,22 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual({'foo': 'bar', 'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
         mock_action.assert_called_once_with(
-            'FAKE_NODE_ID', consts.NODE_UPDATE,
+            self.ctx, 'FAKE_NODE_ID', consts.NODE_UPDATE,
             name='node_update_FAKE_NOD',
             cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY,
             inputs={
                 'name': 'NODE2',
                 'role': 'NEW_ROLE',
                 'metadata': {
                     'KEY': 'V1',
                 }
-            },
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain)
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
+            })
         mock_start.assert_called_once_with(action_id='ACTION_ID')
         mock_load.assert_called_once_with(self.ctx, node=x_obj)
 
     @mock.patch.object(dispatcher, 'start_action')
-    @mock.patch('senlin.engine.actions.base.Action')
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(service.EngineService, 'profile_find')
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(service.EngineService, 'node_find')
@@ -548,8 +543,7 @@ class NodeTest(base.SenlinTestCase):
         x_node = mock.Mock()
         x_node.to_dict.return_value = {'foo': 'bar'}
         mock_load.return_value = x_node
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
 
         # all properties are filtered out except for profile_id
         result = self.eng.node_update(self.ctx, 'FAKE_NODE', name='NODE1',
@@ -563,17 +557,13 @@ class NodeTest(base.SenlinTestCase):
             mock.call(self.ctx, 'OLD_PROFILE_ID'),
         ])
         mock_action.assert_called_once_with(
-            'FAKE_NODE_ID', consts.NODE_UPDATE,
+            self.ctx, 'FAKE_NODE_ID', consts.NODE_UPDATE,
             name='node_update_FAKE_NOD',
             cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY,
             inputs={
                 'new_profile_id': 'NEW_PROFILE_ID',
-            },
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain)
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
+            })
         mock_start.assert_called_once_with(action_id='ACTION_ID')
         mock_load.assert_called_once_with(self.ctx, node=x_obj)
 
