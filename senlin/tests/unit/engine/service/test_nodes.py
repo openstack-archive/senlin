@@ -241,7 +241,7 @@ class NodeTest(base.SenlinTestCase):
                                           limit=None, marker=None,
                                           project_safe=True)
 
-    @mock.patch('senlin.engine.actions.base.Action')
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch('senlin.engine.node.Node')
     @mock.patch.object(service.EngineService, 'profile_find')
     @mock.patch.object(dispatcher, 'start_action')
@@ -250,8 +250,7 @@ class NodeTest(base.SenlinTestCase):
         x_node = mock.Mock(id='NODE_ID')
         x_node.to_dict.return_value = {'foo': 'bar'}
         mock_node.return_value = x_node
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
 
         result = self.eng.node_create(self.ctx, 'NODE1', 'FAKE_PROFILE')
 
@@ -265,17 +264,13 @@ class NodeTest(base.SenlinTestCase):
             domain=self.ctx.domain)
         x_node.store.assert_called_once_with(self.ctx)
         mock_action.assert_called_once_with(
-            'NODE_ID', consts.NODE_CREATE,
+            self.ctx, 'NODE_ID', consts.NODE_CREATE,
             name='node_create_NODE_ID',
             cause=action_mod.CAUSE_RPC,
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain)
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
+            status=action_mod.Action.READY)
         notify.assert_called_once_with(action_id='ACTION_ID')
 
-    @mock.patch('senlin.engine.actions.base.Action')
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch('senlin.engine.node.Node')
     @mock.patch.object(db_api, 'cluster_next_index')
     @mock.patch.object(service.EngineService, 'cluster_find')
@@ -291,8 +286,7 @@ class NodeTest(base.SenlinTestCase):
         x_node = mock.Mock(id='NODE_ID')
         x_node.to_dict.return_value = {'foo': 'bar'}
         mock_node.return_value = x_node
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
 
         result = self.eng.node_create(self.ctx, 'NODE1', 'FAKE_PROFILE',
                                       cluster_id='FAKE_CLUSTER')
@@ -309,17 +303,13 @@ class NodeTest(base.SenlinTestCase):
             domain=self.ctx.domain)
         x_node.store.assert_called_once_with(self.ctx)
         mock_action.assert_called_once_with(
-            'NODE_ID', consts.NODE_CREATE,
+            self.ctx, 'NODE_ID', consts.NODE_CREATE,
             name='node_create_NODE_ID',
             cause=action_mod.CAUSE_RPC,
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain)
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
+            status=action_mod.Action.READY)
         notify.assert_called_once_with(action_id='ACTION_ID')
 
-    @mock.patch('senlin.engine.actions.base.Action')
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch('senlin.engine.node.Node')
     @mock.patch.object(db_api, 'cluster_next_index')
     @mock.patch.object(service.EngineService, 'cluster_find')
@@ -338,8 +328,7 @@ class NodeTest(base.SenlinTestCase):
         x_node = mock.Mock(id='NODE_ID')
         x_node.to_dict.return_value = {'foo': 'bar'}
         mock_node.return_value = x_node
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
 
         result = self.eng.node_create(self.ctx, 'NODE1', 'FAKE_PROFILE',
                                       cluster_id='FAKE_CLUSTER')
@@ -359,14 +348,10 @@ class NodeTest(base.SenlinTestCase):
             domain=self.ctx.domain)
         x_node.store.assert_called_once_with(self.ctx)
         mock_action.assert_called_once_with(
-            'NODE_ID', consts.NODE_CREATE,
+            self.ctx, 'NODE_ID', consts.NODE_CREATE,
             name='node_create_NODE_ID',
             cause=action_mod.CAUSE_RPC,
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain)
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
+            status=action_mod.Action.READY)
         notify.assert_called_once_with(action_id='ACTION_ID')
 
     @mock.patch.object(db_api, 'node_get_by_name')

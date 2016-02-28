@@ -1366,18 +1366,15 @@ class EngineService(service.Service):
         params = {
             'name': 'node_create_%s' % node.id[:8],
             'cause': action_mod.CAUSE_RPC,
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
+            'status': action_mod.Action.READY,
         }
-        action = action_mod.Action(node.id, consts.NODE_CREATE, **params)
-        action.status = action.READY
-        action.store(context)
-        dispatcher.start_action(action_id=action.id)
+        action_id = action_mod.Action.create(context, node.id,
+                                             consts.NODE_CREATE, **params)
+        dispatcher.start_action(action_id=action_id)
+        LOG.info(_LI("Node create action queued: %s."), action_id)
 
-        LOG.info(_LI("Node create action queued: %s."), action.id)
         result = node.to_dict()
-        result['action'] = action.id
+        result['action'] = action_id
         return result
 
     @request_context
