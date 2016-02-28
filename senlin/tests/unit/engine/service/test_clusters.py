@@ -1218,7 +1218,7 @@ class ClusterTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
-    @mock.patch('senlin.engine.actions.base.Action')
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(su, 'check_size_params')
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_scale_out(self, mock_find, mock_check, mock_action,
@@ -1226,8 +1226,7 @@ class ClusterTest(base.SenlinTestCase):
         x_cluster = mock.Mock(id='12345678ABCDEFGH', desired_capacity=4)
         mock_find.return_value = x_cluster
         mock_check.return_value = None
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
 
         result = self.eng.cluster_scale_out(self.ctx, 'CLUSTER', count=1)
 
@@ -1235,16 +1234,12 @@ class ClusterTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_check.assert_called_once_with(x_cluster, 5)
         mock_action.assert_called_once_with(
-            '12345678ABCDEFGH', consts.CLUSTER_SCALE_OUT,
+            self.ctx, '12345678ABCDEFGH', consts.CLUSTER_SCALE_OUT,
             name='cluster_scale_out_12345678',
             cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY,
             inputs={'count': 1},
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain,
         )
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
         notify.assert_called_once_with(action_id='ACTION_ID')
 
     @mock.patch.object(service.EngineService, 'cluster_find')
@@ -1261,30 +1256,25 @@ class ClusterTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(dispatcher, 'start_action')
-    @mock.patch('senlin.engine.actions.base.Action')
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_scale_out_count_is_none(self, mock_find, mock_action,
                                              notify):
         mock_find.return_value = mock.Mock(id='12345678ABCDEFGH',
                                            desired_capacity=4)
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
 
         result = self.eng.cluster_scale_out(self.ctx, 'CLUSTER')
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_action.assert_called_once_with(
-            '12345678ABCDEFGH', consts.CLUSTER_SCALE_OUT,
+            self.ctx, '12345678ABCDEFGH', consts.CLUSTER_SCALE_OUT,
             name='cluster_scale_out_12345678',
             cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY,
             inputs={},
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain,
         )
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
         notify.assert_called_once_with(action_id='ACTION_ID')
 
     @mock.patch.object(service.EngineService, 'cluster_find')
