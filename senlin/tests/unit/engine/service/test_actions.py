@@ -181,21 +181,22 @@ class ActionTest(base.SenlinTestCase):
                                           sort=None, marker=None,
                                           project_safe=False)
 
+    @mock.patch.object(action_base.Action, 'create')
     @mock.patch.object(service.EngineService, 'cluster_find')
-    def test_action_create(self, mock_find):
-        x_cluster = mock.Mock()
-        x_cluster.id = 'FAKE_CLUSTER'
-        mock_find.return_value = x_cluster
+    def test_action_create(self, mock_find, mock_action):
+        mock_find.return_value = mock.Mock(id='FAKE_CLUSTER')
+        mock_action.return_value = 'ACTION_ID'
 
         result = self.eng.action_create(self.ctx, 'a1', 'C1', 'OBJECT_ACTION')
 
-        self.assertIsInstance(result, dict)
-        self.assertIsNotNone(result['id'])
-        self.assertEqual('a1', result['name'])
-        self.assertEqual('FAKE_CLUSTER', result['target'])
-        self.assertEqual({}, result['inputs'])
-
+        self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'C1')
+        mock_action.assert_called_once_with(
+            self.ctx, 'FAKE_CLUSTER', 'OBJECT_ACTION',
+            name='a1',
+            cause=action_base.CAUSE_RPC,
+            status=action_base.Action.READY,
+            inputs={})
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_action_create_cluster_not_found(self, mock_find):
