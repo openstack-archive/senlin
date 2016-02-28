@@ -19,11 +19,6 @@ on Fedora Core:
 Use `mvn`
 =========
 
-Build the REST API reference manual:
-
-  cd api-ref
-  mvn clean generate-sources
-
 Build the Senlin admin guide:
 
   cd senlin-admin
