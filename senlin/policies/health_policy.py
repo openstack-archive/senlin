@@ -10,32 +10,30 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo_service import periodic_task
-
 from senlin.common import constraints
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import schema
+from senlin.engine import health_manager
 from senlin.policies import base
 
 
 class HealthPolicy(base.Policy):
-    '''Policy for health checking for members of a cluster.'''
+    '''Policy for health management of a cluster.'''
 
     VERSION = '1.0'
 
+    PRIORITY = 600
+
     TARGET = [
-        ('AFTER', consts.CLUSTER_ADD_NODES),
-        ('AFTER', consts.CLUSTER_SCALE_OUT),
-        ('BEFORE', consts.CLUSTER_DEL_NODES),
-        ('BEFORE', consts.CLUSTER_SCALE_IN),
+        ('BEFORE', consts.CLUSTER_CHECK),
+        ('BEFORE', consts.CLUSTER_RECOVER),
     ]
 
     # Should be ANY if profile provides health check support?
     PROFILE_TYPE = [
         'os.nova.server',
         'os.heat.stack',
-        'AWS.AutoScaling.LaunchConfiguration',
     ]
 
     KEYS = (DETECTION, RECOVERY) = ('detection', 'recovery')
@@ -130,65 +128,59 @@ class HealthPolicy(base.Policy):
         self.check_type = self.properties[self.DETECTION][self.DETECTION_TYPE]
         options = self.properties[self.DETECTION][self.DETECTION_OPTIONS]
         self.interval = options[self.DETECTION_INTERVAL]
+        recover_settings = self.properties[self.RECOVERY]
+        self.recover_actions = recover_settings[self.RECOVERY_ACTIONS]
 
     def attach(self, cluster):
-        '''Hook for policy attach.
+        """"Hook for policy attach.
 
-        Initialize the health check mechanism for existing nodes in cluster.
-        '''
-        data = {
-            'type': self.check_type,
+        Register the cluster for health management.
+        """
+
+        kwargs = {
+            'check_type': self.check_type,
             'interval': self.interval,
-            'counter': 0,
+            'params': {},
         }
 
-        # TODO(anyone): register cluster for periodic checking
+        health_manager.register(cluster_id=cluster.id, engine_id=None,
+                                **kwargs)
+
+        data = {
+            'check_type': self.check_type,
+            'interval': self.interval,
+        }
+
         return True, self._build_policy_data(data)
 
     def detach(self, cluster):
         '''Hook for policy detach.
 
-        Deinitialize the health check mechanism (for the cluster).
+        Unregister the cluster for health management.
         '''
-        # TODO(anyone): deregister cluster from periodic checking
+
+        health_manager.unregister(cluster_id=cluster.id)
         return True, ''
 
     def pre_op(self, cluster_id, action, **args):
         # Ignore actions that are not required to be processed at this stage
-        if action not in (consts.CLUSTER_SCALE_IN,
-                          consts.CLUSTER_DEL_NODES):
+        if action.action != consts.CLUSTER_RECOVER:
             return True
 
-        # TODO(anyone): Unsubscribe nodes from backend health monitoring
-        #               infrastructure
+        pd = {
+            'recover_action': self.recover_actions[0],
+        }
+        action.data.update({'health': pd})
+        action.store(action.context)
+
         return True
 
     def post_op(self, cluster_id, action, **args):
         # Ignore irrelevant action here
-        if action not in (consts.CLUSTER_SCALE_OUT,
-                          consts.CLUSTER_ADD_NODES):
+        if action.action not in (consts.CLUSTER_CHECK,
+                                 consts.CLUSTER_RECOVER):
             return True
 
         # TODO(anyone): subscribe to vm-lifecycle-events for the specified VM
         #               or add vm to the list of VM status polling
         return True
-
-    @periodic_task.periodic_task
-    def health_check(self):
-        if not self.detect_enabled:
-            return
-
-        if (self.detect_counter < self.detect_interval):
-            self.detect_counter += 1
-            return
-        self.detect_counter = 0
-
-        failures = 0
-        for n in self.rt['nodes']:
-            if(n.rt.profile.do_check(n)):
-                continue
-
-            failures += 1
-
-        # TODO(Anyone): How to enforce the HA policy?
-        pass
