@@ -119,13 +119,13 @@ class ActionTest(base.SenlinTestCase):
 
         result = self.eng.action_list(self.ctx, filters='F', limit=1,
                                       marker='M', sort='status',
-                                      project_safe=False)
+                                      project_safe=True)
 
         self.assertEqual([], result)
 
         mock_load.assert_called_once_with(self.ctx, filters='F', limit=1,
                                           marker='M', sort='status',
-                                          project_safe=False)
+                                          project_safe=True)
 
     def test_action_list_with_bad_params(self):
         ex = self.assertRaises(rpc.ExpectedException,
@@ -142,6 +142,44 @@ class ActionTest(base.SenlinTestCase):
                                self.eng.action_list,
                                self.ctx, project_safe='yes')
         self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
+
+    @mock.patch.object(action_base.Action, 'load_all')
+    def test_action_list_with_project_safe(self, mock_load):
+        mock_load.return_value = []
+
+        result = self.eng.action_list(self.ctx)
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
+                                          sort=None, marker=None,
+                                          project_safe=True)
+        mock_load.reset_mock()
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.action_list,
+                               self.ctx, project_safe=False)
+        self.assertEqual(exc.Forbidden, ex.exc_info[0])
+
+        self.ctx.is_admin = True
+
+        result = self.eng.action_list(self.ctx)
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
+                                          sort=None, marker=None,
+                                          project_safe=True)
+        mock_load.reset_mock()
+
+        result = self.eng.action_list(self.ctx, project_safe=True)
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
+                                          sort=None, marker=None,
+                                          project_safe=True)
+        mock_load.reset_mock()
+
+        result = self.eng.action_list(self.ctx, project_safe=False)
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
+                                          sort=None, marker=None,
+                                          project_safe=False)
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_action_create(self, mock_find):

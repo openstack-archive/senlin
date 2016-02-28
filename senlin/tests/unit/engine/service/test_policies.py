@@ -136,13 +136,13 @@ class PolicyTest(base.SenlinTestCase):
 
         result = self.eng.policy_list(self.ctx, limit=10, marker='KEY',
                                       filters={'foo': 'bar'}, sort='name:asc',
-                                      project_safe=False)
+                                      project_safe=True)
 
         self.assertEqual([], result)
         mock_load.assert_called_once_with(self.ctx, limit=10, marker='KEY',
                                           filters={'foo': 'bar'},
                                           sort='name:asc',
-                                          project_safe=False)
+                                          project_safe=True)
 
     def test_policy_list_bad_param(self):
         ex = self.assertRaises(rpc.ExpectedException,
@@ -159,6 +159,44 @@ class PolicyTest(base.SenlinTestCase):
                                self.eng.policy_list,
                                self.ctx, project_safe='no')
         self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
+
+    @mock.patch.object(policy_mod.Policy, 'load_all')
+    def test_policy_list_with_project_safe(self, mock_load):
+        mock_load.return_value = []
+
+        result = self.eng.policy_list(self.ctx)
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
+                                          sort=None, marker=None,
+                                          project_safe=True)
+        mock_load.reset_mock()
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.policy_list,
+                               self.ctx, project_safe=False)
+        self.assertEqual(exc.Forbidden, ex.exc_info[0])
+
+        self.ctx.is_admin = True
+
+        result = self.eng.policy_list(self.ctx)
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
+                                          sort=None, marker=None,
+                                          project_safe=True)
+        mock_load.reset_mock()
+
+        result = self.eng.policy_list(self.ctx, project_safe=True)
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
+                                          sort=None, marker=None,
+                                          project_safe=True)
+        mock_load.reset_mock()
+
+        result = self.eng.policy_list(self.ctx, project_safe=False)
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
+                                          sort=None, marker=None,
+                                          project_safe=False)
 
     def test_policy_create_default(self):
         self._setup_fakes()

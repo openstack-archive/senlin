@@ -121,14 +121,14 @@ class ReceiverTest(base.SenlinTestCase):
         result = self.eng.receiver_list(self.ctx, limit=1, marker='MARKER',
                                         sort='name',
                                         filters={'key1': 'value1'},
-                                        project_safe=False)
+                                        project_safe=True)
 
         self.assertIsInstance(result, list)
         self.assertEqual([{'FOO': 'BAR'}], result)
         mock_load.assert_called_once_with(self.ctx, limit=1, marker='MARKER',
                                           sort='name',
                                           filters={'key1': 'value1'},
-                                          project_safe=False)
+                                          project_safe=True)
 
     def test_receiver_list_bad_params(self):
         ex = self.assertRaises(rpc.ExpectedException,
@@ -144,6 +144,44 @@ class ReceiverTest(base.SenlinTestCase):
                                self.eng.receiver_list,
                                self.ctx, project_safe='yes')
         self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
+
+    @mock.patch.object(receiver.Receiver, 'load_all')
+    def test_receiver_list_with_project_safe(self, mock_load):
+        mock_load.return_value = []
+
+        result = self.eng.receiver_list(self.ctx)
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
+                                          sort=None, marker=None,
+                                          project_safe=True)
+        mock_load.reset_mock()
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.receiver_list,
+                               self.ctx, project_safe=False)
+        self.assertEqual(exc.Forbidden, ex.exc_info[0])
+
+        self.ctx.is_admin = True
+
+        result = self.eng.receiver_list(self.ctx)
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
+                                          sort=None, marker=None,
+                                          project_safe=True)
+        mock_load.reset_mock()
+
+        result = self.eng.receiver_list(self.ctx, project_safe=True)
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
+                                          sort=None, marker=None,
+                                          project_safe=True)
+        mock_load.reset_mock()
+
+        result = self.eng.receiver_list(self.ctx, project_safe=False)
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
+                                          sort=None, marker=None,
+                                          project_safe=False)
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(receiver.Receiver, 'create')
