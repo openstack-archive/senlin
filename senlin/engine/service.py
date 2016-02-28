@@ -1508,19 +1508,15 @@ class EngineService(service.Service):
         kwargs = {
             'name': 'node_check_%s' % db_node.id[:8],
             'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
             'inputs': params,
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
         }
-        action = action_mod.Action(db_node.id, consts.NODE_CHECK, **kwargs)
-        action.status = action.READY
-        action.store(context)
-        dispatcher.start_action(action_id=action.id)
+        action_id = action_mod.Action.create(context, db_node.id,
+                                             consts.NODE_CHECK, **kwargs)
+        dispatcher.start_action(action_id=action_id)
+        LOG.info(_LI("Node check action is queued: %s."), action_id)
 
-        LOG.info(_LI("Node check action is queued: %s."), action.id)
-
-        return {'action': action.id}
+        return {'action': action_id}
 
     @request_context
     def node_recover(self, context, identity, params=None):
@@ -1538,21 +1534,17 @@ class EngineService(service.Service):
         db_node = self.node_find(context, identity)
 
         kwargs = {
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
             'name': 'node_recover_%s' % db_node.id[:8],
             'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
             'inputs': params
         }
-        action = action_mod.Action(db_node.id, consts.NODE_RECOVER, **kwargs)
-        action.status = action.READY
-        action.store(context)
-        dispatcher.start_action(action_id=action.id)
+        action_id = action_mod.Action.create(context, db_node.id,
+                                             consts.NODE_RECOVER, **kwargs)
+        dispatcher.start_action(action_id=action_id)
+        LOG.info(_LI("Node recover action is queued: %s."), action_id)
 
-        LOG.info(_LI("Node recover action is queued: %s."), action.id)
-
-        return {'action': action.id}
+        return {'action': action_id}
 
     @request_context
     def cluster_policy_list(self, context, identity, filters=None, sort=None):

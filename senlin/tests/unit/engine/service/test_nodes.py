@@ -668,12 +668,11 @@ class NodeTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(dispatcher, 'start_action')
-    @mock.patch('senlin.engine.actions.base.Action')
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(service.EngineService, 'node_find')
     def test_node_check(self, mock_find, mock_action, mock_start):
         mock_find.return_value = mock.Mock(id='12345678AB')
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
 
         params = {}
         result = self.eng.node_check(self.ctx, 'FAKE_NODE', params)
@@ -681,15 +680,11 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
         mock_action.assert_called_once_with(
-            '12345678AB', consts.NODE_CHECK,
+            self.ctx, '12345678AB', consts.NODE_CHECK,
             name='node_check_12345678',
             cause=action_mod.CAUSE_RPC,
-            inputs={},
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain)
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
+            status=action_mod.Action.READY,
+            inputs={})
         mock_start.assert_called_once_with(action_id='ACTION_ID')
 
     @mock.patch.object(service.EngineService, 'node_find')
@@ -706,13 +701,11 @@ class NodeTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(dispatcher, 'start_action')
-    @mock.patch('senlin.engine.actions.base.Action')
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(service.EngineService, 'node_find')
     def test_node_recover(self, mock_find, mock_action, mock_start):
         mock_find.return_value = mock.Mock(id='12345678AB')
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
-
+        mock_action.return_value = 'ACTION_ID'
         params = {'foo': 'bar'}
 
         result = self.eng.node_recover(self.ctx, 'FAKE_NODE', params)
@@ -720,15 +713,11 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
         mock_action.assert_called_once_with(
-            '12345678AB', consts.NODE_RECOVER,
+            self.ctx, '12345678AB', consts.NODE_RECOVER,
             name='node_recover_12345678',
             cause=action_mod.CAUSE_RPC,
-            inputs={'foo': 'bar'},
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain)
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
+            status=action_mod.Action.READY,
+            inputs={'foo': 'bar'})
         mock_start.assert_called_once_with(action_id='ACTION_ID')
 
     @mock.patch.object(service.EngineService, 'node_find')
