@@ -911,18 +911,16 @@ class EngineService(service.Service):
         params = {
             'name': action_name,
             'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
             'inputs': {'nodes': found},
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
         }
-        action = action_mod.Action(db_cluster.id, consts.CLUSTER_ADD_NODES,
-                                   **params)
-        action.status = action.READY
-        action.store(context)
-        dispatcher.start_action(action_id=action.id)
-        LOG.info(_LI("Cluster add nodes action queued: %s."), action.id)
-        return {'action': action.id}
+        action_id = action_mod.Action.create(context, db_cluster.id,
+                                             consts.CLUSTER_ADD_NODES,
+                                             **params)
+        dispatcher.start_action(action_id=action_id)
+        LOG.info(_LI("Cluster add nodes action queued: %s."), action_id)
+
+        return {'action': action_id}
 
     @request_context
     def cluster_del_nodes(self, context, identity, nodes):
