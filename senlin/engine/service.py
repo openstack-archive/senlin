@@ -1161,24 +1161,19 @@ class EngineService(service.Service):
             LOG.info(_LI('Scaling in cluster %s'), db_cluster.name)
             inputs = {}
 
-        action_name = 'cluster_scale_in_%s' % db_cluster.id[:8]
         params = {
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
-            'name': action_name,
+            'name': 'cluster_scale_in_%s' % db_cluster.id[:8],
             'cause': action_mod.CAUSE_RPC,
-            'inputs': inputs
+            'status': action_mod.Action.READY,
+            'inputs': inputs,
         }
-        action = action_mod.Action(db_cluster.id, consts.CLUSTER_SCALE_IN,
-                                   **params)
-        action.status = action.READY
-        action.store(context)
-        dispatcher.start_action(action_id=action.id)
+        action_id = action_mod.Action.create(context, db_cluster.id,
+                                             consts.CLUSTER_SCALE_IN,
+                                             **params)
+        dispatcher.start_action(action_id=action_id)
+        LOG.info(_LI("Cluster Scale in action queued: %s."), action_id)
 
-        LOG.info(_LI("Cluster Scale in action queued: %s."), action.id)
-
-        return {'action': action.id}
+        return {'action': action_id}
 
     @request_context
     def cluster_check(self, context, identity, params=None):
