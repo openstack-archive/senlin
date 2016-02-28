@@ -858,7 +858,7 @@ class ClusterTest(base.SenlinTestCase):
         ])
         mock_node.assert_called_once_with(self.ctx, 'NODE4')
 
-    @mock.patch("senlin.engine.actions.base.Action")
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(service.EngineService, 'node_find')
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(dispatcher, 'start_action')
@@ -866,8 +866,7 @@ class ClusterTest(base.SenlinTestCase):
                                mock_action):
         mock_find.return_value = mock.Mock(id='1234')
         mock_node.return_value = mock.Mock(id='NODE2', cluster_id='1234')
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
 
         result = self.eng.cluster_del_nodes(self.ctx, 'CLUSTER', ['NODE1'])
 
@@ -875,19 +874,15 @@ class ClusterTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_node.assert_called_once_with(self.ctx, 'NODE1')
         mock_action.assert_called_once_with(
-            '1234', consts.CLUSTER_DEL_NODES,
+            self.ctx, '1234', consts.CLUSTER_DEL_NODES,
             name='cluster_del_nodes_1234',
+            status=action_mod.Action.READY,
             cause=action_mod.CAUSE_RPC,
             inputs={
                 'count': 1,
                 'candidates': ['NODE2'],
             },
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain
         )
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
         notify.assert_called_once_with(action_id='ACTION_ID')
 
     @mock.patch.object(service.EngineService, 'cluster_find')

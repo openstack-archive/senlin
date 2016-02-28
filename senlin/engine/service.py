@@ -907,9 +907,8 @@ class EngineService(service.Service):
             LOG.error(error)
             raise exception.BadRequest(msg=error)
 
-        action_name = 'cluster_add_nodes_%s' % db_cluster.id[:8]
         params = {
-            'name': action_name,
+            'name': 'cluster_add_nodes_%s' % db_cluster.id[:8],
             'cause': action_mod.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': {'nodes': found},
@@ -961,27 +960,22 @@ class EngineService(service.Service):
             LOG.error(error)
             raise exception.BadRequest(msg=error)
 
-        action_name = 'cluster_del_nodes_%s' % db_cluster.id[:8]
-        count = len(found)
         params = {
-            'name': action_name,
+            'name': 'cluster_del_nodes_%s' % db_cluster.id[:8],
             'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
             'inputs': {
                 'candidates': found,
-                'count': count
+                'count': len(found),
             },
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
         }
-        action = action_mod.Action(db_cluster.id, consts.CLUSTER_DEL_NODES,
-                                   **params)
-        action.status = action.READY
-        action.store(context)
-        dispatcher.start_action(action_id=action.id)
+        action_id = action_mod.Action.create(context, db_cluster.id,
+                                             consts.CLUSTER_DEL_NODES,
+                                             **params)
+        dispatcher.start_action(action_id=action_id)
+        LOG.info(_LI("Cluster delete nodes action queued: %s."), action_id)
 
-        LOG.info(_LI("Cluster delete nodes action queued: %s."), action.id)
-        return {'action': action.id}
+        return {'action': action_id}
 
     @request_context
     def cluster_resize(self, context, identity, adj_type=None, number=None,
