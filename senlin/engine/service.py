@@ -721,18 +721,15 @@ class EngineService(service.Service):
         kwargs = {
             'name': 'cluster_create_%s' % cluster.id[:8],
             'cause': action_mod.CAUSE_RPC,
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
+            'status': action_mod.Action.READY,
         }
-        action = action_mod.Action(cluster.id, consts.CLUSTER_CREATE, **kwargs)
-        action.status = action.READY
-        action.store(context)
-        dispatcher.start_action(action_id=action.id)
+        action_id = action_mod.Action.create(context, cluster.id,
+                                             consts.CLUSTER_CREATE, **kwargs)
+        dispatcher.start_action(action_id=action_id)
+        LOG.info(_LI("Cluster create action queued: %s."), action_id)
 
-        LOG.info(_LI("Cluster create action queued: %s."), action.id)
         result = cluster.to_dict()
-        result['action'] = action.id
+        result['action'] = action_id
         return result
 
     @request_context

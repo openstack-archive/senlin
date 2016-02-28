@@ -94,7 +94,6 @@ class Action(object):
         self.id = kwargs.get('id', None)
         self.name = kwargs.get('name', '')
 
-        # TODO(Yanyan Hu): Replace context with DB session
         if not context:
             self.user = kwargs.get('user')
             self.project = kwargs.get('project')
@@ -275,7 +274,24 @@ class Action(object):
 
     @classmethod
     def create(cls, context, target, action, **kwargs):
-        obj = cls(target, action, context=context, **kwargs)
+        """Create an action object.
+
+        :param context: The requesting context.
+        :param target: The ID of the target cluster/node.
+        :param action: Name of the action.
+        :param dict kwargs: Other keyword arguments for the action.
+        :return: ID of the action created.
+        """
+        params = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'is_admin': context.is_admin,
+            'request_id': context.request_id,
+            'trusts': context.trusts,
+        }
+        ctx = req_context.RequestContext.from_dict(params)
+        obj = cls(target, action, context=ctx, **kwargs)
         return obj.store(context)
 
     @classmethod
