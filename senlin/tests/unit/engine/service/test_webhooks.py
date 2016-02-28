@@ -30,45 +30,32 @@ class WebhookTest(base.SenlinTestCase):
         self.eng = service.EngineService('host-a', 'topic-a')
 
     @mock.patch.object(dispatcher, 'start_action')
-    @mock.patch.object(action_mod, 'Action')
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(service.EngineService, 'receiver_find')
     def test_webhook_trigger(self, mock_get, mock_find, mock_action, notify):
-        fake_cluster = mock.Mock()
-        fake_cluster.id = 'FAKE_CLUSTER'
-        mock_find.return_value = fake_cluster
+        mock_find.return_value = mock.Mock(id='FAKE_CLUSTER')
+        mock_get.return_value = mock.Mock(id='01234567-abcd-efef',
+                                          cluster_id='FAKE_CLUSTER',
+                                          action='DANCE',
+                                          params={'foo': 'bar'})
+        mock_action.return_value = 'ACTION_ID'
 
-        fake_receiver = mock.Mock()
-        fake_receiver.id = '01234567-abcd-efef'
-        fake_receiver.cluster_id = 'FAKE_CLUSTER'
-        fake_receiver.action = 'DANCE'
-        fake_receiver.params = {'foo': 'bar'}
-        mock_get.return_value = fake_receiver
-
-        fake_action = mock.Mock()
-        fake_action.READY = 'READY'
-        fake_action.id = 'FAKE_ACTION'
-        mock_action.return_value = fake_action
         res = self.eng.webhook_trigger(self.ctx, 'FAKE_RECEIVER',
                                        params={'kee': 'vee'})
 
-        self.assertEqual({'action': 'FAKE_ACTION'}, res)
+        self.assertEqual({'action': 'ACTION_ID'}, res)
 
         mock_get.assert_called_once_with(self.ctx, 'FAKE_RECEIVER')
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
-        kwargs = {
-            'name': 'webhook_01234567',
-            'cause': action_mod.CAUSE_RPC,
-            'inputs': {'kee': 'vee', 'foo': 'bar'},
-            'user': self.ctx.user,
-            'project': self.ctx.project,
-            'domain': self.ctx.domain,
-        }
-
-        mock_action.assert_called_once_with('FAKE_CLUSTER', 'DANCE', **kwargs)
-        fake_action.store.assert_called_once_with(self.ctx)
-        self.assertEqual('READY', fake_action.status)
-        notify.assert_called_once_with(action_id='FAKE_ACTION')
+        mock_action.assert_called_once_with(
+            self.ctx, 'FAKE_CLUSTER', 'DANCE',
+            name='webhook_01234567',
+            cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY,
+            inputs={'kee': 'vee', 'foo': 'bar'},
+        )
+        notify.assert_called_once_with(action_id='ACTION_ID')
 
     @mock.patch.object(service.EngineService, 'receiver_find')
     def test_webhook_trigger_receiver_not_found(self, mock_find):

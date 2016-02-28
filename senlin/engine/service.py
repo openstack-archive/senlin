@@ -2014,24 +2014,19 @@ class EngineService(service.Service):
         if params:
             data.update(params)
 
-        action_name = 'webhook_%s' % receiver.id[:8]
         kwargs = {
-            'name': action_name,
+            'name': 'webhook_%s' % receiver.id[:8],
             'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
             'inputs': data,
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
         }
-        action = action_mod.Action(cluster.id, receiver.action, **kwargs)
-        action.status = action.READY
-        action.store(context)
-        dispatcher.start_action(action_id=action.id)
-
+        action_id = action_mod.Action.create(context, cluster.id,
+                                             receiver.action, **kwargs)
+        dispatcher.start_action(action_id=action_id)
         LOG.info(_LI("Webhook %(w)s' triggered with action queued: %(a)s."),
-                 {'w': identity, 'a': action.id})
+                 {'w': identity, 'a': action_id})
 
-        return {'action': action.id}
+        return {'action': action_id}
 
     def event_find(self, context, identity, project_safe=True):
         """Find an event with the given identity.
