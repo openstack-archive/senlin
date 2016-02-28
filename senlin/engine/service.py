@@ -1611,28 +1611,22 @@ class EngineService(service.Service):
             msg = _("The specified policy (%s) is not found.") % policy
             raise exception.BadRequest(msg=msg)
 
-        inputs = {
-            'policy_id': db_policy.id,
-            'enabled': utils.parse_bool_param('enabled', enabled) or True,
-        }
-
         params = {
             'name': 'attach_policy_%s' % db_cluster.id[:8],
             'cause': action_mod.CAUSE_RPC,
-            'inputs': inputs,
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
+            'status': action_mod.Action.READY,
+            'inputs': {
+                'policy_id': db_policy.id,
+                'enabled': utils.parse_bool_param('enabled', enabled) or True,
+            }
         }
-        action = action_mod.Action(db_cluster.id, consts.CLUSTER_ATTACH_POLICY,
-                                   **params)
-        action.status = action.READY
-        action.store(context)
-        dispatcher.start_action(action_id=action.id)
+        action_id = action_mod.Action.create(context, db_cluster.id,
+                                             consts.CLUSTER_ATTACH_POLICY,
+                                             **params)
+        dispatcher.start_action(action_id=action_id)
+        LOG.info(_LI("Policy attach action queued: %s."), action_id)
 
-        LOG.info(_LI("Policy attach action queued: %s."), action.id)
-
-        return {'action': action.id}
+        return {'action': action_id}
 
     @request_context
     def cluster_policy_detach(self, context, identity, policy):

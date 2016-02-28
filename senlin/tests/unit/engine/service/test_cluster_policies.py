@@ -166,7 +166,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                          "the specified cluster (CLUSTER).",
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch('senlin.engine.actions.base.Action')
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(service.EngineService, 'policy_find')
     @mock.patch.object(dispatcher, 'start_action')
@@ -174,9 +174,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                    mock_action):
         mock_cluster.return_value = mock.Mock(id='12345678abcd')
         mock_policy.return_value = mock.Mock(id='87654321abcd')
-        x_action = mock.Mock()
-        x_action.id = 'ACTION_ID'
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
 
         res = self.eng.cluster_policy_attach(self.ctx, 'C1', 'P1')
 
@@ -185,16 +183,12 @@ class ClusterPolicyTest(base.SenlinTestCase):
         mock_policy.assert_called_once_with(self.ctx, 'P1')
 
         mock_action.assert_called_once_with(
-            '12345678abcd', consts.CLUSTER_ATTACH_POLICY,
+            self.ctx, '12345678abcd', consts.CLUSTER_ATTACH_POLICY,
             name='attach_policy_12345678',
             cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY,
             inputs={'policy_id': '87654321abcd', 'enabled': True},
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain
         )
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
         notify.assert_called_once_with(action_id='ACTION_ID')
 
     @mock.patch.object(service.EngineService, 'cluster_find')
