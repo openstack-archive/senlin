@@ -1481,18 +1481,14 @@ class EngineService(service.Service):
         params = {
             'name': 'node_delete_%s' % db_node.id[:8],
             'cause': action_mod.CAUSE_RPC,
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
+            'status': action_mod.Action.READY,
         }
-        action = action_mod.Action(db_node.id, consts.NODE_DELETE, **params)
-        action.status = action.READY
-        action.store(context)
-        dispatcher.start_action(action_id=action.id)
+        action_id = action_mod.Action.create(context, db_node.id,
+                                             consts.NODE_DELETE, **params)
+        dispatcher.start_action(action_id=action_id)
+        LOG.info(_LI("Node delete action is queued: %s."), action_id)
 
-        LOG.info(_LI("Node delete action is queued: %s."), action.id)
-
-        return {'action': action.id}
+        return {'action': action_id}
 
     @request_context
     def node_check(self, context, identity, params=None):

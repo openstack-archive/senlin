@@ -638,26 +638,21 @@ class NodeTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
 
     @mock.patch.object(dispatcher, 'start_action')
-    @mock.patch("senlin.engine.actions.base.Action")
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(service.EngineService, 'node_find')
     def test_node_delete(self, mock_find, mock_action, mock_start):
         mock_find.return_value = mock.Mock(id='12345678AB')
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
 
         result = self.eng.node_delete(self.ctx, 'FAKE_NODE')
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
         mock_action.assert_called_once_with(
-            '12345678AB', consts.NODE_DELETE,
+            self.ctx, '12345678AB', consts.NODE_DELETE,
             name='node_delete_12345678',
             cause=action_mod.CAUSE_RPC,
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain)
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
+            status=action_mod.Action.READY)
         mock_start.assert_called_once_with(action_id='ACTION_ID')
 
     @mock.patch.object(service.EngineService, 'node_find')
