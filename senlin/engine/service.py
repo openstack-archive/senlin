@@ -1069,33 +1069,25 @@ class EngineService(service.Service):
                        'max_size': max_size, 'min_step': min_step,
                        'strict': strict})
 
-        inputs = {
-            consts.ADJUSTMENT_TYPE: adj_type,
-            consts.ADJUSTMENT_NUMBER: number,
-            consts.ADJUSTMENT_MIN_SIZE: min_size,
-            consts.ADJUSTMENT_MAX_SIZE: max_size,
-            consts.ADJUSTMENT_MIN_STEP: min_step,
-            consts.ADJUSTMENT_STRICT: strict
-        }
-
-        action_name = 'cluster_resize_%s' % db_cluster.id[:8]
         params = {
-            'name': action_name,
+            'name': 'cluster_resize_%s' % db_cluster.id[:8],
             'cause': action_mod.CAUSE_RPC,
-            'inputs': inputs,
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
+            'status': action_mod.Action.READY,
+            'inputs': {
+                consts.ADJUSTMENT_TYPE: adj_type,
+                consts.ADJUSTMENT_NUMBER: number,
+                consts.ADJUSTMENT_MIN_SIZE: min_size,
+                consts.ADJUSTMENT_MAX_SIZE: max_size,
+                consts.ADJUSTMENT_MIN_STEP: min_step,
+                consts.ADJUSTMENT_STRICT: strict
+            }
         }
-        action = action_mod.Action(db_cluster.id, consts.CLUSTER_RESIZE,
-                                   **params)
-        action.status = action.READY
-        action.store(context)
-        dispatcher.start_action(action_id=action.id)
+        action_id = action_mod.Action.create(context, db_cluster.id,
+                                             consts.CLUSTER_RESIZE, **params)
+        dispatcher.start_action(action_id=action_id)
+        LOG.info(_LI("Cluster resize action queued: %s."), action_id)
 
-        LOG.info(_LI("Cluster resize action queued: %s."), action.id)
-
-        return {'action': action.id}
+        return {'action': action_id}
 
     @request_context
     def cluster_scale_out(self, context, identity, count=None):

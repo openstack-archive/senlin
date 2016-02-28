@@ -966,7 +966,7 @@ class ClusterTest(base.SenlinTestCase):
     @mock.patch.object(su, 'calculate_desired')
     @mock.patch.object(su, 'check_size_params')
     @mock.patch.object(dispatcher, 'start_action')
-    @mock.patch('senlin.engine.actions.base.Action')
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_resize_exact_capacity(self, mock_find, mock_action,
                                            notify, mock_check, mock_calc):
@@ -974,9 +974,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_find.return_value = x_cluster
         mock_calc.return_value = 5
         mock_check.return_value = None
-
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
 
         res = self.eng.cluster_resize(self.ctx, 'CLUSTER',
                                       adj_type=consts.EXACT_CAPACITY,
@@ -987,9 +985,10 @@ class ClusterTest(base.SenlinTestCase):
         mock_calc.assert_called_once_with(3, consts.EXACT_CAPACITY, 5, None)
         mock_check.assert_called_once_with(x_cluster, 5, None, None, True)
         mock_action.assert_called_once_with(
-            '12345678ABCDEFGH', consts.CLUSTER_RESIZE,
+            self.ctx, '12345678ABCDEFGH', consts.CLUSTER_RESIZE,
             name='cluster_resize_12345678',
             cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY,
             inputs={
                 consts.ADJUSTMENT_TYPE: consts.EXACT_CAPACITY,
                 consts.ADJUSTMENT_NUMBER: 5,
@@ -998,18 +997,13 @@ class ClusterTest(base.SenlinTestCase):
                 consts.ADJUSTMENT_MIN_STEP: None,
                 consts.ADJUSTMENT_STRICT: True
             },
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain,
         )
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
         notify.assert_called_once_with(action_id='ACTION_ID')
 
     @mock.patch.object(su, 'calculate_desired')
     @mock.patch.object(su, 'check_size_params')
     @mock.patch.object(dispatcher, 'start_action')
-    @mock.patch('senlin.engine.actions.base.Action')
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_resize_change_in_capacity(self, mock_find, mock_action,
                                                notify, mock_check, mock_calc):
@@ -1017,9 +1011,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_find.return_value = x_cluster
         mock_calc.return_value = 9
         mock_check.return_value = None
-
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
 
         res = self.eng.cluster_resize(self.ctx, 'CLUSTER',
                                       adj_type=consts.CHANGE_IN_CAPACITY,
@@ -1031,10 +1023,10 @@ class ClusterTest(base.SenlinTestCase):
                                           None)
         mock_check.assert_called_once_with(x_cluster, 9, None, None, True)
         mock_action.assert_called_once_with(
-            '12345678ABCDEFGH',
-            consts.CLUSTER_RESIZE,
+            self.ctx, '12345678ABCDEFGH', consts.CLUSTER_RESIZE,
             name='cluster_resize_12345678',
             cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY,
             inputs={
                 consts.ADJUSTMENT_TYPE: consts.CHANGE_IN_CAPACITY,
                 consts.ADJUSTMENT_NUMBER: 5,
@@ -1043,18 +1035,13 @@ class ClusterTest(base.SenlinTestCase):
                 consts.ADJUSTMENT_MIN_STEP: None,
                 consts.ADJUSTMENT_STRICT: True
             },
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain,
         )
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
         notify.assert_called_once_with(action_id='ACTION_ID')
 
     @mock.patch.object(su, 'calculate_desired')
     @mock.patch.object(su, 'check_size_params')
     @mock.patch.object(dispatcher, 'start_action')
-    @mock.patch('senlin.engine.actions.base.Action')
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_resize_change_in_percentage(self, mock_find, mock_action,
                                                  notify, mock_check,
@@ -1063,9 +1050,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_find.return_value = x_cluster
         mock_calc.return_value = 8
         mock_check.return_value = None
-
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
 
         res = self.eng.cluster_resize(self.ctx, 'CLUSTER',
                                       adj_type=consts.CHANGE_IN_PERCENTAGE,
@@ -1077,10 +1062,10 @@ class ClusterTest(base.SenlinTestCase):
                                           15.81, None)
         mock_check.assert_called_once_with(x_cluster, 8, None, None, True)
         mock_action.assert_called_once_with(
-            '12345678ABCDEFGH',
-            consts.CLUSTER_RESIZE,
+            self.ctx, '12345678ABCDEFGH', consts.CLUSTER_RESIZE,
             name='cluster_resize_12345678',
             cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY,
             inputs={
                 consts.ADJUSTMENT_TYPE: consts.CHANGE_IN_PERCENTAGE,
                 consts.ADJUSTMENT_NUMBER: 15.81,
@@ -1089,12 +1074,7 @@ class ClusterTest(base.SenlinTestCase):
                 consts.ADJUSTMENT_MIN_STEP: None,
                 consts.ADJUSTMENT_STRICT: True
             },
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain,
         )
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
         notify.assert_called_once_with(action_id='ACTION_ID')
 
     def test_cluster_resize_bad_adj_type(self):
