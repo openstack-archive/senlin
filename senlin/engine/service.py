@@ -1704,24 +1704,19 @@ class EngineService(service.Service):
         if enabled is not None:
             inputs['enabled'] = utils.parse_bool_param('enabled', enabled)
 
-        action_name = 'update_policy_%s' % db_cluster.id[:8]
         params = {
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
-            'name': action_name,
+            'name': 'update_policy_%s' % db_cluster.id[:8],
             'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
             'inputs': inputs
         }
-        action = action_mod.Action(db_cluster.id, consts.CLUSTER_UPDATE_POLICY,
-                                   **params)
-        action.status = action.READY
-        action.store(context)
-        dispatcher.start_action(action_id=action.id)
+        action_id = action_mod.Action.create(context, db_cluster.id,
+                                             consts.CLUSTER_UPDATE_POLICY,
+                                             **params)
+        dispatcher.start_action(action_id=action_id)
+        LOG.info(_LI("Policy update action queued: %s."), action_id)
 
-        LOG.info(_LI("Policy update action queued: %s."), action.id)
-
-        return {'action': action.id}
+        return {'action': action_id}
 
     def action_find(self, context, identity, project_safe=True):
         """Find an action with the given identity.
