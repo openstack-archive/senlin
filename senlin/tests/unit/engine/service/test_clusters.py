@@ -212,7 +212,7 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'check_cluster_quota')
     @mock.patch.object(su, 'check_size_params')
-    @mock.patch("senlin.engine.actions.base.Action")
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch("senlin.engine.cluster.Cluster")
     @mock.patch.object(service.EngineService, 'profile_find')
     @mock.patch.object(dispatcher, 'start_action')
@@ -223,8 +223,7 @@ class ClusterTest(base.SenlinTestCase):
         x_cluster = mock.Mock(id='12345678ABC')
         x_cluster.to_dict.return_value = {'foo': 'bar'}
         mock_cluster.return_value = x_cluster
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
         mock_check.return_value = None
         mock_quota.return_value = None
 
@@ -240,15 +239,12 @@ class ClusterTest(base.SenlinTestCase):
             domain=self.ctx.domain)
         x_cluster.store.assert_called_once_with(self.ctx)
         mock_action.assert_called_once_with(
+            self.ctx,
             '12345678ABC', 'CLUSTER_CREATE',
             name='cluster_create_12345678',
             cause=action_mod.CAUSE_RPC,
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain
+            status=action_mod.Action.READY,
         )
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
         notify.assert_called_once_with(action_id='ACTION_ID')
 
     @mock.patch.object(db_api, 'cluster_count_all')
