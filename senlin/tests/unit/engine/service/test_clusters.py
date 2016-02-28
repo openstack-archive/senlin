@@ -618,7 +618,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_load.assert_called_once_with(self.ctx, cluster=x_obj)
 
-    @mock.patch("senlin.engine.actions.base.Action")
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(db_api, 'receiver_get_all')
     @mock.patch.object(db_api, 'cluster_policy_get_all')
     @mock.patch.object(service.EngineService, 'cluster_find')
@@ -629,8 +629,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_find.return_value = x_obj
         mock_policies.return_value = []
         mock_receivers.return_value = []
-        x_action = mock.Mock(id='ACTION_ID')
-        mock_action.return_value = x_action
+        mock_action.return_value = 'ACTION_ID'
 
         result = self.eng.cluster_delete(self.ctx, 'IDENTITY')
 
@@ -640,14 +639,11 @@ class ClusterTest(base.SenlinTestCase):
         mock_receivers.assert_called_once_with(
             self.ctx, filters={'cluster_id': '12345678AB'})
         mock_action.assert_called_once_with(
-            '12345678AB', 'CLUSTER_DELETE',
+            self.ctx, '12345678AB', 'CLUSTER_DELETE',
             name='cluster_delete_12345678',
             cause=action_mod.CAUSE_RPC,
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain)
-        self.assertEqual(x_action.READY, x_action.status)
-        x_action.store.assert_called_once_with(self.ctx)
+            status=action_mod.Action.READY)
+
         notify.assert_called_once_with(action_id='ACTION_ID')
 
     @mock.patch.object(service.EngineService, 'cluster_find')

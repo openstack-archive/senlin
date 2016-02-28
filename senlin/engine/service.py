@@ -830,23 +830,17 @@ class EngineService(service.Service):
             LOG.error(msg)
             raise exception.BadRequest(msg=msg)
 
-        action_name = 'cluster_delete_%s' % db_cluster.id[:8]
         params = {
-            'name': action_name,
+            'name': 'cluster_delete_%s' % db_cluster.id[:8],
             'cause': action_mod.CAUSE_RPC,
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
+            'status': action_mod.Action.READY,
         }
-        action = action_mod.Action(db_cluster.id, consts.CLUSTER_DELETE,
-                                   **params)
-        action.status = action.READY
-        action.store(context)
-        dispatcher.start_action(action_id=action.id)
+        action_id = action_mod.Action.create(context, db_cluster.id,
+                                             consts.CLUSTER_DELETE, **params)
+        dispatcher.start_action(action_id=action_id)
+        LOG.info(_LI("Cluster delete action queued: %s"), action_id)
 
-        LOG.info(_LI("Cluster delete action queued: %s"), action.id)
-
-        return {'action': action.id}
+        return {'action': action_id}
 
     @request_context
     def cluster_add_nodes(self, context, identity, nodes):
