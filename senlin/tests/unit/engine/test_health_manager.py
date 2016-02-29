@@ -20,7 +20,6 @@ health policies.
 import mock
 
 from senlin.common import consts
-from senlin.common import context as senlin_ctx
 from senlin.common import messaging as rpc_messaging
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import health_manager
@@ -48,50 +47,41 @@ class TestHealthManager(base.SenlinTestCase):
 
     @mock.patch.object(db_api, 'registry_claim')
     def test__load_runtime_registry(self, mock_reg_claim):
-        registry_1 = mock.Mock()
-        registry_1.engine_id = 'ENGINE_ID'
-        registry_2 = mock.Mock()
-        registry_2.engine_id = 'ANOTHER_ENGINE_ID'
-        registries = [registry_1, registry_2]
+        mock_reg_claim.return_value = [
+            mock.Mock(engine_id='ENGINE_ID'),
+            mock.Mock(engine_id='ENGINE_ID')
+        ]
 
-        mock_reg_claim.return_value = registries
         self.hm._load_runtime_registry()
-        self.assertEqual(1, len(self.hm.rt['registries']))
+
+        self.assertEqual(2, len(self.hm.registries))
 
     @mock.patch('senlin.rpc.client.EngineClient')
-    @mock.patch.object(senlin_ctx, 'get_service_context')
-    def test_periodic_check(self, mock_ctx, mock_ec):
-        ctx = mock.Mock()
-        mock_ctx.return_value = ctx
+    def test_periodic_check(self, mock_ec):
         rpcc = mock.Mock()
         mock_ec.return_value = rpcc
         mock_check = self.patchobject(rpcc, 'cluster_check',
                                       return_value=mock.Mock())
         self.hm._periodic_check(cluster_id='CLUSTER_ID')
-        mock_check.assert_called_once_with(ctx, 'CLUSTER_ID')
+        mock_check.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID')
 
     @mock.patch.object(db_api, 'registry_create')
-    @mock.patch.object(senlin_ctx, 'get_service_context')
-    def test_register_cluster(self, mock_ctx, mock_reg_create):
-        ctx = mock.Mock()
-        mock_ctx.return_value = ctx
+    def test_register_cluster(self, mock_reg_create):
         self.hm.register_cluster(cluster_id='CLUSTER_ID',
                                  check_type='NODE_STATUS_POLLING',
                                  interval=50)
         matched_type = 'NODE_STATUS_POLLING'
-        mock_reg_create.assert_called_once_with(ctx, cluster_id='CLUSTER_ID',
+        mock_reg_create.assert_called_once_with(self.hm.ctx,
+                                                cluster_id='CLUSTER_ID',
                                                 check_type=matched_type,
                                                 engine_id='ENGINE_ID',
                                                 interval=50,
                                                 params={})
 
     @mock.patch.object(db_api, 'registry_delete')
-    @mock.patch.object(senlin_ctx, 'get_service_context')
-    def test_unregister_cluster(self, mock_ctx, mock_reg_delete):
-        ctx = mock.Mock()
-        mock_ctx.return_value = ctx
+    def test_unregister_cluster(self, mock_reg_delete):
         self.hm.unregister_cluster(cluster_id='CLUSTER_ID')
-        mock_reg_delete.assert_called_once_with(ctx, 'CLUSTER_ID')
+        mock_reg_delete.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID')
 
     @mock.patch.object(db_api, 'registry_claim')
     @mock.patch('oslo_messaging.Target')
