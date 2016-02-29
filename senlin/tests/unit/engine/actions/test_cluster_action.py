@@ -742,12 +742,14 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual('Cannot delete cluster object.', res_msg)
 
     @mock.patch.object(db_api, 'action_update')
+    @mock.patch.object(base_action.Action, 'create')
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(db_api, 'dependency_add')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
     def test_do_add_nodes_single(self, mock_wait, mock_start, mock_dep,
-                                 mock_load_node, mock_update, mock_load):
+                                 mock_load_node, mock_action, mock_update,
+                                 mock_load):
         cluster = mock.Mock()
         cluster.id = 'CLUSTER_ID'
         mock_load.return_value = cluster
@@ -763,11 +765,7 @@ class ClusterActionTest(base.SenlinTestCase):
         node.cluster_id = None
         node.status = node.ACTIVE
         mock_load_node.return_value = node
-
-        node_action = mock.Mock()
-        node_action.id = 'NODE_ACTION_ID'
-        mock_action = self.patchobject(base_action, 'Action',
-                                       return_value=node_action)
+        mock_action.return_value = 'NODE_ACTION_ID'
         mock_wait.return_value = (action.RES_OK, 'Good to go!')
 
         # do it
@@ -780,26 +778,26 @@ class ClusterActionTest(base.SenlinTestCase):
 
         mock_load_node.assert_called_once_with(action.context, 'NODE_1')
         mock_action.assert_called_once_with(
-            'NODE_1', 'NODE_JOIN', user=self.ctx.user,
-            project=self.ctx.project, domain=self.ctx.domain,
+            action.context, 'NODE_1', 'NODE_JOIN',
             name='node_join_NODE_1', cause='Derived Action',
             inputs={'cluster_id': 'CLUSTER_ID'})
-        node_action.store.assert_called_once_with(action.context)
         mock_dep.assert_called_once_with(action.context, ['NODE_ACTION_ID'],
                                          'CLUSTER_ACTION_ID')
         mock_update.assert_called_once_with(
-            action.context, 'NODE_ACTION_ID', {'status': node_action.READY})
+            action.context, 'NODE_ACTION_ID', {'status': 'READY'})
         mock_start.assert_called_once_with(action_id='NODE_ACTION_ID')
         mock_wait.assert_called_once_with()
         cluster.add_node.assert_called_once_with(node)
 
     @mock.patch.object(db_api, 'action_update')
+    @mock.patch.object(base_action.Action, 'create')
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(db_api, 'dependency_add')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
     def test_do_add_nodes_multiple(self, mock_wait, mock_start, mock_dep,
-                                   mock_load_node, mock_update, mock_load):
+                                   mock_load_node, mock_action, mock_update,
+                                   mock_load):
         cluster = mock.Mock()
         cluster.id = 'CLUSTER_ID'
         mock_load.return_value = cluster
@@ -818,14 +816,7 @@ class ClusterActionTest(base.SenlinTestCase):
         node2.cluster_id = None
         node2.status = node2.ACTIVE
         mock_load_node.side_effect = [node1, node2]
-
-        node_action_1 = mock.Mock()
-        node_action_1.id = 'NODE_ACTION_ID_1'
-        node_action_2 = mock.Mock()
-        node_action_2.id = 'NODE_ACTION_ID_2'
-
-        mock_action = self.patchobject(
-            base_action, 'Action', side_effect=[node_action_1, node_action_2])
+        mock_action.side_effect = ['NODE_ACTION_1', 'NODE_ACTION_2']
         mock_wait.return_value = (action.RES_OK, 'Good to go!')
 
         # do it
@@ -840,30 +831,24 @@ class ClusterActionTest(base.SenlinTestCase):
             mock.call(action.context, 'NODE_1'),
             mock.call(action.context, 'NODE_2')])
         mock_action.assert_has_calls([
-            mock.call('NODE_1', 'NODE_JOIN', user=self.ctx.user,
-                      project=self.ctx.project, domain=self.ctx.domain,
+            mock.call(action.context, 'NODE_1', 'NODE_JOIN',
                       name='node_join_NODE_1', cause='Derived Action',
                       inputs={'cluster_id': 'CLUSTER_ID'}),
-            mock.call('NODE_2', 'NODE_JOIN', user=self.ctx.user,
-                      project=self.ctx.project, domain=self.ctx.domain,
+            mock.call(action.context, 'NODE_2', 'NODE_JOIN',
                       name='node_join_NODE_2', cause='Derived Action',
                       inputs={'cluster_id': 'CLUSTER_ID'})])
 
-        node_action_1.store.assert_called_once_with(action.context)
-        node_action_2.store.assert_called_once_with(action.context)
         mock_dep.assert_called_once_with(
             action.context,
-            ['NODE_ACTION_ID_1', 'NODE_ACTION_ID_2'],
+            ['NODE_ACTION_1', 'NODE_ACTION_2'],
             'CLUSTER_ACTION_ID')
         mock_update.assert_has_calls([
-            mock.call(action.context, 'NODE_ACTION_ID_1',
-                      {'status': node_action_1.READY}),
-            mock.call(action.context, 'NODE_ACTION_ID_2',
-                      {'status': node_action_2.READY})
+            mock.call(action.context, 'NODE_ACTION_1', {'status': 'READY'}),
+            mock.call(action.context, 'NODE_ACTION_2', {'status': 'READY'})
         ])
         mock_start.assert_has_calls([
-            mock.call(action_id='NODE_ACTION_ID_1'),
-            mock.call(action_id='NODE_ACTION_ID_2')])
+            mock.call(action_id='NODE_ACTION_1'),
+            mock.call(action_id='NODE_ACTION_2')])
 
         mock_wait.assert_called_once_with()
         cluster.add_node.assert_has_calls([
@@ -949,29 +934,23 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual("Node [NODE_1] is not in ACTIVE status.", res_msg)
 
     @mock.patch.object(db_api, 'action_update')
+    @mock.patch.object(base_action.Action, 'create')
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(db_api, 'dependency_add')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
     def test_do_add_nodes_failed_waiting(self, mock_wait, mock_start, mock_dep,
-                                         mock_load_node, mock_update,
-                                         mock_load):
+                                         mock_load_node, mock_action,
+                                         mock_update, mock_load):
         action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
         action.inputs = {'nodes': ['NODE_1']}
         action.data = {}
 
-        cluster = mock.Mock()
-        cluster.id = 'CLUSTER_ID'
-        node = mock.Mock()
-        node.id = 'NODE_1'
-        node.cluster_id = None
-        node.status = node.ACTIVE
-        mock_load_node.return_value = node
-
-        node_action = mock.Mock()
-        node_action.id = 'NODE_ACTION_ID'
-        self.patchobject(base_action, 'Action', return_value=node_action)
+        mock_load_node.return_value = mock.Mock(id='NODE_1', cluster_id=None,
+                                                status='ACTIVE',
+                                                ACTIVE='ACTIVE')
+        mock_action.return_value = 'NODE_ACTION_ID'
         mock_wait.return_value = (action.RES_TIMEOUT, 'Timeout!')
 
         # do it
@@ -980,7 +959,7 @@ class ClusterActionTest(base.SenlinTestCase):
         # assertions
         mock_update.assert_called_once_with(
             action.context, 'NODE_ACTION_ID',
-            {'status': node_action.READY})
+            {'status': base_action.Action.READY})
         self.assertEqual(action.RES_TIMEOUT, res_code)
         self.assertEqual('Timeout!', res_msg)
         self.assertEqual({}, action.data)
