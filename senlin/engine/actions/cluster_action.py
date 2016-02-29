@@ -466,28 +466,22 @@ class ClusterAction(base.Action):
         saved_reason = self.cluster.status_reason
         self.cluster.do_check(self.context)
 
-        child_actions = []
+        child = []
         for node in self.cluster.nodes:
             node_id = node.id
-            kwargs = {
-                'name': 'node_check_%s' % node_id[:8],
-                'cause': base.CAUSE_DERIVED,
-                'user': self.context.user,
-                'project': self.context.project,
-                'domain': self.context.domain,
-            }
-            action = base.Action(node_id, 'NODE_CHECK', **kwargs)
-            action.store(self.context)
-            child_actions.append(action)
+            action_id = base.Action.create(
+                self.context, node_id, consts.NODE_CHECK,
+                name='node_check_%s' % node_id[:8],
+                cause=base.CAUSE_DERIVED,
+            )
+            child.append(action_id)
 
-        if child_actions:
-            db_api.dependency_add(self.context,
-                                  [c.id for c in child_actions],
-                                  self.id)
-            for child in child_actions:
-                db_api.action_update(self.context, child.id,
-                                     {'status': child.READY})
-                dispatcher.start_action(action_id=child.id)
+        if child:
+            db_api.dependency_add(self.context, [c for c in child], self.id)
+            for cid in child:
+                db_api.action_update(self.context, cid,
+                                     {'status': base.Action.READY})
+                dispatcher.start_action(action_id=cid)
 
             # Wait for dependent action if any
             res, reason = self._wait_for_dependents()
@@ -503,7 +497,7 @@ class ClusterAction(base.Action):
         """
         res = self.cluster.do_recover(self.context)
         if not res:
-            reason = _('Cluster recover failed.')
+            reason = _('Cluster recovery failed.')
             self.cluster.set_status(self.context, self.cluster.ERROR, reason)
             return self.RES_ERROR, reason
 
@@ -520,33 +514,24 @@ class ClusterAction(base.Action):
 
         reason = _('Cluster recovery succeeded.')
 
-        child_actions = []
+        children = []
         for node in self.cluster.nodes:
             if node.status == 'ACTIVE':
                 continue
             node_id = node.id
-            kwargs = {
-                'name': 'node_recover_%s' % node_id[:8],
-                'cause': base.CAUSE_DERIVED,
-                'inputs': {
-                    'operation': recover_action,
-                },
-                'user': self.context.user,
-                'project': self.context.project,
-                'domain': self.context.domain,
-            }
-            action = base.Action(node_id, 'NODE_RECOVER', **kwargs)
-            action.store(self.context)
-            child_actions.append(action)
+            action_id = base.Action.create(
+                self.context, node_id, consts.NODE_RECOVER,
+                name='node_recover_%s' % node_id[:8],
+                cause=base.CAUSE_DERIVED,
+                inputs={'operation': recover_action}
+            )
+            children.append(action_id)
 
-        if child_actions:
-            db_api.dependency_add(self.context,
-                                  [c.id for c in child_actions],
-                                  self.id)
-            for child in child_actions:
-                db_api.action_update(self.context, child.id,
-                                     {'status': child.READY})
-                dispatcher.start_action(action_id=child.id)
+        if children:
+            db_api.dependency_add(self.context, [c for c in children], self.id)
+            for cid in children:
+                db_api.action_update(self.context, cid, {'status': 'READY'})
+                dispatcher.start_action(action_id=cid)
 
             # Wait for dependent action if any
             res, reason = self._wait_for_dependents()

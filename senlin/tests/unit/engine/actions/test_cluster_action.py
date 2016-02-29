@@ -1077,96 +1077,149 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual("Things went bad.", res_msg)
 
     @mock.patch.object(db_api, 'action_update')
+    @mock.patch.object(base_action.Action, 'create')
     @mock.patch.object(db_api, 'dependency_add')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test_do_recover(self, mock_wait, mock_start, mock_dep, mock_update,
-                        mock_load):
-        cluster = mock.Mock()
-        cluster.id = 'FAKE_ID'
-        cluster.RECOVERING = 'RECOVERING'
-        node1 = mock.Mock()
-        node1.id = 'fake id 1'
-        node1.cluster_id = 'FAKE_ID'
-        node1.status = 'ACTIVE'
-        node2 = mock.Mock()
-        node2.id = 'fake id 2'
-        node2.cluster_id = 'FAKE_ID'
-        node2.status = 'ERROR'
+    def test_do_recover(self, mock_wait, mock_start, mock_dep, mock_action,
+                        mock_update, mock_load):
+        node1 = mock.Mock(id='NODE_1', cluster_id='FAKE_ID', status='ACTIVE')
+        node2 = mock.Mock(id='NODE_2', cluster_id='FAKE_ID', statu='ERROR')
+
+        cluster = mock.Mock(id='FAKE_ID', RECOVERING='RECOVERING')
+        cluster.do_recover.return_value = True
         mock_load.return_value = cluster
         cluster.nodes = [node1, node2]
 
-        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_RECOVER', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
         action.data = {}
 
-        n_action = mock.Mock()
-        mock_action = self.patchobject(base_action, 'Action',
-                                       side_effect=[n_action])
-        mock_wait.return_value = (action.RES_OK,
-                                  'All dependents ended with success')
+        mock_action.return_value = 'NODE_RECOVER_ID'
+        mock_wait.return_value = (action.RES_OK, 'Everything is Okay')
 
         # do it
         res_code, res_msg = action.do_recover()
 
         # assertions
         self.assertEqual(action.RES_OK, res_code)
-        self.assertEqual('All dependents ended with success', res_msg)
-        self.assertEqual(1, mock_action.call_count)
-        n_action.store.assert_called_once_with(action.context)
-        self.assertEqual(1, mock_dep.call_count)
-        update_calls = [
-            mock.call(action.context, n_action.id,
-                      {'status': n_action.READY})
-        ]
-        mock_update.assert_has_calls(update_calls)
-        self.assertEqual(1, mock_start.call_count)
+        self.assertEqual('Everything is Okay', res_msg)
 
-    def test_do_recover_all_nodes_active(self, mock_load):
-        cluster = mock.Mock()
-        cluster.id = 'FAKE_ID'
-        cluster.RECOVERING = 'RECOVERING'
-        node1 = mock.Mock()
-        node1.id = 'fake id 1'
-        node1.cluster_id = 'FAKE_ID'
-        node1.status = 'ACTIVE'
-        node2 = mock.Mock()
-        node2.id = 'fake id 2'
-        node2.cluster_id = 'FAKE_ID'
-        node2.status = 'ACTIVE'
+        cluster.do_recover.assert_called_once_with(action.context)
+        mock_action.assert_called_once_with(
+            action.context, 'NODE_2', 'NODE_RECOVER',
+            name='node_recover_NODE_2',
+            cause=base_action.CAUSE_DERIVED,
+            inputs={'operation': 'RECREATE'}
+        )
+        mock_dep.assert_called_once_with(action.context, ['NODE_RECOVER_ID'],
+                                         'CLUSTER_ACTION_ID')
+        mock_update.assert_called_once_with(action.context, 'NODE_RECOVER_ID',
+                                            {'status': 'READY'})
+        mock_start.assert_called_once_with(action_id='NODE_RECOVER_ID')
+        mock_wait.assert_called_once_with()
+        cluster.set_status.assert_called_once_with(
+            action.context, cluster.ACTIVE, 'Everything is Okay')
+
+    def test_do_recover_failed_recover(self, mock_load):
+        cluster = mock.Mock(id='FAKE_ID')
+        cluster.do_recover.return_value = False
         mock_load.return_value = cluster
-        cluster.nodes = [node1, node2]
-
-        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
-        action.id = 'CLUSTER_ACTION_ID'
-        action.data = {}
+        action = ca.ClusterAction('FAKE_CLUSTER', 'CLUSTER_RECOVER', self.ctx)
 
         # do it
         res_code, res_msg = action.do_recover()
 
         # assertions
-        self.assertEqual(action.RES_OK, res_code)
-        self.assertEqual('Cluster recovery succeeded.', res_msg)
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('Cluster recovery failed.', res_msg)
+
+        mock_load.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
 
     @mock.patch.object(db_api, 'action_update')
+    @mock.patch.object(base_action.Action, 'create')
     @mock.patch.object(db_api, 'dependency_add')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test_do_recover_failure(self, mock_wait, mock_start, mock_dep,
-                                mock_update, mock_load):
-        node = mock.Mock()
-        node.id = 'NODE_1'
-        node.cluster_id = 'CID'
-        node.status = 'ERROR'
-        cluster = mock.Mock()
-        cluster.id = 'CID'
+    def test_do_recover_with_data(self, mock_wait, mock_start, mock_dep,
+                                  mock_action, mock_update, mock_load):
+        node1 = mock.Mock(id='NODE_1', cluster_id='FAKE_ID', status='ERROR')
+        cluster = mock.Mock(id='FAKE_ID', RECOVERING='RECOVERING')
+        cluster.nodes = [node1]
+        cluster.do_recover.return_value = True
         mock_load.return_value = cluster
-        cluster.nodes = [node]
 
-        action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx)
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_RECOVER', self.ctx)
+        action.id = 'CLUSTER_ACTION_ID'
+        action.data = {
+            'health': {
+                'recover_action': 'REBOOT',
+            }
+        }
+
+        mock_action.return_value = 'NODE_RECOVER_ID'
+        mock_wait.return_value = (action.RES_OK, 'Everything is Okay')
+
+        # do it
+        res_code, res_msg = action.do_recover()
+
+        # assertions
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Everything is Okay', res_msg)
+
+        cluster.do_recover.assert_called_once_with(action.context)
+        mock_action.assert_called_once_with(
+            action.context, 'NODE_1', 'NODE_RECOVER',
+            name='node_recover_NODE_1',
+            cause=base_action.CAUSE_DERIVED,
+            inputs={'operation': 'REBOOT'}
+        )
+        mock_dep.assert_called_once_with(action.context, ['NODE_RECOVER_ID'],
+                                         'CLUSTER_ACTION_ID')
+        mock_update.assert_called_once_with(action.context, 'NODE_RECOVER_ID',
+                                            {'status': 'READY'})
+        mock_start.assert_called_once_with(action_id='NODE_RECOVER_ID')
+        mock_wait.assert_called_once_with()
+        cluster.set_status.assert_called_once_with(
+            action.context, cluster.ACTIVE, 'Everything is Okay')
+
+    def test_do_recover_all_nodes_active(self, mock_load):
+        cluster = mock.Mock(id='FAKE_ID')
+        cluster.do_recover.return_value = True
+        mock_load.return_value = cluster
+
+        node1 = mock.Mock(id='NODE_1', cluster_id='FAKE_ID', status='ACTIVE')
+        node2 = mock.Mock(id='NODE_2', cluster_id='FAKE_ID', status='ACTIVE')
+        cluster.nodes = [node1, node2]
+
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_RECOVER', self.ctx)
+
+        # do it
+        res_code, res_msg = action.do_recover()
+
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Cluster recovery succeeded.', res_msg)
+        cluster.do_recover.assert_called_once_with(self.ctx)
+        cluster.set_status.assert_called_once_with(
+            action.context, cluster.ACTIVE, 'Cluster recovery succeeded.')
+
+    @mock.patch.object(db_api, 'action_update')
+    @mock.patch.object(base_action.Action, 'create')
+    @mock.patch.object(db_api, 'dependency_add')
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
+    def test_do_recover_failed_waiting(self, mock_wait, mock_start, mock_dep,
+                                       mock_action, mock_update, mock_load):
+        node = mock.Mock(id='NODE_1', cluster_id='CID', status='ERROR')
+        cluster = mock.Mock(id='CID')
+        cluster.do_recover.return_value = True
+        cluster.nodes = [node]
+        mock_load.return_value = cluster
+        mock_action.return_value = 'NODE_ACTION_ID'
+
+        action = ca.ClusterAction('FAKE_CLUSTER', 'CLUSTER_REOVER', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
 
-        # timeout
         mock_wait.return_value = (action.RES_TIMEOUT, 'Timeout!')
 
         res_code, res_msg = action.do_recover()
@@ -1174,13 +1227,22 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_TIMEOUT, res_code)
         self.assertEqual('Timeout!', res_msg)
 
-        mock_wait.return_value = (action.RES_RETRY, 'retry')
-
-        # do it
-        res_code, res_msg = action.do_recover()
-
-        self.assertEqual(action.RES_RETRY, res_code)
-        self.assertEqual('retry', res_msg)
+        mock_load.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
+        cluster.do_recover.assert_called_once_with(action.context)
+        mock_action.assert_called_once_with(
+            action.context, 'NODE_1', 'NODE_RECOVER',
+            name='node_recover_NODE_1',
+            cause=base_action.CAUSE_DERIVED,
+            inputs={'operation': 'RECREATE'}
+        )
+        mock_dep.assert_called_once_with(action.context, ['NODE_ACTION_ID'],
+                                         'CLUSTER_ACTION_ID')
+        mock_update.assert_called_once_with(action.context, 'NODE_ACTION_ID',
+                                            {'status': 'READY'})
+        mock_start.assert_called_once_with(action_id='NODE_ACTION_ID')
+        mock_wait.assert_called_once_with()
+        cluster.set_status.assert_called_once_with(
+            action.context, cluster.ERROR, 'Timeout!')
 
     @mock.patch.object(ca.ClusterAction, '_get_action_data')
     @mock.patch.object(scaleutils, 'parse_resize_params')
