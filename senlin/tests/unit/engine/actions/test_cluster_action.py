@@ -384,27 +384,22 @@ class ClusterActionTest(base.SenlinTestCase):
         cluster.set_status.assert_called_once_with(action.context, 'INIT')
 
     @mock.patch.object(db_api, 'action_update')
+    @mock.patch.object(base_action.Action, 'create')
     @mock.patch.object(db_api, 'dependency_add')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
     def test_do_update_multi(self, mock_wait, mock_start, mock_dep,
-                             mock_update, mock_load):
-        node1 = mock.Mock()
-        node1.id = 'fake id 1'
-        node2 = mock.Mock()
-        node2.id = 'fake id 2'
-        cluster = mock.Mock()
-        cluster.id = 'FAKE_ID'
+                             mock_action, mock_update, mock_load):
+        node1 = mock.Mock(id='fake id 1')
+        node2 = mock.Mock(id='fake id 2')
+        cluster = mock.Mock(id='FAKE_ID')
         cluster.nodes = [node1, node2]
         cluster.ACTIVE = 'ACTIVE'
         mock_load.return_value = cluster
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.inputs = {'new_profile_id': 'FAKE_PROFILE'}
 
-        n_action_1 = mock.Mock()
-        n_action_2 = mock.Mock()
-        mock_action = self.patchobject(base_action, 'Action',
-                                       side_effect=[n_action_1, n_action_2])
+        mock_action.side_effect = ['NODE_ACTION_1', 'NODE_ACTION_2']
         mock_wait.return_value = (action.RES_OK, 'OK')
 
         # do it
@@ -414,14 +409,10 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Cluster update completed.', res_msg)
         self.assertEqual(2, mock_action.call_count)
-        n_action_1.store.assert_called_once_with(action.context)
-        n_action_2.store.assert_called_once_with(action.context)
         self.assertEqual(1, mock_dep.call_count)
         update_calls = [
-            mock.call(action.context, n_action_1.id,
-                      {'status': n_action_1.READY}),
-            mock.call(action.context, n_action_2.id,
-                      {'status': n_action_2.READY})
+            mock.call(action.context, 'NODE_ACTION_1', {'status': 'READY'}),
+            mock.call(action.context, 'NODE_ACTION_2', {'status': 'READY'})
         ]
         mock_update.assert_has_calls(update_calls)
 
@@ -464,11 +455,12 @@ class ClusterActionTest(base.SenlinTestCase):
             profile_id='FAKE_PROFILE')
 
     @mock.patch.object(db_api, 'action_update')
+    @mock.patch.object(base_action.Action, 'create')
     @mock.patch.object(db_api, 'dependency_add')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
     def test_do_update_failed_wait(self, mock_wait, mock_start, mock_dep,
-                                   mock_update, mock_load):
+                                   mock_action, mock_update, mock_load):
         node = mock.Mock()
         node.id = 'fake node id'
         cluster = mock.Mock()
@@ -479,9 +471,7 @@ class ClusterActionTest(base.SenlinTestCase):
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.inputs = {'new_profile_id': 'FAKE_PROFILE'}
 
-        n_action = mock.Mock()
-        mock_action = self.patchobject(base_action, 'Action',
-                                       return_value=n_action)
+        mock_action.return_value = 'NODE_ACTION'
         mock_wait.return_value = (action.RES_TIMEOUT, 'Timeout')
 
         # do it
@@ -491,10 +481,9 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_TIMEOUT, res_code)
         self.assertEqual('Timeout', res_msg)
         self.assertEqual(1, mock_action.call_count)
-        n_action.store.assert_called_once_with(action.context)
         self.assertEqual(1, mock_dep.call_count)
-        mock_update.assert_called_once_with(
-            action.context, n_action.id, {'status': n_action.READY})
+        mock_update.assert_called_once_with(action.context, 'NODE_ACTION',
+                                            {'status': 'READY'})
         self.assertEqual(1, mock_start.call_count)
         mock_wait.assert_called_once_with()
 
