@@ -115,7 +115,7 @@ class ClusterAction(base.Action):
         placement = self.data.get('placement', None)
 
         nodes = []
-        child_actions = []
+        child = []
         for m in range(count):
             index = db_api.cluster_next_index(self.context, self.cluster.id)
             kwargs = {
@@ -140,24 +140,19 @@ class ClusterAction(base.Action):
             kwargs = {
                 'name': 'node_create_%s' % node.id[:8],
                 'cause': base.CAUSE_DERIVED,
-                'user': self.context.user,
-                'project': self.context.project,
-                'domain': self.context.domain,
             }
 
-            action = base.Action(node.id, 'NODE_CREATE', **kwargs)
-            action.store(self.context)
-            child_actions.append(action)
+            action_id = base.Action.create(self.context, node.id,
+                                           consts.NODE_CREATE, **kwargs)
+            child.append(action_id)
 
-        if child_actions:
+        if child:
             # Build dependency and make the new action ready
-            db_api.dependency_add(self.context,
-                                  [a.id for a in child_actions],
-                                  self.id)
-            for child in child_actions:
-                db_api.action_update(self.context, child.id,
-                                     {'status': child.READY})
-                dispatcher.start_action(action_id=child.id)
+            db_api.dependency_add(self.context, [a for a in child], self.id)
+            for cid in child:
+                db_api.action_update(self.context, cid,
+                                     {'status': base.Action.READY})
+                dispatcher.start_action(action_id=cid)
 
             # Wait for cluster creation to complete
             res, reason = self._wait_for_dependents()
