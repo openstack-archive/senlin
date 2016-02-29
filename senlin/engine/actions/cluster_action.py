@@ -221,41 +221,41 @@ class ClusterAction(base.Action):
         self.cluster.store(self.context)
 
         reason = _('Cluster update completed.')
-        if profile_id is not None:
-            fmt = _LI("Updating cluster '%(cluster)s': profile='%(profile)s'.")
-            LOG.info(fmt, {'cluster': self.cluster.id, 'profile': profile_id})
-            child = []
-            for node in self.cluster.nodes:
-                kwargs = {
-                    'name': 'node_update_%s' % node.id[:8],
-                    'cause': base.CAUSE_DERIVED,
-                    'inputs': {
-                        'new_profile_id': profile_id,
-                    },
-                }
-                action_id = base.Action.create(self.context, node.id,
-                                               consts.NODE_UPDATE, **kwargs)
-                child.append(action_id)
-
-            if child:
-                db_api.dependency_add(self.context, [c for c in child],
-                                      self.id)
-                for cid in child:
-                    db_api.action_update(self.context, cid,
-                                         {'status': base.Action.READY})
-                    dispatcher.start_action(action_id=cid)
-
-                result, new_reason = self._wait_for_dependents()
-                if result != self.RES_OK:
-                    new_reason = _('Failed in updating nodes.')
-                    self.cluster.set_status(self.context, self.cluster.WARNING,
-                                            new_reason)
-                    return result, new_reason
-            self.cluster.set_status(self.context, self.cluster.ACTIVE,
-                                    reason, profile_id=profile_id)
+        if profile_id is None:
+            self.cluster.set_status(self.context, self.cluster.ACTIVE, reason)
             return self.RES_OK, reason
 
-        self.cluster.set_status(self.context, self.cluster.ACTIVE, reason)
+        fmt = _LI("Updating cluster '%(cluster)s': profile='%(profile)s'.")
+        LOG.info(fmt, {'cluster': self.cluster.id, 'profile': profile_id})
+        child = []
+        for node in self.cluster.nodes:
+            kwargs = {
+                'name': 'node_update_%s' % node.id[:8],
+                'cause': base.CAUSE_DERIVED,
+                'inputs': {
+                    'new_profile_id': profile_id,
+                },
+            }
+            action_id = base.Action.create(self.context, node.id,
+                                           consts.NODE_UPDATE, **kwargs)
+            child.append(action_id)
+
+        if child:
+            db_api.dependency_add(self.context, [c for c in child], self.id)
+            for cid in child:
+                db_api.action_update(self.context, cid,
+                                     {'status': base.Action.READY})
+                dispatcher.start_action(action_id=cid)
+
+            result, new_reason = self._wait_for_dependents()
+            if result != self.RES_OK:
+                new_reason = _('Failed in updating nodes.')
+                self.cluster.set_status(self.context, self.cluster.WARNING,
+                                        new_reason)
+                return result, new_reason
+
+        self.cluster.set_status(self.context, self.cluster.ACTIVE,
+                                reason, profile_id=profile_id)
         return self.RES_OK, reason
 
     def _delete_nodes(self, node_ids):
@@ -267,27 +267,23 @@ class ClusterAction(base.Action):
             if not destroy:
                 action_name = consts.NODE_LEAVE
 
-        child_actions = []
+        child = []
         for node_id in node_ids:
             kwargs = {
                 'name': 'node_delete_%s' % node_id[:8],
                 'cause': base.CAUSE_DERIVED,
-                'user': self.context.user,
-                'project': self.context.project,
-                'domain': self.context.domain,
             }
-            action = base.Action(node_id, action_name, **kwargs)
-            action.store(self.context)
-            child_actions.append(action)
+            action_id = base.Action.create(self.context, node_id, action_name,
+                                           **kwargs)
+            child.append(action_id)
 
-        if child_actions:
-            db_api.dependency_add(self.context, [c.id for c in child_actions],
-                                  self.id)
-            for child in child_actions:
+        if child:
+            db_api.dependency_add(self.context, [c for c in child], self.id)
+            for cid in child:
                 # Build dependency and make the new action ready
-                db_api.action_update(self.context, child.id,
-                                     {'status': child.READY})
-                dispatcher.start_action(action_id=child.id)
+                db_api.action_update(self.context, cid,
+                                     {'status': base.Action.READY})
+                dispatcher.start_action(action_id=cid)
 
             res, reason = self._wait_for_dependents()
             if res == self.RES_OK:
