@@ -1792,21 +1792,19 @@ class EngineService(service.Service):
         # Create an action instance
         params = {
             'name': name,
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
             'inputs': inputs or {},
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
         }
-        act = action_mod.Action(target.id, action, **params)
-        act.status = act.READY
-        act.store(context)
+        action_id = action_mod.Action.create(context, target.id, action,
+                                             **params)
 
         # TODO(Anyone): Uncomment this to notify the dispatcher
         # dispatcher.start_action(action_id=action.id)
 
         LOG.info(_LI("Action '%(name)s' is created: %(id)s."),
-                 {'name': name, 'id': act.id})
-        return act.to_dict()
+                 {'name': name, 'id': action_id})
+        return {'action': action_id}
 
     @request_context
     def action_get(self, context, identity):
