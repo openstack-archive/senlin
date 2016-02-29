@@ -21,6 +21,8 @@ class DBAPIRegistryTest(base.SenlinTestCase):
         super(DBAPIRegistryTest, self).setUp()
         self.ctx = utils.dummy_context()
 
+        db_api.service_create(self.ctx, 'SERVICE_ID')
+
     def _create_registry(self, cluster_id, check_type, interval, params,
                          engine_id):
         return db_api.registry_create(self.ctx, cluster_id, check_type,
@@ -36,8 +38,7 @@ class DBAPIRegistryTest(base.SenlinTestCase):
         self.assertEqual(1, len(ret_registries))
         ret_registry = ret_registries[0]
         self.assertEqual(registry.id, ret_registry.id)
-        self.assertEqual(registry.cluster_id,
-                         ret_registry.cluster_id)
+        self.assertEqual(registry.cluster_id, ret_registry.cluster_id)
         self.assertEqual(registry.check_type, ret_registry.check_type)
         self.assertEqual(registry.interval, ret_registry.interval)
         self.assertEqual(registry.params, ret_registry.params)
