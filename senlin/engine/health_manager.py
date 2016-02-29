@@ -19,13 +19,11 @@ health policies.
 """
 
 from oslo_config import cfg
-from oslo_context import context as oslo_context
 import oslo_messaging
 from oslo_service import service
 from oslo_service import threadgroup
 
 from senlin.common import consts
-from senlin.common import context as senlin_context
 from senlin.common import context
 from senlin.common import messaging as rpc_messaging
 from senlin.db import api as db_api
@@ -51,8 +49,7 @@ class HealthManager(service.Service):
         self.engine_id = engine_service.engine_id
         self.topic = topic
         self.version = version
-
-        # params for periodic running task
+        self.ctx = context.get_admin_context()
         self.periodic_interval_max = CONF.periodic_interval_max
         self.rt = {
             'registries': [],
@@ -62,9 +59,8 @@ class HealthManager(service.Service):
         pass
 
     def _periodic_check(self, cluster_id):
-        context = senlin_context.get_service_context()
         rpcc = rpc_client.EngineClient()
-        rpcc.cluster_check(context, cluster_id)
+        rpcc.cluster_check(self.ctx, cluster_id)
 
     def start_periodic_tasks(self):
         """Tasks to be run at a periodic interval."""
@@ -94,13 +90,8 @@ class HealthManager(service.Service):
         self.start_periodic_tasks()
 
     def _load_runtime_registry(self):
-        registries = []
-        ctx = senlin_context.get_service_context()
-        db_registries = db_api.registry_claim(ctx, self.engine_id)
-        for registry in db_registries:
-            if registry.engine_id == self.engine_id:
-                registries.append(registry)
-        self.rt = {'registries': registries}
+        db_registries = db_api.registry_claim(self.ctx, self.engine_id)
+        self.rt = {'registries': [r for r in db_registries]}
 
     @property
     def registries(self):
@@ -125,11 +116,8 @@ class HealthManager(service.Service):
         :param \*\*params: Other parameters for the health check.
         :return: None
         """
-        ctx = senlin_context.get_service_context()
-        registry = db_api.registry_create(ctx, cluster_id=cluster_id,
-                                          check_type=check_type,
-                                          interval=interval, params=params,
-                                          engine_id=self.engine_id)
+        registry = db_api.registry_create(self.ctx, cluster_id, check_type,
+                                          interval, params, self.engine_id)
         self.rt['registries'].append(registry)
 
     def unregister_cluster(self, cluster_id):
@@ -138,11 +126,10 @@ class HealthManager(service.Service):
         :param cluster_id: The ID of the cluste to be unregistered.
         :return: None
         """
-        ctx = senlin_context.get_service_context()
         for registry in self.rt['registries']:
             if registry.cluster_id == cluster_id:
                 self.rt['registries'].remove(registry)
-        db_api.registry_delete(ctx, cluster_id=cluster_id)
+        db_api.registry_delete(self.ctx, cluster_id=cluster_id)
 
 
 def notify(engine_id, method, *args, **kwargs):
@@ -169,9 +156,7 @@ def notify(engine_id, method, *args, **kwargs):
             timeout=timeout,
             topic=consts.ENGINE_HEALTH_MGR_TOPIC)
 
-    ctx = oslo_context.get_current()
-    if ctx is None:
-        ctx = context.RequestContext(is_admin=True)
+    ctx = context.get_admin_context()
 
     try:
         call_context.call(ctx, method, *args, **kwargs)
