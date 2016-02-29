@@ -464,9 +464,15 @@ class ClusterAction(base.Action):
         """
         saved_status = self.cluster.status
         saved_reason = self.cluster.status_reason
-        self.cluster.do_check(self.context)
+        res = self.cluster.do_check(self.context)
+        if not res:
+            reason = _('Cluster checking failed.')
+            self.cluster.set_status(self.context, saved_status, saved_reason)
+            return self.RES_ERROR, reason
 
         child = []
+        res = self.RES_OK
+        reason = _('Cluster checking completed.')
         for node in self.cluster.nodes:
             node_id = node.id
             action_id = base.Action.create(
@@ -484,7 +490,9 @@ class ClusterAction(base.Action):
                 dispatcher.start_action(action_id=cid)
 
             # Wait for dependent action if any
-            res, reason = self._wait_for_dependents()
+            res, new_reason = self._wait_for_dependents()
+            if res != self.RES_OK:
+                reason = new_reason
 
         self.cluster.set_status(self.context, saved_status, saved_reason)
 
