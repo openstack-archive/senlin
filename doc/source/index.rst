@@ -31,6 +31,14 @@ contribute to the project.
    developer/index
    glossary
 
+API Documentation
+~~~~~~~~~~~~~~~~~
+
+Follow the link below for the Senlin API V1 specification:
+
+-  `OpenStack API Complete Reference - Clustering`_
+
+
 Man Pages
 ~~~~~~~~~
 
@@ -45,3 +53,6 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+.. _`OpenStack API Complete Reference - Clustering`: http://api.openstack.org/api-ref-clustering-v1.html
