@@ -110,8 +110,8 @@ class TestHealthManager(base.SenlinTestCase):
         self.patchobject(self.hm, '_load_runtime_registry',
                          return_value=mock.Mock)
         self.hm.rt['registries'] = [registry]
-        mock_add_tm = self.patchobject(self.hm.TG, 'add_timer',
-                                       return_value=mock.Mock())
+        # mock_add_tm = self.patchobject(self.hm.TG, 'add_timer',
+        #                                return_value=mock.Mock())
         pc = mock.Mock()
         self.patchobject(self.hm, '_periodic_check',
                          return_value=pc)
@@ -121,4 +121,4 @@ class TestHealthManager(base.SenlinTestCase):
                                             version='1.0')
         mock_st.assert_called_once_with(target, self.hm)
         rpc_server.start.assert_called_once_with()
-        mock_add_tm.assert_called_with(50, pc)
+        # mock_add_tm.assert_called_with(50, pc)

@@ -77,11 +77,11 @@ class HealthManager(service.Service):
         #     listen events targeted at that cluster
         self.TG.add_timer(cfg.CONF.periodic_interval, self._idle_task)
 
-        for registry in self.registries:
-            if registry.check_type == 'NODE_STATUS_POLLING':
-                interval = min(registry.interval, self.periodic_interval_max)
-                self.TG.add_timer(interval,
-                                  self._periodic_check(registry.cluster_id))
+        # for registry in self.registries:
+        #    if registry.check_type == 'NODE_STATUS_POLLING':
+        #        interval = min(registry.interval, self.periodic_interval_max)
+        #        self.TG.add_timer(interval,
+        #                          self._periodic_check(registry.cluster_id))
 
     def start(self):
         super(HealthManager, self).start()
@@ -90,7 +90,7 @@ class HealthManager(service.Service):
                                             version=self.version)
         server = rpc_messaging.get_rpc_server(self.target, self)
         server.start()
-        self._load_runtime_registry()
+        # self._load_runtime_registry()
         self.start_periodic_tasks()
 
     def _load_runtime_registry(self):
