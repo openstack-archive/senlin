@@ -169,6 +169,8 @@ class ClusterAction(base.Action):
                 self.data['creation'] = creation
                 for node in nodes:
                     self.cluster.add_node(node)
+            else:
+                reason = _('Failed in creating nodes.')
 
             return res, reason
 
@@ -254,6 +256,7 @@ class ClusterAction(base.Action):
 
                 result, new_reason = self._wait_for_dependents()
                 if result != self.RES_OK:
+                    new_reason = _('Failed in updating nodes.')
                     self.cluster.set_status(self.context, self.cluster.WARNING,
                                             new_reason)
                     return result, new_reason
@@ -300,6 +303,8 @@ class ClusterAction(base.Action):
                 self.outputs['nodes_removed'] = node_ids
                 for node_id in node_ids:
                     self.cluster.remove_node(node_id)
+            else:
+                reason = _('Failed in deleting nodes.')
 
             return res, reason
 
