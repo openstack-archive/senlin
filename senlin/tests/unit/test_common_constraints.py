@@ -282,7 +282,7 @@ class TestConstraintsSchema(testtools.TestCase):
                                spec.validate)
         msg = _('The value "%s" cannot be converted into an '
                 'integer.') % data['key2']
-        self.assertTrue(six.text_type(ex.message).find(msg) != -1)
+        self.assertNotEqual(-1, six.text_type(ex.message).find(msg))
 
     def test_policy_validate_fail_unrecognizable_key(self):
         spec_schema = {
@@ -294,7 +294,7 @@ class TestConstraintsSchema(testtools.TestCase):
         ex = self.assertRaises(exception.SpecValidationFailed,
                                spec.validate)
         msg = _('Unrecognizable spec item "%s"') % 'key2'
-        self.assertTrue(six.text_type(ex.message).find(msg) != -1)
+        self.assertNotEqual(-1, six.text_type(ex.message).find(msg))
 
     def test_policy_validate_fail_required_key_missing(self):
         spec_schema = {
@@ -307,7 +307,7 @@ class TestConstraintsSchema(testtools.TestCase):
         ex = self.assertRaises(exception.SpecValidationFailed,
                                spec.validate)
         msg = _('Required spec item "%s" not assigned') % 'key2'
-        self.assertTrue(six.text_type(ex.message).find(msg) != -1)
+        self.assertNotEqual(-1, six.text_type(ex.message).find(msg))
 
 
 class TestSpecVersionChecking(testtools.TestCase):

@@ -153,7 +153,7 @@ class JSONRequestDeserializerTest(base.SenlinTestCase):
     def test_from_json_exceeds_max_json_mb(self):
         cfg.CONF.set_override('max_json_body_size', 10, enforce_type=True)
         body = jsonutils.dumps(['a'] * cfg.CONF.max_json_body_size)
-        self.assertTrue(len(body) > cfg.CONF.max_json_body_size)
+        self.assertGreater(len(body), cfg.CONF.max_json_body_size)
         obj = serializers.JSONRequestDeserializer()
         error = self.assertRaises(exception.RequestLimitExceeded,
                                   obj.from_json,
