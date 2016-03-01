@@ -53,6 +53,28 @@ def list_clusters(client, **query):
     return resp.body['clusters']
 
 
+def update_cluster(client, cluster_id, name=None, metadata=None,
+                   timeout=None, profile=None):
+    rel_url = 'clusters/%(id)s' % {'id': cluster_id}
+    status = [202]
+    data = {}
+    if name:
+        data['name'] = name
+    if metadata:
+        data['metadata'] = metadata
+    if timeout:
+        data['timeout'] = timeout
+    if profile:
+        data['profile_id'] = profile
+    body = {'cluster': data}
+
+    body = jsonutils.dumps(body)
+    resp = client.api_request('PATCH', rel_url, body=body,
+                              resp_status=status)
+    action_id = resp.headers['location'].split('/actions/')[1]
+    return action_id
+
+
 def action_cluster(client, cluster_id, action_name, params=None):
     rel_url = 'clusters/%(id)s/actions' % {'id': cluster_id}
     status = [202, 400]
