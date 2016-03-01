@@ -28,16 +28,12 @@ Output:
       'count': 2,
       'placements': [
         {
-          'host_name': 'openstack_drs',
-          'scheduler_hints': {
-                'group': group_id,
-                },
+          'zone': 'nova:openstack_drs',
+          'servergroup': 'SERVER_GROUP_ID',
         },
         {
-          'host_name': 'openstack_drs',
-          'scheduler_hints': {
-                'group': group_id,
-                },
+          'zone': 'nova:openstack_drs',
+          'servergroup': 'SERVER_GROUP_ID',
         },
       ]
     }
@@ -47,25 +43,24 @@ Output:
 import re
 import six
 
-from oslo_context import context as oslo_context
 from oslo_log import log as logging
 from senlin.common import constraints
 from senlin.common import consts
+from senlin.common import context
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.common import schema
+from senlin.common import utils
+from senlin.db import api as db_api
 from senlin.drivers import base as driver_base
-from senlin.engine import cluster as cluster_mod
-from senlin.engine import cluster_policy
-from senlin.policies import base as policy_base
-from senlin.profiles import base as profile_base
+from senlin.policies import base
 
 
 LOG = logging.getLogger(__name__)
 
 
-class vSphereDRSPolicy(policy_base.Policy):
+class AffinityPolicy(base.Policy):
     """Policy for placing members of a cluster based on server groups.
 
     This policy is expected to be enforced before new member(s) added to an
@@ -82,13 +77,13 @@ class vSphereDRSPolicy(policy_base.Policy):
     ]
 
     PROFILE_TYPE = [
-        'os.nova.server',
+        'os.nova.server-1.0',
     ]
 
     KEYS = (
-        SERVER_GROUP
+        SERVER_GROUP, AVAILABILITY_ZONE, ENABLE_DRS_EXTENSION,
     ) = (
-        'server_group'
+        'servergroup', 'availability_zone', 'enable_drs_extension',
     )
 
     _GROUP_KEYS = (
@@ -97,7 +92,7 @@ class vSphereDRSPolicy(policy_base.Policy):
         'name', 'policies',
     )
 
-    _GROUP_POLICIES = (
+    _POLICIES_VALUES = (
         AFFINITY, ANTI_AFFINITY,
     ) = (
         'affinity', 'anti-affinity',
@@ -112,17 +107,26 @@ class vSphereDRSPolicy(policy_base.Policy):
                 ),
                 GROUP_POLICIES: schema.String(
                     _('The server group policies.'),
-                    default=AFFINITY,
+                    default=ANTI_AFFINITY,
                     constraints=[
-                        constraints.AllowedValues(_GROUP_POLICIES),
+                        constraints.AllowedValues(_POLICIES_VALUES),
                     ],
                 ),
             },
         ),
+        AVAILABILITY_ZONE: schema.String(
+            _('Name of the availability zone to place the nodes.'),
+        ),
+        ENABLE_DRS_EXTENSION: schema.Boolean(
+            _('Enable vSphere DRS extension.'),
+            default=False,
+        ),
     }
 
     def __init__(self, name, spec, **kwargs):
-        super(vSphereDRSPolicy, self).__init__(name, spec, **kwargs)
+        super(AffinityPolicy, self).__init__(name, spec, **kwargs)
+
+        self.enable_drs = self.properties.get(self.ENABLE_DRS_EXTENSION)
         self._novaclient = None
 
     def nova(self, obj):
@@ -141,46 +145,61 @@ class vSphereDRSPolicy(policy_base.Policy):
     def attach(self, cluster):
         """Routine to be invoked when policy is to be attached to a cluster.
 
-        :para cluster: The Target cluster to be attached to;
+        :para cluster: The target cluster to attach to;
         :returns: When the operation was successful, returns a tuple (True,
                   message); otherwise, return a tuple (False, error).
         """
-        data = {}
+        data = {'inherited_group': False}
         nc = self.nova(cluster)
-
         group = self.properties.get(self.SERVER_GROUP)
+
+        # guess servergroup name
         group_name = group.get(self.GROUP_NAME, None)
 
         if group_name is None:
-            profile = profile_base.Profile.load(
-                oslo_context.get_current(), profile_id=cluster.profile_id)
+            profile = cluster.rt['profile']
             if 'scheduler_hints' in profile.spec:
                 hints = profile.spec['scheduler_hints']
                 group_name = hints.get('group', None)
 
-        if group_name is not None:
+        if group_name:
             try:
-                server_group = nc.get_server_group(group_name)
+                server_group = nc.find_server_group(group_name, True)
             except exception.InternalError as ex:
-                msg = _('Failed in retrieving server group')
+                msg = _("Failed in retrieving servergroup '%s'."
+                        ) % group_name
+                LOG.exception(_LE('%(msg)s: %(ex)s') % {
+                              'msg': msg, 'ex': six.text_type(ex)})
+                return False, msg
+
+            if server_group:
+                # Check if the policies match
+                policies = group.get(self.GROUP_POLICIES)
+                if policies and policies != server_group.policies[0]:
+                    msg = _("Policies specified (%(specified)s) doesn't match "
+                            "that of the existing servergroup (%(existing)s)."
+                            ) % {'specified': policies,
+                                 'existing': server_group.policies[0]}
+                    return False, msg
+
+                data['servergroup_id'] = server_group.id
+                data['inherited_group'] = True
+
+        if not data['inherited_group']:
+            # create a random name if necessary
+            if not group_name:
+                group_name = 'server_group_%s' % utils.random_name()
+            try:
+                server_group = nc.create_server_group(
+                    name=group_name,
+                    policies=[group.get(self.GROUP_POLICIES)])
+            except Exception as ex:
+                msg = _('Failed in creating servergroup.')
                 LOG.exception(_LE('%(msg)s: %(ex)s') % {
                     'msg': msg, 'ex': six.text_type(ex)})
                 return False, msg
-            data['group_id'] = server_group.id
-            data['inherited_group'] = True
 
-        if data.get('group_id') is None:
-            policies = group.get(self.GROUP_POLICIES, self.ANTI_AFFINITY)
-
-            try:
-                server_group = nc.create_server_group(policies)
-            except exception.InternalError as ex:
-                msg = _('Failed in creating server group')
-                LOG.exception(_LE('%(msg)s: %(ex)s') % {
-                    'msg': msg, 'ex': six.text_type(ex)})
-                return False, msg
-            data['group_id'] = server_group.id
-            data['inherited_group'] = False
+            data['servergroup_id'] = server_group.id
 
         policy_data = self._build_policy_data(data)
 
@@ -196,25 +215,25 @@ class vSphereDRSPolicy(policy_base.Policy):
                   error) where the err contains a error message.
         """
 
-        reason = _('Server group resources deletion succeeded')
+        reason = _('Servergroup resource deletion succeeded.')
 
-        cp = cluster_policy.ClusterPolicy.load(oslo_context.get_current(),
-                                               cluster.id, self.id)
-        if cp is None or cp.data is None:
+        ctx = context.get_admin_context()
+        binding = db_api.cluster_policy_get(ctx, cluster.id, self.id)
+        if not binding or not binding.data:
             return True, reason
 
-        policy_data = self._extract_policy_data(cp.data)
-        if policy_data is None:
+        policy_data = self._extract_policy_data(binding.data)
+        if not policy_data:
             return True, reason
 
-        group_id = policy_data.get('group_id', None)
+        group_id = policy_data.get('servergroup_id', None)
         inherited_group = policy_data.get('inherited_group', False)
 
         if group_id and not inherited_group:
             try:
                 self.nova(cluster).delete_server_group(group_id)
-            except exception.InternalError as ex:
-                msg = _('Failed in deleting server group')
+            except Exception as ex:
+                msg = _('Failed in deleting servergroup.')
                 LOG.exception(_LE('%(msg)s: %(ex)s') % {
                     'msg': msg, 'ex': six.text_type(ex)})
                 return False, msg
@@ -235,55 +254,56 @@ class vSphereDRSPolicy(policy_base.Policy):
         :param action: The action object that triggered this operation.
         :returns: Nothing.
         """
-
-        if not action.context.is_admin:
-            action.data['status'] = policy_base.CHECK_ERROR
-            action.data['status_reason'] = _('Policy only applicable to '
-                                             'admin-owned clusters.')
-            return
-
-        pd = action.data.get('creation', None)
-
-        if pd is not None:
-            self.count = pd.get('count', 1)
-            # 'nova' is default_availability_zone of Nova settings
-            zone_name = pd.get('zone', 'nova')
-        else:
-            self.count = action.inputs.get('count', 1)
+        zone_name = self.properties.get(self.AVAILABILITY_ZONE)
+        if not zone_name and self.enable_drs:
+            # we make a reasonable guess of the zone name for vSphere
+            # support because the zone name is required in that case.
             zone_name = 'nova'
 
-        cluster = cluster_mod.Cluster.load(action.context, cluster_id)
-        nc = self.nova(cluster)
+        # we respect other policies decisions (if any) and fall back to the
+        # action inputs if no hints found.
+        pd = action.data.get('creation', None)
+        if pd is not None:
+            count = pd.get('count', 1)
+        else:
+            count = action.inputs.get('count', 1)
 
-        hypervisors = nc.get_hypervisors()
-        hv_id = ''
-        pattern = re.compile(r'.*drs*', re.I)
-        for hypervisor in hypervisors:
-            match = pattern.match(hypervisor.hypervisor_hostname)
-            if match:
-                hv_id = hypervisor.id
-                break
-
-        if hv_id:
-            hv_info = nc.get_hypervisor_by_id(hv_id)
-            hostname = hv_info['service']['host']
-            zone_host_name = ":".join([zone_name, hostname])
-
-        cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
-                                               self.id)
+        cp = db_api.cluster_policy_get(action.context, cluster_id, self.id)
         policy_data = self._extract_policy_data(cp.data)
-        group_id = policy_data['group_id']
+        pd_entry = {'servergroup': policy_data['servergroup_id']}
+
+        # special handling for vSphere DRS case where we need to find out
+        # the name of the vSphere host which has DRS enabled.
+        if self.enable_drs:
+            cluster_obj = db_api.cluster_get(action.context, cluster_id)
+            nc = self.nova(cluster_obj)
+
+            hypervisors = nc.hypervisor_list()
+            hv_id = ''
+            pattern = re.compile(r'.*drs*', re.I)
+            for hypervisor in hypervisors:
+                match = pattern.match(hypervisor.hypervisor_hostname)
+                if match:
+                    hv_id = hypervisor.id
+                    break
+
+            if not hv_id:
+                action.data['status'] = base.CHECK_ERROR
+                action.data['status_reason'] = _('No suitable vSphere host '
+                                                 'is available.')
+                action.store(action.context)
+                return
+
+            hv_info = nc.hypervisor_get(hv_id)
+            hostname = hv_info['service']['host']
+            pd_entry['zone'] = ":".join([zone_name, hostname])
+
+        elif zone_name:
+            pd_entry['zone'] = zone_name
 
         pd = {
-            'count': self.count,
-            'placements': [
-                {
-                    'zone': zone_host_name,
-                    'scheduler_hints': {
-                        'group': group_id,
-                    },
-                },
-            ] * self.count,
+            'count': count,
+            'placements': [pd_entry] * count,
         }
         action.data.update({'placement': pd})
         action.store(action.context)
