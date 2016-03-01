@@ -18,27 +18,11 @@ class FakeResourceObject(object):
             setattr(self, key, params[key])
 
     def to_dict(self):
-        data = {
-            'image': {
-                'id': 'FAKE_IMAGE'
-            },
-            'flavor': {
-                'id': 'FAKE_FLAVOR'
-            },
-            'addresses': {
-                'private': [
-                    {
-                        'OS-EXT-IPS:type': 'fixed',
-                        'addr': '10.0.0.5',
-                        'version': 4
-                    }
-                ]
-            },
-            'security_groups': [
-                {
-                    'name': 'default'
-                }
-            ]
-        }
+        '''Override this function in subclass to handle special attributes'''
+        data = {}
+        for attr in dir(self):
+            if not attr.startswith('__'):
+                # Exclude built-in attributes of python object
+                data[attr] = getattr(self, attr)
 
         return data
