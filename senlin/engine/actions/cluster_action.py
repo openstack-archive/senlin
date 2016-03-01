@@ -52,7 +52,7 @@ class ClusterAction(base.Action):
         consts.CLUSTER_UPDATE_POLICY,
     )
 
-    def __init__(self, target, action, context=None, **kwargs):
+    def __init__(self, target, action, context, **kwargs):
         """Constructor for cluster action.
 
         :param target: ID of the target cluster.
