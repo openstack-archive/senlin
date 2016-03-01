@@ -97,8 +97,10 @@ def create_node(client, name, profile_id, cluster_id=None, role=None,
     return node
 
 
-def get_node(client, node_id, ignore_missing=False):
+def get_node(client, node_id, ignore_missing=False, show_details=False):
     rel_url = 'nodes/%(id)s' % {'id': node_id}
+    if show_details:
+        rel_url += '?show_details=True'
     status = [200, 404] if ignore_missing else [200]
     resp = client.api_request('GET', rel_url, resp_status=status)
     return resp if ignore_missing else resp.body['node']

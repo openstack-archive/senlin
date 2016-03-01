@@ -110,7 +110,7 @@ class NovaClient(base.DriverBase):
             },
             "host_id": "65201c14a29663e06d0748e561207d998b343",
             "image": {
-                "id": "70a599e0-31e7-49b7-b260-868f441e862b",
+                "id": "FAKE_IMAGE_ID",
                 "links": []
             },
             "links": [],

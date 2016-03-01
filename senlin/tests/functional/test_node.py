@@ -74,3 +74,24 @@ class TestNode(base.SenlinFunctionalTest):
         test_api.delete_cluster(self.client, cluster['id'])
         test_utils.wait_for_delete(test_api.get_cluster, self.client,
                                    cluster['id'])
+
+    def test_node_get_detail(self):
+        node = test_api.create_node(self.client,
+                                    test_utils.random_name('node'),
+                                    self.profile['id'])
+        test_utils.wait_for_status(test_api.get_node, self.client,
+                                   node['id'], 'ACTIVE')
+
+        # Get node detail and verify
+        node = test_api.get_node(self.client, node['id'], show_details=True)
+        self.assertTrue('details' in node)
+        self.assertEqual("new-server-test", node['details']['name'])
+        self.assertEqual("1", node['details']['flavor'])
+        self.assertEqual("FAKE_IMAGE_ID", node['details']['image'])
+        self.assertEqual("ACTIVE", node['details']['status'])
+        self.assertEqual({"My Server Name": "Apache1"},
+                         node['details']['metadata'])
+
+        # Delete node from cluster
+        test_api.delete_node(self.client, node['id'])
+        test_utils.wait_for_delete(test_api.get_node, self.client, node['id'])
