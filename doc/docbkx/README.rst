@@ -9,18 +9,21 @@ Dependencies
 ============
 
 on Ubuntu:
+::
 
-  sudo apt-get install maven
+  $ sudo apt-get install maven
 
 on Fedora Core:
+::
 
-  sudo yum install maven
+  $ sudo yum install maven
 
 Use `mvn`
 =========
 
 Build the Senlin admin guide:
+::
 
-  cd senlin-admin
-  mvn clean generate-sources
+  $ cd senlin-admin
+  $ mvn clean generate-sources
 
