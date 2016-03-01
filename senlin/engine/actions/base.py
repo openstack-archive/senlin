@@ -70,7 +70,7 @@ class Action(object):
         'CANCEL', 'SUSPEND', 'RESUME',
     )
 
-    def __new__(cls, target, action, context=None, **kwargs):
+    def __new__(cls, target, action, context, **kwargs):
         if (cls != Action):
             return super(Action, cls).__new__(cls)
 
@@ -87,29 +87,17 @@ class Action(object):
 
         return super(Action, cls).__new__(ActionClass)
 
-    def __init__(self, target, action, context=None, **kwargs):
+    def __init__(self, target, action, context, **kwargs):
         # context will be persisted into database so that any worker thread
         # can pick the action up and execute it on behalf of the initiator
 
         self.id = kwargs.get('id', None)
         self.name = kwargs.get('name', '')
 
-        if not context:
-            self.user = kwargs.get('user')
-            self.project = kwargs.get('project')
-            self.domain = kwargs.get('domain')
-            params = {
-                'user': self.user,
-                'project': self.project,
-                'domain': self.domain,
-                'is_admin': False
-            }
-            self.context = req_context.RequestContext.from_dict(params)
-        else:
-            self.user = context.user
-            self.project = context.project
-            self.domain = context.domain
-            self.context = context
+        self.context = context
+        self.user = context.user
+        self.project = context.project
+        self.domain = context.domain
 
         # TODO(Qiming): make description a db column
         self.description = kwargs.get('description', '')
@@ -224,12 +212,9 @@ class Action(object):
             'created_at': record.created_at,
             'updated_at': record.updated_at,
             'data': record.data,
-            'user': record.user,
-            'project': record.project,
-            'domain': record.domain,
         }
 
-        return cls(record.target, record.action, context=context, **kwargs)
+        return cls(record.target, record.action, context, **kwargs)
 
     @classmethod
     def load(cls, context, action_id=None, db_action=None):
@@ -291,7 +276,7 @@ class Action(object):
             'trusts': context.trusts,
         }
         ctx = req_context.RequestContext.from_dict(params)
-        obj = cls(target, action, context=ctx, **kwargs)
+        obj = cls(target, action, ctx, **kwargs)
         return obj.store(context)
 
     @classmethod

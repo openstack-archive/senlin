@@ -16,7 +16,6 @@ import mock
 from oslo_config import cfg
 import six
 
-from senlin.common import context
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine.actions import base as action_base
@@ -33,8 +32,8 @@ from senlin.tests.unit import fakes
 
 class DummyAction(action_base.Action):
 
-    def __init__(self, context, target, action, **kwargs):
-        super(DummyAction, self).__init__(context, target, action, **kwargs)
+    def __init__(self, target, action, context, **kwargs):
+        super(DummyAction, self).__init__(target, action, context, **kwargs)
 
 
 class ActionBaseTest(base.SenlinTestCase):
@@ -114,26 +113,6 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual('FAKE_CREATED_TIME', obj.created_at)
         self.assertEqual('FAKE_UPDATED_TIME', obj.updated_at)
         self.assertEqual({'data_key': 'data_value'}, obj.data)
-
-    @mock.patch.object(context.RequestContext, 'from_dict')
-    def test_action_init_without_context(self, mock_context):
-        target = mock.Mock()
-        target.id = 'ID'
-        user = 'USER1'
-        project = 'PROJ1'
-        domain = 'DOM1'
-        mock_context.return_value = 'FAKE_CONTEXT'
-
-        obj = action_base.Action(target, 'OBJECT_ACTION', user=user,
-                                 project=project, domain=domain)
-        params = {
-            'user': 'USER1',
-            'project': 'PROJ1',
-            'domain': 'DOM1',
-            'is_admin': False
-        }
-        mock_context.assert_called_once_with(params)
-        obj.context = 'FAKE_CONTEXT'
 
     def test_action_store_for_create(self):
         values = copy.deepcopy(self.action_values)
@@ -394,8 +373,8 @@ class ActionBaseTest(base.SenlinTestCase):
             mock_error.reset_mock()
 
     def test_execute_default(self):
-        action = action_base.Action.__new__(DummyAction, self.ctx, 'OBJID',
-                                            'BOOM')
+        action = action_base.Action.__new__(DummyAction, 'OBJID', 'BOOM',
+                                            self.ctx)
         res = action.execute()
         self.assertEqual(NotImplemented, res)
 

@@ -33,7 +33,7 @@ class NodeAction(base.Action):
         'NODE_CHECK', 'NODE_RECOVER'
     )
 
-    def __init__(self, target, action, context=None, **kwargs):
+    def __init__(self, target, action, context, **kwargs):
         """Constructor for a node action object.
 
         :param target: ID of the target node object on which the action is to
