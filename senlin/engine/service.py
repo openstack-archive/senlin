@@ -340,6 +340,8 @@ class EngineService(service.Service):
         :param context: An instance of the request context.
         :param profile_id: The UUID, name or short-id of a profile.
         :param name: The new name for the profile.
+        :param metadata: A dictionary of key-value pairs to be associated with
+                         the profile.
         :returns: A dictionary containing the details of the updated profile,
                   or an exception `ProfileNotFound` if no matching profile is
                   found.
@@ -352,8 +354,8 @@ class EngineService(service.Service):
         if name is not None and name != profile.name:
             profile.name = name
             changed = True
-        if metadata is not None:
-            profile.metadata.update(metadata)
+        if metadata is not None and metadata != profile.metadata:
+            profile.metadata = metadata
             changed = True
         if changed:
             profile.store(context)
@@ -777,9 +779,7 @@ class EngineService(service.Service):
                 inputs['new_profile_id'] = new_profile.id
 
         if metadata is not None and metadata != cluster.metadata:
-            md = cluster.metadata
-            md.update(metadata)
-            inputs['metadata'] = md
+            inputs['metadata'] = metadata
 
         if timeout is not None:
             timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)

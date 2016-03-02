@@ -329,7 +329,7 @@ class ProfileTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'FAKE_PROFILE')
         mock_load.assert_called_once_with(self.ctx, profile=x_obj)
         self.assertEqual('NEW_NAME', x_profile.name)
-        self.assertEqual({'K': 'V', 'V': 'K'}, x_profile.metadata)
+        self.assertEqual({'K': 'V'}, x_profile.metadata)
         x_profile.store.assert_called_once_with(self.ctx)
 
     @mock.patch.object(service.EngineService, 'profile_find')

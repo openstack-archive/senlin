@@ -436,8 +436,7 @@ class ClusterTest(base.SenlinTestCase):
             inputs={
                 'new_profile_id': 'ID_NEW',
                 'metadata': {
-                    'A': 'B',  # old entry
-                    'B': 'A',  # new entry
+                    'B': 'A',
                 },
                 'timeout': 120,
                 'name': 'new_name',
