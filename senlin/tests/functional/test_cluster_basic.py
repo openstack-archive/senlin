@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
+
 from senlin.tests.functional import api as test_api
 from senlin.tests.functional import base
 from senlin.tests.functional.utils import test_utils
@@ -120,3 +122,43 @@ class TestClusterUpdate(base.SenlinFunctionalTest):
         test_api.delete_cluster(self.client, cluster['id'])
         test_utils.wait_for_delete(test_api.get_cluster, self.client,
                                    cluster['id'])
+
+    def test_cluster_update_profile(self):
+        spec_nova_server = copy.deepcopy(test_utils.spec_nova_server)
+        spec_nova_server['properties']['flavor'] = 'new_flavor'
+        spec_nova_server['properties']['image'] = 'new_image'
+        new_profile = test_api.create_profile(
+            self.client, test_utils.random_name('profile'),
+            spec_nova_server)
+
+        # Create cluster with original profile
+        desired_capacity = 2
+        min_size = 1
+        max_size = 3
+        cluster_name = test_utils.random_name('cluster')
+        cluster = test_api.create_cluster(self.client, cluster_name,
+                                          self.profile['id'], desired_capacity,
+                                          min_size, max_size)
+        cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
+                                             cluster['id'], 'ACTIVE')
+
+        # Update cluster with new profile
+        action_id = test_api.update_cluster(self.client, cluster['id'],
+                                            profile=new_profile['id'])
+        test_utils.wait_for_status(test_api.get_action, self.client,
+                                   action_id, 'SUCCEEDED')
+
+        # Verify update result
+        cluster = test_api.get_cluster(self.client, cluster['id'])
+        self.assertEqual(new_profile['id'], cluster['profile_id'])
+        nodes = cluster['nodes']
+        for n in nodes:
+            node = test_api.get_node(self.client, n, show_details=True)
+            self.assertEqual(new_profile['id'], node['profile_id'])
+
+        # Delete cluster
+        test_api.delete_cluster(self.client, cluster['id'])
+        test_utils.wait_for_delete(test_api.get_cluster, self.client,
+                                   cluster['id'])
+        # Delete new profile
+        test_api.delete_profile(self.client, new_profile['id'])

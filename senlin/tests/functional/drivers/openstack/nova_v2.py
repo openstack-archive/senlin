@@ -159,6 +159,15 @@ class NovaClient(base.DriverBase):
 
         return sdk.FakeResourceObject(self.fake_server_get)
 
+    def server_resize(self, server, flavor):
+        self.fake_server_get['flavor'].update({'id': flavor})
+
+    def server_resize_confirm(self, server):
+        return
+
+    def server_resize_revert(self, server):
+        return
+
     def server_delete(self, server, ignore_missing=True):
         return
 
