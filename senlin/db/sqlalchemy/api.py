@@ -1228,17 +1228,15 @@ def service_get_all(context):
 def registry_claim(context, engine_id):
     session = _session(context)
     session.begin()
-    registries = session.query(models.HealthRegistry).all()
-    for registry in registries:
-        service = session.query(models.Service).filter_by(
-            id=registry.engine_id)
-        if service.count() == 0:
-            values = {'engine_id': engine_id}
-            registry.update(values)
-            registry.save(_session(context))
+    q_eng = session.query(models.Service)
+    svc_ids = [s.id for s in q_eng.all()]
+
+    q_reg = session.query(models.HealthRegistry)
+    q_reg = q_reg.filter(models.HealthRegistry.engine_id.notin_(svc_ids))
+    result = q_reg.all()
+    q_reg.update({'engine_id': engine_id}, synchronize_session=False)
     session.commit()
-    session.expire_all()
-    return registries
+    return result
 
 
 def registry_delete(context, cluster_id):
