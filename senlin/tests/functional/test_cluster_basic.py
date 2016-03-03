@@ -113,7 +113,7 @@ class TestClusterUpdate(base.SenlinFunctionalTest):
         # Verify update result
         cluster = test_api.get_cluster(self.client, cluster['id'])
         self.assertEqual('cluster_new_name', cluster['name'])
-        self.assertEqual({'k1': 'v1', 'k2': 'v2'}, cluster['metadata'])
+        self.assertEqual({'k2': 'v2'}, cluster['metadata'])
         self.assertEqual(240, cluster['timeout'])
 
         # Delete cluster
