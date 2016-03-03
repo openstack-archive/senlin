@@ -165,24 +165,12 @@ def get_socket(conf, default_port):
     return sock
 
 
-class WritableLogger(object):
-    """A thin wrapper that responds to `write` and logs."""
-
-    def __init__(self, LOG, level=std_logging.DEBUG):
-        self.LOG = LOG
-        self.level = level
-
-    def write(self, msg):
-        self.LOG.log(self.level, msg.rstrip("\n"))
-
-
 class Server(object):
     """Server class to manage multiple WSGI sockets and applications."""
 
     def __init__(self, name, conf, threads=1000):
         os.umask(0o27)  # ensure files are created with the correct privileges
         self._logger = logging.getLogger("eventlet.wsgi.server")
-        self._wsgi_logger = WritableLogger(self._logger)
         self.name = name
         self.threads = threads
         self.children = set()
@@ -450,7 +438,7 @@ class Server(object):
                 self.sock, self.application,
                 custom_pool=self.pool,
                 url_length_limit=URL_LENGTH_LIMIT,
-                log=self._wsgi_logger,
+                log=self._logger,
                 debug=cfg.CONF.debug,
                 keepalive=cfg.CONF.eventlet_opts.wsgi_keep_alive,
                 socket_timeout=socket_timeout)
@@ -466,7 +454,7 @@ class Server(object):
         LOG.info(_LI("Starting single process server"))
         eventlet.wsgi.server(sock, application, custom_pool=self.pool,
                              url_length_limit=URL_LENGTH_LIMIT,
-                             log=self._wsgi_logger, debug=cfg.CONF.debug)
+                             log=self._logger, debug=cfg.CONF.debug)
 
 
 class Middleware(object):
