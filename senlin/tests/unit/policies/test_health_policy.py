@@ -77,7 +77,7 @@ class TestHealthPolicy(base.SenlinTestCase):
             'interval': self.hp.interval,
             'params': {},
         }
-        mock_hm_reg.assert_called_once_with(cluster_id='CLUSTER_ID',
+        mock_hm_reg.assert_called_once_with('CLUSTER_ID',
                                             engine_id=None,
                                             **kwargs)
 
@@ -86,7 +86,7 @@ class TestHealthPolicy(base.SenlinTestCase):
         res, data = self.hp.detach(self.cluster)
         self.assertTrue(res)
         self.assertEqual('', data)
-        mock_hm_reg.assert_called_once_with(cluster_id='CLUSTER_ID')
+        mock_hm_reg.assert_called_once_with('CLUSTER_ID')
 
     def test_pre_op(self):
         action = mock.Mock()
