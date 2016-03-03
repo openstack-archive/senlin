@@ -977,6 +977,7 @@ def action_mark_succeeded(context, action_id, timestamp):
 
 
 def _mark_failed(session, action_id, timestamp, reason=None):
+    # mark myself as failed
     query = session.query(models.Action).filter_by(id=action_id)
     values = {
         'owner': None,
@@ -987,10 +988,13 @@ def _mark_failed(session, action_id, timestamp, reason=None):
     }
     query.update(values, synchronize_session=False)
 
-    dep = session.query(models.ActionDependency)
-    dependents = dep.filter_by(depended=action_id).all()
+    query = session.query(models.ActionDependency)
+    query = query.filter_by(depended=action_id)
+    dependents = [d.dependent for d in query.all()]
+    query.delete(synchronize_session=False)
+
     for d in dependents:
-        _mark_failed(session, d.dependent, timestamp)
+        _mark_failed(session, d, timestamp)
 
 
 def action_mark_failed(context, action_id, timestamp, reason=None):
@@ -1011,10 +1015,13 @@ def _mark_cancelled(session, action_id, timestamp, reason=None):
     }
     query.update(values, synchronize_session=False)
 
-    dep = session.query(models.ActionDependency)
-    dependents = dep.filter_by(depended=action_id).all()
+    query = session.query(models.ActionDependency)
+    query = query.filter_by(depended=action_id)
+    dependents = [d.dependent for d in query.all()]
+    query.delete(synchronize_session=False)
+
     for d in dependents:
-        _mark_cancelled(session, d.dependent, timestamp)
+        _mark_cancelled(session, d, timestamp)
 
 
 def action_mark_cancelled(context, action_id, timestamp, reason=None):

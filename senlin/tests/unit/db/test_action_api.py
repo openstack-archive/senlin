@@ -320,6 +320,9 @@ class DBAPIActionTest(base.SenlinTestCase):
             self.assertEqual(consts.ACTION_FAILED, action.status)
             self.assertEqual(timestamp, action.end_time)
 
+        result = db_api.dependency_get_dependents(self.ctx, id_of['A01'])
+        self.assertEqual(0, len(result))
+
     def test_action_mark_cancelled(self):
         timestamp = time.time()
         id_of = self._prepare_action_mark_failed_cancel()
@@ -329,6 +332,9 @@ class DBAPIActionTest(base.SenlinTestCase):
             action = db_api.action_get(self.ctx, aid)
             self.assertEqual(consts.ACTION_CANCELLED, action.status)
             self.assertEqual(timestamp, action.end_time)
+
+        result = db_api.dependency_get_dependents(self.ctx, id_of['A01'])
+        self.assertEqual(0, len(result))
 
     def test_action_acquire(self):
         action = _create_action(self.ctx)
