@@ -154,6 +154,38 @@ class DBAPIActionTest(base.SenlinTestCase):
         for spec in specs:
             self.assertIn(spec['name'], names)
 
+    def test_action_check_status(self):
+        specs = [
+            {'name': 'A01', 'target': 'cluster_001'},
+            {'name': 'A02', 'target': 'node_001'},
+        ]
+
+        id_of = {}
+        for spec in specs:
+            action = _create_action(self.ctx, **spec)
+            id_of[spec['name']] = action.id
+
+        db_api.dependency_add(self.ctx, id_of['A02'], id_of['A01'])
+        action1 = db_api.action_get(self.ctx, id_of['A01'])
+        self.assertEqual(consts.ACTION_WAITING, action1.status)
+
+        timestamp = time.time()
+        status = db_api.action_check_status(self.ctx, id_of['A01'], timestamp)
+        self.assertEqual(consts.ACTION_WAITING, status)
+
+        status = db_api.action_check_status(self.ctx, id_of['A01'], timestamp)
+        self.assertEqual(consts.ACTION_WAITING, status)
+        timestamp = time.time()
+        db_api.action_mark_succeeded(self.ctx, id_of['A02'], timestamp)
+
+        status = db_api.action_check_status(self.ctx, id_of['A01'], timestamp)
+        self.assertEqual(consts.ACTION_READY, status)
+
+        action1 = db_api.action_get(self.ctx, id_of['A01'])
+        self.assertEqual('All depended actions completed.',
+                         action1.status_reason)
+        self.assertEqual(timestamp, action1.end_time)
+
     def _check_dependency_add_dependent_list(self):
         specs = [
             {'name': 'A01', 'target': 'cluster_001'},

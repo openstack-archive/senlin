@@ -891,6 +891,25 @@ def action_get_all(context, filters=None, limit=None, marker=None, sort=None,
                                    marker=marker, sort_dirs=dirs).all()
 
 
+def action_check_status(context, action_id, timestamp):
+    session = _session(context)
+    q = session.query(models.ActionDependency)
+    count = q.filter_by(dependent=action_id).count()
+    if count > 0:
+        return consts.ACTION_WAITING
+
+    action = session.query(models.Action).get(action_id)
+    if action.status == consts.ACTION_WAITING:
+        session.begin()
+        action.status = consts.ACTION_READY
+        action.status_reason = _('All depended actions completed.')
+        action.end_time = timestamp
+        action.save(session)
+        session.commit()
+
+    return action.status
+
+
 def dependency_get_depended(context, action_id):
     session = _session(context)
     q = session.query(models.ActionDependency).filter_by(dependent=action_id)
@@ -957,23 +976,8 @@ def action_mark_succeeded(context, action_id, timestamp):
 
     subquery = session.query(models.ActionDependency).filter_by(
         depended=action_id)
-    dependents = [d.dependent for d in subquery.all()]
     subquery.delete(synchronize_session=False)
-
-    for d in dependents:
-        # set action to ready if no depended action hanging
-        q = session.query(models.ActionDependency).filter_by(dependent=d)
-        count = q.count()
-        if count == 0:
-            query = session.query(models.Action).filter_by(id=d)
-            values = {
-                'status': consts.ACTION_READY,
-                'status_reason': _('All depended actions completed.')
-            }
-            query.update(values, synchronize_session=False)
-
     session.commit()
-    session.expire_all()
 
 
 def _mark_failed(session, action_id, timestamp, reason=None):

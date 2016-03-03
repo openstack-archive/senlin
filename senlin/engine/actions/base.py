@@ -379,9 +379,10 @@ class Action(object):
         self.status_reason = reason
 
     def get_status(self):
-        action = db_api.action_get(self.context, self.id, refresh=True)
-        self.status = action.status
-        return action.status
+        timestamp = wallclock()
+        status = db_api.action_check_status(self.context, self.id, timestamp)
+        self.status = status
+        return status
 
     def is_timeout(self):
         time_lapse = wallclock() - self.start_time
