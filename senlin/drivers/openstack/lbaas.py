@@ -154,6 +154,9 @@ class LoadBalancerDriver(base.DriverBase):
         if not hm:
             return True, result
 
+        if not hm:
+            return True, result
+
         # Create health monitor
         try:
             health_monitor = self.nc().healthmonitor_create(
