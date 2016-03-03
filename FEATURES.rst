@@ -19,12 +19,20 @@ before being worked on.
 High Priority
 -------------
 
-Support Scheduled Actions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+API versioning support
+^^^^^^^^^^^^^^^^^^^^^^
 
-This is a request to trigger some actions at a specified time. One typical use
-case is to scale up a cluster before weekend or promotion season as a
-preparation for the coming burst of workloads.
+This support can help to improve the stability and compatibility of Senlin API
+interface. We can learn some experience from what Nova has done for providing
+API version control.
+
+
+CoreOS based Container Support
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To Senlin, CoreOS is just another VM image. However, CoreOS provides some
+builtin support to Container/Docker and it provides clustering facility for
+user applications.
 
 
 Event Listener
@@ -71,6 +79,14 @@ support this kind of requirement.
 Middle Priority
 ---------------
 
+Support Scheduled Actions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is a request to trigger some actions at a specified time. One typical use
+case is to scale up a cluster before weekend or promotion season as a
+preparation for the coming burst of workloads.
+
+
 Blue-Green Deployment
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -95,13 +111,6 @@ tools into the whole picture. One of the option is to provide a easy way for
 Senlin to work with Ansible, for example.
 
 
-Define and Enforce Quotas
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-There is a potential request to limit how many clusters a user can create, how
-large a cluster can become.
-
-
 Event Notification
 ^^^^^^^^^^^^^^^^^^
 
@@ -120,17 +129,31 @@ potential tradeoff is to introduce an option for users to customize the size
 of batches when large number of DB requests pouring in.
 
 
-API versioning support
-^^^^^^^^^^^^^^^^^^^^^^
+Container/Docker support
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-This support can help to improve the stability and compatibility of Senlin API
-interface. We can learn some experience from what Nova has done for providing
-API version control.
+Using Senlin to manage Container/Docker cluster is possible. We should
+provide related support for users who have this requirement.
+
+
+Versioned Object Support
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+oslo.versionedobjects is a lib provides a generic versioned object model that
+is RPC-friendly, with inbuilt serialization, field typing, and remotable method
+calls. We can use it to promote the upgrading capatibility of Senlin service.
+
 
 
 ------------
 Low Priority
 ------------
+
+Define and Enforce Quotas
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There is a potential request to limit how many clusters a user can create, how
+large a cluster can become.
 
 
 Use Barbican to Store Secrets
@@ -147,23 +170,6 @@ Use VPNaaS to Build Cross-Region/Cross-Cloud
 When buidling clusters that span more than one region or cloud, there are
 requirements to place all cluster nodes on the same VPN so that workloads can
 be distributed to the nodes as if they sit on the same network.
-
-
-Make Use of Nova ServerGroup API
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-When creating a cluster of Nova servers, Senlin needs to work with Nova and its
-scheduler to provide sophisticated scheduling decisions. While a user do not
-necessarily have control over the admin plane, he or she does have a right to
-express their requirements in an abstract manner.
-
-
-CoreOS based Container Support
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To Senlin, CoreOS is just another VM image. However, CoreOS provides some
-builtin support to Container/Docker and it provides clustering facility for
-user applications.
 
 
 Vertical Scaling
@@ -246,25 +252,10 @@ Managing baremetal cluster is a very common requirement from user. It is
 reasonable for Senlin to support it by talking with service like Ironic.
 
 
-Container/Docker support
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-Using Senlin to manage Container/Docker cluster is possible. We should
-provide related support for users who have this requirement.
-
-
 TOSCA support
 ^^^^^^^^^^^^^
 
 Provide TOSCA support in Senlin(maybe reuse heat-translator/tosca-parser?)
-
-
-Versioned Object Support
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-oslo.versionedobjects is a lib provides a generic versioned object model that
-is RPC-friendly, with inbuilt serialization, field typing, and remotable method
-calls. We can use it to promote the upgrading capatibility of Senlin service.
 
 
 Dynamic Plugin Loading
