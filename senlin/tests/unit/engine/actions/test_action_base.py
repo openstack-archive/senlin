@@ -419,11 +419,9 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual('BUSY', action.status_reason)
         mock_abandon.assert_called_once_with(action.context, 'FAKE_ID')
 
-    @mock.patch.object(db_api, 'action_get')
+    @mock.patch.object(db_api, 'action_check_status')
     def test_get_status(self, mock_get):
-        obj = mock.Mock()
-        obj.status = 'FAKE_STATUS'
-        mock_get.return_value = obj
+        mock_get.return_value = 'FAKE_STATUS'
 
         action = action_base.Action('OBJID', 'OBJECT_ACTION', self.ctx)
         action.id = 'FAKE_ID'
@@ -432,8 +430,7 @@ class ActionBaseTest(base.SenlinTestCase):
 
         self.assertEqual('FAKE_STATUS', res)
         self.assertEqual('FAKE_STATUS', action.status)
-        mock_get.assert_called_once_with(action.context, 'FAKE_ID',
-                                         project_safe=True, refresh=True)
+        mock_get.assert_called_once_with(action.context, 'FAKE_ID', mock.ANY)
 
     @mock.patch.object(action_base, 'wallclock')
     def test_is_timeout(self, mock_time):

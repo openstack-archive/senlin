@@ -324,6 +324,10 @@ def action_get_all(context, filters=None, limit=None, marker=None, sort=None,
                                project_safe=project_safe)
 
 
+def action_check_status(context, action_id, timestamp):
+    return IMPL.action_check_status(context, action_id, timestamp)
+
+
 def dependency_add(context, depended, dependent):
     return IMPL.dependency_add(context, depended, dependent)
 
