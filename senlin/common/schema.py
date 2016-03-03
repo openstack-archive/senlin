@@ -14,6 +14,7 @@ import collections
 import numbers
 import six
 
+from oslo_serialization import jsonutils
 from oslo_utils import strutils
 
 from senlin.common import exception
@@ -344,6 +345,12 @@ class Map(Schema):
         return self.default
 
     def resolve(self, value, context=None):
+        if isinstance(value, six.string_types):
+            try:
+                value = jsonutils.loads(value)
+            except (TypeError, ValueError):
+                pass
+
         if not isinstance(value, collections.Mapping):
             raise TypeError(_('"%s" is not a Map') % value)
 
