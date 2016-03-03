@@ -73,11 +73,11 @@ class HealthManager(service.Service):
         #     listen events targeted at that cluster
         self.TG.add_timer(cfg.CONF.periodic_interval, self._idle_task)
 
-        # for registry in self.registries:
-        #    if registry.check_type == 'NODE_STATUS_POLLING':
-        #        interval = min(registry.interval, self.periodic_interval_max)
-        #        self.TG.add_timer(interval,
-        #                          self._periodic_check(registry.cluster_id))
+        for registry in self.registries:
+            if registry.check_type == 'NODE_STATUS_POLLING':
+                interval = min(registry.interval, self.periodic_interval_max)
+                self.TG.add_timer(interval,
+                                  self._periodic_check(registry.cluster_id))
 
     def start(self):
         super(HealthManager, self).start()
@@ -86,7 +86,7 @@ class HealthManager(service.Service):
                                             version=self.version)
         server = rpc_messaging.get_rpc_server(self.target, self)
         server.start()
-        # self._load_runtime_registry()
+        self._load_runtime_registry()
         self.start_periodic_tasks()
 
     def _load_runtime_registry(self):
@@ -105,10 +105,11 @@ class HealthManager(service.Service):
         """Respond to confirm that the rpc service is still alive."""
         return True
 
-    def register_cluster(self, cluster_id, check_type, interval=None,
-                         **params):
+    def register_cluster(self, ctx, cluster_id, check_type, interval=None,
+                         params=None):
         """Register cluster for health checking.
 
+        :param ctx: The context of notify request.
         :param cluster_id: The ID of the cluster to be checked.
         :param check_type: A string indicating the type of checks.
         :param interval: An optional integer indicating the length of checking
@@ -116,23 +117,25 @@ class HealthManager(service.Service):
         :param \*\*params: Other parameters for the health check.
         :return: None
         """
-        registry = db_api.registry_create(self.ctx, cluster_id, check_type,
+        params = params or {}
+        registry = db_api.registry_create(ctx, cluster_id, check_type,
                                           interval, params, self.engine_id)
         self.rt['registries'].append(registry)
 
-    def unregister_cluster(self, cluster_id):
+    def unregister_cluster(self, ctx, cluster_id):
         """Unregister a cluster from health checking.
 
+        :param ctx: The context of notify request.
         :param cluster_id: The ID of the cluste to be unregistered.
         :return: None
         """
         for registry in self.rt['registries']:
             if registry.cluster_id == cluster_id:
                 self.rt['registries'].remove(registry)
-        db_api.registry_delete(self.ctx, cluster_id=cluster_id)
+        db_api.registry_delete(ctx, cluster_id)
 
 
-def notify(engine_id, method, *args, **kwargs):
+def notify(engine_id, method, **kwargs):
     """Send notification to health manager service.
 
     :param engine_id: dispatcher to notify; broadcast if value is None
@@ -159,18 +162,27 @@ def notify(engine_id, method, *args, **kwargs):
     ctx = context.get_admin_context()
 
     try:
-        call_context.call(ctx, method, *args, **kwargs)
+        call_context.call(ctx, method, **kwargs)
         return True
     except oslo_messaging.MessagingTimeout:
         return False
 
 
-def register(cluster_id, engine_id=None, *args, **kwargs):
-    return notify(engine_id, 'register_cluster', cluster_id, *args, **kwargs)
+def register(cluster_id, engine_id=None, **kwargs):
+    params = kwargs.pop('params', {})
+    interval = kwargs.pop('interval', cfg.CONF.periodic_interval)
+    check_type = kwargs.pop('check_type', consts.NODE_STATUS_POLLING)
+    return notify(engine_id, 'register_cluster',
+                  cluster_id=cluster_id,
+                  interval=interval,
+                  check_type=check_type,
+                  params=params)
 
 
 def unregister(cluster_id, engine_id=None):
-    return notify(engine_id, 'unregister_cluster', cluster_id)
+    return notify(engine_id,
+                  'unregister_cluster',
+                  cluster_id=cluster_id)
 
 
 def list_opts():

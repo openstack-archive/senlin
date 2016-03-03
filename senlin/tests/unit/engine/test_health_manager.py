@@ -53,7 +53,6 @@ class TestHealthManager(base.SenlinTestCase):
         ]
 
         self.hm._load_runtime_registry()
-
         self.assertEqual(2, len(self.hm.registries))
 
     @mock.patch('senlin.rpc.client.EngineClient')
@@ -67,11 +66,14 @@ class TestHealthManager(base.SenlinTestCase):
 
     @mock.patch.object(db_api, 'registry_create')
     def test_register_cluster(self, mock_reg_create):
-        self.hm.register_cluster(cluster_id='CLUSTER_ID',
+
+        ctx = mock.Mock()
+        self.hm.register_cluster(ctx,
+                                 cluster_id='CLUSTER_ID',
                                  check_type='NODE_STATUS_POLLING',
                                  interval=50)
         matched_type = 'NODE_STATUS_POLLING'
-        mock_reg_create.assert_called_once_with(self.hm.ctx,
+        mock_reg_create.assert_called_once_with(ctx,
                                                 cluster_id='CLUSTER_ID',
                                                 check_type=matched_type,
                                                 engine_id='ENGINE_ID',
@@ -80,12 +82,15 @@ class TestHealthManager(base.SenlinTestCase):
 
     @mock.patch.object(db_api, 'registry_delete')
     def test_unregister_cluster(self, mock_reg_delete):
-        self.hm.unregister_cluster(cluster_id='CLUSTER_ID')
-        mock_reg_delete.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID')
+
+        ctx = mock.Mock()
+        self.hm.unregister_cluster(ctx, cluster_id='CLUSTER_ID')
+        mock_reg_delete.assert_called_once_with(ctx, 'CLUSTER_ID')
 
     @mock.patch.object(db_api, 'registry_claim')
     @mock.patch('oslo_messaging.Target')
     def test_start(self, mock_target, mock_reg_claim):
+
         tg = mock.Mock()
         self.hm.TG = tg
         target = mock.Mock()
@@ -100,8 +105,8 @@ class TestHealthManager(base.SenlinTestCase):
         self.patchobject(self.hm, '_load_runtime_registry',
                          return_value=mock.Mock)
         self.hm.rt['registries'] = [registry]
-        # mock_add_tm = self.patchobject(self.hm.TG, 'add_timer',
-        #                                return_value=mock.Mock())
+        mock_add_tm = self.patchobject(self.hm.TG, 'add_timer',
+                                       return_value=mock.Mock())
         pc = mock.Mock()
         self.patchobject(self.hm, '_periodic_check',
                          return_value=pc)
@@ -111,4 +116,4 @@ class TestHealthManager(base.SenlinTestCase):
                                             version='1.0')
         mock_st.assert_called_once_with(target, self.hm)
         rpc_server.start.assert_called_once_with()
-        # mock_add_tm.assert_called_with(50, pc)
+        mock_add_tm.assert_called_with(50, pc)
