@@ -95,10 +95,12 @@ class TestHealthManager(base.SenlinTestCase):
         self.hm.TG = tg
         target = mock.Mock()
         mock_target.return_value = target
-        registry = mock.Mock()
-        registry.engine_id = 'ENGINE_ID'
-        registry.interval = 50
-        registry.check_type = 'NODE_STATUS_POLLING'
+        registry = {
+            'cluster_id': 'CLUSTER_ID',
+            'check_type': 'NODE_STATUS_POLLING',
+            'interval': 50,
+            'params': {},
+        }
         rpc_server = mock.Mock()
         mock_st = self.patchobject(rpc_messaging, 'get_rpc_server',
                                    return_value=rpc_server)
