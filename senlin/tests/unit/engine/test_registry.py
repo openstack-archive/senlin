@@ -41,18 +41,17 @@ class PluginInfoTest(base.SenlinTestCase):
         pi4 = registry.PluginInfo(self.reg, 'FOO', plugin2)
 
         self.assertIsNotNone(pi1)
-        self.assertTrue(pi1 == pi2)
-        self.assertFalse(pi1 == pi3)
-        self.assertFalse(pi1 == pi4)
-        self.assertFalse(pi2 == pi4)
-        self.assertFalse(pi3 == pi4)
-        self.assertFalse(pi1 != pi2)
-        self.assertTrue(pi1 != pi3)
-        self.assertTrue(pi1 != pi4)
-        self.assertTrue(pi2 != pi4)
-        self.assertTrue(pi3 != pi4)
-        nothing = None
-        self.assertFalse(pi1 == nothing)
+        self.assertEqual(pi1, pi2)
+        self.assertNotEqual(pi1, pi3)
+        self.assertNotEqual(pi1, pi4)
+        self.assertNotEqual(pi2, pi4)
+        self.assertNotEqual(pi3, pi4)
+        self.assertEqual(pi1, pi2)
+        self.assertNotEqual(pi1, pi3)
+        self.assertNotEqual(pi1, pi4)
+        self.assertNotEqual(pi2, pi4)
+        self.assertNotEqual(pi3, pi4)
+        self.assertIsNotNone(pi1)
 
     def test_ordering(self):
         plugin1 = mock.Mock()
@@ -60,14 +59,14 @@ class PluginInfoTest(base.SenlinTestCase):
         pi1 = registry.PluginInfo(self.reg, 'FOO', plugin1)
         pi2 = registry.PluginInfo(self.reg, 'FOO', plugin1)
         pi2.user_provided = False
-        self.assertTrue(pi1 < pi2)
+        self.assertLess(pi1, pi2)
 
         pi3 = registry.PluginInfo(self.reg, 'FOO_LONG', plugin1)
-        self.assertTrue(pi3 < pi1)
+        self.assertLess(pi3, pi1)
 
         pi4 = registry.PluginInfo(self.reg, 'BAR', plugin2)
-        self.assertTrue(pi4 < pi1)
-        self.assertFalse(pi4 > pi1)
+        self.assertLess(pi4, pi1)
+        self.assertNotEqual(pi4, pi1)
 
     def test_str(self):
         plugin = mock.Mock()
