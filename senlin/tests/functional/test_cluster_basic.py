@@ -70,3 +70,53 @@ class TestClusterBasic(base.SenlinFunctionalTest):
                                    cluster['id'])
         test_utils.wait_for_delete(test_api.get_cluster, self.client,
                                    cluster2['id'])
+
+
+class TestClusterUpdate(base.SenlinFunctionalTest):
+    def setUp(self):
+        super(TestClusterUpdate, self).setUp()
+        # Create profile
+        self.profile = test_api.create_profile(
+            self.client, test_utils.random_name('profile'),
+            test_utils.spec_nova_server)
+
+    def tearDown(self):
+        # Delete profile
+        test_api.delete_profile(self.client, self.profile['id'])
+        super(TestClusterUpdate, self).tearDown()
+
+    def test_cluster_update_basic_properties(self):
+        # Create cluster
+        desired_capacity = 2
+        min_size = 1
+        max_size = 3
+        cluster_name = test_utils.random_name('cluster')
+        cluster = test_api.create_cluster(self.client, cluster_name,
+                                          self.profile['id'], desired_capacity,
+                                          min_size, max_size,
+                                          metadata={'k1': 'v1'},
+                                          timeout=120)
+        cluster = test_utils.wait_for_status(test_api.get_cluster, self.client,
+                                             cluster['id'], 'ACTIVE')
+        self.assertEqual(cluster_name, cluster['name'])
+        self.assertEqual({'k1': 'v1'}, cluster['metadata'])
+        self.assertEqual(120, cluster['timeout'])
+
+        # Update basic properties of cluster
+        action_id = test_api.update_cluster(self.client, cluster['id'],
+                                            name='cluster_new_name',
+                                            metadata={'k2': 'v2'},
+                                            timeout=240)
+        test_utils.wait_for_status(test_api.get_action, self.client,
+                                   action_id, 'SUCCEEDED')
+
+        # Verify update result
+        cluster = test_api.get_cluster(self.client, cluster['id'])
+        self.assertEqual('cluster_new_name', cluster['name'])
+        self.assertEqual({'k1': 'v1', 'k2': 'v2'}, cluster['metadata'])
+        self.assertEqual(240, cluster['timeout'])
+
+        # Delete cluster
+        test_api.delete_cluster(self.client, cluster['id'])
+        test_utils.wait_for_delete(test_api.get_cluster, self.client,
+                                   cluster['id'])
