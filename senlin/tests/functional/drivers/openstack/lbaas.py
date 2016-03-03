@@ -23,7 +23,7 @@ class LoadBalancerDriver(base.DriverBase):
 
         self.member_id = "9a7aff27-fd41-4ec1-ba4c-3eb92c629313"
 
-    def lb_create(self, vip, pool):
+    def lb_create(self, vip, pool, hm=None):
         return True, self.lb_result
 
     def lb_delete(self, **kwargs):
