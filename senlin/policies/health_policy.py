@@ -143,8 +143,7 @@ class HealthPolicy(base.Policy):
             'params': {},
         }
 
-        health_manager.register(cluster_id=cluster.id, engine_id=None,
-                                **kwargs)
+        health_manager.register(cluster.id, engine_id=None, **kwargs)
 
         data = {
             'check_type': self.check_type,
@@ -159,7 +158,7 @@ class HealthPolicy(base.Policy):
         Unregister the cluster for health management.
         '''
 
-        health_manager.unregister(cluster_id=cluster.id)
+        health_manager.unregister(cluster.id)
         return True, ''
 
     def pre_op(self, cluster_id, action, **args):
