@@ -121,10 +121,6 @@ individually or combined:
 
   * ``name``: name of clusters to list, can be a string or a list of strings;
   * ``status``: status of clusters, can be a string or a list of strings;
-  * ``project``: ID of the project to which a cluster belongs, can be a string
-    or a list of strings;
-  * ``user``: ID of the user who is the owner of the clusters. It can be a
-    string or a list of strings.
 
 - ``limit``: a number that restricts the maximum number of records to be
   returned from the query. It is useful for displaying the records in pages
