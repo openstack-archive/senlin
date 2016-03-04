@@ -337,7 +337,13 @@ class ServerProfile(base.Profile):
             kwargs['networks'] = networks
 
         if 'placement' in obj.data:
-            kwargs['availability_zone'] = obj.data['placement']['zone']
+            if 'zone' in obj.data['placement']:
+                kwargs['availability_zone'] = obj.data['placement']['zone']
+            if 'servergroup' in obj.data['placement']:
+                group_id = obj.data['placement']['servergroup']
+                hints = self.properties.get(self.SCHEDULER_HINTS, {})
+                hints.update({'group': group_id})
+                kwargs['scheduler_hints'] = hints
 
         LOG.info('Creating server: %s' % kwargs)
         server = self.nova(obj).server_create(**kwargs)

@@ -158,7 +158,8 @@ class TestNovaServerProfile(base.SenlinTestCase):
         test_server.cluster_id = 'FAKE_CLUSTER_ID'
         test_server.data = {
             'placement': {
-                'zone': 'AZ1'
+                'zone': 'AZ1',
+                'servergroup': 'SERVER_GROUP_1'
             }
         }
         image = mock.Mock()
@@ -212,7 +213,8 @@ class TestNovaServerProfile(base.SenlinTestCase):
                 'contents': 'foo'
             }],
             scheduler_hints={
-                'same_host': 'HOST_ID'
+                'same_host': 'HOST_ID',
+                'group': 'SERVER_GROUP_1',
             },
             security_groups=['HIGH_SECURITY_GROUP'],
             user_data='FAKE_USER_DATA',
