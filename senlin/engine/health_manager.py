@@ -74,10 +74,11 @@ class HealthManager(service.Service):
         self.TG.add_timer(cfg.CONF.periodic_interval, self._idle_task)
 
         for registry in self.registries:
-            if registry.check_type == 'NODE_STATUS_POLLING':
-                interval = min(registry.interval, self.periodic_interval_max)
-                self.TG.add_timer(interval,
-                                  self._periodic_check(registry.cluster_id))
+            if registry.get('check_type') == 'NODE_STATUS_POLLING':
+                interval = min(registry.get('interval'),
+                               self.periodic_interval_max)
+                self.TG.add_timer(interval, self._periodic_check(
+                    registry.get('cluster_id')))
 
     def start(self):
         super(HealthManager, self).start()
@@ -91,7 +92,14 @@ class HealthManager(service.Service):
 
     def _load_runtime_registry(self):
         db_registries = db_api.registry_claim(self.ctx, self.engine_id)
-        self.rt = {'registries': [r for r in db_registries]}
+        for registry in db_registries:
+            reg_cap = {
+                'cluster_id': registry.cluster_id,
+                'check_type': registry.check_type,
+                'interval': registry.interval,
+                'params': registry.params,
+            }
+            self.rt['registries'].append(reg_cap)
 
     @property
     def registries(self):
@@ -120,7 +128,14 @@ class HealthManager(service.Service):
         params = params or {}
         registry = db_api.registry_create(ctx, cluster_id, check_type,
                                           interval, params, self.engine_id)
-        self.rt['registries'].append(registry)
+        reg_cap = {
+            'cluster_id': registry.cluster_id,
+            'check_type': registry.check_type,
+            'interval': registry.interval,
+            'params': registry.params,
+
+        }
+        self.rt['registries'].append(reg_cap)
 
     def unregister_cluster(self, ctx, cluster_id):
         """Unregister a cluster from health checking.
@@ -130,7 +145,7 @@ class HealthManager(service.Service):
         :return: None
         """
         for registry in self.rt['registries']:
-            if registry.cluster_id == cluster_id:
+            if registry.get('cluster_id') == cluster_id:
                 self.rt['registries'].remove(registry)
         db_api.registry_delete(ctx, cluster_id)
 
