@@ -259,7 +259,7 @@ class TestNeutronV2Driver(base.SenlinTestCase):
         self.assertEqual(member_obj, self.nc.pool_member_create(
             pool_id, address, protocol_port, subnet_id, **kwargs))
         self.conn.network.create_pool_member.assert_called_once_with(
-            pool_id=pool_id, address=address, protocol_port=protocol_port,
+            pool_id, address=address, protocol_port=protocol_port,
             subnet_id=subnet_id, **kwargs)
 
         # Use default input parameters
@@ -269,7 +269,7 @@ class TestNeutronV2Driver(base.SenlinTestCase):
         self.assertEqual(member_obj, self.nc.pool_member_create(
             pool_id, address, protocol_port, subnet_id))
         self.conn.network.create_pool_member.assert_called_with(
-            pool_id=pool_id, address=address, protocol_port=protocol_port,
+            pool_id, address=address, protocol_port=protocol_port,
             subnet_id=subnet_id, **kwargs)
 
     def test_pool_member_delete(self):
