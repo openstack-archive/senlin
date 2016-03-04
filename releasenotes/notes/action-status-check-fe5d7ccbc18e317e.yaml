@@ -1,0 +1,4 @@
+---
+fixes:
+  - Reworked action status check so that a cluster action will always return
+    from WAITING status.
