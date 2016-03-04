@@ -213,9 +213,9 @@ class InternalError(SenlinException):
 
     def __init__(self, **kwargs):
         super(InternalError, self).__init__(**kwargs)
-        if 'code' in kwargs.keys():
+        if 'code' in kwargs:
             self.code = kwargs.get('code', 500)
-            self.message = kwargs.get('message')
+            self.message = kwargs.get('message', self.message)
 
 
 class ResourceBusyError(InternalError):
