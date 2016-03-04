@@ -417,3 +417,86 @@ class TestNovaV2(base.SenlinTestCase):
 
         result = nc.validate_azs(['AZ1', 'AZ2', 'AZ5'])
         self.assertEqual(['AZ1', 'AZ2'], result)
+
+    def test_server_group_create(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        d.server_group_create(name='sg')
+        self.compute.create_server_group.assert_called_once_with(name='sg')
+
+    def test_server_group_delete(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        d.server_group_delete('sg', True)
+        self.compute.delete_server_group.assert_called_once_with(
+            'sg', ignore_missing=True)
+        self.compute.delete_server_group.reset_mock()
+
+        d.server_group_delete('sg', False)
+        self.compute.delete_server_group.assert_called_once_with(
+            'sg', ignore_missing=False)
+        self.compute.delete_server_group.reset_mock()
+
+        d.server_group_delete('sg')
+        self.compute.delete_server_group.assert_called_once_with(
+            'sg', ignore_missing=True)
+
+    def test_server_group_find(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        d.server_group_find('sg')
+        self.compute.find_server_group.assert_called_once_with(
+            'sg', ignore_missing=True)
+        self.compute.find_server_group.reset_mock()
+
+        d.server_group_find('sg', True)
+        self.compute.find_server_group.assert_called_once_with(
+            'sg', ignore_missing=True)
+        self.compute.find_server_group.reset_mock()
+
+        d.server_group_find('sg', False)
+        self.compute.find_server_group.assert_called_once_with(
+            'sg', ignore_missing=False)
+
+    def test_server_group_get(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        d.server_group_get('sg')
+        self.compute.get_server_group.assert_called_once_with('sg')
+
+    def test_server_group_list(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        d.server_group_list()
+        self.compute.server_groups.assert_called_once_with()
+        self.compute.server_groups.reset_mock()
+
+        d.server_group_list(name='sg')
+        self.compute.server_groups.assert_called_once_with(name='sg')
+        self.compute.server_groups.reset_mock()
+
+    def test_hypervisor_list(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        d.hypervisor_list()
+        self.compute.hypervisors.assert_called_once_with()
+        self.compute.hypervisors.reset_mock()
+
+        d.hypervisor_list(k='v')
+        self.compute.hypervisors.assert_called_once_with(k='v')
+        self.compute.hypervisors.reset_mock()
+
+    def test_hypervisor_find(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        d.hypervisor_find('k')
+        self.compute.find_hypervisor.assert_called_once_with(
+            'k', ignore_missing=True)
+        self.compute.find_hypervisor.reset_mock()
+
+        d.hypervisor_find('k', True)
+        self.compute.find_hypervisor.assert_called_once_with(
+            'k', ignore_missing=True)
+        self.compute.find_hypervisor.reset_mock()
+
+        d.hypervisor_find('k', False)
+        self.compute.find_hypervisor.assert_called_once_with(
+            'k', ignore_missing=False)
+
+    def test_hypervisor_get(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        d.hypervisor_get('k')
+        self.compute.get_hypervisor.assert_called_once_with('k')

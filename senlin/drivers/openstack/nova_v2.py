@@ -222,3 +222,38 @@ class NovaClient(base.DriverBase):
                 LOG.warning(_LW("Availability zone '%s' is not available."),
                             az)
         return found
+
+    @sdk.translate_exception
+    def server_group_create(self, **attrs):
+        return self.conn.compute.create_server_group(**attrs)
+
+    @sdk.translate_exception
+    def server_group_delete(self, server_group, ignore_missing=True):
+        return self.conn.compute.delete_server_group(
+            server_group, ignore_missing=ignore_missing)
+
+    @sdk.translate_exception
+    def server_group_find(self, name_or_id, ignore_missing=True):
+        return self.conn.compute.find_server_group(
+            name_or_id, ignore_missing=ignore_missing)
+
+    @sdk.translate_exception
+    def server_group_get(self, server_group):
+        return self.conn.compute.get_server_group(server_group)
+
+    @sdk.translate_exception
+    def server_group_list(self, **query):
+        return self.conn.compute.server_groups(**query)
+
+    @sdk.translate_exception
+    def hypervisor_list(self, **query):
+        return self.conn.compute.hypervisors(**query)
+
+    @sdk.translate_exception
+    def hypervisor_find(self, name_or_id, ignore_missing=True):
+        return self.conn.compute.find_hypervisor(
+            name_or_id, ignore_missing=ignore_missing)
+
+    @sdk.translate_exception
+    def hypervisor_get(self, hypervisor):
+        return self.conn.compute.get_hypervisor(hypervisor)
