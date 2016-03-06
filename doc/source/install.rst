@@ -119,7 +119,8 @@ The most common options to be customized include:
 
  Create Senlin database using the :command:`senlin-db-recreate` script under
  the :file:`tools` subdirectory. Before calling the script, you need edit it
- to customize the password you will use for the ``senlin`` user.
+ to customize the password you will use for the ``senlin`` user. You need to
+ update this script with the <DB PASSWORD> entered in step4.
 
 ::
 
@@ -128,7 +129,7 @@ The most common options to be customized include:
 
 6. Start senlin engine and api service.
 
- You may need two consoles for the services each.
+ You may need two consoles for the services i.e., one for each service.
 
 ::
 
