@@ -177,6 +177,7 @@ class ServerProfile(base.Profile):
         METADATA: schema.Map(
             _('A collection of key/value pairs to be associated with the '
               'server created. Both key and value should be <=255 chars.'),
+            updatable=True,
         ),
         NAME: schema.String(
             _('Name of the server.'),
