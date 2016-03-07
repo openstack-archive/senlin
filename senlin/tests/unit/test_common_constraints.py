@@ -120,6 +120,7 @@ class TestConstraintsSchema(testtools.TestCase):
             'default': 'wibble',
             'readonly': False,
             'required': True,
+            'updatable': False,
             'constraints': [{
                 'constraint': ['foo', 'bar'],
                 'type': 'AllowedValues'
@@ -141,6 +142,7 @@ class TestConstraintsSchema(testtools.TestCase):
                     'default': 'wibble',
                     'readonly': False,
                     'required': True,
+                    'updatable': False,
                     'constraints': [{
                         'constraint': ['foo', 'bar'],
                         'type': 'AllowedValues'
@@ -149,6 +151,7 @@ class TestConstraintsSchema(testtools.TestCase):
             },
             'readonly': False,
             'required': False,
+            'updatable': False,
         }
         c = constraints.AllowedValues(['foo', 'bar'])
         s = schema.String('A string', default='wibble', required=True,
@@ -167,6 +170,7 @@ class TestConstraintsSchema(testtools.TestCase):
                     'default': 'wibble',
                     'readonly': False,
                     'required': True,
+                    'updatable': False,
                     'constraints': [{
                         'type': 'AllowedValues',
                         'constraint': ['foo', 'bar']
@@ -175,6 +179,7 @@ class TestConstraintsSchema(testtools.TestCase):
             },
             'readonly': False,
             'required': False,
+            'updatable': False,
         }
         c = constraints.AllowedValues(['foo', 'bar'])
         s = schema.String('A string', default='wibble', required=True,
@@ -206,6 +211,7 @@ class TestConstraintsSchema(testtools.TestCase):
                             'default': 'wibble',
                             'readonly': False,
                             'required': True,
+                            'updatable': False,
                             'constraints': [{
                                 'type': 'AllowedValues',
                                 'constraint': ['foo', 'bar']
@@ -214,10 +220,12 @@ class TestConstraintsSchema(testtools.TestCase):
                     },
                     'readonly': False,
                     'required': False,
+                    'updatable': False,
                 }
             },
             'readonly': False,
             'required': False,
+            'updatable': False,
         }
         c = constraints.AllowedValues(['foo', 'bar'])
         s = schema.String('A string', default='wibble', required=True,

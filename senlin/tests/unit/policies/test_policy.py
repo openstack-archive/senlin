@@ -288,12 +288,14 @@ class TestPolicyBase(base.SenlinTestCase):
                 'description': 'first key',
                 'readonly': False,
                 'required': False,
+                'updatable': False,
                 'type': 'String'
             },
             'key2': {
                 'description': 'second key',
                 'readonly': False,
                 'required': True,
+                'updatable': False,
                 'type': 'Integer'
             },
         }

@@ -382,8 +382,10 @@ class ServerProfile(base.Profile):
         if not new_profile:
             return True
 
-        # TODO(anyone): Validate the new profile
-        # TODO(Yanyan Hu): Update all server properties changed in new profile
+        if not self.validate_for_update(new_profile):
+            return False
+
+        # TODO(Yanyan Hu): Update block_device properties
 
         # Update basic properties of server
         if not self._update_basic_properties(obj, new_profile):

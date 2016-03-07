@@ -49,11 +49,16 @@ class DummyProfile(pb.Profile):
         ),
         'key1': schema.String(
             'first key',
-            default='value1'
+            default='value1',
+            updatable=True,
         ),
         'key2': schema.Integer(
             'second key',
             required=True,
+            updatable=True,
+        ),
+        'key3': schema.String(
+            'third key',
         ),
     }
 
@@ -428,6 +433,7 @@ class TestProfileBase(base.SenlinTestCase):
                 'description': 'context data',
                 'readonly': False,
                 'required': False,
+                'updatable': False,
                 'type': 'Map'
             },
             'key1': {
@@ -435,13 +441,22 @@ class TestProfileBase(base.SenlinTestCase):
                 'description': 'first key',
                 'readonly': False,
                 'required': False,
-                'type': 'String'
+                'updatable': True,
+                'type': 'String',
             },
             'key2': {
                 'description': 'second key',
                 'readonly': False,
                 'required': True,
+                'updatable': True,
                 'type': 'Integer'
+            },
+            'key3': {
+                'description': 'third key',
+                'readonly': False,
+                'required': False,
+                'updatable': False,
+                'type': 'String'
             },
         }
 
@@ -666,3 +681,33 @@ class TestProfileBase(base.SenlinTestCase):
 
         result = profile.to_dict()
         self.assertEqual(expected, result)
+
+    def test_validate_for_update_succeeded(self):
+        profile = self._create_profile('test-profile')
+
+        # Properties are updatable
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['key1'] = 'new_v1'
+        new_spec['properties']['key2'] = 3
+        new_profile = pb.Profile('new-profile', new_spec,
+                                 user=self.ctx.user,
+                                 project=self.ctx.project,
+                                 domain=self.ctx.domain,
+                                 context=None)
+        res = profile.validate_for_update(new_profile)
+        self.assertTrue(res)
+
+    def test_validate_for_update_failed(self):
+        profile = self._create_profile('test-profile')
+
+        # Property is not updatable
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['key3'] = 'new_v3'
+        new_profile = pb.Profile('new-profile', new_spec,
+                                 user=self.ctx.user,
+                                 project=self.ctx.project,
+                                 domain=self.ctx.domain,
+                                 context=None)
+
+        res = profile.validate_for_update(new_profile)
+        self.assertFalse(res)

@@ -180,6 +180,9 @@ class StackProfile(base.Profile):
         if not self.stack_id:
             return True
 
+        if not self.validate_for_update(new_profile):
+            return False
+
         fields = {}
         new_template = new_profile.properties[new_profile.TEMPLATE]
         if new_template != self.properties[self.TEMPLATE]:

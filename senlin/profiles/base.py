@@ -20,6 +20,7 @@ import six
 from senlin.common import context
 from senlin.common import exception
 from senlin.common.i18n import _
+from senlin.common.i18n import _LE
 from senlin.common import schema
 from senlin.common import utils
 from senlin.db import api as db_api
@@ -340,3 +341,18 @@ class Profile(object):
             'updated_at': utils.format_time(self.updated_at),
         }
         return pb_dict
+
+    def validate_for_update(self, new_profile):
+        non_updatables = []
+        for (k, v) in new_profile.properties.items():
+            if self.properties.get(k, None) != v:
+                if not self.properties_schema[k].updatable:
+                    non_updatables.append(k)
+
+        if not non_updatables:
+            return True
+
+        msg = ", ".join(non_updatables)
+        LOG.error(_LE("The following properties are not updatable: %s."
+                      ) % msg)
+        return False

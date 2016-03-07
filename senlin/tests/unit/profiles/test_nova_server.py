@@ -786,11 +786,16 @@ class TestNovaServerProfile(base.SenlinTestCase):
                                              'FAKE_IMAGE_NEW',
                                              'adminpass')
 
+    # TODO(Yanyan Hu): remove this mock after admin_pass update
+    # is completely supported.
+    @mock.patch.object(profiles_base.Profile, 'validate_for_update')
     @mock.patch.object(server.ServerProfile, '_update_image')
-    def test_do_update_image_with_passwd(self, mock_update_image):
+    def test_do_update_image_with_passwd(self, mock_update_image,
+                                         mock_validate):
         obj = mock.Mock()
         obj.physical_id = 'FAKE_ID'
 
+        mock_validate.return_value = True
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = mock.Mock()
         new_spec = copy.deepcopy(self.spec)

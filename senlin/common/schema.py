@@ -136,6 +136,8 @@ class Schema(collections.Mapping):
             return self.required
         elif key == self.READONLY:
             return self.readonly
+        elif key == self.UPDATABLE:
+            return self.updatable
         elif key == self.CONSTRAINTS:
             if self.constraints:
                 return [dict(c) for c in self.constraints]
