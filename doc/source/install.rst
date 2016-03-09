@@ -51,14 +51,14 @@ Manual Installation
 Install Senlin Server
 ---------------------
 
-1. Get Senlin source code from OpenStack git repository
+1. Get Senlin source code from OpenStack git repository.
 
 ::
 
   $ cd /opt/stack
   $ git clone http://git.openstack.org/openstack/senlin.git
 
-2. Install Senlin with required packages
+2. Install Senlin with required packages.
 
 ::
 
@@ -93,7 +93,7 @@ The most common options to be customized include:
 ::
 
   [database]
-  connection = mysql://senlin:<DB PASSWORD>@127.0.0.1/senlin?charset=utf8
+  connection = mysql://senlin:<MYSQL_SENLIN_PW>@127.0.0.1/senlin?charset=utf8
 
   [keystone_authtoken]
   auth_uri = http://<HOST>:5000/v3
@@ -115,7 +115,7 @@ The most common options to be customized include:
   rabbit_hosts = <HOST>
   rabbit_password = <RABBIT PASSWORD>
 
-5. Create Senlin Database
+5. Create Senlin Database.
 
  Create Senlin database using the :command:`senlin-db-recreate` script under
  the :file:`tools` subdirectory. Before calling the script, you need edit it
