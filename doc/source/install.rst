@@ -153,4 +153,24 @@ Install Senlin Client
   $ cd python-senlinclient
   $ sudo python setup.py install
 
+Verify Your Installation
+------------------------
+
+To check whether Senlin Server is successfully installed, run command 'senlin build-info'
+in a console. The installation is successful if the command output looks similar to the following.
+
+::
+
+  $ senlin build-info
+  +----------+---------------------+
+  | Property | Value               |
+  +----------+---------------------+
+  | api      | {                   |
+  |          |   "revision": "1.0" |
+  |          | }                   |
+  | engine   | {                   |
+  |          |   "revision": "1.0" |
+  |          | }                   |
+  +----------+---------------------+
+
 You are ready to begin your journey (aka. adventure) with Senlin, now.
