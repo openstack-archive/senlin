@@ -51,6 +51,17 @@ class EngineClient(object):
             client = self._client
         return client.cast(ctxt, method, **kwargs)
 
+    def credential_create(self, ctxt, cred, attrs=None):
+        return self.call(ctxt, self.make_msg('credential_create', cred=cred,
+                                             attrs=attrs))
+
+    def credential_get(self, ctxt, query=None):
+        return self.call(ctxt, self.make_msg('credential_get', query=query))
+
+    def credential_update(self, ctxt, cred, attrs=None):
+        return self.call(ctxt, self.make_msg('credential_update', cred=cred,
+                                             attrs=attrs))
+
     def profile_type_list(self, ctxt):
         return self.call(ctxt, self.make_msg('profile_type_list'))
 
