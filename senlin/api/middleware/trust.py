@@ -13,30 +13,31 @@
 from senlin.api.common import wsgi
 from senlin.common import context
 from senlin.common import exception
-from senlin.db import api as db_api
 from senlin.drivers import base as driver_base
+from senlin.rpc import client as rpc
 
 
 class TrustMiddleware(wsgi.Middleware):
-    '''Extract trust info from request.
+    """Extract trust info from request.
 
     The extracted information is filled into the request context.
     Senlin engine will use this information for access control.
-    '''
+    """
     def _get_trust(self, ctx):
-        '''List trusts with current user as the trustor.'''
+        """List trusts with current user as the trustor.
 
-        # DB table is used as a cache for the trusts.
+        :param ctx: The requesting context.
+        :return: ID of the trust or exception of InternalError.
+        """
+        rpcc = rpc.EngineClient()
+
         cred_exists = False
-        res = db_api.cred_get(ctx, ctx.user, ctx.project)
-        if res is not None:
-            try:
-                trust_id = res.cred['openstack']['trust']
+        res = rpcc.credential_get(ctx)
+        if res:
+            trust_id = res.get('trust', None)
+            if trust_id:
                 return trust_id
-            except KeyError:
-                # Garbage in the store, ignore it
-                cred_exists = True
-                pass
+            cred_exists = True
 
         params = {
             'auth_url': ctx.auth_url,
@@ -60,15 +61,9 @@ class TrustMiddleware(wsgi.Middleware):
 
         # update cache
         if cred_exists:
-            db_api.cred_update(ctx.user, ctx.project,
-                               {'cred': {'openstack': {'trust': trust.id}}})
+            rpcc.credential_update(ctx, trust.id)
         else:
-            values = {
-                'user': ctx.user,
-                'project': ctx.project,
-                'cred': {'openstack': {'trust': trust.id}}
-            }
-            db_api.cred_create(ctx, values)
+            rpcc.credential_create(ctx, trust.id)
 
         return trust.id
 
