@@ -1,7 +1,7 @@
 [run]
 branch = True
 source = senlin
-omit = */tests/*,senlin/openstack/common/*
+omit = */tests/*
 
 [report]
 ignore_errors = True
