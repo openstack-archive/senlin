@@ -12,8 +12,10 @@
 
 import mock
 
+from senlin.common import consts
 from senlin.common import context
 from senlin.common import exception
+from senlin.common import scaleutils
 from senlin.db import api as db_api
 from senlin.policies import affinity_policy as ap
 from senlin.tests.unit.common import base
@@ -476,9 +478,10 @@ class TestAffinityPolicy(base.SenlinTestCase):
         x_action.store.assert_called_once_with(x_action.context)
 
     @mock.patch.object(db_api, 'cluster_policy_get')
-    def test_pre_op_use_action_input(self, mock_cp):
+    def test_pre_op_use_scaleout_input(self, mock_cp):
         x_action = mock.Mock()
         x_action.data = {}
+        x_action.action = consts.CLUSTER_SCALE_OUT
         x_action.inputs = {'count': 2}
         x_binding = mock.Mock()
         mock_cp.return_value = x_binding
@@ -514,6 +517,101 @@ class TestAffinityPolicy(base.SenlinTestCase):
             },
             x_action.data)
         x_action.store.assert_called_once_with(x_action.context)
+
+    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(db_api, 'cluster_policy_get')
+    def test_pre_op_use_resize_params(self, mock_cp, mock_cluster):
+        def fake_parse_func(action, cluster):
+            action.data = {
+                'creation': {
+                    'count': 2
+                }
+            }
+
+        x_action = mock.Mock()
+        x_action.data = {}
+        x_action.action = consts.CLUSTER_RESIZE
+        x_action.inputs = {
+            'adjustment_type': consts.EXACT_CAPACITY,
+            'number': 10
+        }
+        x_cluster = mock.Mock()
+        mock_cluster.return_value = x_cluster
+        mock_parse = self.patchobject(scaleutils, 'parse_resize_params',
+                                      side_effect=fake_parse_func)
+
+        x_binding = mock.Mock()
+        mock_cp.return_value = x_binding
+
+        policy_data = {
+            'servergroup_id': 'SERVERGROUP_ID',
+            'inherited_group': False,
+        }
+        policy = ap.AffinityPolicy('test-policy', self.spec)
+        policy.id = 'POLICY_ID'
+        mock_extract = self.patchobject(policy, '_extract_policy_data',
+                                        return_value=policy_data)
+
+        # do it
+        policy.pre_op('CLUSTER_ID', x_action)
+
+        mock_parse.assert_called_once_with(x_action, x_cluster)
+        mock_cluster.assert_called_once_with(x_action.context, 'CLUSTER_ID')
+        mock_cp.assert_called_once_with(x_action.context, 'CLUSTER_ID',
+                                        'POLICY_ID')
+        mock_extract.assert_called_once_with(x_binding.data)
+        self.assertEqual(
+            {
+                'creation': {
+                    'count': 2,
+                },
+                'placement': {
+                    'count': 2,
+                    'placements': [
+                        {
+                            'servergroup': 'SERVERGROUP_ID'
+                        },
+                        {
+                            'servergroup': 'SERVERGROUP_ID'
+                        }
+                    ]
+                }
+            },
+            x_action.data)
+        x_action.store.assert_called_once_with(x_action.context)
+
+    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(db_api, 'cluster_policy_get')
+    def test_pre_op_resize_shrinking(self, mock_cp, mock_cluster):
+        def fake_parse_func(action, cluster):
+            action.data = {
+                'deletion': {
+                    'count': 2
+                }
+            }
+
+        x_action = mock.Mock()
+        x_action.data = {}
+        x_action.action = consts.CLUSTER_RESIZE
+        x_action.inputs = {
+            'adjustment_type': consts.EXACT_CAPACITY,
+            'number': 10
+        }
+        x_cluster = mock.Mock()
+        mock_cluster.return_value = x_cluster
+        mock_parse = self.patchobject(scaleutils, 'parse_resize_params',
+                                      side_effect=fake_parse_func)
+        policy = ap.AffinityPolicy('test-policy', self.spec)
+        policy.id = 'POLICY_ID'
+        mock_extract = self.patchobject(policy, '_extract_policy_data')
+
+        # do it
+        policy.pre_op('CLUSTER_ID', x_action)
+
+        mock_parse.assert_called_once_with(x_action, x_cluster)
+        mock_cluster.assert_called_once_with(x_action.context, 'CLUSTER_ID')
+        self.assertEqual(0, mock_cp.call_count)
+        self.assertEqual(0, mock_extract.call_count)
 
     @mock.patch.object(db_api, 'cluster_policy_get')
     def test_pre_op_with_zone_name(self, mock_cp):

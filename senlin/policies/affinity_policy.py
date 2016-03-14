@@ -50,6 +50,7 @@ from senlin.common import context
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
+from senlin.common import scaleutils as su
 from senlin.common import schema
 from senlin.common import utils
 from senlin.db import api as db_api
@@ -71,9 +72,9 @@ class AffinityPolicy(base.Policy):
 
     PRIORITY = 300
 
-    # TODO(Xinhui Li): support resize
     TARGET = [
         ('BEFORE', consts.CLUSTER_SCALE_OUT),
+        ('BEFORE', consts.CLUSTER_RESIZE),
     ]
 
     PROFILE_TYPE = [
@@ -265,8 +266,14 @@ class AffinityPolicy(base.Policy):
         pd = action.data.get('creation', None)
         if pd is not None:
             count = pd.get('count', 1)
-        else:
+        elif action.action == consts.CLUSTER_SCALE_OUT:
             count = action.inputs.get('count', 1)
+        else:  # CLUSTER_RESIZE
+            db_cluster = db_api.cluster_get(action.context, cluster_id)
+            su.parse_resize_params(action, db_cluster)
+            if 'creation' not in action.data:
+                return
+            count = action.data['creation']['count']
 
         cp = db_api.cluster_policy_get(action.context, cluster_id, self.id)
         policy_data = self._extract_policy_data(cp.data)
