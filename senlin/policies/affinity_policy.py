@@ -13,31 +13,8 @@
 """
 Policy for placing nodes based on Nova server groups.
 
-NOTE: How placement policy works
-Input:
-  cluster: cluster whose nodes are to be manipulated.
-  action.data['placement']:
-    - count: number of nodes to create; it can be decision from a scaling
-             policy. If no scaling policy is in effect, the count will be
-             assumed to be 1.
-Output:
-  stored in action.data: A dictionary containing scheduling decisions made.
-  {
-    'status': 'OK',
-    'placement': {
-      'count': 2,
-      'placements': [
-        {
-          'zone': 'nova:openstack_drs',
-          'servergroup': 'SERVER_GROUP_ID',
-        },
-        {
-          'zone': 'nova:openstack_drs',
-          'servergroup': 'SERVER_GROUP_ID',
-        },
-      ]
-    }
-  }
+NOTE:  For full documentation about how the affinity policy works, check:
+http://docs.openstack.org/developer/senlin/developer/policies/affinity_v1.html
 """
 
 import re

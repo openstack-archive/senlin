@@ -54,6 +54,7 @@ in a collaborative way to meet the needs of complicated usage scenarios.
 .. toctree::
    :maxdepth: 1
 
+   policies/affinity_v1
    policies/deletion_v1
    policies/load_balance_v1
    policies/region_placement_v1
