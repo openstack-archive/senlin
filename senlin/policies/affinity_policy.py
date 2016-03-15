@@ -127,6 +127,10 @@ class AffinityPolicy(base.Policy):
         :returns: When the operation was successful, returns a tuple (True,
                   message); otherwise, return a tuple (False, error).
         """
+        res, data = super(AffinityPolicy, self).attach(cluster)
+        if res is False:
+            return False, data
+
         data = {'inherited_group': False}
         nc = self.nova(cluster)
         group = self.properties.get(self.SERVER_GROUP)

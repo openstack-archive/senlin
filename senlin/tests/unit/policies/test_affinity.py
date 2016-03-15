@@ -18,6 +18,7 @@ from senlin.common import exception
 from senlin.common import scaleutils
 from senlin.db import api as db_api
 from senlin.policies import affinity_policy as ap
+from senlin.policies import base as pb
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -73,6 +74,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
 
     def test_attach_using_profile_hints(self):
         x_profile = mock.Mock()
+        x_profile.type = 'os.nova.server-1.0'
         x_profile.spec = {
             'scheduler_hints': {
                 'group': 'KONGFOO',
@@ -107,6 +109,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
     def test_attach_with_group_found(self):
         self.spec['properties']['servergroup']['name'] = 'KONGFU'
         x_profile = mock.Mock()
+        x_profile.type = 'os.nova.server-1.0'
         x_profile.spec = {'foo': 'bar'}
         cluster = mock.Mock(id='CLUSTER_ID')
         cluster.rt = {'profile': x_profile}
@@ -138,6 +141,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
         self.spec['properties']['servergroup']['name'] = 'KONGFU'
         x_profile = mock.Mock()
         x_profile.spec = {'foo': 'bar'}
+        x_profile.type = 'os.nova.server-1.0'
         cluster = mock.Mock(id='CLUSTER_ID')
         cluster.rt = {'profile': x_profile}
         x_group = mock.Mock(id='GROUP_ID')
@@ -171,6 +175,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
     def test_attach_with_group_name_not_provided(self):
         x_profile = mock.Mock()
         x_profile.spec = {'foo': 'bar'}
+        x_profile.type = 'os.nova.server-1.0'
         cluster = mock.Mock(id='CLUSTER_ID')
         cluster.rt = {'profile': x_profile}
         x_group = mock.Mock(id='GROUP_ID')
@@ -199,9 +204,22 @@ class TestAffinityPolicy(base.SenlinTestCase):
             'inherited_group': False
         })
 
+    @mock.patch.object(pb.Policy, 'attach')
+    def test_attach_failed_base_return_false(self, mock_attach):
+        cluster = mock.Mock()
+        mock_attach.return_value = (False, 'Something is wrong.')
+
+        policy = ap.AffinityPolicy('test-policy', self.spec)
+
+        res, data = policy.attach(cluster)
+
+        self.assertFalse(res)
+        self.assertEqual('Something is wrong.', data)
+
     def test_attach_failed_finding(self):
         self.spec['properties']['servergroup']['name'] = 'KONGFU'
         x_profile = mock.Mock()
+        x_profile.type = 'os.nova.server-1.0'
         x_profile.spec = {'foo': 'bar'}
         cluster = mock.Mock(id='CLUSTER_ID')
         cluster.rt = {'profile': x_profile}
@@ -225,6 +243,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
     def test_attach_policies_not_match(self):
         self.spec['properties']['servergroup']['name'] = 'KONGFU'
         x_profile = mock.Mock()
+        x_profile.type = 'os.nova.server-1.0'
         x_profile.spec = {'foo': 'bar'}
         cluster = mock.Mock(id='CLUSTER_ID')
         cluster.rt = {'profile': x_profile}
@@ -250,6 +269,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
     def test_attach_failed_creating_server_group(self):
         self.spec['properties']['servergroup']['name'] = 'KONGFU'
         x_profile = mock.Mock()
+        x_profile.type = 'os.nova.server-1.0'
         x_profile.spec = {'foo': 'bar'}
         cluster = mock.Mock(id='CLUSTER_ID')
         cluster.rt = {'profile': x_profile}
