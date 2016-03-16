@@ -193,18 +193,20 @@ class ZonePlacementPolicy(base.Policy):
         :param cluster_id: ID of the target cluster.
         :param action: The action that triggers this policy check.
         """
-
-        count = action.inputs.get('count', None)
         if action.action == consts.CLUSTER_SCALE_IN:
             expand = False
-            if not count:
-                pd = action.data.get('deletion', None)
-                count = pd.get('count', 1) if pd else 1
+            pd = action.data.get('deletion', None)
+            if pd is None:
+                count = action.inputs.get('count', 1)
+            else:
+                count = pd.get('count', 1)
         else:
             expand = True
-            if not count:
-                pd = action.data.get('creation', None)
-                count = pd.get('count', 1) if pd else 1
+            pd = action.data.get('creation', None)
+            if pd is None:
+                count = action.inputs.get('count', 1)
+            else:
+                count = pd.get('count', 1)
 
         cluster = cluster_mod.Cluster.load(action.context, cluster_id)
 
