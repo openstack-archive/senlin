@@ -12,6 +12,9 @@
 
 import mock
 
+from senlin.common import consts
+from senlin.common import scaleutils as su
+from senlin.db.sqlalchemy import api as db_api
 from senlin.drivers import base as driver_base
 from senlin.engine import cluster as cluster_mod
 from senlin.policies import base as policy_base
@@ -108,6 +111,136 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         plan = policy._create_plan(current, regions, 3, False)
         answer = {'R2': 1, 'R3': 1, 'R4': 1}
         self.assertEqual(answer, plan)
+
+    def test__get_count_resize_deletion(self):
+        action = mock.Mock(action=consts.CLUSTER_RESIZE,
+                           data={'deletion': {'count': 3}})
+
+        policy = rp.RegionPlacementPolicy('p1', self.spec)
+
+        res = policy._get_count('FOO', action)
+        self.assertEqual(-3, res)
+
+    def test__get_count_resize_creation(self):
+        action = mock.Mock(action=consts.CLUSTER_RESIZE,
+                           data={'creation': {'count': 3}})
+        policy = rp.RegionPlacementPolicy('p1', self.spec)
+
+        res = policy._get_count('FOO', action)
+        self.assertEqual(3, res)
+
+    @mock.patch.object(su, 'parse_resize_params')
+    @mock.patch.object(db_api, 'cluster_get')
+    def test__get_count_resize_parse_error(self, mock_cluster, mock_parse):
+        x_cluster = mock.Mock()
+        mock_cluster.return_value = x_cluster
+        mock_parse.return_value = (policy_base.CHECK_ERROR, 'Something wrong.')
+        action = mock.Mock(action=consts.CLUSTER_RESIZE, data={})
+        policy = rp.RegionPlacementPolicy('p1', self.spec)
+
+        res = policy._get_count('FOO', action)
+
+        self.assertEqual(0, res)
+        self.assertEqual(policy_base.CHECK_ERROR, action.data['status'])
+        self.assertEqual('Something wrong.', action.data['reason'])
+
+    @mock.patch.object(su, 'parse_resize_params')
+    @mock.patch.object(db_api, 'cluster_get')
+    def test__get_count_resize_parse_creation(self, mock_cluster, mock_parse):
+        def fake_parse(action, cluster):
+            action.data = {'creation': {'count': 3}}
+            return policy_base.CHECK_OK, ''
+
+        x_cluster = mock.Mock()
+        mock_cluster.return_value = x_cluster
+        mock_parse.side_effect = fake_parse
+        action = mock.Mock(action=consts.CLUSTER_RESIZE, data={})
+        policy = rp.RegionPlacementPolicy('p1', self.spec)
+
+        res = policy._get_count('FOO', action)
+
+        self.assertEqual(3, res)
+
+    @mock.patch.object(su, 'parse_resize_params')
+    @mock.patch.object(db_api, 'cluster_get')
+    def test__get_count_resize_parse_deletion(self, mock_cluster, mock_parse):
+        def fake_parse(action, cluster):
+            action.data = {'deletion': {'count': 3}}
+            return policy_base.CHECK_OK, ''
+
+        x_cluster = mock.Mock()
+        mock_cluster.return_value = x_cluster
+        mock_parse.side_effect = fake_parse
+        action = mock.Mock(action=consts.CLUSTER_RESIZE, data={})
+        policy = rp.RegionPlacementPolicy('p1', self.spec)
+
+        res = policy._get_count('FOO', action)
+
+        self.assertEqual(-3, res)
+
+    def test__get_count_scale_in_with_data(self):
+        action = mock.Mock(action=consts.CLUSTER_SCALE_IN,
+                           data={'deletion': {'count': 3}})
+        policy = rp.RegionPlacementPolicy('p1', self.spec)
+
+        res = policy._get_count('FOO', action)
+        self.assertEqual(-3, res)
+
+    def test__get_count_scale_in_with_no_data(self):
+        action = mock.Mock(action=consts.CLUSTER_SCALE_IN,
+                           data={'deletion': {'num': 3}})
+        policy = rp.RegionPlacementPolicy('p1', self.spec)
+
+        res = policy._get_count('FOO', action)
+        self.assertEqual(-1, res)
+
+    def test__get_count_scale_in_with_inputs(self):
+        action = mock.Mock(action=consts.CLUSTER_SCALE_IN, data={},
+                           inputs={'count': 3})
+        policy = rp.RegionPlacementPolicy('p1', self.spec)
+
+        res = policy._get_count('FOO', action)
+        self.assertEqual(-3, res)
+
+    def test__get_count_scale_in_with_incorrect_inputs(self):
+        action = mock.Mock(action=consts.CLUSTER_SCALE_IN, data={},
+                           inputs={'num': 3})
+        policy = rp.RegionPlacementPolicy('p1', self.spec)
+
+        res = policy._get_count('FOO', action)
+        self.assertEqual(-1, res)
+
+    def test__get_count_scale_out_with_data(self):
+        action = mock.Mock(action=consts.CLUSTER_SCALE_OUT,
+                           data={'creation': {'count': 3}})
+        policy = rp.RegionPlacementPolicy('p1', self.spec)
+
+        res = policy._get_count('FOO', action)
+        self.assertEqual(3, res)
+
+    def test__get_count_scale_out_with_no_data(self):
+        action = mock.Mock(action=consts.CLUSTER_SCALE_OUT,
+                           data={'creation': {'num': 3}})
+        policy = rp.RegionPlacementPolicy('p1', self.spec)
+
+        res = policy._get_count('FOO', action)
+        self.assertEqual(1, res)
+
+    def test__get_count_scale_out_with_inputs(self):
+        action = mock.Mock(action=consts.CLUSTER_SCALE_OUT, data={},
+                           inputs={'count': 3})
+        policy = rp.RegionPlacementPolicy('p1', self.spec)
+
+        res = policy._get_count('FOO', action)
+        self.assertEqual(3, res)
+
+    def test__get_count_scale_out_with_incorrect_inputs(self):
+        action = mock.Mock(action=consts.CLUSTER_SCALE_OUT, data={},
+                           inputs={'num': 3})
+        policy = rp.RegionPlacementPolicy('p1', self.spec)
+
+        res = policy._get_count('FOO', action)
+        self.assertEqual(1, res)
 
     @mock.patch.object(rp.RegionPlacementPolicy, '_keystone')
     @mock.patch.object(cluster_mod.Cluster, 'load')

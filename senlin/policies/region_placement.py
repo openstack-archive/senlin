@@ -55,11 +55,11 @@ from oslo_log import log as logging
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
+from senlin.common import scaleutils
 from senlin.common import schema
-
+from senlin.db import api as db_api
 from senlin.drivers import base as driver_base
 from senlin.engine import cluster as cluster_mod
-
 from senlin.policies import base
 
 LOG = logging.getLogger(__name__)
@@ -73,9 +73,9 @@ class RegionPlacementPolicy(base.Policy):
     PRIORITY = 200
 
     TARGET = [
-        # TODO(anyone): enable this to handle CLUSTER_RESIZE action
         ('BEFORE', consts.CLUSTER_SCALE_OUT),
         ('BEFORE', consts.CLUSTER_SCALE_IN),
+        ('BEFORE', consts.CLUSTER_RESIZE),
     ]
 
     PROFILE_TYPE = [
@@ -205,6 +205,48 @@ class RegionPlacementPolicy(base.Policy):
 
         return result
 
+    def _get_count(self, cluster_id, action):
+        """Get number of nodes to create or delete.
+
+        :param cluster_id: The ID of the target cluster.
+        :param action: The action object which triggered this policy check.
+        :return: An integer value which can be 1) positive - number of nodes
+                 to create; 2) negative - number of nodes to delete; 3) 0 -
+                 something wrong happened, and the policy check failed.
+        """
+        if action.action == consts.CLUSTER_RESIZE:
+            if action.data.get('deletion', None):
+                return -action.data['deletion']['count']
+            elif action.data.get('creation', None):
+                return action.data['creation']['count']
+
+            db_cluster = db_api.cluster_get(action.context, cluster_id)
+            res = scaleutils.parse_resize_params(action, db_cluster)
+            if res[0] == base.CHECK_ERROR:
+                action.data['status'] = base.CHECK_ERROR
+                action.data['reason'] = res[1]
+                LOG.error(res[1])
+                return 0
+
+            if action.data.get('deletion', None):
+                return -action.data['deletion']['count']
+            else:
+                return action.data['creation']['count']
+
+        if action.action == consts.CLUSTER_SCALE_IN:
+            pd = action.data.get('deletion', None)
+            if pd is None:
+                return -action.inputs.get('count', 1)
+            else:
+                return -pd.get('count', 1)
+
+        # CLUSTER_SCALE_OUT: an action that inflates the cluster
+        pd = action.data.get('creation', None)
+        if pd is None:
+            return action.inputs.get('count', 1)
+        else:
+            return pd.get('count', 1)
+
     def pre_op(self, cluster_id, action):
         """Callback function when cluster membership is about to change.
 
@@ -212,23 +254,14 @@ class RegionPlacementPolicy(base.Policy):
         :param action: The action that triggers this policy check.
         :returns: ``None``.
         """
-        if action.action == consts.CLUSTER_SCALE_IN:
+        count = self._get_count(cluster_id, action)
+        if count == 0:
+            return
+
+        expand = True
+        if count < 0:
             expand = False
-            pd = action.data.get('deletion', None)
-            if pd is None:
-                # use action input directly if available
-                count = action.inputs.get('count', 1)
-            else:
-                # check if policy decisions available
-                count = pd.get('count', 1)
-        else:
-            # this is an action that inflates the cluster
-            expand = True
-            pd = action.data.get('creation', None)
-            if pd is None:
-                count = action.inputs.get('count', 1)
-            else:
-                count = pd.get('count', 1)
+            count = -count
 
         cluster = cluster_mod.Cluster.load(action.context, cluster_id)
 
