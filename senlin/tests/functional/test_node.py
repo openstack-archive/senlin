@@ -84,7 +84,7 @@ class TestNode(base.SenlinFunctionalTest):
 
         # Get node detail and verify
         node = test_api.get_node(self.client, node['id'], show_details=True)
-        self.assertTrue('details' in node)
+        self.assertIn('details', node)
         self.assertEqual("new-server-test", node['details']['name'])
         self.assertEqual("1", node['details']['flavor'])
         self.assertEqual("FAKE_IMAGE_ID", node['details']['image'])
