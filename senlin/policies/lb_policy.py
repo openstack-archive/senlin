@@ -372,8 +372,9 @@ class LoadBalancingPolicy(base.Policy):
             candidates = deletion.get('candidates', None)
 
         # Still no candidates available, pick count of nodes randomly
-        # TODO(anyone): if count is 0, skip this step
         if candidates is None:
+            if count == 0:
+                return []
             nodes = db_api.node_get_all_by_cluster(action.context,
                                                    cluster_id=cluster_id)
             if count > len(nodes):
