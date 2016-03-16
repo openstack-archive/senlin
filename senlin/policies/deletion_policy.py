@@ -16,6 +16,7 @@ Policy for deleting node(s) from a cluster.
 NOTE: For full documentation about how the deletion policy works, check:
 http://docs.openstack.org/developer/senlin/developer/policies/deletion_v1.html
 """
+from oslo_log import log as logging
 
 from senlin.common import constraints
 from senlin.common import consts
@@ -25,6 +26,8 @@ from senlin.common import schema
 from senlin.db import api as db_api
 from senlin.engine import cluster as cluster_mod
 from senlin.policies import base
+
+LOG = logging.getLogger(__name__)
 
 
 class DeletionPolicy(base.Policy):
@@ -175,7 +178,13 @@ class DeletionPolicy(base.Policy):
         # No policy decision, check action itself: RESIZE
         else:
             db_cluster = db_api.cluster_get(action.context, cluster_id)
-            scaleutils.parse_resize_params(action, db_cluster)
+            res = scaleutils.parse_resize_params(action, db_cluster)
+            if res[0] == base.CHECK_ERROR:
+                action.data['status'] = base.CHECK_ERROR
+                action.data['reason'] = res[1]
+                LOG.error(res[1])
+                return
+
             if 'deletion' not in action.data:
                 return
             count = action.data['deletion']['count']
