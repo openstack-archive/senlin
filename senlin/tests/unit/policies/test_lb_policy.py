@@ -296,6 +296,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         m_nodes_random.assert_called_once_with(['node1', 'node2', 'node3'], 1)
 
         self.assertEqual(['node2'], res)
+        self.assertEqual({'deletion': {'count': 1, 'candidates': ['node2']}},
+                         action.data)
 
     def test_get_delete_candidates_deletion_count_is_zero(self):
         action = mock.Mock()
@@ -570,7 +572,12 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         node2.data = {'lb_member': 'MEMBER2_ID'}
         action = mock.Mock()
         action.data = {}
-        action.data = {'deletion': {'candidates': ['NODE1_ID', 'NODE2_ID']}}
+        action.data = {
+            'deletion': {
+                'count': 2,
+                'candidates': ['NODE1_ID', 'NODE2_ID']
+            }
+        }
         action.context = 'action_context'
         action.action = consts.CLUSTER_DEL_NODES
         cp = mock.Mock()
