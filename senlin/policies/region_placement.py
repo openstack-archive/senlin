@@ -214,20 +214,21 @@ class RegionPlacementPolicy(base.Policy):
         """
         if action.action == consts.CLUSTER_SCALE_IN:
             expand = False
-            # use action input directly if available
-            count = action.inputs.get('count', None)
-            if not count:
+            pd = action.data.get('deletion', None)
+            if pd is None:
+                # use action input directly if available
+                count = action.inputs.get('count', 1)
+            else:
                 # check if policy decisions available
-                pd = action.data.get('deletion', None)
-                count = pd.get('count', 1) if pd else 1
+                count = pd.get('count', 1)
         else:
             # this is an action that inflates the cluster
             expand = True
-            count = action.inputs.get('count', None)
-            if not count:
-                # check if policy decisions available
-                pd = action.data.get('creation', None)
-                count = pd.get('count', 1) if pd else 1
+            pd = action.data.get('creation', None)
+            if pd is None:
+                count = action.inputs.get('count', 1)
+            else:
+                count = pd.get('count', 1)
 
         cluster = cluster_mod.Cluster.load(action.context, cluster_id)
 
