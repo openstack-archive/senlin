@@ -297,6 +297,17 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
 
         self.assertEqual(['node2'], res)
 
+    def test_get_delete_candidates_deletion_count_is_zero(self):
+        action = mock.Mock()
+        self.context = utils.dummy_context()
+        # count is 0 by default
+        action.data = {'deletion': {'number': 3}}
+
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+
+        res = policy._get_delete_candidates('CLUSTERID', action)
+        self.assertEqual([], res)
+
     @mock.patch.object(db_api, 'node_get_all_by_cluster')
     @mock.patch.object(scaleutils, 'nodes_by_random')
     def test_get_delete_candidates_deletion_count_over_size(self,
