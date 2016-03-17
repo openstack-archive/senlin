@@ -51,6 +51,7 @@ class HealthManager(service.Service):
         self.version = version
         self.ctx = context.get_admin_context()
         self.periodic_interval_max = CONF.periodic_interval_max
+        self.rpc_client = rpc_client.EngineClient()
         self.rt = {
             'registries': [],
         }
@@ -58,9 +59,9 @@ class HealthManager(service.Service):
     def _idle_task(self):
         pass
 
-    def _periodic_check(self, cluster_id):
-        rpcc = rpc_client.EngineClient()
-        rpcc.cluster_check(self.ctx, cluster_id)
+    def _periodic_check(self, cluster_id=None):
+        """Tasks to be run at a periodic interval."""
+        self.rpc_client.cluster_check(self.ctx, cluster_id)
 
     def start_periodic_tasks(self):
         """Tasks to be run at a periodic interval."""
@@ -77,8 +78,9 @@ class HealthManager(service.Service):
             if registry.get('check_type') == 'NODE_STATUS_POLLING':
                 interval = min(registry.get('interval'),
                                self.periodic_interval_max)
-                self.TG.add_timer(interval, self._periodic_check(
-                    registry.get('cluster_id')))
+                timer = self.TG.add_timer(interval, self._periodic_check, None,
+                                          registry.get('cluster_id'))
+                registry['timer'] = timer
 
     def start(self):
         super(HealthManager, self).start()
@@ -92,12 +94,14 @@ class HealthManager(service.Service):
 
     def _load_runtime_registry(self):
         db_registries = db_api.registry_claim(self.ctx, self.engine_id)
+
         for registry in db_registries:
             reg_cap = {
                 'cluster_id': registry.cluster_id,
                 'check_type': registry.check_type,
                 'interval': registry.interval,
                 'params': registry.params,
+                'timer': None
             }
             self.rt['registries'].append(reg_cap)
 
@@ -128,11 +132,19 @@ class HealthManager(service.Service):
         params = params or {}
         registry = db_api.registry_create(ctx, cluster_id, check_type,
                                           interval, params, self.engine_id)
+
+        timer = None
+        if check_type == 'NODE_STATUS_POLLING':
+            real_interval = min(interval, self.periodic_interval_max)
+            timer = self.TG.add_timer(real_interval, self._periodic_check,
+                                      None, cluster_id)
+
         reg_cap = {
             'cluster_id': registry.cluster_id,
             'check_type': registry.check_type,
             'interval': registry.interval,
             'params': registry.params,
+            'timer': timer
 
         }
         self.rt['registries'].append(reg_cap)
@@ -144,9 +156,13 @@ class HealthManager(service.Service):
         :param cluster_id: The ID of the cluste to be unregistered.
         :return: None
         """
-        for registry in self.rt['registries']:
+        for i in range(len(self.rt['registries']) - 1, -1, -1):
+            registry = self.rt['registries'][i]
             if registry.get('cluster_id') == cluster_id:
-                self.rt['registries'].remove(registry)
+                timer = registry.get('timer')
+                timer.stop()
+                self.TG.timer_done(timer)
+                self.rt['registries'].pop(i)
         db_api.registry_delete(ctx, cluster_id)
 
 
