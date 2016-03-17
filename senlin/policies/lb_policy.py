@@ -10,6 +10,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+"""
+Policy for load-balancing among nodes in a cluster.
+
+NOTE: For full documentation about how the deletion policy works, check:
+http://docs.openstack.org/developer/senlin/developer/policies/
+load_balance_v1.html
+"""
+
 from oslo_context import context as oslo_context
 from oslo_log import log as logging
 
@@ -29,12 +37,13 @@ LOG = logging.getLogger(__name__)
 
 
 class LoadBalancingPolicy(base.Policy):
-    '''Policy for load balancing among members of a cluster.
+    """Policy for load balancing among members of a cluster.
 
-    This policy is expected to be enforced after the member list of a cluster
-    is changed. We need to reload the load-balancer specified (or internally
-    created) when these actions are performed.
-    '''
+    This policy is expected to be enforced before or after the membership of a
+    cluster is changed. We need to refresh the load-balancer associated with
+    the cluster (which could be created by the policy) when these actions are
+    performed.
+    """
     VERSION = '1.0'
 
     PRIORITY = 500
@@ -293,9 +302,8 @@ class LoadBalancingPolicy(base.Policy):
             if member_id is None:
                 # When failed in adding member, remove all lb resources that
                 # were created and return the failure reason.
-                # TODO(Yanyan Hu): Maybe we should tolerate member adding
-                # failure and allow policy attaching to succeed without
-                # all nodes being added into lb pool?
+                # TODO(anyone): May need to "roll-back" changes caused by any
+                # successful member_add() calls.
                 lb_driver.lb_delete(**data)
                 return False, 'Failed in adding node into lb pool'
 
@@ -343,8 +351,8 @@ class LoadBalancingPolicy(base.Policy):
         deletion = action.data.get('deletion', None)
         # No deletion field in action.data which means no scaling
         # policy or deletion policy is attached.
+        candidates = None
         if deletion is None:
-            candidates = None
             if action.action == consts.CLUSTER_DEL_NODES:
                 # Get candidates from action.input
                 candidates = action.inputs.get('candidates', [])
@@ -364,6 +372,7 @@ class LoadBalancingPolicy(base.Policy):
             candidates = deletion.get('candidates', None)
 
         # Still no candidates available, pick count of nodes randomly
+        # TODO(anyone): if count is 0, skip this step
         if candidates is None:
             nodes = db_api.node_get_all_by_cluster(action.context,
                                                    cluster_id=cluster_id)
@@ -414,6 +423,8 @@ class LoadBalancingPolicy(base.Policy):
                                           'node(s) from lb pool.')
                 return
 
+        # TODO(anyone): move this logic to get_delete_candidates. This doesn't
+        # have to be done every time.
         deletion = action.data.get('deletion', {})
         deletion.update({'count': len(candidates), 'candidates': candidates})
         action.data.update({'deletion': deletion})
