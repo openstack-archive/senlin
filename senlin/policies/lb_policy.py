@@ -380,6 +380,12 @@ class LoadBalancingPolicy(base.Policy):
             if count > len(nodes):
                 count = len(nodes)
             candidates = scaleutils.nodes_by_random(nodes, count)
+            deletion_data = action.data.get('deletion', {})
+            deletion_data.update({
+                'count': len(candidates),
+                'candidates': candidates
+            })
+            action.data.update({'deletion': deletion_data})
 
         return candidates
 
@@ -423,12 +429,6 @@ class LoadBalancingPolicy(base.Policy):
                 action.data['reason'] = _('Failed in removing deleted '
                                           'node(s) from lb pool.')
                 return
-
-        # TODO(anyone): move this logic to get_delete_candidates. This doesn't
-        # have to be done every time.
-        deletion = action.data.get('deletion', {})
-        deletion.update({'count': len(candidates), 'candidates': candidates})
-        action.data.update({'deletion': deletion})
 
         return
 
