@@ -13,40 +13,8 @@
 """
 Policy for scheduling nodes across multiple regions.
 
-NOTE: How placement policy works
-Input:
-  cluster: cluster whose nodes are to be manipulated.
-  action.data['creation']:
-    - count: number of nodes to create; it can be decision from a scaling
-             policy. If no scaling policy is in effect, the count will be
-             assumed to be 1.
-  action.data['deletion']:
-    - count: number of nodes to delete. It can be a decision from a scaling
-             policy. If there is no scaling policy in effect, we assume the
-             count value to be 1.
-Output:
-  action.data: A dictionary containing scheduling decisions made.
-
-  For actions that increase the size of a cluster, the output will look like::
-
-  {
-    'status': 'OK',
-    'creation': {
-      'count': 2,
-      'regions': {'RegionOne': 1, 'RegionTwo': 1}
-    }
-  }
-
-  For actions that shrink the size of a cluster, the output will look like::
-
-  {
-    'status': 'OK',
-    'deletion': {
-      'count': 3,
-      'regions': {'RegionOne': 1, 'RegionTwo': 2}
-    }
-  }
-
+NOTE: For full documentation about how the policy works, check:
+http://docs.openstack.org/developer/senlin/developer/policies/region_v1.html
 """
 
 import math
@@ -79,8 +47,7 @@ class RegionPlacementPolicy(base.Policy):
     ]
 
     PROFILE_TYPE = [
-        'os.nova.server-1.0',
-        'os.heat.stack-1.0',
+        'ANY'
     ]
 
     KEYS = (

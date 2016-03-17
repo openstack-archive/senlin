@@ -141,7 +141,7 @@ S3: Cross-region or Cross-AZ Scaling
 
 When scaling a cluster across multiple regions or multiple availability zones,
 the scaling policy will be evaluated before the
-:doc:`region placement policy <region_placement_v1>` or the
+:doc:`region placement policy <region_v1>` or the
 :doc:`zone placement policy <zone_v1>` respectively. Based on
 builtin priority settings, checking of this scaling policy always happen
 before the region placement policy or the zone placement policy.
