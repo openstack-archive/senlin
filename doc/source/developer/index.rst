@@ -59,7 +59,7 @@ in a collaborative way to meet the needs of complicated usage scenarios.
    policies/load_balance_v1
    policies/region_placement_v1
    policies/scaling_v1
-   policies/zone_placement_v1
+   policies/zone_v1
 
 
 API Documentation
