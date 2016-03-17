@@ -236,6 +236,9 @@ class ZonePlacementPolicy(base.Policy):
         :param action: The action that triggers this policy check.
         """
         count = self._get_count(cluster_id, action)
+        if count == 0:
+            return
+
         expand = True
         if count < 0:
             expand = False
