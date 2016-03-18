@@ -898,14 +898,17 @@ class ClusterTest(base.SenlinTestCase):
         ])
         mock_check.assert_called_once_with(x_cluster, 4, strict=True)
 
+    @mock.patch.object(su, 'check_size_params')
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(service.EngineService, 'node_find')
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_del_nodes(self, notify, mock_find, mock_node,
-                               mock_action):
-        mock_find.return_value = mock.Mock(id='1234')
+                               mock_action, mock_check):
+        x_cluster = mock.Mock(id='1234', desired_capacity=2)
+        mock_find.return_value = x_cluster
         mock_node.return_value = mock.Mock(id='NODE2', cluster_id='1234')
+        mock_check.return_value = None
         mock_action.return_value = 'ACTION_ID'
 
         result = self.eng.cluster_del_nodes(self.ctx, 'CLUSTER', ['NODE1'])
@@ -913,6 +916,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_node.assert_called_once_with(self.ctx, 'NODE1')
+        mock_check.asset_called_once_with(x_cluster, 1, strict=True)
         mock_action.assert_called_once_with(
             self.ctx, '1234', consts.CLUSTER_DEL_NODES,
             name='cluster_del_nodes_1234',
@@ -1002,6 +1006,28 @@ class ClusterTest(base.SenlinTestCase):
 
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_node.assert_called_once_with(self.ctx, 'NODE3')
+
+    @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_del_nodes_failed_checking(self, mock_find, mock_node,
+                                               mock_check):
+        x_cluster = mock.Mock(id='1234', desired_capacity=2)
+        mock_find.return_value = x_cluster
+        mock_node.return_value = mock.Mock(id='NODE2', cluster_id='1234')
+        mock_check.return_value = 'Failed size checking.'
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_del_nodes,
+                               self.ctx, 'CLUSTER', ['NODE1'])
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Failed size checking.",
+                         six.text_type(ex.exc_info[1]))
+
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_node.assert_called_once_with(self.ctx, 'NODE1')
+        mock_check.assert_called_once_with(x_cluster, 1, strict=True)
 
     @mock.patch.object(su, 'calculate_desired')
     @mock.patch.object(su, 'check_size_params')
