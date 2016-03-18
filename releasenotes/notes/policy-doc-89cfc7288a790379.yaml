@@ -1,0 +1,4 @@
+---
+other:
+  - Added documentation for lb policy, affinity policy, scaling policy, zone
+    placement policy and region placement policy.
