@@ -968,6 +968,12 @@ class EngineService(service.Service):
             LOG.error(error)
             raise exception.BadRequest(msg=error)
 
+        target_size = db_cluster.desired_capacity + len(found)
+        error = su.check_size_params(db_cluster, target_size, strict=True)
+        if error:
+            LOG.error(error)
+            raise exception.BadRequest(msg=error)
+
         params = {
             'name': 'cluster_add_nodes_%s' % db_cluster.id[:8],
             'cause': action_mod.CAUSE_RPC,
