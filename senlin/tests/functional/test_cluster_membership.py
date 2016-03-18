@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from senlin.common.i18n import _
 from senlin.tests.functional import api as test_api
 from senlin.tests.functional import base
 from senlin.tests.functional.utils import test_utils
@@ -68,6 +69,7 @@ class TestClusterMembership(base.SenlinFunctionalTest):
                                    action_id, 'SUCCEEDED')
 
         cluster = test_api.get_cluster(self.client, cluster['id'])
+        self.assertEqual(3, cluster['desired_capacity'])
         self.assertEqual(3, len(cluster['nodes']))
         self.assertIn(node1['id'], cluster['nodes'])
         self.assertIn(node2['id'], cluster['nodes'])
@@ -79,7 +81,22 @@ class TestClusterMembership(base.SenlinFunctionalTest):
         self.assertEqual(2, node1['index'])
         self.assertEqual(3, node2['index'])
 
-        # Remove nodes from cluster
+        # Create one more orphan node and add it to cluster
+        node3 = test_api.create_node(self.client,
+                                     test_utils.random_name('node1'),
+                                     self.profile['id'])
+        node3 = test_utils.wait_for_status(test_api.get_node, self.client,
+                                           node3['id'], 'ACTIVE')
+        params = {
+            'nodes': [node3['id']],
+        }
+        res = test_api.action_cluster(self.client, cluster['id'], 'add_nodes',
+                                      params)
+        reason = _("The target capacity (4) is greater than the cluster's "
+                   "max_size (3).")
+        self.assertIn(reason, res)
+
+        # Remove two nodes from cluster
         params = {
             'nodes': [node1['id'], node2['id']],
         }
@@ -89,6 +106,7 @@ class TestClusterMembership(base.SenlinFunctionalTest):
                                    action_id, 'SUCCEEDED')
 
         cluster = test_api.get_cluster(self.client, cluster['id'])
+        self.assertEqual(1, cluster['desired_capacity'])
         self.assertEqual(1, len(cluster['nodes']))
         self.assertNotIn(node1['id'], cluster['nodes'])
         self.assertNotIn(node2['id'], cluster['nodes'])
@@ -100,13 +118,27 @@ class TestClusterMembership(base.SenlinFunctionalTest):
         self.assertEqual(-1, node1['index'])
         self.assertEqual(-1, node2['index'])
 
+        # Try to delete the last node from cluster
+        last_node_id = cluster['nodes'][0]
+        params = {
+            'nodes': [last_node_id]
+        }
+        res = test_api.action_cluster(self.client, cluster['id'], 'del_nodes',
+                                      params)
+        reason = _("The target capacity (0) is less than the cluster's "
+                   "min_size (1).")
+        self.assertIn(reason, res)
+
         # Delete orphan nodes
         test_api.delete_node(self.client, node1['id'])
         test_api.delete_node(self.client, node2['id'])
+        test_api.delete_node(self.client, node3['id'])
         test_utils.wait_for_delete(test_api.get_node, self.client,
                                    node1['id'])
         test_utils.wait_for_delete(test_api.get_node, self.client,
                                    node2['id'])
+        test_utils.wait_for_delete(test_api.get_node, self.client,
+                                   node3['id'])
 
         # Delete cluster
         test_api.delete_cluster(self.client, cluster['id'])
