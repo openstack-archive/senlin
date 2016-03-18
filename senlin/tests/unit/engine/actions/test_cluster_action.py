@@ -497,6 +497,8 @@ class ClusterActionTest(base.SenlinTestCase):
         # prepare mocks
         cluster = mock.Mock()
         cluster.id = 'FAKE_CLUSTER'
+        cluster.desired_capacity = 100
+
         # cluster action is real
         mock_load.return_value = cluster
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
@@ -519,6 +521,8 @@ class ClusterActionTest(base.SenlinTestCase):
                                             {'status': 'READY'})
         mock_start.assert_called_once_with(action_id='NODE_ACTION_ID')
         mock_wait.assert_called_once_with()
+        self.assertEqual(99, cluster.desired_capacity)
+        cluster.store.assert_called_once_with(action.context)
         self.assertEqual(['NODE_ID'], action.outputs['nodes_removed'])
         cluster.remove_node.assert_called_once_with('NODE_ID')
 
@@ -532,6 +536,7 @@ class ClusterActionTest(base.SenlinTestCase):
         # prepare mocks
         cluster = mock.Mock()
         cluster.id = 'CLUSTER_ID'
+        cluster.desired_capacity = 100
         mock_load.return_value = cluster
 
         # cluster action is real
@@ -557,6 +562,8 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_wait.assert_called_once_with()
         self.assertEqual({'nodes_removed': ['NODE_1', 'NODE_2']},
                          action.outputs)
+        self.assertEqual(98, cluster.desired_capacity)
+        cluster.store.assert_called_once_with(action.context)
         cluster.remove_node.assert_has_calls([
             mock.call('NODE_1'), mock.call('NODE_2')])
 
@@ -584,6 +591,7 @@ class ClusterActionTest(base.SenlinTestCase):
         # prepare mocks
         cluster = mock.Mock()
         cluster.id = 'CLUSTER_ID'
+        cluster.desired_capacity = 100
         mock_load.return_value = cluster
         # cluster action is real
         action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
@@ -604,6 +612,8 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             action.context, 'NODE_ID', 'NODE_LEAVE',
             name='node_delete_NODE_ID', cause='Derived Action')
+        self.assertEqual(99, cluster.desired_capacity)
+        cluster.store.assert_called_once_with(action.context)
 
     @mock.patch.object(db_api, 'action_update')
     @mock.patch.object(base_action.Action, 'create')
@@ -752,6 +762,7 @@ class ClusterActionTest(base.SenlinTestCase):
                                  mock_load):
         cluster = mock.Mock()
         cluster.id = 'CLUSTER_ID'
+        cluster.desired_capacity = 100
         mock_load.return_value = cluster
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
@@ -787,6 +798,8 @@ class ClusterActionTest(base.SenlinTestCase):
             action.context, 'NODE_ACTION_ID', {'status': 'READY'})
         mock_start.assert_called_once_with(action_id='NODE_ACTION_ID')
         mock_wait.assert_called_once_with()
+        self.assertEqual(101, cluster.desired_capacity)
+        cluster.store.assert_called_once_with(action.context)
         cluster.add_node.assert_called_once_with(node)
 
     @mock.patch.object(db_api, 'action_update')
@@ -800,6 +813,7 @@ class ClusterActionTest(base.SenlinTestCase):
                                    mock_load):
         cluster = mock.Mock()
         cluster.id = 'CLUSTER_ID'
+        cluster.desired_capacity = 100
         mock_load.return_value = cluster
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
@@ -851,6 +865,8 @@ class ClusterActionTest(base.SenlinTestCase):
             mock.call(action_id='NODE_ACTION_2')])
 
         mock_wait.assert_called_once_with()
+        self.assertEqual(102, cluster.desired_capacity)
+        cluster.store.assert_called_once_with(action.context)
         cluster.add_node.assert_has_calls([
             mock.call(node1), mock.call(node2)])
 

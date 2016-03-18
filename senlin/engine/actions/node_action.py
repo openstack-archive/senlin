@@ -135,18 +135,14 @@ class NodeAction(base.Action):
         cluster_id = self.inputs.get('cluster_id')
         # Check the size constraint of parent cluster
         cluster = cluster_mod.Cluster.load(self.context, cluster_id)
-        desired_capacity = cluster.desired_capacity + 1
-        result = scaleutils.check_size_params(cluster, desired_capacity,
+        new_capacity = cluster.desired_capacity + 1
+        result = scaleutils.check_size_params(cluster, new_capacity,
                                               None, None, True)
         if result:
             return self.RES_ERROR, result
 
         result = self.node.do_join(self.context, cluster_id)
         if result:
-            # Update cluster desired_capacity if node join succeeded
-            cluster = cluster_mod.Cluster.load(self.context, cluster_id)
-            cluster.desired_capacity = desired_capacity
-            cluster.store(self.context)
             cluster.add_node(self.node)
             return self.RES_OK, _('Node successfully joined cluster.')
         else:
@@ -160,18 +156,14 @@ class NodeAction(base.Action):
         # Check the size constraint of parent cluster
         cluster = cluster_mod.Cluster.load(self.context,
                                            self.node.cluster_id)
-        desired_capacity = cluster.desired_capacity - 1
-        result = scaleutils.check_size_params(cluster, desired_capacity,
+        new_capacity = cluster.desired_capacity - 1
+        result = scaleutils.check_size_params(cluster, new_capacity,
                                               None, None, True)
         if result:
             return self.RES_ERROR, result
 
         res = self.node.do_leave(self.context)
         if res:
-            # Update cluster desired_capacity if node leave succeeded
-            cluster = cluster_mod.Cluster.load(self.context, cluster.id)
-            cluster.desired_capacity = desired_capacity
-            cluster.store(self.context)
             cluster.remove_node(self.node.id)
             return self.RES_OK, _('Node successfully left cluster.')
         else:

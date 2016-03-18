@@ -287,6 +287,9 @@ class ClusterAction(base.Action):
 
             res, reason = self._wait_for_dependents()
             if res == self.RES_OK:
+                self.cluster.desired_capacity -= len(node_ids)
+                self.cluster.store(self.context)
+
                 self.outputs['nodes_removed'] = node_ids
                 for node_id in node_ids:
                     self.cluster.remove_node(node_id)
@@ -387,6 +390,8 @@ class ClusterAction(base.Action):
         if result != self.RES_OK:
             reason = new_reason
         else:
+            self.cluster.desired_capacity += len(nodes)
+            self.cluster.store(self.context)
             nodes_added = [n.id for n in nodes]
             self.outputs['nodes_added'] = nodes_added
             creation = self.data.get('creation', {})
