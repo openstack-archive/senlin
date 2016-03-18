@@ -121,6 +121,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         pool_obj = mock.Mock()
         hm_obj = mock.Mock()
         lb_obj.id = 'LB_ID'
+        lb_obj.vip_address = '192.168.1.100'
         listener_obj.id = 'LISTENER_ID'
         pool_obj.id = 'POOL_ID'
         subnet_obj = mock.Mock()
@@ -143,6 +144,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.nc.loadbalancer_create.assert_called_once_with(
             'SUBNET_ID', self.vip['address'], self.vip['admin_state_up'])
         self.assertEqual('LB_ID', res['loadbalancer'])
+        self.assertEqual('192.168.1.100', res['vip_address'])
         self.nc.listener_create.assert_called_once_with(
             'LB_ID', self.vip['protocol'], self.vip['protocol_port'],
             self.vip['connection_limit'], self.vip['admin_state_up'])
@@ -249,6 +251,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         listener_obj = mock.Mock()
         pool_obj = mock.Mock()
         lb_obj.id = 'LB_ID'
+        lb_obj.vip_address = '192.169.1.100'
         listener_obj.id = 'LISTENER_ID'
         pool_obj.id = 'POOL_ID'
         subnet_obj = mock.Mock()

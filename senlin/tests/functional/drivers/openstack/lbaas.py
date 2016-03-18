@@ -17,8 +17,10 @@ class LoadBalancerDriver(base.DriverBase):
     def __init__(self, params):
         self.lb_result = {
             "loadbalancer": "a36c20d0-18e9-42ce-88fd-82a35977ee8c",
+            "vip_address": "192.168.1.100",
             "listener": "35cb8516-1173-4035-8dae-0dae3453f37f",
-            "pool": "4c0a0a5f-cf8f-44b7-b912-957daa8ce5e5"
+            "pool": "4c0a0a5f-cf8f-44b7-b912-957daa8ce5e5",
+            "healthmonitor": "0a9ac99d-0a09-4b18-8499-a0796850279a"
         }
 
         self.member_id = "9a7aff27-fd41-4ec1-ba4c-3eb92c629313"

@@ -310,6 +310,10 @@ class LoadBalancingPolicy(base.Policy):
             node.data.update({'lb_member': member_id})
             node.store(oslo_context.get_current())
 
+        cluster_data_lb = cluster.data.get('loadbalancers', {})
+        cluster_data_lb[self.id] = {'vip_address': data.pop('vip_address')}
+        cluster.data['loadbalancers'] = cluster_data_lb
+
         policy_data = self._build_policy_data(data)
 
         return True, policy_data
@@ -344,6 +348,14 @@ class LoadBalancingPolicy(base.Policy):
             if 'lb_member' in node.data:
                 node.data.pop('lb_member')
                 node.store(oslo_context.get_current())
+
+        lb_data = cluster.data.get('loadbalancers', {})
+        if lb_data and isinstance(lb_data, dict):
+            lb_data.pop(self.id, None)
+            if lb_data:
+                cluster.data['loadbalancers'] = lb_data
+            else:
+                cluster.data.pop('loadbalancers')
 
         return True, reason
 
