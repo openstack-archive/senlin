@@ -1,0 +1,3 @@
+---
+features:
+  - Added profile property checking regarding whether they are updatable.
