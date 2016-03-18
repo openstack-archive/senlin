@@ -81,7 +81,6 @@ class Cluster(object):
         self.metadata = kwargs.get('metadata') or {}
 
         # rt is a dict for runtime data
-        # TODO(Qiming): nodes have to be reloaded when membership changes
         self.rt = {
             'profile': None,
             'nodes': [],
