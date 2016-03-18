@@ -193,12 +193,8 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Node successfully joined cluster.', res_msg)
         node.do_join.assert_called_once_with(action.context, 'FAKE_ID')
-        mock_calls = [mock.call(action.context, 'FAKE_ID'),
-                      mock.call(action.context, 'FAKE_ID')]
-        mock_c_load.assert_has_calls(mock_calls)
+        mock_c_load.assert_called_once_with(action.context, 'FAKE_ID')
         mock_check.assert_called_once_with(cluster, 101, None, None, True)
-        self.assertEqual(101, cluster.desired_capacity)
-        cluster.store.assert_called_once_with(action.context)
         cluster.add_node.assert_called_once_with(node)
 
     @mock.patch.object(cluster_mod.Cluster, 'load')
@@ -270,12 +266,8 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Node successfully left cluster.', res_msg)
         node.do_leave.assert_called_once_with(action.context)
-        mock_calls = [mock.call(action.context, 'FAKE_ID'),
-                      mock.call(action.context, 'FAKE_ID')]
-        mock_c_load.assert_has_calls(mock_calls)
+        mock_c_load.assert_called_once_with(action.context, 'FAKE_ID')
         mock_check.assert_called_once_with(cluster, 99, None, None, True)
-        self.assertEqual(99, cluster.desired_capacity)
-        cluster.store.assert_called_once_with(action.context)
         cluster.remove_node.assert_called_once_with('NID')
 
     @mock.patch.object(cluster_mod.Cluster, 'load')
