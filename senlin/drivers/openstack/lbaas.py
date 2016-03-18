@@ -108,10 +108,12 @@ class LoadBalancerDriver(base.DriverBase):
             LOG.exception(msg)
             return False, msg
         result['loadbalancer'] = lb.id
+        result['vip_address'] = lb.vip_address
 
         res = self._wait_for_lb_ready(lb.id)
         if res is False:
             msg = _LE('Failed in creating load balancer (%s).') % lb.id
+            del result['vip_address']
             _cleanup(msg, **result)
             return False, msg
 
@@ -131,6 +133,7 @@ class LoadBalancerDriver(base.DriverBase):
         res = self._wait_for_lb_ready(lb.id)
         if res is False:
             msg = _LE('Failed in creating listener (%s).') % listener.id
+            del result['vip_address']
             _cleanup(msg, **result)
             return res, msg
 
@@ -148,6 +151,7 @@ class LoadBalancerDriver(base.DriverBase):
         res = self._wait_for_lb_ready(lb.id)
         if res is False:
             msg = _LE('Failed in creating pool (%s).') % pool.id
+            del result['vip_address']
             _cleanup(msg, **result)
             return res, msg
 
@@ -173,6 +177,7 @@ class LoadBalancerDriver(base.DriverBase):
         if res is False:
             msg = _LE('Failed in creating health monitor (%s).'
                       ) % health_monitor.id
+            del result['vip_address']
             _cleanup(msg, **result)
             return res, msg
 

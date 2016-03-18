@@ -740,6 +740,11 @@ class ClusterAction(base.Action):
         res, reason = self.cluster.attach_policy(self.context, policy_id,
                                                  inputs)
         result = self.RES_OK if res else self.RES_ERROR
+
+        # Store cluster since its data could have been updated
+        if result == self.RES_OK:
+            self.cluster.store(self.context)
+
         return result, reason
 
     def do_detach_policy(self):
@@ -753,6 +758,11 @@ class ClusterAction(base.Action):
 
         res, reason = self.cluster.detach_policy(self.context, policy_id)
         result = self.RES_OK if res else self.RES_ERROR
+
+        # Store cluster since its data could have been updated
+        if result == self.RES_OK:
+            self.cluster.store(self.context)
+
         return result, reason
 
     def do_update_policy(self):

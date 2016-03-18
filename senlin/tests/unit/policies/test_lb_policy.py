@@ -136,6 +136,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_build_conn_params')
     def test_attach_succeeded(self, m_conn, m_attach, m_load, m_build):
         cluster = mock.Mock()
+        cluster.data = {}
         cluster.id = 'CLUSTER_ID'
         node1 = mock.Mock()
         node2 = mock.Mock()
@@ -144,10 +145,12 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         m_build.return_value = 'policy_data'
         data = {
             'loadbalancer': 'LB_ID',
+            'vip_address': '192.168.1.100',
             'pool': 'POOL_ID'
         }
 
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        policy.id = 'FAKE_ID'
 
         self.lb_driver.lb_create.return_value = (True, data)
         self.lb_driver.member_add.side_effect = ['MEMBER1_ID', 'MEMBER2_ID']
@@ -167,6 +170,10 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         node2.data.update.assert_called_once_with({'lb_member': 'MEMBER2_ID'})
         node1.store.assert_called_once_with(mock.ANY)
         node2.store.assert_called_once_with(mock.ANY)
+        expected = {
+            policy.id: {'vip_address': '192.168.1.100'}
+        }
+        self.assertEqual(expected, cluster.data['loadbalancers'])
 
     @mock.patch.object(policy_base.Policy, 'attach')
     def test_attach_failed_base_return_false(self, mock_attach):
@@ -203,6 +210,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         mock_load.return_value = ['node1', 'node2']
         lb_data = {
             'loadbalancer': 'LB_ID',
+            'vip_address': '192.168.1.100',
             'pool': 'POOL_ID'
         }
 
@@ -416,6 +424,11 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         m_extract.return_value = policy_data
         self.lb_driver.lb_delete.return_value = (True, 'lb_delete succeeded.')
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        cluster.data = {
+            'loadbalancers': {
+                policy.id: {'vip_address': '192.168.1.100'}
+            }
+        }
 
         res, data = policy.detach(cluster)
         self.assertTrue(res)
@@ -423,6 +436,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         m_load.assert_called_once_with(mock.ANY, cluster.id, policy.id)
         m_extract.assert_called_once_with(cp_data)
         self.lb_driver.lb_delete.assert_called_once_with(**policy_data)
+        self.assertEqual({}, cluster.data)
 
     def test_detach_failed_lb_delete(self, m_extract, m_load, m_conn):
         cluster = mock.Mock()

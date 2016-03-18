@@ -2139,6 +2139,7 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual('OK', res_msg)
         cluster.attach_policy.assert_called_once_with(
             action.context, 'FAKE_POLICY', {'FOO': 'BAR'})
+        cluster.store.assert_called_once_with(action.context)
 
     def test_do_attach_policy_missing_policy(self, mock_load):
         cluster = mock.Mock()
@@ -2169,6 +2170,7 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual('Success', res_msg)
         cluster.detach_policy.assert_called_once_with(action.context,
                                                       'FAKE_POLICY')
+        cluster.store.assert_called_once_with(action.context)
 
     def test_do_detach_policy_missing_policy(self, mock_load):
         cluster = mock.Mock()
