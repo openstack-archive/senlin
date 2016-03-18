@@ -698,15 +698,17 @@ class ClusterTest(base.SenlinTestCase):
         mock_receivers.assert_called_once_with(
             self.ctx, filters={'cluster_id': '12345678AB'})
 
+    @mock.patch.object(su, 'check_size_params')
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(service.EngineService, 'node_find')
     @mock.patch.object(service.EngineService, 'profile_find')
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_add_nodes(self, notify, mock_find, mock_profile,
-                               mock_node, mock_action):
-        mock_find.return_value = mock.Mock(id='12345678AB',
-                                           profile_id='FAKE_ID')
+                               mock_node, mock_action, mock_check):
+        x_cluster = mock.Mock(id='12345678AB', profile_id='FAKE_ID',
+                              desired_capacity=4)
+        mock_find.return_value = x_cluster
         mock_profile.return_value = mock.Mock(type='FAKE_TYPE')
         x_node_1 = mock.Mock(id='NODE1', cluster_id='', status='ACTIVE',
                              profile_id='FAKE_ID_1')
@@ -714,6 +716,7 @@ class ClusterTest(base.SenlinTestCase):
                              profile_id='FAKE_ID_1')
         mock_node.side_effect = [x_node_1, x_node_2]
         mock_action.return_value = 'ACTION_ID'
+        mock_check.return_value = None
 
         result = self.eng.cluster_add_nodes(self.ctx, 'C1',
                                             ['NODE_A', 'NODE_B'])
@@ -724,6 +727,7 @@ class ClusterTest(base.SenlinTestCase):
             mock.call(self.ctx, 'NODE_A'),
             mock.call(self.ctx, 'NODE_B'),
         ])
+        mock_check.assert_called_once_with(x_cluster, 6, strict=True)
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.CLUSTER_ADD_NODES,
             name='cluster_add_nodes_12345678',
@@ -856,6 +860,43 @@ class ClusterTest(base.SenlinTestCase):
             mock.call(self.ctx, 'DIFF'),
         ])
         mock_node.assert_called_once_with(self.ctx, 'NODE4')
+
+    @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_add_nodes_failed_checking(self, mock_find, mock_profile,
+                                               mock_node, mock_check):
+        x_cluster = mock.Mock(id='12345678AB', profile_id='FAKE_PROFILE',
+                              desired_capacity=2)
+        mock_find.return_value = x_cluster
+        mock_profile.return_value = mock.Mock(type='FAKE_TYPE')
+        x_node_1 = mock.Mock(id='NODE1', cluster_id='', status='ACTIVE',
+                             profile_id='FAKE_PROFILE_1')
+        x_node_2 = mock.Mock(id='NODE2', cluster_id='', status='ACTIVE',
+                             profile_id='FAKE_PROFILE_2')
+        mock_node.side_effect = [x_node_1, x_node_2]
+        mock_check.return_value = 'Failed size checking.'
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_add_nodes,
+                               self.ctx, 'C1', ['NODE_A', 'NODE_B'])
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Failed size checking.",
+                         six.text_type(ex.exc_info[1]))
+
+        mock_find.assert_called_once_with(self.ctx, 'C1')
+        mock_profile.assert_has_calls([
+            mock.call(self.ctx, 'FAKE_PROFILE'),
+            mock.call(self.ctx, 'FAKE_PROFILE_1'),
+            mock.call(self.ctx, 'FAKE_PROFILE_2'),
+        ])
+        mock_node.assert_has_calls([
+            mock.call(self.ctx, 'NODE_A'),
+            mock.call(self.ctx, 'NODE_B'),
+        ])
+        mock_check.assert_called_once_with(x_cluster, 4, strict=True)
 
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(service.EngineService, 'node_find')
