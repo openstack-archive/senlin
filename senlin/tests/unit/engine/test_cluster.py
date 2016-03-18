@@ -319,6 +319,17 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual('Cluster updated', cluster.status_reason)
         self.assertIsNotNone(cluster.updated_at)
 
+    @mock.patch.object(db_api, 'cluster_update')
+    def test_set_status_for_resize(self, mock_update):
+        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID',
+                                   id='FAKE_ID', status='RESIZING')
+
+        cluster.set_status(self.context, cluster.ACTIVE, 'Cluster resized')
+
+        self.assertEqual(cluster.ACTIVE, cluster.status)
+        self.assertEqual('Cluster resized', cluster.status_reason)
+        self.assertIsNotNone(cluster.updated_at)
+
     @mock.patch.object(profile_base.Profile, 'load')
     @mock.patch.object(db_api, 'cluster_update')
     def test_set_status_for_update_with_profile(self, mock_update,

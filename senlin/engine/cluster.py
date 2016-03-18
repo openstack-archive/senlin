@@ -245,7 +245,8 @@ class Cluster(object):
         if status == self.ACTIVE and self.status == self.CREATING:
             self.created_at = now
             values['created_at'] = now
-        elif status == self.ACTIVE and self.status == self.UPDATING:
+        elif (status == self.ACTIVE and
+              self.status in (self.UPDATING, self.RESIZING)):
             self.updated_at = now
             values['updated_at'] = now
 
