@@ -13,40 +13,8 @@
 """
 Policy for scheduling nodes across availability zones.
 
-NOTE: How this policy works
-Input:
-  cluster: cluster whose nodes are to be manipulated.
-  action.data['creation']:
-    - count: number of nodes to create. It can be decision from a scaling
-             policy. If no scaling policy is in effect, the count will be
-             assumed to be 1.
-  action.data['deleteion']:
-    - count: number of nodes to delete. It can be decision from a scaling
-             policy. If no scaling policy is in effect, the count will be
-             assumed to be 1.
-Output:
-  action.data: A dictionary containing scheduling decisions made.
-
-  For actions that increase the size of a cluster, the output looks like::
-
-  {
-    'status': 'OK',
-    'creation': {
-      'count': 2,
-      'zones': {'nova-1': 1, 'nova-2': 1}
-     }
-  }
-
-  For actions that decrease the size of a cluster, the output looks like::
-
-  {
-    'status': 'OK',
-    'deletion': {
-      'count': 3,
-      'zones': {'nova-1': 2, 'nova-2': 1}
-     }
-  }
-
+NOTE: For full documentation about how the policy works, check:
+http://docs.openstack.org/developer/senlin/developer/policies/zone_v1.html
 """
 
 import math
