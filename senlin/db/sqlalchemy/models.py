@@ -258,6 +258,12 @@ class Event(BASE, models.ModelBase):
     status_reason = Column(Text)
     meta_data = Column(types.Dict)
 
+    def as_dict(self):
+        data = super(Event, self)._as_dict()
+        ts = data['timestamp'].replace(microsecond=0).isoformat()
+        data['timestamp'] = ts
+        return data
+
 
 class Service(BASE, TimestampMixin, models.ModelBase):
     """Senlin service engine registry."""

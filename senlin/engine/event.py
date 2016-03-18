@@ -16,9 +16,7 @@ from oslo_log import log
 from oslo_utils import reflection
 from oslo_utils import timeutils
 
-from senlin.common import exception
 from senlin.common import i18n
-from senlin.common import utils
 from senlin.db import api as db_api
 
 _LC = i18n._LC
@@ -78,49 +76,6 @@ class Event(object):
         elif e_type == 'NODE':
             self.cluster_id = entity.cluster_id
 
-    @classmethod
-    def from_db_record(cls, record):
-        '''Construct an event object from a database record.'''
-
-        kwargs = {
-            'id': record.id,
-            'obj_id': record.obj_id,
-            'obj_type': record.obj_type,
-            'obj_name': record.obj_name,
-            'cluster_id': record.cluster_id,
-            'user': record.user,
-            'project': record.project,
-            'action': record.action,
-            'status': record.status,
-            'status_reason': record.status_reason,
-            'metadata': record.meta_data,
-        }
-        return cls(record.timestamp, record.level, **kwargs)
-
-    @classmethod
-    def load(cls, context, db_event=None, event_id=None, project_safe=True):
-        '''Retrieve an event record from database.'''
-        if db_event is not None:
-            return cls.from_db_record(db_event)
-
-        record = db_api.event_get(context, event_id, project_safe=project_safe)
-        if record is None:
-            raise exception.EventNotFound(event=event_id)
-
-        return cls.from_db_record(record)
-
-    @classmethod
-    def load_all(cls, context, filters=None, limit=None, marker=None,
-                 sort=None, project_safe=True):
-        '''Retrieve all events from database.'''
-
-        records = db_api.event_get_all(context, limit=limit, marker=marker,
-                                       sort=sort, filters=filters,
-                                       project_safe=project_safe)
-
-        for record in records:
-            yield cls.from_db_record(record)
-
     def store(self, context):
         '''Store the event into database and return its ID.'''
         values = {
@@ -142,30 +97,6 @@ class Event(object):
         self.id = event.id
 
         return self.id
-
-    @classmethod
-    def from_dict(cls, **kwargs):
-        timestamp = kwargs.pop('timestamp')
-        level = kwargs.pop('level')
-        return cls(timestamp, level, kwargs)
-
-    def to_dict(self):
-        evt = {
-            'id': self.id,
-            'level': self.level,
-            'timestamp': utils.format_time(self.timestamp),
-            'obj_type': self.obj_type,
-            'obj_id': self.obj_id,
-            'obj_name': self.obj_name,
-            'cluster_id': self.cluster_id,
-            'user': self.user,
-            'project': self.project,
-            'action': self.action,
-            'status': self.status,
-            'status_reason': self.status_reason,
-            'metadata': self.metadata,
-        }
-        return evt
 
 
 def critical(context, entity, action, status=None, status_reason=None,
