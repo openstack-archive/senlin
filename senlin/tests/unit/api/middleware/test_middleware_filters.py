@@ -13,12 +13,12 @@
 import mock
 from oslo_middleware import ssl
 
+from senlin.api import middleware as mw
 from senlin.api.middleware import context
 from senlin.api.middleware import fault
 from senlin.api.middleware import trust
 from senlin.api.middleware import version_negotiation as vn
 from senlin.api.middleware import webhook
-from senlin.api import openstack
 from senlin.api.openstack import versions
 from senlin.tests.unit.common import base
 
@@ -37,8 +37,7 @@ class MiddlewareFilterTest(base.SenlinTestCase):
         exp = mock.Mock()
         mock_vnf.return_value = exp
 
-        actual = openstack.version_negotiation_filter(self.app, self.conf,
-                                                      **self.local_conf)
+        actual = mw.version_filter(self.app, self.conf, **self.local_conf)
 
         self.assertEqual(exp, actual)
         mock_vnf.assert_called_once_with(versions.Controller,
@@ -50,8 +49,7 @@ class MiddlewareFilterTest(base.SenlinTestCase):
         exp = mock.Mock()
         mock_fw.return_value = exp
 
-        actual = openstack.faultwrap_filter(self.app, self.conf,
-                                            **self.local_conf)
+        actual = mw.fault_filter(self.app, self.conf, **self.local_conf)
 
         self.assertEqual(exp, actual)
         mock_fw.assert_called_once_with(self.app)
@@ -61,19 +59,18 @@ class MiddlewareFilterTest(base.SenlinTestCase):
         exp = mock.Mock()
         mock_ssl.return_value = exp
 
-        actual = openstack.sslmiddleware_filter(self.app, self.conf,
-                                                **self.local_conf)
+        actual = ssl.SSLMiddleware(self.app, self.conf, **self.local_conf)
 
         self.assertEqual(exp, actual)
-        mock_ssl.assert_called_once_with(self.app)
+        mock_ssl.assert_called_once_with(self.app, self.conf,
+                                         **self.local_conf)
 
     @mock.patch.object(context, 'ContextMiddleware')
     def test_contextmiddlware_filter(self, mock_ctx):
         exp = mock.Mock()
         mock_ctx.return_value = exp
 
-        actual = openstack.contextmiddleware_filter(self.app, self.conf,
-                                                    **self.local_conf)
+        actual = mw.context_filter(self.app, self.conf, **self.local_conf)
 
         self.assertEqual(exp, actual)
         mock_ctx.assert_called_once_with(self.app)
@@ -83,8 +80,7 @@ class MiddlewareFilterTest(base.SenlinTestCase):
         exp = mock.Mock()
         mock_trust.return_value = exp
 
-        actual = openstack.trustmiddleware_filter(self.app, self.conf,
-                                                  **self.local_conf)
+        actual = mw.trust_filter(self.app, self.conf, **self.local_conf)
 
         self.assertEqual(exp, actual)
         mock_trust.assert_called_once_with(self.app)
@@ -94,8 +90,7 @@ class MiddlewareFilterTest(base.SenlinTestCase):
         exp = mock.Mock()
         mock_wh.return_value = exp
 
-        actual = openstack.webhookmiddleware_filter(self.app, self.conf,
-                                                    **self.local_conf)
+        actual = mw.webhook_filter(self.app, self.conf, **self.local_conf)
 
         self.assertEqual(exp, actual)
         mock_wh.assert_called_once_with(self.app)
