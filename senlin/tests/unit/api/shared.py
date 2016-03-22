@@ -83,9 +83,6 @@ class ControllerTest(object):
     def _delete(self, path):
         return self._simple_request(path, method='DELETE')
 
-    def _abandon(self, path):
-        return self._simple_request(path, method='DELETE')
-
     def _data_request(self, path, data, content_type='application/json',
                       method='POST'):
         environ = self._environ(path)
