@@ -83,6 +83,11 @@ class BadRequest(SenlinException):
     msg_fmt = _("The request is malformed: %(msg)s")
 
 
+class InvalidAPIVersionString(SenlinException):
+    msg_fmt = _("API Version String (%(version)s) is of invalid format. It "
+                "must be of format 'major.minor'.")
+
+
 class MultipleChoices(SenlinException):
     msg_fmt = _("Multiple results found matching the query criteria %(arg)s. "
                 "Please be more specific.")
