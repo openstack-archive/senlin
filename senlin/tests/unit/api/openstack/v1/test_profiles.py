@@ -22,7 +22,7 @@ from senlin.api.openstack.v1 import profiles
 from senlin.common import exception as senlin_exc
 from senlin.common import policy
 from senlin.rpc import client as rpc_client
-from senlin.tests.unit.apiv1 import shared
+from senlin.tests.unit.api import shared
 from senlin.tests.unit.common import base
 
 

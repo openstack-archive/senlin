@@ -11,7 +11,7 @@
 # under the License.
 
 from senlin.api.openstack.v1 import version
-from senlin.tests.unit.apiv1 import shared
+from senlin.tests.unit.api import shared
 from senlin.tests.unit.common import base
 
 

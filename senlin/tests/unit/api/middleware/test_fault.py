@@ -227,7 +227,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
         exc_info = (type(error), error, None)
         serialized = rpc_common.serialize_remote_exception(exc_info)
         remote_error = rpc_common.deserialize_remote_exception(
-            serialized, ["senlin.tests.unit.middleware.test_fault_middleware"])
+            serialized, ["senlin.tests.unit.api.middleware.test_fault"])
 
         wrapper = fault.FaultWrapper(None)
         msg = wrapper._error(remote_error)
