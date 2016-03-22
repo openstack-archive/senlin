@@ -1,4 +1,4 @@
-# Sample health policy based on node health checking 
+# Sample health policy based on node health checking
 type: senlin.policy.health
 version: 1.0
 description: A policy for maintaining node health from a cluster.
@@ -17,12 +17,12 @@ properties:
     actions:
       - REBOOT
       - REBUILD
-      - MIGRATE 
+      - MIGRATE
       - EVACUATE
       - RECREATE
 
     # List of services that are to be fenced
     fencing:
-      - COMPUTE 
-      - STORAGE 
+      - COMPUTE
+      - STORAGE
       - NETWORK
