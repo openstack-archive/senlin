@@ -50,6 +50,8 @@ from senlin.rpc import client as rpc_client
 LOG = logging.getLogger(__name__)
 URL_LENGTH_LIMIT = 50000
 DEFAULT_API_VERSION = '1.0'
+API_VERSION_KEY = 'OpenStack-API-Version'
+SERVICE_ALIAS = ['cluster', 'clustering']
 
 # senlin_api, api opts
 api_opts = [

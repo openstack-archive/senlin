@@ -20,9 +20,12 @@ return
 import re
 
 from oslo_log import log as logging
+import six
 import webob
 
+from senlin.api.common import version_request
 from senlin.api.common import wsgi
+from senlin.common import exception
 
 LOG = logging.getLogger(__name__)
 
@@ -31,7 +34,7 @@ class VersionNegotiationFilter(wsgi.Middleware):
 
     def __init__(self, version_controller, app, conf, **local_conf):
         self.versions_app = version_controller(conf)
-        self.version_uri_regex = re.compile(r"^v(\d+)\.?(\d+)?")
+        self.version_uri_regex = re.compile(r"^v([1-9]\d*)\.?([1-9]\d*|0)?$")
         self.conf = conf
         super(VersionNegotiationFilter, self).__init__(app)
 
@@ -41,34 +44,31 @@ class VersionNegotiationFilter(wsgi.Middleware):
         If there is a version identifier in the URI, simply return the correct
         API controller, otherwise, if we find an Accept: header, process it
         """
-        msg = ("Processing request: %(method)s %(path)s Accept: "
-               "%(accept)s" % {'method': req.method,
-                               'path': req.path, 'accept': req.accept})
+        msg = ("Processing request: %(m)s %(p)s Accept: %(a)s" %
+               {'m': req.method, 'p': req.path, 'a': req.accept})
         LOG.debug(msg)
 
         # If the request is for /versions, just return the versions container
         if req.path_info_peek() in ("versions", ""):
             return self.versions_app
 
+        # Check if there is a requested (micro-)version for API
+        self.check_version_request(req)
         match = self._match_version_string(req.path_info_peek(), req)
         if match:
-            major_version = req.environ['api.major_version']
-            minor_version = req.environ['api.minor_version']
+            major = req.environ['api.major']
+            minor = req.environ['api.minor']
 
-            if (major_version == 1 and minor_version == 0):
-                LOG.debug("Matched versioned URI. "
-                          "Version: %(major_version)d.%(minor_version)d"
-                          % {'major_version': major_version,
-                             'minor_version': minor_version})
+            if (major == 1 and minor == 0):
+                LOG.debug("Matched versioned URI. Version: %(major)d.%(minor)d"
+                          % {'major': major, 'minor': minor})
                 # Strip the version from the path
                 req.path_info_pop()
                 return None
             else:
                 LOG.debug("Unknown version in versioned URI: "
-                          "%(major_version)d.%(minor_version)d. "
-                          "Returning version choices."
-                          % {'major_version': major_version,
-                             'minor_version': minor_version})
+                          "%(major)d.%(minor)d. Returning version choices."
+                          % {'major': major, 'minor': minor})
                 return self.versions_app
 
         accept = str(req.accept)
@@ -77,20 +77,18 @@ class VersionNegotiationFilter(wsgi.Middleware):
             accept_version = accept[token_loc:]
             match = self._match_version_string(accept_version, req)
             if match:
-                major_version = req.environ['api.major_version']
-                minor_version = req.environ['api.minor_version']
-                if (major_version == 1 and minor_version == 0):
+                major = req.environ['api.major']
+                minor = req.environ['api.minor']
+                if (major == 1 and minor == 0):
                     LOG.debug("Matched versioned media type. Version: "
-                              "%(major_version)d.%(minor_version)d"
-                              % {'major_version': major_version,
-                                 'minor_version': minor_version})
+                              "%(major)d.%(minor)d"
+                              % {'major': major, 'minor': minor})
                     return None
                 else:
                     LOG.debug("Unknown version in accept header: "
-                              "%(major_version)d.%(minor_version)d..."
+                              "%(major)d.%(minor)d..."
                               "returning version choices."
-                              % {'major_version': major_version,
-                                  'minor_version': minor_version})
+                              % {'major': major, 'minor': minor})
                     return self.versions_app
         else:
             if req.accept not in ('*/*', ''):
@@ -104,8 +102,7 @@ class VersionNegotiationFilter(wsgi.Middleware):
         """Do version matching.
 
         Given a subject string, tries to match a major and/or minor version
-        number. If found, sets the api.major_version and api.minor_version
-        environ variables.
+        number. If found, sets the api.major and api.minor environ variables.
 
         :param subject: The string to check
         :param req: Webob.Request object
@@ -113,10 +110,27 @@ class VersionNegotiationFilter(wsgi.Middleware):
         """
         match = self.version_uri_regex.match(subject)
         if match:
-            major_version, minor_version = match.groups(0)
-            major_version = int(major_version)
-            minor_version = int(minor_version)
-            req.environ['api.major_version'] = major_version
-            req.environ['api.minor_version'] = minor_version
+            major, minor = match.groups(0)
+            major = int(major)
+            minor = int(minor)
+            req.environ['api.major'] = major
+            req.environ['api.minor'] = minor
 
         return match is not None
+
+    def check_version_request(self, req):
+        """Set API version request based on the request header."""
+        api_version = wsgi.DEFAULT_API_VERSION
+        key = wsgi.API_VERSION_KEY
+        if key in req.headers:
+            versions = req.headers[key].split(',')
+            for version in versions:
+                svc_ver = version.strip().split(' ')
+                if svc_ver[0].lower() in wsgi.SERVICE_ALIAS:
+                    api_version = svc_ver[1]
+                    break
+        try:
+            vr = version_request.APIVersionRequest(api_version)
+            req.version_request = vr
+        except exception.InvalidAPIVersionString as e:
+            raise webob.exc.HTTPBadRequest(six.text_type(e))

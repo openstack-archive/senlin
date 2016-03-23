@@ -10,8 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from senlin.api.common import version_request as vr
 from senlin.api.common import wsgi
-from senlin.api.openstack import version_request as vr
 from senlin.common import exception
 from senlin.tests.unit.common import base
 

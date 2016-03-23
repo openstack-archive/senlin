@@ -10,8 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import six
 import webob
 
+from senlin.api.common import version_request as vr
+from senlin.api.common import wsgi
 from senlin.api.middleware import version_negotiation as vn
 from senlin.tests.unit.common import base
 
@@ -28,14 +31,14 @@ class VersionNegotiationMiddlewareTest(base.SenlinTestCase):
         version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
         request = webob.Request({})
-        major_version = 1
-        minor_version = 0
+        major = 1
+        minor = 0
 
         match = version_negotiation._match_version_string(
-            'v{0}.{1}'.format(major_version, minor_version), request)
+            'v{0}.{1}'.format(major, minor), request)
         self.assertTrue(match)
-        self.assertEqual(major_version, request.environ['api.major_version'])
-        self.assertEqual(minor_version, request.environ['api.minor_version'])
+        self.assertEqual(major, request.environ['api.major'])
+        self.assertEqual(minor, request.environ['api.minor'])
 
     def test_not_match_version_string(self):
         version_negotiation = vn.VersionNegotiationFilter(
@@ -66,24 +69,22 @@ class VersionNegotiationMiddlewareTest(base.SenlinTestCase):
     def test_request_path_contains_valid_version(self):
         version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
-        major_version = 1
-        minor_version = 0
+        major = 1
+        minor = 0
         request = webob.Request({'PATH_INFO':
-                                 'v{0}.{1}/resource'.format(major_version,
-                                                            minor_version)})
+                                 'v{0}.{1}/resource'.format(major, minor)})
 
         response = version_negotiation.process_request(request)
 
         self.assertIsNone(response)
-        self.assertEqual(major_version, request.environ['api.major_version'])
-        self.assertEqual(minor_version, request.environ['api.minor_version'])
+        self.assertEqual(major, request.environ['api.major'])
+        self.assertEqual(minor, request.environ['api.minor'])
 
     def test_removes_version_from_request_path(self):
         version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
         expected_path = 'resource'
-        request = webob.Request({'PATH_INFO': 'v1.0/{0}'.format(expected_path)
-                                 })
+        request = webob.Request({'PATH_INFO': 'v1.0/%s' % expected_path})
 
         response = version_negotiation.process_request(request)
 
@@ -102,16 +103,16 @@ class VersionNegotiationMiddlewareTest(base.SenlinTestCase):
     def test_accept_header_contains_valid_version(self):
         version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
-        major_version = 1
-        minor_version = 0
+        major = 1
+        minor = 0
         request = webob.Request({'PATH_INFO': 'resource'})
         request.headers['Accept'] = 'application/vnd.openstack.clustering-v1.0'
 
         response = version_negotiation.process_request(request)
 
         self.assertIsNone(response)
-        self.assertEqual(major_version, request.environ['api.major_version'])
-        self.assertEqual(minor_version, request.environ['api.minor_version'])
+        self.assertEqual(major, request.environ['api.major'])
+        self.assertEqual(minor, request.environ['api.minor'])
 
     def test_accept_header_contains_unknown_version(self):
         version_negotiation = vn.VersionNegotiationFilter(
@@ -138,3 +139,38 @@ class VersionNegotiationMiddlewareTest(base.SenlinTestCase):
         request.headers['Accept'] = ''
         response = version_negotiation.process_request(request)
         self.assertIsInstance(response, webob.exc.HTTPNotFound)
+
+    def test_check_version_request(self):
+        request = webob.Request({'PATH_INFO': 'resource'})
+        request.headers[wsgi.API_VERSION_KEY] = 'cluster 1.0,compute 2.0'
+        version_negotiation = vn.VersionNegotiationFilter(
+            self._version_controller_factory, None, None)
+
+        version_negotiation.check_version_request(request)
+        self.assertIsNotNone(request.version_request)
+        expected = vr.APIVersionRequest('1.0')
+        self.assertEqual(expected, request.version_request)
+
+    def test_check_version_request_default(self):
+        request = webob.Request({'PATH_INFO': 'resource'})
+        request.headers[wsgi.API_VERSION_KEY] = 'compute 2.0'
+        version_negotiation = vn.VersionNegotiationFilter(
+            self._version_controller_factory, None, None)
+
+        version_negotiation.check_version_request(request)
+        self.assertIsNotNone(request.version_request)
+        expected = vr.APIVersionRequest(wsgi.DEFAULT_API_VERSION)
+        self.assertEqual(expected, request.version_request)
+
+    def test_check_version_request_invalid(self):
+        request = webob.Request({'PATH_INFO': 'resource'})
+        request.headers[wsgi.API_VERSION_KEY] = 'cluster 2.03'
+        version_negotiation = vn.VersionNegotiationFilter(
+            self._version_controller_factory, None, None)
+
+        ex = self.assertRaises(webob.exc.HTTPBadRequest,
+                               version_negotiation.check_version_request,
+                               request)
+        self.assertEqual("API Version String (2.03) is of invalid format. It "
+                         "must be of format 'major.minor'.",
+                         six.text_type(ex))
