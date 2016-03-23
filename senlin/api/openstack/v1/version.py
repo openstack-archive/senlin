@@ -10,8 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from senlin.api.common import wsgi
 
-class VersionController(object):
+
+class VersionController(wsgi.Controller):
     """WSGI controller for version in Senlin v1 API."""
 
     def __init__(self, conf):
