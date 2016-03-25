@@ -32,31 +32,29 @@ disable it or update some properties of the policy object.
 Listing Policies Attached to a Cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The :program:`senlin` tool provides the :command:`cluster-policy-list` command
-to list policy objects that are attached to a cluster. You can provide the
-name, the ID or the "short ID" of a cluster as the identifier to reference a
-cluster. For example, the command below lists the policies attached to the
-cluster ``webservers``::
+The :program:`openstack cluster` command provides a sub-command
+:command:`policy binding list` to list policy objects that are attached to a
+cluster. You can provide the name, the ID or the "short ID" of a cluster as
+the identifier to reference a cluster. For example, the command below lists
+the policies attached to the cluster ``webservers``::
 
-  $ senlin cluster-policy-list webservers
+  $ openstack cluster policy binding list webservers
 
 
 Sorting the List
 ----------------
 
 You can specify the sorting keys and sorting direction when list cluster
-policies, using the option :option:`--sort` (or :option:`-o`). The
-:option:`--sort` option accepts a string of format
-``key1[:dir1],key2[:dir2],key3[:dir3]``, where the keys used are properties
-of the policy bound to a cluster and the dirs can be one of ``asc`` and
-``desc``. When omitted, Senlin sorts a given key using ``asc`` as the default
-direction.
+policies, using the option :option:`--sort`. The :option:`--sort` option
+accepts a string of format ``key1[:dir1],key2[:dir2],key3[:dir3]``, where the
+keys used are properties of the policy bound to a cluster and the dirs can be
+one of ``asc`` and ``desc``. When omitted, Senlin sorts a given key using
+``asc`` as the default direction.
 
-For example, the following command instructs the :program:`senlin` command
-line to sort policy bindings using the ``enabled`` property in descending
-order::
+For example, the following command line sorts the policy bindings using the
+``enabled`` property in descending order::
 
-  $ senlin cluster-policy-list -o enabled:desc 
+  $ openstack cluster policy binding list --sort enabled:desc
 
 When sorting the list of policies, ``enabled`` is the only key you can specify
 for sorting.
@@ -65,12 +63,12 @@ for sorting.
 Filtering the List
 ------------------
 
-The :program:`senlin` command line also provides options for filtering the
-policy list at the server side. The option :option:`--filters` (or
-:option:`-f`) can be used for this purpose. For example, the following command
-filters clusters by the ``enabled`` field::
+The :program:`openstack cluster` command also supports options for filtering
+the policy list at the server side. The option :option:`--filters` can be used
+for this purpose. For example, the following command filters clusters by the
+``enabled`` field::
 
-  $ senlin cluster-policy-list -f enabled=True c3
+  $ openstack cluster policy binding list --filters enabled=True c3
   +-----------+--------+-----------------------+---------+
   | policy_id | policy | type                  | enabled |
   +-----------+--------+-----------------------+---------+
@@ -89,18 +87,18 @@ Attaching a Policy to a Cluster
 Senlin permits policy objects to be attached to clusters and to be detached
 from clusters dynamically. When attaching a policy object to a cluster, you
 can customize the policy properties for the particular cluster. For example,
-you can specify whether the policy should be enabled once attached. 
+you can specify whether the policy should be enabled once attached.
 
-The following options are supported for the :command:`cluster-policy-attach`
-command:
+The following options are supported for the command
+:command:`openstack cluster policy attach`:
 
-- :option:`--enabled` (or :option:`-e`): a boolean indicating whether the
-  policy to be enabled once attached.
+- :option:`--enabled`: a boolean indicating whether the policy to be enabled
+  once attached.
 
 For example, the following command attaches a policy named ``up01`` to the
 cluster ``c3``, with its enabled status set to ``True``::
 
-  $ senlin cluster-policy-attach -e -p up01 c3
+  $ openstack cluster policy attach --enabled --policy up01 c3
 
 Note that most of the time, Senlin doesn't more than one policy of the same
 type to be attached to the same cluster. This restriction is relaxed for some
@@ -118,10 +116,11 @@ Showing Policy Properties on a Cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To examine the detailed properties of a policy object that has been attached
-to a cluster, you can use the command :command:`cluster-policy-show` with the
-policy identifier and the cluster identifier specified. For example::
+to a cluster, you can use the :command:`openstack cluster policy binding show`
+command with the policy identifier and the cluster identifier specified. For
+example::
 
-  $ senlin cluster-policy-show -p dp01 c3
+  $ openstack cluster policy binding show --policy dp01 c3
   +--------------+--------------------------------------+
   | Property     | Value                                |
   +--------------+--------------------------------------+
@@ -141,12 +140,15 @@ Updating Policy Properties on a Cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Once a policy is attached to a cluster, you can request its property on this
-cluster be changed by using the command :command:`cluster-policy-update`. At 
-this stage, you can specify the ``enabled`` property to be updated.
+cluster be changed by using the command
+:command:`openstack cluster policy binding update`. Presently, you can only
+specify the ``enabled`` property to be updated.
 
 For example, the following command disables a policy on the specified cluster::
 
-  $ senlin cluster-policy-update -e False -p dp01 mycluster
+  $ openstack cluster policy binding update \
+      --enabled False --policy dp01 \
+      mycluster
 
 The Senlin engine will perform validation of the arguments in the same way as
 that for the policy attach operation. You can use the name, the ID or the
@@ -158,10 +160,10 @@ Detach a Policy from a Cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Finally, to remove the binding between a specified policy object from a
-cluster, you can use the :command:`cluster-policy-detach` command as shown
-below::
+cluster, you can use the :command:`openstack cluster policy detach` command as
+shown below::
 
-  $ senlin cluster-policy-detach -p dp01 mycluster
+  $ openstack cluster policy detach --policy dp01 mycluster
 
 This command will detach the specified policy from the specified cluster.
-You will use the option :option:`--policy` (or `-p`) to specify the policy.
+You will use the option :option:`--policy` to specify the policy.

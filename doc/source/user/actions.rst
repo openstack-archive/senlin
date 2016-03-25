@@ -56,7 +56,7 @@ Listing Actions
 
 The following command shows the actions known by the Senlin engine::
 
-  $ senlin action-list
+  $ openstack cluster action list
   +----------+-------------------------+----------------+-----------+----------+------------+-------------+
   | id       | name                    | action         | status    | target   | depends_on | depended_by |
   +----------+-------------------------+----------------+-----------+----------+------------+-------------+
@@ -72,24 +72,23 @@ The following command shows the actions known by the Senlin engine::
   | e973552e | node_create_b716052d    | NODE_CREATE    | SUCCEEDED | b716052d |            |             |
   +----------+-------------------------+----------------+-----------+----------+------------+-------------+
 
-The :program:`senlin` command line supports various options when listing the
-actions.
+The :program:`openstack cluster` command line supports various options when
+listing the actions.
 
 
 Sorting the List
 ----------------
 
 You can specify the sorting keys and sorting direction when list actions,
-using the option :option:`--sort` (or :option:`-o`). The :option:`--sort`
-option accepts a string of format ``key1[:dir1],key2[:dir2],key3[:dir3]``,
-where the keys used are action properties and the dirs can be one of ``asc``
-and ``desc``. When omitted, Senlin sorts a given key using ``asc`` as the
-default direction.
+using the option :option:`--sort`. The :option:`--sort` option accepts a
+string of format ``key1[:dir1],key2[:dir2],key3[:dir3]``, where the keys used
+are action properties and the dirs can be one of ``asc`` and ``desc``. When
+omitted, Senlin sorts a given key using ``asc`` as the default direction.
 
-For example, the following command instructs the :program:`senlin` command
-line to sort actions using the ``name`` property in descending order::
+For example, the following command instructs the :program:`openstack cluster`
+command to sort actions using the ``name`` property in descending order::
 
-  $ senlin action-list -o name:desc
+  $ openstack cluster action list --sort name:desc
 
 When sorting the list of actions, you can use one of ``name``, ``target``,
 ``action``, ``created_at`` and ``status``.
@@ -98,11 +97,10 @@ When sorting the list of actions, you can use one of ``name``, ``target``,
 Filtering the List
 ------------------
 
-You can filter the list of actions using the :option:`--filters`` (or
-:option:`-f`). For example, the following command filters the action list by
-the ``action`` property::
+You can filter the list of actions using the :option:`--filters``. For example,
+the following command filters the action list by the ``action`` property::
 
-  $ senlin action-list -f action=CLUSTER_SCALE_OUT
+  $ openstack cluster action list --filters action=CLUSTER_SCALE_OUT
 
 The option :option:`--filters` accepts a list of key-value pairs separated by
 semicolon (``;``), where each pair is expected to be of format ``key=val``.
@@ -115,17 +113,17 @@ Paginating the Query results
 
 In case you have a huge collection of actions (which is highly likely the
 case), you can limit the number of actions returned using the option
-:option:`--limit <LIMIT>` (or :option:`--l <LIMIT>`). For example::
+:option:`--limit <LIMIT>`. For example::
 
-  $ senlin action-list -l 1
+  $ openstack cluster action list --limit 1
 
 Another option you can specify is the ID of an action after which you want to
 see the returned list starts. In other words, you don't want to see those
 actions with IDs that is or come before the one you specify. You can use the
-option :option:`--marker <ID>` (or :option:`-m <ID>`) for this purpose. For
-example::
+option :option:`--marker <ID>` for this purpose. For example::
 
-  $ senlin action-list -l 1 -m 2959122e-11c7-4e82-b12f-f49dc5dac270
+  $ openstack cluster action list --limit 1 \
+      --marker 2959122e-11c7-4e82-b12f-f49dc5dac270
 
 Only 1 action record is returned in this example and its UUID comes after the
 the one specified from the command line.
@@ -134,16 +132,16 @@ the one specified from the command line.
 Showing Details of an Action
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can use the :program:`senlin` command line to show the details about an
-action you are interested in. When specifying the identity of the action, you
-can use its name, its ID or its "short ID" . Senlin API and engine will verify
-if the identifier you specified can uniquely identify an action. An error
-message will be returned if there is no action matching the identifier or if
-more than one action matching it.
+You can use the :program:`openstack cluster` command to show the details about
+an action you are interested in. When specifying the identity of the action,
+you can use its name, its ID or its "short ID" . Senlin API and engine will
+verify if the identifier you specified can uniquely identify an action. An
+error message will be returned if there is no action matching the identifier
+or if more than one action matching it.
 
 An example is shown below::
 
-  $ senlin action-show 8fac487f
+  $ openstack cluster action show 8fac487f
   +---------------+--------------------------------------+
   | Property      | Value                                |
   +---------------+--------------------------------------+

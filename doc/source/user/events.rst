@@ -48,7 +48,7 @@ Listing Events
 
 The following command lists the events by the Senlin engine::
 
-  $ senlin event-list
+  $ openstack cluster event list
   +----------+---------------------+---------------+----------+----------------------------+-----------------------+-----------+--------------------------------+-------+
   | id       | timestamp           | obj_type      | obj_id   | obj_name                   | action                | status    | status_reason                  | level |
   +----------+---------------------+---------------+----------+----------------------------+-----------------------+-----------+--------------------------------+-------+
@@ -64,24 +64,23 @@ The following command lists the events by the Senlin engine::
   | fe2fc810 | 2015-12-17T15:41:49 | CLUSTERACTION | 0be70b0f | attach_policy_7171861e     | CLUSTER_ATTACH_POLICY | SUCCEEDED | Policy attached.               | 20    |
   +----------+---------------------+---------------+----------+----------------------------+-----------------------+-----------+--------------------------------+-------+
 
-The :program:`senlin` command line supports various options when listing the
-events.
+The :program:`openstack cluster event list` command line supports various
+options when listing the events.
 
 
 Sorting the List
 ----------------
 
 You can specify the sorting keys and sorting direction when list events,
-using the option :option:`--sort` (or :option:`-o`). The :option:`--sort`
-option accepts a string of format ``key1[:dir1],key2[:dir2],key3[:dir3]``,
-where the keys used are event properties and the dirs can be one of ``asc``
-and ``desc``. When omitted, Senlin sorts a given key using ``asc`` as the
-default direction.
+using the option :option:`--sort`. The :option:`--sort` option accepts a
+string of format ``key1[:dir1],key2[:dir2],key3[:dir3]``, where the keys used
+are event properties and the dirs can be one of ``asc`` and ``desc``. When
+omitted, Senlin sorts a given key using ``asc`` as the default direction.
 
-For example, the following command instructs the :program:`senlin` command
-line to sort events using the ``timestamp`` property in descending order::
+For example, the following command sorts the events using the ``timestamp``
+property in descending order::
 
-  $ senlin event-list -o timestamp:desc
+  $ openstack cluster event list --sort timestamp:desc
 
 When sorting the list of events, you can use one of ``timestamp``, ``level``,
 ``obj_type``, ``obj_name``, ``user``, ``action`` and ``status``.
@@ -90,11 +89,10 @@ When sorting the list of events, you can use one of ``timestamp``, ``level``,
 Filtering the List
 ------------------
 
-You can filter the list of events using the :option:`--filters`` (or
-:option:`-f`). For example, the following command filters the event list by
-the ``obj_type`` property::
+You can filter the list of events using the :option:`--filters``. For example,
+the following command filters the event list by the ``obj_type`` property::
 
-  $ senlin action-list -f obj_type=NODE
+  $ openstack cluster event list --filters obj_type=NODE
 
 The option :option:`--filters` accepts a list of key-value pairs separated by
 semicolon (``;``), where each pair is expected to be of format ``key=val``.
@@ -107,17 +105,17 @@ Paginating the Query results
 
 In case you have a huge collection of events (which is highly likely the case),
 you can limit the number of events returned using the option
-:option:`--limit <LIMIT>` (or :option:`--l <LIMIT>`). For example::
+:option:`--limit <LIMIT>`. For example::
 
-  $ senlin event-list -l 10
+  $ openstack cluster event list --limit 10
 
 Another option you can specify is the ID of an event after which you want to
 see the returned list starts. In other words, you don't want to see those
 events with IDs that is or come before the one you specify. You can use the
-option :option:`--marker <ID>` (or :option:`-m <ID>`) for this purpose. For
-example::
+option :option:`--marker <ID>` for this purpose. For example::
 
-  $ senlin event-list -l 20 -m 2959122e-11c7-4e82-b12f-f49dc5dac270
+  $ openstack cluster event list --limit 20 \
+      --marker 2959122e-11c7-4e82-b12f-f49dc5dac270
 
 At most 20 action records will be returned in this example and its UUID comes
 after the the one specified from the command line.
@@ -135,7 +133,7 @@ more than one event matching it.
 
 An example is shown below::
 
-  $ senlin event-show 19ba155a
+  $ openstack cluster event show 19ba155a
   +---------------+--------------------------------------+
   | Property      | Value                                |
   +---------------+--------------------------------------+

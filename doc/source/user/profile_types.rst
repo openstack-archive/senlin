@@ -77,13 +77,13 @@ Listing Profile Types
 Senlin server comes with some built-in profile types. You can check the list
 of profile types using the following command::
 
-  $ senlin profile-type-list
-  +----------------+
-  | name           |
-  +----------------+
-  | os.heat.stack  |
-  | os.nova.server |
-  +----------------+
+  $ openstack cluster profile type list
+  +--------------------+
+  | name               |
+  +--------------------+
+  | os.heat.stack-1.0  |
+  | os.nova.server-1.0 |
+  +--------------------+
 
 The output is a list of profile types supported by the Senlin server.
 
@@ -96,7 +96,7 @@ that describes the names and the types of properties that can be accepted. To
 show the schema of a specific profile type along with other properties, you
 can use the following command::
 
-  $ senlin profile-type-show os.heat.stack
+  $ openstack cluster profile type show os.heat.stack
   name: os.heat.stack
   schema:
     context:
@@ -131,11 +131,11 @@ Here, each property has the following attributes:
   property usually doesn't have a ``default`` value.
 - ``type``: one of ``String``, ``Integer``, ``Boolean``, ``Map`` or ``List``.
 
-The default output from the :command:`profile-type-show` command is in YAML
-format. You can choose to show the spec schema in JSON format by specifying
-the the :option:`-F json` option as exemplified below::
+The default output from the :command:`openstack cluster profile type show`
+command is in YAML format. You can choose to show the spec schema in JSON
+format by specifying the the :option:`-f json` option as exemplified below::
 
-  $ senlin profile-type-show -F json os.heat.stack
+  $ openstack cluster profile type show -f json os.heat.stack
   {
     "name": "os.heat.stack",
     "schema": {

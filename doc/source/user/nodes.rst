@@ -37,9 +37,9 @@ Listing Nodes
 ~~~~~~~~~~~~~
 
 To list nodes that are managed by the Senlin service, you will use the command
-:command:`node-list`. For example::
+:command:`openstack cluster node list`. For example::
 
-  $ senlin node-list
+  $ openstack cluster node list
   +----------+--------+--------+----------+-------------+---------+...
   | id       | name   | status | cluster  | physical_id | profile |
   +----------+--------+--------+----------+-------------+---------+...
@@ -52,23 +52,22 @@ To list nodes that are managed by the Senlin service, you will use the command
 Note that some columns in the output table are *short ID* of objects. Senlin
 command line use short IDs to save real estate on screen so that more useful
 information can be shown on a single line. To show the *full ID* in the list,
-you can add the option :option:`--full-id` (or :option:`-F`) to the command.
+you can add the option :option:`--full-id` to the command.
 
 
 Sorting the List
 ----------------
 
 You can specify the sorting keys and sorting direction when list nodes,
-using the option :option:`--sort` (or :option:`-o`). The :option:`--sort`
-option accepts a string of format ``key1[:dir1],key2[:dir2],key3[:dir3]``,
-where the keys used are node properties and the dirs can be one of ``asc``
-and ``desc``. When omitted, Senlin sorts a given key using ``asc`` as the
-default direction.
+using the option :option:`--sort`. The :option:`--sort` option accepts a
+string of format ``key1[:dir1],key2[:dir2],key3[:dir3]``, where the keys used
+are node properties and the dirs can be one of ``asc`` and ``desc``. When
+omitted, Senlin sorts a given key using ``asc`` as the default direction.
 
-For example, the following command instructs the :program:`senlin` command
-line to sort nodes using the ``status`` property in descending order::
+For example, the following command sorts the nodes using the ``status``
+property in descending order::
 
-  $ senlin node-list -o status:desc
+  $ openstack cluster node list --sort status:desc
 
 When sorting the list of nodes, you can use one of ``index``, ``name``,
 ``status``, ``init_at``, ``created_at`` and ``updated_at``.
@@ -77,11 +76,10 @@ When sorting the list of nodes, you can use one of ``index``, ``name``,
 Filtering the List
 ------------------
 
-You can specify the option :option:`--cluster <CLUSTER>` (or :option:`-c
-<CLUSTER>`) to list nodes that are members of a specific cluster. For
-example::
+You can specify the option :option:`--cluster <CLUSTER>` to list nodes that
+are members of a specific cluster. For example::
 
-  $ senlin node-list --cluster c3
+  $ openstack cluster node list --cluster c3
   +----------+---------+--------+----------+-------------+---------+...
   | id       | name    | status | cluster  | physical_id | profile |
   +----------+---------+--------+----------+-------------+---------+...
@@ -90,12 +88,12 @@ example::
   +----------+---------+--------+----------+-------------+---------+...
 
 Besides these two options, you can add the option :option:`--filters
-<K1=V1;K2=V2...>` (or :option:`-f`) to the command :command:`node-list` to
+<K1=V1;K2=V2...>` to the command :command:`openstack cluster node list` to
 specify keys (node property names) and values you want to filter the list.
 The valid keys for filtering are ``name`` and ``status``. For example, the
 command below filters the list by node status ``ACTIVE``::
 
-  $ senlin node-list -f status=ACTIVE
+  $ openstack cluster node list --filters status=ACTIVE
 
 
 Paginating the List
@@ -103,17 +101,16 @@ Paginating the List
 
 In case you have a large number of nodes, you can limit the number of nodes
 returned from Senlin server each time, using the option :option:`--limit
-<LIMIT>` (or :option:`--l <LIMIT>`). For example::
+<LIMIT>`. For example::
 
-  $ senlin node-list --limit 1
+  $ openstack cluster node list --limit 1
 
 Another option you can specify is the ID of a node after which you want to
 see the returned list starts. In other words, you don't want to see those
 nodes with IDs that is or come before the one you specify. You can use the
-option :option:`--marker <ID>` (or :option:`-m <ID>`) for this purpose. For
-example::
+option :option:`--marker <ID>` for this purpose. For example::
 
-  $ senlin node-list --marker <NODE ID HERE>
+  $ openstack node-list --marker 765385ed-f480-453a-8601-6fb256f512fc
 
 With option :option:`--marker` and option :option:`--limit`, you will be able
 to control how many node records you will get from each request.
@@ -126,7 +123,7 @@ To create a node, you need to specify the ID or name of the profile to be
 used. For example, the following example creates a node named ``test_node``
 using a profile named ``pstack``::
 
-  $ senlin node-create -p pstack test_node
+  $ openstack cluster node create --profile pstack test_node
   +---------------+--------------------------------------+
   | Property      | Value                                |
   +---------------+--------------------------------------+
@@ -156,41 +153,41 @@ will receive an error message.
 
 Note that the ``index`` property of the new node is -1. This is because we
 didn't specify the owning cluster for the node. To join a node to an existing
-cluster, you can either use the command :command:`cluster-node-add` (see
-:ref:`guide-membership`) after the node is created, or specify the owning
-cluster upon node creation, as shown by the following example::
+cluster, you can either use the :command:`openstack cluster member add`
+command (:ref:`guide-membership`) after the node is created, or specify the
+owning cluster upon node creation, as shown by the following example::
 
-  $ senlin node-create -p pstack -c c1 test_node
+  $ openstack cluster node create --profile pstack --cluster c1 test_node
 
 The command above creates a new node using profile ``pstack`` and makes it a
-member of the cluster ``c1``, specified using the option :option:`--cluster`
-(or :option:`-c`). When a node becomes a member of a cluster, it will get a
-value for its ``index`` property that uniquely identifies itself within the
-owning cluster.
+member of the cluster ``c1``, specified using the option :option:`--cluster`.
+When a node becomes a member of a cluster, it will get a value for its
+``index`` property that uniquely identifies itself within the owning cluster.
 
 When the owning cluster is specified, Senlin engine will verify if the cluster
 specified is referencing a profile that has the same :term:`profile type` as
 that of the new node. If the profile types don't match, you will receive an
-error message from the :command:`senlin` command.
+error message from the :command:`openstack cluster` command.
 
-Another argument that could be useful when creating a new node is the
-:option:`--role <ROLE>` (or :option:`-r <ROLE>`) option. The value could be
-used by a profile type implementation to treat nodes differently. For example,
-the following command creates a node with a ``master`` role::
+Another argument that could be useful when creating a new node is the option
+:option:`--role <ROLE>`. The value could be used by a profile type
+implementation to treat nodes differently. For example, the following command
+creates a node with a ``master`` role::
 
-  $ senlin node-create -p pstack -c c1 -r master master_node
+  $ openstack cluster node create --profile pstack --cluster c1 \
+      --role master master_node
 
 A profile type implementation may check this role value when operating the
 physical object that backs the node. It is okay for a profile type
 implementation to ignore this value.
 
 The last argument you can specify when creating a new node is the option
-:option:`--metadata <K1=V1;K2=V2...>` (or :option:`-M <K1=V1;K2=V2..>`). The
-value for this option is a list of key-value pairs seprated by a semicolon
-('``;``'). These key-value pairs are attached to the node and can be used for
-whatever purposes. For example::
+:option:`--metadata <K1=V1;K2=V2...>`. The value for this option is a list of
+key-value pairs seprated by a semicolon ('``;``'). These key-value pairs are
+attached to the node and can be used for whatever purposes. For example::
 
-  $ senlin node-create -p pstack -M owner=JohnWhite test_node
+  $ openstack cluster node create --profile pstack \
+      --metadata owner=JohnWhite test_node
 
 
 Showing Details of a Node
@@ -203,7 +200,7 @@ no node matching the identifier or if more than one node matching it.
 
 An example is shown below::
 
-  $ senlin node-show test_node
+  $ openstack cluster node show test_node
   +---------------+--------------------------------------+
   | Property      | Value                                |
   +---------------+--------------------------------------+
@@ -232,38 +229,38 @@ ID of an object that is of certain type. For example, if the profile type used
 is "``os.heat.stack``", this means the Heat stack ID; if the profile type used
 is "``os.nova.server``", it gives the Nova server ID.
 
-An useful argument for the command :command:`node-show` is the option
-:option:`--details` (or :option:`-D`). When specified, you will get the
-details about the physical object that backs the node. For example::
+An useful argument for the command :command:`openstack cluster node show` is
+the option :option:`--details`. When specified, you will get the details about
+the physical object that backs the node. For example::
 
-  $ senlin node-show -D test_node
+  $ openstack cluster node show --details test_node
 
 
 Updating a Node
 ~~~~~~~~~~~~~~~
 
 Once a node has been created, you can change its properties using the command
-:command:`node-update`. For example, to change the name of a node, you can use
-the option :option:`--name` (or :option:`-n`), as shown by the following
+:command:`openstack cluster node update`. For example, to change the name of a
+node, you can use the option :option:`--name` , as shown by the following
 command::
 
-  $ senlin node-update -n new_node_name old_node_name
+  $ openstack cluster node update --name new_node_name old_node_name
 
 Similarly, you can modify the ``role`` property of a node using the option
-:option:`--role` (or :option:`-r`). For example::
+:option:`--role`. For example::
 
-  $ senlin node-update -r slave master_node
+  $ openstack cluster node update --role slave master_node
 
 You can change the metadata associated with a node using the option
-:option:`--metadata` (or :option:`-M`)::
+:option:`--metadata`::
 
-  $ senlin node-update -M version=2.1 my_node
+  $ openstack cluster node update --metadata version=2.1 my_node
 
-Using the :command:`node-update` command, you can change the profile used by
-a node. The following example updates a node for switching to use a different
-profile::
+Using the :command:`openstack cluster node update` command, you can change the
+profile used by a node. The following example updates a node for switching to
+use a different profile::
 
-  $ senlin node-update -p fedora21_server fedora20_server
+  $ openstack cluster node update --profile fedora21_server fedora20_server
 
 Suppose the node ``fedora20_server`` is now using a profile of type
 ``os.nova.server`` where a Fedora 20 image is used, the command above will
@@ -278,9 +275,10 @@ process.
 Deleting a Node
 ~~~~~~~~~~~~~~~
 
-A node can be deleted using the command :command:`node-delete`, for example::
+A node can be deleted using the :command:`openstack cluster node delete`
+command, for example::
 
-  $ senlin node-delete my_node
+  $ openstack cluster node delete my_node
 
 Note that in this command you can use the name, the ID or the "short ID" to
 specify the node you want to delete. If the specified criteria cannot match

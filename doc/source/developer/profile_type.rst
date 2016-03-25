@@ -232,5 +232,5 @@ a restart of the ``senlin-engine`` process.
 
   $ sudo pip install -e .
 
-Now, when you do a ``senlin profile-type-list``, you will see your profile
-type listed along with other existing profile types.
+Now, when you do a :command:`openstack cluster profile type list`, you will
+see your profile type listed along with other existing profile types.

@@ -63,11 +63,10 @@ There are several ways to raise a service request to the Senlin API, each of
 which has its own characteristics that will affect the way authentication
 and/or authorization is performed.
 
-1) Users interact with Senlin service API using the Senlin client (i.e. the
-   `python-senlinclient` package) which includes a command line interface (CLI)
-   named `senlin`. The requests, after being preprocessed by the OpenStack SDK
-   will contain a valid Keystone token that can be validated by the
-   `auth_token` WSGI middleware.
+1) Users interact with Senlin service API using the OpenStack client (i.e. the
+   plugin provided by the `python-senlinclient` package). The requests, after
+   being preprocessed by the OpenStack SDK will contain a valid Keystone token
+   that can be validated by the `auth_token` WSGI middleware.
 2) Users interact with Senlin service API directly by making HTTP requests
    where the requester's credentials have been validated by Keystone so the
    requests will carry a valid Keystone token for verification by the

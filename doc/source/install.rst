@@ -156,12 +156,14 @@ Install Senlin Client
 Verify Your Installation
 ------------------------
 
-To check whether Senlin Server is successfully installed, run command 'senlin build-info'
-in a console. The installation is successful if the command output looks similar to the following.
+To check whether Senlin server and Senlin client have been installed
+successfully, run command ``openstack cluster build info`` in a console.
+The installation is successful if the command output looks similar to the
+following.
 
 ::
 
-  $ senlin build-info
+  $ openstack cluster build info
   +----------+---------------------+
   | Property | Value               |
   +----------+---------------------+

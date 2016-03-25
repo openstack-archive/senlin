@@ -26,27 +26,26 @@ a receiver can change the size of a specified cluster.
 Listing Receivers
 ~~~~~~~~~~~~~~~~~
 
-The :program:`senlin` command line provides a command :command:`receiver-list`
-that can be used to enumerate receiver objects known to the service. For
-example::
+The :program:`opentack cluster ` command line provides a sub-command
+:command:`receiver list` that can be used to enumerate receiver objects known
+to the service. For example::
 
-  $ senlin receiver-list
+  $ openstack cluster receiver list
 
 
 Sorting the List
 ----------------
 
 You can specify the sorting keys and sorting direction when list receivers,
-using the option :option:`--sort` (or :option:`-o`). The :option:`--sort`
-option accepts a string of format ``key1[:dir1],key2[:dir2],key3[:dir3]``,
-where the keys used are receiver properties and the dirs can be one of ``asc``
-and ``desc``. When omitted, Senlin sorts a given key using ``asc`` as the
-default direction.
+using the option :option:`--sort`. The :option:`--sort` option accepts a
+string of format ``key1[:dir1],key2[:dir2],key3[:dir3]``, where the keys used
+are receiver properties and the dirs can be one of ``asc`` and ``desc``. When
+omitted, Senlin sorts a given key using ``asc`` as the default direction.
 
-For example, the following command instructs the :program:`senlin` command
-line to sort receivers using the ``name`` property in descending order::
+For example, the following command sorts the receivers using the ``name``
+property in descending order::
 
-  $ senlin receiver-list -o name:desc
+  $ openstack cluster receiver list --sort name:desc
 
 When sorting the list of receivers, you can use one of ``type``, ``name``,
 ``action``, ``cluster_id``, ``created_at``.
@@ -57,20 +56,20 @@ Paginating the List
 
 In case you have a huge collection of receiver objects, you can limit the
 number of receivers returned from Senlin server, using the option
-:option:`--limit` (or (or `-l`). For example::
+:option:`--limit`. For example::
 
-  $ senlin receiver-list -l 1
+  $ openstack cluster receiver list --limit 1
 
 Yet another option you can specify is the ID of a receiver object after which
 you want to see the list starts. In other words, you don't want to see those
 receivers with IDs that is or come before the one you specify. You can use the
-option :option:`--marker <ID>` (or option:`-m <ID>`) for this purpose. For
-example::
+option :option:`--marker <ID>` for this purpose. For example::
 
-  $ senlin receiver-list -l 1 -m 239d7212-6196-4a89-9446-44d28717d7de
+  $ openstack cluster receiver list \
+      --limit 1 --marker 239d7212-6196-4a89-9446-44d28717d7de
 
-Combining the :option:`-m` and the :option:`-l` enables you to do pagination
-on the results returned from the server.
+Combining the :option:`--marker` option and the :option:`--limit` option
+enables you to do pagination on the results returned from the server.
 
 
 Creating a Receiver
@@ -81,28 +80,32 @@ Creating a Receiver
 
 ::
 
-  senlin cluster-create -p $PROFILE_ID -c 2 -n 1 -m 5 test-cluster
+  $ openstack cluster create --profile $PROFILE_ID \
+      --desired-capacity 2 --min-size 1 --max-size 5 \
+      test-cluster
 
 2. Attach a ScalingPolicy to the cluster:
 
 ::
 
-  senlin cluster-policy-attach -p $POLICY_ID test-cluster
+  $ opentack cluster policy attach --policy $POLICY_ID test-cluster
 
-3. Create a receiver, use the option :option:`-c` to specify `test-cluster` as
-   the targeted cluster  and use the option :option:`-a` to specify
-   `CLUSTER_SCALE_OUT` or `CLUSTER_SCALE_IN` as the action name. By default,
-   the :program:`senlin` command line creates a receiver of type
-   :term:`webhook`, for example:::
+3. Create a receiver, use the option :option:`--cluster` to specify
+   "``test-cluster``" as the targeted cluster and use the option
+   :option:`--action` to specify "``CLUSTER_SCALE_OUT``" or
+   "``CLUSTER_SCALE_IN``" as the action name. By default, the
+   :program:`openstack cluster receiver create` command line creates a
+   receiver of type :term:`webhook`, for example:::
 
-     senlin receiver-create -c test-cluster \
-         -a CLUSTER_SCALE_OUT \
+     $ openstack cluster receiver create \
+         --cluster test-cluster \
+         --action CLUSTER_SCALE_OUT \
          test-receiver
 
    Senlin service will return the receiver information with its channel ready
    to receive signals. For a webhook receiver, this means you can check the
-   ``alarm_url`` field of the ``channel`` property. You can use this url to
-   trigger the action you specified.
+   "``alarm_url``" field of the "``channel``" property. You can use this url
+   to trigger the action you specified.
 
 4. Trigger the receiver by sending a ``POST`` request to its URL, for example:
 

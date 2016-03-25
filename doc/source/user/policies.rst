@@ -35,11 +35,11 @@ details.
 Listing Policies
 ~~~~~~~~~~~~~~~~
 
-The :program:`senlin` command line provides a command :command:`policy-list`
-that can be used to enumerate policy objects known to the service. For
-example::
+The :program:`openstack cluster` command line provides a sub-command
+:command:`openstack cluster policy list` that can be used to enumerate policy
+objects known to the service. For example::
 
-  $ senlin policy-list
+  $ openstack cluster policy list
   +----------+------+-----------------------------+---------------------+
   | id       | name | type                        | created_at          |
   +----------+------+-----------------------------+---------------------+
@@ -50,24 +50,22 @@ example::
 Note that the first column in the output table is a *short ID* of a policy
 object. Senlin command line use short IDs to save real estate on screen so
 that more useful information can be shown on a single line. To show the *full
-ID* in the list, you can add the :option:`-F` (or :option:`--full-id`) option
-to the command.
+ID* in the list, you can add the :option:`--full-id` option to the command.
 
 
 Sorting the List
 ----------------
 
 You can specify the sorting keys and sorting direction when list policies,
-using the option :option:`--sort` (or :option:`-o`). The :option:`--sort`
-option accepts a string of format ``key1[:dir1],key2[:dir2],key3[:dir3]``,
-where the keys used are policy properties and the dirs can be one of ``asc``
-and ``desc``. When omitted, Senlin sorts a given key using ``asc`` as the
-default direction.
+using the option :option:`--sort`. The :option:`--sort` option accepts a
+string of format ``key1[:dir1],key2[:dir2],key3[:dir3]``, where the keys used
+are policy properties and the dirs can be one of ``asc`` and ``desc``. When
+omitted, Senlin sorts a given key using ``asc`` as the default direction.
 
-For example, the following command instructs the :program:`senlin` command
-line to sort policies using the ``name`` property in descending order::
+For example, the following command sorts the policies using the ``name``
+property in descending order::
 
-  $ senlin policy-list -o name:desc
+  $ openstack cluster policy list --sort name:desc
 
 When sorting the list of policies, you can use one of ``type``, ``name``,
 ``created_at`` and ``updated_at``.
@@ -77,10 +75,10 @@ Paginating the List
 -------------------
 
 In case you have a huge collection of policy objects, you can limit the number
-of policies returned from Senlin server, using the option :option:`--limit` (or
-(or `-l`). For example::
+of policies returned from Senlin server, using the option :option:`--limit`.
+For example::
 
-  $ senlin policy-list -l 1
+  $ openstack cluster policy list --limit 1
   +----------+------+----------------------------+---------------------+
   | id       | name | type                       | created_at          |
   +----------+------+----------------------------+---------------------+
@@ -90,20 +88,20 @@ of policies returned from Senlin server, using the option :option:`--limit` (or
 Yet another option you can specify is the ID of a policy object after which
 you want to see the list starts. In other words, you don't want to see those
 policies with IDs that is or come before the one you specify. You can use the
-option :option:`--marker <ID>` (or option:`-m <ID>`) for this purpose. For
-example::
+option :option:`--marker <ID>` for this purpose. For example::
 
-  $ senlin policy-list -l 1 -m 239d7212-6196-4a89-9446-44d28717d7de
+  $ openstack cluster policy list --limit 1 \
+      --marker 239d7212-6196-4a89-9446-44d28717d7de
 
-Combining the :option:`-m` and the :option:`-l` enables you to do pagination
-on the results returned from the server.
+Combining the :option:`--marker` option and the :option:`--limit` option
+enables you to do pagination on the results returned from the server.
 
 
 Creating a Policy
 ~~~~~~~~~~~~~~~~~
 
 When creating a new policy object, you need a "spec" file in YAML format. You
-may want to check the :command:`policy-type-show` command in
+may want to check the :command:`openstack cluster policy type show` command in
 :ref:`guide-policy-types` for the property names and types for a specific
 :term:`policy type`. For example, the following is a spec for the policy type
 ``senlin.policy.deletion`` (the source can be found in the
@@ -132,7 +130,7 @@ The properties in this spec file are specific to the ``senlin.policy.deletion``
 policy type. To create a policy object using this "spec" file, you can use the
 following command::
 
-  $ senlin policy-create -s deletion_policy.yaml dp01
+  $ opentack cluster policy create --spec deletion_policy.yaml dp01
   +------------+-----------------------------------------------------------+
   | Property   | Value                                                     |
   +------------+-----------------------------------------------------------+
@@ -158,12 +156,12 @@ following command::
 Showing the Details of a Policy
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can use the :command:`policy-show` command to show the properties of a
-policy. You need to provide an identifier to the :program:`senlin` command
+You can use the :command:`openstack cluster policy show` command to show the
+properties of a policy. You need to provide an identifier to the command
 line to indicate the policy object you want to examine. The identifier can be
 the ID, the name or the "short ID" of a policy object. For example::
 
-  $ senlin policy-show dp01
+  $ openstack cluster policy show dp01
   +------------+------------------------------------------------------------+
   | Property   | Value                                                      |
   +------------+------------------------------------------------------------+
@@ -193,12 +191,12 @@ get an error message as well.
 Updating a Policy
 ~~~~~~~~~~~~~~~~~
 
-After a policy object is created, you may want to change some properties of it.
-You can use the :command:`policy-update` to change the "name" of a policy. For
-example, the following command renames a policy object from "``dp01``" to
-"``dp01_bak``"::
+After a policy object is created, you may want to change some properties of
+it.  You can use the :command:`openstack cluster policy update` to change the
+"``name``" of a policy. For example, the following command renames a policy
+object from "``dp01``" to "``dp01_bak``"::
 
-  $ senlin policy-update -n dp01_bak dp01
+  $ openstack cluster policy update --name dp01_bak dp01
 
 If the named policy object could not be found or the parameter value fails the
 validation, you will get an error message.
@@ -210,7 +208,7 @@ Deleting a Policy
 When there are no clusters referencing a policy object, you can delete it from
 the Senlin database using the following command::
 
-  $ senlin policy-delete dp01
+  $ openstack cluster policy delete dp01
 
 Note that in this command you can use the name, the ID or the "short ID" to
 specify the policy object you want to delete. If the specified criteria
