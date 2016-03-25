@@ -20,6 +20,7 @@ import six
 import stubout
 import webob
 
+from senlin.api.common import version_request as vr
 from senlin.api.common import wsgi
 from senlin.common import exception
 from senlin.tests.unit.common import base
@@ -320,3 +321,101 @@ class GetSocketTestCase(base.SenlinTestCase):
             lambda *x, **y: None))
         self.assertRaises(wsgi.socket.error, wsgi.get_socket,
                           wsgi.cfg.CONF.senlin_api, 1234)
+
+
+class FakeController(wsgi.Controller):
+
+    @wsgi.Controller.api_version('2.0')
+    def index(self, req):
+        return {'foo': 'bar'}
+
+    def foo(self, req):
+        return {'bar': 'zoo'}
+
+    @wsgi.Controller.api_version('2.0', '3.0')
+    def dance(self, req):
+        return {'score': 100}
+
+
+class MicroversionTest(base.SenlinTestCase):
+
+    def test_versioned_request_empty(self):
+        data = mock.Mock()
+        request = wsgi.Request.blank('/tests/123')
+        request.version_request = vr.APIVersionRequest('1.0')
+        c = FakeController(data)
+
+        ex = self.assertRaises(exception.MethodVersionNotFound,
+                               c.index, request)
+        self.assertEqual('API version 1.0 is not supported on this method.',
+                         six.text_type(ex))
+
+        res = c.foo(request)
+        self.assertEqual({'bar': 'zoo'}, res)
+
+        ex = self.assertRaises(exception.MethodVersionNotFound,
+                               c.dance, request)
+        self.assertEqual('API version 1.0 is not supported on this method.',
+                         six.text_type(ex))
+
+    def test_versioned_request_lower(self):
+        data = mock.Mock()
+        request = wsgi.Request.blank('/tests/123')
+        request.version_request = vr.APIVersionRequest('2.0')
+        c = FakeController(data)
+
+        res = c.index(request)
+        self.assertEqual({'foo': 'bar'}, res)
+
+        res = c.foo(request)
+        self.assertEqual({'bar': 'zoo'}, res)
+
+        res = c.dance(request)
+        self.assertEqual({'score': 100}, res)
+
+    def test_versioned_request_middle(self):
+        data = mock.Mock()
+        request = wsgi.Request.blank('/tests/123')
+        request.version_request = vr.APIVersionRequest('2.5')
+        c = FakeController(data)
+
+        res = c.index(request)
+        self.assertEqual({'foo': 'bar'}, res)
+
+        res = c.foo(request)
+        self.assertEqual({'bar': 'zoo'}, res)
+
+        res = c.dance(request)
+        self.assertEqual({'score': 100}, res)
+
+    def test_versioned_request_upper(self):
+        data = mock.Mock()
+        request = wsgi.Request.blank('/tests/123')
+        request.version_request = vr.APIVersionRequest('3.0')
+        c = FakeController(data)
+
+        res = c.index(request)
+        self.assertEqual({'foo': 'bar'}, res)
+
+        res = c.foo(request)
+        self.assertEqual({'bar': 'zoo'}, res)
+
+        res = c.dance(request)
+        self.assertEqual({'score': 100}, res)
+
+    def test_versioned_request_too_high(self):
+        data = mock.Mock()
+        request = wsgi.Request.blank('/tests/123')
+        request.version_request = vr.APIVersionRequest('3.5')
+        c = FakeController(data)
+
+        res = c.index(request)
+        self.assertEqual({'foo': 'bar'}, res)
+
+        res = c.foo(request)
+        self.assertEqual({'bar': 'zoo'}, res)
+
+        ex = self.assertRaises(exception.MethodVersionNotFound,
+                               c.dance, request)
+        self.assertEqual('API version 3.5 is not supported on this method.',
+                         six.text_type(ex))

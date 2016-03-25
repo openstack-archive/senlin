@@ -88,6 +88,10 @@ class InvalidAPIVersionString(SenlinException):
                 "must be of format 'major.minor'.")
 
 
+class MethodVersionNotFound(SenlinException):
+    msg_fmt = _("API version %(version)s is not supported on this method.")
+
+
 class MultipleChoices(SenlinException):
     msg_fmt = _("Multiple results found matching the query criteria %(arg)s. "
                 "Please be more specific.")
