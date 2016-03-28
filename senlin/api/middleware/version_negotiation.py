@@ -25,6 +25,7 @@ import webob
 
 from senlin.api.common import version_request as vr
 from senlin.api.common import wsgi
+from senlin.api.openstack import versions as os_ver
 from senlin.common import exception
 
 LOG = logging.getLogger(__name__)
@@ -134,10 +135,10 @@ class VersionNegotiationFilter(wsgi.Middleware):
         except exception.InvalidAPIVersionString as e:
             raise webob.exc.HTTPBadRequest(six.text_type(e))
 
-        if not ver.matches(vr.min_api_version(), vr.max_api_version()):
+        if not ver.matches(os_ver.min_api_version(), os_ver.max_api_version()):
             raise exception.InvalidGlobalAPIVersion(
                 req_ver=api_version,
-                min_ver=six.text_type(vr.min_api_version()),
-                max_ver=six.text_type(vr.max_api_version()))
+                min_ver=six.text_type(os_ver.min_api_version()),
+                max_ver=six.text_type(os_ver.max_api_version()))
 
         req.version_request = ver
