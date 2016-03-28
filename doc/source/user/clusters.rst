@@ -37,7 +37,7 @@ Listing Clusters
 
 The following command shows the clusters managed by the Senlin service::
 
-  $ senlin cluster-list
+  $ openstack cluster list
   +----------+------+--------+---------------------+
   | id       | name | status | created_at          |
   +----------+------+--------+---------------------+
@@ -48,10 +48,9 @@ The following command shows the clusters managed by the Senlin service::
 Note that the first column in the output table is a *short ID* of a cluster
 object. Senlin command line use short IDs to save real estate on screen so
 that more useful information can be shown on a single line. To show the *full
-ID* in the list, you can add the :option:`-F` (or :option:`--full-id`) option
-to the command::
+ID* in the list, you can add the :option:`--full-id` option to the command::
 
-  $ senlin cluster-list -F
+  $ openstack cluster list --full-id
   +--------------------+------+--------+---------------------+------------+
   | id                 | name | status | created_at          | updated_at |
   +--------------------+------+--------+---------------------+------------+
@@ -64,16 +63,15 @@ Sorting the List
 ----------------
 
 You can specify the sorting keys and sorting direction when list clusters,
-using the option :option:`--sort` (or :option:`-o`). The :option:`--sort`
-option accepts a string of format ``key1[:dir1],key2[:dir2],key3[:dir3]``,
-where the keys used are cluster properties and the dirs can be one of ``asc``
-and ``desc``. When omitted, Senlin sorts a given key using ``asc`` as the
-default direction.
+using the option :option:`--sort`. The :option:`--sort` option accepts a
+string of format ``key1[:dir1],key2[:dir2],key3[:dir3]``, where the keys used
+are cluster properties and the dirs can be one of ``asc`` and ``desc``. When
+omitted, Senlin sorts a given key using ``asc`` as the default direction.
 
-For example, the following command instructs the :program:`senlin` command
-line to sort clusters using the ``name`` property in descending order::
+For example, the following command sorts the clusters using the ``name``
+property in descending order::
 
-  $ senlin cluster-list -o name:desc
+  $ openstack cluster list --sort name:desc
 
 When sorting the list of clusters, you can use one of ``name``, ``status``,
 ``init_at``, ``created_at`` and ``updated_at``.
@@ -82,12 +80,12 @@ When sorting the list of clusters, you can use one of ``name``, ``status``,
 Filtering the List
 ------------------
 
-The :program:`senlin` command line also provides options for filtering the
-cluster list at the server side. The option :option:`--filters` (or
-:option:`-f`) can be used for this purpose. For example, the following command
-filters clusters by the ``status`` field::
+The :program:`openstack cluster list` command also provides options for
+filtering the cluster list at the server side. The option :option:`--filters`
+can be used for this purpose. For example, the following command filters the
+clusters by the ``status`` field::
 
-  $ senlin cluster-list -f status=ACTIVE
+  $ openstack cluster list --filters status=ACTIVE
   +----------+------+--------+---------------------+
   | id       | name | status | created_at          |
   +----------+------+--------+---------------------+
@@ -106,9 +104,9 @@ Paginating the Query Results
 
 In case you have a huge collection of clusters, you can limit the number of
 clusters returned from Senlin server each time, using the option
-:option:`--limit <LIMIT>` (or :option:`--l <LIMIT>`). For example::
+:option:`--limit <LIMIT>`. For example::
 
-  $ senlin cluster-list -l 1
+  $ openstack cluster list --limit 1
   +----------+------+--------+---------------------+
   | id       | name | status | created_at          |
   +----------+------+--------+---------------------+
@@ -118,10 +116,10 @@ clusters returned from Senlin server each time, using the option
 Another option you can specify is the ID of a cluster after which you want to
 see the returned list starts. In other words, you don't want to see those
 clusters with IDs that is or come before the one you specify. You can use the
-option :option:`--marker <ID>` (or :option:`-m <ID>`) for this purpose. For
-example::
+option :option:`--marker <ID>` for this purpose. For example::
 
-  $ senlin cluster-list -l 1 -m 2959122e-11c7-4e82-b12f-f49dc5dac270
+  $ openstack cluster list --limit 1 \
+      --marker 2959122e-11c7-4e82-b12f-f49dc5dac270
   +----------+------+--------+---------------------+
   | id       | name | status | created_at          |
   +----------+------+--------+---------------------+
@@ -138,7 +136,7 @@ Creating a Cluster
 To create a cluster, you need to provide the ID or name of the profile to be
 associated with the cluster. For example::
 
-  $ senlin cluster-create --profile qstack c3
+  $ openstack cluster create --profile qstack c3
   +------------------+--------------------------------------+
   | Property         | Value                                |
   +------------------+--------------------------------------+
@@ -164,10 +162,10 @@ associated with the cluster. For example::
 
 From the output you can see that a new cluster object created and put to
 ``INIT`` status. Senlin will verify if profile specified using the option
-:option:`--profile <PROFILE>` (or :option:`-p <PROFILE>`) does exist. The
-server allows the ``<PROFILE>`` value to be a profile name, a profile ID or
-the short ID of a profile object. If the profile is not found or multiple
-profiles found matching the value, you will receive an error message.
+:option:`--profile <PROFILE>` does exist. The server allows the ``<PROFILE>``
+value to be a profile name, a profile ID or the short ID of a profile object.
+If the profile is not found or multiple profiles found matching the value, you
+will receive an error message.
 
 
 Controlling Cluster Capacity
@@ -184,7 +182,10 @@ The following command creates a cluster named "``test_cluster``", with its
 desired capacity set to 2, its minimum size set to 1 and its maximum size set
 to 3::
 
-  $ senlin cluster-create -n 1 -c 2 -m 3 -p myprofile test_cluster
+  $ openstack cluster create --desired_capacity 2 \
+      --min-size 1 --max-size 3 \
+      --profile myprofile \
+      test_cluster
 
 Senlin API and Senlin engine will validate the settings for these capacity
 arguments when receiving this request. An error message will be returned if
@@ -207,10 +208,9 @@ as the "metadata" for the cluster.
 Since cluster operations may take some time to finish when being executed and
 Senlin interacts with the backend services to make it happen, there needs a
 way to verify whether an operation has timed out. When creating a cluster
-using the :program:`senlin` command line tool, you can use the option
-:option:`--timeout <TIMEOUT>` (or :option:`-t <TIMEOUT>`) to specify the
-default time out in number of seconds. This value would be the global setting
-for the cluster.
+using the :program:`opentack cluster create` command line, you can use the
+option :option:`--timeout <TIMEOUT>` to specify the default time out in number
+of seconds. This value would be the global setting for the cluster.
 
 
 Showing Details of a Cluster
@@ -226,7 +226,7 @@ no cluster matching the identifier or if more than one cluster matching it.
 
 An example is shown below::
 
-  $ senlin cluster-show c3
+  $ openstack cluster show c3
   +------------------+--------------------------------------+
   | Property         | Value                                |
   +------------------+--------------------------------------+
@@ -259,20 +259,20 @@ Updating a Cluster
 ~~~~~~~~~~~~~~~~~~
 
 Once a cluster has been created, you change its properties using the
-:program:`senlin` command line. For example, to change the name of a cluster,
-you can use the following command::
+:program:`openstack cluster update` command. For example, to change the name
+of a cluster, you can use the following command::
 
-  $ senlin cluster-update -n web_bak web_servers
+  $ openstack cluster update --name web_bak web_servers
 
-You can change the ``timeout`` property using option :option:`--timeout` (or
-:option:`-t`) for the ``cluster-update`` command. You can change the metadata
-associated with cluster using option :option:`--metadata` (or :option:`-M`).
+You can change the ``timeout`` property using option :option:`--timeout`.
+You can change the metadata associated with cluster using option
+:option:`--metadata`.
 
-Using the :command:`cluster-update` command, you can change the profile used
-by the cluster and its member nodes. The following example launches a global
-update on the cluster for switching to a different profile::
+Using the :command:`openstack cluster update` command, you can change the
+profile used by the cluster and its member nodes. The following example
+launches a global update on the cluster for switching to a different profile::
 
-  $ senlin cluster-update -p fedora21_server web_cluster
+  $ openstack cluster update --profile fedora21_server web_cluster
 
 Suppose the cluster ``web_cluster`` is now using a profile of type
 ``os.nova.server`` where a Fedora 20 image is used, the command above will
@@ -290,21 +290,21 @@ information.
 Resizing a Cluster
 ~~~~~~~~~~~~~~~~~~
 
-The :program:`senlin` tool supports several different commands to resize a
-cluster.
+The :program:`openstack cluster` command line supports several different
+sub-commands to resize a cluster.
 
 
-``cluster-resize``
-------------------
+``openstack cluster resize``
+----------------------------
 
-The command :command:`cluster-resize` takes several arguments that allow you
-to resize a cluster in various ways:
+The command :command:`openstack cluster resize` takes several arguments that
+allow you to resize a cluster in various ways:
 
 - you can change the size of a cluster to a specified number;
 - you can add a specified number of nodes to a cluster or remove a specified
   number of nodes from a cluster;
-- you can instruct :program:`senlin` to resize a cluster by a specified
-  percentage;
+- you can instruct :program:`openstack cluster resize` to resize a cluster by
+  a specified percentage;
 - you can tune the ``min_size`` and/or ``max_size`` property of a cluster when
   resizing it;
 - you can request a size change made on a best-effort basis, if the resize
@@ -313,7 +313,7 @@ to resize a cluster in various ways:
   resize operation.
 
 You can specify one and only one of the following options for the
-:command:`cluster-resize` command:
+:command:`openstack cluster resize` command:
 
 - use :option:`--capacity <CAPACITY>` (:option:`-c <CAPACITY>`) to specify
   the exact value of the new cluster size;
@@ -326,35 +326,33 @@ The following command resizes the cluster ``test_cluster`` to 2 nodes,
 provided that the ``min_size`` is less than or equal to 2 and the ``max_size``
 is either no less than 2 or equal to -1 (indicating that there is no upper
 bound for the cluster size). This command makes use of the option
-:option:`--capacity <CAPACITY>` (or :option:`-c <CAPACITY>`), where
-``<CAPACITY>`` is the new size of the cluster::
+:option:`--capacity <CAPACITY>`, where ``<CAPACITY>`` is the new size of the
+cluster::
 
-  $ senlin cluster-resize -c 2 test_cluster
+  $ openstack cluster resize --capacity 2 test_cluster
 
 Another way to resize a cluster is by specifying the :option:`--adjustment
-<ADJUSTMENT>` (or :option:`-a <ADJUSTMENT>`) option, where ``<ADJUSTMENT>``
-can be a positive or a negative integer giving the number of nodes to add or
-remove respectively. For example, the following command adds two nodes to the
-specified cluster::
+<ADJUSTMENT>` option, where ``<ADJUSTMENT>`` can be a positive or a negative
+integer giving the number of nodes to add or remove respectively. For example,
+the following command adds two nodes to the specified cluster::
 
-  $ senlin cluster-resize -a 2 test_cluster
+  $ openstack cluster resize --adjustment 2 test_cluster
 
 The following command removes two nodes from the specified cluster::
 
-  $ senlin cluster-resize -a -2 test_cluster
+  $ openstack cluster resize --adjustment -2 test_cluster
 
 Yet another way to resize a cluster is by specifying the size change in
-percentage. You will use the option :option:`--percentage <PERCENTAGE>` (or
-:option:`-p <PERCENTAGE>` for this purpose. The ``<PERCENTAGE>`` value can be
-either a positive float value or a negative float value giving the percentage
-of cluster size. For example, the following command increases the cluster size
-by 30%::
+percentage. You will use the option :option:`--percentage <PERCENTAGE>` for
+this purpose. The ``<PERCENTAGE>`` value can be either a positive float value
+or a negative float value giving the percentage of cluster size. For example,
+the following command increases the cluster size by 30%::
 
-  $ senlin cluster-resize -p 30 test_cluster
+  $ openstack cluster resize --percentage 30 test_cluster
 
 The following command decreases the cluster size by 25%::
 
-  $ senlin cluster-resize -p -25 test_cluster
+  $ openstack cluster resize --percentage -25 test_cluster
 
 Senlin engine computes the actual number of nodes to add or to remove based on
 the current size of the cluster, the specified percentage value, the
@@ -371,19 +369,19 @@ the value based on the following rules:
 - If the value of the new capacity is between 0 and -1, Senlin will round it
   down to -1;
 - The new capacity should be in the range of ``min_size`` and ``max_size``,
-  inclusively, unless option :option:`--strict` (or :option:`-s`) is specified;
+  inclusively, unless option :option:`--strict` is specified;
 - The range checking will be performed against the current size constraints if
   no new value for ``min_size`` and/or ``max_size`` is given, or else Senlin
   will first verify the new size constraints and perform range checking
   against the new constraints;
-- If option :option:`--min-step <MIN_STEP>` (or :option:`-t <MIN_STEP>`) is
-  specified, the ``<MIN_STEP>`` value will be used if the absolute value of
-  the new capacity value is less than ``<MIN_STEP>``.
+- If option :option:`--min-step <MIN_STEP>` is specified, the ``<MIN_STEP>``
+  value will be used if the absolute value of the new capacity value is less
+  than ``<MIN_STEP>``.
 
-If option :option:`--strict`` (or :option:`-s`) is specified, Senlin will
-strictly conform to the cluster size constraints. If the capacity value falls
-out of the range, the request will be rejected. When :option:`--strict` is set
-to False, Senlin engine will do a resize on a best-effort basis.
+If option :option:`--strict`` is specified, Senlin will strictly conform to
+the cluster size constraints. If the capacity value falls out of the range,
+the request will be rejected. When :option:`--strict` is set to ``False``,
+Senlin engine will do a resize on a best-effort basis.
 
 Suppose we have a cluster A with ``min_size`` set to 5 and its current size is
 7. If the new capacity value is 4 and option :option:`--strict` is set to
@@ -391,40 +389,41 @@ Suppose we have a cluster A with ``min_size`` set to 5 and its current size is
 capacity value is 4 and the option :option:`--strict` is not set, Senlin will
 try resize the cluster to 5 nodes.
 
-Along with the :command:`cluster-resize` command, you can specify the new size
-constraints using either the option :option:`--min-size` (or :option:`-n`) or
-the option :option:`--max-size` (or :option:`-m`) or both.
+Along with the :command:`openstack cluster resize` command, you can specify
+the new size constraints using either the option :option:`--min-size` or
+the option :option:`--max-size` or both.
 
 
-``cluster-scale-in`` and ``cluster-scale-out``
-----------------------------------------------
+``openstack cluster shrink`` and ``openstack cluster expand``
+-------------------------------------------------------------
 
-The :command:`cluster-scale-in` command and the :command:`cluster-scale-out`
-command are provided for convenience when you want to add specific number of
-nodes to a cluster or remove specific number of nodes from a cluster,
-respectively. These two commands both take an argument ``<COUNT>`` which is a
-positive integer giving the number of nodes to add or remove. For example, the
-following command adds two nodes to the ``web_servers`` cluster::
+The :command:`openstack cluster shrink` command and the
+:command:`openstack cluster expand` command are provided for convenience when
+you want to remove a specific number of nodes from a cluster or add a specific
+number of nodes to a cluster, respectively. These two commands both take an
+argument ``<COUNT>`` which is a positive integer representing the number of
+nodes to add or remove. For example, the following command adds two nodes to
+the ``web_servers`` cluster::
 
-  $ senlin cluster-scale-out -c 2 web_servers
+  $ openstack cluster expand --count 2 web_servers
 
 The following command removes two nodes from the ``web_servers`` cluster::
 
-  $ senlin cluster-scale-in -c 2 web_servers
+  $ openstack cluster shrink --count 2 web_servers
 
-The option :option:`--count <COUNT>` (:option:`-c <COUNT>`) is optional. If
-this option is specified, Senlin will use it for cluster size change, even
-when there are scaling policies attached to the cluster. If this option is
-omitted, however, Senlin will treat it as implicitly set to value 1.
+The option :option:`--count <COUNT>` is optional. If this option is specified,
+Senlin will use it for cluster size change, even when there are scaling
+policies attached to the cluster. If this option is omitted, however, Senlin
+will treat it as implicitly set to value 1.
 
 
 Deleting a Cluster
 ~~~~~~~~~~~~~~~~~~
 
-A cluster can be deleted using the command :command:`cluster-delete`, for
-example::
+A cluster can be deleted using the :command:`openstack cluster delete`
+command, for example::
 
-  $ senlin cluster-delete my_cluster
+  $ openstack cluster delete mycluster
 
 Note that in this command you can use the name, the ID or the "short ID" to
 specify the cluster object you want to delete. If the specified criteria

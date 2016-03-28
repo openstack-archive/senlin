@@ -46,10 +46,11 @@ The developers are focusing on creating an OpenStack style project using
 OpenStack design tenets, implemented in Python. We have started with a close
 interaction with Heat project.
 
-senlin
-------
+senlinclient
+------------
 
-The :program:`senlin` tool is a command line interface that communicates with
+The :program:`senlinclient` package provides a plugin for the openstackclient
+tool so you have a command line interface to communicate with
 the :program:`senlin-api` to manage clusters, nodes, profiles, policies,
 actions and events. End developers could also use the Senlin REST API directly.
 

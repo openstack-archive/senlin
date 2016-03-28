@@ -58,7 +58,7 @@ Listing Policy Types
 Senlin server comes with some built-in policy types. You can check the list
 of policy types using the following command::
 
-  $ senlin policy-type-list
+  $ openstack cluster policy type list
   +--------------------------------+
   | name                           |
   +--------------------------------+
@@ -82,7 +82,7 @@ that describes the names and types of the properties that can be accepted. To
 show the schema of a specific policy type along with other properties, you can
 use the following command::
 
-  $ senlin policy-type-show senlin.policy.deletion
+  $ openstack cluster policy type show senlin.policy.deletion
   name: senlin.policy.deletion
   schema:
     criteria:
@@ -132,7 +132,7 @@ The default output from the :command:`policy-type-show` command is in YAML
 format. You can choose to show the spec schema in JSON format by specifying
 the the :option:`-F json` option as shown below::
 
-  $ senlin policy-type-show -F json senlin.policy.deletion
+  $ openstack cluster policy type show -F json senlin.policy.deletion
 
 For information on how to manage the relationship between a policy and a
 cluster, please refer to :ref:`guide-bindings`.

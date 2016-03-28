@@ -85,4 +85,4 @@ running single tests by providing a regex::
 A more convenient way to run specific test is to name the unit test directly,
 as shown below::
 
-  $ python -m testtools.run senlin.tests.db.test_cluster_api
+  $ python -m testtools.run senlin.tests.unit.db.test_cluster_api

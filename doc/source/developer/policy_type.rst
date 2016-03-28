@@ -254,5 +254,5 @@ by a restart of the ``senlin-engine`` process.
   $ sudo pip install -e .
 
 
-Now, when you do a ``senlin policy-type-list``, you will see your policy
-type listed along with other existing policy types.
+Now, when you do a :command:`openstack cluster policy type list`, you will see
+your policy type listed along with other existing policy types.
