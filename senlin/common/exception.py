@@ -92,6 +92,11 @@ class MethodVersionNotFound(SenlinException):
     msg_fmt = _("API version %(version)s is not supported on this method.")
 
 
+class InvalidGlobalAPIVersion(SenlinException):
+    msg_fmt = _("Version %(req_ver)s is not supported by the API. Minimum is "
+                "%(min_ver)s and maximum is %(max_ver)s.")
+
+
 class MultipleChoices(SenlinException):
     msg_fmt = _("Multiple results found matching the query criteria %(arg)s. "
                 "Please be more specific.")

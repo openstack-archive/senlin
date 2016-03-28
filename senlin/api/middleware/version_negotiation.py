@@ -23,7 +23,7 @@ from oslo_log import log as logging
 import six
 import webob
 
-from senlin.api.common import version_request
+from senlin.api.common import version_request as vr
 from senlin.api.common import wsgi
 from senlin.common import exception
 
@@ -130,7 +130,14 @@ class VersionNegotiationFilter(wsgi.Middleware):
                     api_version = svc_ver[1]
                     break
         try:
-            vr = version_request.APIVersionRequest(api_version)
-            req.version_request = vr
+            ver = vr.APIVersionRequest(api_version)
         except exception.InvalidAPIVersionString as e:
             raise webob.exc.HTTPBadRequest(six.text_type(e))
+
+        if not ver.matches(vr.min_api_version(), vr.max_api_version()):
+            raise exception.InvalidGlobalAPIVersion(
+                req_ver=api_version,
+                min_ver=six.text_type(vr.min_api_version()),
+                max_ver=six.text_type(vr.max_api_version()))
+
+        req.version_request = ver

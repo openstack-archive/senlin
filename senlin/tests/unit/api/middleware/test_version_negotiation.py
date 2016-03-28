@@ -16,6 +16,7 @@ import webob
 from senlin.api.common import version_request as vr
 from senlin.api.common import wsgi
 from senlin.api.middleware import version_negotiation as vn
+from senlin.common import exception
 from senlin.tests.unit.common import base
 
 
@@ -162,7 +163,7 @@ class VersionNegotiationMiddlewareTest(base.SenlinTestCase):
         expected = vr.APIVersionRequest(wsgi.DEFAULT_API_VERSION)
         self.assertEqual(expected, request.version_request)
 
-    def test_check_version_request_invalid(self):
+    def test_check_version_request_invalid_format(self):
         request = webob.Request({'PATH_INFO': 'resource'})
         request.headers[wsgi.API_VERSION_KEY] = 'cluster 2.03'
         version_negotiation = vn.VersionNegotiationFilter(
@@ -174,3 +175,18 @@ class VersionNegotiationMiddlewareTest(base.SenlinTestCase):
         self.assertEqual("API Version String (2.03) is of invalid format. It "
                          "must be of format 'major.minor'.",
                          six.text_type(ex))
+
+    def test_check_version_request_invalid_version(self):
+        request = webob.Request({'PATH_INFO': 'resource'})
+        request.headers[wsgi.API_VERSION_KEY] = 'cluster 2.3'
+        version_negotiation = vn.VersionNegotiationFilter(
+            self._version_controller_factory, None, None)
+
+        ex = self.assertRaises(exception.InvalidGlobalAPIVersion,
+                               version_negotiation.check_version_request,
+                               request)
+        expected = ("Version 2.3 is not supported by the API. Minimum is "
+                    "%(min_ver)s and maximum is %(max_ver)s." %
+                    {'min_ver': str(vr.min_api_version()),
+                     'max_ver': str(vr.max_api_version())})
+        self.assertEqual(expected, six.text_type(ex))
