@@ -199,6 +199,24 @@ class ResourceTest(base.SenlinTestCase):
                               resource, request)
         self.assertEqual(message_es, six.text_type(e.exc))
 
+    def test_resource_call_with_version_header(self):
+        class Controller(object):
+            def dance(self, req):
+                return {'foo': 'bar'}
+
+        actions = {'action': 'dance'}
+        env = {'wsgiorg.routing_args': [None, actions]}
+        request = wsgi.Request.blank('/tests/123', environ=env)
+        request.version_request = vr.APIVersionRequest('1.0')
+
+        resource = wsgi.Resource(Controller())
+        resp = resource(request)
+        self.assertEqual('{"foo": "bar"}', encodeutils.safe_decode(resp.body))
+        self.assertTrue(hasattr(resp, 'headers'))
+        expected = 'clustering 1.0'
+        self.assertEqual(expected, resp.headers['OpenStack-API-Version'])
+        self.assertEqual('OpenStack-API-Version', resp.headers['Vary'])
+
 
 class ControllerTest(base.SenlinTestCase):
 
