@@ -345,6 +345,10 @@ class ServerProfile(base.Profile):
             kwargs['networks'] = self._resolve_network(networks,
                                                        self.neutron(obj))
 
+        secgroups = self.properties[self.SECURITY_GROUPS]
+        if secgroups:
+            kwargs['security_groups'] = [{'name': sg} for sg in secgroups]
+
         if 'placement' in obj.data:
             if 'zone' in obj.data['placement']:
                 kwargs['availability_zone'] = obj.data['placement']['zone']
