@@ -198,7 +198,7 @@ in the action's ``data`` property, the policy proceeds to parse the raw inputs
 of the action.
 
 The output from the parser may indicate an invalid combination of input
-values. If that is the case, the policy check failes with the action's
+values. If that is the case, the policy check fails with the action's
 ``data`` set to something like the following example:
 
 ::
@@ -217,4 +217,4 @@ When the placement policy finds out the number of nodes to create (or delete),
 it proceeds to calculate a distribution plan. If the action is about growing
 the size of the cluster, the logic and the output format are the same as that
 have been outlined in scenario *S2*. Otherwise, the logic and the output
-format are identical to that have been describled in scenario *S1*.
+format are identical to that have been described in scenario *S1*.

@@ -125,7 +125,7 @@
                                     file="${basedir}/target/docbkx/pdf/bk-senlin-admin-guide.pdf"
                                     tofile="${basedir}/target/docbkx/webhelp/${release.path.name}/senlin-admin/bk-senlin-admin-guide-${release.path.name}.pdf"/>
 
-                                <!--Deletes leftover uneeded directories -->
+                                <!--Deletes leftover unneeded directories -->
 
                                 <delete dir="${basedir}/target/docbkx/webhelp/bk-senlin-admin-guide"/>
 

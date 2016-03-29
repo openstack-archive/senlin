@@ -195,7 +195,7 @@ in the action's ``data`` property, the policy proceeds to parse the raw inputs
 of the action.
 
 The output from the parser may indicate an invalid combination of input
-values. If that is the case, the policy check failes with the action's
+values. If that is the case, the policy check fails with the action's
 ``data`` set to something like the following example:
 
 ::

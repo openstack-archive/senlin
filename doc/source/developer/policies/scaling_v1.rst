@@ -70,7 +70,7 @@ something similar to the following example:
   }
 
 If the validation succeeds, the ``data`` property of the action is updated
-accordingly (see Senarios below).
+accordingly (see Scenarios below).
 
 
 Scenarios
