@@ -274,6 +274,26 @@ class ServerProfile(base.Profile):
         '''Validate if the spec has provided valid info for server creation.'''
         return True
 
+    def _resolve_bdm(self, bdm):
+        for bd in bdm:
+            for key in self.BDM2_KEYS:
+                if bd[key] is None:
+                    del bd[key]
+        return bdm
+
+    def _resolve_network(self, networks, client):
+        for network in networks:
+            net_name_id = network.get(self.NETWORK)
+            if net_name_id:
+                res = client.network_get(net_name_id)
+                network['uuid'] = res.id
+                del network[self.NETWORK]
+                if network['port'] is None:
+                    del network['port']
+                if network['fixed-ip'] is None:
+                    del network['fixed-ip']
+        return networks
+
     def do_create(self, obj):
         '''Create a server using the given profile.'''
         kwargs = {}
@@ -312,11 +332,8 @@ class ServerProfile(base.Profile):
 
         block_device_mapping_v2 = self.properties[self.BLOCK_DEVICE_MAPPING_V2]
         if block_device_mapping_v2 is not None:
-            for bdm in block_device_mapping_v2:
-                for key in self.BDM2_KEYS:
-                    if bdm[key] is None:
-                        del bdm[key]
-            kwargs['block_device_mapping_v2'] = block_device_mapping_v2
+            kwargs['block_device_mapping_v2'] = self._resolve_bdm(
+                block_device_mapping_v2)
 
         user_data = self.properties[self.USER_DATA]
         if user_data is not None:
@@ -325,17 +342,8 @@ class ServerProfile(base.Profile):
 
         networks = self.properties[self.NETWORKS]
         if networks is not None:
-            for network in networks:
-                net_name_id = network.get(self.NETWORK)
-                if net_name_id:
-                    res = self.neutron(obj).network_get(net_name_id)
-                    network['uuid'] = res.id
-                    del network[self.NETWORK]
-                    if network['port'] is None:
-                        del network['port']
-                    if network['fixed-ip'] is None:
-                        del network['fixed-ip']
-            kwargs['networks'] = networks
+            kwargs['networks'] = self._resolve_network(networks,
+                                                       self.neutron(obj))
 
         if 'placement' in obj.data:
             if 'zone' in obj.data['placement']:
