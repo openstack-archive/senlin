@@ -131,7 +131,7 @@ If the ``credentials`` to use is not explicitly provided, Senlin will assume
 that the receiver will be triggered in the future using the the requester's
 credential. To make sure the future authentication succeeds, Senlin engine
 will extract the ``user`` ID from the invoking context and create a trust
-between the user and the the ``senlin`` service account, just like the way how
+between the user and the ``senlin`` service account, just like the way how
 Senlin deals with other operations.
 
 The requester must be either the owner of the targeted cluster or he/she has

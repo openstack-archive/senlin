@@ -130,7 +130,7 @@ Here, each property has the following attributes:
 
 The default output from the :command:`policy-type-show` command is in YAML
 format. You can choose to show the spec schema in JSON format by specifying
-the the :option:`-F json` option as shown below::
+the :option:`-F json` option as shown below::
 
   $ openstack cluster policy type show -F json senlin.policy.deletion
 
