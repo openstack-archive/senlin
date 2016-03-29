@@ -354,6 +354,10 @@ class FakeController(wsgi.Controller):
     def dance(self, req):
         return {'score': 100}
 
+    @wsgi.Controller.api_version('4.0')   # noqa
+    def dance(self, req):
+        return {'score': 60}
+
 
 class MicroversionTest(base.SenlinTestCase):
 
@@ -437,3 +441,16 @@ class MicroversionTest(base.SenlinTestCase):
                                c.dance, request)
         self.assertEqual('API version 3.5 is not supported on this method.',
                          six.text_type(ex))
+
+    def test_vserioned_request_inner_functions(self):
+        data = mock.Mock()
+        request = wsgi.Request.blank('/tests/123')
+        request.version_request = vr.APIVersionRequest('3.0')
+        c = FakeController(data)
+
+        res = c.dance(request)
+        self.assertEqual({'score': 100}, res)
+
+        request.version_request = vr.APIVersionRequest('4.0')
+        res = c.dance(request)
+        self.assertEqual({'score': 60}, res)
