@@ -16,6 +16,7 @@ import webob
 from senlin.api.common import version_request as vr
 from senlin.api.common import wsgi
 from senlin.api.middleware import version_negotiation as vn
+from senlin.api.openstack import versions as os_ver
 from senlin.common import exception
 from senlin.tests.unit.common import base
 
@@ -187,6 +188,6 @@ class VersionNegotiationMiddlewareTest(base.SenlinTestCase):
                                request)
         expected = ("Version 2.3 is not supported by the API. Minimum is "
                     "%(min_ver)s and maximum is %(max_ver)s." %
-                    {'min_ver': str(vr.min_api_version()),
-                     'max_ver': str(vr.max_api_version())})
+                    {'min_ver': str(os_ver.min_api_version()),
+                     'max_ver': str(os_ver.max_api_version())})
         self.assertEqual(expected, six.text_type(ex))
