@@ -15,6 +15,8 @@ import re
 asse_equal_end_with_none_re = re.compile(r"assertEqual\(.*?,\s+None\)$")
 asse_equal_start_with_none_re = re.compile(r"assertEqual\(None,")
 mutable_default_args = re.compile(r"^\s*def .+\((.+=\{\}|.+=\[\])")
+api_version_dec = re.compile(r"@.*api_version")
+decorator_re = re.compile(r"@.*")
 
 
 def assert_equal_none(logical_line):
@@ -46,7 +48,17 @@ def no_mutable_default_args(logical_line):
         yield (0, msg)
 
 
+def check_api_version_decorator(logical_line, previous_logical, blank_before,
+                                filename):
+    msg = ("S321: The api_version decorator must be the first decorator on "
+           "a method.")
+    if (blank_before == 0 and re.match(api_version_dec, logical_line) and
+            re.match(decorator_re, previous_logical)):
+        yield(0, msg)
+
+
 def factory(register):
     register(assert_equal_none)
     register(use_jsonutils)
     register(no_mutable_default_args)
+    register(check_api_version_decorator)
