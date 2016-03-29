@@ -174,10 +174,10 @@ class ClusterController(wsgi.Controller):
         cluster = self.rpc_client.cluster_create(
             req.context, data.name, data.desired_capacity, data.profile,
             data.min_size, data.max_size, data.metadata, data.timeout)
-
+        action_id = cluster.pop('action')
         result = {
             'cluster': cluster,
-            'location': '/clusters/%s' % cluster['id'],
+            'location': '/actions/%s' % action_id,
         }
         return result
 

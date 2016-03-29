@@ -278,6 +278,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'cluster_id': None,
             'role': None,
             'metadata': {},
+            'action': 'fake_action'
         }
 
         req = self._post('/nodes', jsonutils.dumps(body))
@@ -299,7 +300,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         expected = {
             'node': engine_response,
-            'location': '/nodes/test_node_id'
+            'location': '/actions/fake_action'
         }
         self.assertEqual(expected, resp)
 

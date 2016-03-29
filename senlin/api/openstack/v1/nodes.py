@@ -115,9 +115,10 @@ class NodeController(wsgi.Controller):
                                            data.cluster_id(),
                                            data.profile_id(),
                                            data.role(), data.metadata())
+        action_id = node.pop('action')
         result = {
             'node': node,
-            'location': '/nodes/%s' % node['id']
+            'location': '/actions/%s' % action_id
         }
         return result
 

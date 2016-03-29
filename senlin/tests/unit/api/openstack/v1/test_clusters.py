@@ -466,6 +466,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'max_size': 0,
             'metadata': {},
             'timeout': 60,
+            'action': 'fake_action'
         }
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -487,7 +488,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         )
 
         self.assertEqual(engine_response, resp['cluster'])
-        self.assertEqual('/clusters/FAKE_ID', resp['location'])
+        self.assertEqual('/actions/fake_action', resp['location'])
 
     def test_create_maleformed_body(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
