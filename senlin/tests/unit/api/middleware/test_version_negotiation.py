@@ -191,3 +191,14 @@ class VersionNegotiationMiddlewareTest(base.SenlinTestCase):
                     {'min_ver': str(os_ver.min_api_version()),
                      'max_ver': str(os_ver.max_api_version())})
         self.assertEqual(expected, six.text_type(ex))
+
+    def test_check_version_request_latest(self):
+        request = webob.Request({'PATH_INFO': 'resource'})
+        request.headers[wsgi.API_VERSION_KEY] = 'cluster Latest'
+        version_negotiation = vn.VersionNegotiationFilter(
+            self._version_controller_factory, None, None)
+
+        version_negotiation.check_version_request(request)
+        self.assertIsNotNone(request.version_request)
+        expected = os_ver.max_api_version()
+        self.assertEqual(expected, request.version_request)

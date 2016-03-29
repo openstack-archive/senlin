@@ -130,6 +130,10 @@ class VersionNegotiationFilter(wsgi.Middleware):
                 if svc_ver[0].lower() in wsgi.SERVICE_ALIAS:
                     api_version = svc_ver[1]
                     break
+        if api_version.lower() == 'latest':
+            req.version_request = os_ver.max_api_version()
+            return
+
         try:
             ver = vr.APIVersionRequest(api_version)
         except exception.InvalidAPIVersionString as e:
