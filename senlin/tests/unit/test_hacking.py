@@ -10,6 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import mock
+import pep8
+import textwrap
+
 from senlin.hacking import checks
 from senlin.tests.unit.common import base
 
@@ -48,3 +52,49 @@ class HackingTestCase(base.SenlinTestCase):
 
         self.assertEqual(0, len(list(checks.no_mutable_default_args(
             "defined, undefined = [], {}"))))
+
+    @mock.patch("pep8._checks",
+                {'physical_line': {}, 'logical_line': {}, 'tree': {}})
+    def test_api_version_decorator(self):
+        code = """
+            @some_other_decorator
+            @wsgi.api_version("2.2")
+            def my_method():
+                pass
+            """
+
+        lines = textwrap.dedent(code).strip().splitlines(True)
+
+        pep8.register_check(checks.check_api_version_decorator)
+        checker = pep8.Checker(filename=None, lines=lines)
+        checker.check_all()
+        checker.report._deferred_print.sort()
+
+        actual_error = checker.report._deferred_print[0]
+
+        self.assertEqual(2, actual_error[0])
+        self.assertEqual(0, actual_error[1])
+        self.assertEqual('S321', actual_error[2])
+        self.assertEqual(' The api_version decorator must be the first '
+                         'decorator on a method.',
+                         actual_error[3])
+
+    @mock.patch("pep8._checks",
+                {'physical_line': {}, 'logical_line': {}, 'tree': {}})
+    def test_api_version_decorator_good(self):
+        code = """
+            class SomeController():
+                @wsgi.api_version("2.2")
+                def my_method():
+                    pass
+
+            """
+        lines = textwrap.dedent(code).strip().splitlines(True)
+
+        pep8.register_check(checks.check_api_version_decorator)
+        checker = pep8.Checker(filename=None, lines=lines)
+        checker.check_all()
+        checker.report._deferred_print.sort()
+
+        actual_error = checker.report._deferred_print
+        self.assertEqual(0, len(actual_error))

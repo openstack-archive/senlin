@@ -13,6 +13,7 @@ Senlin Specific Commandments
 - [S319] Use ``jsonutils`` functions rather than using the ``json`` package
          directly.
 - [S320] Default arguments of a method should not be mutable.
+- [S321] The api_version decorator has to be the first decorator on a method.
 
 Working on APIs
 ---------------
