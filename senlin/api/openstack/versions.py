@@ -28,7 +28,7 @@ from senlin.api.common import version_request as vr
 # formats or even originate in the API code layer.
 #
 # The minimum and maximum versions of the API supported, where the default api
-# version request is defined to be the the minimum version supported.
+# version request is defined to be the minimum version supported.
 _MIN_API_VERSION = "1.0"
 _MAX_API_VERSION = "1.0"
 DEFAULT_API_VERSION = _MIN_API_VERSION

@@ -118,7 +118,7 @@ option :option:`--marker <ID>` for this purpose. For example::
       --marker 2959122e-11c7-4e82-b12f-f49dc5dac270
 
 At most 20 action records will be returned in this example and its UUID comes
-after the the one specified from the command line.
+after the one specified from the command line.
 
 
 Showing Details of an Event

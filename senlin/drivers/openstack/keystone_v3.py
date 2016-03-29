@@ -42,7 +42,7 @@ class KeystoneClient(base.DriverBase):
     @sdk.translate_exception
     def user_get(self, name_or_id, ignore_missing=False):
         # Note: Since default keystone policy will block non-admin user to
-        # get/list user(s), this function may not be workable. Pleaes use
+        # get/list user(s), this function may not be workable. Please use
         # get_user_id method to get the ID of user if needed.
         user = self.conn.identity.find_user(
             name_or_id, ignore_missing=ignore_missing)
@@ -107,7 +107,7 @@ class KeystoneClient(base.DriverBase):
 
         :param trustor: ID of the user who is the trustor.
         :param trustee: ID of the user who is the trustee.
-        :param project: Scope of of the trust which is a project ID.
+        :param project: Scope of the trust which is a project ID.
         :param roles: List of roles the trustee will inherit from the trustor.
         :param impersonation: Whether the trustee is allowed to impersonate
                               the trustor.
@@ -145,7 +145,7 @@ class KeystoneClient(base.DriverBase):
     @classmethod
     @sdk.translate_exception
     def get_user_id(cls, **creds):
-        '''Get ID of the user with given creddential'''
+        '''Get ID of the user with given credential'''
 
         access_info = sdk.authenticate(**creds)
         return access_info['user_id']
