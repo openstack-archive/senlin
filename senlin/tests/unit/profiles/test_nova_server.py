@@ -216,7 +216,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
                 'same_host': 'HOST_ID',
                 'group': 'SERVER_GROUP_1',
             },
-            security_groups=['HIGH_SECURITY_GROUP'],
+            security_groups=[{'name': 'HIGH_SECURITY_GROUP'}],
             user_data='FAKE_USER_DATA',
             availability_zone='AZ1',
         )
@@ -318,7 +318,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
                      metadata={
                          'cluster': 'FAKE_CLUSTER_ID',
                      },
-                     security_groups=['HIGH_SECURITY_GROUP'])
+                     security_groups=[{'name': 'HIGH_SECURITY_GROUP'}])
 
         novaclient.server_create.assert_called_once_with(**attrs)
         self.assertEqual(nova_server.id, server_id)
@@ -360,7 +360,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
                      flavorRef='FAKE_FLAVOR_ID',
                      name='FAKE_SERVER_NAME',
                      metadata={},
-                     security_groups=['HIGH_SECURITY_GROUP'])
+                     security_groups=[{'name': 'HIGH_SECURITY_GROUP'}])
 
         novaclient.server_create.assert_called_once_with(**attrs)
         self.assertEqual(nova_server.id, server_id)
@@ -401,7 +401,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
                      flavorRef='FAKE_FLAVOR_ID',
                      name='TEST-SERVER',
                      metadata={},
-                     security_groups=['HIGH_SECURITY_GROUP'])
+                     security_groups=[{'name': 'HIGH_SECURITY_GROUP'}])
 
         novaclient.server_create.assert_called_once_with(**attrs)
         self.assertEqual(nova_server.id, server_id)
@@ -473,7 +473,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
                      flavorRef='FAKE_FLAVOR_ID',
                      name='FAKE_SERVER_NAME',
                      metadata={},
-                     security_groups=['HIGH_SECURITY_GROUP'],
+                     security_groups=[{'name': 'HIGH_SECURITY_GROUP'}],
                      block_device_mapping_v2=bdm_v2)
 
         novaclient.server_create.assert_called_once_with(**attrs)
