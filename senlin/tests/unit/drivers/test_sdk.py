@@ -66,6 +66,17 @@ class OpenStackSDKTest(base.SenlinTestCase):
         self.assertEqual(404, ex.code)
         self.assertEqual('A message.', six.text_type(ex))
 
+    def test_parse_exception_http_exception_no_details_no_response(self):
+        details = "An error message"
+
+        raw = sdk.exc.ResourceNotFound('A message.', details, http_status=404)
+        raw.details = None
+        raw.response = None
+        ex = self.assertRaises(senlin_exc.InternalError,
+                               sdk.parse_exception, raw)
+        self.assertEqual(404, ex.code)
+        self.assertEqual('A message.', six.text_type(ex))
+
     def test_parse_exception_http_exception_code_displaced(self):
         details = jsonutils.dumps({
             'code': 400,

@@ -41,7 +41,7 @@ def parse_exception(ex):
             code = ex.http_status
         message = ex.message
         data = {}
-        if ex.details is None:
+        if ex.details is None and ex.response is not None:
             data = ex.response.json()
         else:
             try:
