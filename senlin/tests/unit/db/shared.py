@@ -74,7 +74,7 @@ def create_cluster(ctx, profile, **kwargs):
         'init_at': tu.utcnow(),
         'status': 'INIT',
         'status_reason': 'Just Initialized',
-        'metadata': {},
+        'meta_data': {},
     }
     values.update(kwargs)
     if 'project' in kwargs:
@@ -102,7 +102,7 @@ def create_node(ctx, cluster, profile, **kwargs):
         'updated_at': None,
         'status': 'ACTIVE',
         'status_reason': 'create complete',
-        'metadata': jsonutils.loads('{"foo": "123"}'),
+        'meta_data': jsonutils.loads('{"foo": "123"}'),
         'data': jsonutils.loads('{"key1": "value1"}'),
     }
     values.update(kwargs)

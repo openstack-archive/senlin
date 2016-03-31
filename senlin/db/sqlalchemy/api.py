@@ -16,13 +16,14 @@ Implementation of SQLAlchemy backend.
 
 import six
 import sys
+import threading
 
 from oslo_config import cfg
-from oslo_db.sqlalchemy import session as db_session
+from oslo_db.sqlalchemy import enginefacade
 from oslo_db.sqlalchemy import utils as sa_utils
 from oslo_log import log as logging
 from oslo_utils import timeutils
-import sqlalchemy as sa
+from sqlalchemy.orm import joinedload_all
 
 from senlin.common import consts
 from senlin.common import exception
@@ -37,39 +38,31 @@ LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 CONF.import_opt('max_events_per_cluster', 'senlin.common.config')
 
-_facade = None
-_sa_create_engine_orig = sa.create_engine
+_main_context_manager = None
+_CONTEXT = threading.local()
 
 
-def _get_facade():
-    global _facade
-
-    if not _facade:
-        _facade = db_session.EngineFacade(
-            cfg.CONF.database.connection,
-            expire_on_commit=True,
-            **dict(six.iteritems(cfg.CONF.database))
-        )
-    return _facade
-
-
-def _sa_create_engine_wrapper(*args, **kwargs):
-
-    if args[0].drivername != 'sqlite':
-        kwargs['isolation_level'] = 'READ_COMMITTED'
-
-    return _sa_create_engine_orig(*args, **kwargs)
+def _get_main_context_manager():
+    global _main_context_manager
+    if not _main_context_manager:
+        _main_context_manager = enginefacade.transaction_context()
+    return _main_context_manager
 
 
 def get_engine():
-    if sa.create_engine != _sa_create_engine_wrapper:
-        sa.create_engine = _sa_create_engine_wrapper
-
-    return _get_facade().get_engine()
+    return _get_main_context_manager().get_legacy_facade().get_engine()
 
 
 def get_session():
-    return _get_facade().get_session()
+    return _get_main_context_manager().get_legacy_facade().get_session()
+
+
+def session_for_read():
+    return _get_main_context_manager().reader.using(_CONTEXT)
+
+
+def session_for_write():
+    return _get_main_context_manager().writer.using(_CONTEXT)
 
 
 def get_backend():
@@ -77,14 +70,10 @@ def get_backend():
     return sys.modules[__name__]
 
 
-def _session(context):
-    return (context and context.session) or get_session()
-
-
 def model_query(context, *args):
-    session = _session(context)
-    query = session.query(*args)
-    return query
+    with session_for_read() as session:
+        query = session.query(*args).options(joinedload_all('*'))
+        return query
 
 
 def query_by_short_id(context, model, short_id, project_safe=True):
@@ -119,15 +108,15 @@ def query_by_name(context, model, name, project_safe=True):
 
 # Clusters
 def cluster_create(context, values):
-    cluster_ref = models.Cluster()
-    cluster_ref.update(values)
-    cluster_ref.save(_session(context))
-    return cluster_ref
+    with session_for_write() as session:
+        cluster_ref = models.Cluster()
+        cluster_ref.update(values)
+        session.add(cluster_ref)
+        return cluster_ref
 
 
 def cluster_get(context, cluster_id, project_safe=True):
-    query = model_query(context, models.Cluster)
-    cluster = query.get(cluster_id)
+    cluster = model_query(context, models.Cluster).get(cluster_id)
 
     if cluster is None:
         return None
@@ -171,15 +160,15 @@ def cluster_get_all(context, limit=None, marker=None, sort=None, filters=None,
 
 
 def cluster_next_index(context, cluster_id):
-    session = _session(context)
-    cluster = session.query(models.Cluster).get(cluster_id)
-    if cluster is None:
-        return 0
+    with session_for_write() as session:
+        cluster = session.query(models.Cluster).get(cluster_id)
+        if cluster is None:
+            return 0
 
-    next_index = cluster.next_index
-    cluster.next_index += 1
-    cluster.save(session)
-    return next_index
+        next_index = cluster.next_index
+        cluster.next_index += 1
+        cluster.save(session)
+        return next_index
 
 
 def cluster_count_all(context, filters=None, project_safe=True):
@@ -189,48 +178,45 @@ def cluster_count_all(context, filters=None, project_safe=True):
 
 
 def cluster_update(context, cluster_id, values):
-    cluster = cluster_get(context, cluster_id)
+    with session_for_write() as session:
+        cluster = session.query(models.Cluster).get(cluster_id)
 
-    if not cluster:
-        raise exception.ClusterNotFound(cluster=cluster_id)
+        if not cluster:
+            raise exception.ClusterNotFound(cluster=cluster_id)
 
-    cluster.update(values)
-    cluster.save(_session(context))
+        cluster.update(values)
+        cluster.save(session)
 
 
 def cluster_delete(context, cluster_id):
-    session = _session(context)
+    with session_for_write() as session:
+        cluster = session.query(models.Cluster).get(cluster_id)
+        if cluster is None:
+            raise exception.ClusterNotFound(cluster=cluster_id)
 
-    cluster = session.query(models.Cluster).get(cluster_id)
-    if cluster is None:
-        raise exception.ClusterNotFound(cluster=cluster_id)
+        query = session.query(models.Node).filter_by(cluster_id=cluster_id)
+        nodes = query.all()
 
-    session.begin()
-    query = session.query(models.Node).filter_by(cluster_id=cluster_id)
-    nodes = query.all()
+        if len(nodes) != 0:
+            for node in nodes:
+                session.delete(node)
 
-    if len(nodes) != 0:
-        for node in nodes:
-            session.delete(node)
+        # Delete all related cluster_policies records
+        for cp in cluster.policies:
+            session.delete(cp)
 
-    # Delete all related cluster_policies records
-    for cp in cluster.policies:
-        session.delete(cp)
-
-    # Delete cluster
-    session.delete(cluster)
-    session.commit()
-    session.flush()
+        # Delete cluster
+        session.delete(cluster)
 
 
 # Nodes
 def node_create(context, values):
     # This operation is always called with cluster and node locked
-    session = _session(context)
-    node = models.Node()
-    node.update(values)
-    node.save(session)
-    return node
+    with session_for_write() as session:
+        node = models.Node()
+        node.update(values)
+        session.add(node)
+        return node
 
 
 def node_get(context, node_id, project_safe=True):
@@ -298,59 +284,46 @@ def node_update(context, node_id, values):
     :param values: A dictionary of values to be updated on the node.
     :raises ClusterNotFound: The specified node does not exist in database.
     '''
-    session = _session(context)
-    session.begin()
+    with session_for_write() as session:
+        node = session.query(models.Node).get(node_id)
+        if not node:
+            raise exception.NodeNotFound(node=node_id)
 
-    node = session.query(models.Node).get(node_id)
-    if not node:
-        session.rollback()
-        raise exception.NodeNotFound(node=node_id)
-
-    node.update(values)
-    node.save(session)
-    if 'status' in values and node.cluster_id is not None:
-        cluster = session.query(models.Cluster).get(node.cluster_id)
-        if cluster is not None:
-            if values['status'] == 'ERROR':
-                cluster.status = 'WARNING'
-            if 'status_reason' in values:
-                cluster.status_reason = _('Node %(node)s: %(reason)s') % {
-                    'node': node.name, 'reason': values['status_reason']}
-            cluster.save(session)
-    session.commit()
+        node.update(values)
+        node.save(session)
+        if 'status' in values and node.cluster_id is not None:
+            cluster = session.query(models.Cluster).get(node.cluster_id)
+            if cluster is not None:
+                if values['status'] == 'ERROR':
+                    cluster.status = 'WARNING'
+                if 'status_reason' in values:
+                    cluster.status_reason = _('Node %(node)s: %(reason)s') % {
+                        'node': node.name, 'reason': values['status_reason']}
+                cluster.save(session)
 
 
 def node_migrate(context, node_id, to_cluster, timestamp, role=None):
-    session = _session(context)
-    session.begin()
-
-    node = session.query(models.Node).get(node_id)
-    from_cluster = node.cluster_id
-    if from_cluster:
-        node.index = -1
-    if to_cluster:
-        cluster2 = session.query(models.Cluster).get(to_cluster)
-        index = cluster2.next_index
-        cluster2.next_index += 1
-        node.index = index
-    node.cluster_id = to_cluster if to_cluster else ''
-    node.updated_at = timestamp
-    node.role = role
-    session.commit()
-    return node
+    with session_for_write() as session:
+        node = session.query(models.Node).get(node_id)
+        from_cluster = node.cluster_id
+        if from_cluster:
+            node.index = -1
+        if to_cluster:
+            node.index = cluster_next_index(context, to_cluster)
+        node.cluster_id = to_cluster if to_cluster else ''
+        node.updated_at = timestamp
+        node.role = role
+        node.save(session)
+        return node
 
 
 def node_delete(context, node_id, force=False):
-    session = _session(context)
-    node = session.query(models.Node).get(node_id)
-    if not node:
-        # Note: this is okay, because the node may have already gone
-        return
-
-    session.begin()
-    session.delete(node)
-    session.commit()
-    session.flush()
+    with session_for_write() as session:
+        node = session.query(models.Node).get(node_id)
+        if not node:
+            # Note: this is okay, because the node may have already gone
+            return
+        session.delete(node)
 
 
 # Locks
@@ -363,23 +336,21 @@ def cluster_lock_acquire(cluster_id, action_id, scope):
                   a cluster-level lock.
     :return: A list of action IDs that currently works on the cluster.
     '''
-    session = get_session()
-    session.begin()
-    lock = session.query(models.ClusterLock).get(cluster_id)
-    if lock is not None:
-        if scope == 1 and lock.semaphore > 0:
-            if action_id not in lock.action_ids:
-                lock.action_ids.append(six.text_type(action_id))
-                lock.semaphore += 1
-                lock.save(session)
-    else:
-        lock = models.ClusterLock(cluster_id=cluster_id,
-                                  action_ids=[six.text_type(action_id)],
-                                  semaphore=scope)
-        session.add(lock)
+    with session_for_write() as session:
+        lock = session.query(models.ClusterLock).get(cluster_id)
+        if lock is not None:
+            if scope == 1 and lock.semaphore > 0:
+                if action_id not in lock.action_ids:
+                    lock.action_ids.append(six.text_type(action_id))
+                    lock.semaphore += 1
+                    lock.save(session)
+        else:
+            lock = models.ClusterLock(cluster_id=cluster_id,
+                                      action_ids=[six.text_type(action_id)],
+                                      semaphore=scope)
+            session.add(lock)
 
-    session.commit()
-    return lock.action_ids
+        return lock.action_ids
 
 
 def cluster_lock_release(cluster_id, action_id, scope):
@@ -391,96 +362,85 @@ def cluster_lock_release(cluster_id, action_id, scope):
                   a cluster-level lock.
     :return: True indicates successful release, False indicates failure.
     '''
-    session = get_session()
-    session.begin()
-    lock = session.query(models.ClusterLock).get(cluster_id)
-    if lock is None:
-        session.commit()
-        return False
+    with session_for_write() as session:
+        lock = session.query(models.ClusterLock).get(cluster_id)
+        if lock is None:
+            return False
 
-    success = False
-    if scope == -1 or lock.semaphore == 1:
-        if six.text_type(action_id) in lock.action_ids:
-            session.delete(lock)
+        success = False
+        if scope == -1 or lock.semaphore == 1:
+            if six.text_type(action_id) in lock.action_ids:
+                session.delete(lock)
+                success = True
+        elif action_id in lock.action_ids:
+            if lock.semaphore == 1:
+                session.delete(lock)
+            else:
+                lock.action_ids.remove(six.text_type(action_id))
+                lock.semaphore -= 1
+                lock.save(session)
             success = True
-    elif action_id in lock.action_ids:
-        if lock.semaphore == 1:
-            session.delete(lock)
-        else:
-            lock.action_ids.remove(six.text_type(action_id))
-            lock.semaphore -= 1
-            lock.save(session)
-        success = True
 
-    session.commit()
-    return success
+        return success
 
 
 def cluster_lock_steal(cluster_id, action_id):
-    session = get_session()
-    session.begin()
-    lock = session.query(models.ClusterLock).get(cluster_id)
-    if lock is not None:
-        lock.action_ids = [action_id]
-        lock.semaphore = -1
-        lock.save(session)
-    else:
-        lock = models.ClusterLock(cluster_id=cluster_id,
-                                  action_ids=[action_id],
-                                  semaphore=-1)
-        session.add(lock)
+    with session_for_write() as session:
+        lock = session.query(models.ClusterLock).get(cluster_id)
+        if lock is not None:
+            lock.action_ids = [action_id]
+            lock.semaphore = -1
+            lock.save(session)
+        else:
+            lock = models.ClusterLock(cluster_id=cluster_id,
+                                      action_ids=[action_id],
+                                      semaphore=-1)
+            session.add(lock)
 
-    session.commit()
-    return lock.action_ids
+        return lock.action_ids
 
 
 def node_lock_acquire(node_id, action_id):
-    session = get_session()
-    session.begin()
+    with session_for_write() as session:
+        lock = session.query(models.NodeLock).get(node_id)
+        if lock is None:
+            lock = models.NodeLock(node_id=node_id, action_id=action_id)
+            session.add(lock)
 
-    lock = session.query(models.NodeLock).get(node_id)
-    if lock is None:
-        lock = models.NodeLock(node_id=node_id, action_id=action_id)
-        session.add(lock)
-    session.commit()
-
-    return lock.action_id
+        return lock.action_id
 
 
 def node_lock_release(node_id, action_id):
-    session = get_session()
-    session.begin()
+    with session_for_write() as session:
 
-    success = False
-    lock = session.query(models.NodeLock).get(node_id)
-    if lock is not None and lock.action_id == action_id:
-        session.delete(lock)
-        success = True
+        success = False
+        lock = session.query(models.NodeLock).get(node_id)
+        if lock is not None and lock.action_id == action_id:
+            session.delete(lock)
+            success = True
 
-    session.commit()
-    return success
+        return success
 
 
 def node_lock_steal(node_id, action_id):
-    session = get_session()
-    session.begin()
-    lock = session.query(models.NodeLock).get(node_id)
-    if lock is not None:
-        lock.action_id = action_id
-        lock.save(session)
-    else:
-        lock = models.NodeLock(node_id=node_id, action_id=action_id)
-        session.add(lock)
-    session.commit()
-    return lock.action_id
+    with session_for_write() as session:
+        lock = session.query(models.NodeLock).get(node_id)
+        if lock is not None:
+            lock.action_id = action_id
+            lock.save(session)
+        else:
+            lock = models.NodeLock(node_id=node_id, action_id=action_id)
+            session.add(lock)
+        return lock.action_id
 
 
 # Policies
 def policy_create(context, values):
-    policy = models.Policy()
-    policy.update(values)
-    policy.save(_session(context))
-    return policy
+    with session_for_write() as session:
+        policy = models.Policy()
+        policy.update(values)
+        session.add(policy)
+        return policy
 
 
 def policy_get(context, policy_id, project_safe=True):
@@ -525,31 +485,29 @@ def policy_get_all(context, limit=None, marker=None, sort=None, filters=None,
 
 
 def policy_update(context, policy_id, values):
-    policy = model_query(context, models.Policy).get(policy_id)
-    if not policy:
-        raise exception.PolicyNotFound(policy=policy_id)
+    with session_for_write() as session:
+        policy = session.query(models.Policy).get(policy_id)
+        if not policy:
+            raise exception.PolicyNotFound(policy=policy_id)
 
-    policy.update(values)
-    policy.save(_session(context))
-    return policy
+        policy.update(values)
+        policy.save(session)
+        return policy
 
 
 def policy_delete(context, policy_id, force=False):
-    session = _session(context)
-    policy = session.query(models.Policy).get(policy_id)
+    with session_for_write() as session:
+        policy = session.query(models.Policy).get(policy_id)
 
-    if not policy:
-        return
+        if not policy:
+            return
 
-    bindings = session.query(models.ClusterPolicies).filter_by(
-        policy_id=policy_id)
-    if bindings.count():
-        raise exception.ResourceBusyError(resource_type='policy',
-                                          resource_id=policy_id)
-    session.begin()
-    session.delete(policy)
-    session.commit()
-    session.flush()
+        bindings = session.query(models.ClusterPolicies).filter_by(
+            policy_id=policy_id)
+        if bindings.count():
+            raise exception.ResourceBusyError(resource_type='policy',
+                                              resource_id=policy_id)
+        session.delete(policy)
 
 
 # Cluster-Policy Associations
@@ -587,47 +545,47 @@ def cluster_policy_get_by_type(context, cluster_id, policy_type, filters=None):
 
 
 def cluster_policy_attach(context, cluster_id, policy_id, values):
-    binding = models.ClusterPolicies()
-    binding.cluster_id = cluster_id
-    binding.policy_id = policy_id
-    binding.update(values)
-    binding.save(_session(context))
-    return binding
+    with session_for_write() as session:
+        binding = models.ClusterPolicies()
+        binding.cluster_id = cluster_id
+        binding.policy_id = policy_id
+        binding.update(values)
+        session.add(binding)
+    # Load foreignkey cluster and policy
+    return cluster_policy_get(context, cluster_id, policy_id)
 
 
 def cluster_policy_detach(context, cluster_id, policy_id):
-    session = _session(context)
-    query = session.query(models.ClusterPolicies)
-    bindings = query.filter_by(cluster_id=cluster_id,
-                               policy_id=policy_id).first()
-    if bindings is None:
-        return
-    session.begin()
-    session.delete(bindings)
-    session.commit()
-    session.flush()
+    with session_for_write() as session:
+        query = session.query(models.ClusterPolicies)
+        bindings = query.filter_by(cluster_id=cluster_id,
+                                   policy_id=policy_id).first()
+        if bindings is None:
+            return
+        session.delete(bindings)
 
 
 def cluster_policy_update(context, cluster_id, policy_id, values):
-    session = _session(context)
-    query = session.query(models.ClusterPolicies)
-    binding = query.filter_by(cluster_id=cluster_id,
-                              policy_id=policy_id).first()
+    with session_for_write() as session:
+        query = session.query(models.ClusterPolicies)
+        binding = query.filter_by(cluster_id=cluster_id,
+                                  policy_id=policy_id).first()
 
-    if binding is None:
-        return None
+        if binding is None:
+            return None
 
-    binding.update(values)
-    binding.save(session)
-    return binding
+        binding.update(values)
+        binding.save(session)
+        return binding
 
 
 # Profiles
 def profile_create(context, values):
-    profile = models.Profile()
-    profile.update(values)
-    profile.save(_session(context))
-    return profile
+    with session_for_write() as session:
+        profile = models.Profile()
+        profile.update(values)
+        session.add(profile)
+        return profile
 
 
 def profile_get(context, profile_id, project_safe=True):
@@ -672,45 +630,44 @@ def profile_get_all(context, limit=None, marker=None, sort=None, filters=None,
 
 
 def profile_update(context, profile_id, values):
-    profile = model_query(context, models.Profile).get(profile_id)
-    if not profile:
-        raise exception.ProfileNotFound(profile=profile_id)
+    with session_for_write() as session:
+        profile = session.query(models.Profile).get(profile_id)
+        if not profile:
+            raise exception.ProfileNotFound(profile=profile_id)
 
-    profile.update(values)
-    profile.save(_session(context))
-    return profile
+        profile.update(values)
+        profile.save(session)
+        return profile
 
 
 def profile_delete(context, profile_id, force=False):
-    session = _session(context)
-    profile = session.query(models.Profile).get(profile_id)
-    if profile is None:
-        return
+    with session_for_write() as session:
+        profile = session.query(models.Profile).get(profile_id)
+        if profile is None:
+            return
 
-    # used by any clusters?
-    clusters = session.query(models.Cluster).filter_by(profile_id=profile_id)
-    if clusters.count() > 0:
-        raise exception.ResourceBusyError(resource_type='profile',
-                                          resource_id=profile_id)
+        # used by any clusters?
+        clusters = session.query(models.Cluster).filter_by(
+            profile_id=profile_id)
+        if clusters.count() > 0:
+            raise exception.ResourceBusyError(resource_type='profile',
+                                              resource_id=profile_id)
 
-    # used by any nodes?
-    nodes = session.query(models.Node).filter_by(profile_id=profile_id)
-    if nodes.count() > 0:
-        raise exception.ResourceBusyError(resource_type='profile',
-                                          resource_id=profile_id)
-
-    session.begin()
-    session.delete(profile)
-    session.commit()
-    session.flush()
+        # used by any nodes?
+        nodes = session.query(models.Node).filter_by(profile_id=profile_id)
+        if nodes.count() > 0:
+            raise exception.ResourceBusyError(resource_type='profile',
+                                              resource_id=profile_id)
+        session.delete(profile)
 
 
 # Credentials
 def cred_create(context, values):
-    cred = models.Credential()
-    cred.update(values)
-    cred.save(_session(context))
-    return cred
+    with session_for_write() as session:
+        cred = models.Credential()
+        cred.update(values)
+        session.add(cred)
+        return cred
 
 
 def cred_get(context, user, project):
@@ -718,22 +675,19 @@ def cred_get(context, user, project):
 
 
 def cred_update(context, user, project, values):
-    cred = model_query(context, models.Credential).get((user, project))
-    cred.update(values)
-    cred.save(_session(context))
-    return cred
+    with session_for_write() as session:
+        cred = session.query(models.Credential).get((user, project))
+        cred.update(values)
+        cred.save(session)
+        return cred
 
 
 def cred_delete(context, user, project):
-    session = _session(context)
-    cred = session.query(models.Credential).get((user, project))
-    if cred is None:
-        return None
-
-    session.begin()
-    session.delete(cred)
-    session.commit()
-    session.flush()
+    with session_for_write() as session:
+        cred = session.query(models.Credential).get((user, project))
+        if cred is None:
+            return None
+        session.delete(cred)
 
 
 # Events
@@ -744,11 +698,11 @@ def _delete_event_rows(context, cluster_id, limit):
     # pgsql SHOULD work with the pure DELETE/JOIN below but that must be
     # confirmed via integration tests.
     query = event_count_by_cluster(context, cluster_id)
-    session = _session(context)
-    all_events = query.order_by(models.Event.timestamp).limit(limit).all()
-    ids = [r.id for r in all_events]
-    q = session.query(models.Event).filter(models.Event.id.in_(ids))
-    return q.delete(synchronize_session='fetch')
+    with session_for_write() as session:
+        all_events = query.order_by(models.Event.timestamp).limit(limit).all()
+        ids = [r.id for r in all_events]
+        q = session.query(models.Event).filter(models.Event.id.in_(ids))
+        return q.delete(synchronize_session='fetch')
 
 
 def event_prune(context, cluster_id):
@@ -761,10 +715,11 @@ def event_prune(context, cluster_id):
 
 
 def event_create(context, values):
-    event = models.Event()
-    event.update(values)
-    event.save(_session(context))
-    return event
+    with session_for_write() as session:
+        event = models.Event()
+        event.update(values)
+        session.add(event)
+        return event
 
 
 def event_get(context, event_id, project_safe=True):
@@ -827,34 +782,35 @@ def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
 
 # Actions
 def action_create(context, values):
-    action = models.Action()
-    action.update(values)
-    action.save(_session(context))
-    return action
+    with session_for_write() as session:
+        action = models.Action()
+        action.update(values)
+        session.add(action)
+        return action
 
 
 def action_update(context, action_id, values):
-    session = get_session()
-    action = session.query(models.Action).get(action_id)
-    if not action:
-        raise exception.ActionNotFound(action=action_id)
+    with session_for_write() as session:
+        action = session.query(models.Action).get(action_id)
+        if not action:
+            raise exception.ActionNotFound(action=action_id)
 
-    action.update(values)
-    action.save(session)
+        action.update(values)
+        action.save(session)
 
 
 def action_get(context, action_id, project_safe=True, refresh=False):
-    session = _session(context)
-    action = session.query(models.Action).get(action_id)
-    if action is None:
-        return None
-
-    if not context.is_admin and project_safe:
-        if action.project != context.project:
+    with session_for_read() as session:
+        action = session.query(models.Action).get(action_id)
+        if action is None:
             return None
 
-    session.refresh(action)
-    return action
+        if not context.is_admin and project_safe:
+            if action.project != context.project:
+                return None
+
+        session.refresh(action)
+        return action
 
 
 def action_get_by_name(context, name, project_safe=True):
@@ -892,34 +848,34 @@ def action_get_all(context, filters=None, limit=None, marker=None, sort=None,
 
 
 def action_check_status(context, action_id, timestamp):
-    session = _session(context)
-    q = session.query(models.ActionDependency)
-    count = q.filter_by(dependent=action_id).count()
-    if count > 0:
-        return consts.ACTION_WAITING
+    with session_for_write() as session:
+        q = session.query(models.ActionDependency)
+        count = q.filter_by(dependent=action_id).count()
+        if count > 0:
+            return consts.ACTION_WAITING
 
-    action = session.query(models.Action).get(action_id)
-    if action.status == consts.ACTION_WAITING:
-        session.begin()
-        action.status = consts.ACTION_READY
-        action.status_reason = _('All depended actions completed.')
-        action.end_time = timestamp
-        action.save(session)
-        session.commit()
+        action = session.query(models.Action).get(action_id)
+        if action.status == consts.ACTION_WAITING:
+            action.status = consts.ACTION_READY
+            action.status_reason = _('All depended actions completed.')
+            action.end_time = timestamp
+            action.save(session)
 
-    return action.status
+        return action.status
 
 
 def dependency_get_depended(context, action_id):
-    session = _session(context)
-    q = session.query(models.ActionDependency).filter_by(dependent=action_id)
-    return [d.depended for d in q.all()]
+    with session_for_read() as session:
+        q = session.query(models.ActionDependency).filter_by(
+            dependent=action_id)
+        return [d.depended for d in q.all()]
 
 
 def dependency_get_dependents(context, action_id):
-    session = _session(context)
-    q = session.query(models.ActionDependency).filter_by(depended=action_id)
-    return [d.dependent for d in q.all()]
+    with session_for_read() as session:
+        q = session.query(models.ActionDependency).filter_by(
+            depended=action_id)
+        return [d.dependent for d in q.all()]
 
 
 def dependency_add(context, depended, dependent):
@@ -927,57 +883,51 @@ def dependency_add(context, depended, dependent):
         raise exception.NotSupport(
             _('Multiple dependencies between lists not support'))
 
-    session = _session(context)
+    with session_for_write() as session:
+        if isinstance(depended, list):   # e.g. D depends on A,B,C
+            for d in depended:
+                r = models.ActionDependency(depended=d, dependent=dependent)
+                session.add(r)
 
-    if isinstance(depended, list):   # e.g. D depends on A,B,C
-        session.begin()
-        for d in depended:
-            r = models.ActionDependency(depended=d, dependent=dependent)
+            query = session.query(models.Action).filter_by(id=dependent)
+            query.update({'status': consts.ACTION_WAITING,
+                          'status_reason': _('Waiting for depended actions.')},
+                         synchronize_session=False)
+            return
+
+        # Only dependent can be a list now, convert it to a list if it
+        # is not a list
+        if not isinstance(dependent, list):  # e.g. B,C,D depend on A
+            dependents = [dependent]
+        else:
+            dependents = dependent
+
+        for d in dependents:
+            r = models.ActionDependency(depended=depended, dependent=d)
             session.add(r)
 
-        query = session.query(models.Action).filter_by(id=dependent)
-        query.update({'status': consts.ACTION_WAITING,
-                      'status_reason': _('Waiting for depended actions.')},
-                     synchronize_session=False)
-        session.commit()
-        return
-
-    # Only dependent can be a list now, convert it to a list if it
-    # is not a list
-    if not isinstance(dependent, list):  # e.g. B,C,D depend on A
-        dependents = [dependent]
-    else:
-        dependents = dependent
-
-    session.begin()
-    for d in dependents:
-        r = models.ActionDependency(depended=depended, dependent=d)
-        session.add(r)
-
-    q = session.query(models.Action).filter(models.Action.id.in_(dependents))
-    q.update({'status': consts.ACTION_WAITING,
-              'status_reason': _('Waiting for depended actions.')},
-             synchronize_session=False)
-    session.commit()
+        q = session.query(models.Action).filter(
+            models.Action.id.in_(dependents))
+        q.update({'status': consts.ACTION_WAITING,
+                  'status_reason': _('Waiting for depended actions.')},
+                 synchronize_session=False)
 
 
 def action_mark_succeeded(context, action_id, timestamp):
-    session = _session(context)
-    session.begin()
+    with session_for_write() as session:
 
-    query = session.query(models.Action).filter_by(id=action_id)
-    values = {
-        'owner': None,
-        'status': consts.ACTION_SUCCEEDED,
-        'status_reason': _('Action completed successfully.'),
-        'end_time': timestamp,
-    }
-    query.update(values, synchronize_session=False)
+        query = session.query(models.Action).filter_by(id=action_id)
+        values = {
+            'owner': None,
+            'status': consts.ACTION_SUCCEEDED,
+            'status_reason': _('Action completed successfully.'),
+            'end_time': timestamp,
+        }
+        query.update(values, synchronize_session=False)
 
-    subquery = session.query(models.ActionDependency).filter_by(
-        depended=action_id)
-    subquery.delete(synchronize_session=False)
-    session.commit()
+        subquery = session.query(models.ActionDependency).filter_by(
+            depended=action_id)
+        subquery.delete(synchronize_session=False)
 
 
 def _mark_failed(session, action_id, timestamp, reason=None):
@@ -1002,10 +952,8 @@ def _mark_failed(session, action_id, timestamp, reason=None):
 
 
 def action_mark_failed(context, action_id, timestamp, reason=None):
-    session = _session(context)
-    session.begin()
-    _mark_failed(session, action_id, timestamp, reason)
-    session.commit()
+    with session_for_write() as session:
+        _mark_failed(session, action_id, timestamp, reason)
 
 
 def _mark_cancelled(session, action_id, timestamp, reason=None):
@@ -1029,15 +977,12 @@ def _mark_cancelled(session, action_id, timestamp, reason=None):
 
 
 def action_mark_cancelled(context, action_id, timestamp, reason=None):
-    session = _session(context)
-    session.begin()
-    _mark_cancelled(session, action_id, timestamp, reason)
-    session.commit()
+    with session_for_write() as session:
+        _mark_cancelled(session, action_id, timestamp, reason)
 
 
 def action_acquire(context, action_id, owner, timestamp):
-    session = _session(context)
-    with session.begin():
+    with session_for_write() as session:
         action = session.query(models.Action).get(action_id)
         if not action:
             return None
@@ -1054,14 +999,13 @@ def action_acquire(context, action_id, owner, timestamp):
         action.start_time = timestamp
         action.status = consts.ACTION_RUNNING
         action.status_reason = _('The action is being processed.')
+        action.save(session)
 
         return action
 
 
 def action_acquire_1st_ready(context, owner, timestamp):
-    session = _session(context)
-
-    with session.begin():
+    with session_for_write() as session:
         action = session.query(models.Action).\
             filter_by(status=consts.ACTION_READY).\
             filter_by(owner=None).first()
@@ -1071,7 +1015,7 @@ def action_acquire_1st_ready(context, owner, timestamp):
             action.start_time = timestamp
             action.status = consts.ACTION_RUNNING
             action.status_reason = _('The action is being processed.')
-
+            action.save(session)
             return action
 
 
@@ -1081,16 +1025,15 @@ def action_abandon(context, action_id):
     This API is always called with the action locked by the current
     worker. There is no chance the action is gone or stolen by others.
     '''
+    with session_for_write() as session:
+        action = session.query(models.Action).get(action_id)
 
-    query = model_query(context, models.Action)
-    action = query.get(action_id)
-
-    action.owner = None
-    action.start_time = None
-    action.status = consts.ACTION_READY
-    action.status_reason = _('The action was abandoned.')
-    action.save(query.session)
-    return action
+        action.owner = None
+        action.start_time = None
+        action.status = consts.ACTION_READY
+        action.status_reason = _('The action was abandoned.')
+        action.save(session)
+        return action
 
 
 def action_lock_check(context, action_id, owner=None):
@@ -1105,13 +1048,13 @@ def action_lock_check(context, action_id, owner=None):
 
 
 def action_signal(context, action_id, value):
-    query = model_query(context, models.Action)
-    action = query.get(action_id)
-    if not action:
-        return
+    with session_for_write() as session:
+        action = session.query(models.Action).get(action_id)
+        if not action:
+            return
 
-    action.control = value
-    action.save(query.session)
+        action.control = value
+        action.save(session)
 
 
 def action_signal_query(context, action_id):
@@ -1123,27 +1066,25 @@ def action_signal_query(context, action_id):
 
 
 def action_delete(context, action_id, force=False):
-    session = _session(context)
-    action = session.query(models.Action).get(action_id)
-    if not action:
-        return
-    if ((action.status == 'WAITING') or (action.status == 'RUNNING') or
-            (action.status == 'SUSPENDED')):
+    with session_for_write() as session:
+        action = session.query(models.Action).get(action_id)
+        if not action:
+            return
+        if ((action.status == 'WAITING') or (action.status == 'RUNNING') or
+                (action.status == 'SUSPENDED')):
 
-        raise exception.ResourceBusyError(resource_type='action',
-                                          resource_id=action_id)
-    session.begin()
-    session.delete(action)
-    session.commit()
-    session.flush()
+            raise exception.ResourceBusyError(resource_type='action',
+                                              resource_id=action_id)
+        session.delete(action)
 
 
 # Receivers
 def receiver_create(context, values):
-    receiver = models.Receiver()
-    receiver.update(values)
-    receiver.save(_session(context))
-    return receiver
+    with session_for_write() as session:
+        receiver = models.Receiver()
+        receiver.update(values)
+        session.add(receiver)
+        return receiver
 
 
 def receiver_get(context, receiver_id, project_safe=True):
@@ -1185,46 +1126,43 @@ def receiver_get_by_short_id(context, short_id, project_safe=True):
 
 
 def receiver_delete(context, receiver_id):
-    session = _session(context)
-    receiver = session.query(models.Receiver).get(receiver_id)
-    if not receiver:
-        return
-
-    session.begin()
-    session.delete(receiver)
-    session.commit()
-    session.flush()
+    with session_for_write() as session:
+        receiver = session.query(models.Receiver).get(receiver_id)
+        if not receiver:
+            return
+        session.delete(receiver)
 
 
 def service_create(context, service_id, host=None, binary=None,
                    topic=None):
-    time_now = timeutils.utcnow()
-    svc = models.Service(id=service_id, host=host, binary=binary,
-                         topic=topic, created_at=time_now,
-                         updated_at=time_now)
-    svc.save(_session(context))
-    return svc
+    with session_for_write() as session:
+        time_now = timeutils.utcnow()
+        svc = models.Service(id=service_id, host=host, binary=binary,
+                             topic=topic, created_at=time_now,
+                             updated_at=time_now)
+        session.add(svc)
+        return svc
 
 
 def service_update(context, service_id, values=None):
+    with session_for_write() as session:
+        service = session.query(models.Service).get(service_id)
+        if not service:
+            return
 
-    service = service_get(context, service_id)
-    if not service:
-        return
+        if values is None:
+            values = {}
 
-    if values is None:
-        values = {}
-
-    values.update({'updated_at': timeutils.utcnow()})
-    service.update(values)
-    service.save(_session(context))
-    return service
+        values.update({'updated_at': timeutils.utcnow()})
+        service.update(values)
+        service.save(session)
+        return service
 
 
 def service_delete(context, service_id):
-    session = _session(context)
-    session.query(models.Service).filter_by(
-        id=service_id).delete(synchronize_session='fetch')
+    with session_for_write() as session:
+        session.query(models.Service).filter_by(
+            id=service_id).delete(synchronize_session='fetch')
 
 
 def service_get(context, service_id):
@@ -1237,41 +1175,37 @@ def service_get_all(context):
 
 # HealthRegistry
 def registry_claim(context, engine_id):
-    session = _session(context)
-    session.begin()
-    q_eng = session.query(models.Service)
-    svc_ids = [s.id for s in q_eng.all()]
+    with session_for_write() as session:
+        q_eng = session.query(models.Service)
+        svc_ids = [s.id for s in q_eng.all()]
 
-    q_reg = session.query(models.HealthRegistry)
-    q_reg = q_reg.filter(models.HealthRegistry.engine_id.notin_(svc_ids))
-    result = q_reg.all()
-    q_reg.update({'engine_id': engine_id}, synchronize_session=False)
-    session.commit()
-    return result
+        q_reg = session.query(models.HealthRegistry)
+        q_reg = q_reg.filter(models.HealthRegistry.engine_id.notin_(svc_ids))
+        q_reg.update({'engine_id': engine_id}, synchronize_session=False)
+        result = q_reg.all()
+        return result
 
 
 def registry_delete(context, cluster_id):
-    session = _session(context)
-    registry = session.query(models.HealthRegistry).filter_by(
-        cluster_id=cluster_id).first()
-    if registry is None:
-        return
-    session.begin()
-    session.delete(registry)
-    session.commit()
-    session.flush()
+    with session_for_write() as session:
+        registry = session.query(models.HealthRegistry).filter_by(
+            cluster_id=cluster_id).first()
+        if registry is None:
+            return
+        session.delete(registry)
 
 
 def registry_create(context, cluster_id, check_type, interval, params,
                     engine_id):
-    registry = models.HealthRegistry()
-    registry.cluster_id = cluster_id
-    registry.check_type = check_type
-    registry.interval = interval
-    registry.params = params
-    registry.engine_id = engine_id
-    registry.save(_session(context))
-    return registry
+    with session_for_write() as session:
+        registry = models.HealthRegistry()
+        registry.cluster_id = cluster_id
+        registry.check_type = check_type
+        registry.interval = interval
+        registry.params = params
+        registry.engine_id = engine_id
+        session.add(registry)
+        return registry
 
 
 # Utils
