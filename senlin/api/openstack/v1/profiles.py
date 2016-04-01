@@ -42,9 +42,6 @@ class ProfileData(object):
     def metadata(self):
         return self.data.get(consts.PROFILE_METADATA, None)
 
-    def context(self):
-        return self.data.get(consts.PROFILE_CONTEXT, None)
-
 
 class ProfileController(wsgi.Controller):
     """WSGI controller for profiles resource in Senlin v1 API."""

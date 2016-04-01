@@ -29,9 +29,6 @@ from senlin.tests.unit.common import base
 class ProfileDataTest(base.SenlinTestCase):
     def test_profile_data(self):
         body = {
-            'context': {
-                'region': 'region1',
-            },
             'name': 'test_profile',
             'spec': {
                 'type': 'test_profile_type',
@@ -39,6 +36,9 @@ class ProfileDataTest(base.SenlinTestCase):
                 'properties': {
                     'param1': 'value1',
                     'param2': 'value2',
+                    'context': {
+                        'region': 'region1',
+                    },
                 }
             },
             'metadata': {}
@@ -47,7 +47,6 @@ class ProfileDataTest(base.SenlinTestCase):
         self.assertEqual('test_profile', data.name())
         self.assertEqual(body['spec'], data.spec())
         self.assertEqual({}, data.metadata())
-        self.assertEqual({'region': 'region1'}, data.context())
 
     def test_required_fields_missing(self):
         body = {'not a profile name': 'wibble'}
@@ -55,7 +54,6 @@ class ProfileDataTest(base.SenlinTestCase):
         self.assertRaises(exc.HTTPBadRequest, data.name)
         self.assertRaises(exc.HTTPBadRequest, data.spec)
         self.assertIsNone(data.metadata())
-        self.assertIsNone(data.context())
 
 
 @mock.patch.object(policy, 'enforce')
