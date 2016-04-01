@@ -1649,13 +1649,19 @@ class EngineService(service.Service):
         """
         LOG.info(_LI('Deleting node %s'), identity)
 
-        db_node = self.node_find(context, identity)
+        node = self.node_find(context, identity)
+
+        if node.status in [node_mod.Node.CREATING, node_mod.Node.UPDATING,
+                           node_mod.Node.DELETING, node_mod.Node.RECOVERING]:
+            raise exception.ActionInProgress(type='node', id=identity,
+                                             status=node.status)
+
         params = {
-            'name': 'node_delete_%s' % db_node.id[:8],
+            'name': 'node_delete_%s' % node.id[:8],
             'cause': action_mod.CAUSE_RPC,
             'status': action_mod.Action.READY,
         }
-        action_id = action_mod.Action.create(context, db_node.id,
+        action_id = action_mod.Action.create(context, node.id,
                                              consts.NODE_DELETE, **params)
         dispatcher.start_action()
         LOG.info(_LI("Node delete action is queued: %s."), action_id)
