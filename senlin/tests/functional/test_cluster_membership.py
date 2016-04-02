@@ -76,8 +76,7 @@ class TestClusterMembership(base.SenlinFunctionalTest):
         node2 = test_api.get_node(self.client, node2['id'])
         self.assertEqual(cluster['id'], node1['cluster_id'])
         self.assertEqual(cluster['id'], node2['cluster_id'])
-        self.assertEqual(2, node1['index'])
-        self.assertEqual(3, node2['index'])
+        self.assertEqual([2, 3], sorted([node1['index'], node2['index']]))
 
         # Remove nodes from cluster
         params = {
