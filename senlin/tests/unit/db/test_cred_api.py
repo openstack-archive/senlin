@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
 
 from senlin.db.sqlalchemy import api as db_api
 from senlin.tests.unit.common import base
@@ -83,3 +84,22 @@ class DBAPICredentialTest(base.SenlinTestCase):
         db_api.cred_create(self.ctx, values)
         cred = db_api.cred_delete(self.ctx, USER_ID, PROJECT_ID)
         self.assertIsNone(cred)
+
+    def test_cred_create_update(self):
+        cred = db_api.cred_create_update(self.ctx, values)
+        self.assertIsNotNone(cred)
+        self.assertEqual(USER_ID, cred.user)
+        self.assertEqual(PROJECT_ID, cred.project)
+        self.assertEqual(
+            {'openstack': {'trust': '01234567890123456789012345678901'}},
+            cred.cred)
+        self.assertEqual({}, cred.data)
+
+        new_values = copy.deepcopy(values)
+        new_values['cred']['openstack']['trust'] = 'newtrust'
+        cred = db_api.cred_create_update(self.ctx, new_values)
+        self.assertEqual(USER_ID, cred.user)
+        self.assertEqual(PROJECT_ID, cred.project)
+        self.assertEqual(
+            {'openstack': {'trust': 'newtrust'}},
+            cred.cred)

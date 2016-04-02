@@ -258,6 +258,10 @@ def cred_delete(context, user, project):
     return IMPL.cred_delete(context, user, project)
 
 
+def cred_create_update(context, values):
+    return IMPL.cred_create_update(context, values)
+
+
 # Events
 def event_create(context, values):
     return IMPL.event_create(context, values)
