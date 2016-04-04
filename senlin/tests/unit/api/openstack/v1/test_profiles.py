@@ -283,7 +283,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                     'version': '1.0',
                     'properties': {'param': 'value'},
                 },
-                'spec': {'param': 'value'},
                 'metadata': {},
             }
         }
