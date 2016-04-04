@@ -484,7 +484,6 @@ class Action(object):
             'interval': self.interval,
             'start_time': self.start_time,
             'end_time': self.end_time,
-            'interval': self.interval,
             'timeout': self.timeout,
             'status': self.status,
             'status_reason': self.status_reason,
