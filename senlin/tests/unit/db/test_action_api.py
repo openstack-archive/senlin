@@ -370,7 +370,7 @@ class DBAPIActionTest(base.SenlinTestCase):
 
     def test_action_acquire(self):
         action = _create_action(self.ctx)
-        action.status = 'READY'
+        db_api.action_update(self.ctx, action.id, {'status': 'READY'})
         timestamp = time.time()
         action = db_api.action_acquire(self.ctx, action.id, 'worker1',
                                        timestamp)

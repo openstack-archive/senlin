@@ -49,7 +49,7 @@ class DBAPINodeTest(base.SenlinTestCase):
         self.assertIsNone(node.updated_at)
         self.assertEqual('ACTIVE', node.status)
         self.assertEqual('create complete', node.status_reason)
-        self.assertEqual('{"foo": "123"}', jsonutils.dumps(node.metadata))
+        self.assertEqual('{"foo": "123"}', jsonutils.dumps(node.meta_data))
         self.assertEqual('{"key1": "value1"}', jsonutils.dumps(node.data))
         self.assertEqual(self.cluster.id, node.cluster_id)
         self.assertEqual(self.profile.id, node.profile_id)
@@ -473,6 +473,9 @@ class DBAPINodeTest(base.SenlinTestCase):
         self.assertEqual(1, len(nodes))
         nodes = db_api.node_get_all_by_cluster(self.ctx, cluster2.id)
         self.assertEqual(0, len(nodes))
+        # Refresh cluster1 and cluster2
+        cluster1 = db_api.cluster_get(self.ctx, cluster1.id)
+        cluster2 = db_api.cluster_get(self.ctx, cluster2.id)
         self.assertEqual(2, cluster1.next_index)
         self.assertEqual(1, cluster2.next_index)
 
