@@ -33,6 +33,7 @@ class TestRequestContext(base.SenlinTestCase):
             'is_admin': False,
             'password': 'foo',
             'show_deleted': False,
+            'read_only': False,
             'roles': ['arole', 'notadmin'],
             'auth_url': 'http://xyz',
             'trusts': None,
@@ -65,12 +66,18 @@ class TestRequestContext(base.SenlinTestCase):
 
         ctx_dict = ctx.to_dict()
         del(ctx_dict['request_id'])
+        del(ctx_dict['user_identity'])
+        del(ctx_dict['resource_uuid'])
+        del(ctx_dict['tenant'])
         self.assertEqual(self.ctx, ctx_dict)
 
     def test_request_context_from_dict(self):
         ctx = context.RequestContext.from_dict(self.ctx)
         ctx_dict = ctx.to_dict()
         del(ctx_dict['request_id'])
+        del(ctx_dict['user_identity'])
+        del(ctx_dict['resource_uuid'])
+        del(ctx_dict['tenant'])
         self.assertEqual(self.ctx, ctx_dict)
 
     def test_request_context_update(self):

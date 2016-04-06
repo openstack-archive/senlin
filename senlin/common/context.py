@@ -41,7 +41,8 @@ class RequestContext(base_context.RequestContext):
             domain=domain, user_domain=user_domain,
             project_domain=project_domain,
             read_only=read_only, show_deleted=show_deleted,
-            request_id=request_id)
+            request_id=request_id,
+            roles=roles)
 
         # request_id might be a byte array
         self.request_id = encodeutils.safe_decode(self.request_id)
@@ -63,7 +64,6 @@ class RequestContext(base_context.RequestContext):
 
         self.auth_token_info = auth_token_info
         self.region_name = region_name
-        self.roles = roles or []
         self.password = password
 
         # Check user is admin or not
@@ -81,28 +81,20 @@ class RequestContext(base_context.RequestContext):
         return self._session
 
     def to_dict(self):
-        return {
+        d = super(RequestContext, self).to_dict()
+        d.update({
             'auth_url': self.auth_url,
-            'auth_token': self.auth_token,
             'auth_token_info': self.auth_token_info,
-            'user': self.user,
             'user_name': self.user_name,
-            'user_domain': self.user_domain,
             'user_domain_name': self.user_domain_name,
             'project': self.project,
             'project_name': self.project_name,
-            'project_domain': self.project_domain,
             'project_domain_name': self.project_domain_name,
-            'domain': self.domain,
             'domain_name': self.domain_name,
             'trusts': self.trusts,
             'region_name': self.region_name,
-            'roles': self.roles,
-            'show_deleted': self.show_deleted,
-            'is_admin': self.is_admin,
-            'request_id': self.request_id,
-            'password': self.password,
-        }
+            'password': self.password})
+        return d
 
     @classmethod
     def from_dict(cls, values):
