@@ -62,7 +62,6 @@ class Event(object):
             self._infer_entity_data(entity)
 
     def _infer_entity_data(self, entity):
-        self.obj_id = entity.id
         self.obj_name = entity.name
         if self.status is None:
             self.status = entity.status
@@ -72,9 +71,17 @@ class Event(object):
         e_type = e_type.upper()
         self.obj_type = e_type
         if e_type == 'CLUSTER':
+            self.obj_id = entity.id
             self.cluster_id = entity.id
         elif e_type == 'NODE':
+            self.obj_id = entity.id
             self.cluster_id = entity.cluster_id
+        elif e_type == 'CLUSTERACTION':
+            self.obj_id = entity.target
+            self.cluster_id = entity.target
+        elif e_type == 'NODEACTION':
+            self.obj_id = entity.target
+            self.cluster_id = entity.node.cluster_id
 
     def store(self, context):
         '''Store the event into database and return its ID.'''
