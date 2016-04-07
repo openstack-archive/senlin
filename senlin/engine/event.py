@@ -50,38 +50,40 @@ class Event(object):
         self.cluster_id = kwargs.get('cluster_id', None)
         self.metadata = kwargs.get('metadata', {})
 
-        ctx = kwargs.get('context', None)
-        if ctx is not None:
-            self.user = ctx.user
-            self.project = ctx.project
-            self.domain = ctx.domain
-
         # entity not None implies an initial creation of event object,
         # not a deserialization, so we try make an inference here
         if entity is not None:
             self._infer_entity_data(entity)
 
     def _infer_entity_data(self, entity):
-        self.obj_name = entity.name
         if self.status is None:
             self.status = entity.status
         if self.status_reason is None:
             self.status_reason = entity.status_reason
+
         e_type = reflection.get_class_name(entity, fully_qualified=False)
         e_type = e_type.upper()
-        self.obj_type = e_type
+
         if e_type == 'CLUSTER':
             self.obj_id = entity.id
             self.cluster_id = entity.id
+            self.obj_name = entity.name
+            self.obj_type = 'CLUSTER'
         elif e_type == 'NODE':
             self.obj_id = entity.id
             self.cluster_id = entity.cluster_id
+            self.obj_name = entity.name
+            self.obj_type = 'NODE'
         elif e_type == 'CLUSTERACTION':
             self.obj_id = entity.target
             self.cluster_id = entity.target
+            self.obj_name = entity.cluster.name
+            self.obj_type = 'CLUSTER'
         elif e_type == 'NODEACTION':
             self.obj_id = entity.target
             self.cluster_id = entity.node.cluster_id
+            self.obj_name = entity.node.name
+            self.obj_type = 'NODE'
 
     def store(self, context):
         '''Store the event into database and return its ID.'''
