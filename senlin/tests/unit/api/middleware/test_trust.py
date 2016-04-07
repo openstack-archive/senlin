@@ -77,7 +77,7 @@ class TestTrustMiddleware(base.SenlinTestCase):
             uid='FAKE_ID', passwd='FAKE_PASS')
         mock_keystone.trust_get_by_trustor.assert_called_once_with(
             self.context.user, 'FAKE_ADMIN_ID', self.context.project)
-        x_rpc.credential_update.assert_called_once_with(
+        x_rpc.credential_create.assert_called_once_with(
             self.context, 'FAKE_TRUST_ID')
 
     @mock.patch.object(context, "get_service_context")

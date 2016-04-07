@@ -202,7 +202,7 @@ class EngineService(service.Service):
                 }
             }
         }
-        db_api.cred_create(context, values)
+        db_api.cred_create_update(context, values)
         return {'cred': cred}
 
     @request_context

@@ -31,13 +31,11 @@ class TrustMiddleware(wsgi.Middleware):
         """
         rpcc = rpc.EngineClient()
 
-        cred_exists = False
         res = rpcc.credential_get(ctx)
         if res:
             trust_id = res.get('trust', None)
             if trust_id:
                 return trust_id
-            cred_exists = True
 
         params = {
             'auth_url': ctx.auth_url,
@@ -59,11 +57,8 @@ class TrustMiddleware(wsgi.Middleware):
             # Create a trust if no existing one found
             trust = kc.trust_create(ctx.user, admin_id, ctx.project, ctx.roles)
 
-        # update cache
-        if cred_exists:
-            rpcc.credential_update(ctx, trust.id)
-        else:
-            rpcc.credential_create(ctx, trust.id)
+        # If credential not exists, create it, otherwise update it.
+        rpcc.credential_create(ctx, trust.id)
 
         return trust.id
 

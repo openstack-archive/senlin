@@ -690,6 +690,16 @@ def cred_delete(context, user, project):
         session.delete(cred)
 
 
+def cred_create_update(context, values):
+    cred = cred_get(context, values.get('user'), values.get('project'))
+    if not cred:
+        return cred_create(context, values)
+    else:
+        user = values.pop('user')
+        project = values.pop('project')
+        return cred_update(context, user, project, values)
+
+
 # Events
 def _delete_event_rows(context, cluster_id, limit):
     # MySQL does not support LIMIT in subqueries,
