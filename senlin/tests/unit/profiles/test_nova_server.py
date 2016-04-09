@@ -1116,7 +1116,6 @@ class TestNovaServerProfile(base.SenlinTestCase):
             'security_groups': 'default',
             'updated': 'UPDATE_TIMESTAMP',
             'status': 'FAKE_STATUS',
-            'updated': 'UPDATE_TIMESTAMP',
         }
         self.assertEqual(expected, res)
         nc.server_get.assert_called_once_with('FAKE_ID')
