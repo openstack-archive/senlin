@@ -19,6 +19,7 @@ import sys
 import threading
 
 from oslo_config import cfg
+from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import enginefacade
 from oslo_db.sqlalchemy import utils as sa_utils
 from oslo_log import log as logging
@@ -691,10 +692,9 @@ def cred_delete(context, user, project):
 
 
 def cred_create_update(context, values):
-    cred = cred_get(context, values.get('user'), values.get('project'))
-    if not cred:
+    try:
         return cred_create(context, values)
-    else:
+    except db_exc.DBDuplicateEntry:
         user = values.pop('user')
         project = values.pop('project')
         return cred_update(context, user, project, values)
