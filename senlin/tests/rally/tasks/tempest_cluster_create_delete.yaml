@@ -1,0 +1,10 @@
+---
+  SenlinTempestScenario.single_test:
+    -
+      args:
+        tempest_conf: "/etc/tempest/tempest.conf"
+        test_name: "senlin.tests.tempest.tests.api.test_cluster_basic.TestClusterBasic.test_cluster_create_delete"
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 1
