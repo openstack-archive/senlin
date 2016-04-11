@@ -15,6 +15,8 @@ HIGH PRIORITY
 API
 ---
   - Find and fill gaps with API-WG besides the one we already identified.
+  - Validate API request for unexpected attributes. Such attributes should
+    result in a 400 error. [https://review.openstack.org/#/c/260292]
 
 POLICY
 ------
