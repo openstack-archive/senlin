@@ -11,7 +11,7 @@
   License for the specific language governing permissions and limitations
   under the License.
 
-.. _guide-profile-types:
+.. _ref-profile-types:
 
 =============
 Profile Types

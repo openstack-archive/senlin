@@ -12,7 +12,7 @@
   under the License.
 
 
-.. _guide-membership:
+.. _ref-membership:
 
 ==================
 Cluster Membership

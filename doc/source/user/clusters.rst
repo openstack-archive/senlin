@@ -12,7 +12,7 @@
   under the License.
 
 
-.. _guide-clusters:
+.. _ref-clusters:
 
 ========
 Clusters

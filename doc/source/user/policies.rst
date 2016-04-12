@@ -12,7 +12,7 @@
   under the License.
 
 
-.. _guide-policies:
+.. _ref-policies:
 
 ========
 Policies

@@ -12,7 +12,7 @@
   under the License.
 
 
-.. _guide-policy-types:
+.. _ref-policy-types:
 
 ============
 Policy Types

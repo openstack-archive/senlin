@@ -12,7 +12,7 @@
   under the License.
 
 
-.. _guide-profiles:
+.. _ref-profiles:
 
 ========
 Profiles
