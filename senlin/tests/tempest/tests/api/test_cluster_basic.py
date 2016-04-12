@@ -13,8 +13,8 @@
 import copy
 from tempest.lib import decorators
 
-from senlin.tests.tempest_tests.tests.api import base
-from senlin.tests.tempest_tests.tests.common import constants
+from senlin.tests.tempest.tests.api import base
+from senlin.tests.tempest.tests.common import constants
 
 
 class TestClusterBasic(base.BaseSenlinTest):

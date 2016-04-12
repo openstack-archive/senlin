@@ -20,7 +20,7 @@ from tempest.lib import exceptions
 from tempest import test
 # from tempest_lib.common.utils import data_utils
 
-from senlin.tests.tempest_tests.services.clustering import clustering_client
+from senlin.tests.tempest.services.clustering import clustering_client
 
 CONF = config.CONF
 lOG = log.getLogger(__name__)
