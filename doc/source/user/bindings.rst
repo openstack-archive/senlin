@@ -12,7 +12,7 @@
   under the License.
 
 
-.. _guide-bindings:
+.. _ref-bindings:
 
 =======================
 Cluster-Policy Bindings

@@ -12,7 +12,7 @@
   under the License.
 
 
-.. _guide-events:
+.. _ref-events:
 
 ======
 Events

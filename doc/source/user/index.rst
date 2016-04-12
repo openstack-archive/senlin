@@ -11,10 +11,10 @@
   License for the specific language governing permissions and limitations
   under the License.
 
-.. _guide-index:
+.. _ref-index:
 
 ===============
-Getting Started
+User References
 ===============
 
 Project Scope and Vision
