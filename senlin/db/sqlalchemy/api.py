@@ -161,12 +161,13 @@ def cluster_get_all(context, limit=None, marker=None, sort=None, filters=None,
 
 def cluster_next_index(context, cluster_id):
     with session_for_write() as session:
-        cluster = session.query(models.Cluster).get(cluster_id)
+        cluster = session.query(models.Cluster).with_for_update().get(
+            cluster_id)
         if cluster is None:
             return 0
 
         next_index = cluster.next_index
-        cluster.next_index += 1
+        cluster.next_index = cluster.next_index + 1
         cluster.save(session)
         return next_index
 
