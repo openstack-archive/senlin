@@ -22,13 +22,13 @@ This section contains the glossary for the Senlin service.
    :sorted:
 
    Action
-     An action is an operation that can be performed on a :term:`Cluster`, a
-     :term:`Node`, a :term:`Policy`, etc. Different types of objects support
-     different set of actions. An action is executed by a :term:`Worker` thread
-     when the action becomes ready. Most Senlin APIs create actions in database
-     for worker threads to execute asynchronously. An action, when executed,
-     will check and enforce :term:`Policy` associated with the cluster. An
-     action can be triggered via :term:`Webhook`.
+     An action is an operation that can be performed on a :term:`Cluster` or a
+     :term:`Node` etc. Different types of objects support different set of
+     actions. An action is executed by a :term:`Worker` thread when the action
+     becomes READY. Most Senlin APIs create actions in database for worker
+     threads to execute asynchronously. An action, when executed, will check
+     and enforce :term:`Policy` associated with the cluster. An action can be
+     triggered via :term:`Receiver`.
 
    API server
      HTTP REST API service for Senlin.
@@ -66,9 +66,6 @@ This section contains the glossary for the Senlin service.
      An integer property of a :term:`Node` when it is a member of a
      :term:`Cluster`.  Each node has an auto-generated index value that is
      unique in the cluster.
-
-   Nested Cluster
-     A cluster that serves a member of another :term:`Cluster`.
 
    Node
      A node is an object that belongs to at most one :term:`Cluster`. A node
@@ -108,7 +105,7 @@ This section contains the glossary for the Senlin service.
      profile is an instance of a :term:`Profile Type` with all required
      information specified. Each profile has an unique ID. As a guideline, a
      profile cannot be updated once created. To change a profile, you have to
-     create a new instance. 
+     create a new instance.
 
    Profile Type
      A profile type is an abstraction of objects that are backed by some
@@ -129,15 +126,13 @@ This section contains the glossary for the Senlin service.
      A receiver is an abstract resource created at the senlin engine that can
      be used to hook the engine to some external event/alarm sources. A
      receiver can be of different types. The most common type is a
-     :term:`webhook`.
+     :term:`Webhook`.
 
    Webhook
-     A webhook is an encoded URI (Universion Resource Identifier) that
-     encapsulates a tuple (user, object, action), where the user is a Keystone
-     entity that initiates an action and the object is a specific cluster.
-     The action item specifies an :term:`Action` to be triggered. Such a
-     webhook is the only thing one needs to know to trigger an action on a
-     cluster.
+     A webhook is an encoded URI (Universion Resource Identifier) that for
+     triggering some operations (e.g. Senlin actions) on some resources. Such
+     a webhook URL is the only thing one needs to know to trigger an action on
+     a cluster.
 
    Worker
      A worker is the thread created and managed by Senlin engine to execute
