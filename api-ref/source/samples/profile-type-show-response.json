@@ -1,0 +1,61 @@
+{
+    "profile_type": {
+        "name": "os.heat.stack-1.0",
+        "schema": {
+            "context": {
+                "default": {},
+                "description": "A dictionary for specifying the customized context for stack operations",
+                "readonly": false,
+                "required": false,
+                "type": "Map",
+                "updatable": false
+            },
+            "disable_rollback": {
+                "default": true,
+                "description": "A boolean specifying whether a stack operation can be rolled back.",
+                "readonly": false,
+                "required": false,
+                "type": "Boolean",
+                "updatable": true
+            },
+            "environment": {
+                "default": {},
+                "description": "A map that specifies the environment used for stack operations.",
+                "readonly": false,
+                "required": false,
+                "type": "Map",
+                "updatable": true
+            },
+            "files": {
+                "default": {},
+                "description": "Contents of files referenced by the template, if any.",
+                "readonly": false,
+                "required": false,
+                "type": "Map",
+                "updatable": true
+            },
+            "parameters": {
+                "default": {},
+                "description": "Parameters to be passed to Heat for stack operations.",
+                "readonly": false,
+                "required": false,
+                "type": "Map",
+                "updatable": true
+            },
+            "template": {
+                "description": "Heat stack template.",
+                "readonly": false,
+                "required": true,
+                "type": "Map",
+                "updatable": true
+            },
+            "timeout": {
+                "description": "A integer that specifies the number of minutes that a stack operation times out.",
+                "readonly": false,
+                "required": false,
+                "type": "Integer",
+                "updatable": true
+            }
+        }
+    }
+}
