@@ -135,7 +135,7 @@ the :option:`-F json` option as shown below::
   $ openstack cluster policy type show -F json senlin.policy.deletion
 
 For information on how to manage the relationship between a policy and a
-cluster, please refer to :ref:`guide-bindings`.
+cluster, please refer to :ref:`ref-bindings`.
 
 
 See Also

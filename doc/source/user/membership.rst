@@ -86,7 +86,7 @@ Specify the Cluster When Creating a Node
 There are several ways to make a node a member of a cluster. When creating a
 node using command :command:`openstack cluster node create`, you can specify
 the option :option:`--cluster` to tell Senlin to which cluster the new node
-belongs. Please refer to :ref:`guide-nodes` for detailed instructions.
+belongs. Please refer to :ref:`ref-nodes` for detailed instructions.
 
 
 Adding Node(s) to A Cluster
