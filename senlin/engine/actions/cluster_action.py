@@ -287,9 +287,6 @@ class ClusterAction(base.Action):
 
             res, reason = self._wait_for_dependents()
             if res == self.RES_OK:
-                self.cluster.desired_capacity -= len(node_ids)
-                self.cluster.store(self.context)
-
                 self.outputs['nodes_removed'] = node_ids
                 for node_id in node_ids:
                     self.cluster.remove_node(node_id)
@@ -447,6 +444,10 @@ class ClusterAction(base.Action):
 
         if result != self.RES_OK:
             reason = new_reason
+        else:
+            self.cluster.desired_capacity -= len(nodes)
+            self.cluster.store(self.context)
+
         return result, reason
 
     def _get_action_data(self, current_size):
@@ -652,11 +653,11 @@ class ClusterAction(base.Action):
         result, reason = self._create_nodes(count)
         if result == self.RES_OK:
             reason = _('Cluster scaling succeeded.')
-            # TODO(anyone): make update to desired_capacity customizable
             self.cluster.set_status(self.context, self.cluster.ACTIVE, reason,
                                     desired_capacity=new_size)
         elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_ERROR]:
-            self.cluster.set_status(self.context, self.cluster.ERROR, reason)
+            self.cluster.set_status(self.context, self.cluster.ERROR, reason,
+                                    desired_capacity=new_size)
         else:  # RES_RETRY
             pass
 
@@ -721,11 +722,11 @@ class ClusterAction(base.Action):
 
         if result == self.RES_OK:
             reason = _('Cluster scaling succeeded.')
-            # TODO(anyone): make update to desired capacity customizable
             self.cluster.set_status(self.context, self.cluster.ACTIVE, reason,
                                     desired_capacity=new_size)
         elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_ERROR]:
-            self.cluster.set_status(self.context, self.cluster.ERROR, reason)
+            self.cluster.set_status(self.context, self.cluster.ERROR, reason,
+                                    desired_capacity=new_size)
         else:
             # RES_RETRY
             pass
