@@ -521,8 +521,6 @@ class ClusterActionTest(base.SenlinTestCase):
                                             {'status': 'READY'})
         mock_start.assert_called_once_with(action_id='NODE_ACTION_ID')
         mock_wait.assert_called_once_with()
-        self.assertEqual(99, cluster.desired_capacity)
-        cluster.store.assert_called_once_with(action.context)
         self.assertEqual(['NODE_ID'], action.outputs['nodes_removed'])
         cluster.remove_node.assert_called_once_with('NODE_ID')
 
@@ -562,8 +560,6 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_wait.assert_called_once_with()
         self.assertEqual({'nodes_removed': ['NODE_1', 'NODE_2']},
                          action.outputs)
-        self.assertEqual(98, cluster.desired_capacity)
-        cluster.store.assert_called_once_with(action.context)
         cluster.remove_node.assert_has_calls([
             mock.call('NODE_1'), mock.call('NODE_2')])
 
@@ -612,8 +608,6 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             action.context, 'NODE_ID', 'NODE_LEAVE',
             name='node_delete_NODE_ID', cause='Derived Action')
-        self.assertEqual(99, cluster.desired_capacity)
-        cluster.store.assert_called_once_with(action.context)
 
     @mock.patch.object(db_api, 'action_update')
     @mock.patch.object(base_action.Action, 'create')
@@ -986,6 +980,7 @@ class ClusterActionTest(base.SenlinTestCase):
     def test_do_del_nodes(self, mock_delete, mock_get, mock_wait, mock_load):
         cluster = mock.Mock()
         cluster.id = 'FAKE_CLUSTER'
+        cluster.desired_capacity = 4
         mock_load.return_value = cluster
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
@@ -1015,6 +1010,7 @@ class ClusterActionTest(base.SenlinTestCase):
             mock.call(action.context, 'NODE_1', project_safe=True),
             mock.call(action.context, 'NODE_2', project_safe=True)])
         mock_delete.assert_called_once_with(['NODE_1', 'NODE_2'])
+        self.assertEqual(2, cluster.desired_capacity)
 
         # deletion policy is attached to the action
         action.data = {
@@ -1030,6 +1026,10 @@ class ClusterActionTest(base.SenlinTestCase):
         res_code, res_msg = action.do_del_nodes()
         self.assertTrue(action.data['deletion']['destroy_after_deletion'])
         mock_wait.assert_called_once_with(2)
+        self.assertEqual(0, cluster.desired_capacity)
+        cluster.store.has_calls([
+            mock.call(action.context),
+            mock.call(action.context)])
 
     @mock.patch.object(db_api, 'node_get')
     def test_do_del_nodes_node_not_found(self, mock_get, mock_load):
@@ -1834,7 +1834,8 @@ class ClusterActionTest(base.SenlinTestCase):
             cluster.set_status.assert_has_calls([
                 mock.call(action.context, cluster.RESIZING,
                           'Cluster scale out started.'),
-                mock.call(action.context, cluster.ERROR, 'Too hot to work!')])
+                mock.call(action.context, cluster.ERROR, 'Too hot to work!',
+                          desired_capacity=3)])
             cluster.set_status.reset_mock()
             mock_create.assert_called_once_with(2)
             mock_create.reset_mock()
@@ -2118,7 +2119,8 @@ class ClusterActionTest(base.SenlinTestCase):
             cluster.set_status.assert_has_calls([
                 mock.call(action.context, cluster.RESIZING,
                           'Cluster scale in started.'),
-                mock.call(action.context, cluster.ERROR, 'Too cold to work!')])
+                mock.call(action.context, cluster.ERROR, 'Too cold to work!',
+                          desired_capacity=3)])
             cluster.set_status.reset_mock()
             mock_delete.assert_called_once_with(mock.ANY)
             mock_delete.reset_mock()
