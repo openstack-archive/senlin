@@ -27,10 +27,10 @@ nodes. A cluster has a ``profile_id`` property that specifies which
 :term:`Profile` to use when new nodes are created as members the cluster.
 
 Senlin provides APIs and command line supports to manage the cluster
-membership. Please refer to :ref:`guide-membership` for details. Senlin also
+membership. Please refer to :ref:`ref-membership` for details. Senlin also
 supports attaching :term:`Policy` objects to a cluster, customizing the policy
 properties when attaching a policy to a cluster. Please refer to
-:ref:`guide-bindings` for details.
+:ref:`ref-bindings` for details.
 
 Listing Clusters
 ~~~~~~~~~~~~~~~~
@@ -283,7 +283,7 @@ with that of the existing one and whether the new profile has a well-formed
 ``spec`` property. If everything is fine, the engine will start a node level
 profile update process. The node level update operation is subject to policy
 checkings/enforcements when there is an update policy attached to the cluster.
-Please refer to :ref:`guide-policies` and :ref:`guide-bindings` for more
+Please refer to :ref:`ref-policies` and :ref:`ref-bindings` for more
 information.
 
 

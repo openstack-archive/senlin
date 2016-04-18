@@ -25,11 +25,11 @@ A :term:`Node` is a logical object managed by the Senlin service. A node can
 be a member of at most one cluster at any time. A node can be an orphan node
 which means it doesn't belong to any clusters. Senlin provides APIs and
 command line supports to manage node's cluster membership. Please refer to
-:ref:`guide-membership` for details.
+:ref:`ref-membership` for details.
 
 A node has a ``profile_id`` property when created that specifies which
 :term:`Profile` to use when creating a physical object that backs the node.
-Please refer to :ref:`guide-profiles` for the creation and management of
+Please refer to :ref:`ref-profiles` for the creation and management of
 profile objects.
 
 
@@ -154,7 +154,7 @@ will receive an error message.
 Note that the ``index`` property of the new node is -1. This is because we
 didn't specify the owning cluster for the node. To join a node to an existing
 cluster, you can either use the :command:`openstack cluster member add`
-command (:ref:`guide-membership`) after the node is created, or specify the
+command (:ref:`ref-membership`) after the node is created, or specify the
 owning cluster upon node creation, as shown by the following example::
 
   $ openstack cluster node create --profile pstack --cluster c1 test_node
