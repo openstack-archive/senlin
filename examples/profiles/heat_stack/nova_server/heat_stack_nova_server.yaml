@@ -1,0 +1,9 @@
+type: os.heat.stack
+version: 1.0
+properties:
+  name: nova_server_stack
+  template: nova_server_template.yaml
+  parameters:
+    server_name: my_cirros_server
+  context:
+    region_name: RegionOne

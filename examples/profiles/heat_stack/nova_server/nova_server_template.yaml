@@ -1,0 +1,56 @@
+heat_template_version: 2014-10-16
+
+description: >
+  A HOT template that holds a VM instance with a Neutron port created in
+  given private network and a floatingIP created in given external network.
+
+parameters:
+  server_name:
+    type: string
+    description: Name for the instance to be created
+    default: my_server
+  flavor:
+    type: string
+    description: Flavor for the instance to be created
+    default: m1.tiny
+  image:
+    type: string
+    description: Name or ID of the image to use for the instance.
+    default: cirros-0.3.4-x86_64-uec
+  public_net:
+    type: string
+    description: ID or name of public network where floating IP to be created
+    default: public
+  private_net:
+    type: string
+    description: ID or name of private network into which servers get deployed
+    default: private
+
+resources:
+  my_server:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: server_name }
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: server_port }
+
+  server_port:
+    type: OS::Neutron::Port
+    properties:
+      network: { get_param: private_net }
+
+  server_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: { get_param: public_net }
+      port_id: { get_resource: server_port }
+
+outputs:
+  server_private_ip:
+    description: IP address of my_server in private network
+    value: { get_attr: [ server_port, fixed_ips, 0, ip_address ] }
+  server_public_ip:
+    description: Floating IP address of my_server in public network
+    value: { get_attr: [ server_floating_ip, floating_ip_address ] }
