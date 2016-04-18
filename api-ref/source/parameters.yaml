@@ -1,0 +1,114 @@
+microversion:
+  type: string
+  in: header
+  optional: True
+  description: |
+    API microversion request. It takes the form of
+    ``openstack-api-version: clustering 1.0``, where ``1.0`` is the requested
+    API version.
+
+profile_type:
+  type: object
+  in: body
+  description: |
+    A structured description of a profile type.
+
+profile_type_name:
+  type: string
+  in: profile_type
+  description: |
+    The name of the profile type.
+
+profile_type_schema:
+  type: object
+  in: profile_type
+  description: |
+    The schema of a profile type. The schema of a profile type varies
+    a lot based on the specific type implementation. All profile types
+    share the ``context`` property which is a dictionary for customizing
+    the request context to authenticate with a backend service. A common
+    usage of this property is to set the ``region_name`` in the dictionary
+    so that a node can be created in the specified region. All other
+    properties are defined by a particular profile type implementation.
+
+profile_type_url:
+  type: string
+  in: URL
+  description: |
+    The name of a profile type.
+
+profile_types:
+  type: list
+  in: body
+  description: |
+    A list of profile_type objects.
+
+request_id:
+  type: UUID
+  in: header
+  description: |
+    A unique ID for tracking service request. The request ID associated
+    with the request by default appears in the service logs.
+
+version:
+  type: object
+  in: body
+  description: |
+    The details about a major API version.
+
+version_id:
+  type: string
+  in: version
+  description: |
+    The string representation of an API version number, e.g. ``1.0``.
+
+version_links:
+  type: list
+  in: version
+  description: |
+    A list of relative URLs to different version objects.
+
+version_max_version:
+  type: string
+  in: version
+  description: |
+    The string representation of the maximum microversion supported.
+
+version_media_types:
+  type: list
+  in: version
+  description: |
+    A list of content-type based media type request supported.
+
+version_min_version:
+  type: string
+  in: version
+  description: |
+    The string representation of the minimum microversion supported.
+
+version_status:
+  type: string
+  in: version
+  description: |
+    A string indicating the supporting status of the version.
+
+version_updated:
+  type: string
+  in: version
+  description: |
+    The date and time when the version was last updated. The data and time
+    stamp format is ISO8601: ``CCYY-MM-DDThh:mm:ssZ``. For example:
+
+      ``2016-01-18T00:00:00Z``
+
+version_url:
+  type: string
+  in: URL
+  description: |
+    A string indicating the major version of Clustering API.
+
+versions:
+  type: list
+  in: body
+  description: |
+    A list of supported major API versions.

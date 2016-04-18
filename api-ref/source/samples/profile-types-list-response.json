@@ -1,0 +1,10 @@
+{
+    "profile_types": [
+        {
+            "name": "os.heat.stack-1.0"
+        },
+        {
+            "name": "os.nova.server-1.0"
+        }
+    ]
+}
