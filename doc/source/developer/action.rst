@@ -50,7 +50,7 @@ actions are supported at the time of this design:
 - ``NODE_JOIN``: An action for joining a node to an existing cluster;
 - ``NODE_LEAVE``: An action for a node to leave its current owning cluster;
 - ``NODE_CHECK``: An action for checking a node to see if its physical node is
- 'ACTIVE' and update its status with 'ERROR' if not;
+  'ACTIVE' and update its status with 'ERROR' if not;
 - ``NODE_RECOVER``: An action for recovering a node;
 
 
