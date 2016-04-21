@@ -27,6 +27,7 @@ contribute to the project.
 
    overview
    install
+   tutorial/index
    user/index
    developer/index
    glossary
