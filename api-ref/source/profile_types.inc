@@ -12,15 +12,19 @@ List profile types
 Lists supported profile types.
 
 Normal response codes: 200
-Error response codes: unauthorized (401), forbidden (403),
-serviceUnvailable (503)
+
+Error response codes:
+
+- unauthorized (401)
+- forbidden (403)
+- serviceUnvailable (503)
 
 Request Parameters
 ------------------
 
 .. rest_parameters:: parameters.yaml
 
-  - microversion: microversion
+  - OpenStack-API-Version: microversion
 
 Response Example
 ----------------
@@ -45,8 +49,13 @@ Shows details for a profile type.
 
 
 Normal response codes: 200
-Error response codes: unauthorized (401), forbidden (403),
-notFound (404), serviceUavailable (503)
+
+Error response codes:
+
+- unauthorized (401)
+- forbidden (403)
+- notFound (404)
+- serviceUavailable (503)
 
 
 Request Parameters
@@ -54,7 +63,7 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
-  - microversion: microversion
+  - OpenStack-API-Version: microversion
   - profile_type: profile_type_url
 
 Response Parameters
