@@ -25,7 +25,7 @@ class SenlinTempestPlugin(plugins.TempestPlugin):
         base_path = os.path.split(os.path.dirname(
             os.path.abspath(__file__)))[0]
         base_path += '/../..'
-        test_dir = "senlin/tests/tempest/tests"
+        test_dir = "senlin/tests/tempest"
         full_test_dir = os.path.join(base_path, test_dir)
         return full_test_dir, base_path
 
