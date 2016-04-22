@@ -7,6 +7,37 @@ microversion:
     ``openstack-api-version: clustering 1.0``, where ``1.0`` is the requested
     API version.
 
+policy_type:
+  type: object
+  in: body
+  description: |
+    A structured description of a policy type.
+
+policy_type_name:
+  type: string
+  in: policy_type
+  description: |
+    The name of the policy type.
+
+policy_type_schema:
+  type: object
+  in: policy_type
+  description: |
+    The schema of a policy type. The schema of a policy type varies a lot
+    based on the specific type implementation.
+
+policy_type_url:
+  type: string
+  in: URL
+  description: |
+    The name of a policy type.
+
+policy_types:
+  type: list
+  in: body
+  description: |
+    A list of policy_type objects.
+
 profile_type:
   type: object
   in: body
