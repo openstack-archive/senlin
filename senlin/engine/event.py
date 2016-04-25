@@ -10,9 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
-
-from oslo_log import log
+from oslo_log import log as logging
 from oslo_utils import reflection
 from oslo_utils import timeutils
 
@@ -25,7 +23,7 @@ _LW = i18n._LW
 _LI = i18n._LI
 _ = i18n._
 
-LOG = log.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class Event(object):

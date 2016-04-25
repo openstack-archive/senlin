@@ -10,8 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
-
+from oslo_log import log as logging
 
 RPC_ATTRS = (
     ENGINE_TOPIC,
