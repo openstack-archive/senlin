@@ -197,7 +197,7 @@ In the controller class:
         ....
 
 This method is only available if the caller had specified a request header
-``OpenStack-API-Version`` with value ``clustering <ver>`` and ``<ver`` is >=
+``OpenStack-API-Version`` with value ``clustering <ver>`` and ``<ver>`` is >=
 ``2.4``. If they had specified a lower version (or omitted it thus got the
 default of ``1.0``) the server would respond with HTTP 404.
 
@@ -214,7 +214,7 @@ In the controller class:
         ....
 
 This method would only be available if the caller had specified an
-``OpenStack-API-Version`` with value ``clustering <ver>`` and the ``ver`` is
+``OpenStack-API-Version`` with value ``clustering <ver>`` and the ``<ver>`` is
 <= ``2.4``. If ``2.5`` or later is specified the server will respond with
 HTTP 404.
 
