@@ -60,3 +60,9 @@ class ClusteringAPIClient(rest_client.RestClient):
         resp, body = self.delete(uri)
 
         return self._parsed_resp(resp, body)
+
+    def trigger_webhook(self, webhook_url, params=None):
+        if params is not None:
+            params = jsonutils.dumps(params)
+        resp, body = self.raw_request(webhook_url, 'POST', body=params)
+        return self._parsed_resp(resp, body)
