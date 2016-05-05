@@ -16,7 +16,6 @@ Utility methods for working with WSGI servers
 
 import abc
 import errno
-import logging as std_logging
 import os
 import signal
 import sys
@@ -1003,7 +1002,7 @@ def load_paste_app(app_name=None):
         # Log the options used when starting if we're in debug mode...
         if cfg.CONF.debug:
             cfg.CONF.log_opt_values(logging.getLogger(app_name),
-                                    std_logging.DEBUG)
+                                    logging.DEBUG)
 
         return app
     except (LookupError, ImportError) as e:
