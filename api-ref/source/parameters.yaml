@@ -1,11 +1,76 @@
+created_at:
+  type: string
+  in: body
+  description: |
+    The date and time when the resource was created. The date and time stamp
+    format is ISO8601: ``CCYY-MM-DDThh:mm:ssZ``. For example:
+    ``2016-01-18T00:00:00Z``
+
+domain:
+  type: UUID
+  in: body
+  description: |
+    The ID of the domain a resource is created in.
+
+global_project:
+  type: bool
+  in: query
+  default: False
+  optional: True
+  description: |
+    Indicates whether to include resources for all projects or resources for
+    the current project in the response.
+
+    If you are an administrative user and you set this value to ``true``, the
+    call returns all resources from all projects. Default is ``false``, which
+    returns only resources in the current project.
+
+limit:
+  type: int
+  in: query
+  optional: True
+  description: |
+    Requests a page size of resources. Returns a number of resources up to the
+    limit value. Use the `limit` parameter to make an initial limited request
+    and use the ID of the last-seen resource from the response as the `marker`
+    parameter value in a subsequent limited request.
+
+marker:
+  type: UUID
+  in: query
+  optional: True
+  description: |
+    The ID of the last-seen resource. Use the `limit` parameter to make an
+    initial limited request and use the ID of the last-seen resource from the
+    response as the `marker` parameter value in a subsequent limited request.
+
+metadata:
+  type: object
+  in: body
+  description: |
+    Metadata key and value pairs associated with a resource.
+
 microversion:
   type: string
   in: header
   optional: True
   description: |
     API microversion request. It takes the form of
-    ``openstack-api-version: clustering 1.0``, where ``1.0`` is the requested
+    ``OpenStack-API-Version: clustering 1.0``, where ``1.0`` is the requested
     API version.
+
+name:
+  type: string
+  in: body
+  description:
+    The name of the resource.
+
+name_query:
+  type: string
+  in: query
+  optional: True
+  description: |
+    Filters the response by the ``name`` property of the resource.
 
 policy_type:
   type: object
@@ -29,6 +94,7 @@ policy_type_schema:
 policy_type_url:
   type: string
   in: URL
+  optional: False
   description: |
     The name of a policy type.
 
@@ -37,6 +103,24 @@ policy_types:
   in: body
   description: |
     A list of policy_type objects.
+
+profile:
+  type: object
+  in: body
+  description: |
+    A structured description of a profile object.
+
+profile_id:
+  type: UUID
+  in: body
+  description: |
+    The UUID of a profile.
+
+profile_spec:
+  type: object
+  in: body
+  description: |
+    The detailed specification of the profile.
 
 profile_type:
   type: object
@@ -49,6 +133,12 @@ profile_type_name:
   in: profile_type
   description: |
     The name of the profile type.
+
+profile_type_property:
+  type: string
+  in: body
+  description: |
+    The ``type`` property of a profile.
 
 profile_type_schema:
   type: object
@@ -65,6 +155,7 @@ profile_type_schema:
 profile_type_url:
   type: string
   in: URL
+  optional: False
   description: |
     The name of a profile type.
 
@@ -74,12 +165,63 @@ profile_types:
   description: |
     A list of profile_type objects.
 
+profiles:
+  type: list
+  in: body
+  description: |
+    A list for profile objects.
+
+project:
+  type: UUID
+  in: body
+  description: |
+    The ID of the project a resource is created in.
+
 request_id:
   type: UUID
   in: header
+  optional: True
   description: |
     A unique ID for tracking service request. The request ID associated
     with the request by default appears in the service logs.
+
+sort:
+  type: string
+  in: query
+  optional: True
+  description: |
+    Sorts the response by one or more attribute and optional sort direction
+    combinations. A valid direction is ``asc`` (ascending) or ``desc``
+    (descending). Default direction is ``asc`` (ascending).
+
+    Specify the list as ``<key>[:<direction>]``.
+
+    For example, the following query parameters in the URI sort the resources
+    in the response by ``name`` in ascending order and then by ``status`` in
+    descending order::
+
+      GET /v2/images?sort=name:asc,status:desc
+
+type_query:
+  type: string
+  in: query
+  optional: True
+  description: |
+    Filters the response by the ``type`` property of the resource.
+
+updated_at:
+  type: string
+  in: body
+  description: |
+    The date and time when the resource was last updated. The date and time
+    stamp format is ISO8601: ``CCYY-MM-DDThh:mm:ssZ``. For example:
+    ``2016-01-18T00:00:00Z``
+
+user:
+  type: UUID
+  in: body
+  description: |
+    The ID of the user a resource is created by.
 
 version:
   type: object
@@ -127,14 +269,14 @@ version_updated:
   type: string
   in: version
   description: |
-    The date and time when the version was last updated. The data and time
+    The date and time when the version was last updated. The date and time
     stamp format is ISO8601: ``CCYY-MM-DDThh:mm:ssZ``. For example:
-
-      ``2016-01-18T00:00:00Z``
+    ``2016-01-18T00:00:00Z``
 
 version_url:
   type: string
   in: URL
+  optional: False
   description: |
     A string indicating the major version of Clustering API.
 

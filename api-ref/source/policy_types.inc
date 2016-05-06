@@ -13,7 +13,9 @@ Lists all supported policy types.
 
 
 Normal response codes: 200
+
 Error response codes:
+
 - unauthorized (401)
 - forbidden (403)
 - serviceUnvailable (503)
@@ -23,7 +25,7 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
-  - microversion: microversion
+  - OpenStack-API-Version: microversion
 
 Response Parameters
 -------------------
@@ -47,7 +49,9 @@ Show policy type details
 Shows details for a policy type.
 
 Normal response codes: 200
+
 Error response codes:
+
 - unauthorized (401)
 - forbidden (403)
 - notFound (404)
@@ -58,7 +62,7 @@ Request Parameters
 
 .. rest_parameters:: parameters.yaml
 
-  - microversion: microversion
+  - OpenStack-API-Version: microversion
   - policy_type: policy_type_url
 
 Response Parameters

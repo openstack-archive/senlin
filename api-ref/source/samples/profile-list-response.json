@@ -1,0 +1,30 @@
+{
+    "profiles": [
+        {
+            "created_at": "2016-01-03T16:22:23",
+            "domain": null,
+            "id": "9e1c6f42-acf5-4688-be2c-8ce954ef0f23",
+            "metadata": {},
+            "name": "pserver",
+            "project": "42d9e9663331431f97b75e25136307ff",
+            "spec": {
+                "properties": {
+                    "flavor": 1,
+                    "image": "cirros-0.3.4-x86_64-uec",
+                    "key_name": "oskey",
+                    "name": "cirros_server",
+                    "networks": [
+                        {
+                            "network": "private"
+                        }
+                    ]
+                },
+                "type": "os.nova.server",
+                "version": 1.0
+            },
+            "type": "os.nova.server-1.0",
+            "updated_at": null,
+            "user": "5e5bf8027826429c96af157f68dc9072"
+        }
+    ]
+}
