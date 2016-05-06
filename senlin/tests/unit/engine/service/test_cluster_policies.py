@@ -189,7 +189,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
             status=action_mod.Action.READY,
             inputs={'policy_id': '87654321abcd', 'enabled': True},
         )
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_policy_attach_cluster_not_found(self, mock_cluster):
@@ -263,7 +263,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
             status=action_mod.Action.READY,
             inputs={'policy_id': '87654321abcd'},
         )
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_policy_detach_cluster_not_found(self, mock_cluster):
@@ -342,7 +342,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
             status=action_mod.Action.READY,
             inputs={'policy_id': '87654321abcd', 'enabled': False},
         )
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_policy_update_cluster_not_found(self, mock_cluster):

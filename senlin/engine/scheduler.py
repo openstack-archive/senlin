@@ -61,35 +61,42 @@ class ThreadGroupManager(object):
         return self.group.add_thread(func, *args, **kwargs)
 
     def start_action(self, worker_id, action_id=None):
-        '''Run the given action in a sub-thread.
+        '''Run action(s) in sub-thread(s).
 
-        Release the action lock when the thread finishes?
-
-        :param workder_id: ID of the worker thread; we fake workers using
-                           senlin engines at the moment.
-        :param action_id: ID of the action to be executed. None means the
-                          1st ready action will be scheduled to run.
+        :param worker_id: ID of the worker thread; we fake workers using
+                          senlin engines at the moment.
+        :param action_id: ID of the action to be executed. None means all
+                          ready actions will be acquired and scheduled to run.
         '''
+        def launch(action_id):
+            '''Launch a sub-thread to run given action.'''
+            th = self.start(action_mod.ActionProc, self.db_session, action_id)
+            self.workers[action_id] = th
+            th.link(release, action_id)
+            return th
+
         def release(thread, action_id):
             '''Callback function that will be passed to GreenThread.link().'''
             # Remove action thread from thread list
             self.workers.pop(action_id)
 
-        timestamp = wallclock()
         if action_id is not None:
+            timestamp = wallclock()
             action = db_api.action_acquire(self.db_session, action_id,
                                            worker_id, timestamp)
-        else:
+            if action:
+                launch(action.id)
+
+        while True:
+            timestamp = wallclock()
             action = db_api.action_acquire_1st_ready(self.db_session,
                                                      worker_id,
                                                      timestamp)
-        if not action:
-            return
-
-        th = self.start(action_mod.ActionProc, self.db_session, action.id)
-        self.workers[action.id] = th
-        th.link(release, action.id)
-        return th
+            # TODO(Yanyan Hu): Enable batch control.
+            if action:
+                launch(action.id)
+            else:
+                break
 
     def cancel_action(self, action_id):
         '''Cancel an action execution progress.'''

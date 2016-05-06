@@ -163,7 +163,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_update.assert_called_once_with(
             action.context, 'NODE_ACTION_ID',
             {'status': base_action.Action.READY})
-        mock_start.assert_called_once_with(action_id='NODE_ACTION_ID')
+        mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with()
         self.assertEqual({'nodes_added': ['NODE_ID']}, action.outputs)
 
@@ -237,7 +237,7 @@ class ClusterActionTest(base.SenlinTestCase):
             mock.call(action.context, 'NODE_ACTION_2', {'status': 'READY'})
         ]
         mock_update.assert_has_calls(update_calls)
-        self.assertEqual(2, mock_start.call_count)
+        mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with()
         self.assertEqual({'nodes_added': [node1.id, node2.id]}, action.outputs)
         self.assertEqual({'region': 'regionOne'}, node1.data['placement'])
@@ -416,7 +416,7 @@ class ClusterActionTest(base.SenlinTestCase):
         ]
         mock_update.assert_has_calls(update_calls)
 
-        self.assertEqual(2, mock_start.call_count)
+        mock_start.assert_called_once_with()
         cluster.set_status.assert_called_once_with(
             action.context, 'ACTIVE', 'Cluster update completed.',
             profile_id='FAKE_PROFILE')
@@ -484,7 +484,7 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(1, mock_dep.call_count)
         mock_update.assert_called_once_with(action.context, 'NODE_ACTION',
                                             {'status': 'READY'})
-        self.assertEqual(1, mock_start.call_count)
+        mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with()
 
     @mock.patch.object(db_api, 'action_update')
@@ -519,7 +519,7 @@ class ClusterActionTest(base.SenlinTestCase):
                                          'CLUSTER_ACTION_ID')
         mock_update.assert_called_once_with(action.context, 'NODE_ACTION_ID',
                                             {'status': 'READY'})
-        mock_start.assert_called_once_with(action_id='NODE_ACTION_ID')
+        mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with()
         self.assertEqual(['NODE_ID'], action.outputs['nodes_removed'])
         cluster.remove_node.assert_called_once_with('NODE_ID')
@@ -556,7 +556,7 @@ class ClusterActionTest(base.SenlinTestCase):
         ]
         mock_update.assert_has_calls(update_calls)
         self.assertEqual(1, mock_dep.call_count)
-        self.assertEqual(2, mock_start.call_count)
+        mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with()
         self.assertEqual({'nodes_removed': ['NODE_1', 'NODE_2']},
                          action.outputs)
@@ -790,7 +790,7 @@ class ClusterActionTest(base.SenlinTestCase):
                                          'CLUSTER_ACTION_ID')
         mock_update.assert_called_once_with(
             action.context, 'NODE_ACTION_ID', {'status': 'READY'})
-        mock_start.assert_called_once_with(action_id='NODE_ACTION_ID')
+        mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with()
         self.assertEqual(101, cluster.desired_capacity)
         cluster.store.assert_called_once_with(action.context)
@@ -854,9 +854,7 @@ class ClusterActionTest(base.SenlinTestCase):
             mock.call(action.context, 'NODE_ACTION_1', {'status': 'READY'}),
             mock.call(action.context, 'NODE_ACTION_2', {'status': 'READY'})
         ])
-        mock_start.assert_has_calls([
-            mock.call(action_id='NODE_ACTION_1'),
-            mock.call(action_id='NODE_ACTION_2')])
+        mock_start.assert_called_once_with()
 
         mock_wait.assert_called_once_with()
         self.assertEqual(102, cluster.desired_capacity)
@@ -1137,10 +1135,7 @@ class ClusterActionTest(base.SenlinTestCase):
             mock.call(action.context, 'NODE_ACTION_1', {'status': 'READY'}),
             mock.call(action.context, 'NODE_ACTION_2', {'status': 'READY'}),
         ])
-        mock_start.assert_has_calls([
-            mock.call(action_id='NODE_ACTION_1'),
-            mock.call(action_id='NODE_ACTION_2'),
-        ])
+        mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with()
         cluster.set_status.assert_called_once_with(
             action.context, 'old status', 'old reason')
@@ -1215,7 +1210,7 @@ class ClusterActionTest(base.SenlinTestCase):
                                          'CLUSTER_ACTION_ID')
         mock_update.assert_called_once_with(action.context, 'NODE_ACTION_ID',
                                             {'status': 'READY'})
-        mock_start.assert_called_once_with(action_id='NODE_ACTION_ID')
+        mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with()
         cluster.set_status.assert_called_once_with(
             action.context, 'old status', 'old reason')
@@ -1260,7 +1255,7 @@ class ClusterActionTest(base.SenlinTestCase):
                                          'CLUSTER_ACTION_ID')
         mock_update.assert_called_once_with(action.context, 'NODE_RECOVER_ID',
                                             {'status': 'READY'})
-        mock_start.assert_called_once_with(action_id='NODE_RECOVER_ID')
+        mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with()
         cluster.set_status.assert_called_once_with(
             action.context, cluster.ACTIVE, 'Everything is Okay')
@@ -1322,7 +1317,7 @@ class ClusterActionTest(base.SenlinTestCase):
                                          'CLUSTER_ACTION_ID')
         mock_update.assert_called_once_with(action.context, 'NODE_RECOVER_ID',
                                             {'status': 'READY'})
-        mock_start.assert_called_once_with(action_id='NODE_RECOVER_ID')
+        mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with()
         cluster.set_status.assert_called_once_with(
             action.context, cluster.ACTIVE, 'Everything is Okay')
@@ -1383,7 +1378,7 @@ class ClusterActionTest(base.SenlinTestCase):
                                          'CLUSTER_ACTION_ID')
         mock_update.assert_called_once_with(action.context, 'NODE_ACTION_ID',
                                             {'status': 'READY'})
-        mock_start.assert_called_once_with(action_id='NODE_ACTION_ID')
+        mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with()
         cluster.set_status.assert_called_once_with(
             action.context, cluster.ERROR, 'Timeout!')

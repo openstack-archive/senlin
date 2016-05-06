@@ -55,7 +55,7 @@ class WebhookTest(base.SenlinTestCase):
             status=action_mod.Action.READY,
             inputs={'kee': 'vee', 'foo': 'bar'},
         )
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'receiver_find')
     def test_webhook_trigger_receiver_not_found(self, mock_find):

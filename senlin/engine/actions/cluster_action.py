@@ -152,7 +152,7 @@ class ClusterAction(base.Action):
             for cid in child:
                 db_api.action_update(self.context, cid,
                                      {'status': base.Action.READY})
-                dispatcher.start_action(action_id=cid)
+            dispatcher.start_action()
 
             # Wait for cluster creation to complete
             res, reason = self._wait_for_dependents()
@@ -245,7 +245,7 @@ class ClusterAction(base.Action):
             for cid in child:
                 db_api.action_update(self.context, cid,
                                      {'status': base.Action.READY})
-                dispatcher.start_action(action_id=cid)
+            dispatcher.start_action()
 
             result, new_reason = self._wait_for_dependents()
             if result != self.RES_OK:
@@ -283,7 +283,7 @@ class ClusterAction(base.Action):
                 # Build dependency and make the new action ready
                 db_api.action_update(self.context, cid,
                                      {'status': base.Action.READY})
-                dispatcher.start_action(action_id=cid)
+            dispatcher.start_action()
 
             res, reason = self._wait_for_dependents()
             if res == self.RES_OK:
@@ -380,7 +380,7 @@ class ClusterAction(base.Action):
             for cid in child:
                 db_api.action_update(self.context, cid,
                                      {'status': base.Action.READY})
-                dispatcher.start_action(action_id=cid)
+            dispatcher.start_action()
 
         # Wait for dependent action if any
         result, new_reason = self._wait_for_dependents()
@@ -493,7 +493,7 @@ class ClusterAction(base.Action):
             for cid in child:
                 db_api.action_update(self.context, cid,
                                      {'status': base.Action.READY})
-                dispatcher.start_action(action_id=cid)
+            dispatcher.start_action()
 
             # Wait for dependent action if any
             res, new_reason = self._wait_for_dependents()
@@ -545,7 +545,7 @@ class ClusterAction(base.Action):
             db_api.dependency_add(self.context, [c for c in children], self.id)
             for cid in children:
                 db_api.action_update(self.context, cid, {'status': 'READY'})
-                dispatcher.start_action(action_id=cid)
+            dispatcher.start_action()
 
             # Wait for dependent action if any
             res, reason = self._wait_for_dependents()

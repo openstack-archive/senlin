@@ -994,7 +994,8 @@ def action_mark_cancelled(context, action_id, timestamp, reason=None):
 
 def action_acquire(context, action_id, owner, timestamp):
     with session_for_write() as session:
-        action = session.query(models.Action).get(action_id)
+        action = session.query(models.Action).with_for_update().\
+            get(action_id)
         if not action:
             return None
 
@@ -1018,6 +1019,7 @@ def action_acquire(context, action_id, owner, timestamp):
 def action_acquire_1st_ready(context, owner, timestamp):
     with session_for_write() as session:
         action = session.query(models.Action).\
+            with_for_update().\
             filter_by(status=consts.ACTION_READY).\
             filter_by(owner=None).first()
 
@@ -1027,6 +1029,7 @@ def action_acquire_1st_ready(context, owner, timestamp):
             action.status = consts.ACTION_RUNNING
             action.status_reason = _('The action is being processed.')
             action.save(session)
+
             return action
 
 
