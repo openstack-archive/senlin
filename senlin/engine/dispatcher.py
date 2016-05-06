@@ -96,13 +96,14 @@ def notify(method, engine_id=None, **kwargs):
         # Broadcast to all disptachers
         call_context = client.prepare(
             version=consts.RPC_API_VERSION,
-            topic=consts.ENGINE_DISPATCHER_TOPIC)
+            topic=consts.ENGINE_DISPATCHER_TOPIC,
+            fanout=True)
 
     try:
         # We don't use ctext parameter in action progress
         # actually. But since RPCClient.call needs this param,
         # we use oslo current context here.
-        call_context.call(oslo_context.get_current(), method, **kwargs)
+        call_context.cast(oslo_context.get_current(), method, **kwargs)
         return True
     except oslo_messaging.MessagingTimeout:
         return False

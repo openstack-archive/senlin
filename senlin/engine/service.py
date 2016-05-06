@@ -787,7 +787,7 @@ class EngineService(service.Service):
         }
         action_id = action_mod.Action.create(context, cluster.id,
                                              consts.CLUSTER_CREATE, **kwargs)
-        dispatcher.start_action(action_id=action_id)
+        dispatcher.start_action()
         LOG.info(_LI("Cluster create action queued: %s."), action_id)
 
         result = cluster.to_dict()
@@ -856,7 +856,7 @@ class EngineService(service.Service):
         }
         action_id = action_mod.Action.create(context, cluster.id,
                                              consts.CLUSTER_UPDATE, **kwargs)
-        dispatcher.start_action(action_id=action_id)
+        dispatcher.start_action()
         LOG.info(_LI("Cluster update action queued: %s."), action_id)
 
         resp = cluster.to_dict()
@@ -897,7 +897,7 @@ class EngineService(service.Service):
         }
         action_id = action_mod.Action.create(context, db_cluster.id,
                                              consts.CLUSTER_DELETE, **params)
-        dispatcher.start_action(action_id=action_id)
+        dispatcher.start_action()
         LOG.info(_LI("Cluster delete action queued: %s"), action_id)
 
         return {'action': action_id}
@@ -982,7 +982,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(context, db_cluster.id,
                                              consts.CLUSTER_ADD_NODES,
                                              **params)
-        dispatcher.start_action(action_id=action_id)
+        dispatcher.start_action()
         LOG.info(_LI("Cluster add nodes action queued: %s."), action_id)
 
         return {'action': action_id}
@@ -1044,7 +1044,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(context, db_cluster.id,
                                              consts.CLUSTER_DEL_NODES,
                                              **params)
-        dispatcher.start_action(action_id=action_id)
+        dispatcher.start_action()
         LOG.info(_LI("Cluster delete nodes action queued: %s."), action_id)
 
         return {'action': action_id}
@@ -1156,7 +1156,7 @@ class EngineService(service.Service):
         }
         action_id = action_mod.Action.create(context, db_cluster.id,
                                              consts.CLUSTER_RESIZE, **params)
-        dispatcher.start_action(action_id=action_id)
+        dispatcher.start_action()
         LOG.info(_LI("Cluster resize action queued: %s."), action_id)
 
         return {'action': action_id}
@@ -1199,7 +1199,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(context, db_cluster.id,
                                              consts.CLUSTER_SCALE_OUT,
                                              **params)
-        dispatcher.start_action(action_id=action_id)
+        dispatcher.start_action()
         LOG.info(_LI("Cluster Scale out action queued: %s"), action_id)
 
         return {'action': action_id}
@@ -1242,7 +1242,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(context, db_cluster.id,
                                              consts.CLUSTER_SCALE_IN,
                                              **params)
-        dispatcher.start_action(action_id=action_id)
+        dispatcher.start_action()
         LOG.info(_LI("Cluster Scale in action queued: %s."), action_id)
 
         return {'action': action_id}
@@ -1269,7 +1269,7 @@ class EngineService(service.Service):
         }
         action_id = action_mod.Action.create(context, db_cluster.id,
                                              consts.CLUSTER_CHECK, **params)
-        dispatcher.start_action(action_id=action_id)
+        dispatcher.start_action()
         LOG.info(_LI("Cluster check action queued: %s."), action_id)
 
         return {'action': action_id}
@@ -1295,7 +1295,7 @@ class EngineService(service.Service):
         }
         action_id = action_mod.Action.create(context, db_cluster.id,
                                              consts.CLUSTER_RECOVER, **params)
-        dispatcher.start_action(action_id=action_id)
+        dispatcher.start_action()
         LOG.info(_LI("Cluster recover action queued: %s."), action_id)
 
         return {'action': action_id}
@@ -1442,7 +1442,7 @@ class EngineService(service.Service):
         }
         action_id = action_mod.Action.create(context, node.id,
                                              consts.NODE_CREATE, **params)
-        dispatcher.start_action(action_id=action_id)
+        dispatcher.start_action()
         LOG.info(_LI("Node create action queued: %s."), action_id)
 
         result = node.to_dict()
@@ -1529,7 +1529,7 @@ class EngineService(service.Service):
         }
         action_id = action_mod.Action.create(context, db_node.id,
                                              consts.NODE_UPDATE, **params)
-        dispatcher.start_action(action_id=action_id)
+        dispatcher.start_action()
         LOG.info(_LI("Node update action is queued: %s."), action_id)
 
         node = node_mod.Node.load(context, node=db_node)
@@ -1557,7 +1557,7 @@ class EngineService(service.Service):
         }
         action_id = action_mod.Action.create(context, db_node.id,
                                              consts.NODE_DELETE, **params)
-        dispatcher.start_action(action_id=action_id)
+        dispatcher.start_action()
         LOG.info(_LI("Node delete action is queued: %s."), action_id)
 
         return {'action': action_id}
@@ -1585,7 +1585,7 @@ class EngineService(service.Service):
         }
         action_id = action_mod.Action.create(context, db_node.id,
                                              consts.NODE_CHECK, **kwargs)
-        dispatcher.start_action(action_id=action_id)
+        dispatcher.start_action()
         LOG.info(_LI("Node check action is queued: %s."), action_id)
 
         return {'action': action_id}
@@ -1613,7 +1613,7 @@ class EngineService(service.Service):
         }
         action_id = action_mod.Action.create(context, db_node.id,
                                              consts.NODE_RECOVER, **kwargs)
-        dispatcher.start_action(action_id=action_id)
+        dispatcher.start_action()
         LOG.info(_LI("Node recover action is queued: %s."), action_id)
 
         return {'action': action_id}
@@ -1695,7 +1695,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(context, db_cluster.id,
                                              consts.CLUSTER_ATTACH_POLICY,
                                              **params)
-        dispatcher.start_action(action_id=action_id)
+        dispatcher.start_action()
         LOG.info(_LI("Policy attach action queued: %s."), action_id)
 
         return {'action': action_id}
@@ -1738,7 +1738,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(context, db_cluster.id,
                                              consts.CLUSTER_DETACH_POLICY,
                                              **params)
-        dispatcher.start_action(action_id=action_id)
+        dispatcher.start_action()
         LOG.info(_LI("Policy dettach action queued: %s."), action_id)
 
         return {'action': action_id}
@@ -1785,7 +1785,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(context, db_cluster.id,
                                              consts.CLUSTER_UPDATE_POLICY,
                                              **params)
-        dispatcher.start_action(action_id=action_id)
+        dispatcher.start_action()
         LOG.info(_LI("Policy update action queued: %s."), action_id)
 
         return {'action': action_id}
@@ -2094,7 +2094,7 @@ class EngineService(service.Service):
         }
         action_id = action_mod.Action.create(context, cluster.id,
                                              receiver.action, **kwargs)
-        dispatcher.start_action(action_id=action_id)
+        dispatcher.start_action()
         LOG.info(_LI("Webhook %(w)s' triggered with action queued: %(a)s."),
                  {'w': identity, 'a': action_id})
 

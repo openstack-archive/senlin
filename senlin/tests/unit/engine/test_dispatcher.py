@@ -115,10 +115,11 @@ class TestDispatcher(base.SenlinTestCase):
         mock_client = mock_rpc.return_value
         mock_client.prepare.assert_called_once_with(
             version=consts.RPC_API_VERSION,
-            topic=consts.ENGINE_DISPATCHER_TOPIC)
+            topic=consts.ENGINE_DISPATCHER_TOPIC,
+            fanout=True)
 
         mock_context = mock_client.prepare.return_value
-        mock_context.call.assert_called_once_with(fake_ctx, 'METHOD')
+        mock_context.cast.assert_called_once_with(fake_ctx, 'METHOD')
 
     @mock.patch.object(context, 'get_current')
     @mock.patch.object(messaging, 'get_rpc_client')
@@ -138,14 +139,14 @@ class TestDispatcher(base.SenlinTestCase):
             server='FAKE_ENGINE')
 
         mock_context = mock_client.prepare.return_value
-        mock_context.call.assert_called_once_with(fake_ctx, 'METHOD')
+        mock_context.cast.assert_called_once_with(fake_ctx, 'METHOD')
 
     @mock.patch.object(messaging, 'get_rpc_client')
     def test_notify_timeout(self, mock_rpc):
         mock_rpc.return_value = mock.Mock()
         mock_client = mock_rpc.return_value
         mock_context = mock_client.prepare.return_value
-        mock_context.call.side_effect = oslo_messaging.MessagingTimeout
+        mock_context.cast.side_effect = oslo_messaging.MessagingTimeout
 
         result = dispatcher.notify('METHOD')
 
@@ -154,9 +155,10 @@ class TestDispatcher(base.SenlinTestCase):
         mock_rpc.assert_called_once_with(version=consts.RPC_API_VERSION)
         mock_client.prepare.assert_called_once_with(
             version=consts.RPC_API_VERSION,
-            topic=consts.ENGINE_DISPATCHER_TOPIC)
+            topic=consts.ENGINE_DISPATCHER_TOPIC,
+            fanout=True)
 
-        mock_context.call.assert_called_once_with(mock.ANY, 'METHOD')
+        mock_context.cast.assert_called_once_with(mock.ANY, 'METHOD')
 
     @mock.patch.object(dispatcher, 'notify')
     def test_start_action_function(self, mock_notify):
