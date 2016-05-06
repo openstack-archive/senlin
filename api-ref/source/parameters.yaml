@@ -116,6 +116,12 @@ profile_id:
   description: |
     The UUID of a profile.
 
+profile_id_url:
+  type: string
+  in: URL
+  description: |
+    The name, UUID or short-UUID of a profile.
+
 profile_spec:
   type: object
   in: body
