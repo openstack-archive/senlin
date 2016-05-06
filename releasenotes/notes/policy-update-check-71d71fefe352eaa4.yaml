@@ -1,3 +1,0 @@
----
-fixes:
-  - Added parameter checking for cluster-policy-update API invocation.

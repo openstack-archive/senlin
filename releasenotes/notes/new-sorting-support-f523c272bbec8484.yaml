@@ -1,3 +1,0 @@
----
-features:
-  - Use 'sort' instead of 'sort_keys' and 'sort_dir' for object sorting.

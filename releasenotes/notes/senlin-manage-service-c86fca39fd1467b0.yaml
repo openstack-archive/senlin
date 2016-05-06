@@ -1,5 +1,0 @@
----
-features:
-  - Added command 'senlin-manage service list' to show the status of engine.
-  - Added command 'senlin-manage service clean' to clean the dead engine
-    records.

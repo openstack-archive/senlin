@@ -1,6 +1,0 @@
----
-upgrade:
-  - As a side-effect of the rework of action dependency, a new table has been
-    added to the database.
-fixes:
-  - Reworked action dependency to avoid indefinite waiting problem.

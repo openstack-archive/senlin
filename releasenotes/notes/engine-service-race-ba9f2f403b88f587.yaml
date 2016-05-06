@@ -1,3 +1,0 @@
----
-fixes:
-  - Fixed race condition in service deletion.

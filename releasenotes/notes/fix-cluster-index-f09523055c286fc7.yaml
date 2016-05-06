@@ -1,4 +1,0 @@
----
-fixes:
-  - Fixed a bug related to setting the next_index property of a cluster after
-    new nodes have joined or existing nodes have left.

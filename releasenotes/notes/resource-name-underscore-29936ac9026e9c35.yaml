@@ -1,4 +1,0 @@
----
-other:
-  - Ensure there are no underscores ('_') in resource names exposed through
-    RESTful API

@@ -1,3 +1,0 @@
----
-fixes:
-  - Fixed profile type checking error when attaching affinity policy.

@@ -1,3 +1,0 @@
----
-features:
-  - Clusters now have a new 'RESIZING' status when its scale is being changed.

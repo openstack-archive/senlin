@@ -1,4 +1,0 @@
----
-features:
-  - Profile types and policy types are explicitly versioned now. We have the
-    version string appended to the type names for easier detection.

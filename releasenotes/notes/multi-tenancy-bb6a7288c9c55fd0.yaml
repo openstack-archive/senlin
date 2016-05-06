@@ -1,4 +1,0 @@
----
-fixes:
-  - Enforce multi-tenancy checking when a non-admin user attempting to list
-    resources from projects other than that of the requesting user.

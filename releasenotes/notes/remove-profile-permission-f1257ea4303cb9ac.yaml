@@ -1,4 +1,0 @@
----
-upgrade:
-  - Removed permission property from profiles. We will devise an RBAC mechanism
-    as an alternative.
