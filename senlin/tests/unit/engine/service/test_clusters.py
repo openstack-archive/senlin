@@ -245,7 +245,7 @@ class ClusterTest(base.SenlinTestCase):
             cause=action_mod.CAUSE_RPC,
             status=action_mod.Action.READY,
         )
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(db_api, 'cluster_count_all')
     def test_check_cluster_quota(self, mock_count):
@@ -442,7 +442,7 @@ class ClusterTest(base.SenlinTestCase):
                 'name': 'new_name',
             },
         )
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_update_cluster_not_found(self, mock_find):
@@ -566,7 +566,7 @@ class ClusterTest(base.SenlinTestCase):
                 'name': 'new_name',
             },
         )
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(cluster_mod.Cluster, 'load')
@@ -599,7 +599,7 @@ class ClusterTest(base.SenlinTestCase):
                 'name': 'new_name',
             },
         )
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(cluster_mod.Cluster, 'load')
     @mock.patch.object(service.EngineService, 'cluster_find')
@@ -643,7 +643,7 @@ class ClusterTest(base.SenlinTestCase):
             cause=action_mod.CAUSE_RPC,
             status=action_mod.Action.READY)
 
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_delete_not_found(self, mock_find):
@@ -735,7 +735,7 @@ class ClusterTest(base.SenlinTestCase):
             status=action_mod.Action.READY,
             inputs={'nodes': ['NODE1', 'NODE2']},
         )
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_add_nodes_cluster_not_found(self, mock_find):
@@ -927,7 +927,7 @@ class ClusterTest(base.SenlinTestCase):
                 'candidates': ['NODE2'],
             },
         )
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_del_nodes_cluster_not_found(self, mock_find):
@@ -1064,7 +1064,7 @@ class ClusterTest(base.SenlinTestCase):
                 consts.ADJUSTMENT_STRICT: True
             },
         )
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(su, 'calculate_desired')
     @mock.patch.object(su, 'check_size_params')
@@ -1102,7 +1102,7 @@ class ClusterTest(base.SenlinTestCase):
                 consts.ADJUSTMENT_STRICT: True
             },
         )
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(su, 'calculate_desired')
     @mock.patch.object(su, 'check_size_params')
@@ -1141,7 +1141,7 @@ class ClusterTest(base.SenlinTestCase):
                 consts.ADJUSTMENT_STRICT: True
             },
         )
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     def test_cluster_resize_bad_adj_type(self):
         ex = self.assertRaises(rpc.ExpectedException,
@@ -1306,7 +1306,7 @@ class ClusterTest(base.SenlinTestCase):
             status=action_mod.Action.READY,
             inputs={'count': 1},
         )
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_scale_out_cluster_not_found(self, mock_find):
@@ -1341,7 +1341,7 @@ class ClusterTest(base.SenlinTestCase):
             status=action_mod.Action.READY,
             inputs={},
         )
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_scale_out_count_not_int_or_zero(self, mock_find):
@@ -1403,7 +1403,7 @@ class ClusterTest(base.SenlinTestCase):
             status=action_mod.Action.READY,
             inputs={'count': 1},
         )
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_scale_in_cluster_not_found(self, mock_find):
@@ -1438,7 +1438,7 @@ class ClusterTest(base.SenlinTestCase):
             status=action_mod.Action.READY,
             inputs={},
         )
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_scale_in_count_not_int_or_zero(self, mock_find):
@@ -1497,7 +1497,7 @@ class ClusterTest(base.SenlinTestCase):
             status=action_mod.Action.READY,
             inputs={'foo': 'bar'},
         )
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_check_cluster_not_found(self, mock_find):
@@ -1532,7 +1532,7 @@ class ClusterTest(base.SenlinTestCase):
             status=action_mod.Action.READY,
             inputs={'foo': 'bar'},
         )
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_recover_cluster_not_found(self, mock_find):

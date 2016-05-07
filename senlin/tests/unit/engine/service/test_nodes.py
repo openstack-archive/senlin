@@ -268,7 +268,7 @@ class NodeTest(base.SenlinTestCase):
             name='node_create_NODE_ID',
             cause=action_mod.CAUSE_RPC,
             status=action_mod.Action.READY)
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch('senlin.engine.node.Node')
@@ -307,7 +307,7 @@ class NodeTest(base.SenlinTestCase):
             name='node_create_NODE_ID',
             cause=action_mod.CAUSE_RPC,
             status=action_mod.Action.READY)
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch('senlin.engine.node.Node')
@@ -352,7 +352,7 @@ class NodeTest(base.SenlinTestCase):
             name='node_create_NODE_ID',
             cause=action_mod.CAUSE_RPC,
             status=action_mod.Action.READY)
-        notify.assert_called_once_with(action_id='ACTION_ID')
+        notify.assert_called_once_with()
 
     @mock.patch.object(db_api, 'node_get_by_name')
     def test_node_create_name_conflict(self, mock_get):
@@ -520,7 +520,7 @@ class NodeTest(base.SenlinTestCase):
                     'KEY': 'V1',
                 }
             })
-        mock_start.assert_called_once_with(action_id='ACTION_ID')
+        mock_start.assert_called_once_with()
         mock_load.assert_called_once_with(self.ctx, node=x_obj)
 
     @mock.patch.object(dispatcher, 'start_action')
@@ -564,7 +564,7 @@ class NodeTest(base.SenlinTestCase):
             inputs={
                 'new_profile_id': 'NEW_PROFILE_ID',
             })
-        mock_start.assert_called_once_with(action_id='ACTION_ID')
+        mock_start.assert_called_once_with()
         mock_load.assert_called_once_with(self.ctx, node=x_obj)
 
     @mock.patch.object(service.EngineService, 'node_find')
@@ -653,7 +653,7 @@ class NodeTest(base.SenlinTestCase):
             name='node_delete_12345678',
             cause=action_mod.CAUSE_RPC,
             status=action_mod.Action.READY)
-        mock_start.assert_called_once_with(action_id='ACTION_ID')
+        mock_start.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'node_find')
     def test_node_delete_node_not_found(self, mock_find):
@@ -685,7 +685,7 @@ class NodeTest(base.SenlinTestCase):
             cause=action_mod.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={})
-        mock_start.assert_called_once_with(action_id='ACTION_ID')
+        mock_start.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'node_find')
     def test_node_check_not_found(self, mock_find):
@@ -718,7 +718,7 @@ class NodeTest(base.SenlinTestCase):
             cause=action_mod.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'foo': 'bar'})
-        mock_start.assert_called_once_with(action_id='ACTION_ID')
+        mock_start.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'node_find')
     def test_node_recover_not_found(self, mock_find):
