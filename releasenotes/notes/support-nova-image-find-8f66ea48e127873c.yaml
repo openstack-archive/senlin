@@ -1,4 +1,0 @@
----
-features:
-  - Both image ID and image name are supported when creating os.nova.server
-    profile.

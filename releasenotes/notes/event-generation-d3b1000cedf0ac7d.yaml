@@ -1,4 +1,0 @@
----
-fixes:
-  - Fixed the bug related to event generation where we are passing in an object
-    of ClusterAction or NodeAction.

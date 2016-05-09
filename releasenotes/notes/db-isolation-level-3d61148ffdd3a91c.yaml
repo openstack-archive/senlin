@@ -1,4 +1,0 @@
----
-other:
-  - DB isolation level defaults to READ_COMMITTED in order to solve concurrency
-    problems encountered in action dependency checking.

@@ -1,4 +1,0 @@
----
-features:
-  - Make sure 'spec' of a profile is immutable after a profile object is
-    created. The only way to "update" a profile is to create a new one.

@@ -1,5 +1,0 @@
----
-upgrade:
-  - Status `DELETED` is removed from clusters and nodes.
-other:
-  - Command `senlin-manage purge_deleted` is removed.

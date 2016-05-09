@@ -1,4 +1,0 @@
----
-features:
-  - New health check daemon is introduced to do periodical cluster status
-    checking. It collaborates with health policy on cluster monitoring.

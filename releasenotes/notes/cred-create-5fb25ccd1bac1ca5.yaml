@@ -1,4 +1,0 @@
----
-fixes:
-  - Fixed an issue when multiple requests from the same user/project arrive at
-    the trust middleware which was causing concurrency problems in DB.

@@ -1,4 +1,0 @@
----
-fixes:
-  - Fixed trust usage when interacting with keystone. This enables senlin to
-    be deployed on a Juno version OpenStack.

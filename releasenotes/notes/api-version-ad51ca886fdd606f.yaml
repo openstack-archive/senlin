@@ -1,4 +1,0 @@
----
-features:
-  - REST APIs now support a version request in the HTTP header. This is a
-    downward compatible change.

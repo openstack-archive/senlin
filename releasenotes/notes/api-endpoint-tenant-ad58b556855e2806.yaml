@@ -1,4 +1,0 @@
----
-upgrade:
-  - Senlin API has removed 'tenant_id' from its endpoint. This means users have
-    to recreate their keystone endpoints if they have an old installation.
