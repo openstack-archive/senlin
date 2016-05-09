@@ -66,3 +66,11 @@ class ClusteringAPIClient(rest_client.RestClient):
             params = jsonutils.dumps(params)
         resp, body = self.raw_request(webhook_url, 'POST', body=params)
         return self._parsed_resp(resp, body)
+
+    def trigger_action(self, obj_type, obj_id, params=None):
+        uri = '{0}/{1}/{2}/actions'.format(self.version, obj_type, obj_id)
+        if params is not None:
+            params = jsonutils.dumps(params)
+        resp, body = self.post(uri, body=params)
+
+        return self._parsed_resp(resp, body)
