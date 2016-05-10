@@ -121,14 +121,22 @@ class RestParametersDirective(Table):
         # self.app.info("Lookup table looks like %s" % lookup)
         new_content = list()
         for paramlist in parsed:
-            for name, ref in paramlist.items():
-                if ref in lookup:
-                    new_content.append((name, lookup[ref]))
+            definition = {}
+            name = None
+            for key, value in paramlist.items():
+                if key.lower() == 'optional':
+                    definition['optional'] = bool(value)
+                elif value in lookup:
+                    name = key
+                    definition.update(lookup[value])
                 else:
                     self.env.warn(
                         self.env.docname,
                         "No field definition for %s found in %s. Skipping." %
-                        (ref, fpath))
+                        (value, fpath))
+
+            if name:
+                new_content.append((name, definition))
 
         # self.app.info("New content %s" % new_content)
         self.yaml = new_content
@@ -281,6 +289,7 @@ def rest_method_html(self, node):
 
 
 def resolve_rest_references(app, doctree):
+    """Resolve RST reference."""
     for node in doctree.traverse():
         if isinstance(node, rest_method):
             rest_node = node
@@ -313,6 +322,7 @@ def resolve_rest_references(app, doctree):
 
 
 def setup(app):
+    """Setup environment for doc build."""
     app.add_node(rest_method,
                  html=(rest_method_html, None))
     app.add_directive('rest_parameters', RestParametersDirective)
