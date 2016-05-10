@@ -8,3 +8,4 @@ Clustering API
 .. include:: policy_types.inc
 .. include:: profile_types.inc
 .. include:: profiles.inc
+.. include:: policies.inc

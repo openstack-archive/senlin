@@ -104,6 +104,48 @@ policy_types:
   description: |
     A list of policy_type objects.
 
+policies:
+  type: list
+  in: body
+  description: |
+    A list of policy objects.
+
+policy:
+  type: object
+  in: body
+  description: |
+    A structured description of a policy object.
+
+policy_data:
+  type: object
+  in: policy
+  description: |
+    A structured representation of data associated with a policy object.
+
+policy_id:
+  type: UUID
+  in: body
+  description: |
+    The UUID of a policy object.
+
+policy_id_url:
+  type: string
+  in: URL
+  description: |
+    The name, UUID or short-UUID of a policy object.
+
+policy_spec:
+  type: object
+  in: body
+  description: |
+    The detailed specification of a policy object.
+
+policy_type_property:
+  type: string
+  in: body
+  description: |
+    The ``type`` property of a policy object.
+
 profile:
   type: object
   in: body

@@ -1,18 +1,18 @@
 .. -*- rst -*-
 
 ===================
-Profiles (profiles)
+Policies (policies)
 ===================
 
-Lists all profiles and creates, shows information for, updates, and deletes a
-profile.
+Lists all policies and creates, shows information for, updates, and deletes a
+policy.
 
-List profiles
+List policies
 =============
 
-.. rest_method::  GET /v1/profiles
+.. rest_method::  GET /v1/policies
 
-Lists all profiles.
+Lists all policies.
 
 Normal response codes: 200
 Error response codes:
@@ -40,30 +40,32 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-  - profiles: profiles
+  - policies: policies
   - created_at: created_at
-  - id: profile_id
+  - data: policy_data
+  - domain: domain
+  - id: policy_id
   - metadata: metadata
   - name: name
   - project: project
-  - spec: profile_spec
-  - type: profile_type_property
+  - spec: policy_spec
+  - type: policy_type_property
   - updated_at: updated_at
   - user: user
 
 Response Example
 ----------------
 
-.. literalinclude:: samples/profile-list-response.json
+.. literalinclude:: samples/policy-list-response.json
    :language: javascript
 
 
-Create profile
+Create policy
 ==============
 
-.. rest_method::  POST /v1/profiles
+.. rest_method::  POST /v1/policies
 
-Creates a profile.
+Creates a policy.
 
 Normal response codes: 201
 Error response codes:
@@ -79,16 +81,14 @@ Request Parameters
 .. rest_parameters:: parameters.yaml
 
   - OpenStack-API-Version: microversion
-  - profile: profile
+  - policy: policy
   - name: name
-  - metadata: metadata
-    optional: true
-  - spec: profile_spec
+  - spec: policy_spec
 
 Request Example
 ---------------
 
-.. literalinclude:: samples/profile-create-request.json
+.. literalinclude:: samples/policy-create-request.json
    :language: javascript
 
 Response Parameters
@@ -96,31 +96,31 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-  - profile: profile
+  - policy: policy
   - created_at: created_at
+  - data: policy_data
   - domain: domain
-  - id: profile_id
-  - metadata: metadata
+  - id: policy_id
   - name: name
   - project: project
-  - spec: profile_spec
-  - type: profile_type_property
+  - spec: policy_spec
+  - type: policy_type_property
   - updated_at: updated_at
   - user: user
 
 Response Example
 ----------------
 
-.. literalinclude:: samples/profile-create-response.json
+.. literalinclude:: samples/policy-create-response.json
    :language: javascript
 
 
-Show profile details
+Show policy details
 ====================
 
-.. rest_method::  GET /v1/profiles/{profile_id}
+.. rest_method::  GET /v1/policies/{policy_id}
 
-Shows details for a profile.
+Shows details for a policy.
 
 Normal response codes: 200
 Error response codes:
@@ -137,39 +137,38 @@ Request Parameters
 .. rest_parameters:: parameters.yaml
 
   - OpenStack-API-Version: microversion
-  - profile_id: profile_id_url
-
+  - policy_id: policy_id_url
 
 Response Parameters
 -------------------
 
 .. rest_parameters:: parameters.yaml
 
-  - profile: profile
+  - policy: policy
   - created_at: created_at
+  - data: policy_data
   - domain: domain
-  - id: profile_id
-  - metadata: metadata
+  - id: policy_id
   - name: name
   - project: project
-  - spec: profile_spec
-  - type: profile_type_property
+  - spec: policy_spec
+  - type: policy_type_property
   - updated_at: updated_at
   - user: user
 
 Response Example
 ----------------
 
-.. literalinclude:: samples/profile-show-response.json
+.. literalinclude:: samples/policy-show-response.json
    :language: javascript
 
 
-Update profile
+Update policy
 ==============
 
-.. rest_method::  PATCH /v1/profiles/{profile_id}
+.. rest_method::  PATCH /v1/policies/{policy_id}
 
-Updates a profile.
+Updates a policy.
 
 Normal response codes: 200
 Error response codes:
@@ -186,16 +185,13 @@ Request Parameters
 .. rest_parameters:: parameters.yaml
 
   - OpenStack-API-Version: microversion
-  - profile_id: profile_id_url
-  - metadata: metadata
-    optional: true
+  - policy_id: policy_id_url
   - name: name
-    optional: true
 
 Request Example
 ---------------
 
-.. literalinclude:: samples/profile-update-request.json
+.. literalinclude:: samples/policy-update-request.json
    :language: javascript
 
 
@@ -204,30 +200,32 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-  - profile: profile
+  - policy: policy
   - created_at: created_at
-  - id: profile_id
+  - data: policy_data
+  - domain: domain
+  - id: policy_id
   - metadata: metadata
   - name: name
   - project: project
-  - spec: profile_spec
-  - type: profile_type_property
+  - spec: policy_spec
+  - type: policy_type_property
   - updated_at: updated_at
   - user: user
 
 Response Example
 ----------------
 
-.. literalinclude:: samples/profile-update-response.json
+.. literalinclude:: samples/policy-update-response.json
    :language: javascript
 
 
-Delete profile
+Delete policy
 ==============
 
-.. rest_method::  DELETE /v1/profiles/{profile_id}
+.. rest_method::  DELETE /v1/policies/{policy_id}
 
-Deletes a profile.
+Deletes a policy.
 
 Normal response codes: 204
 Error response codes:
@@ -245,4 +243,4 @@ Request Parameters
 .. rest_parameters:: parameters.yaml
 
   - OpenStack-API-Version: microversion
-  - profile_id: profile_id_url
+  - policy_id: policy_id_url
