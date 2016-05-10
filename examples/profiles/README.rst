@@ -16,7 +16,7 @@ To create a os.heat.stack profile::
 
 To get help on the command line options for creating profiles::
 
-  $senlin profile-create
+  $senlin help profile-create
 
 To show the profile created::
 
