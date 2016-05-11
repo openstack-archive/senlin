@@ -15,6 +15,7 @@ List profiles
 Lists all profiles.
 
 Normal response codes: 200
+
 Error response codes:
 
 - badRequest (400)
@@ -66,6 +67,7 @@ Create profile
 Creates a profile.
 
 Normal response codes: 201
+
 Error response codes:
 
 - badRequest (400)
@@ -123,6 +125,7 @@ Show profile details
 Shows details for a profile.
 
 Normal response codes: 200
+
 Error response codes:
 
 - badRequest (400)
@@ -172,6 +175,7 @@ Update profile
 Updates a profile.
 
 Normal response codes: 200
+
 Error response codes:
 
 - badRequest (400)
@@ -187,6 +191,7 @@ Request Parameters
 
   - OpenStack-API-Version: microversion
   - profile_id: profile_id_url
+  - profile: profile
   - metadata: metadata
     optional: true
   - name: name
@@ -230,6 +235,7 @@ Delete profile
 Deletes a profile.
 
 Normal response codes: 204
+
 Error response codes:
 
 - badRequest (400)
