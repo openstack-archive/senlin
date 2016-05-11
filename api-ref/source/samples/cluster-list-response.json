@@ -1,0 +1,26 @@
+{
+    "clusters": [
+        {
+            "created_at": "2016-05-11T07:29:04",
+            "data": {},
+            "desired_capacity": 0,
+            "domain": null,
+            "id": "e395be1e-8d8e-43bb-bd6c-943eccf76a6d",
+            "init_at": "2016-05-11T07:29:04",
+            "max_size": -1,
+            "metadata": {},
+            "min_size": 0,
+            "name": "c0",
+            "nodes": [],
+            "policies": [],
+            "profile_id": "d8a48377-f6a3-4af4-bbbb-6e8bcaa0cbc0",
+            "profile_name": "pcirros",
+            "project": "eee0b7c083e84501bdd50fb269d2a10e",
+            "status": "ACTIVE",
+            "status_reason": "Cluster creation succeeded.",
+            "timeout": 3600,
+            "updated_at": null,
+            "user": "ab79b9647d074e46ac223a8fa297b846"
+        }
+    ]
+}
