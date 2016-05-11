@@ -1,3 +1,45 @@
+cluster_id:
+  type: UUID
+  in: body
+  description: |
+    The UUID of a cluster object.
+
+cluster_id_url:
+  type: string
+  in: URL
+  description: |
+    The name, UUID or short-UUID of a cluster object.
+
+cluster_name:
+  type: string
+  in: body
+  description: |
+    The name of a cluster object.
+
+cluster_policies:
+  type: list
+  in: body
+  description: |
+    A list of cluster_policy objects.
+
+cluster_policy:
+  type: object
+  in: body
+  description: |
+    The structured description of a cluster_policy object.
+
+cluster_policy_enabled:
+  type: bool
+  in: body
+  description: |
+    Whether the policy is enabled on the attached cluster.
+
+cluster_policy_id:
+  type: UUID
+  in: body
+  description: |
+    The UUID of a cluster_policy object.
+
 created_at:
   type: string
   in: body
@@ -11,6 +53,13 @@ domain:
   in: body
   description: |
     The ID of the domain a resource is created in.
+
+enabled_query:
+  type: string
+  in: query
+  optional: True
+  description: |
+    Filters the response by a policy enabled status on the cluster.
 
 global_project:
   type: bool
@@ -134,6 +183,12 @@ policy_id_url:
   description: |
     The name, UUID or short-UUID of a policy object.
 
+policy_name:
+  type: string
+  in: body
+  description: |
+    The name of a policy object.
+
 policy_spec:
   type: object
   in: body
@@ -248,7 +303,7 @@ sort:
     in the response by ``name`` in ascending order and then by ``status`` in
     descending order::
 
-      GET /v2/images?sort=name:asc,status:desc
+      GET /v1/clusters?sort=name:asc,status:desc
 
 type_query:
   type: string
