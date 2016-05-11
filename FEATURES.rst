@@ -27,12 +27,19 @@ interface. We can learn some experience from what Nova has done for providing
 API version control.
 
 
-CoreOS based Container Support
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Container Clustering
+^^^^^^^^^^^^^^^^^^^^
 
-To Senlin, CoreOS is just another VM image. However, CoreOS provides some
-builtin support to Container/Docker and it provides clustering facility for
-user applications.
+[Austin Discussion: https://etherpad.openstack.org/p/newton-senlin-container]
+We need to add a simple/generic container profile (which can be rebased on
+some other projects later) so that we can experiment with issues unique to
+container cluster management:
+
+- Scheduling
+- Networking/Storage
+- APIs
+- Security issues
+- Dependencies
 
 
 Event Listener
@@ -232,11 +239,20 @@ there could be enterprise level policy enforcement that Senlin has to comply
 to.
 
 
-Integration with Tooz
+Investigation of Tooz
 ^^^^^^^^^^^^^^^^^^^^^
 
-There is potential requirement to do a better coordination between nodes in a
-cluster. That is where the Tooz project can be leveraged.
+There is requirement to manage multiple senlin-engine instances in a
+distributed way. Or, we can use a variant of DLM to manage cluster membership.
+E.g. use redis/zookeeper to build clusters in their sense so that when the
+cluster membership changes, we may possibly receive a notification. This would
+be helpful for cluster health management.
+
+Tooz is the promised focal point in this field, generalizing the many backends
+that we don't want to care about. This TODO item is about two things:
+
+#. Whether Tooz does provide a reliable membership management infra?
+#. Is there a comparison between zookeeper and redis for example.
 
 
 Run Senlin API under Apache
@@ -263,3 +279,13 @@ Dynamic Plugin Loading
 
 Design and implement dynamic plugin loading mechanism that allows loading
 plugins from any paths.
+
+
+Scaling to Existing Nodes
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+[Conclusion from Austin: https://etherpad.openstack.org/p/newton-senlin-as]
+
+Senlin can improve scale-out operation so that it can add existing nodes to
+a cluster when doing scale-out. We are not intended to scale to nodes not
+created by Senlin.
