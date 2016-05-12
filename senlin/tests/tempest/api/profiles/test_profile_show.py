@@ -28,12 +28,13 @@ class TestProfileShow(base.BaseSenlinTest):
     def resource_cleanup(cls):
         # Delete profile
         cls.client.delete_obj('profiles', cls.profile['id'])
+        super(TestProfileShow, cls).resource_cleanup()
 
     @decorators.idempotent_id('36206711-0676-4e4f-8f5d-7029912ecade')
     def test_show_profile(self):
         res = self.client.get_obj('profiles', self.profile['id'])
 
-        # Verify resp of profile update API
+        # Verify resp of profile show API
         self.assertEqual(200, res['status'])
         self.assertIsNone(res['location'])
         self.assertIsNotNone(res['body'])
