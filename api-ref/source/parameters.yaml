@@ -103,6 +103,14 @@ adjustment_type:
     When this paramter is specified, the ``number`` parameter has to be
     provided as well.
 
+check_params:
+  type: object
+  in: action
+  optional: true
+  description: |
+    The optional parameters provided to a cluster check operation. The detailed
+    keys and values are not checked at the moment.
+
 cluster:
   type: object
   in: body
@@ -489,6 +497,14 @@ project:
   in: body
   description: |
     The ID of the project a resource is created in.
+
+recover_params:
+  type: object
+  in: action
+  optional: true
+  description: |
+    The optional parameters provided to a cluster recover operation. The
+    detailed keys and values are not checked at the moment.
 
 request_id:
   type: UUID

@@ -587,3 +587,228 @@ Response Parameters
 .. rest_parameters:: parameters.yaml
 
    - location: location
+
+
+Attach a Policy to a Cluster
+============================
+
+.. rest_method::  POST /v1/clusters/{cluster_id}/actions
+
+Attach the specified policy to the cluster.
+
+Normal response codes: 202
+
+Error response codes:
+
+- badRequest (400)
+- unauthorized (401)
+- forbidden (403)
+- notFound (404)
+- serviceUnvailable (503)
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - cluster_id: cluster_id_url
+  - action: action_request
+  - policy_id: policy_id_url
+    in: action
+  - enabled: cluster_policy_enabled
+    in: action
+    optional: true
+
+The ``action_name`` in the request body has to be ``attach_policy``.
+
+Request Example
+---------------
+
+.. literalinclude:: samples/cluster-attach-policy-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - location: location
+
+
+Detach a Policy from a Cluster
+==============================
+
+.. rest_method::  POST /v1/clusters/{cluster_id}/actions
+
+Detach the specified policy from the cluster.
+
+Normal response codes: 202
+
+Error response codes:
+
+- badRequest (400)
+- unauthorized (401)
+- forbidden (403)
+- notFound (404)
+- serviceUnvailable (503)
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - cluster_id: cluster_id_url
+  - action: action_request
+  - policy_id: policy_id_url
+    in: action
+
+The ``action_name`` in the request body has to be ``detach_policy``.
+
+Request Example
+---------------
+
+.. literalinclude:: samples/cluster-detach-policy-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - location: location
+
+
+Update a Policy on a Cluster
+============================
+
+.. rest_method::  POST /v1/clusters/{cluster_id}/actions
+
+Update the specified policy on the cluster.
+
+Normal response codes: 202
+
+Error response codes:
+
+- badRequest (400)
+- unauthorized (401)
+- forbidden (403)
+- notFound (404)
+- serviceUnvailable (503)
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - cluster_id: cluster_id_url
+  - action: action_request
+  - policy_id: policy_id_url
+    in: action
+  - enabled: cluster_policy_enabled
+    in: action
+
+The ``action_name`` in the request body has to be ``update_policy``.
+
+Request Example
+---------------
+
+.. literalinclude:: samples/cluster-update-policy-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - location: location
+
+
+Check a Cluster's Health Status
+===============================
+
+.. rest_method::  POST /v1/clusters/{cluster_id}/actions
+
+CHeck the health status of all nodes in a cluster.
+
+Normal response codes: 202
+
+Error response codes:
+
+- badRequest (400)
+- unauthorized (401)
+- forbidden (403)
+- notFound (404)
+- serviceUnvailable (503)
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - cluster_id: cluster_id_url
+  - action: action_request
+  - params: check_params
+    in: action
+
+The ``action_name`` in the request body has to be ``check``.
+
+Request Example
+---------------
+
+.. literalinclude:: samples/cluster-check-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - location: location
+
+
+Recover a Cluster to a Healthy Status
+=====================================
+
+.. rest_method::  POST /v1/clusters/{cluster_id}/actions
+
+Recover the health status for all nodes in a cluster.
+
+Normal response codes: 202
+
+Error response codes:
+
+- badRequest (400)
+- unauthorized (401)
+- forbidden (403)
+- notFound (404)
+- serviceUnvailable (503)
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - cluster_id: cluster_id_url
+  - action: action_request
+  - params: recover_params
+    in: action
+
+The ``action_name`` in the request body has to be ``recover``.
+
+Request Example
+---------------
+
+.. literalinclude:: samples/cluster-recover-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - location: location
