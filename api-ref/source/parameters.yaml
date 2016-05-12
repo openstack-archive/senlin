@@ -687,6 +687,12 @@ version:
   description: |
     The details about a major API version.
 
+versions:
+  type: list
+  in: body
+  description: |
+    A list of supported major API versions.
+
 version_id:
   type: string
   in: version
@@ -738,8 +744,21 @@ version_url:
   description: |
     A string indicating the major version of Clustering API.
 
-versions:
-  type: list
-  in: body
+webhook_id_url:
+  type: UUID
+  in: URL
   description: |
-    A list of supported major API versions.
+    The UUID of a webhook object.
+
+webhook_params:
+  type: dict
+  in: query
+  optional: True
+  description: |
+    The query string that forms the inputs to use for the targeted action.
+
+webhook_version:
+  type: string
+  in: query
+  description: |
+    The webhook implementation version requested.

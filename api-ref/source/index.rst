@@ -12,3 +12,4 @@ Clustering API
 .. include:: profiles.inc
 .. include:: policies.inc
 .. include:: clusters.inc
+.. include:: webhooks.inc
