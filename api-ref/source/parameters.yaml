@@ -1,8 +1,20 @@
-cluster_id:
-  type: UUID
+cluster:
+  type: object
   in: body
   description: |
-    The UUID of a cluster object.
+    The structured definition of a cluster object.
+
+cluster_data:
+  type: object
+  in: cluster
+  description: |
+    The structured data associated with the cluster.
+
+cluster_id:
+  type: UUID
+  in: cluster
+  description: |
+    The UUID of the cluster object.
 
 cluster_id_url:
   type: string
@@ -30,15 +42,53 @@ cluster_policy:
 
 cluster_policy_enabled:
   type: bool
-  in: body
+  in: cluster_policy
   description: |
     Whether the policy is enabled on the attached cluster.
 
 cluster_policy_id:
   type: UUID
-  in: body
+  in: cluster_policy
   description: |
     The UUID of a cluster_policy object.
+
+cluster_name:
+  type: string
+  in: cluster
+  description: |
+    The name of the cluster object.
+
+cluster_nodes:
+  type: list
+  in: cluster
+  description: |
+    A list of the UUIDs of node objects which are members of the current
+    cluster.
+
+cluster_policy_property:
+  type: list
+  in: cluster
+  description: |
+    A list of the UUIDs of policy objects which are attached to the current
+    cluster.
+
+cluster_profile_id:
+  type: UUID
+  in: cluster
+  description: |
+    The UUID of the profile object referenced by the current cluster.
+
+cluster_profile_name:
+  type: string
+  in: cluster
+  description: |
+    The name of the profile object referenced by the current cluster.
+
+cluster_status:
+  type: string
+  in: cluster
+  description: |
+    The string representation of the current status of the cluster.
 
 created_at:
   type: string
@@ -47,6 +97,13 @@ created_at:
     The date and time when the resource was created. The date and time stamp
     format is ISO8601: ``CCYY-MM-DDThh:mm:ssZ``. For example:
     ``2016-01-18T00:00:00Z``
+
+desired_capacity:
+  type: integer
+  in: cluster
+  description: |
+    The desired capacity of a cluster. When creating a cluster, this value is
+    set to 0 by default.
 
 domain:
   type: UUID
@@ -74,6 +131,14 @@ global_project:
     call returns all resources from all projects. Default is ``false``, which
     returns only resources in the current project.
 
+cluster_init_at:
+  type: string
+  in: cluster
+  description: |
+    The date and time when the cluster object was initialized. The date and
+    time stamp format is ISO8601: ``CCYY-MM-DDThh:mm:ssZ``. For example:
+    ``2016-01-18T00:00:00Z``
+
 limit:
   type: int
   in: query
@@ -84,6 +149,14 @@ limit:
     and use the ID of the last-seen resource from the response as the `marker`
     parameter value in a subsequent limited request.
 
+location:
+  type: string
+  in: header
+  description: |
+    For asynchronous object operations, the ``location`` header contains a
+    string that can be interpreted as a relative URI from where users can
+    track the progress of the action triggered.
+
 marker:
   type: UUID
   in: query
@@ -93,11 +166,19 @@ marker:
     initial limited request and use the ID of the last-seen resource from the
     response as the `marker` parameter value in a subsequent limited request.
 
+max_size:
+  type: integer
+  in: cluster
+  description: |
+    The maximum size of a cluster, i.e. the maximum number of nodes that can
+    be members of the cluster. A value of -1 means that the cluster doesn't
+    have an upper bound regarding the number of member nodes.
+
 metadata:
   type: object
   in: body
   description: |
-    Metadata key and value pairs associated with a resource.
+    A collection of key-value pairs associated with an object.
 
 microversion:
   type: string
@@ -107,6 +188,14 @@ microversion:
     API microversion request. It takes the form of
     ``OpenStack-API-Version: clustering 1.0``, where ``1.0`` is the requested
     API version.
+
+min_size:
+  type: integer
+  default: 0
+  in: cluster
+  description: |
+    The minmum size of a cluster, i.e. the minimum number of nodes that can
+    be members of the cluster.
 
 name:
   type: string
@@ -304,6 +393,25 @@ sort:
     descending order::
 
       GET /v1/clusters?sort=name:asc,status:desc
+
+status_query:
+  type: string
+  in: query
+  optional: True
+  description: |
+    Filters the resource collection by the ``status`` property.
+
+status_reason:
+  type: string
+  description: |
+    The string representation of the reason why the object has transited to
+    its current status.
+
+timeout:
+  type: integer
+  in: cluster
+  description: |
+    The default timeout value (in seconds) of cluster operations.
 
 type_query:
   type: string
