@@ -262,7 +262,7 @@ policy_data:
 
 policy_id:
   type: UUID
-  in: body
+  in: policy
   description: |
     The UUID of a policy object.
 
@@ -280,13 +280,13 @@ policy_name:
 
 policy_spec:
   type: object
-  in: body
+  in: policy
   description: |
     The detailed specification of a policy object.
 
 policy_type_property:
   type: string
-  in: body
+  in: policy
   description: |
     The ``type`` property of a policy object.
 
@@ -298,7 +298,7 @@ profile:
 
 profile_id:
   type: UUID
-  in: body
+  in: profile
   description: |
     The UUID of a profile.
 
@@ -310,7 +310,7 @@ profile_id_url:
 
 profile_spec:
   type: object
-  in: body
+  in: profile
   description: |
     The detailed specification of the profile.
 

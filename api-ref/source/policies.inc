@@ -100,15 +100,21 @@ Response Parameters
 
   - policy: policy
   - created_at: created_at
+    in: policy
   - data: policy_data
   - domain: domain
+    in: policy
   - id: policy_id
   - name: name
+    in: policy
   - project: project
+    in: policy
   - spec: policy_spec
   - type: policy_type_property
   - updated_at: updated_at
+    in: policy
   - user: user
+    in: policy
 
 Response Example
 ----------------
@@ -192,6 +198,7 @@ Request Parameters
   - policy_id: policy_id_url
   - policy: policy
   - name: name
+    in: policy
 
 Request Example
 ---------------
@@ -209,13 +216,18 @@ Response Parameters
   - created_at: created_at
   - data: policy_data
   - domain: domain
+    in: policy
   - id: policy_id
   - name: name
+    in: policy
   - project: project
+    in: policy
   - spec: policy_spec
   - type: policy_type_property
   - updated_at: updated_at
+    in: policy
   - user: user
+    in: policy
 
 Response Example
 ----------------
