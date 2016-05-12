@@ -11,7 +11,7 @@
   License for the specific language governing permissions and limitations
   under the License.
 
-.. _tutorial-receiver:
+.. _tutorial-receivers:
 
 ======================
 Working with Receivers

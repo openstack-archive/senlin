@@ -11,7 +11,7 @@
   License for the specific language governing permissions and limitations
   under the License.
 
-.. _tutorial-autoscaling:
+.. _tutorial-heat:
 
 ===============================
 Cluster Orchestration with Heat
