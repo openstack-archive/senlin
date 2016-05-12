@@ -15,6 +15,7 @@ List policies
 Lists all policies.
 
 Normal response codes: 200
+
 Error response codes:
 
 - badRequest (400)
@@ -68,6 +69,7 @@ Create policy
 Creates a policy.
 
 Normal response codes: 201
+
 Error response codes:
 
 - badRequest (400)
@@ -123,6 +125,7 @@ Show policy details
 Shows details for a policy.
 
 Normal response codes: 200
+
 Error response codes:
 
 - badRequest (400)
@@ -171,6 +174,7 @@ Update policy
 Updates a policy.
 
 Normal response codes: 200
+
 Error response codes:
 
 - badRequest (400)
@@ -186,6 +190,7 @@ Request Parameters
 
   - OpenStack-API-Version: microversion
   - policy_id: policy_id_url
+  - policy: policy
   - name: name
 
 Request Example
@@ -205,7 +210,6 @@ Response Parameters
   - data: policy_data
   - domain: domain
   - id: policy_id
-  - metadata: metadata
   - name: name
   - project: project
   - spec: policy_spec
@@ -228,6 +232,7 @@ Delete policy
 Deletes a policy.
 
 Normal response codes: 204
+
 Error response codes:
 
 - badRequest (400)
