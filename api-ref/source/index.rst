@@ -10,3 +10,4 @@ Clustering API
 .. include:: profile_types.inc
 .. include:: profiles.inc
 .. include:: policies.inc
+.. include:: clusters.inc

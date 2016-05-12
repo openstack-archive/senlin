@@ -1,0 +1,9 @@
+{
+    "resize": {
+        "adjustment_type": "CHANGE_IN_CAPACITY",
+        "max_size": 5,
+        "min_size": 1,
+        "number": -2,
+        "strict": true 
+    }
+}
