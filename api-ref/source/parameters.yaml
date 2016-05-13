@@ -1,3 +1,108 @@
+action:
+  type: object
+  in: body
+  description: |
+    A structured definition of an action object.
+
+action_action:
+  type: string
+  in: action
+  description: |
+    A string representation of the action for execution.
+
+action_request:
+  type: object
+  in: body
+  description: |
+    A structured definition of an action to be executed. The object is
+    usually expressed as::
+
+      <action_name>: {
+        <param_1>: <value_1>
+        <param_2>: <value_2>
+        ...
+      }
+
+    The ``<action_name>`` indicates the requested action while the ``<param>``
+    keys provide the associated parameters to the action. Each individual
+    action has its own set of parameters.
+
+adjustment_max_size:
+  type: integer
+  in: action
+  optional: true
+  description: |
+    The value to be set as the new ``max_size`` of the cluster.
+
+adjustment_min_size:
+  type: integer
+  in: action
+  optional: true
+  description: |
+    The value to be set as the new ``min_size`` of the cluster.
+
+adjustment_min_step:
+  type: integer
+  in: action
+  optional: true
+  description: |
+    When ``adjustment_type`` is set to ``CHANGE_IN_PERCENTAGE``, often times
+    the computed value is a float which could be less than 1.0. The
+    ``min_step`` can be used to specify that at least this number of nodes will
+    be added or removed.
+
+adjustment_number:
+  type: number
+  in: action
+  optional: true
+  description: |
+    The number of adjustment. The interpretion of the value depends on the
+    value of the ``adjustment_type`` parameter. This parameter is mandatory
+    when ``adjustment_type`` is specified. Otherwise, it is optional.
+
+    When ``adjustment_type`` is specified as ``CHANGE_IN_PERCENTAGE``, the
+    value of this parameter can be a float number, otherwise it has to be an
+    integer.
+
+adjustment_strict:
+  type: bool
+  in: action
+  optional: true
+  default: false
+  description: |
+    There are cases where the computed number of nodes to adjust will break
+    the size constraints of a cluster, i.e. its ``min_size`` or ``max_size``
+    property. If this is the case, the ``strict`` parameter can further
+    instructs the senlin engine whether the resize should be done on a best
+    effort basis. If the value is set to True, senlin engine will perform the
+    resize operation while respecting the cluster's size constraints.
+    Otherwise, if the computed adjustment will break the size constraints, the
+    resize request will be directly rejected.
+
+adjustment_type:
+  type: string
+  in: action
+  optional: true
+  description: |
+    The type of size adjustment. The valid values are:
+
+    - ``EXACT_CAPACITY``: The adjustment number specified is to be interpreted
+      as the targeted ``desired_capacity``. This value has to be a non-negative
+      integer.
+    - ``CHANGE_IN_CAPACITY``: The adjustment number specified is to be treated
+      as the number of nodes to add or remove. The value has to be a non-zero
+      integer. A positive number can be used to specify the number of nodes to
+      add while a negative number can be specified to indicate the number of
+      nodes to remove.
+    - ``CHANGE_IN_PERCENTAGE``: The adjustment number will be interpreted as
+      a percentile relative to a cluster's current ``desired_capacity``. The
+      adjustment number can be a positive or negative float value.
+
+    This parameter is optional when a resize request is only about changing the
+    ``min_size`` and/or ``max_size`` of the cluster. Otherwise, it is required.
+    When this paramter is specified, the ``number`` parameter has to be
+    provided as well.
+
 cluster:
   type: object
   in: body
@@ -22,17 +127,33 @@ cluster_id_url:
   description: |
     The name, UUID or short-UUID of a cluster object.
 
+cluster_member_nodes:
+  type: list
+  in: action
+  optional: false
+  description: |
+    The candidate nodes to be added to or removed from a cluster. The meaning
+    of the parameter is depended on the action requested.
+
+    Each item in the list can be the name, the short-ID or the UUID of a node.
+
 cluster_name:
   type: string
-  in: body
+  in: cluster
   description: |
-    The name of a cluster object.
+    The name of the cluster object.
 
 cluster_policies:
   type: list
   in: body
   description: |
     A list of cluster_policy objects.
+
+cluster_policies_property:
+  type: list
+  in: cluster
+  description: |
+    A list of UUIDs of the policies attached to current cluster.
 
 cluster_policy:
   type: object
@@ -51,12 +172,6 @@ cluster_policy_id:
   in: cluster_policy
   description: |
     The UUID of a cluster_policy object.
-
-cluster_name:
-  type: string
-  in: cluster
-  description: |
-    The name of the cluster object.
 
 cluster_nodes:
   type: list
@@ -89,6 +204,12 @@ cluster_status:
   in: cluster
   description: |
     The string representation of the current status of the cluster.
+
+clusters:
+  type: list
+  in: body
+  description: |
+    A list of cluster objects.
 
 created_at:
   type: string
@@ -376,6 +497,16 @@ request_id:
   description: |
     A unique ID for tracking service request. The request ID associated
     with the request by default appears in the service logs.
+
+scale_count:
+  type: integer
+  in: action
+  optional: true
+  default: 1
+  description: |
+    The number of new nodes to add to or remove from the specified cluster.
+    The interpretation is depending on the action requested. Default value is
+    1.
 
 sort:
   type: string

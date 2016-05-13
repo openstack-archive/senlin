@@ -45,9 +45,11 @@ Response Parameters
 
   - clusters: clusters
   - created_at: created_at
+    in: cluster
   - data: cluster_data
   - desired_capacity: desired_capacity
   - domain: domain
+    in: cluster
   - id: cluster_id
   - init_at: cluster_init_at
   - max_size: max_size
@@ -59,10 +61,11 @@ Response Parameters
   - nodes: cluster_nodes
   - policies: cluster_policies_property
   - profile_id: cluster_profile_id
-  - profile_name: profile_name
+  - profile_name: cluster_profile_name
   - project: project
+    in: cluster
   - status: cluster_status
-  - status_reason: cluster_status_reason
+  - status_reason: status_reason
     in: cluster
   - timeout: timeout
   - updated_at: updated_at
@@ -101,6 +104,7 @@ Request Parameters
   - OpenStack-API-Version: microversion
   - cluster: cluster
   - name: name
+    in: cluster
   - desired_capacity: desired_capacity
     optional: true
   - profile_id: profile_id_url
@@ -112,6 +116,7 @@ Request Parameters
   - max_size: max_size
     optional: true
   - metadata: metadata
+    in: cluster
     optional: true
 
 
@@ -130,9 +135,11 @@ Response Parameters
   - location: location
   - cluster: cluster
   - created_at: created_at
+    in: cluster
   - data: cluster_data
   - desired_capacity: desired_capacity
   - domain: domain
+    in: cluster
   - id: cluster_id
   - init_at: cluster_init_at
   - max_size: max_size
@@ -144,16 +151,18 @@ Response Parameters
   - nodes: cluster_nodes
   - policies: cluster_policies_property
   - profile_id: cluster_profile_id
-  - profile_name: profile_name
+  - profile_name: cluster_profile_name
   - project: project
+    in: cluster
   - status: cluster_status
-  - status_reason: cluster_status_reason
+  - status_reason: status_reason
     in: cluster
   - timeout: timeout
   - updated_at: updated_at
     in: cluster
   - user: user
     in: cluster
+
 
 Response Example
 ----------------
@@ -187,6 +196,40 @@ Request Parameters
   - OpenStack-API-Version: microversion
   - cluster_id: cluster_id_url
 
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - cluster: cluster
+  - created_at: created_at
+    in: cluster
+  - data: cluster_data
+  - desired_capacity: desired_capacity
+  - domain: domain
+    in: cluster
+  - id: cluster_id
+  - init_at: cluster_init_at
+  - max_size: max_size
+  - metadata: metadata
+    in: cluster
+  - min_size: min_size
+  - name: cluster_name
+    in: cluster
+  - nodes: cluster_nodes
+  - policies: cluster_policies_property
+  - profile_id: cluster_profile_id
+  - profile_name: cluster_profile_name
+  - project: project
+    in: cluster
+  - status: cluster_status
+  - status_reason: status_reason
+    in: cluster
+  - timeout: timeout
+  - updated_at: updated_at
+    in: cluster
+  - user: user
+    in: cluster
 
 Response Example
 ----------------
@@ -228,6 +271,7 @@ Request
   - timeout: timeout
     optional: true
   - metadata: metadata
+    in: cluster
     optional: true
 
 Request Example
@@ -245,9 +289,11 @@ Response Parameters
   - location: location
   - cluster: cluster
   - created_at: created_at
+    in: cluster
   - data: cluster_data
   - desired_capacity: desired_capacity
   - domain: domain
+    in: cluster
   - id: cluster_id
   - init_at: cluster_init_at
   - max_size: max_size
@@ -259,10 +305,11 @@ Response Parameters
   - nodes: cluster_nodes
   - policies: cluster_policies_property
   - profile_id: cluster_profile_id
-  - profile_name: profile_name
+  - profile_name: cluster_profile_name
   - project: project
+    in: cluster
   - status: cluster_status
-  - status_reason: cluster_status_reason
+  - status_reason: status_reason
     in: cluster
   - timeout: timeout
   - updated_at: updated_at
@@ -284,7 +331,19 @@ Delete cluster
 
 Deletes a cluster.
 
+A cluster cannot be deleted if there are still policies attached to it.
+It cannot be deleted if there are still receivers associated with it. In both
+cases, a 400 error will be returned.
+
 Normal response codes: 202
+
+Error response codes:
+
+- badRequest (400)
+- unauthorized (401)
+- forbidden (403)
+- notFound (404)
+- serviceUnvailable (503)
 
 
 Request Parameters
@@ -301,3 +360,230 @@ Response Parameters
 .. rest_parameters:: parameters.yaml
 
   - location: location
+
+
+Resize a Cluster
+================
+
+.. rest_method::  POST /v1/clusters/{cluster_id}/actions
+
+Resize a cluster.
+
+Normal response codes: 202
+
+Error response codes:
+
+- badRequest (400)
+- unauthorized (401)
+- forbidden (403)
+- notFound (404)
+- serviceUnvailable (503)
+
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - cluster_id: cluster_id_url
+  - action: action_request
+  - adjustment_type: adjustment_type
+  - number: adjustment_number
+  - min_size: adjustment_min_size
+  - max_size: adjustment_max_size
+  - min_step: adjustment_min_step
+  - strict: adjustment_strict
+
+
+The ``action_name`` in the request body has to be ``resize``.
+
+Request Example
+---------------
+
+.. literalinclude:: samples/cluster-resize-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - location: location
+
+
+Scale-in a Cluster
+===================
+
+.. rest_method::  POST /v1/clusters/{cluster_id}/actions
+
+Shrink the size of a cluster by a given number.
+
+Normal response codes: 202
+
+Error response codes:
+
+- badRequest (400)
+- unauthorized (401)
+- forbidden (403)
+- notFound (404)
+- serviceUnvailable (503)
+
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - cluster_id: cluster_id_url
+  - action: action_request
+  - count: scale_count 
+
+
+The ``action_name`` in the request body has to be ``scale_in``.
+
+Request Example
+---------------
+
+.. literalinclude:: samples/cluster-scale-in-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - location: location
+
+
+Scale-out a Cluster
+===================
+
+.. rest_method::  POST /v1/clusters/{cluster_id}/actions
+
+Expand the size of a cluster by a given number.
+
+Normal response codes: 202
+
+Error response codes:
+
+- badRequest (400)
+- unauthorized (401)
+- forbidden (403)
+- notFound (404)
+- serviceUnvailable (503)
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - cluster_id: cluster_id_url
+  - action: action_request
+  - count: scale_count 
+
+
+The ``action_name`` in the request body has to be ``scale_out``.
+
+Request Example
+---------------
+
+.. literalinclude:: samples/cluster-scale-out-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - location: location
+
+
+Add nodes to a Cluster
+======================
+
+.. rest_method::  POST /v1/clusters/{cluster_id}/actions
+
+Add the specified list of nodes to the cluster.
+
+Normal response codes: 202
+
+Error response codes:
+
+- badRequest (400)
+- unauthorized (401)
+- forbidden (403)
+- notFound (404)
+- serviceUnvailable (503)
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - cluster_id: cluster_id_url
+  - action: action_request
+  - nodes: cluster_member_nodes
+
+
+The ``action_name`` in the request body has to be ``add_nodes``.
+
+Request Example
+---------------
+
+.. literalinclude:: samples/cluster-add-nodes-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - location: location
+
+
+Remove nodes from a Cluster
+===========================
+
+.. rest_method::  POST /v1/clusters/{cluster_id}/actions
+
+Remove the specified list of nodes from the cluster.
+
+Normal response codes: 202
+
+Error response codes:
+
+- badRequest (400)
+- unauthorized (401)
+- forbidden (403)
+- notFound (404)
+- serviceUnvailable (503)
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - cluster_id: cluster_id_url
+  - action: action_request
+  - nodes: cluster_member_nodes
+
+
+The ``action_name`` in the request body has to be ``del_nodes``.
+
+Request Example
+---------------
+
+.. literalinclude:: samples/cluster-del-nodes-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - location: location
