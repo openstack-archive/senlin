@@ -317,11 +317,17 @@ global_project:
     call returns all resources from all projects. Default is ``false``, which
     returns only resources in the current project.
 
-cluster_init_at:
+index:
+  type: integer
+  in: node
+  description: |
+    An integer that uniquely identifies a node within its owning cluster.
+
+init_at:
   type: string
   in: cluster
   description: |
-    The date and time when the cluster object was initialized. The date and
+    The date and time when the object was initialized. The date and
     time stamp format is ISO8601: ``CCYY-MM-DDThh:mm:ssZ``. For example:
     ``2016-01-18T00:00:00Z``
 
@@ -396,6 +402,55 @@ name_query:
   description: |
     Filters the response by the ``name`` property of the resource.
 
+node:
+  type: object
+  in: body
+  description: |
+    A structured description of a node object.
+
+node_data:
+  type: object
+  in: node
+  description: |
+    A map containing key-value pairs associated with a node object.
+
+node_id:
+  type: UUID
+  in: node
+  description: |
+    A UUID string that uniquely identifies a node object.
+
+node_id_url:
+  type: string
+  in: URL
+  description: |
+    The name, short-ID or UUID of a node object.
+
+node_profile_id:
+  type: UUID
+  in: node
+  description: |
+    The UUID of the profile object referenced by the current node object.
+
+node_profile_name:
+  type: string
+  in: node
+  description: |
+    The name of the profile object referenced by the current node object.
+
+node_status:
+  type: string
+  in: node
+  description: |
+    The string representation of the current status of the node object.
+
+nodes:
+  type: list
+  in: body
+  description: |
+    A list of node objects.
+
+
 obj_id:
   type: UUID
   in: event
@@ -438,6 +493,12 @@ obj_type_query:
     Filters the response by the ``type`` of object associated with an event.
     Use this filter multiple times to filter by multiple objects. A valid
     value is ``CLUSTER`` or ``NODE``.
+
+physical_id:
+  type: UUID
+  in: node
+  description: |
+    The UUID of the physical resource represented by the node object.
 
 policy_type:
   type: object
@@ -686,6 +747,12 @@ request_id:
     A unique ID for tracking service request. The request ID associated
     with the request by default appears in the service logs.
 
+role:
+  type: string
+  in: node
+  description: |
+    A string describing the role played by a node inside a cluster.
+
 scale_count:
   type: integer
   in: action
@@ -695,6 +762,15 @@ scale_count:
     The number of new nodes to add to or remove from the specified cluster.
     The interpretation is depending on the action requested. Default value is
     1.
+
+show_details:
+  type: bool
+  in: query
+  optional: true
+  default: false
+  description: |
+    A boolean indicating whether the detailed information about the physical
+    resource associated with the node object will be returned.
 
 sort:
   type: string

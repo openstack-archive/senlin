@@ -1,0 +1,6 @@
+{
+    "update_policy": {
+        "policy_id": "dp01",
+        "enabled": false
+    }
+}

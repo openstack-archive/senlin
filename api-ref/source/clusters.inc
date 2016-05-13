@@ -51,7 +51,7 @@ Response Parameters
   - domain: domain
     in: cluster
   - id: cluster_id
-  - init_at: cluster_init_at
+  - init_at: init_at
   - max_size: max_size
   - metadata: metadata
     in: cluster
@@ -141,7 +141,7 @@ Response Parameters
   - domain: domain
     in: cluster
   - id: cluster_id
-  - init_at: cluster_init_at
+  - init_at: init_at
   - max_size: max_size
   - metadata: metadata
     in: cluster
@@ -209,7 +209,7 @@ Response Parameters
   - domain: domain
     in: cluster
   - id: cluster_id
-  - init_at: cluster_init_at
+  - init_at: init_at
   - max_size: max_size
   - metadata: metadata
     in: cluster
@@ -295,7 +295,7 @@ Response Parameters
   - domain: domain
     in: cluster
   - id: cluster_id
-  - init_at: cluster_init_at
+  - init_at: init_at
   - max_size: max_size
   - metadata: metadata
     in: cluster

@@ -1,0 +1,24 @@
+{
+    "nodes": [
+        {
+            "cluster_id": "e395be1e-8d8e-43bb-bd6c-943eccf76a6d",
+            "created_at": "2016-05-13T07:02:20",
+            "data": {},
+            "domain": null,
+            "id": "82fe28e0-9fcb-42ca-a2fa-6eb7dddd75a1",
+            "index": 2,
+            "init_at": "2016-05-13T07:02:04",
+            "metadata": {},
+            "name": "node-e395be1e-002",
+            "physical_id": "66a81d68-bf48-4af5-897b-a3bfef7279a8",
+            "profile_id": "d8a48377-f6a3-4af4-bbbb-6e8bcaa0cbc0",
+            "profile_name": "pcirros",
+            "project": "eee0b7c083e84501bdd50fb269d2a10e",
+            "role": "",
+            "status": "ACTIVE",
+            "status_reason": "Creation succeeded",
+            "updated_at": null,
+            "user": "ab79b9647d074e46ac223a8fa297b846"
+        }
+    ]
+}
