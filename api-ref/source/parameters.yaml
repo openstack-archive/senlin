@@ -10,6 +10,20 @@ action_action:
   description: |
     A string representation of the action for execution.
 
+action_name:
+  type: string
+  in: body
+  description: |
+    The name of an action object.
+
+action_name_query:
+  type: string
+  in: query
+  optional: True
+  description: |
+    Filters the response by the action name associated with an event.
+    Use this filter multiple times to filter by multiple actions.
+
 action_request:
   type: object
   in: body
@@ -247,6 +261,49 @@ enabled_query:
   description: |
     Filters the response by a policy enabled status on the cluster.
 
+event:
+  type: object
+  in: body
+  description: |
+    The structured description of an event object.
+
+events:
+  type: list
+  in: body
+  description: |
+    A list of event objects.
+
+event_id:
+  type: UUID
+  in: event
+  description: |
+    The UUID of an event object.
+
+event_id_url:
+  type: string
+  in: URL
+  description: |
+    The name, UUID or short-UUID of an event object.
+
+event_level:
+  type: string
+  in: event
+  description: |
+    The level of an event object.
+
+event_status:
+  type: string
+  in: event
+  description: |
+    The current status of the object associated with the event.
+
+event_timestamp:
+  type: string
+  in: event
+  description: |
+    The date and time when the event was generated. The date and time stamp
+    format is ISO8601: ``CCYY-MM-DDThh:mm:ssZ``.
+
 global_project:
   type: bool
   in: query
@@ -338,6 +395,49 @@ name_query:
   optional: True
   description: |
     Filters the response by the ``name`` property of the resource.
+
+obj_id:
+  type: UUID
+  in: event
+  description: |
+    The UUID of an object associated with the event.
+
+obj_id_query:
+  type: string
+  in: query
+  optional: True
+  description: |
+    Filters the response by the ``ID`` of object associated with an event.
+    Use this filter multiple times to filter by multiple objects.
+
+obj_name:
+  type: string
+  in: event
+  description: |
+    The name of an object associated with the event.
+
+obj_name_query:
+  type: string
+  in: query
+  optional: True
+  description: |
+    Filters the response by the ``name`` of object associated with an event.
+    Use this filter multiple times to filter by multiple objects.
+
+obj_type:
+  type: string
+  in: event
+  description: |
+    The type of an object associated with the event.
+
+obj_type_query:
+  type: string
+  in: query
+  optional: True
+  description: |
+    Filters the response by the ``type`` of object associated with an event.
+    Use this filter multiple times to filter by multiple objects. A valid
+    value is ``CLUSTER`` or ``NODE``.
 
 policy_type:
   type: object
