@@ -16,11 +16,11 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.common import constants
 
 
-class TestProfileShow(base.BaseSenlinTest):
+class TestProfileList(base.BaseSenlinTest):
 
     @classmethod
     def resource_setup(cls):
-        super(TestProfileShow, cls).resource_setup()
+        super(TestProfileList, cls).resource_setup()
         # Create profile
         cls.profile = cls.create_profile(constants.spec_nova_server)
 
@@ -28,6 +28,7 @@ class TestProfileShow(base.BaseSenlinTest):
     def resource_cleanup(cls):
         # Delete profile
         cls.client.delete_obj('profiles', cls.profile['id'])
+        super(TestProfileList, cls).resource_cleanup()
 
     @decorators.idempotent_id('329d3026-12f7-4369-845b-05914e2a8678')
     def test_list_profile(self):
