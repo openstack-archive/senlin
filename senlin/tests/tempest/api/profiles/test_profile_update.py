@@ -28,7 +28,6 @@ class TestProfileUpdate(base.BaseSenlinTest):
     def resource_cleanup(cls):
         # Delete profile
         cls.client.delete_obj('profiles', cls.profile['id'])
-        super(TestProfileUpdate, cls).resource_setup()
 
     @decorators.idempotent_id('d7efdd92-1687-444e-afcc-b7f9c7e37478')
     def test_update_profile(self):
