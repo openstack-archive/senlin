@@ -598,6 +598,78 @@ project:
   description: |
     The ID of the project a resource is created in.
 
+receiver:
+  type: object
+  in: body
+  description: |
+    The structured definition of a receiver object.
+
+receivers:
+  type: list
+  in: body
+  description: |
+    A list for receiver objects.
+
+receiver_action:
+  type: string
+  in: receiver
+  description: |
+    The action to initiate when the receiver is triggered. A valid value
+    should be the name of an action that can be applied on a cluster.
+
+receiver_action_query:
+  type: string
+  in: query
+  optional: True
+  description: |
+    Filters the response by the action targeted by the receiver.
+
+receiver_actor:
+  type: dict
+  in: receiver
+  description: |
+    A map of key and value pairs to use for authentication. If omitted,
+    the requester is assumed to be the actor.
+
+receiver_channel:
+  type: dict
+  in: receiver
+  description: |
+    The target to be used by user to trigger a receiver. For webhook type
+    of receiver, channel is a webhook URL.
+
+receiver_id:
+  type: UUID
+  in: receiver
+  description: |
+    The UUID of the receiver object.
+
+receiver_id_url:
+  type: string
+  in: URL
+  description: |
+    The name, UUID or short-UUID of a receiver object.
+
+receiver_params:
+  type: dict
+  in: receiver
+  description: |
+    A map of key and value pairs to use for action creation. Some actions
+    might require certain input parameters.
+
+receiver_type:
+  type: string
+  in: receiver
+  description: |
+    The type of the receiver. The only valid value is webhook currently.
+
+receiver_type_query:
+  type: string
+  in: query
+  optional: True
+  description: |
+    Filters the response by the ``type`` property of the receiver.
+
 recover_params:
   type: object
   in: action
@@ -680,6 +752,13 @@ user:
   in: body
   description: |
     The ID of the user a resource is created by.
+
+user_query:
+  type: UUID
+  in: query
+  optional: True
+  description: |
+    Filters the response by the ``user`` property of the resource.
 
 version:
   type: object
