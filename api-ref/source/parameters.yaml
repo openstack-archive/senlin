@@ -175,6 +175,24 @@ adjustment_type:
     When this paramter is specified, the ``number`` parameter has to be
     provided as well.
 
+build_info:
+  type: object
+  in: body
+  description: |
+    Build information for a Senlin deployment.
+
+build_info_api:
+  type: object
+  in: build_info
+  description: |
+    Revision information of Senlin API service.
+
+build_info_engine:
+  type: object
+  in: build_info
+  description: |
+    Revision information of Senlin engine service.
+
 cause:
   type: string
   in: action
