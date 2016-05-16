@@ -10,6 +10,31 @@ action_action:
   description: |
     A string representation of the action for execution.
 
+action_action_query:
+  type: string
+  in: query
+  description: |
+    Filters the resulted list using the ``action`` field of the object.
+
+action_context:
+  type: object
+  in: action
+  description: |
+    A collection of key-value pairs that are used as security context when
+    executing the action.
+
+action_id:
+  type: UUID
+  in: action
+  description: |
+    An UUID that uniquely identifies an action object.
+
+action_id_url:
+  type: string
+  in: URL
+  description: |
+    The name or short-ID or UUID that identifies an action object.
+
 action_name:
   type: string
   in: body
@@ -23,6 +48,13 @@ action_name_query:
   description: |
     Filters the response by the action name associated with an event.
     Use this filter multiple times to filter by multiple actions.
+
+action_owner:
+  type: string
+  in: action
+  description: |
+    The UUID of the owning engine that is currently locking the action for
+    execution.
 
 action_request:
   type: object
@@ -40,6 +72,32 @@ action_request:
     The ``<action_name>`` indicates the requested action while the ``<param>``
     keys provide the associated parameters to the action. Each individual
     action has its own set of parameters.
+
+action_status:
+  type: string
+  in: action
+  description: |
+    A string representation of the current status of the action.
+
+action_status_query:
+  type: string
+  in: query
+  optional: true
+  description: |
+    Filters the results by the ``status`` property of an action object.
+
+action_timeout:
+  type: integer
+  in: action
+  description: |
+    The number of seconds after which an unfinished action execution will be
+    treated as timeout.
+
+actions:
+  type: list
+  in: body
+  description: |
+    A list of action objects.
 
 adjustment_max_size:
   type: integer
@@ -116,6 +174,12 @@ adjustment_type:
     ``min_size`` and/or ``max_size`` of the cluster. Otherwise, it is required.
     When this paramter is specified, the ``number`` parameter has to be
     provided as well.
+
+cause:
+  type: string
+  in: action
+  description: |
+    An explanation why an action was started.
 
 check_params:
   type: object
@@ -237,9 +301,21 @@ created_at:
   type: string
   in: body
   description: |
-    The date and time when the resource was created. The date and time stamp
+    The date and time when the object was created. The date and time stamp
     format is ISO8601: ``CCYY-MM-DDThh:mm:ssZ``. For example:
     ``2016-01-18T00:00:00Z``
+
+depended_by:
+  type: list
+  in: action
+  description: |
+    A list of UUIDs of the actions that depend on the current action.
+
+depends_on:
+  type: list
+  in: action
+  description: |
+    A list of UUIDs of the actions that the current action depends on.
 
 desired_capacity:
   type: integer
@@ -260,6 +336,13 @@ enabled_query:
   optional: True
   description: |
     Filters the response by a policy enabled status on the cluster.
+
+end_time:
+  type: float
+  in: action
+  description: |
+    A floating point number that represents when an action's execution has
+    completed.
 
 event:
   type: object
@@ -331,6 +414,20 @@ init_at:
     time stamp format is ISO8601: ``CCYY-MM-DDThh:mm:ssZ``. For example:
     ``2016-01-18T00:00:00Z``
 
+inputs:
+  type: object
+  in: action
+  description: |
+    A collection of key-value pairs that are fed to the action as input
+    parameters.
+
+interval:
+  type: integer
+  in: action
+  description: |
+    An integer that indicates the interval in seconds between two consecutive
+    executions of a repeatable action.
+
 limit:
   type: int
   in: query
@@ -393,14 +490,14 @@ name:
   type: string
   in: body
   description:
-    The name of the resource.
+    The name of the object in question.
 
 name_query:
   type: string
   in: query
   optional: True
   description: |
-    Filters the response by the ``name`` property of the resource.
+    Filters the response by the ``name`` property of the object.
 
 node:
   type: object
@@ -493,6 +590,13 @@ obj_type_query:
     Filters the response by the ``type`` of object associated with an event.
     Use this filter multiple times to filter by multiple objects. A valid
     value is ``CLUSTER`` or ``NODE``.
+
+outputs:
+  type: object
+  in: action
+  description: |
+    A collection of key-value pairs that were produced during the execution of
+    an action as its outputs.
 
 physical_id:
   type: UUID
@@ -789,6 +893,13 @@ sort:
 
       GET /v1/clusters?sort=name:asc,status:desc
 
+start_time:
+  type: float
+  in: action
+  description: |
+    A floating point number that represents the time when an action started
+    execution.
+
 status_query:
   type: string
   in: query
@@ -801,6 +912,20 @@ status_reason:
   description: |
     The string representation of the reason why the object has transited to
     its current status.
+
+target:
+  type: string
+  in: action
+  descrption: |
+    The UUID of the targeted object (which is usually a cluster).
+
+target_query:
+  type: string
+  in: query
+  optional: true
+  descrption: |
+    Filters the results by the UUID of the targeted object (which is usually
+    a cluster).
 
 timeout:
   type: integer
@@ -819,7 +944,7 @@ updated_at:
   type: string
   in: body
   description: |
-    The date and time when the resource was last updated. The date and time
+    The date and time when the object was last updated. The date and time
     stamp format is ISO8601: ``CCYY-MM-DDThh:mm:ssZ``. For example:
     ``2016-01-18T00:00:00Z``
 
@@ -827,7 +952,7 @@ user:
   type: UUID
   in: body
   description: |
-    The ID of the user a resource is created by.
+    The ID of the user an object is created by.
 
 user_query:
   type: UUID
