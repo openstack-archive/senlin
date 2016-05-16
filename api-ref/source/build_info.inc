@@ -17,7 +17,7 @@ Error response codes:
 
 - unauthorized (401)
 - forbidden (403)
-- serviceUavailable (503)
+- serviceUnavailable (503)
 
 Request Parameters
 ------------------

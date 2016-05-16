@@ -17,7 +17,7 @@ Error response codes:
 
 - forbidden (403)
 - notFound (404)
-- serviceUnvailable (503)
+- serviceUnavailable (503)
 
 Request Parameters
 ------------------

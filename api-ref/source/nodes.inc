@@ -22,7 +22,7 @@ Error response codes:
 - badRequest (400)
 - unauthorized (401)
 - forbidden (403)
-- serviceUnvailable (503)
+- serviceUnavailable (503)
 
 Request Parameters
 ------------------
@@ -96,7 +96,7 @@ Error response codes:
 - badRequest (400)
 - unauthorized (401)
 - forbidden (403)
-- serviceUnvailable (503)
+- serviceUnavailable (503)
 
 Request Parameters
 ------------------
@@ -184,7 +184,7 @@ Error response codes:
 - unauthorized (401)
 - forbidden (403)
 - notFound (404)
-- serviceUnvailable (503)
+- serviceUnavailable (503)
 
 Request Parameters
 ------------------
@@ -218,7 +218,7 @@ Error response codes:
 - unauthorized (401)
 - forbidden (403)
 - notFound (404)
-- serviceUnvailable (503)
+- serviceUnavailable (503)
 
 
 Request
@@ -305,7 +305,7 @@ Error response codes:
 - unauthorized (401)
 - forbidden (403)
 - notFound (404)
-- serviceUnvailable (503)
+- serviceUnavailable (503)
 
 Request Parameters
 ------------------
@@ -339,7 +339,7 @@ Error response codes:
 - unauthorized (401)
 - forbidden (403)
 - notFound (404)
-- serviceUnvailable (503)
+- serviceUnavailable (503)
 
 Request Parameters
 ------------------
@@ -380,7 +380,7 @@ Error response codes:
 - unauthorized (401)
 - forbidden (403)
 - notFound (404)
-- serviceUnvailable (503)
+- serviceUnavailable (503)
 
 Request Parameters
 ------------------
