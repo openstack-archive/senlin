@@ -126,8 +126,6 @@ class RestParametersDirective(Table):
             for key, value in paramlist.items():
                 if key.lower() == 'optional':
                     definition['optional'] = bool(value)
-                elif key.lower() == 'in':
-                    definition['in'] = value
                 elif value in lookup:
                     name = key
                     definition.update(lookup[value])
