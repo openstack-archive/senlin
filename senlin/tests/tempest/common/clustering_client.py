@@ -74,3 +74,16 @@ class ClusteringAPIClient(rest_client.RestClient):
         resp, body = self.post(uri, body=params)
 
         return self._parsed_resp(resp, body)
+
+    def list_cluster_policies(self, cluster_id):
+        uri = '{0}/clusters/{1}/policies'.format(self.version, cluster_id)
+        resp, body = self.get(uri)
+
+        return self._parsed_resp(resp, body)
+
+    def get_cluster_policy(self, cluster_id, policy_id):
+        uri = '{0}/clusters/{1}/policies/{2}'.format(self.version, cluster_id,
+                                                     policy_id)
+        resp, body = self.get(uri)
+
+        return self._parsed_resp(resp, body)
