@@ -903,7 +903,7 @@ def dependency_add(context, depended, dependent):
             query = session.query(models.Action).filter_by(id=dependent)
             query.update({'status': consts.ACTION_WAITING,
                           'status_reason': _('Waiting for depended actions.')},
-                         synchronize_session=False)
+                         synchronize_session='fetch')
             return
 
         # Only dependent can be a list now, convert it to a list if it
@@ -921,7 +921,7 @@ def dependency_add(context, depended, dependent):
             models.Action.id.in_(dependents))
         q.update({'status': consts.ACTION_WAITING,
                   'status_reason': _('Waiting for depended actions.')},
-                 synchronize_session=False)
+                 synchronize_session='fetch')
 
 
 def action_mark_succeeded(context, action_id, timestamp):
@@ -938,7 +938,7 @@ def action_mark_succeeded(context, action_id, timestamp):
 
         subquery = session.query(models.ActionDependency).filter_by(
             depended=action_id)
-        subquery.delete(synchronize_session=False)
+        subquery.delete(synchronize_session='fetch')
 
 
 def _mark_failed(session, action_id, timestamp, reason=None):
