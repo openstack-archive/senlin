@@ -22,7 +22,7 @@ spec_nova_server = {
         # nova server spec file after sdk support is done.
         "flavor": 1,
         "name": "new-server-test",
-        "image": "cirros-0.3.2-x86_64-uec",
+        "image": "cirros-0.3.4-x86_64-uec",
         "networks": [
             {"network": "private-net"}
         ]
