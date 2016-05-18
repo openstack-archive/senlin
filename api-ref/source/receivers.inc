@@ -35,9 +35,7 @@ Request Parameters
   - name: name_query
   - type: receiver_type_query
   - user: user_query
-  - cluster_id: cluster_id
-    in: query
-    optional: true
+  - cluster_id: cluster_identity_query
   - action: receiver_action_query
 
 Response Parameters
@@ -51,20 +49,14 @@ Response Parameters
   - channel: receiver_channel
   - cluster_id: cluster_id
   - created_at: created_at
-    in: receiver
   - domain: domain
-    in: receiver
   - id: receiver_id
   - name: name
-    in: receiver
   - params: receiver_params
   - project: project
-    in: receiver
   - type: receiver_type
   - updated_at: updated_at
-    in: receiver
   - user: user
-    in: receiver
 
 Response Example
 ----------------
@@ -97,17 +89,11 @@ Request Parameters
   - OpenStack-API-Version: microversion
   - receiver: receiver
   - name: name
-    in: receiver
-    optional: true
-  - cluster_id: cluster_id_url
-    in: receiver
+  - cluster_id: cluster_identity
   - type: receiver_type
   - action: receiver_action
   - actor: receiver_actor
-    optional: true
   - params: receiver_params
-    optional: true
-
 
 Request Example
 ---------------
@@ -127,21 +113,14 @@ Response Parameters
   - channel: receiver_channel
   - cluster_id: cluster_id
   - created_at: created_at
-    in: receiver
   - domain: domain
-    in: receiver
   - id: receiver_id
   - name: name
-    in: receiver
   - params: receiver_params
   - project: project
-    in: receiver
   - type: receiver_type
   - updated_at: updated_at
-    in: receiver
   - user: user
-    in: receiver
-
 
 Response Example
 ----------------
@@ -186,21 +165,14 @@ Response Parameters
   - channel: receiver_channel
   - cluster_id: cluster_id
   - created_at: created_at
-    in: receiver
   - domain: domain
-    in: receiver
   - id: receiver_id
   - name: name
-    in: receiver
   - params: receiver_params
   - project: project
-    in: receiver
   - type: receiver_type
   - updated_at: updated_at
-    in: receiver
   - user: user
-    in: receiver
-
 
 Response Example
 ----------------

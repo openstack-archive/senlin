@@ -32,9 +32,7 @@ Request Parameters
   - marker: marker
   - sort: sort
   - global_project: global_project
-  - cluster_id: cluster_id
-    in: query
-    optional: true
+  - cluster_id: cluster_identity_query
   - name: name_query
   - status: status_query
 
@@ -45,33 +43,23 @@ Response Parameters
 
   - nodes: nodes
   - cluster_id: cluster_id
-    in: node
   - created_at: created_at
-    in: node
   - data: node_data
   - domain: domain
-    in: node
   - id: node_id
   - index: index
   - init_at: init_at
-    in: node
   - metadata: metadata
-    in: node
   - name: name
-    in: node
   - physical_id: physical_id
   - profile_id: node_profile_id
   - profile_name: node_profile_name
   - project: project
-    in: node
   - role: role
   - status: node_status
   - status_reason: status_reason
-    in: node
   - updated_at: updated_at
-    in: node
   - user: user
-    in: node
 
 Response Example
 ----------------
@@ -104,18 +92,10 @@ Request Parameters
   - OpenStack-API-Version: microversion
   - node: node
   - role: role
-    optional: true
-  - profile_id: profile_id_url
-    in: node
-  - cluster_id: cluster_id_url
-    in: node
-    optional: true
+  - profile_id: profile_identity
+  - cluster_id: cluster_identity
   - name: name
-    in: node
-    optional: true
   - metadata: metadata
-    in: node
-    optional: true
 
 Request Example
 ---------------
@@ -131,33 +111,23 @@ Response Parameters
   - location: location
   - node: node
   - cluster_id: cluster_id
-    in: node
   - created_at: created_at
-    in: node
   - data: node_data
   - domain: domain
-    in: node
   - id: node_id
   - index: index
   - init_at: init_at
-    in: node
   - metadata: metadata
-    in: node
   - name: name
-    in: node
   - physical_id: physical_id
   - profile_id: node_profile_id
   - profile_name: node_profile_name
   - project: project
-    in: node
   - role: role
   - status: node_status
   - status_reason: status_reason
-    in: node
   - updated_at: updated_at
-    in: node
   - user: user
-    in: node
 
 Response Example
 ----------------
@@ -192,7 +162,6 @@ Request Parameters
   - OpenStack-API-Version: microversion
   - node_id: node_id_url
   - show_details: show_details
-    optional: true
 
 Response Example
 ----------------
@@ -228,16 +197,9 @@ Request
   - node_id: node_id_url
   - node: node
   - name: name
-    in: node
-    optional: true
-  - profile_id: profile_id_url
-    in: node
-    optional: true
+  - profile_id: profile_identity
   - role: role
-    optional: true
   - metadata: metadata
-    in: node
-    optional: true
 
 Request Example
 ---------------
@@ -253,33 +215,23 @@ Response Parameters
   - location: location
   - node: node
   - cluster_id: cluster_id
-    in: node
   - created_at: created_at
-    in: node
   - data: node_data
   - domain: domain
-    in: node
   - id: node_id
   - index: index
   - init_at: init_at
-    in: node
   - metadata: metadata
-    in: node
   - name: name
-    in: node
   - physical_id: physical_id
   - profile_id: node_profile_id
   - profile_name: node_profile_name
   - project: project
-    in: node
   - role: role
   - status: node_status
   - status_reason: status_reason
-    in: node
   - updated_at: updated_at
-    in: node
   - user: user
-    in: node
 
 Response Example
 ----------------
