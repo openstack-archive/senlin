@@ -10,11 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from tempest.lib.common.utils import data_utils
 from tempest.lib import decorators
 
 from senlin.tests.tempest.api import base
-from senlin.tests.tempest.common import constants
 
 
 class TestPolicyDelete(base.BaseSenlinTest):
@@ -23,13 +21,7 @@ class TestPolicyDelete(base.BaseSenlinTest):
     def resource_setup(cls):
         super(TestPolicyDelete, cls).resource_setup()
         # Create policy
-        params = {
-            'policy': {
-                'name': data_utils.rand_name("tempest-created-policy"),
-                'spec': constants.spec_scaling_policy
-            }
-        }
-        cls.policy = cls.client.create_obj('policies', params)['body']
+        cls.policy = cls.create_test_policy()
 
     @decorators.idempotent_id('b707e4e3-3d42-4a9f-9a09-3e330959b498')
     def test_delete_policy(self):
