@@ -229,3 +229,34 @@ class BaseSenlinTest(test.BaseTestCase):
         }
         res = cls.client.create_obj('policies', params)
         return res['body']
+
+    @classmethod
+    def attach_policy(cls, cluster_id, policy_id, wait_timeout=None):
+        """Utility function that attach a policy to cluster."""
+
+        params = {
+            'policy_attach': {
+                'enabled': True,
+                'policy_id': policy_id,
+            }
+        }
+        res = cls.client.trigger_action('clusters', cluster_id,
+                                        params=params)
+        action_id = res['location'].split('/actions/')[1]
+        cls.wait_for_status('actions', action_id, 'SUCCEEDED',
+                            timeout=wait_timeout)
+
+    @classmethod
+    def detach_policy(cls, cluster_id, policy_id, wait_timeout=None):
+        """Utility function that detach a policy from cluster."""
+
+        params = {
+            'policy_detach': {
+                'policy_id': policy_id,
+            }
+        }
+        res = cls.client.trigger_action('clusters', cluster_id,
+                                        params=params)
+        action_id = res['location'].split('/actions/')[1]
+        cls.wait_for_status('actions', action_id, 'SUCCEEDED',
+                            timeout=wait_timeout)
