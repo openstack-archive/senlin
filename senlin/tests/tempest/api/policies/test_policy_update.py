@@ -10,11 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from tempest.lib.common.utils import data_utils
 from tempest.lib import decorators
 
 from senlin.tests.tempest.api import base
-from senlin.tests.tempest.common import constants
 
 
 class TestPolicyUpdate(base.BaseSenlinTest):
@@ -23,13 +21,7 @@ class TestPolicyUpdate(base.BaseSenlinTest):
     def resource_setup(cls):
         super(TestPolicyUpdate, cls).resource_setup()
         # Create policy
-        params = {
-            'policy': {
-                'name': data_utils.rand_name("tempest-created-policy"),
-                'spec': constants.spec_scaling_policy
-            }
-        }
-        cls.policy = cls.client.create_obj('policies', params)['body']
+        cls.policy = cls.create_test_policy()
 
     @classmethod
     def resource_cleanup(cls):

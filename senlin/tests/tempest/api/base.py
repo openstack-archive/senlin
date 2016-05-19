@@ -21,6 +21,7 @@ from tempest.lib import exceptions
 from tempest import test
 
 from senlin.tests.tempest.common import clustering_client
+from senlin.tests.tempest.common import constants
 
 CONF = config.CONF
 lOG = log.getLogger(__name__)
@@ -214,4 +215,17 @@ class BaseSenlinTest(test.BaseTestCase):
         """Utility function that get detail of a Senlin node."""
 
         res = cls.client.get_obj('nodes', node_id)
+        return res['body']
+
+    @classmethod
+    def create_test_policy(cls, spec=None, name=None):
+        """Utility function that generates a Senlin policy."""
+
+        params = {
+            'policy': {
+                'name': name or data_utils.rand_name("tempest-created-policy"),
+                'spec': spec or constants.spec_scaling_policy
+            }
+        }
+        res = cls.client.create_obj('policies', params)
         return res['body']
