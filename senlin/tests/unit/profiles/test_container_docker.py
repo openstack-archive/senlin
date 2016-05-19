@@ -22,7 +22,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
 
         self.context = utils.dummy_context()
         self.spec = {
-            'type': 'container.docker',
+            'type': 'container.dockerinc.docker',
             'version': '1.0',
             'properties': {
                 'context': {
