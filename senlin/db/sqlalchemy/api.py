@@ -19,6 +19,7 @@ import sys
 import threading
 
 from oslo_config import cfg
+from oslo_db import api as oslo_db_api
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import enginefacade
 from oslo_db.sqlalchemy import utils as sa_utils
@@ -889,6 +890,8 @@ def dependency_get_dependents(context, action_id):
         return [d.dependent for d in q.all()]
 
 
+@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
+                           retry_interval=0.5, inc_retry_interval=True)
 def dependency_add(context, depended, dependent):
     if isinstance(depended, list) and isinstance(dependent, list):
         raise exception.NotSupport(
@@ -1016,6 +1019,8 @@ def action_acquire(context, action_id, owner, timestamp):
         return action
 
 
+@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
+                           retry_interval=0.5, inc_retry_interval=True)
 def action_acquire_1st_ready(context, owner, timestamp):
     with session_for_write() as session:
         action = session.query(models.Action).\
