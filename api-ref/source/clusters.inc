@@ -102,21 +102,12 @@ Request Parameters
   - OpenStack-API-Version: microversion
   - cluster: cluster
   - name: name
-    in: cluster
   - desired_capacity: desired_capacity
-    optional: true
   - profile_id: profile_id_url
-    in: cluster
   - min_size: min_size
-    optional: true
   - timeout: timeout
-    optional: true
   - max_size: max_size
-    optional: true
   - metadata: metadata
-    in: cluster
-    optional: true
-
 
 Request Example
 ---------------
@@ -133,19 +124,15 @@ Response Parameters
   - location: location
   - cluster: cluster
   - created_at: created_at
-    in: cluster
   - data: cluster_data
   - desired_capacity: desired_capacity
   - domain: domain
-    in: cluster
   - id: cluster_id
   - init_at: init_at
   - max_size: max_size
   - metadata: metadata
-    in: cluster
   - min_size: min_size
   - name: cluster_name
-    in: cluster
   - nodes: cluster_nodes
   - policies: cluster_policies_property
   - profile_id: cluster_profile_id
@@ -154,13 +141,9 @@ Response Parameters
     in: cluster
   - status: cluster_status
   - status_reason: status_reason
-    in: cluster
   - timeout: timeout
   - updated_at: updated_at
-    in: cluster
   - user: user
-    in: cluster
-
 
 Response Example
 ----------------
@@ -205,29 +188,22 @@ Response Parameters
   - data: cluster_data
   - desired_capacity: desired_capacity
   - domain: domain
-    in: cluster
   - id: cluster_id
   - init_at: init_at
   - max_size: max_size
   - metadata: metadata
-    in: cluster
   - min_size: min_size
   - name: cluster_name
-    in: cluster
   - nodes: cluster_nodes
   - policies: cluster_policies_property
   - profile_id: cluster_profile_id
   - profile_name: cluster_profile_name
   - project: project
-    in: cluster
   - status: cluster_status
   - status_reason: status_reason
-    in: cluster
   - timeout: timeout
   - updated_at: updated_at
-    in: cluster
   - user: user
-    in: cluster
 
 Response Example
 ----------------
@@ -262,15 +238,10 @@ Request
   - cluster_id: cluster_id_url
   - cluster: cluster
   - name: cluster_name
-    optional: true
-  - profile_id: profile_id_url
-    in: cluster
-    optional: true
+  - profile_id: cluster_profile_identity
   - timeout: timeout
-    optional: true
   - metadata: metadata
-    in: cluster
-    optional: true
+
 
 Request Example
 ---------------
@@ -287,33 +258,25 @@ Response Parameters
   - location: location
   - cluster: cluster
   - created_at: created_at
-    in: cluster
   - data: cluster_data
   - desired_capacity: desired_capacity
   - domain: domain
-    in: cluster
   - id: cluster_id
   - init_at: init_at
   - max_size: max_size
   - metadata: metadata
-    in: cluster
   - min_size: min_size
   - name: cluster_name
-    in: cluster
   - nodes: cluster_nodes
   - policies: cluster_policies_property
   - profile_id: cluster_profile_id
   - profile_name: cluster_profile_name
   - project: project
-    in: cluster
   - status: cluster_status
   - status_reason: status_reason
-    in: cluster
   - timeout: timeout
   - updated_at: updated_at
-    in: cluster
   - user: user
-    in: cluster
 
 Response Example
 ----------------
@@ -612,11 +575,8 @@ Request Parameters
   - OpenStack-API-Version: microversion
   - cluster_id: cluster_id_url
   - action: action_request
-  - policy_id: policy_id_url
-    in: action
+  - policy_id: policy_identity
   - enabled: cluster_policy_enabled
-    in: action
-    optional: true
 
 The ``action_name`` in the request body has to be ``attach_policy``.
 
@@ -659,8 +619,7 @@ Request Parameters
   - OpenStack-API-Version: microversion
   - cluster_id: cluster_id_url
   - action: action_request
-  - policy_id: policy_id_url
-    in: action
+  - policy_id: policy_identity
 
 The ``action_name`` in the request body has to be ``detach_policy``.
 
@@ -703,10 +662,8 @@ Request Parameters
   - OpenStack-API-Version: microversion
   - cluster_id: cluster_id_url
   - action: action_request
-  - policy_id: policy_id_url
-    in: action
+  - policy_id: policy_identity
   - enabled: cluster_policy_enabled
-    in: action
 
 The ``action_name`` in the request body has to be ``update_policy``.
 
@@ -750,7 +707,6 @@ Request Parameters
   - cluster_id: cluster_id_url
   - action: action_request
   - params: check_params
-    in: action
 
 The ``action_name`` in the request body has to be ``check``.
 
@@ -794,7 +750,6 @@ Request Parameters
   - cluster_id: cluster_id_url
   - action: action_request
   - params: recover_params
-    in: action
 
 The ``action_name`` in the request body has to be ``recover``.
 

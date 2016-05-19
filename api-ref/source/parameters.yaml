@@ -4,42 +4,11 @@ action:
   description: |
     A structured definition of an action object.
 
-action_action:
-  type: string
-  in: action
-  description: |
-    A string representation of the action for execution.
-
 action_action_query:
   type: string
   in: query
   description: |
     Filters the resulted list using the ``action`` field of the object.
-
-action_context:
-  type: object
-  in: action
-  description: |
-    A collection of key-value pairs that are used as security context when
-    executing the action.
-
-action_id:
-  type: UUID
-  in: action
-  description: |
-    An UUID that uniquely identifies an action object.
-
-action_id_url:
-  type: string
-  in: URL
-  description: |
-    The name or short-ID or UUID that identifies an action object.
-
-action_name:
-  type: string
-  in: body
-  description: |
-    The name of an action object.
 
 action_name_query:
   type: string
@@ -49,9 +18,47 @@ action_name_query:
     Filters the response by the action name associated with an event.
     Use this filter multiple times to filter by multiple actions.
 
+action_status_query:
+  type: string
+  in: query
+  optional: true
+  description: |
+    Filters the results by the ``status`` property of an action object.
+
+action_action:
+  type: string
+  in: body
+  description: |
+    A string representation of the action for execution.
+
+action_context:
+  type: object
+  in: body
+  description: |
+    A collection of key-value pairs that are used as security context when
+    executing the action.
+
+action_id:
+  type: UUID
+  in: body
+  description: |
+    An UUID that uniquely identifies an action object.
+
+action_id_url:
+  type: string
+  in: path
+  description: |
+    The name or short-ID or UUID that identifies an action object.
+
+action_name:
+  type: string
+  in: body
+  description: |
+    The name of an action object.
+
 action_owner:
   type: string
-  in: action
+  in: body
   description: |
     The UUID of the owning engine that is currently locking the action for
     execution.
@@ -75,20 +82,13 @@ action_request:
 
 action_status:
   type: string
-  in: action
+  in: body
   description: |
     A string representation of the current status of the action.
 
-action_status_query:
-  type: string
-  in: query
-  optional: true
-  description: |
-    Filters the results by the ``status`` property of an action object.
-
 action_timeout:
   type: integer
-  in: action
+  in: body
   description: |
     The number of seconds after which an unfinished action execution will be
     treated as timeout.
@@ -101,21 +101,21 @@ actions:
 
 adjustment_max_size:
   type: integer
-  in: action
+  in: body
   optional: true
   description: |
     The value to be set as the new ``max_size`` of the cluster.
 
 adjustment_min_size:
   type: integer
-  in: action
+  in: body
   optional: true
   description: |
     The value to be set as the new ``min_size`` of the cluster.
 
 adjustment_min_step:
   type: integer
-  in: action
+  in: body
   optional: true
   description: |
     When ``adjustment_type`` is set to ``CHANGE_IN_PERCENTAGE``, often times
@@ -125,7 +125,7 @@ adjustment_min_step:
 
 adjustment_number:
   type: number
-  in: action
+  in: body
   optional: true
   description: |
     The number of adjustment. The interpretion of the value depends on the
@@ -138,7 +138,7 @@ adjustment_number:
 
 adjustment_strict:
   type: bool
-  in: action
+  in: body
   optional: true
   default: false
   description: |
@@ -153,7 +153,7 @@ adjustment_strict:
 
 adjustment_type:
   type: string
-  in: action
+  in: body
   optional: true
   description: |
     The type of size adjustment. The valid values are:
@@ -183,25 +183,25 @@ build_info:
 
 build_info_api:
   type: object
-  in: build_info
+  in: body
   description: |
     Revision information of Senlin API service.
 
 build_info_engine:
   type: object
-  in: build_info
+  in: body
   description: |
     Revision information of Senlin engine service.
 
 cause:
   type: string
-  in: action
+  in: body
   description: |
     An explanation why an action was started.
 
 check_params:
   type: object
-  in: action
+  in: body
   optional: true
   description: |
     The optional parameters provided to a cluster check operation. The detailed
@@ -215,25 +215,39 @@ cluster:
 
 cluster_data:
   type: object
-  in: cluster
+  in: body
   description: |
     The structured data associated with the cluster.
 
 cluster_id:
   type: UUID
-  in: cluster
+  in: body
   description: |
     The UUID of the cluster object.
 
+cluster_identity:
+  type: string
+  in: body
+  optional: True
+  description: |
+    The name, short-ID or UUID of the cluster object.
+
+cluster_identity_query:
+  type: string
+  in: query
+  optional: True
+  description: |
+    The name, short-ID or UUID of the cluster object.
+
 cluster_id_url:
   type: string
-  in: URL
+  in: path
   description: |
     The name, UUID or short-UUID of a cluster object.
 
 cluster_member_nodes:
   type: list
-  in: action
+  in: body
   optional: false
   description: |
     The candidate nodes to be added to or removed from a cluster. The meaning
@@ -243,7 +257,8 @@ cluster_member_nodes:
 
 cluster_name:
   type: string
-  in: cluster
+  in: body
+  optional: True
   description: |
     The name of the cluster object.
 
@@ -255,7 +270,7 @@ cluster_policies:
 
 cluster_policies_property:
   type: list
-  in: cluster
+  in: body
   description: |
     A list of UUIDs of the policies attached to current cluster.
 
@@ -267,45 +282,54 @@ cluster_policy:
 
 cluster_policy_enabled:
   type: bool
-  in: cluster_policy
+  in: body
+  optional: True
   description: |
     Whether the policy is enabled on the attached cluster.
 
 cluster_policy_id:
   type: UUID
-  in: cluster_policy
+  in: body
   description: |
     The UUID of a cluster_policy object.
 
 cluster_nodes:
   type: list
-  in: cluster
+  in: body
   description: |
     A list of the UUIDs of node objects which are members of the current
     cluster.
 
 cluster_policy_property:
   type: list
-  in: cluster
+  in: body
   description: |
     A list of the UUIDs of policy objects which are attached to the current
     cluster.
 
 cluster_profile_id:
   type: UUID
-  in: cluster
+  in: body
   description: |
     The UUID of the profile object referenced by the current cluster.
 
+cluster_profile_identity:
+  type: string
+  in: body
+  optional: True
+  description: |
+    The name, short-ID or UUID of the profile object referenced by the current
+    cluster.
+
 cluster_profile_name:
   type: string
-  in: cluster
+  in: body
   description: |
     The name of the profile object referenced by the current cluster.
 
 cluster_status:
   type: string
-  in: cluster
+  in: body
   description: |
     The string representation of the current status of the cluster.
 
@@ -325,19 +349,20 @@ created_at:
 
 depended_by:
   type: list
-  in: action
+  in: body
   description: |
     A list of UUIDs of the actions that depend on the current action.
 
 depends_on:
   type: list
-  in: action
+  in: body
   description: |
     A list of UUIDs of the actions that the current action depends on.
 
 desired_capacity:
   type: integer
-  in: cluster
+  in: body
+  optional: True
   description: |
     The desired capacity of a cluster. When creating a cluster, this value is
     set to 0 by default.
@@ -357,7 +382,7 @@ enabled_query:
 
 end_time:
   type: float
-  in: action
+  in: body
   description: |
     A floating point number that represents when an action's execution has
     completed.
@@ -376,31 +401,31 @@ events:
 
 event_id:
   type: UUID
-  in: event
+  in: body
   description: |
     The UUID of an event object.
 
 event_id_url:
   type: string
-  in: URL
+  in: path
   description: |
     The name, UUID or short-UUID of an event object.
 
 event_level:
   type: string
-  in: event
+  in: body
   description: |
     The level of an event object.
 
 event_status:
   type: string
-  in: event
+  in: body
   description: |
     The current status of the object associated with the event.
 
 event_timestamp:
   type: string
-  in: event
+  in: body
   description: |
     The date and time when the event was generated. The date and time stamp
     format is ISO8601: ``CCYY-MM-DDThh:mm:ssZ``.
@@ -420,13 +445,13 @@ global_project:
 
 index:
   type: integer
-  in: node
+  in: body
   description: |
     An integer that uniquely identifies a node within its owning cluster.
 
 init_at:
   type: string
-  in: cluster
+  in: body
   description: |
     The date and time when the object was initialized. The date and
     time stamp format is ISO8601: ``CCYY-MM-DDThh:mm:ssZ``. For example:
@@ -434,14 +459,14 @@ init_at:
 
 inputs:
   type: object
-  in: action
+  in: body
   description: |
     A collection of key-value pairs that are fed to the action as input
     parameters.
 
 interval:
   type: integer
-  in: action
+  in: body
   description: |
     An integer that indicates the interval in seconds between two consecutive
     executions of a repeatable action.
@@ -475,7 +500,9 @@ marker:
 
 max_size:
   type: integer
-  in: cluster
+  default: -1
+  in: body
+  optional: True
   description: |
     The maximum size of a cluster, i.e. the maximum number of nodes that can
     be members of the cluster. A value of -1 means that the cluster doesn't
@@ -484,6 +511,7 @@ max_size:
 metadata:
   type: object
   in: body
+  optional: True
   description: |
     A collection of key-value pairs associated with an object.
 
@@ -499,7 +527,8 @@ microversion:
 min_size:
   type: integer
   default: 0
-  in: cluster
+  in: body
+  optional: True
   description: |
     The minmum size of a cluster, i.e. the minimum number of nodes that can
     be members of the cluster.
@@ -507,6 +536,7 @@ min_size:
 name:
   type: string
   in: body
+  optional: True
   description:
     The name of the object in question.
 
@@ -525,37 +555,37 @@ node:
 
 node_data:
   type: object
-  in: node
+  in: body
   description: |
     A map containing key-value pairs associated with a node object.
 
 node_id:
   type: UUID
-  in: node
+  in: body
   description: |
     A UUID string that uniquely identifies a node object.
 
 node_id_url:
   type: string
-  in: URL
+  in: path
   description: |
     The name, short-ID or UUID of a node object.
 
 node_profile_id:
   type: UUID
-  in: node
+  in: body
   description: |
     The UUID of the profile object referenced by the current node object.
 
 node_profile_name:
   type: string
-  in: node
+  in: body
   description: |
     The name of the profile object referenced by the current node object.
 
 node_status:
   type: string
-  in: node
+  in: body
   description: |
     The string representation of the current status of the node object.
 
@@ -568,7 +598,7 @@ nodes:
 
 obj_id:
   type: UUID
-  in: event
+  in: body
   description: |
     The UUID of an object associated with the event.
 
@@ -582,7 +612,7 @@ obj_id_query:
 
 obj_name:
   type: string
-  in: event
+  in: body
   description: |
     The name of an object associated with the event.
 
@@ -596,7 +626,7 @@ obj_name_query:
 
 obj_type:
   type: string
-  in: event
+  in: body
   description: |
     The type of an object associated with the event.
 
@@ -611,14 +641,14 @@ obj_type_query:
 
 outputs:
   type: object
-  in: action
+  in: body
   description: |
     A collection of key-value pairs that were produced during the execution of
     an action as its outputs.
 
 physical_id:
   type: UUID
-  in: node
+  in: body
   description: |
     The UUID of the physical resource represented by the node object.
 
@@ -630,20 +660,20 @@ policy_type:
 
 policy_type_name:
   type: string
-  in: policy_type
+  in: body
   description: |
     The name of the policy type.
 
 policy_type_schema:
   type: object
-  in: policy_type
+  in: body
   description: |
     The schema of a policy type. The schema of a policy type varies a lot
     based on the specific type implementation.
 
 policy_type_url:
   type: string
-  in: URL
+  in: path
   optional: False
   description: |
     The name of a policy type.
@@ -668,19 +698,25 @@ policy:
 
 policy_data:
   type: object
-  in: policy
+  in: body
   description: |
     A structured representation of data associated with a policy object.
 
 policy_id:
   type: UUID
-  in: policy
+  in: body
   description: |
     The UUID of a policy object.
 
 policy_id_url:
   type: string
-  in: URL
+  in: path
+  description: |
+    The name, UUID or short-UUID of a policy object.
+
+policy_identity:
+  type: string
+  in: body
   description: |
     The name, UUID or short-UUID of a policy object.
 
@@ -692,13 +728,13 @@ policy_name:
 
 policy_spec:
   type: object
-  in: policy
+  in: body
   description: |
     The detailed specification of a policy object.
 
 policy_type_property:
   type: string
-  in: policy
+  in: body
   description: |
     The ``type`` property of a policy object.
 
@@ -710,19 +746,25 @@ profile:
 
 profile_id:
   type: UUID
-  in: profile
+  in: body
   description: |
     The UUID of a profile.
 
+profile_identity:
+  type: string
+  in: body
+  description: |
+    The name, short-ID, or UUID of a profile.
+
 profile_id_url:
   type: string
-  in: URL
+  in: path
   description: |
     The name, UUID or short-UUID of a profile.
 
 profile_spec:
   type: object
-  in: profile
+  in: body
   description: |
     The detailed specification of the profile.
 
@@ -734,7 +776,7 @@ profile_type:
 
 profile_type_name:
   type: string
-  in: profile_type
+  in: body
   description: |
     The name of the profile type.
 
@@ -746,7 +788,7 @@ profile_type_property:
 
 profile_type_schema:
   type: object
-  in: profile_type
+  in: body
   description: |
     The schema of a profile type. The schema of a profile type varies
     a lot based on the specific type implementation. All profile types
@@ -758,7 +800,7 @@ profile_type_schema:
 
 profile_type_url:
   type: string
-  in: URL
+  in: path
   optional: False
   description: |
     The name of a profile type.
@@ -795,7 +837,7 @@ receivers:
 
 receiver_action:
   type: string
-  in: receiver
+  in: body
   description: |
     The action to initiate when the receiver is triggered. A valid value
     should be the name of an action that can be applied on a cluster.
@@ -808,41 +850,43 @@ receiver_action_query:
     Filters the response by the action targeted by the receiver.
 
 receiver_actor:
-  type: dict
-  in: receiver
+  type: object
+  in: body
+  optional: True
   description: |
     A map of key and value pairs to use for authentication. If omitted,
     the requester is assumed to be the actor.
 
 receiver_channel:
-  type: dict
-  in: receiver
+  type: object
+  in: body
   description: |
     The target to be used by user to trigger a receiver. For webhook type
     of receiver, channel is a webhook URL.
 
 receiver_id:
   type: UUID
-  in: receiver
+  in: body
   description: |
     The UUID of the receiver object.
 
 receiver_id_url:
   type: string
-  in: URL
+  in: path
   description: |
     The name, UUID or short-UUID of a receiver object.
 
 receiver_params:
-  type: dict
-  in: receiver
+  type: object
+  in: body
+  optional: True
   description: |
     A map of key and value pairs to use for action creation. Some actions
     might require certain input parameters.
 
 receiver_type:
   type: string
-  in: receiver
+  in: body
   description: |
     The type of the receiver. The only valid value is webhook currently.
 
@@ -855,7 +899,7 @@ receiver_type_query:
 
 recover_params:
   type: object
-  in: action
+  in: body
   optional: true
   description: |
     The optional parameters provided to a cluster recover operation. The
@@ -871,13 +915,14 @@ request_id:
 
 role:
   type: string
-  in: node
+  in: body
+  optional: True
   description: |
     A string describing the role played by a node inside a cluster.
 
 scale_count:
   type: integer
-  in: action
+  in: body
   optional: true
   default: 1
   description: |
@@ -913,7 +958,7 @@ sort:
 
 start_time:
   type: float
-  in: action
+  in: body
   description: |
     A floating point number that represents the time when an action started
     execution.
@@ -927,13 +972,14 @@ status_query:
 
 status_reason:
   type: string
+  in: body
   description: |
     The string representation of the reason why the object has transited to
     its current status.
 
 target:
   type: string
-  in: action
+  in: body
   descrption: |
     The UUID of the targeted object (which is usually a cluster).
 
@@ -947,7 +993,8 @@ target_query:
 
 timeout:
   type: integer
-  in: cluster
+  in: body
+  optional: True
   description: |
     The default timeout value (in seconds) of cluster operations.
 
@@ -993,43 +1040,43 @@ versions:
 
 version_id:
   type: string
-  in: version
+  in: body
   description: |
     The string representation of an API version number, e.g. ``1.0``.
 
 version_links:
   type: list
-  in: version
+  in: body
   description: |
     A list of relative URLs to different version objects.
 
 version_max_version:
   type: string
-  in: version
+  in: body
   description: |
     The string representation of the maximum microversion supported.
 
 version_media_types:
   type: list
-  in: version
+  in: body
   description: |
     A list of content-type based media type request supported.
 
 version_min_version:
   type: string
-  in: version
+  in: body
   description: |
     The string representation of the minimum microversion supported.
 
 version_status:
   type: string
-  in: version
+  in: body
   description: |
     A string indicating the supporting status of the version.
 
 version_updated:
   type: string
-  in: version
+  in: body
   description: |
     The date and time when the version was last updated. The date and time
     stamp format is ISO8601: ``CCYY-MM-DDThh:mm:ssZ``. For example:
@@ -1037,19 +1084,19 @@ version_updated:
 
 version_url:
   type: string
-  in: URL
+  in: path
   optional: False
   description: |
     A string indicating the major version of Clustering API.
 
 webhook_id_url:
   type: UUID
-  in: URL
+  in: path
   description: |
     The UUID of a webhook object.
 
 webhook_params:
-  type: dict
+  type: object
   in: query
   optional: True
   description: |

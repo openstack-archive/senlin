@@ -82,7 +82,6 @@ Request Parameters
   - profile: profile
   - name: name
   - metadata: metadata
-    optional: true
   - spec: profile_spec
 
 Request Example
@@ -191,9 +190,7 @@ Request Parameters
   - profile_id: profile_id_url
   - profile: profile
   - metadata: metadata
-    optional: true
   - name: name
-    optional: true
 
 Request Example
 ---------------

@@ -47,7 +47,6 @@ Reponse Parameters
   - cause: cause
   - context: action_context
   - created_at: created_at
-    in: action
   - depended_by: depended_by
   - depends_on: depends_on
   - start_time: start_time
@@ -56,16 +55,13 @@ Reponse Parameters
   - inputs: inputs
   - interval: interval
   - name: name
-    in: action
   - outputs: outputs
   - owner: action_owner
   - status: action_status
   - status_reason: status_reason
-    in: action
   - target: target
   - timeout: timeout
   - updated_at: updated_at
-    in: action
 
 Response Example
 ----------------
@@ -108,7 +104,6 @@ Response Parameters:
   - cause: cause
   - context: action_context
   - created_at: created_at
-    in: action
   - depended_by: depended_by
   - depends_on: depends_on
   - start_time: start_time
@@ -117,16 +112,13 @@ Response Parameters:
   - inputs: inputs
   - interval: interval
   - name: name
-    in: action
   - outputs: outputs
   - owner: action_owner
   - status: action_status
   - status_reason: status_reason
-    in: action
   - target: target
   - timeout: timeout
   - updated_at: updated_at
-    in: action
 
 Response Example
 ----------------
