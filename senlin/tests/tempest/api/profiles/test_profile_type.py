@@ -25,9 +25,11 @@ class TestProfileType(base.BaseSenlinTest):
         self.assertEqual(200, res['status'])
         self.assertIsNotNone(res['body'])
         profile_types = res['body']
-        expected_profile_types = [{'name': 'os.nova.server-1.0'},
-                                  {'name': 'os.heat.stack-1.0'},
-                                  {'name': 'container.docker-1.0'}]
+        expected_profile_types = [
+            {'name': 'os.nova.server-1.0'},
+            {'name': 'os.heat.stack-1.0'},
+            {'name': 'container.dockerinc.docker-1.0'}
+        ]
         for profile_type in expected_profile_types:
             self.assertIn(profile_type, profile_types)
 
