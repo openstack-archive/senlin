@@ -44,7 +44,6 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertIsNotNone(self.hm.rpc_client)
         self.assertEqual(consts.ENGINE_HEALTH_MGR_TOPIC, self.hm.topic)
         self.assertEqual(consts.RPC_API_VERSION, self.hm.version)
-        self.assertEqual(60, self.hm.periodic_interval_max)
         self.assertEqual(0, len(self.hm.rt['registries']))
 
     @mock.patch.object(db_api, 'registry_claim')
