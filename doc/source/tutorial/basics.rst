@@ -54,13 +54,13 @@ You may have to change the values based on your environment setup before using
 this file to create a profile. After the **spec** file is modified properly,
 you can use the following command to create a profile object:
 
-.. code-block:: shell-session
+.. code-block:: console
 
   $ cd $SENLIN_ROOT/examples/profiles/nova_server
   $ senlin profile-create -s cirros_basic.yaml myserver
 
-Check the :doc:`profile section in user guide <../../user/profiles>` for more
-details.
+Check the :doc:`Profiles <../user/profiles>` section in the
+:doc:`User References <../user/index>` documentation for more details.
 
 Creating Your First Cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -83,8 +83,8 @@ nodes in the cluster.
   $ senlin cluster-create -p myserver -c 1 mycluster
   $ senlin cluster-show mycluster
 
-For more details, check the "Creating a Cluster" section in
-:doc:`user guide <../../user/clusters>`.
+For more details, check the :doc:`Creating a Cluster <../user/clusters>`
+section in the :doc:`User References <../user/index>` documentation.
 
 
 Scaling a Cluster
@@ -105,8 +105,8 @@ To decrease the size of the cluster, use the following command:
   $ senlin cluster-scale-in mycluster
   $ senlin cluster-show mycluster
 
-For more details, check the "Resizing a Cluster" subsection in the
-:doc:`user guide <../../user/clusters>`.
+For more details, please check the :doc:`Resizing a Cluster <../user/clusters>`
+section in the :doc:`User References <../user/index>` documentation.
 
 
 Resizing a Cluster
@@ -121,8 +121,9 @@ Yet another way to change the size of a cluster is to use the command
   $ senlin cluster-show mycluster
 
 The ``cluster-resize`` command supports more flexible options to control how
-a cluster is resized. For more details, please check the "Resizing a Cluster"
-section in the :doc:`user guide <../../user/clusters>`.
+a cluster is resized. For more details, please check the
+:doc:`Resizing a Cluster <../user/clusters>` section in the
+:doc:`User References <../user/index>` documentation.
 
 
 Creating a Node
@@ -137,7 +138,8 @@ then add it to a cluster. To create a node using a given profile:
   $ senlin node-show newnode
 
 For other options supported by the ``node-create`` command, please check the
-"Creating a Node" subsection in the :doc:`user guide <../../user/nodes`.
+:doc:`Creating a Node <../user/nodes>` subsection in the
+:doc:`User References <../user/index>` documentation.
 
 
 Adding a Node to a Cluster
@@ -170,7 +172,8 @@ command:
   $ senlin node-show newnode
 
 For other commands and options cluster membership management, please check the
-"Cluster Membership" section in the :doc:`user guide <../../user/membership`.
+:doc:`Cluster Membership <../user/membership>` section in the
+:doc:`User References <../user/index>` documentation.
 
 
 .. _Installation Guide: http://docs.openstack.org/developer/senlin/install.html
