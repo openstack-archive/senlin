@@ -18,6 +18,7 @@ from oslo_log import log as logging
 from oslo_service import threadgroup
 
 from senlin.common import context
+from senlin.common.i18n import _
 from senlin.db import api as db_api
 from senlin.engine.actions import base as action_mod
 
@@ -80,21 +81,39 @@ class ThreadGroupManager(object):
             # Remove action thread from thread list
             self.workers.pop(action_id)
 
+        actions_launched = 0
         if action_id is not None:
             timestamp = wallclock()
             action = db_api.action_acquire(self.db_session, action_id,
                                            worker_id, timestamp)
             if action:
                 launch(action.id)
+                actions_launched += 1
 
+        batch_size = cfg.CONF.max_actions_per_batch
+        batch_interval = cfg.CONF.batch_interval
         while True:
             timestamp = wallclock()
             action = db_api.action_acquire_1st_ready(self.db_session,
                                                      worker_id,
                                                      timestamp)
-            # TODO(Yanyan Hu): Enable batch control.
             if action:
-                launch(action.id)
+                if batch_size > 0 and 'NODE' in action.action:
+                    if actions_launched < batch_size:
+                        launch(action.id)
+                        actions_launched += 1
+                    else:
+                        msg = _('Engine %(id)s has launched %(num)s node '
+                                'actions consecutively, stop scheduling '
+                                'node action for %(interval)s second...'
+                                ) % {'id': worker_id, 'num': batch_size,
+                                     'interval': batch_interval}
+                        LOG.debug(msg)
+                        sleep(batch_interval)
+                        launch(action.id)
+                        actions_launched = 1
+                else:
+                    launch(action.id)
             else:
                 break
 

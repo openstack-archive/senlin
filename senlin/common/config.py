@@ -66,9 +66,14 @@ engine_opts = [
                default=3600,
                help=_('Timeout in seconds for actions.')),
     cfg.IntOpt('max_actions_per_batch',
-               default=10,
-               help=_('Maximum number of actions per batch when operating a '
-                      'cluster.')),
+               default=0,
+               help=_('Maximum number of node actions that each engine worker '
+                      'can schedule consecutively per batch. 0 means no '
+                      'limit.')),
+    cfg.IntOpt('batch_interval',
+               default=3,
+               help=_('Seconds to pause between scheduling two consecutive '
+                      'batches of node actions.')),
     cfg.IntOpt('lock_retry_times',
                default=3,
                help=_('Number of times trying to grab a lock.')),
