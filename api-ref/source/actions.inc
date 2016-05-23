@@ -36,7 +36,6 @@ Request Parameters
   - action: action_action_query
   - status: action_status_query
 
-
 Reponse Parameters
 ------------------
 
@@ -59,8 +58,8 @@ Reponse Parameters
   - owner: action_owner
   - status: action_status
   - status_reason: status_reason
-  - target: target
-  - timeout: timeout
+  - target: action_target
+  - timeout: action_timeout
   - updated_at: updated_at
 
 Response Example
@@ -116,8 +115,8 @@ Response Parameters:
   - owner: action_owner
   - status: action_status
   - status_reason: status_reason
-  - target: target
-  - timeout: timeout
+  - target: action_target
+  - timeout: action_timeout
   - updated_at: updated_at
 
 Response Example

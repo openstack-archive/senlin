@@ -89,11 +89,11 @@ Request Parameters
   - OpenStack-API-Version: microversion
   - receiver: receiver
   - name: name
-  - cluster_id: cluster_identity
-  - type: receiver_type
+  - cluster_id: receiver_cluster_identity
+  - type: receiver_type_req
   - action: receiver_action
   - actor: receiver_actor
-  - params: receiver_params
+  - params: receiver_params_req
 
 Request Example
 ---------------

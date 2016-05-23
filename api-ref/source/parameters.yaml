@@ -29,69 +29,77 @@ request_id:
 action_id_url:
   type: string
   in: path
+  required: True
   description: |
     The name or short-ID or UUID that identifies an action object.
 
 cluster_id_url:
   type: string
   in: path
+  required: True
   description: |
     The name, UUID or short-UUID of a cluster object.
 
 event_id_url:
   type: string
   in: path
+  required: True
   description: |
     The name, UUID or short-UUID of an event object.
 
 node_id_url:
   type: string
   in: path
+  required: True
   description: |
     The name, short-ID or UUID of a node object.
 
 policy_id_url:
   type: string
   in: path
+  required: True
   description: |
     The name, UUID or short-UUID of a policy object.
 
 policy_type_url:
   type: string
   in: path
-  optional: False
+  required: True
   description: |
     The name of a policy type.
 
 profile_id_url:
   type: string
   in: path
+  required: True
   description: |
     The name, UUID or short-UUID of a profile.
 
 profile_type_url:
   type: string
   in: path
-  optional: False
+  required: True
   description: |
     The name of a profile type.
 
 receiver_id_url:
   type: string
   in: path
+  required: True
   description: |
     The name, UUID or short-UUID of a receiver object.
 
 version_url:
   type: string
   in: path
-  optional: False
+  required: True
   description: |
     A string indicating the major version of Clustering API.
 
 webhook_id_url:
   type: UUID
   in: path
+  required: True
   description: |
     The UUID of a webhook object.
 
@@ -201,6 +209,7 @@ show_details:
   type: bool
   in: query
   default: False
+  required: False
   description: |
     A boolean indicating whether the detailed information about the physical
     resource associated with the node object will be returned.
@@ -230,9 +239,9 @@ status_query:
 target_query:
   type: string
   in: query
-  descrption: |
-    Filters the results by the UUID of the targeted object (which is usually
-    a cluster).
+  description: |
+    Filters the results by the UUID of the targeted object which is usually
+    a cluster.
 
 type_query:
   type: string
@@ -264,18 +273,21 @@ webhook_version:
 action:
   type: object
   in: body
+  required: True
   description: |
     A structured definition of an action object.
 
 action_action:
   type: string
   in: body
+  required: True
   description: |
     A string representation of the action for execution.
 
 action_context:
   type: object
   in: body
+  required: True
   description: |
     A collection of key-value pairs that are used as security context when
     executing the action.
@@ -283,18 +295,21 @@ action_context:
 action_id:
   type: UUID
   in: body
+  required: True
   description: |
     An UUID that uniquely identifies an action object.
 
 action_name:
   type: string
   in: body
+  required: True
   description: |
     The name of an action object.
 
 action_owner:
   type: string
   in: body
+  required: True
   description: |
     The UUID of the owning engine that is currently locking the action for
     execution.
@@ -302,6 +317,7 @@ action_owner:
 action_request:
   type: object
   in: body
+  required: True
   description: |
     A structured definition of an action to be executed. The object is
     usually expressed as::
@@ -319,12 +335,21 @@ action_request:
 action_status:
   type: string
   in: body
+  required: True
   description: |
     A string representation of the current status of the action.
+
+action_target:
+  type: string
+  in: body
+  required: True
+  descrption: |
+    The UUID of the targeted object (which is usually a cluster).
 
 action_timeout:
   type: integer
   in: body
+  required: True
   description: |
     The number of seconds after which an unfinished action execution will be
     treated as timeout.
@@ -332,27 +357,25 @@ action_timeout:
 actions:
   type: list
   in: body
+  required: True
   description: |
     A list of action objects.
 
 adjustment_max_size:
   type: integer
   in: body
-  optional: true
   description: |
     The value to be set as the new ``max_size`` of the cluster.
 
 adjustment_min_size:
   type: integer
   in: body
-  optional: true
   description: |
     The value to be set as the new ``min_size`` of the cluster.
 
 adjustment_min_step:
   type: integer
   in: body
-  optional: true
   description: |
     When ``adjustment_type`` is set to ``CHANGE_IN_PERCENTAGE``, often times
     the computed value is a float which could be less than 1.0. The
@@ -362,7 +385,6 @@ adjustment_min_step:
 adjustment_number:
   type: number
   in: body
-  optional: true
   description: |
     The number of adjustment. The interpretion of the value depends on the
     value of the ``adjustment_type`` parameter. This parameter is mandatory
@@ -375,8 +397,7 @@ adjustment_number:
 adjustment_strict:
   type: bool
   in: body
-  optional: true
-  default: false
+  default: False
   description: |
     There are cases where the computed number of nodes to adjust will break
     the size constraints of a cluster, i.e. its ``min_size`` or ``max_size``
@@ -390,7 +411,6 @@ adjustment_strict:
 adjustment_type:
   type: string
   in: body
-  optional: true
   description: |
     The type of size adjustment. The valid values are:
 
@@ -414,31 +434,34 @@ adjustment_type:
 build_info:
   type: object
   in: body
+  required: True
   description: |
     Build information for a Senlin deployment.
 
 build_info_api:
   type: object
   in: body
+  required: True
   description: |
     Revision information of Senlin API service.
 
 build_info_engine:
   type: object
   in: body
+  required: True
   description: |
     Revision information of Senlin engine service.
 
 cause:
   type: string
   in: body
+  required: True
   description: |
     An explanation why an action was started.
 
 check_params:
   type: object
   in: body
-  optional: true
   description: |
     The optional parameters provided to a cluster check operation. The detailed
     keys and values are not checked at the moment.
@@ -446,32 +469,28 @@ check_params:
 cluster:
   type: object
   in: body
+  required: True
   description: |
     The structured definition of a cluster object.
 
 cluster_data:
   type: object
   in: body
+  required: True
   description: |
     The structured data associated with the cluster.
 
 cluster_id:
   type: UUID
   in: body
+  required: True
   description: |
     The UUID of the cluster object.
-
-cluster_identity:
-  type: string
-  in: body
-  optional: True
-  description: |
-    The name, short-ID or UUID of the cluster object.
 
 cluster_member_nodes:
   type: list
   in: body
-  optional: false
+  reqruied: True
   description: |
     The candidate nodes to be added to or removed from a cluster. The meaning
     of the parameter is depended on the action requested.
@@ -481,13 +500,14 @@ cluster_member_nodes:
 cluster_name:
   type: string
   in: body
-  optional: True
+  required: True
   description: |
     The name of the cluster object.
 
 cluster_nodes:
   type: list
   in: body
+  required: True
   description: |
     A list of the UUIDs of node objects which are members of the current
     cluster.
@@ -495,31 +515,35 @@ cluster_nodes:
 cluster_policies:
   type: list
   in: body
+  required: True
   description: |
     A list of cluster_policy objects.
 
 cluster_policies_property:
   type: list
   in: body
+  required: True
   description: |
     A list of UUIDs of the policies attached to current cluster.
 
 cluster_policy:
   type: object
   in: body
+  required: True
   description: |
     The structured description of a cluster_policy object.
 
 cluster_policy_enabled:
   type: bool
   in: body
-  optional: True
+  required: True
   description: |
     Whether the policy is enabled on the attached cluster.
 
 cluster_policy_id:
   type: UUID
   in: body
+  required: True
   description: |
     The UUID of a cluster_policy object.
 
@@ -530,41 +554,24 @@ cluster_policy_property:
     A list of the UUIDs of policy objects which are attached to the current
     cluster.
 
-cluster_profile_id:
-  type: UUID
-  in: body
-  description: |
-    The UUID of the profile object referenced by the current cluster.
-
-cluster_profile_identity:
-  type: string
-  in: body
-  optional: True
-  description: |
-    The name, short-ID or UUID of the profile object referenced by the current
-    cluster.
-
-cluster_profile_name:
-  type: string
-  in: body
-  description: |
-    The name of the profile object referenced by the current cluster.
-
 cluster_status:
   type: string
   in: body
+  required: True
   description: |
     The string representation of the current status of the cluster.
 
 clusters:
   type: list
   in: body
+  required: True
   description: |
     A list of cluster objects.
 
 created_at:
   type: string
   in: body
+  required: True
   description: |
     The date and time when the object was created. The date and time stamp
     format is ISO8601: ``CCYY-MM-DDThh:mm:ssZ``. For example:
@@ -573,19 +580,21 @@ created_at:
 depended_by:
   type: list
   in: body
+  required: True
   description: |
     A list of UUIDs of the actions that depend on the current action.
 
 depends_on:
   type: list
   in: body
+  required: True
   description: |
     A list of UUIDs of the actions that the current action depends on.
 
 desired_capacity:
   type: integer
   in: body
-  optional: True
+  required: True
   description: |
     The desired capacity of a cluster. When creating a cluster, this value is
     set to 0 by default.
@@ -593,12 +602,14 @@ desired_capacity:
 domain:
   type: UUID
   in: body
+  required: True
   description: |
     The ID of the domain a resource is created in.
 
 end_time:
   type: float
   in: body
+  required: True
   description: |
     A floating point number that represents when an action's execution has
     completed.
@@ -606,30 +617,35 @@ end_time:
 event:
   type: object
   in: body
+  required: True
   description: |
     The structured description of an event object.
 
 event_id:
   type: UUID
   in: body
+  required: True
   description: |
     The UUID of an event object.
 
 event_level:
   type: string
   in: body
+  required: True
   description: |
     The level of an event object.
 
 event_status:
   type: string
   in: body
+  required: True
   description: |
     The current status of the object associated with the event.
 
 event_timestamp:
   type: string
   in: body
+  required: True
   description: |
     The date and time when the event was generated. The date and time stamp
     format is ISO8601: ``CCYY-MM-DDThh:mm:ssZ``.
@@ -637,18 +653,21 @@ event_timestamp:
 events:
   type: list
   in: body
+  required: True
   description: |
     A list of event objects.
 
 index:
   type: integer
   in: body
+  required: True
   description: |
     An integer that uniquely identifies a node within its owning cluster.
 
 init_at:
   type: string
   in: body
+  required: True
   description: |
     The date and time when the object was initialized. The date and
     time stamp format is ISO8601: ``CCYY-MM-DDThh:mm:ssZ``. For example:
@@ -657,6 +676,7 @@ init_at:
 inputs:
   type: object
   in: body
+  required: True
   description: |
     A collection of key-value pairs that are fed to the action as input
     parameters.
@@ -664,15 +684,25 @@ inputs:
 interval:
   type: integer
   in: body
+  required: True
   description: |
     An integer that indicates the interval in seconds between two consecutive
     executions of a repeatable action.
 
 max_size:
   type: integer
+  in: body
+  required: True
+  description: |
+    The maximum size of a cluster, i.e. the maximum number of nodes that can
+    be members of the cluster. A value of -1 means that the cluster doesn't
+    have an upper bound regarding the number of member nodes.
+
+max_size_req:
+  type: integer
   default: -1
   in: body
-  optional: True
+  required: False
   description: |
     The maximum size of a cluster, i.e. the maximum number of nodes that can
     be members of the cluster. A value of -1 means that the cluster doesn't
@@ -681,15 +711,29 @@ max_size:
 metadata:
   type: object
   in: body
-  optional: True
+  required: True
+  description: |
+    A collection of key-value pairs associated with an object.
+
+metadata_req:
+  type: object
+  in: body
   description: |
     A collection of key-value pairs associated with an object.
 
 min_size:
   type: integer
+  in: body
+  required: True
+  description: |
+    The minmum size of a cluster, i.e. the minimum number of nodes that can
+    be members of the cluster.
+
+min_size_req:
+  type: integer
   default: 0
   in: body
-  optional: True
+  required: False
   description: |
     The minmum size of a cluster, i.e. the minimum number of nodes that can
     be members of the cluster.
@@ -697,74 +741,84 @@ min_size:
 name:
   type: string
   in: body
-  optional: True
+  required: True
   description:
     The name of the object in question.
+
+name_req:
+  type: string
+  in: body
+  required: False
+  description:
+    The new name of the object in question.
 
 node:
   type: object
   in: body
+  required: True
   description: |
     A structured description of a node object.
+
+node_cluster_identity:
+  type: string
+  in: body
+  required: False
+  description: |
+    The name, short-ID or UUID of the cluster object a node belongs to.
 
 node_data:
   type: object
   in: body
+  required: True
   description: |
     A map containing key-value pairs associated with a node object.
 
 node_id:
   type: UUID
   in: body
+  required: True
   description: |
     A UUID string that uniquely identifies a node object.
-
-node_profile_id:
-  type: UUID
-  in: body
-  description: |
-    The UUID of the profile object referenced by the current node object.
-
-node_profile_name:
-  type: string
-  in: body
-  description: |
-    The name of the profile object referenced by the current node object.
 
 node_status:
   type: string
   in: body
+  required: True
   description: |
     The string representation of the current status of the node object.
 
 nodes:
   type: list
   in: body
+  required: True
   description: |
     A list of node objects.
-
 
 obj_id:
   type: UUID
   in: body
+  required: True
   description: |
     The UUID of an object associated with the event.
 
 obj_name:
   type: string
   in: body
+  required: True
   description: |
     The name of an object associated with the event.
 
 obj_type:
   type: string
   in: body
+  required: True
   description: |
     The type of an object associated with the event.
 
 outputs:
   type: object
   in: body
+  required: True
   description: |
     A collection of key-value pairs that were produced during the execution of
     an action as its outputs.
@@ -772,72 +826,77 @@ outputs:
 physical_id:
   type: UUID
   in: body
+  required: True
   description: |
     The UUID of the physical resource represented by the node object.
 
 policies:
   type: list
   in: body
+  required: True
   description: |
     A list of policy objects.
 
 policy:
   type: object
   in: body
+  required: True
   description: |
     A structured description of a policy object.
 
 policy_data:
   type: object
   in: body
+  required: True
   description: |
     A structured representation of data associated with a policy object.
 
 policy_id:
   type: UUID
   in: body
+  required: True
   description: |
     The UUID of a policy object.
 
 policy_identity:
   type: string
   in: body
+  required: True
   description: |
     The name, UUID or short-UUID of a policy object.
 
 policy_name:
   type: string
   in: body
+  required: True
   description: |
     The name of a policy object.
 
 policy_spec:
   type: object
   in: body
+  required: True
   description: |
     The detailed specification of a policy object.
 
 policy_type:
   type: object
   in: body
+  required: True
   description: |
     A structured description of a policy type.
 
 policy_type_name:
   type: string
   in: body
+  required: True
   description: |
     The name of the policy type.
-
-policy_type_property:
-  type: string
-  in: body
-  description: |
-    The ``type`` property of a policy object.
 
 policy_type_schema:
   type: object
   in: body
+  required: True
   description: |
     The schema of a policy type. The schema of a policy type varies a lot
     based on the specific type implementation.
@@ -845,54 +904,70 @@ policy_type_schema:
 policy_types:
   type: list
   in: body
+  required: True
   description: |
     A list of policy_type objects.
 
 profile:
   type: object
   in: body
+  required: True
   description: |
     A structured description of a profile object.
 
 profile_id:
   type: UUID
   in: body
+  required: True
   description: |
-    The UUID of a profile.
+    The UUID of the profile.
 
 profile_identity:
   type: string
   in: body
+  required: False
   description: |
     The name, short-ID, or UUID of a profile.
+
+profile_identity_req:
+  type: string
+  in: body
+  required: True
+  description: |
+    The name, short-ID, or UUID of a profile.
+
+profile_name:
+  type: string
+  in: body
+  required: True
+  description: |
+    The name of the profile.
 
 profile_spec:
   type: object
   in: body
+  required: True
   description: |
     The detailed specification of the profile.
 
 profile_type:
   type: object
   in: body
+  required: True
   description: |
     A structured description of a profile type.
 
 profile_type_name:
   type: string
   in: body
+  required: True
   description: |
     The name of the profile type.
-
-profile_type_property:
-  type: string
-  in: body
-  description: |
-    The ``type`` property of a profile.
 
 profile_type_schema:
   type: object
   in: body
+  required: True
   description: |
     The schema of a profile type. The schema of a profile type varies
     a lot based on the specific type implementation. All profile types
@@ -905,18 +980,21 @@ profile_type_schema:
 profile_types:
   type: list
   in: body
+  required: True
   description: |
     A list of profile_type objects.
 
 profiles:
   type: list
   in: body
+  required: True
   description: |
     A list for profile objects.
 
 project:
   type: UUID
   in: body
+  required: True
   description: |
     The ID of the project a resource is created in.
 
@@ -929,6 +1007,7 @@ receiver:
 receiver_action:
   type: string
   in: body
+  required: True
   description: |
     The action to initiate when the receiver is triggered. A valid value
     should be the name of an action that can be applied on a cluster.
@@ -936,7 +1015,14 @@ receiver_action:
 receiver_actor:
   type: object
   in: body
-  optional: True
+  required: True
+  description: |
+    A map of key and value pairs to use for authentication.
+
+receiver_actor_req:
+  type: object
+  in: body
+  required: False
   description: |
     A map of key and value pairs to use for authentication. If omitted,
     the requester is assumed to be the actor.
@@ -944,20 +1030,36 @@ receiver_actor:
 receiver_channel:
   type: object
   in: body
+  required: True
   description: |
     The target to be used by user to trigger a receiver. For webhook type
     of receiver, channel is a webhook URL.
 
+receiver_cluster_identity:
+  type: string
+  in: body
+  required: True
+  description: |
+    The name, short-ID or UUID of the cluster object a node belongs to.
+
 receiver_id:
   type: UUID
   in: body
+  required: True
   description: |
     The UUID of the receiver object.
 
 receiver_params:
   type: object
   in: body
-  optional: True
+  required: True
+  description: |
+    A map of key and value pairs to use for action creation.
+
+receiver_params_req:
+  type: object
+  in: body
+  required: True
   description: |
     A map of key and value pairs to use for action creation. Some actions
     might require certain input parameters.
@@ -965,19 +1067,27 @@ receiver_params:
 receiver_type:
   type: string
   in: body
+  required: True
   description: |
-    The type of the receiver. The only valid value is webhook currently.
+    The type of the receiver.
+
+receiver_type_req:
+  type: string
+  in: body
+  required: False
+  description: |
+    The type of the receiver. The only valid value is ``webhook`` currently.
 
 receivers:
   type: list
   in: body
+  required: True
   description: |
     A list for receiver objects.
 
 recover_params:
   type: object
   in: body
-  optional: true
   description: |
     The optional parameters provided to a cluster recover operation. The
     detailed keys and values are not checked at the moment.
@@ -985,14 +1095,19 @@ recover_params:
 role:
   type: string
   in: body
-  optional: True
+  required: True
   description: |
     A string describing the role played by a node inside a cluster.
+
+role_req:
+  type: string
+  in: body
+  description: |
+    A string describing the new role played by a node inside a cluster.
 
 scale_count:
   type: integer
   in: body
-  optional: true
   default: 1
   description: |
     The number of new nodes to add to or remove from the specified cluster.
@@ -1002,6 +1117,7 @@ scale_count:
 start_time:
   type: float
   in: body
+  required: True
   description: |
     A floating point number that represents the time when an action started
     execution.
@@ -1009,26 +1125,29 @@ start_time:
 status_reason:
   type: string
   in: body
+  required: True
   description: |
     The string representation of the reason why the object has transited to
     its current status.
 
-target:
-  type: string
-  in: body
-  descrption: |
-    The UUID of the targeted object (which is usually a cluster).
-
 timeout:
   type: integer
   in: body
-  optional: True
+  required: True
   description: |
     The default timeout value (in seconds) of cluster operations.
+
+timeout_req:
+  type: integer
+  in: body
+  required: False
+  description: |
+    The new timeout value (in seconds) of cluster operations.
 
 updated_at:
   type: string
   in: body
+  required: True
   description: |
     The date and time when the object was last updated. The date and time
     stamp format is ISO8601: ``CCYY-MM-DDThh:mm:ssZ``. For example:
@@ -1037,54 +1156,63 @@ updated_at:
 user:
   type: UUID
   in: body
+  required: True
   description: |
     The ID of the user an object is created by.
 
 version:
   type: object
   in: body
+  required: True
   description: |
     The details about a major API version.
 
 version_id:
   type: string
   in: body
+  required: True
   description: |
     The string representation of an API version number, e.g. ``1.0``.
 
 version_links:
   type: list
   in: body
+  required: True
   description: |
     A list of relative URLs to different version objects.
 
 version_max_version:
   type: string
   in: body
+  required: True
   description: |
     The string representation of the maximum microversion supported.
 
 version_media_types:
   type: list
   in: body
+  required: True
   description: |
     A list of content-type based media type request supported.
 
 version_min_version:
   type: string
   in: body
+  required: True
   description: |
     The string representation of the minimum microversion supported.
 
 version_status:
   type: string
   in: body
+  required: True
   description: |
     A string indicating the supporting status of the version.
 
 version_updated:
   type: string
   in: body
+  required: True
   description: |
     The date and time when the version was last updated. The date and time
     stamp format is ISO8601: ``CCYY-MM-DDThh:mm:ssZ``. For example:
@@ -1093,5 +1221,6 @@ version_updated:
 versions:
   type: list
   in: body
+  required: True
   description: |
     A list of supported major API versions.
