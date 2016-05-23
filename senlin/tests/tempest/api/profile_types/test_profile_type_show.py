@@ -15,23 +15,7 @@ from tempest.lib import decorators
 from senlin.tests.tempest.api import base
 
 
-class TestProfileType(base.BaseSenlinTest):
-
-    @decorators.idempotent_id('fa0cf9e3-5b75-4d4d-9a0f-1748772b65d3')
-    def test_profile_type_list(self):
-        res = self.client.list_objs('profile-types')
-
-        # Verify resp of profile type list API
-        self.assertEqual(200, res['status'])
-        self.assertIsNotNone(res['body'])
-        profile_types = res['body']
-        expected_profile_types = [
-            {'name': 'os.nova.server-1.0'},
-            {'name': 'os.heat.stack-1.0'},
-            {'name': 'container.dockerinc.docker-1.0'}
-        ]
-        for profile_type in expected_profile_types:
-            self.assertIn(profile_type, profile_types)
+class TestProfileTypeShow(base.BaseSenlinTest):
 
     @decorators.idempotent_id('198165b3-1c1f-4801-8918-90c1adbf57c8')
     def test_profile_type_show(self):
