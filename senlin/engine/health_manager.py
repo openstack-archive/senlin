@@ -30,16 +30,6 @@ from senlin.db import api as db_api
 from senlin.rpc import client as rpc_client
 
 
-health_mgr_opts = [
-    cfg.IntOpt('periodic_interval_max',
-               default=60,
-               help='Seconds between periodic tasks to be called'),
-]
-
-CONF = cfg.CONF
-CONF.register_opts(health_mgr_opts)
-
-
 class HealthManager(service.Service):
 
     def __init__(self, engine_service, topic, version):
@@ -50,7 +40,6 @@ class HealthManager(service.Service):
         self.topic = topic
         self.version = version
         self.ctx = context.get_admin_context()
-        self.periodic_interval_max = CONF.periodic_interval_max
         self.rpc_client = rpc_client.EngineClient()
         self.rt = {
             'registries': [],
@@ -77,7 +66,7 @@ class HealthManager(service.Service):
         for registry in self.registries:
             if registry.get('check_type') == 'NODE_STATUS_POLLING':
                 interval = min(registry.get('interval'),
-                               self.periodic_interval_max)
+                               cfg.CONF.periodic_interval_max)
                 timer = self.TG.add_timer(interval, self._periodic_check, None,
                                           registry.get('cluster_id'))
                 registry['timer'] = timer
@@ -135,7 +124,7 @@ class HealthManager(service.Service):
 
         timer = None
         if check_type == 'NODE_STATUS_POLLING':
-            real_interval = min(interval, self.periodic_interval_max)
+            real_interval = min(interval, cfg.CONF.periodic_interval_max)
             timer = self.TG.add_timer(real_interval, self._periodic_check,
                                       None, cluster_id)
 
@@ -214,7 +203,3 @@ def unregister(cluster_id, engine_id=None):
     return notify(engine_id,
                   'unregister_cluster',
                   cluster_id=cluster_id)
-
-
-def list_opts():
-    yield None, health_mgr_opts
