@@ -48,7 +48,7 @@ Response Parameters
   - name: name
   - project: project
   - spec: policy_spec
-  - type: policy_type_property
+  - type: policy_type_name
   - updated_at: updated_at
   - user: user
 
@@ -98,21 +98,15 @@ Response Parameters
 
   - policy: policy
   - created_at: created_at
-    in: policy
   - data: policy_data
   - domain: domain
-    in: policy
   - id: policy_id
   - name: name
-    in: policy
   - project: project
-    in: policy
   - spec: policy_spec
-  - type: policy_type_property
+  - type: policy_type_name
   - updated_at: updated_at
-    in: policy
   - user: user
-    in: policy
 
 Response Example
 ----------------
@@ -159,7 +153,7 @@ Response Parameters
   - name: name
   - project: project
   - spec: policy_spec
-  - type: policy_type_property
+  - type: policy_type_name
   - updated_at: updated_at
   - user: user
 
@@ -196,7 +190,9 @@ Request Parameters
   - policy_id: policy_id_url
   - policy: policy
   - name: name
-    in: policy
+
+Note that the only property that can be updated on a policy object after
+creation is ``name``.
 
 Request Example
 ---------------
@@ -214,18 +210,13 @@ Response Parameters
   - created_at: created_at
   - data: policy_data
   - domain: domain
-    in: policy
   - id: policy_id
   - name: name
-    in: policy
   - project: project
-    in: policy
   - spec: policy_spec
-  - type: policy_type_property
+  - type: policy_type_name
   - updated_at: updated_at
-    in: policy
   - user: user
-    in: policy
 
 Response Example
 ----------------

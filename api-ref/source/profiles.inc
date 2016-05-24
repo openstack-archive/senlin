@@ -46,7 +46,7 @@ Response Parameters
   - name: name
   - project: project
   - spec: profile_spec
-  - type: profile_type_property
+  - type: profile_type_name
   - updated_at: updated_at
   - user: user
 
@@ -81,7 +81,7 @@ Request Parameters
   - OpenStack-API-Version: microversion
   - profile: profile
   - name: name
-  - metadata: metadata
+  - metadata: metadata_req
   - spec: profile_spec
 
 Request Example
@@ -103,7 +103,7 @@ Response Parameters
   - name: name
   - project: project
   - spec: profile_spec
-  - type: profile_type_property
+  - type: profile_type_name
   - updated_at: updated_at
   - user: user
 
@@ -153,7 +153,7 @@ Response Parameters
   - name: name
   - project: project
   - spec: profile_spec
-  - type: profile_type_property
+  - type: profile_type_name
   - updated_at: updated_at
   - user: user
 
@@ -189,8 +189,8 @@ Request Parameters
   - OpenStack-API-Version: microversion
   - profile_id: profile_id_url
   - profile: profile
-  - metadata: metadata
-  - name: name
+  - metadata: metadata_req
+  - name: name_req
 
 Request Example
 ---------------
@@ -211,7 +211,7 @@ Response Parameters
   - name: name
   - project: project
   - spec: profile_spec
-  - type: profile_type_property
+  - type: profile_type_name
   - updated_at: updated_at
   - user: user
 

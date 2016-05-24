@@ -52,8 +52,8 @@ Response Parameters
   - metadata: metadata
   - name: name
   - physical_id: physical_id
-  - profile_id: node_profile_id
-  - profile_name: node_profile_name
+  - profile_id: profile_id
+  - profile_name: profile_name
   - project: project
   - role: role
   - status: node_status
@@ -91,11 +91,11 @@ Request Parameters
 
   - OpenStack-API-Version: microversion
   - node: node
-  - role: role
-  - profile_id: profile_identity
-  - cluster_id: cluster_identity
+  - role: role_req
+  - profile_id: profile_identity_req
+  - cluster_id: node_cluster_identity
   - name: name
-  - metadata: metadata
+  - metadata: metadata_req
 
 Request Example
 ---------------
@@ -120,8 +120,8 @@ Response Parameters
   - metadata: metadata
   - name: name
   - physical_id: physical_id
-  - profile_id: node_profile_id
-  - profile_name: node_profile_name
+  - profile_id: profile_id
+  - profile_name: profile_name
   - project: project
   - role: role
   - status: node_status
@@ -163,6 +163,31 @@ Request Parameters
   - node_id: node_id_url
   - show_details: show_details
 
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - node: node
+  - cluster_id: cluster_id
+  - created_at: created_at
+  - data: node_data
+  - domain: domain
+  - id: node_id
+  - index: index
+  - init_at: init_at
+  - metadata: metadata
+  - name: name
+  - physical_id: physical_id
+  - profile_id: profile_id
+  - profile_name: profile_name
+  - project: project
+  - role: role
+  - status: node_status
+  - status_reason: status_reason
+  - updated_at: updated_at
+  - user: user
+
 Response Example
 ----------------
 
@@ -188,18 +213,18 @@ Error response codes:
 - serviceUnavailable (503)
 
 
-Request
--------
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
   - OpenStack-API-Version: microversion
   - node_id: node_id_url
   - node: node
-  - name: name
+  - name: name_req
   - profile_id: profile_identity
-  - role: role
-  - metadata: metadata
+  - role: role_req
+  - metadata: metadata_req
 
 Request Example
 ---------------
@@ -224,8 +249,8 @@ Response Parameters
   - metadata: metadata
   - name: name
   - physical_id: physical_id
-  - profile_id: node_profile_id
-  - profile_name: node_profile_name
+  - profile_id: profile_id
+  - profile_name: profile_name
   - project: project
   - role: role
   - status: node_status
@@ -264,7 +289,6 @@ Request Parameters
 
   - OpenStack-API-Version: microversion
   - node_id: node_id_url
-
 
 Response Parameters
 -------------------

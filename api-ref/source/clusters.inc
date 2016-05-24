@@ -13,7 +13,6 @@ List clusters
 
 Lists clusters.
 
-
 Normal response codes: 200
 
 Error response codes:
@@ -43,33 +42,25 @@ Response Parameters
 
   - clusters: clusters
   - created_at: created_at
-    in: cluster
   - data: cluster_data
   - desired_capacity: desired_capacity
   - domain: domain
-    in: cluster
   - id: cluster_id
   - init_at: init_at
   - max_size: max_size
   - metadata: metadata
-    in: cluster
   - min_size: min_size
-  - name: cluster_name
-    in: cluster
+  - name: name
   - nodes: cluster_nodes
   - policies: cluster_policies_property
-  - profile_id: cluster_profile_id
-  - profile_name: cluster_profile_name
+  - profile_id: profile_id
+  - profile_name: profile_name
   - project: project
-    in: cluster
   - status: cluster_status
   - status_reason: status_reason
-    in: cluster
   - timeout: timeout
   - updated_at: updated_at
-    in: cluster
   - user: user
-    in: cluster
 
 Response Example
 ----------------
@@ -103,11 +94,11 @@ Request Parameters
   - cluster: cluster
   - name: name
   - desired_capacity: desired_capacity
-  - profile_id: profile_id_url
-  - min_size: min_size
-  - timeout: timeout
-  - max_size: max_size
-  - metadata: metadata
+  - profile_id: profile_identity_req
+  - min_size: min_size_req
+  - timeout: timeout_req
+  - max_size: max_size_req
+  - metadata: metadata_req
 
 Request Example
 ---------------
@@ -132,13 +123,12 @@ Response Parameters
   - max_size: max_size
   - metadata: metadata
   - min_size: min_size
-  - name: cluster_name
+  - name: name
   - nodes: cluster_nodes
   - policies: cluster_policies_property
-  - profile_id: cluster_profile_id
-  - profile_name: cluster_profile_name
+  - profile_id: profile_id
+  - profile_name: profile_name
   - project: project
-    in: cluster
   - status: cluster_status
   - status_reason: status_reason
   - timeout: timeout
@@ -184,7 +174,6 @@ Response Parameters
 
   - cluster: cluster
   - created_at: created_at
-    in: cluster
   - data: cluster_data
   - desired_capacity: desired_capacity
   - domain: domain
@@ -193,11 +182,11 @@ Response Parameters
   - max_size: max_size
   - metadata: metadata
   - min_size: min_size
-  - name: cluster_name
+  - name: name
   - nodes: cluster_nodes
   - policies: cluster_policies_property
-  - profile_id: cluster_profile_id
-  - profile_name: cluster_profile_name
+  - profile_id: profile_id
+  - profile_name: profile_name
   - project: project
   - status: cluster_status
   - status_reason: status_reason
@@ -237,11 +226,10 @@ Request
   - OpenStack-API-Version: microversion
   - cluster_id: cluster_id_url
   - cluster: cluster
-  - name: cluster_name
-  - profile_id: cluster_profile_identity
-  - timeout: timeout
-  - metadata: metadata
-
+  - name: name_req
+  - profile_id: profile_identity
+  - timeout: timeout_req
+  - metadata: metadata_req
 
 Request Example
 ---------------
@@ -266,11 +254,11 @@ Response Parameters
   - max_size: max_size
   - metadata: metadata
   - min_size: min_size
-  - name: cluster_name
+  - name: name
   - nodes: cluster_nodes
   - policies: cluster_policies_property
-  - profile_id: cluster_profile_id
-  - profile_name: cluster_profile_name
+  - profile_id: profile_id
+  - profile_name: profile_name
   - project: project
   - status: cluster_status
   - status_reason: status_reason

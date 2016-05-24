@@ -42,7 +42,7 @@ Response Parameters
   - id: cluster_policy_id
   - policy_id: policy_id
   - policy_name: policy_name
-  - policy_type: policy_type_property
+  - policy_type: policy_type_name
 
 Response Example
 ----------------
@@ -89,7 +89,7 @@ Response Parameters
   - id: cluster_policy_id
   - policy_id: policy_id
   - policy_name: policy_name
-  - policy_type: policy_type_property
+  - policy_type: policy_type_name
 
 Response Example
 ----------------
