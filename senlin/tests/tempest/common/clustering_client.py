@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from six.moves.urllib import parse as urllib
+
 from oslo_serialization import jsonutils
 from tempest.lib.common import rest_client
 
@@ -43,8 +45,10 @@ class ClusteringAPIClient(rest_client.RestClient):
 
         return self._parsed_resp(resp, body)
 
-    def list_objs(self, obj_type):
+    def list_objs(self, obj_type, params=None):
         uri = '{0}/{1}'.format(self.version, obj_type)
+        if params:
+            uri += '?{0}'.format(urllib.urlencode(params))
         resp, body = self.get(uri)
 
         return self._parsed_resp(resp, body)
