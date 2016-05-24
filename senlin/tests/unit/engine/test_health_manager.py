@@ -10,14 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-'''
-Health Manager class.
-
-Health Manager is responsible for monitoring the health of the clusters and
-take corresponding actions to recover the clusters based on the pre-defined
-health policies.
-'''
 import mock
+from oslo_config import cfg
 
 from senlin.common import consts
 from senlin.common import messaging as rpc_messaging
@@ -47,38 +41,83 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertEqual(0, len(self.hm.rt['registries']))
 
     @mock.patch.object(db_api, 'registry_claim')
-    def test__load_runtime_registry(self, mock_reg_claim):
-        mock_reg_claim.return_value = [
-            mock.Mock(engine_id='ENGINE_ID'),
-            mock.Mock(engine_id='ENGINE_ID')
+    def test__load_runtime_registry(self, mock_claim):
+        mock_claim.return_value = [
+            mock.Mock(cluster_id='CID1',
+                      check_type=consts.NODE_STATUS_POLLING,
+                      interval=12,
+                      params={'k1': 'v1'}),
+            mock.Mock(cluster_id='CID2',
+                      check_type=consts.NODE_STATUS_POLLING,
+                      interval=34,
+                      params={'k2': 'v2'}),
+            mock.Mock(cluster_id='CID3',
+                      check_type='UNKNOWN_CHECK_TYPE',
+                      interval=56,
+                      params={'k3': 'v3'}),
         ]
 
+        timer1 = mock.Mock()
+        timer2 = mock.Mock()
+        mock_add_timer = self.patchobject(self.hm.TG, 'add_timer',
+                                          side_effect=[timer1, timer2])
+
+        # do it
         self.hm._load_runtime_registry()
-        self.assertEqual(2, len(self.hm.registries))
+
+        # assertions
+        mock_claim.assert_called_once_with(self.hm.ctx, self.hm.engine_id)
+        mock_calls = [
+            mock.call(12, self.hm._poll_cluster, None, 'CID1'),
+            mock.call(34, self.hm._poll_cluster, None, 'CID2')
+        ]
+        mock_add_timer.assert_has_calls(mock_calls)
+        self.assertEqual(3, len(self.hm.registries))
+        self.assertEqual(
+            {
+                'cluster_id': 'CID1',
+                'check_type': consts.NODE_STATUS_POLLING,
+                'interval': 12,
+                'params': {'k1': 'v1'},
+                'timer': timer1
+            },
+            self.hm.registries[0])
+        self.assertEqual(
+            {
+                'cluster_id': 'CID2',
+                'check_type': consts.NODE_STATUS_POLLING,
+                'interval': 34,
+                'params': {'k2': 'v2'},
+                'timer': timer2
+            },
+            self.hm.registries[1])
 
     @mock.patch.object(rpc_client.EngineClient, 'cluster_check')
-    def test_periodic_check(self, mock_check):
-        self.hm._periodic_check(cluster_id='CLUSTER_ID')
+    def test__poll_cluster(self, mock_check):
+        self.hm._poll_cluster('CLUSTER_ID')
         mock_check.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID')
 
     @mock.patch.object(db_api, 'registry_create')
     def test_register_cluster(self, mock_reg_create):
         ctx = mock.Mock()
-        matched_type = 'NODE_STATUS_POLLING'
         timer = mock.Mock()
         mock_add_tm = self.patchobject(self.hm.TG, 'add_timer',
                                        return_value=timer)
-        mock_check = self.patchobject(self.hm, '_periodic_check',
-                                      return_value=mock.Mock())
+        mock_poll = self.patchobject(self.hm, '_poll_cluster',
+                                     return_value=mock.Mock())
+        x_reg = mock.Mock(cluster_id='CLUSTER_ID',
+                          check_type=consts.NODE_STATUS_POLLING,
+                          interval=50, params={})
+        mock_reg_create.return_value = x_reg
 
         self.hm.register_cluster(ctx,
                                  cluster_id='CLUSTER_ID',
-                                 check_type=matched_type,
+                                 check_type=consts.NODE_STATUS_POLLING,
                                  interval=50)
 
         mock_reg_create.assert_called_once_with(
-            ctx, 'CLUSTER_ID', matched_type, 50, {}, 'ENGINE_ID')
-        mock_add_tm.assert_called_with(50, mock_check, None, 'CLUSTER_ID')
+            ctx, 'CLUSTER_ID', consts.NODE_STATUS_POLLING, 50, {}, 'ENGINE_ID')
+        mock_add_tm.assert_called_with(50, mock_poll, None, 'CLUSTER_ID')
         self.assertEqual(1, len(self.hm.registries))
 
     @mock.patch.object(db_api, 'registry_delete')
@@ -100,34 +139,28 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertEqual(0, len(self.hm.registries))
         mock_reg_delete.assert_called_once_with(ctx, 'CLUSTER_ID')
 
-    @mock.patch.object(db_api, 'registry_claim')
     @mock.patch('oslo_messaging.Target')
-    def test_start(self, mock_target, mock_reg_claim):
-        tg = mock.Mock()
-        self.hm.TG = tg
+    def test_start(self, mock_target):
+        self.hm.TG = mock.Mock()
         target = mock.Mock()
         mock_target.return_value = target
-        registry = {
-            'cluster_id': 'CLUSTER_ID',
-            'check_type': 'NODE_STATUS_POLLING',
-            'interval': 50,
-            'params': {},
-        }
-        rpc_server = mock.Mock()
-        mock_st = self.patchobject(rpc_messaging, 'get_rpc_server',
-                                   return_value=rpc_server)
-        self.patchobject(self.hm, '_load_runtime_registry',
-                         return_value=mock.Mock)
-        self.hm.rt['registries'] = [registry]
-        timer = mock.Mock()
-        mock_add_tm = self.patchobject(self.hm.TG, 'add_timer',
-                                       return_value=timer)
-        mock_check = self.patchobject(self.hm, '_periodic_check',
-                                      return_value=mock.Mock())
+        x_rpc_server = mock.Mock()
+        mock_get_rpc = self.patchobject(rpc_messaging, 'get_rpc_server',
+                                        return_value=x_rpc_server)
+        x_timer = mock.Mock()
+        mock_add_timer = self.patchobject(self.hm.TG, 'add_timer',
+                                          return_value=x_timer)
+        mock_load = self.patchobject(self.hm, '_load_runtime_registry')
+
+        # do it
         self.hm.start()
+
+        # assert
         mock_target.assert_called_once_with(server='ENGINE_ID',
                                             topic='engine-health-mgr',
                                             version='1.0')
-        mock_st.assert_called_once_with(target, self.hm)
-        rpc_server.start.assert_called_once_with()
-        mock_add_tm.assert_called_with(50, mock_check, None, 'CLUSTER_ID')
+        mock_get_rpc.assert_called_once_with(target, self.hm)
+        x_rpc_server.start.assert_called_once_with()
+        mock_add_timer.assert_called_once_with(cfg.CONF.periodic_interval,
+                                               self.hm._dummy_task)
+        mock_load.assert_called_once_with()

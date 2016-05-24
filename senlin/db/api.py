@@ -448,7 +448,7 @@ def registry_delete(context, cluster_id):
 
 
 def registry_claim(context, engine_id):
-    return IMPL.registry_claim(context, engine_id=engine_id)
+    return IMPL.registry_claim(context, engine_id)
 
 
 def db_sync(engine, version=None):
