@@ -31,6 +31,8 @@ class Receiver(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'action': fields.StringField(),
         'params': fields.DictOfStringField(nullable=True),
         'channel': fields.DictOfStringField(nullable=True),
+        'created_at': fields.DateTimeField(nullable=True),
+        'updated_at': fields.DateTimeField(nullable=True),
         'user': fields.StringField(),
         'project': fields.StringField(),
         'domain': fields.StringField(),
