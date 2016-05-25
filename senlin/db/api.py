@@ -439,11 +439,8 @@ def service_get_all(context):
 
 def registry_create(context, cluster_id, check_type, interval, params,
                     engine_id):
-    return IMPL.registry_create(context, cluster_id=cluster_id,
-                                check_type=check_type,
-                                interval=interval,
-                                params=params,
-                                engine_id=engine_id)
+    return IMPL.registry_create(context, cluster_id, check_type, interval,
+                                params, engine_id)
 
 
 def registry_delete(context, cluster_id):

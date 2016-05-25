@@ -76,12 +76,8 @@ class TestHealthManager(base.SenlinTestCase):
                                  check_type=matched_type,
                                  interval=50)
 
-        mock_reg_create.assert_called_once_with(ctx,
-                                                cluster_id='CLUSTER_ID',
-                                                check_type=matched_type,
-                                                engine_id='ENGINE_ID',
-                                                interval=50,
-                                                params={})
+        mock_reg_create.assert_called_once_with(
+            ctx, 'CLUSTER_ID', matched_type, 50, {}, 'ENGINE_ID')
         mock_add_tm.assert_called_with(50, mock_check, None, 'CLUSTER_ID')
         self.assertEqual(1, len(self.hm.registries))
 
