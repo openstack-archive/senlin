@@ -1,0 +1,6 @@
+---
+features:
+  - Improved the action scheduler so that it can decide how many node
+    actions will be fired in each batch. Batch control is a throttling
+    measure to avoid raising too many requests in a short interval to
+    the backend services.
