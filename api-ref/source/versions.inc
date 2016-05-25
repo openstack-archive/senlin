@@ -17,7 +17,7 @@ List Major Versions
 Lists information for all Clustering API major versions.
 
 
-Normal response codes: 200
+Normal response codes: 300
 Error response codes: serviceUnavailable (503)
 
 Response Parameters
