@@ -18,6 +18,7 @@ from senlin.common import scaleutils as su
 from senlin.common import schema
 from senlin.common import utils
 from senlin.db import api as db_api
+from senlin.objects import node as no
 from senlin.policies import base
 
 
@@ -164,7 +165,7 @@ class ScalingPolicy(base.Policy):
 
         # Use action input if count is provided
         count = action.inputs.get('count', None)
-        current = db_api.node_count_by_cluster(action.context, cluster_id)
+        current = no.Node.count_by_cluster(action.context, cluster_id)
         if count is None:
             # count not specified, calculate it
             count = self._calculate_adjustment_count(current)

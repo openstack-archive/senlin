@@ -29,6 +29,7 @@ from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock
+from senlin.objects import node as no
 from senlin.policies import base as policy_mod
 
 LOG = logging.getLogger(__name__)
@@ -423,7 +424,7 @@ class ClusterAction(base.Action):
         errors = []
         for node_id in node_ids:
             try:
-                node = db_api.node_get(self.context, node_id)
+                node = no.Node.get(self.context, node_id)
             except exception.NodeNotFound:
                 errors.append(_('Node [%s] is not found.') % node_id)
                 continue

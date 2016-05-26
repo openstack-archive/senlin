@@ -248,8 +248,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
 
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
         res = policy._get_delete_candidates('CLUSTERID', action)
-        m_node_get.assert_called_once_with(action.context,
-                                           cluster_id='CLUSTERID')
+        m_node_get.assert_called_once_with(action.context, 'CLUSTERID')
         m_nodes_random.assert_called_once_with(['node1', 'node2', 'node3'], 1)
 
         self.assertEqual(['node1', 'node3'], res)
@@ -280,8 +279,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         m_cluster_get.assert_called_once_with(action.context,
                                               'CLUSTERID')
         m_parse_param.assert_called_once_with(action, 'cluster1')
-        m_node_get.assert_called_once_with(action.context,
-                                           cluster_id='CLUSTERID')
+        m_node_get.assert_called_once_with(action.context, 'CLUSTERID')
         m_nodes_random.assert_called_once_with(['node1', 'node2', 'node3'], 2)
 
         self.assertEqual(['node1', 'node3'], res)
@@ -299,8 +297,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
 
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
         res = policy._get_delete_candidates('CLUSTERID', action)
-        m_node_get.assert_called_once_with(action.context,
-                                           cluster_id='CLUSTERID')
+        m_node_get.assert_called_once_with(action.context, 'CLUSTERID')
         m_nodes_random.assert_called_once_with(['node1', 'node2', 'node3'], 1)
 
         self.assertEqual(['node2'], res)
@@ -330,8 +327,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
 
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
         policy._get_delete_candidates('CLUSTERID', action)
-        m_node_get.assert_called_once_with(action.context,
-                                           cluster_id='CLUSTERID')
+        m_node_get.assert_called_once_with(action.context, 'CLUSTERID')
         m_nodes_random.assert_called_once_with(['node1', 'node2', 'node3'], 3)
 
     def test_get_delete_candidates_deletion_with_candidates(self):

@@ -31,6 +31,7 @@ from senlin.db import api as db_api
 from senlin.drivers import base as driver_base
 from senlin.engine import cluster_policy
 from senlin.engine import node as node_mod
+from senlin.objects import node as no
 from senlin.policies import base
 
 LOG = logging.getLogger(__name__)
@@ -387,8 +388,7 @@ class LoadBalancingPolicy(base.Policy):
         if candidates is None:
             if count == 0:
                 return []
-            nodes = db_api.node_get_all_by_cluster(action.context,
-                                                   cluster_id=cluster_id)
+            nodes = no.Node.get_all_by_cluster(action.context, cluster_id)
             if count > len(nodes):
                 count = len(nodes)
             candidates = scaleutils.nodes_by_random(nodes, count)

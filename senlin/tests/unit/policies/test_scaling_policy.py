@@ -16,8 +16,9 @@ import six
 
 from senlin.common import consts
 from senlin.db.sqlalchemy import api as db_api
-from senlin.objects import profile as profile_obj
-from senlin.policies import base as policy_base
+from senlin.objects import node as no
+from senlin.objects import profile as po
+from senlin.policies import base as pb
 from senlin.policies import scaling_policy as sp
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -57,7 +58,7 @@ class TestScalingPolicy(base.SenlinTestCase):
             'user': self.context.user,
             'project': self.context.project,
         }
-        return profile_obj.Profile.create(self.context, values)
+        return po.Profile.create(self.context, values)
 
     def _create_cluster(self, cluster_id, profile_id):
         values = {
@@ -93,7 +94,7 @@ class TestScalingPolicy(base.SenlinTestCase):
                 'metadata': {'foo': '123'},
                 'data': {'key1': 'value1'},
             }
-            db_node = db_api.node_create(self.context, values)
+            db_node = no.Node.create(self.context, values)
             nodes.append(six.text_type(db_node.id))
         return nodes
 
@@ -184,7 +185,7 @@ class TestScalingPolicy(base.SenlinTestCase):
                 'count': 2,
             },
             'reason': 'Scaling request validated.',
-            'status': policy_base.CHECK_OK,
+            'status': pb.CHECK_OK,
         }
         action.data.update.assert_called_with(pd)
         action.store.assert_called_with(self.context)
@@ -205,7 +206,7 @@ class TestScalingPolicy(base.SenlinTestCase):
                 'count': 1,
             },
             'reason': 'Scaling request validated.',
-            'status': policy_base.CHECK_OK,
+            'status': pb.CHECK_OK,
         }
         action.data.update.assert_called_with(pd)
         action.store.assert_called_with(self.context)
@@ -218,7 +219,7 @@ class TestScalingPolicy(base.SenlinTestCase):
                 'count': 1,
             },
             'reason': 'Scaling request validated.',
-            'status': policy_base.CHECK_OK,
+            'status': pb.CHECK_OK,
         }
         action.data.update.assert_called_with(pd)
 
@@ -235,7 +236,7 @@ class TestScalingPolicy(base.SenlinTestCase):
         policy.pre_op(self.cluster['id'], action)
 
         pd = {
-            'status': policy_base.CHECK_ERROR,
+            'status': pb.CHECK_ERROR,
             'reason': "Invalid count (-2) for action 'CLUSTER_SCALE_IN'.",
         }
         action.data.update.assert_called_with(pd)
@@ -254,7 +255,7 @@ class TestScalingPolicy(base.SenlinTestCase):
         policy.pre_op(self.cluster['id'], action)
 
         pd = {
-            'status': policy_base.CHECK_ERROR,
+            'status': pb.CHECK_ERROR,
             'reason': ("The target capacity (0) is less than the cluster's "
                        "min_size (1)."),
         }
@@ -278,7 +279,7 @@ class TestScalingPolicy(base.SenlinTestCase):
             'deletion': {
                 'count': 2,
             },
-            'status': policy_base.CHECK_OK,
+            'status': pb.CHECK_OK,
             'reason': 'Scaling request validated.',
         }
         action.data.update.assert_called_with(pd)
@@ -286,7 +287,7 @@ class TestScalingPolicy(base.SenlinTestCase):
 
     def test_pre_op_with_bad_nodes(self):
         node_id = self.nodes[0]
-        db_api.node_update(self.context, node_id, {'status': 'ERROR'})
+        no.Node.update(self.context, node_id, {'status': 'ERROR'})
 
         action = mock.Mock()
         action.context = self.context
@@ -303,7 +304,7 @@ class TestScalingPolicy(base.SenlinTestCase):
                 'count': 2,
             },
             'reason': 'Scaling request validated.',
-            'status': policy_base.CHECK_OK,
+            'status': pb.CHECK_OK,
         }
         action.data.update.assert_called_with(pd)
         action.store.assert_called_with(self.context)

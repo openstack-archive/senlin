@@ -19,19 +19,19 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.common import utils
-from senlin.db import api as db_api
+from senlin.objects import node as no
 from senlin.profiles import base as profile_base
 
 LOG = logging.getLogger(__name__)
 
 
 class Node(object):
-    '''A node is an object that can belong to at most one single cluster.
+    """A node is an object that can belong to at most one single cluster.
 
     All operations are performed without further checking because the
     checkings are supposed to be done before/after/during an action is
     excuted.
-    '''
+    """
 
     statuses = (
         INIT, ACTIVE, ERROR, WARNING, CREATING, UPDATING, DELETING,
@@ -94,12 +94,14 @@ class Node(object):
         self.rt = {'profile': profile}
 
     def store(self, context):
-        '''Store the node record into database table.
+        """Store the node into database table.
 
-        The invocation of DB API could be a node_create or a node_update,
+        The invocation of object API could be a node_create or a node_update,
         depending on whether node has an ID assigned.
-        '''
 
+        @param context: Request context for node creation.
+        @return: UUID of node created.
+        """
         values = {
             'name': self.name,
             'physical_id': self.physical_id,
@@ -120,64 +122,64 @@ class Node(object):
         }
 
         if self.id:
-            db_api.node_update(context, self.id, values)
+            no.Node.update(context, self.id, values)
         else:
             init_at = timeutils.utcnow()
             self.init_at = init_at
             values['init_at'] = init_at
-            node = db_api.node_create(context, values)
+            node = no.Node.create(context, values)
             self.id = node.id
 
         self._load_runtime_data(context)
         return self.id
 
     @classmethod
-    def _from_db_record(cls, context, record):
-        '''Construct a node object from database record.
+    def _from_object(cls, context, node):
+        """Construct a node from node object.
 
-        :param context: the context used for DB operations;
-        :param record: a DB node object that contains all fields;
-        '''
+        @param context: the context used for DB operations;
+        @param node: a node object that contains all fields;
+        """
         kwargs = {
-            'id': record.id,
-            'physical_id': record.physical_id,
-            'user': record.user,
-            'project': record.project,
-            'domain': record.domain,
-            'index': record.index,
-            'role': record.role,
-            'init_at': record.init_at,
-            'created_at': record.created_at,
-            'updated_at': record.updated_at,
-            'status': record.status,
-            'status_reason': record.status_reason,
-            'data': record.data,
-            'metadata': record.meta_data,
+            'id': node.id,
+            'physical_id': node.physical_id,
+            'user': node.user,
+            'project': node.project,
+            'domain': node.domain,
+            'index': node.index,
+            'role': node.role,
+            'init_at': node.init_at,
+            'created_at': node.created_at,
+            'updated_at': node.updated_at,
+            'status': node.status,
+            'status_reason': node.status_reason,
+            'data': node.data,
+            'metadata': node.metadata,
         }
 
-        return cls(record.name, record.profile_id, record.cluster_id,
+        return cls(node.name, node.profile_id, node.cluster_id,
                    context=context, **kwargs)
 
     @classmethod
     def load(cls, context, node_id=None, node=None, project_safe=True):
         '''Retrieve a node from database.'''
         if node is None:
-            node = db_api.node_get(context, node_id, project_safe=project_safe)
+            node = no.Node.get(context, node_id, project_safe=project_safe)
             if node is None:
                 raise exception.NodeNotFound(node=node_id)
 
-        return cls._from_db_record(context, node)
+        return cls._from_object(context, node)
 
     @classmethod
     def load_all(cls, context, cluster_id=None, limit=None, marker=None,
                  sort=None, filters=None, project_safe=True):
         '''Retrieve all nodes of from database.'''
-        records = db_api.node_get_all(context, cluster_id=cluster_id,
-                                      filters=filters, sort=sort,
-                                      limit=limit, marker=marker,
-                                      project_safe=project_safe)
+        nodes = no.Node.get_all(context, cluster_id=cluster_id,
+                                filters=filters, sort=sort,
+                                limit=limit, marker=marker,
+                                project_safe=project_safe)
 
-        return [cls._from_db_record(context, record) for record in records]
+        return [cls._from_object(context, node) for node in nodes]
 
     def to_dict(self):
         if self.rt['profile']:
@@ -221,7 +223,7 @@ class Node(object):
         if reason:
             self.status_reason = reason
             values['status_reason'] = reason
-        db_api.node_update(context, self.id, values)
+        no.Node.update(context, self.id, values)
 
     def get_details(self, context):
         if not self.physical_id:
@@ -265,7 +267,7 @@ class Node(object):
 
     def do_delete(self, context):
         if not self.physical_id:
-            db_api.node_delete(context, self.id)
+            no.Node.delete(context, self.id)
             return True
 
         # TODO(Qiming): check if actions are working on it and can be canceled
@@ -277,7 +279,7 @@ class Node(object):
             res = False
 
         if res:
-            db_api.node_delete(context, self.id)
+            no.Node.delete(context, self.id)
             return True
         else:
             self.set_status(context, self.ERROR, reason='Deletion failed')
@@ -328,8 +330,7 @@ class Node(object):
         res = profile_base.Profile.join_cluster(context, self, cluster_id)
         if res:
             timestamp = timeutils.utcnow()
-            db_node = db_api.node_migrate(context, self.id, cluster_id,
-                                          timestamp)
+            db_node = no.Node.migrate(context, self.id, cluster_id, timestamp)
             self.cluster_id = cluster_id
             self.updated_at = timestamp
             self.index = db_node.index
@@ -344,7 +345,7 @@ class Node(object):
         res = profile_base.Profile.leave_cluster(context, self)
         if res:
             timestamp = timeutils.utcnow()
-            db_api.node_migrate(context, self.id, None, timestamp)
+            no.Node.migrate(context, self.id, None, timestamp)
             self.cluster_id = ''
             self.updated_at = timestamp
             self.index = -1

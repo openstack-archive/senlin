@@ -20,6 +20,7 @@ from senlin.common.i18n import _
 from senlin.common import utils as common_utils
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import node as nodem
+from senlin.objects import node as node_obj
 from senlin.objects import profile as profile_obj
 from senlin.profiles import base as profiles_base
 from senlin.tests.unit.common import base
@@ -69,7 +70,7 @@ class TestNode(base.SenlinTestCase):
             'name': 'node1',
             'role': 'test_node',
         }
-        return db_api.node_create(self.context, values)
+        return node_obj.Node.create(self.context, values)
 
     def test_node_init(self):
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
@@ -108,7 +109,7 @@ class TestNode(base.SenlinTestCase):
         node_id = node.store(self.context)
         self.assertIsNotNone(node_id)
 
-        node_info = db_api.node_get(self.context, node_id)
+        node_info = node_obj.Node.get(self.context, node_id)
         self.assertIsNotNone(node_info)
         self.assertEqual('node1', node_info.name)
         self.assertEqual('', node_info.physical_id)
@@ -126,7 +127,7 @@ class TestNode(base.SenlinTestCase):
 
         self.assertEqual('INIT', node_info.status)
         self.assertEqual('Initializing', node_info.status_reason)
-        self.assertEqual({}, node_info.meta_data)
+        self.assertEqual({}, node_info.metadata)
         self.assertEqual({}, node_info.data)
 
     def test_node_store_update(self):
@@ -165,7 +166,7 @@ class TestNode(base.SenlinTestCase):
 
         self.assertEqual(node.status, node_info.status)
         self.assertEqual(node.status_reason, node_info.status_reason)
-        self.assertEqual(node.meta_data, node_info.metadata)
+        self.assertEqual(node.metadata, node_info.metadata)
         self.assertEqual(node.data, node_info.data)
         self.assertEqual(self.profile.name, node_info.rt['profile'].name)
 
@@ -216,7 +217,7 @@ class TestNode(base.SenlinTestCase):
             'status': node.status,
             'status_reason': node.status_reason,
             'data': node.data,
-            'metadata': node.meta_data,
+            'metadata': node.metadata,
             'profile_name': self.profile.name,
         }
         result = nodem.Node.load(self.context, 'NODE1')
@@ -244,7 +245,7 @@ class TestNode(base.SenlinTestCase):
             'status': node.status,
             'status_reason': node.status_reason,
             'data': node.data,
-            'metadata': node.meta_data,
+            'metadata': node.metadata,
             'profile_name': 'Unknown',
         }
         mock_profile_get.return_value = None
@@ -324,7 +325,7 @@ class TestNode(base.SenlinTestCase):
         node = nodem.Node('node1', self.profile.id, None, self.context)
         node.store(self.context)
         node._handle_exception(self.context, 'ACTION', 'STATUS', ex)
-        db_node = db_api.node_get(self.context, node.id)
+        db_node = node_obj.Node.get(self.context, node.id)
         self.assertEqual(node.ERROR, db_node.status)
         self.assertEqual('Profile failed in ACTIOing resource '
                          '(FAKE_ID) due to: %s' % six.text_type(ex),
@@ -338,7 +339,7 @@ class TestNode(base.SenlinTestCase):
         node = nodem.Node('node1', self.profile.id, None, self.context)
         node.store(self.context)
         node._handle_exception(self.context, 'CREATE', 'STATUS', ex)
-        db_node = db_api.node_get(self.context, node.id)
+        db_node = node_obj.Node.get(self.context, node.id)
         self.assertEqual(node.ERROR, db_node.status)
         self.assertEqual('Profile failed in creating node due to: '
                          '%s' % six.text_type(ex), db_node.status_reason)
@@ -397,21 +398,22 @@ class TestNode(base.SenlinTestCase):
             'msg': six.text_type(ex)}
         mock_status.assert_any_call(self.context, node.ERROR, reason)
 
-    @mock.patch.object(db_api, 'node_delete')
+    @mock.patch.object(node_obj.Node, 'delete')
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(profiles_base.Profile, 'delete_object')
     def test_node_delete(self, mock_delete, mock_status, mock_db_delete):
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
                           self.context)
         node.physical_id = 'fake_id'
+        node.id = 'FAKE_NODE_ID'
         res = node.do_delete(self.context)
         self.assertTrue(res)
         mock_delete.assert_called_once_with(mock.ANY, node)
-        mock_db_delete.assert_called_once_with(mock.ANY, node.id, False)
+        mock_db_delete.assert_called_once_with(mock.ANY, node.id)
         mock_status.assert_called_once_with(self.context, node.DELETING,
                                             reason='Deletion in progress')
 
-    @mock.patch.object(db_api, 'node_delete')
+    @mock.patch.object(node_obj.Node, 'delete')
     @mock.patch.object(profiles_base.Profile, 'delete_object')
     def test_node_delete_not_created(self, mock_delete, mock_db_delete):
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
@@ -497,7 +499,7 @@ class TestNode(base.SenlinTestCase):
                                                       'ERROR', ex)
         self.assertNotEqual('NEW_PROFILE_ID', node.profile_id)
 
-    @mock.patch.object(db_api, 'node_migrate')
+    @mock.patch.object(node_obj.Node, 'migrate')
     def test_node_join_same_cluster(self, mock_migrate):
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
                           self.context)
@@ -510,7 +512,7 @@ class TestNode(base.SenlinTestCase):
 
     @mock.patch.object(timeutils, 'utcnow')
     @mock.patch.object(profiles_base.Profile, 'join_cluster')
-    @mock.patch.object(db_api, 'node_migrate')
+    @mock.patch.object(node_obj.Node, 'migrate')
     def test_node_join(self, mock_migrate, mock_join_cluster, mock_time):
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
                           self.context)
@@ -518,8 +520,7 @@ class TestNode(base.SenlinTestCase):
         res = node.do_join(self.context, 'NEW_CLUSTER_ID')
         self.assertTrue(res)
         mock_migrate.assert_called_once_with(self.context, node.id,
-                                             'NEW_CLUSTER_ID', mock_time(),
-                                             None)
+                                             'NEW_CLUSTER_ID', mock.ANY)
         mock_join_cluster.assert_called_once_with(self.context, node,
                                                   'NEW_CLUSTER_ID')
         self.assertEqual('NEW_CLUSTER_ID', node.cluster_id)
@@ -538,7 +539,7 @@ class TestNode(base.SenlinTestCase):
         mock_join.assert_called_once_with(self.context, node,
                                           'NEW_CLUSTER_ID')
 
-    @mock.patch.object(db_api, 'node_migrate')
+    @mock.patch.object(node_obj.Node, 'migrate')
     def test_node_leave_no_cluster(self, mock_migrate):
         node = nodem.Node('node1', self.profile.id, '', self.context)
         self.assertTrue(node.do_leave(self.context))
@@ -548,7 +549,7 @@ class TestNode(base.SenlinTestCase):
 
     @mock.patch.object(timeutils, 'utcnow')
     @mock.patch.object(profiles_base.Profile, 'leave_cluster')
-    @mock.patch.object(db_api, 'node_migrate')
+    @mock.patch.object(node_obj.Node, 'migrate')
     def test_node_leave(self, mock_migrate, mock_leave_cluster, mock_time):
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
                           self.context)
@@ -559,7 +560,7 @@ class TestNode(base.SenlinTestCase):
         self.assertIsNotNone(node.updated_at)
         self.assertEqual(-1, node.index)
         mock_migrate.assert_called_once_with(self.context, node.id,
-                                             None, mock_time(), None)
+                                             None, mock.ANY)
         mock_leave_cluster.assert_called_once_with(self.context, node)
 
     @mock.patch.object(profiles_base.Profile, 'leave_cluster')

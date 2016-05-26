@@ -35,8 +35,8 @@ class Node(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'updated_at': fields.DateTimeField(nullable=True),
         'status': fields.StringField(),
         'status_reason': fields.StringField(),
-        'metadata': fields.DictOfStringField(),
-        'data': fields.DictOfStringField(),
+        'metadata': fields.DictOfStringsField(),
+        'data': fields.DictOfStringsField(),
         'user': fields.StringField(),
         'project': fields.StringField(),
         'domain': fields.StringField(nullable=True),
@@ -44,6 +44,9 @@ class Node(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
 
     @staticmethod
     def _from_db_object(context, node, db_obj):
+        if db_obj is None:
+            return None
+
         for field in node.fields:
             if field == 'metadata':
                 node['metadata'] = db_obj['meta_data']
@@ -84,7 +87,7 @@ class Node(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         return db_api.node_get_all_by_cluster(context, cluster_id, **kwargs)
 
     @classmethod
-    def count_all_by_cluster(cls, context, cluster_id, **kwargs):
+    def count_by_cluster(cls, context, cluster_id, **kwargs):
         return db_api.node_count_by_cluster(context, cluster_id, **kwargs)
 
     @classmethod
