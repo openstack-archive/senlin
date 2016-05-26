@@ -26,7 +26,7 @@ from oslo_service import threadgroup
 from senlin.common import consts
 from senlin.common import context
 from senlin.common import messaging as rpc_messaging
-from senlin.db import api as db_api
+from senlin.objects import health_registry as hr
 from senlin.rpc import client as rpc_client
 
 
@@ -77,7 +77,7 @@ class HealthManager(service.Service):
 
     def _load_runtime_registry(self):
         """Load the initial runtime registry with a DB scan."""
-        db_registries = db_api.registry_claim(self.ctx, self.engine_id)
+        db_registries = hr.HealthRegistry.claim(self.ctx, self.engine_id)
 
         for cluster in db_registries:
             entry = {
@@ -125,8 +125,10 @@ class HealthManager(service.Service):
         :return: None
         """
         params = params or {}
-        registry = db_api.registry_create(ctx, cluster_id, check_type,
-                                          interval, params, self.engine_id)
+
+        registry = hr.HealthRegistry.create(ctx, cluster_id, check_type,
+                                            interval, params, self.engine_id)
+
         entry = {
             'cluster_id': registry.cluster_id,
             'check_type': registry.check_type,
@@ -152,7 +154,7 @@ class HealthManager(service.Service):
                     timer.stop()
                     self.TG.timer_done(timer)
                 self.rt['registries'].pop(i)
-        db_api.registry_delete(ctx, cluster_id)
+        hr.HealthRegistry.delete(ctx, cluster_id)
 
 
 def notify(engine_id, method, **kwargs):

@@ -15,8 +15,8 @@ from oslo_config import cfg
 
 from senlin.common import consts
 from senlin.common import messaging as rpc_messaging
-from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import health_manager
+from senlin.objects import health_registry as hr
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.common import base
 
@@ -40,7 +40,7 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertEqual(consts.RPC_API_VERSION, self.hm.version)
         self.assertEqual(0, len(self.hm.rt['registries']))
 
-    @mock.patch.object(db_api, 'registry_claim')
+    @mock.patch.object(hr.HealthRegistry, 'claim')
     def test__load_runtime_registry(self, mock_claim):
         mock_claim.return_value = [
             mock.Mock(cluster_id='CID1',
@@ -97,7 +97,7 @@ class TestHealthManager(base.SenlinTestCase):
         self.hm._poll_cluster('CLUSTER_ID')
         mock_check.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID')
 
-    @mock.patch.object(db_api, 'registry_create')
+    @mock.patch.object(hr.HealthRegistry, 'create')
     def test_register_cluster(self, mock_reg_create):
         ctx = mock.Mock()
         timer = mock.Mock()
@@ -120,7 +120,7 @@ class TestHealthManager(base.SenlinTestCase):
         mock_add_tm.assert_called_with(50, mock_poll, None, 'CLUSTER_ID')
         self.assertEqual(1, len(self.hm.registries))
 
-    @mock.patch.object(db_api, 'registry_delete')
+    @mock.patch.object(hr.HealthRegistry, 'delete')
     def test_unregister_cluster(self, mock_reg_delete):
         ctx = mock.Mock()
         timer = mock.Mock()
