@@ -55,4 +55,4 @@ Indices and tables
 * :ref:`search`
 
 
-.. _`OpenStack API Complete Reference - Clustering`: http://api.openstack.org/api-ref-clustering-v1.html
+.. _`OpenStack API Complete Reference - Clustering`: http://developer.openstack.org/api-ref/clustering/
