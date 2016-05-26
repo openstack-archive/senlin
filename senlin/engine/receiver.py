@@ -19,6 +19,7 @@ from senlin.common import consts
 from senlin.common import exception
 from senlin.common import utils
 from senlin.db import api as db_api
+from senlin.objects import receiver as ro
 
 CONF = cfg.CONF
 
@@ -83,7 +84,7 @@ class Receiver(object):
         }
 
         # TODO(Qiming): Add support to update
-        receiver = db_api.receiver_create(context, values)
+        receiver = ro.Receiver.create(context, values)
         self.id = receiver.id
 
         return self.id
@@ -112,58 +113,59 @@ class Receiver(object):
         return obj
 
     @classmethod
-    def _from_db_record(cls, record):
-        """Construct a receiver object from database record.
+    def _from_object(cls, receiver):
+        """Construct a receiver from receiver object.
 
-        :param record: a DB receiver object that will receive all fields.
+        @param cls: The target class.
+        @param receiver: a receiver object that contains all fields.
         """
         kwargs = {
-            'id': record.id,
-            'name': record.name,
-            'user': record.user,
-            'project': record.project,
-            'domain': record.domain,
-            'created_at': record.created_at,
-            'updated_at': record.updated_at,
-            'actor': record.actor,
-            'params': record.params,
-            'channel': record.channel,
+            'id': receiver.id,
+            'name': receiver.name,
+            'user': receiver.user,
+            'project': receiver.project,
+            'domain': receiver.domain,
+            'created_at': receiver.created_at,
+            'updated_at': receiver.updated_at,
+            'actor': receiver.actor,
+            'params': receiver.params,
+            'channel': receiver.channel,
         }
 
-        return cls(record.type, record.cluster_id, record.action, **kwargs)
+        return cls(receiver.type, receiver.cluster_id, receiver.action,
+                   **kwargs)
 
     @classmethod
     def load(cls, context, receiver_id=None, receiver_obj=None,
              project_safe=True):
         """Retrieve a receiver from database.
 
-        :param context: the context for db operations.
-        :param receiver_id: the unique ID of the receiver to retrieve.
-        :param receiver_obj: the DB object of a receiver to retrieve.
-        :param project_safe: Optional parameter specifying whether only
+        @param context: the context for db operations.
+        @param receiver_id: the unique ID of the receiver to retrieve.
+        @param receiver_obj: the DB object of a receiver to retrieve.
+        @param project_safe: Optional parameter specifying whether only
                              receiver belong to the context.project will be
                              loaded.
         """
         if receiver_obj is None:
-            receiver_obj = db_api.receiver_get(context, receiver_id,
-                                               project_safe=project_safe)
+            receiver_obj = ro.Receiver.get(context, receiver_id,
+                                           project_safe=project_safe)
             if receiver_obj is None:
                 raise exception.ReceiverNotFound(receiver=receiver_id)
 
-        return cls._from_db_record(receiver_obj)
+        return cls._from_object(receiver_obj)
 
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort=None,
                  filters=None, project_safe=True):
         """Retrieve all receivers from database."""
 
-        records = db_api.receiver_get_all(context, limit=limit, marker=marker,
-                                          sort=sort, filters=filters,
-                                          project_safe=project_safe)
+        objs = ro.Receiver.get_all(context, limit=limit, marker=marker,
+                                   sort=sort, filters=filters,
+                                   project_safe=project_safe)
 
-        for record in records:
-            receiver = cls._from_db_record(record)
-            yield receiver
+        for obj in objs:
+            yield cls._from_object(obj)
 
     def to_dict(self):
         info = {

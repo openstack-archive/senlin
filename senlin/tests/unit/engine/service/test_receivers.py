@@ -17,9 +17,9 @@ from oslo_utils import uuidutils
 import six
 
 from senlin.common import exception as exc
-from senlin.db.sqlalchemy import api as db_api
-from senlin.engine import receiver
+from senlin.engine import receiver as rb
 from senlin.engine import service
+from senlin.objects import receiver as ro
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -31,7 +31,7 @@ class ReceiverTest(base.SenlinTestCase):
         self.ctx = utils.dummy_context(project='receiver_test_project')
         self.eng = service.EngineService('host-a', 'topic-a')
 
-    @mock.patch.object(db_api, 'receiver_get')
+    @mock.patch.object(ro.Receiver, 'get')
     def test_receiver_find_by_uuid(self, mock_get):
         fake_obj = mock.Mock()
         mock_get.return_value = fake_obj
@@ -42,8 +42,8 @@ class ReceiverTest(base.SenlinTestCase):
         self.assertEqual(fake_obj, res)
         mock_get.assert_called_once_with(self.ctx, fake_id, project_safe=True)
 
-    @mock.patch.object(db_api, 'receiver_get_by_name')
-    @mock.patch.object(db_api, 'receiver_get')
+    @mock.patch.object(ro.Receiver, 'get_by_name')
+    @mock.patch.object(ro.Receiver, 'get')
     def test_receiver_find_by_uuid_as_name(self, mock_get, mock_get_name):
         mock_get.return_value = None
         fake_obj = mock.Mock()
@@ -57,7 +57,7 @@ class ReceiverTest(base.SenlinTestCase):
         mock_get_name.assert_called_once_with(self.ctx, fake_id,
                                               project_safe=False)
 
-    @mock.patch.object(db_api, 'receiver_get_by_name')
+    @mock.patch.object(ro.Receiver, 'get_by_name')
     def test_receiver_find_by_name(self, mock_get_name):
         fake_obj = mock.Mock()
         mock_get_name.return_value = fake_obj
@@ -69,8 +69,8 @@ class ReceiverTest(base.SenlinTestCase):
         mock_get_name.assert_called_once_with(self.ctx, fake_id,
                                               project_safe=True)
 
-    @mock.patch.object(db_api, 'receiver_get_by_short_id')
-    @mock.patch.object(db_api, 'receiver_get_by_name')
+    @mock.patch.object(ro.Receiver, 'get_by_short_id')
+    @mock.patch.object(ro.Receiver, 'get_by_name')
     def test_receiver_find_by_short_id(self, mock_get_name, mock_get_shortid):
         mock_get_name.return_value = None
         fake_obj = mock.Mock()
@@ -85,7 +85,7 @@ class ReceiverTest(base.SenlinTestCase):
         mock_get_shortid.assert_called_once_with(self.ctx, fake_id,
                                                  project_safe=False)
 
-    @mock.patch.object(db_api, 'receiver_get_by_name')
+    @mock.patch.object(ro.Receiver, 'get_by_name')
     def test_receiver_find_not_found(self, mock_get_name):
         mock_get_name.return_value = None
         fake_id = '12345678'  # not a uuid
@@ -97,7 +97,7 @@ class ReceiverTest(base.SenlinTestCase):
         mock_get_name.assert_called_once_with(self.ctx, fake_id,
                                               project_safe=True)
 
-    @mock.patch.object(receiver.Receiver, 'load_all')
+    @mock.patch.object(rb.Receiver, 'load_all')
     def test_receiver_list(self, mock_load):
         fake_obj = mock.Mock()
         fake_obj.to_dict.return_value = {'FOO': 'BAR'}
@@ -112,7 +112,7 @@ class ReceiverTest(base.SenlinTestCase):
                                           sort=None, filters=None,
                                           project_safe=True)
 
-    @mock.patch.object(receiver.Receiver, 'load_all')
+    @mock.patch.object(rb.Receiver, 'load_all')
     def test_receiver_list_with_params(self, mock_load):
         fake_obj = mock.Mock()
         fake_obj.to_dict.return_value = {'FOO': 'BAR'}
@@ -145,7 +145,7 @@ class ReceiverTest(base.SenlinTestCase):
                                self.ctx, project_safe='yes')
         self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
 
-    @mock.patch.object(receiver.Receiver, 'load_all')
+    @mock.patch.object(rb.Receiver, 'load_all')
     def test_receiver_list_with_project_safe(self, mock_load):
         mock_load.return_value = []
 
@@ -184,7 +184,7 @@ class ReceiverTest(base.SenlinTestCase):
                                           project_safe=False)
 
     @mock.patch.object(service.EngineService, 'cluster_find')
-    @mock.patch.object(receiver.Receiver, 'create')
+    @mock.patch.object(rb.Receiver, 'create')
     def test_receiver_create(self, mock_create, mock_find):
         fake_cluster = mock.Mock()
         fake_cluster.user = self.ctx.user
@@ -217,7 +217,7 @@ class ReceiverTest(base.SenlinTestCase):
             name='r1', user=self.ctx.user, project=self.ctx.project,
             domain=self.ctx.domain, params={'FOO': 'BAR'})
 
-    @mock.patch.object(db_api, 'receiver_get_by_name')
+    @mock.patch.object(ro.Receiver, 'get_by_name')
     def test_receiver_create_name_duplicated(self, mock_get):
         cfg.CONF.set_override('name_unique', True, enforce_type=True)
         # Return an existing instance
@@ -254,7 +254,7 @@ class ReceiverTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(service.EngineService, 'cluster_find')
-    @mock.patch.object(receiver.Receiver, 'create')
+    @mock.patch.object(rb.Receiver, 'create')
     def test_receiver_create_forbidden(self, mock_create, mock_find):
         fake_cluster = mock.Mock()
         fake_cluster.user = 'someone'
@@ -301,7 +301,7 @@ class ReceiverTest(base.SenlinTestCase):
                          "not applicable to clusters.",
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(receiver.Receiver, 'load')
+    @mock.patch.object(rb.Receiver, 'load')
     def test_receiver_get(self, mock_load):
         fake_obj = mock.Mock()
         mock_find = self.patchobject(self.eng, 'receiver_find',
@@ -329,7 +329,7 @@ class ReceiverTest(base.SenlinTestCase):
         self.assertEqual(exc.ReceiverNotFound, ex.exc_info[0])
 
     @mock.patch.object(service.EngineService, 'receiver_find')
-    @mock.patch.object(db_api, 'receiver_delete')
+    @mock.patch.object(ro.Receiver, 'delete')
     def test_receiver_delete(self, mock_delete, mock_find):
         fake_obj = mock.Mock()
         fake_obj.id = 'FAKE_ID'

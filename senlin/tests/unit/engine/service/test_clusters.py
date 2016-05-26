@@ -25,6 +25,7 @@ from senlin.engine.actions import base as action_mod
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import dispatcher
 from senlin.engine import service
+from senlin.objects import receiver as ro
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -618,7 +619,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_load.assert_called_once_with(self.ctx, cluster=x_obj)
 
     @mock.patch.object(action_mod.Action, 'create')
-    @mock.patch.object(db_api, 'receiver_get_all')
+    @mock.patch.object(ro.Receiver, 'get_all')
     @mock.patch.object(db_api, 'cluster_policy_get_all')
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(dispatcher, 'start_action')
@@ -675,7 +676,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'IDENTITY')
         mock_policies.assert_called_once_with(self.ctx, '12345678AB')
 
-    @mock.patch.object(db_api, 'receiver_get_all')
+    @mock.patch.object(ro.Receiver, 'get_all')
     @mock.patch.object(db_api, 'cluster_policy_get_all')
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_delete_with_receiver(self, mock_find, mock_policies,

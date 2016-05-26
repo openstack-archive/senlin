@@ -27,10 +27,10 @@ class Receiver(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'name': fields.StringField(),
         'type': fields.StringField(),
         'cluster_id': fields.UUIDField(),
-        'actor': fields.DictOfStringField(nullable=True),
+        'actor': fields.DictOfStringsField(nullable=True),
         'action': fields.StringField(),
-        'params': fields.DictOfStringField(nullable=True),
-        'channel': fields.DictOfStringField(nullable=True),
+        'params': fields.DictOfStringsField(nullable=True),
+        'channel': fields.DictOfStringsField(nullable=True),
         'created_at': fields.DateTimeField(nullable=True),
         'updated_at': fields.DateTimeField(nullable=True),
         'user': fields.StringField(),
@@ -40,6 +40,9 @@ class Receiver(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
 
     @staticmethod
     def _from_db_object(context, receiver, db_obj):
+        if db_obj is None:
+            return None
+
         for field in receiver.fields:
             receiver[field] = db_obj[field]
 
@@ -54,8 +57,8 @@ class Receiver(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         return cls._from_db_object(context, cls(context), obj)
 
     @classmethod
-    def get(cls, context, receiver_id):
-        obj = db_api.receiver_get(context, receiver_id)
+    def get(cls, context, receiver_id, **kwargs):
+        obj = db_api.receiver_get(context, receiver_id, **kwargs)
         return cls._from_db_object(context, cls(), obj)
 
     @classmethod
