@@ -161,12 +161,14 @@ function install_senlin_dashboard {
     # where devstack install 'test-requirements' but should not do it
     # for senlin-dashboard project as it installs Horizon from url.
     # Remove following two 'mv' commands when mentioned bug is fixed.
-
-    git_clone $SENLIN_DASHBOARD_REPO $SENLIN_DASHBOARD_DIR $SENLIN_DASHBOARD_BRANCH
-    mv $SENLIN_DASHBOARD_DIR/test-requirements.txt $SENLIN_DASHBOARD_DIR/_test-requirements.txt
-    setup_develop $SENLIN_DASHBOARD_DIR
-
-    mv $SENLIN_DASHBOARD_DIR/_test-requirements.txt $SENLIN_DASHBOARD_DIR/test-requirements.txt
+    if use_library_from_git "senlin-dashboard"; then
+        git_clone $SENLIN_DASHBOARD_REPO $SENLIN_DASHBOARD_DIR $SENLIN_DASHBOARD_BRANCH
+        mv $SENLIN_DASHBOARD_DIR/test-requirements.txt $SENLIN_DASHBOARD_DIR/_test-requirements.txt
+        setup_develop $SENLIN_DASHBOARD_DIR
+        mv $SENLIN_DASHBOARD_DIR/_test-requirements.txt $SENLIN_DASHBOARD_DIR/test-requirements.txt
+    else
+        pip_install senlin-dashboard
+    fi
 }
 
 # configure_senlin_dashboard() - Set config files
