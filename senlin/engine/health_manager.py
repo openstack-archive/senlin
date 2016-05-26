@@ -45,31 +45,50 @@ class HealthManager(service.Service):
             'registries': [],
         }
 
-    def _idle_task(self):
+    def _dummy_task(self):
+        """A Dummy task that is queued on the health manager thread group.
+
+        The task is here so that the service always has something to wait()
+        on, or else the process will exit.
+        """
         pass
 
-    def _periodic_check(self, cluster_id=None):
-        """Tasks to be run at a periodic interval."""
+    def _poll_cluster(self, cluster_id):
+        """Routine to be executed for polling cluster status.
+
+        @param cluster_id: The UUID of the cluster to be checked.
+        @return Nothing.
+        """
         self.rpc_client.cluster_check(self.ctx, cluster_id)
 
-    def start_periodic_tasks(self):
-        """Tasks to be run at a periodic interval."""
-        # TODO(anyone): start timers to check clusters
-        # - get clusters that needs health management from DB
-        # - get their checking options
-        #   * if it is about node status polling, add a timer to trigger its
-        #     do_check logic
-        #   * if it is about listening to message queue, start a thread to
-        #     listen events targeted at that cluster
-        self.TG.add_timer(cfg.CONF.periodic_interval, self._idle_task)
+    def _start_check(self, entry):
+        """Routine to call for starting the checking for a cluster.
 
-        for registry in self.registries:
-            if registry.get('check_type') == 'NODE_STATUS_POLLING':
-                interval = min(registry.get('interval'),
-                               cfg.CONF.periodic_interval_max)
-                timer = self.TG.add_timer(interval, self._periodic_check, None,
-                                          registry.get('cluster_id'))
-                registry['timer'] = timer
+        @param entry: A dict containing the data associated with the cluster.
+        @return: An updated registry entry record.
+        """
+        if entry['check_type'] == consts.NODE_STATUS_POLLING:
+            interval = min(entry['interval'], cfg.CONF.periodic_interval_max)
+            timer = self.TG.add_timer(interval, self._poll_cluster, None,
+                                      entry['cluster_id'])
+            entry['timer'] = timer
+
+        return entry
+
+    def _load_runtime_registry(self):
+        """Load the initial runtime registry with a DB scan."""
+        db_registries = db_api.registry_claim(self.ctx, self.engine_id)
+
+        for cluster in db_registries:
+            entry = {
+                'cluster_id': cluster.cluster_id,
+                'check_type': cluster.check_type,
+                'interval': cluster.interval,
+                'params': cluster.params,
+            }
+
+            entry = self._start_check(entry)
+            self.rt['registries'].append(entry)
 
     def start(self):
         super(HealthManager, self).start()
@@ -78,29 +97,16 @@ class HealthManager(service.Service):
                                             version=self.version)
         server = rpc_messaging.get_rpc_server(self.target, self)
         server.start()
+        self.TG.add_timer(cfg.CONF.periodic_interval, self._dummy_task)
         self._load_runtime_registry()
-        self.start_periodic_tasks()
-
-    def _load_runtime_registry(self):
-        db_registries = db_api.registry_claim(self.ctx, self.engine_id)
-
-        for registry in db_registries:
-            reg_cap = {
-                'cluster_id': registry.cluster_id,
-                'check_type': registry.check_type,
-                'interval': registry.interval,
-                'params': registry.params,
-                'timer': None
-            }
-            self.rt['registries'].append(reg_cap)
-
-    @property
-    def registries(self):
-        return self.rt['registries']
 
     def stop(self):
         self.TG.stop_timers()
         super(HealthManager, self).stop()
+
+    @property
+    def registries(self):
+        return self.rt['registries']
 
     def listening(self, ctx):
         """Respond to confirm that the rpc service is still alive."""
@@ -108,7 +114,7 @@ class HealthManager(service.Service):
 
     def register_cluster(self, ctx, cluster_id, check_type, interval=None,
                          params=None):
-        """Register cluster for health checking.
+        r"""Register cluster for health checking.
 
         :param ctx: The context of notify request.
         :param cluster_id: The ID of the cluster to be checked.
@@ -121,22 +127,15 @@ class HealthManager(service.Service):
         params = params or {}
         registry = db_api.registry_create(ctx, cluster_id, check_type,
                                           interval, params, self.engine_id)
-
-        timer = None
-        if check_type == 'NODE_STATUS_POLLING':
-            real_interval = min(interval, cfg.CONF.periodic_interval_max)
-            timer = self.TG.add_timer(real_interval, self._periodic_check,
-                                      None, cluster_id)
-
-        reg_cap = {
+        entry = {
             'cluster_id': registry.cluster_id,
             'check_type': registry.check_type,
             'interval': registry.interval,
             'params': registry.params,
-            'timer': timer
-
         }
-        self.rt['registries'].append(reg_cap)
+
+        self._start_check(entry)
+        self.rt['registries'].append(entry)
 
     def unregister_cluster(self, ctx, cluster_id):
         """Unregister a cluster from health checking.
@@ -148,9 +147,10 @@ class HealthManager(service.Service):
         for i in range(len(self.rt['registries']) - 1, -1, -1):
             registry = self.rt['registries'][i]
             if registry.get('cluster_id') == cluster_id:
-                timer = registry.get('timer')
-                timer.stop()
-                self.TG.timer_done(timer)
+                timer = registry.get('timer', None)
+                if timer:
+                    timer.stop()
+                    self.TG.timer_done(timer)
                 self.rt['registries'].pop(i)
         db_api.registry_delete(ctx, cluster_id)
 
@@ -161,7 +161,6 @@ def notify(engine_id, method, **kwargs):
     :param engine_id: dispatcher to notify; broadcast if value is None
     :param method: remote method to call
     """
-
     timeout = cfg.CONF.engine_life_check_timeout
     client = rpc_messaging.get_rpc_client(version=consts.RPC_API_VERSION)
 
