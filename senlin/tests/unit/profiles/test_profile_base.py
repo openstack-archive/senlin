@@ -24,6 +24,7 @@ from senlin.common import utils as common_utils
 from senlin.db import api as db_api
 from senlin.engine import environment
 from senlin.engine import parser
+from senlin.objects import profile as po
 from senlin.profiles import base as pb
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -139,12 +140,12 @@ class TestProfileBase(base.SenlinTestCase):
         self.assertEqual("The 'version' key is missing from the provided "
                          "spec map.", six.text_type(ex))
 
-    def test_from_db_record(self):
+    def test_from_object(self):
         obj = self._create_profile('test_profile_for_record')
         obj.store(self.ctx)
-        profile = db_api.profile_get(self.ctx, obj.id)
+        profile = po.Profile.get(self.ctx, obj.id)
 
-        result = pb.Profile.from_db_record(profile)
+        result = pb.Profile.from_object(profile)
 
         self.assertEqual(profile.id, result.id)
         self.assertEqual(profile.name, result.name)
@@ -153,7 +154,7 @@ class TestProfileBase(base.SenlinTestCase):
         self.assertEqual(profile.project, result.project)
         self.assertEqual(profile.domain, result.domain)
         self.assertEqual(profile.spec, result.spec)
-        self.assertEqual(profile.meta_data, result.metadata)
+        self.assertEqual(profile.metadata, result.metadata)
         self.assertEqual('value1', result.properties['key1'])
         self.assertEqual(2, result.properties['key2'])
 
@@ -161,10 +162,10 @@ class TestProfileBase(base.SenlinTestCase):
         self.assertEqual(profile.updated_at, result.updated_at)
         self.assertEqual(profile.context, result.context)
 
-    def test_load_with_profile_object(self):
+    def test_load_with_poect(self):
         obj = self._create_profile('test-profile-bb')
         profile_id = obj.store(self.ctx)
-        profile = db_api.profile_get(self.ctx, profile_id)
+        profile = po.Profile.get(self.ctx, profile_id)
 
         result = pb.Profile.load(self.ctx, profile=profile)
 
@@ -181,14 +182,14 @@ class TestProfileBase(base.SenlinTestCase):
     def test_load_with_both(self):
         profile = self._create_profile('test1')
         profile.store(self.ctx)
-        db_profile = db_api.profile_get(self.ctx, profile.id)
+        db_profile = po.Profile.get(self.ctx, profile.id)
 
         res = pb.Profile.load(self.ctx, profile=db_profile,
                               profile_id=profile.id)
 
         self.assertEqual(profile.id, res.id)
 
-    @mock.patch.object(db_api, 'profile_get')
+    @mock.patch.object(po.Profile, 'get')
     def test_load_not_found(self, mock_get):
         mock_get.return_value = None
         self.assertRaises(exception.ProfileNotFound,
@@ -197,7 +198,7 @@ class TestProfileBase(base.SenlinTestCase):
         mock_get.assert_called_once_with(self.ctx, 'FAKE_ID',
                                          project_safe=True)
 
-    @mock.patch.object(db_api, 'profile_get_all')
+    @mock.patch.object(po.Profile, 'get_all')
     def test_load_all_empty(self, mock_get):
         mock_get.return_value = []
         res = pb.Profile.load_all(self.ctx)
@@ -208,8 +209,8 @@ class TestProfileBase(base.SenlinTestCase):
                                          sort=None, filters=None,
                                          project_safe=True)
 
-    @mock.patch.object(db_api, 'profile_get_all')
-    @mock.patch.object(pb.Profile, 'from_db_record')
+    @mock.patch.object(po.Profile, 'get_all')
+    @mock.patch.object(pb.Profile, 'from_object')
     def test_load_all_with_results(self, mock_from, mock_get):
         dbobj = mock.Mock()
         mock_get.return_value = [dbobj]
@@ -224,8 +225,8 @@ class TestProfileBase(base.SenlinTestCase):
                                          project_safe=True)
         mock_from.assert_called_once_with(dbobj)
 
-    @mock.patch.object(db_api, 'profile_get_all')
-    @mock.patch.object(pb.Profile, 'from_db_record')
+    @mock.patch.object(po.Profile, 'get_all')
+    @mock.patch.object(pb.Profile, 'from_object')
     def test_load_all_with_params(self, mock_from, mock_get):
         dbobj = mock.Mock()
         mock_get.return_value = [dbobj]
@@ -242,13 +243,13 @@ class TestProfileBase(base.SenlinTestCase):
                                          project_safe=False)
         mock_from.assert_called_once_with(dbobj)
 
-    @mock.patch.object(db_api, 'profile_delete')
+    @mock.patch.object(po.Profile, 'delete')
     def test_delete(self, mock_delete):
         res = pb.Profile.delete(self.ctx, 'FAKE_ID')
         self.assertIsNone(res)
         mock_delete.assert_called_once_with(self.ctx, 'FAKE_ID')
 
-    @mock.patch.object(db_api, 'profile_delete')
+    @mock.patch.object(po.Profile, 'delete')
     def test_delete_busy(self, mock_delete):
         err = exception.ResourceBusyError(resource_type='profile',
                                           resource_id='FAKE_ID')
@@ -258,14 +259,14 @@ class TestProfileBase(base.SenlinTestCase):
                           self.ctx, 'FAKE_ID')
         mock_delete.assert_called_once_with(self.ctx, 'FAKE_ID')
 
-    @mock.patch.object(db_api, 'profile_delete')
+    @mock.patch.object(po.Profile, 'delete')
     def test_delete_not_found(self, mock_delete):
         mock_delete.return_value = None
         result = pb.Profile.delete(self.ctx, 'BOGUS')
         self.assertIsNone(result)
         mock_delete.assert_called_once_with(self.ctx, 'BOGUS')
 
-    @mock.patch.object(db_api, 'profile_create')
+    @mock.patch.object(po.Profile, 'create')
     def test_store_for_create(self, mock_create):
         profile = self._create_profile('test-profile')
         self.assertIsNone(profile.id)
@@ -292,7 +293,7 @@ class TestProfileBase(base.SenlinTestCase):
         self.assertEqual('FAKE_ID', profile_id)
         self.assertIsNotNone(profile.created_at)
 
-    @mock.patch.object(db_api, 'profile_update')
+    @mock.patch.object(po.Profile, 'update')
     def test_store_for_update(self, mock_update):
         profile = self._create_profile('test-profile')
         self.assertIsNone(profile.id)

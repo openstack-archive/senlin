@@ -25,6 +25,7 @@ from senlin.common import schema
 from senlin.common import utils
 from senlin.db import api as db_api
 from senlin.engine import environment
+from senlin.objects import profile as profile_obj
 
 LOG = logging.getLogger(__name__)
 
@@ -111,51 +112,51 @@ class Profile(object):
             self.context = kwargs.get('context')
 
     @classmethod
-    def from_db_record(cls, record):
-        '''Construct a profile object from database record.
+    def from_object(cls, profile):
+        '''Construct a profile from profile object.
 
-        :param record: a DB Profle object that contains all required fields.
+        :param profile: a Profle object that contains all required fields.
         '''
         kwargs = {
-            'id': record.id,
-            'type': record.type,
-            'context': record.context,
-            'user': record.user,
-            'project': record.project,
-            'domain': record.domain,
-            'metadata': record.meta_data,
-            'created_at': record.created_at,
-            'updated_at': record.updated_at,
+            'id': profile.id,
+            'type': profile.type,
+            'context': profile.context,
+            'user': profile.user,
+            'project': profile.project,
+            'domain': profile.domain,
+            'metadata': profile.metadata,
+            'created_at': profile.created_at,
+            'updated_at': profile.updated_at,
         }
 
-        return cls(record.name, record.spec, **kwargs)
+        return cls(profile.name, profile.spec, **kwargs)
 
     @classmethod
     def load(cls, ctx, profile=None, profile_id=None, project_safe=True):
         '''Retrieve a profile object from database.'''
         if profile is None:
-            profile = db_api.profile_get(ctx, profile_id,
-                                         project_safe=project_safe)
+            profile = profile_obj.Profile.get(ctx, profile_id,
+                                              project_safe=project_safe)
             if profile is None:
                 raise exception.ProfileNotFound(profile=profile_id)
 
-        return cls.from_db_record(profile)
+        return cls.from_object(profile)
 
     @classmethod
     def load_all(cls, ctx, limit=None, marker=None, sort=None, filters=None,
                  project_safe=True):
         """Retrieve all profiles from database."""
 
-        records = db_api.profile_get_all(ctx, limit=limit, marker=marker,
-                                         sort=sort, filters=filters,
-                                         project_safe=project_safe)
+        records = profile_obj.Profile.get_all(ctx, limit=limit, marker=marker,
+                                              sort=sort, filters=filters,
+                                              project_safe=project_safe)
 
         for record in records:
-            yield cls.from_db_record(record)
+            yield cls.from_object(record)
 
     @classmethod
     def delete(cls, ctx, profile_id):
-        db_api.profile_delete(ctx, profile_id)
+        profile_obj.Profile.delete(ctx, profile_id)
 
     def store(self, ctx):
         '''Store the profile into database and return its ID.'''
@@ -175,11 +176,11 @@ class Profile(object):
         if self.id:
             self.updated_at = timestamp
             values['updated_at'] = timestamp
-            db_api.profile_update(ctx, self.id, values)
+            profile_obj.Profile.update(ctx, self.id, values)
         else:
             self.created_at = timestamp
             values['created_at'] = timestamp
-            profile = db_api.profile_create(ctx, values)
+            profile = profile_obj.Profile.create(ctx, values)
             self.id = profile.id
 
         return self.id

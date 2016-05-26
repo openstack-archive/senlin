@@ -28,15 +28,19 @@ class Profile(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'type': fields.StringField(),
         'context': fields.DictOfStringsField(),
         'spec': fields.DictOfStringsField(),
+        'created_at': fields.DateTimeField(),
+        'updated_at': fields.DateTimeField(),
         'user': fields.StringField(),
         'project': fields.StringField(),
         'domain': fields.StringField(nullable=True),
         'permission': fields.StringField(nullable=True),
-        'metadata': fields.DictOfStringField()
+        'metadata': fields.DictOfStringsField(),
     }
 
     @staticmethod
     def _from_db_object(context, profile, db_profile):
+        if db_profile is None:
+            return None
         for field in profile.fields:
             if field == 'metadata':
                 profile['metadata'] = db_profile['meta_data']

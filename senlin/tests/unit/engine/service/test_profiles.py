@@ -17,10 +17,10 @@ from oslo_utils import uuidutils
 import six
 
 from senlin.common import exception as exc
-from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import environment
 from senlin.engine import service
-from senlin.profiles import base as profile_mod
+from senlin.objects import profile as po
+from senlin.profiles import base as pb
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 from senlin.tests.unit import fakes
@@ -52,7 +52,7 @@ class ProfileTest(base.SenlinTestCase):
             }
         }
 
-    @mock.patch.object(db_api, 'profile_get')
+    @mock.patch.object(po.Profile, 'get')
     def test_profile_find_by_uuid(self, mock_get):
         x_profile = mock.Mock()
         mock_get.return_value = x_profile
@@ -63,8 +63,8 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual(x_profile, result)
         mock_get.assert_called_once_with(self.ctx, aid, project_safe=True)
 
-    @mock.patch.object(db_api, 'profile_get_by_name')
-    @mock.patch.object(db_api, 'profile_get')
+    @mock.patch.object(po.Profile, 'get_by_name')
+    @mock.patch.object(po.Profile, 'get')
     def test_profile_find_by_uuid_as_name(self, mock_get, mock_get_name):
         x_profile = mock.Mock()
         mock_get_name.return_value = x_profile
@@ -78,7 +78,7 @@ class ProfileTest(base.SenlinTestCase):
         mock_get_name.assert_called_once_with(self.ctx, aid,
                                               project_safe=False)
 
-    @mock.patch.object(db_api, 'profile_get_by_name')
+    @mock.patch.object(po.Profile, 'get_by_name')
     def test_profile_find_by_name(self, mock_get_name):
         x_profile = mock.Mock()
         mock_get_name.return_value = x_profile
@@ -89,8 +89,8 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual(x_profile, result)
         mock_get_name.assert_called_once_with(self.ctx, aid, project_safe=True)
 
-    @mock.patch.object(db_api, 'profile_get_by_short_id')
-    @mock.patch.object(db_api, 'profile_get_by_name')
+    @mock.patch.object(po.Profile, 'get_by_short_id')
+    @mock.patch.object(po.Profile, 'get_by_name')
     def test_profile_find_by_shortid(self, mock_get_name, mock_get_shortid):
         x_profile = mock.Mock()
         mock_get_shortid.return_value = x_profile
@@ -105,7 +105,7 @@ class ProfileTest(base.SenlinTestCase):
         mock_get_shortid.assert_called_once_with(self.ctx, aid,
                                                  project_safe=False)
 
-    @mock.patch.object(db_api, 'profile_get_by_name')
+    @mock.patch.object(po.Profile, 'get_by_name')
     def test_profile_find_not_found(self, mock_get_name):
         mock_get_name.return_value = None
 
@@ -118,7 +118,7 @@ class ProfileTest(base.SenlinTestCase):
         mock_get_name.assert_called_once_with(self.ctx, 'Bogus',
                                               project_safe=True)
 
-    @mock.patch.object(profile_mod.Profile, 'load_all')
+    @mock.patch.object(pb.Profile, 'load_all')
     def test_profile_list(self, mock_load):
         x_obj_1 = mock.Mock()
         x_obj_1.to_dict.return_value = {'k': 'v1'}
@@ -133,7 +133,7 @@ class ProfileTest(base.SenlinTestCase):
                                           filters=None, sort=None,
                                           project_safe=True)
 
-    @mock.patch.object(profile_mod.Profile, 'load_all')
+    @mock.patch.object(pb.Profile, 'load_all')
     def test_profile_list_with_params(self, mock_load):
         mock_load.return_value = []
 
@@ -163,7 +163,7 @@ class ProfileTest(base.SenlinTestCase):
                                self.ctx, project_safe='no')
         self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
 
-    @mock.patch.object(profile_mod.Profile, 'load_all')
+    @mock.patch.object(pb.Profile, 'load_all')
     def test_profile_list_with_project_safe(self, mock_load):
         mock_load.return_value = []
 
@@ -213,7 +213,7 @@ class ProfileTest(base.SenlinTestCase):
         self.assertIsNotNone(result['created_at'])
         self.assertIsNotNone(result['id'])
 
-    @mock.patch.object(db_api, 'profile_get_by_name')
+    @mock.patch.object(po.Profile, 'get_by_name')
     def test_profile_create_name_conflict(self, mock_get):
         cfg.CONF.set_override('name_unique', True, enforce_type=True)
         mock_get.return_value = mock.Mock()
@@ -234,8 +234,7 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual("The request is malformed: A profile named "
                          "'FAKE_NAME' already exists.",
                          six.text_type(ex.exc_info[1]))
-        mock_get.assert_called_once_with(self.ctx, 'FAKE_NAME',
-                                         project_safe=True)
+        mock_get.assert_called_once_with(self.ctx, 'FAKE_NAME')
 
     def test_profile_create_type_not_found(self):
         # We skip the fakes setup, so we won't get the proper profile type
@@ -284,7 +283,7 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual('The request is malformed: BOOM',
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(profile_mod.Profile, 'load')
+    @mock.patch.object(pb.Profile, 'load')
     @mock.patch.object(service.EngineService, 'profile_find')
     def test_profile_get(self, mock_find, mock_load):
         x_obj = mock.Mock()
@@ -311,7 +310,7 @@ class ProfileTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
-    @mock.patch.object(profile_mod.Profile, 'load')
+    @mock.patch.object(pb.Profile, 'load')
     @mock.patch.object(service.EngineService, 'profile_find')
     def test_profile_update(self, mock_find, mock_load):
         x_obj = mock.Mock()
@@ -346,7 +345,7 @@ class ProfileTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
-    @mock.patch.object(profile_mod.Profile, 'load')
+    @mock.patch.object(pb.Profile, 'load')
     @mock.patch.object(service.EngineService, 'profile_find')
     def test_profile_update_no_change(self, mock_find, mock_load):
         x_obj = mock.Mock()
@@ -365,7 +364,7 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual(0, x_profile.store.call_count)
         self.assertEqual('OLD_NAME', x_profile.name)
 
-    @mock.patch.object(profile_mod.Profile, 'delete')
+    @mock.patch.object(pb.Profile, 'delete')
     @mock.patch.object(service.EngineService, 'profile_find')
     def test_profile_delete(self, mock_find, mock_delete):
         x_obj = mock.Mock(id='PROFILE_ID')
@@ -390,7 +389,7 @@ class ProfileTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
-    @mock.patch.object(profile_mod.Profile, 'delete')
+    @mock.patch.object(pb.Profile, 'delete')
     @mock.patch.object(service.EngineService, 'profile_find')
     def test_profile_delete_profile_in_use(self, mock_find, mock_delete):
         x_obj = mock.Mock(id='PROFILE_ID')

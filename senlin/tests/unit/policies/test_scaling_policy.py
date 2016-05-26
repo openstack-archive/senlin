@@ -16,6 +16,7 @@ import six
 
 from senlin.common import consts
 from senlin.db.sqlalchemy import api as db_api
+from senlin.objects import profile as profile_obj
 from senlin.policies import base as policy_base
 from senlin.policies import scaling_policy as sp
 from senlin.tests.unit.common import base
@@ -56,7 +57,7 @@ class TestScalingPolicy(base.SenlinTestCase):
             'user': self.context.user,
             'project': self.context.project,
         }
-        return db_api.profile_create(self.context, values)
+        return profile_obj.Profile.create(self.context, values)
 
     def _create_cluster(self, cluster_id, profile_id):
         values = {
