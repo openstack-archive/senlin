@@ -47,6 +47,7 @@ class FaultWrapper(wsgi.Middleware):
         'ActionInProgress': webob.exc.HTTPConflict,
         'ActionNotFound': webob.exc.HTTPNotFound,
         'ClusterNotFound': webob.exc.HTTPNotFound,
+        'ClusterBusy': webob.exc.HTTPConflict,
         'EventNotFound': webob.exc.HTTPNotFound,
         'FeatureNotSupported': webob.exc.HTTPConflict,
         'Forbidden': webob.exc.HTTPForbidden,

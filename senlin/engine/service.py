@@ -886,7 +886,8 @@ class EngineService(service.Service):
             msg = _('Cluster %(id)s cannot be deleted without having all '
                     'policies detached.') % {'id': identity}
             LOG.error(msg)
-            raise exception.BadRequest(msg=msg)
+            reason = _("there is still policy(s) attached to it.")
+            raise exception.ClusterBusy(cluster=db_cluster.id, reason=reason)
 
         receivers = receiver_obj.Receiver.get_all(
             context, filters={'cluster_id': db_cluster.id})
@@ -894,7 +895,8 @@ class EngineService(service.Service):
             msg = _('Cluster %(id)s cannot be deleted without having all '
                     'receivers deleted.') % {'id': identity}
             LOG.error(msg)
-            raise exception.BadRequest(msg=msg)
+            reason = _("there is still receiver(s) associated with it.")
+            raise exception.ClusterBusy(cluster=db_cluster.id, reason=reason)
 
         params = {
             'name': 'cluster_delete_%s' % db_cluster.id[:8],

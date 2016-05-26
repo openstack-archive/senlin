@@ -110,6 +110,10 @@ class ClusterNotFound(SenlinException):
     msg_fmt = _("The cluster (%(cluster)s) could not be found.")
 
 
+class ClusterBusy(SenlinException):
+    msg_fmt = _("The cluster (%(cluster)s) cannot be deleted: %(reason)s")
+
+
 class NodeNotFound(SenlinException):
     msg_fmt = _("The node (%(node)s) could not be found.")
 

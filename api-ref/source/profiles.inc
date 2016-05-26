@@ -229,11 +229,13 @@ Delete profile
 
 Deletes a profile.
 
+A profile cannot be deleted if it is still used by node or cluster. In that
+case, a 409 error will be returned.
+
 Normal response codes: 204
 
 Error response codes:
 
-- badRequest (400)
 - unauthorized (401)
 - forbidden (403)
 - notFound(404)

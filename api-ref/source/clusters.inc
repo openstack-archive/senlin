@@ -282,16 +282,16 @@ Deletes a cluster.
 
 A cluster cannot be deleted if there are still policies attached to it.
 It cannot be deleted if there are still receivers associated with it. In both
-cases, a 400 error will be returned.
+cases, a 409 error will be returned.
 
 Normal response codes: 202
 
 Error response codes:
 
-- badRequest (400)
 - unauthorized (401)
 - forbidden (403)
 - notFound (404)
+- conflict(409)
 - serviceUnavailable (503)
 
 

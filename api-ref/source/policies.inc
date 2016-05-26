@@ -232,11 +232,13 @@ Delete policy
 
 Deletes a policy.
 
+A policy cannot be deleted if it is still attached to cluster(s). In that
+case, a 409 error will be returned.
+
 Normal response codes: 204
 
 Error response codes:
 
-- badRequest (400)
 - unauthorized (401)
 - forbidden (403)
 - notFound(404)

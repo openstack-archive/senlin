@@ -670,10 +670,10 @@ class ClusterTest(base.SenlinTestCase):
                                self.eng.cluster_delete,
                                self.ctx, 'IDENTITY')
 
-        self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual('The request is malformed: Cluster IDENTITY cannot '
-                         'be deleted without having all policies detached.',
-                         six.text_type(ex.exc_info[1]))
+        self.assertEqual(exc.ClusterBusy, ex.exc_info[0])
+        expected_msg = _('The cluster (12345678AB) cannot be deleted: '
+                         'there is still policy(s) attached to it.')
+        self.assertEqual(expected_msg, six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'IDENTITY')
         mock_policies.assert_called_once_with(self.ctx, '12345678AB')
 
@@ -691,10 +691,10 @@ class ClusterTest(base.SenlinTestCase):
                                self.eng.cluster_delete,
                                self.ctx, 'IDENTITY')
 
-        self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual('The request is malformed: Cluster IDENTITY cannot '
-                         'be deleted without having all receivers deleted.',
-                         six.text_type(ex.exc_info[1]))
+        self.assertEqual(exc.ClusterBusy, ex.exc_info[0])
+        expected_msg = _('The cluster (12345678AB) cannot be deleted: '
+                         'there is still receiver(s) associated with it.')
+        self.assertEqual(expected_msg, six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'IDENTITY')
         mock_policies.assert_called_once_with(self.ctx, '12345678AB')
         mock_receivers.assert_called_once_with(
