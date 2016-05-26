@@ -22,7 +22,8 @@ from senlin.common import utils as common_utils
 from senlin.db import api as db_api
 from senlin.engine import environment
 from senlin.engine import parser
-from senlin.policies import base as policy_base
+from senlin.objects import policy as po
+from senlin.policies import base as pb
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -36,7 +37,7 @@ sample_policy = """
 """
 
 
-class DummyPolicy(policy_base.Policy):
+class DummyPolicy(pb.Policy):
     VERSION = '1.0'
 
     properties_schema = {
@@ -64,10 +65,10 @@ class TestPolicyBase(base.SenlinTestCase):
         self.spec = parser.simple_parse(sample_policy)
 
     def _create_policy(self, policy_name, policy_id=None):
-        policy = policy_base.Policy(policy_name, self.spec,
-                                    user=self.ctx.user,
-                                    project=self.ctx.project,
-                                    domain=self.ctx.domain)
+        policy = pb.Policy(policy_name, self.spec,
+                           user=self.ctx.user,
+                           project=self.ctx.project,
+                           domain=self.ctx.domain)
         if policy_id:
             policy.id = policy_id
 
@@ -85,7 +86,7 @@ class TestPolicyBase(base.SenlinTestCase):
         }
 
         values.update(kwargs)
-        return db_api.policy_create(self.ctx, values)
+        return po.Policy.create(self.ctx, values)
 
     def test_init(self):
         policy = self._create_policy('test-policy')
@@ -117,12 +118,12 @@ class TestPolicyBase(base.SenlinTestCase):
         }
 
         self.assertRaises(exception.PolicyTypeNotFound,
-                          policy_base.Policy,
+                          pb.Policy,
                           'test-policy', bad_spec)
 
     def test_load(self):
         policy = self._create_db_policy()
-        result = policy_base.Policy.load(self.ctx, policy.id)
+        result = pb.Policy.load(self.ctx, policy.id)
 
         self.assertEqual(policy.id, result.id)
         self.assertEqual(policy.name, result.name)
@@ -142,34 +143,34 @@ class TestPolicyBase(base.SenlinTestCase):
 
         new_ctx = utils.dummy_context(project='a-different-project')
         self.assertRaises(exception.PolicyNotFound,
-                          policy_base.Policy.load,
+                          pb.Policy.load,
                           new_ctx, policy.id, None)
 
-        res = policy_base.Policy.load(new_ctx, policy.id, project_safe=False)
+        res = pb.Policy.load(new_ctx, policy.id, project_safe=False)
         self.assertIsNotNone(res)
         self.assertEqual(policy.id, res.id)
 
     def test_load_not_found(self):
         ex = self.assertRaises(exception.PolicyNotFound,
-                               policy_base.Policy.load,
+                               pb.Policy.load,
                                self.ctx, 'fake-policy', None)
         self.assertEqual('The policy (fake-policy) could not be found.',
                          six.text_type(ex))
 
         ex = self.assertRaises(exception.PolicyNotFound,
-                               policy_base.Policy.load,
+                               pb.Policy.load,
                                self.ctx, None, None)
         self.assertEqual('The policy (None) could not be found.',
                          six.text_type(ex))
 
     def test_load_all(self):
-        result = policy_base.Policy.load_all(self.ctx)
+        result = pb.Policy.load_all(self.ctx)
         self.assertEqual([], list(result))
 
         policy1 = self._create_db_policy(name='policy-1', id='ID1')
         policy2 = self._create_db_policy(name='policy-2', id='ID2')
 
-        result = policy_base.Policy.load_all(self.ctx)
+        result = pb.Policy.load_all(self.ctx)
         policies = list(result)
         self.assertEqual(2, len(policies))
         self.assertEqual(policy1.id, policies[0].id)
@@ -180,23 +181,23 @@ class TestPolicyBase(base.SenlinTestCase):
         self._create_db_policy(name='policy-2', id='ID2')
 
         new_ctx = utils.dummy_context(project='a-different-project')
-        res = policy_base.Policy.load_all(new_ctx)
+        res = pb.Policy.load_all(new_ctx)
         self.assertEqual(0, len(list(res)))
-        res = policy_base.Policy.load_all(new_ctx, project_safe=False)
+        res = pb.Policy.load_all(new_ctx, project_safe=False)
         self.assertEqual(2, len(list(res)))
 
-    @mock.patch.object(db_api, 'policy_get_all')
+    @mock.patch.object(po.Policy, 'get_all')
     def test_load_all_with_params(self, mock_get):
         mock_get.return_value = []
 
-        res = list(policy_base.Policy.load_all(self.ctx))
+        res = list(pb.Policy.load_all(self.ctx))
         self.assertEqual([], res)
         mock_get.assert_called_once_with(self.ctx, limit=None, marker=None,
                                          sort=None, filters=None,
                                          project_safe=True)
         mock_get.reset_mock()
 
-        res = list(policy_base.Policy.load_all(
+        res = list(pb.Policy.load_all(
             self.ctx, limit=1, marker='MARKER', sort='K1:asc'))
         self.assertEqual([], res)
         mock_get.assert_called_once_with(self.ctx, limit=1, marker='MARKER',
@@ -207,14 +208,14 @@ class TestPolicyBase(base.SenlinTestCase):
         policy = self._create_db_policy()
         policy_id = policy.id
 
-        res = policy_base.Policy.delete(self.ctx, policy_id)
+        res = pb.Policy.delete(self.ctx, policy_id)
         self.assertIsNone(res)
         self.assertRaises(exception.PolicyNotFound,
-                          policy_base.Policy.load,
+                          pb.Policy.load,
                           self.ctx, policy_id, None)
 
     def test_delete_not_found(self):
-        result = policy_base.Policy.delete(self.ctx, 'bogus')
+        result = pb.Policy.delete(self.ctx, 'bogus')
         self.assertIsNone(result)
 
     def test_store_for_create(self):
@@ -225,7 +226,7 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertIsNotNone(policy_id)
         self.assertEqual(policy_id, policy.id)
 
-        result = db_api.policy_get(self.ctx, policy_id)
+        result = po.Policy.get(self.ctx, policy_id)
 
         self.assertIsNotNone(result)
         self.assertEqual('test-policy', result.name)
@@ -254,7 +255,7 @@ class TestPolicyBase(base.SenlinTestCase):
         new_id = policy.store(self.ctx)
         self.assertEqual(policy_id, new_id)
 
-        result = db_api.policy_get(self.ctx, policy_id)
+        result = po.Policy.get(self.ctx, policy_id)
         self.assertIsNotNone(result)
         self.assertEqual('test-policy-1', result.name)
         self.assertEqual({'kk': 'vv'}, policy.data)
@@ -278,7 +279,7 @@ class TestPolicyBase(base.SenlinTestCase):
             'updated_at': None,
         }
 
-        result = policy_base.Policy.load(self.ctx, policy_id=policy.id)
+        result = pb.Policy.load(self.ctx, policy_id=policy.id)
         self.assertEqual(expected, result.to_dict())
 
     def test_get_schema(self):

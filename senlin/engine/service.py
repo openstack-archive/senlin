@@ -43,6 +43,7 @@ from senlin.engine import health_manager
 from senlin.engine import node as node_mod
 from senlin.engine import receiver as receiver_mod
 from senlin.engine import scheduler
+from senlin.objects import policy as policy_obj
 from senlin.objects import profile as profile_obj
 from senlin.objects import service as service_obj
 from senlin.policies import base as policy_base
@@ -479,16 +480,16 @@ class EngineService(service.Service):
                  no matching object is found.
         """
         if uuidutils.is_uuid_like(identity):
-            policy = db_api.policy_get(context, identity,
-                                       project_safe=project_safe)
+            policy = policy_obj.Policy.get(context, identity,
+                                           project_safe=project_safe)
             if not policy:
-                policy = db_api.policy_get_by_name(context, identity,
-                                                   project_safe=project_safe)
+                policy = policy_obj.Policy.get_by_name(
+                    context, identity, project_safe=project_safe)
         else:
-            policy = db_api.policy_get_by_name(context, identity,
-                                               project_safe=project_safe)
+            policy = policy_obj.Policy.get_by_name(context, identity,
+                                                   project_safe=project_safe)
             if not policy:
-                policy = db_api.policy_get_by_short_id(
+                policy = policy_obj.Policy.get_by_short_id(
                     context, identity, project_safe=project_safe)
 
         if not policy:
@@ -536,7 +537,7 @@ class EngineService(service.Service):
                  created.
         """
         if cfg.CONF.name_unique:
-            if db_api.policy_get_by_name(context, name):
+            if policy_obj.Policy.get_by_name(context, name):
                 msg = _("A policy named '%(name)s' already exists."
                         ) % {"name": name}
                 raise exception.BadRequest(msg=msg)

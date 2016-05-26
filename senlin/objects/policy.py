@@ -29,7 +29,9 @@ class Policy(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'spec': fields.DictOfStringsField(),
         'cooldown': fields.IntegerField(nullable=True),
         'level': fields.IntegerField(nullable=True),
-        'data': fields.DictOfStringField(),
+        'data': fields.DictOfStringsField(),
+        'created_at': fields.DateTimeField(),
+        'updated_at': fields.DateTimeField(),
         'user': fields.StringField(),
         'project': fields.StringField(),
         'domain': fields.StringField(nullable=True),
@@ -37,6 +39,9 @@ class Policy(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
 
     @staticmethod
     def _from_db_object(context, policy, db_obj):
+        if db_obj is None:
+            return None
+
         for field in policy.fields:
             policy[field] = db_obj[field]
 

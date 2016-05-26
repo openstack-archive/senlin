@@ -17,6 +17,7 @@ import six
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import cluster_policy as cpm
+from senlin.objects import policy as po
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -104,7 +105,7 @@ class TestClusterPolicy(base.SenlinTestCase):
             'domain': self.context.domain,
             'name': 'test_policy',
         }
-        return db_api.policy_create(self.context, values)
+        return po.Policy.create(self.context, values)
 
     def test_cluster_policy_load(self):
         ex = self.assertRaises(exception.PolicyNotAttached,
