@@ -25,8 +25,8 @@ class TestProfileDelete(base.BaseSenlinTest):
         cls.profile = cls.create_profile(constants.spec_nova_server)
 
     @decorators.idempotent_id('ea3c1b9e-5ed7-4d63-84ce-2032c3bc6d27')
-    def test_delete_policy(self):
-        # Verify resp of policy delete API
+    def test_delete_profile(self):
+        # Verify resp of profile delete API
         res = self.client.delete_obj('profiles', self.profile['id'])
         self.assertEqual(204, res['status'])
         self.assertIsNone(res['body'])
