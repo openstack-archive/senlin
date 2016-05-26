@@ -43,6 +43,7 @@ from senlin.engine import health_manager
 from senlin.engine import node as node_mod
 from senlin.engine import receiver as receiver_mod
 from senlin.engine import scheduler
+from senlin.objects import node as node_obj
 from senlin.objects import policy as policy_obj
 from senlin.objects import profile as profile_obj
 from senlin.objects import receiver as receiver_obj
@@ -1313,16 +1314,16 @@ class EngineService(service.Service):
                  matching object is found.
         """
         if uuidutils.is_uuid_like(identity):
-            node = db_api.node_get(context, identity,
-                                   project_safe=project_safe)
+            node = node_obj.Node.get(context, identity,
+                                     project_safe=project_safe)
             if not node:
-                node = db_api.node_get_by_name(context, identity,
-                                               project_safe=project_safe)
+                node = node_obj.Node.get_by_name(context, identity,
+                                                 project_safe=project_safe)
         else:
-            node = db_api.node_get_by_name(context, identity,
-                                           project_safe=project_safe)
+            node = node_obj.Node.get_by_name(context, identity,
+                                             project_safe=project_safe)
             if not node:
-                node = db_api.node_get_by_short_id(
+                node = node_obj.Node.get_by_short_id(
                     context, identity, project_safe=project_safe)
 
         if node is None:
@@ -1386,7 +1387,7 @@ class EngineService(service.Service):
                  request.
         """
         if cfg.CONF.name_unique:
-            if db_api.node_get_by_name(context, name):
+            if node_obj.Node.get_by_name(context, name):
                 msg = _("The node named (%(name)s) already exists."
                         ) % {"name": name}
                 raise exception.BadRequest(msg=msg)

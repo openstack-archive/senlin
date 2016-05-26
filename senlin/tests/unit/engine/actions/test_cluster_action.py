@@ -24,6 +24,7 @@ from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock
+from senlin.objects import node as no
 from senlin.policies import base as policy_base
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -973,7 +974,7 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual({}, action.data)
 
     @mock.patch.object(ca.ClusterAction, '_wait_before_deletion')
-    @mock.patch.object(db_api, 'node_get')
+    @mock.patch.object(no.Node, 'get')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
     def test_do_del_nodes(self, mock_delete, mock_get, mock_wait, mock_load):
         cluster = mock.Mock()
@@ -1005,8 +1006,8 @@ class ClusterActionTest(base.SenlinTestCase):
                          action.data)
 
         mock_get.assert_has_calls([
-            mock.call(action.context, 'NODE_1', project_safe=True),
-            mock.call(action.context, 'NODE_2', project_safe=True)])
+            mock.call(action.context, 'NODE_1'),
+            mock.call(action.context, 'NODE_2')])
         mock_delete.assert_called_once_with(['NODE_1', 'NODE_2'])
         self.assertEqual(2, cluster.desired_capacity)
 
@@ -1029,7 +1030,7 @@ class ClusterActionTest(base.SenlinTestCase):
             mock.call(action.context),
             mock.call(action.context)])
 
-    @mock.patch.object(db_api, 'node_get')
+    @mock.patch.object(no.Node, 'get')
     def test_do_del_nodes_node_not_found(self, mock_get, mock_load):
         cluster = mock.Mock()
         mock_load.return_value = cluster
@@ -1046,7 +1047,7 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual({'deletion': {'destroy_after_deletion': False}},
                          action.data)
 
-    @mock.patch.object(db_api, 'node_get')
+    @mock.patch.object(no.Node, 'get')
     def test_do_del_nodes_node_not_member(self, mock_get, mock_load):
         cluster = mock.Mock()
         cluster.id = 'FAKE_CLUSTER'
@@ -1068,7 +1069,7 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual({'deletion': {'destroy_after_deletion': False}},
                          action.data)
 
-    @mock.patch.object(db_api, 'node_get')
+    @mock.patch.object(no.Node, 'get')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
     def test_do_del_nodes_failed_delete(self, mock_delete, mock_get,
                                         mock_load):

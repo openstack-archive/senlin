@@ -24,6 +24,7 @@ from senlin.engine.actions import base as action_mod
 from senlin.engine import dispatcher
 from senlin.engine import node as node_mod
 from senlin.engine import service
+from senlin.objects import node as no
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -35,7 +36,7 @@ class NodeTest(base.SenlinTestCase):
         self.ctx = utils.dummy_context(project='node_test_project')
         self.eng = service.EngineService('host-a', 'topic-a')
 
-    @mock.patch.object(db_api, 'node_get')
+    @mock.patch.object(no.Node, 'get')
     def test_node_find_by_uuid(self, mock_get):
         x_node = mock.Mock()
         mock_get.return_value = x_node
@@ -46,8 +47,8 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(x_node, result)
         mock_get.assert_called_once_with(self.ctx, aid, project_safe=True)
 
-    @mock.patch.object(db_api, 'node_get_by_name')
-    @mock.patch.object(db_api, 'node_get')
+    @mock.patch.object(no.Node, 'get_by_name')
+    @mock.patch.object(no.Node, 'get')
     def test_node_find_by_uuid_as_name(self, mock_get, mock_name):
         mock_get.return_value = None
         x_node = mock.Mock()
@@ -60,7 +61,7 @@ class NodeTest(base.SenlinTestCase):
         mock_get.assert_called_once_with(self.ctx, aid, project_safe=False)
         mock_name.assert_called_once_with(self.ctx, aid, project_safe=False)
 
-    @mock.patch.object(db_api, 'node_get_by_name')
+    @mock.patch.object(no.Node, 'get_by_name')
     def test_node_find_by_name(self, mock_name):
         x_node = mock.Mock()
         mock_name.return_value = x_node
@@ -71,8 +72,8 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(x_node, result)
         mock_name.assert_called_once_with(self.ctx, aid, project_safe=True)
 
-    @mock.patch.object(db_api, 'node_get_by_short_id')
-    @mock.patch.object(db_api, 'node_get_by_name')
+    @mock.patch.object(no.Node, 'get_by_short_id')
+    @mock.patch.object(no.Node, 'get_by_name')
     def test_node_find_by_short_id(self, mock_name, mock_shortid):
         mock_name.return_value = None
         x_node = mock.Mock()
@@ -85,7 +86,7 @@ class NodeTest(base.SenlinTestCase):
         mock_name.assert_called_once_with(self.ctx, aid, project_safe=False)
         mock_shortid.assert_called_once_with(self.ctx, aid, project_safe=False)
 
-    @mock.patch.object(db_api, 'node_get_by_short_id')
+    @mock.patch.object(no.Node, 'get_by_short_id')
     def test_node_find_not_found(self, mock_shortid):
         mock_shortid.return_value = None
 
@@ -354,7 +355,7 @@ class NodeTest(base.SenlinTestCase):
             status=action_mod.Action.READY)
         notify.assert_called_once_with()
 
-    @mock.patch.object(db_api, 'node_get_by_name')
+    @mock.patch.object(no.Node, 'get_by_name')
     def test_node_create_name_conflict(self, mock_get):
         cfg.CONF.set_override('name_unique', True, enforce_type=True)
         mock_get.return_value = mock.Mock()
