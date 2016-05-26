@@ -995,6 +995,8 @@ def action_mark_cancelled(context, action_id, timestamp, reason=None):
         _mark_cancelled(session, action_id, timestamp, reason)
 
 
+@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
+                           retry_interval=0.5, inc_retry_interval=True)
 def action_acquire(context, action_id, owner, timestamp):
     with session_for_write() as session:
         action = session.query(models.Action).with_for_update().\
@@ -1024,9 +1026,9 @@ def action_acquire(context, action_id, owner, timestamp):
 def action_acquire_1st_ready(context, owner, timestamp):
     with session_for_write() as session:
         action = session.query(models.Action).\
-            with_for_update().\
             filter_by(status=consts.ACTION_READY).\
-            filter_by(owner=None).first()
+            filter_by(owner=None).\
+            with_for_update().first()
 
         if action:
             action.owner = owner

@@ -1464,7 +1464,7 @@ class EngineService(service.Service):
                  be found.
         """
         db_node = self.node_find(context, identity)
-        node = node_mod.Node.load(context, node=db_node)
+        node = node_mod.Node.load(context, db_node=db_node)
         res = node.to_dict()
         if show_details and node.physical_id:
             res['details'] = node.get_details(context)
@@ -1534,7 +1534,7 @@ class EngineService(service.Service):
         dispatcher.start_action()
         LOG.info(_LI("Node update action is queued: %s."), action_id)
 
-        node = node_mod.Node.load(context, node=db_node)
+        node = node_mod.Node.load(context, db_node=db_node)
         resp = node.to_dict()
         resp['action'] = action_id
 

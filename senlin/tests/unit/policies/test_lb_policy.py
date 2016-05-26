@@ -19,6 +19,7 @@ from senlin.db import api as db_api
 from senlin.drivers import base as driver_base
 from senlin.engine import cluster_policy
 from senlin.engine import node as node_mod
+from senlin.objects import node as no
 from senlin.policies import base as policy_base
 from senlin.policies import lb_policy
 from senlin.tests.unit.common import base
@@ -233,7 +234,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         res = policy._get_delete_candidates('CLUSTERID', action)
         self.assertEqual(['node1', 'node2'], res)
 
-    @mock.patch.object(db_api, 'node_get_all_by_cluster')
+    @mock.patch.object(no.Node, 'get_all_by_cluster')
     @mock.patch.object(scaleutils, 'nodes_by_random')
     def test_get_delete_candidates_no_deletion_data_scale_in(self,
                                                              m_nodes_random,
@@ -253,7 +254,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
 
         self.assertEqual(['node1', 'node3'], res)
 
-    @mock.patch.object(db_api, 'node_get_all_by_cluster')
+    @mock.patch.object(no.Node, 'get_all_by_cluster')
     @mock.patch.object(db_api, 'cluster_get')
     @mock.patch.object(scaleutils, 'parse_resize_params')
     @mock.patch.object(scaleutils, 'nodes_by_random')
@@ -284,7 +285,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
 
         self.assertEqual(['node1', 'node3'], res)
 
-    @mock.patch.object(db_api, 'node_get_all_by_cluster')
+    @mock.patch.object(no.Node, 'get_all_by_cluster')
     @mock.patch.object(scaleutils, 'nodes_by_random')
     def test_get_delete_candidates_deletion_no_candidates(self,
                                                           m_nodes_random,
@@ -315,7 +316,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         res = policy._get_delete_candidates('CLUSTERID', action)
         self.assertEqual([], res)
 
-    @mock.patch.object(db_api, 'node_get_all_by_cluster')
+    @mock.patch.object(no.Node, 'get_all_by_cluster')
     @mock.patch.object(scaleutils, 'nodes_by_random')
     def test_get_delete_candidates_deletion_count_over_size(self,
                                                             m_nodes_random,

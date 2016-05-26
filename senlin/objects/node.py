@@ -80,11 +80,13 @@ class Node(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
 
     @classmethod
     def get_all(cls, context, **kwargs):
-        return db_api.node_get_all(context, **kwargs)
+        objs = db_api.node_get_all(context, **kwargs)
+        return [cls._from_db_object(context, cls(), obj) for obj in objs]
 
     @classmethod
     def get_all_by_cluster(cls, context, cluster_id, **kwargs):
-        return db_api.node_get_all_by_cluster(context, cluster_id, **kwargs)
+        objs = db_api.node_get_all_by_cluster(context, cluster_id, **kwargs)
+        return [cls._from_db_object(context, cls(), obj) for obj in objs]
 
     @classmethod
     def count_by_cluster(cls, context, cluster_id, **kwargs):
@@ -96,8 +98,9 @@ class Node(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
 
     @classmethod
     def migrate(cls, context, obj_id, to_cluster, timestamp, role=None):
-        db_api.node_migrate(context, obj_id, to_cluster, timestamp, role=role)
+        return db_api.node_migrate(context, obj_id, to_cluster, timestamp,
+                                   role=role)
 
     @classmethod
     def delete(cls, context, obj_id):
-        db_api.cluster_delete(context, obj_id)
+        db_api.node_delete(context, obj_id)

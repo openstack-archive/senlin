@@ -29,10 +29,14 @@ class Service(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'topic': fields.StringField(),
         'disabled': fields.BooleanField(),
         'disabled_reason': fields.StringField(),
+        'created_at': fields.DateTimeField(),
+        'updated_at': fields.DateTimeField(),
     }
 
     @staticmethod
     def _from_db_object(context, service, db_obj):
+        if db_obj is None:
+            return None
         for field in service.fields:
             service[field] = db_obj[field]
 
@@ -58,7 +62,7 @@ class Service(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         return [cls._from_db_object(context, cls(), obj) for obj in objs]
 
     @classmethod
-    def update(cls, context, obj_id, values):
+    def update(cls, context, obj_id, values=None):
         obj = db_api.service_update(context, obj_id, values=values)
         return cls._from_db_object(context, cls(), obj)
 
