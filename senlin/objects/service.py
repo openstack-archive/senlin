@@ -64,4 +64,4 @@ class Service(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
 
     @classmethod
     def delete(cls, context, obj_id):
-        db_api.profile_delete(context, obj_id)
+        db_api.service_delete(context, obj_id)

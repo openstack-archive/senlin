@@ -20,6 +20,7 @@ from senlin.common.i18n import _
 from senlin.common import utils as common_utils
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import node as nodem
+from senlin.objects import profile as profile_obj
 from senlin.profiles import base as profiles_base
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -45,7 +46,7 @@ class TestNode(base.SenlinTestCase):
             'user': self.context.user,
             'project': self.context.project
         }
-        return db_api.profile_create(self.context, values)
+        return profile_obj.Profile.create(self.context, values)
 
     def _create_cluster(self, cluster_id):
         values = {
@@ -222,7 +223,7 @@ class TestNode(base.SenlinTestCase):
         dt = result.to_dict()
         self.assertEqual(expected, dt)
 
-    @mock.patch.object(db_api, 'profile_get')
+    @mock.patch.object(profile_obj.Profile, 'get')
     def test_node_to_dict_no_profile(self, mock_profile_get):
         node = self._create_node('NODE1')
         self.assertIsNotNone(node.id)
