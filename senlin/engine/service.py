@@ -45,6 +45,7 @@ from senlin.engine import receiver as receiver_mod
 from senlin.engine import scheduler
 from senlin.objects import policy as policy_obj
 from senlin.objects import profile as profile_obj
+from senlin.objects import receiver as receiver_obj
 from senlin.objects import service as service_obj
 from senlin.policies import base as policy_base
 from senlin.profiles import base as profile_base
@@ -882,8 +883,8 @@ class EngineService(service.Service):
             LOG.error(msg)
             raise exception.BadRequest(msg=msg)
 
-        receivers = db_api.receiver_get_all(context, filters={'cluster_id':
-                                            db_cluster.id})
+        receivers = receiver_obj.Receiver.get_all(
+            context, filters={'cluster_id': db_cluster.id})
         if len(receivers) > 0:
             msg = _('Cluster %(id)s cannot be deleted without having all '
                     'receivers deleted.') % {'id': identity}
@@ -1922,16 +1923,16 @@ class EngineService(service.Service):
                  if no matching reciever is found.
         """
         if uuidutils.is_uuid_like(identity):
-            receiver = db_api.receiver_get(context, identity,
-                                           project_safe=project_safe)
-            if not receiver:
-                receiver = db_api.receiver_get_by_name(
-                    context, identity, project_safe=project_safe)
-        else:
-            receiver = db_api.receiver_get_by_name(
+            receiver = receiver_obj.Receiver.get(
                 context, identity, project_safe=project_safe)
             if not receiver:
-                receiver = db_api.receiver_get_by_short_id(
+                receiver = receiver_obj.Receiver.get_by_name(
+                    context, identity, project_safe=project_safe)
+        else:
+            receiver = receiver_obj.Receiver.get_by_name(
+                context, identity, project_safe=project_safe)
+            if not receiver:
+                receiver = receiver_obj.Receiver.get_by_short_id(
                     context, identity, project_safe=project_safe)
 
         if not receiver:
@@ -1986,7 +1987,7 @@ class EngineService(service.Service):
                  created.
         """
         if cfg.CONF.name_unique:
-            if db_api.receiver_get_by_name(context, name):
+            if receiver_obj.Receiver.get_by_name(context, name):
                 msg = _("A receiver named '%s' already exists.") % name
                 raise exception.BadRequest(msg=msg)
 
@@ -2066,7 +2067,7 @@ class EngineService(service.Service):
         """
         db_receiver = self.receiver_find(context, identity)
         LOG.info(_LI("Deleting receiver %s."), identity)
-        db_api.receiver_delete(context, db_receiver.id)
+        receiver_obj.Receiver.delete(context, db_receiver.id)
         LOG.info(_LI("Receiver %s is deleted."), identity)
 
     @request_context

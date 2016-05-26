@@ -17,8 +17,8 @@ import six
 
 from senlin.common import exception
 from senlin.common import utils as common_utils
-from senlin.db.sqlalchemy import api as db_api
-from senlin.engine import receiver as receiver_mod
+from senlin.engine import receiver as rb
+from senlin.objects import receiver as ro
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -55,7 +55,7 @@ class TestReceiver(base.SenlinTestCase):
             'channel': None,
         }
 
-        return db_api.receiver_create(self.context, values)
+        return ro.Receiver.create(self.context, values)
 
     def test_receiver_init(self):
         kwargs = {
@@ -71,8 +71,8 @@ class TestReceiver(base.SenlinTestCase):
             'channel': {'alarm_url': 'http://url1'},
         }
 
-        receiver = receiver_mod.Receiver('webhook', 'FAKE_CLUSTER',
-                                         'test-action', **kwargs)
+        receiver = rb.Receiver('webhook', 'FAKE_CLUSTER', 'test-action',
+                               **kwargs)
 
         self.assertEqual(kwargs['id'], receiver.id)
         self.assertEqual(kwargs['name'], receiver.name)
@@ -92,8 +92,7 @@ class TestReceiver(base.SenlinTestCase):
         self.assertEqual(kwargs['channel'], receiver.channel)
 
     def test_receiver_init_default_value(self):
-        receiver = receiver_mod.Receiver('webhook', 'FAKE_CLUSTER',
-                                         'test-action')
+        receiver = rb.Receiver('webhook', 'FAKE_CLUSTER', 'test-action')
         self.assertIsNone(receiver.id)
         self.assertIsNone(receiver.name)
         self.assertEqual('webhook', receiver.type)
@@ -111,9 +110,8 @@ class TestReceiver(base.SenlinTestCase):
         self.assertEqual({}, receiver.channel)
 
     def test_receiver_store(self):
-        receiver = receiver_mod.Receiver('webhook', 'FAKE_CLUSTER',
-                                         'test-action',
-                                         project=self.context.project)
+        receiver = rb.Receiver('webhook', 'FAKE_CLUSTER', 'test-action',
+                               project=self.context.project)
         self.assertIsNone(receiver.id)
 
         receiver_id = receiver.store(self.context)
@@ -121,7 +119,7 @@ class TestReceiver(base.SenlinTestCase):
         self.assertIsNotNone(receiver_id)
         self.assertEqual(receiver_id, receiver.id)
 
-        result = db_api.receiver_get(self.context, receiver_id)
+        result = ro.Receiver.get(self.context, receiver_id)
 
         self.assertIsNotNone(result)
         self.assertEqual(receiver_id, result.id)
@@ -140,8 +138,8 @@ class TestReceiver(base.SenlinTestCase):
     def test_receiver_create(self):
         cluster = mock.Mock()
         cluster.id = 'FAKE_CLUSTER'
-        receiver = receiver_mod.Receiver.create(
-            self.context, 'webhook', cluster, 'FAKE_ACTION')
+        receiver = rb.Receiver.create(self.context, 'webhook', cluster,
+                                      'FAKE_ACTION')
 
         self.assertEqual(self.context.user, receiver.user)
         self.assertEqual(self.context.project, receiver.project)
@@ -166,19 +164,17 @@ class TestReceiver(base.SenlinTestCase):
 
     def test_receiver_load_with_id(self):
         receiver = self._create_receiver('receiver-1', 'FAKE_ID')
-        result = receiver_mod.Receiver.load(self.context,
-                                            receiver_id=receiver.id)
+        result = rb.Receiver.load(self.context, receiver_id=receiver.id)
         self._verify_receiver(receiver, result)
 
     def test_receiver_load_with_object(self):
         receiver = self._create_receiver('receiver-1', 'FAKE_ID')
-        result = receiver_mod.Receiver.load(self.context,
-                                            receiver_obj=receiver)
+        result = rb.Receiver.load(self.context, receiver_obj=receiver)
         self._verify_receiver(receiver, result)
 
     def test_receiver_load_not_found(self):
         ex = self.assertRaises(exception.ReceiverNotFound,
-                               receiver_mod.Receiver.load,
+                               rb.Receiver.load,
                                self.context, 'fake-receiver', None)
         self.assertEqual('The receiver (fake-receiver) could not be found.',
                          six.text_type(ex))
@@ -188,24 +184,23 @@ class TestReceiver(base.SenlinTestCase):
 
         new_context = utils.dummy_context(project='a-different-project')
         ex = self.assertRaises(exception.ReceiverNotFound,
-                               receiver_mod.Receiver.load,
+                               rb.Receiver.load,
                                new_context, 'FAKE_ID', None)
         self.assertEqual('The receiver (FAKE_ID) could not be found.',
                          six.text_type(ex))
 
-        res = receiver_mod.Receiver.load(new_context, receiver.id,
-                                         project_safe=False)
+        res = rb.Receiver.load(new_context, receiver.id, project_safe=False)
         self.assertIsNotNone(res)
         self.assertEqual(receiver.id, res.id)
 
     def test_receiver_load_all(self):
-        result = receiver_mod.Receiver.load_all(self.context)
+        result = rb.Receiver.load_all(self.context)
         self.assertEqual([], [w for w in result])
 
         receiver1 = self._create_receiver('receiver-1', 'ID1')
         receiver2 = self._create_receiver('receiver-2', 'ID2')
 
-        result = receiver_mod.Receiver.load_all(self.context)
+        result = rb.Receiver.load_all(self.context)
         receivers = [w for w in result]
         self.assertEqual(2, len(receivers))
         self.assertEqual(receiver1.id, receivers[0].id)
@@ -216,10 +211,9 @@ class TestReceiver(base.SenlinTestCase):
         self._create_receiver('receiver-2', 'ID2')
 
         new_context = utils.dummy_context(project='a-different-project')
-        result = receiver_mod.Receiver.load_all(new_context)
+        result = rb.Receiver.load_all(new_context)
         self.assertEqual(0, len(list(result)))
-        result = receiver_mod.Receiver.load_all(new_context,
-                                                project_safe=False)
+        result = rb.Receiver.load_all(new_context, project_safe=False)
         self.assertEqual(2, len(list(result)))
 
     def test_receiver_to_dict(self):
@@ -241,8 +235,7 @@ class TestReceiver(base.SenlinTestCase):
             'channel': None,
         }
 
-        result = receiver_mod.Receiver.load(self.context,
-                                            receiver_id=receiver.id)
+        result = rb.Receiver.load(self.context, receiver_id=receiver.id)
         self.assertEqual(expected, result.to_dict())
 
 
@@ -251,8 +244,8 @@ class TestWebhook(base.SenlinTestCase):
     def test_initialize_channel(self):
         cfg.CONF.set_override('host', 'web.com', 'webhook')
         cfg.CONF.set_override('port', '1234', 'webhook')
-        webhook = receiver_mod.Webhook('webhook', 'FAKE_CLUSTER',
-                                       'FAKE_ACTION', id='FAKE_ID')
+        webhook = rb.Webhook('webhook', 'FAKE_CLUSTER', 'FAKE_ACTION',
+                             id='FAKE_ID')
         channel = webhook.initialize_channel()
 
         expected = {
@@ -265,7 +258,7 @@ class TestWebhook(base.SenlinTestCase):
     def test_initialize_channel_with_params(self):
         cfg.CONF.set_override('host', 'web.com', 'webhook')
         cfg.CONF.set_override('port', '1234', 'webhook')
-        webhook = receiver_mod.Webhook(
+        webhook = rb.Webhook(
             'webhook', 'FAKE_CLUSTER', 'FAKE_ACTION',
             id='FAKE_ID', params={'KEY': 884, 'FOO': 'BAR'})
 
