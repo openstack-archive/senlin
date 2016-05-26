@@ -17,10 +17,10 @@ from oslo_utils import uuidutils
 import six
 
 from senlin.common import exception as exc
-from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import environment
 from senlin.engine import service
-from senlin.policies import base as policy_mod
+from senlin.objects import policy as po
+from senlin.policies import base as pb
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 from senlin.tests.unit import fakes
@@ -49,7 +49,7 @@ class PolicyTest(base.SenlinTestCase):
             }
         }
 
-    @mock.patch.object(db_api, 'policy_get')
+    @mock.patch.object(po.Policy, 'get')
     def test_policy_find_by_uuid(self, mock_get):
         x_policy = mock.Mock()
         mock_get.return_value = x_policy
@@ -60,8 +60,8 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual(x_policy, result)
         mock_get.assert_called_once_with(self.ctx, aid, project_safe=True)
 
-    @mock.patch.object(db_api, 'policy_get_by_name')
-    @mock.patch.object(db_api, 'policy_get')
+    @mock.patch.object(po.Policy, 'get_by_name')
+    @mock.patch.object(po.Policy, 'get')
     def test_policy_find_by_uuid_as_name(self, mock_get, mock_get_name):
         x_policy = mock.Mock()
         mock_get_name.return_value = x_policy
@@ -75,7 +75,7 @@ class PolicyTest(base.SenlinTestCase):
         mock_get_name.assert_called_once_with(self.ctx, aid,
                                               project_safe=False)
 
-    @mock.patch.object(db_api, 'policy_get_by_name')
+    @mock.patch.object(po.Policy, 'get_by_name')
     def test_policy_find_by_name(self, mock_get_name):
         x_policy = mock.Mock()
         mock_get_name.return_value = x_policy
@@ -86,8 +86,8 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual(x_policy, result)
         mock_get_name.assert_called_once_with(self.ctx, aid, project_safe=True)
 
-    @mock.patch.object(db_api, 'policy_get_by_short_id')
-    @mock.patch.object(db_api, 'policy_get_by_name')
+    @mock.patch.object(po.Policy, 'get_by_short_id')
+    @mock.patch.object(po.Policy, 'get_by_name')
     def test_policy_find_by_shortid(self, mock_get_name, mock_get_shortid):
         x_policy = mock.Mock()
         mock_get_shortid.return_value = x_policy
@@ -102,7 +102,7 @@ class PolicyTest(base.SenlinTestCase):
         mock_get_shortid.assert_called_once_with(self.ctx, aid,
                                                  project_safe=False)
 
-    @mock.patch.object(db_api, 'policy_get_by_name')
+    @mock.patch.object(po.Policy, 'get_by_name')
     def test_policy_find_not_found(self, mock_get_name):
         mock_get_name.return_value = None
 
@@ -115,7 +115,7 @@ class PolicyTest(base.SenlinTestCase):
         mock_get_name.assert_called_once_with(self.ctx, 'Bogus',
                                               project_safe=True)
 
-    @mock.patch.object(policy_mod.Policy, 'load_all')
+    @mock.patch.object(pb.Policy, 'load_all')
     def test_policy_list(self, mock_load):
         x_obj_1 = mock.Mock()
         x_obj_1.to_dict.return_value = {'k': 'v1'}
@@ -130,7 +130,7 @@ class PolicyTest(base.SenlinTestCase):
                                           filters=None, sort=None,
                                           project_safe=True)
 
-    @mock.patch.object(policy_mod.Policy, 'load_all')
+    @mock.patch.object(pb.Policy, 'load_all')
     def test_policy_list_with_params(self, mock_load):
         mock_load.return_value = []
 
@@ -160,7 +160,7 @@ class PolicyTest(base.SenlinTestCase):
                                self.ctx, project_safe='no')
         self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
 
-    @mock.patch.object(policy_mod.Policy, 'load_all')
+    @mock.patch.object(pb.Policy, 'load_all')
     def test_policy_list_with_project_safe(self, mock_load):
         mock_load.return_value = []
 
@@ -211,7 +211,7 @@ class PolicyTest(base.SenlinTestCase):
         self.assertIsNotNone(result['created_at'])
         self.assertIsNotNone(result['id'])
 
-    @mock.patch.object(db_api, 'policy_get_by_name')
+    @mock.patch.object(po.Policy, 'get_by_name')
     def test_policy_create_name_conflict(self, mock_get):
         cfg.CONF.set_override('name_unique', True, enforce_type=True)
         mock_get.return_value = mock.Mock()
@@ -231,8 +231,7 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual("The request is malformed: A policy named "
                          "'FAKE_NAME' already exists.",
                          six.text_type(ex.exc_info[1]))
-        mock_get.assert_called_once_with(self.ctx, 'FAKE_NAME',
-                                         project_safe=True)
+        mock_get.assert_called_once_with(self.ctx, 'FAKE_NAME')
 
     def test_policy_create_type_not_found(self):
         # We skip the fakes setup, so we won't get the proper policy type
@@ -280,7 +279,7 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual('The request is malformed: BOOM',
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(policy_mod.Policy, 'load')
+    @mock.patch.object(pb.Policy, 'load')
     @mock.patch.object(service.EngineService, 'policy_find')
     def test_policy_get(self, mock_find, mock_load):
         x_obj = mock.Mock()
@@ -307,7 +306,7 @@ class PolicyTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
-    @mock.patch.object(policy_mod.Policy, 'load')
+    @mock.patch.object(pb.Policy, 'load')
     @mock.patch.object(service.EngineService, 'policy_find')
     def test_policy_update(self, mock_find, mock_load):
         x_obj = mock.Mock()
@@ -349,7 +348,7 @@ class PolicyTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
-    @mock.patch.object(policy_mod.Policy, 'load')
+    @mock.patch.object(pb.Policy, 'load')
     @mock.patch.object(service.EngineService, 'policy_find')
     def test_policy_update_no_change(self, mock_find, mock_load):
         x_obj = mock.Mock()
@@ -368,7 +367,7 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual(0, x_policy.store.call_count)
         self.assertEqual('OLD_NAME', x_policy.name)
 
-    @mock.patch.object(policy_mod.Policy, 'delete')
+    @mock.patch.object(pb.Policy, 'delete')
     @mock.patch.object(service.EngineService, 'policy_find')
     def test_policy_delete(self, mock_find, mock_delete):
         x_obj = mock.Mock(id='POLICY_ID')
@@ -393,7 +392,7 @@ class PolicyTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
-    @mock.patch.object(policy_mod.Policy, 'delete')
+    @mock.patch.object(pb.Policy, 'delete')
     @mock.patch.object(service.EngineService, 'policy_find')
     def test_policy_delete_policy_in_use(self, mock_find, mock_delete):
         x_obj = mock.Mock(id='POLICY_ID')
