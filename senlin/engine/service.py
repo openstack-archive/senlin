@@ -43,6 +43,7 @@ from senlin.engine import health_manager
 from senlin.engine import node as node_mod
 from senlin.engine import receiver as receiver_mod
 from senlin.engine import scheduler
+from senlin.objects import service as service_obj
 from senlin.policies import base as policy_base
 from senlin.profiles import base as profile_base
 
@@ -153,14 +154,11 @@ class EngineService(service.Service):
     def service_manage_report(self):
         ctx = senlin_context.get_admin_context()
         try:
-            svc = db_api.service_update(ctx, self.engine_id)
+            svc = service_obj.Service.update(ctx, self.engine_id)
             # if svc is None, means it's not created.
             if svc is None:
-                params = dict(host=self.host,
-                              binary='senlin-engine',
-                              service_id=self.engine_id,
-                              topic=self.topic)
-                db_api.service_create(ctx, **params)
+                service_obj.Service.create(ctx, self.engine_id, self.host,
+                                           'senlin-engine', self.topic)
         except Exception as ex:
             LOG.error(_LE('Service %(service_id)s update failed: %(error)s'),
                       {'service_id': self.engine_id, 'error': ex})
@@ -170,14 +168,14 @@ class EngineService(service.Service):
         last_updated_window = (2 * cfg.CONF.periodic_interval)
         time_line = timeutils.utcnow() - datetime.timedelta(
             seconds=last_updated_window)
-        svcs = db_api.service_get_all(ctx)
+        svcs = service_obj.Service.get_all(ctx)
         for svc in svcs:
             if svc['id'] == self.engine_id:
                 continue
             if svc['updated_at'] < time_line:
                 # hasn't been updated, assuming it's died.
                 LOG.info(_LI('Service %s was aborted'), svc['id'])
-                db_api.service_delete(ctx, svc['id'])
+                service_obj.Service.delete(ctx, svc['id'])
 
     @request_context
     def credential_create(self, context, cred, attrs=None):

@@ -17,6 +17,7 @@ from oslo_config import cfg
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock as lockm
+from senlin.objects import service as service_obj
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -275,13 +276,13 @@ class SenlinLockEnginCheckTest(base.SenlinTestCase):
         super(SenlinLockEnginCheckTest, self).setUp()
         self.ctx = utils.dummy_context()
 
-    @mock.patch.object(db_api, 'service_get')
+    @mock.patch.object(service_obj.Service, 'get')
     def test_engine_is_none(self, mock_service):
         mock_service.return_value = None
         self.assertTrue(lockm.is_engine_dead(self.ctx, 'fake_engine_id'))
         mock_service.assert_called_once_with(self.ctx, 'fake_engine_id')
 
-    @mock.patch.object(db_api, 'service_get')
+    @mock.patch.object(service_obj.Service, 'get')
     def test_engine_is_dead(self, mock_service):
         update_time = (datetime.datetime.utcnow() - datetime.timedelta(
             seconds=3 * cfg.CONF.periodic_interval))
@@ -289,7 +290,7 @@ class SenlinLockEnginCheckTest(base.SenlinTestCase):
         self.assertTrue(lockm.is_engine_dead(self.ctx, 'fake_engine_id'))
         mock_service.assert_called_once_with(self.ctx, 'fake_engine_id')
 
-    @mock.patch.object(db_api, 'service_get')
+    @mock.patch.object(service_obj.Service, 'get')
     def test_engine_is_alive(self, mock_service):
         mock_service.return_value = mock.Mock(
             updated_at=datetime.datetime.utcnow())

@@ -20,6 +20,7 @@ from senlin.common.i18n import _LE
 from senlin.common.i18n import _LI
 from senlin.db import api as db_api
 from senlin.engine import scheduler
+from senlin.objects import service as service_obj
 
 CONF = cfg.CONF
 
@@ -40,7 +41,7 @@ def is_engine_dead(ctx, engine_id, period_time=None):
     # as a dead engine.
     if period_time is None:
         period_time = 2 * CONF.periodic_interval
-    eng = db_api.service_get(ctx, engine_id)
+    eng = service_obj.Service.get(ctx, engine_id)
     if not eng:
         return True
     if (timeutils.utcnow() - eng.updated_at).total_seconds() > period_time:
