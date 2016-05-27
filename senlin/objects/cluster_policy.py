@@ -30,12 +30,14 @@ class ClusterPolicy(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'policy': fields.ObjectField('Policy'),
         'enabled': fields.BooleanField(),
         'priority': fields.IntegerField(),
-        'data': fields.DictOfStringField(),
+        'data': fields.DictOfStringsField(),
         'last_op': fields.DateTimeField(),
     }
 
     @staticmethod
     def _from_db_object(context, binding, db_obj):
+        if db_obj is None:
+            return None
         for field in binding.fields:
             binding[field] = db_obj[field]
 

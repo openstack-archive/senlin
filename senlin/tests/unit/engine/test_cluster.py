@@ -15,11 +15,11 @@ from oslo_config import cfg
 import six
 
 from senlin.common import exception
-from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import cluster as cb
-from senlin.engine import cluster_policy as cp_mod
+from senlin.engine import cluster_policy as cpm
 from senlin.engine import node as node_mod
 from senlin.objects import cluster as co
+from senlin.objects import cluster_policy as cpo
 from senlin.policies import base as pcb
 from senlin.profiles import base as pfb
 from senlin.tests.unit.common import base
@@ -74,7 +74,7 @@ class TestCluster(base.SenlinTestCase):
         cb.Cluster('test-cluster', 0, 'PROFILE_ID', context=self.context)
         mock_load.assert_called_once_with(self.context)
 
-    @mock.patch.object(db_api, 'cluster_policy_get_all')
+    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
     @mock.patch.object(pcb.Policy, 'load')
     @mock.patch.object(pfb.Profile, 'load')
     @mock.patch.object(node_mod.Node, 'load_all')
@@ -101,8 +101,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual([x_node_1, x_node_2], rt['nodes'])
         self.assertEqual([x_policy], rt['policies'])
 
-        mock_pb.assert_called_once_with(self.context, 'FAKE_CLUSTER',
-                                        filters=None, sort=None)
+        mock_pb.assert_called_once_with(self.context, 'FAKE_CLUSTER')
         mock_policy.assert_called_once_with(self.context, 'FAKE_POLICY')
         mock_profile.assert_called_once_with(self.context,
                                              profile_id='PROFILE_ID',
@@ -507,7 +506,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual([], cluster.nodes)
 
     @mock.patch.object(pcb.Policy, 'load')
-    @mock.patch.object(cp_mod, 'ClusterPolicy')
+    @mock.patch.object(cpm, 'ClusterPolicy')
     def test_attach_policy(self, mock_cp, mock_load):
         cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         cluster.id = 'FAKE_CLUSTER'
@@ -575,7 +574,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual(expected, reason)
         mock_load.assert_called_once_with(self.context, 'PLCY1')
 
-    @mock.patch.object(cp_mod, 'ClusterPolicy')
+    @mock.patch.object(cpm, 'ClusterPolicy')
     @mock.patch.object(pcb.Policy, 'load')
     def test_attach_policy_type_conflict_but_ok(self, mock_load, mock_cp):
         cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
@@ -627,7 +626,7 @@ class TestCluster(base.SenlinTestCase):
         policy.attach.assert_called_once_with(cluster)
         mock_load.assert_called_once_with(self.context, 'FAKE_1')
 
-    @mock.patch.object(db_api, 'cluster_policy_detach')
+    @mock.patch.object(cpo.ClusterPolicy, 'delete')
     @mock.patch.object(pcb.Policy, 'load')
     def test_detach_policy(self, mock_load, mock_detach):
         cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
@@ -676,7 +675,7 @@ class TestCluster(base.SenlinTestCase):
         mock_load.assert_called_once_with(self.context, 'FAKE_POLICY')
         policy.detach.assert_called_once_with(cluster)
 
-    @mock.patch.object(db_api, 'cluster_policy_update')
+    @mock.patch.object(cpo.ClusterPolicy, 'update')
     def test_update_policy(self, mock_update):
         cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         cluster.id = 'FAKE_CLUSTER'

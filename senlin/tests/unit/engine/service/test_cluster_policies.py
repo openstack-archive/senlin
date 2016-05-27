@@ -16,11 +16,11 @@ import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
-from senlin.db import api as db_api
 from senlin.engine.actions import base as action_mod
 from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import dispatcher
 from senlin.engine import service
+from senlin.objects import cluster_policy as cpo
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -238,7 +238,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(action_mod.Action, 'create')
-    @mock.patch.object(db_api, 'cluster_policy_get')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(service.EngineService, 'policy_find')
     @mock.patch.object(dispatcher, 'start_action')
@@ -295,7 +295,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         mock_cluster.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
         mock_policy.assert_called_once_with(self.ctx, 'Bogus')
 
-    @mock.patch.object(db_api, 'cluster_policy_get')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(service.EngineService, 'policy_find')
     def test_cluster_policy_detach_binding_not_found(self, mock_policy,
@@ -316,7 +316,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         mock_cp.assert_called_once_with(self.ctx, 'X_CLUSTER', 'X_POLICY')
 
     @mock.patch.object(action_mod.Action, 'create')
-    @mock.patch.object(db_api, 'cluster_policy_get')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(service.EngineService, 'policy_find')
     @mock.patch.object(dispatcher, 'start_action')
@@ -375,7 +375,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         mock_cluster.assert_called_once_with(self.ctx, 'C1')
         mock_policy.assert_called_once_with(self.ctx, 'Bogus')
 
-    @mock.patch.object(db_api, 'cluster_policy_get')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(service.EngineService, 'policy_find')
     def test_cluster_policy_update_binding_not_found(self, mock_policy,
@@ -398,7 +398,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         mock_cp.assert_called_once_with(self.ctx, 'FAKE_CLUSTER',
                                         'FAKE_POLICY')
 
-    @mock.patch.object(db_api, 'cluster_policy_get')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(service.EngineService, 'policy_find')
     def test_cluster_policy_update_param_invalid(self, mock_policy,

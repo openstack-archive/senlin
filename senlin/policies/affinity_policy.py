@@ -30,9 +30,9 @@ from senlin.common.i18n import _LE
 from senlin.common import scaleutils as su
 from senlin.common import schema
 from senlin.common import utils
-from senlin.db import api as db_api
 from senlin.drivers import base as driver
 from senlin.objects import cluster as co
+from senlin.objects import cluster_policy as cpo
 from senlin.policies import base
 
 
@@ -201,7 +201,7 @@ class AffinityPolicy(base.Policy):
         reason = _('Servergroup resource deletion succeeded.')
 
         ctx = context.get_admin_context()
-        binding = db_api.cluster_policy_get(ctx, cluster.id, self.id)
+        binding = cpo.ClusterPolicy.get(ctx, cluster.id, self.id)
         if not binding or not binding.data:
             return True, reason
 
@@ -257,7 +257,7 @@ class AffinityPolicy(base.Policy):
                 return
             count = action.data['creation']['count']
 
-        cp = db_api.cluster_policy_get(action.context, cluster_id, self.id)
+        cp = cpo.ClusterPolicy.get(action.context, cluster_id, self.id)
         policy_data = self._extract_policy_data(cp.data)
         pd_entry = {'servergroup': policy_data['servergroup_id']}
 

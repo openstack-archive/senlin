@@ -36,7 +36,7 @@ from senlin.common import utils
 from senlin.db import api as db_api
 from senlin.engine.actions import base as action_mod
 from senlin.engine import cluster as cluster_mod
-from senlin.engine import cluster_policy
+from senlin.engine import cluster_policy as cpm
 from senlin.engine import dispatcher
 from senlin.engine import environment
 from senlin.engine import health_manager
@@ -44,6 +44,7 @@ from senlin.engine import node as node_mod
 from senlin.engine import receiver as receiver_mod
 from senlin.engine import scheduler
 from senlin.objects import cluster as cluster_obj
+from senlin.objects import cluster_policy as cp_obj
 from senlin.objects import credential as cred_obj
 from senlin.objects import event as event_obj
 from senlin.objects import node as node_obj
@@ -880,7 +881,7 @@ class EngineService(service.Service):
 
         db_cluster = self.cluster_find(context, identity)
 
-        policies = db_api.cluster_policy_get_all(context, db_cluster.id)
+        policies = cp_obj.ClusterPolicy.get_all(context, db_cluster.id)
         if len(policies) > 0:
             msg = _('Cluster %(id)s cannot be deleted without having all '
                     'policies detached.') % {'id': identity}
@@ -1637,7 +1638,7 @@ class EngineService(service.Service):
         """
         utils.validate_sort_param(sort, consts.CLUSTER_POLICY_SORT_KEYS)
         db_cluster = self.cluster_find(context, identity)
-        bindings = cluster_policy.ClusterPolicy.load_all(
+        bindings = cpm.ClusterPolicy.load_all(
             context, db_cluster.id, filters=filters, sort=sort)
 
         return [binding.to_dict() for binding in bindings]
@@ -1656,7 +1657,7 @@ class EngineService(service.Service):
         db_policy = self.policy_find(context, policy_id)
 
         try:
-            binding = cluster_policy.ClusterPolicy.load(
+            binding = cpm.ClusterPolicy.load(
                 context, db_cluster.id, db_policy.id)
         except exception.PolicyNotAttached:
             raise exception.PolicyBindingNotFound(policy=policy_id,
@@ -1727,8 +1728,8 @@ class EngineService(service.Service):
             msg = _("The specified policy (%s) is not found.") % policy
             raise exception.BadRequest(msg=msg)
 
-        binding = db_api.cluster_policy_get(context, db_cluster.id,
-                                            db_policy.id)
+        binding = cp_obj.ClusterPolicy.get(context, db_cluster.id,
+                                           db_policy.id)
         if binding is None:
             msg = _("The policy (%(p)s) is not attached to the specified "
                     "cluster (%(c)s).") % {'p': policy, 'c': identity}
@@ -1770,8 +1771,8 @@ class EngineService(service.Service):
             msg = _("The specified policy (%s) is not found.") % policy
             raise exception.BadRequest(msg=msg)
 
-        binding = db_api.cluster_policy_get(context, db_cluster.id,
-                                            db_policy.id)
+        binding = cp_obj.ClusterPolicy.get(context, db_cluster.id,
+                                           db_policy.id)
         if binding is None:
             msg = _("The policy (%(p)s) is not attached to the specified "
                     "cluster (%(c)s).") % {'p': policy, 'c': identity}

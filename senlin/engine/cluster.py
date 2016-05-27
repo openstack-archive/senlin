@@ -19,10 +19,10 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.common import utils
-from senlin.db import api as db_api
-from senlin.engine import cluster_policy as cp_mod
+from senlin.engine import cluster_policy as cpm
 from senlin.engine import node as node_mod
 from senlin.objects import cluster as co
+from senlin.objects import cluster_policy as cpo
 from senlin.policies import base as pcb
 from senlin.profiles import base as pfb
 
@@ -96,7 +96,7 @@ class Cluster(object):
             return
 
         policies = []
-        bindings = db_api.cluster_policy_get_all(context, self.id)
+        bindings = cpo.ClusterPolicy.get_all(context, self.id)
         for b in bindings:
             # Detect policy type conflicts
             policy = pcb.Policy.load(context, b.policy_id)
@@ -352,7 +352,7 @@ class Cluster(object):
             'priority': policy.PRIORITY
         }
 
-        cp = cp_mod.ClusterPolicy(self.id, policy_id, **kwargs)
+        cp = cpm.ClusterPolicy(self.id, policy_id, **kwargs)
         cp.store(ctx)
 
         # refresh cached runtime
@@ -385,7 +385,7 @@ class Cluster(object):
 
         params = {'enabled': bool(enabled)}
 
-        db_api.cluster_policy_update(ctx, self.id, policy_id, params)
+        cpo.ClusterPolicy.update(ctx, self.id, policy_id, params)
         return True, _('Policy updated.')
 
     def detach_policy(self, ctx, policy_id):
@@ -412,7 +412,7 @@ class Cluster(object):
         if not res:
             return res, reason
 
-        db_api.cluster_policy_detach(ctx, self.id, policy_id)
+        cpo.ClusterPolicy.delete(ctx, self.id, policy_id)
         self.rt['policies'].remove(found)
 
         return True, _('Policy detached.')

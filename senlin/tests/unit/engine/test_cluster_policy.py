@@ -15,9 +15,9 @@ from oslo_utils import timeutils
 import six
 
 from senlin.common import exception
-from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import cluster_policy as cpm
 from senlin.objects import cluster as co
+from senlin.objects import cluster_policy as cpo
 from senlin.objects import policy as po
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -59,8 +59,8 @@ class TestClusterPolicy(base.SenlinTestCase):
         cp_id = cp.store(self.context)
         self.assertIsNotNone(cp_id)
 
-        result = db_api.cluster_policy_get(self.context, 'fake-cluster',
-                                           'fake-policy')
+        result = cpo.ClusterPolicy.get(self.context, 'fake-cluster',
+                                       'fake-policy')
 
         self.assertIsNotNone(result)
         self.assertEqual(12, result.priority)
@@ -78,8 +78,8 @@ class TestClusterPolicy(base.SenlinTestCase):
         new_id = cp.store(self.context)
         self.assertEqual(cp_id, new_id)
 
-        result = db_api.cluster_policy_get(self.context, 'fake-cluster',
-                                           'fake-policy')
+        result = cpo.ClusterPolicy.get(self.context, 'fake-cluster',
+                                       'fake-policy')
 
         self.assertIsNotNone(result)
         self.assertFalse(result.enabled)

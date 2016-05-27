@@ -16,8 +16,8 @@ from senlin.common import consts
 from senlin.common import context
 from senlin.common import exception
 from senlin.common import scaleutils
-from senlin.db import api as db_api
 from senlin.objects import cluster as co
+from senlin.objects import cluster_policy as cpo
 from senlin.policies import affinity_policy as ap
 from senlin.policies import base as pb
 from senlin.tests.unit.common import base
@@ -294,7 +294,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
             name=mock.ANY,
             policies=[policy.ANTI_AFFINITY])
 
-    @mock.patch.object(db_api, 'cluster_policy_get')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
     @mock.patch.object(context, 'get_admin_context')
     def test_detach_inherited(self, mock_context, mock_cp):
         cluster = mock.Mock(id='CLUSTER_ID')
@@ -322,7 +322,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
         mock_cp.assert_called_once_with(x_ctx, 'CLUSTER_ID', 'POLICY_ID')
         mock_extract.assert_called_once_with(x_binding.data)
 
-    @mock.patch.object(db_api, 'cluster_policy_get')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
     @mock.patch.object(context, 'get_admin_context')
     def test_detach_not_inherited(self, mock_context, mock_cp):
         cluster = mock.Mock(id='CLUSTER_ID')
@@ -355,7 +355,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
         mock_nova.assert_called_once_with(cluster)
         x_nova.delete_server_group.assert_called_once_with('SERVERGROUP_ID')
 
-    @mock.patch.object(db_api, 'cluster_policy_get')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
     @mock.patch.object(context, 'get_admin_context')
     def test_detach_binding_not_found(self, mock_context, mock_cp):
         cluster = mock.Mock(id='CLUSTER_ID')
@@ -377,7 +377,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
         mock_context.assert_called_once_with()
         mock_cp.assert_called_once_with(x_ctx, 'CLUSTER_ID', 'POLICY_ID')
 
-    @mock.patch.object(db_api, 'cluster_policy_get')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
     @mock.patch.object(context, 'get_admin_context')
     def test_detach_binding_data_empty(self, mock_context, mock_cp):
         cluster = mock.Mock(id='CLUSTER_ID')
@@ -399,7 +399,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
         mock_context.assert_called_once_with()
         mock_cp.assert_called_once_with(x_ctx, 'CLUSTER_ID', 'POLICY_ID')
 
-    @mock.patch.object(db_api, 'cluster_policy_get')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
     @mock.patch.object(context, 'get_admin_context')
     def test_detach_policy_data_empty(self, mock_context, mock_cp):
         cluster = mock.Mock(id='CLUSTER_ID')
@@ -423,7 +423,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
         mock_cp.assert_called_once_with(x_ctx, 'CLUSTER_ID', 'POLICY_ID')
         mock_extract.assert_called_once_with({'foo': 'bar'})
 
-    @mock.patch.object(db_api, 'cluster_policy_get')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
     @mock.patch.object(context, 'get_admin_context')
     def test_detach_failing_delete_sg(self, mock_context, mock_cp):
         cluster = mock.Mock(id='CLUSTER_ID')
@@ -456,7 +456,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
         mock_nova.assert_called_once_with(cluster)
         x_nova.delete_server_group.assert_called_once_with('SERVERGROUP_ID')
 
-    @mock.patch.object(db_api, 'cluster_policy_get')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
     def test_pre_op(self, mock_cp):
         x_action = mock.Mock()
         x_action.data = {'creation': {'count': 2}}
@@ -498,7 +498,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
             x_action.data)
         x_action.store.assert_called_once_with(x_action.context)
 
-    @mock.patch.object(db_api, 'cluster_policy_get')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
     def test_pre_op_use_scaleout_input(self, mock_cp):
         x_action = mock.Mock()
         x_action.data = {}
@@ -540,7 +540,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
         x_action.store.assert_called_once_with(x_action.context)
 
     @mock.patch.object(co.Cluster, 'get')
-    @mock.patch.object(db_api, 'cluster_policy_get')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
     def test_pre_op_use_resize_params(self, mock_cp, mock_cluster):
         def fake_parse_func(action, cluster):
             action.data = {
@@ -602,7 +602,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
         x_action.store.assert_called_once_with(x_action.context)
 
     @mock.patch.object(co.Cluster, 'get')
-    @mock.patch.object(db_api, 'cluster_policy_get')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
     def test_pre_op_resize_shrinking(self, mock_cp, mock_cluster):
         def fake_parse_func(action, cluster):
             action.data = {
@@ -634,7 +634,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
         self.assertEqual(0, mock_cp.call_count)
         self.assertEqual(0, mock_extract.call_count)
 
-    @mock.patch.object(db_api, 'cluster_policy_get')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
     def test_pre_op_with_zone_name(self, mock_cp):
         self.spec['properties']['availability_zone'] = 'BLUE_ZONE'
         x_action = mock.Mock()
@@ -680,7 +680,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
         x_action.store.assert_called_once_with(x_action.context)
 
     @mock.patch.object(co.Cluster, 'get')
-    @mock.patch.object(db_api, 'cluster_policy_get')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
     def test_pre_op_with_drs_enabled(self, mock_cp, mock_cluster):
         self.spec['properties']['enable_drs_extension'] = True
         x_action = mock.Mock()
@@ -745,7 +745,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
         x_action.store.assert_called_once_with(x_action.context)
 
     @mock.patch.object(co.Cluster, 'get')
-    @mock.patch.object(db_api, 'cluster_policy_get')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
     def test_pre_op_with_drs_enabled_no_match(self, mock_cp, mock_cluster):
         self.spec['properties']['enable_drs_extension'] = True
         x_action = mock.Mock()
