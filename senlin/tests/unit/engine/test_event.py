@@ -15,9 +15,9 @@ import mock
 from oslo_log import log as logging
 from oslo_utils import timeutils
 
-from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import event as EVENT
+from senlin.objects import event as eo
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -191,7 +191,7 @@ class TestEvent(base.SenlinTestCase):
         self.assertIsNotNone(event_id)
         self.assertEqual(event_id, event.id)
 
-        result = db_api.event_get(self.context, event_id)
+        result = eo.Event.get(self.context, event_id)
 
         self.assertIsNotNone(result)
         self.assertEqual(event_id, result.id)

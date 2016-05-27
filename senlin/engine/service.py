@@ -43,6 +43,7 @@ from senlin.engine import health_manager
 from senlin.engine import node as node_mod
 from senlin.engine import receiver as receiver_mod
 from senlin.engine import scheduler
+from senlin.objects import event as event_obj
 from senlin.objects import node as node_obj
 from senlin.objects import policy as policy_obj
 from senlin.objects import profile as profile_obj
@@ -2114,11 +2115,11 @@ class EngineService(service.Service):
         """
         event = None
         if uuidutils.is_uuid_like(identity):
-            event = db_api.event_get(context, identity,
-                                     project_safe=project_safe)
+            event = event_obj.Event.get(context, identity,
+                                        project_safe=project_safe)
         if not event:
-            event = db_api.event_get_by_short_id(context, identity,
-                                                 project_safe=project_safe)
+            event = event_obj.Event.get_by_short_id(context, identity,
+                                                    project_safe=project_safe)
         if not event:
             raise exception.EventNotFound(event=identity)
 
@@ -2154,9 +2155,10 @@ class EngineService(service.Service):
             if value is not None:
                 filters[consts.EVENT_LEVEL] = value
 
-        all_events = db_api.event_get_all(context, filters=filters,
-                                          limit=limit, marker=marker,
-                                          sort=sort, project_safe=project_safe)
+        all_events = event_obj.Event.get_all(context, filters=filters,
+                                             limit=limit, marker=marker,
+                                             sort=sort,
+                                             project_safe=project_safe)
 
         results = [event.as_dict() for event in all_events]
         return results

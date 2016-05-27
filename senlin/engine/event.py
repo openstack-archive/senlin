@@ -15,7 +15,7 @@ from oslo_utils import reflection
 from oslo_utils import timeutils
 
 from senlin.common import i18n
-from senlin.db import api as db_api
+from senlin.objects import event as eo
 
 _LC = i18n._LC
 _LE = i18n._LE
@@ -100,7 +100,7 @@ class Event(object):
             'meta_data': self.metadata,
         }
 
-        event = db_api.event_create(context, values)
+        event = eo.Event.create(context, values)
         self.id = event.id
 
         return self.id
