@@ -134,52 +134,52 @@ class Node(object):
         return self.id
 
     @classmethod
-    def _from_object(cls, context, node):
+    def _from_object(cls, context, obj):
         """Construct a node from node object.
 
         @param context: the context used for DB operations;
         @param node: a node object that contains all fields;
         """
         kwargs = {
-            'id': node.id,
-            'physical_id': node.physical_id,
-            'user': node.user,
-            'project': node.project,
-            'domain': node.domain,
-            'index': node.index,
-            'role': node.role,
-            'init_at': node.init_at,
-            'created_at': node.created_at,
-            'updated_at': node.updated_at,
-            'status': node.status,
-            'status_reason': node.status_reason,
-            'data': node.data,
-            'metadata': node.metadata,
+            'id': obj.id,
+            'physical_id': obj.physical_id,
+            'user': obj.user,
+            'project': obj.project,
+            'domain': obj.domain,
+            'index': obj.index,
+            'role': obj.role,
+            'init_at': obj.init_at,
+            'created_at': obj.created_at,
+            'updated_at': obj.updated_at,
+            'status': obj.status,
+            'status_reason': obj.status_reason,
+            'data': obj.data,
+            'metadata': obj.metadata,
         }
 
-        return cls(node.name, node.profile_id, node.cluster_id,
+        return cls(obj.name, obj.profile_id, obj.cluster_id,
                    context=context, **kwargs)
 
     @classmethod
-    def load(cls, context, node_id=None, node=None, project_safe=True):
+    def load(cls, context, node_id=None, db_node=None, project_safe=True):
         '''Retrieve a node from database.'''
-        if node is None:
-            node = no.Node.get(context, node_id, project_safe=project_safe)
-            if node is None:
+        if db_node is None:
+            db_node = no.Node.get(context, node_id, project_safe=project_safe)
+            if db_node is None:
                 raise exception.NodeNotFound(node=node_id)
 
-        return cls._from_object(context, node)
+        return cls._from_object(context, db_node)
 
     @classmethod
     def load_all(cls, context, cluster_id=None, limit=None, marker=None,
                  sort=None, filters=None, project_safe=True):
         '''Retrieve all nodes of from database.'''
-        nodes = no.Node.get_all(context, cluster_id=cluster_id,
-                                filters=filters, sort=sort,
-                                limit=limit, marker=marker,
-                                project_safe=project_safe)
+        objs = no.Node.get_all(context, cluster_id=cluster_id,
+                               filters=filters, sort=sort,
+                               limit=limit, marker=marker,
+                               project_safe=project_safe)
 
-        return [cls._from_object(context, node) for node in nodes]
+        return [cls._from_object(context, obj) for obj in objs]
 
     def to_dict(self):
         if self.rt['profile']:

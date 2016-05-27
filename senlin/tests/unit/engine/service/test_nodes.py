@@ -439,7 +439,7 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual({'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
-        mock_load.assert_called_once_with(self.ctx, node=x_obj)
+        mock_load.assert_called_once_with(self.ctx, db_node=x_obj)
         x_node.to_dict.assert_called_once_with()
 
     @mock.patch.object(node_mod.Node, 'load')
@@ -457,7 +457,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual({'foo': 'bar', 'details': {'info': 'blahblah'}},
                          result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
-        mock_load.assert_called_once_with(self.ctx, node=x_obj)
+        mock_load.assert_called_once_with(self.ctx, db_node=x_obj)
         x_node.to_dict.assert_called_once_with()
         x_node.get_details.assert_called_once_with(self.ctx)
 
@@ -486,7 +486,7 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual({'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
-        mock_load.assert_called_once_with(self.ctx, node=x_obj)
+        mock_load.assert_called_once_with(self.ctx, db_node=x_obj)
         x_node.to_dict.assert_called_once_with()
         self.assertEqual(0, x_node.get_details.call_count)
 
@@ -522,7 +522,7 @@ class NodeTest(base.SenlinTestCase):
                 }
             })
         mock_start.assert_called_once_with()
-        mock_load.assert_called_once_with(self.ctx, node=x_obj)
+        mock_load.assert_called_once_with(self.ctx, db_node=x_obj)
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(action_mod.Action, 'create')
@@ -566,7 +566,7 @@ class NodeTest(base.SenlinTestCase):
                 'new_profile_id': 'NEW_PROFILE_ID',
             })
         mock_start.assert_called_once_with()
-        mock_load.assert_called_once_with(self.ctx, node=x_obj)
+        mock_load.assert_called_once_with(self.ctx, db_node=x_obj)
 
     @mock.patch.object(service.EngineService, 'node_find')
     def test_node_update_node_not_found(self, mock_find):

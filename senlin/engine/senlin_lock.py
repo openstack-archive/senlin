@@ -20,6 +20,8 @@ from senlin.common.i18n import _LE
 from senlin.common.i18n import _LI
 from senlin.db import api as db_api
 from senlin.engine import scheduler
+from senlin.objects import cluster_lock as cl_obj
+from senlin.objects import node_lock as nl_obj
 from senlin.objects import service as service_obj
 
 CONF = cfg.CONF
@@ -65,7 +67,7 @@ def cluster_lock_acquire(context, cluster_id, action_id, engine=None,
 
     # Step 1: try lock the cluster - if the returned owner_id is the
     #         action id, it was a success
-    owners = db_api.cluster_lock_acquire(cluster_id, action_id, scope)
+    owners = cl_obj.ClusterLock.acquire(cluster_id, action_id, scope)
     if action_id in owners:
         return True
 
@@ -76,14 +78,14 @@ def cluster_lock_acquire(context, cluster_id, action_id, engine=None,
     while retries > 0:
         scheduler.sleep(retry_interval)
         LOG.debug('Acquire lock for cluster %s again' % cluster_id)
-        owners = db_api.cluster_lock_acquire(cluster_id, action_id, scope)
+        owners = cl_obj.ClusterLock.acquire(cluster_id, action_id, scope)
         if action_id in owners:
             return True
         retries = retries - 1
 
     # Step 3: Last resort is 'forced locking', only needed when retry failed
     if forced:
-        owners = db_api.cluster_lock_steal(cluster_id, action_id)
+        owners = cl_obj.ClusterLock.steal(cluster_id, action_id)
         return action_id in owners
 
     # Will reach here only because scope == CLUSTER_SCOPE
@@ -98,7 +100,7 @@ def cluster_lock_acquire(context, cluster_id, action_id, engine=None,
         reason = _('Engine died when executing this action.')
         db_api.action_mark_failed(context, action.id, time.time(),
                                   reason=reason)
-        owners = db_api.cluster_lock_steal(cluster_id, action_id)
+        owners = cl_obj.ClusterLock.steal(cluster_id, action_id)
         return action_id in owners
 
     LOG.error(_LE('Cluster is already locked by action %(old)s, '
@@ -115,7 +117,7 @@ def cluster_lock_release(cluster_id, action_id, scope):
     :param action_id: ID of the action that attempts to release the node.
     :param scope: The scope of the lock to be released.
     """
-    return db_api.cluster_lock_release(cluster_id, action_id, scope)
+    return cl_obj.ClusterLock.release(cluster_id, action_id, scope)
 
 
 def node_lock_acquire(context, node_id, action_id, engine=None,
@@ -132,7 +134,7 @@ def node_lock_acquire(context, node_id, action_id, engine=None,
     """
     # Step 1: try lock the node - if the returned owner_id is the
     #         action id, it was a success
-    owner = db_api.node_lock_acquire(node_id, action_id)
+    owner = nl_obj.NodeLock.acquire(node_id, action_id)
     if action_id == owner:
         return True
 
@@ -143,14 +145,14 @@ def node_lock_acquire(context, node_id, action_id, engine=None,
     while retries > 0:
         scheduler.sleep(retry_interval)
         LOG.debug('Acquire lock for node %s again' % node_id)
-        owner = db_api.node_lock_acquire(node_id, action_id)
+        owner = nl_obj.NodeLock.acquire(node_id, action_id)
         if action_id == owner:
             return True
         retries = retries - 1
 
     # Step 3: Last resort is 'forced locking', only needed when retry failed
     if forced:
-        owner = db_api.node_lock_steal(node_id, action_id)
+        owner = nl_obj.NodeLock.steal(node_id, action_id)
         return action_id == owner
 
     # if this node lock by dead engine
@@ -165,7 +167,7 @@ def node_lock_acquire(context, node_id, action_id, engine=None,
         reason = _('Engine died when executing this action.')
         db_api.action_mark_failed(context, action.id, time.time(),
                                   reason=reason)
-        db_api.node_lock_steal(node_id, action_id)
+        nl_obj.NodeLock.steal(node_id, action_id)
         return True
 
     LOG.error(_LE('Node is already locked by action %(old)s, '
@@ -181,4 +183,4 @@ def node_lock_release(node_id, action_id):
     :param node_id: ID of the node to be released.
     :param action_id: ID of the action that attempts to release the node.
     """
-    return db_api.node_lock_release(node_id, action_id)
+    return nl_obj.NodeLock.release(node_id, action_id)
