@@ -21,9 +21,9 @@ from senlin.common import context as senlin_ctx
 from senlin.common import exception
 from senlin.common import schema
 from senlin.common import utils as common_utils
-from senlin.db import api as db_api
 from senlin.engine import environment
 from senlin.engine import parser
+from senlin.objects import credential as co
 from senlin.objects import profile as po
 from senlin.profiles import base as pb
 from senlin.tests.unit.common import base
@@ -565,7 +565,7 @@ class TestProfileBase(base.SenlinTestCase):
         }
         self.assertEqual(expected, profile.context)
 
-    @mock.patch.object(db_api, 'cred_get')
+    @mock.patch.object(co.Credential, 'get')
     @mock.patch.object(oslo_ctx, 'get_current')
     def test__build_conn_params(self, mock_current, mock_get):
         profile = self._create_profile('test-profile')
@@ -587,7 +587,7 @@ class TestProfileBase(base.SenlinTestCase):
         mock_current.assert_called_once_with()
         mock_get.assert_called_once_with(fake_ctx, 'FAKE_USER', 'FAKE_PROJECT')
 
-    @mock.patch.object(db_api, 'cred_get')
+    @mock.patch.object(co.Credential, 'get')
     @mock.patch.object(oslo_ctx, 'get_current')
     def test__build_conn_params_trust_not_found(self, mock_current, mock_get):
         profile = self._create_profile('test-profile')

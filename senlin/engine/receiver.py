@@ -18,7 +18,7 @@ from six.moves.urllib import parse
 from senlin.common import consts
 from senlin.common import exception
 from senlin.common import utils
-from senlin.db import api as db_api
+from senlin.objects import credential as co
 from senlin.objects import receiver as ro
 
 CONF = cfg.CONF
@@ -94,7 +94,7 @@ class Receiver(object):
         cdata = dict()
         if context.is_admin:
             # use object owner if request is from admin
-            cred = db_api.cred_get(context, cluster.user, cluster.project)
+            cred = co.Credential.get(context, cluster.user, cluster.project)
             trust_id = cred['cred']['openstack']['trust']
             cdata['trust_id'] = trust_id
         else:

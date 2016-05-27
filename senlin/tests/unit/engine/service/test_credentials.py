@@ -12,8 +12,8 @@
 
 import mock
 
-from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import service
+from senlin.objects import credential as co
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -26,7 +26,7 @@ class CredentialTest(base.SenlinTestCase):
                                        project='fake_project_id')
         self.eng = service.EngineService('host-a', 'topic-a')
 
-    @mock.patch.object(db_api, 'cred_create')
+    @mock.patch.object(co.Credential, 'update_or_create')
     def test_credential_create(self, mock_create):
         x_cred = 'fake_cred'
 
@@ -46,7 +46,7 @@ class CredentialTest(base.SenlinTestCase):
             }
         )
 
-    @mock.patch.object(db_api, 'cred_get')
+    @mock.patch.object(co.Credential, 'get')
     def test_credential_get(self, mock_get):
         x_data = {'openstack': {'foo': 'bar'}}
         x_cred = mock.Mock(cred=x_data)
@@ -58,7 +58,7 @@ class CredentialTest(base.SenlinTestCase):
         mock_get.assert_called_once_with(
             self.ctx, 'fake_user_id', 'fake_project_id')
 
-    @mock.patch.object(db_api, 'cred_get')
+    @mock.patch.object(co.Credential, 'get')
     def test_credential_get_not_found(self, mock_get):
         mock_get.return_value = None
 
@@ -68,7 +68,7 @@ class CredentialTest(base.SenlinTestCase):
         mock_get.assert_called_once_with(
             self.ctx, 'fake_user_id', 'fake_project_id')
 
-    @mock.patch.object(db_api, 'cred_get')
+    @mock.patch.object(co.Credential, 'get')
     def test_credential_data_not_match(self, mock_get):
         x_cred = mock.Mock(cred={'bogkey': 'bogval'})
         mock_get.return_value = x_cred
@@ -79,7 +79,7 @@ class CredentialTest(base.SenlinTestCase):
         mock_get.assert_called_once_with(
             self.ctx, 'fake_user_id', 'fake_project_id')
 
-    @mock.patch.object(db_api, 'cred_update')
+    @mock.patch.object(co.Credential, 'update')
     def test_credential_update(self, mock_update):
         x_cred = 'fake_credential'
 

@@ -25,8 +25,8 @@ class Credential(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
     fields = {
         'user': fields.StringField(),
         'project': fields.StringField(),
-        'cred': fields.DictOfStringField(),
-        'data': fields.DictOfStringField(),
+        'cred': fields.DictOfStringsField(),
+        'data': fields.DictOfStringsField(),
     }
 
     @staticmethod

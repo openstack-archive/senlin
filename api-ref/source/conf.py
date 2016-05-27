@@ -144,7 +144,7 @@ pygments_style = 'sphinx'
 # using the given strftime format.
 # html_last_updated_fmt = '%b %d, %Y'
 git_cmd = ["git", "log", "--pretty=format:'%ad, commit %h'", "--date=local",
-    "-n1"]
+           "-n1"]
 html_last_updated_fmt = subprocess.Popen(
     git_cmd, stdout=subprocess.PIPE).communicate()[0]
 

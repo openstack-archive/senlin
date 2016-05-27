@@ -19,9 +19,9 @@ from senlin.common import context as senlin_ctx
 from senlin.common import exception
 from senlin.common import schema
 from senlin.common import utils as common_utils
-from senlin.db import api as db_api
 from senlin.engine import environment
 from senlin.engine import parser
+from senlin.objects import credential as co
 from senlin.objects import policy as po
 from senlin.policies import base as pb
 from senlin.tests.unit.common import base
@@ -405,7 +405,7 @@ class TestPolicyBase(base.SenlinTestCase):
         res = policy.detach(cluster)
         self.assertEqual((True, None), res)
 
-    @mock.patch.object(db_api, 'cred_get')
+    @mock.patch.object(co.Credential, 'get')
     @mock.patch.object(senlin_ctx, 'get_service_context')
     @mock.patch.object(oslo_ctx, 'get_current')
     def test_build_conn_params(self, mock_get_current, mock_get_service_ctx,
@@ -450,7 +450,7 @@ class TestPolicyBase(base.SenlinTestCase):
         mock_get_service_ctx.assert_called_once_with()
         mock_cred_get.assert_called_once_with(current_ctx, 'user1', 'project1')
 
-    @mock.patch.object(db_api, 'cred_get')
+    @mock.patch.object(co.Credential, 'get')
     @mock.patch.object(senlin_ctx, 'get_service_context')
     @mock.patch.object(oslo_ctx, 'get_current')
     def test_build_conn_params_trust_not_found(

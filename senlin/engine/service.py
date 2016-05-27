@@ -43,6 +43,7 @@ from senlin.engine import health_manager
 from senlin.engine import node as node_mod
 from senlin.engine import receiver as receiver_mod
 from senlin.engine import scheduler
+from senlin.objects import credential as cred_obj
 from senlin.objects import event as event_obj
 from senlin.objects import node as node_obj
 from senlin.objects import policy as policy_obj
@@ -205,7 +206,7 @@ class EngineService(service.Service):
                 }
             }
         }
-        db_api.cred_create_update(context, values)
+        cred_obj.Credential.update_or_create(context, values)
         return {'cred': cred}
 
     @request_context
@@ -221,7 +222,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the persistent credential, or None
             if no matching credential is found.
         """
-        res = db_api.cred_get(context, context.user, context.project)
+        res = cred_obj.Credential.get(context, context.user, context.project)
         if res is None:
             return None
         return res.cred.get('openstack', None)
@@ -239,8 +240,8 @@ class EngineService(service.Service):
                            the credential.
         :return: A dictionary containing the updated credential.
         """
-        db_api.cred_update(context, context.user, context.project,
-                           {'cred': {'openstack': {'trust': cred}}})
+        cred_obj.Credential.update(context, context.user, context.project,
+                                   {'cred': {'openstack': {'trust': cred}}})
         return {'cred': cred}
 
     @request_context

@@ -19,8 +19,8 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.common import utils
-from senlin.db import api as db_api
 from senlin.engine import environment
+from senlin.objects import credential as co
 from senlin.objects import policy as po
 
 CHECK_RESULTS = (
@@ -289,8 +289,8 @@ class Policy(object):
             'user_domain_name': service_creds.get('user_domain_name')
         }
 
-        cred = db_api.cred_get(oslo_context.get_current(),
-                               cluster.user, cluster.project)
+        cred = co.Credential.get(oslo_context.get_current(),
+                                 cluster.user, cluster.project)
         if cred is None:
             raise exception.TrustNotFound(trustor=cluster.user)
         params['trust_id'] = cred.cred['openstack']['trust']
