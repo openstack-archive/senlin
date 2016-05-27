@@ -14,9 +14,9 @@ import mock
 
 from senlin.common import consts
 from senlin.common import scaleutils as su
-from senlin.db.sqlalchemy import api as db_api
 from senlin.drivers import base as driver_base
 from senlin.engine import cluster as cluster_mod
+from senlin.objects import cluster as co
 from senlin.policies import base as policy_base
 from senlin.policies import zone_placement as zp
 from senlin.tests.unit.common import base
@@ -127,7 +127,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         self.assertEqual(3, res)
 
     @mock.patch.object(su, 'parse_resize_params')
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     def test__get_count_resize_parse_error(self, mock_cluster, mock_parse):
         x_cluster = mock.Mock()
         mock_cluster.return_value = x_cluster
@@ -142,7 +142,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         self.assertEqual('Something wrong.', action.data['reason'])
 
     @mock.patch.object(su, 'parse_resize_params')
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     def test__get_count_resize_parse_creation(self, mock_cluster, mock_parse):
         def fake_parse(action, cluster):
             action.data = {'creation': {'count': 3}}
@@ -159,7 +159,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         self.assertEqual(3, res)
 
     @mock.patch.object(su, 'parse_resize_params')
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     def test__get_count_resize_parse_deletion(self, mock_cluster, mock_parse):
         def fake_parse(action, cluster):
             action.data = {'deletion': {'count': 3}}

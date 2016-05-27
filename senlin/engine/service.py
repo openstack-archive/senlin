@@ -43,6 +43,7 @@ from senlin.engine import health_manager
 from senlin.engine import node as node_mod
 from senlin.engine import receiver as receiver_mod
 from senlin.engine import scheduler
+from senlin.objects import cluster as cluster_obj
 from senlin.objects import credential as cred_obj
 from senlin.objects import event as event_obj
 from senlin.objects import node as node_obj
@@ -649,17 +650,17 @@ class EngineService(service.Service):
         """
 
         if uuidutils.is_uuid_like(identity):
-            cluster = db_api.cluster_get(context, identity,
-                                         project_safe=project_safe)
+            cluster = cluster_obj.Cluster.get(context, identity,
+                                              project_safe=project_safe)
             if not cluster:
-                cluster = db_api.cluster_get_by_name(context, identity,
-                                                     project_safe=project_safe)
+                cluster = cluster_obj.Cluster.get_by_name(
+                    context, identity, project_safe=project_safe)
         else:
-            cluster = db_api.cluster_get_by_name(context, identity,
-                                                 project_safe=project_safe)
+            cluster = cluster_obj.Cluster.get_by_name(
+                context, identity, project_safe=project_safe)
             # maybe it is a short form of UUID
             if not cluster:
-                cluster = db_api.cluster_get_by_short_id(
+                cluster = cluster_obj.Cluster.get_by_short_id(
                     context, identity, project_safe=project_safe)
 
         if not cluster:
@@ -706,7 +707,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the details about a cluster.
         """
         db_cluster = self.cluster_find(context, identity)
-        cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
+        cluster = cluster_mod.Cluster.load(context, dbcluster=db_cluster)
         return cluster.to_dict()
 
     def check_cluster_quota(self, context):
@@ -716,7 +717,7 @@ class EngineService(service.Service):
         :return: None if cluster creation is okay, or an exception of type
                  `Forbbiden` if number of clusters reaches the maximum.
         """
-        existing = db_api.cluster_count_all(context)
+        existing = cluster_obj.Cluster.count_all(context)
         maximum = cfg.CONF.max_clusters_per_project
         if existing >= maximum:
             raise exception.Forbidden()
@@ -743,7 +744,7 @@ class EngineService(service.Service):
         self.check_cluster_quota(context)
 
         if cfg.CONF.name_unique:
-            if db_api.cluster_get_by_name(context, name):
+            if cluster_obj.Cluster.get_by_name(context, name):
                 msg = _("The cluster (%(name)s) already exists."
                         ) % {"name": name}
                 raise exception.BadRequest(msg=msg)
@@ -817,7 +818,7 @@ class EngineService(service.Service):
 
         # Get the database representation of the existing cluster
         db_cluster = self.cluster_find(context, identity)
-        cluster = cluster_mod.Cluster.load(context, cluster=db_cluster)
+        cluster = cluster_mod.Cluster.load(context, dbcluster=db_cluster)
         if cluster.status == cluster.ERROR:
             msg = _('Updating a cluster in error state')
             LOG.error(msg)
@@ -1423,7 +1424,7 @@ class EngineService(service.Service):
                             'operation aborted.')
                     LOG.error(msg)
                     raise exception.ProfileTypeNotMatch(message=msg)
-            index = db_api.cluster_next_index(context, cluster_id)
+            index = cluster_obj.Cluster.next_index(context, cluster_id)
 
         # Create a node instance
         kwargs = {

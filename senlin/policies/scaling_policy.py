@@ -17,7 +17,7 @@ from senlin.common.i18n import _
 from senlin.common import scaleutils as su
 from senlin.common import schema
 from senlin.common import utils
-from senlin.db import api as db_api
+from senlin.objects import cluster as co
 from senlin.objects import node as no
 from senlin.policies import base
 
@@ -183,7 +183,7 @@ class ScalingPolicy(base.Policy):
             return
 
         # Check size constraints
-        cluster = db_api.cluster_get(action.context, cluster_id)
+        cluster = co.Cluster.get(action.context, cluster_id)
         if action.action == consts.CLUSTER_SCALE_IN:
             if self.best_effort:
                 count = min(count, current - cluster.min_size)

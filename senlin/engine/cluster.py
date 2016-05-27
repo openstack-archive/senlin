@@ -22,8 +22,9 @@ from senlin.common import utils
 from senlin.db import api as db_api
 from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import node as node_mod
-from senlin.policies import base as policy_base
-from senlin.profiles import base as profile_base
+from senlin.objects import cluster as co
+from senlin.policies import base as pcb
+from senlin.profiles import base as pfb
 
 LOG = logging.getLogger(__name__)
 
@@ -98,13 +99,12 @@ class Cluster(object):
         bindings = db_api.cluster_policy_get_all(context, self.id)
         for b in bindings:
             # Detect policy type conflicts
-            policy = policy_base.Policy.load(context, b.policy_id)
+            policy = pcb.Policy.load(context, b.policy_id)
             policies.append(policy)
 
         self.rt = {
-            'profile': profile_base.Profile.load(context,
-                                                 profile_id=self.profile_id,
-                                                 project_safe=False),
+            'profile': pfb.Profile.load(context, profile_id=self.profile_id,
+                                        project_safe=False),
             'nodes': node_mod.Node.load_all(context, cluster_id=self.id),
             'policies': policies
         }
@@ -138,66 +138,66 @@ class Cluster(object):
         timestamp = timeutils.utcnow()
         if self.id:
             values['updated_at'] = timestamp
-            db_api.cluster_update(context, self.id, values)
+            co.Cluster.update(context, self.id, values)
         else:
             self.init_at = timestamp
             values['init_at'] = timestamp
-            cluster = db_api.cluster_create(context, values)
+            cluster = co.Cluster.create(context, values)
             self.id = cluster.id
 
         self._load_runtime_data(context)
         return self.id
 
     @classmethod
-    def _from_db_record(cls, context, record):
-        '''Construct a cluster object from database record.
+    def _from_object(cls, context, obj):
+        """Construct a cluster from database object.
 
         :param context: the context used for DB operations;
-        :param record: a DB cluster object that will receive all fields;
-        '''
+        :param obj: a DB cluster object that will receive all fields;
+        """
         kwargs = {
-            'id': record.id,
-            'user': record.user,
-            'project': record.project,
-            'domain': record.domain,
-            'init_at': record.init_at,
-            'created_at': record.created_at,
-            'updated_at': record.updated_at,
-            'min_size': record.min_size,
-            'max_size': record.max_size,
-            'next_index': record.next_index,
-            'timeout': record.timeout,
-            'status': record.status,
-            'status_reason': record.status_reason,
-            'data': record.data,
-            'metadata': record.meta_data,
+            'id': obj.id,
+            'user': obj.user,
+            'project': obj.project,
+            'domain': obj.domain,
+            'init_at': obj.init_at,
+            'created_at': obj.created_at,
+            'updated_at': obj.updated_at,
+            'min_size': obj.min_size,
+            'max_size': obj.max_size,
+            'next_index': obj.next_index,
+            'timeout': obj.timeout,
+            'status': obj.status,
+            'status_reason': obj.status_reason,
+            'data': obj.data,
+            'metadata': obj.metadata,
         }
 
-        return cls(record.name, record.desired_capacity, record.profile_id,
+        return cls(obj.name, obj.desired_capacity, obj.profile_id,
                    context=context, **kwargs)
 
     @classmethod
-    def load(cls, context, cluster_id=None, cluster=None, project_safe=True):
+    def load(cls, context, cluster_id=None, dbcluster=None, project_safe=True):
         '''Retrieve a cluster from database.'''
-        if cluster is None:
-            cluster = db_api.cluster_get(context, cluster_id,
-                                         project_safe=project_safe)
-            if cluster is None:
+        if dbcluster is None:
+            dbcluster = co.Cluster.get(context, cluster_id,
+                                       project_safe=project_safe)
+            if dbcluster is None:
                 raise exception.ClusterNotFound(cluster=cluster_id)
 
-        return cls._from_db_record(context, cluster)
+        return cls._from_object(context, dbcluster)
 
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort=None,
                  filters=None, project_safe=True):
-        '''Retrieve all clusters from database.'''
+        """Retrieve all clusters from database."""
 
-        records = db_api.cluster_get_all(context, limit=limit, marker=marker,
-                                         sort=sort, filters=filters,
-                                         project_safe=project_safe)
+        objs = co.Cluster.get_all(context, limit=limit, marker=marker,
+                                  sort=sort, filters=filters,
+                                  project_safe=project_safe)
 
-        for record in records:
-            cluster = cls._from_db_record(context, record)
+        for obj in objs:
+            cluster = cls._from_object(context, obj)
             yield cluster
 
     def to_dict(self):
@@ -263,10 +263,9 @@ class Cluster(object):
 
         # There is a possibility that the profile id is changed
         if 'profile_id' in values:
-            profile = profile_base.Profile.load(context,
-                                                profile_id=self.profile_id)
+            profile = pfb.Profile.load(context, profile_id=self.profile_id)
             self.rt['profile'] = profile
-        db_api.cluster_update(context, self.id, values)
+        co.Cluster.update(context, self.id, values)
         return
 
     def do_create(self, context, **kwargs):
@@ -284,7 +283,7 @@ class Cluster(object):
     def do_delete(self, context, **kwargs):
         """Additional logic at the end of cluster deletion process."""
 
-        db_api.cluster_delete(context, self.id)
+        co.Cluster.delete(context, self.id)
         return True
 
     def do_update(self, context, **kwargs):
@@ -324,7 +323,7 @@ class Cluster(object):
         :returns: A tuple containing a boolean result and a reason string.
         """
 
-        policy = policy_base.Policy.load(ctx, policy_id)
+        policy = pcb.Policy.load(ctx, policy_id)
         # Check if policy has already been attached
         for existing in self.rt['policies']:
             # Policy already attached
@@ -408,7 +407,7 @@ class Cluster(object):
         if found is None:
             return False, _('Policy not attached.')
 
-        policy = policy_base.Policy.load(ctx, policy_id)
+        policy = pcb.Policy.load(ctx, policy_id)
         res, reason = policy.detach(self)
         if not res:
             return res, reason

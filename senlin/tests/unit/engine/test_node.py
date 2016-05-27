@@ -18,8 +18,8 @@ from oslo_utils import timeutils
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import utils as common_utils
-from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import node as nodem
+from senlin.objects import cluster as no
 from senlin.objects import node as node_obj
 from senlin.objects import profile as profile_obj
 from senlin.profiles import base as profiles_base
@@ -59,7 +59,7 @@ class TestNode(base.SenlinTestCase):
             'next_index': 1,
         }
 
-        return db_api.cluster_create(self.context, values)
+        return no.Cluster.create(self.context, values)
 
     def _create_node(self, node_id):
         values = {

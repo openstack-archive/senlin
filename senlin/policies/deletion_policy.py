@@ -23,8 +23,8 @@ from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import scaleutils
 from senlin.common import schema
-from senlin.db import api as db_api
-from senlin.engine import cluster as cluster_mod
+from senlin.engine import cluster as cm
+from senlin.objects import cluster as co
 from senlin.policies import base
 
 LOG = logging.getLogger(__name__)
@@ -177,7 +177,8 @@ class DeletionPolicy(base.Policy):
 
         # No policy decision, check action itself: RESIZE
         else:
-            db_cluster = db_api.cluster_get(action.context, cluster_id)
+            db_cluster = co.Cluster.get(action.context, cluster_id,
+                                        project_safe=True)
             res = scaleutils.parse_resize_params(action, db_cluster)
             if res[0] == base.CHECK_ERROR:
                 action.data['status'] = base.CHECK_ERROR
@@ -189,9 +190,8 @@ class DeletionPolicy(base.Policy):
                 return
             count = action.data['deletion']['count']
 
-        cluster = cluster_mod.Cluster.load(action.context,
-                                           cluster=db_cluster,
-                                           cluster_id=cluster_id)
+        cluster = cm.Cluster.load(action.context, dbcluster=db_cluster,
+                                  cluster_id=cluster_id)
         # Cross-region
         if regions:
             victims = self._victims_by_regions(cluster, regions)

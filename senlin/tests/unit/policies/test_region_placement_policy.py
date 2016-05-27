@@ -14,10 +14,10 @@ import mock
 
 from senlin.common import consts
 from senlin.common import scaleutils as su
-from senlin.db.sqlalchemy import api as db_api
 from senlin.drivers import base as driver_base
-from senlin.engine import cluster as cluster_mod
-from senlin.policies import base as policy_base
+from senlin.engine import cluster as cm
+from senlin.objects import cluster as co
+from senlin.policies import base as pb
 from senlin.policies import region_placement as rp
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -68,7 +68,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         }
         self.assertEqual(expected, policy.regions)
 
-    @mock.patch.object(policy_base.Policy, '_build_conn_params')
+    @mock.patch.object(pb.Policy, '_build_conn_params')
     @mock.patch.object(driver_base, 'SenlinDriver')
     def test__keystone(self, mock_sd, mock_conn):
         params = mock.Mock()
@@ -130,26 +130,26 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         self.assertEqual(3, res)
 
     @mock.patch.object(su, 'parse_resize_params')
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     def test__get_count_resize_parse_error(self, mock_cluster, mock_parse):
         x_cluster = mock.Mock()
         mock_cluster.return_value = x_cluster
-        mock_parse.return_value = (policy_base.CHECK_ERROR, 'Something wrong.')
+        mock_parse.return_value = (pb.CHECK_ERROR, 'Something wrong.')
         action = mock.Mock(action=consts.CLUSTER_RESIZE, data={})
         policy = rp.RegionPlacementPolicy('p1', self.spec)
 
         res = policy._get_count('FOO', action)
 
         self.assertEqual(0, res)
-        self.assertEqual(policy_base.CHECK_ERROR, action.data['status'])
+        self.assertEqual(pb.CHECK_ERROR, action.data['status'])
         self.assertEqual('Something wrong.', action.data['reason'])
 
     @mock.patch.object(su, 'parse_resize_params')
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     def test__get_count_resize_parse_creation(self, mock_cluster, mock_parse):
         def fake_parse(action, cluster):
             action.data = {'creation': {'count': 3}}
-            return policy_base.CHECK_OK, ''
+            return pb.CHECK_OK, ''
 
         x_cluster = mock.Mock()
         mock_cluster.return_value = x_cluster
@@ -162,11 +162,11 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         self.assertEqual(3, res)
 
     @mock.patch.object(su, 'parse_resize_params')
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     def test__get_count_resize_parse_deletion(self, mock_cluster, mock_parse):
         def fake_parse(action, cluster):
             action.data = {'deletion': {'count': 3}}
-            return policy_base.CHECK_OK, ''
+            return pb.CHECK_OK, ''
 
         x_cluster = mock.Mock()
         mock_cluster.return_value = x_cluster
@@ -243,7 +243,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         self.assertEqual(1, res)
 
     @mock.patch.object(rp.RegionPlacementPolicy, '_keystone')
-    @mock.patch.object(cluster_mod.Cluster, 'load')
+    @mock.patch.object(cm.Cluster, 'load')
     def test_pre_op(self, mock_load, mock_keystone):
         # test pre_op method whether returns the correct action.data
         policy = rp.RegionPlacementPolicy('p1', self.spec)
@@ -288,7 +288,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
             current_dist, regions, 3, True)
 
     @mock.patch.object(rp.RegionPlacementPolicy, '_keystone')
-    @mock.patch.object(cluster_mod.Cluster, 'load')
+    @mock.patch.object(cm.Cluster, 'load')
     def test_pre_op_count_from_inputs(self, mock_load, mock_keystone):
         # test pre_op method whether returns the correct action.data
         policy = rp.RegionPlacementPolicy('p1', self.spec)
@@ -322,7 +322,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         self.assertEqual(2, dist['R3'])
 
     @mock.patch.object(rp.RegionPlacementPolicy, '_keystone')
-    @mock.patch.object(cluster_mod.Cluster, 'load')
+    @mock.patch.object(cm.Cluster, 'load')
     def test_pre_op_no_regions(self, mock_load, mock_keystone):
         # test pre_op method whether returns the correct action.data
         policy = rp.RegionPlacementPolicy('p1', self.spec)
@@ -345,7 +345,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         self.assertEqual('No region is found usable.', action.data['reason'])
 
     @mock.patch.object(rp.RegionPlacementPolicy, '_keystone')
-    @mock.patch.object(cluster_mod.Cluster, 'load')
+    @mock.patch.object(cm.Cluster, 'load')
     def test_pre_op_no_feasible_plan(self, mock_load, mock_keystone):
         # test pre_op method whether returns the correct action.data
         policy = rp.RegionPlacementPolicy('p1', self.spec)

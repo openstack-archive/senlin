@@ -17,6 +17,7 @@ import six
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import cluster_policy as cpm
+from senlin.objects import cluster as co
 from senlin.objects import policy as po
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -94,7 +95,7 @@ class TestClusterPolicy(base.SenlinTestCase):
             'user': 'user',
             'project': 'project'
         }
-        return db_api.cluster_create(self.context, values)
+        return co.Cluster.create(self.context, values)
 
     def _create_policy(self, policy_id):
         values = {

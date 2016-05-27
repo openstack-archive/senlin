@@ -25,9 +25,9 @@ from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.common import scaleutils
 from senlin.common import schema
-from senlin.db import api as db_api
 from senlin.drivers import base as driver_base
-from senlin.engine import cluster as cluster_mod
+from senlin.engine import cluster as cm
+from senlin.objects import cluster as co
 from senlin.policies import base
 
 LOG = logging.getLogger(__name__)
@@ -187,7 +187,7 @@ class RegionPlacementPolicy(base.Policy):
             elif action.data.get('creation', None):
                 return action.data['creation']['count']
 
-            db_cluster = db_api.cluster_get(action.context, cluster_id)
+            db_cluster = co.Cluster.get(action.context, cluster_id)
             res = scaleutils.parse_resize_params(action, db_cluster)
             if res[0] == base.CHECK_ERROR:
                 action.data['status'] = base.CHECK_ERROR
@@ -230,7 +230,7 @@ class RegionPlacementPolicy(base.Policy):
             expand = False
             count = -count
 
-        cluster = cluster_mod.Cluster.load(action.context, cluster_id)
+        cluster = cm.Cluster.load(action.context, cluster_id)
 
         kc = self._keystone(cluster)
 

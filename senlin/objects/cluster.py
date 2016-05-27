@@ -37,8 +37,8 @@ class Cluster(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'timeout': fields.IntegerField(),
         'status': fields.StringField(),
         'status_reason': fields.StringField(),
-        'metadata': fields.DictOfStringField(),
-        'data': fields.DictOfStringField(),
+        'metadata': fields.DictOfStringsField(),
+        'data': fields.DictOfStringsField(),
         'user': fields.StringField(),
         'project': fields.StringField(),
         'domain': fields.StringField(nullable=True),
@@ -46,6 +46,9 @@ class Cluster(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
 
     @staticmethod
     def _from_db_object(context, cluster, db_obj):
+        if db_obj is None:
+            return None
+
         for field in cluster.fields:
             if field == 'metadata':
                 cluster['metadata'] = db_obj['meta_data']

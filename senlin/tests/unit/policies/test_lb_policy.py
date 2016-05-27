@@ -15,10 +15,10 @@ from oslo_context import context as oslo_context
 
 from senlin.common import consts
 from senlin.common import scaleutils
-from senlin.db import api as db_api
 from senlin.drivers import base as driver_base
 from senlin.engine import cluster_policy
 from senlin.engine import node as node_mod
+from senlin.objects import cluster as co
 from senlin.objects import node as no
 from senlin.policies import base as policy_base
 from senlin.policies import lb_policy
@@ -255,7 +255,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         self.assertEqual(['node1', 'node3'], res)
 
     @mock.patch.object(no.Node, 'get_all_by_cluster')
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     @mock.patch.object(scaleutils, 'parse_resize_params')
     @mock.patch.object(scaleutils, 'nodes_by_random')
     def test_get_delete_candidates_no_deletion_data_resize(self,
@@ -455,7 +455,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         self.assertIsNone(res)
 
     @mock.patch.object(node_mod.Node, 'load')
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     def test_post_op_add_nodes(self, m_cluster_get, m_node_load, m_extract,
                                m_load, m_conn):
         cid = 'CLUSTER_ID'
@@ -511,7 +511,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         self.assertEqual({'lb_member': 'MEMBER2_ID'}, node2.data)
 
     @mock.patch.object(node_mod.Node, 'load')
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     def test_post_op_add_nodes_in_pool(self, m_cluster_get, m_node_load,
                                        m_extract, m_load, m_conn):
         cluster_id = 'CLUSTER_ID'
@@ -540,7 +540,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
             node2, 'LB_ID', 'POOL_ID', 80, 'test-subnet')
 
     @mock.patch.object(node_mod.Node, 'load')
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     def test_post_op_add_nodes_failed(self, m_cluster_get, m_node_load,
                                       m_extract, m_load, m_conn):
         cluster_id = 'CLUSTER_ID'
@@ -571,7 +571,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
             node1, 'LB_ID', 'POOL_ID', 80, 'test-subnet')
 
     @mock.patch.object(node_mod.Node, 'load')
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     def test_pre_op_del_nodes_ok(self, m_cluster_get, m_node_load, m_extract,
                                  m_load, m_conn):
         cluster_id = 'CLUSTER_ID'
@@ -635,7 +635,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         self.assertEqual(expected_data, action.data)
 
     @mock.patch.object(node_mod.Node, 'load')
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     def test_pre_op_del_nodes_not_in_pool(self, m_cluster_get, m_node_load,
                                           m_extract, m_load, m_conn):
         cluster_id = 'CLUSTER_ID'
@@ -663,7 +663,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
             'LB_ID', 'POOL_ID', 'MEMBER2_ID')
 
     @mock.patch.object(node_mod.Node, 'load')
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     def test_pre_op_del_nodes_failed(self, m_cluster_get, m_node_load,
                                      m_extract, m_load, m_conn):
         cluster_id = 'CLUSTER_ID'

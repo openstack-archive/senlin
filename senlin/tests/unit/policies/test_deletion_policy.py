@@ -14,8 +14,8 @@ import mock
 
 from senlin.common import consts
 from senlin.common import scaleutils as su
-from senlin.db.sqlalchemy import api as db_api
-from senlin.engine import cluster as cluster_mod
+from senlin.engine import cluster as cm
+from senlin.objects import cluster as co
 from senlin.policies import deletion_policy as dp
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -310,7 +310,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
 
     @mock.patch.object(dp.DeletionPolicy, '_update_action')
     @mock.patch.object(su, 'nodes_by_age')
-    @mock.patch.object(cluster_mod.Cluster, 'load')
+    @mock.patch.object(cm.Cluster, 'load')
     def test_pre_op_with_count_decisions(self, mock_load, mock_select,
                                          mock_update):
         action = mock.Mock()
@@ -327,12 +327,12 @@ class TestDeletionPolicy(base.SenlinTestCase):
 
         mock_update.assert_called_once_with(action, ['NODE1', 'NODE2'])
         mock_load.assert_called_once_with(action.context,
-                                          cluster=None, cluster_id='FAKE_ID')
+                                          dbcluster=None, cluster_id='FAKE_ID')
         mock_select.assert_called_once_with(cluster.nodes, 2, True)
 
     @mock.patch.object(dp.DeletionPolicy, '_update_action')
     @mock.patch.object(dp.DeletionPolicy, '_victims_by_regions')
-    @mock.patch.object(cluster_mod.Cluster, 'load')
+    @mock.patch.object(cm.Cluster, 'load')
     def test_pre_op_with_region_decisions(self, mock_load, mock_select,
                                           mock_update):
         action = mock.Mock()
@@ -357,12 +357,12 @@ class TestDeletionPolicy(base.SenlinTestCase):
 
         mock_update.assert_called_once_with(action, ['NODE1', 'NODE2'])
         mock_load.assert_called_once_with(action.context,
-                                          cluster=None, cluster_id='FAKE_ID')
+                                          dbcluster=None, cluster_id='FAKE_ID')
         mock_select.assert_called_once_with(cluster, {'R1': 1, 'R2': 1})
 
     @mock.patch.object(dp.DeletionPolicy, '_update_action')
     @mock.patch.object(dp.DeletionPolicy, '_victims_by_zones')
-    @mock.patch.object(cluster_mod.Cluster, 'load')
+    @mock.patch.object(cm.Cluster, 'load')
     def test_pre_op_with_zone_decisions(self, mock_load, mock_select,
                                         mock_update):
         action = mock.Mock()
@@ -387,12 +387,12 @@ class TestDeletionPolicy(base.SenlinTestCase):
 
         mock_update.assert_called_once_with(action, ['NODE1', 'NODE2'])
         mock_load.assert_called_once_with(action.context,
-                                          cluster=None, cluster_id='FAKE_ID')
+                                          dbcluster=None, cluster_id='FAKE_ID')
         mock_select.assert_called_once_with(cluster, {'AZ1': 1, 'AZ2': 1})
 
     @mock.patch.object(dp.DeletionPolicy, '_update_action')
     @mock.patch.object(su, 'nodes_by_age')
-    @mock.patch.object(cluster_mod.Cluster, 'load')
+    @mock.patch.object(cm.Cluster, 'load')
     def test_pre_op_scale_in_with_count(self, mock_load, mock_select,
                                         mock_update):
         action = mock.Mock()
@@ -409,7 +409,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
         policy.pre_op('FAKE_ID', action)
 
         mock_load.assert_called_once_with(action.context,
-                                          cluster=None, cluster_id='FAKE_ID')
+                                          dbcluster=None, cluster_id='FAKE_ID')
         mock_update.assert_called_once_with(action, ['NODE_ID'])
         # the following was invoked with 1 because the input count is
         # greater than the cluster size
@@ -417,7 +417,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
 
     @mock.patch.object(dp.DeletionPolicy, '_update_action')
     @mock.patch.object(su, 'nodes_by_age')
-    @mock.patch.object(cluster_mod.Cluster, 'load')
+    @mock.patch.object(cm.Cluster, 'load')
     def test_pre_op_scale_in_without_count(self, mock_load, mock_select,
                                            mock_update):
         action = mock.Mock()
@@ -434,7 +434,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
         policy.pre_op('FAKE_ID', action)
 
         mock_load.assert_called_once_with(action.context,
-                                          cluster=None, cluster_id='FAKE_ID')
+                                          dbcluster=None, cluster_id='FAKE_ID')
         mock_update.assert_called_once_with(action, ['NODE_ID'])
         # the following was invoked with 1 because the input count is
         # not specified so 1 becomes the default
@@ -442,7 +442,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
 
     @mock.patch.object(dp.DeletionPolicy, '_update_action')
     @mock.patch.object(su, 'parse_resize_params')
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     def test_pre_op_resize_failed_parse(self, mock_get, mock_parse,
                                         mock_update):
         action = mock.Mock()
@@ -468,7 +468,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
 
     @mock.patch.object(dp.DeletionPolicy, '_update_action')
     @mock.patch.object(su, 'parse_resize_params')
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     def test_pre_op_resize_not_deletion(self, mock_get, mock_parse,
                                         mock_update):
         def fake_parse(a, c):
@@ -498,8 +498,8 @@ class TestDeletionPolicy(base.SenlinTestCase):
     @mock.patch.object(su, 'parse_resize_params')
     @mock.patch.object(dp.DeletionPolicy, '_update_action')
     @mock.patch.object(su, 'nodes_by_age')
-    @mock.patch.object(cluster_mod.Cluster, 'load')
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(cm.Cluster, 'load')
+    @mock.patch.object(co.Cluster, 'get')
     def test_pre_op_resize_with_count(self, mock_get, mock_load,
                                       mock_select, mock_update,
                                       mock_parse):
@@ -537,13 +537,13 @@ class TestDeletionPolicy(base.SenlinTestCase):
                                          project_safe=True)
         mock_parse.assert_called_once_with(action, db_cluster)
         mock_load.assert_called_once_with(action.context,
-                                          cluster=db_cluster,
+                                          dbcluster=db_cluster,
                                           cluster_id='FAKE_ID')
         mock_update.assert_called_once_with(action, ['NID'])
 
     @mock.patch.object(dp.DeletionPolicy, '_update_action')
     @mock.patch.object(su, 'nodes_by_random')
-    @mock.patch.object(cluster_mod.Cluster, 'load')
+    @mock.patch.object(cm.Cluster, 'load')
     def test_pre_op_do_random(self, mock_load, mock_select, mock_update):
         action = mock.Mock()
         action.context = self.context
@@ -559,13 +559,13 @@ class TestDeletionPolicy(base.SenlinTestCase):
         policy.pre_op('FAKE_ID', action)
 
         mock_load.assert_called_once_with(action.context,
-                                          cluster=None, cluster_id='FAKE_ID')
+                                          dbcluster=None, cluster_id='FAKE_ID')
         mock_select.assert_called_once_with(cluster.nodes, 2)
         mock_update.assert_called_once_with(action, ['NODE1', 'NODE2'])
 
     @mock.patch.object(dp.DeletionPolicy, '_update_action')
     @mock.patch.object(su, 'nodes_by_profile_age')
-    @mock.patch.object(cluster_mod.Cluster, 'load')
+    @mock.patch.object(cm.Cluster, 'load')
     def test_pre_op_do_oldest_profile(self, mock_load, mock_select,
                                       mock_update):
         action = mock.Mock()
@@ -583,13 +583,13 @@ class TestDeletionPolicy(base.SenlinTestCase):
         policy.pre_op('FAKE_ID', action)
 
         mock_load.assert_called_once_with(action.context,
-                                          cluster=None, cluster_id='FAKE_ID')
+                                          dbcluster=None, cluster_id='FAKE_ID')
         mock_select.assert_called_once_with(cluster.nodes, 2)
         mock_update.assert_called_once_with(action, ['NODE1', 'NODE2'])
 
     @mock.patch.object(dp.DeletionPolicy, '_update_action')
     @mock.patch.object(su, 'nodes_by_age')
-    @mock.patch.object(cluster_mod.Cluster, 'load')
+    @mock.patch.object(cm.Cluster, 'load')
     def test_pre_op_do_oldest_first(self, mock_load, mock_select, mock_update):
         action = mock.Mock()
         action.context = self.context
@@ -605,6 +605,6 @@ class TestDeletionPolicy(base.SenlinTestCase):
         policy.pre_op('FAKE_ID', action)
 
         mock_load.assert_called_once_with(action.context,
-                                          cluster=None, cluster_id='FAKE_ID')
+                                          dbcluster=None, cluster_id='FAKE_ID')
         mock_select.assert_called_once_with(cluster.nodes, 2, True)
         mock_update.assert_called_once_with(action, ['NODE1', 'NODE2'])

@@ -25,6 +25,7 @@ from senlin.engine.actions import base as action_mod
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import dispatcher
 from senlin.engine import service
+from senlin.objects import cluster as co
 from senlin.objects import receiver as ro
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -38,7 +39,7 @@ class ClusterTest(base.SenlinTestCase):
         self.ctx = utils.dummy_context(project='cluster_test_project')
         self.eng = service.EngineService('host-a', 'topic-a')
 
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     def test_cluster_find_by_uuid(self, mock_get):
         x_cluster = mock.Mock()
         mock_get.return_value = x_cluster
@@ -49,8 +50,8 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(x_cluster, result)
         mock_get.assert_called_once_with(self.ctx, aid, project_safe=True)
 
-    @mock.patch.object(db_api, 'cluster_get_by_name')
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get_by_name')
+    @mock.patch.object(co.Cluster, 'get')
     def test_cluster_find_by_uuid_as_name(self, mock_get, mock_get_name):
         x_cluster = mock.Mock()
         mock_get_name.return_value = x_cluster
@@ -64,7 +65,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_get_name.assert_called_once_with(self.ctx, aid,
                                               project_safe=False)
 
-    @mock.patch.object(db_api, 'cluster_get_by_name')
+    @mock.patch.object(co.Cluster, 'get_by_name')
     def test_cluster_find_by_name(self, mock_get_name):
         x_cluster = mock.Mock()
         mock_get_name.return_value = x_cluster
@@ -75,8 +76,8 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(x_cluster, result)
         mock_get_name.assert_called_once_with(self.ctx, aid, project_safe=True)
 
-    @mock.patch.object(db_api, 'cluster_get_by_short_id')
-    @mock.patch.object(db_api, 'cluster_get_by_name')
+    @mock.patch.object(co.Cluster, 'get_by_short_id')
+    @mock.patch.object(co.Cluster, 'get_by_name')
     def test_cluster_find_by_shortid(self, mock_get_name, mock_get_shortid):
         x_cluster = mock.Mock()
         mock_get_shortid.return_value = x_cluster
@@ -91,7 +92,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_get_shortid.assert_called_once_with(self.ctx, aid,
                                                  project_safe=False)
 
-    @mock.patch.object(db_api, 'cluster_get_by_name')
+    @mock.patch.object(co.Cluster, 'get_by_name')
     def test_cluster_find_not_found(self, mock_get_name):
         mock_get_name.return_value = None
 
@@ -200,7 +201,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual({'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
-        mock_load.assert_called_once_with(self.ctx, cluster=x_obj)
+        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_get_not_found(self, mock_find):
@@ -248,7 +249,7 @@ class ClusterTest(base.SenlinTestCase):
         )
         notify.assert_called_once_with()
 
-    @mock.patch.object(db_api, 'cluster_count_all')
+    @mock.patch.object(co.Cluster, 'count_all')
     def test_check_cluster_quota(self, mock_count):
         mock_count.return_value = 10
         cfg.CONF.set_override('max_clusters_per_project', 11,
@@ -259,7 +260,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertIsNone(res)
         mock_count.assert_called_once_with(self.ctx)
 
-    @mock.patch.object(db_api, 'cluster_count_all')
+    @mock.patch.object(co.Cluster, 'count_all')
     def test_check_cluster_quota_failed(self, mock_count):
         mock_count.return_value = 11
         cfg.CONF.set_override('max_clusters_per_project', 11,
@@ -286,7 +287,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_quota.assert_called_once_with(self.ctx)
 
     @mock.patch.object(service.EngineService, 'check_cluster_quota')
-    @mock.patch.object(db_api, 'cluster_get_by_name')
+    @mock.patch.object(co.Cluster, 'get_by_name')
     def test_cluster_create_already_exists(self, mock_get, mock_quota):
         mock_quota.return_value = None
         cfg.CONF.set_override('name_unique', True, enforce_type=True)
@@ -424,7 +425,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual({'action': 'ACTION_ID', 'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_ID')
-        mock_load.assert_called_once_with(self.ctx, cluster=x_obj)
+        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
         mock_profile.assert_has_calls([
             mock.call(self.ctx, 'OLD_PROFILE'),
             mock.call(self.ctx, 'NEW_PROFILE'),
@@ -469,7 +470,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual('Updating a cluster in error state is not supported.',
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
-        mock_load.assert_called_once_with(self.ctx, cluster=x_obj)
+        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
 
     @mock.patch.object(service.EngineService, 'profile_find')
     @mock.patch.object(cluster_mod.Cluster, 'load')
@@ -495,7 +496,7 @@ class ClusterTest(base.SenlinTestCase):
                          "The specified profile 'Bogus' is not found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
-        mock_load.assert_called_once_with(self.ctx, cluster=x_obj)
+        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
         mock_profile.assert_has_calls([
             mock.call(self.ctx, 'OLD_ID'),
             mock.call(self.ctx, 'Bogus'),
@@ -522,7 +523,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ProfileTypeNotMatch, ex.exc_info[0])
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
-        mock_load.assert_called_once_with(self.ctx, cluster=x_obj)
+        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
         mock_profile.assert_has_calls([
             mock.call(self.ctx, 'OLD_ID'),
             mock.call(self.ctx, 'NEW_PROFILE'),
@@ -552,7 +553,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual({'action': 'ACTION_ID', 'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_ID')
-        mock_load.assert_called_once_with(self.ctx, cluster=x_obj)
+        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
         mock_profile.assert_has_calls([
             mock.call(self.ctx, 'OLD_PROFILE'),
             mock.call(self.ctx, 'NEW_PROFILE'),
@@ -589,7 +590,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual({'action': 'ACTION_ID', 'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_ID')
-        mock_load.assert_called_once_with(self.ctx, cluster=x_obj)
+        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', 'CLUSTER_UPDATE',
             name='cluster_update_12345678',
@@ -616,7 +617,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
-        mock_load.assert_called_once_with(self.ctx, cluster=x_obj)
+        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
 
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(ro.Receiver, 'get_all')

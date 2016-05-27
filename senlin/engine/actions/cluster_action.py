@@ -29,6 +29,7 @@ from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock
+from senlin.objects import cluster as co
 from senlin.objects import dependency as dobj
 from senlin.objects import node as no
 from senlin.policies import base as policy_mod
@@ -119,7 +120,7 @@ class ClusterAction(base.Action):
         nodes = []
         child = []
         for m in range(count):
-            index = db_api.cluster_next_index(self.context, self.cluster.id)
+            index = co.Cluster.next_index(self.context, self.cluster.id)
             kwargs = {
                 'index': index,
                 'metadata': {},

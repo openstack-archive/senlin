@@ -27,10 +27,10 @@ from senlin.common.i18n import _
 from senlin.common.i18n import _LW
 from senlin.common import scaleutils
 from senlin.common import schema
-from senlin.db import api as db_api
 from senlin.drivers import base as driver_base
 from senlin.engine import cluster_policy
-from senlin.engine import node as node_mod
+from senlin.engine import node as nm
+from senlin.objects import cluster as co
 from senlin.objects import node as no
 from senlin.policies import base
 
@@ -283,8 +283,8 @@ class LoadBalancingPolicy(base.Policy):
         if res is False:
             return False, data
 
-        nodes = node_mod.Node.load_all(oslo_context.get_current(),
-                                       cluster_id=cluster.id)
+        nodes = nm.Node.load_all(oslo_context.get_current(),
+                                 cluster_id=cluster.id)
 
         params = self._build_conn_params(cluster)
         lb_driver = driver_base.SenlinDriver().loadbalancing(params)
@@ -343,8 +343,8 @@ class LoadBalancingPolicy(base.Policy):
         if res is False:
             return False, reason
 
-        nodes = node_mod.Node.load_all(oslo_context.get_current(),
-                                       cluster_id=cluster.id)
+        nodes = nm.Node.load_all(oslo_context.get_current(),
+                                 cluster_id=cluster.id)
         for node in nodes:
             if 'lb_member' in node.data:
                 node.data.pop('lb_member')
@@ -372,7 +372,7 @@ class LoadBalancingPolicy(base.Policy):
                 count = len(candidates)
             elif action.action == consts.CLUSTER_RESIZE:
                 # Calculate deletion count based on action input
-                db_cluster = db_api.cluster_get(action.context, cluster_id)
+                db_cluster = co.Cluster.get(action.context, cluster_id)
                 scaleutils.parse_resize_params(action, db_cluster)
                 if 'deletion' not in action.data:
                     return []
@@ -417,7 +417,7 @@ class LoadBalancingPolicy(base.Policy):
         if len(candidates) == 0:
             return
 
-        db_cluster = db_api.cluster_get(action.context, cluster_id)
+        db_cluster = co.Cluster.get(action.context, cluster_id)
         params = self._build_conn_params(db_cluster)
         lb_driver = driver_base.SenlinDriver().loadbalancing(params)
         cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
@@ -428,7 +428,7 @@ class LoadBalancingPolicy(base.Policy):
 
         # Remove nodes that will be deleted from lb pool
         for node_id in candidates:
-            node = node_mod.Node.load(action.context, node_id=node_id)
+            node = nm.Node.load(action.context, node_id=node_id)
             member_id = node.data.get('lb_member', None)
             if member_id is None:
                 LOG.warning(_LW('Node %(n)s not found in lb pool %(p)s.'),
@@ -463,7 +463,7 @@ class LoadBalancingPolicy(base.Policy):
         if len(nodes_added) == 0:
             return
 
-        db_cluster = db_api.cluster_get(action.context, cluster_id)
+        db_cluster = co.Cluster.get(action.context, cluster_id)
         params = self._build_conn_params(db_cluster)
         lb_driver = driver_base.SenlinDriver().loadbalancing(params)
         cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
@@ -476,7 +476,7 @@ class LoadBalancingPolicy(base.Policy):
 
         # Add new nodes to lb pool
         for node_id in nodes_added:
-            node = node_mod.Node.load(action.context, node_id=node_id)
+            node = nm.Node.load(action.context, node_id=node_id)
             member_id = node.data.get('lb_member', None)
             if member_id:
                 LOG.warning(_LW('Node %(n)s already in lb pool %(p)s.'),

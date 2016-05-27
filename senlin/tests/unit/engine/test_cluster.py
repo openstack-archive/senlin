@@ -16,11 +16,12 @@ import six
 
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
-from senlin.engine import cluster as clusterm
+from senlin.engine import cluster as cb
 from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import node as node_mod
-from senlin.policies import base as policy_base
-from senlin.profiles import base as profile_base
+from senlin.objects import cluster as co
+from senlin.policies import base as pcb
+from senlin.profiles import base as pfb
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -32,7 +33,7 @@ class TestCluster(base.SenlinTestCase):
         self.context = utils.dummy_context(project='cluster_test_project')
 
     def test_init(self):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
 
         self.assertIsNone(cluster.id)
         self.assertEqual('test-cluster', cluster.name)
@@ -63,19 +64,19 @@ class TestCluster(base.SenlinTestCase):
             'max_size': None,
             'metadata': None
         }
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID', **kwargs)
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID', **kwargs)
         self.assertEqual(0, cluster.min_size)
         self.assertEqual(-1, cluster.max_size)
         self.assertEqual({}, cluster.metadata)
 
-    @mock.patch.object(clusterm.Cluster, '_load_runtime_data')
+    @mock.patch.object(cb.Cluster, '_load_runtime_data')
     def test_init_with_context(self, mock_load):
-        clusterm.Cluster('test-cluster', 0, 'PROFILE_ID', context=self.context)
+        cb.Cluster('test-cluster', 0, 'PROFILE_ID', context=self.context)
         mock_load.assert_called_once_with(self.context)
 
     @mock.patch.object(db_api, 'cluster_policy_get_all')
-    @mock.patch.object(policy_base.Policy, 'load')
-    @mock.patch.object(profile_base.Profile, 'load')
+    @mock.patch.object(pcb.Policy, 'load')
+    @mock.patch.object(pfb.Profile, 'load')
     @mock.patch.object(node_mod.Node, 'load_all')
     def test__load_runtime_data(self, mock_nodes, mock_profile, mock_policy,
                                 mock_pb):
@@ -90,7 +91,7 @@ class TestCluster(base.SenlinTestCase):
         x_node_2 = mock.Mock()
         mock_nodes.return_value = [x_node_1, x_node_2]
 
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         cluster.id = 'FAKE_CLUSTER'
 
         cluster._load_runtime_data(self.context)
@@ -110,7 +111,7 @@ class TestCluster(base.SenlinTestCase):
                                            cluster_id='FAKE_CLUSTER')
 
     def test__load_runtime_data_id_is_none(self):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
 
         cluster._load_runtime_data(self.context)
 
@@ -119,9 +120,9 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual([], cluster.rt['policies'])
 
     def test_store_for_create(self):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID',
-                                   user=self.context.user,
-                                   project=self.context.project)
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID',
+                             user=self.context.user,
+                             project=self.context.project)
         mock_load = self.patchobject(cluster, '_load_runtime_data')
         self.assertIsNone(cluster.id)
 
@@ -129,7 +130,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertIsNotNone(cluster_id)
         mock_load.assert_called_once_with(self.context)
 
-        result = db_api.cluster_get(self.context, cluster_id=cluster_id)
+        result = co.Cluster.get(self.context, cluster_id=cluster_id)
 
         self.assertIsNotNone(result)
         self.assertEqual('test-cluster', result.name)
@@ -150,12 +151,12 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual('INIT', result.status)
         self.assertEqual('Initializing', result.status_reason)
         self.assertEqual({}, result.data)
-        self.assertEqual({}, result.meta_data)
+        self.assertEqual({}, result.metadata)
 
     def test_store_for_update(self):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID',
-                                   user=self.context.user,
-                                   project=self.context.project)
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID',
+                             user=self.context.user,
+                             project=self.context.project)
         mock_load = self.patchobject(cluster, '_load_runtime_data')
         self.assertIsNone(cluster.id)
 
@@ -177,7 +178,7 @@ class TestCluster(base.SenlinTestCase):
         new_id = cluster.store(self.context)
         self.assertEqual(cluster_id, new_id)
 
-        result = db_api.cluster_get(self.context, cluster_id)
+        result = co.Cluster.get(self.context, cluster_id)
         self.assertIsNotNone(result)
 
         self.assertEqual('test-cluster-1', result.name)
@@ -190,43 +191,43 @@ class TestCluster(base.SenlinTestCase):
 
         self.assertEqual(120, result.timeout)
         self.assertEqual({'FOO': 'BAR'}, result.data)
-        self.assertEqual({'KEY': 'VALUE'}, result.meta_data)
+        self.assertEqual({'KEY': 'VALUE'}, result.metadata)
 
-    @mock.patch.object(clusterm.Cluster, '_from_db_record')
+    @mock.patch.object(cb.Cluster, '_from_object')
     def test_load_via_db_object(self, mock_init):
         x_obj = mock.Mock()
 
-        result = clusterm.Cluster.load(self.context, cluster=x_obj)
+        result = cb.Cluster.load(self.context, dbcluster=x_obj)
 
         self.assertEqual(mock_init.return_value, result)
         mock_init.assert_called_once_with(self.context, x_obj)
 
-    @mock.patch.object(db_api, 'cluster_get')
-    @mock.patch.object(clusterm.Cluster, '_from_db_record')
+    @mock.patch.object(co.Cluster, 'get')
+    @mock.patch.object(cb.Cluster, '_from_object')
     def test_load_via_cluster_id(self, mock_init, mock_get):
         x_obj = mock.Mock()
         mock_get.return_value = x_obj
 
-        result = clusterm.Cluster.load(self.context, cluster_id='FAKE_ID')
+        result = cb.Cluster.load(self.context, cluster_id='FAKE_ID')
 
         self.assertEqual(mock_init.return_value, result)
         mock_get.assert_called_once_with(self.context, 'FAKE_ID',
                                          project_safe=True)
         mock_init.assert_called_once_with(self.context, x_obj)
 
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     def test_load_not_found(self, mock_get):
         mock_get.return_value = None
         ex = self.assertRaises(exception.ClusterNotFound,
-                               clusterm.Cluster.load,
+                               cb.Cluster.load,
                                self.context, cluster_id='FAKE_CLUSTER')
         self.assertEqual('The cluster (FAKE_CLUSTER) could not be found.',
                          six.text_type(ex))
         mock_get.assert_called_once_with(self.context, 'FAKE_CLUSTER',
                                          project_safe=True)
 
-    @mock.patch.object(clusterm.Cluster, '_from_db_record')
-    @mock.patch.object(db_api, 'cluster_get_all')
+    @mock.patch.object(cb.Cluster, '_from_object')
+    @mock.patch.object(co.Cluster, 'get_all')
     def test_load_all(self, mock_get, mock_init):
         x_obj_1 = mock.Mock()
         x_obj_2 = mock.Mock()
@@ -236,7 +237,7 @@ class TestCluster(base.SenlinTestCase):
         x_cluster_2 = mock.Mock()
         mock_init.side_effect = [x_cluster_1, x_cluster_2]
 
-        result = clusterm.Cluster.load_all(self.context)
+        result = cb.Cluster.load_all(self.context)
 
         self.assertEqual([x_cluster_1, x_cluster_2], [c for c in result])
         mock_get.assert_called_once_with(self.context,
@@ -247,7 +248,7 @@ class TestCluster(base.SenlinTestCase):
             mock.call(self.context, x_obj_1),
             mock.call(self.context, x_obj_2)])
 
-    @mock.patch.object(clusterm.Cluster, '_load_runtime_data')
+    @mock.patch.object(cb.Cluster, '_load_runtime_data')
     def test_to_dict(self, mock_load):
         values = {
             'id': 'CLUSTER123',
@@ -259,7 +260,7 @@ class TestCluster(base.SenlinTestCase):
             'project': self.context.project,
         }
 
-        cluster = db_api.cluster_create(self.context, values)
+        cluster = co.Cluster.create(self.context, values)
 
         expected = {
             'id': cluster.id,
@@ -284,13 +285,13 @@ class TestCluster(base.SenlinTestCase):
             'profile_name': None,
         }
 
-        result = clusterm.Cluster.load(self.context, cluster_id='CLUSTER123')
+        result = cb.Cluster.load(self.context, cluster_id='CLUSTER123')
         self.assertEqual(expected, result.to_dict())
 
-    @mock.patch.object(db_api, 'cluster_update')
+    @mock.patch.object(co.Cluster, 'update')
     def test_set_status_for_create(self, mock_update):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID',
-                                   id='FAKE_ID', status='CREATING')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID',
+                             id='FAKE_ID', status='CREATING')
 
         cluster.set_status(self.context, cluster.ACTIVE, 'Cluster created')
 
@@ -308,10 +309,10 @@ class TestCluster(base.SenlinTestCase):
             }
         )
 
-    @mock.patch.object(db_api, 'cluster_update')
+    @mock.patch.object(co.Cluster, 'update')
     def test_set_status_for_update(self, mock_update):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID',
-                                   id='FAKE_ID', status='UPDATING')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID',
+                             id='FAKE_ID', status='UPDATING')
 
         cluster.set_status(self.context, cluster.ACTIVE, 'Cluster updated')
 
@@ -319,10 +320,10 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual('Cluster updated', cluster.status_reason)
         self.assertIsNotNone(cluster.updated_at)
 
-    @mock.patch.object(db_api, 'cluster_update')
+    @mock.patch.object(co.Cluster, 'update')
     def test_set_status_for_resize(self, mock_update):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID',
-                                   id='FAKE_ID', status='RESIZING')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID',
+                             id='FAKE_ID', status='RESIZING')
 
         cluster.set_status(self.context, cluster.ACTIVE, 'Cluster resized')
 
@@ -330,14 +331,14 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual('Cluster resized', cluster.status_reason)
         self.assertIsNotNone(cluster.updated_at)
 
-    @mock.patch.object(profile_base.Profile, 'load')
-    @mock.patch.object(db_api, 'cluster_update')
+    @mock.patch.object(pfb.Profile, 'load')
+    @mock.patch.object(co.Cluster, 'update')
     def test_set_status_for_update_with_profile(self, mock_update,
                                                 mock_load):
         x_profile = mock.Mock()
         mock_load.return_value = x_profile
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID',
-                                   id='FAKE_ID', status='UPDATING')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID',
+                             id='FAKE_ID', status='UPDATING')
 
         cluster.set_status(self.context, cluster.ACTIVE, 'Cluster updated',
                            profile_id='NEW_PROFILE')
@@ -359,11 +360,11 @@ class TestCluster(base.SenlinTestCase):
             }
         )
 
-    @mock.patch.object(db_api, 'cluster_update')
+    @mock.patch.object(co.Cluster, 'update')
     def test_set_status_without_reason(self, mock_update):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID',
-                                   id='FAKE_ID', status='UPDATING',
-                                   status_reason='Update in progress')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID',
+                             id='FAKE_ID', status='UPDATING',
+                             status_reason='Update in progress')
 
         cluster.set_status(self.context, cluster.WARNING)
 
@@ -373,7 +374,7 @@ class TestCluster(base.SenlinTestCase):
                                             {'status': cluster.WARNING})
 
     def test_do_create(self):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         mock_status = self.patchobject(cluster, 'set_status')
 
         res = cluster.do_create(self.context)
@@ -383,18 +384,18 @@ class TestCluster(base.SenlinTestCase):
             self.context, cluster.CREATING, reason='Creation in progress')
 
     def test_do_create_wrong_status(self):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         cluster.status = cluster.ACTIVE
 
         res = cluster.do_create(self.context)
 
         self.assertFalse(res)
 
-    @mock.patch.object(db_api, 'cluster_delete')
+    @mock.patch.object(co.Cluster, 'delete')
     def test_do_delete(self, mock_delete):
         mock_delete.return_value = None
 
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         cluster.id = 'FAKE_ID'
 
         res = cluster.do_delete(self.context)
@@ -403,7 +404,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertTrue(res)
 
     def test_do_update(self):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         mock_status = self.patchobject(cluster, 'set_status')
 
         res = cluster.do_update(self.context)
@@ -413,7 +414,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertTrue(res)
 
     def test_do_check(self):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         mock_status = self.patchobject(cluster, 'set_status')
 
         res = cluster.do_check(self.context)
@@ -423,7 +424,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertTrue(res)
 
     def test_do_recover(self):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         mock_status = self.patchobject(cluster, 'set_status')
 
         res = cluster.do_recover(self.context)
@@ -433,7 +434,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertTrue(res)
 
     def test_nodes_property(self):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         self.assertEqual([], cluster.nodes)
 
         # with nodes
@@ -444,7 +445,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual([node1, node2], cluster.nodes)
 
     def test_policies_property(self):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         self.assertEqual([], cluster.policies)
 
         # with policies attached
@@ -454,7 +455,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual([policy1, policy2], cluster.policies)
 
     def test_add_node(self):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         self.assertEqual([], cluster.nodes)
 
         # add one node
@@ -468,7 +469,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual([node, another_node], cluster.nodes)
 
     def test_remove_node(self):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         self.assertEqual([], cluster.nodes)
 
         # remove from empty list should be okay
@@ -505,10 +506,10 @@ class TestCluster(base.SenlinTestCase):
         self.assertIsNone(res)
         self.assertEqual([], cluster.nodes)
 
-    @mock.patch.object(policy_base.Policy, 'load')
+    @mock.patch.object(pcb.Policy, 'load')
     @mock.patch.object(cp_mod, 'ClusterPolicy')
     def test_attach_policy(self, mock_cp, mock_load):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         cluster.id = 'FAKE_CLUSTER'
 
         policy = mock.Mock()
@@ -530,9 +531,9 @@ class TestCluster(base.SenlinTestCase):
         binding.store.assert_called_once_with(self.context)
         self.assertIn(policy, cluster.policies)
 
-    @mock.patch.object(policy_base.Policy, 'load')
+    @mock.patch.object(pcb.Policy, 'load')
     def test_attach_policy_already_attached(self, mock_load):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
 
         existing = mock.Mock()
         existing.id = 'FAKE_POLICY_1'
@@ -547,9 +548,9 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual('Policy already attached.', reason)
         mock_load.assert_called_once_with(self.context, 'FAKE_POLICY_1')
 
-    @mock.patch.object(policy_base.Policy, 'load')
+    @mock.patch.object(pcb.Policy, 'load')
     def test_attach_policy_type_conflict(self, mock_load):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         cluster.id = 'FAKE_CLUSTER'
 
         existing = mock.Mock()
@@ -575,9 +576,9 @@ class TestCluster(base.SenlinTestCase):
         mock_load.assert_called_once_with(self.context, 'PLCY1')
 
     @mock.patch.object(cp_mod, 'ClusterPolicy')
-    @mock.patch.object(policy_base.Policy, 'load')
+    @mock.patch.object(pcb.Policy, 'load')
     def test_attach_policy_type_conflict_but_ok(self, mock_load, mock_cp):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
 
         existing = mock.Mock()
         existing.id = 'FAKE_2'
@@ -610,9 +611,9 @@ class TestCluster(base.SenlinTestCase):
         binding.store.assert_called_once_with(self.context)
         self.assertIn(policy, cluster.policies)
 
-    @mock.patch.object(policy_base.Policy, 'load')
+    @mock.patch.object(pcb.Policy, 'load')
     def test_attach_policy_failed_do_attach(self, mock_load):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
 
         policy = mock.Mock()
         policy.attach.return_value = (False, 'Bad things happened.')
@@ -627,9 +628,9 @@ class TestCluster(base.SenlinTestCase):
         mock_load.assert_called_once_with(self.context, 'FAKE_1')
 
     @mock.patch.object(db_api, 'cluster_policy_detach')
-    @mock.patch.object(policy_base.Policy, 'load')
+    @mock.patch.object(pcb.Policy, 'load')
     def test_detach_policy(self, mock_load, mock_detach):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         cluster.id = 'FAKE_CLUSTER'
 
         policy = mock.Mock()
@@ -651,7 +652,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual([], cluster.rt['policies'])
 
     def test_detach_policy_not_attached(self):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         cluster.rt['policies'] = []
 
         res, reason = cluster.detach_policy(self.context, 'FAKE_POLICY')
@@ -659,9 +660,9 @@ class TestCluster(base.SenlinTestCase):
         self.assertFalse(res)
         self.assertEqual('Policy not attached.', reason)
 
-    @mock.patch.object(policy_base.Policy, 'load')
+    @mock.patch.object(pcb.Policy, 'load')
     def test_detach_policy_failed_detach(self, mock_load):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         policy = mock.Mock()
         policy.id = 'FAKE_POLICY'
         policy.detach.return_value = False, 'Things went wrong.'
@@ -677,7 +678,7 @@ class TestCluster(base.SenlinTestCase):
 
     @mock.patch.object(db_api, 'cluster_policy_update')
     def test_update_policy(self, mock_update):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         cluster.id = 'FAKE_CLUSTER'
 
         existing = mock.Mock()
@@ -694,7 +695,7 @@ class TestCluster(base.SenlinTestCase):
             self.context, 'FAKE_CLUSTER', 'FAKE_POLICY', {'enabled': False})
 
     def test_update_policy_not_attached(self):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         cluster.rt['policies'] = []
 
         # do it
@@ -705,7 +706,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual('Policy not attached.', reason)
 
     def test_update_policy_no_update_needed(self):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         existing = mock.Mock()
         existing.id = 'FAKE_POLICY'
         cluster.rt['policies'] = [existing]
@@ -719,7 +720,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual('No update is needed.', reason)
 
     def test_get_region_distribution(self):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
 
         node1 = mock.Mock()
         node1.data = {'placement': {'region_name': 'R1'}}
@@ -743,7 +744,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual(0, result['R3'])
 
     def test_get_zone_distribution(self):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         node1 = mock.Mock()
         node1.data = {}
         node1.get_details.return_value = {
@@ -775,7 +776,7 @@ class TestCluster(base.SenlinTestCase):
         node1.get_details.assert_called_once_with(self.context)
 
     def test_nodes_by_region(self):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         node1 = mock.Mock(data={'placement': {'region_name': 'R1'}})
         node2 = mock.Mock(data={'placement': {'region_name': 'R2'}})
         node3 = mock.Mock(data={'key': 'value'})
@@ -797,7 +798,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual(0, len(result))
 
     def test_nodes_by_zone(self):
-        cluster = clusterm.Cluster('test-cluster', 0, 'PROFILE_ID')
+        cluster = cb.Cluster('test-cluster', 0, 'PROFILE_ID')
         node1 = mock.Mock(data={'placement': {'zone': 'AZ1'}})
         node2 = mock.Mock(data={'placement': {'zone': 'AZ2'}})
         node3 = mock.Mock(data={'key': 'value'})

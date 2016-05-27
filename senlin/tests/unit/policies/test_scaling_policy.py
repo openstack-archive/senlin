@@ -15,7 +15,7 @@ from oslo_utils import timeutils
 import six
 
 from senlin.common import consts
-from senlin.db.sqlalchemy import api as db_api
+from senlin.objects import cluster as co
 from senlin.objects import node as no
 from senlin.objects import profile as po
 from senlin.policies import base as pb
@@ -73,7 +73,7 @@ class TestScalingPolicy(base.SenlinTestCase):
             'desired_capacity': 3,
         }
 
-        return db_api.cluster_create(self.context, values)
+        return co.Cluster.create(self.context, values)
 
     def _create_nodes(self, cluster_id, profile_id, count):
         nodes = []

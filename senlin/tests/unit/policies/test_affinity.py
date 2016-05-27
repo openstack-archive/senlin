@@ -17,6 +17,7 @@ from senlin.common import context
 from senlin.common import exception
 from senlin.common import scaleutils
 from senlin.db import api as db_api
+from senlin.objects import cluster as co
 from senlin.policies import affinity_policy as ap
 from senlin.policies import base as pb
 from senlin.tests.unit.common import base
@@ -538,7 +539,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
             x_action.data)
         x_action.store.assert_called_once_with(x_action.context)
 
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     @mock.patch.object(db_api, 'cluster_policy_get')
     def test_pre_op_use_resize_params(self, mock_cp, mock_cluster):
         def fake_parse_func(action, cluster):
@@ -600,7 +601,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
             x_action.data)
         x_action.store.assert_called_once_with(x_action.context)
 
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     @mock.patch.object(db_api, 'cluster_policy_get')
     def test_pre_op_resize_shrinking(self, mock_cp, mock_cluster):
         def fake_parse_func(action, cluster):
@@ -678,7 +679,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
             x_action.data)
         x_action.store.assert_called_once_with(x_action.context)
 
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     @mock.patch.object(db_api, 'cluster_policy_get')
     def test_pre_op_with_drs_enabled(self, mock_cp, mock_cluster):
         self.spec['properties']['enable_drs_extension'] = True
@@ -743,7 +744,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
             x_action.data)
         x_action.store.assert_called_once_with(x_action.context)
 
-    @mock.patch.object(db_api, 'cluster_get')
+    @mock.patch.object(co.Cluster, 'get')
     @mock.patch.object(db_api, 'cluster_policy_get')
     def test_pre_op_with_drs_enabled_no_match(self, mock_cp, mock_cluster):
         self.spec['properties']['enable_drs_extension'] = True
