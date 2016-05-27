@@ -18,8 +18,8 @@ import time
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.common.i18n import _LI
-from senlin.db import api as db_api
 from senlin.engine import scheduler
+from senlin.objects import action as ao
 from senlin.objects import cluster_lock as cl_obj
 from senlin.objects import node_lock as nl_obj
 from senlin.objects import service as service_obj
@@ -89,7 +89,7 @@ def cluster_lock_acquire(context, cluster_id, action_id, engine=None,
         return action_id in owners
 
     # Will reach here only because scope == CLUSTER_SCOPE
-    action = db_api.action_get(context, owners[0])
+    action = ao.Action.get(context, owners[0])
     if (action and action.owner and action.owner != engine and
             is_engine_dead(context, action.owner)):
         LOG.info(_LI('The cluster %(c)s is locked by dead action %(a)s, '
@@ -98,8 +98,7 @@ def cluster_lock_acquire(context, cluster_id, action_id, engine=None,
             'a': owners[0]
         })
         reason = _('Engine died when executing this action.')
-        db_api.action_mark_failed(context, action.id, time.time(),
-                                  reason=reason)
+        ao.Action.mark_failed(context, action.id, time.time(), reason)
         owners = cl_obj.ClusterLock.steal(cluster_id, action_id)
         return action_id in owners
 
@@ -156,7 +155,7 @@ def node_lock_acquire(context, node_id, action_id, engine=None,
         return action_id == owner
 
     # if this node lock by dead engine
-    action = db_api.action_get(context, owner)
+    action = ao.Action.get(context, owner)
     if (action and action.owner and action.owner != engine and
             is_engine_dead(context, action.owner)):
         LOG.info(_LI('The node %(n)s is locked by dead action %(a)s, '
@@ -165,8 +164,7 @@ def node_lock_acquire(context, node_id, action_id, engine=None,
             'a': owner
         })
         reason = _('Engine died when executing this action.')
-        db_api.action_mark_failed(context, action.id, time.time(),
-                                  reason=reason)
+        ao.Action.mark_failed(context, action.id, time.time(), reason)
         nl_obj.NodeLock.steal(node_id, action_id)
         return True
 

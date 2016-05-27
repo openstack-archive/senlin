@@ -21,9 +21,9 @@ from senlin.common import context as req_context
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
-from senlin.db import api as db_api
 from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import event as EVENT
+from senlin.objects import action as ao
 from senlin.objects import dependency as dobj
 from senlin.policies import base as policy_mod
 
@@ -179,43 +179,43 @@ class Action(object):
         if self.id:
             self.updated_at = timestamp
             values['updated_at'] = timestamp
-            db_api.action_update(context, self.id, values)
+            ao.Action.update(context, self.id, values)
         else:
             self.created_at = timestamp
             values['created_at'] = timestamp
-            action = db_api.action_create(context, values)
+            action = ao.Action.create(context, values)
             self.id = action.id
 
         return self.id
 
     @classmethod
-    def _from_db_record(cls, record):
-        """Construct a action object from database record.
+    def _from_object(cls, obj):
+        """Construct an action from database object.
 
         :param context: the context used for DB operations;
-        :param record: a DB action object that contains all fields.
+        :param obj: a DB action object that contains all fields.
         :return: An `Action` object deserialized from the DB action object.
         """
-        context = req_context.RequestContext.from_dict(record.context)
+        context = req_context.RequestContext.from_dict(obj.context)
         kwargs = {
-            'id': record.id,
-            'name': record.name,
-            'cause': record.cause,
-            'owner': record.owner,
-            'interval': record.interval,
-            'start_time': record.start_time,
-            'end_time': record.end_time,
-            'timeout': record.timeout,
-            'status': record.status,
-            'status_reason': record.status_reason,
-            'inputs': record.inputs or {},
-            'outputs': record.outputs or {},
-            'created_at': record.created_at,
-            'updated_at': record.updated_at,
-            'data': record.data,
+            'id': obj.id,
+            'name': obj.name,
+            'cause': obj.cause,
+            'owner': obj.owner,
+            'interval': obj.interval,
+            'start_time': obj.start_time,
+            'end_time': obj.end_time,
+            'timeout': obj.timeout,
+            'status': obj.status,
+            'status_reason': obj.status_reason,
+            'inputs': obj.inputs or {},
+            'outputs': obj.outputs or {},
+            'created_at': obj.created_at,
+            'updated_at': obj.updated_at,
+            'data': obj.data,
         }
 
-        return cls(record.target, record.action, context, **kwargs)
+        return cls(obj.target, obj.action, context, **kwargs)
 
     @classmethod
     def load(cls, context, action_id=None, db_action=None):
@@ -227,11 +227,11 @@ class Action(object):
         :return: A `Action` object instance.
         """
         if db_action is None:
-            db_action = db_api.action_get(context, action_id)
+            db_action = ao.Action.get(context, action_id)
             if db_action is None:
                 raise exception.ActionNotFound(action=action_id)
 
-        return cls._from_db_record(db_action)
+        return cls._from_object(db_action)
 
     @classmethod
     def load_all(cls, context, filters=None, limit=None, marker=None,
@@ -251,12 +251,12 @@ class Action(object):
         :return: A list of `Action` objects.
         """
 
-        records = db_api.action_get_all(context, filters=filters, sort=sort,
-                                        limit=limit, marker=marker,
-                                        project_safe=project_safe)
+        records = ao.Action.get_all(context, filters=filters, sort=sort,
+                                    limit=limit, marker=marker,
+                                    project_safe=project_safe)
 
         for record in records:
-            yield cls._from_db_record(record)
+            yield cls._from_object(record)
 
     @classmethod
     def create(cls, context, target, action, **kwargs):
@@ -288,7 +288,7 @@ class Action(object):
         :param action_id: The UUID of the target action to be deleted.
         :return: Nothing.
         """
-        db_api.action_delete(context, action_id)
+        ao.Action.delete(context, action_id)
 
     def signal(self, cmd):
         '''Send a signal to the action.'''
@@ -313,7 +313,7 @@ class Action(object):
             return
 
         # TODO(Yanyan Hu): use DB session here
-        db_api.action_signal(self.context, self.id, cmd)
+        ao.Action.signal(self.context, self.id, cmd)
 
     def execute(self, **kwargs):
         '''Execute the action.
@@ -332,27 +332,27 @@ class Action(object):
 
         if result == self.RES_OK:
             status = self.SUCCEEDED
-            db_api.action_mark_succeeded(self.context, self.id, timestamp)
+            ao.Action.mark_succeeded(self.context, self.id, timestamp)
 
         elif result == self.RES_ERROR:
             status = self.FAILED
-            db_api.action_mark_failed(self.context, self.id, timestamp,
-                                      reason=reason or 'ERROR')
+            ao.Action.mark_failed(self.context, self.id, timestamp,
+                                  reason or 'ERROR')
 
         elif result == self.RES_TIMEOUT:
             status = self.FAILED
-            db_api.action_mark_failed(self.context, self.id, timestamp,
-                                      reason=reason or 'TIMEOUT')
+            ao.Action.mark_failed(self.context, self.id, timestamp,
+                                  reason or 'TIMEOUT')
 
         elif result == self.RES_CANCEL:
             status = self.CANCELLED
-            db_api.action_mark_cancelled(self.context, self.id, timestamp)
+            ao.Action.mark_cancelled(self.context, self.id, timestamp)
 
         else:  # result == self.RES_RETRY:
             status = self.READY
             # Action failed at the moment, but can be retried
             # We abandon it and then notify other dispatchers to execute it
-            db_api.action_abandon(self.context, self.id)
+            ao.Action.abandon(self.context, self.id)
 
         if status == self.SUCCEEDED:
             EVENT.info(self.context, self, self.action, status, reason)
@@ -366,7 +366,7 @@ class Action(object):
 
     def get_status(self):
         timestamp = wallclock()
-        status = db_api.action_check_status(self.context, self.id, timestamp)
+        status = ao.Action.check_status(self.context, self.id, timestamp)
         self.status = status
         return status
 
@@ -380,7 +380,7 @@ class Action(object):
             EVENT.debug(self.context, self, self.action, 'TIMEOUT')
             return self.RES_TIMEOUT
 
-        result = db_api.action_signal_query(self.context, self.id)
+        result = ao.Action.signal_query(self.context, self.id)
         return result
 
     def is_cancelled(self):

@@ -16,9 +16,9 @@ from oslo_utils import uuidutils
 import six
 
 from senlin.common import exception as exc
-from senlin.db import api as db_api
 from senlin.engine.actions import base as action_base
 from senlin.engine import service
+from senlin.objects import action as ao
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -31,7 +31,7 @@ class ActionTest(base.SenlinTestCase):
         self.eng = service.EngineService('host-a', 'topic-a')
         self.eng.init_tgm()
 
-    @mock.patch.object(db_api, 'action_get')
+    @mock.patch.object(ao.Action, 'get')
     def test_action_find_by_uuid(self, mock_get):
         x_action = mock.Mock()
         mock_get.return_value = x_action
@@ -42,8 +42,8 @@ class ActionTest(base.SenlinTestCase):
         self.assertEqual(x_action, result)
         mock_get.assert_called_once_with(self.ctx, aid, project_safe=True)
 
-    @mock.patch.object(db_api, 'action_get_by_name')
-    @mock.patch.object(db_api, 'action_get')
+    @mock.patch.object(ao.Action, 'get_by_name')
+    @mock.patch.object(ao.Action, 'get')
     def test_action_find_by_uuid_as_name(self, mock_get, mock_get_name):
         x_action = mock.Mock()
         mock_get_name.return_value = x_action
@@ -57,7 +57,7 @@ class ActionTest(base.SenlinTestCase):
         mock_get_name.assert_called_once_with(self.ctx, aid,
                                               project_safe=False)
 
-    @mock.patch.object(db_api, 'action_get_by_name')
+    @mock.patch.object(ao.Action, 'get_by_name')
     def test_action_find_by_name(self, mock_get_name):
         x_action = mock.Mock()
         mock_get_name.return_value = x_action
@@ -68,8 +68,8 @@ class ActionTest(base.SenlinTestCase):
         self.assertEqual(x_action, result)
         mock_get_name.assert_called_once_with(self.ctx, aid, project_safe=True)
 
-    @mock.patch.object(db_api, 'action_get_by_short_id')
-    @mock.patch.object(db_api, 'action_get_by_name')
+    @mock.patch.object(ao.Action, 'get_by_short_id')
+    @mock.patch.object(ao.Action, 'get_by_name')
     def test_action_find_by_shortid(self, mock_get_name, mock_get_shortid):
         x_action = mock.Mock()
         mock_get_shortid.return_value = x_action
@@ -84,7 +84,7 @@ class ActionTest(base.SenlinTestCase):
         mock_get_shortid.assert_called_once_with(self.ctx, aid,
                                                  project_safe=False)
 
-    @mock.patch.object(db_api, 'action_get_by_name')
+    @mock.patch.object(ao.Action, 'get_by_name')
     def test_action_find_not_found(self, mock_get_name):
         mock_get_name.return_value = None
 

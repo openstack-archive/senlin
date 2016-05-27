@@ -13,7 +13,6 @@
 from oslo_utils import timeutils
 
 from senlin.common import exception
-from senlin.db import api as db_api
 from senlin.objects import cluster_policy as cpo
 
 
@@ -47,11 +46,11 @@ class ClusterPolicy(object):
         }
 
         if self.id:
-            db_api.cluster_policy_update(context, self.cluster_id,
-                                         self.policy_id, values)
+            cpo.ClusterPolicy.update(context, self.cluster_id, self.policy_id,
+                                     values)
         else:
-            binding = db_api.cluster_policy_attach(context, self.cluster_id,
-                                                   self.policy_id, values)
+            binding = cpo.ClusterPolicy.create(context, self.cluster_id,
+                                               self.policy_id, values)
             self.cluster_name = binding.cluster.name
             self.policy_name = binding.policy.name
             self.policy_type = binding.policy.type

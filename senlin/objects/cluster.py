@@ -82,7 +82,8 @@ class Cluster(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
 
     @classmethod
     def get_all(cls, context, **kwargs):
-        return db_api.cluster_get_all(context, **kwargs)
+        objs = db_api.cluster_get_all(context, **kwargs)
+        return [cls._from_db_object(context, cls(), obj) for obj in objs]
 
     @classmethod
     def next_index(cls, context, cluster_id):

@@ -21,7 +21,6 @@ from senlin.common.i18n import _
 from senlin.common.i18n import _LI
 from senlin.common import scaleutils
 from senlin.common import utils
-from senlin.db import api as db_api
 from senlin.engine.actions import base
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import dispatcher
@@ -29,6 +28,7 @@ from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock
+from senlin.objects import action as ao
 from senlin.objects import cluster as co
 from senlin.objects import dependency as dobj
 from senlin.objects import node as no
@@ -153,8 +153,8 @@ class ClusterAction(base.Action):
             # Build dependency and make the new action ready
             dobj.Dependency.create(self.context, [a for a in child], self.id)
             for cid in child:
-                db_api.action_update(self.context, cid,
-                                     {'status': base.Action.READY})
+                ao.Action.update(self.context, cid,
+                                 {'status': base.Action.READY})
             dispatcher.start_action()
 
             # Wait for cluster creation to complete
@@ -246,8 +246,8 @@ class ClusterAction(base.Action):
         if child:
             dobj.Dependency.create(self.context, [c for c in child], self.id)
             for cid in child:
-                db_api.action_update(self.context, cid,
-                                     {'status': base.Action.READY})
+                ao.Action.update(self.context, cid,
+                                 {'status': base.Action.READY})
             dispatcher.start_action()
 
             result, new_reason = self._wait_for_dependents()
@@ -284,8 +284,8 @@ class ClusterAction(base.Action):
             dobj.Dependency.create(self.context, [c for c in child], self.id)
             for cid in child:
                 # Build dependency and make the new action ready
-                db_api.action_update(self.context, cid,
-                                     {'status': base.Action.READY})
+                ao.Action.update(self.context, cid,
+                                 {'status': base.Action.READY})
             dispatcher.start_action()
 
             res, reason = self._wait_for_dependents()
@@ -381,8 +381,8 @@ class ClusterAction(base.Action):
         if child:
             dobj.Dependency.create(self.context, [c for c in child], self.id)
             for cid in child:
-                db_api.action_update(self.context, cid,
-                                     {'status': base.Action.READY})
+                ao.Action.update(self.context, cid,
+                                 {'status': base.Action.READY})
             dispatcher.start_action()
 
         # Wait for dependent action if any
@@ -494,8 +494,8 @@ class ClusterAction(base.Action):
         if child:
             dobj.Dependency.create(self.context, [c for c in child], self.id)
             for cid in child:
-                db_api.action_update(self.context, cid,
-                                     {'status': base.Action.READY})
+                ao.Action.update(self.context, cid,
+                                 {'status': base.Action.READY})
             dispatcher.start_action()
 
             # Wait for dependent action if any
@@ -548,7 +548,7 @@ class ClusterAction(base.Action):
             dobj.Dependency.create(self.context, [c for c in children],
                                    self.id)
             for cid in children:
-                db_api.action_update(self.context, cid, {'status': 'READY'})
+                ao.Action.update(self.context, cid, {'status': 'READY'})
             dispatcher.start_action()
 
             # Wait for dependent action if any

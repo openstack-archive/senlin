@@ -14,9 +14,9 @@ import datetime
 import mock
 from oslo_config import cfg
 
-from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock as lockm
+from senlin.objects import action as ao
 from senlin.objects import cluster_lock as clo
 from senlin.objects import node_lock as nlo
 from senlin.objects import service as service_obj
@@ -31,9 +31,8 @@ class SenlinLockTest(base.SenlinTestCase):
 
         self.ctx = utils.dummy_context()
 
-        self.stub_get = self.patchobject(
-            db_api, 'action_get',
-            return_value=mock.Mock(owner='ENGINE', id='ACTION_ABC'))
+        ret = mock.Mock(owner='ENGINE', id='ACTION_ABC')
+        self.stub_get = self.patchobject(ao.Action, 'get', return_value=ret)
 
     @mock.patch.object(clo.ClusterLock, "acquire")
     def test_cluster_lock_acquire_already_owner(self, mock_acquire):
@@ -47,7 +46,7 @@ class SenlinLockTest(base.SenlinTestCase):
 
     @mock.patch.object(lockm, 'is_engine_dead')
     @mock.patch.object(scheduler, 'sleep')
-    @mock.patch.object(db_api, 'action_mark_failed')
+    @mock.patch.object(ao.Action, 'mark_failed')
     @mock.patch.object(clo.ClusterLock, "acquire")
     @mock.patch.object(clo.ClusterLock, "steal")
     def test_cluster_lock_acquire_dead_owner(self, mock_steal, mock_acquire,
@@ -170,7 +169,7 @@ class SenlinLockTest(base.SenlinTestCase):
         mock_acquire.assert_called_once_with('NODE_A', 'ACTION_XYZ')
 
     @mock.patch.object(lockm, 'is_engine_dead')
-    @mock.patch.object(db_api, 'action_mark_failed')
+    @mock.patch.object(ao.Action, 'mark_failed')
     @mock.patch.object(nlo.NodeLock, "acquire")
     @mock.patch.object(nlo.NodeLock, "steal")
     def test_node_lock_acquire_dead_owner(self, mock_steal, mock_acquire,
@@ -243,7 +242,7 @@ class SenlinLockTest(base.SenlinTestCase):
         mock_acquire.assert_has_calls(acquire_calls * 3)
         mock_steal.assert_called_once_with('NODE_A', 'ACTION_XY')
 
-    @mock.patch.object(db_api, 'action_get')
+    @mock.patch.object(ao.Action, 'get')
     @mock.patch.object(scheduler, 'sleep')
     @mock.patch.object(nlo.NodeLock, "acquire")
     @mock.patch.object(nlo.NodeLock, "steal")

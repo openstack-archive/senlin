@@ -19,8 +19,8 @@ from oslo_service import threadgroup
 
 from senlin.common import context
 from senlin.common.i18n import _
-from senlin.db import api as db_api
 from senlin.engine.actions import base as action_mod
+from senlin.objects import action as ao
 
 LOG = logging.getLogger(__name__)
 
@@ -84,8 +84,8 @@ class ThreadGroupManager(object):
         actions_launched = 0
         if action_id is not None:
             timestamp = wallclock()
-            action = db_api.action_acquire(self.db_session, action_id,
-                                           worker_id, timestamp)
+            action = ao.Action.acquire(self.db_session, action_id, worker_id,
+                                       timestamp)
             if action:
                 launch(action.id)
                 actions_launched += 1
@@ -94,9 +94,8 @@ class ThreadGroupManager(object):
         batch_interval = cfg.CONF.batch_interval
         while True:
             timestamp = wallclock()
-            action = db_api.action_acquire_1st_ready(self.db_session,
-                                                     worker_id,
-                                                     timestamp)
+            action = ao.Action.acquire_1st_ready(self.db_session, worker_id,
+                                                 timestamp)
             if action:
                 if batch_size > 0 and 'NODE' in action.action:
                     if actions_launched < batch_size:

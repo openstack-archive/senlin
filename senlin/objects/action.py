@@ -27,7 +27,7 @@ class Action(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'created_at': fields.DateTimeField(),
         'updated_at': fields.DateTimeField(nullable=True),
         'name': fields.StringField(),
-        'context': fields.DictOfStringField(),
+        'context': fields.DictOfStringsField(),
         'target': fields.UUIDField(),
         'action': fields.StringField(),
         'cause': fields.StringField(),
@@ -39,9 +39,9 @@ class Action(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'status': fields.StringField(),
         'status_reason': fields.StringField(),
         'control': fields.StringField(nullable=True),
-        'inputs': fields.DictOfStringField(nullable=True),
-        'outputs': fields.DictOfStringField(nullable=True),
-        'data': fields.DictOfStringField(nullable=True),
+        'inputs': fields.DictOfStringsField(nullable=True),
+        'outputs': fields.DictOfStringsField(nullable=True),
+        'data': fields.DictOfStringsField(nullable=True),
         'user': fields.StringField(),
         'project': fields.StringField(),
         'domain': fields.StringField(),
@@ -49,6 +49,8 @@ class Action(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
 
     @staticmethod
     def _from_db_object(context, action, db_obj):
+        if db_obj is None:
+            return None
         for field in action.fields:
             action[field] = db_obj[field]
 
@@ -79,11 +81,13 @@ class Action(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
 
     @classmethod
     def get_all(cls, context, **kwargs):
-        return db_api.action_get_all(context, **kwargs)
+        objs = db_api.action_get_all(context, **kwargs)
+        return [cls._from_db_object(context, cls(), obj) for obj in objs]
 
     @classmethod
     def get_all_by_owner(cls, context, owner):
-        return db_api.action_get_all_by_owner(context, owner)
+        objs = db_api.action_get_all_by_owner(context, owner)
+        return [cls._from_db_object(context, cls(), obj) for obj in objs]
 
     @classmethod
     def check_status(cls, context, action_id, timestamp):
@@ -94,8 +98,8 @@ class Action(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         return db_api.action_mark_succeeded(context, action_id, timestamp)
 
     @classmethod
-    def mark_failed(cls, context, action_id, timestamp):
-        return db_api.action_mark_failed(context, action_id, timestamp)
+    def mark_failed(cls, context, action_id, timestamp, reason=None):
+        return db_api.action_mark_failed(context, action_id, timestamp, reason)
 
     @classmethod
     def mark_cancelled(cls, context, action_id, timestamp):
@@ -106,9 +110,8 @@ class Action(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         return db_api.action_acquire(context, action_id, owner, timestamp)
 
     @classmethod
-    def acquire_1st_ready(cls, context, action_id, owner, timestamp):
-        return db_api.action_acquire_1st_ready(context, action_id, owner,
-                                               timestamp)
+    def acquire_1st_ready(cls, context, owner, timestamp):
+        return db_api.action_acquire_1st_ready(context, owner, timestamp)
 
     @classmethod
     def abandon(cls, context, action_id):
@@ -125,6 +128,10 @@ class Action(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
     @classmethod
     def lock_check(cls, context, action_id, owner=None):
         return db_api.action_lock_check(context, action_id, owner)
+
+    @classmethod
+    def update(cls, context, action_id, values):
+        return db_api.action_update(context, action_id, values)
 
     @classmethod
     def delete(cls, context, action_id):

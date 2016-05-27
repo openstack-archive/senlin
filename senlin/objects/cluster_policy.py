@@ -59,13 +59,14 @@ class ClusterPolicy(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
 
     @classmethod
     def get_by_type(cls, context, cluster_id, policy_type, filters=None):
-        obj = db_api.cluster_policy_get_by_type(context, cluster_id,
-                                                policy_type, filters=filters)
-        return cls._from_db_object(context, cls(), obj)
+        objs = db_api.cluster_policy_get_by_type(context, cluster_id,
+                                                 policy_type, filters=filters)
+        return [cls._from_db_object(context, cls(), obj) for obj in objs]
 
     @classmethod
     def get_all(cls, context, cluster_id, **kwargs):
-        return db_api.cluster_policy_get_all(context, cluster_id, **kwargs)
+        objs = db_api.cluster_policy_get_all(context, cluster_id, **kwargs)
+        return [cls._from_db_object(context, cls(), obj) for obj in objs]
 
     @classmethod
     def update(cls, context, cluster_id, policy_id, values):

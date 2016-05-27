@@ -33,7 +33,6 @@ from senlin.common import messaging as rpc_messaging
 from senlin.common import scaleutils as su
 from senlin.common import schema
 from senlin.common import utils
-from senlin.db import api as db_api
 from senlin.engine.actions import base as action_mod
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import cluster_policy as cpm
@@ -43,6 +42,7 @@ from senlin.engine import health_manager
 from senlin.engine import node as node_mod
 from senlin.engine import receiver as receiver_mod
 from senlin.engine import scheduler
+from senlin.objects import action as action_obj
 from senlin.objects import cluster as cluster_obj
 from senlin.objects import cluster_policy as cp_obj
 from senlin.objects import credential as cred_obj
@@ -1805,16 +1805,16 @@ class EngineService(service.Service):
                  matching action is found.
         """
         if uuidutils.is_uuid_like(identity):
-            action = db_api.action_get(context, identity,
-                                       project_safe=project_safe)
+            action = action_obj.Action.get(context, identity,
+                                           project_safe=project_safe)
             if not action:
-                action = db_api.action_get_by_name(context, identity,
-                                                   project_safe=project_safe)
+                action = action_obj.Action.get_by_name(
+                    context, identity, project_safe=project_safe)
         else:
-            action = db_api.action_get_by_name(context, identity,
-                                               project_safe=project_safe)
+            action = action_obj.Action.get_by_name(
+                context, identity, project_safe=project_safe)
             if not action:
-                action = db_api.action_get_by_short_id(
+                action = action_obj.Action.get_by_short_id(
                     context, identity, project_safe=project_safe)
 
         if not action:

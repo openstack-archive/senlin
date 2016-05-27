@@ -31,6 +31,8 @@ class Credential(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
 
     @staticmethod
     def _from_db_object(context, credential, db_obj):
+        if db_obj is None:
+            return None
         for field in credential.fields:
             credential[field] = db_obj[field]
 
