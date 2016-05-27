@@ -24,6 +24,7 @@ from senlin.common.i18n import _LE
 from senlin.db import api as db_api
 from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import event as EVENT
+from senlin.objects import dependency as dobj
 from senlin.policies import base as policy_mod
 
 wallclock = time.time
@@ -469,8 +470,8 @@ class Action(object):
 
     def to_dict(self):
         if self.id:
-            dep_on = db_api.dependency_get_depended(self.context, self.id)
-            dep_by = db_api.dependency_get_dependents(self.context, self.id)
+            dep_on = dobj.Dependency.get_depended(self.context, self.id)
+            dep_by = dobj.Dependency.get_dependents(self.context, self.id)
         else:
             dep_on = []
             dep_by = []

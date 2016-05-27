@@ -24,6 +24,7 @@ from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import environment
 from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
+from senlin.objects import dependency as dobj
 from senlin.policies import base as policy_mod
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -545,8 +546,8 @@ class ActionBaseTest(base.SenlinTestCase):
                                           sort='priority',
                                           filters={'enabled': True})
 
-    @mock.patch.object(db_api, 'dependency_get_depended')
-    @mock.patch.object(db_api, 'dependency_get_dependents')
+    @mock.patch.object(dobj.Dependency, 'get_depended')
+    @mock.patch.object(dobj.Dependency, 'get_dependents')
     def test_action_to_dict(self, mock_dep_by, mock_dep_on):
         mock_dep_on.return_value = ['ACTION_1']
         mock_dep_by.return_value = ['ACTION_2']

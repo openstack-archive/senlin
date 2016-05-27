@@ -29,6 +29,7 @@ from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock
+from senlin.objects import dependency as dobj
 from senlin.objects import node as no
 from senlin.policies import base as policy_mod
 
@@ -149,7 +150,7 @@ class ClusterAction(base.Action):
 
         if child:
             # Build dependency and make the new action ready
-            db_api.dependency_add(self.context, [a for a in child], self.id)
+            dobj.Dependency.create(self.context, [a for a in child], self.id)
             for cid in child:
                 db_api.action_update(self.context, cid,
                                      {'status': base.Action.READY})
@@ -242,7 +243,7 @@ class ClusterAction(base.Action):
             child.append(action_id)
 
         if child:
-            db_api.dependency_add(self.context, [c for c in child], self.id)
+            dobj.Dependency.create(self.context, [c for c in child], self.id)
             for cid in child:
                 db_api.action_update(self.context, cid,
                                      {'status': base.Action.READY})
@@ -279,7 +280,7 @@ class ClusterAction(base.Action):
             child.append(action_id)
 
         if child:
-            db_api.dependency_add(self.context, [c for c in child], self.id)
+            dobj.Dependency.create(self.context, [c for c in child], self.id)
             for cid in child:
                 # Build dependency and make the new action ready
                 db_api.action_update(self.context, cid,
@@ -377,7 +378,7 @@ class ClusterAction(base.Action):
             child.append(action_id)
 
         if child:
-            db_api.dependency_add(self.context, [c for c in child], self.id)
+            dobj.Dependency.create(self.context, [c for c in child], self.id)
             for cid in child:
                 db_api.action_update(self.context, cid,
                                      {'status': base.Action.READY})
@@ -490,7 +491,7 @@ class ClusterAction(base.Action):
             child.append(action_id)
 
         if child:
-            db_api.dependency_add(self.context, [c for c in child], self.id)
+            dobj.Dependency.create(self.context, [c for c in child], self.id)
             for cid in child:
                 db_api.action_update(self.context, cid,
                                      {'status': base.Action.READY})
@@ -543,7 +544,8 @@ class ClusterAction(base.Action):
             children.append(action_id)
 
         if children:
-            db_api.dependency_add(self.context, [c for c in children], self.id)
+            dobj.Dependency.create(self.context, [c for c in children],
+                                   self.id)
             for cid in children:
                 db_api.action_update(self.context, cid, {'status': 'READY'})
             dispatcher.start_action()
