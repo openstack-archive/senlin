@@ -29,18 +29,19 @@ class Event(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'obj_name': fields.StringField(),
         'obj_type': fields.StringField(),
         'cluster_id': fields.UUIDField(nullable=True),
-        'cluster': fields.ObjectField('Cluster', nullable=True),
         'level': fields.StringField(),
         'user': fields.StringField(),
         'project': fields.StringField(),
         'action': fields.StringField(nullable=True),
         'status': fields.StringField(),
         'status_reason': fields.StringField(),
-        'metadata': fields.DictOfStringField(nullable=True),
+        'metadata': fields.DictOfStringsField(nullable=True),
     }
 
     @staticmethod
     def _from_db_object(context, event, db_obj):
+        if db_obj is None:
+            return None
         for field in event.fields:
             if field == 'metadata':
                 event['metadata'] = db_obj['meta_data']
@@ -59,18 +60,15 @@ class Event(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
 
     @classmethod
     def get(cls, context, event_id, **kwargs):
-        obj = db_api.event_get(context, event_id, **kwargs)
-        return cls._from_db_object(context, cls(), obj)
+        return db_api.event_get(context, event_id, **kwargs)
 
     @classmethod
     def get_by_short_id(cls, context, short_id, **kwargs):
-        obj = db_api.event_get_by_short_id(context, short_id, **kwargs)
-        return cls._from_db_object(context, cls(), obj)
+        return db_api.event_get_by_short_id(context, short_id, **kwargs)
 
     @classmethod
     def get_all(cls, context, **kwargs):
-        objs = db_api.event_get_all(context, **kwargs)
-        return [cls._from_db_object(context, cls(), obj) for obj in objs]
+        return db_api.event_get_all(context, **kwargs)
 
     @classmethod
     def count_by_cluster(cls, context, cluster_id, **kwargs):

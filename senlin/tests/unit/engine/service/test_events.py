@@ -17,8 +17,8 @@ from oslo_utils import uuidutils
 import six
 
 from senlin.common import exception as exc
-from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import service
+from senlin.objects import event as eo
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -30,7 +30,7 @@ class EventTest(base.SenlinTestCase):
         self.ctx = utils.dummy_context(project='event_test_project')
         self.eng = service.EngineService('host-a', 'topic-a')
 
-    @mock.patch.object(db_api, 'event_get')
+    @mock.patch.object(eo.Event, 'get')
     def test_event_find_by_uuid(self, mock_get):
         x_event = mock.Mock()
         mock_get.return_value = x_event
@@ -41,8 +41,8 @@ class EventTest(base.SenlinTestCase):
         self.assertEqual(x_event, result)
         mock_get.assert_called_once_with(self.ctx, aid, project_safe=True)
 
-    @mock.patch.object(db_api, 'event_get_by_short_id')
-    @mock.patch.object(db_api, 'event_get')
+    @mock.patch.object(eo.Event, 'get_by_short_id')
+    @mock.patch.object(eo.Event, 'get')
     def test_event_find_by_short_id(self, mock_get, mock_shortid):
         mock_get.return_value = None
         x_event = mock.Mock()
@@ -55,7 +55,7 @@ class EventTest(base.SenlinTestCase):
         mock_get.assert_called_once_with(self.ctx, aid, project_safe=False)
         mock_shortid.assert_called_once_with(self.ctx, aid, project_safe=False)
 
-    @mock.patch.object(db_api, 'event_get_by_short_id')
+    @mock.patch.object(eo.Event, 'get_by_short_id')
     def test_event_find_by_short_id_directly(self, mock_shortid):
         x_event = mock.Mock()
         mock_shortid.return_value = x_event
@@ -66,7 +66,7 @@ class EventTest(base.SenlinTestCase):
         self.assertEqual(x_event, result)
         mock_shortid.assert_called_once_with(self.ctx, aid, project_safe=True)
 
-    @mock.patch.object(db_api, 'event_get_by_short_id')
+    @mock.patch.object(eo.Event, 'get_by_short_id')
     def test_event_find_not_found(self, mock_shortid):
         mock_shortid.return_value = None
 
@@ -78,7 +78,7 @@ class EventTest(base.SenlinTestCase):
         mock_shortid.assert_called_once_with(self.ctx, 'BOGUS',
                                              project_safe=True)
 
-    @mock.patch.object(db_api, 'event_get_all')
+    @mock.patch.object(eo.Event, 'get_all')
     def test_event_list(self, mock_load):
         obj_1 = mock.Mock()
         obj_1.as_dict.return_value = {'k': 'v1'}
@@ -94,7 +94,7 @@ class EventTest(base.SenlinTestCase):
                                           limit=None, marker=None,
                                           project_safe=True)
 
-    @mock.patch.object(db_api, 'event_get_all')
+    @mock.patch.object(eo.Event, 'get_all')
     def test_event_list_with_params(self, mock_load):
         obj_1 = mock.Mock()
         obj_1.as_dict.return_value = {'k': 'v1'}
@@ -140,7 +140,7 @@ class EventTest(base.SenlinTestCase):
         self.assertEqual("Invalid value 'yes' specified for 'project_safe'",
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(db_api, 'event_get_all')
+    @mock.patch.object(eo.Event, 'get_all')
     def test_event_list_with_project_safe(self, mock_load):
         mock_load.return_value = []
 
@@ -178,7 +178,7 @@ class EventTest(base.SenlinTestCase):
                                           sort=None, marker=None,
                                           project_safe=False)
 
-    @mock.patch.object(db_api, 'event_get_all')
+    @mock.patch.object(eo.Event, 'get_all')
     def test_event_list_empty(self, mock_load):
         mock_load.return_value = []
 
