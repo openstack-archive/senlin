@@ -13,7 +13,7 @@
 from tempest.lib import decorators
 
 from senlin.tests.tempest.api import base
-from senlin.tests.tempest.common import constants
+from senlin.tests.tempest.api import utils
 
 
 class TestNodeDelete(base.BaseSenlinTest):
@@ -21,8 +21,7 @@ class TestNodeDelete(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestNodeDelete, cls).resource_setup()
-        # Create profile
-        cls.profile = cls.create_profile(constants.spec_nova_server)
+        cls.profile = utils.create_a_profile(cls)
         # Create test node
         cls.node = cls.create_test_node(cls.profile['id'])
 

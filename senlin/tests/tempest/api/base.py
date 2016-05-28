@@ -90,22 +90,6 @@ class BaseSenlinTest(test.BaseTestCase):
         return res['body']
 
     @classmethod
-    def create_profile(cls, spec, name=None, metadata=None):
-        """Utility function that generates a Senlin profile."""
-
-        if name is None:
-            name = data_utils.rand_name("tempest-created-profile")
-        params = {
-            'profile': {
-                'name': name,
-                'spec': spec,
-                'metadata': metadata,
-            }
-        }
-        res = cls.client.create_obj('profiles', params)
-        return res['body']
-
-    @classmethod
     def delete_profile(cls, profile_id, ignore_missing=False):
         """Utility function that deletes a Senlin profile."""
         res = cls.client.delete_obj('profiles', profile_id)

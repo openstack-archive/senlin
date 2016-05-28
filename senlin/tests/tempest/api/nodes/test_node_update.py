@@ -14,6 +14,7 @@ import copy
 from tempest.lib import decorators
 
 from senlin.tests.tempest.api import base
+from senlin.tests.tempest.api import utils
 from senlin.tests.tempest.common import constants
 
 
@@ -22,9 +23,7 @@ class TestNodeDelete(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestNodeDelete, cls).resource_setup()
-        # Create profile
-        cls.profile = cls.create_profile(constants.spec_nova_server)
-        # Create test node
+        cls.profile = utils.create_a_profile(cls)
         cls.node = cls.create_test_node(cls.profile['id'], name='node1',
                                         metadata={'k1': 'v1'}, role='member')
 
@@ -75,7 +74,7 @@ class TestNodeDelete(base.BaseSenlinTest):
         spec_nova_server = copy.deepcopy(constants.spec_nova_server)
         spec_nova_server['properties']['flavor'] = 'new_flavor'
         spec_nova_server['properties']['image'] = 'new_image'
-        new_profile = self.create_profile(spec_nova_server)
+        new_profile = utils.create_a_profile(self, spec_nova_server)
 
         # Update node with new profile
         params = {

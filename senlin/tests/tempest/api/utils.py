@@ -13,6 +13,28 @@
 
 from tempest.lib.common.utils import data_utils
 
+from senlin.tests.tempest.common import constants
+
+
+def create_a_profile(cls, spec=None, name=None, metadata=None):
+    """Utility function that generates a Senlin profile."""
+
+    if spec is None:
+        spec = constants.spec_nova_server
+
+    if name is None:
+        name = data_utils.rand_name("tempest-created-profile")
+
+    params = {
+        'profile': {
+            'name': name,
+            'spec': spec,
+            'metadata': metadata,
+        }
+    }
+    res = cls.client.create_obj('profiles', params)
+    return res['body']
+
 
 def create_a_cluster(cls, profile_id, desired_capacity=0, min_size=0,
                      max_size=-1, timeout=None, metadata=None, name=None,

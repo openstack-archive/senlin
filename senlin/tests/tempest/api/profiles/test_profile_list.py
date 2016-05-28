@@ -13,7 +13,7 @@
 from tempest.lib import decorators
 
 from senlin.tests.tempest.api import base
-from senlin.tests.tempest.common import constants
+from senlin.tests.tempest.api import utils
 
 
 class TestProfileList(base.BaseSenlinTest):
@@ -21,8 +21,7 @@ class TestProfileList(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestProfileList, cls).resource_setup()
-        # Create profile
-        cls.profile = cls.create_profile(constants.spec_nova_server)
+        cls.profile = utils.create_a_profile(cls)
 
     @classmethod
     def resource_cleanup(cls):

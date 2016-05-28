@@ -13,7 +13,7 @@
 from tempest.lib import decorators
 
 from senlin.tests.tempest.api import base
-from senlin.tests.tempest.common import constants
+from senlin.tests.tempest.api import utils
 
 
 class TestActionShow(base.BaseSenlinTest):
@@ -21,10 +21,7 @@ class TestActionShow(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestActionShow, cls).resource_setup()
-        # Create profile
-        cls.profile = cls.create_profile(
-            constants.spec_nova_server)
-        # Create a test cluster
+        cls.profile = utils.create_a_profile(cls)
         params = {
             'cluster': {
                 'profile_id': cls.profile['id'],

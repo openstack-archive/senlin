@@ -14,7 +14,6 @@ from tempest.lib import decorators
 
 from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
-from senlin.tests.tempest.common import constants
 
 
 class TestClusterDelete(base.BaseSenlinTest):
@@ -22,7 +21,7 @@ class TestClusterDelete(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestClusterDelete, cls).resource_setup()
-        cls.profile = cls.create_profile(constants.spec_nova_server)
+        cls.profile = utils.create_a_profile(cls)
         cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
 
     @classmethod

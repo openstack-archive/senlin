@@ -23,7 +23,7 @@ class TestClusterUpdate(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestClusterUpdate, cls).resource_setup()
-        cls.profile = cls.create_profile(constants.spec_nova_server)
+        cls.profile = utils.create_a_profile(cls)
         cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
 
     @classmethod
@@ -73,7 +73,7 @@ class TestClusterUpdate(base.BaseSenlinTest):
         spec_nova_server = copy.deepcopy(constants.spec_nova_server)
         spec_nova_server['properties']['flavor'] = 'new_flavor'
         spec_nova_server['properties']['image'] = 'new_image'
-        new_profile = self.create_profile(spec_nova_server)
+        new_profile = utils.create_a_profile(self, spec_nova_server)
 
         # Update cluster with new profile
         params = {

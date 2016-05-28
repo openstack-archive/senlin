@@ -13,7 +13,7 @@
 from tempest.lib import decorators
 
 from senlin.tests.tempest.api import base
-from senlin.tests.tempest.common import constants
+from senlin.tests.tempest.api import utils
 
 
 class TestProfileDelete(base.BaseSenlinTest):
@@ -21,8 +21,7 @@ class TestProfileDelete(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestProfileDelete, cls).resource_setup()
-        # Create profile
-        cls.profile = cls.create_profile(constants.spec_nova_server)
+        cls.profile = utils.create_a_profile(cls)
 
     @decorators.idempotent_id('ea3c1b9e-5ed7-4d63-84ce-2032c3bc6d27')
     def test_delete_profile(self):

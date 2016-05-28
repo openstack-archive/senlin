@@ -16,7 +16,6 @@ from tempest import test
 
 from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
-from senlin.tests.tempest.common import constants
 
 
 class TestClusterDeleteNegative(base.BaseSenlinTest):
@@ -24,7 +23,7 @@ class TestClusterDeleteNegative(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestClusterDeleteNegative, cls).resource_setup()
-        cls.profile = cls.create_profile(constants.spec_nova_server)
+        cls.profile = utils.create_a_profile(cls)
         cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
         # Create policy and attach to cluster
         cls.policy = cls.create_test_policy()
