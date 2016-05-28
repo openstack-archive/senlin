@@ -31,8 +31,7 @@ class TestWebhookTrigger(base.BaseSenlinTest):
     def resource_cleanup(cls):
         # Delete receiver
         cls.delete_receiver(cls.receiver['id'])
-        # Delete test cluster
-        cls.delete_test_cluster(cls.cluster['id'])
+        utils.delete_a_cluster(cls, cls.cluster['id'])
         # Delete profile
         cls.delete_profile(cls.profile['id'])
         super(TestWebhookTrigger, cls).resource_cleanup()

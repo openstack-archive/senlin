@@ -26,8 +26,7 @@ class TestEventShow(base.BaseSenlinTest):
 
     @classmethod
     def resource_cleanup(cls):
-        # Delete test cluster
-        cls.delete_test_cluster(cls.cluster['id'])
+        utils.delete_a_cluster(cls, cls.cluster['id'])
         # Delete profile
         cls.client.delete_obj('profiles', cls.profile['id'])
         super(TestEventShow, cls).resource_cleanup()

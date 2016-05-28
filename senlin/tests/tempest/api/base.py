@@ -74,15 +74,6 @@ class BaseSenlinTest(test.BaseTestCase):
         raise Exception('Timeout waiting for deletion.')
 
     @classmethod
-    def delete_test_cluster(cls, cluster_id, wait_timeout=None):
-        """Utility function that deletes a Senlin cluster."""
-
-        res = cls.client.delete_obj('clusters', cluster_id)
-        action_id = res['location'].split('/actions/')[1]
-        cls.wait_for_status('actions', action_id, 'SUCCEEDED',
-                            timeout=wait_timeout)
-
-    @classmethod
     def get_test_cluster(cls, cluster_id):
         """Utility function that get detail of a Senlin cluster."""
 

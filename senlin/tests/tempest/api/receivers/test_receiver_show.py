@@ -31,8 +31,7 @@ class TestReceiverShow(base.BaseSenlinTest):
     def resource_cleanup(cls):
         # Delete receiver
         cls.client.delete_obj('receivers', cls.receiver['id'])
-        # Delete test cluster
-        cls.delete_test_cluster(cls.cluster['id'])
+        utils.delete_a_cluster(cls, cls.cluster['id'])
         # Delete profile
         cls.delete_profile(cls.profile['id'])
         super(TestReceiverShow, cls).resource_cleanup()

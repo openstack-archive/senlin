@@ -67,11 +67,8 @@ class TestClusterCreate(base.BaseSenlinTest):
         self.assertEqual(metadata, cluster['metadata'])
         self.assertEqual(timeout, cluster['timeout'])
 
-        def cleanup_cluster():
-            self.delete_test_cluster(cluster['id'])
-
-        self.addCleanup(cleanup_cluster)
-
         # Wait cluster to be active before moving on
         action_id = res['location'].split('/actions/')[1]
         self.wait_for_status('actions', action_id, 'SUCCEEDED')
+
+        utils.delete_a_cluster(self, cluster['id'])

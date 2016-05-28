@@ -64,3 +64,10 @@ def create_a_cluster(cls, profile_id, desired_capacity=0, min_size=0,
     res = cls.client.get_obj('clusters', cluster_id)
 
     return res['body']
+
+
+def delete_a_cluster(cls, cluster_id, wait_timeout=None):
+    """Utility function that deletes a Senlin cluster."""
+    res = cls.client.delete_obj('clusters', cluster_id)
+    action_id = res['location'].split('/actions/')[1]
+    cls.wait_for_status('actions', action_id, 'SUCCEEDED', wait_timeout)

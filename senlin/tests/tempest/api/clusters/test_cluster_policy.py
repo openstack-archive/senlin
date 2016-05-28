@@ -23,7 +23,6 @@ class TestClusterPolicy(base.BaseSenlinTest):
         super(TestClusterPolicy, cls).resource_setup()
         cls.profile = utils.create_a_profile(cls)
         cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
-        # Create policy and attach to cluster
         cls.policy = cls.create_test_policy()
         cls.attach_policy(cls.cluster['id'], cls.policy['id'])
 
@@ -32,8 +31,7 @@ class TestClusterPolicy(base.BaseSenlinTest):
         # Detach policy from cluster and delete it
         cls.detach_policy(cls.cluster['id'], cls.policy['id'])
         cls.client.delete_obj('policies', cls.policy['id'])
-        # Delete test cluster
-        cls.delete_test_cluster(cls.cluster['id'])
+        utils.delete_a_cluster(cls, cls.cluster['id'])
         # Delete profile
         cls.delete_profile(cls.profile['id'])
         super(TestClusterPolicy, cls).resource_cleanup()

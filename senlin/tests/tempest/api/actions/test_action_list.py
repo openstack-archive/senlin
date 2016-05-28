@@ -26,8 +26,7 @@ class TestActionList(base.BaseSenlinTest):
 
     @classmethod
     def resource_cleanup(cls):
-        # Delete cluster
-        cls.delete_test_cluster(cls.cluster['id'])
+        utils.delete_a_cluster(cls, cls.cluster['id'])
         # Delete profile
         cls.delete_profile(cls.profile['id'])
         super(TestActionList, cls).resource_cleanup()
