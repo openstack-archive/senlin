@@ -74,13 +74,6 @@ class BaseSenlinTest(test.BaseTestCase):
         raise Exception('Timeout waiting for deletion.')
 
     @classmethod
-    def get_test_cluster(cls, cluster_id):
-        """Utility function that get detail of a Senlin cluster."""
-
-        res = cls.client.get_obj('clusters', cluster_id)
-        return res['body']
-
-    @classmethod
     def create_receiver(cls, cluster_id, action, r_type,
                         name=None, params=None):
         """Utility function that generates a Senlin receiver."""

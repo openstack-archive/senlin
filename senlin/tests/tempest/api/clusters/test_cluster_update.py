@@ -59,12 +59,6 @@ class TestClusterUpdate(base.BaseSenlinTest):
         action_id = res['location'].split('/actions/')[1]
         self.wait_for_status('actions', action_id, 'SUCCEEDED')
 
-        # Verify cluster update result
-        cluster = self.get_test_cluster(cluster['id'])
-        self.assertEqual('cluster_new_name', cluster['name'])
-        self.assertEqual({'k2': 'v2'}, cluster['metadata'])
-        self.assertEqual(240, cluster['timeout'])
-
     @decorators.idempotent_id('abff7891-21af-4c37-a8df-5bc7379ce349')
     def test_cluster_update_profile(self):
         # Create a new profile
@@ -95,7 +89,3 @@ class TestClusterUpdate(base.BaseSenlinTest):
         # Wait for cluster update to be done before moving on
         action_id = res['location'].split('/actions/')[1]
         self.wait_for_status('actions', action_id, 'SUCCEEDED')
-
-        # Verify cluster update result
-        cluster = self.get_test_cluster(cluster['id'])
-        self.assertEqual(new_profile_id, cluster['profile_id'])

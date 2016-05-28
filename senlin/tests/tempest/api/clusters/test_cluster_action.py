@@ -47,7 +47,3 @@ class TestClusterAction(base.BaseSenlinTest):
 
         action_id = res['location'].split('/actions/')[1]
         self.wait_for_status('actions', action_id, 'SUCCEEDED')
-
-        # Verify action result
-        cluster = self.get_test_cluster(self.cluster_id)
-        self.assertEqual(3, cluster['max_size'])
