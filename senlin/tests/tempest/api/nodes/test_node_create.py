@@ -22,7 +22,7 @@ class TestNodeCreate(base.BaseSenlinTest):
     def resource_setup(cls):
         super(TestNodeCreate, cls).resource_setup()
         cls.profile_id = utils.create_a_profile(cls)
-        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)['id']
+        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)
 
     @classmethod
     def resource_cleanup(cls):

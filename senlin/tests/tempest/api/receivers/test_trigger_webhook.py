@@ -22,7 +22,7 @@ class TestWebhookTrigger(base.BaseSenlinTest):
     def resource_setup(cls):
         super(TestWebhookTrigger, cls).resource_setup()
         cls.profile_id = utils.create_a_profile(cls)
-        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)['id']
+        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)
         params = {'max_size': 2}
         receiver = cls.create_receiver(cls.cluster_id, 'CLUSTER_RESIZE',
                                        'webhook', params=params)

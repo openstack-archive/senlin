@@ -62,9 +62,8 @@ def create_a_cluster(cls, profile_id, desired_capacity=0, min_size=0,
     cluster_id = res['body']['id']
     action_id = res['location'].split('/actions/')[1]
     cls.wait_for_status('actions', action_id, 'SUCCEEDED', wait_timeout)
-    res = cls.client.get_obj('clusters', cluster_id)
 
-    return res['body']
+    return cluster_id
 
 
 def delete_a_cluster(cls, cluster_id, wait_timeout=None):
