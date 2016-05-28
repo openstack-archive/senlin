@@ -13,6 +13,7 @@
 from tempest.lib import decorators
 
 from senlin.tests.tempest.api import base
+from senlin.tests.tempest.api import utils
 from senlin.tests.tempest.common import constants
 
 
@@ -21,11 +22,8 @@ class TestReceiverList(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestReceiverList, cls).resource_setup()
-        # Create profile
         cls.profile = cls.create_profile(constants.spec_nova_server)
-        # Create a test cluster
-        cls.cluster = cls.create_test_cluster(cls.profile['id'],
-                                              0, min_size=0, max_size=-1)
+        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
         # Create receiver
         cls.receiver = cls.create_receiver(cls.cluster['id'],
                                            'CLUSTER_RESIZE', 'webhook')

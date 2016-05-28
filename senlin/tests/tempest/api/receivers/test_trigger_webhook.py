@@ -13,6 +13,7 @@
 from tempest.lib import decorators
 
 from senlin.tests.tempest.api import base
+from senlin.tests.tempest.api import utils
 from senlin.tests.tempest.common import constants
 
 
@@ -21,15 +22,9 @@ class TestWebhookTrigger(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestWebhookTrigger, cls).resource_setup()
-        # Create profile
         cls.profile = cls.create_profile(constants.spec_nova_server)
-        # Create a test cluster
-        cls.cluster = cls.create_test_cluster(cls.profile['id'],
-                                              0, min_size=0, max_size=-1)
-        # Create a webhook receiver
-        params = {
-            'max_size': 2
-        }
+        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
+        params = {'max_size': 2}
         cls.receiver = cls.create_receiver(
             cls.cluster['id'], 'CLUSTER_RESIZE', 'webhook', params=params)
 

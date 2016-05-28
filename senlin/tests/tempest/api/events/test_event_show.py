@@ -13,6 +13,7 @@
 from tempest.lib import decorators
 
 from senlin.tests.tempest.api import base
+from senlin.tests.tempest.api import utils
 from senlin.tests.tempest.common import constants
 
 
@@ -21,11 +22,8 @@ class TestEventShow(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestEventShow, cls).resource_setup()
-        # Create profile
         cls.profile = cls.create_profile(constants.spec_nova_server)
-        # Create a test cluster
-        cls.cluster = cls.create_test_cluster(cls.profile['id'],
-                                              0, 0, 3)
+        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
 
     @classmethod
     def resource_cleanup(cls):
