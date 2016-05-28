@@ -74,34 +74,6 @@ class BaseSenlinTest(test.BaseTestCase):
         raise Exception('Timeout waiting for deletion.')
 
     @classmethod
-    def create_receiver(cls, cluster_id, action, r_type,
-                        name=None, params=None):
-        """Utility function that generates a Senlin receiver."""
-
-        if name is None:
-            name = data_utils.rand_name("tempest-created-receiver")
-        body = {
-            'receiver': {
-                'name': name,
-                'cluster_id': cluster_id,
-                'type': r_type,
-                'action': action,
-                'params': params
-            }
-        }
-        res = cls.client.create_obj('receivers', body)
-        return res['body']
-
-    @classmethod
-    def delete_receiver(cls, receiver_id, ignore_missing=False):
-        """Utility function that deletes a Senlin receiver."""
-        res = cls.client.delete_obj('receivers', receiver_id)
-        if res['status'] == 404:
-            if ignore_missing:
-                return
-            raise exceptions.NotFound()
-
-    @classmethod
     def create_test_node(cls, profile_id, cluster_id=None, metadata=None,
                          role=None, name=None, wait_timeout=None):
         """Utility function that generates a Senlin node.

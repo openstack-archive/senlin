@@ -24,14 +24,16 @@ class TestWebhookTrigger(base.BaseSenlinTest):
         cls.profile_id = utils.create_a_profile(cls)
         cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)
         params = {'max_size': 2}
-        receiver = cls.create_receiver(cls.cluster_id, 'CLUSTER_RESIZE',
-                                       'webhook', params=params)
-        cls.receiver_id = receiver['id']
-        cls.webhook_url = receiver['channel']['alarm_url']
+        cls.receiver_id = utils.create_a_receiver(cls.client, cls.cluster_id,
+                                                  'CLUSTER_RESIZE',
+                                                  params=params)
+
+        receiver = cls.client.get_obj('receivers', cls.receiver_id)
+        cls.webhook_url = receiver['body']['channel']['alarm_url']
 
     @classmethod
     def resource_cleanup(cls):
-        cls.delete_receiver(cls.receiver_id)
+        utils.delete_a_receiver(cls.client, cls.receiver_id)
         utils.delete_a_cluster(cls, cls.cluster_id)
         utils.delete_a_profile(cls, cls.profile_id)
         super(TestWebhookTrigger, cls).resource_cleanup()

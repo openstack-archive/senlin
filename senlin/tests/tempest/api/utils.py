@@ -66,6 +66,26 @@ def create_a_cluster(cls, profile_id, desired_capacity=0, min_size=0,
     return cluster_id
 
 
+def create_a_receiver(client, cluster_id, action, r_type=None, name=None,
+                      params=None):
+    """Utility function that generates a Senlin receiver."""
+
+    if name is None:
+        name = data_utils.rand_name("tempest-created-receiver")
+
+    body = {
+        'receiver': {
+            'name': name,
+            'cluster_id': cluster_id,
+            'type': r_type or 'webhook',
+            'action': action,
+            'params': params or {}
+        }
+    }
+    res = client.create_obj('receivers', body)
+    return res['body']['id']
+
+
 def delete_a_cluster(cls, cluster_id, wait_timeout=None):
     """Utility function that deletes a Senlin cluster."""
     res = cls.client.delete_obj('clusters', cluster_id)
@@ -76,6 +96,15 @@ def delete_a_cluster(cls, cluster_id, wait_timeout=None):
 def delete_a_profile(cls, profile_id, ignore_missing=False):
     """Utility function that deletes a Senlin profile."""
     res = cls.client.delete_obj('profiles', profile_id)
+    if res['status'] == 404:
+        if ignore_missing:
+            return
+        raise exceptions.NotFound()
+
+
+def delete_a_receiver(client, receiver_id, ignore_missing=False):
+    """Utility function that deletes a Senlin receiver."""
+    res = client.delete_obj('receivers', receiver_id)
     if res['status'] == 404:
         if ignore_missing:
             return

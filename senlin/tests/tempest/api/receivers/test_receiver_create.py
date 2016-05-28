@@ -18,21 +18,12 @@ from senlin.tests.tempest.api import utils
 
 class TestReceiverCreate(base.BaseSenlinTest):
 
-    @classmethod
-    def resource_setup(cls):
-        super(TestReceiverCreate, cls).resource_setup()
-        cls.profile_id = utils.create_a_profile(cls)
-        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)
-        cls.receivers = []
-
-    @classmethod
-    def resource_cleanup(cls):
-        # Delete receivers
-        for recv in cls.receivers:
-            cls.delete_receiver(recv)
-        utils.delete_a_cluster(cls, cls.cluster_id)
-        utils.delete_a_profile(cls, cls.profile_id)
-        super(TestReceiverCreate, cls).resource_cleanup()
+    def setUp(self):
+        super(TestReceiverCreate, self).setUp()
+        self.profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id)
+        self.cluster_id = utils.create_a_cluster(self, self.profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
     @decorators.idempotent_id('55f06733-af40-4fa8-a1de-3cb2a0c700d7')
     def test_create_receiver(self):
@@ -51,7 +42,9 @@ class TestReceiverCreate(base.BaseSenlinTest):
         self.assertEqual(201, res['status'])
         self.assertIsNotNone(res['body'])
         recv = res['body']
-        self.receivers.append(recv['id'])
+        self.receiver_id = recv['id']
+        self.addCleanup(utils.delete_a_receiver, self.client, self.receiver_id)
+
         for key in ['action', 'actor', 'channel', 'cluster_id', 'created_at',
                     'domain', 'id', 'name', 'params', 'project', 'type',
                     'updated_at', 'user']:

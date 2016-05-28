@@ -23,9 +23,8 @@ class TestReceiverShow(base.BaseSenlinTest):
         super(TestReceiverShow, cls).resource_setup()
         cls.profile_id = utils.create_a_profile(cls)
         cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)
-        receiver = cls.create_receiver(cls.cluster_id, 'CLUSTER_RESIZE',
-                                       'webhook')
-        cls.receiver_id = receiver['id']
+        cls.receiver_id = utils.create_a_receiver(cls.client, cls.cluster_id,
+                                                  'CLUSTER_RESIZE')
 
     @classmethod
     def resource_cleanup(cls):
