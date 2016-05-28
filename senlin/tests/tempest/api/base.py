@@ -74,37 +74,6 @@ class BaseSenlinTest(test.BaseTestCase):
         raise Exception('Timeout waiting for deletion.')
 
     @classmethod
-    def create_test_cluster(cls, profile_id, desired_capacity,
-                            min_size=None, max_size=None, timeout=None,
-                            metadata=None, name=None, wait_timeout=None):
-        """Utility function that generates a Senlin cluster.
-
-        Create a Senlin cluster and return it after it is active. This
-        function is for minimizing the code duplication that could
-        happen in API test cases where a 'existing' Senlin cluster is needed.
-        """
-        if name is None:
-            name = data_utils.rand_name("tempest-created-cluster")
-        params = {
-            'cluster': {
-                'profile_id': profile_id,
-                'desired_capacity': desired_capacity,
-                'min_size': min_size,
-                'max_size': max_size,
-                'timeout': timeout,
-                'metadata': metadata,
-                'name': name
-            }
-        }
-        res = cls.client.create_obj('clusters', params)
-        cluster_id = res['body']['id']
-        action_id = res['location'].split('/actions/')[1]
-        cls.wait_for_status('actions', action_id, 'SUCCEEDED',
-                            timeout=wait_timeout)
-        res = cls.client.get_obj('clusters', cluster_id)
-        return res['body']
-
-    @classmethod
     def delete_test_cluster(cls, cluster_id, wait_timeout=None):
         """Utility function that deletes a Senlin cluster."""
 

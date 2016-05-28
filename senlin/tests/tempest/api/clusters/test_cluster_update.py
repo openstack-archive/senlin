@@ -14,6 +14,7 @@ import copy
 from tempest.lib import decorators
 
 from senlin.tests.tempest.api import base
+from senlin.tests.tempest.api import utils
 from senlin.tests.tempest.common import constants
 
 
@@ -22,12 +23,8 @@ class TestClusterUpdate(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestClusterUpdate, cls).resource_setup()
-        # Create profile
-        cls.profile = cls.create_profile(
-            constants.spec_nova_server)
-        # Create a test cluster
-        cls.cluster = cls.create_test_cluster(cls.profile['id'],
-                                              2, 1, 3)
+        cls.profile = cls.create_profile(constants.spec_nova_server)
+        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
 
     @classmethod
     def resource_cleanup(cls):
