@@ -21,12 +21,11 @@ class TestProfileList(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestProfileList, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
+        cls.profile_id = utils.create_a_profile(cls)
 
     @classmethod
     def resource_cleanup(cls):
-        # Delete profile
-        cls.client.delete_obj('profiles', cls.profile['id'])
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestProfileList, cls).resource_cleanup()
 
     @decorators.idempotent_id('329d3026-12f7-4369-845b-05914e2a8678')
@@ -44,4 +43,4 @@ class TestProfileList(base.BaseSenlinTest):
                         'project', 'spec', 'type', 'updated_at', 'user']:
                 self.assertIn(key, profile)
             ids.append(profile['id'])
-        self.assertIn(self.profile['id'], ids)
+        self.assertIn(self.profile_id, ids)

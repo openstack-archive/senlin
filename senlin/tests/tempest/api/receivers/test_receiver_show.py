@@ -21,24 +21,23 @@ class TestReceiverShow(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestReceiverShow, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
-        # Create receiver
-        cls.receiver = cls.create_receiver(cls.cluster['id'],
-                                           'CLUSTER_RESIZE', 'webhook')
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)['id']
+        receiver = cls.create_receiver(cls.cluster_id, 'CLUSTER_RESIZE',
+                                       'webhook')
+        cls.receiver_id = receiver['id']
 
     @classmethod
     def resource_cleanup(cls):
         # Delete receiver
-        cls.client.delete_obj('receivers', cls.receiver['id'])
-        utils.delete_a_cluster(cls, cls.cluster['id'])
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        cls.client.delete_obj('receivers', cls.receiver_id)
+        utils.delete_a_cluster(cls, cls.cluster_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestReceiverShow, cls).resource_cleanup()
 
     @decorators.idempotent_id('6a86b2e4-127a-4acc-b0ec-6f951b240e5b')
     def test_show_receiver(self):
-        res = self.client.get_obj('receivers', self.receiver['id'])
+        res = self.client.get_obj('receivers', self.receiver_id)
 
         self.assertEqual(200, res['status'])
         self.assertIsNone(res['location'])

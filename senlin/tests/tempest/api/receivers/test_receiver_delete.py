@@ -21,21 +21,21 @@ class TestReceiverDelete(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestReceiverDelete, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
-        cls.receiver = cls.create_receiver(cls.cluster['id'],
-                                           'CLUSTER_RESIZE', 'webhook')
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)['id']
+        receiver = cls.create_receiver(cls.cluster_id, 'CLUSTER_RESIZE',
+                                       'webhook')
+        cls.receiver_id = receiver['id']
 
     @classmethod
     def resource_cleanup(cls):
-        utils.delete_a_cluster(cls, cls.cluster['id'])
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        utils.delete_a_cluster(cls, cls.cluster_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestReceiverDelete, cls).resource_cleanup()
 
     @decorators.idempotent_id('c67cf6c3-2339-4f10-9631-fb7e9f47170f')
     def test_delete_receiver(self):
         # Verify resp of receiver delete API
-        res = self.client.delete_obj('receivers', self.receiver['id'])
+        res = self.client.delete_obj('receivers', self.receiver_id)
         self.assertEqual(204, res['status'])
         self.assertIsNone(res['body'])

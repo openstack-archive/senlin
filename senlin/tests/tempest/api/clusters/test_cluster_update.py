@@ -23,14 +23,13 @@ class TestClusterUpdate(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestClusterUpdate, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)['id']
 
     @classmethod
     def resource_cleanup(cls):
-        utils.delete_a_cluster(cls, cls.cluster['id'])
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        utils.delete_a_cluster(cls, cls.cluster_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestClusterUpdate, cls).resource_cleanup()
 
     @decorators.idempotent_id('ba8514b2-b3c4-47a4-9176-7fe9bb2781ae')
@@ -43,7 +42,7 @@ class TestClusterUpdate(base.BaseSenlinTest):
                 'name': 'cluster_new_name'
             }
         }
-        res = self.client.update_obj('clusters', self.cluster['id'], params)
+        res = self.client.update_obj('clusters', self.cluster_id, params)
 
         # Verify resp of cluster update API
         self.assertEqual(202, res['status'])
@@ -72,15 +71,15 @@ class TestClusterUpdate(base.BaseSenlinTest):
         spec_nova_server = copy.deepcopy(constants.spec_nova_server)
         spec_nova_server['properties']['flavor'] = 'new_flavor'
         spec_nova_server['properties']['image'] = 'new_image'
-        new_profile = utils.create_a_profile(self, spec_nova_server)
+        new_profile_id = utils.create_a_profile(self, spec_nova_server)
 
         # Update cluster with new profile
         params = {
             'cluster': {
-                'profile_id': new_profile['id']
+                'profile_id': new_profile_id
             }
         }
-        res = self.client.update_obj('clusters', self.cluster['id'], params)
+        res = self.client.update_obj('clusters', self.cluster_id, params)
 
         # Verify resp of cluster update API
         self.assertEqual(202, res['status'])
@@ -99,4 +98,4 @@ class TestClusterUpdate(base.BaseSenlinTest):
 
         # Verify cluster update result
         cluster = self.get_test_cluster(cluster['id'])
-        self.assertEqual(new_profile['id'], cluster['profile_id'])
+        self.assertEqual(new_profile_id, cluster['profile_id'])

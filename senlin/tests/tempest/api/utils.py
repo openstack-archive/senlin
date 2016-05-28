@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from tempest.lib.common.utils import data_utils
+from tempest.lib import exceptions
 
 from senlin.tests.tempest.common import constants
 
@@ -33,7 +34,7 @@ def create_a_profile(cls, spec=None, name=None, metadata=None):
         }
     }
     res = cls.client.create_obj('profiles', params)
-    return res['body']
+    return res['body']['id']
 
 
 def create_a_cluster(cls, profile_id, desired_capacity=0, min_size=0,
@@ -71,3 +72,12 @@ def delete_a_cluster(cls, cluster_id, wait_timeout=None):
     res = cls.client.delete_obj('clusters', cluster_id)
     action_id = res['location'].split('/actions/')[1]
     cls.wait_for_status('actions', action_id, 'SUCCEEDED', wait_timeout)
+
+
+def delete_a_profile(cls, profile_id, ignore_missing=False):
+    """Utility function that deletes a Senlin profile."""
+    res = cls.client.delete_obj('profiles', profile_id)
+    if res['status'] == 404:
+        if ignore_missing:
+            return
+        raise exceptions.NotFound()

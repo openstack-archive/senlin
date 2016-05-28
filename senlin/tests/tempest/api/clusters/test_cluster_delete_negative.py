@@ -23,19 +23,18 @@ class TestClusterDeleteNegative(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestClusterDeleteNegative, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)['id']
         cls.policy = cls.create_test_policy()
-        cls.attach_policy(cls.cluster['id'], cls.policy['id'])
+        cls.attach_policy(cls.cluster_id, cls.policy['id'])
 
     @classmethod
     def resource_cleanup(cls):
         # Detach policy from cluster and delete it
-        cls.detach_policy(cls.cluster['id'], cls.policy['id'])
+        cls.detach_policy(cls.cluster_id, cls.policy['id'])
         cls.client.delete_obj('policies', cls.policy['id'])
-        utils.delete_a_cluster(cls, cls.cluster['id'])
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        utils.delete_a_cluster(cls, cls.cluster_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestClusterDeleteNegative, cls).resource_cleanup()
 
     @test.attr(type=['negative'])
@@ -44,8 +43,7 @@ class TestClusterDeleteNegative(base.BaseSenlinTest):
         # Verify conflict exception(409) is raised.
         self.assertRaises(exceptions.Conflict,
                           self.client.delete_obj,
-                          'clusters',
-                          self.cluster['id'])
+                          'clusters', self.cluster_id)
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('8a583b8e-eeaa-4920-a6f5-2880b070624f')
@@ -53,5 +51,4 @@ class TestClusterDeleteNegative(base.BaseSenlinTest):
         # Verify notfound exception(404) is raised.
         self.assertRaises(exceptions.NotFound,
                           self.client.delete_obj,
-                          'clusters',
-                          '8a583b8e-eeaa-4920-a6f5-2880b070624f')
+                          'clusters', '8a583b8e-eeaa-4920-a6f5-2880b070624f')

@@ -21,21 +21,20 @@ class TestEventShow(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestEventShow, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)['id']
 
     @classmethod
     def resource_cleanup(cls):
-        utils.delete_a_cluster(cls, cls.cluster['id'])
-        # Delete profile
-        cls.client.delete_obj('profiles', cls.profile['id'])
+        utils.delete_a_cluster(cls, cls.cluster_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestEventShow, cls).resource_cleanup()
 
     @decorators.idempotent_id('b23490a7-0ae2-44be-a1f9-9f2d82dfe6aa')
     def test_show_event(self):
         # Get cluster events
         events = self.client.list_objs('events',
-                                       {'obj_id': self.cluster['id']})['body']
+                                       {'obj_id': self.cluster_id})['body']
         res = self.client.get_obj('events', events[0]['id'])
 
         # Verify resp of event list API

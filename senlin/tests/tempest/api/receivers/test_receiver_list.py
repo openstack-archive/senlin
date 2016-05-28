@@ -21,17 +21,17 @@ class TestReceiverList(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestReceiverList, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
-        cls.receiver = cls.create_receiver(cls.cluster['id'],
-                                           'CLUSTER_RESIZE', 'webhook')
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)['id']
+        receiver = cls.create_receiver(cls.cluster_id, 'CLUSTER_RESIZE',
+                                       'webhook')
+        cls.receiver_id = receiver['id']
 
     @classmethod
     def resource_cleanup(cls):
-        cls.client.delete_obj('receivers', cls.receiver['id'])
-        utils.delete_a_cluster(cls, cls.cluster['id'])
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        cls.client.delete_obj('receivers', cls.receiver_id)
+        utils.delete_a_cluster(cls, cls.cluster_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestReceiverList, cls).resource_cleanup()
 
     @decorators.idempotent_id('e5cedce0-9240-45ea-90d7-692be5058aac')
@@ -49,4 +49,4 @@ class TestReceiverList(base.BaseSenlinTest):
                         'project', 'type', 'updated_at', 'user']:
                 self.assertIn(key, receiver)
             ids.append(receiver['id'])
-        self.assertIn(self.receiver['id'], ids)
+        self.assertIn(self.receiver_id, ids)

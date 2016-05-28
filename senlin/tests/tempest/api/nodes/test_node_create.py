@@ -21,22 +21,21 @@ class TestNodeCreate(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestNodeCreate, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)['id']
 
     @classmethod
     def resource_cleanup(cls):
-        utils.delete_a_cluster(cls, cls.cluster['id'])
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        utils.delete_a_cluster(cls, cls.cluster_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestNodeCreate, cls).resource_cleanup()
 
     @decorators.idempotent_id('14d06753-7f0a-4ad2-84be-37fce7114a8f')
     def test_node_create_all_attrs_defined(self):
         params = {
             'node': {
-                'profile_id': self.profile['id'],
-                'cluster_id': self.cluster['id'],
+                'profile_id': self.profile_id,
+                'cluster_id': self.cluster_id,
                 'metadata': {'k1': 'v1'},
                 'role': 'member',
                 'name': 'test-node'
@@ -55,8 +54,8 @@ class TestNodeCreate(base.BaseSenlinTest):
                     'status', 'status_reason', 'updated_at', 'user']:
             self.assertIn(key, node)
         self.assertIn('test-node', node['name'])
-        self.assertEqual(self.profile['id'], node['profile_id'])
-        self.assertEqual(self.cluster['id'], node['cluster_id'])
+        self.assertEqual(self.profile_id, node['profile_id'])
+        self.assertEqual(self.cluster_id, node['cluster_id'])
         self.assertEqual({'k1': 'v1'}, node['metadata'])
         self.assertEqual('member', node['role'])
         self.assertEqual('test-node', node['name'])
@@ -64,3 +63,5 @@ class TestNodeCreate(base.BaseSenlinTest):
         # Wait node to be active before moving on
         action_id = res['location'].split('/actions/')[1]
         self.wait_for_status('actions', action_id, 'SUCCEEDED')
+
+        self.delete_test_node(node['id'])

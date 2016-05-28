@@ -21,15 +21,13 @@ class TestNodeAction(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestNodeAction, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.node = cls.create_test_node(cls.profile['id'])
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.node_id = cls.create_test_node(cls.profile_id)['id']
 
     @classmethod
     def resource_cleanup(cls):
-        # Delete node
-        cls.delete_test_node(cls.node['id'])
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        cls.delete_test_node(cls.node_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestNodeAction, cls).resource_cleanup()
 
     @decorators.idempotent_id('ae124bfe-9fcf-4e87-91b7-319102efbdcc')
@@ -39,8 +37,7 @@ class TestNodeAction(base.BaseSenlinTest):
             }
         }
         # Trigger node action
-        res = self.client.trigger_action('nodes', self.node['id'],
-                                         params=params)
+        res = self.client.trigger_action('nodes', self.node_id, params=params)
 
         # Verfiy resp code, body and location in headers
         self.assertEqual(202, res['status'])

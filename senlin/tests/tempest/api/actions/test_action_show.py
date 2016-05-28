@@ -21,10 +21,10 @@ class TestActionShow(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestActionShow, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
+        cls.profile_id = utils.create_a_profile(cls)
         params = {
             'cluster': {
-                'profile_id': cls.profile['id'],
+                'profile_id': cls.profile_id,
                 'desired_capacity': 0,
                 'min_size': 0,
                 'max_size': -1,
@@ -41,8 +41,7 @@ class TestActionShow(base.BaseSenlinTest):
     @classmethod
     def resource_cleanup(cls):
         utils.delete_a_cluster(cls, cls.cluster_id)
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestActionShow, cls).resource_cleanup()
 
     @decorators.idempotent_id('c6376f60-8f52-4384-8b6d-57df264f2e23')

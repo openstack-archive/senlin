@@ -21,12 +21,11 @@ class TestClusterCreate(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestClusterCreate, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
+        cls.profile_id = utils.create_a_profile(cls)
 
     @classmethod
     def resource_cleanup(cls):
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestClusterCreate, cls).resource_cleanup()
 
     @decorators.idempotent_id('61cbe340-937a-40d5-9d2f-067f2c7cafcc')
@@ -40,7 +39,7 @@ class TestClusterCreate(base.BaseSenlinTest):
         timeout = 120
         params = {
             'cluster': {
-                'profile_id': self.profile['id'],
+                'profile_id': self.profile_id,
                 'desired_capacity': desired_capacity,
                 'min_size': min_size,
                 'max_size': max_size,

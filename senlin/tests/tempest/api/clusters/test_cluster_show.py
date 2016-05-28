@@ -21,19 +21,18 @@ class TestClusterShow(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestClusterShow, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)['id']
 
     @classmethod
     def resource_cleanup(cls):
-        utils.delete_a_cluster(cls, cls.cluster['id'])
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        utils.delete_a_cluster(cls, cls.cluster_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestClusterShow, cls).resource_cleanup()
 
     @decorators.idempotent_id('45f56c9a-4589-48dd-9256-9b368727dd6c')
     def test_cluster_show(self):
-        res = self.client.get_obj('clusters', self.cluster['id'])
+        res = self.client.get_obj('clusters', self.cluster_id)
 
         # Verify resp of cluster get API
         self.assertEqual(200, res['status'])

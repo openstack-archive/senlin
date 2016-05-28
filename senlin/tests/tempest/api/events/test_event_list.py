@@ -21,14 +21,13 @@ class TestEventList(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestEventList, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)['id']
 
     @classmethod
     def resource_cleanup(cls):
-        utils.delete_a_cluster(cls, cls.cluster['id'])
-        # Delete profile
-        cls.client.delete_obj('profiles', cls.profile['id'])
+        utils.delete_a_cluster(cls, cls.cluster_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestEventList, cls).resource_cleanup()
 
     @decorators.idempotent_id('498a7e22-7ada-415b-a7cf-927b0ad3d9f6')

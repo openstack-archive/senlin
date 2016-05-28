@@ -21,15 +21,13 @@ class TestNodeList(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestNodeList, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.node = cls.create_test_node(cls.profile['id'])
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.node_id = cls.create_test_node(cls.profile_id)['id']
 
     @classmethod
     def resource_cleanup(cls):
-        # Delete test node
-        cls.delete_test_node(cls.node['id'])
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        cls.delete_test_node(cls.node_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestNodeList, cls).resource_cleanup()
 
     @decorators.idempotent_id('cd086dcb-7509-4125-adfc-6beb63b10d0a')
@@ -50,4 +48,4 @@ class TestNodeList(base.BaseSenlinTest):
                         'updated_at', 'user']:
                 self.assertIn(key, node)
             node_ids.append(node['id'])
-        self.assertIn(self.node['id'], node_ids)
+        self.assertIn(self.node_id, node_ids)

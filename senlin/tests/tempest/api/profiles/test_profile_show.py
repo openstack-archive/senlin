@@ -21,17 +21,16 @@ class TestProfileShow(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestProfileShow, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
+        cls.profile_id = utils.create_a_profile(cls)
 
     @classmethod
     def resource_cleanup(cls):
-        # Delete profile
-        cls.client.delete_obj('profiles', cls.profile['id'])
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestProfileShow, cls).resource_cleanup()
 
     @decorators.idempotent_id('36206711-0676-4e4f-8f5d-7029912ecade')
     def test_show_profile(self):
-        res = self.client.get_obj('profiles', self.profile['id'])
+        res = self.client.get_obj('profiles', self.profile_id)
 
         # Verify resp of profile show API
         self.assertEqual(200, res['status'])

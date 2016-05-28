@@ -21,14 +21,13 @@ class TestActionList(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestActionList, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)['id']
 
     @classmethod
     def resource_cleanup(cls):
-        utils.delete_a_cluster(cls, cls.cluster['id'])
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        utils.delete_a_cluster(cls, cls.cluster_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestActionList, cls).resource_cleanup()
 
     @decorators.idempotent_id('2e47639b-7f58-4fb4-a147-a8c6bf184e97')

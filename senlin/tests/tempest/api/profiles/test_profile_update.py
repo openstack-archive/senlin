@@ -21,12 +21,11 @@ class TestProfileUpdate(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestProfileUpdate, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
+        cls.profile_id = utils.create_a_profile(cls)
 
     @classmethod
     def resource_cleanup(cls):
-        # Delete profile
-        cls.client.delete_obj('profiles', cls.profile['id'])
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestProfileUpdate, cls).resource_cleanup()
 
     @decorators.idempotent_id('d7efdd92-1687-444e-afcc-b7f9c7e37478')
@@ -37,7 +36,7 @@ class TestProfileUpdate(base.BaseSenlinTest):
                 'metadata': {'bar': 'foo'}
             }
         }
-        res = self.client.update_obj('profiles', self.profile['id'], params)
+        res = self.client.update_obj('profiles', self.profile_id, params)
 
         # Verify resp of profile update API
         self.assertEqual(200, res['status'])

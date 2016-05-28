@@ -81,15 +81,6 @@ class BaseSenlinTest(test.BaseTestCase):
         return res['body']
 
     @classmethod
-    def delete_profile(cls, profile_id, ignore_missing=False):
-        """Utility function that deletes a Senlin profile."""
-        res = cls.client.delete_obj('profiles', profile_id)
-        if res['status'] == 404:
-            if ignore_missing:
-                return
-            raise exceptions.NotFound()
-
-    @classmethod
     def create_receiver(cls, cluster_id, action, r_type,
                         name=None, params=None):
         """Utility function that generates a Senlin receiver."""

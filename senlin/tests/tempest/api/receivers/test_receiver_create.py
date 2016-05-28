@@ -21,8 +21,8 @@ class TestReceiverCreate(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestReceiverCreate, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)['id']
         cls.receivers = []
 
     @classmethod
@@ -30,9 +30,8 @@ class TestReceiverCreate(base.BaseSenlinTest):
         # Delete receivers
         for recv in cls.receivers:
             cls.delete_receiver(recv)
-        utils.delete_a_cluster(cls, cls.cluster['id'])
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        utils.delete_a_cluster(cls, cls.cluster_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestReceiverCreate, cls).resource_cleanup()
 
     @decorators.idempotent_id('55f06733-af40-4fa8-a1de-3cb2a0c700d7')
@@ -40,7 +39,7 @@ class TestReceiverCreate(base.BaseSenlinTest):
         params = {
             'receiver': {
                 'name': 'test-receiver',
-                'cluster_id': self.cluster['id'],
+                'cluster_id': self.cluster_id,
                 'type': 'webhook',
                 'action': 'CLUSTER_SCALE_IN',
                 'params': {"count": 5}
@@ -58,6 +57,6 @@ class TestReceiverCreate(base.BaseSenlinTest):
                     'updated_at', 'user']:
             self.assertIn(key, recv)
         self.assertEqual('test-receiver', recv['name'])
-        self.assertEqual(self.cluster['id'], recv['cluster_id'])
+        self.assertEqual(self.cluster_id, recv['cluster_id'])
         self.assertEqual('webhook', recv['type'])
         self.assertEqual({"count": 5}, recv['params'])

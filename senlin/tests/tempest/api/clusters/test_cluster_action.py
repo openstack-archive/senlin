@@ -21,14 +21,13 @@ class TestClusterAction(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestClusterAction, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)['id']
 
     @classmethod
     def resource_cleanup(cls):
-        utils.delete_a_cluster(cls, cls.cluster['id'])
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        utils.delete_a_cluster(cls, cls.cluster_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestClusterAction, cls).resource_cleanup()
 
     @decorators.idempotent_id('f5f75882-df3d-481f-bd05-019e4d08af65')
@@ -39,7 +38,7 @@ class TestClusterAction(base.BaseSenlinTest):
             }
         }
         # Trigger cluster action
-        res = self.client.trigger_action('clusters', self.cluster['id'],
+        res = self.client.trigger_action('clusters', self.cluster_id,
                                          params=params)
 
         # Verify resp code, body and location in headers
@@ -50,5 +49,5 @@ class TestClusterAction(base.BaseSenlinTest):
         self.wait_for_status('actions', action_id, 'SUCCEEDED')
 
         # Verify action result
-        cluster = self.get_test_cluster(self.cluster['id'])
+        cluster = self.get_test_cluster(self.cluster_id)
         self.assertEqual(3, cluster['max_size'])

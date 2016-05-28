@@ -21,11 +21,11 @@ class TestProfileDelete(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestProfileDelete, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
+        cls.profile_id = utils.create_a_profile(cls)
 
     @decorators.idempotent_id('ea3c1b9e-5ed7-4d63-84ce-2032c3bc6d27')
     def test_delete_profile(self):
         # Verify resp of profile delete API
-        res = self.client.delete_obj('profiles', self.profile['id'])
+        res = self.client.delete_obj('profiles', self.profile_id)
         self.assertEqual(204, res['status'])
         self.assertIsNone(res['body'])

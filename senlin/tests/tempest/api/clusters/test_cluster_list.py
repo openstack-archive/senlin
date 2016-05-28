@@ -21,13 +21,13 @@ class TestClusterList(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestClusterList, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)['id']
 
     @classmethod
     def resource_cleanup(cls):
-        utils.delete_a_cluster(cls, cls.cluster['id'])
-        cls.delete_profile(cls.profile['id'])
+        utils.delete_a_cluster(cls, cls.cluster_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestClusterList, cls).resource_cleanup()
 
     @decorators.idempotent_id('943cdc02-81bd-4200-a08d-bc1932d932f7')
@@ -49,4 +49,4 @@ class TestClusterList(base.BaseSenlinTest):
                 self.assertIn(key, cluster)
             cluster_ids.append(cluster['id'])
 
-        self.assertIn(self.cluster['id'], cluster_ids)
+        self.assertIn(self.cluster_id, cluster_ids)

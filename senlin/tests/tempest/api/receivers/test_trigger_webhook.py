@@ -21,25 +21,24 @@ class TestWebhookTrigger(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestWebhookTrigger, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)['id']
         params = {'max_size': 2}
-        cls.receiver = cls.create_receiver(
-            cls.cluster['id'], 'CLUSTER_RESIZE', 'webhook', params=params)
+        receiver = cls.create_receiver(cls.cluster_id, 'CLUSTER_RESIZE',
+                                       'webhook', params=params)
+        cls.receiver_id = receiver['id']
+        cls.webhook_url = receiver['channel']['alarm_url']
 
     @classmethod
     def resource_cleanup(cls):
-        # Delete receiver
-        cls.delete_receiver(cls.receiver['id'])
-        utils.delete_a_cluster(cls, cls.cluster['id'])
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        cls.delete_receiver(cls.receiver_id)
+        utils.delete_a_cluster(cls, cls.cluster_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestWebhookTrigger, cls).resource_cleanup()
 
     @decorators.idempotent_id('afd671af-330a-46d6-bdb5-9c50966ab8b5')
     def test_trigger_webhook(self):
-        webhook_url = self.receiver['channel']['alarm_url']
-        res = self.client.trigger_webhook(webhook_url)
+        res = self.client.trigger_webhook(self.webhook_url)
 
         # Verify resp of webhook API
         self.assertEqual(202, res['status'])
@@ -50,5 +49,5 @@ class TestWebhookTrigger(base.BaseSenlinTest):
         self.wait_for_status('actions', action_id, 'SUCCEEDED')
 
         # Verify cluster status
-        cluster = self.get_test_cluster(self.cluster['id'])
+        cluster = self.get_test_cluster(self.cluster_id)
         self.assertEqual(2, cluster['max_size'])

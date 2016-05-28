@@ -21,19 +21,17 @@ class TestClusterDelete(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestClusterDelete, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)['id']
 
     @classmethod
     def resource_cleanup(cls):
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestClusterDelete, cls).resource_cleanup()
 
     @decorators.idempotent_id('33d7426e-0138-42c9-9ab4-ba796a7d1fdc')
     def test_cluster_delete_in_active_status(self):
-        # Delete test cluster
-        res = self.client.delete_obj('clusters', self.cluster['id'])
+        res = self.client.delete_obj('clusters', self.cluster_id)
 
         # Verify resp code, body and location in headers
         self.assertEqual(202, res['status'])

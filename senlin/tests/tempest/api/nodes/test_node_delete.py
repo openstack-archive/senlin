@@ -21,20 +21,18 @@ class TestNodeDelete(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestNodeDelete, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        # Create test node
-        cls.node = cls.create_test_node(cls.profile['id'])
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.node_id = cls.create_test_node(cls.profile_id)['id']
 
     @classmethod
     def resource_cleanup(cls):
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestNodeDelete, cls).resource_cleanup()
 
     @decorators.idempotent_id('29b18f65-2e0e-4a61-b00a-e5803365525b')
     def test_node_delete(self):
         # Delete test node
-        res = self.client.delete_obj('nodes', self.node['id'])
+        res = self.client.delete_obj('nodes', self.node_id)
 
         # Verfiy resp code, body and location in headers
         self.assertEqual(202, res['status'])

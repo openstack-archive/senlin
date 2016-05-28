@@ -23,19 +23,18 @@ class TestPolicyDeleteNegative(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestPolicyDeleteNegative, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)['id']
         cls.policy = cls.create_test_policy()
-        cls.attach_policy(cls.cluster['id'], cls.policy['id'])
+        cls.attach_policy(cls.cluster_id, cls.policy['id'])
 
     @classmethod
     def resource_cleanup(cls):
         # Detach policy from cluster and delete it
-        cls.detach_policy(cls.cluster['id'], cls.policy['id'])
+        cls.detach_policy(cls.cluster_id, cls.policy['id'])
         cls.client.delete_obj('policies', cls.policy['id'])
-        utils.delete_a_cluster(cls, cls.cluster['id'])
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        utils.delete_a_cluster(cls, cls.cluster_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestPolicyDeleteNegative, cls).resource_cleanup()
 
     @test.attr(type=['negative'])

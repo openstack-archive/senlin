@@ -23,16 +23,15 @@ class TestNodeDelete(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestNodeDelete, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.node = cls.create_test_node(cls.profile['id'], name='node1',
-                                        metadata={'k1': 'v1'}, role='member')
+        cls.profile_id = utils.create_a_profile(cls)
+        node = cls.create_test_node(cls.profile_id, name='node1',
+                                    metadata={'k1': 'v1'}, role='member')
+        cls.node_id = node['id']
 
     @classmethod
     def resource_cleanup(cls):
-        # Delete test node
-        cls.delete_test_node(cls.node['id'])
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        cls.delete_test_node(cls.node_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestNodeDelete, cls).resource_cleanup()
 
     @decorators.idempotent_id('bd8a39bf-eee0-4056-aec0-0d8f8706efea')
@@ -45,7 +44,7 @@ class TestNodeDelete(base.BaseSenlinTest):
                 'metadata': {'k2': 'v2'}
             }
         }
-        res = self.client.update_obj('nodes', self.node['id'], params)
+        res = self.client.update_obj('nodes', self.node_id, params)
 
         # Verify resp of node update API
         self.assertEqual(202, res['status'])
@@ -74,15 +73,15 @@ class TestNodeDelete(base.BaseSenlinTest):
         spec_nova_server = copy.deepcopy(constants.spec_nova_server)
         spec_nova_server['properties']['flavor'] = 'new_flavor'
         spec_nova_server['properties']['image'] = 'new_image'
-        new_profile = utils.create_a_profile(self, spec_nova_server)
+        new_profile_id = utils.create_a_profile(self, spec_nova_server)
 
         # Update node with new profile
         params = {
             'node': {
-                'profile_id': new_profile['id']
+                'profile_id': new_profile_id
             }
         }
-        res = self.client.update_obj('nodes', self.node['id'], params)
+        res = self.client.update_obj('nodes', self.node_id, params)
 
         # Verify resp of node update API
         self.assertEqual(202, res['status'])
@@ -101,4 +100,7 @@ class TestNodeDelete(base.BaseSenlinTest):
 
         # Verify node update result
         node = self.get_test_node(node['id'])
-        self.assertEqual(new_profile['id'], node['profile_id'])
+        self.assertEqual(new_profile_id, node['profile_id'])
+
+        # cannot do this yet, because the profile is still being used
+        # utils.delete_a_profile(self, new_profile_id)

@@ -21,20 +21,18 @@ class TestNodeShow(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestNodeShow, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.node = cls.create_test_node(cls.profile['id'])
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.node_id = cls.create_test_node(cls.profile_id)['id']
 
     @classmethod
     def resource_cleanup(cls):
-        # Delete test node
-        cls.delete_test_node(cls.node['id'])
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        cls.delete_test_node(cls.node_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestNodeShow, cls).resource_cleanup()
 
     @decorators.idempotent_id('302372e8-efa2-4348-88dd-8a1829e5e26c')
     def test_node_show(self):
-        res = self.client.get_obj('nodes', self.node['id'])
+        res = self.client.get_obj('nodes', self.node_id)
 
         # Verify resp of node get API
         self.assertEqual(200, res['status'])

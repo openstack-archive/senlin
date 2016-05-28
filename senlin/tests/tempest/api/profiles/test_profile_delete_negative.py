@@ -23,14 +23,13 @@ class TestProfileDeleteNegative(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestProfileDeleteNegative, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)['id']
 
     @classmethod
     def resource_cleanup(cls):
-        utils.delete_a_cluster(cls, cls.cluster['id'])
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        utils.delete_a_cluster(cls, cls.cluster_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestProfileDeleteNegative, cls).resource_cleanup()
 
     @test.attr(type=['negative'])
@@ -39,5 +38,4 @@ class TestProfileDeleteNegative(base.BaseSenlinTest):
         # Verify conflict exception(409) is raised.
         self.assertRaises(exceptions.Conflict,
                           self.client.delete_obj,
-                          'profiles',
-                          self.profile['id'])
+                          'profiles', self.profile_id)

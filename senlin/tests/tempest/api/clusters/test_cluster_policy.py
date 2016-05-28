@@ -21,24 +21,23 @@ class TestClusterPolicy(base.BaseSenlinTest):
     @classmethod
     def resource_setup(cls):
         super(TestClusterPolicy, cls).resource_setup()
-        cls.profile = utils.create_a_profile(cls)
-        cls.cluster = utils.create_a_cluster(cls, cls.profile['id'])
+        cls.profile_id = utils.create_a_profile(cls)
+        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)['id']
         cls.policy = cls.create_test_policy()
-        cls.attach_policy(cls.cluster['id'], cls.policy['id'])
+        cls.attach_policy(cls.cluster_id, cls.policy['id'])
 
     @classmethod
     def resource_cleanup(cls):
         # Detach policy from cluster and delete it
-        cls.detach_policy(cls.cluster['id'], cls.policy['id'])
+        cls.detach_policy(cls.cluster_id, cls.policy['id'])
         cls.client.delete_obj('policies', cls.policy['id'])
-        utils.delete_a_cluster(cls, cls.cluster['id'])
-        # Delete profile
-        cls.delete_profile(cls.profile['id'])
+        utils.delete_a_cluster(cls, cls.cluster_id)
+        utils.delete_a_profile(cls, cls.profile_id)
         super(TestClusterPolicy, cls).resource_cleanup()
 
     @decorators.idempotent_id('ebaeedcb-7198-4997-9b9c-a8f1eccfc2a6')
     def test_cluster_policy_list(self):
-        res = self.client.list_cluster_policies(self.cluster['id'])
+        res = self.client.list_cluster_policies(self.cluster_id)
 
         # Verify resp of cluster policy list API
         self.assertEqual(200, res['status'])
@@ -53,7 +52,7 @@ class TestClusterPolicy(base.BaseSenlinTest):
 
     @decorators.idempotent_id('fdf4dbf9-fcc6-4eb0-96c1-d8e8caa90f6d')
     def test_cluster_policy_show(self):
-        res = self.client.get_cluster_policy(self.cluster['id'],
+        res = self.client.get_cluster_policy(self.cluster_id,
                                              self.policy['id'])
 
         # Verify resp of cluster policy show API
