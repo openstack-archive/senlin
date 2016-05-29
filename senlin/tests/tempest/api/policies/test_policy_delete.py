@@ -17,15 +17,13 @@ from senlin.tests.tempest.api import base
 
 class TestPolicyDelete(base.BaseSenlinTest):
 
-    @classmethod
-    def resource_setup(cls):
-        super(TestPolicyDelete, cls).resource_setup()
-        # Create policy
-        cls.policy = cls.create_test_policy()
+    def setUp(self):
+        super(TestPolicyDelete, self).setUp()
+        self.policy_id = self.create_test_policy()['id']
 
     @decorators.idempotent_id('b707e4e3-3d42-4a9f-9a09-3e330959b498')
     def test_delete_policy(self):
         # Verify resp of policy delete API
-        res = self.client.delete_obj('policies', self.policy['id'])
+        res = self.client.delete_obj('policies', self.policy_id)
         self.assertEqual(204, res['status'])
         self.assertIsNone(res['body'])

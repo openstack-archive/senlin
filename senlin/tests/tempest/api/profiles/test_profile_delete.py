@@ -18,10 +18,9 @@ from senlin.tests.tempest.api import utils
 
 class TestProfileDelete(base.BaseSenlinTest):
 
-    @classmethod
-    def resource_setup(cls):
-        super(TestProfileDelete, cls).resource_setup()
-        cls.profile_id = utils.create_a_profile(cls)
+    def setUp(self):
+        super(TestProfileDelete, self).setUp()
+        self.profile_id = utils.create_a_profile(self)
 
     @decorators.idempotent_id('ea3c1b9e-5ed7-4d63-84ce-2032c3bc6d27')
     def test_delete_profile(self):

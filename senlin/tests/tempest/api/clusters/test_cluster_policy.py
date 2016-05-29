@@ -18,22 +18,19 @@ from senlin.tests.tempest.api import utils
 
 class TestClusterPolicy(base.BaseSenlinTest):
 
-    @classmethod
-    def resource_setup(cls):
-        super(TestClusterPolicy, cls).resource_setup()
-        cls.profile_id = utils.create_a_profile(cls)
-        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)
-        cls.policy = cls.create_test_policy()
-        cls.attach_policy(cls.cluster_id, cls.policy['id'])
+    def setUp(self):
+        super(TestClusterPolicy, self).setUp()
+        profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, profile_id)
 
-    @classmethod
-    def resource_cleanup(cls):
-        # Detach policy from cluster and delete it
-        cls.detach_policy(cls.cluster_id, cls.policy['id'])
-        cls.client.delete_obj('policies', cls.policy['id'])
-        utils.delete_a_cluster(cls, cls.cluster_id)
-        utils.delete_a_profile(cls, cls.profile_id)
-        super(TestClusterPolicy, cls).resource_cleanup()
+        self.cluster_id = utils.create_a_cluster(self, profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+
+        self.policy_id = self.create_test_policy()['id']
+        self.addCleanup(self.client.delete_obj, 'policies', self.policy_id)
+
+        self.attach_policy(self.cluster_id, self.policy_id)
+        self.addCleanup(self.detach_policy, self.cluster_id, self.policy_id)
 
     @decorators.idempotent_id('ebaeedcb-7198-4997-9b9c-a8f1eccfc2a6')
     def test_cluster_policy_list(self):
@@ -48,12 +45,11 @@ class TestClusterPolicy(base.BaseSenlinTest):
         for key in ['cluster_id', 'cluster_name', 'enabled', 'id',
                     'policy_id', 'policy_name', 'policy_type']:
             self.assertIn(key, policies[0])
-        self.assertEqual(self.policy['id'], policies[0]['policy_id'])
+        self.assertEqual(self.policy_id, policies[0]['policy_id'])
 
     @decorators.idempotent_id('fdf4dbf9-fcc6-4eb0-96c1-d8e8caa90f6d')
     def test_cluster_policy_show(self):
-        res = self.client.get_cluster_policy(self.cluster_id,
-                                             self.policy['id'])
+        res = self.client.get_cluster_policy(self.cluster_id, self.policy_id)
 
         # Verify resp of cluster policy show API
         self.assertEqual(200, res['status'])
@@ -63,4 +59,4 @@ class TestClusterPolicy(base.BaseSenlinTest):
         for key in ['cluster_id', 'cluster_name', 'id', 'policy_id',
                     'policy_name', 'policy_type', 'enabled']:
             self.assertIn(key, policy)
-        self.assertEqual(self.policy['id'], policy['policy_id'])
+        self.assertEqual(self.policy_id, policy['policy_id'])

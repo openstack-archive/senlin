@@ -18,17 +18,12 @@ from senlin.tests.tempest.api import utils
 
 class TestNodeList(base.BaseSenlinTest):
 
-    @classmethod
-    def resource_setup(cls):
-        super(TestNodeList, cls).resource_setup()
-        cls.profile_id = utils.create_a_profile(cls)
-        cls.node_id = cls.create_test_node(cls.profile_id)['id']
-
-    @classmethod
-    def resource_cleanup(cls):
-        cls.delete_test_node(cls.node_id)
-        utils.delete_a_profile(cls, cls.profile_id)
-        super(TestNodeList, cls).resource_cleanup()
+    def setUp(self):
+        super(TestNodeList, self).setUp()
+        profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, profile_id)
+        self.node_id = self.create_test_node(profile_id)['id']
+        self.addCleanup(self.delete_test_node, self.node_id)
 
     @decorators.idempotent_id('cd086dcb-7509-4125-adfc-6beb63b10d0a')
     def test_node_list(self):
@@ -48,4 +43,5 @@ class TestNodeList(base.BaseSenlinTest):
                         'updated_at', 'user']:
                 self.assertIn(key, node)
             node_ids.append(node['id'])
+
         self.assertIn(self.node_id, node_ids)

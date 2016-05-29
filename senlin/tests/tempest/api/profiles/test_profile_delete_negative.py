@@ -20,17 +20,12 @@ from senlin.tests.tempest.api import utils
 
 class TestProfileDeleteNegative(base.BaseSenlinTest):
 
-    @classmethod
-    def resource_setup(cls):
-        super(TestProfileDeleteNegative, cls).resource_setup()
-        cls.profile_id = utils.create_a_profile(cls)
-        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)
-
-    @classmethod
-    def resource_cleanup(cls):
-        utils.delete_a_cluster(cls, cls.cluster_id)
-        utils.delete_a_profile(cls, cls.profile_id)
-        super(TestProfileDeleteNegative, cls).resource_cleanup()
+    def setUp(self):
+        super(TestProfileDeleteNegative, self).setUp()
+        self.profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id)
+        cluster_id = utils.create_a_cluster(self, self.profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, cluster_id)
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('8e5e8414-b757-41f4-b633-e0fa83d72ea2')

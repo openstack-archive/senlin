@@ -18,19 +18,16 @@ from senlin.tests.tempest.api import utils
 
 class TestReceiverDelete(base.BaseSenlinTest):
 
-    @classmethod
-    def resource_setup(cls):
-        super(TestReceiverDelete, cls).resource_setup()
-        cls.profile_id = utils.create_a_profile(cls)
-        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)
-        cls.receiver_id = utils.create_a_receiver(cls.client, cls.cluster_id,
-                                                  'CLUSTER_RESIZE')
+    def setUp(self):
+        super(TestReceiverDelete, self).setUp()
+        profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, profile_id)
 
-    @classmethod
-    def resource_cleanup(cls):
-        utils.delete_a_cluster(cls, cls.cluster_id)
-        utils.delete_a_profile(cls, cls.profile_id)
-        super(TestReceiverDelete, cls).resource_cleanup()
+        cluster_id = utils.create_a_cluster(self, profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, cluster_id)
+
+        self.receiver_id = utils.create_a_receiver(self.client, cluster_id,
+                                                   'CLUSTER_RESIZE')
 
     @decorators.idempotent_id('c67cf6c3-2339-4f10-9631-fb7e9f47170f')
     def test_delete_receiver(self):

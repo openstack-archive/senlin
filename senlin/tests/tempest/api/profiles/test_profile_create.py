@@ -13,22 +13,11 @@
 from tempest.lib import decorators
 
 from senlin.tests.tempest.api import base
+from senlin.tests.tempest.api import utils
 from senlin.tests.tempest.common import constants
 
 
 class TestProfileCreate(base.BaseSenlinTest):
-
-    @classmethod
-    def resource_setup(cls):
-        super(TestProfileCreate, cls).resource_setup()
-        cls.profiles = []
-
-    @classmethod
-    def resource_cleanup(cls):
-        # Delete profile
-        for profile in cls.profiles:
-            cls.client.delete_obj('profiles', profile)
-        super(TestProfileCreate, cls).resource_cleanup()
 
     @decorators.idempotent_id('76216581-e78a-42f5-bf1d-65d83bd206fc')
     def test_create_profile(self):
@@ -45,7 +34,8 @@ class TestProfileCreate(base.BaseSenlinTest):
         self.assertEqual(201, res['status'])
         self.assertIsNotNone(res['body'])
         profile = res['body']
-        self.profiles.append(profile['id'])
+        self.addCleanup(utils.delete_a_profile, self, profile['id'])
+
         for key in ['created_at', 'domain', 'id', 'metadata', 'name',
                     'project', 'spec', 'type', 'updated_at', 'user']:
             self.assertIn(key, profile)

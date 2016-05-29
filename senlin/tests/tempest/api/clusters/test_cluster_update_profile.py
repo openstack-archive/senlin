@@ -10,31 +10,38 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
 from tempest.lib import decorators
 
 from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
+from senlin.tests.tempest.common import constants
 
 
-class TestClusterUpdate(base.BaseSenlinTest):
+class TestClusterUpdateProfile(base.BaseSenlinTest):
 
     def setUp(self):
-        super(TestClusterUpdate, self).setUp()
+        super(TestClusterUpdateProfile, self).setUp()
 
         profile_id = utils.create_a_profile(self)
         self.addCleanup(utils.delete_a_profile, self, profile_id)
 
+        # create a new profile
+        new_spec = copy.deepcopy(constants.spec_nova_server)
+        new_spec['properties']['flavor'] = 'new_flavor'
+        new_spec['properties']['image'] = 'new_image'
+        self.new_profile_id = utils.create_a_profile(self, new_spec)
+        self.addCleanup(utils.delete_a_profile, self, self.new_profile_id)
+
         self.cluster_id = utils.create_a_cluster(self, profile_id)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
-    @decorators.idempotent_id('ba8514b2-b3c4-47a4-9176-7fe9bb2781ae')
-    def test_cluster_update_basic_properties(self):
-        # Update basic properties of cluster
+    @decorators.idempotent_id('abff7891-21af-4c37-a8df-5bc7379ce349')
+    def test_cluster_update_profile(self):
+        # Update cluster with new profile
         params = {
             'cluster': {
-                'timeout': 240,
-                'metadata': {'k2': 'v2'},
-                'name': 'cluster_new_name'
+                'profile_id': self.new_profile_id
             }
         }
         res = self.client.update_obj('clusters', self.cluster_id, params)

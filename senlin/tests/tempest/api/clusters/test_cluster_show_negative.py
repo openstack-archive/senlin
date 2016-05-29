@@ -24,5 +24,4 @@ class TestClusterShowNegative(base.BaseSenlinTest):
     def test_cluster_show_not_found(self):
         self.assertRaises(exceptions.NotFound,
                           self.client.get_obj,
-                          'clusters',
-                          'bbc593ff-8556-416e-83c3-384e5c14d363')
+                          'clusters', 'bbc593ff-8556-416e-83c3-384e5c14d363')

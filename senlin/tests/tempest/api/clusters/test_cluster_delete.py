@@ -18,16 +18,13 @@ from senlin.tests.tempest.api import utils
 
 class TestClusterDelete(base.BaseSenlinTest):
 
-    @classmethod
-    def resource_setup(cls):
-        super(TestClusterDelete, cls).resource_setup()
-        cls.profile_id = utils.create_a_profile(cls)
-        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)
+    def setUp(self):
+        super(TestClusterDelete, self).setUp()
+        profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, profile_id)
 
-    @classmethod
-    def resource_cleanup(cls):
-        utils.delete_a_profile(cls, cls.profile_id)
-        super(TestClusterDelete, cls).resource_cleanup()
+        # cluster will be deleted by test case
+        self.cluster_id = utils.create_a_cluster(self, profile_id)
 
     @decorators.idempotent_id('33d7426e-0138-42c9-9ab4-ba796a7d1fdc')
     def test_cluster_delete_in_active_status(self):

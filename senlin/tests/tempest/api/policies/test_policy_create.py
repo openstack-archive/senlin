@@ -18,17 +18,9 @@ from senlin.tests.tempest.common import constants
 
 class TestPolicyCreate(base.BaseSenlinTest):
 
-    @classmethod
-    def resource_setup(cls):
-        super(TestPolicyCreate, cls).resource_setup()
-        cls.policies = []
-
-    @classmethod
-    def resource_cleanup(cls):
-        # Delete receivers
-        for policy in cls.policies:
-            cls.client.delete_obj('policies', policy)
-        super(TestPolicyCreate, cls).resource_cleanup()
+    def setUp(self):
+        super(TestPolicyCreate, self).setUp()
+        self.policy_id = None
 
     @decorators.idempotent_id('f50648d9-f38c-479a-a82b-3c6909733496')
     def test_create_policy(self):
@@ -44,7 +36,9 @@ class TestPolicyCreate(base.BaseSenlinTest):
         self.assertEqual(201, res['status'])
         self.assertIsNotNone(res['body'])
         policy = res['body']
-        self.policies.append(policy['id'])
+
+        self.addCleanup(self.client.delete_obj, 'policies', policy['id'])
+
         for key in ['created_at', 'data', 'domain', 'id', 'name', 'project',
                     'spec', 'type', 'updated_at', 'user']:
             self.assertIn(key, policy)

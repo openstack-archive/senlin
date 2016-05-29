@@ -20,22 +20,19 @@ from senlin.tests.tempest.api import utils
 
 class TestClusterDeleteNegative(base.BaseSenlinTest):
 
-    @classmethod
-    def resource_setup(cls):
-        super(TestClusterDeleteNegative, cls).resource_setup()
-        cls.profile_id = utils.create_a_profile(cls)
-        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)
-        cls.policy = cls.create_test_policy()
-        cls.attach_policy(cls.cluster_id, cls.policy['id'])
+    def setUp(self):
+        super(TestClusterDeleteNegative, self).setUp()
+        profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, profile_id)
 
-    @classmethod
-    def resource_cleanup(cls):
-        # Detach policy from cluster and delete it
-        cls.detach_policy(cls.cluster_id, cls.policy['id'])
-        cls.client.delete_obj('policies', cls.policy['id'])
-        utils.delete_a_cluster(cls, cls.cluster_id)
-        utils.delete_a_profile(cls, cls.profile_id)
-        super(TestClusterDeleteNegative, cls).resource_cleanup()
+        self.cluster_id = utils.create_a_cluster(self, profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+
+        self.policy = self.create_test_policy()
+        self.addCleanup(self.client.delete_obj, 'policies', self.policy['id'])
+
+        self.attach_policy(self.cluster_id, self.policy['id'])
+        self.addCleanup(self.detach_policy, self.cluster_id, self.policy['id'])
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('0de81427-2b2f-4821-9462-c893d35fb212')

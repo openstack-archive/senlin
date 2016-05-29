@@ -17,16 +17,10 @@ from senlin.tests.tempest.api import base
 
 class TestPolicyUpdate(base.BaseSenlinTest):
 
-    @classmethod
-    def resource_setup(cls):
-        super(TestPolicyUpdate, cls).resource_setup()
-        # Create policy
-        cls.policy = cls.create_test_policy()
-
-    @classmethod
-    def resource_cleanup(cls):
-        # Delete policy
-        cls.client.delete_obj('policies', cls.policy['id'])
+    def setUp(self):
+        super(TestPolicyUpdate, self).setUp()
+        self.policy_id = self.create_test_policy()['id']
+        self.addCleanup(self.client.delete_obj, 'policies', self.policy_id)
 
     @decorators.idempotent_id('dbe9c6a6-882c-41cf-b862-7f648804db24')
     def test_update_policy(self):
@@ -35,7 +29,7 @@ class TestPolicyUpdate(base.BaseSenlinTest):
                 'name': 'updated-policy-name'
             }
         }
-        res = self.client.update_obj('policies', self.policy['id'], params)
+        res = self.client.update_obj('policies', self.policy_id, params)
 
         # Verify resp of policy update API
         self.assertEqual(200, res['status'])

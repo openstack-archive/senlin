@@ -18,16 +18,12 @@ from senlin.tests.tempest.api import utils
 
 class TestNodeDelete(base.BaseSenlinTest):
 
-    @classmethod
-    def resource_setup(cls):
-        super(TestNodeDelete, cls).resource_setup()
-        cls.profile_id = utils.create_a_profile(cls)
-        cls.node_id = cls.create_test_node(cls.profile_id)['id']
+    def setUp(self):
+        super(TestNodeDelete, self).setUp()
+        profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, profile_id)
 
-    @classmethod
-    def resource_cleanup(cls):
-        utils.delete_a_profile(cls, cls.profile_id)
-        super(TestNodeDelete, cls).resource_cleanup()
+        self.node_id = self.create_test_node(profile_id)['id']
 
     @decorators.idempotent_id('29b18f65-2e0e-4a61-b00a-e5803365525b')
     def test_node_delete(self):

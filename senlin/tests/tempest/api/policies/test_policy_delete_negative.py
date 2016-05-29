@@ -20,22 +20,19 @@ from senlin.tests.tempest.api import utils
 
 class TestPolicyDeleteNegative(base.BaseSenlinTest):
 
-    @classmethod
-    def resource_setup(cls):
-        super(TestPolicyDeleteNegative, cls).resource_setup()
-        cls.profile_id = utils.create_a_profile(cls)
-        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)
-        cls.policy = cls.create_test_policy()
-        cls.attach_policy(cls.cluster_id, cls.policy['id'])
+    def setUp(self):
+        super(TestPolicyDeleteNegative, self).setUp()
+        profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, profile_id)
 
-    @classmethod
-    def resource_cleanup(cls):
-        # Detach policy from cluster and delete it
-        cls.detach_policy(cls.cluster_id, cls.policy['id'])
-        cls.client.delete_obj('policies', cls.policy['id'])
-        utils.delete_a_cluster(cls, cls.cluster_id)
-        utils.delete_a_profile(cls, cls.profile_id)
-        super(TestPolicyDeleteNegative, cls).resource_cleanup()
+        cluster_id = utils.create_a_cluster(self, profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, cluster_id)
+
+        self.policy_id = self.create_test_policy()['id']
+        self.addCleanup(self.client.delete_obj, 'policies', self.policy_id)
+
+        self.attach_policy(cluster_id, self.policy_id)
+        self.addCleanup(self.detach_policy, cluster_id, self.policy_id)
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('b8b8fca8-962f-4cad-bfca-76683df7b617')
@@ -43,5 +40,4 @@ class TestPolicyDeleteNegative(base.BaseSenlinTest):
         # Verify conflict exception(409) is raised.
         self.assertRaises(exceptions.Conflict,
                           self.client.delete_obj,
-                          'policies',
-                          self.policy['id'])
+                          'policies', self.policy_id)

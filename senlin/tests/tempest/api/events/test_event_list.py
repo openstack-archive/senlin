@@ -18,17 +18,12 @@ from senlin.tests.tempest.api import utils
 
 class TestEventList(base.BaseSenlinTest):
 
-    @classmethod
-    def resource_setup(cls):
-        super(TestEventList, cls).resource_setup()
-        cls.profile_id = utils.create_a_profile(cls)
-        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)
-
-    @classmethod
-    def resource_cleanup(cls):
-        utils.delete_a_cluster(cls, cls.cluster_id)
-        utils.delete_a_profile(cls, cls.profile_id)
-        super(TestEventList, cls).resource_cleanup()
+    def setup(self):
+        super(TestEventList, self).setUp()
+        profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, profile_id)
+        cluster_id = utils.create_a_cluster(self, profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, cluster_id)
 
     @decorators.idempotent_id('498a7e22-7ada-415b-a7cf-927b0ad3d9f6')
     def test_list_event(self):

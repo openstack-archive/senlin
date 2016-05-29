@@ -18,25 +18,22 @@ from senlin.tests.tempest.api import utils
 
 class TestWebhookTrigger(base.BaseSenlinTest):
 
-    @classmethod
-    def resource_setup(cls):
-        super(TestWebhookTrigger, cls).resource_setup()
-        cls.profile_id = utils.create_a_profile(cls)
-        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)
+    def setUp(self):
+        super(TestWebhookTrigger, self).setUp()
+        profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, profile_id)
+
+        cluster_id = utils.create_a_cluster(self, profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, cluster_id)
+
         params = {'max_size': 2}
-        cls.receiver_id = utils.create_a_receiver(cls.client, cls.cluster_id,
-                                                  'CLUSTER_RESIZE',
-                                                  params=params)
+        self.receiver_id = utils.create_a_receiver(self.client, cluster_id,
+                                                   'CLUSTER_RESIZE',
+                                                   params=params)
+        self.addCleanup(self.client.delete_obj, 'receivers', self.receiver_id)
 
-        receiver = cls.client.get_obj('receivers', cls.receiver_id)
-        cls.webhook_url = receiver['body']['channel']['alarm_url']
-
-    @classmethod
-    def resource_cleanup(cls):
-        utils.delete_a_receiver(cls.client, cls.receiver_id)
-        utils.delete_a_cluster(cls, cls.cluster_id)
-        utils.delete_a_profile(cls, cls.profile_id)
-        super(TestWebhookTrigger, cls).resource_cleanup()
+        receiver = self.client.get_obj('receivers', self.receiver_id)
+        self.webhook_url = receiver['body']['channel']['alarm_url']
 
     @decorators.idempotent_id('afd671af-330a-46d6-bdb5-9c50966ab8b5')
     def test_trigger_webhook(self):

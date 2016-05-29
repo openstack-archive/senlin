@@ -18,15 +18,10 @@ from senlin.tests.tempest.api import utils
 
 class TestProfileShow(base.BaseSenlinTest):
 
-    @classmethod
-    def resource_setup(cls):
-        super(TestProfileShow, cls).resource_setup()
-        cls.profile_id = utils.create_a_profile(cls)
-
-    @classmethod
-    def resource_cleanup(cls):
-        utils.delete_a_profile(cls, cls.profile_id)
-        super(TestProfileShow, cls).resource_cleanup()
+    def setUp(self):
+        super(TestProfileShow, self).setUp()
+        self.profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id)
 
     @decorators.idempotent_id('36206711-0676-4e4f-8f5d-7029912ecade')
     def test_show_profile(self):

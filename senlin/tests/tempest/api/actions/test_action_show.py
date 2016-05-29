@@ -18,13 +18,14 @@ from senlin.tests.tempest.api import utils
 
 class TestActionShow(base.BaseSenlinTest):
 
-    @classmethod
-    def resource_setup(cls):
-        super(TestActionShow, cls).resource_setup()
-        cls.profile_id = utils.create_a_profile(cls)
+    def setUp(self):
+        super(TestActionShow, self).setUp()
+        profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, profile_id)
+
         params = {
             'cluster': {
-                'profile_id': cls.profile_id,
+                'profile_id': profile_id,
                 'desired_capacity': 0,
                 'min_size': 0,
                 'max_size': -1,
@@ -33,16 +34,11 @@ class TestActionShow(base.BaseSenlinTest):
                 'name': 'test-cluster-action-show'
             }
         }
-        res = cls.client.create_obj('clusters', params)
-        cls.action_id = res['location'].split('/actions/')[1]
-        cls.cluster_id = res['body']['id']
-        cls.wait_for_status('actions', cls.action_id, 'SUCCEEDED')
+        res = self.client.create_obj('clusters', params)
+        self.action_id = res['location'].split('/actions/')[1]
+        self.addCleanup(utils.delete_a_cluster, self, res['body']['id'])
 
-    @classmethod
-    def resource_cleanup(cls):
-        utils.delete_a_cluster(cls, cls.cluster_id)
-        utils.delete_a_profile(cls, cls.profile_id)
-        super(TestActionShow, cls).resource_cleanup()
+        self.wait_for_status('actions', self.action_id, 'SUCCEEDED')
 
     @decorators.idempotent_id('c6376f60-8f52-4384-8b6d-57df264f2e23')
     def test_action_show(self):

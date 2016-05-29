@@ -18,20 +18,17 @@ from senlin.tests.tempest.api import utils
 
 class TestReceiverList(base.BaseSenlinTest):
 
-    @classmethod
-    def resource_setup(cls):
-        super(TestReceiverList, cls).resource_setup()
-        cls.profile_id = utils.create_a_profile(cls)
-        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)
-        cls.receiver_id = utils.create_a_receiver(cls.client, cls.cluster_id,
-                                                  'CLUSTER_RESIZE')
+    def setUp(self):
+        super(TestReceiverList, self).setUp()
+        profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, profile_id)
 
-    @classmethod
-    def resource_cleanup(cls):
-        cls.client.delete_obj('receivers', cls.receiver_id)
-        utils.delete_a_cluster(cls, cls.cluster_id)
-        utils.delete_a_profile(cls, cls.profile_id)
-        super(TestReceiverList, cls).resource_cleanup()
+        cluster_id = utils.create_a_cluster(self, profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, cluster_id)
+
+        self.receiver_id = utils.create_a_receiver(self.client, cluster_id,
+                                                   'CLUSTER_RESIZE')
+        self.addCleanup(self.client.delete_obj, 'receivers', self.receiver_id)
 
     @decorators.idempotent_id('e5cedce0-9240-45ea-90d7-692be5058aac')
     def test_list_receiver(self):

@@ -18,17 +18,12 @@ from senlin.tests.tempest.api import utils
 
 class TestNodeCreate(base.BaseSenlinTest):
 
-    @classmethod
-    def resource_setup(cls):
-        super(TestNodeCreate, cls).resource_setup()
-        cls.profile_id = utils.create_a_profile(cls)
-        cls.cluster_id = utils.create_a_cluster(cls, cls.profile_id)
-
-    @classmethod
-    def resource_cleanup(cls):
-        utils.delete_a_cluster(cls, cls.cluster_id)
-        utils.delete_a_profile(cls, cls.profile_id)
-        super(TestNodeCreate, cls).resource_cleanup()
+    def setUp(self):
+        super(TestNodeCreate, self).setUp()
+        self.profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id)
+        self.cluster_id = utils.create_a_cluster(self, self.profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
     @decorators.idempotent_id('14d06753-7f0a-4ad2-84be-37fce7114a8f')
     def test_node_create_all_attrs_defined(self):
@@ -48,6 +43,7 @@ class TestNodeCreate(base.BaseSenlinTest):
         self.assertIsNotNone(res['body'])
         self.assertIn('actions', res['location'])
         node = res['body']
+        self.addCleanup(self.delete_test_node, node['id'])
         for key in ['cluster_id', 'created_at', 'data', 'domain', 'id',
                     'index', 'init_at', 'metadata', 'name', 'physical_id',
                     'profile_id', 'profile_name', 'project', 'role',
@@ -63,5 +59,3 @@ class TestNodeCreate(base.BaseSenlinTest):
         # Wait node to be active before moving on
         action_id = res['location'].split('/actions/')[1]
         self.wait_for_status('actions', action_id, 'SUCCEEDED')
-
-        self.delete_test_node(node['id'])
