@@ -23,7 +23,7 @@ class TestNodeDelete(base.BaseSenlinTest):
         profile_id = utils.create_a_profile(self)
         self.addCleanup(utils.delete_a_profile, self, profile_id)
 
-        self.node_id = self.create_test_node(profile_id)['id']
+        self.node_id = utils.create_a_node(self, profile_id)
 
     @decorators.idempotent_id('29b18f65-2e0e-4a61-b00a-e5803365525b')
     def test_node_delete(self):

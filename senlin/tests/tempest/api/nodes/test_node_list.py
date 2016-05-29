@@ -22,8 +22,9 @@ class TestNodeList(base.BaseSenlinTest):
         super(TestNodeList, self).setUp()
         profile_id = utils.create_a_profile(self)
         self.addCleanup(utils.delete_a_profile, self, profile_id)
-        self.node_id = self.create_test_node(profile_id)['id']
-        self.addCleanup(self.delete_test_node, self.node_id)
+
+        self.node_id = utils.create_a_node(self, profile_id)
+        self.addCleanup(utils.delete_a_node, self, self.node_id)
 
     @decorators.idempotent_id('cd086dcb-7509-4125-adfc-6beb63b10d0a')
     def test_node_list(self):

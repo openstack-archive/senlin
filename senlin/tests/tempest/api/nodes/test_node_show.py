@@ -22,8 +22,9 @@ class TestNodeShow(base.BaseSenlinTest):
         super(TestNodeShow, self).setUp()
         profile_id = utils.create_a_profile(self)
         self.addCleanup(utils.delete_a_profile, self, profile_id)
-        self.node_id = self.create_test_node(profile_id)['id']
-        self.addCleanup(self.delete_test_node, self.node_id)
+
+        self.node_id = utils.create_a_node(self, profile_id)
+        self.addCleanup(utils.delete_a_node, self, self.node_id)
 
     @decorators.idempotent_id('302372e8-efa2-4348-88dd-8a1829e5e26c')
     def test_node_show(self):

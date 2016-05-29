@@ -43,7 +43,7 @@ class TestNodeCreate(base.BaseSenlinTest):
         self.assertIsNotNone(res['body'])
         self.assertIn('actions', res['location'])
         node = res['body']
-        self.addCleanup(self.delete_test_node, node['id'])
+        self.addCleanup(utils.delete_a_node, self, node['id'])
         for key in ['cluster_id', 'created_at', 'data', 'domain', 'id',
                     'index', 'init_at', 'metadata', 'name', 'physical_id',
                     'profile_id', 'profile_name', 'project', 'role',

@@ -37,6 +37,15 @@ def create_a_profile(cls, spec=None, name=None, metadata=None):
     return res['body']['id']
 
 
+def delete_a_profile(cls, profile_id, ignore_missing=False):
+    """Utility function that deletes a Senlin profile."""
+    res = cls.client.delete_obj('profiles', profile_id)
+    if res['status'] == 404:
+        if ignore_missing:
+            return
+        raise exceptions.NotFound()
+
+
 def create_a_cluster(cls, profile_id, desired_capacity=0, min_size=0,
                      max_size=-1, timeout=None, metadata=None, name=None,
                      wait_timeout=None):
@@ -66,6 +75,50 @@ def create_a_cluster(cls, profile_id, desired_capacity=0, min_size=0,
     return cluster_id
 
 
+def delete_a_cluster(cls, cluster_id, wait_timeout=None):
+    """Utility function that deletes a Senlin cluster."""
+    res = cls.client.delete_obj('clusters', cluster_id)
+    action_id = res['location'].split('/actions/')[1]
+    cls.wait_for_status('actions', action_id, 'SUCCEEDED', wait_timeout)
+    return
+
+
+def create_a_node(base, profile_id, cluster_id=None, metadata=None,
+                  role=None, name=None, wait_timeout=None):
+    """Utility function that creates a node.
+
+    Create a node and return it after it is ACTIVE. This function is for
+    minimizing the code duplication that could happen in API tests where
+    an 'existing' Senlin node is needed.
+    """
+    if name is None:
+        name = data_utils.rand_name("tempest-created-node")
+
+    params = {
+        'node': {
+            'profile_id': profile_id,
+            'cluster_id': cluster_id,
+            'metadata': metadata,
+            'role': role,
+            'name': name
+        }
+    }
+    res = base.client.create_obj('nodes', params)
+    node_id = res['body']['id']
+    action_id = res['location'].split('/actions/')[1]
+    base.wait_for_status('actions', action_id, 'SUCCEEDED', wait_timeout)
+    res = base.client.get_obj('nodes', node_id)
+    return res['body']['id']
+
+
+def delete_a_node(base, node_id, wait_timeout=None):
+    """Utility function that deletes a Senlin node."""
+    res = base.client.delete_obj('nodes', node_id)
+    action_id = res['location'].split('/actions/')[1]
+    base.wait_for_status('actions', action_id, 'SUCCEEDED', wait_timeout)
+    return
+
+
 def create_a_receiver(client, cluster_id, action, r_type=None, name=None,
                       params=None):
     """Utility function that generates a Senlin receiver."""
@@ -84,22 +137,6 @@ def create_a_receiver(client, cluster_id, action, r_type=None, name=None,
     }
     res = client.create_obj('receivers', body)
     return res['body']['id']
-
-
-def delete_a_cluster(cls, cluster_id, wait_timeout=None):
-    """Utility function that deletes a Senlin cluster."""
-    res = cls.client.delete_obj('clusters', cluster_id)
-    action_id = res['location'].split('/actions/')[1]
-    cls.wait_for_status('actions', action_id, 'SUCCEEDED', wait_timeout)
-
-
-def delete_a_profile(cls, profile_id, ignore_missing=False):
-    """Utility function that deletes a Senlin profile."""
-    res = cls.client.delete_obj('profiles', profile_id)
-    if res['status'] == 404:
-        if ignore_missing:
-            return
-        raise exceptions.NotFound()
 
 
 def delete_a_receiver(client, receiver_id, ignore_missing=False):

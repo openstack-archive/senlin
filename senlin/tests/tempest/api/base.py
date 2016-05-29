@@ -52,6 +52,7 @@ class BaseSenlinTest(test.BaseTestCase):
     def wait_for_status(cls, obj_type, obj_id, expected_status, timeout=None):
         if timeout is None:
             timeout = CONF.clustering.wait_timeout
+
         while timeout > 0:
             res = cls.client.get_obj(obj_type, obj_id)
             if res['body']['status'] == expected_status:
@@ -72,50 +73,6 @@ class BaseSenlinTest(test.BaseTestCase):
             time.sleep(5)
             timeout -= 5
         raise Exception('Timeout waiting for deletion.')
-
-    @classmethod
-    def create_test_node(cls, profile_id, cluster_id=None, metadata=None,
-                         role=None, name=None, wait_timeout=None):
-        """Utility function that generates a Senlin node.
-
-        Create a Senlin node and return it after it is active. This
-        function is for minimizing the code duplication that could
-        happen in API test cases where a 'existing' Senlin node is needed.
-        """
-        if name is None:
-            name = data_utils.rand_name("tempest-created-node")
-        params = {
-            'node': {
-                'profile_id': profile_id,
-                'cluster_id': cluster_id,
-                'metadata': metadata,
-                'role': role,
-                'name': name
-            }
-        }
-        res = cls.client.create_obj('nodes', params)
-        node_id = res['body']['id']
-        action_id = res['location'].split('/actions/')[1]
-        cls.wait_for_status('actions', action_id, 'SUCCEEDED',
-                            timeout=wait_timeout)
-        res = cls.client.get_obj('nodes', node_id)
-        return res['body']
-
-    @classmethod
-    def delete_test_node(cls, node_id, wait_timeout=None):
-        """Utility function that deletes a Senlin node."""
-
-        res = cls.client.delete_obj('nodes', node_id)
-        action_id = res['location'].split('/actions/')[1]
-        cls.wait_for_status('actions', action_id, 'SUCCEEDED',
-                            timeout=wait_timeout)
-
-    @classmethod
-    def get_test_node(cls, node_id):
-        """Utility function that get detail of a Senlin node."""
-
-        res = cls.client.get_obj('nodes', node_id)
-        return res['body']
 
     @classmethod
     def create_test_policy(cls, spec=None, name=None):

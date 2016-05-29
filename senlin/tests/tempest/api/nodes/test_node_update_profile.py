@@ -31,10 +31,8 @@ class TestNodeUpdateProfile(base.BaseSenlinTest):
         self.new_profile_id = utils.create_a_profile(self, new_spec)
         self.addCleanup(utils.delete_a_profile, self, self.new_profile_id)
 
-        self.node_id = self.create_test_node(profile_id, name='node1',
-                                             metadata={'k1': 'v1'},
-                                             role='member')['id']
-        self.addCleanup(self.delete_test_node, self.node_id)
+        self.node_id = utils.create_a_node(self, profile_id)
+        self.addCleanup(utils.delete_a_node, self, self.node_id)
 
     @decorators.idempotent_id('de9465f2-95b4-41ce-81f5-b092967cb2b8')
     def test_node_update_profile(self):

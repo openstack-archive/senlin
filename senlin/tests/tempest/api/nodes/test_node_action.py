@@ -23,8 +23,8 @@ class TestNodeAction(base.BaseSenlinTest):
         profile_id = utils.create_a_profile(self)
         self.addCleanup(utils.delete_a_profile, self, profile_id)
 
-        self.node_id = self.create_test_node(profile_id)['id']
-        self.addCleanup(self.delete_test_node, self.node_id)
+        self.node_id = utils.create_a_node(self, profile_id)
+        self.addCleanup(utils.delete_a_node, self, self.node_id)
 
     @decorators.idempotent_id('ae124bfe-9fcf-4e87-91b7-319102efbdcc')
     def test_node_action_trigger(self):
