@@ -26,11 +26,12 @@ class TestClusterPolicy(base.BaseSenlinTest):
         self.cluster_id = utils.create_a_cluster(self, profile_id)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
-        self.policy_id = self.create_test_policy()['id']
-        self.addCleanup(self.client.delete_obj, 'policies', self.policy_id)
+        self.policy_id = utils.create_a_policy(self)
+        self.addCleanup(utils.delete_a_policy, self, self.policy_id)
 
-        self.attach_policy(self.cluster_id, self.policy_id)
-        self.addCleanup(self.detach_policy, self.cluster_id, self.policy_id)
+        utils.attach_policy(self, self.cluster_id, self.policy_id)
+        self.addCleanup(utils.detach_policy, self, self.cluster_id,
+                        self.policy_id)
 
     @decorators.idempotent_id('ebaeedcb-7198-4997-9b9c-a8f1eccfc2a6')
     def test_cluster_policy_list(self):

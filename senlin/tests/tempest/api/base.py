@@ -16,12 +16,10 @@ import time
 
 from oslo_log import log
 from tempest import config
-from tempest.lib.common.utils import data_utils
 from tempest.lib import exceptions
 from tempest import test
 
 from senlin.tests.tempest.common import clustering_client
-from senlin.tests.tempest.common import constants
 
 CONF = config.CONF
 lOG = log.getLogger(__name__)
@@ -73,47 +71,3 @@ class BaseSenlinTest(test.BaseTestCase):
             time.sleep(5)
             timeout -= 5
         raise Exception('Timeout waiting for deletion.')
-
-    @classmethod
-    def create_test_policy(cls, spec=None, name=None):
-        """Utility function that generates a Senlin policy."""
-
-        params = {
-            'policy': {
-                'name': name or data_utils.rand_name("tempest-created-policy"),
-                'spec': spec or constants.spec_scaling_policy
-            }
-        }
-        res = cls.client.create_obj('policies', params)
-        return res['body']
-
-    @classmethod
-    def attach_policy(cls, cluster_id, policy_id, wait_timeout=None):
-        """Utility function that attach a policy to cluster."""
-
-        params = {
-            'policy_attach': {
-                'enabled': True,
-                'policy_id': policy_id,
-            }
-        }
-        res = cls.client.trigger_action('clusters', cluster_id,
-                                        params=params)
-        action_id = res['location'].split('/actions/')[1]
-        cls.wait_for_status('actions', action_id, 'SUCCEEDED',
-                            timeout=wait_timeout)
-
-    @classmethod
-    def detach_policy(cls, cluster_id, policy_id, wait_timeout=None):
-        """Utility function that detach a policy from cluster."""
-
-        params = {
-            'policy_detach': {
-                'policy_id': policy_id,
-            }
-        }
-        res = cls.client.trigger_action('clusters', cluster_id,
-                                        params=params)
-        action_id = res['location'].split('/actions/')[1]
-        cls.wait_for_status('actions', action_id, 'SUCCEEDED',
-                            timeout=wait_timeout)

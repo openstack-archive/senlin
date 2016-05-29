@@ -28,11 +28,11 @@ class TestClusterDeleteNegative(base.BaseSenlinTest):
         self.cluster_id = utils.create_a_cluster(self, profile_id)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
-        self.policy = self.create_test_policy()
-        self.addCleanup(self.client.delete_obj, 'policies', self.policy['id'])
+        policy_id = utils.create_a_policy(self)
+        self.addCleanup(utils.delete_a_policy, self, policy_id)
 
-        self.attach_policy(self.cluster_id, self.policy['id'])
-        self.addCleanup(self.detach_policy, self.cluster_id, self.policy['id'])
+        utils.attach_policy(self, self.cluster_id, policy_id)
+        self.addCleanup(utils.detach_policy, self, self.cluster_id, policy_id)
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('0de81427-2b2f-4821-9462-c893d35fb212')

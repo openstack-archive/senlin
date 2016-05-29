@@ -17,7 +17,7 @@ from tempest.lib import exceptions
 from senlin.tests.tempest.common import constants
 
 
-def create_a_profile(cls, spec=None, name=None, metadata=None):
+def create_a_profile(base, spec=None, name=None, metadata=None):
     """Utility function that generates a Senlin profile."""
 
     if spec is None:
@@ -33,20 +33,20 @@ def create_a_profile(cls, spec=None, name=None, metadata=None):
             'metadata': metadata,
         }
     }
-    res = cls.client.create_obj('profiles', params)
+    res = base.client.create_obj('profiles', params)
     return res['body']['id']
 
 
-def delete_a_profile(cls, profile_id, ignore_missing=False):
+def delete_a_profile(base, profile_id, ignore_missing=False):
     """Utility function that deletes a Senlin profile."""
-    res = cls.client.delete_obj('profiles', profile_id)
+    res = base.client.delete_obj('profiles', profile_id)
     if res['status'] == 404:
         if ignore_missing:
             return
         raise exceptions.NotFound()
 
 
-def create_a_cluster(cls, profile_id, desired_capacity=0, min_size=0,
+def create_a_cluster(base, profile_id, desired_capacity=0, min_size=0,
                      max_size=-1, timeout=None, metadata=None, name=None,
                      wait_timeout=None):
     """Utility function that generates a Senlin cluster.
@@ -67,19 +67,19 @@ def create_a_cluster(cls, profile_id, desired_capacity=0, min_size=0,
             'name': name
         }
     }
-    res = cls.client.create_obj('clusters', params)
+    res = base.client.create_obj('clusters', params)
     cluster_id = res['body']['id']
     action_id = res['location'].split('/actions/')[1]
-    cls.wait_for_status('actions', action_id, 'SUCCEEDED', wait_timeout)
+    base.wait_for_status('actions', action_id, 'SUCCEEDED', wait_timeout)
 
     return cluster_id
 
 
-def delete_a_cluster(cls, cluster_id, wait_timeout=None):
+def delete_a_cluster(base, cluster_id, wait_timeout=None):
     """Utility function that deletes a Senlin cluster."""
-    res = cls.client.delete_obj('clusters', cluster_id)
+    res = base.client.delete_obj('clusters', cluster_id)
     action_id = res['location'].split('/actions/')[1]
-    cls.wait_for_status('actions', action_id, 'SUCCEEDED', wait_timeout)
+    base.wait_for_status('actions', action_id, 'SUCCEEDED', wait_timeout)
     return
 
 
@@ -114,6 +114,58 @@ def create_a_node(base, profile_id, cluster_id=None, metadata=None,
 def delete_a_node(base, node_id, wait_timeout=None):
     """Utility function that deletes a Senlin node."""
     res = base.client.delete_obj('nodes', node_id)
+    action_id = res['location'].split('/actions/')[1]
+    base.wait_for_status('actions', action_id, 'SUCCEEDED', wait_timeout)
+    return
+
+
+def create_a_policy(base, spec=None, name=None):
+    """Utility function that generates a Senlin policy."""
+
+    params = {
+        'policy': {
+            'name': name or data_utils.rand_name("tempest-created-policy"),
+            'spec': spec or constants.spec_scaling_policy
+        }
+    }
+    res = base.client.create_obj('policies', params)
+    return res['body']['id']
+
+
+def delete_a_policy(base, policy_id, ignore_missing=False):
+    """Utility function that deletes a policy."""
+    res = base.client.delete_obj('policies', policy_id)
+    if res['status'] == 404:
+        if ignore_missing:
+            return
+        raise exceptions.NotFound()
+    return
+
+
+def attach_policy(base, cluster_id, policy_id, wait_timeout=None):
+    """Utility function that attach a policy to cluster."""
+
+    params = {
+        'policy_attach': {
+            'enabled': True,
+            'policy_id': policy_id,
+        }
+    }
+    res = base.client.trigger_action('clusters', cluster_id, params=params)
+    action_id = res['location'].split('/actions/')[1]
+    base.wait_for_status('actions', action_id, 'SUCCEEDED', wait_timeout)
+    return
+
+
+def detach_policy(base, cluster_id, policy_id, wait_timeout=None):
+    """Utility function that detach a policy from cluster."""
+
+    params = {
+        'policy_detach': {
+            'policy_id': policy_id,
+        }
+    }
+    res = base.client.trigger_action('clusters', cluster_id, params=params)
     action_id = res['location'].split('/actions/')[1]
     base.wait_for_status('actions', action_id, 'SUCCEEDED', wait_timeout)
     return

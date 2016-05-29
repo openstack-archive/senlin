@@ -13,14 +13,15 @@
 from tempest.lib import decorators
 
 from senlin.tests.tempest.api import base
+from senlin.tests.tempest.api import utils
 
 
 class TestPolicyShow(base.BaseSenlinTest):
 
     def setUp(self):
         super(TestPolicyShow, self).setUp()
-        self.policy_id = self.create_test_policy()['id']
-        self.addCleanup(self.client.delete_obj, 'policies', self.policy_id)
+        self.policy_id = utils.create_a_policy(self)
+        self.addCleanup(utils.delete_a_policy, self, self.policy_id)
 
     @decorators.idempotent_id('7ab18be1-e554-452d-91ac-9b5e5c87430b')
     def test_show_policy(self):
