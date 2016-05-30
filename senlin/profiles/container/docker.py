@@ -10,8 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import docker
+
 from senlin.common.i18n import _
 from senlin.common import schema
+from senlin.drivers import base as driver_base
 from senlin.profiles import base
 
 
@@ -49,3 +52,39 @@ class DockerProfile(base.Profile):
         super(DockerProfile, self).__init__(type_name, name, **kwargs)
 
         self._dockerclient = None
+        self._novaclient = None
+
+    def docker(self, obj):
+        """Construct docker client based on object.
+
+        :param obj: Object for which the client is created. It is expected to
+                    be None when retrieving an existing client. When creating
+                    a client, it contains the user and project to be used.
+        """
+
+        if self._dockerclient is not None:
+            return self._dockerclient
+        host = self.properties[self.HOST_NODE]
+        host_ip = self.get_host_ip(self, obj, host)
+        url = 'tcp://' + host_ip + ':2375'
+        self._dockerclient = docker.Client(base_url=url)
+
+    def get_host_ip(self, obj, host):
+        """Fetch the ip address of nova server."""
+
+        server = self.nova(obj).server_get(host)
+        return server.access_ipv4
+
+    def nova(self, obj):
+        """Construct nova client based on object.
+
+        :param obj: Object for which the client is created. It is expected to
+                    be None when retrieving an existing client. When creating
+                    a client, it contains the user and project to be used.
+        """
+
+        if self._novaclient is not None:
+            return self._novaclient
+        params = self._build_conn_params(obj.user, obj.project)
+        self._novaclient = driver_base.SenlinDriver().compute(params)
+        return self._novaclient

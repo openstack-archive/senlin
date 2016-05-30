@@ -1436,6 +1436,13 @@ class EngineService(service.Service):
             'domain': context.domain,
         }
 
+        # TODO(xuhaiwei) Handle the case 'host_cluster' is not None
+        if node_profile.type == 'container.docker':
+            host_node = node_profile.properties.get('host_node', None)
+            if host_node:
+                host = self.node_get(context, host_node, project_safe=True)
+                kwargs['host'] = host
+
         node = node_mod.Node(name, node_profile.id, cluster_id, context,
                              **kwargs)
         node.store(context)
