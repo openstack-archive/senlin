@@ -135,7 +135,7 @@ class Cluster(object):
             'data': self.data,
         }
 
-        timestamp = timeutils.utcnow()
+        timestamp = timeutils.utcnow(True)
         if self.id:
             values['updated_at'] = timestamp
             co.Cluster.update(context, self.id, values)
@@ -241,7 +241,7 @@ class Cluster(object):
         """
 
         values = {}
-        now = timeutils.utcnow()
+        now = timeutils.utcnow(True)
         if status == self.ACTIVE and self.status == self.CREATING:
             self.created_at = now
             values['created_at'] = now

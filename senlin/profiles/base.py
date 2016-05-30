@@ -160,7 +160,7 @@ class Profile(object):
 
     def store(self, ctx):
         '''Store the profile into database and return its ID.'''
-        timestamp = timeutils.utcnow()
+        timestamp = timeutils.utcnow(True)
 
         values = {
             'name': self.name,

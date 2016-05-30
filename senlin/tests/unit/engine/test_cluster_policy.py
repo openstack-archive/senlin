@@ -15,6 +15,7 @@ from oslo_utils import timeutils
 import six
 
 from senlin.common import exception
+from senlin.common import utils as common_utils
 from senlin.engine import cluster_policy as cpm
 from senlin.objects import cluster as co
 from senlin.objects import cluster_policy as cpo
@@ -72,7 +73,7 @@ class TestClusterPolicy(base.SenlinTestCase):
         cp.enabled = False
         cp.priority = 60
         cp.data = {'foo': 'bar'}
-        timestamp = timeutils.utcnow()
+        timestamp = timeutils.utcnow(True)
         cp.last_op = timestamp
 
         new_id = cp.store(self.context)
@@ -85,26 +86,31 @@ class TestClusterPolicy(base.SenlinTestCase):
         self.assertFalse(result.enabled)
         self.assertEqual(60, result.priority)
         self.assertEqual({'foo': 'bar'}, result.data)
-        self.assertEqual(timestamp, result.last_op)
+        self.assertEqual(common_utils.isotime(timestamp),
+                         common_utils.isotime(result.last_op))
 
     def _create_cluster(self, cluster_id):
         values = {
             'id': cluster_id,
             'profile_id': 'some-profile',
             'name': 'test_cluster',
-            'user': 'user',
-            'project': 'project'
+            'status': 'ACTIVE',
+            'init_at': timeutils.utcnow(True),
+            'user': self.context.user,
+            'project': self.context.project,
         }
         return co.Cluster.create(self.context, values)
 
     def _create_policy(self, policy_id):
         values = {
             'id': policy_id,
+            'name': 'test_policy',
             'type': 'policy-type',
+            'spec': {'prop': 'value'},
+            'created_at': timeutils.utcnow(True),
             'user': self.context.user,
             'project': self.context.project,
             'domain': self.context.domain,
-            'name': 'test_policy',
         }
         return po.Policy.create(self.context, values)
 
@@ -148,9 +154,11 @@ class TestClusterPolicy(base.SenlinTestCase):
         policy1 = self._create_policy('P1')
         policy2 = self._create_policy('P2')
 
-        b1 = cpm.ClusterPolicy(cluster.id, policy1.id, enabled=True)
+        b1 = cpm.ClusterPolicy(cluster.id, policy1.id, enabled=True,
+                               priority=10)
         b1.store(self.context)
-        b2 = cpm.ClusterPolicy(cluster.id, policy2.id, enabled=False)
+        b2 = cpm.ClusterPolicy(cluster.id, policy2.id, enabled=False,
+                               priority=20)
         b2.store(self.context)
 
         # NOTE: we don't test all other parameters because the db api tests
@@ -182,7 +190,7 @@ class TestClusterPolicy(base.SenlinTestCase):
     def test_cooldown_inprogress(self):
         values = {
             'enabled': True,
-            'last_op': timeutils.utcnow(),
+            'last_op': timeutils.utcnow(True),
         }
         cp = cpm.ClusterPolicy('fake-cluster', 'fake-policy', **values)
         self.assertTrue(cp.cooldown_inprogress(60))

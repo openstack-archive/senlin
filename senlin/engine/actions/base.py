@@ -21,6 +21,7 @@ from senlin.common import context as req_context
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
+from senlin.common import utils
 from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import event as EVENT
 from senlin.objects import action as ao
@@ -151,7 +152,7 @@ class Action(object):
         :return: The ID of the stored object.
         """
 
-        timestamp = timeutils.utcnow()
+        timestamp = timeutils.utcnow(True)
 
         values = {
             'name': self.name,
@@ -492,8 +493,8 @@ class Action(object):
             'outputs': self.outputs,
             'depends_on': dep_on,
             'depended_by': dep_by,
-            'created_at': self.created_at,
-            'updated_at': self.updated_at,
+            'created_at': utils.isotime(self.created_at),
+            'updated_at': utils.isotime(self.updated_at),
             'data': self.data,
         }
         return action_dict

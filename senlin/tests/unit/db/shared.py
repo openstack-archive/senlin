@@ -71,7 +71,7 @@ def create_cluster(ctx, profile, **kwargs):
         'next_index': 1,
         'timeout': 60,
         'desired_capacity': 0,
-        'init_at': tu.utcnow(),
+        'init_at': tu.utcnow(True),
         'status': 'INIT',
         'status_reason': 'Just Initialized',
         'meta_data': {},
@@ -168,7 +168,7 @@ def create_policy(ctx, **kwargs):
 
 def create_event(ctx, **kwargs):
     values = {
-        'timestamp': tu.utcnow(),
+        'timestamp': tu.utcnow(True),
         'obj_id': 'FAKE_ID',
         'obj_name': 'FAKE_NAME',
         'obj_type': 'CLUSTER',

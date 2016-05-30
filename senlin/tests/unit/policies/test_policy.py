@@ -12,6 +12,7 @@
 
 import mock
 from oslo_context import context as oslo_ctx
+from oslo_utils import timeutils
 import six
 
 from senlin.common import consts
@@ -79,10 +80,10 @@ class TestPolicyBase(base.SenlinTestCase):
             'name': 'test-policy',
             'type': 'senlin.policy.dummy-1.0',
             'spec': self.spec,
+            'created_at': timeutils.utcnow(True),
             'user': self.ctx.user,
             'project': self.ctx.project,
             'domain': self.ctx.domain,
-            'data': {}
         }
 
         values.update(kwargs)
@@ -275,7 +276,7 @@ class TestPolicyBase(base.SenlinTestCase):
             'domain': policy.domain,
             'spec': policy.spec,
             'data': policy.data,
-            'created_at': common_utils.format_time(policy.created_at),
+            'created_at': common_utils.isotime(policy.created_at),
             'updated_at': None,
         }
 

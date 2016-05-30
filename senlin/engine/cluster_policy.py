@@ -108,7 +108,7 @@ class ClusterPolicy(object):
         return False
 
     def record_last_op(self, context):
-        self.last_op = timeutils.utcnow()
+        self.last_op = timeutils.utcnow(True)
         self.store(context)
 
     def to_dict(self):

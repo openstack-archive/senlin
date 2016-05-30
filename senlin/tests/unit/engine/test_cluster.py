@@ -12,6 +12,7 @@
 
 import mock
 from oslo_config import cfg
+from oslo_utils import timeutils
 import six
 
 from senlin.common import exception
@@ -255,6 +256,7 @@ class TestCluster(base.SenlinTestCase):
             'name': 'test-cluster',
             'desired_capacity': 1,
             'status': 'INIT',
+            'init_at': timeutils.utcnow(True),
             'user': self.context.user,
             'project': self.context.project,
         }

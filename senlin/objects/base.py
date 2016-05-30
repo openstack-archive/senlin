@@ -12,7 +12,10 @@
 
 """Senlin common internal object model"""
 
+from oslo_utils import versionutils
 from oslo_versionedobjects import base
+
+from senlin import objects
 
 
 class SenlinObject(base.VersionedObject):
@@ -26,3 +29,22 @@ class SenlinObject(base.VersionedObject):
 
     OBJ_PROJECT_NAMESPACE = 'senlin'
     VERSION = '1.0'
+
+
+class SenlinObjectRegistry(base.VersionedObjectRegistry):
+
+    def registration_hook(self, cls, index):
+        """Callback for object registration.
+
+        When an object is registered, this function will be called for
+        maintaining senlin.objects.$OBJECT as the highest-versioned
+        implementation of a given object.
+        """
+        version = versionutils.convert_version_to_tuple(cls.VERSION)
+        if not hasattr(objects, cls.obj_name()):
+            setattr(objects, cls.obj_name(), cls)
+        else:
+            curr_version = versionutils.convert_version_to_tuple(
+                getattr(objects, cls.obj_name()).VERSION)
+            if version >= curr_version:
+                setattr(objects, cls.obj_name(), cls)

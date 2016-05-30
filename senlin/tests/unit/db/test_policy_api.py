@@ -232,7 +232,7 @@ class DBAPIPolicyTest(base.SenlinTestCase):
     def test_policy_get_all_with_limit_marker(self):
         ids = ['policy1', 'policy2', 'policy3']
         for pid in ids:
-            timestamp = tu.utcnow()
+            timestamp = tu.utcnow(True)
             data = self.new_policy_data(id=pid, created_at=timestamp)
             db_api.policy_create(self.ctx, data)
 
@@ -282,7 +282,7 @@ class DBAPIPolicyTest(base.SenlinTestCase):
                   {'id': '003', 'name': 'policy2'}]
 
         for v in values:
-            v['created_at'] = tu.utcnow()
+            v['created_at'] = tu.utcnow(True)
             data = self.new_policy_data(**v)
             db_api.policy_create(self.ctx, data)
 
@@ -310,7 +310,7 @@ class DBAPIPolicyTest(base.SenlinTestCase):
     def test_policy_get_all_default_sorting(self):
         policies = []
         for x in range(3):
-            data = self.new_policy_data(created_at=tu.utcnow())
+            data = self.new_policy_data(created_at=tu.utcnow(True))
             policies.append(db_api.policy_create(self.ctx, data))
 
         results = db_api.policy_get_all(self.ctx)

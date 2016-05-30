@@ -17,8 +17,10 @@ from oslo_versionedobjects import fields
 
 from senlin.db import api as db_api
 from senlin.objects import base as senlin_base
+from senlin.objects import fields as senlin_fields
 
 
+@senlin_base.SenlinObjectRegistry.register
 class Cluster(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
     """Senlin cluster object."""
 
@@ -27,18 +29,18 @@ class Cluster(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'name': fields.StringField(),
         'profile_id': fields.UUIDField(),
         'parent': fields.UUIDField(nullable=True),
-        'init_at': fields.DateTimeField(nullable=True),
+        'init_at': fields.DateTimeField(),
         'created_at': fields.DateTimeField(nullable=True),
         'updated_at': fields.DateTimeField(nullable=True),
         'min_size': fields.IntegerField(nullable=True),
         'max_size': fields.IntegerField(nullable=True),
         'desired_capacity': fields.IntegerField(nullable=True),
-        'next_index': fields.IntegerField(),
-        'timeout': fields.IntegerField(),
+        'next_index': fields.IntegerField(nullable=True),
+        'timeout': fields.IntegerField(nullable=True),
         'status': fields.StringField(),
-        'status_reason': fields.StringField(),
-        'metadata': fields.DictOfStringsField(),
-        'data': fields.DictOfStringsField(),
+        'status_reason': fields.StringField(nullable=True),
+        'metadata': senlin_fields.JsonField(nullable=True),
+        'data': senlin_fields.JsonField(nullable=True),
         'user': fields.StringField(),
         'project': fields.StringField(),
         'domain': fields.StringField(nullable=True),
@@ -86,7 +88,7 @@ class Cluster(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         return [cls._from_db_object(context, cls(), obj) for obj in objs]
 
     @classmethod
-    def next_index(cls, context, cluster_id):
+    def get_next_index(cls, context, cluster_id):
         return db_api.cluster_next_index(context, cluster_id)
 
     @classmethod

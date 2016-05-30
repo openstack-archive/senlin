@@ -38,12 +38,14 @@ class TestNode(base.SenlinTestCase):
     def _create_profile(self, profile_id):
         values = {
             'id': profile_id,
+            'context': self.context.to_dict(),
             'type': 'os.nova.server-1.0',
             'name': 'test-profile',
             'spec': {
                 'type': 'os.nova.server',
                 'version': '1.0',
             },
+            'created_at': timeutils.utcnow(True),
             'user': self.context.user,
             'project': self.context.project
         }
@@ -54,6 +56,8 @@ class TestNode(base.SenlinTestCase):
             'id': cluster_id,
             'profile_id': self.profile.id,
             'name': 'test-cluster',
+            'status': 'ACTIVE',
+            'init_at': timeutils.utcnow(True),
             'user': self.context.user,
             'project': self.context.project,
             'next_index': 1,
@@ -64,11 +68,15 @@ class TestNode(base.SenlinTestCase):
     def _create_node(self, node_id):
         values = {
             'id': node_id,
+            'name': 'node1',
             'profile_id': self.profile.id,
             'cluster_id': self.cluster.id,
+            'index': 2,
+            'init_at': timeutils.utcnow(True),
+            'user': self.context.user,
             'project': self.context.project,
-            'name': 'node1',
             'role': 'test_node',
+            'status': 'ACTIVE',
         }
         return node_obj.Node.create(self.context, values)
 
@@ -510,10 +518,9 @@ class TestNode(base.SenlinTestCase):
         self.assertIsNone(node.updated_at)
         self.assertFalse(mock_migrate.called)
 
-    @mock.patch.object(timeutils, 'utcnow')
     @mock.patch.object(profiles_base.Profile, 'join_cluster')
     @mock.patch.object(node_obj.Node, 'migrate')
-    def test_node_join(self, mock_migrate, mock_join_cluster, mock_time):
+    def test_node_join(self, mock_migrate, mock_join_cluster):
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
                           self.context)
         mock_join_cluster.return_value = True
@@ -547,10 +554,9 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual('', node.cluster_id)
         self.assertIsNone(node.updated_at)
 
-    @mock.patch.object(timeutils, 'utcnow')
     @mock.patch.object(profiles_base.Profile, 'leave_cluster')
     @mock.patch.object(node_obj.Node, 'migrate')
-    def test_node_leave(self, mock_migrate, mock_leave_cluster, mock_time):
+    def test_node_leave(self, mock_migrate, mock_leave_cluster):
         node = nodem.Node('node1', self.profile.id, self.cluster.id,
                           self.context)
         mock_leave_cluster.return_value = True

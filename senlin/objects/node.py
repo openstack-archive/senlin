@@ -17,8 +17,10 @@ from oslo_versionedobjects import fields
 
 from senlin.db import api as db_api
 from senlin.objects import base as senlin_base
+from senlin.objects import fields as senlin_fields
 
 
+@senlin_base.SenlinObjectRegistry.register
 class Node(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
     """Senlin node object."""
 
@@ -26,17 +28,18 @@ class Node(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'id': fields.UUIDField(),
         'name': fields.StringField(),
         'profile_id': fields.UUIDField(),
-        'cluster_id': fields.UUIDField(),
-        'physical_id': fields.UUIDField(),
+        # This field is treated as string because we may store '' into it
+        'cluster_id': fields.StringField(),
+        'physical_id': fields.UUIDField(nullable=True),
         'index': fields.IntegerField(),
         'role': fields.StringField(nullable=True),
-        'init_at': fields.DateTimeField(nullable=True),
+        'init_at': fields.DateTimeField(),
         'created_at': fields.DateTimeField(nullable=True),
         'updated_at': fields.DateTimeField(nullable=True),
         'status': fields.StringField(),
-        'status_reason': fields.StringField(),
-        'metadata': fields.DictOfStringsField(),
-        'data': fields.DictOfStringsField(),
+        'status_reason': fields.StringField(nullable=True),
+        'metadata': senlin_fields.JsonField(nullable=True),
+        'data': senlin_fields.JsonField(nullable=True),
         'user': fields.StringField(),
         'project': fields.StringField(),
         'domain': fields.StringField(nullable=True),

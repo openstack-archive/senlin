@@ -1157,7 +1157,7 @@ def receiver_delete(context, receiver_id):
 def service_create(context, service_id, host=None, binary=None,
                    topic=None):
     with session_for_write() as session:
-        time_now = timeutils.utcnow()
+        time_now = timeutils.utcnow(True)
         svc = models.Service(id=service_id, host=host, binary=binary,
                              topic=topic, created_at=time_now,
                              updated_at=time_now)
@@ -1174,7 +1174,7 @@ def service_update(context, service_id, values=None):
         if values is None:
             values = {}
 
-        values.update({'updated_at': timeutils.utcnow()})
+        values.update({'updated_at': timeutils.utcnow(True)})
         service.update(values)
         service.save(session)
         return service

@@ -48,7 +48,7 @@ class TestReceiver(base.SenlinTestCase):
             'user': self.context.user,
             'project': self.context.project,
             'domain': self.context.domain,
-            'created_at': timeutils.utcnow(),
+            'created_at': timeutils.utcnow(True),
             'updated_at': None,
             'actor': self.actor,
             'params': self.params,
@@ -64,7 +64,7 @@ class TestReceiver(base.SenlinTestCase):
             'user': 'test-user',
             'project': 'test-project',
             'domain': 'test-domain',
-            'created_at': timeutils.utcnow(),
+            'created_at': timeutils.utcnow(True),
             'updated_at': None,
             'actor': self.actor,
             'params': self.params,
@@ -111,6 +111,7 @@ class TestReceiver(base.SenlinTestCase):
 
     def test_receiver_store(self):
         receiver = rb.Receiver('webhook', 'FAKE_CLUSTER', 'test-action',
+                               name='test_receiver_123456',
                                project=self.context.project)
         self.assertIsNone(receiver.id)
 
@@ -128,7 +129,8 @@ class TestReceiver(base.SenlinTestCase):
         self.assertEqual(receiver.user, result.user)
         self.assertEqual(receiver.project, result.project)
         self.assertEqual(receiver.domain, result.domain)
-        self.assertEqual(receiver.created_at, result.created_at)
+        self.assertEqual(common_utils.isotime(receiver.created_at),
+                         common_utils.isotime(result.created_at)),
         self.assertEqual(receiver.updated_at, result.updated_at)
         self.assertEqual(receiver.action, result.action)
         self.assertEqual(receiver.actor, result.actor)
@@ -139,7 +141,8 @@ class TestReceiver(base.SenlinTestCase):
         cluster = mock.Mock()
         cluster.id = 'FAKE_CLUSTER'
         receiver = rb.Receiver.create(self.context, 'webhook', cluster,
-                                      'FAKE_ACTION')
+                                      'FAKE_ACTION',
+                                      name='test_receiver_2234')
 
         self.assertEqual(self.context.user, receiver.user)
         self.assertEqual(self.context.project, receiver.project)

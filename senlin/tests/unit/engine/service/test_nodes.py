@@ -19,11 +19,11 @@ import six
 from senlin.common import consts
 from senlin.common import exception as exc
 from senlin.common.i18n import _
-from senlin.db.sqlalchemy import api as db_api
 from senlin.engine.actions import base as action_mod
 from senlin.engine import dispatcher
 from senlin.engine import node as node_mod
 from senlin.engine import service
+from senlin.objects import cluster as co
 from senlin.objects import node as no
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -273,7 +273,7 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch('senlin.engine.node.Node')
-    @mock.patch.object(db_api, 'cluster_next_index')
+    @mock.patch.object(co.Cluster, 'get_next_index')
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(service.EngineService, 'profile_find')
     @mock.patch.object(dispatcher, 'start_action')
@@ -312,7 +312,7 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch('senlin.engine.node.Node')
-    @mock.patch.object(db_api, 'cluster_next_index')
+    @mock.patch.object(co.Cluster, 'get_next_index')
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(service.EngineService, 'profile_find')
     @mock.patch.object(dispatcher, 'start_action')

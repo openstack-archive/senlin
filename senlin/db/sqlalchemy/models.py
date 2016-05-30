@@ -16,7 +16,7 @@ SQLAlchemy models for Senlin data.
 
 from oslo_db.sqlalchemy import models
 from oslo_utils import uuidutils
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer
+from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer
 from sqlalchemy import String, Text
 from sqlalchemy.ext import declarative
 from sqlalchemy.orm import backref
@@ -29,8 +29,8 @@ UUID4 = uuidutils.generate_uuid
 
 
 class TimestampMixin(object):
-    created_at = Column(DateTime)
-    updated_at = Column(DateTime)
+    created_at = Column(types.TZAwareDateTime)
+    updated_at = Column(types.TZAwareDateTime)
 
 
 class Profile(BASE, TimestampMixin, models.ModelBase):
@@ -80,7 +80,7 @@ class Cluster(BASE, TimestampMixin, models.ModelBase):
     domain = Column(String(32))
     parent = Column(String(36))
 
-    init_at = Column(DateTime)
+    init_at = Column(types.TZAwareDateTime)
 
     min_size = Column(Integer)
     max_size = Column(Integer)
@@ -111,7 +111,7 @@ class Node(BASE, TimestampMixin, models.ModelBase):
     index = Column(Integer)
     role = Column(String(64))
 
-    init_at = Column(DateTime)
+    init_at = Column(types.TZAwareDateTime)
 
     status = Column(String(255))
     status_reason = Column(Text)
@@ -151,7 +151,7 @@ class ClusterPolicies(BASE, models.ModelBase):
     enabled = Column(Boolean)
     priority = Column(Integer)
     data = Column(types.Dict)
-    last_op = Column(DateTime)
+    last_op = Column(types.TZAwareDateTime)
 
 
 class HealthRegistry(BASE, models.ModelBase):
@@ -244,7 +244,7 @@ class Event(BASE, models.ModelBase):
     __tablename__ = 'event'
 
     id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
-    timestamp = Column(DateTime)
+    timestamp = Column(types.TZAwareDateTime)
     oid = Column(String(36))
     oname = Column(String(255))
     otype = Column(String(36))

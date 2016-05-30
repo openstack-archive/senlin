@@ -124,7 +124,7 @@ class Node(object):
         if self.id:
             no.Node.update(context, self.id, values)
         else:
-            init_at = timeutils.utcnow()
+            init_at = timeutils.utcnow(True)
             self.init_at = init_at
             values['init_at'] = init_at
             node = no.Node.create(context, values)
@@ -212,7 +212,7 @@ class Node(object):
         '''Set status of the node.'''
 
         values = {}
-        now = timeutils.utcnow()
+        now = timeutils.utcnow(True)
         if status == self.ACTIVE and self.status == self.CREATING:
             self.created_at = values['created_at'] = now
         elif status == self.ACTIVE and self.status == self.UPDATING:
@@ -329,7 +329,7 @@ class Node(object):
             return True
         res = profile_base.Profile.join_cluster(context, self, cluster_id)
         if res:
-            timestamp = timeutils.utcnow()
+            timestamp = timeutils.utcnow(True)
             db_node = no.Node.migrate(context, self.id, cluster_id, timestamp)
             self.cluster_id = cluster_id
             self.updated_at = timestamp
@@ -344,7 +344,7 @@ class Node(object):
 
         res = profile_base.Profile.leave_cluster(context, self)
         if res:
-            timestamp = timeutils.utcnow()
+            timestamp = timeutils.utcnow(True)
             no.Node.migrate(context, self.id, None, timestamp)
             self.cluster_id = ''
             self.updated_at = timestamp

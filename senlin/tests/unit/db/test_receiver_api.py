@@ -156,7 +156,8 @@ class DBAPIReceiverTest(base.SenlinTestCase):
     def test_receiver_get_all_with_limit_marker(self):
         receiver_ids = ['receiver1', 'receiver2', 'receiver3']
         for v in receiver_ids:
-            self._create_receiver(self.ctx, id=v, created_at=tu.utcnow())
+            self._create_receiver(self.ctx, id=v,
+                                  created_at=tu.utcnow(True))
 
         receivers = db_api.receiver_get_all(self.ctx, limit=1)
         self.assertEqual(1, len(receivers))

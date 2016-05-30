@@ -17,8 +17,12 @@ from oslo_versionedobjects import fields
 
 from senlin.db import api as db_api
 from senlin.objects import base as senlin_base
+from senlin.objects import cluster as cluster_obj
+from senlin.objects import fields as senlin_fields
+from senlin.objects import policy as policy_obj
 
 
+@senlin_base.SenlinObjectRegistry.register
 class ClusterPolicy(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
     """Senlin cluster-policy binding object."""
 
@@ -26,12 +30,12 @@ class ClusterPolicy(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'id': fields.UUIDField(),
         'cluster_id': fields.UUIDField(),
         'policy_id': fields.UUIDField(),
-        'cluster': fields.ObjectField('Cluster'),
-        'policy': fields.ObjectField('Policy'),
+        'cluster': fields.ObjectField('Cluster', nullable=True),
+        'policy': fields.ObjectField('Policy', nullable=True),
         'enabled': fields.BooleanField(),
         'priority': fields.IntegerField(),
-        'data': fields.DictOfStringsField(),
-        'last_op': fields.DateTimeField(),
+        'data': senlin_fields.JsonField(nullable=True),
+        'last_op': fields.DateTimeField(nullable=True),
     }
 
     @staticmethod
@@ -39,7 +43,14 @@ class ClusterPolicy(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         if db_obj is None:
             return None
         for field in binding.fields:
-            binding[field] = db_obj[field]
+            if field == 'cluster':
+                c = cluster_obj.Cluster.get(context, db_obj['cluster_id'])
+                binding['cluster'] = c
+            elif field == 'policy':
+                p = policy_obj.Policy.get(context, db_obj['policy_id'])
+                binding['policy'] = p
+            else:
+                binding[field] = db_obj[field]
 
         binding._context = context
         binding.obj_reset_changes()
