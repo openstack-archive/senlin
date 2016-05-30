@@ -47,9 +47,9 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 "cluster_id": None,
                 "id": "2d255b9c-8f36-41a2-a137-c0175ccc29c3",
                 "level": "20",
-                "obj_id": "0df0931b-e251-4f2e-8719-4ebfda3627ba",
-                "obj_name": "node009",
-                "obj_type": "NODE",
+                "oid": "0df0931b-e251-4f2e-8719-4ebfda3627ba",
+                "oname": "node009",
+                "otype": "NODE",
                 "project": "6e18cc2bdbeb48a5b3cad2dc499f6804",
                 "status": "CREATING",
                 "status_reason": "Initializing",
@@ -164,9 +164,9 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test_event_index_whitelist_filter_params(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
-            'obj_name': 'fake name',
-            'obj_type': 'fake type',
-            'obj_id': 'fake ID',
+            'oname': 'fake name',
+            'otype': 'fake type',
+            'oid': 'fake ID',
             'cluster_id': 'another fake ID',
             'action': 'fake action',
             'level': 30,
@@ -183,9 +183,9 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         filters = engine_args['filters']
         self.assertEqual(6, len(filters))
-        self.assertIn('obj_name', filters)
-        self.assertIn('obj_id', filters)
-        self.assertIn('obj_type', filters)
+        self.assertIn('oname', filters)
+        self.assertIn('oid', filters)
+        self.assertIn('otype', filters)
         self.assertIn('cluster_id', filters)
         self.assertIn('action', filters)
         self.assertIn('level', filters)
@@ -226,9 +226,9 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
             "cluster_id": None,
             "id": "2d255b9c-8f36-41a2-a137-c0175ccc29c3",
             "level": "20",
-            "obj_id": "0df0931b-e251-4f2e-8719-4ebfda3627ba",
-            "obj_name": "node009",
-            "obj_type": "NODE",
+            "oid": "0df0931b-e251-4f2e-8719-4ebfda3627ba",
+            "oname": "node009",
+            "otype": "NODE",
             "project": "6e18cc2bdbeb48a5b3cad2dc499f6804",
             "status": "CREATING",
             "status_reason": "Initializing",

@@ -29,7 +29,7 @@ class TestEventShow(base.BaseSenlinTest):
     def test_show_event(self):
         # Get cluster events
         events = self.client.list_objs('events',
-                                       {'obj_id': self.cluster_id})['body']
+                                       {'oid': self.cluster_id})['body']
         res = self.client.get_obj('events', events[0]['id'])
 
         # Verify resp of event list API
@@ -37,7 +37,7 @@ class TestEventShow(base.BaseSenlinTest):
         self.assertIsNone(res['location'])
         self.assertIsNotNone(res['body'])
         event = res['body']
-        for key in ['action', 'cluster_id', 'id', 'level', 'obj_id',
-                    'obj_name', 'obj_type', 'project', 'status',
+        for key in ['action', 'cluster_id', 'id', 'level', 'oid',
+                    'oname', 'otype', 'project', 'status',
                     'status_reason', 'timestamp', 'user']:
             self.assertIn(key, event)

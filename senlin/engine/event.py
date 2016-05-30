@@ -42,9 +42,9 @@ class Event(object):
         self.status_reason = kwargs.get('status_reason', None)
 
         # we deal with deserialization first
-        self.obj_id = kwargs.get('obj_id', None)
-        self.obj_type = kwargs.get('obj_type', None)
-        self.obj_name = kwargs.get('obj_name', None)
+        self.oid = kwargs.get('oid', None)
+        self.otype = kwargs.get('otype', None)
+        self.oname = kwargs.get('oname', None)
         self.cluster_id = kwargs.get('cluster_id', None)
         self.metadata = kwargs.get('metadata', {})
 
@@ -63,34 +63,34 @@ class Event(object):
         e_type = e_type.upper()
 
         if e_type == 'CLUSTER':
-            self.obj_id = entity.id
+            self.oid = entity.id
             self.cluster_id = entity.id
-            self.obj_name = entity.name
-            self.obj_type = 'CLUSTER'
+            self.oname = entity.name
+            self.otype = 'CLUSTER'
         elif e_type == 'NODE':
-            self.obj_id = entity.id
+            self.oid = entity.id
             self.cluster_id = entity.cluster_id
-            self.obj_name = entity.name
-            self.obj_type = 'NODE'
+            self.oname = entity.name
+            self.otype = 'NODE'
         elif e_type == 'CLUSTERACTION':
-            self.obj_id = entity.target
+            self.oid = entity.target
             self.cluster_id = entity.target
-            self.obj_name = entity.cluster.name
-            self.obj_type = 'CLUSTER'
+            self.oname = entity.cluster.name
+            self.otype = 'CLUSTER'
         elif e_type == 'NODEACTION':
-            self.obj_id = entity.target
+            self.oid = entity.target
             self.cluster_id = entity.node.cluster_id
-            self.obj_name = entity.node.name
-            self.obj_type = 'NODE'
+            self.oname = entity.node.name
+            self.otype = 'NODE'
 
     def store(self, context):
         '''Store the event into database and return its ID.'''
         values = {
             'level': self.level,
             'timestamp': self.timestamp,
-            'obj_id': self.obj_id,
-            'obj_type': self.obj_type,
-            'obj_name': self.obj_name,
+            'oid': self.oid,
+            'otype': self.otype,
+            'oname': self.oname,
             'cluster_id': self.cluster_id,
             'user': self.user,
             'project': self.project,
@@ -114,8 +114,8 @@ def critical(context, entity, action, status=None, status_reason=None,
                   user=context.user, project=context.project)
     event.store(context)
     LOG.critical(_LC('%(name)s [%(id)s] - %(status)s: %(reason)s'),
-                 {'name': event.obj_name,
-                  'id': event.obj_id and event.obj_id[:8],
+                 {'name': event.oname,
+                  'id': event.oid and event.oid[:8],
                   'status': status,
                   'reason': status_reason})
 
@@ -128,8 +128,8 @@ def error(context, entity, action, status=None, status_reason=None,
                   user=context.user, project=context.project)
     event.store(context)
     LOG.error(_LE('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s'),
-              {'name': event.obj_name,
-               'id': event.obj_id and event.obj_id[:8],
+              {'name': event.oname,
+               'id': event.oid and event.oid[:8],
                'action': action,
                'status': status,
                'reason': status_reason})
@@ -143,8 +143,8 @@ def warning(context, entity, action, status=None, status_reason=None,
                   user=context.user, project=context.project)
     event.store(context)
     LOG.warning(_LW('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s'),
-                {'name': event.obj_name,
-                 'id': event.obj_id and event.obj_id[:8],
+                {'name': event.oname,
+                 'id': event.oid and event.oid[:8],
                  'action': action,
                  'status': status,
                  'reason': status_reason})
@@ -158,8 +158,8 @@ def info(context, entity, action, status=None, status_reason=None,
                   user=context.user, project=context.project)
     event.store(context)
     LOG.info(_LI('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s'),
-             {'name': event.obj_name,
-              'id': event.obj_id and event.obj_id[:8],
+             {'name': event.oname,
+              'id': event.oid and event.oid[:8],
               'action': action,
               'status': status,
               'reason': status_reason})
@@ -173,8 +173,8 @@ def debug(context, entity, action, status=None, status_reason=None,
                   user=context.user, project=context.project)
     event.store(context)
     LOG.debug(_('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s'),
-              {'name': event.obj_name,
-               'id': event.obj_id and event.obj_id[:8],
+              {'name': event.oname,
+               'id': event.oid and event.oid[:8],
                'action': action,
                'status': status,
                'reason': status_reason})

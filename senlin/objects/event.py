@@ -25,9 +25,9 @@ class Event(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
     fields = {
         'id': fields.UUIDField(),
         'timestamp': fields.DateTimeField(),
-        'obj_id': fields.UUIDField(),
-        'obj_name': fields.StringField(),
-        'obj_type': fields.StringField(),
+        'oid': fields.UUIDField(),
+        'oname': fields.StringField(),
+        'otype': fields.StringField(),
         'cluster_id': fields.UUIDField(nullable=True),
         'level': fields.StringField(),
         'user': fields.StringField(),

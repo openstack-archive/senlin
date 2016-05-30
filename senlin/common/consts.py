@@ -152,7 +152,7 @@ EVENT_ATTRS = (
     EVENT_USER, EVENT_ACTION, EVENT_STATUS, EVENT_STATUS_REASON,
     EVENT_LEVEL, EVENT_CLUSTER_ID,
 ) = (
-    'timestamp', 'obj_id', 'obj_name', 'obj_type',
+    'timestamp', 'oid', 'oname', 'otype',
     'user', 'action', 'status', 'status_reason',
     'level', 'cluster_id',
 )

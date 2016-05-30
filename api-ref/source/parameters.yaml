@@ -171,21 +171,21 @@ name_query:
   description: |
     Filters the response by the ``name`` property of the object.
 
-obj_id_query:
+oid_query:
   type: string
   in: query
   description: |
     Filters the response by the ``ID`` of object associated with an event.
     Use this filter multiple times to filter by multiple objects.
 
-obj_name_query:
+oname_query:
   type: string
   in: query
   description: |
     Filters the response by the ``name`` of object associated with an event.
     Use this filter multiple times to filter by multiple objects.
 
-obj_type_query:
+otype_query:
   type: string
   in: query
   description: |
@@ -794,21 +794,21 @@ nodes:
   description: |
     A list of node objects.
 
-obj_id:
+oid:
   type: UUID
   in: body
   required: True
   description: |
     The UUID of an object associated with the event.
 
-obj_name:
+oname:
   type: string
   in: body
   required: True
   description: |
     The name of an object associated with the event.
 
-obj_type:
+otype:
   type: string
   in: body
   required: True

@@ -35,7 +35,7 @@ class TestEventList(base.BaseSenlinTest):
         self.assertIsNotNone(res['body'])
         events = res['body']
         for event in events:
-            for key in ['action', 'cluster_id', 'id', 'level', 'obj_id',
-                        'obj_name', 'obj_type', 'project', 'status',
+            for key in ['action', 'cluster_id', 'id', 'level', 'oid',
+                        'oname', 'otype', 'project', 'status',
                         'status_reason', 'timestamp', 'user']:
                 self.assertIn(key, event)

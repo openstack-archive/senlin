@@ -50,7 +50,7 @@ The following command lists the events by the Senlin engine::
 
   $ openstack cluster event list
   +----------+---------------------+---------------+----------+----------------------------+-----------------------+-----------+--------------------------------+-------+
-  | id       | timestamp           | obj_type      | obj_id   | obj_name                   | action                | status    | status_reason                  | level |
+  | id       | timestamp           | otype         | oid     | oname                       | action                | status    | status_reason                  | level |
   +----------+---------------------+---------------+----------+----------------------------+-----------------------+-----------+--------------------------------+-------+
   | 1f72eb5e | 2015-12-17T15:41:48 | NODE          | 427e64f3 | node-7171861e-002          | update                | ACTIVE    | Creation succeeded             | 20    |
   | 20b8eb9a | 2015-12-17T15:41:49 | NODE          | 6da22a49 | node-7171861e-001          | update                | ACTIVE    | Creation succeeded             | 20    |
@@ -83,20 +83,20 @@ property in descending order::
   $ openstack cluster event list --sort timestamp:desc
 
 When sorting the list of events, you can use one of ``timestamp``, ``level``,
-``obj_type``, ``obj_name``, ``user``, ``action`` and ``status``.
+``otype``, ``oname``, ``user``, ``action`` and ``status``.
 
 
 Filtering the List
 ------------------
 
 You can filter the list of events using the :option:`--filters``. For example,
-the following command filters the event list by the ``obj_type`` property::
+the following command filters the event list by the ``otype`` property::
 
-  $ openstack cluster event list --filters obj_type=NODE
+  $ openstack cluster event list --filters otype=NODE
 
 The option :option:`--filters` accepts a list of key-value pairs separated by
 semicolon (``;``), where each pair is expected to be of format ``key=val``.
-The valid keys for filtering include ``obj_name``, ``obj_type``, ``obj_id``,
+The valid keys for filtering include ``oname``, ``otype``, ``oid``,
 ``cluster_id``, ``action`` or any combination of them.
 
 
@@ -141,9 +141,9 @@ An example is shown below::
   | cluster_id    | ce85d842-aa2a-4d83-965c-2cab5133aedc |
   | id            | 19ba155a-d327-490f-aa0f-589f67194b2c |
   | level         | 20                                   |
-  | obj_id        | cd9f519a-5589-4cbf-8a74-03b12fd9436c |
-  | obj_name      | node-ce85d842-003                    |
-  | obj_type      | NODE                                 |
+  | oid           | cd9f519a-5589-4cbf-8a74-03b12fd9436c |
+  | oname         | node-ce85d842-003                    |
+  | otype         | NODE                                 |
   | project       | 42d9e9663331431f97b75e25136307ff     |
   | status        | DELETING                             |
   | status_reason | Deletion in progress                 |

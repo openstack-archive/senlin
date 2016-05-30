@@ -245,9 +245,9 @@ class Event(BASE, models.ModelBase):
 
     id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
     timestamp = Column(DateTime)
-    obj_id = Column(String(36))
-    obj_name = Column(String(255))
-    obj_type = Column(String(36))
+    oid = Column(String(36))
+    oname = Column(String(255))
+    otype = Column(String(36))
     cluster_id = Column(String(36), ForeignKey('cluster.id'), nullable=True)
     cluster = relationship(Cluster, backref=backref('events'))
     level = Column(String(64))

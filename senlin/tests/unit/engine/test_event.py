@@ -37,9 +37,9 @@ class TestEvent(base.SenlinTestCase):
             'action': 'fake-action',
             'status': 'ACTIVE',
             'status_reason': 'Weather is clear',
-            'obj_id': 'FAKE-OBJ-ID',
-            'obj_type': 'CLUSTER-TYPE',
-            'obj_name': 'fake-cluster',
+            'oid': 'FAKE-OBJ-ID',
+            'otype': 'CLUSTER-TYPE',
+            'oname': 'fake-cluster',
             'cluster_id': 'FAKE-CLUSTER-ID',
             'metadata': {'foo': 'bar'},
         }
@@ -56,9 +56,9 @@ class TestEvent(base.SenlinTestCase):
         self.assertEqual('ACTIVE', event.status)
         self.assertEqual('Weather is clear', event.status_reason)
 
-        self.assertEqual('FAKE-OBJ-ID', event.obj_id)
-        self.assertEqual('CLUSTER-TYPE', event.obj_type)
-        self.assertEqual('fake-cluster', event.obj_name)
+        self.assertEqual('FAKE-OBJ-ID', event.oid)
+        self.assertEqual('CLUSTER-TYPE', event.otype)
+        self.assertEqual('fake-cluster', event.oname)
         self.assertEqual('FAKE-CLUSTER-ID', event.cluster_id)
         self.assertEqual({'foo': 'bar'}, event.metadata)
 
@@ -82,10 +82,10 @@ class TestEvent(base.SenlinTestCase):
         self.assertEqual('ACTIVE', event.status)
         self.assertEqual('Recovered just now', event.status_reason)
 
-        self.assertEqual('FAKE_CLUSTER', event.obj_id)
-        self.assertEqual('fake-cluster', event.obj_name)
+        self.assertEqual('FAKE_CLUSTER', event.oid)
+        self.assertEqual('fake-cluster', event.oname)
         self.assertEqual('FAKE_CLUSTER', event.cluster_id)
-        self.assertEqual('CLUSTER', event.obj_type)
+        self.assertEqual('CLUSTER', event.otype)
 
     @mock.patch('oslo_utils.reflection.get_class_name')
     def test_event__infer_entity_data_cluster(self, mock_get):
@@ -99,11 +99,11 @@ class TestEvent(base.SenlinTestCase):
 
         self.assertEqual('timestamp', event.timestamp)
         self.assertEqual('level', event.level)
-        self.assertEqual('obj-name', event.obj_name)
+        self.assertEqual('obj-name', event.oname)
         self.assertEqual('fake-status', event.status)
         self.assertEqual('fake-reason', event.status_reason)
-        self.assertEqual('CLUSTER', event.obj_type)
-        self.assertEqual('obj-id', event.obj_id)
+        self.assertEqual('CLUSTER', event.otype)
+        self.assertEqual('obj-id', event.oid)
         self.assertEqual('obj-id', event.cluster_id)
         mock_get.assert_called_once_with(entity, fully_qualified=False)
 
@@ -119,11 +119,11 @@ class TestEvent(base.SenlinTestCase):
 
         self.assertEqual('timestamp', event.timestamp)
         self.assertEqual('level', event.level)
-        self.assertEqual('obj-name', event.obj_name)
+        self.assertEqual('obj-name', event.oname)
         self.assertEqual('fake-status', event.status)
         self.assertEqual('fake-reason', event.status_reason)
-        self.assertEqual('NODE', event.obj_type)
-        self.assertEqual('obj-id', event.obj_id)
+        self.assertEqual('NODE', event.otype)
+        self.assertEqual('obj-id', event.oid)
         self.assertEqual('cluster-id', event.cluster_id)
         mock_get.assert_called_once_with(entity, fully_qualified=False)
 
@@ -139,11 +139,11 @@ class TestEvent(base.SenlinTestCase):
 
         self.assertEqual('timestamp', event.timestamp)
         self.assertEqual('level', event.level)
-        self.assertEqual('obj-name', event.obj_name)
+        self.assertEqual('obj-name', event.oname)
         self.assertEqual('fake-status', event.status)
         self.assertEqual('fake-reason', event.status_reason)
-        self.assertEqual('CLUSTER', event.obj_type)
-        self.assertEqual('fake-cluster', event.obj_id)
+        self.assertEqual('CLUSTER', event.otype)
+        self.assertEqual('fake-cluster', event.oid)
         self.assertEqual('fake-cluster', event.cluster_id)
         mock_get.assert_called_once_with(entity, fully_qualified=False)
 
@@ -160,11 +160,11 @@ class TestEvent(base.SenlinTestCase):
 
         self.assertEqual('timestamp', event.timestamp)
         self.assertEqual('level', event.level)
-        self.assertEqual('obj-name', event.obj_name)
+        self.assertEqual('obj-name', event.oname)
         self.assertEqual('fake-status', event.status)
         self.assertEqual('fake-reason', event.status_reason)
-        self.assertEqual('NODE', event.obj_type)
-        self.assertEqual('fake-node', event.obj_id)
+        self.assertEqual('NODE', event.otype)
+        self.assertEqual('fake-node', event.oid)
         self.assertEqual('fake-cluster', event.cluster_id)
         mock_get.assert_called_once_with(entity, fully_qualified=False)
 
@@ -176,9 +176,9 @@ class TestEvent(base.SenlinTestCase):
             'action': 'fake-action',
             'status': 'ACTIVE',
             'status_reason': 'Weather is clear',
-            'obj_id': 'FAKE-CLUSTER-ID',
-            'obj_type': 'CLUSTER TYPE',
-            'obj_name': 'fake-cluster',
+            'oid': 'FAKE-CLUSTER-ID',
+            'otype': 'CLUSTER TYPE',
+            'oname': 'fake-cluster',
             'cluster_id': 'FAKE-CLUSTER-ID',
             'metadata': {'foo': 'bar'},
         }
@@ -202,8 +202,8 @@ class TestEvent(base.SenlinTestCase):
         self.assertEqual(event.action, result.action)
         self.assertEqual(event.status, result.status)
         self.assertEqual(event.status_reason, result.status_reason)
-        self.assertEqual(event.obj_id, result.obj_id)
-        self.assertEqual(event.obj_type, result.obj_type)
-        self.assertEqual(event.obj_name, result.obj_name)
+        self.assertEqual(event.oid, result.oid)
+        self.assertEqual(event.otype, result.otype)
+        self.assertEqual(event.oname, result.oname)
         self.assertEqual(event.cluster_id, result.cluster_id)
         self.assertEqual(event.metadata, result.meta_data)

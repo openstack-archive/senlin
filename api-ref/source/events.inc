@@ -30,9 +30,9 @@ Request Parameters
   - marker: marker
   - sort: sort
   - global_project: global_project
-  - obj_id: obj_id_query
-  - obj_type: obj_type_query
-  - obj_name: obj_name_query
+  - oid: oid_query
+  - otype: otype_query
+  - oname: oname_query
   - cluster_id: cluster_identity_query
   - action: action_name_query
 
@@ -46,9 +46,9 @@ Response Parameters
   - cluster_id: cluster_id
   - id: event_id
   - level: event_level
-  - obj_id: obj_id
-  - obj_name: obj_name
-  - obj_type: obj_type
+  - oid: oid
+  - oname: oname
+  - otype: otype
   - project: project
   - status: event_status
   - status_reason: status_reason
@@ -97,9 +97,9 @@ Response Parameters
   - cluster_id: cluster_id
   - id: event_id
   - level: event_level
-  - obj_id: obj_id
-  - obj_name: obj_name
-  - obj_type: obj_type
+  - oid: oid
+  - oname: oname
+  - otype: otype
   - project: project
   - status: event_status
   - status_reason: status_reason

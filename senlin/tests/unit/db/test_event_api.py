@@ -54,9 +54,9 @@ class DBAPIEventTest(base.SenlinTestCase):
         values = {
             'timestamp': timestamp or fake_timestamp,
             'level': level,
-            'obj_id': entity.id if entity else '',
-            'obj_name': entity.name if entity else '',
-            'obj_type': type_name,
+            'oid': entity.id if entity else '',
+            'oname': entity.name if entity else '',
+            'otype': type_name,
             'cluster_id': cluster_id,
             'action': action or '',
             'status': status or '',
@@ -76,9 +76,9 @@ class DBAPIEventTest(base.SenlinTestCase):
                                          '%Y-%m-%d %H:%M:%S.%f')
         self.assertEqual(tst_timestamp, ret_event.timestamp)
         self.assertEqual('20', ret_event.level)
-        self.assertEqual('', ret_event.obj_id)
-        self.assertEqual('', ret_event.obj_type)
-        self.assertEqual('', ret_event.obj_name)
+        self.assertEqual('', ret_event.oid)
+        self.assertEqual('', ret_event.otype)
+        self.assertEqual('', ret_event.oname)
         self.assertEqual('', ret_event.action)
         self.assertEqual('', ret_event.status)
         self.assertEqual('', ret_event.status_reason)
@@ -138,13 +138,13 @@ class DBAPIEventTest(base.SenlinTestCase):
         events = db_api.event_get_all(self.ctx)
         self.assertEqual(3, len(events))
 
-        cluster_ids = [event.obj_id for event in events]
-        obj_names = [event.obj_name for event in events]
+        cluster_ids = [event.oid for event in events]
+        onames = [event.oname for event in events]
 
         self.assertIn(cluster1.id, cluster_ids)
-        self.assertIn(cluster1.name, obj_names)
+        self.assertIn(cluster1.name, onames)
         self.assertIn(cluster2.id, cluster_ids)
-        self.assertIn(cluster2.name, obj_names)
+        self.assertIn(cluster2.name, onames)
 
     def test_event_get_all_with_limit(self):
         cluster1 = shared.create_cluster(self.ctx, self.profile)
@@ -237,23 +237,23 @@ class DBAPIEventTest(base.SenlinTestCase):
         events = db_api.event_get_all(self.ctx)
         self.assertEqual(2, len(events))
 
-        obj_ids = [event.obj_id for event in events]
-        obj_names = [event.obj_name for event in events]
-        self.assertNotIn(cluster1.id, obj_ids)
-        self.assertNotIn(cluster1.name, obj_names)
-        self.assertIn(cluster2.id, obj_ids)
-        self.assertIn(cluster2.name, obj_names)
+        oids = [event.oid for event in events]
+        onames = [event.oname for event in events]
+        self.assertNotIn(cluster1.id, oids)
+        self.assertNotIn(cluster1.name, onames)
+        self.assertIn(cluster2.id, oids)
+        self.assertIn(cluster2.name, onames)
 
         # Set project_safe to false, we should get all three events
         events = db_api.event_get_all(self.ctx, project_safe=False)
         self.assertEqual(3, len(events))
 
-        obj_ids = [event.obj_id for event in events]
-        obj_names = [event.obj_name for event in events]
-        self.assertIn(cluster1.id, obj_ids)
-        self.assertIn(cluster1.name, obj_names)
-        self.assertIn(cluster2.id, obj_ids)
-        self.assertIn(cluster2.name, obj_names)
+        oids = [event.oid for event in events]
+        onames = [event.oname for event in events]
+        self.assertIn(cluster1.id, oids)
+        self.assertIn(cluster1.name, onames)
+        self.assertIn(cluster2.id, oids)
+        self.assertIn(cluster2.name, onames)
 
     def test_event_get_all_admin_context(self):
         self.ctx.project = 'project_1'
@@ -440,27 +440,27 @@ class DBAPIEventTest(base.SenlinTestCase):
                                                  filters=filters)
         self.assertEqual(0, len(events))
 
-        # test filter by obj_name
-        filters = {'obj_name': 'cluster1'}
+        # test filter by oname
+        filters = {'oname': 'cluster1'}
         events = db_api.event_get_all_by_cluster(self.ctx, cluster1.id,
                                                  filters=filters)
         self.assertEqual(2, len(events))
-        self.assertEqual('cluster1', events[0].obj_name)
-        self.assertEqual('cluster1', events[1].obj_name)
+        self.assertEqual('cluster1', events[0].oname)
+        self.assertEqual('cluster1', events[1].oname)
 
-        filters = {'obj_name': 'cluster3'}
+        filters = {'oname': 'cluster3'}
         events = db_api.event_get_all_by_cluster(self.ctx, cluster1.id,
                                                  filters=filters)
         self.assertEqual(0, len(events))
 
-        # test filter by obj_type
-        filters = {'obj_type': 'CLUSTER'}
+        # test filter by otype
+        filters = {'otype': 'CLUSTER'}
         events = db_api.event_get_all_by_cluster(self.ctx, cluster2.id,
                                                  filters=filters)
         self.assertEqual(1, len(events))
-        self.assertEqual('CLUSTER', events[0].obj_type)
+        self.assertEqual('CLUSTER', events[0].otype)
 
-        filters = {'obj_type': 'NODE'}
+        filters = {'otype': 'NODE'}
         events = db_api.event_get_all_by_cluster(self.ctx, cluster2.id,
                                                  filters=filters)
         self.assertEqual(0, len(events))
