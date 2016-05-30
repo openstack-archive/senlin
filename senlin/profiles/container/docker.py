@@ -19,9 +19,9 @@ class DockerProfile(base.Profile):
     """Profile for a docker container."""
 
     KEYS = (
-        CONTEXT, IMAGE, NAME, COMMAND,
+        CONTEXT, IMAGE, NAME, COMMAND, HOST_NODE, HOST_CLUSTER
     ) = (
-        'context', 'image', 'name', 'command',
+        'context', 'image', 'name', 'command', 'host_node', 'host_cluster',
     )
 
     properties_schema = {
@@ -36,6 +36,12 @@ class DockerProfile(base.Profile):
         ),
         COMMAND: schema.String(
             _('The command to run when container is started.')
+        ),
+        HOST_NODE: schema.String(
+            _('The node on which container will be launched.')
+        ),
+        HOST_CLUSTER: schema.String(
+            _('The cluster on which container cluster will be launched.')
         ),
     }
 
