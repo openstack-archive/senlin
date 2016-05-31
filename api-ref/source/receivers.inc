@@ -72,7 +72,9 @@ Create receiver
 
 Creates a receiver.
 
-Error response codes: 201
+Normal response codes: 201
+
+Error response codes:
 
 - badRequest (400)
 - unauthorized (401)
