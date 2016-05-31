@@ -54,7 +54,7 @@ class Node(object):
         if cluster_id is None:
             cluster_id = ''
 
-        self.physical_id = kwargs.get('physical_id', '')
+        self.physical_id = kwargs.get('physical_id', None)
         self.profile_id = profile_id
         self.user = kwargs.get('user', '')
         self.project = kwargs.get('project', '')
