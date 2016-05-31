@@ -17,8 +17,10 @@ from oslo_versionedobjects import fields
 
 from senlin.db import api as db_api
 from senlin.objects import base as senlin_base
+from senlin.objects import fields as senlin_fields
 
 
+@senlin_base.SenlinObjectRegistry.register
 class Policy(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
     """Senlin policy object."""
 
@@ -26,12 +28,12 @@ class Policy(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'id': fields.UUIDField(),
         'name': fields.StringField(),
         'type': fields.StringField(),
-        'spec': fields.DictOfStringsField(),
+        'spec': senlin_fields.JsonField(),
         'cooldown': fields.IntegerField(nullable=True),
         'level': fields.IntegerField(nullable=True),
-        'data': fields.DictOfStringsField(),
+        'data': fields.DictOfStringsField(nullable=True),
         'created_at': fields.DateTimeField(),
-        'updated_at': fields.DateTimeField(),
+        'updated_at': fields.DateTimeField(nullable=True),
         'user': fields.StringField(),
         'project': fields.StringField(),
         'domain': fields.StringField(nullable=True),

@@ -132,7 +132,7 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual(1, len(bindings))
         self.assertIsNone(bindings[0].last_op)
 
-        timestamp = tu.utcnow()
+        timestamp = tu.utcnow(True)
         fields = {'last_op': timestamp}
         db_api.cluster_policy_update(self.ctx, self.cluster.id, policy.id,
                                      fields)

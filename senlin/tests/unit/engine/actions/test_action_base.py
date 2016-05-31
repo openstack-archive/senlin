@@ -14,9 +14,11 @@ import copy
 
 import mock
 from oslo_config import cfg
+from oslo_utils import timeutils
 import six
 
 from senlin.common import exception
+from senlin.common import utils as common_utils
 from senlin.engine.actions import base as ab
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import cluster_policy as cp_mod
@@ -55,7 +57,7 @@ class ActionBaseTest(base.SenlinTestCase):
             'status_reason': 'FAKE_STATUS_REASON',
             'inputs': {'param': 'value'},
             'outputs': {'key': 'output_value'},
-            'created_at': None,
+            'created_at': timeutils.utcnow(True),
             'updated_at': None,
             'data': {'data_key': 'data_value'},
         }
@@ -120,7 +122,8 @@ class ActionBaseTest(base.SenlinTestCase):
         obj = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx,
                                  **values)
 
-        self.assertIsNone(obj.created_at)
+        self.assertEqual(common_utils.isotime(values['created_at']),
+                         common_utils.isotime(obj.created_at))
         self.assertIsNone(obj.updated_at)
 
         # store for creation
@@ -172,7 +175,8 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual(obj.status_reason, action_obj.status_reason)
         self.assertEqual(obj.inputs, action_obj.inputs)
         self.assertEqual(obj.outputs, action_obj.outputs)
-        self.assertEqual(obj.created_at, action_obj.created_at)
+        self.assertEqual(common_utils.isotime(obj.created_at),
+                         common_utils.isotime(action_obj.created_at))
         self.assertEqual(obj.updated_at, action_obj.updated_at)
         self.assertEqual(obj.data, action_obj.data)
         self.assertEqual(obj.user, action_obj.user)
@@ -552,6 +556,7 @@ class ActionBaseTest(base.SenlinTestCase):
         action = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx,
                                     **self.action_values)
         action.id = 'FAKE_ID'
+        ts = common_utils.isotime(self.action_values['created_at'])
         expected = {
             'id': 'FAKE_ID',
             'name': 'FAKE_NAME',
@@ -569,7 +574,7 @@ class ActionBaseTest(base.SenlinTestCase):
             'outputs': {'key': 'output_value'},
             'depends_on': ['ACTION_1'],
             'depended_by': ['ACTION_2'],
-            'created_at': None,
+            'created_at': ts,
             'updated_at': None,
             'data': {'data_key': 'data_value'},
         }

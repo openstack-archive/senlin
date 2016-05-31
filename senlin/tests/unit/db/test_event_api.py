@@ -74,7 +74,9 @@ class DBAPIEventTest(base.SenlinTestCase):
         self.assertIsNotNone(ret_event)
         tst_timestamp = tu.parse_strtime('2014-12-19 11:51:54.670244',
                                          '%Y-%m-%d %H:%M:%S.%f')
-        self.assertEqual(tst_timestamp, ret_event.timestamp)
+
+        self.assertEqual(tu.isotime(tst_timestamp),
+                         tu.isotime(ret_event.timestamp))
         self.assertEqual('20', ret_event.level)
         self.assertEqual('', ret_event.oid)
         self.assertEqual('', ret_event.otype)
@@ -193,13 +195,13 @@ class DBAPIEventTest(base.SenlinTestCase):
         cluster1 = shared.create_cluster(self.ctx, self.profile)
 
         event1 = self.create_event(self.ctx, entity=cluster1,
-                                   timestamp=tu.utcnow(),
+                                   timestamp=tu.utcnow(True),
                                    action='action2')
         event2 = self.create_event(self.ctx, entity=cluster1,
-                                   timestamp=tu.utcnow(),
+                                   timestamp=tu.utcnow(True),
                                    action='action3')
         event3 = self.create_event(self.ctx, entity=cluster1,
-                                   timestamp=tu.utcnow(),
+                                   timestamp=tu.utcnow(True),
                                    action='action1')
 
         events = db_api.event_get_all(self.ctx, sort='timestamp')

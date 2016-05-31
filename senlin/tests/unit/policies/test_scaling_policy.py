@@ -51,10 +51,14 @@ class TestScalingPolicy(base.SenlinTestCase):
 
     def _create_profile(self, profile_id):
         values = {
+            'context': self.context.to_dict(),
             'id': profile_id,
             'type': 'os.heat.stack',
             'name': 'test-profile',
-            'created_at': timeutils.utcnow(),
+            'spec': {
+                'template': 'fake_stack.yml',
+            },
+            'created_at': timeutils.utcnow(True),
             'user': self.context.user,
             'project': self.context.project,
         }
@@ -71,6 +75,8 @@ class TestScalingPolicy(base.SenlinTestCase):
             'min_size': 1,
             'max_size': 5,
             'desired_capacity': 3,
+            'status': 'ACTIVE',
+            'init_at': timeutils.utcnow(True),
         }
 
         return co.Cluster.create(self.context, values)
@@ -84,15 +90,17 @@ class TestScalingPolicy(base.SenlinTestCase):
                 'physical_id': 'FAKE_PHY_ID_%s' % (i + 1),
                 'cluster_id': cluster_id,
                 'profile_id': profile_id,
-                'project': self.context.project,
                 'index': i + 1,
                 'role': None,
-                'created_at': timeutils.utcnow(),
+                'init_at': timeutils.utcnow(True),
+                'created_at': timeutils.utcnow(True),
                 'updated_at': None,
                 'status': 'ACTIVE',
                 'status_reason': 'create complete',
                 'metadata': {'foo': '123'},
                 'data': {'key1': 'value1'},
+                'user': self.context.user,
+                'project': self.context.project,
             }
             db_node = no.Node.create(self.context, values)
             nodes.append(six.text_type(db_node.id))

@@ -120,7 +120,7 @@ class ClusterAction(base.Action):
         nodes = []
         child = []
         for m in range(count):
-            index = co.Cluster.next_index(self.context, self.cluster.id)
+            index = co.Cluster.get_next_index(self.context, self.cluster.id)
             kwargs = {
                 'index': index,
                 'metadata': {},

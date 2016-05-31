@@ -82,6 +82,11 @@ class Event(object):
             self.cluster_id = entity.node.cluster_id
             self.oname = entity.node.name
             self.otype = 'NODE'
+        else:
+            self.oid = entity.target
+            self.cluster_id = ''
+            self.oname = ''
+            self.otype = ''
 
     def store(self, context):
         '''Store the event into database and return its ID.'''
@@ -108,7 +113,7 @@ class Event(object):
 
 def critical(context, entity, action, status=None, status_reason=None,
              timestamp=None):
-    timestamp = timestamp or timeutils.utcnow()
+    timestamp = timestamp or timeutils.utcnow(True)
     event = Event(timestamp, logging.CRITICAL, entity,
                   action=action, status=status, status_reason=status_reason,
                   user=context.user, project=context.project)
@@ -122,7 +127,7 @@ def critical(context, entity, action, status=None, status_reason=None,
 
 def error(context, entity, action, status=None, status_reason=None,
           timestamp=None):
-    timestamp = timestamp or timeutils.utcnow()
+    timestamp = timestamp or timeutils.utcnow(True)
     event = Event(timestamp, logging.ERROR, entity,
                   action=action, status=status, status_reason=status_reason,
                   user=context.user, project=context.project)
@@ -137,7 +142,7 @@ def error(context, entity, action, status=None, status_reason=None,
 
 def warning(context, entity, action, status=None, status_reason=None,
             timestamp=None):
-    timestamp = timestamp or timeutils.utcnow()
+    timestamp = timestamp or timeutils.utcnow(True)
     event = Event(timestamp, logging.WARNING, entity,
                   action=action, status=status, status_reason=status_reason,
                   user=context.user, project=context.project)
@@ -152,7 +157,7 @@ def warning(context, entity, action, status=None, status_reason=None,
 
 def info(context, entity, action, status=None, status_reason=None,
          timestamp=None):
-    timestamp = timestamp or timeutils.utcnow()
+    timestamp = timestamp or timeutils.utcnow(True)
     event = Event(timestamp, logging.INFO, entity,
                   action=action, status=status, status_reason=status_reason,
                   user=context.user, project=context.project)
@@ -167,7 +172,7 @@ def info(context, entity, action, status=None, status_reason=None,
 
 def debug(context, entity, action, status=None, status_reason=None,
           timestamp=None):
-    timestamp = timestamp or timeutils.utcnow()
+    timestamp = timestamp or timeutils.utcnow(True)
     event = Event(timestamp, logging.DEBUG, entity,
                   action=action, status=status, status_reason=status_reason,
                   user=context.user, project=context.project)

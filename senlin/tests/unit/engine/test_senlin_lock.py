@@ -13,6 +13,7 @@
 import datetime
 import mock
 from oslo_config import cfg
+from oslo_utils import timeutils
 
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock as lockm
@@ -285,15 +286,14 @@ class SenlinLockEnginCheckTest(base.SenlinTestCase):
 
     @mock.patch.object(service_obj.Service, 'get')
     def test_engine_is_dead(self, mock_service):
-        update_time = (datetime.datetime.utcnow() - datetime.timedelta(
-            seconds=3 * cfg.CONF.periodic_interval))
+        delta = datetime.timedelta(seconds=3 * cfg.CONF.periodic_interval)
+        update_time = timeutils.utcnow(True) - delta
         mock_service.return_value = mock.Mock(updated_at=update_time)
         self.assertTrue(lockm.is_engine_dead(self.ctx, 'fake_engine_id'))
         mock_service.assert_called_once_with(self.ctx, 'fake_engine_id')
 
     @mock.patch.object(service_obj.Service, 'get')
-    def test_engine_is_alive(self, mock_service):
-        mock_service.return_value = mock.Mock(
-            updated_at=datetime.datetime.utcnow())
+    def test_engine_is_alive(self, mock_svc):
+        mock_svc.return_value = mock.Mock(updated_at=timeutils.utcnow(True))
         self.assertFalse(lockm.is_engine_dead(self.ctx, 'fake_engine_id'))
-        mock_service.assert_called_once_with(self.ctx, 'fake_engine_id')
+        mock_svc.assert_called_once_with(self.ctx, 'fake_engine_id')

@@ -46,7 +46,7 @@ def is_engine_dead(ctx, engine_id, period_time=None):
     eng = service_obj.Service.get(ctx, engine_id)
     if not eng:
         return True
-    if (timeutils.utcnow() - eng.updated_at).total_seconds() > period_time:
+    if timeutils.is_older_than(eng.updated_at, period_time):
         return True
     return False
 

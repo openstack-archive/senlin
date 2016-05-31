@@ -29,7 +29,7 @@ class TestEvent(base.SenlinTestCase):
         self.context = utils.dummy_context()
 
     def test_event_init(self):
-        timestamp = timeutils.utcnow()
+        timestamp = timeutils.utcnow(True)
         kwargs = {
             'id': 'FAKE-ID',
             'user': 'test-user',
@@ -63,7 +63,7 @@ class TestEvent(base.SenlinTestCase):
         self.assertEqual({'foo': 'bar'}, event.metadata)
 
     def test_event_init_with_entity(self):
-        timestamp = timeutils.utcnow()
+        timestamp = timeutils.utcnow(True)
         x_cluster = cluster_mod.Cluster('fake-cluster', 0, 'fake-profile',
                                         id='FAKE_CLUSTER')
 
@@ -169,7 +169,7 @@ class TestEvent(base.SenlinTestCase):
         mock_get.assert_called_once_with(entity, fully_qualified=False)
 
     def test_event_store(self):
-        timestamp = timeutils.utcnow()
+        timestamp = timeutils.utcnow(True)
         kwargs = {
             'user': self.context.user,
             'project': self.context.project,

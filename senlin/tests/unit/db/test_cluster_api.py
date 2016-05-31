@@ -249,7 +249,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
 
     def test_cluster_get_all_default_sort_dir(self):
         clusters = [shared.create_cluster(self.ctx, self.profile,
-                                          init_at=tu.utcnow())
+                                          init_at=tu.utcnow(True))
                     for x in range(3)]
 
         st_db = db_api.cluster_get_all(self.ctx)
@@ -260,7 +260,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
 
     def test_cluster_get_all_str_sort_keys(self):
         clusters = [shared.create_cluster(self.ctx, self.profile,
-                                          created_at=tu.utcnow())
+                                          created_at=tu.utcnow(True))
                     for x in range(3)]
 
         st_db = db_api.cluster_get_all(self.ctx, sort='created_at')
@@ -282,7 +282,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
 
     def test_cluster_get_all_marker(self):
         clusters = [shared.create_cluster(self.ctx, self.profile,
-                                          created_at=tu.utcnow())
+                                          created_at=tu.utcnow(True))
                     for x in range(3)]
         cl_db = db_api.cluster_get_all(self.ctx, marker=clusters[1].id)
         self.assertEqual(1, len(cl_db))

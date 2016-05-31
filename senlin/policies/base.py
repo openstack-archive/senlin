@@ -167,7 +167,7 @@ class Policy(object):
 
     def store(self, context):
         '''Store the policy object into database table.'''
-        timestamp = timeutils.utcnow()
+        timestamp = timeutils.utcnow(True)
 
         values = {
             'name': self.name,
@@ -270,8 +270,8 @@ class Policy(object):
             'project': self.project,
             'domain': self.domain,
             'spec': self.spec,
-            'created_at': utils.format_time(self.created_at),
-            'updated_at': utils.format_time(self.updated_at),
+            'created_at': utils.isotime(self.created_at),
+            'updated_at': utils.isotime(self.updated_at),
             'data': self.data,
         }
         return pb_dict

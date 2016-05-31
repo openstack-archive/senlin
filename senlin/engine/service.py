@@ -11,7 +11,6 @@
 # under the License.
 
 import copy
-import datetime
 import functools
 import uuid
 
@@ -173,14 +172,13 @@ class EngineService(service.Service):
 
     def service_manage_cleanup(self):
         ctx = senlin_context.get_admin_context()
-        last_updated_window = (2 * cfg.CONF.periodic_interval)
-        time_line = timeutils.utcnow() - datetime.timedelta(
-            seconds=last_updated_window)
+        time_window = (2 * cfg.CONF.periodic_interval)
         svcs = service_obj.Service.get_all(ctx)
         for svc in svcs:
             if svc['id'] == self.engine_id:
                 continue
-            if svc['updated_at'] < time_line:
+            if timeutils.is_older_than(svc['updated_at'], time_window):
+                # < time_line:
                 # hasn't been updated, assuming it's died.
                 LOG.info(_LI('Service %s was aborted'), svc['id'])
                 service_obj.Service.delete(ctx, svc['id'])
@@ -1427,7 +1425,7 @@ class EngineService(service.Service):
                             'operation aborted.')
                     LOG.error(msg)
                     raise exception.ProfileTypeNotMatch(message=msg)
-            index = cluster_obj.Cluster.next_index(context, cluster_id)
+            index = cluster_obj.Cluster.get_next_index(context, cluster_id)
 
         # Create a node instance
         kwargs = {

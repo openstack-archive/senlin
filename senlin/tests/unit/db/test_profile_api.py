@@ -184,7 +184,7 @@ class DBAPIProfileTest(base.SenlinTestCase):
     def test_profile_get_all_with_limit_marker(self):
         ids = ['profile1', 'profile2', 'profile3']
         for pid in ids:
-            timestamp = tu.utcnow()
+            timestamp = tu.utcnow(True)
             shared.create_profile(self.ctx, id=pid, created_at=timestamp)
 
         # different limit settings
@@ -256,7 +256,8 @@ class DBAPIProfileTest(base.SenlinTestCase):
     def test_profile_get_all_default_sorting(self):
         profiles = []
         for x in range(3):
-            profile = shared.create_profile(self.ctx, created_at=tu.utcnow())
+            profile = shared.create_profile(self.ctx,
+                                            created_at=tu.utcnow(True))
             profiles.append(profile)
 
         results = db_api.profile_get_all(self.ctx)

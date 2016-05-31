@@ -17,8 +17,10 @@ from oslo_versionedobjects import fields
 
 from senlin.db import api as db_api
 from senlin.objects import base as senlin_base
+from senlin.objects import fields as senlin_fields
 
 
+@senlin_base.SenlinObjectRegistry.register
 class Profile(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
     """Senlin profile object."""
 
@@ -26,15 +28,15 @@ class Profile(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'id': fields.UUIDField(),
         'name': fields.StringField(),
         'type': fields.StringField(),
-        'context': fields.DictOfStringsField(),
-        'spec': fields.DictOfStringsField(),
+        'context': senlin_fields.JsonField(),
+        'spec': senlin_fields.JsonField(),
         'created_at': fields.DateTimeField(),
-        'updated_at': fields.DateTimeField(),
+        'updated_at': fields.DateTimeField(nullable=True),
         'user': fields.StringField(),
         'project': fields.StringField(),
         'domain': fields.StringField(nullable=True),
         'permission': fields.StringField(nullable=True),
-        'metadata': fields.DictOfStringsField(),
+        'metadata': fields.DictOfStringsField(nullable=True),
     }
 
     @staticmethod

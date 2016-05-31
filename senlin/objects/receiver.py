@@ -17,8 +17,10 @@ from oslo_versionedobjects import fields
 
 from senlin.db import api as db_api
 from senlin.objects import base as senlin_base
+from senlin.objects import fields as senlin_fields
 
 
+@senlin_base.SenlinObjectRegistry.register
 class Receiver(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
     """Senlin receiver object."""
 
@@ -27,15 +29,15 @@ class Receiver(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'name': fields.StringField(),
         'type': fields.StringField(),
         'cluster_id': fields.UUIDField(),
-        'actor': fields.DictOfStringsField(nullable=True),
+        'actor': senlin_fields.JsonField(nullable=True),
         'action': fields.StringField(),
-        'params': fields.DictOfStringsField(nullable=True),
-        'channel': fields.DictOfStringsField(nullable=True),
+        'params': senlin_fields.JsonField(nullable=True),
+        'channel': senlin_fields.JsonField(nullable=True),
         'created_at': fields.DateTimeField(nullable=True),
         'updated_at': fields.DateTimeField(nullable=True),
         'user': fields.StringField(),
         'project': fields.StringField(),
-        'domain': fields.StringField(),
+        'domain': fields.StringField(nullable=True),
     }
 
     @staticmethod

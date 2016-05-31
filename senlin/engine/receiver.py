@@ -66,7 +66,7 @@ class Receiver(object):
 
         :param context: Context for DB operations.
         """
-        self.created_at = timeutils.utcnow()
+        self.created_at = timeutils.utcnow(True)
         values = {
             'id': self.id,
             'name': self.name,

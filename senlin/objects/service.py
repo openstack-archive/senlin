@@ -19,6 +19,7 @@ from senlin.db import api as db_api
 from senlin.objects import base as senlin_base
 
 
+@senlin_base.SenlinObjectRegistry.register
 class Service(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
     """Senlin service object."""
 
@@ -28,7 +29,7 @@ class Service(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'binary': fields.StringField(),
         'topic': fields.StringField(),
         'disabled': fields.BooleanField(),
-        'disabled_reason': fields.StringField(),
+        'disabled_reason': fields.StringField(nullable=True),
         'created_at': fields.DateTimeField(),
         'updated_at': fields.DateTimeField(),
     }

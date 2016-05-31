@@ -51,9 +51,8 @@ class ServiceManageCommand(object):
             return
 
         status = 'down'
-        seconds_since_update = (timeutils.utcnow() -
-                                service.updated_at).total_seconds()
-        if seconds_since_update <= 2 * CONF.periodic_interval:
+        max_interval = 2 * CONF.periodic_interval
+        if timeutils.is_older_than(service.updated_at, max_interval):
             status = 'up'
 
         result = {

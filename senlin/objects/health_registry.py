@@ -19,6 +19,7 @@ from senlin.db import api as db_api
 from senlin.objects import base as senlin_base
 
 
+@senlin_base.SenlinObjectRegistry.register
 class HealthRegistry(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
     """Senlin health registry object."""
 

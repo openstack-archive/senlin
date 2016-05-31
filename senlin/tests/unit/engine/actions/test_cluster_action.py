@@ -112,7 +112,7 @@ class ClusterActionTest(base.SenlinTestCase):
 
     @mock.patch.object(ao.Action, 'update')
     @mock.patch.object(ab.Action, 'create')
-    @mock.patch.object(co.Cluster, 'next_index')
+    @mock.patch.object(co.Cluster, 'get_next_index')
     @mock.patch.object(nm, 'Node')
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
@@ -185,7 +185,7 @@ class ClusterActionTest(base.SenlinTestCase):
 
     @mock.patch.object(ao.Action, 'update')
     @mock.patch.object(ab.Action, 'create')
-    @mock.patch.object(co.Cluster, 'next_index')
+    @mock.patch.object(co.Cluster, 'get_next_index')
     @mock.patch.object(nm, 'Node')
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')

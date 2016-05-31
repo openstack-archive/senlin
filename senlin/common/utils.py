@@ -32,6 +32,7 @@ from senlin.common.i18n import _LI
 
 cfg.CONF.import_opt('max_response_size', 'senlin.common.config')
 LOG = logging.getLogger(__name__)
+_ISO8601_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
 
 class URLFetchError(exception.Error, IOError):
@@ -173,3 +174,17 @@ def format_time(value):
         value = value.replace(microsecond=0)
         value = value.isoformat()
     return value
+
+
+def isotime(at):
+    """Stringify time in ISO 8601 format.
+
+    oslo.versionedobject is using this function for datetime formatting.
+    """
+    if at is None:
+        return None
+
+    st = at.strftime(_ISO8601_TIME_FORMAT)
+    tz = at.tzinfo.tzname(None) if at.tzinfo else 'UTC'
+    st += ('Z' if tz == 'UTC' else tz)
+    return st
