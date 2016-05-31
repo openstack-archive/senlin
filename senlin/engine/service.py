@@ -12,7 +12,6 @@
 
 import copy
 import functools
-import uuid
 
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -104,7 +103,7 @@ class EngineService(service.Service):
         self.TG = scheduler.ThreadGroupManager()
 
     def start(self):
-        self.engine_id = str(uuid.uuid4())
+        self.engine_id = uuidutils.generate_uuid()
         self.init_tgm()
 
         # create a dispatcher RPC service for this engine.
