@@ -32,6 +32,10 @@ from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 from senlin.tests.unit import fakes
 
+CLUSTER_ID = 'e1cfd82b-dc95-46ad-86e8-37864d7be1cd'
+OBJID = '571fffb8-f41c-4cbc-945c-cb2937d76f19'
+OWNER_ID = 'c7114713-ee68-409d-ba5d-0560a72a386c'
+
 
 class DummyAction(ab.Action):
 
@@ -48,7 +52,7 @@ class ActionBaseTest(base.SenlinTestCase):
         self.action_values = {
             'name': 'FAKE_NAME',
             'cause': 'FAKE_CAUSE',
-            'owner': 'FAKE_OWNER',
+            'owner': OWNER_ID,
             'interval': 60,
             'start_time': 0,
             'end_time': 0,
@@ -86,8 +90,8 @@ class ActionBaseTest(base.SenlinTestCase):
     @mock.patch.object(cluster_mod.Cluster, 'load')
     def test_action_new(self, mock_n_load, mock_c_load):
         for action in ['CLUSTER_CREATE', 'NODE_CREATE', 'WHAT_EVER']:
-            obj = ab.Action('OBJID', action, self.ctx)
-            self._verify_new_action(obj, 'OBJID', action)
+            obj = ab.Action(OBJID, action, self.ctx)
+            self._verify_new_action(obj, OBJID, action)
 
     def test_action_init_with_values(self):
         values = copy.deepcopy(self.action_values)
@@ -96,15 +100,14 @@ class ActionBaseTest(base.SenlinTestCase):
         values['created_at'] = 'FAKE_CREATED_TIME'
         values['updated_at'] = 'FAKE_UPDATED_TIME'
 
-        obj = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx,
-                                 **values)
+        obj = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, **values)
 
         self.assertEqual('FAKE_ID', obj.id)
         self.assertEqual('FAKE_NAME', obj.name)
         self.assertEqual('FAKE_DESC', obj.description)
-        self.assertEqual('OBJID', obj.target)
+        self.assertEqual(OBJID, obj.target)
         self.assertEqual('FAKE_CAUSE', obj.cause)
-        self.assertEqual('FAKE_OWNER', obj.owner)
+        self.assertEqual(OWNER_ID, obj.owner)
         self.assertEqual(60, obj.interval)
         self.assertEqual(0, obj.start_time)
         self.assertEqual(0, obj.end_time)
@@ -119,8 +122,7 @@ class ActionBaseTest(base.SenlinTestCase):
 
     def test_action_store_for_create(self):
         values = copy.deepcopy(self.action_values)
-        obj = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx,
-                                 **values)
+        obj = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, **values)
 
         self.assertEqual(common_utils.isotime(values['created_at']),
                          common_utils.isotime(obj.created_at))
@@ -136,8 +138,7 @@ class ActionBaseTest(base.SenlinTestCase):
     def test_action_store_for_update(self):
         values = copy.deepcopy(self.action_values)
 
-        obj = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx,
-                                 **values)
+        obj = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, **values)
         obj_id = obj.store(self.ctx)
         self.assertIsNotNone(obj_id)
         self.assertIsNotNone(obj.created_at)
@@ -153,8 +154,7 @@ class ActionBaseTest(base.SenlinTestCase):
 
     def test_from_db_record(self):
         values = copy.deepcopy(self.action_values)
-        obj = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx,
-                                 **values)
+        obj = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, **values)
         obj.store(self.ctx)
 
         record = ao.Action.get(self.ctx, obj.id)
@@ -187,8 +187,7 @@ class ActionBaseTest(base.SenlinTestCase):
         values = copy.deepcopy(self.action_values)
         del values['inputs']
         del values['outputs']
-        obj = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx,
-                                 **values)
+        obj = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, **values)
         obj.store(self.ctx)
         record = ao.Action.get(self.ctx, obj.id)
         action_obj = ab.Action._from_object(record)
@@ -197,7 +196,7 @@ class ActionBaseTest(base.SenlinTestCase):
 
     def test_load(self):
         values = copy.deepcopy(self.action_values)
-        obj = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx, **values)
+        obj = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, **values)
         obj.store(self.ctx)
 
         result = ab.Action.load(self.ctx, obj.id, None)
@@ -232,11 +231,9 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual([], [c for c in result])
 
         values = copy.deepcopy(self.action_values)
-        action1 = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx,
-                                     **values)
+        action1 = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, **values)
         action1.store(self.ctx)
-        action2 = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx,
-                                     **values)
+        action2 = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, **values)
         action2.store(self.ctx)
 
         # NOTE: we don't test all other parameters because the db api tests
@@ -267,7 +264,7 @@ class ActionBaseTest(base.SenlinTestCase):
     def test_action_create(self, mock_store):
         mock_store.return_value = 'FAKE_ID'
 
-        result = ab.Action.create(self.ctx, 'OBJ_ID', 'CLUSTER_DANCE',
+        result = ab.Action.create(self.ctx, OBJID, 'CLUSTER_DANCE',
                                   name='test')
 
         self.assertEqual('FAKE_ID', result)
@@ -278,8 +275,7 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertIsNone(result)
 
         values = copy.deepcopy(self.action_values)
-        action1 = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx,
-                                     **values)
+        action1 = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, **values)
         action1.store(self.ctx)
 
         result = ab.Action.delete(self.ctx, action1.id)
@@ -294,8 +290,7 @@ class ActionBaseTest(base.SenlinTestCase):
     @mock.patch.object(ao.Action, 'signal')
     def test_action_signal_bad_command(self, mock_call):
         values = copy.deepcopy(self.action_values)
-        action1 = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx,
-                                     **values)
+        action1 = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, **values)
         action1.store(self.ctx)
 
         result = action1.signal('BOGUS')
@@ -306,8 +301,7 @@ class ActionBaseTest(base.SenlinTestCase):
     @mock.patch.object(EVENT, 'error')
     def test_action_signal_cancel(self, mock_error, mock_call):
         values = copy.deepcopy(self.action_values)
-        action = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx,
-                                    **values)
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, **values)
         action.store(self.ctx)
 
         expected = [action.INIT, action.WAITING, action.READY, action.RUNNING]
@@ -332,7 +326,7 @@ class ActionBaseTest(base.SenlinTestCase):
     @mock.patch.object(ao.Action, 'signal')
     @mock.patch.object(EVENT, 'error')
     def test_action_signal_suspend(self, mock_error, mock_call):
-        action = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx)
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx)
 
         expected = [action.RUNNING]
         for status in expected:
@@ -356,7 +350,7 @@ class ActionBaseTest(base.SenlinTestCase):
     @mock.patch.object(ao.Action, 'signal')
     @mock.patch.object(EVENT, 'error')
     def test_action_signal_resume(self, mock_error, mock_call):
-        action = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx)
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx)
 
         expected = [action.SUSPENDED]
         for status in expected:
@@ -378,17 +372,20 @@ class ActionBaseTest(base.SenlinTestCase):
             mock_error.reset_mock()
 
     def test_execute_default(self):
-        action = ab.Action.__new__(DummyAction, 'OBJID', 'BOOM', self.ctx)
+        action = ab.Action.__new__(DummyAction, OBJID, 'BOOM', self.ctx)
         res = action.execute()
         self.assertEqual(NotImplemented, res)
 
+    @mock.patch.object(EVENT, 'info')
+    @mock.patch.object(EVENT, 'error')
+    @mock.patch.object(EVENT, 'warning')
     @mock.patch.object(ao.Action, 'mark_succeeded')
     @mock.patch.object(ao.Action, 'mark_failed')
     @mock.patch.object(ao.Action, 'mark_cancelled')
     @mock.patch.object(ao.Action, 'abandon')
     def test_set_status(self, mock_abandon, mark_cancel, mark_fail,
-                        mark_succeed):
-        action = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx)
+                        mark_succeed, mock_event, mock_error, mock_info):
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx)
         action.id = 'FAKE_ID'
 
         action.set_status(action.RES_OK, 'FAKE_REASON')
@@ -427,7 +424,7 @@ class ActionBaseTest(base.SenlinTestCase):
     def test_get_status(self, mock_get):
         mock_get.return_value = 'FAKE_STATUS'
 
-        action = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx)
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx)
         action.id = 'FAKE_ID'
 
         res = action.get_status()
@@ -454,8 +451,9 @@ class ActionBaseTest(base.SenlinTestCase):
         mock_time.return_value = 12
         self.assertTrue(action.is_timeout())
 
-    def test_check_signal_timeout(self):
-        action = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx)
+    @mock.patch.object(EVENT, 'debug')
+    def test_check_signal_timeout(self, mock_debug):
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx)
         action.id = 'FAKE_ID'
         action.timeout = 10
         self.patchobject(action, 'is_timeout', return_value=True)
@@ -465,7 +463,7 @@ class ActionBaseTest(base.SenlinTestCase):
 
     @mock.patch.object(ao.Action, 'signal_query')
     def test_check_signal_signals_caught(self, mock_query):
-        action = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx)
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx)
         action.id = 'FAKE_ID'
         action.timeout = 100
         self.patchobject(action, 'is_timeout', return_value=False)
@@ -478,7 +476,7 @@ class ActionBaseTest(base.SenlinTestCase):
 
     @mock.patch.object(ao.Action, 'signal_query')
     def test_is_cancelled(self, mock_query):
-        action = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx)
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx)
         action.id = 'FAKE_ID'
         action.timeout = 100
         self.patchobject(action, 'is_timeout', return_value=False)
@@ -496,7 +494,7 @@ class ActionBaseTest(base.SenlinTestCase):
 
     @mock.patch.object(ao.Action, 'signal_query')
     def test_is_suspended(self, mock_query):
-        action = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx)
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx)
         action.id = 'FAKE_ID'
         action.timeout = 100
         self.patchobject(action, 'is_timeout', return_value=False)
@@ -514,7 +512,7 @@ class ActionBaseTest(base.SenlinTestCase):
 
     @mock.patch.object(ao.Action, 'signal_query')
     def test_is_resumed(self, mock_query):
-        action = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx)
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx)
         action.id = 'FAKE_ID'
         action.timeout = 100
         self.patchobject(action, 'is_timeout', return_value=False)
@@ -532,14 +530,14 @@ class ActionBaseTest(base.SenlinTestCase):
 
     @mock.patch.object(cp_mod.ClusterPolicy, 'load_all')
     def test_policy_check_target_invalid(self, mock_load):
-        action = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx)
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx)
         res = action.policy_check('FAKE_CLUSTER', 'WHEN')
         self.assertIsNone(res)
         self.assertEqual(0, mock_load.call_count)
 
     @mock.patch.object(cp_mod.ClusterPolicy, 'load_all')
     def test_policy_check_no_bindings(self, mock_load):
-        action = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx)
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx)
         mock_load.return_value = []
         res = action.policy_check('FAKE_CLUSTER', 'BEFORE')
         self.assertIsNone(res)
@@ -553,17 +551,17 @@ class ActionBaseTest(base.SenlinTestCase):
     def test_action_to_dict(self, mock_dep_by, mock_dep_on):
         mock_dep_on.return_value = ['ACTION_1']
         mock_dep_by.return_value = ['ACTION_2']
-        action = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx,
-                                    **self.action_values)
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx,
+                           **self.action_values)
         action.id = 'FAKE_ID'
         ts = common_utils.isotime(self.action_values['created_at'])
         expected = {
             'id': 'FAKE_ID',
             'name': 'FAKE_NAME',
             'action': 'OBJECT_ACTION',
-            'target': 'OBJID',
+            'target': OBJID,
             'cause': 'FAKE_CAUSE',
-            'owner': 'FAKE_OWNER',
+            'owner': OWNER_ID,
             'interval': 60,
             'start_time': 0,
             'end_time': 0,
@@ -616,7 +614,7 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
     @mock.patch.object(policy_mod.Policy, 'load')
     def test_policy_check_missing_target(self, mock_load, mock_load_all,
                                          mock_pre_op, mock_post_op):
-        cluster_id = 'FAKE_CLUSTER_ID'
+        cluster_id = CLUSTER_ID
         # Note: policy is mocked
         spec = {
             'type': 'TestPolicy',
@@ -649,10 +647,11 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         self.assertEqual(0, mock_pre_op.call_count)
         self.assertEqual(0, mock_post_op.call_count)
 
+    @mock.patch.object(EVENT, 'debug')
     @mock.patch.object(cp_mod.ClusterPolicy, 'load_all')
     @mock.patch.object(policy_mod.Policy, 'load')
-    def test_policy_check_pre_op(self, mock_load, mock_load_all):
-        cluster_id = 'FAKE_CLUSTER_ID'
+    def test_policy_check_pre_op(self, mock_load, mock_load_all, mock_event):
+        cluster_id = CLUSTER_ID
         # Note: policy is mocked
         spec = {
             'type': 'TestPolicy',
@@ -680,10 +679,11 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         # last_op was not updated
         self.assertIsNone(pb.last_op)
 
+    @mock.patch.object(EVENT, 'debug')
     @mock.patch.object(cp_mod.ClusterPolicy, 'load_all')
     @mock.patch.object(policy_mod.Policy, 'load')
-    def test_policy_check_post_op(self, mock_load, mock_load_all):
-        cluster_id = 'FAKE_CLUSTER_ID'
+    def test_policy_check_post_op(self, mock_load, mock_load_all, mock_event):
+        cluster_id = CLUSTER_ID
         # Note: policy is mocked
         policy = mock.Mock()
         policy.id = 'FAKE_POLICY_ID'
@@ -696,7 +696,7 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         mock_load.return_value = policy
         action = ab.Action(cluster_id, 'OBJECT_ACTION', self.ctx)
 
-        res = action.policy_check('FAKE_CLUSTER_ID', 'AFTER')
+        res = action.policy_check(CLUSTER_ID, 'AFTER')
 
         self.assertIsNone(res)
         self.assertEqual(policy_mod.CHECK_OK, action.data['status'])
@@ -713,7 +713,7 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
     @mock.patch.object(cp_mod.ClusterPolicy, 'load_all')
     @mock.patch.object(policy_mod.Policy, 'load')
     def test_policy_check_cooldown_inprogress(self, mock_load, mock_load_all):
-        cluster_id = 'FAKE_CLUSTER_ID'
+        cluster_id = CLUSTER_ID
         # Note: policy is mocked
         policy = mock.Mock()
         policy.id = 'FAKE_POLICY_ID'
@@ -726,7 +726,7 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         mock_load.return_value = policy
         action = ab.Action(cluster_id, 'OBJECT_ACTION', self.ctx)
 
-        res = action.policy_check('FAKE_CLUSTER_ID', 'AFTER')
+        res = action.policy_check(CLUSTER_ID, 'AFTER')
 
         self.assertIsNone(res)
         self.assertEqual(policy_mod.CHECK_ERROR, action.data['status'])
@@ -747,7 +747,7 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
     @mock.patch.object(ab.Action, '_check_result')
     def test_policy_check_abort_in_middle(self, mock_check, mock_load,
                                           mock_load_all):
-        cluster_id = 'FAKE_CLUSTER_ID'
+        cluster_id = CLUSTER_ID
         # Note: both policies are mocked
         policy1 = mock.Mock()
         policy1.id = 'FAKE_POLICY_ID_1'
@@ -797,7 +797,7 @@ class ActionProcTest(base.SenlinTestCase):
     @mock.patch.object(ao.Action, 'mark_succeeded')
     def test_action_proc_successful(self, mock_mark, mock_load,
                                     mock_event_info):
-        action = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx)
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx)
         action.owner = 'WORKER'
         action.start_time = 123456
         self.patchobject(action, 'execute',
@@ -818,9 +818,12 @@ class ActionProcTest(base.SenlinTestCase):
     @mock.patch.object(ao.Action, 'mark_failed')
     def test_action_proc_failed_error(self, mock_mark, mock_load,
                                       mock_event_info):
-        action = ab.Action('OBJID', 'OBJECT_ACTION', self.ctx)
-        action.owner = 'WORKER'
+        action = ab.Action(OBJID, 'CLUSTER_ACTION', self.ctx)
+        action.id = '5eb0c9a5-149a-4cd7-875f-0351c3cc69d5'
+        action.owner = OWNER_ID
         action.start_time = 123456
+        action.cluster = mock.Mock(id=CLUSTER_ID)
+        action.cluster.name = 'fake-cluster'
         self.patchobject(action, 'execute', side_effect=Exception('Boom!'))
         mock_load.return_value = action
 
