@@ -12,10 +12,10 @@
 
 import datetime
 import mock
-import uuid
 
 from oslo_config import cfg
 from oslo_utils import timeutils
+from oslo_utils import uuidutils
 
 from senlin.common import consts
 from senlin.common import context
@@ -34,7 +34,9 @@ class EngineBasicTest(base.SenlinTestCase):
 
         super(EngineBasicTest, self).setUp()
         self.eng = service.EngineService('host-a', 'topic-a')
-        self.gen_id = self.patchobject(uuid, 'uuid4', return_value='1234')
+        self.fake_id = '4db0a14c-dc10-4131-8ed6-7573987ce9b0'
+        self.gen_id = self.patchobject(uuidutils, 'generate_uuid',
+                                       return_value=self.fake_id)
 
         self.fake_rpc_server = mock.Mock()
         self.get_rpc = self.patchobject(rpc_messaging, 'get_rpc_server',
@@ -53,7 +55,7 @@ class EngineBasicTest(base.SenlinTestCase):
         self.eng.start()
 
         self.gen_id.assert_called_once_with()
-        self.assertEqual('1234', self.eng.engine_id)
+        self.assertEqual(self.fake_id, self.eng.engine_id)
         self.assertIsNotNone(self.eng.TG)
 
         mock_disp_cls.assert_called_once_with(self.eng,
@@ -112,7 +114,9 @@ class EngineStatusTest(base.SenlinTestCase):
     def setUp(self):
         super(EngineStatusTest, self).setUp()
         self.eng = service.EngineService('host-a', 'topic-a')
-        self.gen_id = self.patchobject(uuid, 'uuid4', return_value='1234')
+        fake_id = '4db0a14c-dc10-4131-8ed6-7573987ce9b0'
+        self.gen_id = self.patchobject(uuidutils, 'generate_uuid',
+                                       return_value=fake_id)
 
         self.fake_rpc_server = mock.Mock()
         self.get_rpc = self.patchobject(rpc_messaging, 'get_rpc_server',
