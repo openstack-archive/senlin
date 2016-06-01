@@ -28,6 +28,8 @@ from senlin.policies import base as pb
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
+UUID1 = 'aa5f86b8-e52b-4f2b-828a-4c14c770938d'
+UUID2 = '2c5139a6-24ba-4a6f-bd53-a268f61536de'
 
 sample_policy = """
   type: senlin.policy.dummy
@@ -168,8 +170,8 @@ class TestPolicyBase(base.SenlinTestCase):
         result = pb.Policy.load_all(self.ctx)
         self.assertEqual([], list(result))
 
-        policy1 = self._create_db_policy(name='policy-1', id='ID1')
-        policy2 = self._create_db_policy(name='policy-2', id='ID2')
+        policy1 = self._create_db_policy(name='policy-1', id=UUID1)
+        policy2 = self._create_db_policy(name='policy-2', id=UUID2)
 
         result = pb.Policy.load_all(self.ctx)
         policies = list(result)
@@ -178,8 +180,8 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual(policy2.id, policies[1].id)
 
     def test_load_all_diff_project(self):
-        self._create_db_policy(name='policy-1', id='ID1')
-        self._create_db_policy(name='policy-2', id='ID2')
+        self._create_db_policy(name='policy-1', id=UUID1)
+        self._create_db_policy(name='policy-2', id=UUID2)
 
         new_ctx = utils.dummy_context(project='a-different-project')
         res = pb.Policy.load_all(new_ctx)
