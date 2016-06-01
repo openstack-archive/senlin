@@ -22,6 +22,10 @@ from senlin.objects import receiver as ro
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
+CLUSTER_ID = '2c5139a6-24ba-4a6f-bd53-a268f61536de'
+UUID1 = 'aa5f86b8-e52b-4f2b-828a-4c14c770938d'
+UUID2 = '60efdaa1-06c2-4fcf-ae44-17a2d85ff3ea'
+
 
 class TestReceiver(base.SenlinTestCase):
 
@@ -43,7 +47,7 @@ class TestReceiver(base.SenlinTestCase):
             'id': receiver_id,
             'name': receiver_name,
             'type': 'webhook',
-            'cluster_id': 'fake-cluster',
+            'cluster_id': CLUSTER_ID,
             'action': 'test-action',
             'user': self.context.user,
             'project': self.context.project,
@@ -59,7 +63,7 @@ class TestReceiver(base.SenlinTestCase):
 
     def test_receiver_init(self):
         kwargs = {
-            'id': 'FAKE_ID',
+            'id': UUID1,
             'name': 'test-receiver',
             'user': 'test-user',
             'project': 'test-project',
@@ -71,8 +75,7 @@ class TestReceiver(base.SenlinTestCase):
             'channel': {'alarm_url': 'http://url1'},
         }
 
-        receiver = rb.Receiver('webhook', 'FAKE_CLUSTER', 'test-action',
-                               **kwargs)
+        receiver = rb.Receiver('webhook', CLUSTER_ID, 'test-action', **kwargs)
 
         self.assertEqual(kwargs['id'], receiver.id)
         self.assertEqual(kwargs['name'], receiver.name)
@@ -85,14 +88,14 @@ class TestReceiver(base.SenlinTestCase):
         self.assertEqual(kwargs['created_at'], receiver.created_at)
         self.assertEqual(kwargs['updated_at'], receiver.updated_at)
 
-        self.assertEqual('FAKE_CLUSTER', receiver.cluster_id)
+        self.assertEqual(CLUSTER_ID, receiver.cluster_id)
         self.assertEqual('test-action', receiver.action)
         self.assertEqual(self.actor, receiver.actor)
         self.assertEqual(self.params, receiver.params)
         self.assertEqual(kwargs['channel'], receiver.channel)
 
     def test_receiver_init_default_value(self):
-        receiver = rb.Receiver('webhook', 'FAKE_CLUSTER', 'test-action')
+        receiver = rb.Receiver('webhook', CLUSTER_ID, 'test-action')
         self.assertIsNone(receiver.id)
         self.assertIsNone(receiver.name)
         self.assertEqual('webhook', receiver.type)
@@ -103,14 +106,14 @@ class TestReceiver(base.SenlinTestCase):
         self.assertIsNone(receiver.created_at)
         self.assertIsNone(receiver.updated_at)
 
-        self.assertEqual('FAKE_CLUSTER', receiver.cluster_id)
+        self.assertEqual(CLUSTER_ID, receiver.cluster_id)
         self.assertEqual('test-action', receiver.action)
         self.assertEqual({}, receiver.actor)
         self.assertEqual({}, receiver.params)
         self.assertEqual({}, receiver.channel)
 
     def test_receiver_store(self):
-        receiver = rb.Receiver('webhook', 'FAKE_CLUSTER', 'test-action',
+        receiver = rb.Receiver('webhook', CLUSTER_ID, 'test-action',
                                name='test_receiver_123456',
                                project=self.context.project)
         self.assertIsNone(receiver.id)
@@ -139,7 +142,7 @@ class TestReceiver(base.SenlinTestCase):
 
     def test_receiver_create(self):
         cluster = mock.Mock()
-        cluster.id = 'FAKE_CLUSTER'
+        cluster.id = CLUSTER_ID
         receiver = rb.Receiver.create(self.context, 'webhook', cluster,
                                       'FAKE_ACTION',
                                       name='test_receiver_2234')
@@ -166,12 +169,12 @@ class TestReceiver(base.SenlinTestCase):
         self.assertEqual(receiver.channel, result.channel)
 
     def test_receiver_load_with_id(self):
-        receiver = self._create_receiver('receiver-1', 'FAKE_ID')
+        receiver = self._create_receiver('receiver-1', UUID1)
         result = rb.Receiver.load(self.context, receiver_id=receiver.id)
         self._verify_receiver(receiver, result)
 
     def test_receiver_load_with_object(self):
-        receiver = self._create_receiver('receiver-1', 'FAKE_ID')
+        receiver = self._create_receiver('receiver-1', UUID1)
         result = rb.Receiver.load(self.context, receiver_obj=receiver)
         self._verify_receiver(receiver, result)
 
@@ -183,13 +186,13 @@ class TestReceiver(base.SenlinTestCase):
                          six.text_type(ex))
 
     def test_receiver_load_diff_project(self):
-        receiver = self._create_receiver('receiver-1', 'FAKE_ID')
+        receiver = self._create_receiver('receiver-1', UUID1)
 
         new_context = utils.dummy_context(project='a-different-project')
         ex = self.assertRaises(exception.ReceiverNotFound,
                                rb.Receiver.load,
-                               new_context, 'FAKE_ID', None)
-        self.assertEqual('The receiver (FAKE_ID) could not be found.',
+                               new_context, UUID1, None)
+        self.assertEqual('The receiver (%s) could not be found.' % UUID1,
                          six.text_type(ex))
 
         res = rb.Receiver.load(new_context, receiver.id, project_safe=False)
@@ -200,8 +203,8 @@ class TestReceiver(base.SenlinTestCase):
         result = rb.Receiver.load_all(self.context)
         self.assertEqual([], [w for w in result])
 
-        receiver1 = self._create_receiver('receiver-1', 'ID1')
-        receiver2 = self._create_receiver('receiver-2', 'ID2')
+        receiver1 = self._create_receiver('receiver-1', UUID1)
+        receiver2 = self._create_receiver('receiver-2', UUID2)
 
         result = rb.Receiver.load_all(self.context)
         receivers = [w for w in result]
@@ -210,8 +213,8 @@ class TestReceiver(base.SenlinTestCase):
         self.assertEqual(receiver2.id, receivers[1].id)
 
     def test_receiver_load_all_diff_project(self):
-        self._create_receiver('receiver-1', 'ID1')
-        self._create_receiver('receiver-2', 'ID2')
+        self._create_receiver('receiver-1', UUID1)
+        self._create_receiver('receiver-2', UUID2)
 
         new_context = utils.dummy_context(project='a-different-project')
         result = rb.Receiver.load_all(new_context)
@@ -220,7 +223,7 @@ class TestReceiver(base.SenlinTestCase):
         self.assertEqual(2, len(list(result)))
 
     def test_receiver_to_dict(self):
-        receiver = self._create_receiver('test-receiver', 'FAKE_ID')
+        receiver = self._create_receiver('test-receiver', UUID1)
         self.assertIsNotNone(receiver.id)
         expected = {
             'id': receiver.id,
@@ -247,13 +250,13 @@ class TestWebhook(base.SenlinTestCase):
     def test_initialize_channel(self):
         cfg.CONF.set_override('host', 'web.com', 'webhook')
         cfg.CONF.set_override('port', '1234', 'webhook')
-        webhook = rb.Webhook('webhook', 'FAKE_CLUSTER', 'FAKE_ACTION',
-                             id='FAKE_ID')
+        webhook = rb.Webhook('webhook', CLUSTER_ID, 'FAKE_ACTION',
+                             id=UUID1)
         channel = webhook.initialize_channel()
 
         expected = {
-            'alarm_url': ('http://web.com:1234/v1/webhooks/FAKE_ID/trigger'
-                          '?V=1')
+            'alarm_url': ('http://web.com:1234/v1/webhooks/%s/trigger'
+                          '?V=1' % UUID1)
         }
         self.assertEqual(expected, channel)
         self.assertEqual(expected, webhook.channel)
@@ -262,14 +265,14 @@ class TestWebhook(base.SenlinTestCase):
         cfg.CONF.set_override('host', 'web.com', 'webhook')
         cfg.CONF.set_override('port', '1234', 'webhook')
         webhook = rb.Webhook(
-            'webhook', 'FAKE_CLUSTER', 'FAKE_ACTION',
-            id='FAKE_ID', params={'KEY': 884, 'FOO': 'BAR'})
+            'webhook', CLUSTER_ID, 'FAKE_ACTION',
+            id=UUID1, params={'KEY': 884, 'FOO': 'BAR'})
 
         channel = webhook.initialize_channel()
 
         expected = {
-            'alarm_url': ('http://web.com:1234/v1/webhooks/FAKE_ID/trigger'
-                          '?V=1&FOO=BAR&KEY=884')
+            'alarm_url': ('http://web.com:1234/v1/webhooks/%s/trigger'
+                          '?V=1&FOO=BAR&KEY=884' % UUID1)
         }
         self.assertEqual(expected, channel)
         self.assertEqual(expected, webhook.channel)
