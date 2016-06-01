@@ -23,6 +23,19 @@ from senlin.policies import scaling_policy as sp
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
+PROFILE_ID = 'aa5f86b8-e52b-4f2b-828a-4c14c770938d'
+CLUSTER_ID = '2c5139a6-24ba-4a6f-bd53-a268f61536de'
+NODE_IDS = [
+    '6eaa45fa-bd2e-426d-ae49-f75db1a4bd73',
+    '8bf73953-b57b-4e6b-bdef-83fa9420befb',
+    'c3058ea0-5241-466b-89bc-6a85f6050a11',
+]
+PHYSICAL_IDS = [
+    '2417c5d6-9a89-4637-9ba6-82c00b180cb7',
+    '374bf2b9-30ba-4a9b-822b-1196f6d4a368',
+    '2a1b7e37-de18-4b22-9489-a7a413fdfe48',
+]
+
 
 class TestScalingPolicy(base.SenlinTestCase):
 
@@ -43,16 +56,15 @@ class TestScalingPolicy(base.SenlinTestCase):
                 }
             }
         }
-        self.profile = self._create_profile('PROFILE1')
-        self.cluster = self._create_cluster('CLUSTER1',
-                                            self.profile['id'])
+        self.profile = self._create_profile()
+        self.cluster = self._create_cluster()
         self.nodes = self._create_nodes(self.cluster['id'],
                                         self.profile['id'], 3)
 
-    def _create_profile(self, profile_id):
+    def _create_profile(self, profile_id=None):
         values = {
             'context': self.context.to_dict(),
-            'id': profile_id,
+            'id': profile_id or PROFILE_ID,
             'type': 'os.heat.stack',
             'name': 'test-profile',
             'spec': {
@@ -64,10 +76,10 @@ class TestScalingPolicy(base.SenlinTestCase):
         }
         return po.Profile.create(self.context, values)
 
-    def _create_cluster(self, cluster_id, profile_id):
+    def _create_cluster(self, cluster_id=None, profile_id=None):
         values = {
-            'id': cluster_id,
-            'profile_id': profile_id,
+            'id': cluster_id or CLUSTER_ID,
+            'profile_id': profile_id or PROFILE_ID,
             'name': 'test-cluster',
             'user': self.context.user,
             'project': self.context.project,
@@ -85,11 +97,11 @@ class TestScalingPolicy(base.SenlinTestCase):
         nodes = []
         for i in range(count):
             values = {
-                'id': 'FAKE_NODE_%s_%s' % (profile_id, (i + 1)),
+                'id': NODE_IDS[i],
                 'name': 'test_node_%s' % (i + 1),
-                'physical_id': 'FAKE_PHY_ID_%s' % (i + 1),
-                'cluster_id': cluster_id,
-                'profile_id': profile_id,
+                'physical_id': PHYSICAL_IDS[i],
+                'cluster_id': cluster_id or CLUSTER_ID,
+                'profile_id': profile_id or PROFILE_ID,
                 'index': i + 1,
                 'role': None,
                 'init_at': timeutils.utcnow(True),
