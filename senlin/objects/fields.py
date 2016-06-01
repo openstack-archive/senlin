@@ -18,8 +18,10 @@ import six
 class Json(fields.FieldType):
     def coerce(self, obj, attr, value):
         if isinstance(value, six.string_types):
-            loaded = jsonutils.loads(value)
-            return loaded
+            try:
+                return jsonutils.loads(value)
+            except Exception:
+                raise ValueError
         return value
 
     def from_primitive(self, obj, attr, value):
@@ -27,6 +29,14 @@ class Json(fields.FieldType):
 
     def to_primitive(self, obj, attr, value):
         return jsonutils.dumps(value)
+
+    def stringify(self, value):
+        if isinstance(value, six.string_types):
+            try:
+                return jsonutils.loads(value)
+            except ValueError:
+                raise
+        return str(value)
 
 
 class JsonField(fields.AutoTypedField):
