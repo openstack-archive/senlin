@@ -17,6 +17,8 @@ from oslo_versionedobjects import base
 
 from senlin import objects
 
+VersionedObjectDictCompat = base.VersionedObjectDictCompat
+
 
 class SenlinObject(base.VersionedObject):
     """Base class for senlin objects.

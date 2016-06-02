@@ -12,16 +12,13 @@
 
 """Action object."""
 
-from oslo_versionedobjects import base
-from oslo_versionedobjects import fields
-
 from senlin.db import api as db_api
-from senlin.objects import base as senlin_base
-from senlin.objects import fields as senlin_fields
+from senlin.objects import base
+from senlin.objects import fields
 
 
-@senlin_base.SenlinObjectRegistry.register
-class Action(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
+@base.SenlinObjectRegistry.register
+class Action(base.SenlinObject, base.VersionedObjectDictCompat):
     """Senlin action object."""
 
     fields = {
@@ -29,7 +26,7 @@ class Action(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'created_at': fields.DateTimeField(),
         'updated_at': fields.DateTimeField(nullable=True),
         'name': fields.StringField(),
-        'context': senlin_fields.JsonField(),
+        'context': fields.JsonField(),
         'target': fields.UUIDField(),
         'action': fields.StringField(),
         'cause': fields.StringField(),
@@ -41,9 +38,9 @@ class Action(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'status': fields.StringField(),
         'status_reason': fields.StringField(nullable=True),
         'control': fields.StringField(nullable=True),
-        'inputs': senlin_fields.JsonField(nullable=True),
-        'outputs': senlin_fields.JsonField(nullable=True),
-        'data': senlin_fields.JsonField(nullable=True),
+        'inputs': fields.JsonField(nullable=True),
+        'outputs': fields.JsonField(nullable=True),
+        'data': fields.JsonField(nullable=True),
         'user': fields.StringField(),
         'project': fields.StringField(),
         'domain': fields.StringField(nullable=True),
