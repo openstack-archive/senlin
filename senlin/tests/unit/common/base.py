@@ -10,13 +10,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
 import os
 import time
 
 import fixtures
 from oslo_config import cfg
 from oslo_log import log as logging
+from oslo_serialization import jsonutils
 from oslotest import mockpatch
+import six
 import testscenarios
 import testtools
 
@@ -99,3 +102,53 @@ class SenlinTestCase(testscenarios.WithScenarios,
     def patch(self, target, **kwargs):
         mockfixture = self.useFixture(mockpatch.Patch(target, **kwargs))
         return mockfixture.mock
+
+    def assertJsonEqual(self, expected, observed):
+        """Asserts that 2 complex data structures are json equivalent.
+
+        This code is from Nova.
+        """
+        if isinstance(expected, six.string_types):
+            expected = jsonutils.loads(expected)
+        if isinstance(observed, six.string_types):
+            observed = jsonutils.loads(observed)
+
+        def sort_key(x):
+            if isinstance(x, (set, list)) or isinstance(x, datetime.datetime):
+                return str(x)
+            if isinstance(x, dict):
+                items = ((sort_key(k), sort_key(v)) for k, v in x.items())
+                return sorted(items)
+            return x
+
+        def inner(expected, observed):
+            if isinstance(expected, dict) and isinstance(observed, dict):
+                self.assertEqual(len(expected), len(observed))
+                expected_keys = sorted(expected)
+                observed_keys = sorted(observed)
+                self.assertEqual(expected_keys, observed_keys)
+
+                for key in list(six.iterkeys(expected)):
+                    inner(expected[key], observed[key])
+            elif (isinstance(expected, (list, tuple, set)) and
+                  isinstance(observed, (list, tuple, set))):
+                self.assertEqual(len(expected), len(observed))
+
+                expected_values_iter = iter(sorted(expected, key=sort_key))
+                observed_values_iter = iter(sorted(observed, key=sort_key))
+
+                for i in range(len(expected)):
+                    inner(next(expected_values_iter),
+                          next(observed_values_iter))
+            else:
+                self.assertEqual(expected, observed)
+
+        try:
+            inner(expected, observed)
+        except testtools.matchers.MismatchError as e:
+            inner_mismatch = e.mismatch
+            # inverting the observed / expected because testtools
+            # error messages assume expected is second. Possibly makes
+            # reading the error messages less confusing.
+            raise testtools.matchers.MismatchError(
+                observed, expected, inner_mismatch, verbose=True)
