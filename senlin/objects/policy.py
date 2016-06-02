@@ -36,19 +36,6 @@ class Policy(base.SenlinObject, base.VersionedObjectDictCompat):
         'domain': fields.StringField(nullable=True),
     }
 
-    @staticmethod
-    def _from_db_object(context, policy, db_obj):
-        if db_obj is None:
-            return None
-
-        for field in policy.fields:
-            policy[field] = db_obj[field]
-
-        policy._context = context
-        policy.obj_reset_changes()
-
-        return policy
-
     @classmethod
     def create(cls, context, values):
         obj = db_api.policy_create(context, values)

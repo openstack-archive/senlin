@@ -28,18 +28,6 @@ class Credential(base.SenlinObject, base.VersionedObjectDictCompat):
         'data': fields.JsonField(nullable=True),
     }
 
-    @staticmethod
-    def _from_db_object(context, credential, db_obj):
-        if db_obj is None:
-            return None
-        for field in credential.fields:
-            credential[field] = db_obj[field]
-
-        credential._context = context
-        credential.obj_reset_changes()
-
-        return credential
-
     @classmethod
     def create(cls, context, values):
         obj = db_api.cred_create(context, values)

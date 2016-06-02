@@ -30,16 +30,6 @@ class HealthRegistry(base.SenlinObject, base.VersionedObjectDictCompat):
         'engine_id': fields.UUIDField(),
     }
 
-    @staticmethod
-    def _from_db_object(context, registry, db_obj):
-        for field in registry.fields:
-            registry[field] = db_obj[field]
-
-        registry._context = context
-        registry.obj_reset_changes()
-
-        return registry
-
     @classmethod
     def create(cls, context, cluster_id, check_type, interval, params,
                engine_id):

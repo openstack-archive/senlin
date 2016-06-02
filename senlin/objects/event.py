@@ -37,21 +37,6 @@ class Event(base.SenlinObject, base.VersionedObjectDictCompat):
         'metadata': fields.JsonField(nullable=True),
     }
 
-    @staticmethod
-    def _from_db_object(context, event, db_obj):
-        if db_obj is None:
-            return None
-        for field in event.fields:
-            if field == 'metadata':
-                event['metadata'] = db_obj['meta_data']
-            else:
-                event[field] = db_obj[field]
-
-        event._context = context
-        event.obj_reset_changes()
-
-        return event
-
     @classmethod
     def create(cls, context, values):
         obj = db_api.event_create(context, values)

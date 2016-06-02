@@ -43,22 +43,6 @@ class Cluster(base.SenlinObject, base.VersionedObjectDictCompat):
         'domain': fields.StringField(nullable=True),
     }
 
-    @staticmethod
-    def _from_db_object(context, cluster, db_obj):
-        if db_obj is None:
-            return None
-
-        for field in cluster.fields:
-            if field == 'metadata':
-                cluster['metadata'] = db_obj['meta_data']
-            else:
-                cluster[field] = db_obj[field]
-
-        cluster._context = context
-        cluster.obj_reset_changes()
-
-        return cluster
-
     @classmethod
     def create(cls, context, values):
         obj = db_api.cluster_create(context, values)
