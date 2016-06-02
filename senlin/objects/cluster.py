@@ -12,16 +12,13 @@
 
 """Cluster object."""
 
-from oslo_versionedobjects import base
-from oslo_versionedobjects import fields
-
 from senlin.db import api as db_api
-from senlin.objects import base as senlin_base
-from senlin.objects import fields as senlin_fields
+from senlin.objects import base
+from senlin.objects import fields
 
 
-@senlin_base.SenlinObjectRegistry.register
-class Cluster(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
+@base.SenlinObjectRegistry.register
+class Cluster(base.SenlinObject, base.VersionedObjectDictCompat):
     """Senlin cluster object."""
 
     fields = {
@@ -39,8 +36,8 @@ class Cluster(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'timeout': fields.IntegerField(nullable=True),
         'status': fields.StringField(),
         'status_reason': fields.StringField(nullable=True),
-        'metadata': senlin_fields.JsonField(nullable=True),
-        'data': senlin_fields.JsonField(nullable=True),
+        'metadata': fields.JsonField(nullable=True),
+        'data': fields.JsonField(nullable=True),
         'user': fields.StringField(),
         'project': fields.StringField(),
         'domain': fields.StringField(nullable=True),

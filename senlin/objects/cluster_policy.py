@@ -12,18 +12,15 @@
 
 """Cluster-policy binding object."""
 
-from oslo_versionedobjects import base
-from oslo_versionedobjects import fields
-
 from senlin.db import api as db_api
-from senlin.objects import base as senlin_base
+from senlin.objects import base
 from senlin.objects import cluster as cluster_obj
-from senlin.objects import fields as senlin_fields
+from senlin.objects import fields
 from senlin.objects import policy as policy_obj
 
 
-@senlin_base.SenlinObjectRegistry.register
-class ClusterPolicy(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
+@base.SenlinObjectRegistry.register
+class ClusterPolicy(base.SenlinObject, base.VersionedObjectDictCompat):
     """Senlin cluster-policy binding object."""
 
     fields = {
@@ -34,7 +31,7 @@ class ClusterPolicy(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'policy': fields.ObjectField('Policy', nullable=True),
         'enabled': fields.BooleanField(),
         'priority': fields.IntegerField(),
-        'data': senlin_fields.JsonField(nullable=True),
+        'data': fields.JsonField(nullable=True),
         'last_op': fields.DateTimeField(nullable=True),
     }
 

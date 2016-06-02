@@ -12,15 +12,13 @@
 
 """Event object."""
 
-from oslo_versionedobjects import base
-from oslo_versionedobjects import fields
-
 from senlin.db import api as db_api
-from senlin.objects import base as senlin_base
+from senlin.objects import base
+from senlin.objects import fields
 
 
-@senlin_base.SenlinObjectRegistry.register
-class Event(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
+@base.SenlinObjectRegistry.register
+class Event(base.SenlinObject, base.VersionedObjectDictCompat):
     """Senlin event object."""
 
     fields = {
@@ -36,7 +34,7 @@ class Event(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'action': fields.StringField(nullable=True),
         'status': fields.StringField(),
         'status_reason': fields.StringField(),
-        'metadata': fields.DictOfStringsField(nullable=True),
+        'metadata': fields.JsonField(nullable=True),
     }
 
     @staticmethod

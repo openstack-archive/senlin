@@ -12,7 +12,7 @@
 
 from senlin.objects import base
 from senlin.objects import fields
-from senlin import rpc
+from senlin.rpc import notifier as rpc
 
 
 @base.SenlinObjectRegistry.register
@@ -33,7 +33,7 @@ class EventType(base.SenlinObject):
         return s
 
 
-class NotificationPayloadBase(base.NovaObject):
+class NotificationPayloadBase(base.SenlinObject):
     """Base class for the payload of versioned notifications."""
     # schema is a dict that defines how to populate the payload fields, where
     # each key-value pair has the following format:
@@ -45,27 +45,27 @@ class NotificationPayloadBase(base.NovaObject):
     # The <data_source> field shall refer to name of the parameter passed as
     # kwarg to the payload's populate_schema() call and this object will be
     # used as the source of the data.
-    # The SCHEMA needs to be applied with the populate_schema() call before the
-    # notification can be emitted.
+    # The 'schema' needs to be applied with the populate_schema() call before
+    # the notification can be emitted.
     # The value of the payload.<payload_field> field will be set by the
     # <data_source>.<data_source_field> field. The <data_source> will not be
     # part of the payload object internal or external representation.
-    # Payload fields that are not set by the SCHEMA can be filled in the same
+    # Payload fields that are not set by the schema can be filled in the same
     # way as in any versioned object.
     schema = {}
     VERSION = '1.0'
 
     def __init__(self, *args, **kwargs):
         super(NotificationPayloadBase, self).__init__(*args, **kwargs)
-        self.populated = not self.SCHEMA
+        self.populated = not self.schema
 
     def populate_schema(self, **kwargs):
-        """Populate the object based on the SCHEMA and the source objects
+        """Populate the object based on the schema and the source objects
 
         :param kwargs: A dict contains the source object at the key defined in
-                       the SCHEMA
+                       the schema
         """
-        for key, (obj, field) in self.SCHEMA.items():
+        for key, (obj, field) in self.schema.items():
             source = kwargs[obj]
             if source.obj_attr_is_set(field):
                 setattr(self, key, getattr(source, field))
@@ -100,7 +100,7 @@ class NotificationBase(base.SenlinObject):
     }
 
     def _emit(self, context, event_type, publisher_id, payload):
-        notifier = rpc.get_versioned_notifier(publisher_id)
+        notifier = rpc.get_notifier(publisher_id)
         notify = getattr(notifier, self.priority)
         notify(context, event_type=event_type, payload=payload)
 

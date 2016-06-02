@@ -12,15 +12,13 @@
 
 """Health registry object."""
 
-from oslo_versionedobjects import base
-from oslo_versionedobjects import fields
-
 from senlin.db import api as db_api
-from senlin.objects import base as senlin_base
+from senlin.objects import base
+from senlin.objects import fields
 
 
-@senlin_base.SenlinObjectRegistry.register
-class HealthRegistry(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
+@base.SenlinObjectRegistry.register
+class HealthRegistry(base.SenlinObject, base.VersionedObjectDictCompat):
     """Senlin health registry object."""
 
     fields = {
@@ -28,7 +26,7 @@ class HealthRegistry(senlin_base.SenlinObject, base.VersionedObjectDictCompat):
         'cluster_id': fields.UUIDField(),
         'check_type': fields.StringField(),
         'interval': fields.IntegerField(nullable=True),
-        'params': fields.DictOfStringsField(),
+        'params': fields.JsonField(nullable=True),
         'engine_id': fields.UUIDField(),
     }
 

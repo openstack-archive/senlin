@@ -14,6 +14,16 @@ from oslo_serialization import jsonutils
 from oslo_versionedobjects import fields
 import six
 
+# Field alias for code readability
+BooleanField = fields.BooleanField
+StringField = fields.StringField
+IntegerField = fields.IntegerField
+FloatField = fields.FloatField
+UUIDField = fields.UUIDField
+DateTimeField = fields.DateTimeField
+ListOfStringsField = fields.ListOfStringsField
+ObjectField = fields.ObjectField
+
 
 class Json(fields.FieldType):
     def coerce(self, obj, attr, value):
