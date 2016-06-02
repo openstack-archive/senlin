@@ -10,7 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import eventlet
 import oslo_i18n
+
+from senlin import objects
 
 
 def fake_translate_msgid(msgid, domain, desired_locale=None):
@@ -22,3 +25,14 @@ oslo_i18n.enable_lazy()
 # As there are lots of places where matching is expected when comparing
 # exception message(translated) with raw message.
 oslo_i18n._translate_msgid = fake_translate_msgid
+
+eventlet.monkey_patch(os=False)
+
+# The following has to be done after eventlet monkey patching or else the
+# threading.locl() store used in oslo_messaging will be initialized to
+# thread-local storage rather than green-thread local. This will cause context
+# sets and deletes in that storage to clobber each other.
+# Make sure we have all objects loaded. This is done at module import time,
+# because we may be using mock decorators in our tests that run at import
+# time.
+objects.register_all()
