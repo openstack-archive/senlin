@@ -11,6 +11,7 @@
 # under the License.
 
 from oslo_serialization import jsonutils
+from oslo_utils import timeutils
 import pytz
 
 from sqlalchemy.dialects import mysql
@@ -112,6 +113,14 @@ class List(types.TypeDecorator):
 class TZAwareDateTime(types.TypeDecorator):
     """A DB type that is time zone aware."""
     impl = types.DateTime
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        if dialect.name == 'mysql':
+            return timeutils.normalize_time(value)
+
+        return value
 
     def process_result_value(self, value, dialect):
         if value is None:

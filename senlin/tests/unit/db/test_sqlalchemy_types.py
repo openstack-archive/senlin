@@ -11,6 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
+import mock
+from oslo_utils import timeutils
+import pytz
 from sqlalchemy.dialects.mysql import base as mysql_base
 from sqlalchemy.dialects.sqlite import base as sqlite_base
 from sqlalchemy import types
@@ -89,6 +93,48 @@ class ListTest(testtools.TestCase):
         value = '["foo", "bar"]'
         result = self.sqltype.process_result_value(value, dialect)
         self.assertEqual(['foo', 'bar'], result)
+
+    def test_process_result_value_null(self):
+        dialect = None
+        value = None
+        result = self.sqltype.process_result_value(value, dialect)
+        self.assertIsNone(result)
+
+
+class TZAwareDateTimeTest(testtools.TestCase):
+
+    def setUp(self):
+        super(TZAwareDateTimeTest, self).setUp()
+        self.sqltype = db_types.TZAwareDateTime()
+
+    def test_process_bind_param(self):
+        dialect = mock.Mock()
+        dialect.name = 'nonmysql'
+        value = timeutils.utcnow(True)
+        result = self.sqltype.process_bind_param(value, dialect)
+        self.assertEqual(value, result)
+
+    def test_process_bind_param_mysql(self):
+        dialect = mock.Mock()
+        dialect.name = 'mysql'
+        value = timeutils.utcnow(True)
+        expected_value = timeutils.normalize_time(value)
+        result = self.sqltype.process_bind_param(value, dialect)
+        self.assertEqual(expected_value, result)
+
+    def test_process_bind_param_mysql_null(self):
+        dialect = mock.Mock()
+        dialect.name = 'mysql'
+        value = None
+        result = self.sqltype.process_bind_param(value, dialect)
+        self.assertIsNone(result)
+
+    def test_process_result_value(self):
+        dialect = None
+        value = timeutils.utcnow(False)
+        expected_value = value.replace(tzinfo=pytz.utc)
+        result = self.sqltype.process_result_value(value, dialect)
+        self.assertEqual(expected_value, result)
 
     def test_process_result_value_null(self):
         dialect = None
