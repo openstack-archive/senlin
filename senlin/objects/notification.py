@@ -10,9 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from senlin.common import messaging
 from senlin.objects import base
 from senlin.objects import fields
-from senlin.rpc import notifier as rpc
 
 
 @base.SenlinObjectRegistry.register
@@ -100,7 +100,7 @@ class NotificationBase(base.SenlinObject):
     }
 
     def _emit(self, context, event_type, publisher_id, payload):
-        notifier = rpc.get_notifier(publisher_id)
+        notifier = messaging.get_notifier(publisher_id)
         notify = getattr(notifier, self.priority)
         notify(context, event_type=event_type, payload=payload)
 

@@ -139,7 +139,7 @@ class TestNotificationBase(test_base.SenlinTestCase):
         actual_payload = mock_notify.call_args[1]['payload']
         self.assertJsonEqual(expected_payload, actual_payload)
 
-    @mock.patch('senlin.rpc.notifier.NOTIFIER')
+    @mock.patch('senlin.common.messaging.NOTIFIER')
     def test_emit_notification(self, mock_notifier):
 
         mock_context = mock.Mock()
@@ -152,7 +152,7 @@ class TestNotificationBase(test_base.SenlinTestCase):
             expected_event_type='test_object.update.start',
             expected_payload=self.expected_payload)
 
-    @mock.patch('senlin.rpc.notifier.NOTIFIER')
+    @mock.patch('senlin.common.messaging.NOTIFIER')
     def test_emit_with_host_and_binary_as_publisher(self, mock_notifier):
         event_type = notification.EventType(
             object='test_object',
@@ -175,7 +175,7 @@ class TestNotificationBase(test_base.SenlinTestCase):
             expected_event_type='test_object.update',
             expected_payload=self.expected_payload)
 
-    @mock.patch('senlin.rpc.notifier.NOTIFIER')
+    @mock.patch('senlin.common.messaging.NOTIFIER')
     def test_emit_event_type_without_phase(self, mock_notifier):
         noti = TestNotification(
             event_type=notification.EventType(
@@ -196,7 +196,7 @@ class TestNotificationBase(test_base.SenlinTestCase):
             expected_event_type='test_object.update',
             expected_payload=self.expected_payload)
 
-    @mock.patch('senlin.rpc.notifier.NOTIFIER')
+    @mock.patch('senlin.common.messaging.NOTIFIER')
     def test_not_possible_to_emit_if_not_populated(self, mock_notifier):
         # create a non-populated payload
         payload = TestPayload(extra_field='test string')
@@ -216,7 +216,7 @@ class TestNotificationBase(test_base.SenlinTestCase):
         self.assertRaises(AssertionError, noti.emit, mock_context)
         self.assertFalse(mock_notifier.called)
 
-    @mock.patch('senlin.rpc.notifier.NOTIFIER')
+    @mock.patch('senlin.common.messaging.NOTIFIER')
     def test_empty_schema(self, mock_notifier):
         # create a non-populated payload
         payload = TestPayloadEmptySchema(extra_field='test string')

@@ -11,18 +11,19 @@
 # under the License.
 
 import eventlet
-
 from oslo_config import cfg
-import oslo_messaging
-from oslo_serialization import jsonutils
+import oslo_messaging as messaging
 
 from senlin.common import context
+
+# An alias for the default serializer
+JsonPayloadSerializer = messaging.JsonPayloadSerializer
 
 TRANSPORT = None
 NOTIFIER = None
 
 
-class RequestContextSerializer(oslo_messaging.Serializer):
+class RequestContextSerializer(messaging.Serializer):
     def __init__(self, base):
         self._base = base
 
@@ -45,37 +46,32 @@ class RequestContextSerializer(oslo_messaging.Serializer):
         return context.RequestContext.from_dict(ctxt)
 
 
-class JsonPayloadSerializer(oslo_messaging.NoOpSerializer):
-    @classmethod
-    def serialize_entity(cls, context, entity):
-        return jsonutils.to_primitive(entity, convert_instances=True)
-
-
 def setup(url=None, optional=False):
     """Initialise the oslo_messaging layer."""
     global TRANSPORT, NOTIFIER
 
     if url and url.startswith("fake://"):
-        # NOTE(sileht): oslo_messaging fake driver uses time.sleep
+        # NOTE: oslo_messaging fake driver uses time.sleep
         # for task switch, so we need to monkey_patch it
         eventlet.monkey_patch(time=True)
 
     if not TRANSPORT:
-        oslo_messaging.set_transport_defaults('senlin')
+        messaging.set_transport_defaults('senlin')
         exmods = ['senlin.common.exception']
         try:
-            TRANSPORT = oslo_messaging.get_transport(
+            TRANSPORT = messaging.get_transport(
                 cfg.CONF, url, allowed_remote_exmods=exmods)
-        except oslo_messaging.InvalidTransportURL as e:
+        except messaging.InvalidTransportURL as e:
             TRANSPORT = None
             if not optional or e.url:
-                # NOTE(sileht): oslo_messaging is configured but unloadable
+                # NOTE: oslo_messaging is configured but unloadable
                 # so reraise the exception
                 raise
 
     if not NOTIFIER and TRANSPORT:
         serializer = RequestContextSerializer(JsonPayloadSerializer())
-        NOTIFIER = oslo_messaging.Notifier(TRANSPORT, serializer=serializer)
+        NOTIFIER = messaging.Notifier(TRANSPORT, serializer=serializer,
+                                      topics=['versioned_notifications'])
 
 
 def cleanup():
@@ -83,25 +79,26 @@ def cleanup():
     global TRANSPORT, NOTIFIER
     if TRANSPORT:
         TRANSPORT.cleanup()
-        TRANSPORT = NOTIFIER = None
+        TRANSPORT = None
+    NOTIFIER = None
 
 
 def get_rpc_server(target, endpoint):
     """Return a configured oslo_messaging rpc server."""
     serializer = RequestContextSerializer(JsonPayloadSerializer())
-    return oslo_messaging.get_rpc_server(TRANSPORT, target, [endpoint],
-                                         executor='eventlet',
-                                         serializer=serializer)
+    return messaging.get_rpc_server(TRANSPORT, target, [endpoint],
+                                    executor='eventlet',
+                                    serializer=serializer)
 
 
 def get_rpc_client(**kwargs):
     """Return a configured oslo_messaging RPCClient."""
-    target = oslo_messaging.Target(**kwargs)
+    target = messaging.Target(**kwargs)
     serializer = RequestContextSerializer(JsonPayloadSerializer())
-    return oslo_messaging.RPCClient(TRANSPORT, target,
-                                    serializer=serializer)
+    return messaging.RPCClient(TRANSPORT, target, serializer=serializer)
 
 
 def get_notifier(publisher_id):
     """Return a configured oslo_messaging notifier."""
+    global NOTIFIER
     return NOTIFIER.prepare(publisher_id=publisher_id)
