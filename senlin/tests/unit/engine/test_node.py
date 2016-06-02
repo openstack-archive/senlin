@@ -13,13 +13,10 @@
 import mock
 import six
 
-from oslo_utils import timeutils
-
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import utils as common_utils
 from senlin.engine import node as nodem
-from senlin.objects import cluster as no
 from senlin.objects import node as node_obj
 from senlin.objects import profile as profile_obj
 from senlin.profiles import base as profiles_base
@@ -36,53 +33,9 @@ class TestNode(base.SenlinTestCase):
     def setUp(self):
         super(TestNode, self).setUp()
         self.context = utils.dummy_context(project='node_test_project')
-        self.profile = self._create_profile()
-        self.cluster = self._create_cluster()
-
-    def _create_profile(self, profile_id=None):
-        values = {
-            'id': profile_id or PROFILE_ID,
-            'context': self.context.to_dict(),
-            'type': 'os.nova.server-1.0',
-            'name': 'test-profile',
-            'spec': {
-                'type': 'os.nova.server',
-                'version': '1.0',
-            },
-            'created_at': timeutils.utcnow(True),
-            'user': self.context.user,
-            'project': self.context.project
-        }
-        return profile_obj.Profile.create(self.context, values)
-
-    def _create_cluster(self, cluster_id=None):
-        values = {
-            'id': cluster_id or CLUSTER_ID,
-            'profile_id': PROFILE_ID,
-            'name': 'test-cluster',
-            'status': 'ACTIVE',
-            'init_at': timeutils.utcnow(True),
-            'user': self.context.user,
-            'project': self.context.project,
-            'next_index': 1,
-        }
-
-        return no.Cluster.create(self.context, values)
-
-    def _create_node(self, node_id=None):
-        values = {
-            'id': node_id or NODE_ID,
-            'name': 'node1',
-            'profile_id': PROFILE_ID,
-            'cluster_id': CLUSTER_ID,
-            'index': 2,
-            'init_at': timeutils.utcnow(True),
-            'user': self.context.user,
-            'project': self.context.project,
-            'role': 'test_node',
-            'status': 'ACTIVE',
-        }
-        return node_obj.Node.create(self.context, values)
+        self.profile = utils.create_profile(self.context, PROFILE_ID)
+        self.cluster = utils.create_cluster(self.context, CLUSTER_ID,
+                                            PROFILE_ID)
 
     def test_node_init(self):
         node = nodem.Node('node1', PROFILE_ID, CLUSTER_ID, role='first_node')
@@ -157,7 +110,8 @@ class TestNode(base.SenlinTestCase):
                          six.text_type(ex))
 
         x_node_id = 'ee96c490-2dee-40c8-8919-4c64b89e326c'
-        node = self._create_node(x_node_id)
+        node = utils.create_node(self.context, x_node_id, PROFILE_ID,
+                                 CLUSTER_ID)
         node_info = nodem.Node.load(self.context, x_node_id)
 
         self.assertEqual(node.id, node_info.id)
@@ -183,7 +137,8 @@ class TestNode(base.SenlinTestCase):
 
     def test_node_load_diff_project(self):
         x_node_id = 'c06840c5-f4e4-49ae-8143-9da5b4c73f38'
-        self._create_node(x_node_id)
+        utils.create_node(self.context, x_node_id, PROFILE_ID, CLUSTER_ID)
+
         new_ctx = utils.dummy_context(project='a-different-project')
         ex = self.assertRaises(exception.NodeNotFound,
                                nodem.Node.load,
@@ -200,19 +155,21 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual([], [c for c in node_info])
         x_node_id1 = 'e7ec30c4-4dbf-45ac-a6b5-6c675c58d892'
         x_node_id2 = '9d87b415-a572-407f-ab55-21a0f0073ee4'
-        node1 = self._create_node(x_node_id1)
-        node2 = self._create_node(x_node_id2)
+
+        utils.create_node(self.context, x_node_id1, PROFILE_ID, CLUSTER_ID)
+        utils.create_node(self.context, x_node_id2, PROFILE_ID, CLUSTER_ID)
 
         # NOTE: we don't test all other parameters because the db api tests
         #       already covered that
         nodes = nodem.Node.load_all(self.context)
         self.assertEqual(2, len(nodes))
-        self.assertEqual(node1.id, nodes[0].id)
-        self.assertEqual(node2.id, nodes[1].id)
+        self.assertEqual(x_node_id1, nodes[0].id)
+        self.assertEqual(x_node_id2, nodes[1].id)
 
     def test_node_to_dict(self):
         x_node_id = '16e70db8-4f70-4883-96be-cf40264a5abd'
-        node = self._create_node(x_node_id)
+        node = utils.create_node(self.context, x_node_id, PROFILE_ID,
+                                 CLUSTER_ID)
         self.assertIsNotNone(node.id)
         expected = {
             'id': node.id,
@@ -241,7 +198,8 @@ class TestNode(base.SenlinTestCase):
     @mock.patch.object(profile_obj.Profile, 'get')
     def test_node_to_dict_no_profile(self, mock_profile_get):
         x_node_id = '11ad5c3d-e1e5-4ed8-8fe3-2938b63a11cb'
-        node = self._create_node(x_node_id)
+        node = utils.create_node(self.context, x_node_id, PROFILE_ID,
+                                 CLUSTER_ID)
         self.assertIsNotNone(node.id)
         expected = {
             'id': node.id,
@@ -457,7 +415,7 @@ class TestNode(base.SenlinTestCase):
     def test_node_update_new_profile(self, mock_update, mock_status):
         node = nodem.Node('node1', PROFILE_ID, CLUSTER_ID, self.context)
         new_id = '71d8f4dd-1ef9-4308-b7ae-03298b04449e'
-        new_profile = self._create_profile(new_id)
+        new_profile = utils.create_profile(self.context, new_id)
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
         res = node.do_update(self.context, {'new_profile_id': new_profile.id})
         self.assertTrue(res)
@@ -499,7 +457,7 @@ class TestNode(base.SenlinTestCase):
                                            reason='some reason')
         mock_update.side_effect = ex
         new_id = '71d8f4dd-1ef9-4308-b7ae-03298b04449e'
-        new_profile = self._create_profile(new_id)
+        new_profile = utils.create_profile(self.context, new_id)
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
         res = node.do_update(self.context, {'new_profile_id': new_profile.id})
         self.assertFalse(res)
