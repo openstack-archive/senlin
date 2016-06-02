@@ -377,24 +377,36 @@ class TestNovaV2(base.SenlinTestCase):
         server = mock.Mock()
         d = nova_v2.NovaClient(self.conn_params)
         d.server_metadata_create(server, {'k1': 'v1'})
-        self.compute.create_server_metadata.assert_called_once_with(
+        self.compute.set_server_metadata.assert_called_once_with(
             server, k1='v1')
 
     def test_server_metadata_get(self):
         server = mock.Mock()
+        res_server = mock.Mock()
+        res_server.metadata = {
+            'k1': 'v1'
+        }
+        self.compute.get_server_metadata.return_value = res_server
+
         d = nova_v2.NovaClient(self.conn_params)
-        d.server_metadata_get(server)
+        res = d.server_metadata_get(server)
         self.compute.get_server_metadata.assert_called_once_with(server)
+        self.assertEqual({'k1': 'v1'}, res)
 
     def test_server_metadata_update(self):
         server = mock.Mock()
-        d = nova_v2.NovaClient(self.conn_params)
-        d.server_metadata_update(server, {'k1': 'v1'})
-        self.compute.update_server_metadata.assert_called_once_with(
-            server, k1='v1')
+        res_server = mock.Mock()
+        res_server.metadata = {
+            'k1': 'v1'
+        }
+        self.compute.get_server_metadata.return_value = res_server
 
-        d.server_metadata_update(server, {})
-        self.compute.replace_server_metadata.assert_called_once_with(server)
+        d = nova_v2.NovaClient(self.conn_params)
+        d.server_metadata_update(server, {'k2': 'v2'})
+        self.compute.delete_server_metadata.assert_called_once_with(
+            server, ['k1'])
+        self.compute.set_server_metadata.assert_called_once_with(
+            server, k2='v2')
 
     def test_server_metadata_delete(self):
         server = mock.Mock()

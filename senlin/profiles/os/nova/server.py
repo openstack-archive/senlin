@@ -706,7 +706,7 @@ class ServerProfile(base.Profile):
         if not obj.physical_id:
             return False
 
-        self.nova(obj).server_metadata_delete(obj.physical_id, 'cluster')
+        self.nova(obj).server_metadata_delete(obj.physical_id, ['cluster'])
         return super(ServerProfile, self).do_leave(obj)
 
     def do_rebuild(self, obj):
