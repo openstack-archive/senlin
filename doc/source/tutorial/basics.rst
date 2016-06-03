@@ -166,10 +166,10 @@ command:
 
 .. code-block:: console
 
-  $ senlin cluster-node-add -n newnode mycluster
+  $ senlin cluster-node-del -n oldnode mycluster
   $ senlin cluster-node-list mycluster
   $ senlin cluster-show mycluster
-  $ senlin node-show newnode
+  $ senlin node-show oldnode
 
 For other commands and options cluster membership management, please check the
 :doc:`Cluster Membership <../user/membership>` section in the
