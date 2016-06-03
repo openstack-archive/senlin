@@ -1275,7 +1275,8 @@ class TestNovaServerProfile(base.SenlinTestCase):
         res = profile.do_leave(obj)
 
         self.assertTrue(res)
-        nc.server_metadata_delete.assert_called_once_with('FAKE_ID', 'cluster')
+        nc.server_metadata_delete.assert_called_once_with('FAKE_ID',
+                                                          ['cluster'])
         mock_nova.assert_called_once_with(obj)
 
     def test_do_leave_no_physical_id(self):

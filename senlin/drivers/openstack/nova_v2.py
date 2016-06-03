@@ -12,6 +12,7 @@
 
 from oslo_config import cfg
 from oslo_log import log
+import six
 
 from senlin.common.i18n import _LW
 from senlin.drivers import base
@@ -181,24 +182,28 @@ class NovaClient(base.DriverBase):
 
     @sdk.translate_exception
     def server_metadata_create(self, server, metadata):
-        self.conn.compute.create_server_metadata(server, **metadata)
+        self.conn.compute.set_server_metadata(server, **metadata)
 
     @sdk.translate_exception
     def server_metadata_get(self, server):
-        return self.conn.compute.get_server_metadata(server)
+        res = self.conn.compute.get_server_metadata(server)
+        return res.metadata
 
     @sdk.translate_exception
     def server_metadata_update(self, server, metadata):
-        if metadata == {}:
-            # clean server metadata
-            return self.conn.compute.replace_server_metadata(server)
-        else:
-            # update metadata to given dictionary
-            return self.conn.compute.update_server_metadata(server, **metadata)
+        # Clean all existing metadata first
+        res = self.conn.compute.get_server_metadata(server)
+        if res.metadata:
+            self.conn.compute.delete_server_metadata(
+                server, list(six.iterkeys(res.metadata)))
+
+        # Then reset metadata to given value if it is not {}
+        if metadata:
+            return self.conn.compute.set_server_metadata(server, **metadata)
 
     @sdk.translate_exception
-    def server_metadata_delete(self, server, key):
-        self.conn.compute.delete_server_metadata(server, key)
+    def server_metadata_delete(self, server, keys):
+        self.conn.compute.delete_server_metadata(server, keys)
 
     @sdk.translate_exception
     def availability_zone_list(self, **query):
