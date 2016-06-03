@@ -15,12 +15,12 @@ import string
 
 from oslo_config import cfg
 from oslo_db import options
+from oslo_utils import timeutils
 import sqlalchemy
 
 from senlin.common import context
 from senlin.db import api as db_api
-
-get_engine = db_api.get_engine
+from senlin import objects
 
 
 def random_name():
@@ -33,13 +33,13 @@ def setup_dummy_db():
     options.set_defaults(cfg.CONF,
                          connection="sqlite://",
                          sqlite_db='senlin.db')
-    engine = get_engine()
+    engine = db_api.get_engine()
     db_api.db_sync(engine)
     engine.connect()
 
 
 def reset_dummy_db():
-    engine = get_engine()
+    engine = db_api.get_engine()
     meta = sqlalchemy.MetaData()
     meta.reflect(bind=engine)
 
@@ -67,3 +67,76 @@ def dummy_context(user=None, project=None, password=None, roles=None,
         'region_name': region_name or 'region_one',
         'domain': domain or ''
     })
+
+
+def create_profile(context, profile_id):
+    values = {
+        'id': profile_id,
+        'context': context.to_dict(),
+        'type': 'os.nova.server-1.0',
+        'name': 'test-profile',
+        'spec': {
+            'type': 'os.nova.server',
+            'version': '1.0',
+        },
+        'created_at': timeutils.utcnow(True),
+        'user': context.user,
+        'project': context.project
+    }
+    return objects.Profile.create(context, values)
+
+
+def create_cluster(context, cluster_id, profile_id):
+    values = {
+        'id': cluster_id,
+        'profile_id': profile_id,
+        'name': 'test-cluster',
+        'next_index': 1,
+        'min_size': 1,
+        'max_size': 5,
+        'desired_capacity': 3,
+        'status': 'ACTIVE',
+        'init_at': timeutils.utcnow(True),
+        'user': context.user,
+        'project': context.project,
+    }
+
+    return objects.Cluster.create(context, values)
+
+
+def create_node(context, node_id, profile_id, cluster_id, physical_id=None):
+    values = {
+        'id': node_id,
+        'name': 'node1',
+        'profile_id': profile_id,
+        'cluster_id': cluster_id or '',
+        'physical_id': physical_id,
+        'index': 2,
+        'init_at': timeutils.utcnow(True),
+        'created_at': timeutils.utcnow(True),
+        'role': 'test_node',
+        'status': 'ACTIVE',
+        'user': context.user,
+        'project': context.project,
+    }
+    return objects.Node.create(context, values)
+
+
+def create_policy(context, policy_id, name=None):
+    values = {
+        'id': policy_id,
+        'name': name or 'test_policy',
+        'type': 'senlin.policy.dummy-1.0',
+        'spec': {
+            'type': 'senlin.policy.dummy',
+            'version': '1.0',
+            'properties': {
+                'key1': 'value1',
+                'key2': 2
+            }
+        },
+        'created_at': timeutils.utcnow(True),
+        'user': context.user,
+        'project': context.project,
+    }
+    return objects.Policy.create(context, values)

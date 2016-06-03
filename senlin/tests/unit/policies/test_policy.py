@@ -125,7 +125,7 @@ class TestPolicyBase(base.SenlinTestCase):
                           'test-policy', bad_spec)
 
     def test_load(self):
-        policy = self._create_db_policy()
+        policy = utils.create_policy(self.ctx, UUID1)
         result = pb.Policy.load(self.ctx, policy.id)
 
         self.assertEqual(policy.id, result.id)
@@ -142,7 +142,7 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual(policy.updated_at, result.updated_at)
 
     def test_load_diff_project(self):
-        policy = self._create_db_policy()
+        policy = utils.create_policy(self.ctx, UUID1)
 
         new_ctx = utils.dummy_context(project='a-different-project')
         self.assertRaises(exception.PolicyNotFound,
@@ -170,8 +170,8 @@ class TestPolicyBase(base.SenlinTestCase):
         result = pb.Policy.load_all(self.ctx)
         self.assertEqual([], list(result))
 
-        policy1 = self._create_db_policy(name='policy-1', id=UUID1)
-        policy2 = self._create_db_policy(name='policy-2', id=UUID2)
+        policy1 = utils.create_policy(self.ctx, UUID1, 'policy-1')
+        policy2 = utils.create_policy(self.ctx, UUID2, 'policy-2')
 
         result = pb.Policy.load_all(self.ctx)
         policies = list(result)
@@ -180,8 +180,8 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual(policy2.id, policies[1].id)
 
     def test_load_all_diff_project(self):
-        self._create_db_policy(name='policy-1', id=UUID1)
-        self._create_db_policy(name='policy-2', id=UUID2)
+        utils.create_policy(self.ctx, UUID1, 'policy-1')
+        utils.create_policy(self.ctx, UUID2, 'policy-2')
 
         new_ctx = utils.dummy_context(project='a-different-project')
         res = pb.Policy.load_all(new_ctx)
@@ -208,7 +208,7 @@ class TestPolicyBase(base.SenlinTestCase):
                                          project_safe=True)
 
     def test_delete(self):
-        policy = self._create_db_policy()
+        policy = utils.create_policy(self.ctx, UUID1)
         policy_id = policy.id
 
         res = pb.Policy.delete(self.ctx, policy_id)

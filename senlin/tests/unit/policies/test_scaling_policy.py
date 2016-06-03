@@ -11,13 +11,9 @@
 # under the License.
 
 import mock
-from oslo_utils import timeutils
-import six
 
 from senlin.common import consts
-from senlin.objects import cluster as co
 from senlin.objects import node as no
-from senlin.objects import profile as po
 from senlin.policies import base as pb
 from senlin.policies import scaling_policy as sp
 from senlin.tests.unit.common import base
@@ -25,16 +21,6 @@ from senlin.tests.unit.common import utils
 
 PROFILE_ID = 'aa5f86b8-e52b-4f2b-828a-4c14c770938d'
 CLUSTER_ID = '2c5139a6-24ba-4a6f-bd53-a268f61536de'
-NODE_IDS = [
-    '6eaa45fa-bd2e-426d-ae49-f75db1a4bd73',
-    '8bf73953-b57b-4e6b-bdef-83fa9420befb',
-    'c3058ea0-5241-466b-89bc-6a85f6050a11',
-]
-PHYSICAL_IDS = [
-    '2417c5d6-9a89-4637-9ba6-82c00b180cb7',
-    '374bf2b9-30ba-4a9b-822b-1196f6d4a368',
-    '2a1b7e37-de18-4b22-9489-a7a413fdfe48',
-]
 
 
 class TestScalingPolicy(base.SenlinTestCase):
@@ -56,66 +42,27 @@ class TestScalingPolicy(base.SenlinTestCase):
                 }
             }
         }
-        self.profile = self._create_profile()
-        self.cluster = self._create_cluster()
-        self.nodes = self._create_nodes(self.cluster['id'],
-                                        self.profile['id'], 3)
+        self.profile = utils.create_profile(self.context, PROFILE_ID)
+        self.cluster = utils.create_cluster(self.context, CLUSTER_ID,
+                                            PROFILE_ID)
 
-    def _create_profile(self, profile_id=None):
-        values = {
-            'context': self.context.to_dict(),
-            'id': profile_id or PROFILE_ID,
-            'type': 'os.heat.stack',
-            'name': 'test-profile',
-            'spec': {
-                'template': 'fake_stack.yml',
-            },
-            'created_at': timeutils.utcnow(True),
-            'user': self.context.user,
-            'project': self.context.project,
-        }
-        return po.Profile.create(self.context, values)
+    def _create_nodes(self, count):
+        NODE_IDS = [
+            '6eaa45fa-bd2e-426d-ae49-f75db1a4bd73',
+            '8bf73953-b57b-4e6b-bdef-83fa9420befb',
+            'c3058ea0-5241-466b-89bc-6a85f6050a11',
+        ]
+        PHYSICAL_IDS = [
+            '2417c5d6-9a89-4637-9ba6-82c00b180cb7',
+            '374bf2b9-30ba-4a9b-822b-1196f6d4a368',
+            '2a1b7e37-de18-4b22-9489-a7a413fdfe48',
+        ]
 
-    def _create_cluster(self, cluster_id=None, profile_id=None):
-        values = {
-            'id': cluster_id or CLUSTER_ID,
-            'profile_id': profile_id or PROFILE_ID,
-            'name': 'test-cluster',
-            'user': self.context.user,
-            'project': self.context.project,
-            'next_index': 1,
-            'min_size': 1,
-            'max_size': 5,
-            'desired_capacity': 3,
-            'status': 'ACTIVE',
-            'init_at': timeutils.utcnow(True),
-        }
-
-        return co.Cluster.create(self.context, values)
-
-    def _create_nodes(self, cluster_id, profile_id, count):
         nodes = []
         for i in range(count):
-            values = {
-                'id': NODE_IDS[i],
-                'name': 'test_node_%s' % (i + 1),
-                'physical_id': PHYSICAL_IDS[i],
-                'cluster_id': cluster_id or CLUSTER_ID,
-                'profile_id': profile_id or PROFILE_ID,
-                'index': i + 1,
-                'role': None,
-                'init_at': timeutils.utcnow(True),
-                'created_at': timeutils.utcnow(True),
-                'updated_at': None,
-                'status': 'ACTIVE',
-                'status_reason': 'create complete',
-                'metadata': {'foo': '123'},
-                'data': {'key1': 'value1'},
-                'user': self.context.user,
-                'project': self.context.project,
-            }
-            db_node = no.Node.create(self.context, values)
-            nodes.append(six.text_type(db_node.id))
+            utils.create_node(self.context, NODE_IDS[i], PROFILE_ID,
+                              CLUSTER_ID, PHYSICAL_IDS[i])
+            nodes.append(NODE_IDS[i])
         return nodes
 
     def test_policy_init(self):
@@ -190,6 +137,7 @@ class TestScalingPolicy(base.SenlinTestCase):
         self.assertEqual(2, count)
 
     def test_pre_op_pass_without_input(self):
+        self._create_nodes(3)
         action = mock.Mock()
         action.context = self.context
         action.action = consts.CLUSTER_SCALE_IN
@@ -211,6 +159,7 @@ class TestScalingPolicy(base.SenlinTestCase):
         action.store.assert_called_with(self.context)
 
     def test_pre_op_pass_with_input(self):
+        self._create_nodes(3)
         action = mock.Mock()
         action.context = self.context
         action.action = consts.CLUSTER_SCALE_IN
@@ -244,6 +193,7 @@ class TestScalingPolicy(base.SenlinTestCase):
         action.data.update.assert_called_with(pd)
 
     def test_pre_op_fail_negative_count(self):
+        self._create_nodes(3)
         action = mock.Mock()
         action.context = self.context
         action.action = consts.CLUSTER_SCALE_IN
@@ -263,6 +213,7 @@ class TestScalingPolicy(base.SenlinTestCase):
         action.store.assert_called_with(self.context)
 
     def test_pre_op_fail_below_min_size(self):
+        self._create_nodes(3)
         action = mock.Mock()
         action.action = consts.CLUSTER_SCALE_IN
         action.context = self.context
@@ -283,6 +234,7 @@ class TestScalingPolicy(base.SenlinTestCase):
         action.store.assert_called_with(self.context)
 
     def test_pre_op_pass_best_effort(self):
+        self._create_nodes(3)
         action = mock.Mock()
         action.context = self.context
         action.action = consts.CLUSTER_SCALE_IN
@@ -306,8 +258,8 @@ class TestScalingPolicy(base.SenlinTestCase):
         action.store.assert_called_with(self.context)
 
     def test_pre_op_with_bad_nodes(self):
-        node_id = self.nodes[0]
-        no.Node.update(self.context, node_id, {'status': 'ERROR'})
+        self.nodes = self._create_nodes(3)
+        no.Node.update(self.context, self.nodes[0], {'status': 'ERROR'})
 
         action = mock.Mock()
         action.context = self.context
