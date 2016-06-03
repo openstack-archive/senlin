@@ -34,3 +34,11 @@ class TestProfileDeleteNegative(base.BaseSenlinTest):
         self.assertRaises(exceptions.Conflict,
                           self.client.delete_obj,
                           'profiles', self.profile_id)
+
+    @test.attr(type=['negative'])
+    @decorators.idempotent_id('b6e7911d-5f65-4ec6-a08b-b88809fe2b9e')
+    def test_profile_delete_not_found(self):
+        # Verify notfound exception(404) is raised.
+        self.assertRaises(exceptions.NotFound,
+                          self.client.delete_obj,
+                          'profiles', 'b6e7911d-5f65-4ec6-a08b-b88809fe2b9e')
