@@ -24,7 +24,7 @@ class TestProfileUpdate(base.BaseSenlinTest):
         self.addCleanup(utils.delete_a_profile, self, self.profile_id)
 
     @decorators.idempotent_id('d7efdd92-1687-444e-afcc-b7f9c7e37478')
-    def test_update_profile(self):
+    def test_profile_update(self):
         params = {
             'profile': {
                 'name': 'updated-profile-name',

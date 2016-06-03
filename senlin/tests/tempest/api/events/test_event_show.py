@@ -26,7 +26,7 @@ class TestEventShow(base.BaseSenlinTest):
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
     @decorators.idempotent_id('b23490a7-0ae2-44be-a1f9-9f2d82dfe6aa')
-    def test_show_event(self):
+    def test_event_show(self):
         # Get cluster events
         events = self.client.list_objs('events',
                                        {'oid': self.cluster_id})['body']

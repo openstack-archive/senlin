@@ -24,7 +24,7 @@ class TestProfileList(base.BaseSenlinTest):
         self.addCleanup(utils.delete_a_profile, self, self.profile_id)
 
     @decorators.idempotent_id('329d3026-12f7-4369-845b-05914e2a8678')
-    def test_list_profile(self):
+    def test_profile_list(self):
         res = self.client.list_objs('profiles')
 
         # Verify resp of profile list API

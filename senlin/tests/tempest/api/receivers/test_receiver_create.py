@@ -26,7 +26,7 @@ class TestReceiverCreate(base.BaseSenlinTest):
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
     @decorators.idempotent_id('55f06733-af40-4fa8-a1de-3cb2a0c700d7')
-    def test_create_receiver(self):
+    def test_receiver_create(self):
         params = {
             'receiver': {
                 'name': 'test-receiver',

@@ -23,7 +23,7 @@ class TestPolicyDelete(base.BaseSenlinTest):
         self.policy_id = utils.create_a_policy(self)
 
     @decorators.idempotent_id('b707e4e3-3d42-4a9f-9a09-3e330959b498')
-    def test_delete_policy(self):
+    def test_policy_delete(self):
         # Verify resp of policy delete API
         res = self.client.delete_obj('policies', self.policy_id)
         self.assertEqual(204, res['status'])

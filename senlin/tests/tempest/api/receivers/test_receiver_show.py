@@ -31,7 +31,7 @@ class TestReceiverShow(base.BaseSenlinTest):
         self.addCleanup(self.client.delete_obj, 'receivers', self.receiver_id)
 
     @decorators.idempotent_id('6a86b2e4-127a-4acc-b0ec-6f951b240e5b')
-    def test_show_receiver(self):
+    def test_receiver_show(self):
         res = self.client.get_obj('receivers', self.receiver_id)
 
         self.assertEqual(200, res['status'])

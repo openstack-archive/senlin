@@ -24,7 +24,7 @@ class TestPolicyShow(base.BaseSenlinTest):
         self.addCleanup(utils.delete_a_policy, self, self.policy_id)
 
     @decorators.idempotent_id('7ab18be1-e554-452d-91ac-9b5e5c87430b')
-    def test_show_policy(self):
+    def test_policy_show(self):
         res = self.client.get_obj('policies', self.policy_id)
 
         # Verify resp of policy show API

@@ -24,7 +24,7 @@ class TestProfileShow(base.BaseSenlinTest):
         self.addCleanup(utils.delete_a_profile, self, self.profile_id)
 
     @decorators.idempotent_id('36206711-0676-4e4f-8f5d-7029912ecade')
-    def test_show_profile(self):
+    def test_profile_show(self):
         res = self.client.get_obj('profiles', self.profile_id)
 
         # Verify resp of profile show API
