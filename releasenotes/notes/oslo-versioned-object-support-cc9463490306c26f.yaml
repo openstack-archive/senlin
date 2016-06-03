@@ -1,0 +1,4 @@
+---
+features:
+  - Added support to oslo.versionedobject so that DB interactions are
+    abstracted. It is possible to do live upgrade for senlin service now.

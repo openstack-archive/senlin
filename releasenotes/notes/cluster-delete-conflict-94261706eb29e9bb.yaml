@@ -1,0 +1,5 @@
+---
+upgrade:
+  - The cluster delete API calls may return a 409 status code if there
+    are policies and/or receivers associated with it. Previously, we return
+    a 400 status code.

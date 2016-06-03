@@ -1,0 +1,4 @@
+---
+upgrade:
+  - DB columns obj_id, obj_type and obj_name in the event table are now
+    renamed to oid, otype and oname correspondingly.
