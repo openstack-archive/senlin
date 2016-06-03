@@ -37,19 +37,6 @@ class Receiver(base.SenlinObject, base.VersionedObjectDictCompat):
         'domain': fields.StringField(nullable=True),
     }
 
-    @staticmethod
-    def _from_db_object(context, receiver, db_obj):
-        if db_obj is None:
-            return None
-
-        for field in receiver.fields:
-            receiver[field] = db_obj[field]
-
-        receiver._context = context
-        receiver.obj_reset_changes()
-
-        return receiver
-
     @classmethod
     def create(cls, context, values):
         obj = db_api.receiver_create(context, values)

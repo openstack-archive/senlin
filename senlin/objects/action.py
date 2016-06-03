@@ -46,18 +46,6 @@ class Action(base.SenlinObject, base.VersionedObjectDictCompat):
         'domain': fields.StringField(nullable=True),
     }
 
-    @staticmethod
-    def _from_db_object(context, action, db_obj):
-        if db_obj is None:
-            return None
-        for field in action.fields:
-            action[field] = db_obj[field]
-
-        action._context = context
-        action.obj_reset_changes()
-
-        return action
-
     @classmethod
     def create(cls, context, values):
         obj = db_api.action_create(context, values)

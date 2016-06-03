@@ -32,18 +32,6 @@ class Service(base.SenlinObject, base.VersionedObjectDictCompat):
         'updated_at': fields.DateTimeField(),
     }
 
-    @staticmethod
-    def _from_db_object(context, service, db_obj):
-        if db_obj is None:
-            return None
-        for field in service.fields:
-            service[field] = db_obj[field]
-
-        service._context = context
-        service.obj_reset_changes()
-
-        return service
-
     @classmethod
     def create(cls, context, service_id, host=None, binary=None, topic=None):
         obj = db_api.service_create(context, service_id=service_id, host=host,

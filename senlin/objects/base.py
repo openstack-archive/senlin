@@ -32,6 +32,21 @@ class SenlinObject(base.VersionedObject):
     OBJ_PROJECT_NAMESPACE = 'senlin'
     VERSION = '1.0'
 
+    @staticmethod
+    def _from_db_object(context, obj, db_obj):
+        if db_obj is None:
+            return None
+        for field in obj.fields:
+            if field == 'metadata':
+                obj['metadata'] = db_obj['meta_data']
+            else:
+                obj[field] = db_obj[field]
+
+        obj._context = context
+        obj.obj_reset_changes()
+
+        return obj
+
 
 class SenlinObjectRegistry(base.VersionedObjectRegistry):
 

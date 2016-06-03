@@ -42,22 +42,6 @@ class Node(base.SenlinObject, base.VersionedObjectDictCompat):
         'domain': fields.StringField(nullable=True),
     }
 
-    @staticmethod
-    def _from_db_object(context, node, db_obj):
-        if db_obj is None:
-            return None
-
-        for field in node.fields:
-            if field == 'metadata':
-                node['metadata'] = db_obj['meta_data']
-            else:
-                node[field] = db_obj[field]
-
-        node._context = context
-        node.obj_reset_changes()
-
-        return node
-
     @classmethod
     def create(cls, context, values):
         obj = db_api.node_create(context, values)

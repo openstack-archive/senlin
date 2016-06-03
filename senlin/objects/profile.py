@@ -36,21 +36,6 @@ class Profile(base.SenlinObject, base.VersionedObjectDictCompat):
         'metadata': fields.JsonField(nullable=True),
     }
 
-    @staticmethod
-    def _from_db_object(context, profile, db_profile):
-        if db_profile is None:
-            return None
-        for field in profile.fields:
-            if field == 'metadata':
-                profile['metadata'] = db_profile['meta_data']
-            else:
-                profile[field] = db_profile[field]
-
-        profile._context = context
-        profile.obj_reset_changes()
-
-        return profile
-
     @classmethod
     def create(cls, context, values):
         obj = db_api.profile_create(context, values)
