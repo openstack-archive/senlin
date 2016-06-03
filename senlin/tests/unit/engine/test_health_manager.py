@@ -10,15 +10,63 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
+
 import mock
 from oslo_config import cfg
 
 from senlin.common import consts
-from senlin.common import messaging as rpc_messaging
+from senlin.common import messaging
 from senlin.engine import health_manager
+from senlin.objects import cluster as obj_cluster
 from senlin.objects import health_registry as hr
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.common import base
+
+
+@mock.patch('oslo_messaging.NotificationFilter')
+class TestNotificationEndpoint(base.SenlinTestCase):
+
+    def test_init(self, mock_filter):
+        x_filter = mock_filter.return_value
+        obj = health_manager.NotificationEndpoint('PROJECT', 'CLUSTER')
+
+        mock_filter.assert_called_once_with(
+            publisher_id='^compute.*',
+            event_type='^compute\.instance\..*',
+            context={'project_id': '^PROJECT$'})
+        self.assertEqual(x_filter, obj.filter_rule)
+
+
+@mock.patch('senlin.engine.health_manager.NotificationEndpoint')
+@mock.patch('oslo_messaging.Target')
+@mock.patch('oslo_messaging.get_transport')
+@mock.patch('oslo_messaging.get_notification_listener')
+class TestListenerProc(base.SenlinTestCase):
+
+    def test_listener_proc(self, mock_listener, mock_transport, mock_target,
+                           mock_endpoint):
+        x_listener = mock.Mock()
+        mock_listener.return_value = x_listener
+        x_transport = mock.Mock()
+        mock_transport.return_value = x_transport
+        x_target = mock.Mock()
+        mock_target.return_value = x_target
+        x_endpoint = mock.Mock()
+        mock_endpoint.return_value = x_endpoint
+
+        res = health_manager.ListenerProc('EXCHANGE', 'PROJECT_ID',
+                                          'CLUSTER_ID')
+
+        self.assertIsNone(res)
+        mock_transport.assert_called_once_with(cfg.CONF)
+        mock_target.assert_called_once_with(topic="notifications",
+                                            exchange='EXCHANGE')
+        mock_endpoint.assert_called_once_with('PROJECT_ID', 'CLUSTER_ID')
+        mock_listener.assert_called_once_with(
+            x_transport, [x_target], [x_endpoint], pool="listener-workers")
+        x_listener.start.assert_called_once_with()
+        x_listener.wait.assert_called_once_with()
 
 
 class TestHealthManager(base.SenlinTestCase):
@@ -72,7 +120,7 @@ class TestHealthManager(base.SenlinTestCase):
             mock.call(34, self.hm._poll_cluster, None, 'CID2')
         ]
         mock_add_timer.assert_has_calls(mock_calls)
-        self.assertEqual(3, len(self.hm.registries))
+        self.assertEqual(2, len(self.hm.registries))
         self.assertEqual(
             {
                 'cluster_id': 'CID1',
@@ -96,6 +144,93 @@ class TestHealthManager(base.SenlinTestCase):
     def test__poll_cluster(self, mock_check):
         self.hm._poll_cluster('CLUSTER_ID')
         mock_check.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID')
+
+    @mock.patch.object(obj_cluster.Cluster, 'get')
+    def test__add_listener(self, mock_get):
+        x_listener = mock.Mock()
+        mock_add_thread = self.patchobject(self.hm.TG, 'add_thread',
+                                           return_value=x_listener)
+        x_cluster = mock.Mock(project='PROJECT_ID')
+        mock_get.return_value = x_cluster
+
+        # do it
+        res = self.hm._add_listener('CLUSTER_ID')
+
+        # assertions
+        self.assertEqual(x_listener, res)
+        mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID')
+        mock_add_thread.assert_called_once_with(health_manager.ListenerProc,
+                                                'nova', 'PROJECT_ID',
+                                                'CLUSTER_ID')
+
+    @mock.patch.object(obj_cluster.Cluster, 'get')
+    def test__add_listener_cluster_not_found(self, mock_get):
+        mock_get.return_value = None
+        mock_add_thread = self.patchobject(self.hm.TG, 'add_thread')
+
+        # do it
+        res = self.hm._add_listener('CLUSTER_ID')
+
+        # assertions
+        self.assertIsNone(res)
+        mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID')
+        self.assertEqual(0, mock_add_thread.call_count)
+
+    def test__start_check_for_polling(self):
+        x_timer = mock.Mock()
+        mock_add_timer = self.patchobject(self.hm.TG, 'add_timer',
+                                          return_value=x_timer)
+
+        entry = {
+            'cluster_id': 'CCID',
+            'interval': 12,
+            'check_type': consts.NODE_STATUS_POLLING,
+        }
+        res = self.hm._start_check(entry)
+
+        expected = copy.deepcopy(entry)
+        expected['timer'] = x_timer
+        self.assertEqual(expected, res)
+        mock_add_timer.assert_called_once_with(12, self.hm._poll_cluster, None,
+                                               'CCID')
+
+    def test__start_check_for_listening(self):
+        x_listener = mock.Mock()
+        mock_add_listener = self.patchobject(self.hm, '_add_listener',
+                                             return_value=x_listener)
+
+        entry = {
+            'cluster_id': 'CCID',
+            'check_type': consts.VM_LIFECYCLE_EVENTS,
+        }
+        res = self.hm._start_check(entry)
+
+        expected = copy.deepcopy(entry)
+        expected['listener'] = x_listener
+        self.assertEqual(expected, res)
+        mock_add_listener.assert_called_once_with('CCID')
+
+    def test__start_check_for_listening_failed(self):
+        mock_add_listener = self.patchobject(self.hm, '_add_listener',
+                                             return_value=None)
+
+        entry = {
+            'cluster_id': 'CCID',
+            'check_type': consts.VM_LIFECYCLE_EVENTS,
+        }
+        res = self.hm._start_check(entry)
+
+        self.assertIsNone(res)
+        mock_add_listener.assert_called_once_with('CCID')
+
+    def test__start_check_other_types(self):
+        entry = {
+            'cluster_id': 'CCID',
+            'check_type': 'BOGUS TYPE',
+        }
+        res = self.hm._start_check(entry)
+
+        self.assertIsNone(res)
 
     @mock.patch.object(hr.HealthRegistry, 'create')
     def test_register_cluster(self, mock_reg_create):
@@ -145,7 +280,7 @@ class TestHealthManager(base.SenlinTestCase):
         target = mock.Mock()
         mock_target.return_value = target
         x_rpc_server = mock.Mock()
-        mock_get_rpc = self.patchobject(rpc_messaging, 'get_rpc_server',
+        mock_get_rpc = self.patchobject(messaging, 'get_rpc_server',
                                         return_value=x_rpc_server)
         x_timer = mock.Mock()
         mock_add_timer = self.patchobject(self.hm.TG, 'add_timer',
