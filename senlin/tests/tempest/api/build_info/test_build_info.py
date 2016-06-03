@@ -18,7 +18,7 @@ from senlin.tests.tempest.api import base
 class TestBuildInfo(base.BaseSenlinTest):
 
     @decorators.idempotent_id('bf7a8bdf-d896-49ff-a7a8-7c8fdbfc3667')
-    def test_get_build_info(self):
+    def test_build_info_get(self):
         uri = '{0}/build-info'.format(self.client.version)
         resp, info = self.client.get(uri)
 

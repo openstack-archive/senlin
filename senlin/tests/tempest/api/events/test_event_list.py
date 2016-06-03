@@ -26,7 +26,7 @@ class TestEventList(base.BaseSenlinTest):
         self.addCleanup(utils.delete_a_cluster, self, cluster_id)
 
     @decorators.idempotent_id('498a7e22-7ada-415b-a7cf-927b0ad3d9f6')
-    def test_list_event(self):
+    def test_event_list(self):
         res = self.client.list_objs('events')
 
         # Verify resp of event list API

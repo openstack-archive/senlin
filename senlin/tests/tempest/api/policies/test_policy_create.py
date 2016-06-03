@@ -23,7 +23,7 @@ class TestPolicyCreate(base.BaseSenlinTest):
         self.policy_id = None
 
     @decorators.idempotent_id('f50648d9-f38c-479a-a82b-3c6909733496')
-    def test_create_policy(self):
+    def test_policy_create(self):
         params = {
             'policy': {
                 'name': 'test-scaling-policy',

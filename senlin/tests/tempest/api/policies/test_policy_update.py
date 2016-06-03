@@ -24,7 +24,7 @@ class TestPolicyUpdate(base.BaseSenlinTest):
         self.addCleanup(utils.delete_a_policy, self, self.policy_id)
 
     @decorators.idempotent_id('dbe9c6a6-882c-41cf-b862-7f648804db24')
-    def test_update_policy(self):
+    def test_policy_update(self):
         params = {
             'policy': {
                 'name': 'updated-policy-name'

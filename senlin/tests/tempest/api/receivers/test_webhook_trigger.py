@@ -36,7 +36,7 @@ class TestWebhookTrigger(base.BaseSenlinTest):
         self.webhook_url = receiver['body']['channel']['alarm_url']
 
     @decorators.idempotent_id('afd671af-330a-46d6-bdb5-9c50966ab8b5')
-    def test_trigger_webhook(self):
+    def test_webhook_trigger(self):
         res = self.client.trigger_webhook(self.webhook_url)
 
         # Verify resp of webhook API

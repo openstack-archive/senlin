@@ -20,7 +20,7 @@ from senlin.tests.tempest.common import constants
 class TestProfileCreate(base.BaseSenlinTest):
 
     @decorators.idempotent_id('76216581-e78a-42f5-bf1d-65d83bd206fc')
-    def test_create_profile(self):
+    def test_profile_create(self):
         params = {
             'profile': {
                 'name': 'test-profile',

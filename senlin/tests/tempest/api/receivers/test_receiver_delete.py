@@ -30,7 +30,7 @@ class TestReceiverDelete(base.BaseSenlinTest):
                                                    'CLUSTER_RESIZE')
 
     @decorators.idempotent_id('c67cf6c3-2339-4f10-9631-fb7e9f47170f')
-    def test_delete_receiver(self):
+    def test_receiver_delete(self):
         # Verify resp of receiver delete API
         res = self.client.delete_obj('receivers', self.receiver_id)
         self.assertEqual(204, res['status'])
