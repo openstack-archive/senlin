@@ -24,6 +24,37 @@ spec_nova_server = {
     }
 }
 
+
+spec_heat_stack = {
+    "type": "os.heat.stack",
+    "version": "1.0",
+    "properties": {
+        "template": {
+            "heat_template_version": "2014-10-16",
+            "parameters": {
+                "str_length": {
+                    "type": "number",
+                    "default": 64
+                }
+            },
+            "resources": {
+                "random": {
+                    "type": "OS::Heat::RandomString",
+                    "properties": {
+                        "length": {"get_param": "str_length"}
+                    }
+                }
+            },
+            "outputs": {
+                "result": {
+                    "value": {"get_attr": ["random", "value"]}
+                }
+            }
+        }
+    }
+}
+
+
 spec_scaling_policy = {
     "type": "senlin.policy.scaling",
     "version": "1.0",
