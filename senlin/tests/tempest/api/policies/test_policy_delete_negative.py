@@ -41,3 +41,11 @@ class TestPolicyDeleteNegative(base.BaseSenlinTest):
         self.assertRaises(exceptions.Conflict,
                           self.client.delete_obj,
                           'policies', self.policy_id)
+
+    @test.attr(type=['negative'])
+    @decorators.idempotent_id('5591416f-4646-46c2-83b4-231e72aa4bfe')
+    def test_policy_delete_not_found(self):
+        # Verify notfound exception(404) is raised.
+        self.assertRaises(exceptions.NotFound,
+                          self.client.delete_obj,
+                          'policies', '5591416f-4646-46c2-83b4-231e72aa4bfe')
