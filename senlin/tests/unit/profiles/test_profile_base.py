@@ -432,7 +432,6 @@ class TestProfileBase(base.SenlinTestCase):
         expected = {
             'context': {
                 'description': 'context data',
-                'readonly': False,
                 'required': False,
                 'updatable': False,
                 'type': 'Map'
@@ -440,21 +439,18 @@ class TestProfileBase(base.SenlinTestCase):
             'key1': {
                 'default': 'value1',
                 'description': 'first key',
-                'readonly': False,
                 'required': False,
                 'updatable': True,
                 'type': 'String',
             },
             'key2': {
                 'description': 'second key',
-                'readonly': False,
                 'required': True,
                 'updatable': True,
                 'type': 'Integer'
             },
             'key3': {
                 'description': 'third key',
-                'readonly': False,
                 'required': False,
                 'updatable': False,
                 'type': 'String'
