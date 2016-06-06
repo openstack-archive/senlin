@@ -15,6 +15,7 @@ from tempest.lib import exceptions
 from tempest import test
 
 from senlin.tests.tempest.api import base
+from senlin.tests.tempest.api import utils
 
 
 class TestPolicyShowNegativeNotFound(base.BaseSenlinTest):
@@ -25,3 +26,20 @@ class TestPolicyShowNegativeNotFound(base.BaseSenlinTest):
         self.assertRaises(exceptions.NotFound,
                           self.client.get_obj,
                           'policies', 'f1615466-7fca-4670-8c9a-66cb4bb24e54')
+
+
+class TestPolicyShowNegativeBadRequest(base.BaseSenlinTest):
+
+    def setUp(self):
+        super(TestPolicyShowNegativeBadRequest, self).setUp()
+        self.policy_id1 = utils.create_a_policy(self, name='p-01')
+        self.policy_id2 = utils.create_a_policy(self, name='p-01')
+        self.addCleanup(utils.delete_a_policy, self, self.policy_id1)
+        self.addCleanup(utils.delete_a_policy, self, self.policy_id2)
+
+    @test.attr(type=['negative'])
+    @decorators.idempotent_id('c2eadbae-29b7-4d12-a407-259f387286f5')
+    def test_policy_show_multiple_choice(self):
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.get_obj,
+                          'policies', 'p-01')
