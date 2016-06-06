@@ -42,7 +42,7 @@ class TestClusterCreate(base.BaseSenlinTest):
                 'max_size': max_size,
                 'timeout': timeout,
                 'metadata': {'k1': 'v1'},
-                'name': 'test-cluster'
+                'name': name
             }
         }
         res = self.client.create_obj('clusters', params)
