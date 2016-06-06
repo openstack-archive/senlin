@@ -33,5 +33,5 @@ class NeutronClient(base.DriverBase):
             "id": "d32019d3-bc6e-4319-9c1d-6722fc136a22"
         }
 
-    def network_get(self, value):
+    def network_get(self, value, ignore_missing=False):
         return sdk.FakeResourceObject(self.fake_network)
