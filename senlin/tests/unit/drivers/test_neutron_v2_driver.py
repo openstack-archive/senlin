@@ -41,7 +41,7 @@ class TestNeutronV2Driver(base.SenlinTestCase):
 
         self.conn.network.find_network.return_value = network_obj
         res = self.nc.network_get(net_id)
-        self.conn.network.find_network.assert_called_once_with(net_id)
+        self.conn.network.find_network.assert_called_once_with(net_id, False)
         self.assertEqual(network_obj, res)
 
     def test_subnet_get(self):
@@ -50,7 +50,7 @@ class TestNeutronV2Driver(base.SenlinTestCase):
 
         self.conn.network.find_subnet.return_value = subnet_obj
         res = self.nc.subnet_get(subnet_id)
-        self.conn.network.find_subnet.assert_called_once_with(subnet_id)
+        self.conn.network.find_subnet.assert_called_once_with(subnet_id, False)
         self.assertEqual(subnet_obj, res)
 
     def test_loadbalancer_get(self):
@@ -59,7 +59,8 @@ class TestNeutronV2Driver(base.SenlinTestCase):
 
         self.conn.network.find_load_balancer.return_value = loadbalancer_obj
         res = self.nc.loadbalancer_get(lb_id)
-        self.conn.network.find_load_balancer.assert_called_once_with(lb_id)
+        self.conn.network.find_load_balancer.assert_called_once_with(lb_id,
+                                                                     False)
         self.assertEqual(loadbalancer_obj, res)
 
     def test_loadbalancer_list(self):
@@ -113,7 +114,7 @@ class TestNeutronV2Driver(base.SenlinTestCase):
         self.conn.network.find_listener.return_value = listener_obj
         res = self.nc.listener_get(name_or_id)
         self.conn.network.find_listener.assert_called_once_with(
-            name_or_id)
+            name_or_id, False)
         self.assertEqual(listener_obj, res)
 
     def test_listener_list(self):
@@ -171,7 +172,8 @@ class TestNeutronV2Driver(base.SenlinTestCase):
 
         self.conn.network.find_pool.return_value = pool_obj
         res = self.nc.pool_get(name_or_id)
-        self.conn.network.find_pool.assert_called_once_with(name_or_id)
+        self.conn.network.find_pool.assert_called_once_with(name_or_id,
+                                                            False)
         self.assertEqual(pool_obj, res)
 
     def test_pool_list(self):
@@ -230,7 +232,7 @@ class TestNeutronV2Driver(base.SenlinTestCase):
         self.conn.network.find_pool_member.return_value = member_obj
         res = self.nc.pool_member_get(pool_id, name_or_id)
         self.conn.network.find_pool_member.assert_called_once_with(
-            name_or_id, pool_id)
+            name_or_id, pool_id, False)
         self.assertEqual(member_obj, res)
 
     def test_pool_member_list(self):
@@ -291,7 +293,7 @@ class TestNeutronV2Driver(base.SenlinTestCase):
         self.conn.network.find_health_monitor.return_value = healthmonitor_obj
         res = self.nc.healthmonitor_get(name_or_id)
         self.conn.network.find_health_monitor.assert_called_once_with(
-            name_or_id)
+            name_or_id, False)
         self.assertEqual(healthmonitor_obj, res)
 
     def test_healthmonitor_list(self):

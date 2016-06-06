@@ -22,18 +22,21 @@ class NeutronClient(base.DriverBase):
         self.conn = sdk.create_connection(params)
 
     @sdk.translate_exception
-    def network_get(self, name_or_id):
-        network = self.conn.network.find_network(name_or_id)
+    def network_get(self, name_or_id, ignore_missing=False):
+        network = self.conn.network.find_network(name_or_id,
+                                                 ignore_missing)
         return network
 
     @sdk.translate_exception
-    def subnet_get(self, name_or_id):
-        subnet = self.conn.network.find_subnet(name_or_id)
+    def subnet_get(self, name_or_id, ignore_missing=False):
+        subnet = self.conn.network.find_subnet(name_or_id,
+                                               ignore_missing)
         return subnet
 
     @sdk.translate_exception
-    def loadbalancer_get(self, name_or_id):
-        lb = self.conn.network.find_load_balancer(name_or_id)
+    def loadbalancer_get(self, name_or_id, ignore_missing=False):
+        lb = self.conn.network.find_load_balancer(name_or_id,
+                                                  ignore_missing)
         return lb
 
     @sdk.translate_exception
@@ -67,8 +70,9 @@ class NeutronClient(base.DriverBase):
         return
 
     @sdk.translate_exception
-    def listener_get(self, name_or_id):
-        listener = self.conn.network.find_listener(name_or_id)
+    def listener_get(self, name_or_id, ignore_missing=False):
+        listener = self.conn.network.find_listener(name_or_id,
+                                                   ignore_missing)
         return listener
 
     @sdk.translate_exception
@@ -105,8 +109,9 @@ class NeutronClient(base.DriverBase):
         return
 
     @sdk.translate_exception
-    def pool_get(self, name_or_id):
-        pool = self.conn.network.find_pool(name_or_id)
+    def pool_get(self, name_or_id, ignore_missing=False):
+        pool = self.conn.network.find_pool(name_or_id,
+                                           ignore_missing)
         return pool
 
     @sdk.translate_exception
@@ -140,9 +145,10 @@ class NeutronClient(base.DriverBase):
         return
 
     @sdk.translate_exception
-    def pool_member_get(self, pool_id, name_or_id):
+    def pool_member_get(self, pool_id, name_or_id, ignore_missing=False):
         member = self.conn.network.find_pool_member(name_or_id,
-                                                    pool_id)
+                                                    pool_id,
+                                                    ignore_missing)
         return member
 
     @sdk.translate_exception
@@ -174,8 +180,9 @@ class NeutronClient(base.DriverBase):
         return
 
     @sdk.translate_exception
-    def healthmonitor_get(self, name_or_id):
-        hm = self.conn.network.find_health_monitor(name_or_id)
+    def healthmonitor_get(self, name_or_id, ignore_missing=False):
+        hm = self.conn.network.find_health_monitor(name_or_id,
+                                                   ignore_missing)
         return hm
 
     @sdk.translate_exception
