@@ -118,7 +118,6 @@ class TestConstraintsSchema(testtools.TestCase):
             'type': 'String',
             'description': 'A string',
             'default': 'wibble',
-            'readonly': False,
             'required': True,
             'updatable': False,
             'constraints': [{
@@ -140,7 +139,6 @@ class TestConstraintsSchema(testtools.TestCase):
                     'type': 'String',
                     'description': 'A string',
                     'default': 'wibble',
-                    'readonly': False,
                     'required': True,
                     'updatable': False,
                     'constraints': [{
@@ -149,7 +147,6 @@ class TestConstraintsSchema(testtools.TestCase):
                     }]
                 }
             },
-            'readonly': False,
             'required': False,
             'updatable': False,
         }
@@ -168,7 +165,6 @@ class TestConstraintsSchema(testtools.TestCase):
                     'type': 'String',
                     'description': 'A string',
                     'default': 'wibble',
-                    'readonly': False,
                     'required': True,
                     'updatable': False,
                     'constraints': [{
@@ -177,7 +173,6 @@ class TestConstraintsSchema(testtools.TestCase):
                     }]
                 }
             },
-            'readonly': False,
             'required': False,
             'updatable': False,
         }
@@ -209,7 +204,6 @@ class TestConstraintsSchema(testtools.TestCase):
                             'type': 'String',
                             'description': 'A string',
                             'default': 'wibble',
-                            'readonly': False,
                             'required': True,
                             'updatable': False,
                             'constraints': [{
@@ -218,12 +212,10 @@ class TestConstraintsSchema(testtools.TestCase):
                             }]
                         }
                     },
-                    'readonly': False,
                     'required': False,
                     'updatable': False,
                 }
             },
-            'readonly': False,
             'required': False,
             'updatable': False,
         }
