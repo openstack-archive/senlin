@@ -80,6 +80,18 @@ class StackProfile(base.Profile):
         )
     }
 
+    OP_NAMES = (
+        OP_ABANDON,
+    ) = (
+        'abandon',
+    )
+
+    OPERATIONS = {
+        OP_ABANDON: schema.Map(
+            _('Abandon a heat stack node.'),
+        )
+    }
+
     def __init__(self, type_name, name, **kwargs):
         super(StackProfile, self).__init__(type_name, name, **kwargs)
 
@@ -249,3 +261,7 @@ class StackProfile(base.Profile):
             return {}
 
         return self.heat(obj).stack_get(obj.physical_id)
+
+    def handle_abandon(self, obj, **options):
+        """Handler for abandoning a heat stack node."""
+        pass

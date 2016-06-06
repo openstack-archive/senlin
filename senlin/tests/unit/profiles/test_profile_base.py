@@ -62,6 +62,7 @@ class DummyProfile(pb.Profile):
             'third key',
         ),
     }
+    OPERATIONS = {}
 
     def __init__(self, name, spec, **kwargs):
         super(DummyProfile, self).__init__(name, spec, **kwargs)

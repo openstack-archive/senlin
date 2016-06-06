@@ -45,6 +45,8 @@ class DockerProfile(base.Profile):
         ),
     }
 
+    OPERATIONS = {}
+
     def __init__(self, type_name, name, **kwargs):
         super(DockerProfile, self).__init__(type_name, name, **kwargs)
 

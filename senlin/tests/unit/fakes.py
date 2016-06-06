@@ -37,6 +37,8 @@ class TestProfile(profile_base.Profile):
         ),
     }
 
+    OPERATIONS = {}
+
     def __init__(self, name, spec, **kwargs):
         super(TestProfile, self).__init__(name, spec, **kwargs)
 

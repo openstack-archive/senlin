@@ -17,6 +17,7 @@ from oslo_log import log as logging
 from oslo_utils import encodeutils
 import six
 
+from senlin.common import constraints
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import schema
@@ -233,6 +234,30 @@ class ServerProfile(base.Profile):
         USER_DATA: schema.String(
             _('User data to be exposed by the metadata server.'),
         ),
+    }
+
+    OP_NAMES = (
+        OP_REBOOT,
+    ) = (
+        'reboot',
+    )
+
+    REBOOT_TYPE = 'type'
+    REBOOT_TYPES = (REBOOT_SOFT, REBOOT_HARD) = ('SOFT', 'HARD')
+
+    OPERATIONS = {
+        OP_REBOOT: schema.Operation(
+            _("Reboot the nova server."),
+            schema={
+                REBOOT_TYPE: schema.String(
+                    _("Type of reboot which can be 'SOFT' or 'HARD'."),
+                    default=REBOOT_SOFT,
+                    constraints=[
+                        constraints.AllowedValues(REBOOT_TYPES),
+                    ]
+                )
+            }
+        )
     }
 
     def __init__(self, type_name, name, **kwargs):
@@ -750,3 +775,7 @@ class ServerProfile(base.Profile):
             obj, **options)
 
         return res
+
+    def handle_reboot(self, obj, **options):
+        """Handler for the reboot operation."""
+        pass
