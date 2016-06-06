@@ -17,7 +17,7 @@ from tempest import test
 from senlin.tests.tempest.api import base
 
 
-class TestReceiverShowNegative(base.BaseSenlinTest):
+class TestReceiverShowNegativeNotFound(base.BaseSenlinTest):
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('0cca923f-3e6c-4e23-8d42-2e1c70243c9d')

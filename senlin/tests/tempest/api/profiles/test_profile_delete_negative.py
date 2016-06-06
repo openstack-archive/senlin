@@ -18,10 +18,10 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestProfileDeleteNegative(base.BaseSenlinTest):
+class TestProfileDeleteNegativeConflict(base.BaseSenlinTest):
 
     def setUp(self):
-        super(TestProfileDeleteNegative, self).setUp()
+        super(TestProfileDeleteNegativeConflict, self).setUp()
         self.profile_id = utils.create_a_profile(self)
         self.addCleanup(utils.delete_a_profile, self, self.profile_id)
         cluster_id = utils.create_a_cluster(self, self.profile_id)
@@ -34,6 +34,9 @@ class TestProfileDeleteNegative(base.BaseSenlinTest):
         self.assertRaises(exceptions.Conflict,
                           self.client.delete_obj,
                           'profiles', self.profile_id)
+
+
+class TestProfileDeleteNegativeNotFound(base.BaseSenlinTest):
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('b6e7911d-5f65-4ec6-a08b-b88809fe2b9e')

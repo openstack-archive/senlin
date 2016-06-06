@@ -17,7 +17,7 @@ from tempest import test
 from senlin.tests.tempest.api import base
 
 
-class TestClusterShowNegative(base.BaseSenlinTest):
+class TestClusterShowNegativeNotFound(base.BaseSenlinTest):
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('bbc593ff-8556-416e-83c3-384e5c14d363')

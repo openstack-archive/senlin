@@ -17,7 +17,7 @@ from tempest import test
 from senlin.tests.tempest.api import base
 
 
-class TestReceiverDeleteNegative(base.BaseSenlinTest):
+class TestReceiverDeleteNegativeNotFound(base.BaseSenlinTest):
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('799395ff-8bb5-49d6-9e3b-0d2d4428e8c1')

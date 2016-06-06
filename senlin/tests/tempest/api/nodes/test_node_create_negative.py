@@ -19,10 +19,10 @@ from senlin.tests.tempest.api import utils
 from senlin.tests.tempest.common import constants
 
 
-class TestNodeCreateNegative(base.BaseSenlinTest):
+class TestNodeCreateNegativeBadRequest(base.BaseSenlinTest):
 
     def setUp(self):
-        super(TestNodeCreateNegative, self).setUp()
+        super(TestNodeCreateNegativeBadRequest, self).setUp()
         self.profile_id = utils.create_a_profile(self)
         self.addCleanup(utils.delete_a_profile, self, self.profile_id)
         self.profile_id2 = utils.create_a_profile(
