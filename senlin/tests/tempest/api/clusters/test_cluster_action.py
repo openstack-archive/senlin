@@ -224,3 +224,36 @@ class TestClusterActionRecover(base.BaseSenlinTest):
 
         action_id = res['location'].split('/actions/')[1]
         self.wait_for_status('actions', action_id, 'SUCCEEDED')
+
+
+class TestClusterActionPolicyAttach(base.BaseSenlinTest):
+
+    def setUp(self):
+        super(TestClusterActionPolicyAttach, self).setUp()
+        profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, profile_id)
+        self.cluster_id = utils.create_a_cluster(self, profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+        self.policy_id = utils.create_a_policy(self)
+        self.addCleanup(utils.delete_a_policy, self, self.policy_id)
+        self.addCleanup(utils.detach_policy, self, self.cluster_id,
+                        self.policy_id)
+
+    @decorators.idempotent_id('214c48f8-cca9-4512-a904-2985743a1155')
+    def test_cluster_action_policy_attach(self):
+        params = {
+            "policy_attach": {
+                "enabled": True,
+                "policy_id": self.policy_id
+            }
+        }
+        # Trigger cluster action
+        res = self.client.trigger_action('clusters', self.cluster_id,
+                                         params=params)
+
+        # Verify resp code, body and location in headers
+        self.assertEqual(202, res['status'])
+        self.assertIn('actions', res['location'])
+
+        action_id = res['location'].split('/actions/')[1]
+        self.wait_for_status('actions', action_id, 'SUCCEEDED')
