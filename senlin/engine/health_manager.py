@@ -10,8 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-"""
-Health Manager class.
+"""Health Manager class.
 
 Health Manager is responsible for monitoring the health of the clusters and
 trigger corresponding actions to recover the clusters based on the pre-defined
@@ -19,15 +18,64 @@ health policies.
 """
 
 from oslo_config import cfg
-import oslo_messaging
+from oslo_log import log as logging
+import oslo_messaging as messaging
 from oslo_service import service
 from oslo_service import threadgroup
 
 from senlin.common import consts
 from senlin.common import context
-from senlin.common import messaging as rpc_messaging
-from senlin.objects import health_registry as hr
+from senlin.common.i18n import _LI
+from senlin.common.i18n import _LW
+from senlin.common import messaging as rpc
+from senlin import objects
 from senlin.rpc import client as rpc_client
+
+LOG = logging.getLogger(__name__)
+
+
+class NotificationEndpoint(object):
+
+    def __init__(self, project_id, cluster_id):
+        self.filter_rule = messaging.NotificationFilter(
+            publisher_id='^compute.*',
+            event_type='^compute\.instance\..*',
+            context={'project_id': '^%s$' % project_id})
+        self.cluster_id = cluster_id
+
+    def info(self, ctxt, publisher_id, event_type, payload, metadata):
+        metadata = payload['metadata']
+        if 'cluster' in metadata and metadata['cluster'] == self.cluster_id:
+            LOG.info("publisher=%s" % publisher_id)
+            LOG.info("event_type=%s" % event_type)
+
+    def warn(self, ctxt, publisher_id, event_type, payload, metadata):
+        metadata = payload['metadata']
+        if 'cluster' in metadata and metadata['cluster'] == self.cluster_id:
+            LOG.warn("publisher=%s" % publisher_id)
+            LOG.warn("event_type=%s" % event_type)
+
+    def debug(self, ctxt, publisher_id, event_type, payload, metadata):
+        metadata = payload['metadata']
+        if 'cluster' in metadata and metadata['cluster'] == self.cluster_id:
+            LOG.debug("publisher=%s" % publisher_id)
+            LOG.debug("event_type=%s" % event_type)
+
+
+def ListenerProc(exchange, project_id, cluster_id):
+    transport = messaging.get_transport(cfg.CONF)
+    targets = [
+        messaging.Target(topic='notifications', exchange=exchange),
+    ]
+    endpoints = [
+        NotificationEndpoint(project_id, cluster_id),
+    ]
+    pool = "listener-workers"
+    listener = messaging.get_notification_listener(
+        transport, targets, endpoints, pool=pool)
+
+    listener.start()
+    listener.wait()
 
 
 class HealthManager(service.Service):
@@ -61,6 +109,20 @@ class HealthManager(service.Service):
         """
         self.rpc_client.cluster_check(self.ctx, cluster_id)
 
+    def _add_listener(self, cluster_id):
+        """Routine to be executed for adding cluster listener.
+
+        @param cluster_id: The UUID of the cluster to be filtered.
+        @return Nothing.
+        """
+        cluster = objects.Cluster.get(self.ctx, cluster_id)
+        if not cluster:
+            LOG.warn(_LW("Cluster (%s) is not found."), cluster_id)
+            return
+
+        project = cluster.project
+        return self.TG.add_thread(ListenerProc, 'nova', project, cluster_id)
+
     def _start_check(self, entry):
         """Routine to call for starting the checking for a cluster.
 
@@ -72,12 +134,24 @@ class HealthManager(service.Service):
             timer = self.TG.add_timer(interval, self._poll_cluster, None,
                                       entry['cluster_id'])
             entry['timer'] = timer
+        elif entry['check_type'] == consts.VM_LIFECYCLE_EVENTS:
+            LOG.info(_LI("Start listening events for cluster (%s)."),
+                     entry['cluster_id'])
+            listener = self._add_listener(entry['cluster_id'])
+            if listener:
+                entry['listener'] = listener
+            else:
+                return None
+        else:
+            LOG.warn(_LW("Cluster (%(id)s) check type (%(type)s) is invalid."),
+                     {'id': entry['cluster_id'], 'type': entry['check_type']})
+            return None
 
         return entry
 
     def _load_runtime_registry(self):
         """Load the initial runtime registry with a DB scan."""
-        db_registries = hr.HealthRegistry.claim(self.ctx, self.engine_id)
+        db_registries = objects.HealthRegistry.claim(self.ctx, self.engine_id)
 
         for cluster in db_registries:
             entry = {
@@ -88,14 +162,14 @@ class HealthManager(service.Service):
             }
 
             entry = self._start_check(entry)
-            self.rt['registries'].append(entry)
+            if entry:
+                self.rt['registries'].append(entry)
 
     def start(self):
         super(HealthManager, self).start()
-        self.target = oslo_messaging.Target(server=self.engine_id,
-                                            topic=self.topic,
-                                            version=self.version)
-        server = rpc_messaging.get_rpc_server(self.target, self)
+        self.target = messaging.Target(server=self.engine_id, topic=self.topic,
+                                       version=self.version)
+        server = rpc.get_rpc_server(self.target, self)
         server.start()
         self.TG.add_timer(cfg.CONF.periodic_interval, self._dummy_task)
         self._load_runtime_registry()
@@ -126,8 +200,9 @@ class HealthManager(service.Service):
         """
         params = params or {}
 
-        registry = hr.HealthRegistry.create(ctx, cluster_id, check_type,
-                                            interval, params, self.engine_id)
+        registry = objects.HealthRegistry.create(ctx, cluster_id, check_type,
+                                                 interval, params,
+                                                 self.engine_id)
 
         entry = {
             'cluster_id': registry.cluster_id,
@@ -153,8 +228,14 @@ class HealthManager(service.Service):
                 if timer:
                     timer.stop()
                     self.TG.timer_done(timer)
+                listener = registry.get('listener', None)
+                if listener:
+                    listener.stop()
+                    self.TG.thread_done(listener)
+
                 self.rt['registries'].pop(i)
-        hr.HealthRegistry.delete(ctx, cluster_id)
+
+        objects.HealthRegistry.delete(ctx, cluster_id)
 
 
 def notify(engine_id, method, **kwargs):
@@ -164,7 +245,7 @@ def notify(engine_id, method, **kwargs):
     :param method: remote method to call
     """
     timeout = cfg.CONF.engine_life_check_timeout
-    client = rpc_messaging.get_rpc_client(version=consts.RPC_API_VERSION)
+    client = rpc.get_rpc_client(version=consts.RPC_API_VERSION)
 
     if engine_id:
         # Notify specific dispatcher identified by engine_id
@@ -185,7 +266,7 @@ def notify(engine_id, method, **kwargs):
     try:
         call_context.call(ctx, method, **kwargs)
         return True
-    except oslo_messaging.MessagingTimeout:
+    except messaging.MessagingTimeout:
         return False
 
 

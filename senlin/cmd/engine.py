@@ -22,6 +22,7 @@ from oslo_service import service
 
 from senlin.common import consts
 from senlin.common import messaging
+from senlin import objects
 
 _lazy.enable_lazy()
 
@@ -33,6 +34,7 @@ def main():
     cfg.CONF(project='senlin', prog='senlin-engine')
     logging.setup(cfg.CONF, 'senlin-engine')
     logging.set_defaults()
+    objects.register_all()
     messaging.setup()
 
     from senlin.engine import service as engine
