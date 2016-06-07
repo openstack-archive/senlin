@@ -117,7 +117,15 @@ class ProfileController(wsgi.Controller):
         if profile_data is None:
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'profile' key in request body."))
-        # We ignore the 'spec' property even if it is specified.
+
+        # Spec is not allowed to be updated
+        spec = profile_data.get(consts.PROFILE_SPEC)
+        if spec is not None:
+            msg = _("Updating the spec of a profile is not supported because "
+                    "it may cause state conflicts in engine.")
+            raise exc.HTTPBadRequest(msg)
+
+        # Handle updatable properties including name and metadata
         name = profile_data.get(consts.PROFILE_NAME, None)
         metadata = profile_data.get(consts.PROFILE_METADATA, None)
         # We don't check if type is specified or not
