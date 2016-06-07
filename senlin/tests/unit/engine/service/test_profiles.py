@@ -355,14 +355,14 @@ class ProfileTest(base.SenlinTestCase):
         x_profile.to_dict.return_value = {'foo': 'bar'}
         mock_load.return_value = x_profile
 
-        result = self.eng.profile_update(self.ctx, 'FAKE_PROFILE',
-                                         name='OLD_NAME')
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.profile_update,
+                               self.ctx, 'FAKE_PROFILE')
 
-        self.assertEqual({'foo': 'bar'}, result)
-        mock_find.assert_called_once_with(self.ctx, 'FAKE_PROFILE')
-        mock_load.assert_called_once_with(self.ctx, profile=x_obj)
-        self.assertEqual(0, x_profile.store.call_count)
-        self.assertEqual('OLD_NAME', x_profile.name)
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual(
+            'The request is malformed: No property needs an update.',
+            six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(pb.Profile, 'delete')
     @mock.patch.object(service.EngineService, 'profile_find')

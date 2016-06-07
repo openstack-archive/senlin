@@ -55,7 +55,7 @@ class ClusterDataTest(base.SenlinTestCase):
     def test_timeout_use_default(self):
         body = {}
         data = clusters.ClusterData(body)
-        self.assertEqual(cfg.CONF.default_action_timeout, data.timeout)
+        self.assertIsNone(data.timeout)
 
     def _test_data_type_errors(self, func_name):
         for key in ['desired_capacity', 'min_size', 'timeout']:
@@ -727,7 +727,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'name': None,
             'metadata': None,
             'profile_id': 'xxxx-yyyy-zzzz',
-            'timeout': cfg.CONF.default_action_timeout,
+            'timeout': None,
             'identity': cid,
         }
         mock_call.assert_called_once_with(req.context,

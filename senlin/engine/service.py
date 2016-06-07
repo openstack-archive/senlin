@@ -422,6 +422,9 @@ class EngineService(service.Service):
             changed = True
         if changed:
             profile.store(context)
+        else:
+            msg = _("No property needs an update.")
+            raise exception.BadRequest(msg=msg)
 
         LOG.info(_LI("Profile '%(id)s' is updated."), {'id': profile_id})
         return profile.to_dict()
@@ -762,6 +765,8 @@ class EngineService(service.Service):
                                              allow_negative=True)
         if timeout is not None:
             timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
+        else:
+            timeout = cfg.CONF.default_action_timeout
 
         res = su.check_size_params(None, init_size, min_size, max_size, True)
         if res:
@@ -850,6 +855,10 @@ class EngineService(service.Service):
 
         if name is not None:
             inputs['name'] = name
+
+        if not inputs:
+            msg = _("No property needs an update.")
+            raise exception.BadRequest(msg=msg)
 
         kwargs = {
             'name': 'cluster_update_%s' % cluster.id[:8],
@@ -1522,7 +1531,7 @@ class EngineService(service.Service):
         if metadata is not None and metadata != db_node.metadata:
             inputs['metadata'] = metadata
 
-        if inputs == {}:
+        if not inputs:
             msg = _("No property needs an update.")
             raise exception.BadRequest(msg=msg)
 
