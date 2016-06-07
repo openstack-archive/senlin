@@ -18,44 +18,46 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestProfileUpdateNegativeNotFound(base.BaseSenlinTest):
+class TestPolicyUpdateNegativeNotFound(base.BaseSenlinTest):
 
     @test.attr(type=['negative'])
-    @decorators.idempotent_id('5fe90195-aaed-4c1f-a73a-806b3f044bf8')
-    def test_profile_update_profile_not_found(self):
+    @decorators.idempotent_id('5df90d82-9889-4c6f-824c-30272bcfa767')
+    def test_policy_update_policy_not_found(self):
         self.assertRaises(exceptions.NotFound,
                           self.client.update_obj,
-                          'profiles', '5fe90195-aaed-4c1f-a73a-806b3f044bf8',
-                          {'profile': {'name': 'new-name'}})
+                          'policies', '5df90d82-9889-4c6f-824c-30272bcfa767',
+                          {'policy': {'name': 'new-name'}})
 
 
-class TestProfileUpdateNegativeBadRequest(base.BaseSenlinTest):
+class TestPolicyUpdateNegativeBadRequest(base.BaseSenlinTest):
 
     def setUp(self):
-        super(TestProfileUpdateNegativeBadRequest, self).setUp()
-        # Create a profile
-        profile_id = utils.create_a_profile(self)
-        self.addCleanup(utils.delete_a_profile, self, profile_id)
-        self.profile_id = profile_id
+        super(TestPolicyUpdateNegativeBadRequest, self).setUp()
+        # Create a policy
+        policy_id = utils.create_a_policy(self)
+        self.addCleanup(utils.delete_a_policy, self, policy_id)
+        self.policy_id = policy_id
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('31242de5-55ac-4589-87a1-a9940e4beca2')
-    def test_profile_update_no_property_updated(self):
-        # No property is updated
+    def test_policy_update_no_property_updated(self):
+        # No property is updated.
         params = {
-            'profile': {}
+            'policy': {}
         }
         # Verify badrequest exception(400) is raised.
         self.assertRaises(exceptions.BadRequest,
                           self.client.update_obj,
-                          'profiles', self.profile_id, params)
+                          'policies', self.policy_id, params)
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('d2ca7de6-0069-48c9-b3de-ee975a2428dc')
-    def test_profile_update_spec_not_updatable(self):
-        # Try to update spec of profile which is not allowed.
+    def test_policy_update_spec_not_updatable(self):
+        # Try to update spec of policy.
+        # Note: name is the only property that can be updated
+        # after policy is created.
         params = {
-            'profile': {
+            'policy': {
                 'name': 'new-name',
                 'spec': {'k1': 'v1'}
             }
@@ -63,4 +65,4 @@ class TestProfileUpdateNegativeBadRequest(base.BaseSenlinTest):
         # Verify badrequest exception(400) is raised.
         self.assertRaises(exceptions.BadRequest,
                           self.client.update_obj,
-                          'profiles', self.profile_id, params)
+                          'policies', self.policy_id, params)
