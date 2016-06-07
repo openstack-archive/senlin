@@ -876,6 +876,15 @@ def action_check_status(context, action_id, timestamp):
         return action.status
 
 
+def action_delete_by_target(context, target, exceptions=None):
+    with session_for_write() as session:
+        q = session.query(models.Action).\
+            filter(models.Action.target == target)
+        if exceptions:
+            q = q.filter(~models.Action.action.in_(exceptions))
+        return q.delete(synchronize_session='fetch')
+
+
 def dependency_get_depended(context, action_id):
     with session_for_read() as session:
         q = session.query(models.ActionDependency).filter_by(

@@ -23,8 +23,8 @@ from senlin.tests.unit.common import utils
 from senlin.tests.unit.db import shared
 
 
-def _create_action(context, action=shared.sample_action, **kwargs):
-    data = parser.simple_parse(action)
+def _create_action(context, action_json=shared.sample_action, **kwargs):
+    data = parser.simple_parse(action_json)
     data['user'] = context.user
     data['project'] = context.project
     data['domain'] = context.domain
@@ -405,3 +405,32 @@ class DBAPIActionTest(base.SenlinTestCase):
                                    self.ctx, action.id)
             self.assertEqual('The action (%s) is busy now.' % action.id,
                              six.text_type(ex))
+
+    def test_action_delete_by_target(self):
+        for name in ['CLUSTER_CREATE', 'CLUSTER_RESIZE', 'CLUSTER_DELETE']:
+            action = _create_action(self.ctx, action=name, target='CLUSTER_ID')
+            self.assertIsNotNone(action)
+            action = _create_action(self.ctx, action=name,
+                                    target='CLUSTER_ID_2')
+            self.assertIsNotNone(action)
+
+        actions = db_api.action_get_all(self.ctx)
+        self.assertEqual(6, len(actions))
+
+        db_api.action_delete_by_target(self.ctx, 'CLUSTER_ID')
+        actions = db_api.action_get_all(self.ctx)
+        self.assertEqual(3, len(actions))
+
+    def test_action_delete_by_target_with_exceptions(self):
+        for name in ['CLUSTER_CREATE', 'CLUSTER_RESIZE', 'CLUSTER_DELETE']:
+            action = _create_action(self.ctx, action=name, target='CLUSTER_ID')
+            self.assertIsNotNone(action)
+
+        actions = db_api.action_get_all(self.ctx)
+        self.assertEqual(3, len(actions))
+
+        db_api.action_delete_by_target(self.ctx, 'CLUSTER_ID',
+                                       ['CLUSTER_DELETE'])
+        actions = db_api.action_get_all(self.ctx)
+        self.assertEqual(1, len(actions))
+        self.assertEqual('CLUSTER_DELETE', actions[0].action)
