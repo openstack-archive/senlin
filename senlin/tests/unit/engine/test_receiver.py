@@ -236,8 +236,8 @@ class TestReceiver(base.SenlinTestCase):
             'action': receiver.action,
             'actor': receiver.actor,
             'params': receiver.params,
-            'created_at': common_utils.format_time(receiver.created_at),
-            'updated_at': receiver.updated_at,
+            'created_at': common_utils.isotime(receiver.created_at),
+            'updated_at': common_utils.isotime(receiver.updated_at),
             'channel': None,
         }
 

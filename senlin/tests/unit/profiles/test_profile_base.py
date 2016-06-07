@@ -672,7 +672,7 @@ class TestProfileBase(base.SenlinTestCase):
             'domain': profile.domain,
             'spec': profile.spec,
             'metadata': profile.metadata,
-            'created_at': common_utils.format_time(profile.created_at),
+            'created_at': common_utils.isotime(profile.created_at),
             'updated_at': None,
         }
 
