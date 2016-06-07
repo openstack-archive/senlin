@@ -412,9 +412,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {
             'profile': {
                 'name': 'profile-2',
-                'spec': {
-                    'param_2': 'value3',
-                },
                 'metadata': {
                     'author': 'thomas j',
                 }
@@ -428,10 +425,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'id': pid,
             u'name': u'profile-2',
             u'type': u'test_profile_type',
-            u'spec': {
-                u'param_1': u'value1',
-                u'param_2': u'value3',
-            },
             u'created_time': u'2015-02-25T16:20:13Z',
             u'updated_time': None,
             u'metadata': {u'author': u'thomas j'},
@@ -443,7 +436,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         args = copy.deepcopy(body['profile'])
         args['profile_id'] = pid
-        del args['spec']
         mock_call.assert_called_with(req.context, ('profile_update', args))
 
         expected = {'profile': engine_resp}
@@ -466,8 +458,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         pid = 'aaaa-bbbb-cccc'
         body = {
-            'profile': {'spec': {'param_2': 'value3'},
-                        'metadata': {'author': 'thomas j'}}
+            'profile': {'metadata': {'author': 'thomas j'}}
         }
 
         req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
@@ -477,41 +468,25 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         result = self.controller.update(req, profile_id=pid, body=body)
         self.assertEqual({'profile': {}}, result)
 
-    def test_profile_update_no_spec(self, mock_enforce):
+    def test_profile_update_with_spec(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         pid = 'aaaa-bbbb-cccc'
         body = {
             'profile': {
                 'name': 'new_profile',
                 'metadata': {'author': 'john d'},
+                'spec': {'param_1': 'value1'}
             }
         }
         req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
                         jsonutils.dumps(body))
 
-        engine_response = {
-            u'id': 'dddd-eeee-ffff',
-            u'name': u'new_profile',
-            u'type': u'test_profile_type',
-            u'spec': {
-                u'param_1': u'value1',
-                u'param_2': u'value3',
-            },
-            u'created_time': u'2015-02-25T16:20:13Z',
-            u'updated_time': u'2015-02-25T16:50:22Z',
-            u'metadata': {u'author': u'john d'},
-        }
-
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
-                                     return_value=engine_response)
-        result = self.controller.update(req, profile_id=pid, body=body)
-
-        args = copy.deepcopy(body['profile'])
-        args['profile_id'] = pid
-        mock_call.assert_called_with(req.context, ('profile_update', args))
-
-        expected = {'profile': engine_response}
-        self.assertEqual(expected, result)
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.update,
+                               req, profile_id=pid, body=body)
+        self.assertEqual("Updating the spec of a profile is not supported "
+                         "because it may cause state conflicts in engine.",
+                         six.text_type(ex))
 
     def test_profile_update_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
