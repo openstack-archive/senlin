@@ -15,7 +15,6 @@
 Cluster endpoint for Senlin v1 ReST API.
 """
 
-from oslo_config import cfg
 import six
 from webob import exc
 
@@ -38,8 +37,7 @@ class ClusterData(object):
         self.desired_capacity = data.get(consts.CLUSTER_DESIRED_CAPACITY, None)
         self.min_size = data.get(consts.CLUSTER_MIN_SIZE, None)
         self.max_size = data.get(consts.CLUSTER_MAX_SIZE, None)
-        self.timeout = data.get(consts.CLUSTER_TIMEOUT,
-                                cfg.CONF.default_action_timeout)
+        self.timeout = data.get(consts.CLUSTER_TIMEOUT, None)
 
     def _enforce_data_types(self):
         if self.desired_capacity is not None:

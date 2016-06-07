@@ -236,7 +236,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_check.assert_called_once_with(None, 3, None, None, True)
         mock_cluster.assert_called_once_with(
             'C1', 3, 'PROFILE_ID',
-            min_size=None, max_size=None, timeout=None, metadata=None,
+            min_size=None, max_size=None, timeout=3600, metadata=None,
             user=self.ctx.user, project=self.ctx.project,
             domain=self.ctx.domain)
         x_cluster.store.assert_called_once_with(self.ctx)
@@ -618,6 +618,20 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
+
+    @mock.patch.object(cm.Cluster, 'load')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_update_cluster_no_property_updated(self, mock_find,
+                                                        mock_load):
+        x_obj = mock.Mock()
+        mock_find.return_value = x_obj
+        mock_load.return_value = mock.Mock(status='ACTIVE', ERROR='ERROR',
+                                           profile_id='OLD_ID')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_update,
+                               self.ctx, 'CLUSTER')
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
 
     @mock.patch.object(am.Action, 'create')
     @mock.patch.object(ro.Receiver, 'get_all')

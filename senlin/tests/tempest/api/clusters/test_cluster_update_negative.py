@@ -121,3 +121,28 @@ class TestClusterUpdateNegativeProfileTypeUnmatch(base.BaseSenlinTest):
         self.assertRaises(exceptions.BadRequest,
                           self.client.update_obj,
                           'clusters', self.cluster_id, params)
+
+
+class TestClusterUpdateNegativeNoPropertyUpdated(base.BaseSenlinTest):
+
+    def setUp(self):
+        super(TestClusterUpdateNegativeNoPropertyUpdated, self).setUp()
+        # Create a profile
+        profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, profile_id)
+        self.profile_id = profile_id
+        # Create a cluster
+        self.cluster_id = utils.create_a_cluster(self, profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+
+    @test.attr(type=['negative'])
+    @decorators.idempotent_id('0fbd8fd9-7789-47da-b806-d91631a28556')
+    def test_cluster_update_no_property_updated(self):
+        # No any property is updated
+        params = {
+            'cluster': {}
+        }
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.update_obj,
+                          'clusters', self.cluster_id, params)
