@@ -60,10 +60,13 @@ def get_sort_params(value, default_key=None):
         for s in value.split(','):
             s_key, _s, s_dir = s.partition(':')
             keys.append(s_key)
-            dirs.append(s_dir or 'asc')
+            s_dir = s_dir or 'asc'
+            nulls_appendix = 'nullsfirst' if s_dir == 'asc' else 'nullslast'
+            sort_dir = '-'.join([s_dir, nulls_appendix])
+            dirs.append(sort_dir)
     elif default_key:
         # use default if specified
-        return [default_key, 'id'], ['asc', 'asc']
+        return [default_key, 'id'], ['asc-nullsfirst', 'asc']
 
     if 'id' not in keys:
         keys.append('id')

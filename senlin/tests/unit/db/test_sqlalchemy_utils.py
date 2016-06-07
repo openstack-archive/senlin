@@ -55,39 +55,43 @@ class SortParamTest(base.SenlinTestCase):
         self.assertEqual(2, len(keys))
         self.assertEqual(2, len(dirs))
         self.assertEqual(['foo', 'id'], keys)
-        self.assertEqual(['asc', 'asc'], dirs)
+        self.assertEqual(['asc-nullsfirst', 'asc'], dirs)
 
     def test_value_single(self):
         keys, dirs = utils.get_sort_params('foo')
         self.assertEqual(2, len(keys))
         self.assertEqual(2, len(dirs))
         self.assertEqual(['foo', 'id'], keys)
-        self.assertEqual(['asc', 'asc'], dirs)
+        self.assertEqual(['asc-nullsfirst', 'asc'], dirs)
 
     def test_value_multiple(self):
         keys, dirs = utils.get_sort_params('foo,bar,zoo')
         self.assertEqual(4, len(keys))
         self.assertEqual(4, len(dirs))
         self.assertEqual(['foo', 'bar', 'zoo', 'id'], keys)
-        self.assertEqual(['asc', 'asc', 'asc', 'asc'], dirs)
+        self.assertEqual(['asc-nullsfirst', 'asc-nullsfirst', 'asc-nullsfirst',
+                          'asc'], dirs)
 
     def test_value_multiple_with_dirs(self):
         keys, dirs = utils.get_sort_params('foo:asc,bar,zoo:desc')
         self.assertEqual(4, len(keys))
         self.assertEqual(4, len(dirs))
         self.assertEqual(['foo', 'bar', 'zoo', 'id'], keys)
-        self.assertEqual(['asc', 'asc', 'desc', 'asc'], dirs)
+        self.assertEqual(['asc-nullsfirst', 'asc-nullsfirst',
+                          'desc-nullslast', 'asc'], dirs)
 
     def test_value_multiple_with_dirs_and_default_key(self):
         keys, dirs = utils.get_sort_params('foo:asc,bar,zoo:desc', 'notused')
         self.assertEqual(4, len(keys))
         self.assertEqual(4, len(dirs))
         self.assertEqual(['foo', 'bar', 'zoo', 'id'], keys)
-        self.assertEqual(['asc', 'asc', 'desc', 'asc'], dirs)
+        self.assertEqual(['asc-nullsfirst', 'asc-nullsfirst',
+                          'desc-nullslast', 'asc'], dirs)
 
     def test_value_multiple_including_id(self):
         keys, dirs = utils.get_sort_params('foo,bar,id')
         self.assertEqual(3, len(keys))
         self.assertEqual(3, len(dirs))
         self.assertEqual(['foo', 'bar', 'id'], keys)
-        self.assertEqual(['asc', 'asc', 'asc'], dirs)
+        self.assertEqual(['asc-nullsfirst', 'asc-nullsfirst',
+                          'asc-nullsfirst'], dirs)
