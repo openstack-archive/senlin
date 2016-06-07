@@ -38,7 +38,6 @@ LOG = logging.getLogger(__name__)
 
 
 CONF = cfg.CONF
-CONF.import_opt('max_events_per_cluster', 'senlin.common.config')
 
 _main_context_manager = None
 _CONTEXT = threading.local()
@@ -703,29 +702,6 @@ def cred_create_update(context, values):
 
 
 # Events
-def _delete_event_rows(context, cluster_id, limit):
-    # MySQL does not support LIMIT in subqueries,
-    # sqlite does not support JOIN in DELETE.
-    # So we must manually supply the IN() values.
-    # pgsql SHOULD work with the pure DELETE/JOIN below but that must be
-    # confirmed via integration tests.
-    query = event_count_by_cluster(context, cluster_id)
-    with session_for_write() as session:
-        all_events = query.order_by(models.Event.timestamp).limit(limit).all()
-        ids = [r.id for r in all_events]
-        q = session.query(models.Event).filter(models.Event.id.in_(ids))
-        return q.delete(synchronize_session='fetch')
-
-
-def event_prune(context, cluster_id):
-    if cfg.CONF.max_events_per_cluster:
-        event_count = event_count_by_cluster(context, cluster_id)
-        if (event_count >= cfg.CONF.max_events_per_cluster):
-            # prune events
-            batch_size = cfg.CONF.event_purge_batch_size
-            _delete_event_rows(context, cluster_id, batch_size)
-
-
 def event_create(context, values):
     with session_for_write() as session:
         event = models.Event()
@@ -790,6 +766,16 @@ def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
 
     return _event_filter_paginate_query(context, query, filters=filters,
                                         limit=limit, marker=marker, sort=sort)
+
+
+def event_prune(context, cluster_id, project_safe=True):
+    with session_for_write() as session:
+        query = session.query(models.Event).with_for_update()
+        query = query.filter_by(cluster_id=cluster_id)
+        if not context.is_admin and project_safe:
+            query = query.filter_by(project=context.project)
+
+        return query.delete(synchronize_session='fetch')
 
 
 # Actions
