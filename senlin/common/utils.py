@@ -168,14 +168,6 @@ def random_name(length=8):
     return lead + tail
 
 
-def format_time(value):
-    """Cut microsecond and format to isoformat string."""
-    if value:
-        value = value.replace(microsecond=0)
-        value = value.isoformat()
-    return value
-
-
 def isotime(at):
     """Stringify time in ISO 8601 format.
 

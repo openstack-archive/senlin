@@ -338,8 +338,8 @@ class Profile(object):
             'domain': self.domain,
             'spec': self.spec,
             'metadata': self.metadata,
-            'created_at': utils.format_time(self.created_at),
-            'updated_at': utils.format_time(self.updated_at),
+            'created_at': utils.isotime(self.created_at),
+            'updated_at': utils.isotime(self.updated_at),
         }
         return pb_dict
 
