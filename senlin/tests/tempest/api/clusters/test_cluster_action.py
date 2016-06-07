@@ -195,3 +195,32 @@ class TestClusterActionCheck(base.BaseSenlinTest):
 
         action_id = res['location'].split('/actions/')[1]
         self.wait_for_status('actions', action_id, 'SUCCEEDED')
+
+
+class TestClusterActionRecover(base.BaseSenlinTest):
+
+    def setUp(self):
+        super(TestClusterActionRecover, self).setUp()
+        profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, profile_id)
+        self.cluster_id = utils.create_a_cluster(self, profile_id,
+                                                 desired_capacity=1)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+
+    @decorators.idempotent_id('9020bc7e-db2a-47d0-9f78-7e6a3d231fad')
+    def test_cluster_action_recover(self):
+        params = {
+            "recover": {
+                "operation": "rebuild"
+            }
+        }
+        # Trigger cluster action
+        res = self.client.trigger_action('clusters', self.cluster_id,
+                                         params=params)
+
+        # Verify resp code, body and location in headers
+        self.assertEqual(202, res['status'])
+        self.assertIn('actions', res['location'])
+
+        action_id = res['location'].split('/actions/')[1]
+        self.wait_for_status('actions', action_id, 'SUCCEEDED')
