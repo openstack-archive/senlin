@@ -46,3 +46,31 @@ class TestClusterActionResize(base.BaseSenlinTest):
 
         action_id = res['location'].split('/actions/')[1]
         self.wait_for_status('actions', action_id, 'SUCCEEDED')
+
+
+class TestClusterActionScaleOut(base.BaseSenlinTest):
+
+    def setUp(self):
+        super(TestClusterActionScaleOut, self).setUp()
+        profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, profile_id)
+        self.cluster_id = utils.create_a_cluster(self, profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+
+    @decorators.idempotent_id('f15ff8cc-4be3-4c93-9979-6be428e83cd7')
+    def test_cluster_action_scale_out(self):
+        params = {
+            "scale_out": {
+                "count": "1"
+            }
+        }
+        # Trigger cluster action
+        res = self.client.trigger_action('clusters', self.cluster_id,
+                                         params=params)
+
+        # Verify resp code, body and location in headers
+        self.assertEqual(202, res['status'])
+        self.assertIn('actions', res['location'])
+
+        action_id = res['location'].split('/actions/')[1]
+        self.wait_for_status('actions', action_id, 'SUCCEEDED')
