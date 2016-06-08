@@ -14,9 +14,12 @@
 ClusterPolicies endpoint for Senlin v1 ReST API.
 """
 
+from webob import exc
+
 from senlin.api.common import util
 from senlin.api.common import wsgi
 from senlin.common import consts
+from senlin.common.i18n import _
 from senlin.common import utils
 
 
@@ -34,6 +37,11 @@ class ClusterPolicyController(wsgi.Controller):
         param_whitelist = {
             consts.PARAM_SORT: 'single',
         }
+        for key in req.params.keys():
+            if (key not in param_whitelist.keys() and key not in
+                    filter_whitelist.keys()):
+                raise exc.HTTPBadRequest(_('Invalid parameter %s') % key)
+
         params = util.get_allowed_params(req.params, param_whitelist)
         filters = util.get_allowed_params(req.params, filter_whitelist)
         key = consts.CP_ENABLED
