@@ -16,20 +16,24 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestClusterAction(base.BaseSenlinTest):
+class TestClusterActionResize(base.BaseSenlinTest):
 
     def setUp(self):
-        super(TestClusterAction, self).setUp()
+        super(TestClusterActionResize, self).setUp()
         profile_id = utils.create_a_profile(self)
         self.addCleanup(utils.delete_a_profile, self, profile_id)
         self.cluster_id = utils.create_a_cluster(self, profile_id)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
     @decorators.idempotent_id('f5f75882-df3d-481f-bd05-019e4d08af65')
-    def test_cluster_action_trigger(self):
+    def test_cluster_action_resize(self):
         params = {
-            'resize': {
-                'max_size': 3
+            "resize": {
+                "adjustment_type": "CHANGE_IN_CAPACITY",
+                "max_size": 20,
+                "min_step": 1,
+                "min_size": 5,
+                "number": 20,
             }
         }
         # Trigger cluster action
