@@ -15,6 +15,7 @@ from tempest.lib import exceptions
 from tempest import test
 
 from senlin.tests.tempest.api import base
+from senlin.tests.tempest.api import utils
 
 
 class TestProfileShowNegativeNotFound(base.BaseSenlinTest):
@@ -25,3 +26,20 @@ class TestProfileShowNegativeNotFound(base.BaseSenlinTest):
         self.assertRaises(exceptions.NotFound,
                           self.client.get_obj,
                           'profiles', '887aa1a5-e623-4b49-bdba-e62366b8b636')
+
+
+class TestProfileShowNegativeBadRequest(base.BaseSenlinTest):
+
+    def setUp(self):
+        super(TestProfileShowNegativeBadRequest, self).setUp()
+        profile_id1 = utils.create_a_profile(self, name='p-01')
+        profile_id2 = utils.create_a_profile(self, name='p-01')
+        self.addCleanup(utils.delete_a_profile, self, profile_id1)
+        self.addCleanup(utils.delete_a_profile, self, profile_id2)
+
+    @test.attr(type=['negative'])
+    @decorators.idempotent_id('f0ea4ff1-81f9-49e1-ba1b-40964677f7da')
+    def test_profile_show_multiple_choice(self):
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.get_obj,
+                          'profiles', 'p-01')
