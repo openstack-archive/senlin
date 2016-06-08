@@ -16,10 +16,10 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestClusterPolicy(base.BaseSenlinTest):
+class TestClusterPolicyList(base.BaseSenlinTest):
 
     def setUp(self):
-        super(TestClusterPolicy, self).setUp()
+        super(TestClusterPolicyList, self).setUp()
         profile_id = utils.create_a_profile(self)
         self.addCleanup(utils.delete_a_profile, self, profile_id)
 
@@ -47,17 +47,3 @@ class TestClusterPolicy(base.BaseSenlinTest):
                     'policy_id', 'policy_name', 'policy_type']:
             self.assertIn(key, policies[0])
         self.assertEqual(self.policy_id, policies[0]['policy_id'])
-
-    @decorators.idempotent_id('fdf4dbf9-fcc6-4eb0-96c1-d8e8caa90f6d')
-    def test_cluster_policy_show(self):
-        res = self.client.get_cluster_policy(self.cluster_id, self.policy_id)
-
-        # Verify resp of cluster policy show API
-        self.assertEqual(200, res['status'])
-        self.assertIsNone(res['location'])
-        self.assertIsNotNone(res['body'])
-        policy = res['body']
-        for key in ['cluster_id', 'cluster_name', 'id', 'policy_id',
-                    'policy_name', 'policy_type', 'enabled']:
-            self.assertIn(key, policy)
-        self.assertEqual(self.policy_id, policy['policy_id'])
