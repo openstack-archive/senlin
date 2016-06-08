@@ -294,6 +294,10 @@ def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
                                          project_safe=project_safe)
 
 
+def event_prune(context, cluster_id, project_safe=True):
+    return IMPL.event_prune(context, cluster_id, project_safe=project_safe)
+
+
 # Actions
 def action_create(context, values):
     return IMPL.action_create(context, values)

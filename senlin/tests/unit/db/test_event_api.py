@@ -475,3 +475,46 @@ class DBAPIEventTest(base.SenlinTestCase):
                                                  limit=1, marker=marker)
         self.assertEqual(1, len(events))
         self.assertEqual(expected, events[0].id)
+
+    def test_event_prune(self):
+        cluster1 = shared.create_cluster(self.ctx, self.profile)
+        cluster2 = shared.create_cluster(self.ctx, self.profile)
+        node1_1 = shared.create_node(self.ctx, cluster1, self.profile)
+        node_orphan = shared.create_node(self.ctx, None, self.profile)
+
+        # prune 1: cluste events
+        self.create_event(self.ctx, entity=cluster1)
+        self.create_event(self.ctx, entity=cluster1)
+
+        res = db_api.event_get_all_by_cluster(self.ctx, cluster1.id)
+        self.assertEqual(2, len(res))
+        db_api.event_prune(self.ctx, cluster1.id)
+        res = db_api.event_get_all_by_cluster(self.ctx, cluster1.id)
+        self.assertEqual(0, len(res))
+
+        # prune 2: Node level events account to cluster
+        self.create_event(self.ctx, entity=node1_1)
+
+        res = db_api.event_get_all_by_cluster(self.ctx, cluster1.id)
+        self.assertEqual(1, len(res))
+        db_api.event_prune(self.ctx, cluster1.id)
+        res = db_api.event_get_all_by_cluster(self.ctx, cluster1.id)
+        self.assertEqual(0, len(res))
+
+        # prune 3: Events related to orphan nodes
+        # no impact here and no error given
+        self.create_event(self.ctx, entity=node_orphan)
+        res = db_api.event_get_all_by_cluster(self.ctx, cluster1.id)
+        self.assertEqual(0, len(res))
+        db_api.event_prune(self.ctx, cluster1.id)
+        res = db_api.event_get_all_by_cluster(self.ctx, cluster1.id)
+        self.assertEqual(0, len(res))
+
+        # prune 4: Another cluster
+        # no impact here and no error given
+        self.create_event(self.ctx, entity=cluster2)
+        res = db_api.event_get_all_by_cluster(self.ctx, cluster1.id)
+        self.assertEqual(0, len(res))
+        db_api.event_prune(self.ctx, cluster1.id)
+        res = db_api.event_get_all_by_cluster(self.ctx, cluster1.id)
+        self.assertEqual(0, len(res))

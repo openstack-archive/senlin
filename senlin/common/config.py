@@ -57,11 +57,6 @@ engine_opts = [
                default=100,
                help=_('Maximum number of clusters any one project may have'
                       ' active at one time.')),
-    cfg.IntOpt('max_events_per_cluster',
-               default=3000,
-               help=_('Maximum events per cluster. Older events will be '
-                      'deleted when this is reached.  Set to 0 for unlimited '
-                      'events per cluster.')),
     cfg.IntOpt('default_action_timeout',
                default=3600,
                help=_('Timeout in seconds for actions.')),
