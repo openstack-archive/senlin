@@ -55,6 +55,7 @@ class Profile(object):
     }
 
     properties_schema = {}
+    operations_schema = {}
 
     def __new__(cls, name, spec, **kwargs):
         """Create a new profile of the appropriate class.
@@ -104,6 +105,8 @@ class Profile(object):
         self.spec_data = schema.Spec(self.spec_schema, self.spec)
         self.properties = schema.Spec(self.properties_schema,
                                       self.spec.get(self.PROPERTIES, {}))
+        LOG.info(dict((name, dict(schema))
+                 for name, schema in self.OPERATIONS.items()))
 
         if not self.id:
             # new object needs a context dict
@@ -191,11 +194,6 @@ class Profile(object):
         return profile.do_create(obj)
 
     @classmethod
-    def check_object(cls, ctx, obj):
-        profile = cls.load(ctx, profile_id=obj.profile_id)
-        return profile.do_check(obj)
-
-    @classmethod
     def delete_object(cls, ctx, obj):
         profile = cls.load(ctx, profile_id=obj.profile_id)
         return profile.do_delete(obj)
@@ -207,11 +205,6 @@ class Profile(object):
         if new_profile_id:
             new_profile = cls.load(ctx, profile_id=new_profile_id)
         return profile.do_update(obj, new_profile, **params)
-
-    @classmethod
-    def recover_object(cls, ctx, obj, **options):
-        profile = cls.load(ctx, profile_id=obj.profile_id)
-        return profile.do_recover(obj, **options)
 
     @classmethod
     def get_details(cls, ctx, obj):
@@ -227,6 +220,16 @@ class Profile(object):
     def leave_cluster(cls, ctx, obj):
         profile = cls.load(ctx, profile_id=obj.profile_id)
         return profile.do_leave(obj)
+
+    @classmethod
+    def check_object(cls, ctx, obj):
+        profile = cls.load(ctx, profile_id=obj.profile_id)
+        return profile.do_check(obj)
+
+    @classmethod
+    def recover_object(cls, ctx, obj, **options):
+        profile = cls.load(ctx, profile_id=obj.profile_id)
+        return profile.do_recover(obj, **options)
 
     def validate(self):
         '''Validate the schema and the data provided.'''

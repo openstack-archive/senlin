@@ -39,15 +39,13 @@ class AnyIndexDict(collections.Mapping):
         return 1
 
 
-class Schema(collections.Mapping):
-    '''Class for validating profile and policy specifications.'''
+class SchemaBase(collections.Mapping):
+    """Class for validating property or operation schemas."""
 
     KEYS = (
-        TYPE, DESCRIPTION, DEFAULT, REQUIRED, SCHEMA, UPDATABLE,
-        CONSTRAINTS,
+        TYPE, DESCRIPTION, DEFAULT, REQUIRED, SCHEMA, CONSTRAINTS,
     ) = (
-        'type', 'description', 'default', 'required', 'schema', 'updatable',
-        'constraints',
+        'type', 'description', 'default', 'required', 'schema', 'constraints',
     )
 
     TYPES = (
@@ -57,10 +55,9 @@ class Schema(collections.Mapping):
     )
 
     def __init__(self, description=None, default=None, required=False,
-                 schema=None, updatable=False, constraints=None):
-
+                 schema=None, constraints=None):
         if schema is not None:
-            if type(self) not in (List, Map):
+            if type(self) not in (List, Map, Operation):
                 msg = _('Schema valid only for List or Map, not '
                         '"%s"') % self[self.TYPE]
                 raise exception.InvalidSchemaError(message=msg)
@@ -73,7 +70,6 @@ class Schema(collections.Mapping):
         self.description = description
         self.default = default
         self.required = required
-        self.updatable = updatable
         self.constraints = constraints or []
         self._len = None
 
@@ -95,10 +91,10 @@ class Schema(collections.Mapping):
                 dict(default=self.default, exc=exc))
 
     def validate(self, context=None):
-        '''Validates the schema.
+        """Validates the schema.
 
-        This method checks if the schema itself is valid.
-        '''
+        :param context: A RequestContext instance for deep validation.
+        """
         self._validate_default(context)
 
         # validated nested schema: List or Map
@@ -132,8 +128,6 @@ class Schema(collections.Mapping):
                 return dict((n, dict(s)) for n, s in self.schema.items())
         elif key == self.REQUIRED:
             return self.required
-        elif key == self.UPDATABLE:
-            return self.updatable
         elif key == self.CONSTRAINTS:
             if self.constraints:
                 return [dict(c) for c in self.constraints]
@@ -155,12 +149,37 @@ class Schema(collections.Mapping):
         return self._len
 
 
-class Boolean(Schema):
+class PropertySchema(SchemaBase):
+    """Class for validating profile and policy specifications."""
+
+    KEYS = (
+        TYPE, DESCRIPTION, DEFAULT, REQUIRED, SCHEMA, UPDATABLE,
+        CONSTRAINTS,
+    ) = (
+        'type', 'description', 'default', 'required', 'schema', 'updatable',
+        'constraints',
+    )
+
+    def __init__(self, description=None, default=None, required=False,
+                 schema=None, updatable=False, constraints=None):
+        super(PropertySchema, self).__init__(description=description,
+                                             default=default,
+                                             required=required, schema=schema,
+                                             constraints=constraints)
+        self.updatable = updatable
+
+    def __getitem__(self, key):
+        if key == self.UPDATABLE:
+            return self.updatable
+
+        return super(PropertySchema, self).__getitem__(key)
+
+
+class Boolean(PropertySchema):
     def __getitem__(self, key):
         if key == self.TYPE:
             return self.BOOLEAN
-        else:
-            return super(Boolean, self).__getitem__(key)
+        return super(Boolean, self).__getitem__(key)
 
     def to_schema_type(self, value):
         return strutils.bool_from_string(str(value), strict=True)
@@ -179,12 +198,11 @@ class Boolean(Schema):
         self.resolve(value)
 
 
-class Integer(Schema):
+class Integer(PropertySchema):
     def __getitem__(self, key):
         if key == self.TYPE:
             return self.INTEGER
-        else:
-            return super(Integer, self).__getitem__(key)
+        return super(Integer, self).__getitem__(key)
 
     def to_schema_type(self, value):
         if isinstance(value, six.integer_types):
@@ -211,12 +229,11 @@ class Integer(Schema):
         self.validate_constraints(value, self, context)
 
 
-class String(Schema):
+class String(PropertySchema):
     def __getitem__(self, key):
         if key == self.TYPE:
             return self.STRING
-        else:
-            return super(String, self).__getitem__(key)
+        return super(String, self).__getitem__(key)
 
     def to_schema_type(self, value):
         return str(value)
@@ -237,12 +254,11 @@ class String(Schema):
         self.validate_constraints(value, self, context)
 
 
-class Number(Schema):
+class Number(PropertySchema):
     def __getitem__(self, key):
         if key == self.TYPE:
             return self.NUMBER
-        else:
-            return super(Number, self).__getitem__(key)
+        return super(Number, self).__getitem__(key)
 
     def to_schema_type(self, value):
         if isinstance(value, numbers.Number):
@@ -270,12 +286,11 @@ class Number(Schema):
         self.resolve_constraints(value, self, context)
 
 
-class List(Schema):
+class List(PropertySchema):
     def __getitem__(self, key):
         if key == self.TYPE:
             return self.LIST
-        else:
-            return super(List, self).__getitem__(key)
+        return super(List, self).__getitem__(key)
 
     def _get_children(self, values, keys, context):
         sub_schema = self.schema
@@ -313,12 +328,11 @@ class List(Schema):
             child.validate(item_value, context)
 
 
-class Map(Schema):
+class Map(PropertySchema):
     def __getitem__(self, key):
         if key == self.TYPE:
             return self.MAP
-        else:
-            return super(Map, self).__getitem__(key)
+        return super(Map, self).__getitem__(key)
 
     def _get_children(self, values, context=None):
         # There are cases where the Map is not specified to the very detailed
@@ -361,6 +375,17 @@ class Map(Schema):
         for key, child in self.schema.items():
             item_value = value.get(key)
             child.validate(item_value, context)
+
+
+class StringParam(SchemaBase):
+    def _getitem__(self, key):
+        if key == self.TYPE:
+            return self.STRING
+
+
+class Operation(Map):
+    """Class for specifying operations on profiles."""
+    pass
 
 
 class Spec(collections.Mapping):
