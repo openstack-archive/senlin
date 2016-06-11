@@ -12,6 +12,7 @@
 
 import mock
 import six
+from webob import exc
 
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import cluster_policies as cp_mod
@@ -67,14 +68,13 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(expected, result)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_cluster_policy_index_whitelists_params(self, mock_call,
-                                                    mock_enforce):
+    def test_cluster_policy_index_valid_filter_params(self, mock_call,
+                                                      mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         cid = 'FAKE_CLUSTER'
         params = {
             'sort': 'fake sorting string',
-            'filters': None,
-            'balrog': 'you shall not pass!'
+            'enabled': 'True',
         }
         req = self._get('/cluster_policies/%s' % cid, params=params)
         mock_call.return_value = []
@@ -90,8 +90,8 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertNotIn('balrog', engine_args)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_cluster_policy_index_whitelist_filter_params(self, mock_call,
-                                                          mock_enforce):
+    def test_cluster_policy_index_invalid_params(self, mock_call,
+                                                 mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         cid = 'FAKE_CLUSTER'
         params = {
@@ -101,16 +101,10 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/cluster_policies/%s' % cid, params=params)
         mock_call.return_value = []
 
-        self.controller.index(req, cluster_id=cid)
-
-        rpc_call_args, _ = mock_call.call_args
-        engine_args = rpc_call_args[1][1]
-        self.assertIn('filters', engine_args)
-
-        filters = engine_args['filters']
-        self.assertEqual(1, len(filters))
-        self.assertTrue(filters['enabled'])
-        self.assertNotIn('balrog', filters)
+        ex = self.assertRaises(exc.HTTPBadRequest, self.controller.index,
+                               req, cluster_id=cid)
+        self.assertEqual('Invalid parameter balrog',
+                         six.text_type(ex))
 
     def test_cluster_policy_index_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)

@@ -15,6 +15,7 @@ Normal response codes: 200
 
 Error response codes:
 
+- badRequest (400)
 - unauthorized (401)
 - forbidden (403)
 - notFound (404)
