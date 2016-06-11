@@ -16,10 +16,10 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestNodeAction(base.BaseSenlinTest):
+class TestNodeActionCheck(base.BaseSenlinTest):
 
     def setUp(self):
-        super(TestNodeAction, self).setUp()
+        super(TestNodeActionCheck, self).setUp()
         profile_id = utils.create_a_profile(self)
         self.addCleanup(utils.delete_a_profile, self, profile_id)
 
@@ -27,9 +27,37 @@ class TestNodeAction(base.BaseSenlinTest):
         self.addCleanup(utils.delete_a_node, self, self.node_id)
 
     @decorators.idempotent_id('ae124bfe-9fcf-4e87-91b7-319102efbdcc')
-    def test_node_action_trigger(self):
+    def test_node_action_Check(self):
         params = {
             'check': {
+            }
+        }
+        # Trigger node action
+        res = self.client.trigger_action('nodes', self.node_id, params=params)
+
+        # Verfiy resp code, body and location in headers
+        self.assertEqual(202, res['status'])
+        self.assertIn('actions', res['location'])
+
+        action_id = res['location'].split('/actions/')[1]
+        self.wait_for_status('actions', action_id, 'SUCCEEDED')
+
+
+class TestNodeActionRecover(base.BaseSenlinTest):
+
+    def setUp(self):
+        super(TestNodeActionRecover, self).setUp()
+        profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, profile_id)
+
+        self.node_id = utils.create_a_node(self, profile_id)
+        self.addCleanup(utils.delete_a_node, self, self.node_id)
+
+    @decorators.idempotent_id('217af65a-4029-40ce-a833-74faeac8c1f5')
+    def test_node_action_recover(self):
+        params = {
+            "recover": {
+                "operation": "REBUILD"
             }
         }
         # Trigger node action
