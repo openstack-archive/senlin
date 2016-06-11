@@ -29,7 +29,7 @@ class TestClusterCreateNegativeBadRequest(base.BaseSenlinTest):
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('3aced30b-ccb2-4e40-90c2-7b6aa205e3d6')
-    def test_cluster_create_bad_request_profile_invalid(self):
+    def test_cluster_create_profile_invalid(self):
         # Invalid profile_id is provided
         params = {
             'cluster': {
@@ -44,7 +44,7 @@ class TestClusterCreateNegativeBadRequest(base.BaseSenlinTest):
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('7eaf60c3-f33d-403b-a4ee-0276ae90928c')
-    def test_cluster_create_bad_request_size_constraint_illegal(self):
+    def test_cluster_create_size_constraint_illegal(self):
         # Invalid size limitation is defined: min_size > max_size
         desired_capacity = 2
         min_size = 5

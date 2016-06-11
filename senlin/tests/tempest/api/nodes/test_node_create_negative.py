@@ -33,7 +33,7 @@ class TestNodeCreateNegativeBadRequest(base.BaseSenlinTest):
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('cbe7827a-60ca-42c0-99d2-38167cb4f46d')
-    def test_node_create_bad_request_profile_invalid(self):
+    def test_node_create_profile_invalid(self):
         # Invalid profile_id is provided
         params = {
             'node': {
@@ -51,7 +51,7 @@ class TestNodeCreateNegativeBadRequest(base.BaseSenlinTest):
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('960cd427-2487-4c83-b679-1b5e1f9dd985')
-    def test_node_create_bad_request_cluster_invalid(self):
+    def test_node_create_cluster_invalid(self):
         # Invalid cluster_id is provided
         params = {
             'node': {
@@ -69,7 +69,7 @@ class TestNodeCreateNegativeBadRequest(base.BaseSenlinTest):
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('8ddf45a5-f45f-4cc8-813d-2bff75498576')
-    def test_node_create_bad_request_profile_type_unmatch(self):
+    def test_node_create_profile_type_unmatch(self):
         # Node profile type is different from cluster profile type
         params = {
             'node': {
