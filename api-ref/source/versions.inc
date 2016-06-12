@@ -42,7 +42,11 @@ Show Details of an API Version
 Show details about an API major version.
 
 Normal response codes: 200
-Error response codes: serviceUnavailable (503)
+
+Error response codes:
+
+- notFound (404)
+- serviceUnavailable (503)
 
 Response Parameters
 -------------------
