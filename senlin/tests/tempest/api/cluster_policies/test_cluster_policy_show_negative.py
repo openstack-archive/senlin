@@ -67,3 +67,33 @@ class TestClusterPolicyShowNegativeNoPolicyBinding(base.BaseSenlinTest):
         self.assertRaises(exceptions.NotFound,
                           self.client.get_cluster_policy,
                           self.cluster_id, self.policy_id)
+
+
+class TestClusterPolicyShowNegativeBadRequest(base.BaseSenlinTest):
+
+    def setUp(self):
+        super(TestClusterPolicyShowNegativeBadRequest, self).setUp()
+        profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, profile_id)
+
+        self.cluster_id = utils.create_a_cluster(self, profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+
+        self.policy_id1 = utils.create_a_policy(self, name='test-policy')
+        self.addCleanup(utils.delete_a_policy, self, self.policy_id1)
+        self.policy_id2 = utils.create_a_policy(self, name='test-policy')
+        self.addCleanup(utils.delete_a_policy, self, self.policy_id2)
+
+        utils.attach_policy(self, self.cluster_id, self.policy_id1)
+        self.addCleanup(utils.detach_policy, self, self.cluster_id,
+                        self.policy_id1)
+        utils.attach_policy(self, self.cluster_id, self.policy_id2)
+        self.addCleanup(utils.detach_policy, self, self.cluster_id,
+                        self.policy_id2)
+
+    @test.attr(type=['negative'])
+    @decorators.idempotent_id('3faaaf65-0606-4853-a660-2bb04f10485b')
+    def test_cluster_policy_show_multiple_choice(self):
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.get_cluster_policy,
+                          self.cluster_id, 'test-policy')

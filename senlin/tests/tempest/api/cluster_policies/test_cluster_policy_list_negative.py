@@ -26,3 +26,13 @@ class TestClusterPolicyListNegativeBadRequest(base.BaseSenlinTest):
                           self.client.list_cluster_policies,
                           '7f23de64-60c4-456e-9e24-db86ac89480c',
                           {'bogus': 'foo'})
+
+
+class TestClusterPolicyListNegativeNotFound(base.BaseSenlinTest):
+
+    @test.attr(type=['negative'])
+    @decorators.idempotent_id('0259cbac-0fb3-480b-8f23-1ec59616f3af')
+    def test_cluster_policy_list_cluster_not_found(self):
+        self.assertRaises(exceptions.NotFound,
+                          self.client.list_cluster_policies,
+                          '0259cbac-0fb3-480b-8f23-1ec59616f3af')
