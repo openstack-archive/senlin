@@ -28,6 +28,22 @@ class TestClusterCreateNegativeBadRequest(base.BaseSenlinTest):
         self.profile_id = profile_id
 
     @test.attr(type=['negative'])
+    @decorators.idempotent_id('498a06eb-8c5f-4d9e-852f-87ac295f1a96')
+    def test_cluster_create_cluster_data_not_specified(self):
+        # cluster key is missing in request data
+        params = {
+            'clustre': {
+                'profile_id': self.profile_id,
+                'name': 'test-cluster'
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.create_obj,
+                          'clusters', params)
+
+    @test.attr(type=['negative'])
     @decorators.idempotent_id('3aced30b-ccb2-4e40-90c2-7b6aa205e3d6')
     def test_cluster_create_profile_invalid(self):
         # Invalid profile_id is provided

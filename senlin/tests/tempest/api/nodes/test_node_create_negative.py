@@ -32,6 +32,24 @@ class TestNodeCreateNegativeBadRequest(base.BaseSenlinTest):
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
     @test.attr(type=['negative'])
+    @decorators.idempotent_id('80a1bc9c-92bc-47a7-bb69-f51907398c0f')
+    def test_node_create_node_data_not_specified(self):
+        # node key is missing in request data
+        params = {
+            'noed': {
+                'profile_id': self.profile_id,
+                'cluster_id': self.cluster_id,
+                'metadata': {'k1': 'v1'},
+                'role': 'member',
+                'name': 'test-node'
+            }
+        }
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.create_obj,
+                          'nodes', params)
+
+    @test.attr(type=['negative'])
     @decorators.idempotent_id('cbe7827a-60ca-42c0-99d2-38167cb4f46d')
     def test_node_create_profile_invalid(self):
         # Invalid profile_id is provided
