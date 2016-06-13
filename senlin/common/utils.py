@@ -17,13 +17,13 @@ Utilities module.
 import random
 import string
 
-import requests
-from requests import exceptions
-from six.moves import urllib
-
+from jsonpath_rw import parse
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import strutils
+import requests
+import six
+from six.moves import urllib
 
 from senlin.common import consts
 from senlin.common import exception
@@ -154,7 +154,7 @@ def url_fetch(url, allowed_schemes=('http', 'https')):
                                     " bytes)" % cfg.CONF.max_response_size)
         return result
 
-    except exceptions.RequestException as ex:
+    except requests.exceptions.RequestException as ex:
         raise URLFetchError(_('Failed to retrieve data: %s') % ex)
 
 
@@ -180,3 +180,21 @@ def isotime(at):
     tz = at.tzinfo.tzname(None) if at.tzinfo else 'UTC'
     st += ('Z' if tz == 'UTC' else tz)
     return st
+
+
+def get_path_parser(path):
+    """Get a JsonPath parser based on a path string.
+
+    :param path: A string containing a JsonPath.
+    :returns: A parser used for path matching.
+    :raises: An exception of `BadRequest` if the path failes validation.
+    """
+    try:
+        expr = parse(path)
+    except Exception as ex:
+        error_text = six.text_type(ex)
+        error_msg = error_text.split(':', 1)[1]
+        raise exception.BadRequest(
+            msg=_("Invalid attribute path - %s") % error_msg.strip())
+
+    return expr
