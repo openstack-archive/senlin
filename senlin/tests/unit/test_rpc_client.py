@@ -275,6 +275,11 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
     def test_cluster_delete_call(self):
         self._test_engine_api('cluster_delete', 'call', identity='a-cluster')
 
+    def test_cluster_collect(self):
+        self._test_engine_api('cluster_collect', 'call', identity='a-cluster',
+                              path='astring', project_safe=True,
+                              version='1.1')
+
     def test_cluster_check(self):
         self._test_engine_api('cluster_check', 'call', identity='a-cluster',
                               params=None)
