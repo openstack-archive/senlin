@@ -1,0 +1,19 @@
+# Zheng Xi Zhou <zzxwill@gmail.com>, 2016. #zanata
+msgid ""
+msgstr ""
+"Project-Id-Version: senlin 2.0.0.0b2.dev67\n"
+"Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
+"POT-Creation-Date: 2016-06-13 04:02+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2016-06-12 04:20+0000\n"
+"Last-Translator: Zheng Xi Zhou <zzxwill@gmail.com>\n"
+"Language-Team: Chinese (China)\n"
+"Language: zh-CN\n"
+"X-Generator: Zanata 3.7.3\n"
+"Plural-Forms: nplurals=1; plural=0\n"
+
+#, python-format
+msgid "%(name)s [%(id)s] - %(status)s: %(reason)s"
+msgstr "%(name)s [%(id)s] - %(status)s：%(reason)s"
