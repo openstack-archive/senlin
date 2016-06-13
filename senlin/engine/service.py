@@ -1069,29 +1069,25 @@ class EngineService(service.Service):
                        strict=True):
         """Adjust cluster size parameters.
 
-        :param identity: cluster dentity which can be name, id or short ID;
-        :param adj_type: optional; if specified, must be one of the strings
-                         defined in consts.ADJUSTMENT_TYPES;
+        :param identity: cluster identity which can be cluster name, UUID or
+                         short ID.
+        :param adj_type: type of adjustment. If specified, must be one of the
+                         strings defined in `consts.ADJUSTMENT_TYPES`.
         :param number: number for adjustment. It is interpreted as the new
                        desired_capacity of the cluster if `adj_type` is set
                        to `EXACT_CAPACITY`; it is interpreted as the relative
                        number of nodes to add/remove when `adj_type` is set
                        to `CHANGE_IN_CAPACITY`; it is treated as a percentage
                        when `adj_type` is set to `CHANGE_IN_PERCENTAGE`.
-                       This parameter is optional.
         :param min_size: new lower bound of the cluster size, if specified.
-                         This parameter is optional.
-        :param max_size: new upper bound of the cluster size, if specified;
+        :param max_size: new upper bound of the cluster size, if specified.
                          A value of negative means no upper limit is imposed.
-                         This parameter is optional.
-        :param min_step: optional. It specifies the number of nodes to be
-                         added or removed when `adj_type` is set to value
-                         `CHANGE_IN_PERCENTAGE` and the number calculated is
-                         less than 1 or so.
-        :param strict: optional boolean value. It specifies whether Senlin
-                       should try a best-effort style resizing or just
-                       reject the request when scaling beyond its current
-                       size constraint.
+        :param min_step: the number of nodes to be added or removed when
+                         `adj_type` is set to value `CHANGE_IN_PERCENTAGE`
+                         and the number calculated is less than 1.
+        :param strict: whether Senlin should try a best-effort style resizing
+                       or just rejects the request when scaling beyond its
+                       current size constraint.
 
         :return: A dict containing the ID of an action fired.
         """

@@ -16,9 +16,43 @@
         min_size: 0
         max_size: 3
       runner:
-        type: "constant"
+        type: constant
         times: 2
-        concurrency: 1
+        concurrency: 2
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  SenlinScenario.create_resize_delete_cluster:
+    -
+      args:
+        profile_spec:
+          type: os.nova.server
+          version: 1.0
+          properties:
+            name: cirros_server
+            flavor: 1
+            image: cirros-0.3.4-x86_64-uec
+            networks:
+              - network: private
+        create_params:
+          desired_capacity: 0
+          min_size: 0
+          max_size: 1
+        resize_params:
+          adj_type: CHANGE_IN_CAPACITY
+          number: 3
+          min_size: 0
+          max_size: 3
+          strict: false
+      runner:
+        type: constant
+        times: 2
+        concurrency: 2
       context:
         users:
           tenants: 1
