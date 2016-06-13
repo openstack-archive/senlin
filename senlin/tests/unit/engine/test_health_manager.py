@@ -293,7 +293,7 @@ class TestHealthManager(base.SenlinTestCase):
         # assert
         mock_target.assert_called_once_with(server='ENGINE_ID',
                                             topic='engine-health-mgr',
-                                            version='1.0')
+                                            version=consts.RPC_API_VERSION)
         mock_get_rpc.assert_called_once_with(target, self.hm)
         x_rpc_server.start.assert_called_once_with()
         mock_add_timer.assert_called_once_with(cfg.CONF.periodic_interval,
