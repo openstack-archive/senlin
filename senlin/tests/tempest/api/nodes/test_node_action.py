@@ -27,7 +27,7 @@ class TestNodeActionCheck(base.BaseSenlinTest):
         self.addCleanup(utils.delete_a_node, self, self.node_id)
 
     @decorators.idempotent_id('ae124bfe-9fcf-4e87-91b7-319102efbdcc')
-    def test_node_action_Check(self):
+    def test_node_action_check(self):
         params = {
             'check': {
             }
