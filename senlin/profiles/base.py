@@ -17,10 +17,12 @@ from oslo_log import log as logging
 from oslo_utils import timeutils
 import six
 
+from senlin.common import consts
 from senlin.common import context
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
+from senlin.common.i18n import _LW
 from senlin.common import schema
 from senlin.common import utils
 from senlin.engine import environment
@@ -275,50 +277,55 @@ class Profile(object):
         return params
 
     def do_create(self, obj):
-        '''For subclass to override.'''
-
-        return NotImplemented
+        """For subclass to override."""
+        raise NotImplementedError
 
     def do_delete(self, obj):
-        '''For subclass to override.'''
-
-        return NotImplemented
+        """For subclass to override."""
+        raise NotImplementedError
 
     def do_update(self, obj, new_profile, **params):
-        '''For subclass to override.'''
-
-        return NotImplemented
+        """For subclass to override."""
+        LOG.warn(_LW("Update operation not supported."))
+        return True
 
     def do_check(self, obj):
-        '''For subclass to override.'''
-        return NotImplemented
+        """For subclass to override."""
+        LOG.warn(_LW("Check operation not supported."))
+        return True
 
     def do_get_details(self, obj):
-        '''For subclass to override.'''
-        return NotImplemented
+        """For subclass to override."""
+        LOG.warn(_LW("Get_details operation not supported."))
+        return {}
 
     def do_join(self, obj, cluster_id):
-        '''For subclass to override to perform extra operations.'''
+        """For subclass to override to perform extra operations."""
+        LOG.warn(_LW("Join operation not specialized."))
         return True
 
     def do_leave(self, obj):
-        '''For subclass to override to perform extra operations.'''
+        """For subclass to override to perform extra operations."""
+        LOG.warn(_LW("Join operation not specialized."))
         return True
 
     def do_rebuild(self, obj):
-        '''For subclass to override.'''
-        return NotImplemented
+        """For subclass to override."""
+        LOG.warn(_LW("Rebuild operation not specialized."))
+        return True
 
     def do_recover(self, obj, **options):
-        '''For subclass to override.'''
+        """Default recover operation.
 
+        :param obj: The node object to operate on.
+        :param options: Keyword arguments for the recover operation.
+        """
         operation = options.get('operation', None)
-        if operation and operation != 'RECREATE':
-            return NotImplemented
+        if operation and operation != consts.RECOVER_RECREATE:
+            LOG.error(_LE("Recover operation not supported: %s"), operation)
+            return False
 
-        # NOTE: do_delete always returns a boolean
         res = self.do_delete(obj)
-
         if res:
             try:
                 res = self.do_create(obj)
