@@ -771,8 +771,7 @@ class ServerProfile(base.Profile):
             if options['operation'] == 'REBUILD':
                 return self.do_rebuild(obj)
 
-        res = super(ServerProfile, self).do_recover(
-            obj, **options)
+        res = super(ServerProfile, self).do_recover(obj, **options)
 
         return res
 

@@ -225,3 +225,9 @@ EVENT_LEVELS = {
     'INFO': logging.INFO,
     'DEBUG': logging.DEBUG,
 }
+
+RECOVER_OPERATIONS = (
+    RECOVER_RECREATE, RECOVER_REBUILD,
+) = (
+    'RECREATE', 'REBUILD',
+)
