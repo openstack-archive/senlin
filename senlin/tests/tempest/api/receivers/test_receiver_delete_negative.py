@@ -15,6 +15,7 @@ from tempest.lib import exceptions
 from tempest import test
 
 from senlin.tests.tempest.api import base
+from senlin.tests.tempest.api import utils
 
 
 class TestReceiverDeleteNegativeNotFound(base.BaseSenlinTest):
@@ -26,3 +27,32 @@ class TestReceiverDeleteNegativeNotFound(base.BaseSenlinTest):
         self.assertRaises(exceptions.NotFound,
                           self.client.delete_obj,
                           'receivers', '799395ff-8bb5-49d6-9e3b-0d2d4428e8c1')
+
+
+class TestReceiverDeleteNegativeBadRequest(base.BaseSenlinTest):
+
+    def setUp(self):
+        super(TestReceiverDeleteNegativeBadRequest, self).setUp()
+        profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, profile_id)
+        cluster_id = utils.create_a_cluster(self, profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, cluster_id)
+
+        self.receiver_id1 = utils.create_a_receiver(self.client, cluster_id,
+                                                    'CLUSTER_RESIZE',
+                                                    name='r-01')
+        self.addCleanup(utils.delete_a_receiver, self.client,
+                        self.receiver_id1)
+        self.receiver_id2 = utils.create_a_receiver(self.client, cluster_id,
+                                                    'CLUSTER_RESIZE',
+                                                    name='r-01')
+        self.addCleanup(utils.delete_a_receiver, self.client,
+                        self.receiver_id2)
+
+    @test.attr(type=['negative'])
+    @decorators.idempotent_id('f6f2377c-f125-4c35-be5f-42f94ba81a0e')
+    def test_receiver_delete_multiple_choice(self):
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.delete_obj,
+                          'receivers', 'r-01')

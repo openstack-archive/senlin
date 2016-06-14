@@ -45,3 +45,21 @@ class TestProfileDeleteNegativeNotFound(base.BaseSenlinTest):
         self.assertRaises(exceptions.NotFound,
                           self.client.delete_obj,
                           'profiles', 'b6e7911d-5f65-4ec6-a08b-b88809fe2b9e')
+
+
+class TestProfileDeleteNegativeBadRequest(base.BaseSenlinTest):
+
+    def setUp(self):
+        super(TestProfileDeleteNegativeBadRequest, self).setUp()
+        self.profile_id1 = utils.create_a_profile(self, name='p-01')
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id1)
+        self.profile_id2 = utils.create_a_profile(self, name='p-01')
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id2)
+
+    @test.attr(type=['negative'])
+    @decorators.idempotent_id('b6e7911d-5f65-4ec6-a08b-b88809fe2b9e')
+    def test_profile_delete_multiple_choice(self):
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.delete_obj,
+                          'profiles', 'p-01')

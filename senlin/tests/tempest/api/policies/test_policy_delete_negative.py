@@ -52,3 +52,21 @@ class TestPolicyDeleteNegativeNotFound(base.BaseSenlinTest):
         self.assertRaises(exceptions.NotFound,
                           self.client.delete_obj,
                           'policies', '5591416f-4646-46c2-83b4-231e72aa4bfe')
+
+
+class TestPolicyDeleteNegativeBadRequest(base.BaseSenlinTest):
+
+    def setUp(self):
+        super(TestPolicyDeleteNegativeBadRequest, self).setUp()
+        self.policy_id1 = utils.create_a_policy(self, name='p-01')
+        self.addCleanup(utils.delete_a_policy, self, self.policy_id1)
+        self.policy_id2 = utils.create_a_policy(self, name='p-01')
+        self.addCleanup(utils.delete_a_policy, self, self.policy_id2)
+
+    @test.attr(type=['negative'])
+    @decorators.idempotent_id('d6f35043-2db5-49ff-8bc4-ba14a652f748')
+    def test_policy_delete_multiple_choice(self):
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.delete_obj,
+                          'policies', 'p-01')
