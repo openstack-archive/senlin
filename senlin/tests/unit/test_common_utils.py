@@ -12,7 +12,6 @@
 
 from oslo_log import log as logging
 import requests
-from requests import exceptions
 import six
 
 from oslo_config import cfg
@@ -161,13 +160,15 @@ class UrlFetchTest(base.SenlinTestCase):
     def test_http_error(self):
         url = 'http://example.com/somedata'
 
-        self.patchobject(requests, 'get', side_effect=exceptions.HTTPError())
+        self.patchobject(requests, 'get',
+                         side_effect=requests.exceptions.HTTPError())
         self.assertRaises(utils.URLFetchError, utils.url_fetch, url)
 
     def test_non_exist_url(self):
         url = 'http://non-exist.com/somedata'
 
-        self.patchobject(requests, 'get', side_effect=exceptions.Timeout())
+        self.patchobject(requests, 'get',
+                         side_effect=requests.exceptions.Timeout())
         self.assertRaises(utils.URLFetchError, utils.url_fetch, url)
 
     def test_garbage(self):
@@ -251,3 +252,18 @@ class TestParseLevelValues(base.SenlinTestCase):
     def test_with_only_invalid_values(self):
         res = utils.parse_level_values(['warn'])
         self.assertIsNone(res)
+
+
+class TestGetPathParser(base.SenlinTestCase):
+
+    def test_normal(self):
+        res = utils.get_path_parser('foo.bar')
+        self.assertIsNotNone(res)
+
+    def test_bad_path(self):
+        err = self.assertRaises(exception.BadRequest,
+                                utils.get_path_parser,
+                                '^foo.bar')
+        self.assertEqual("The request is malformed: Invalid attribute path - "
+                         "Unexpected character: ^",
+                         six.text_type(err))
