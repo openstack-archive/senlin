@@ -630,3 +630,13 @@ class TestNode(base.SenlinTestCase):
         res = node.do_recover(self.context)
 
         self.assertFalse(res)
+
+    @mock.patch.object(nodem.Node, 'set_status')
+    def test_node_recover_operation_not_support(self, mock_set_status):
+        node = nodem.Node('node1', PROFILE_ID, None)
+        node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
+
+        params = {'operation': 'foo'}
+        res = node.do_recover(self.context, **params)
+
+        self.assertFalse(res)
