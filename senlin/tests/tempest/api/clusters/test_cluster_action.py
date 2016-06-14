@@ -103,3 +103,35 @@ class TestClusterActionScaleIn(base.BaseSenlinTest):
 
         action_id = res['location'].split('/actions/')[1]
         self.wait_for_status('actions', action_id, 'SUCCEEDED')
+
+
+class TestClusterActionAddNodes(base.BaseSenlinTest):
+
+    def setUp(self):
+        super(TestClusterActionAddNodes, self).setUp()
+        self.profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id)
+        self.cluster_id = utils.create_a_cluster(self, self.profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+        self.node_id = utils.create_a_node(self, self.profile_id)
+        self.addCleanup(utils.delete_a_node, self, self.node_id)
+
+    @decorators.idempotent_id('db0faadf-9cd2-457f-b434-4891b77938ab')
+    def test_cluster_action_add_nodes(self):
+        params = {
+            "add_nodes": {
+                "nodes": [
+                    self.node_id
+                ]
+            }
+        }
+        # Trigger cluster action
+        res = self.client.trigger_action('clusters', self.cluster_id,
+                                         params=params)
+
+        # Verify resp code, body and location in headers
+        self.assertEqual(202, res['status'])
+        self.assertIn('actions', res['location'])
+
+        action_id = res['location'].split('/actions/')[1]
+        self.wait_for_status('actions', action_id, 'SUCCEEDED')
