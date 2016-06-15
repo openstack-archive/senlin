@@ -20,9 +20,11 @@ from senlin.common import consts
 from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.common import scaleutils as su
+from senlin.common import utils as common_utils
 from senlin.engine.actions import base as am
 from senlin.engine import cluster as cm
 from senlin.engine import dispatcher
+from senlin.engine import node as nm
 from senlin.engine import service
 from senlin.objects import cluster as co
 from senlin.objects import cluster_policy as cpo
@@ -1492,6 +1494,122 @@ class ClusterTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
         mock_check.assert_called_once_with(x_cluster, 2)
+
+    @mock.patch.object(nm.Node, 'load_all')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_collect(self, mock_find, mock_load):
+        x_cluster = mock.Mock(id='FAKE_CLUSTER')
+        mock_find.return_value = x_cluster
+        x_node_1 = mock.Mock(id='NODE1', physical_id='PHYID1')
+        x_node_1.to_dict.return_value = {'name': 'node1'}
+        x_node_1.get_details.return_value = {'ip': '1.2.3.4'}
+        x_node_2 = mock.Mock(id='NODE2', physical_id='PHYID2')
+        x_node_2.to_dict.return_value = {'name': 'node2'}
+        x_node_2.get_details.return_value = {'ip': '5.6.7.8'}
+        mock_load.return_value = [x_node_1, x_node_2]
+
+        res = self.eng.cluster_collect(self.ctx, 'CLUSTER_ID', 'details.ip')
+
+        self.assertIn('cluster_attributes', res)
+        self.assertIn({'id': 'NODE1', 'value': '1.2.3.4'},
+                      res['cluster_attributes'])
+        self.assertIn({'id': 'NODE2', 'value': '5.6.7.8'},
+                      res['cluster_attributes'])
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER_ID')
+        mock_load.assert_called_once_with(self.ctx, cluster_id='FAKE_CLUSTER',
+                                          project_safe=True)
+        x_node_1.to_dict.assert_called_once_with()
+        x_node_1.get_details.assert_called_once_with(self.ctx)
+        x_node_2.to_dict.assert_called_once_with()
+        x_node_2.get_details.assert_called_once_with(self.ctx)
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(common_utils, 'get_path_parser')
+    def test_cluster_collect_bad_path(self, mock_parser, mock_find):
+        mock_parser.side_effect = exc.BadRequest(msg='Boom')
+
+        err = self.assertRaises(rpc.ExpectedException,
+                                self.eng.cluster_collect,
+                                self.ctx, 'CLUSTER-ID', 'foo.bar')
+
+        self.assertEqual(exc.BadRequest, err.exc_info[0])
+        mock_parser.assert_called_once_with('foo.bar')
+        self.assertEqual(0, mock_find.call_count)
+
+    @mock.patch.object(nm.Node, 'load_all')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_collect_cluster_not_found(self, mock_find, mock_load):
+        cid = 'FAKE_CLUSTER'
+        mock_find.side_effect = exc.ClusterNotFound(cluster=cid)
+
+        err = self.assertRaises(rpc.ExpectedException,
+                                self.eng.cluster_collect,
+                                self.ctx, cid, 'foo.bar')
+        self.assertEqual(exc.ClusterNotFound, err.exc_info[0])
+        mock_find.assert_called_once_with(self.ctx, cid)
+        self.assertEqual(0, mock_load.call_count)
+
+    @mock.patch.object(nm.Node, 'load_all')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_collect_no_nodes(self, mock_find, mock_load):
+        x_cluster = mock.Mock(id='FAKE_CLUSTER')
+        mock_find.return_value = x_cluster
+        mock_load.return_value = []
+
+        res = self.eng.cluster_collect(self.ctx, 'CLUSTER_ID', 'bogus')
+
+        self.assertEqual({'cluster_attributes': []}, res)
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER_ID')
+        mock_load.assert_called_once_with(self.ctx, cluster_id='FAKE_CLUSTER',
+                                          project_safe=True)
+
+    @mock.patch.object(nm.Node, 'load_all')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_collect_no_details(self, mock_find, mock_load):
+        x_cluster = mock.Mock(id='FAKE_CLUSTER')
+        mock_find.return_value = x_cluster
+        x_node_1 = mock.Mock(id='NODE1', physical_id=None)
+        x_node_1.to_dict.return_value = {'name': 'node1'}
+        x_node_2 = mock.Mock(id='NODE2', physical_id=None)
+        x_node_2.to_dict.return_value = {'name': 'node2'}
+        mock_load.return_value = [x_node_1, x_node_2]
+
+        res = self.eng.cluster_collect(self.ctx, 'CLUSTER_ID', 'name')
+
+        self.assertIn('cluster_attributes', res)
+        self.assertIn({'id': 'NODE1', 'value': 'node1'},
+                      res['cluster_attributes'])
+        self.assertIn({'id': 'NODE2', 'value': 'node2'},
+                      res['cluster_attributes'])
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER_ID')
+        mock_load.assert_called_once_with(self.ctx, cluster_id='FAKE_CLUSTER',
+                                          project_safe=True)
+        x_node_1.to_dict.assert_called_once_with()
+        self.assertEqual(0, x_node_1.get_details.call_count)
+        x_node_2.to_dict.assert_called_once_with()
+        self.assertEqual(0, x_node_2.get_details.call_count)
+
+    @mock.patch.object(nm.Node, 'load_all')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_collect_no_match(self, mock_find, mock_load):
+        x_cluster = mock.Mock(id='FAKE_CLUSTER')
+        mock_find.return_value = x_cluster
+        x_node_1 = mock.Mock(physical_id=None)
+        x_node_1.to_dict.return_value = {'name': 'node1'}
+        x_node_2 = mock.Mock(physical_id=None)
+        x_node_2.to_dict.return_value = {'name': 'node2'}
+        mock_load.return_value = [x_node_1, x_node_2]
+
+        res = self.eng.cluster_collect(self.ctx, 'CLUSTER_ID', 'bogus')
+
+        self.assertEqual({'cluster_attributes': []}, res)
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER_ID')
+        mock_load.assert_called_once_with(self.ctx, cluster_id='FAKE_CLUSTER',
+                                          project_safe=True)
+        x_node_1.to_dict.assert_called_once_with()
+        self.assertEqual(0, x_node_1.get_details.call_count)
+        x_node_2.to_dict.assert_called_once_with()
+        self.assertEqual(0, x_node_2.get_details.call_count)
 
     @mock.patch.object(am.Action, 'create')
     @mock.patch.object(service.EngineService, 'cluster_find')

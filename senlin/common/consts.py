@@ -21,7 +21,7 @@ RPC_ATTRS = (
     'senlin-engine',
     'engine-dispatcher',
     'engine-health-mgr',
-    '1.0',
+    '1.1',
 )
 
 RPC_PARAMS = (
