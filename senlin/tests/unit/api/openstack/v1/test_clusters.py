@@ -1777,3 +1777,75 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
+
+    def test_cluster_collect(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'collect', True)
+        cid = 'aaaa-bbbb-cccc'
+        path = 'foo.bar'
+        req = self._get('/clusters/%(cid)s/attrs/%(path)s' %
+                        {'cid': cid, 'path': path}, version='1.2')
+        engine_response = {
+            'cluster_attributes': [{'key': 'value'}],
+        }
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=engine_response)
+
+        resp = self.controller.collect(req, cluster_id=cid, path=path)
+
+        self.assertEqual(engine_response, resp)
+        mock_call.assert_called_once_with(
+            req.context,
+            ('cluster_collect', {'identity': cid, 'path': path,
+                                 'project_safe': True}),
+            version='1.1')
+
+    def test_cluster_collect_version_mismatch(self, mock_enforce):
+        # NOTE: we skip the mock_enforce setup below because api version check
+        #       comes before the policy enforcement and the check fails in
+        #       this test case.
+        # self._mock_enforce_setup(mock_enforce, 'collect', True)
+        cid = 'aaaa-bbbb-cccc'
+        path = 'foo.bar'
+        req = self._get('/clusters/%(cid)s/attrs/%(path)s' %
+                        {'cid': cid, 'path': path}, version='1.1')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+
+        ex = self.assertRaises(senlin_exc.MethodVersionNotFound,
+                               self.controller.collect,
+                               req, cluster_id=cid, path=path)
+
+        self.assertEqual(0, mock_call.call_count)
+        self.assertEqual('API version 1.1 is not supported on this method.',
+                         six.text_type(ex))
+
+    def test_cluster_collect_path_not_provided(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'collect', True)
+        cid = 'aaaa-bbbb-cccc'
+        path = '    '
+        req = self._get('/clusters/%(cid)s/attrs/%(path)s' %
+                        {'cid': cid, 'path': path}, version='1.2')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.collect,
+                               req, cluster_id=cid, path=path)
+
+        self.assertEqual(0, mock_call.call_count)
+        self.assertEqual('Required path attribute is missing.',
+                         six.text_type(ex))
+
+    def test_cluster_collect_denied_policy(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'collect', False)
+        cid = 'aaaa-bbbb-cccc'
+        path = 'foo.bar'
+        req = self._get('/clusters/%(cid)s/attrs/%(path)s' %
+                        {'cid': cid, 'path': path}, version='1.2')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.collect,
+                                              req, cluster_id=cid, path=path)
+
+        self.assertEqual(403, resp.status_int)
+        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertEqual(0, mock_call.call_count)

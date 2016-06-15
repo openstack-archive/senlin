@@ -21,3 +21,8 @@ it can be used by both users and developers.
    where the ``<version>`` is any valid API version supported. If such a
    header is not provided, the API behaves as if a version request of v1.0
    is received.
+
+1.2
+---
+
+   Added ``cluster_collect`` API.

@@ -152,6 +152,10 @@ class API(wsgi.Router):
                                action="action",
                                conditions={'method': 'POST'},
                                success=202)
+            sub_mapper.connect("cluster_collect",
+                               "/clusters/{cluster_id}/attrs/{path}",
+                               action="collect",
+                               conditions={'method': 'GET'})
             sub_mapper.connect("cluster_delete",
                                "/clusters/{cluster_id}",
                                action="delete",
