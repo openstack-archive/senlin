@@ -15,6 +15,7 @@ from tempest.lib import exceptions
 
 from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
+from senlin.tests.tempest.common import constants
 
 
 class TestClusterActionNegativeCommon(base.BaseSenlinTest):
@@ -248,3 +249,171 @@ class TestClusterScalingNegativeNotFound(base.BaseSenlinTest):
                           self.client.trigger_action, 'clusters',
                           'b7038d95-204c-455f-a866-94dc535dd840',
                           params)
+
+
+class TestClusterAddNodesNegativeInvalidNodesParams(base.BaseSenlinTest):
+
+    @decorators.idempotent_id('912bb24d-73e1-4801-a6de-bdd453cbbdbf')
+    def test_cluster_add_nodes_missing_nodes_params(self):
+        params = {
+            'add_nodes': {
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', 'cluster_id', params)
+
+    @decorators.idempotent_id('6cb029f7-9b72-4f10-a28b-3ed5bd3ed7b0')
+    def test_cluster_add_nodes_params_not_list(self):
+        params = {
+            'add_nodes': {
+                'nodes': 'node_id'
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', 'cluster_id', params)
+
+    @decorators.idempotent_id('b8ae9b5f-967f-48a6-8e31-c77f86ba06aa')
+    def test_cluster_add_nodes_params_empty_list(self):
+        params = {
+            'add_nodes': {
+                'nodes': []
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', 'cluster_id', params)
+
+
+class TestClusterAddNodesNegativeNodeNotFound(base.BaseSenlinTest):
+
+    def setUp(self):
+        super(TestClusterAddNodesNegativeNodeNotFound, self).setUp()
+        self.profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id)
+        self.cluster_id = utils.create_a_cluster(self, self.profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+
+    @decorators.idempotent_id('5ddf7e5a-3f67-4f1e-af1e-c5a7da319dc0')
+    def test_cluster_add_nodes_node_not_found(self):
+        params = {
+            'add_nodes': {
+                'nodes': ['5ddf7e5a-3f67-4f1e-af1e-c5a7da319dc0']
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', self.cluster_id, params)
+
+
+class TestClusterAddNodesNegativeNodeNotOrphan(base.BaseSenlinTest):
+
+    def setUp(self):
+        super(TestClusterAddNodesNegativeNodeNotOrphan, self).setUp()
+        self.profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id)
+        self.cluster_id = utils.create_a_cluster(self, self.profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+
+        self.cluster_id2 = utils.create_a_cluster(self, self.profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id2)
+        self.node_id = utils.create_a_node(self, self.profile_id,
+                                           cluster_id=self.cluster_id2)
+
+    @decorators.idempotent_id('08e1271c-025e-4670-a20e-4a96fa179dca')
+    def test_cluster_add_nodes_node_not_orphan(self):
+        params = {
+            'add_nodes': {
+                'nodes': [self.node_id]
+            }
+        }
+
+        # Verify conflict exception(409) is raised.
+        self.assertRaises(exceptions.Conflict,
+                          self.client.trigger_action,
+                          'clusters', self.cluster_id, params)
+
+
+class TestClusterAddNodesNegativeProfileTypeUnmatch(base.BaseSenlinTest):
+
+    def setUp(self):
+        super(TestClusterAddNodesNegativeProfileTypeUnmatch, self).setUp()
+        self.profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id)
+        self.cluster_id = utils.create_a_cluster(self, self.profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+
+        self.profile_id2 = utils.create_a_profile(
+            self, spec=constants.spec_heat_stack)
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id2)
+        self.node_id = utils.create_a_node(self, self.profile_id2)
+        self.addCleanup(utils.delete_a_node, self, self.node_id)
+
+    @decorators.idempotent_id('7a27c697-6d29-46f0-8b2a-3a7282c15b33')
+    def test_cluster_add_nodes_profile_type_unmatch(self):
+        params = {
+            'add_nodes': {
+                'nodes': [
+                    self.node_id
+                ]
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', self.cluster_id, params)
+
+
+class TestClusterAddNodesNegativeSizeCheckFailed(base.BaseSenlinTest):
+
+    def setUp(self):
+        super(TestClusterAddNodesNegativeSizeCheckFailed, self).setUp()
+        self.profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id)
+        self.cluster_id = utils.create_a_cluster(self, self.profile_id,
+                                                 desired_capacity=1,
+                                                 max_size=1)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+        self.node_id = utils.create_a_node(self, self.profile_id)
+        self.addCleanup(utils.delete_a_node, self, self.node_id)
+
+    @decorators.idempotent_id('3b485352-53e3-481d-b471-9a042c76d758')
+    def test_cluster_add_nodes_cluster_size_check_failed(self):
+        params = {
+            'add_nodes': {
+                'nodes': [
+                    self.node_id
+                ]
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', self.cluster_id, params)
+
+
+class TestClusterAddNodesNegativeClusterNotFound(base.BaseSenlinTest):
+
+    @decorators.idempotent_id('22f10d36-c29a-4cde-a975-af262a5775a1')
+    def test_cluster_add_nodes_cluster_not_found(self):
+        params = {
+            'add_nodes': {
+                'nodes': ['node_id']
+            }
+        }
+
+        # Verify notfound exception(404) is raised.
+        self.assertRaises(exceptions.NotFound,
+                          self.client.trigger_action, 'clusters',
+                          'db0faadf-9cd2-457f-b434-4891b77938ab', params)
