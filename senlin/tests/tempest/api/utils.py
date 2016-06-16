@@ -75,6 +75,12 @@ def create_a_cluster(base, profile_id, desired_capacity=0, min_size=0,
     return cluster_id
 
 
+def get_a_cluster(base, cluster_id):
+    """Utility function that gets a Senlin cluster."""
+    res = base.client.get_obj('clusters', cluster_id)
+    return res['body']
+
+
 def delete_a_cluster(base, cluster_id, wait_timeout=None):
     """Utility function that deletes a Senlin cluster."""
     res = base.client.delete_obj('clusters', cluster_id)
