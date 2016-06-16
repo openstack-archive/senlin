@@ -180,3 +180,71 @@ class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinTest):
         self.assertRaises(exceptions.BadRequest,
                           self.client.trigger_action,
                           'clusters', self.cluster_id, params)
+
+
+class TestClusterScalingNegativeBadRequest(base.BaseSenlinTest):
+
+    def setUp(self):
+        super(TestClusterScalingNegativeBadRequest, self).setUp()
+        profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, profile_id)
+        self.cluster_id = utils.create_a_cluster(self, profile_id,
+                                                 min_size=0, max_size=5,
+                                                 desired_capacity=1)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+
+    @decorators.idempotent_id('337a8a8f-a368-4d4f-949a-8b116dbb6a75')
+    def test_cluster_scale_in_invalid_count(self):
+        params = {
+            "scale_in": {
+                "count": -1
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', self.cluster_id, params)
+
+    @decorators.idempotent_id('2bbf6e0c-a8cc-4b29-8060-83652ffd6cd2')
+    def test_cluster_scale_out_invalid_count(self):
+        params = {
+            "scale_out": {
+                "count": -1
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', self.cluster_id, params)
+
+
+class TestClusterScalingNegativeNotFound(base.BaseSenlinTest):
+
+    @decorators.idempotent_id('0124c7de-66d0-4a84-9c8f-80bc4d246b79')
+    def test_cluster_scale_in_cluster_not_found(self):
+        params = {
+            "scale_in": {
+                "count": 1
+            }
+        }
+
+        # Verify notfound exception(404) is raised.
+        self.assertRaises(exceptions.NotFound,
+                          self.client.trigger_action, 'clusters',
+                          '0124c7de-66d0-4a84-9c8f-80bc4d246b79', params)
+
+    @decorators.idempotent_id('b7038d95-204c-455f-a866-94dc535dd840')
+    def test_cluster_scale_out_cluster_not_found(self):
+        params = {
+            "scale_out": {
+                "count": 1
+            }
+        }
+
+        # Verify notfound exception(404) is raised.
+        self.assertRaises(exceptions.NotFound,
+                          self.client.trigger_action, 'clusters',
+                          'b7038d95-204c-455f-a866-94dc535dd840',
+                          params)
