@@ -21,7 +21,13 @@ from senlin.common import messaging
 
 
 class EngineClient(object):
-    '''Client side of the senlin engine rpc API.'''
+    """Client side of the senlin engine rpc API.
+
+    Version History:
+
+      1.0 - Initial version (Mitaka 1.0 release)
+      1.1 - Add cluster-collect call.
+    """
 
     BASE_RPC_API_VERSION = '1.0'
 
@@ -163,16 +169,6 @@ class EngineClient(object):
                                              identity=identity,
                                              nodes=nodes))
 
-    def cluster_check(self, ctxt, identity, params=None):
-        return self.call(ctxt, self.make_msg('cluster_check',
-                                             identity=identity,
-                                             params=params))
-
-    def cluster_recover(self, ctxt, identity, params=None):
-        return self.call(ctxt, self.make_msg('cluster_recover',
-                                             identity=identity,
-                                             params=params))
-
     def cluster_resize(self, ctxt, identity, adj_type=None, number=None,
                        min_size=None, max_size=None, min_step=None,
                        strict=True):
@@ -208,6 +204,22 @@ class EngineClient(object):
         return rpc_method(ctxt,
                           self.make_msg('cluster_delete',
                                         identity=identity))
+
+    def cluster_collect(self, ctxt, identity, path, project_safe=True):
+        return self.call(ctxt, self.make_msg('cluster_collect',
+                                             identity=identity, path=path,
+                                             project_safe=project_safe),
+                         version='1.1')
+
+    def cluster_check(self, ctxt, identity, params=None):
+        return self.call(ctxt, self.make_msg('cluster_check',
+                                             identity=identity,
+                                             params=params))
+
+    def cluster_recover(self, ctxt, identity, params=None):
+        return self.call(ctxt, self.make_msg('cluster_recover',
+                                             identity=identity,
+                                             params=params))
 
     def node_list(self, ctxt, cluster_id=None, limit=None, marker=None,
                   sort=None, filters=None, project_safe=True):
