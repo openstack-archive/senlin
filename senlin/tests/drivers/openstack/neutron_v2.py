@@ -11,11 +11,11 @@
 # under the License.
 
 from senlin.drivers import base
-from senlin.tests.functional.drivers.openstack import sdk
+from senlin.tests.drivers.openstack import sdk
 
 
 class NeutronClient(base.DriverBase):
-    '''Fake Neutron V2 driver for functional test.'''
+    '''Fake Neutron V2 driver for test.'''
 
     def __init__(self, ctx):
         self.fake_network = {

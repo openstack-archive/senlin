@@ -13,11 +13,11 @@
 from oslo_utils import uuidutils
 
 from senlin.drivers import base
-from senlin.tests.functional.drivers.openstack import sdk
+from senlin.tests.drivers.openstack import sdk
 
 
 class NovaClient(base.DriverBase):
-    '''Fake Nova V2 driver for functional test.'''
+    '''Fake Nova V2 driver for test.'''
 
     def __init__(self, ctx):
         self.fake_flavor = {
