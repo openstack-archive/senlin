@@ -1,0 +1,3 @@
+---
+features:
+  - A new ``cluster_collect`` API is added.

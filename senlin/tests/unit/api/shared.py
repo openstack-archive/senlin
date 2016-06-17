@@ -17,6 +17,7 @@ from oslo_log import log
 from oslo_messaging._drivers import common as rpc_common
 from oslo_utils import encodeutils
 
+from senlin.api.common import version_request as vr
 from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.tests.unit.common import utils
@@ -64,7 +65,7 @@ class ControllerTest(object):
             'wsgi.url_scheme': 'http',
         }
 
-    def _simple_request(self, path, params=None, method='GET'):
+    def _simple_request(self, path, params=None, method='GET', version=None):
         environ = self._environ(path)
         environ['REQUEST_METHOD'] = method
 
@@ -75,33 +76,40 @@ class ControllerTest(object):
         req = wsgi.Request(environ)
         req.context = utils.dummy_context('api_test_user', self.project)
         self.context = req.context
+        ver = version if version else wsgi.DEFAULT_API_VERSION
+        req.version_request = vr.APIVersionRequest(ver)
         return req
 
-    def _get(self, path, params=None):
-        return self._simple_request(path, params=params)
+    def _get(self, path, params=None, version=None):
+        return self._simple_request(path, params=params, version=version)
 
-    def _delete(self, path):
+    def _delete(self, path, version=None):
         return self._simple_request(path, method='DELETE')
 
     def _data_request(self, path, data, content_type='application/json',
-                      method='POST'):
+                      method='POST', version=None):
         environ = self._environ(path)
         environ['REQUEST_METHOD'] = method
 
         req = wsgi.Request(environ)
         req.context = utils.dummy_context('api_test_user', self.project)
         self.context = req.context
+        ver = version if version else wsgi.DEFAULT_API_VERSION
+        req.version_request = vr.APIVersionRequest(ver)
         req.body = encodeutils.safe_encode(data)
         return req
 
-    def _post(self, path, data, content_type='application/json'):
-        return self._data_request(path, data, content_type)
+    def _post(self, path, data, content_type='application/json', version=None):
+        return self._data_request(path, data, content_type, version=version)
 
-    def _put(self, path, data, content_type='application/json'):
-        return self._data_request(path, data, content_type, method='PUT')
+    def _put(self, path, data, content_type='application/json', version=None):
+        return self._data_request(path, data, content_type, method='PUT',
+                                  version=version)
 
-    def _patch(self, path, data, content_type='application/json'):
-        return self._data_request(path, data, content_type, method='PATCH')
+    def _patch(self, path, data, content_type='application/json',
+               version=None):
+        return self._data_request(path, data, content_type, method='PATCH',
+                                  version=version)
 
     def tearDown(self):
         # Common tearDown to assert that policy enforcement happens for all

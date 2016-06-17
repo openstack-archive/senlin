@@ -33,6 +33,13 @@ action_id_url:
   description: |
     The name or short-ID or UUID that identifies an action object.
 
+cluster_attrs_path:
+  type: string
+  in: path
+  required: True
+  description: |
+    The Json path of an attribute to be aggregated across a cluster.
+
 cluster_id_url:
   type: string
   in: path
@@ -472,6 +479,21 @@ cluster:
   required: True
   description: |
     The structured definition of a cluster object.
+
+cluster_attr_value:
+  type: object
+  in: body
+  description: |
+    The attribute value on a specific node. The value could be of any data
+    type that is valid for the attribute.
+
+cluster_attributes:
+  type: list
+  in: body
+  required: True
+  description: |
+    A list of dictionaries each containing the node ID and the corresponding
+    attribute value.
 
 cluster_data:
   type: object
