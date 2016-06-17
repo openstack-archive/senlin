@@ -251,6 +251,62 @@ class TestClusterScalingNegativeNotFound(base.BaseSenlinTest):
                           params)
 
 
+class TestClusterCheckNegativeInvalidParams(base.BaseSenlinTest):
+
+    @decorators.idempotent_id('9a305b4f-2f05-4aa9-95ae-e08fd24b0593')
+    def test_cluster_check_params_not_dict(self):
+        params = {
+            'check': ['k1', 'v1']
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', 'cluster_id', params)
+
+
+class TestClusterCheckNegativeNotFound(base.BaseSenlinTest):
+
+    @decorators.idempotent_id('bbbe3feb-8482-4ae4-9c29-b4732efce931')
+    def test_cluster_check_cluster_not_found(self):
+        params = {
+            'check': {'k1': 'v1'}
+        }
+
+        # Verify notfound exception(404) is raised.
+        self.assertRaises(exceptions.NotFound,
+                          self.client.trigger_action, 'clusters',
+                          'bbbe3feb-8482-4ae4-9c29-b4732efce931', params)
+
+
+class TestClusterRecoverNegativeInvalidParams(base.BaseSenlinTest):
+
+    @decorators.idempotent_id('1f93e909-b271-4e46-acd8-8cb621b27546')
+    def test_cluster_recover_params_not_dict(self):
+        params = {
+            'recover': ['k1', 'v1']
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', 'cluster_id', params)
+
+
+class TestClusterRecoverNegativeNotFound(base.BaseSenlinTest):
+
+    @decorators.idempotent_id('e6e522f4-34d4-42f7-b7f1-45004e06f3d9')
+    def test_cluster_recover_cluster_not_found(self):
+        params = {
+            'recover': {'k1': 'v1'}
+        }
+
+        # Verify notfound exception(404) is raised.
+        self.assertRaises(exceptions.NotFound,
+                          self.client.trigger_action, 'clusters',
+                          'e6e522f4-34d4-42f7-b7f1-45004e06f3d9', params)
+
+
 class TestClusterAddNodesNegativeInvalidNodesParams(base.BaseSenlinTest):
 
     @decorators.idempotent_id('912bb24d-73e1-4801-a6de-bdd453cbbdbf')
