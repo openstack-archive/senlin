@@ -18,7 +18,7 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestClusterPolicyShowNegativeClusterNotFound(base.BaseSenlinTest):
+class TestClusterPolicyShowNegativeClusterNotFound(base.BaseSenlinAPITest):
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('965d7324-e3f7-4d77-8e7f-44c862b851f7')
@@ -29,7 +29,7 @@ class TestClusterPolicyShowNegativeClusterNotFound(base.BaseSenlinTest):
                           'POLICY_ID')
 
 
-class TestClusterPolicyShowNegativePolicyNotFound(base.BaseSenlinTest):
+class TestClusterPolicyShowNegativePolicyNotFound(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterPolicyShowNegativePolicyNotFound, self).setUp()
@@ -48,7 +48,7 @@ class TestClusterPolicyShowNegativePolicyNotFound(base.BaseSenlinTest):
                           'e3e24058-ed07-42b6-b47c-a972c6047509')
 
 
-class TestClusterPolicyShowNegativeNoPolicyBinding(base.BaseSenlinTest):
+class TestClusterPolicyShowNegativeNoPolicyBinding(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterPolicyShowNegativeNoPolicyBinding, self).setUp()
@@ -69,7 +69,7 @@ class TestClusterPolicyShowNegativeNoPolicyBinding(base.BaseSenlinTest):
                           self.cluster_id, self.policy_id)
 
 
-class TestClusterPolicyShowNegativeBadRequest(base.BaseSenlinTest):
+class TestClusterPolicyShowNegativeBadRequest(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterPolicyShowNegativeBadRequest, self).setUp()

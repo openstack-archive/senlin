@@ -16,7 +16,7 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestReceiverShow(base.BaseSenlinTest):
+class TestReceiverShow(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestReceiverShow, self).setUp()

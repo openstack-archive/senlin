@@ -12,24 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from oslo_log import log
 from tempest import config
-
-from senlin.tests.tempest import base
-from senlin.tests.tempest.common import clustering_client
+from tempest import test
 
 CONF = config.CONF
-lOG = log.getLogger(__name__)
 
 
-class BaseSenlinAPITest(base.BaseSenlinTest):
+class BaseSenlinTest(test.BaseTestCase):
+
+    credentials = ['primary']
+
+    @classmethod
+    def skip_checks(cls):
+        super(BaseSenlinTest, cls).skip_checks()
+        if not CONF.service_available.senlin:
+            skip_msg = 'Senlin is disabled'
+            raise cls.skipException(skip_msg)
 
     @classmethod
     def setup_clients(cls):
-        super(BaseSenlinAPITest, cls).setup_clients()
-        cls.client = clustering_client.ClusteringAPIClient(
-            cls.os.auth_provider,
-            CONF.clustering.catalog_type,
-            CONF.identity.region,
-            **cls.os.default_params_with_timeout_values
-        )
+        super(BaseSenlinTest, cls).setup_clients()

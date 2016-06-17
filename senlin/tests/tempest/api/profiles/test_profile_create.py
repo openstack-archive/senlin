@@ -17,7 +17,7 @@ from senlin.tests.tempest.api import utils
 from senlin.tests.tempest.common import constants
 
 
-class TestProfileCreate(base.BaseSenlinTest):
+class TestProfileCreate(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('76216581-e78a-42f5-bf1d-65d83bd206fc')
     def test_profile_create(self):

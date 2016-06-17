@@ -18,7 +18,7 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestProfileShowNegativeNotFound(base.BaseSenlinTest):
+class TestProfileShowNegativeNotFound(base.BaseSenlinAPITest):
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('887aa1a5-e623-4b49-bdba-e62366b8b636')
@@ -28,7 +28,7 @@ class TestProfileShowNegativeNotFound(base.BaseSenlinTest):
                           'profiles', '887aa1a5-e623-4b49-bdba-e62366b8b636')
 
 
-class TestProfileShowNegativeBadRequest(base.BaseSenlinTest):
+class TestProfileShowNegativeBadRequest(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestProfileShowNegativeBadRequest, self).setUp()

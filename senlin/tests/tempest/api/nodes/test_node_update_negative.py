@@ -20,7 +20,7 @@ from senlin.tests.tempest.api import utils
 from senlin.tests.tempest.common import constants
 
 
-class TestNodeUpdateNegativeNotFound(base.BaseSenlinTest):
+class TestNodeUpdateNegativeNotFound(base.BaseSenlinAPITest):
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('608addc9-cbbe-45cd-a00a-495cae7db400')
@@ -31,7 +31,7 @@ class TestNodeUpdateNegativeNotFound(base.BaseSenlinTest):
                           {'node': {'name': 'new-name'}})
 
 
-class TestNodeUpdateNegativeProfileNotFound(base.BaseSenlinTest):
+class TestNodeUpdateNegativeProfileNotFound(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestNodeUpdateNegativeProfileNotFound, self).setUp()
@@ -58,7 +58,7 @@ class TestNodeUpdateNegativeProfileNotFound(base.BaseSenlinTest):
                           'nodes', self.node_id, params)
 
 
-class TestNodeUpdateNegativeProfileMultichoices(base.BaseSenlinTest):
+class TestNodeUpdateNegativeProfileMultichoices(base.BaseSenlinAPITest):
     def setUp(self):
         super(TestNodeUpdateNegativeProfileMultichoices, self).setUp()
         # Create a profile
@@ -92,7 +92,7 @@ class TestNodeUpdateNegativeProfileMultichoices(base.BaseSenlinTest):
                           'nodes', self.node_id, params)
 
 
-class TestNodeUpdateNegativeProfileTypeUnmatch(base.BaseSenlinTest):
+class TestNodeUpdateNegativeProfileTypeUnmatch(base.BaseSenlinAPITest):
     def setUp(self):
         super(TestNodeUpdateNegativeProfileTypeUnmatch, self).setUp()
         # Create a profile
@@ -123,7 +123,7 @@ class TestNodeUpdateNegativeProfileTypeUnmatch(base.BaseSenlinTest):
                           'nodes', self.node_id, params)
 
 
-class TestNodeUpdateNegativeNoPropertyUpdated(base.BaseSenlinTest):
+class TestNodeUpdateNegativeNoPropertyUpdated(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestNodeUpdateNegativeNoPropertyUpdated, self).setUp()

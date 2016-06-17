@@ -16,7 +16,7 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestReceiverDelete(base.BaseSenlinTest):
+class TestReceiverDelete(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestReceiverDelete, self).setUp()

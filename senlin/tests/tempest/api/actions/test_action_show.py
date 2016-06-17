@@ -16,7 +16,7 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestActionShow(base.BaseSenlinTest):
+class TestActionShow(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestActionShow, self).setUp()
@@ -38,7 +38,7 @@ class TestActionShow(base.BaseSenlinTest):
         self.action_id = res['location'].split('/actions/')[1]
         self.addCleanup(utils.delete_a_cluster, self, res['body']['id'])
 
-        self.wait_for_status('actions', self.action_id, 'SUCCEEDED')
+        self.client.wait_for_status('actions', self.action_id, 'SUCCEEDED')
 
     @decorators.idempotent_id('c6376f60-8f52-4384-8b6d-57df264f2e23')
     def test_action_show(self):

@@ -16,7 +16,7 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.common import constants
 
 
-class TestPolicyCreate(base.BaseSenlinTest):
+class TestPolicyCreate(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestPolicyCreate, self).setUp()

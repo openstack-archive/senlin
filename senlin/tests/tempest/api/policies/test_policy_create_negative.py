@@ -19,7 +19,7 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.common import constants
 
 
-class TestPolicyCreateNegativeBadRequest(base.BaseSenlinTest):
+class TestPolicyCreateNegativeBadRequest(base.BaseSenlinAPITest):
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('3fea4aa9-6dee-4202-8611-cf2d008a4d42')

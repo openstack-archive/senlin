@@ -16,7 +16,7 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestEventShow(base.BaseSenlinTest):
+class TestEventShow(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestEventShow, self).setUp()

@@ -16,7 +16,7 @@ from tempest.lib import exceptions
 from senlin.tests.tempest.api import base
 
 
-class TestAPIVersionShowNegative(base.BaseSenlinTest):
+class TestAPIVersionShowNegative(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('a3b02638-2459-41ab-a70b-a6f1a269914e')
     def test_API_version_show_invalid_version(self):

@@ -16,7 +16,7 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestClusterActionResize(base.BaseSenlinTest):
+class TestClusterActionResize(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterActionResize, self).setUp()
@@ -45,10 +45,10 @@ class TestClusterActionResize(base.BaseSenlinTest):
         self.assertIn('actions', res['location'])
 
         action_id = res['location'].split('/actions/')[1]
-        self.wait_for_status('actions', action_id, 'SUCCEEDED')
+        self.client.wait_for_status('actions', action_id, 'SUCCEEDED')
 
 
-class TestClusterActionScaleOut(base.BaseSenlinTest):
+class TestClusterActionScaleOut(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterActionScaleOut, self).setUp()
@@ -73,10 +73,10 @@ class TestClusterActionScaleOut(base.BaseSenlinTest):
         self.assertIn('actions', res['location'])
 
         action_id = res['location'].split('/actions/')[1]
-        self.wait_for_status('actions', action_id, 'SUCCEEDED')
+        self.client.wait_for_status('actions', action_id, 'SUCCEEDED')
 
 
-class TestClusterActionScaleIn(base.BaseSenlinTest):
+class TestClusterActionScaleIn(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterActionScaleIn, self).setUp()
@@ -102,10 +102,10 @@ class TestClusterActionScaleIn(base.BaseSenlinTest):
         self.assertIn('actions', res['location'])
 
         action_id = res['location'].split('/actions/')[1]
-        self.wait_for_status('actions', action_id, 'SUCCEEDED')
+        self.client.wait_for_status('actions', action_id, 'SUCCEEDED')
 
 
-class TestClusterActionAddNodes(base.BaseSenlinTest):
+class TestClusterActionAddNodes(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterActionAddNodes, self).setUp()
@@ -134,10 +134,10 @@ class TestClusterActionAddNodes(base.BaseSenlinTest):
         self.assertIn('actions', res['location'])
 
         action_id = res['location'].split('/actions/')[1]
-        self.wait_for_status('actions', action_id, 'SUCCEEDED')
+        self.client.wait_for_status('actions', action_id, 'SUCCEEDED')
 
 
-class TestClusterActionDelNodes(base.BaseSenlinTest):
+class TestClusterActionDelNodes(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterActionDelNodes, self).setUp()
@@ -167,10 +167,10 @@ class TestClusterActionDelNodes(base.BaseSenlinTest):
         self.assertIn('actions', res['location'])
 
         action_id = res['location'].split('/actions/')[1]
-        self.wait_for_status('actions', action_id, 'SUCCEEDED')
+        self.client.wait_for_status('actions', action_id, 'SUCCEEDED')
 
 
-class TestClusterActionCheck(base.BaseSenlinTest):
+class TestClusterActionCheck(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterActionCheck, self).setUp()
@@ -194,10 +194,10 @@ class TestClusterActionCheck(base.BaseSenlinTest):
         self.assertIn('actions', res['location'])
 
         action_id = res['location'].split('/actions/')[1]
-        self.wait_for_status('actions', action_id, 'SUCCEEDED')
+        self.client.wait_for_status('actions', action_id, 'SUCCEEDED')
 
 
-class TestClusterActionRecover(base.BaseSenlinTest):
+class TestClusterActionRecover(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterActionRecover, self).setUp()
@@ -223,10 +223,10 @@ class TestClusterActionRecover(base.BaseSenlinTest):
         self.assertIn('actions', res['location'])
 
         action_id = res['location'].split('/actions/')[1]
-        self.wait_for_status('actions', action_id, 'SUCCEEDED')
+        self.client.wait_for_status('actions', action_id, 'SUCCEEDED')
 
 
-class TestClusterActionPolicyAttach(base.BaseSenlinTest):
+class TestClusterActionPolicyAttach(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterActionPolicyAttach, self).setUp()
@@ -256,10 +256,10 @@ class TestClusterActionPolicyAttach(base.BaseSenlinTest):
         self.assertIn('actions', res['location'])
 
         action_id = res['location'].split('/actions/')[1]
-        self.wait_for_status('actions', action_id, 'SUCCEEDED')
+        self.client.wait_for_status('actions', action_id, 'SUCCEEDED')
 
 
-class TestClusterActionPolicyDetach(base.BaseSenlinTest):
+class TestClusterActionPolicyDetach(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterActionPolicyDetach, self).setUp()
@@ -287,10 +287,10 @@ class TestClusterActionPolicyDetach(base.BaseSenlinTest):
         self.assertIn('actions', res['location'])
 
         action_id = res['location'].split('/actions/')[1]
-        self.wait_for_status('actions', action_id, 'SUCCEEDED')
+        self.client.wait_for_status('actions', action_id, 'SUCCEEDED')
 
 
-class TestClusterActionPolicyUpdate(base.BaseSenlinTest):
+class TestClusterActionPolicyUpdate(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterActionPolicyUpdate, self).setUp()
@@ -321,4 +321,4 @@ class TestClusterActionPolicyUpdate(base.BaseSenlinTest):
         self.assertIn('actions', res['location'])
 
         action_id = res['location'].split('/actions/')[1]
-        self.wait_for_status('actions', action_id, 'SUCCEEDED')
+        self.client.wait_for_status('actions', action_id, 'SUCCEEDED')

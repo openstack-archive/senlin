@@ -15,7 +15,7 @@ from tempest.lib import decorators
 from senlin.tests.tempest.api import base
 
 
-class TestAPIVersionShow(base.BaseSenlinTest):
+class TestAPIVersionShow(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('4a270caa-9917-4acd-98ef-6636f9618037')
     def test_API_version_show(self):

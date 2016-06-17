@@ -18,7 +18,7 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestClusterDeleteNegativeConflict(base.BaseSenlinTest):
+class TestClusterDeleteNegativeConflict(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterDeleteNegativeConflict, self).setUp()
@@ -43,7 +43,7 @@ class TestClusterDeleteNegativeConflict(base.BaseSenlinTest):
                           'clusters', self.cluster_id)
 
 
-class TestClusterDeleteNegativeNotFound(base.BaseSenlinTest):
+class TestClusterDeleteNegativeNotFound(base.BaseSenlinAPITest):
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('8a583b8e-eeaa-4920-a6f5-2880b070624f')
@@ -54,7 +54,7 @@ class TestClusterDeleteNegativeNotFound(base.BaseSenlinTest):
                           'clusters', '8a583b8e-eeaa-4920-a6f5-2880b070624f')
 
 
-class TestClusterDeleteNegativeBadRequest(base.BaseSenlinTest):
+class TestClusterDeleteNegativeBadRequest(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterDeleteNegativeBadRequest, self).setUp()

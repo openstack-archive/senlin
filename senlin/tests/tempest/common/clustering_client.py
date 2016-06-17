@@ -13,9 +13,16 @@
 # limitations under the License.
 
 from six.moves.urllib import parse as urllib
+import time
 
+from oslo_log import log
 from oslo_serialization import jsonutils
+from tempest import config
 from tempest.lib.common import rest_client
+from tempest.lib import exceptions
+
+CONF = config.CONF
+lOG = log.getLogger(__name__)
 
 
 class ClusteringAPIClient(rest_client.RestClient):
@@ -94,3 +101,32 @@ class ClusteringAPIClient(rest_client.RestClient):
         resp, body = self.get(uri)
 
         return self._parsed_resp(resp, body)
+
+    def wait_for_status(self, obj_type, obj_id, expected_status, timeout=None):
+        if timeout is None:
+            timeout = CONF.clustering.wait_timeout
+
+        while timeout > 0:
+            res = self.get_obj(obj_type, obj_id)
+            if res['body']['status'] == expected_status:
+                return res
+            time.sleep(5)
+            timeout -= 5
+        raise Exception('Timeout waiting for status.')
+
+    def wait_for_delete(self, obj_type, obj_id, timeout=None):
+        if timeout is None:
+            timeout = CONF.clustering.wait_timeout
+        while timeout > 0:
+            try:
+                self.get_obj(obj_type, obj_id)
+            except exceptions.NotFound:
+                return
+            time.sleep(5)
+            timeout -= 5
+        raise Exception('Timeout waiting for deletion.')
+
+
+class ClusteringFunctionalClient(ClusteringAPIClient):
+    """This is the tempest client for Senlin functional test"""
+    pass
