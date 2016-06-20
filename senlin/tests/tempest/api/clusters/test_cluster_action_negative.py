@@ -734,3 +734,107 @@ class TestClusterPolicyDetachNegativeNotFound(base.BaseSenlinTest):
         self.assertRaises(exceptions.NotFound,
                           self.client.trigger_action, 'clusters',
                           '11ff0486-a022-4b28-9def-9b2d78d47fab', params)
+
+
+class TestClusterPolicyUpdateNegativeInvalidParams(base.BaseSenlinTest):
+
+    @decorators.idempotent_id('653d8ea9-9c7e-48f2-b568-6167bb7f8666')
+    def test_cluster_policy_update_params_not_dict(self):
+        params = {
+            'policy_update': 'POLICY_ID'
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', 'cluster_id', params)
+
+    @decorators.idempotent_id('b47dff55-3ff0-4303-b86e-c4ab5f9a0878')
+    def test_cluster_policy_update_missing_profile_id_param(self):
+        params = {
+            'policy_update': {}
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', 'cluster_id', params)
+
+    @decorators.idempotent_id('4adb03f4-35e6-40eb-b867-d75315ca8a89')
+    def test_cluster_policy_update_invalid_enabled_param(self):
+        params = {
+            'policy_update': {
+                'policy_id': 'POLICY_ID',
+                'enabled': 'flase'
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', 'cluster_id', params)
+
+
+class TestClusterPolicyUpdateNegativePolicyNotFound(base.BaseSenlinTest):
+
+    def setUp(self):
+        super(TestClusterPolicyUpdateNegativePolicyNotFound, self).setUp()
+        self.profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id)
+        self.cluster_id = utils.create_a_cluster(self, self.profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+
+    @decorators.idempotent_id('7528bfa5-2106-459a-9ece-f201498b3ace')
+    def test_cluster_policy_update_policy_not_found(self):
+        params = {
+            'policy_update': {
+                'poilicy_id': '7528bfa5-2106-459a-9ece-f201498b3ace'
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', self.cluster_id, params)
+
+
+class TestClusterPolicyUpdateNegativeUnattached(base.BaseSenlinTest):
+
+    def setUp(self):
+        super(TestClusterPolicyUpdateNegativeUnattached, self).setUp()
+        self.profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id)
+        self.cluster_id = utils.create_a_cluster(self, self.profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+        self.policy_id = utils.create_a_policy(self)
+        self.addCleanup(utils.delete_a_policy, self, self.policy_id)
+
+    @decorators.idempotent_id('81931b14-0a4c-43e5-a5eb-fdfd5386627e')
+    def test_cluster_policy_update_policy_unattached(self):
+        params = {
+            'policy_update': {
+                'poilicy_id': self.policy_id
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', self.cluster_id, params)
+
+
+class TestClusterPolicyUpdateNegativeNotFound(base.BaseSenlinTest):
+
+    @decorators.idempotent_id('c7605959-3bc9-41e2-9685-7e11fa03b9e6')
+    def test_cluster_policy_update_cluster_not_found(self):
+        params = {
+            'policy_update': {
+                'policy_id': 'POLICY_ID',
+                'enabled': 'false'
+            }
+        }
+
+        # Verify notfound exception(404) is raised.
+        self.assertRaises(exceptions.NotFound,
+                          self.client.trigger_action, 'clusters',
+                          'c7605959-3bc9-41e2-9685-7e11fa03b9e6', params)
