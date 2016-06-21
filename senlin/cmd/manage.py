@@ -51,6 +51,7 @@ class ServiceManageCommand(object):
             return
 
         status = 'down'
+        cfg.CONF.import_opt('periodic_interval', 'senlin.common.config')
         max_interval = 2 * CONF.periodic_interval
         if timeutils.is_older_than(service.updated_at, max_interval):
             status = 'up'
