@@ -10,11 +10,20 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from senlin.drivers import base
+import docker
 
 
-class DockerClient(base.DriverBase):
+class DockerClient(object):
     """Docker driver."""
 
-    def __init__(self, params):
-        super(DockerClient, self).__init__(params)
+    def __init__(self, url):
+        self.url = url
+        self._dockerclient = docker.Client(base_url=self.url)
+
+    def container_create(self, image, name=None, command=None):
+        return self._dockerclient.create_container(name=name, image=image,
+                                                   command=command)
+
+    def container_delete(self, container):
+        self._dockerclient.remove_container(container)
+        return True
