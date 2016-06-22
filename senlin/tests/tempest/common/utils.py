@@ -82,6 +82,12 @@ def get_a_cluster(base, cluster_id):
     return res['body']
 
 
+def list_clusters(base):
+    """Utility function that lists Senlin clusters."""
+    res = base.client.list_objs('clusters')
+    return res['body']
+
+
 def delete_a_cluster(base, cluster_id, wait_timeout=None):
     """Utility function that deletes a Senlin cluster."""
     res = base.client.delete_obj('clusters', cluster_id)

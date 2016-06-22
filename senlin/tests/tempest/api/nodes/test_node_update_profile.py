@@ -14,8 +14,8 @@ import copy
 from tempest.lib import decorators
 
 from senlin.tests.tempest.api import base
-from senlin.tests.tempest.api import utils
 from senlin.tests.tempest.common import constants
+from senlin.tests.tempest.common import utils
 
 
 class TestNodeUpdateProfile(base.BaseSenlinAPITest):
