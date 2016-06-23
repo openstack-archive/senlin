@@ -390,6 +390,8 @@ class ClusterAction(base.Action):
         if result != self.RES_OK:
             reason = new_reason
         else:
+            self.cluster = cluster_mod.Cluster.load(self.context,
+                                                    self.cluster.id)
             self.cluster.desired_capacity += len(nodes)
             self.cluster.store(self.context)
             nodes_added = [n.id for n in nodes]

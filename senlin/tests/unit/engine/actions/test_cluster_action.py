@@ -785,6 +785,9 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual({'nodes_added': ['NODE_1']}, action.outputs)
 
         mock_load_node.assert_called_once_with(action.context, 'NODE_1')
+        mock_load.assert_has_calls([
+            mock.call(action.context, 'CLUSTER_ID'),
+            mock.call(action.context, 'CLUSTER_ID')])
         mock_action.assert_called_once_with(
             action.context, 'NODE_1', 'NODE_JOIN',
             name='node_join_NODE_1', cause='Derived Action',
@@ -841,6 +844,9 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_load_node.assert_has_calls([
             mock.call(action.context, 'NODE_1'),
             mock.call(action.context, 'NODE_2')])
+        mock_load.assert_has_calls([
+            mock.call(action.context, 'CLUSTER_ID'),
+            mock.call(action.context, 'CLUSTER_ID')])
         mock_action.assert_has_calls([
             mock.call(action.context, 'NODE_1', 'NODE_JOIN',
                       name='node_join_NODE_1', cause='Derived Action',
