@@ -84,11 +84,11 @@ class TestClusterPolicyShowNegativeBadRequest(base.BaseSenlinAPITest):
         self.policy_id2 = utils.create_a_policy(self, name='test-policy')
         self.addCleanup(utils.delete_a_policy, self, self.policy_id2)
 
-        utils.attach_policy(self, self.cluster_id, self.policy_id1)
-        self.addCleanup(utils.detach_policy, self, self.cluster_id,
+        utils.cluster_attach_policy(self, self.cluster_id, self.policy_id1)
+        self.addCleanup(utils.cluster_detach_policy, self, self.cluster_id,
                         self.policy_id1)
-        utils.attach_policy(self, self.cluster_id, self.policy_id2)
-        self.addCleanup(utils.detach_policy, self, self.cluster_id,
+        utils.cluster_attach_policy(self, self.cluster_id, self.policy_id2)
+        self.addCleanup(utils.cluster_detach_policy, self, self.cluster_id,
                         self.policy_id2)
 
     @test.attr(type=['negative'])

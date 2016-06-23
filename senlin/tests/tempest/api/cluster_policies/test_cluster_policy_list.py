@@ -29,8 +29,8 @@ class TestClusterPolicyList(base.BaseSenlinAPITest):
         self.policy_id = utils.create_a_policy(self)
         self.addCleanup(utils.delete_a_policy, self, self.policy_id)
 
-        utils.attach_policy(self, self.cluster_id, self.policy_id)
-        self.addCleanup(utils.detach_policy, self, self.cluster_id,
+        utils.cluster_attach_policy(self, self.cluster_id, self.policy_id)
+        self.addCleanup(utils.cluster_detach_policy, self, self.cluster_id,
                         self.policy_id)
 
     @decorators.idempotent_id('ebaeedcb-7198-4997-9b9c-a8f1eccfc2a6')

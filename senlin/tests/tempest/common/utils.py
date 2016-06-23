@@ -185,7 +185,7 @@ def delete_a_policy(base, policy_id, ignore_missing=False):
     return
 
 
-def attach_policy(base, cluster_id, policy_id, wait_timeout=None):
+def cluster_attach_policy(base, cluster_id, policy_id, wait_timeout=None):
     """Utility function that attach a policy to cluster."""
 
     params = {
@@ -201,12 +201,42 @@ def attach_policy(base, cluster_id, policy_id, wait_timeout=None):
     return
 
 
-def detach_policy(base, cluster_id, policy_id, wait_timeout=None):
+def cluster_detach_policy(base, cluster_id, policy_id, wait_timeout=None):
     """Utility function that detach a policy from cluster."""
 
     params = {
         'policy_detach': {
             'policy_id': policy_id,
+        }
+    }
+    res = base.client.trigger_action('clusters', cluster_id, params=params)
+    action_id = res['location'].split('/actions/')[1]
+    base.client.wait_for_status('actions', action_id, 'SUCCEEDED',
+                                wait_timeout)
+    return
+
+
+def cluster_add_nodes(base, cluster_id, nodes, wait_timeout=None):
+    """Utility function that add nodes to cluster."""
+
+    params = {
+        'add_nodes': {
+            'nodes': nodes,
+        }
+    }
+    res = base.client.trigger_action('clusters', cluster_id, params=params)
+    action_id = res['location'].split('/actions/')[1]
+    base.client.wait_for_status('actions', action_id, 'SUCCEEDED',
+                                wait_timeout)
+    return
+
+
+def cluster_del_nodes(base, cluster_id, nodes, wait_timeout=None):
+    """Utility function that delete nodes to cluster."""
+
+    params = {
+        'del_nodes': {
+            'nodes': nodes,
         }
     }
     res = base.client.trigger_action('clusters', cluster_id, params=params)

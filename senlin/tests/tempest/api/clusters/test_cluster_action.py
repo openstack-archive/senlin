@@ -236,7 +236,7 @@ class TestClusterActionPolicyAttach(base.BaseSenlinAPITest):
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
         self.policy_id = utils.create_a_policy(self)
         self.addCleanup(utils.delete_a_policy, self, self.policy_id)
-        self.addCleanup(utils.detach_policy, self, self.cluster_id,
+        self.addCleanup(utils.cluster_detach_policy, self, self.cluster_id,
                         self.policy_id)
 
     @decorators.idempotent_id('214c48f8-cca9-4512-a904-2985743a1155')
@@ -269,7 +269,7 @@ class TestClusterActionPolicyDetach(base.BaseSenlinAPITest):
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
         self.policy_id = utils.create_a_policy(self)
         self.addCleanup(utils.delete_a_policy, self, self.policy_id)
-        utils.attach_policy(self, self.cluster_id, self.policy_id)
+        utils.cluster_attach_policy(self, self.cluster_id, self.policy_id)
 
     @decorators.idempotent_id('8643245e-ee32-41bb-a736-e33c9e77202a')
     def test_cluster_action_policy_detach(self):
@@ -300,8 +300,8 @@ class TestClusterActionPolicyUpdate(base.BaseSenlinAPITest):
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
         self.policy_id = utils.create_a_policy(self)
         self.addCleanup(utils.delete_a_policy, self, self.policy_id)
-        utils.attach_policy(self, self.cluster_id, self.policy_id)
-        self.addCleanup(utils.detach_policy, self, self.cluster_id,
+        utils.cluster_attach_policy(self, self.cluster_id, self.policy_id)
+        self.addCleanup(utils.cluster_detach_policy, self, self.cluster_id,
                         self.policy_id)
 
     @decorators.idempotent_id('0b9efe3e-0abf-4230-a278-b282578df111')

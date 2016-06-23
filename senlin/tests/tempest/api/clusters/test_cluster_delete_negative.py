@@ -31,8 +31,9 @@ class TestClusterDeleteNegativeConflict(base.BaseSenlinAPITest):
         policy_id = utils.create_a_policy(self)
         self.addCleanup(utils.delete_a_policy, self, policy_id)
 
-        utils.attach_policy(self, self.cluster_id, policy_id)
-        self.addCleanup(utils.detach_policy, self, self.cluster_id, policy_id)
+        utils.cluster_attach_policy(self, self.cluster_id, policy_id)
+        self.addCleanup(utils.cluster_detach_policy, self, self.cluster_id,
+                        policy_id)
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('0de81427-2b2f-4821-9462-c893d35fb212')
