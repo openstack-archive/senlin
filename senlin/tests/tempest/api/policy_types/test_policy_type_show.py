@@ -15,7 +15,7 @@ from tempest.lib import decorators
 from senlin.tests.tempest.api import base
 
 
-class TestPolicyTypeShow(base.BaseSenlinTest):
+class TestPolicyTypeShow(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('57791ed7-7f57-4369-ba6e-7e039169ebdc')
     def test_policy_type_show(self):

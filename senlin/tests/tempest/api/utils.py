@@ -70,7 +70,8 @@ def create_a_cluster(base, profile_id, desired_capacity=0, min_size=0,
     res = base.client.create_obj('clusters', params)
     cluster_id = res['body']['id']
     action_id = res['location'].split('/actions/')[1]
-    base.wait_for_status('actions', action_id, 'SUCCEEDED', wait_timeout)
+    base.client.wait_for_status('actions', action_id, 'SUCCEEDED',
+                                wait_timeout)
 
     return cluster_id
 
@@ -85,7 +86,8 @@ def delete_a_cluster(base, cluster_id, wait_timeout=None):
     """Utility function that deletes a Senlin cluster."""
     res = base.client.delete_obj('clusters', cluster_id)
     action_id = res['location'].split('/actions/')[1]
-    base.wait_for_status('actions', action_id, 'SUCCEEDED', wait_timeout)
+    base.client.wait_for_status('actions', action_id, 'SUCCEEDED',
+                                wait_timeout)
     return
 
 
@@ -112,7 +114,8 @@ def create_a_node(base, profile_id, cluster_id=None, metadata=None,
     res = base.client.create_obj('nodes', params)
     node_id = res['body']['id']
     action_id = res['location'].split('/actions/')[1]
-    base.wait_for_status('actions', action_id, 'SUCCEEDED', wait_timeout)
+    base.client.wait_for_status('actions', action_id, 'SUCCEEDED',
+                                wait_timeout)
     res = base.client.get_obj('nodes', node_id)
     return res['body']['id']
 
@@ -121,7 +124,8 @@ def delete_a_node(base, node_id, wait_timeout=None):
     """Utility function that deletes a Senlin node."""
     res = base.client.delete_obj('nodes', node_id)
     action_id = res['location'].split('/actions/')[1]
-    base.wait_for_status('actions', action_id, 'SUCCEEDED', wait_timeout)
+    base.client.wait_for_status('actions', action_id, 'SUCCEEDED',
+                                wait_timeout)
     return
 
 
@@ -159,7 +163,8 @@ def attach_policy(base, cluster_id, policy_id, wait_timeout=None):
     }
     res = base.client.trigger_action('clusters', cluster_id, params=params)
     action_id = res['location'].split('/actions/')[1]
-    base.wait_for_status('actions', action_id, 'SUCCEEDED', wait_timeout)
+    base.client.wait_for_status('actions', action_id, 'SUCCEEDED',
+                                wait_timeout)
     return
 
 
@@ -173,7 +178,8 @@ def detach_policy(base, cluster_id, policy_id, wait_timeout=None):
     }
     res = base.client.trigger_action('clusters', cluster_id, params=params)
     action_id = res['location'].split('/actions/')[1]
-    base.wait_for_status('actions', action_id, 'SUCCEEDED', wait_timeout)
+    base.client.wait_for_status('actions', action_id, 'SUCCEEDED',
+                                wait_timeout)
     return
 
 

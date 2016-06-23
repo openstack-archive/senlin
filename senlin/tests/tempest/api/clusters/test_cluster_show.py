@@ -16,7 +16,7 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestClusterShow(base.BaseSenlinTest):
+class TestClusterShow(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterShow, self).setUp()

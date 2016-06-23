@@ -22,12 +22,12 @@ CONF = config.CONF
 lOG = log.getLogger(__name__)
 
 
-class BaseSenlinAPITest(base.BaseSenlinTest):
+class BaseSenlinFunctionalTest(base.BaseSenlinTest):
 
     @classmethod
     def setup_clients(cls):
-        super(BaseSenlinAPITest, cls).setup_clients()
-        cls.client = clustering_client.ClusteringAPIClient(
+        super(BaseSenlinFunctionalTest, cls).setup_clients()
+        cls.client = clustering_client.ClusteringFunctionalClient(
             cls.os.auth_provider,
             CONF.clustering.catalog_type,
             CONF.identity.region,

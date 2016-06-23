@@ -18,7 +18,7 @@ from senlin.tests.tempest.api import utils
 from senlin.tests.tempest.common import constants
 
 
-class TestClusterUpdateProfile(base.BaseSenlinTest):
+class TestClusterUpdateProfile(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterUpdateProfile, self).setUp()
@@ -59,4 +59,4 @@ class TestClusterUpdateProfile(base.BaseSenlinTest):
 
         # Wait for cluster update to be done before moving on
         action_id = res['location'].split('/actions/')[1]
-        self.wait_for_status('actions', action_id, 'SUCCEEDED')
+        self.client.wait_for_status('actions', action_id, 'SUCCEEDED')

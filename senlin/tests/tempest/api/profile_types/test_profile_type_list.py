@@ -15,7 +15,7 @@ from tempest.lib import decorators
 from senlin.tests.tempest.api import base
 
 
-class TestProfileTypeList(base.BaseSenlinTest):
+class TestProfileTypeList(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('fa0cf9e3-5b75-4d4d-9a0f-1748772b65d3')
     def test_profile_type_list(self):

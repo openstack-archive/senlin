@@ -18,7 +18,7 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestProfileDeleteNegativeConflict(base.BaseSenlinTest):
+class TestProfileDeleteNegativeConflict(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestProfileDeleteNegativeConflict, self).setUp()
@@ -36,7 +36,7 @@ class TestProfileDeleteNegativeConflict(base.BaseSenlinTest):
                           'profiles', self.profile_id)
 
 
-class TestProfileDeleteNegativeNotFound(base.BaseSenlinTest):
+class TestProfileDeleteNegativeNotFound(base.BaseSenlinAPITest):
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('b6e7911d-5f65-4ec6-a08b-b88809fe2b9e')
@@ -47,7 +47,7 @@ class TestProfileDeleteNegativeNotFound(base.BaseSenlinTest):
                           'profiles', 'b6e7911d-5f65-4ec6-a08b-b88809fe2b9e')
 
 
-class TestProfileDeleteNegativeBadRequest(base.BaseSenlinTest):
+class TestProfileDeleteNegativeBadRequest(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestProfileDeleteNegativeBadRequest, self).setUp()

@@ -18,7 +18,7 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestClusterCreateNegativeBadRequest(base.BaseSenlinTest):
+class TestClusterCreateNegativeBadRequest(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterCreateNegativeBadRequest, self).setUp()

@@ -16,7 +16,7 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestPolicyDelete(base.BaseSenlinTest):
+class TestPolicyDelete(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestPolicyDelete, self).setUp()

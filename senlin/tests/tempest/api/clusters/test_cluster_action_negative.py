@@ -18,7 +18,7 @@ from senlin.tests.tempest.api import utils
 from senlin.tests.tempest.common import constants
 
 
-class TestClusterActionNegativeCommon(base.BaseSenlinTest):
+class TestClusterActionNegativeCommon(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('9c972d49-81bd-4448-9afc-b93053aa835d')
     def test_cluster_action_no_action_specified(self):
@@ -56,7 +56,7 @@ class TestClusterActionNegativeCommon(base.BaseSenlinTest):
                           'clusters', 'cluster_id', params)
 
 
-class TestClusterResizeNegativeInvalidResizeParams(base.BaseSenlinTest):
+class TestClusterResizeNegativeInvalidResizeParams(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('57bc61a2-df38-4bf5-a26a-d23d2cc67ca3')
     def test_cluster_resize_invalid_adj_type(self):
@@ -137,7 +137,7 @@ class TestClusterResizeNegativeInvalidResizeParams(base.BaseSenlinTest):
                           'clusters', 'cluster_id', params)
 
 
-class TestClusterResizeNegativeClusterNotFound(base.BaseSenlinTest):
+class TestClusterResizeNegativeClusterNotFound(base.BaseSenlinAPITest):
     @decorators.idempotent_id('087ef694-55d2-4616-a58b-1073cacb2bcd')
     def test_cluster_resize_cluster_not_found(self):
         params = {
@@ -156,7 +156,7 @@ class TestClusterResizeNegativeClusterNotFound(base.BaseSenlinTest):
                           params)
 
 
-class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinTest):
+class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterResizeNegativeSizeCheckFailed, self).setUp()
@@ -183,7 +183,7 @@ class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinTest):
                           'clusters', self.cluster_id, params)
 
 
-class TestClusterScalingNegativeBadRequest(base.BaseSenlinTest):
+class TestClusterScalingNegativeBadRequest(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterScalingNegativeBadRequest, self).setUp()
@@ -221,7 +221,7 @@ class TestClusterScalingNegativeBadRequest(base.BaseSenlinTest):
                           'clusters', self.cluster_id, params)
 
 
-class TestClusterScalingNegativeNotFound(base.BaseSenlinTest):
+class TestClusterScalingNegativeNotFound(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('0124c7de-66d0-4a84-9c8f-80bc4d246b79')
     def test_cluster_scale_in_cluster_not_found(self):
@@ -251,7 +251,7 @@ class TestClusterScalingNegativeNotFound(base.BaseSenlinTest):
                           params)
 
 
-class TestClusterCheckNegativeInvalidParams(base.BaseSenlinTest):
+class TestClusterCheckNegativeInvalidParams(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('9a305b4f-2f05-4aa9-95ae-e08fd24b0593')
     def test_cluster_check_params_not_dict(self):
@@ -265,7 +265,7 @@ class TestClusterCheckNegativeInvalidParams(base.BaseSenlinTest):
                           'clusters', 'cluster_id', params)
 
 
-class TestClusterCheckNegativeNotFound(base.BaseSenlinTest):
+class TestClusterCheckNegativeNotFound(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('bbbe3feb-8482-4ae4-9c29-b4732efce931')
     def test_cluster_check_cluster_not_found(self):
@@ -279,7 +279,7 @@ class TestClusterCheckNegativeNotFound(base.BaseSenlinTest):
                           'bbbe3feb-8482-4ae4-9c29-b4732efce931', params)
 
 
-class TestClusterRecoverNegativeInvalidParams(base.BaseSenlinTest):
+class TestClusterRecoverNegativeInvalidParams(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('1f93e909-b271-4e46-acd8-8cb621b27546')
     def test_cluster_recover_params_not_dict(self):
@@ -293,7 +293,7 @@ class TestClusterRecoverNegativeInvalidParams(base.BaseSenlinTest):
                           'clusters', 'cluster_id', params)
 
 
-class TestClusterRecoverNegativeNotFound(base.BaseSenlinTest):
+class TestClusterRecoverNegativeNotFound(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('e6e522f4-34d4-42f7-b7f1-45004e06f3d9')
     def test_cluster_recover_cluster_not_found(self):
@@ -307,7 +307,7 @@ class TestClusterRecoverNegativeNotFound(base.BaseSenlinTest):
                           'e6e522f4-34d4-42f7-b7f1-45004e06f3d9', params)
 
 
-class TestClusterAddNodesNegativeInvalidNodesParams(base.BaseSenlinTest):
+class TestClusterAddNodesNegativeInvalidNodesParams(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('912bb24d-73e1-4801-a6de-bdd453cbbdbf')
     def test_cluster_add_nodes_missing_nodes_params(self):
@@ -348,7 +348,7 @@ class TestClusterAddNodesNegativeInvalidNodesParams(base.BaseSenlinTest):
                           'clusters', 'cluster_id', params)
 
 
-class TestClusterAddNodesNegativeNodeNotFound(base.BaseSenlinTest):
+class TestClusterAddNodesNegativeNodeNotFound(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterAddNodesNegativeNodeNotFound, self).setUp()
@@ -371,7 +371,7 @@ class TestClusterAddNodesNegativeNodeNotFound(base.BaseSenlinTest):
                           'clusters', self.cluster_id, params)
 
 
-class TestClusterAddNodesNegativeNodeNotOrphan(base.BaseSenlinTest):
+class TestClusterAddNodesNegativeNodeNotOrphan(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterAddNodesNegativeNodeNotOrphan, self).setUp()
@@ -399,7 +399,7 @@ class TestClusterAddNodesNegativeNodeNotOrphan(base.BaseSenlinTest):
                           'clusters', self.cluster_id, params)
 
 
-class TestClusterAddNodesNegativeProfileTypeUnmatch(base.BaseSenlinTest):
+class TestClusterAddNodesNegativeProfileTypeUnmatch(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterAddNodesNegativeProfileTypeUnmatch, self).setUp()
@@ -430,7 +430,7 @@ class TestClusterAddNodesNegativeProfileTypeUnmatch(base.BaseSenlinTest):
                           'clusters', self.cluster_id, params)
 
 
-class TestClusterAddNodesNegativeSizeCheckFailed(base.BaseSenlinTest):
+class TestClusterAddNodesNegativeSizeCheckFailed(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterAddNodesNegativeSizeCheckFailed, self).setUp()
@@ -459,7 +459,7 @@ class TestClusterAddNodesNegativeSizeCheckFailed(base.BaseSenlinTest):
                           'clusters', self.cluster_id, params)
 
 
-class TestClusterAddNodesNegativeClusterNotFound(base.BaseSenlinTest):
+class TestClusterAddNodesNegativeClusterNotFound(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('22f10d36-c29a-4cde-a975-af262a5775a1')
     def test_cluster_add_nodes_cluster_not_found(self):
@@ -475,7 +475,7 @@ class TestClusterAddNodesNegativeClusterNotFound(base.BaseSenlinTest):
                           'db0faadf-9cd2-457f-b434-4891b77938ab', params)
 
 
-class TestClusterDelNodesNegativeInvalidNodesParams(base.BaseSenlinTest):
+class TestClusterDelNodesNegativeInvalidNodesParams(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('89af1e6f-17b4-4c6f-ae5f-91a2da784c05')
     def test_cluster_del_nodes_missing_nodes_params(self):
@@ -516,7 +516,7 @@ class TestClusterDelNodesNegativeInvalidNodesParams(base.BaseSenlinTest):
                           'clusters', 'cluster_id', params)
 
 
-class TestClusterDelNodesNegativeNodeNotFound(base.BaseSenlinTest):
+class TestClusterDelNodesNegativeNodeNotFound(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterDelNodesNegativeNodeNotFound, self).setUp()
@@ -539,7 +539,7 @@ class TestClusterDelNodesNegativeNodeNotFound(base.BaseSenlinTest):
                           'clusters', self.cluster_id, params)
 
 
-class TestClusterDelNodesNegativeOrphanNode(base.BaseSenlinTest):
+class TestClusterDelNodesNegativeOrphanNode(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterDelNodesNegativeOrphanNode, self).setUp()
@@ -564,7 +564,7 @@ class TestClusterDelNodesNegativeOrphanNode(base.BaseSenlinTest):
                           'clusters', self.cluster_id, params)
 
 
-class TestClusterDelNodesNegativeNodeOfOtherCluster(base.BaseSenlinTest):
+class TestClusterDelNodesNegativeNodeOfOtherCluster(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterDelNodesNegativeNodeOfOtherCluster, self).setUp()
@@ -591,7 +591,7 @@ class TestClusterDelNodesNegativeNodeOfOtherCluster(base.BaseSenlinTest):
                           'clusters', self.cluster_id, params)
 
 
-class TestClusterDelNodesNegativeSizeCheckFailed(base.BaseSenlinTest):
+class TestClusterDelNodesNegativeSizeCheckFailed(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterDelNodesNegativeSizeCheckFailed, self).setUp()
@@ -620,7 +620,7 @@ class TestClusterDelNodesNegativeSizeCheckFailed(base.BaseSenlinTest):
                           'clusters', self.cluster_id, params)
 
 
-class TestClusterDelNodesNegativeClusterNotFound(base.BaseSenlinTest):
+class TestClusterDelNodesNegativeClusterNotFound(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('dc8f106a-10b7-47a3-8494-c86035207351')
     def test_cluster_del_nodes_cluster_not_found(self):
@@ -636,7 +636,7 @@ class TestClusterDelNodesNegativeClusterNotFound(base.BaseSenlinTest):
                           'dc8f106a-10b7-47a3-8494-c86035207351', params)
 
 
-class TestClusterPolicyAttachNegativeInvalidParams(base.BaseSenlinTest):
+class TestClusterPolicyAttachNegativeInvalidParams(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('76dcdc8d-7680-4e27-bccd-26ad9d697528')
     def test_cluster_policy_attach_params_not_dict(self):
@@ -675,7 +675,7 @@ class TestClusterPolicyAttachNegativeInvalidParams(base.BaseSenlinTest):
                           'clusters', 'cluster_id', params)
 
 
-class TestClusterPolicyAttachNegativePolicyNotFound(base.BaseSenlinTest):
+class TestClusterPolicyAttachNegativePolicyNotFound(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterPolicyAttachNegativePolicyNotFound, self).setUp()
@@ -698,7 +698,7 @@ class TestClusterPolicyAttachNegativePolicyNotFound(base.BaseSenlinTest):
                           'clusters', self.cluster_id, params)
 
 
-class TestClusterPolicyAttachNegativeNotFound(base.BaseSenlinTest):
+class TestClusterPolicyAttachNegativeNotFound(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('29e66d49-9ffa-47c9-bbe3-e0cf9c3370ee')
     def test_cluster_policy_attach_cluster_not_found(self):
@@ -714,7 +714,7 @@ class TestClusterPolicyAttachNegativeNotFound(base.BaseSenlinTest):
                           '29e66d49-9ffa-47c9-bbe3-e0cf9c3370ee', params)
 
 
-class TestClusterPolicyDetachNegativeInvalidParams(base.BaseSenlinTest):
+class TestClusterPolicyDetachNegativeInvalidParams(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('815a1c5a-f27b-4620-8711-bbef46507447')
     def test_cluster_policy_detach_missing_profile_id_param(self):
@@ -728,7 +728,7 @@ class TestClusterPolicyDetachNegativeInvalidParams(base.BaseSenlinTest):
                           'clusters', 'cluster_id', params)
 
 
-class TestClusterPolicyDetachNegativePolicyNotFound(base.BaseSenlinTest):
+class TestClusterPolicyDetachNegativePolicyNotFound(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterPolicyDetachNegativePolicyNotFound, self).setUp()
@@ -751,7 +751,7 @@ class TestClusterPolicyDetachNegativePolicyNotFound(base.BaseSenlinTest):
                           'clusters', self.cluster_id, params)
 
 
-class TestClusterPolicyDetachNegativeUnattached(base.BaseSenlinTest):
+class TestClusterPolicyDetachNegativeUnattached(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterPolicyDetachNegativeUnattached, self).setUp()
@@ -776,7 +776,7 @@ class TestClusterPolicyDetachNegativeUnattached(base.BaseSenlinTest):
                           'clusters', self.cluster_id, params)
 
 
-class TestClusterPolicyDetachNegativeNotFound(base.BaseSenlinTest):
+class TestClusterPolicyDetachNegativeNotFound(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('11ff0486-a022-4b28-9def-9b2d78d47fab')
     def test_cluster_policy_detach_cluster_not_found(self):
@@ -792,7 +792,7 @@ class TestClusterPolicyDetachNegativeNotFound(base.BaseSenlinTest):
                           '11ff0486-a022-4b28-9def-9b2d78d47fab', params)
 
 
-class TestClusterPolicyUpdateNegativeInvalidParams(base.BaseSenlinTest):
+class TestClusterPolicyUpdateNegativeInvalidParams(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('653d8ea9-9c7e-48f2-b568-6167bb7f8666')
     def test_cluster_policy_update_params_not_dict(self):
@@ -831,7 +831,7 @@ class TestClusterPolicyUpdateNegativeInvalidParams(base.BaseSenlinTest):
                           'clusters', 'cluster_id', params)
 
 
-class TestClusterPolicyUpdateNegativePolicyNotFound(base.BaseSenlinTest):
+class TestClusterPolicyUpdateNegativePolicyNotFound(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterPolicyUpdateNegativePolicyNotFound, self).setUp()
@@ -854,7 +854,7 @@ class TestClusterPolicyUpdateNegativePolicyNotFound(base.BaseSenlinTest):
                           'clusters', self.cluster_id, params)
 
 
-class TestClusterPolicyUpdateNegativeUnattached(base.BaseSenlinTest):
+class TestClusterPolicyUpdateNegativeUnattached(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterPolicyUpdateNegativeUnattached, self).setUp()
@@ -879,7 +879,7 @@ class TestClusterPolicyUpdateNegativeUnattached(base.BaseSenlinTest):
                           'clusters', self.cluster_id, params)
 
 
-class TestClusterPolicyUpdateNegativeNotFound(base.BaseSenlinTest):
+class TestClusterPolicyUpdateNegativeNotFound(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('c7605959-3bc9-41e2-9685-7e11fa03b9e6')
     def test_cluster_policy_update_cluster_not_found(self):

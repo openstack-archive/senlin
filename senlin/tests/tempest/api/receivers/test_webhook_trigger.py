@@ -16,7 +16,7 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestWebhookTrigger(base.BaseSenlinTest):
+class TestWebhookTrigger(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestWebhookTrigger, self).setUp()
@@ -45,4 +45,4 @@ class TestWebhookTrigger(base.BaseSenlinTest):
 
         # Trigger webhook action
         action_id = res['location'].split('/actions/')[1]
-        self.wait_for_status('actions', action_id, 'SUCCEEDED')
+        self.client.wait_for_status('actions', action_id, 'SUCCEEDED')

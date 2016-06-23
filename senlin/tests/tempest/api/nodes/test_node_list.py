@@ -16,7 +16,7 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestNodeList(base.BaseSenlinTest):
+class TestNodeList(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestNodeList, self).setUp()

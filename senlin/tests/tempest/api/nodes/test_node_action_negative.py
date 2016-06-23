@@ -16,7 +16,7 @@ from tempest.lib import exceptions
 from senlin.tests.tempest.api import base
 
 
-class TestNodeActionNegativeBadRequest(base.BaseSenlinTest):
+class TestNodeActionNegativeBadRequest(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('9ab462e2-ea3a-49f8-bd78-5a056ae80a48')
     def test_node_action_no_action_specified(self):
@@ -78,7 +78,7 @@ class TestNodeActionNegativeBadRequest(base.BaseSenlinTest):
                           'nodes', 'node_id', params)
 
 
-class TestNodeActionNegativeNotFound(base.BaseSenlinTest):
+class TestNodeActionNegativeNotFound(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('90c46123-f992-4833-859a-46f6d2ccd8e9')
     def test_node_action_node_not_found(self):

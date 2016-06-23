@@ -16,7 +16,7 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestProfileDelete(base.BaseSenlinTest):
+class TestProfileDelete(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestProfileDelete, self).setUp()

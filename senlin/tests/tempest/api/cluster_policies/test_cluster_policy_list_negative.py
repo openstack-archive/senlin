@@ -17,7 +17,7 @@ from tempest import test
 from senlin.tests.tempest.api import base
 
 
-class TestClusterPolicyListNegativeBadRequest(base.BaseSenlinTest):
+class TestClusterPolicyListNegativeBadRequest(base.BaseSenlinAPITest):
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('7f23de64-60c4-456e-9e24-db86ac89480c')
@@ -28,7 +28,7 @@ class TestClusterPolicyListNegativeBadRequest(base.BaseSenlinTest):
                           {'bogus': 'foo'})
 
 
-class TestClusterPolicyListNegativeNotFound(base.BaseSenlinTest):
+class TestClusterPolicyListNegativeNotFound(base.BaseSenlinAPITest):
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('0259cbac-0fb3-480b-8f23-1ec59616f3af')

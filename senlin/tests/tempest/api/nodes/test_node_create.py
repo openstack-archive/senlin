@@ -16,7 +16,7 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestNodeCreate(base.BaseSenlinTest):
+class TestNodeCreate(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestNodeCreate, self).setUp()
@@ -58,4 +58,4 @@ class TestNodeCreate(base.BaseSenlinTest):
 
         # Wait node to be active before moving on
         action_id = res['location'].split('/actions/')[1]
-        self.wait_for_status('actions', action_id, 'SUCCEEDED')
+        self.client.wait_for_status('actions', action_id, 'SUCCEEDED')

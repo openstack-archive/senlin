@@ -16,7 +16,7 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestNodeActionCheck(base.BaseSenlinTest):
+class TestNodeActionCheck(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestNodeActionCheck, self).setUp()
@@ -40,10 +40,10 @@ class TestNodeActionCheck(base.BaseSenlinTest):
         self.assertIn('actions', res['location'])
 
         action_id = res['location'].split('/actions/')[1]
-        self.wait_for_status('actions', action_id, 'SUCCEEDED')
+        self.client.wait_for_status('actions', action_id, 'SUCCEEDED')
 
 
-class TestNodeActionRecover(base.BaseSenlinTest):
+class TestNodeActionRecover(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestNodeActionRecover, self).setUp()
@@ -68,4 +68,4 @@ class TestNodeActionRecover(base.BaseSenlinTest):
         self.assertIn('actions', res['location'])
 
         action_id = res['location'].split('/actions/')[1]
-        self.wait_for_status('actions', action_id, 'SUCCEEDED')
+        self.client.wait_for_status('actions', action_id, 'SUCCEEDED')

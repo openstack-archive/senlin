@@ -20,7 +20,7 @@ from senlin.tests.tempest.api import utils
 from senlin.tests.tempest.common import constants
 
 
-class TestClusterUpdateNegativeNotFound(base.BaseSenlinTest):
+class TestClusterUpdateNegativeNotFound(base.BaseSenlinAPITest):
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('f7a97fce-f495-44a8-b41a-7408139adacf')
@@ -31,7 +31,7 @@ class TestClusterUpdateNegativeNotFound(base.BaseSenlinTest):
                           {'cluster': {'name': 'new-name'}})
 
 
-class TestClusterUpdateNegativeProfileNotFound(base.BaseSenlinTest):
+class TestClusterUpdateNegativeProfileNotFound(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterUpdateNegativeProfileNotFound, self).setUp()
@@ -58,7 +58,7 @@ class TestClusterUpdateNegativeProfileNotFound(base.BaseSenlinTest):
                           'clusters', self.cluster_id, params)
 
 
-class TestClusterUpdateNegativeProfileMultichoices(base.BaseSenlinTest):
+class TestClusterUpdateNegativeProfileMultichoices(base.BaseSenlinAPITest):
     def setUp(self):
         super(TestClusterUpdateNegativeProfileMultichoices, self).setUp()
         # Create a profile
@@ -92,7 +92,7 @@ class TestClusterUpdateNegativeProfileMultichoices(base.BaseSenlinTest):
                           'clusters', self.cluster_id, params)
 
 
-class TestClusterUpdateNegativeProfileTypeUnmatch(base.BaseSenlinTest):
+class TestClusterUpdateNegativeProfileTypeUnmatch(base.BaseSenlinAPITest):
     def setUp(self):
         super(TestClusterUpdateNegativeProfileTypeUnmatch, self).setUp()
         # Create a profile
@@ -123,7 +123,7 @@ class TestClusterUpdateNegativeProfileTypeUnmatch(base.BaseSenlinTest):
                           'clusters', self.cluster_id, params)
 
 
-class TestClusterUpdateNegativeNoPropertyUpdated(base.BaseSenlinTest):
+class TestClusterUpdateNegativeNoPropertyUpdated(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterUpdateNegativeNoPropertyUpdated, self).setUp()

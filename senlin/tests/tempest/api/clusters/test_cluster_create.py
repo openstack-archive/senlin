@@ -16,7 +16,7 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.api import utils
 
 
-class TestClusterCreate(base.BaseSenlinTest):
+class TestClusterCreate(base.BaseSenlinAPITest):
 
     def setUp(self):
         super(TestClusterCreate, self).setUp()
@@ -65,6 +65,6 @@ class TestClusterCreate(base.BaseSenlinTest):
 
         # Wait cluster to be active before moving on
         action_id = res['location'].split('/actions/')[1]
-        self.wait_for_status('actions', action_id, 'SUCCEEDED')
+        self.client.wait_for_status('actions', action_id, 'SUCCEEDED')
 
         self.addCleanup(utils.delete_a_cluster, self, cluster['id'])
