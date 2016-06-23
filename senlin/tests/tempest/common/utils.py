@@ -76,6 +76,27 @@ def create_a_cluster(base, profile_id, desired_capacity=0, min_size=0,
     return cluster_id
 
 
+def update_a_cluster(base, cluster_id, profile_id=None, name=None,
+                     metadata=None, timeout=None, wait_timeout=None):
+    """Utility function that updates a Senlin cluster.
+
+    Update a cluster and return it after it is ACTIVE.
+    """
+    params = {
+        'cluster': {
+            'profile_id': profile_id,
+            'metadata': metadata,
+            'name': name,
+            'timeout': timeout
+        }
+    }
+    res = base.client.update_obj('clusters', cluster_id, params)
+    action_id = res['location'].split('/actions/')[1]
+    base.client.wait_for_status('actions', action_id, 'SUCCEEDED',
+                                wait_timeout)
+    return res['body']
+
+
 def get_a_cluster(base, cluster_id):
     """Utility function that gets a Senlin cluster."""
     res = base.client.get_obj('clusters', cluster_id)
@@ -124,6 +145,12 @@ def create_a_node(base, profile_id, cluster_id=None, metadata=None,
                                 wait_timeout)
     res = base.client.get_obj('nodes', node_id)
     return res['body']['id']
+
+
+def get_a_node(base, node_id):
+    """Utility function that gets a Senlin node."""
+    res = base.client.get_obj('nodes', node_id)
+    return res['body']
 
 
 def delete_a_node(base, node_id, wait_timeout=None):
