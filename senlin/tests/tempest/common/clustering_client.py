@@ -40,8 +40,10 @@ class ClusteringAPIClient(rest_client.RestClient):
 
         return res
 
-    def get_obj(self, obj_type, obj_id):
+    def get_obj(self, obj_type, obj_id, params=None):
         uri = '{0}/{1}/{2}'.format(self.version, obj_type, obj_id)
+        if params:
+            uri += '?{0}'.format(urllib.urlencode(params))
         resp, body = self.get(uri)
 
         return self._parsed_resp(resp, body)
