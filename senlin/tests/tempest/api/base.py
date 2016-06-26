@@ -24,6 +24,13 @@ lOG = log.getLogger(__name__)
 
 class BaseSenlinAPITest(base.BaseSenlinTest):
 
+    network_resources = {
+        'network': False,
+        'router': False,
+        'subnet': False,
+        'dhcp': False,
+    }
+
     @classmethod
     def setup_clients(cls):
         super(BaseSenlinAPITest, cls).setup_clients()
