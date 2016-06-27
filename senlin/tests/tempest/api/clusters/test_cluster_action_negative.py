@@ -163,16 +163,123 @@ class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinAPITest):
         profile_id = utils.create_a_profile(self)
         self.addCleanup(utils.delete_a_profile, self, profile_id)
         self.cluster_id = utils.create_a_cluster(self, profile_id,
-                                                 min_size=0, max_size=5,
-                                                 desired_capacity=1)
+                                                 min_size=2, max_size=5,
+                                                 desired_capacity=3)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
     @decorators.idempotent_id('92e7d3c8-2d38-4766-86c3-41dc14bf89a1')
-    def test_cluster_resize_cluster_size_check_failed(self):
+    def test_cluster_resize_break_upper_limit(self):
+        # New desired_capacity will be larger than max_size
         params = {
             "resize": {
                 "adjustment_type": "CHANGE_IN_CAPACITY",
-                "number": 5,
+                "number": 3,
+                "strict": True
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', self.cluster_id, params)
+
+    @decorators.idempotent_id('9dcac577-d768-44d1-b119-02d27202ef08')
+    def test_cluster_resize_break_lower_limit(self):
+        # New desired_capacity will be less than min_size
+        params = {
+            "resize": {
+                "adjustment_type": "CHANGE_IN_CAPACITY",
+                "number": -2,
+                "strict": True
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', self.cluster_id, params)
+
+    @decorators.idempotent_id('d7a96d95-2944-4749-be34-cfe39a5dbcb4')
+    def test_cluster_resize_max_size_under_current_desired_capacity(self):
+        # New max_size is lower than current desired_capacity of cluster
+        params = {
+            "resize": {
+                "max_size": 2,
+                "strict": True
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', self.cluster_id, params)
+
+    @decorators.idempotent_id('3b35938f-a73a-4096-bf13-af3709aed47f')
+    def test_cluster_resize_max_size_under_current_min_size(self):
+        # New max_size is lower than current min_size of cluster
+        # with strict set to False
+        params = {
+            "resize": {
+                "max_size": 1,
+                "strict": False
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', self.cluster_id, params)
+
+        # New max_size is lower than current min_size of cluster
+        # with strict set to True
+        params = {
+            "resize": {
+                "max_size": 1,
+                "strict": True
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', self.cluster_id, params)
+
+    @decorators.idempotent_id('1d7595a4-a7a8-42a4-9f90-7501a4bbb7e5')
+    def test_cluster_resize_min_size_over_current_desired_capacity(self):
+        # New min_size is larger than current desired_capacity of cluster
+        params = {
+            "resize": {
+                "min_size": 4,
+                "strict": True
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', self.cluster_id, params)
+
+    @decorators.idempotent_id('606e5d3f-0857-4bfe-b52d-2ea1ad0cec16')
+    def test_cluster_resize_min_size_over_current_max_size(self):
+        # New min_size is larger than current max_size of cluster
+        # with strict set to False
+        params = {
+            "resize": {
+                "min_size": 6,
+                "strict": False
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'clusters', self.cluster_id, params)
+
+        # New min_size is larger than current max_size of cluster
+        # with strict set to True
+        params = {
+            "resize": {
+                "min_size": 6,
                 "strict": True
             }
         }
