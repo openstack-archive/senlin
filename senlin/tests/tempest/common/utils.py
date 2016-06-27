@@ -274,7 +274,7 @@ def cluster_add_nodes(base, cluster_id, nodes, expected_status='SUCCEEDED',
 
 def cluster_del_nodes(base, cluster_id, nodes, expected_status='SUCCEEDED',
                       wait_timeout=None):
-    """Utility function that delete nodes to cluster."""
+    """Utility function that delete nodes from cluster."""
 
     params = {
         'del_nodes': {
@@ -311,6 +311,28 @@ def cluster_scale_in(base, cluster_id, count=None,
     params = {
         'scale_in': {
             'count': count
+        }
+    }
+    res = base.client.trigger_action('clusters', cluster_id, params=params)
+    action_id = res['location'].split('/actions/')[1]
+    res = base.client.wait_for_status('actions', action_id, expected_status,
+                                      wait_timeout)
+    return res['body']['status_reason']
+
+
+def cluster_resize(base, cluster_id, adj_type=None, number=None, min_size=None,
+                   max_size=None, min_step=None, strict=True,
+                   expected_status='SUCCEEDED', wait_timeout=None):
+    """Utility function that resize cluster."""
+
+    params = {
+        'resize': {
+            'adjustment_type': adj_type,
+            'number': number,
+            'min_size': min_size,
+            'max_size': max_size,
+            'min_step': min_step,
+            'strict': strict
         }
     }
     res = base.client.trigger_action('clusters', cluster_id, params=params)
