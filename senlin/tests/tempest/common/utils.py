@@ -314,7 +314,7 @@ def cluster_scale_in(base, cluster_id, count=None,
     return res['body']['status_reason']
 
 
-def create_a_receiver(client, cluster_id, action, r_type=None, name=None,
+def create_a_receiver(base, cluster_id, action, r_type=None, name=None,
                       params=None):
     """Utility function that generates a Senlin receiver."""
 
@@ -330,13 +330,19 @@ def create_a_receiver(client, cluster_id, action, r_type=None, name=None,
             'params': params or {}
         }
     }
-    res = client.create_obj('receivers', body)
+    res = base.client.create_obj('receivers', body)
     return res['body']['id']
 
 
-def delete_a_receiver(client, receiver_id, ignore_missing=False):
+def get_a_receiver(base, receiver_id):
+    """Utility function that gets a Senlin receiver."""
+    res = base.client.get_obj('receivers', receiver_id)
+    return res['body']
+
+
+def delete_a_receiver(base, receiver_id, ignore_missing=False):
     """Utility function that deletes a Senlin receiver."""
-    res = client.delete_obj('receivers', receiver_id)
+    res = base.client.delete_obj('receivers', receiver_id)
     if res['status'] == 404:
         if ignore_missing:
             return

@@ -38,16 +38,14 @@ class TestReceiverDeleteNegativeBadRequest(base.BaseSenlinAPITest):
         cluster_id = utils.create_a_cluster(self, profile_id)
         self.addCleanup(utils.delete_a_cluster, self, cluster_id)
 
-        self.receiver_id1 = utils.create_a_receiver(self.client, cluster_id,
+        self.receiver_id1 = utils.create_a_receiver(self, cluster_id,
                                                     'CLUSTER_RESIZE',
                                                     name='r-01')
-        self.addCleanup(utils.delete_a_receiver, self.client,
-                        self.receiver_id1)
-        self.receiver_id2 = utils.create_a_receiver(self.client, cluster_id,
+        self.addCleanup(utils.delete_a_receiver, self, self.receiver_id1)
+        self.receiver_id2 = utils.create_a_receiver(self, cluster_id,
                                                     'CLUSTER_RESIZE',
                                                     name='r-01')
-        self.addCleanup(utils.delete_a_receiver, self.client,
-                        self.receiver_id2)
+        self.addCleanup(utils.delete_a_receiver, self, self.receiver_id2)
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('f6f2377c-f125-4c35-be5f-42f94ba81a0e')

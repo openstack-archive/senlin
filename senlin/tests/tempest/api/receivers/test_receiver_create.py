@@ -43,7 +43,7 @@ class TestReceiverCreate(base.BaseSenlinAPITest):
         self.assertIsNotNone(res['body'])
         recv = res['body']
         self.receiver_id = recv['id']
-        self.addCleanup(utils.delete_a_receiver, self.client, self.receiver_id)
+        self.addCleanup(utils.delete_a_receiver, self, self.receiver_id)
 
         for key in ['action', 'actor', 'channel', 'cluster_id', 'created_at',
                     'domain', 'id', 'name', 'params', 'project', 'type',
