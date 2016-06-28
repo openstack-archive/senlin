@@ -282,6 +282,38 @@ def cluster_del_nodes(base, cluster_id, nodes, expected_status='SUCCEEDED',
     return res['body']['status_reason']
 
 
+def cluster_scale_out(base, cluster_id, count=None,
+                      expected_status='SUCCEEDED', wait_timeout=None):
+    """Utility function that scale out cluster."""
+
+    params = {
+        'scale_out': {
+            'count': count
+        }
+    }
+    res = base.client.trigger_action('clusters', cluster_id, params=params)
+    action_id = res['location'].split('/actions/')[1]
+    res = base.client.wait_for_status('actions', action_id, expected_status,
+                                      wait_timeout)
+    return res['body']['status_reason']
+
+
+def cluster_scale_in(base, cluster_id, count=None,
+                     expected_status='SUCCEEDED', wait_timeout=None):
+    """Utility function that scale in cluster."""
+
+    params = {
+        'scale_in': {
+            'count': count
+        }
+    }
+    res = base.client.trigger_action('clusters', cluster_id, params=params)
+    action_id = res['location'].split('/actions/')[1]
+    res = base.client.wait_for_status('actions', action_id, expected_status,
+                                      wait_timeout)
+    return res['body']['status_reason']
+
+
 def create_a_receiver(client, cluster_id, action, r_type=None, name=None,
                       params=None):
     """Utility function that generates a Senlin receiver."""
