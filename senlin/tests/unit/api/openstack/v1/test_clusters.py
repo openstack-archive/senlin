@@ -1215,7 +1215,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'min_size': None,
                 'max_size': -1,
                 'min_step': None,
-                'strict': None
+                'strict': True
             })
         )
         self.assertEqual(eng_resp, resp)
@@ -1257,7 +1257,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'min_size': 2,
                 'max_size': -1,
                 'min_step': None,
-                'strict': None
+                'strict': True
             })
         )
         self.assertEqual(eng_resp, resp)

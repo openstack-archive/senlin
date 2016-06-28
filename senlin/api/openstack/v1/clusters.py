@@ -250,6 +250,8 @@ class ClusterController(wsgi.Controller):
                                              min_step)
         if strict is not None:
             strict = utils.parse_bool_param(consts.ADJUSTMENT_STRICT, strict)
+        else:
+            strict = True
 
         result = self.rpc_client.cluster_resize(req.context, cluster_id,
                                                 adj_type, number, min_size,
