@@ -206,6 +206,12 @@ def create_a_policy(base, spec=None, name=None):
     return res['body']['id']
 
 
+def get_a_policy(base, policy_id):
+    """Utility function that gets a Senlin policy."""
+    res = base.client.get_obj('policies', policy_id)
+    return res['body']
+
+
 def delete_a_policy(base, policy_id, ignore_missing=False):
     """Utility function that deletes a policy."""
     res = base.client.delete_obj('policies', policy_id)
