@@ -147,9 +147,40 @@ def create_a_node(base, profile_id, cluster_id=None, metadata=None,
     return res['body']['id']
 
 
-def get_a_node(base, node_id):
+def get_a_node(base, node_id, show_details=False):
     """Utility function that gets a Senlin node."""
-    res = base.client.get_obj('nodes', node_id)
+    params = None
+    if show_details:
+        params = {'show_details': True}
+    res = base.client.get_obj('nodes', node_id, params)
+    return res['body']
+
+
+def list_nodes(base):
+    """Utility function that lists Senlin nodes."""
+    res = base.client.list_objs('nodes')
+    return res['body']
+
+
+def update_a_node(base, node_id, profile_id=None, name=None,
+                  metadata=None, role=None, wait_timeout=None):
+    """Utility function that updates a Senlin node.
+
+    Update a node and return it after it is ACTIVE.
+    """
+    params = {
+        'node': {
+            'profile_id': profile_id,
+            'metadata': metadata,
+            'name': name,
+            'role': role
+        }
+    }
+    res = base.client.update_obj('nodes', node_id, params)
+    action_id = res['location'].split('/actions/')[1]
+    base.client.wait_for_status('actions', action_id, 'SUCCEEDED',
+                                wait_timeout)
+
     return res['body']
 
 
