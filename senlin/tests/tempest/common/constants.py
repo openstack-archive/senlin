@@ -68,3 +68,37 @@ spec_scaling_policy = {
         }
     }
 }
+
+
+spec_lb_policy = {
+    "type": "senlin.policy.loadbalance",
+    "version": "1.0",
+    "properties": {
+        "pool": {
+            "protocol": "HTTP",
+            "protocol_port": 80,
+            "subnet": "private-subnet",
+            "lb_method": "ROUND_ROBIN",
+            "session_persistence": {
+                "type": "SOURCE_IP",
+                "cookie_name": "test-cookie"
+            }
+        },
+        "vip": {
+            "subnet": "private-subnet",
+            "connection_limit": 100,
+            "protocol": "HTTP",
+            "protocol_port": 80
+        },
+        "health_monitor": {
+            "type": "HTTP",
+            "delay": "1",
+            "timeout": 1,
+            "max_retries": 5,
+            "admin_state_up": True,
+            "http_method": "GET",
+            "url_path": "/index.html",
+            "expected_codes": "200,201,202"
+        }
+    }
+}
