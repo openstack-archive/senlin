@@ -37,6 +37,7 @@ class TestClusterScaleInOut(base.BaseSenlinFunctionalTest):
 
         # Verify scale out result
         cluster = utils.get_a_cluster(self, self.cluster_id)
+        self.assertEqual('ACTIVE', cluster['status'])
         self.assertEqual(2, cluster['desired_capacity'])
         self.assertEqual(2, len(cluster['nodes']))
 
@@ -45,6 +46,7 @@ class TestClusterScaleInOut(base.BaseSenlinFunctionalTest):
 
         # Verify scale out result
         cluster = utils.get_a_cluster(self, self.cluster_id)
+        self.assertEqual('ACTIVE', cluster['status'])
         self.assertEqual(4, cluster['desired_capacity'])
         self.assertEqual(4, len(cluster['nodes']))
 
@@ -54,6 +56,7 @@ class TestClusterScaleInOut(base.BaseSenlinFunctionalTest):
 
         # Verify action result and action failure reason
         cluster = utils.get_a_cluster(self, self.cluster_id)
+        self.assertEqual('ACTIVE', cluster['status'])
         self.assertEqual(4, cluster['desired_capacity'])
         self.assertEqual(4, len(cluster['nodes']))
         reason = _("The target capacity (6) is greater "
@@ -65,6 +68,7 @@ class TestClusterScaleInOut(base.BaseSenlinFunctionalTest):
 
         # Verify scale in result
         cluster = utils.get_a_cluster(self, self.cluster_id)
+        self.assertEqual('ACTIVE', cluster['status'])
         self.assertEqual(2, cluster['desired_capacity'])
         self.assertEqual(2, len(cluster['nodes']))
 
@@ -73,6 +77,7 @@ class TestClusterScaleInOut(base.BaseSenlinFunctionalTest):
 
         # Verify scale in result
         cluster = utils.get_a_cluster(self, self.cluster_id)
+        self.assertEqual('ACTIVE', cluster['status'])
         self.assertEqual(1, cluster['desired_capacity'])
         self.assertEqual(1, len(cluster['nodes']))
 
@@ -82,8 +87,155 @@ class TestClusterScaleInOut(base.BaseSenlinFunctionalTest):
 
         # Verify action result and action failure reason
         cluster = utils.get_a_cluster(self, self.cluster_id)
+        self.assertEqual('ACTIVE', cluster['status'])
         self.assertEqual(1, cluster['desired_capacity'])
         self.assertEqual(1, len(cluster['nodes']))
         reason = _("The target capacity (0) is less "
                    "than the cluster's min_size (1).")
         self.assertEqual(reason, res)
+
+
+class TestClusterResize(base.BaseSenlinFunctionalTest):
+
+    def setUp(self):
+        super(TestClusterResize, self).setUp()
+        self.profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id)
+        self.cluster_id = utils.create_a_cluster(self, self.profile_id,
+                                                 min_size=2, max_size=5,
+                                                 desired_capacity=3)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+
+    @test.attr(type=['functional'])
+    @decorators.idempotent_id('02b570ef-9101-489b-9ee7-8c1f35d2b105')
+    def test_cluster_resize_basic(self):
+        # Increase cluster size by specifying adjustment count
+        kwargs = {
+            'adj_type': 'CHANGE_IN_CAPACITY',
+            'number': 2
+        }
+        utils.cluster_resize(self, self.cluster_id, **kwargs)
+
+        # Verify resizing result
+        cluster = utils.get_a_cluster(self, self.cluster_id)
+        self.assertEqual('ACTIVE', cluster['status'])
+        self.assertEqual(5, cluster['desired_capacity'])
+        self.assertEqual(5, len(cluster['nodes']))
+
+        # Decrease cluster size by specifying adjustment percentage
+        kwargs = {
+            'adj_type': 'CHANGE_IN_PERCENTAGE',
+            'number': -50
+        }
+        utils.cluster_resize(self, self.cluster_id, **kwargs)
+
+        # Verify resizing result
+        cluster = utils.get_a_cluster(self, self.cluster_id)
+        self.assertEqual('ACTIVE', cluster['status'])
+        self.assertEqual(3, cluster['desired_capacity'])
+        self.assertEqual(3, len(cluster['nodes']))
+
+        # Decrease cluster size by specifying exact capacity
+        kwargs = {
+            'adj_type': 'EXACT_CAPACITY',
+            'number': 2
+        }
+        utils.cluster_resize(self, self.cluster_id, **kwargs)
+
+        # Verify resizing result
+        cluster = utils.get_a_cluster(self, self.cluster_id)
+        self.assertEqual('ACTIVE', cluster['status'])
+        self.assertEqual(2, cluster['desired_capacity'])
+        self.assertEqual(2, len(cluster['nodes']))
+
+    @test.attr(type=['functional'])
+    @decorators.idempotent_id('72aac2f7-8cb3-4d95-a0b8-4aeeadf4b319')
+    def test_cluster_resize_constraint_breaking(self):
+        # Do best-effort resizing when size upper limit is broken
+        kwargs = {
+            'adj_type': 'CHANGE_IN_CAPACITY',
+            'number': 3,
+            'strict': False
+        }
+        utils.cluster_resize(self, self.cluster_id, **kwargs)
+
+        # Verify resizing result
+        cluster = utils.get_a_cluster(self, self.cluster_id)
+        self.assertEqual('ACTIVE', cluster['status'])
+        self.assertEqual(5, cluster['desired_capacity'])
+        self.assertEqual(5, len(cluster['nodes']))
+
+        # Do best-effort resizing when size lower limit is broken
+        kwargs = {
+            'adj_type': 'CHANGE_IN_CAPACITY',
+            'number': -5,
+            'strict': False
+        }
+        utils.cluster_resize(self, self.cluster_id, **kwargs)
+
+        # Verify resizing result
+        cluster = utils.get_a_cluster(self, self.cluster_id)
+        self.assertEqual('ACTIVE', cluster['status'])
+        self.assertEqual(2, cluster['desired_capacity'])
+        self.assertEqual(2, len(cluster['nodes']))
+
+    @test.attr(type=['functional'])
+    @decorators.idempotent_id('9bde1918-7821-4024-a382-44e6b4950a7e')
+    def test_cluster_resize_constraint_adjusting(self):
+        # Increase cluster size with upper limit increased
+        kwargs = {
+            'adj_type': 'CHANGE_IN_CAPACITY',
+            'number': 3,
+            'max_size': 6
+        }
+        utils.cluster_resize(self, self.cluster_id, **kwargs)
+
+        # Verify resizing result
+        cluster = utils.get_a_cluster(self, self.cluster_id)
+        self.assertEqual('ACTIVE', cluster['status'])
+        self.assertEqual(6, cluster['desired_capacity'])
+        self.assertEqual(6, len(cluster['nodes']))
+        self.assertEqual(6, cluster['max_size'])
+
+        # Decrease cluster size upper limit with strict set to False
+        kwargs = {
+            'max_size': 4,
+            'strict': False
+        }
+        utils.cluster_resize(self, self.cluster_id, **kwargs)
+
+        # Verify resizing result
+        cluster = utils.get_a_cluster(self, self.cluster_id)
+        self.assertEqual('ACTIVE', cluster['status'])
+        self.assertEqual(4, cluster['desired_capacity'])
+        self.assertEqual(4, len(cluster['nodes']))
+        self.assertEqual(4, cluster['max_size'])
+
+        # Decrease cluster size with lower limit decreased
+        kwargs = {
+            'adj_type': 'CHANGE_IN_CAPACITY',
+            'number': -4,
+            'min_size': 0
+        }
+        utils.cluster_resize(self, self.cluster_id, **kwargs)
+
+        # Verify resizing result
+        cluster = utils.get_a_cluster(self, self.cluster_id)
+        self.assertEqual('ACTIVE', cluster['status'])
+        self.assertEqual(0, cluster['desired_capacity'])
+        self.assertEqual(0, len(cluster['nodes']))
+        self.assertEqual(0, cluster['min_size'])
+
+        # Increase cluster size lower limit with strict set to False
+        kwargs = {
+            'min_size': 2,
+            'strict': False
+        }
+        utils.cluster_resize(self, self.cluster_id, **kwargs)
+
+        # Verify resizing result
+        cluster = utils.get_a_cluster(self, self.cluster_id)
+        self.assertEqual('ACTIVE', cluster['status'])
+        self.assertEqual(2, cluster['desired_capacity'])
+        self.assertEqual(2, len(cluster['nodes']))
+        self.assertEqual(2, cluster['min_size'])
