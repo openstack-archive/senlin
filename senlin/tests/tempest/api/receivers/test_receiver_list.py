@@ -26,7 +26,7 @@ class TestReceiverList(base.BaseSenlinAPITest):
         cluster_id = utils.create_a_cluster(self, profile_id)
         self.addCleanup(utils.delete_a_cluster, self, cluster_id)
 
-        self.receiver_id = utils.create_a_receiver(self.client, cluster_id,
+        self.receiver_id = utils.create_a_receiver(self, cluster_id,
                                                    'CLUSTER_RESIZE')
         self.addCleanup(self.client.delete_obj, 'receivers', self.receiver_id)
 

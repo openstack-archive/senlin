@@ -26,7 +26,7 @@ class TestReceiverDelete(base.BaseSenlinAPITest):
         cluster_id = utils.create_a_cluster(self, profile_id)
         self.addCleanup(utils.delete_a_cluster, self, cluster_id)
 
-        self.receiver_id = utils.create_a_receiver(self.client, cluster_id,
+        self.receiver_id = utils.create_a_receiver(self, cluster_id,
                                                    'CLUSTER_RESIZE')
 
     @decorators.idempotent_id('c67cf6c3-2339-4f10-9631-fb7e9f47170f')

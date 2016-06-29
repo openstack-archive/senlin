@@ -27,7 +27,7 @@ class TestWebhookTrigger(base.BaseSenlinAPITest):
         self.addCleanup(utils.delete_a_cluster, self, cluster_id)
 
         params = {'max_size': 2}
-        self.receiver_id = utils.create_a_receiver(self.client, cluster_id,
+        self.receiver_id = utils.create_a_receiver(self, cluster_id,
                                                    'CLUSTER_RESIZE',
                                                    params=params)
         self.addCleanup(self.client.delete_obj, 'receivers', self.receiver_id)
