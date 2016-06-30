@@ -14,4 +14,6 @@ To run only these tests in tempest, go to tempest directory, then run::
 
 To run a single test case, go to tempest directory, then run with test case name, e.g.::
 
-    $ ./run_tempest.sh -N -- senlin.tests.tempest.tests.api.test_cluster_basic.TestClusterBasic.test_cluster_create_delete
+    $ ./run_tempest.sh -N -- senlin.tests.tempest.api.test_cluster_basic.TestClusterBasic.test_cluster_create_delete
+
+More information about running tempest test can be found here: http://docs.openstack.org/developer/tempest/overview.html
