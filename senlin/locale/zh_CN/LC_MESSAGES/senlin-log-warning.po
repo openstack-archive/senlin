@@ -1,0 +1,64 @@
+# zzxwill <zzxwill@gmail.com>, 2016. #zanata
+msgid ""
+msgstr ""
+"Project-Id-Version: senlin 2.0.0.0b2.dev158\n"
+"Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
+"POT-Creation-Date: 2016-06-30 01:32+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2016-06-26 03:16+0000\n"
+"Last-Translator: zzxwill <zzxwill@gmail.com>\n"
+"Language-Team: Chinese (China)\n"
+"Language: zh-CN\n"
+"X-Generator: Zanata 3.7.3\n"
+"Plural-Forms: nplurals=1; plural=0\n"
+
+#, python-format
+msgid "%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s"
+msgstr "%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s"
+
+#, python-format
+msgid "Availability zone '%s' is not available."
+msgstr "可用域'%s'不可用。"
+
+#, python-format
+msgid "Changing %(name)s from %(old)s to %(new)s"
+msgstr "将%(name)s从%(old)s变成%(new)s"
+
+msgid "Check operation not supported."
+msgstr "不支持检查操作。"
+
+#, python-format
+msgid "Cluster (%(id)s) check type (%(type)s) is invalid."
+msgstr "集群(%(id)s)的检查类型(%(type)s)不合法。"
+
+#, python-format
+msgid "Cluster (%s) is not found."
+msgstr "找不到集群（%s）。"
+
+msgid "Get_details operation not supported."
+msgstr "不支持Get_details操作。"
+
+#, python-format
+msgid "Node %(n)s already in lb pool %(p)s."
+msgstr "节点%(n)s已在负载均衡池%(p)s中。"
+
+#, python-format
+msgid "Node %(n)s not found in lb pool %(p)s."
+msgstr "负载均衡池%(p)s中没有找到节点%(n)s。"
+
+#, python-format
+msgid "Region %s is not found."
+msgstr "区域%s无法被找到"
+
+#, fuzzy, python-format
+msgid "Removing %(item)s from registry"
+msgstr "从registry中移除%(item)s"
+
+#, python-format
+msgid "Unrecognized child %s"
+msgstr "无法识别的子代 %s"
+
+msgid "Update operation not supported."
+msgstr "不支持更新操作。"
