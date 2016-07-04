@@ -223,7 +223,7 @@ Deployment Steps
 ~~~~~~~~~~~~~~~~
 
 Before the deployment, please ensure that neutron LBaas v2 and
-ceilometer has been installed and configured in your environment.
+ceilometer/Aodh has been installed and configured in your environment.
 
 Step one is to generate key-pair using the followed command:
 
@@ -242,5 +242,9 @@ Step three is to create a heat stack using the followed command:
   $ heat stack-create test -f \
       ./ex_aslb.yaml \
       -p "key_name=heat_key"
+
+The steps and samples introduced in this tutorial can also work
+well together with composition of ceilometer, Aodh, and Gnocchi
+without any change.
 
 .. _heat template: http://git.openstack.org/cgit/openstack/senlin/doc/source/user/ex_lbas.yaml
