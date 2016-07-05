@@ -44,3 +44,4 @@ class SenlinDriver(object):
         self.orchestration = backend.orchestration
         self.telemetry = backend.telemetry
         self.identity = backend.identity
+        self.message = backend.message
