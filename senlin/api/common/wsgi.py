@@ -661,7 +661,7 @@ class Resource(object):
                 # openstacksdk's need.
                 http_exc = translate_exception(err,
                                                request.best_match_language())
-                raise exception.HTTPExceptionDisguise(http_exc)
+                raise http_exc
             if isinstance(err, exc.HTTPServerError):
                 LOG.error(
                     _LE("Returning %(code)s to user: %(explanation)s"),

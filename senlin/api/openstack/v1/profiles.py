@@ -137,3 +137,4 @@ class ProfileController(wsgi.Controller):
     @util.policy_enforce
     def delete(self, req, profile_id):
         self.rpc_client.profile_delete(req.context, profile_id, cast=False)
+        raise exc.HTTPNoContent()

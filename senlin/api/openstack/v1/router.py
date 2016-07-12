@@ -82,8 +82,7 @@ class API(wsgi.Router):
             sub_mapper.connect("profile_delete",
                                "/profiles/{profile_id}",
                                action="delete",
-                               conditions={'method': 'DELETE'},
-                               success=204)
+                               conditions={'method': 'DELETE'})
 
         # Policy Types
         res = wsgi.Resource(policy_types.PolicyTypeController(conf))
@@ -122,8 +121,7 @@ class API(wsgi.Router):
             sub_mapper.connect("policy_delete",
                                "/policies/{policy_id}",
                                action="delete",
-                               conditions={'method': 'DELETE'},
-                               success=204)
+                               conditions={'method': 'DELETE'})
 
         # Clusters
         res = wsgi.Resource(clusters.ClusterController(conf))
@@ -247,8 +245,7 @@ class API(wsgi.Router):
             sub_mapper.connect("receiver_delete",
                                "/receivers/{receiver_id}",
                                action="delete",
-                               conditions={'method': 'DELETE'},
-                               success=204)
+                               conditions={'method': 'DELETE'})
 
         # Webhooks
         res = wsgi.Resource(webhooks.WebhookController(conf))
