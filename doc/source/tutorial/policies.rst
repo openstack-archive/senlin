@@ -49,13 +49,13 @@ To verify the policy creation, you can do:
 Attaching a Policy
 ~~~~~~~~~~~~~~~~~~
 
-The enforce a policy on a cluster, you will attach a policy to a cluster:
+The enforce a policy on a cluster, attach a policy to it:
 
 .. code-block:: console
 
   $ senlin cluster-policy-attach -p dp01 mycluster
 
-To verify the policy attach operation, you can do:
+To verify the policy attach operation, do the following:
 
 .. code-block:: console
 
@@ -66,7 +66,7 @@ Verifying a Policy
 ~~~~~~~~~~~~~~~~~~
 
 To verify the deletion policy attached to the cluster ``mycluster``, you
-can try expanding the cluster followed by shrinking it:
+can try expanding the cluster, followed by shrinking it:
 
 .. code-block:: console
 

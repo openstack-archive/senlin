@@ -14,6 +14,6 @@ properties:
   # This param buys an instance some time before deletion
   grace_period: 60
 
-  # Whether the deletion will reduce the desired capability of
-  # the cluster as well.
+  # Whether the deletion will reduce the desired capacity of
+  # the cluster as well
   reduce_desired_capacity: False

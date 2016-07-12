@@ -17,7 +17,7 @@
 Working with Receivers
 ======================
 
-Receivers are the event sinks associated to senlin clusters so that when
+Receivers are the event sinks associated to senlin clusters. When
 certain events (or alarms) are seen by a monitoring software, the software can
 notify the senlin clusters of those events (or alarms). When senlin receives
 those notifications, it can automatically trigger some predefined operations
@@ -35,7 +35,7 @@ cluster:
 
   $ senlin receiver-create -c mycluster -a CLUSTER_SCALE_IN w_scale_in
 
-The output from the command will be something like shown below:
+The output from the command will be something like this:
 
 .. code-block:: console
 

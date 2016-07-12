@@ -90,8 +90,8 @@ section in the :doc:`User References <../user/index>` documentation.
 Scaling a Cluster
 ~~~~~~~~~~~~~~~~~
 
-Now you can try change the size of your cluster. To increase the size of the
-cluster, use the following command:
+Now you can try to change the size of your cluster. To increase the size,
+use the following command:
 
 .. code-block:: console
 
@@ -129,7 +129,7 @@ a cluster is resized. For more details, please check the
 Creating a Node
 ---------------
 
-Another way to manage cluster node membership is to create a standalone code
+Another way to manage cluster node membership is to create a standalone node
 then add it to a cluster. To create a node using a given profile:
 
 .. code-block:: console
@@ -171,7 +171,7 @@ command:
   $ senlin cluster-show mycluster
   $ senlin node-show oldnode
 
-For other commands and options cluster membership management, please check the
+For other cluster membership management commands and options, please check the
 :doc:`Cluster Membership <../user/membership>` section in the
 :doc:`User References <../user/index>` documentation.
 
