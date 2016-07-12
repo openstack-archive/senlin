@@ -222,13 +222,13 @@ class LoadBalancingPolicy(base.Policy):
                     default=PING,
                 ),
                 HM_DELAY: schema.Integer(
-                    _('The amount of time in seconds between sending '
+                    _('The amount of time in milliseconds between sending '
                       'probes to members.'),
                     default=10,
                 ),
                 HM_TIMEOUT: schema.Integer(
-                    _('The maximum time in seconds that a monitor waits to '
-                      'connect before it times out.'),
+                    _('The maximum time in milliseconds that a monitor waits '
+                      'to connect before it times out.'),
                     default=5,
                 ),
                 HM_MAX_RETRIES: schema.Integer(

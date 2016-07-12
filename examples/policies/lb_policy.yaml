@@ -45,12 +45,12 @@ properties:
     # can be PING, TCP, HTTP, or HTTPS.
     type: 'PING'
 
-    # The amount of time, in seconds, between sending probes to members.
-    delay: 10
+    # The amount of time, in milliseconds, between sending probes to members.
+    delay: 10000
 
-    # The maximum time in seconds that a monitor waits to connect before it
-    # times out. This value must be less than the delay value.
-    timeout: 5
+    # The maximum time in milliseconds that a monitor waits to connect before
+    # it times out. This value must be less than the delay value.
+    timeout: 5000
 
     # The number of allowed connection failures before changing the status
     # of the member to INACTIVE. A valid value is from 1 to 10.
