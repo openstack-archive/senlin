@@ -66,20 +66,15 @@ class TestRequestContext(base.SenlinTestCase):
             region_name=self.ctx.get('region_name'))
 
         ctx_dict = ctx.to_dict()
-        del(ctx_dict['request_id'])
-        del(ctx_dict['user_identity'])
-        del(ctx_dict['resource_uuid'])
-        del(ctx_dict['tenant'])
-        self.assertEqual(self.ctx, ctx_dict)
+        for k, v in self.ctx.items():
+            self.assertEqual(v, ctx_dict.get(k))
 
     def test_request_context_from_dict(self):
         ctx = context.RequestContext.from_dict(self.ctx)
+
         ctx_dict = ctx.to_dict()
-        del(ctx_dict['request_id'])
-        del(ctx_dict['user_identity'])
-        del(ctx_dict['resource_uuid'])
-        del(ctx_dict['tenant'])
-        self.assertEqual(self.ctx, ctx_dict)
+        for k, v in self.ctx.items():
+            self.assertEqual(v, ctx_dict.get(k))
 
     def test_request_context_update(self):
         ctx = context.RequestContext.from_dict(self.ctx)
