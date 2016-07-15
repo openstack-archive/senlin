@@ -31,6 +31,7 @@ class TestRequestContext(base.SenlinTestCase):
             'project_domain': 'project-domain-id',
             'project_domain_name': 'a project domain',
             'is_admin': False,
+            'is_admin_project': True,
             'password': 'foo',
             'show_deleted': False,
             'read_only': False,
