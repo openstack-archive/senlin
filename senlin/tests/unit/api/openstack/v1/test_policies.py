@@ -481,7 +481,8 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=None)
 
-        self.controller.delete(req, policy_id=pid)
+        self.assertRaises(exc.HTTPNoContent,
+                          self.controller.delete, req, policy_id=pid)
 
         mock_call.assert_called_with(
             req.context, ('policy_delete', {'identity': pid}))

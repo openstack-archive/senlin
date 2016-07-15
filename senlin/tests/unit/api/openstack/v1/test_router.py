@@ -106,8 +106,7 @@ class RoutesTest(base.SenlinTestCase):
             'delete',
             'ProfileController',
             {
-                'profile_id': 'bbbb',
-                'success': '204'
+                'profile_id': 'bbbb'
             })
 
     def test_policy_types_handling(self):
@@ -173,8 +172,7 @@ class RoutesTest(base.SenlinTestCase):
             'delete',
             'PolicyController',
             {
-                'policy_id': 'bbbb',
-                'success': '204',
+                'policy_id': 'bbbb'
             })
 
     def test_cluster_collection(self):
@@ -384,8 +382,7 @@ class RoutesTest(base.SenlinTestCase):
             'delete',
             'ReceiverController',
             {
-                'receiver_id': 'bbbb',
-                'success': '204',
+                'receiver_id': 'bbbb'
             })
 
     def test_webhook_collection(self):

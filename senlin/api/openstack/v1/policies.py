@@ -114,3 +114,4 @@ class PolicyController(wsgi.Controller):
     @util.policy_enforce
     def delete(self, req, policy_id):
         self.rpc_client.policy_delete(req.context, policy_id, cast=False)
+        raise exc.HTTPNoContent()

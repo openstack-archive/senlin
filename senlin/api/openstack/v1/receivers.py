@@ -130,3 +130,4 @@ class ReceiverController(wsgi.Controller):
     @util.policy_enforce
     def delete(self, req, receiver_id):
         self.rpc_client.receiver_delete(req.context, receiver_id, cast=False)
+        raise exc.HTTPNoContent()

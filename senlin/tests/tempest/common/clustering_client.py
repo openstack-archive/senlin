@@ -29,10 +29,15 @@ class ClusteringAPIClient(rest_client.RestClient):
     version = 'v1'
 
     def _parsed_resp(self, resp, body):
+        # Parse status code and location
         res = {
-            'status': int(resp['status']),
-            'location': resp.get('location', None),
+            'status': int(resp.pop('status')),
+            'location': resp.pop('location', None)
         }
+        # Parse other keys included in resp
+        res.update(resp)
+
+        # Parse body
         if body and str(body) != 'null':
             res['body'] = self._parse_resp(body)
         else:
