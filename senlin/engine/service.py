@@ -748,14 +748,12 @@ class EngineService(service.Service):
             if cluster_obj.Cluster.get_by_name(context, name):
                 msg = _("The cluster (%(name)s) already exists."
                         ) % {"name": name}
-                LOG.debug(msg)
                 raise exception.BadRequest(msg=msg)
 
         try:
             db_profile = self.profile_find(context, profile_id)
         except exception.ProfileNotFound:
             msg = _("The specified profile '%s' is not found.") % profile_id
-            LOG.debug(msg)
             raise exception.BadRequest(msg=msg)
 
         init_size = utils.parse_int_param(consts.CLUSTER_DESIRED_CAPACITY,
@@ -772,8 +770,6 @@ class EngineService(service.Service):
 
         res = su.check_size_params(None, init_size, min_size, max_size, True)
         if res:
-            msg = _("Size parameters check failed: %s") % res
-            LOG.debug(msg)
             raise exception.BadRequest(msg=res)
 
         LOG.info(_LI("Creating cluster '%s'."), name)
@@ -828,7 +824,7 @@ class EngineService(service.Service):
         cluster = cluster_mod.Cluster.load(context, dbcluster=db_cluster)
         if cluster.status == cluster.ERROR:
             msg = _('Updating a cluster in error state')
-            LOG.debug(msg)
+            LOG.error(msg)
             raise exception.FeatureNotSupported(feature=msg)
 
         LOG.info(_LI("Updating cluster '%s'."), identity)
@@ -841,13 +837,11 @@ class EngineService(service.Service):
             except exception.ProfileNotFound:
                 msg = _("The specified profile '%s' is not found."
                         ) % profile_id
-                LOG.debug(msg)
                 raise exception.BadRequest(msg=msg)
 
             if new_profile.type != old_profile.type:
                 msg = _('Cannot update a cluster to a different profile type, '
                         'operation aborted.')
-                LOG.debug(msg)
                 raise exception.ProfileTypeNotMatch(message=msg)
             if old_profile.id != new_profile.id:
                 inputs['new_profile_id'] = new_profile.id
@@ -864,7 +858,6 @@ class EngineService(service.Service):
 
         if not inputs:
             msg = _("No property needs an update.")
-            LOG.debug(msg)
             raise exception.BadRequest(msg=msg)
 
         kwargs = {
@@ -898,7 +891,7 @@ class EngineService(service.Service):
         if len(policies) > 0:
             msg = _('Cluster %(id)s cannot be deleted without having all '
                     'policies detached.') % {'id': identity}
-            LOG.debug(msg)
+            LOG.error(msg)
             reason = _("there is still policy(s) attached to it.")
             raise exception.ClusterBusy(cluster=db_cluster.id, reason=reason)
 
@@ -907,7 +900,7 @@ class EngineService(service.Service):
         if len(receivers) > 0:
             msg = _('Cluster %(id)s cannot be deleted without having all '
                     'receivers deleted.') % {'id': identity}
-            LOG.debug(msg)
+            LOG.error(msg)
             reason = _("there is still receiver(s) associated with it.")
             raise exception.ClusterBusy(cluster=db_cluster.id, reason=reason)
 
@@ -971,11 +964,11 @@ class EngineService(service.Service):
         if len(not_match_nodes) > 0:
             error = _("Profile type of nodes %s does not match that of the "
                       "cluster.") % not_match_nodes
-            LOG.debug(error)
+            LOG.error(error)
             raise exception.ProfileTypeNotMatch(message=error)
         elif len(owned_nodes) > 0:
             error = _("Nodes %s already owned by some cluster.") % owned_nodes
-            LOG.debug(error)
+            LOG.error(error)
             raise exception.NodeNotOrphan(message=error)
         elif len(bad_nodes) > 0:
             error = _("Nodes are not ACTIVE: %s.") % bad_nodes
@@ -985,13 +978,13 @@ class EngineService(service.Service):
             error = _("No nodes to add: %s.") % nodes
 
         if error is not None:
-            LOG.debug(error)
+            LOG.error(error)
             raise exception.BadRequest(msg=error)
 
         target_size = db_cluster.desired_capacity + len(found)
         error = su.check_size_params(db_cluster, target_size, strict=True)
         if error:
-            LOG.debug(error)
+            LOG.error(error)
             raise exception.BadRequest(msg=error)
 
         params = {
@@ -1044,13 +1037,13 @@ class EngineService(service.Service):
             error = _("No nodes specified.")
 
         if error is not None:
-            LOG.debug(error)
+            LOG.error(error)
             raise exception.BadRequest(msg=error)
 
         target_size = db_cluster.desired_capacity - len(found)
         error = su.check_size_params(db_cluster, target_size, strict=True)
         if error:
-            LOG.debug(error)
+            LOG.error(error)
             raise exception.BadRequest(msg=error)
 
         params = {
@@ -1102,18 +1095,14 @@ class EngineService(service.Service):
         # check adj_type
         if adj_type is not None:
             if adj_type not in consts.ADJUSTMENT_TYPES:
-                msg = _('Invalid adjustment_type %s.') % adj_type
-                LOG.debug(msg)
                 raise exception.InvalidParameter(
                     name=consts.ADJUSTMENT_TYPE, value=adj_type)
             if number is None:
                 msg = _('Missing number value for size adjustment.')
-                LOG.debug(msg)
                 raise exception.BadRequest(msg=msg)
         else:
             if number is not None:
                 msg = _('Missing adjustment_type value for size adjustment.')
-                LOG.debug(msg)
                 raise exception.BadRequest(msg=msg)
 
         if adj_type == consts.EXACT_CAPACITY:
@@ -1125,8 +1114,6 @@ class EngineService(service.Service):
             try:
                 number = float(number)
             except ValueError:
-                msg = _('Invalid adjustment number %s.') % number
-                LOG.debug(msg)
                 raise exception.InvalidParameter(name=consts.ADJUSTMENT_NUMBER,
                                                  value=number)
             # min_step is only used (so checked) for this case
@@ -1153,8 +1140,6 @@ class EngineService(service.Service):
         res = su.check_size_params(db_cluster, desired, min_size, max_size,
                                    strict)
         if res:
-            msg = _("Size parameters check failed: %s") % res
-            LOG.debug(msg)
             raise exception.BadRequest(msg=res)
 
         fmt = _LI("Resizing cluster '%(cluster)s': type=%(adj_type)s, "
@@ -1206,8 +1191,6 @@ class EngineService(service.Service):
             err = su.check_size_params(db_cluster,
                                        db_cluster.desired_capacity + count)
             if err:
-                msg = _("Size parameters check failed: %s") % err
-                LOG.debug(msg)
                 raise exception.BadRequest(msg=err)
 
             LOG.info(_LI('Scaling out cluster %(name)s by %(delta)s nodes'),
@@ -1251,8 +1234,6 @@ class EngineService(service.Service):
             err = su.check_size_params(db_cluster,
                                        db_cluster.desired_capacity - count)
             if err:
-                msg = _("Size parameters check failed: %s") % err
-                LOG.debug(msg)
                 raise exception.BadRequest(msg=err)
 
             LOG.info(_LI('Scaling in cluster %(name)s by %(delta)s nodes'),
@@ -1445,7 +1426,6 @@ class EngineService(service.Service):
             if node_obj.Node.get_by_name(context, name):
                 msg = _("The node named (%(name)s) already exists."
                         ) % {"name": name}
-                LOG.debug(msg)
                 raise exception.BadRequest(msg=msg)
 
         LOG.info(_LI("Creating node '%s'."), name)
@@ -1457,7 +1437,6 @@ class EngineService(service.Service):
             node_profile = self.profile_find(context, profile_id)
         except exception.ProfileNotFound:
             msg = _("The specified profile (%s) is not found.") % profile_id
-            LOG.debug(msg)
             raise exception.BadRequest(msg=msg)
 
         index = -1
@@ -1467,7 +1446,6 @@ class EngineService(service.Service):
             except exception.ClusterNotFound:
                 msg = _("The specified cluster (%s) is not found."
                         ) % cluster_id
-                LOG.debug(msg)
                 raise exception.BadRequest(msg=msg)
 
             cluster_id = db_cluster.id
@@ -1477,7 +1455,7 @@ class EngineService(service.Service):
                 if node_profile.type != cluster_profile.type:
                     msg = _('Node and cluster have different profile type, '
                             'operation aborted.')
-                    LOG.debug(msg)
+                    LOG.error(msg)
                     raise exception.ProfileTypeNotMatch(message=msg)
             index = cluster_obj.Cluster.get_next_index(context, cluster_id)
 
@@ -1562,7 +1540,6 @@ class EngineService(service.Service):
             except exception.ProfileNotFound:
                 msg = _("The specified profile (%s) is not found."
                         ) % profile_id
-                LOG.debug(msg)
                 raise exception.BadRequest(msg=msg)
             profile_id = db_profile.id
 
@@ -1571,7 +1548,7 @@ class EngineService(service.Service):
             if old_profile.type != db_profile.type:
                 msg = _('Cannot update a node to a different profile type, '
                         'operation aborted.')
-                LOG.debug(msg)
+                LOG.error(msg)
                 raise exception.ProfileTypeNotMatch(message=msg)
 
             inputs = {'new_profile_id': profile_id}
@@ -1587,7 +1564,6 @@ class EngineService(service.Service):
 
         if not inputs:
             msg = _("No property needs an update.")
-            LOG.debug(msg)
             raise exception.BadRequest(msg=msg)
 
         params = {
@@ -1750,7 +1726,6 @@ class EngineService(service.Service):
             db_policy = self.policy_find(context, policy)
         except exception.PolicyNotFound:
             msg = _("The specified policy (%s) is not found.") % policy
-            LOG.debug(msg)
             raise exception.BadRequest(msg=msg)
 
         params = {
@@ -1790,7 +1765,6 @@ class EngineService(service.Service):
             db_policy = self.policy_find(context, policy)
         except exception.PolicyNotFound:
             msg = _("The specified policy (%s) is not found.") % policy
-            LOG.debug(msg)
             raise exception.BadRequest(msg=msg)
 
         binding = cp_obj.ClusterPolicy.get(context, db_cluster.id,
@@ -1798,7 +1772,6 @@ class EngineService(service.Service):
         if binding is None:
             msg = _("The policy (%(p)s) is not attached to the specified "
                     "cluster (%(c)s).") % {'p': policy, 'c': identity}
-            LOG.debug(msg)
             raise exception.BadRequest(msg=msg)
 
         params = {
@@ -1835,7 +1808,6 @@ class EngineService(service.Service):
             db_policy = self.policy_find(context, policy)
         except exception.PolicyNotFound:
             msg = _("The specified policy (%s) is not found.") % policy
-            LOG.debug(msg)
             raise exception.BadRequest(msg=msg)
 
         binding = cp_obj.ClusterPolicy.get(context, db_cluster.id,
@@ -1843,7 +1815,6 @@ class EngineService(service.Service):
         if binding is None:
             msg = _("The policy (%(p)s) is not attached to the specified "
                     "cluster (%(c)s).") % {'p': policy, 'c': identity}
-            LOG.debug(msg)
             raise exception.BadRequest(msg=msg)
 
         inputs = {'policy_id': db_policy.id}
@@ -2062,7 +2033,6 @@ class EngineService(service.Service):
         if cfg.CONF.name_unique:
             if receiver_obj.Receiver.get_by_name(context, name):
                 msg = _("A receiver named '%s' already exists.") % name
-                LOG.debug(msg)
                 raise exception.BadRequest(msg=msg)
 
         LOG.info(_LI("Creating receiver %(n)s: \n"
@@ -2072,7 +2042,6 @@ class EngineService(service.Service):
         rtype = type_name.lower()
         if rtype not in consts.RECEIVER_TYPES:
             msg = _("Receiver type '%s' is not supported.") % rtype
-            LOG.debug(msg)
             raise exception.BadRequest(msg=msg)
 
         # Check whether cluster identified by cluster_id does exist
@@ -2081,26 +2050,19 @@ class EngineService(service.Service):
             cluster = self.cluster_find(context, cluster_id)
         except exception.ClusterNotFound:
             msg = _("The referenced cluster '%s' is not found.") % cluster_id
-            LOG.debug(msg)
             raise exception.BadRequest(msg=msg)
 
         # permission checking
         if not context.is_admin and context.user != cluster.user:
-            msg = _("User %(user)s is not allowed to create receiver targets "
-                    "on cluster %(cluster)s."), {'user': context.user,
-                                                 'cluster': cluster.id}
-            LOG.debug(msg)
             raise exception.Forbidden()
 
         # Check action name
         if action not in consts.ACTION_NAMES:
             msg = _("Illegal action '%s' specified.") % action
-            LOG.debug(msg)
             raise exception.BadRequest(msg=msg)
 
         if action.lower().split('_')[0] != 'cluster':
             msg = _("Action '%s' is not applicable to clusters.") % action
-            LOG.debug(msg)
             raise exception.BadRequest(msg=msg)
 
         if not params:
@@ -2163,7 +2125,6 @@ class EngineService(service.Service):
         except exception.ClusterNotFound:
             msg = _("The referenced cluster (%s) is not found."
                     ) % receiver.cluster_id
-            LOG.debug(msg)
             raise exception.BadRequest(msg=msg)
 
         data = copy.deepcopy(receiver.params)
