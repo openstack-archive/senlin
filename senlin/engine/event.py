@@ -14,14 +14,8 @@ from oslo_log import log as logging
 from oslo_utils import reflection
 from oslo_utils import timeutils
 
-from senlin.common import i18n
+from senlin.common.i18n import _, _LC, _LE, _LW, _LI
 from senlin.objects import event as eo
-
-_LC = i18n._LC
-_LE = i18n._LE
-_LW = i18n._LW
-_LI = i18n._LI
-_ = i18n._
 
 LOG = logging.getLogger(__name__)
 
