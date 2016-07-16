@@ -18,6 +18,12 @@ API
   - Validate API request for unexpected attributes. Such attributes should
     result in a 400 error. [https://review.openstack.org/#/c/260292]
 
+DOC
+---
+  - Add documentation for configuration options, configuration in the project
+    oslo.messaging project can be used as an example. E.g. the
+    `oslo_config.sphinxext` extension and the `show-options` stanza.
+
 ENGINE
 ------
   - Scaling Improvments [https://etherpad.openstack.org/p/newton-senlin-ha]
