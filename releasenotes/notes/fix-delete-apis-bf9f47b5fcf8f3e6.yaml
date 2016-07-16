@@ -1,0 +1,4 @@
+---
+fixes:
+  - Fixed resource delete operations which should return 204 status code with
+    body length of zero.

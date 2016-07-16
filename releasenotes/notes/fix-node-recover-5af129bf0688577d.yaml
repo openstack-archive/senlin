@@ -1,0 +1,4 @@
+---
+fixes:
+  - Fixed node recover operation behavior so that unsupported operations can
+    be detected and handled.

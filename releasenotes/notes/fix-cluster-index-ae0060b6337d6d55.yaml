@@ -1,0 +1,3 @@
+---
+fixes:
+  - Fix cluster next_index update when adding nodes to cluster.
