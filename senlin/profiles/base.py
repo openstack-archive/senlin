@@ -286,32 +286,32 @@ class Profile(object):
 
     def do_update(self, obj, new_profile, **params):
         """For subclass to override."""
-        LOG.warn(_LW("Update operation not supported."))
+        LOG.warning(_LW("Update operation not supported."))
         return True
 
     def do_check(self, obj):
         """For subclass to override."""
-        LOG.warn(_LW("Check operation not supported."))
+        LOG.warning(_LW("Check operation not supported."))
         return True
 
     def do_get_details(self, obj):
         """For subclass to override."""
-        LOG.warn(_LW("Get_details operation not supported."))
+        LOG.warning(_LW("Get_details operation not supported."))
         return {}
 
     def do_join(self, obj, cluster_id):
         """For subclass to override to perform extra operations."""
-        LOG.warn(_LW("Join operation not specialized."))
+        LOG.warning(_LW("Join operation not specialized."))
         return True
 
     def do_leave(self, obj):
         """For subclass to override to perform extra operations."""
-        LOG.warn(_LW("Join operation not specialized."))
+        LOG.warning(_LW("Join operation not specialized."))
         return True
 
     def do_rebuild(self, obj):
         """For subclass to override."""
-        LOG.warn(_LW("Rebuild operation not specialized."))
+        LOG.warning(_LW("Rebuild operation not specialized."))
         return True
 
     def do_recover(self, obj, **options):

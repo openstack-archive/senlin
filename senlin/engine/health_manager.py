@@ -52,8 +52,8 @@ class NotificationEndpoint(object):
     def warn(self, ctxt, publisher_id, event_type, payload, metadata):
         metadata = payload['metadata']
         if 'cluster' in metadata and metadata['cluster'] == self.cluster_id:
-            LOG.warn("publisher=%s" % publisher_id)
-            LOG.warn("event_type=%s" % event_type)
+            LOG.warning("publisher=%s" % publisher_id)
+            LOG.warning("event_type=%s" % event_type)
 
     def debug(self, ctxt, publisher_id, event_type, payload, metadata):
         metadata = payload['metadata']
@@ -117,7 +117,7 @@ class HealthManager(service.Service):
         """
         cluster = objects.Cluster.get(self.ctx, cluster_id)
         if not cluster:
-            LOG.warn(_LW("Cluster (%s) is not found."), cluster_id)
+            LOG.warning(_LW("Cluster (%s) is not found."), cluster_id)
             return
 
         project = cluster.project
@@ -143,8 +143,10 @@ class HealthManager(service.Service):
             else:
                 return None
         else:
-            LOG.warn(_LW("Cluster (%(id)s) check type (%(type)s) is invalid."),
-                     {'id': entry['cluster_id'], 'type': entry['check_type']})
+            LOG.warning(_LW("Cluster (%(id)s) check type (%(type)s) is "
+                            "invalid."),
+                        {'id': entry['cluster_id'],
+                         'type': entry['check_type']})
             return None
 
         return entry
