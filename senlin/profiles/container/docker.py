@@ -33,7 +33,7 @@ class DockerProfile(base.Profile):
 
     properties_schema = {
         CONTEXT: schema.Map(
-            _('Customized security context for operationg containers.')
+            _('Customized security context for operating containers.')
         ),
         IMAGE: schema.String(
             _('The image used to create a container')
@@ -121,7 +121,7 @@ class DockerProfile(base.Profile):
         try:
             self.docker(obj).container_delete(self.container_id)
         except Exception as ex:
-            LOG.error("Container deletion failded: %s" % six.text_type(ex))
+            LOG.error("Container deletion failed: %s" % six.text_type(ex))
             return False
 
         return True
