@@ -57,7 +57,7 @@ you can use the following command to create a profile object:
 .. code-block:: console
 
   $ cd $SENLIN_ROOT/examples/profiles/nova_server
-  $ senlin profile-create -s cirros_basic.yaml myserver
+  $ openstack cluster profile create --spec-file cirros_basic.yaml myserver
 
 Check the :doc:`Profiles <../user/profiles>` section in the
 :doc:`User References <../user/index>` documentation for more details.
