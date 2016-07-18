@@ -118,7 +118,7 @@ class Profile(object):
     def from_object(cls, profile):
         '''Construct a profile from profile object.
 
-        :param profile: a Profle object that contains all required fields.
+        :param profile: a profile object that contains all required fields.
         '''
         kwargs = {
             'id': profile.id,

@@ -160,7 +160,7 @@ class LoadBalancingPolicy(base.Policy):
                     default=True,
                 ),
                 POOL_SESSION_PERSISTENCE: schema.Map(
-                    _('Session pesistence configuration.'),
+                    _('Session persistence configuration.'),
                     schema={
                         PERSISTENCE_TYPE: schema.String(
                             _('Type of session persistence implementation.'),
