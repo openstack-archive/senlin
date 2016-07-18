@@ -18,52 +18,36 @@ class TestRequestContext(base.SenlinTestCase):
 
     def setUp(self):
         self.ctx = {
-            'auth_token': '123',
+            'auth_url': 'http://xyz',
             'auth_token_info': {'123info': 'woop'},
-            'user': 'fooUser',
             'user_name': 'mick',
-            'user_domain': 'user-domain',
             'user_domain_name': 'user-domain-name',
-            'domain': 'domain-id',
-            'domain_name': 'this domain',
             'project': 'project-id',
             'project_name': 'a project',
-            'project_domain': 'project-domain-id',
             'project_domain_name': 'a project domain',
-            'is_admin': False,
-            'is_admin_project': True,
-            'password': 'foo',
-            'show_deleted': False,
-            'read_only': False,
-            'roles': ['arole', 'notadmin'],
-            'auth_url': 'http://xyz',
+            'domain_name': 'this domain',
             'trusts': None,
-            'region_name': 'regionOne'
+            'region_name': 'regionOne',
+            'password': 'foo',
+            'is_admin': False  # needed for tests to work
         }
 
         super(TestRequestContext, self).setUp()
 
     def test_request_context_init(self):
         ctx = context.RequestContext(
-            auth_token=self.ctx.get('auth_token'),
+            auth_url=self.ctx.get('auth_url'),
             auth_token_info=self.ctx.get('auth_token_info'),
-            user=self.ctx.get('user'),
             user_name=self.ctx.get('user_name'),
-            user_domain=self.ctx.get('user_domain'),
             user_domain_name=self.ctx.get('user_domain_name'),
-            domain=self.ctx.get('domain'),
-            domain_name=self.ctx.get('domain_name'),
-            project_domain=self.ctx.get('project_domain'),
-            project_domain_name=self.ctx.get('project_domain_name'),
             project=self.ctx.get('project'),
             project_name=self.ctx.get('project_name'),
-            is_admin=self.ctx.get('is_admin'),
-            password=self.ctx.get('password'),
-            show_deleted=self.ctx.get('show_deleted'),
-            roles=self.ctx.get('roles'),
-            auth_url=self.ctx.get('auth_url'),
+            project_domain_name=self.ctx.get('project_domain_name'),
+            domain_name=self.ctx.get('domain_name'),
             trusts=self.ctx.get('trusts'),
-            region_name=self.ctx.get('region_name'))
+            region_name=self.ctx.get('region_name'),
+            password=self.ctx.get('password'),
+            is_admin=self.ctx.get('is_admin'))  # need for tests to work
 
         ctx_dict = ctx.to_dict()
         for k, v in self.ctx.items():
