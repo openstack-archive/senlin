@@ -14,7 +14,6 @@ import mock
 import six
 from webob import exc
 
-from oslo_config import cfg
 from oslo_serialization import jsonutils
 
 from senlin.api.middleware import fault
@@ -702,7 +701,6 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     def test_node_action_missing_action(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
-        cfg.CONF.set_override('debug', True, enforce_type=True)
         node_id = 'xxxx-yyyy'
         body = {}
         req = self._post('/nodes/%(node_id)s/actions' % {'node_id': node_id},
@@ -719,7 +717,6 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     def test_node_action_multiple_action(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
-        cfg.CONF.set_override('debug', True, enforce_type=True)
         node_id = 'xxxx-yyyy'
         body = {'eat': {}, 'sleep': {}}
         req = self._post('/nodes/%(node_id)s/actions' % {'node_id': node_id},
@@ -736,7 +733,6 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     def test_node_action_unknown_action(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
-        cfg.CONF.set_override('debug', True, enforce_type=True)
         node_id = 'xxxx-yyyy'
         body = {'eat': None}
         req = self._post('/nodes/%(node_id)s/action' % {'node_id': node_id},

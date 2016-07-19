@@ -15,7 +15,6 @@ import six
 import webob
 from webob import exc
 
-from oslo_config import cfg
 from oslo_serialization import jsonutils
 
 from senlin.api.middleware import fault
@@ -561,8 +560,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('InvalidParameter', resp.json['error']['type'])
 
-    def test_create_err_cluster_bad_reqest(self, mock_enforce):
-        cfg.CONF.set_override('debug', True, enforce_type=True)
+    def test_create_err_cluster_bad_request(self, mock_enforce):
         body = {
             'cluster': {
                 'name': 'test_cluster',
