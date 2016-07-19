@@ -19,6 +19,7 @@ return
 
 import re
 
+import microversion_parse
 from oslo_log import log as logging
 import six
 import webob
@@ -121,16 +122,11 @@ class VersionNegotiationFilter(wsgi.Middleware):
 
     def check_version_request(self, req):
         """Set API version request based on the request header."""
-        api_version = wsgi.DEFAULT_API_VERSION
-        key = wsgi.API_VERSION_KEY
-        if key in req.headers:
-            versions = req.headers[key].split(',')
-            for version in versions:
-                svc_ver = version.strip().split(' ')
-                if svc_ver[0].lower() in wsgi.SERVICE_ALIAS:
-                    api_version = svc_ver[1]
-                    break
-        if api_version.lower() == 'latest':
+        api_version = microversion_parse.get_version(req.headers,
+                                                     service_type='clustering')
+        if api_version is None:
+            api_version = wsgi.DEFAULT_API_VERSION
+        elif api_version.lower() == 'latest':
             req.version_request = os_ver.max_api_version()
             return
 

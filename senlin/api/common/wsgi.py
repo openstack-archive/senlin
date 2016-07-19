@@ -53,7 +53,6 @@ URL_LENGTH_LIMIT = 50000
 DEFAULT_API_VERSION = '1.0'
 API_VERSION_KEY = 'OpenStack-API-Version'
 VER_METHOD_ATTR = 'versioned_methods'
-SERVICE_ALIAS = ['clustering', 'cluster']
 
 # senlin_api, api opts
 api_opts = [
@@ -693,7 +692,7 @@ class Resource(object):
                     response.headers[hdr] = six.text_type(val)
                 ver = request.version_request
                 if not ver.is_null():
-                    ver_res = ' '.join([SERVICE_ALIAS[0], str(ver)])
+                    ver_res = ' '.join(['clustering', str(ver)])
                     response.headers[API_VERSION_KEY] = ver_res
                     response.headers['Vary'] = API_VERSION_KEY
 
