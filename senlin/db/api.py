@@ -387,7 +387,7 @@ def action_signal(context, action_id, value):
 
 
 def action_signal_query(context, action_id):
-    '''Query signal status for the sepcified action.'''
+    '''Query signal status for the specified action.'''
     return IMPL.action_signal_query(context, action_id)
 
 

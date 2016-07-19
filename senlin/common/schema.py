@@ -210,7 +210,7 @@ class Integer(PropertySchema):
         try:
             num = int(value)
         except ValueError:
-            raise ValueError(_('%s is not an intger.') % num)
+            raise ValueError(_('%s is not an integer.') % num)
 
         return num
 
