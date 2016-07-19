@@ -224,13 +224,11 @@ class AffinityPolicy(base.Policy):
         return True, reason
 
     def pre_op(self, cluster_id, action):
-        """Routine to be called before an 'CLUSTER_SCALE_OUT' action.
+        """Routine to be called before target action is executed.
 
-        For this particular policy, we take this chance to intelligently
-        select the most proper hypervisor/vsphere cluster to create nodes.
-        In order to realize the function, we need to create construct meta
-        to handle affinity/anti-affinity then update the profile with the
-        specific parameters at first
+        This policy annotates the node with a server group ID before the
+        node is actually created. For vSphere DRS, it is equivalent to the
+        selection of vSphere host (cluster).
 
         :param cluster_id: ID of the cluster on which the relevant action
                             is to be executed.
