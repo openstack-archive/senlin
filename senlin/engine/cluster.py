@@ -49,7 +49,7 @@ class Cluster(object):
 
     def __init__(self, name, desired_capacity, profile_id,
                  context=None, **kwargs):
-        '''Intialize a cluster object.
+        '''Initialize a cluster object.
 
         The cluster defaults to have 0 node with no profile assigned.
         '''

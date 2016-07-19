@@ -186,7 +186,7 @@ class StackProfile(base.Profile):
 
         :param obj: the node object to operate on
         :param new_profile: the new profile used for updating
-        :param params: other parametes for the update request.
+        :param params: other parameters for the update request.
         '''
         self.stack_id = obj.physical_id
         if not self.stack_id:
