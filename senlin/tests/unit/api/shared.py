@@ -13,7 +13,6 @@
 import webob
 
 from oslo_config import cfg
-from oslo_log import log
 from oslo_messaging._drivers import common as rpc_common
 from oslo_utils import encodeutils
 
@@ -54,7 +53,6 @@ class ControllerTest(object):
         self.api_version = '1.0'
         self.project = 'PROJ'
         self.mock_enforce = None
-        log.register_options(cfg.CONF)
 
     def _environ(self, path):
         return {
