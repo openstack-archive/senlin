@@ -144,7 +144,7 @@ class VersionNegotiationMiddlewareTest(base.SenlinTestCase):
 
     def test_check_version_request(self):
         request = webob.Request({'PATH_INFO': 'resource'})
-        request.headers[wsgi.API_VERSION_KEY] = 'cluster 1.0,compute 2.0'
+        request.headers[wsgi.API_VERSION_KEY] = 'clustering 1.0,compute 2.0'
         version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
 
@@ -166,7 +166,7 @@ class VersionNegotiationMiddlewareTest(base.SenlinTestCase):
 
     def test_check_version_request_invalid_format(self):
         request = webob.Request({'PATH_INFO': 'resource'})
-        request.headers[wsgi.API_VERSION_KEY] = 'cluster 2.03'
+        request.headers[wsgi.API_VERSION_KEY] = 'clustering 2.03'
         version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
 
@@ -179,7 +179,7 @@ class VersionNegotiationMiddlewareTest(base.SenlinTestCase):
 
     def test_check_version_request_invalid_version(self):
         request = webob.Request({'PATH_INFO': 'resource'})
-        request.headers[wsgi.API_VERSION_KEY] = 'cluster 2.3'
+        request.headers[wsgi.API_VERSION_KEY] = 'clustering 2.3'
         version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
 
@@ -194,7 +194,7 @@ class VersionNegotiationMiddlewareTest(base.SenlinTestCase):
 
     def test_check_version_request_latest(self):
         request = webob.Request({'PATH_INFO': 'resource'})
-        request.headers[wsgi.API_VERSION_KEY] = 'cluster Latest'
+        request.headers[wsgi.API_VERSION_KEY] = 'clustering Latest'
         version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
 
