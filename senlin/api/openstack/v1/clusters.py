@@ -368,10 +368,12 @@ class ClusterController(wsgi.Controller):
     @util.policy_enforce
     def collect(self, req, cluster_id, path):
         """Aggregate attribute values across a cluster."""
-        if path.strip() == '':
+        stripped_path = path.strip()
+        if stripped_path == '':
             raise exc.HTTPBadRequest(_("Required path attribute is missing."))
 
-        return self.rpc_client.cluster_collect(req.context, cluster_id, path)
+        return self.rpc_client.cluster_collect(req.context, cluster_id,
+                                               stripped_path)
 
     @util.policy_enforce
     def delete(self, req, cluster_id):
