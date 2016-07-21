@@ -113,7 +113,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         lb_obj.operating_status = 'OFFLINE'
         res = self.lb_driver._wait_for_lb_ready(lb_id, timeout=2)
         self.assertFalse(res)
-        mock_sleep.assert_called_once_with(2)
+        mock_sleep.assert_called_once_with(10)
 
     def test_lb_create_succeeded(self):
         lb_obj = mock.Mock()
@@ -125,7 +125,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         listener_obj.id = 'LISTENER_ID'
         pool_obj.id = 'POOL_ID'
         subnet_obj = mock.Mock()
-        subnet_obj.name = 'subnet1'
+        subnet_obj.name = 'subnet'
         subnet_obj.id = 'SUBNET_ID'
         subnet_obj.network_id = 'NETWORK_ID'
         hm_obj.id = 'HEALTHMONITOR_ID'
@@ -168,7 +168,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         lb_obj = mock.Mock()
         lb_obj.id = 'LB_ID'
         subnet_obj = mock.Mock()
-        subnet_obj.name = 'subnet1'
+        subnet_obj.name = 'subnet'
         subnet_obj.id = 'SUBNET_ID'
         subnet_obj.network_id = 'NETWORK_ID'
         self.nc.loadbalancer_create.return_value = lb_obj
@@ -212,7 +212,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         lb_obj.id = 'LB_ID'
         listener_obj.id = 'LISTENER_ID'
         subnet_obj = mock.Mock()
-        subnet_obj.name = 'subnet1'
+        subnet_obj.name = 'subnet'
         subnet_obj.id = 'SUBNET_ID'
         subnet_obj.network_id = 'NETWORK_ID'
 
@@ -255,7 +255,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         listener_obj.id = 'LISTENER_ID'
         pool_obj.id = 'POOL_ID'
         subnet_obj = mock.Mock()
-        subnet_obj.name = 'subnet1'
+        subnet_obj.name = 'subnet'
         subnet_obj.id = 'SUBNET_ID'
         subnet_obj.network_id = 'NETWORK_ID'
 
@@ -302,7 +302,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         listener_obj.id = 'LISTENER_ID'
         pool_obj.id = 'POOL_ID'
         subnet_obj = mock.Mock()
-        subnet_obj.name = 'subnet1'
+        subnet_obj.name = 'subnet'
         subnet_obj.id = 'SUBNET_ID'
         subnet_obj.network_id = 'NETWORK_ID'
         hm_obj.id = 'HEALTHMONITOR_ID'
@@ -418,14 +418,14 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
             'LB_ID', ignore_not_found=True)
 
     @mock.patch.object(oslo_context, 'get_current')
-    def test_member_add(self, mock_get_current):
+    def test_member_add_succeeded(self, mock_get_current):
         node = mock.Mock()
         lb_id = 'LB_ID'
         pool_id = 'POOL_ID'
         port = '80'
-        subnet = 'subnet1'
+        subnet = 'subnet'
         subnet_obj = mock.Mock()
-        subnet_obj.name = 'subnet1'
+        subnet_obj.name = 'subnet'
         subnet_obj.id = 'SUBNET_ID'
         subnet_obj.network_id = 'NETWORK_ID'
         network_obj = mock.Mock()
@@ -454,29 +454,119 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.nc.network_get.assert_called_once_with('NETWORK_ID')
         self.nc.pool_member_create.assert_called_once_with(
             pool_id, 'ipaddr_net1', port, 'SUBNET_ID')
+        self.lb_driver._wait_for_lb_ready.assert_has_calls(
+            [mock.call('LB_ID'), mock.call('LB_ID')])
 
-        # Exception happens in subnet_get
+    @mock.patch.object(oslo_context, 'get_current')
+    def test_member_add_subnet_get_failed(self, mock_get_current):
         self.nc.subnet_get.side_effect = exception.InternalError(
-            code=500, message="Can't find subnet1")
-        res = self.lb_driver.member_add(node, lb_id, pool_id, port, subnet)
+            code=500, message="Can't find subnet")
+        res = self.lb_driver.member_add('node', 'LB_ID', 'POOL_ID', 80,
+                                        'subnet')
         self.assertIsNone(res)
 
+    @mock.patch.object(oslo_context, 'get_current')
+    def test_member_add_network_get_failed(self, mock_get_current):
+        subnet_obj = mock.Mock()
+        subnet_obj.name = 'subnet'
+        subnet_obj.id = 'SUBNET_ID'
+        subnet_obj.network_id = 'NETWORK_ID'
+
         # Exception happens in network_get
-        self.nc.subnet_get.side_effect = None
         self.nc.subnet_get.return_value = subnet_obj
         self.nc.network_get.side_effect = exception.InternalError(
             code=500, message="Can't find NETWORK_ID")
-        res = self.lb_driver.member_add(node, lb_id, pool_id, port, subnet)
+        res = self.lb_driver.member_add('node', 'LB_ID', 'POOL_ID', 80,
+                                        'subnet')
         self.assertIsNone(res)
 
+    @mock.patch.object(oslo_context, 'get_current')
+    def test_member_add_lb_unready_for_member_create(self, mock_get_current):
+        node = mock.Mock()
+        subnet_obj = mock.Mock()
+        subnet_obj.name = 'subnet'
+        subnet_obj.id = 'SUBNET_ID'
+        subnet_obj.network_id = 'NETWORK_ID'
+        network_obj = mock.Mock()
+        network_obj.name = 'network1'
+        network_obj.id = 'NETWORK_ID'
+        node_detail = {
+            'name': 'node-01',
+            'addresses': {
+                'network1': ['ipaddr_net1'],
+                'network2': ['ipaddr_net2']
+            }
+        }
+        node.get_details.return_value = node_detail
+
         # Exception happens in pool_member_create
-        self.nc.subnet_get.side_effect = None
+        self.lb_driver._wait_for_lb_ready = mock.Mock()
+        self.lb_driver._wait_for_lb_ready.return_value = False
         self.nc.subnet_get.return_value = subnet_obj
-        self.nc.network_get.side_effect = None
         self.nc.network_get.return_value = network_obj
         self.nc.pool_member_create.side_effect = exception.InternalError(
             code=500, message="CREATE FAILED")
-        res = self.lb_driver.member_add(node, lb_id, pool_id, port, subnet)
+        res = self.lb_driver.member_add(node, 'LB_ID', 'POOL_ID', 80,
+                                        'subnet')
+        self.assertIsNone(res)
+        self.lb_driver._wait_for_lb_ready.assert_called_once_with('LB_ID')
+
+    @mock.patch.object(oslo_context, 'get_current')
+    def test_member_add_member_create_failed(self, mock_get_current):
+        node = mock.Mock()
+        subnet_obj = mock.Mock()
+        subnet_obj.name = 'subnet'
+        subnet_obj.id = 'SUBNET_ID'
+        subnet_obj.network_id = 'NETWORK_ID'
+        network_obj = mock.Mock()
+        network_obj.name = 'network1'
+        network_obj.id = 'NETWORK_ID'
+        node_detail = {
+            'name': 'node-01',
+            'addresses': {
+                'network1': ['ipaddr_net1'],
+                'network2': ['ipaddr_net2']
+            }
+        }
+        node.get_details.return_value = node_detail
+
+        # Exception happens in pool_member_create
+        self.lb_driver._wait_for_lb_ready = mock.Mock()
+        self.lb_driver._wait_for_lb_ready.return_value = True
+        self.nc.subnet_get.return_value = subnet_obj
+        self.nc.network_get.return_value = network_obj
+        self.nc.pool_member_create.side_effect = exception.InternalError(
+            code=500, message="CREATE FAILED")
+        res = self.lb_driver.member_add(node, 'LB_ID', 'POOL_ID', 80,
+                                        'subnet')
+        self.assertIsNone(res)
+
+    @mock.patch.object(oslo_context, 'get_current')
+    def test_member_add_wait_for_lb_timeout(self, mock_get_current):
+        node = mock.Mock()
+        subnet_obj = mock.Mock()
+        subnet_obj.name = 'subnet'
+        subnet_obj.id = 'SUBNET_ID'
+        subnet_obj.network_id = 'NETWORK_ID'
+        network_obj = mock.Mock()
+        network_obj.name = 'network1'
+        network_obj.id = 'NETWORK_ID'
+        node_detail = {
+            'name': 'node-01',
+            'addresses': {
+                'network1': ['ipaddr_net1'],
+                'network2': ['ipaddr_net2']
+            }
+        }
+        node.get_details.return_value = node_detail
+
+        # Wait for lb ready timeout after creating member
+        self.lb_driver._wait_for_lb_ready = mock.Mock()
+        self.lb_driver._wait_for_lb_ready.side_effect = [True, False]
+        self.nc.subnet_get.return_value = subnet_obj
+        self.nc.network_get.return_value = network_obj
+        res = self.lb_driver.member_add(node, 'LB_ID', 'POOL_ID', 80,
+                                        'subnet')
         self.assertIsNone(res)
 
     @mock.patch.object(oslo_context, 'get_current')
@@ -485,7 +575,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         lb_id = 'LB_ID'
         pool_id = 'POOL_ID'
         port = '80'
-        subnet = 'subnet1'
+        subnet = 'subnet'
         network_obj = mock.Mock()
         network_obj.name = 'network3'
         network_obj.id = 'NETWORK_ID'
@@ -516,23 +606,34 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         res = self.lb_driver.member_remove(lb_id, pool_id, member_id)
         self.assertTrue(res)
         self.nc.pool_member_delete.assert_called_once_with(pool_id, member_id)
-        self.lb_driver._wait_for_lb_ready.assert_called_once_with(lb_id)
+        self.lb_driver._wait_for_lb_ready.assert_has_calls(
+            [mock.call(lb_id), mock.call(lb_id)])
 
-    def test_member_remove_failed(self):
-        lb_id = 'LB_ID'
-        pool_id = 'POOL_ID'
-        member_id = 'MEMBER_ID'
+    def test_member_remove_lb_unready_for_member_delete(self):
+        self.lb_driver._wait_for_lb_ready = mock.Mock()
+        self.lb_driver._wait_for_lb_ready.return_value = False
 
+        res = self.lb_driver.member_remove('LB_ID', 'POOL_ID', 'MEMBER_ID')
+        self.assertFalse(res)
+        self.lb_driver._wait_for_lb_ready.assert_called_once_with('LB_ID')
+
+    def test_member_remove_member_delete_failed(self):
         self.lb_driver._wait_for_lb_ready = mock.Mock()
         self.lb_driver._wait_for_lb_ready.return_value = True
         self.nc.pool_member_delete.side_effect = exception.InternalError(
             code=500, message='')
-        res = self.lb_driver.member_remove(lb_id, pool_id, member_id)
-        self.assertFalse(res)
-        self.nc.pool_member_delete.assert_called_once_with(pool_id, member_id)
 
+        res = self.lb_driver.member_remove('LB_ID', 'POOL_ID', 'MEMBER_ID')
+        self.assertFalse(res)
+        self.nc.pool_member_delete.assert_called_once_with('POOL_ID',
+                                                           'MEMBER_ID')
+
+    def test_member_remove_wait_for_lb_timeout(self):
+        self.lb_driver._wait_for_lb_ready = mock.Mock()
+        self.lb_driver._wait_for_lb_ready.side_effect = [True, False]
         self.nc.pool_member_delete.side_effect = None
-        self.lb_driver._wait_for_lb_ready.return_value = False
-        res = self.lb_driver.member_remove(lb_id, pool_id, member_id)
+
+        res = self.lb_driver.member_remove('LB_ID', 'POOL_ID', 'MEMBER_ID')
         self.assertIsNone(res)
-        self.lb_driver._wait_for_lb_ready.assert_called_once_with(lb_id)
+        self.lb_driver._wait_for_lb_ready.assert_has_calls(
+            [mock.call('LB_ID'), mock.call('LB_ID')])
