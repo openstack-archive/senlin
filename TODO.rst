@@ -74,6 +74,11 @@ DB
 LOW PRIORITY
 ============
 
+API
+---
+  - Add support to osprofiler which is a common library across all openstack
+    projects for tracing and profiling.
+
 ENGINE
 ------
   - Allow actions to be paused and resumed. This is important for some background
