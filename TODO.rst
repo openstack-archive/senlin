@@ -104,6 +104,12 @@ DOC
 -----
   - Provide a sample conf file for customizing senlin options.
 
+OTHERS
+------
+  - Integration with Glare for profile/policy specs storage. At least we may
+    want to enable users to retrieve/reference heat templates from glare when
+    creating profiles.
+
 
 .. _`Filtering Guidelines`: http://specs.openstack.org/openstack/api-wg/guidelines/pagination_filter_sort.html#filtering
 .. _`Autoscaling Notifications`: https://ask.openstack.org/en/question/46495/heat-autoscaling-adaptation-actions-on-existing-servers/
