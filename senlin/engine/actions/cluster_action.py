@@ -409,19 +409,24 @@ class ClusterAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        # Check if deletion policy is attached to the action, if is,
-        # get grace_period value
+        # Use policy decision if any, or fall back to defaults
+        destroy_after_deletion = False
+        grace_period = 0
+        reduce_desired_capacity = True
         pd = self.data.get('deletion', None)
-        grace_period = None
-        if pd is not None:
-            grace_period = self.data['deletion'].get('grace_period')
-        else:  # if not, deleting nodes from cluster, don't destroy them
-            data = {
-                'deletion': {
-                    'destroy_after_deletion': False,
-                }
+        if pd:
+            destroy_after_deletion = pd.get('destroy_after_deletion', False)
+            grace_period = pd.get('grace_period', 0)
+            reduce_desired_capacity = pd.get('reduce_desired_capacity', True)
+
+        data = {
+            'deletion': {
+                'destroy_after_deletion': destroy_after_deletion,
+                'grace_period': grace_period,
+                'reduce_desired_capacity': reduce_desired_capacity,
             }
-            self.data.update(data)
+        }
+        self.data.update(data)
         nodes = self.inputs.get('candidates', [])
 
         node_ids = copy.deepcopy(nodes)
@@ -443,13 +448,14 @@ class ClusterAction(base.Action):
         if len(nodes) == 0:
             return self.RES_OK, reason
 
-        if grace_period is not None:
+        if grace_period:
             self._wait_before_deletion(grace_period)
-        result, new_reason = self._delete_nodes(nodes)
 
+        result, new_reason = self._delete_nodes(nodes)
         if result != self.RES_OK:
-            reason = new_reason
-        else:
+            return result, new_reason
+
+        if reduce_desired_capacity:
             self.cluster.desired_capacity -= len(nodes)
             self.cluster.store(self.context)
 

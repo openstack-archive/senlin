@@ -264,6 +264,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
                 'candidates': ['N1', 'N2'],
                 'destroy_after_deletion': True,
                 'grace_period': 60,
+                'reduce_desired_capacity': False,
             }
         }
         self.assertEqual(pd, action.data)
@@ -289,6 +290,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
                 'candidates': ['N1', 'N2'],
                 'destroy_after_deletion': True,
                 'grace_period': 60,
+                'reduce_desired_capacity': False,
             }
         }
         self.assertEqual(pd, action.data)
@@ -307,6 +309,19 @@ class TestDeletionPolicy(base.SenlinTestCase):
         policy = dp.DeletionPolicy('test-policy', self.spec)
         policy.pre_op('FAKE_ID', action)
         mock_update.assert_called_once_with(action, ['N1', 'N2'])
+
+    @mock.patch.object(dp.DeletionPolicy, '_update_action')
+    def test_pre_op_node_delete(self, mock_update):
+        action = mock.Mock()
+        action.action = consts.NODE_DELETE
+        action.context = self.context
+        action.node.id = 'NODE_ID'
+        action.inputs = {}
+        action.data = {}
+
+        policy = dp.DeletionPolicy('test-policy', self.spec)
+        policy.pre_op('FAKE_ID', action)
+        mock_update.assert_called_once_with(action, ['NODE_ID'])
 
     @mock.patch.object(dp.DeletionPolicy, '_update_action')
     @mock.patch.object(su, 'nodes_by_age')

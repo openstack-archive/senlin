@@ -105,15 +105,20 @@ class NodeAction(base.Action):
                 return self.RES_ERROR, result
 
         res = self.node.do_delete(self.context)
-        if res:
-            if self.node.cluster_id and self.cause == base.CAUSE_RPC:
-                # Update cluster desired_capacity if node deletion succeeded
+        if not res:
+            return self.RES_ERROR, _('Node deletion failed.')
+
+        if self.node.cluster_id and self.cause == base.CAUSE_RPC:
+            # check if desired_capacity should be changed
+            do_reduce = True
+            pd = self.data.get('deletion', None)
+            if pd:
+                do_reduce = pd.get('reduce_desired_capacity', True)
+            if do_reduce:
                 cluster.desired_capacity -= 1
                 cluster.store(self.context)
-                cluster.remove_node(self.node.id)
-            return self.RES_OK, _('Node deleted successfully.')
-        else:
-            return self.RES_ERROR, _('Node deletion failed.')
+            cluster.remove_node(self.node.id)
+        return self.RES_OK, _('Node deleted successfully.')
 
     def do_update(self):
         """Handler for the NODE_UPDATE action.

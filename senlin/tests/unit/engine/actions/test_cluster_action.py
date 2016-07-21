@@ -1010,8 +1010,14 @@ class ClusterActionTest(base.SenlinTestCase):
         # assertions
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Completed deleting nodes.', res_msg)
-        self.assertEqual({'deletion': {'destroy_after_deletion': False}},
-                         action.data)
+        expected = {
+            'deletion': {
+                'destroy_after_deletion': False,
+                'grace_period': 0,
+                'reduce_desired_capacity': True,
+            }
+        }
+        self.assertEqual(expected, action.data)
 
         mock_get.assert_has_calls([
             mock.call(action.context, 'NODE_1'),
@@ -1052,8 +1058,14 @@ class ClusterActionTest(base.SenlinTestCase):
         # assertions
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual("Node [NODE_1] is not found.", res_msg)
-        self.assertEqual({'deletion': {'destroy_after_deletion': False}},
-                         action.data)
+        expected = {
+            'deletion': {
+                'destroy_after_deletion': False,
+                'grace_period': 0,
+                'reduce_desired_capacity': True,
+            }
+        }
+        self.assertEqual(expected, action.data)
 
     @mock.patch.object(no.Node, 'get')
     def test_do_del_nodes_node_not_member(self, mock_get, mock_load):
@@ -1074,8 +1086,14 @@ class ClusterActionTest(base.SenlinTestCase):
         # assertions
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual("Completed deleting nodes.", res_msg)
-        self.assertEqual({'deletion': {'destroy_after_deletion': False}},
-                         action.data)
+        expected = {
+            'deletion': {
+                'destroy_after_deletion': False,
+                'grace_period': 0,
+                'reduce_desired_capacity': True,
+            }
+        }
+        self.assertEqual(expected, action.data)
 
     @mock.patch.object(no.Node, 'get')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
