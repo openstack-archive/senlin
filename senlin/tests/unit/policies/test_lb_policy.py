@@ -224,6 +224,17 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         self.assertEqual((False, 'Failed in adding node into lb pool'), res)
         self.lb_driver.lb_delete.assert_called_once_with(**lb_data)
 
+    def test_get_delete_candidates_for_node_delete(self):
+        action = mock.Mock()
+        action.data = {}
+        action.action = consts.NODE_DELETE
+        action.node = mock.Mock(id='NODE_ID')
+        action.inputs = {}
+
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        res = policy._get_delete_candidates('CLUSTERID', action)
+        self.assertEqual(['NODE_ID'], res)
+
     def test_get_delete_candidates_no_deletion_data_del_nodes(self):
         action = mock.Mock()
         action.data = {}
