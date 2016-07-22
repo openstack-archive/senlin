@@ -44,6 +44,7 @@ class RegionPlacementPolicy(base.Policy):
         ('BEFORE', consts.CLUSTER_SCALE_OUT),
         ('BEFORE', consts.CLUSTER_SCALE_IN),
         ('BEFORE', consts.CLUSTER_RESIZE),
+        ('BEFORE', consts.NODE_CREATE),
     ]
 
     PROFILE_TYPE = [
@@ -181,6 +182,14 @@ class RegionPlacementPolicy(base.Policy):
                  to create; 2) negative - number of nodes to delete; 3) 0 -
                  something wrong happened, and the policy check failed.
         """
+        if action.action == consts.NODE_CREATE:
+            # skip node if the context already contains a region_name
+            profile = action.node.rt['profile']
+            if 'region_name' in profile.properties[profile.CONTEXT]:
+                return 0
+            else:
+                return 1
+
         if action.action == consts.CLUSTER_RESIZE:
             if action.data.get('deletion', None):
                 return -action.data['deletion']['count']
