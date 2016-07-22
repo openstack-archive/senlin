@@ -109,7 +109,7 @@ authentication_opts = [
                help=_('Complete public identity V3 API endpoint.')),
     cfg.StrOpt('service_username', default='senlin',
                help=_('Senlin service user name')),
-    cfg.StrOpt('service_password', default='',
+    cfg.StrOpt('service_password', default='', secret=True,
                help=_('Password specified for the Senlin service user.')),
     cfg.StrOpt('service_project_name', default='service',
                help=_('Name of the service project.')),
