@@ -467,6 +467,53 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(co.Cluster, 'get')
+    def test_post_op_node_create(self, m_cluster_get, m_node_load, m_extract,
+                                 m_load, m_conn):
+        ctx = mock.Mock()
+        cid = 'CLUSTER_ID'
+        cluster = mock.Mock()
+        m_cluster_get.return_value = cluster
+        node_obj = mock.Mock(data={})
+        action = mock.Mock(data={}, context=ctx, action=consts.NODE_CREATE)
+        action.node = mock.Mock(id='NODE_ID')
+        cp = mock.Mock()
+        policy_data = {
+            'loadbalancer': 'LB_ID',
+            'listener': 'LISTENER_ID',
+            'pool': 'POOL_ID',
+            'healthmonitor': 'HM_ID'
+        }
+        cp_data = {
+            'LoadBalancingPolicy': {
+                'version': '1.0',
+                'data': policy_data
+            }
+        }
+        cp.data = cp_data
+        self.lb_driver.member_add.side_effect = ['MEMBER_ID']
+        m_node_load.side_effect = [node_obj]
+        m_load.return_value = cp
+        m_extract.return_value = policy_data
+
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+
+        # do it
+        res = policy.post_op(cid, action)
+
+        # assertion
+        self.assertIsNone(res)
+        m_cluster_get.assert_called_once_with(ctx, 'CLUSTER_ID')
+        m_conn.assert_called_once_with(cluster)
+        m_load.assert_called_once_with(ctx, cid, policy.id)
+        m_extract.assert_called_once_with(cp_data)
+        m_node_load.assert_called_once_with(ctx, node_id='NODE_ID')
+        self.lb_driver.member_add.assert_called_once_with(
+            node_obj, 'LB_ID', 'POOL_ID', 80, 'test-subnet')
+        node_obj.store.assert_called_once_with(ctx)
+        self.assertEqual({'lb_member': 'MEMBER_ID'}, node_obj.data)
+
+    @mock.patch.object(node_mod.Node, 'load')
+    @mock.patch.object(co.Cluster, 'get')
     def test_post_op_add_nodes(self, m_cluster_get, m_node_load, m_extract,
                                m_load, m_conn):
         cid = 'CLUSTER_ID'
