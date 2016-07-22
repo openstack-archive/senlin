@@ -556,7 +556,7 @@ class NodeActionTest(base.SenlinTestCase):
                              mock_check, mock_release, mock_acquire,
                              mock_load):
         def fake_execute():
-            node.cluster_id = None
+            node.cluster_id = ''
             return (action.RES_OK, 'Execution ok')
 
         node = mock.Mock()
