@@ -205,7 +205,7 @@ class NodeAction(base.Action):
         :param dict kwargs: Parameters provided to the action, if any.
         :returns: A tuple containing the result and the related reason.
         """
-        # Since node.cluster_id could be reset to None in _execute progress,
+        # Since node.cluster_id could be reset to '' during action execution,
         # we record it here for policy check and cluster lock release.
         saved_cluster_id = self.node.cluster_id
         if self.node.cluster_id:
@@ -219,8 +219,7 @@ class NodeAction(base.Action):
 
             self.policy_check(self.node.cluster_id, 'BEFORE')
             if self.data['status'] != policy_mod.CHECK_OK:
-                # Don't emit message here since policy_check should have
-                # done it
+                # Don't emit message since policy_check should have done it
                 if self.cause == base.CAUSE_RPC:
                     senlin_lock.cluster_lock_release(
                         self.node.cluster_id, self.id, senlin_lock.NODE_SCOPE)
@@ -236,7 +235,8 @@ class NodeAction(base.Action):
                 reason = _('Failed in locking node')
             else:
                 res, reason = self._execute()
-                if res == self.RES_OK and saved_cluster_id is not None:
+                if (self.cause == base.CAUSE_RPC and res == self.RES_OK and
+                        saved_cluster_id):
                     self.policy_check(saved_cluster_id, 'AFTER')
                     if self.data['status'] != policy_mod.CHECK_OK:
                         res = self.RES_ERROR
@@ -245,7 +245,7 @@ class NodeAction(base.Action):
                         res = self.RES_OK
         finally:
             senlin_lock.node_lock_release(self.node.id, self.id)
-            if saved_cluster_id is not None and self.cause == base.CAUSE_RPC:
+            if self.cause == base.CAUSE_RPC and saved_cluster_id:
                 senlin_lock.cluster_lock_release(saved_cluster_id, self.id,
                                                  senlin_lock.NODE_SCOPE)
         return res, reason
