@@ -56,6 +56,7 @@ class LoadBalancingPolicy(base.Policy):
         ('BEFORE', consts.CLUSTER_DEL_NODES),
         ('BEFORE', consts.CLUSTER_SCALE_IN),
         ('BEFORE', consts.CLUSTER_RESIZE),
+        ('BEFORE', consts.NODE_DELETE),
     ]
 
     PROFILE_TYPE = [
@@ -366,7 +367,10 @@ class LoadBalancingPolicy(base.Policy):
         # policy or deletion policy is attached.
         candidates = None
         if deletion is None:
-            if action.action == consts.CLUSTER_DEL_NODES:
+            if action.action == consts.NODE_DELETE:
+                candidates = [action.node.id]
+                count = 1
+            elif action.action == consts.CLUSTER_DEL_NODES:
                 # Get candidates from action.input
                 candidates = action.inputs.get('candidates', [])
                 count = len(candidates)
