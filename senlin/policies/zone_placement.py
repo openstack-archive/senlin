@@ -45,6 +45,7 @@ class ZonePlacementPolicy(base.Policy):
         ('BEFORE', consts.CLUSTER_SCALE_OUT),
         ('BEFORE', consts.CLUSTER_SCALE_IN),
         ('BEFORE', consts.CLUSTER_RESIZE),
+        ('BEFORE', consts.NODE_CREATE),
     ]
 
     PROFILE_TYPE = [
@@ -164,6 +165,13 @@ class ZonePlacementPolicy(base.Policy):
                  to create; 2) negative - number of nodes to delete; 3) 0 -
                  something wrong happened, and the policy check failed.
         """
+        if action.action == consts.NODE_CREATE:
+            # skip the policy if availability zone is specified in profile
+            profile = action.node.rt['profile']
+            if profile.properties[profile.AVAILABILITY_ZONE]:
+                return 0
+            return 1
+
         if action.action == consts.CLUSTER_RESIZE:
             if action.data.get('deletion', None):
                 return -action.data['deletion']['count']
