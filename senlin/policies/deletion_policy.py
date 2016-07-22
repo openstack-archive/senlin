@@ -60,6 +60,7 @@ class DeletionPolicy(base.Policy):
         ('BEFORE', consts.CLUSTER_SCALE_IN),
         ('BEFORE', consts.CLUSTER_DEL_NODES),
         ('BEFORE', consts.CLUSTER_RESIZE),
+        ('BEFORE', consts.NODE_DELETE),
     ]
 
     PROFILE_TYPE = [
@@ -86,7 +87,7 @@ class DeletionPolicy(base.Policy):
         REDUCE_DESIRED_CAPACITY: schema.Boolean(
             _('Whether the desired capacity of the cluster should be '
               'reduced along the deletion. Default to False.'),
-            default=False,
+            default=True,
         )
     }
 
@@ -142,6 +143,7 @@ class DeletionPolicy(base.Policy):
         pd['candidates'] = victims
         pd['destroy_after_deletion'] = self.destroy_after_deletion
         pd['grace_period'] = self.grace_period
+        pd['reduce_desired_capacity'] = self.reduce_desired_capacity
         action.data.update({
             'status': base.CHECK_OK,
             'reason': _('Candidates generated'),
@@ -159,6 +161,10 @@ class DeletionPolicy(base.Policy):
         victims = action.inputs.get('candidates', [])
         if len(victims) > 0:
             self._update_action(action, victims)
+            return
+
+        if action.action == consts.NODE_DELETE:
+            self._update_action(action, [action.node.id])
             return
 
         db_cluster = None
