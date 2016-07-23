@@ -28,7 +28,8 @@ extensions = [
     # 'sphinx.ext.todo'
     'sphinx.ext.graphviz',
     'sphinx.ext.intersphinx',
-    'oslosphinx'
+    'oslosphinx',
+    'oslo_config.sphinxext',
 ]
 
 # autodoc generation is a bit aggressive and a nuisance when doing heavy

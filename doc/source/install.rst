@@ -115,6 +115,13 @@ The most common options to be customized include:
   rabbit_hosts = <HOST>
   rabbit_password = <RABBIT PASSWORD>
 
+  [oslo_messaging_notifications]
+  driver = messaging
+
+For more comprehensive helps on configuration options, please refer to
+:doc:`Configuration Options <configuration>` documentation.
+
+
 5. Create Senlin Database.
 
  Create Senlin database using the :command:`senlin-db-recreate` script under
