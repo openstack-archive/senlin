@@ -48,6 +48,20 @@ def no_mutable_default_args(logical_line):
         yield (0, msg)
 
 
+def no_log_warn(logical_line):
+    """Disallow 'LOG.warn('
+
+    Deprecated LOG.warn(), instead use LOG.warning
+    https://bugs.launchpad.net/senlin/+bug/1508442
+
+    N352
+    """
+
+    msg = ("S322: LOG.warn is deprecated, please use LOG.warning!")
+    if "LOG.warn(" in logical_line:
+        yield (0, msg)
+
+
 def check_api_version_decorator(logical_line, previous_logical, blank_before,
                                 filename):
     msg = ("S321: The api_version decorator must be the first decorator on "
@@ -61,4 +75,5 @@ def factory(register):
     register(assert_equal_none)
     register(use_jsonutils)
     register(no_mutable_default_args)
+    register(no_log_warn)
     register(check_api_version_decorator)
