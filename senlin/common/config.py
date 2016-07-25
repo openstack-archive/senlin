@@ -17,6 +17,7 @@ import socket
 
 from oslo_config import cfg
 
+from senlin.api.common import wsgi
 from senlin.common.i18n import _
 
 
@@ -159,6 +160,8 @@ cfg.CONF.register_opts(webhook_opts, group=webhook_group)
 
 
 def list_opts():
+    for g, o in wsgi.wsgi_opts():
+        yield g, o
     yield None, cloud_backend_opts
     yield None, rpc_opts
     yield None, engine_opts

@@ -114,7 +114,7 @@ json_size_opt = cfg.IntOpt('max_json_body_size', default=1048576,
 cfg.CONF.register_opt(json_size_opt)
 
 
-def list_opts():
+def wsgi_opts():
     yield None, [json_size_opt]
     yield paste_deploy_group.name, paste_deploy_opts
     yield api_group.name, api_opts
