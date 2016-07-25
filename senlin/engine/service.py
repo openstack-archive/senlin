@@ -1964,7 +1964,7 @@ class EngineService(service.Service):
                              projects other than the requesting one can be
                              returned.
         :return: A DB object of receiver or an exception `ReceiverNotFound`
-                 if no matching reciever is found.
+                 if no matching receiver is found.
         """
         if uuidutils.is_uuid_like(identity):
             receiver = receiver_obj.Receiver.get(
