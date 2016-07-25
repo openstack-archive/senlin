@@ -770,7 +770,7 @@ class ClusterActionTest(base.SenlinTestCase):
 
         node = mock.Mock()
         node.id = 'NODE_1'
-        node.cluster_id = None
+        node.cluster_id = ''
         node.status = node.ACTIVE
         mock_load_node.return_value = node
         mock_action.return_value = 'NODE_ACTION_ID'
@@ -823,11 +823,11 @@ class ClusterActionTest(base.SenlinTestCase):
 
         node1 = mock.Mock()
         node1.id = 'NODE_1'
-        node1.cluster_id = None
+        node1.cluster_id = ''
         node1.status = node1.ACTIVE
         node2 = mock.Mock()
         node2.id = 'NODE_2'
-        node2.cluster_id = None
+        node2.cluster_id = ''
         node2.status = node2.ACTIVE
         mock_load_node.side_effect = [node1, node2]
         mock_action.side_effect = ['NODE_ACTION_1', 'NODE_ACTION_2']
@@ -939,7 +939,7 @@ class ClusterActionTest(base.SenlinTestCase):
         cluster = mock.Mock()
         cluster.id = 'FAKE_CLUSTER'
         node = mock.Mock()
-        node.cluster_id = None
+        node.cluster_id = ''
         node.status = node.ERROR
         mock_load_node.return_value = node
 
@@ -1075,7 +1075,7 @@ class ClusterActionTest(base.SenlinTestCase):
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.inputs = {'nodes': ['NODE_1', 'NODE_2']}
         node1 = mock.Mock()
-        node1.cluster_id = None
+        node1.cluster_id = ''
         node2 = mock.Mock()
         node2.cluster_id = 'ANOTHER_CLUSTER'
         mock_get.side_effect = [node1, node2]
