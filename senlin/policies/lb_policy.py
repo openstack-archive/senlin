@@ -53,6 +53,7 @@ class LoadBalancingPolicy(base.Policy):
         ('AFTER', consts.CLUSTER_ADD_NODES),
         ('AFTER', consts.CLUSTER_SCALE_OUT),
         ('AFTER', consts.CLUSTER_RESIZE),
+        ('AFTER', consts.NODE_CREATE),
         ('BEFORE', consts.CLUSTER_DEL_NODES),
         ('BEFORE', consts.CLUSTER_SCALE_IN),
         ('BEFORE', consts.CLUSTER_RESIZE),
@@ -462,10 +463,13 @@ class LoadBalancingPolicy(base.Policy):
 
         # TODO(Yanyanhu): Need special handling for cross-az scenario
         # which is supported by Neutron lbaas.
-        creation = action.data.get('creation', None)
-        nodes_added = creation.get('nodes', []) if creation else []
-        if len(nodes_added) == 0:
-            return
+        if action.action == consts.NODE_CREATE:
+            nodes_added = [action.node.id]
+        else:
+            creation = action.data.get('creation', None)
+            nodes_added = creation.get('nodes', []) if creation else []
+            if len(nodes_added) == 0:
+                return
 
         db_cluster = co.Cluster.get(action.context, cluster_id)
         params = self._build_conn_params(db_cluster)
