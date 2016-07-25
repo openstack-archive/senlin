@@ -19,6 +19,27 @@ from senlin.tests.unit.common import base
 
 
 class HackingTestCase(base.SenlinTestCase):
+    @mock.patch('pep8._checks',
+                {'physical_line': {}, 'logical_line': {}, 'tree': {}})
+    def _run_check(self, code, checker, filename=None):
+        pep8.register_check(checker)
+
+        lines = textwrap.dedent(code).strip().splitlines(True)
+
+        checker = pep8.Checker(filename=filename, lines=lines)
+        checker.check_all()
+        checker.report._deferred_print.sort()
+        return checker.report._deferred_print
+
+    def _assert_has_errors(self, code, checker, expected_errors=None,
+                           filename=None):
+        actual_errors = [e[:3] for e in
+                         self._run_check(code, checker, filename)]
+        self.assertEqual(expected_errors or [], actual_errors)
+
+    def _assert_has_no_errors(self, code, checker, filename=None):
+        self._assert_has_errors(code, checker, filename=filename)
+
     def test_assert_equal_none(self):
         self.assertEqual(1, len(list(checks.assert_equal_none(
             "self.assertEqual(A, None)"))))
@@ -53,8 +74,6 @@ class HackingTestCase(base.SenlinTestCase):
         self.assertEqual(0, len(list(checks.no_mutable_default_args(
             "defined, undefined = [], {}"))))
 
-    @mock.patch("pep8._checks",
-                {'physical_line': {}, 'logical_line': {}, 'tree': {}})
     def test_api_version_decorator(self):
         code = """
             @some_other_decorator
@@ -63,14 +82,8 @@ class HackingTestCase(base.SenlinTestCase):
                 pass
             """
 
-        lines = textwrap.dedent(code).strip().splitlines(True)
-
-        pep8.register_check(checks.check_api_version_decorator)
-        checker = pep8.Checker(filename=None, lines=lines)
-        checker.check_all()
-        checker.report._deferred_print.sort()
-
-        actual_error = checker.report._deferred_print[0]
+        actual_error = self._run_check(code,
+                                       checks.check_api_version_decorator)[0]
 
         self.assertEqual(2, actual_error[0])
         self.assertEqual(0, actual_error[1])
@@ -79,8 +92,6 @@ class HackingTestCase(base.SenlinTestCase):
                          'decorator on a method.',
                          actual_error[3])
 
-    @mock.patch("pep8._checks",
-                {'physical_line': {}, 'logical_line': {}, 'tree': {}})
     def test_api_version_decorator_good(self):
         code = """
             class SomeController():
@@ -89,12 +100,19 @@ class HackingTestCase(base.SenlinTestCase):
                     pass
 
             """
-        lines = textwrap.dedent(code).strip().splitlines(True)
 
-        pep8.register_check(checks.check_api_version_decorator)
-        checker = pep8.Checker(filename=None, lines=lines)
-        checker.check_all()
-        checker.report._deferred_print.sort()
-
-        actual_error = checker.report._deferred_print
+        actual_error = self._run_check(code,
+                                       checks.check_api_version_decorator)
         self.assertEqual(0, len(actual_error))
+
+    def test_no_log_warn(self):
+        code = """
+                  LOG.warn("LOG.warn is deprecated")
+               """
+        errors = [(1, 0, 'S322')]
+        self._assert_has_errors(code, checks.no_log_warn,
+                                expected_errors=errors)
+        code = """
+                  LOG.warning("LOG.warn is deprecated")
+               """
+        self._assert_has_no_errors(code, checks.no_log_warn)
