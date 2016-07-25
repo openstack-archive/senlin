@@ -160,6 +160,23 @@ cfg.CONF.register_opts(webhook_opts, group=webhook_group)
 
 
 def list_opts():
+    """Return a list of oslo.config options available.
+
+    The purpose of this function is to allow tools like the Oslo sample config
+    file generator to discover the options exposed to users by this service.
+    The returned list includes all oslo.config options which may be registered
+    at runtime by the service api/engine.
+
+    Each element of the list is a tuple. The first element is the name of the
+    group under which the list of elements in the second element will be
+    registered. A group name of None corresponds to the [DEFAULT] group in
+    config files.
+
+    This function is also discoverable via the 'senlin.config' entry point
+    under the 'oslo.config.opts' namespace.
+
+    :returns: a list of (group_name, opts) tuples
+    """
     for g, o in wsgi.wsgi_opts():
         yield g, o
     yield None, cloud_backend_opts
