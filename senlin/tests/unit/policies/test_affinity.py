@@ -539,6 +539,43 @@ class TestAffinityPolicy(base.SenlinTestCase):
             x_action.data)
         x_action.store.assert_called_once_with(x_action.context)
 
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
+    def test_pre_op_for_node_create(self, mock_cp):
+        x_action = mock.Mock()
+        x_action.data = {}
+        x_action.action = consts.NODE_CREATE
+        x_binding = mock.Mock()
+        mock_cp.return_value = x_binding
+
+        policy_data = {
+            'servergroup_id': 'SERVERGROUP_ID',
+            'inherited_group': False,
+        }
+        policy = ap.AffinityPolicy('test-policy', self.spec)
+        policy.id = 'POLICY_ID'
+        mock_extract = self.patchobject(policy, '_extract_policy_data',
+                                        return_value=policy_data)
+
+        # do it
+        policy.pre_op('CLUSTER_ID', x_action)
+
+        mock_cp.assert_called_once_with(x_action.context, 'CLUSTER_ID',
+                                        'POLICY_ID')
+        mock_extract.assert_called_once_with(x_binding.data)
+        self.assertEqual(
+            {
+                'placement': {
+                    'count': 1,
+                    'placements': [
+                        {
+                            'servergroup': 'SERVERGROUP_ID'
+                        }
+                    ]
+                }
+            },
+            x_action.data)
+        x_action.store.assert_called_once_with(x_action.context)
+
     @mock.patch.object(co.Cluster, 'get')
     @mock.patch.object(cpo.ClusterPolicy, 'get')
     def test_pre_op_use_resize_params(self, mock_cp, mock_cluster):

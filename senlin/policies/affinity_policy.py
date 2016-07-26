@@ -248,6 +248,8 @@ class AffinityPolicy(base.Policy):
             count = pd.get('count', 1)
         elif action.action == consts.CLUSTER_SCALE_OUT:
             count = action.inputs.get('count', 1)
+        elif action.action == consts.NODE_CREATE:
+            count = 1
         else:  # CLUSTER_RESIZE
             db_cluster = co.Cluster.get(action.context, cluster_id)
             su.parse_resize_params(action, db_cluster)
