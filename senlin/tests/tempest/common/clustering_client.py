@@ -137,3 +137,8 @@ class ClusteringAPIClient(rest_client.RestClient):
 class ClusteringFunctionalClient(ClusteringAPIClient):
     """This is the tempest client for Senlin functional test"""
     pass
+
+
+class ClusteringIntegrationClient(ClusteringAPIClient):
+    """This is the tempest client for Senlin integration test"""
+    pass
