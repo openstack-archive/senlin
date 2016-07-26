@@ -40,7 +40,7 @@ class TestNotificationEndpoint(base.SenlinTestCase):
 
 @mock.patch('senlin.engine.health_manager.NotificationEndpoint')
 @mock.patch('oslo_messaging.Target')
-@mock.patch('oslo_messaging.get_transport')
+@mock.patch('oslo_messaging.get_notification_transport')
 @mock.patch('oslo_messaging.get_notification_listener')
 class TestListenerProc(base.SenlinTestCase):
 
@@ -64,7 +64,7 @@ class TestListenerProc(base.SenlinTestCase):
                                             exchange='EXCHANGE')
         mock_endpoint.assert_called_once_with('PROJECT_ID', 'CLUSTER_ID')
         mock_listener.assert_called_once_with(
-            x_transport, [x_target], [x_endpoint], pool="listener-workers")
+            x_transport, [x_target], [x_endpoint], pool="senlin-listeners")
         x_listener.start.assert_called_once_with()
         x_listener.wait.assert_called_once_with()
 

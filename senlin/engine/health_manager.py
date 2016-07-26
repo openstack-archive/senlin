@@ -63,16 +63,15 @@ class NotificationEndpoint(object):
 
 
 def ListenerProc(exchange, project_id, cluster_id):
-    transport = messaging.get_transport(cfg.CONF)
+    transport = messaging.get_notification_transport(cfg.CONF)
     targets = [
         messaging.Target(topic='notifications', exchange=exchange),
     ]
     endpoints = [
         NotificationEndpoint(project_id, cluster_id),
     ]
-    pool = "listener-workers"
     listener = messaging.get_notification_listener(
-        transport, targets, endpoints, pool=pool)
+        transport, targets, endpoints, pool="senlin-listeners")
 
     listener.start()
     listener.wait()
