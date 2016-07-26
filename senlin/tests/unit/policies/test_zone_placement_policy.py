@@ -109,6 +109,28 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         answer = {'AZ4': 4}
         self.assertEqual(answer, plan)
 
+    def test__get_count_node_create_with_zone(self):
+        x_profile = mock.Mock(AVAILABILITY_ZONE='availability_zone',
+                              properties={'availability_zone': 'zone1'})
+        x_node = mock.Mock(rt={'profile': x_profile})
+        action = mock.Mock(action=consts.NODE_CREATE, node=x_node)
+
+        policy = zp.ZonePlacementPolicy('p1', self.spec)
+
+        res = policy._get_count('FOO', action)
+        self.assertEqual(0, res)
+
+    def test__get_count_node_create_without_zone(self):
+        x_profile = mock.Mock(AVAILABILITY_ZONE='availability_zone',
+                              properties={'availability_zone': None})
+        x_node = mock.Mock(rt={'profile': x_profile})
+        action = mock.Mock(action=consts.NODE_CREATE, node=x_node)
+
+        policy = zp.ZonePlacementPolicy('p1', self.spec)
+
+        res = policy._get_count('FOO', action)
+        self.assertEqual(1, res)
+
     def test__get_count_resize_deletion(self):
         action = mock.Mock(action=consts.CLUSTER_RESIZE,
                            data={'deletion': {'count': 3}})
