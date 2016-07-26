@@ -112,6 +112,27 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         answer = {'R2': 1, 'R3': 1, 'R4': 1}
         self.assertEqual(answer, plan)
 
+    def test__get_count_node_create_no_region(self):
+        x_profile = mock.Mock(CONTEXT='context', properties={'context': {}})
+        x_node = mock.Mock(rt={'profile': x_profile})
+        action = mock.Mock(action=consts.NODE_CREATE, node=x_node)
+
+        policy = rp.RegionPlacementPolicy('p1', self.spec)
+
+        res = policy._get_count('FOO', action)
+        self.assertEqual(1, res)
+
+    def test__get_count_node_create_region_specified(self):
+        x_profile = mock.Mock(CONTEXT='context',
+                              properties={'context': {'region_name': 'foo'}})
+        x_node = mock.Mock(rt={'profile': x_profile})
+        action = mock.Mock(action=consts.NODE_CREATE, node=x_node)
+
+        policy = rp.RegionPlacementPolicy('p1', self.spec)
+
+        res = policy._get_count('FOO', action)
+        self.assertEqual(0, res)
+
     def test__get_count_resize_deletion(self):
         action = mock.Mock(action=consts.CLUSTER_RESIZE,
                            data={'deletion': {'count': 3}})
