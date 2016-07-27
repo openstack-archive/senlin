@@ -53,4 +53,35 @@ Working with Senlin
    receivers
    actions
    events
-   policy/index
+
+Built-in Policy Types
+~~~~~~~~~~~~~~~~~~~~~
+
+The senlin service is released with some builtin policy types that target some
+most common use cases. You can develop and deploy your own policy types by
+following the instructions in the
+:doc:`developer guide <../../developer/index>`.
+
+The following is a list of builtin policy types that are shipped with the
+service package.
+
+.. toctree::
+   :maxdepth: 1
+
+   policy_types/affinity
+   policy_types/deletion
+   policy_types/load_balancing
+   policy_types/scaling
+   policy_types/region_placement
+   policy_types/zone_placement
+
+
+Usage Scenarios
+~~~~~~~~~~~~~~~
+
+This section provides some guides for typical usage scenarios.
+
+.. toctree::
+   :maxdepth: 1
+
+   scenarios/affinity
