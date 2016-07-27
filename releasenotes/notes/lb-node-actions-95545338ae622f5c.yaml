@@ -1,0 +1,5 @@
+---
+features:
+  - The load-balancing policy is improved to handle 'NODE_CREATE' and
+    'NODE_DELETE' actions that derive from 'node_create' or 'node_delete'
+    RPC requests directly.
