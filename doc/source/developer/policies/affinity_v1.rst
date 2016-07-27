@@ -41,6 +41,9 @@ The policy is capable of handling the following actions:
   resize a cluster. The policy will try to parse the raw inputs if no other
   policies have done this.
 
+- ``NODE_CREATE``: an action originated from a node creation RPC request.
+  The policy is capable of processing the node associated with this action.
+
 The policy will be checked **BEFORE** any of the above mentioned actions is
 executed. When the action is ``CLUSTER_RESIZE``, the affinity policy will
 check if it is about the creation of new nodes. If the resize request is about
@@ -51,7 +54,7 @@ policies, if any. If no such data exists, it then checks the user-provided
 "``count``" input if there is one. The policy is also designed to parse a
 cluster resize request and see if there are new nodes to be created.
 
-After validating the ``count`` value, the deletion policy proceeds to update
+After validating the ``count`` value, the affinity policy proceeds to update
 the ``data`` property of the action with node placement data. For example:
 
 ::
