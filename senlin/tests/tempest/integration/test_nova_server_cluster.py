@@ -27,4 +27,27 @@ class TestNovaServerCluster(base.BaseSenlinIntegrationTest):
     @test.attr(type=['integration'])
     @decorators.idempotent_id('c26eae1c-5c46-4a5f-be63-954d7229c8cc')
     def test_cluster_create_delete(self):
-        pass
+        # Create a cluster
+        desired_capacity = 2
+        min_size = 1
+        max_size = 3
+        metadata = {'k1': 'v1'}
+        timeout = 600
+        cluster_id = utils.create_a_cluster(
+            self, self.profile_id, desired_capacity, min_size, max_size,
+            timeout, metadata)
+
+        # Verify creation result
+        cluster = utils.get_a_cluster(self, cluster_id)
+        self.assertIsNotNone(cluster)
+        self.assertEqual(desired_capacity, cluster['desired_capacity'])
+        self.assertEqual(desired_capacity, len(cluster['nodes']))
+        for nid in cluster['nodes']:
+            # TODO(Yanyan Hu)verify nova server property as well
+            # after node show datail works.
+            node = utils.get_a_node(self, nid)
+            self.assertEqual('ACTIVE', node['status'])
+            self.assertEqual(cluster_id, node['cluster_id'])
+
+        # Delete cluster
+        utils.delete_a_cluster(self, cluster_id)

@@ -24,12 +24,14 @@ lOG = log.getLogger(__name__)
 
 class BaseSenlinIntegrationTest(base.BaseSenlinTest):
 
+    credentials = ['admin']
+
     @classmethod
     def setup_clients(cls):
         super(BaseSenlinIntegrationTest, cls).setup_clients()
         cls.client = clustering_client.ClusteringIntegrationClient(
-            cls.os.auth_provider,
+            cls.os_adm.auth_provider,
             CONF.clustering.catalog_type,
             CONF.identity.region,
-            **cls.os.default_params_with_timeout_values
+            **cls.os_adm.default_params_with_timeout_values
         )

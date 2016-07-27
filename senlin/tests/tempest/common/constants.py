@@ -19,7 +19,7 @@ spec_nova_server = {
         "name": "new-server-test",
         "image": "cirros-0.3.4-x86_64-uec",
         "networks": [
-            {"network": "private-net"}
+            {"network": "private"}
         ]
     }
 }
