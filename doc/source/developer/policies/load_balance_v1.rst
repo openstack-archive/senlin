@@ -49,6 +49,11 @@ The policy is capable of handling the following actions:
   specifying the details about the resize request, e.g. ``adjustment_type``,
   ``number`` etc. in its ``inputs``.
 
+- ``NODE_CREATE``: an action originated directly from RPC request and it has
+  a node associated with it.
+
+- ``NODE_DELETE``: an action originated directly from RPC request and it has
+  a node associated with it.
 
 The policy will be checked **AFTER** one of the above mentioned actions that
 adds new member nodes for the cluster is executed. It is also checked
@@ -241,3 +246,17 @@ some new nodes created and added to the cluster, it will record the IDs of
 the nodes into the ``creation`` property of the action's ``data`` field. The
 logic to update the load balancer and the logic to update the ``data`` field
 of individual nodes are identical to that described in scenario *S4*.
+
+S7: Handling ``NODE_CREATE`` Action
+-----------------------------------
+
+When the action to be processed is a ``NODE_CREATE`` action, the new node has
+been created and it is yet to be attached to the load balancer. The logic to
+update the load balancer and the ``data`` field of the node in question are
+identical to that described in scenario *S4*.
+
+When the action to be processed is a ``NODE_DELETE`` action, the node is about
+to be removed from the cluster. Before that, the policy is responsible to
+detach it from the load balancer. The logic to update the load balancer and
+the ``data`` field of the node in question are identical to that described in
+scenario *S1*.
