@@ -40,6 +40,8 @@ The policy is capable of handling the following actions:
 - ``CLUSTER_RESIZE``: an action that accepts a map as its input parameters in
   its ``inputs`` property, such as "``adjustment_type``", "``number``" etc.
 
+- ``NODE_CREATE``: an action originated directly from a RPC request. This
+  action has an associated node object that will be created.
 
 The policy will be checked **BEFORE** any of the above mentioned actions is
 executed. Because the same policy implementation is used for covering both the
@@ -215,3 +217,19 @@ it proceeds to calculate a distribution plan. If the action is about growing
 the size of the cluster, the logic and the output format are the same as that
 have been outlined in scenario *S2*. Otherwise, the logic and the output
 format are identical to that have been describled in scenario *S1*.
+
+
+S4: ``NODE_CREATE``
+-------------------
+
+When handling a ``NODE_CREATE`` action, the region placement policy only needs
+to deal with the node associated with the action. If, however, the node is
+referencing a profile which has a ``region_name`` specified in its spec, this
+policy will avoid choosing deployment region for the node. In other words, the
+``region_name`` specified in the profile spec used takes precedence.
+
+If the profile spec doesn't specify a region name, this placement policy will
+proceed to do an evaluation of current region distribution followed by a
+calculation of a distribution plan. The logic and the output format are the
+same as that in scenario *S2*, although the number of nodes to handle is one
+in this case.
