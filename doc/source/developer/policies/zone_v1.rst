@@ -41,6 +41,9 @@ The policy is capable of handling the following actions:
 - ``CLUSTER_RESIZE``: an action that accepts a map as its input parameters in
   its ``inputs`` property, such as "``adjustment_type``", "``number``" etc.
 
+- ``NODE_CREATE``: an action originated directly from a RPC request. Such an
+  action will have a node object associated with it, which becomes the one to
+  be handled by this policy.
 
 The policy will be checked **BEFORE** any of the above mentioned actions is
 executed. Because the same policy implementation is used for covering both the
@@ -218,3 +221,19 @@ it proceeds to calculate a distribution plan. If the action is about growing
 the size of the cluster, the logic and the output format are the same as that
 have been outlined in scenario *S2*. Otherwise, the logic and the output
 format are identical to that have been described in scenario *S1*.
+
+S4: ``NODE_CREATE``
+-------------------
+
+When handling a ``NODE_CREATE`` action, the zone placement policy needs to
+process the single node associated with the action, i.e. the node to be
+created. If, however, the node is referencing a profile whose spec contains
+a ``availability_zone`` property, it means the requesting user has a prefered
+availability zone for the new node. In this case, the placement policy will
+return directly without choosing availability zone for the node.
+
+If the profile spec doesn't have ``availability_zone`` specified, the
+placement policy will proceed to do an evaluation of the current zone
+distribution followed by a calculation of distribution plan so that the new
+node will be deployed in a proper availability zone. These logics and the
+output format are identical to that in scenario *S2*.
