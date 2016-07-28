@@ -53,3 +53,4 @@ Working with Senlin
    receivers
    actions
    events
+   policy/index

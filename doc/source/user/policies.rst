@@ -223,5 +223,6 @@ The list below provides links to documents related to the creation and usage
 of policy objects.
 
 * :doc:`Working with Policy Types <policy_types>`
+* :doc:`Builtin Policies <policy/index>`
 * :doc:`Managing the Bindings between Clusters and Policies <bindings>`
 * :doc:`Browsing Events <events>`
