@@ -1,0 +1,4 @@
+---
+features:
+  - The region placement policy is improved to handle the NODE_CREATE action
+    which derives from a 'node_create' RPC request.
