@@ -96,7 +96,7 @@ that describes the names and the types of properties that can be accepted. To
 show the schema of a specific profile type along with other properties, you
 can use the following command::
 
-  $ openstack cluster profile type show os.heat.stack
+  $ openstack cluster profile type show os.heat.stack-1.0
   name: os.heat.stack
   schema:
     context:
@@ -135,7 +135,7 @@ The default output from the :command:`openstack cluster profile type show`
 command is in YAML format. You can choose to show the spec schema in JSON
 format by specifying the :option:`-f json` option as exemplified below::
 
-  $ openstack cluster profile type show -f json os.heat.stack
+  $ openstack cluster profile type show -f json os.heat.stack-1.0
   {
     "name": "os.heat.stack",
     "schema": {
