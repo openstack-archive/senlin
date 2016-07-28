@@ -12,11 +12,11 @@
   under the License.
 
 
-.. _guide-tutorial:
+.. _guide-tutorial-autoscaling-heat:
 
-========
-Tutorial
-========
+=====================
+Autoscaling with Heat
+=====================
 
 Goal
 ~~~~
@@ -231,20 +231,17 @@ Step one is to generate key-pair using the followed command:
 
   $ nova keypair-add heat_key
 
-Step two is to create a heat template as follows::
-
-Full example: `heat template`_
+Step two is to create a heat template as by downloading the template file
+from `heat template`_.
 
 Step three is to create a heat stack using the followed command:
 
 .. code-block:: console
 
-  $ heat stack-create test -f \
-      ./ex_aslb.yaml \
-      -p "key_name=heat_key"
+  $ heat stack-create test -f ./ex_aslb.yaml -p "key_name=heat_key"
 
 The steps and samples introduced in this tutorial can also work
 well together with composition of ceilometer, Aodh, and Gnocchi
 without any change.
 
-.. _heat template: http://git.openstack.org/cgit/openstack/senlin/doc/source/user/ex_lbas.yaml
+.. _heat template: http://docs.openstack.org/developer/senlin//user/scenarios/ex_lbas.yaml
