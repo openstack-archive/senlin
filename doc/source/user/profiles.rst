@@ -116,7 +116,8 @@ Before working with a :term:`Cluster` or a :term:`Node`, you will need a
 :term:`Profile` object created with a profile type. To create a profile, you
 will need a "spec" file in YAML format. For example, below is a simple spec
 for the ``os.heat.stack`` profile type (the source can be found in the
-:file:`examples/profiles/heat_stack_random_string.yaml` file).
+:file:`/examples/profiles/heat_stack/random_string/
+heat_stack_random_string.yaml` file).
 
 ::
 
@@ -125,17 +126,16 @@ for the ``os.heat.stack`` profile type (the source can be found in the
   properties:
     name: random_string_stack
     template: random_string_stack.yaml
-    environment:
-      - env.yaml
+    context:
+      region_name: RegionOne
 
 The ``random_string_stack.yaml`` is the name of a Heat template file to be used
-for stack creation. The ``env.yaml`` is the name of an environment file to be
-passed to Heat for processing. It is given here only as an example. You can
+for stack creation. It is given here only as an example. You can
 decide which properties to use based on your requirements.
 
 Now you can create a profile using the following command::
 
-  $ cd /opt/stack/senlin/examples/profiles
+  $ cd /opt/stack/senlin/examples/profiles/heat_stack/random_string
   $ openstack cluster profile create \
       --spec heat_stack_random_string.yaml \
       my_stack
