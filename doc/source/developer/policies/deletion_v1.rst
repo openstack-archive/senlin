@@ -40,6 +40,11 @@ The policy is capable of handling the following actions:
 - ``CLUSTER_RESIZE``: an action that carries various key-value pairs as
   arguments to the action in its ``inputs`` value.
 
+- ``NODE_DELETE``: an action that has a node associated with it. This action
+  has to be originated from a RPC request directly so that it will be
+  processed by the deletion policy. The node ID associated with the action
+  obviously become the 'candidate' node for deletion.
+
 The policy will be checked **BEFORE** any of the above mentioned actions is
 executed.
 
@@ -245,3 +250,26 @@ property to something like:
 
 In the ``deletion.candidates`` list, two of the nodes are from region ``R-1``,
 one of the nodes is from region ``R-2``.
+
+
+S7: Handling ``NODE_DELETE`` Action
+-----------------------------------
+
+If the action that triggered the policy checking is a ``NODE_DELETE`` action,
+the action has an associated node as its property. When the deletion policy
+has detected this action type, it will copy the policy specification values
+into the action's ``data`` field although the ``count`` and ``candidates``
+value are so obvious. For example:
+
+::
+
+  {
+    "status": "OK",
+    "reason": "Candidates generated",
+    "deletion": {
+       "count": 1,
+       "candidates": ["node-id-1"]
+       "destroy_after_deletion": true,
+       "grace_period": 0
+    }
+  }
