@@ -80,7 +80,7 @@ Creating a Receiver
 
 ::
 
-  $ openstack cluster create --profile $PROFILE_ID \
+  $ senlin cluster-create --profile $PROFILE_ID \
       --desired-capacity 2 --min-size 1 --max-size 5 \
       test-cluster
 

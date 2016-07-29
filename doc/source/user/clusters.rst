@@ -136,7 +136,7 @@ Creating a Cluster
 To create a cluster, you need to provide the ID or name of the profile to be
 associated with the cluster. For example::
 
-  $ openstack cluster create --profile qstack c3
+  $ senlin cluster-create --profile qstack c3
   +------------------+--------------------------------------+
   | Property         | Value                                |
   +------------------+--------------------------------------+
@@ -182,7 +182,7 @@ The following command creates a cluster named "``test_cluster``", with its
 desired capacity set to 2, its minimum size set to 1 and its maximum size set
 to 3::
 
-  $ openstack cluster create --desired_capacity 2 \
+  $ senlin cluster-create --desired-capacity 2 \
       --min-size 1 --max-size 3 \
       --profile myprofile \
       test_cluster
@@ -272,7 +272,7 @@ Using the :command:`openstack cluster update` command, you can change the
 profile used by the cluster and its member nodes. The following example
 launches a global update on the cluster for switching to a different profile::
 
-  $ openstack cluster update --profile fedora21_server web_cluster
+  $ senlin cluster-update --profile fedora21_server web_cluster
 
 Suppose the cluster ``web_cluster`` is now using a profile of type
 ``os.nova.server`` where a Fedora 20 image is used, the command above will
@@ -315,11 +315,11 @@ allow you to resize a cluster in various ways:
 You can specify one and only one of the following options for the
 :command:`openstack cluster resize` command:
 
-- use :option:`--capacity <CAPACITY>` (:option:`-c <CAPACITY>`) to specify
+- use :option:`--capacity <CAPACITY>` to specify
   the exact value of the new cluster size;
-- use :option:`--adjustment <ADJUSTMENT>` (:option:`-a <ADJUSTMENT>`) to
+- use :option:`--adjustment <ADJUSTMENT>` to
   specify the relative number of nodes to add/remove;
-- use :option:`--percentage <PERCENTAGE>` (:option:`-p <PERCENTAGE>`) to
+- use :option:`--percentage <PERCENTAGE>` to
   specify the percentage of cluster size change.
 
 The following command resizes the cluster ``test_cluster`` to 2 nodes,

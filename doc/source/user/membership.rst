@@ -31,11 +31,11 @@ cluster membership after the cluster and and the node have been created.
 Listing Nodes in a Cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Using the command :command:`openstack cluster member list`, you can list the
+Using the command :command:`openstack cluster members list`, you can list the
 nodes that are members of a specific cluster. For example, to list nodes in
 cluster ``c3``, you can use the following command::
 
-  $ openstack cluster member list c3
+  $ openstack cluster members list c3
   +----------+--------+-------+--------+-------------+---------------------+
   | id       | name   | index | status | physical_id | created_at          |
   +----------+--------+-------+--------+-------------+---------------------+
@@ -52,7 +52,7 @@ node in this cluster. Note that the ``id`` field and the ``physical_id`` field
 are shown as "short ID"s by default. If you want to see the full IDs, you can
 specify the :option:`--full-id` option to indicate that::
 
-  $ openstack cluster member list --full-id c3
+  $ openstack cluster members list --full-id c3
   +------------...-+--------+-------+--------+-------------+-----------..-+
   | id             | name   | index | status | physical_id | created_at   |
   +------------...-+--------+-------+--------+-------------+-----------..-+
@@ -68,7 +68,7 @@ value specifies the number of nodes you want to include in the resulted list.
 For example, the following command lists the nodes starting after a specific
 node ID with the length of the list set to 10::
 
-  $ openstack cluster member list --marker b28692a5 --limit 10 webservers
+  $ openstack cluster members list --marker b28692a5 --limit 10 webservers
 
 Another useful option for listing nodes is the :option:`--filters <FILTERS>`
 option. The option value accepts a string of format "``K1=V1;K2=V2...``",
@@ -77,7 +77,7 @@ where "``K1``" and "``K2``" are node properties for checking, "``V1``" and
 ``name`` and ``status``. For example, the following command lists cluster
 nodes from a cluster based on whether a node's status is "``ACTIVE``"::
 
-  $ openstack cluster member list --filters status=ACTIVE webservers
+  $ openstack cluster members list --filters status=ACTIVE webservers
 
 
 Specify the Cluster When Creating a Node
@@ -93,10 +93,10 @@ Adding Node(s) to A Cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When you already have some nodes and some clusters, you can add some specified
-nodes to a specified cluster using the :command:`openstack cluster member add`
+nodes to a specified cluster using the :command:`openstack cluster members add`
 command. For example, the following command adds two nodes to a cluster::
 
-  $ openstack cluster member add --nodes node3,node4 cluster1
+  $ openstack cluster members add --nodes node3,node4 cluster1
 
 You can use the name, the ID or the "short ID" to name the node(s) to be
 added, you can also use the name, the ID or the "short ID" to specify the
@@ -116,13 +116,13 @@ Removing Node(s) from a Cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The :program:`openstack cluster` command line also provides command
-:command:`cluster member del` to remove node(s) from a cluster. In this case,
+:command:`cluster members del` to remove node(s) from a cluster. In this case,
 you can use the name, the ID or the "short ID" to specify the node(s) and the
 cluster. The identifier specified must uniquely identifies a node or a cluster
 object, or else you will get an error message indicating that the request was
 rejected. The following command removes two nodes from a cluster::
 
-  $ openstack cluster member del --nodes node21,node22 webservers
+  $ openstack cluster members del --nodes node21,node22 webservers
 
 When performing this operation, Senlin engine will check if the specified
 nodes are actually members of the specified cluster. If any node from the
