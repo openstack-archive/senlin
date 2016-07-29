@@ -25,6 +25,8 @@ from senlin.api.common import wsgi
 from senlin.common import exception
 from senlin.tests.unit.common import base
 
+CONF = cfg.CONF
+
 
 class RequestTest(base.SenlinTestCase):
 

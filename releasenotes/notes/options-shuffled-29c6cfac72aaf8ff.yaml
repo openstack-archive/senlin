@@ -1,0 +1,5 @@
+---
+upgrade:
+  - Several configuration options are consolidated into the 'senlin_api' group
+    in 'senlin.conf' file ('api_paste_config', 'wsgi_keep_alive',
+    'client_socket_timeout', 'max_json_body_size').

@@ -81,44 +81,31 @@ api_opts = [
                help=_('The value for the socket option TCP_KEEPIDLE.  This is '
                       'the time in seconds that the connection must be idle '
                       'before TCP starts sending keepalive probes.')),
+    cfg.StrOpt('api_paste_config', default="api-paste.ini",
+               deprecated_group='paste_deploy',
+               help=_("The API paste config file to use.")),
+    cfg.BoolOpt('wsgi_keep_alive', default=True,
+                deprecated_group='eventlet_opts',
+                help=_("If false, closes the client socket explicitly.")),
+    cfg.IntOpt('client_socket_timeout', default=900,
+               deprecated_group='eventlet_opts',
+               help=_("Timeout for client connections' socket operations. "
+                      "If an incoming connection is idle for this number of "
+                      "seconds it will be closed. A value of '0' indicates "
+                      "waiting forever.")),
+    cfg.IntOpt('max_json_body_size', default=1048576,
+               deprecated_group='DEFAULT',
+               help=_('Maximum raw byte size of JSON request body.'
+                      ' Should be larger than max_template_size.'))
+
 ]
 api_group = cfg.OptGroup('senlin_api')
 cfg.CONF.register_group(api_group)
 cfg.CONF.register_opts(api_opts, group=api_group)
 
-# Paste-deploy, paste-deploy
-paste_deploy_group = cfg.OptGroup('paste_deploy')
-paste_deploy_opts = [
-    cfg.StrOpt('api_paste_config', default="api-paste.ini",
-               help=_("The API paste config file to use."))]
-cfg.CONF.register_group(paste_deploy_group)
-cfg.CONF.register_opts(paste_deploy_opts, group=paste_deploy_group)
-
-# eventlet_opts, eventlet
-wsgi_eventlet_opts = [
-    cfg.BoolOpt('wsgi_keep_alive', default=True,
-                help=_("If false, closes the client socket explicitly.")),
-    cfg.IntOpt('client_socket_timeout', default=900,
-               help=_("Timeout for client connections' socket operations. "
-                      "If an incoming connection is idle for this number of "
-                      "seconds it will be closed. A value of '0' indicates "
-                      "waiting forever.")),
-]
-wsgi_eventlet_group = cfg.OptGroup('eventlet_opts')
-cfg.CONF.register_group(wsgi_eventlet_group)
-cfg.CONF.register_opts(wsgi_eventlet_opts, group=wsgi_eventlet_group)
-
-json_size_opt = cfg.IntOpt('max_json_body_size', default=1048576,
-                           help=_('Maximum raw byte size of JSON request body.'
-                                  ' Should be larger than max_template_size.'))
-cfg.CONF.register_opt(json_size_opt)
-
 
 def wsgi_opts():
-    yield None, [json_size_opt]
-    yield paste_deploy_group.name, paste_deploy_opts
     yield api_group.name, api_opts
-    yield wsgi_eventlet_group.name, wsgi_eventlet_opts
 
 
 def get_bind_addr(conf, default_port=None):
@@ -435,7 +422,7 @@ class Server(object):
         eventlet.hubs.use_hub('poll')
         eventlet.patcher.monkey_patch(all=False, socket=True)
         self.pool = eventlet.GreenPool(size=self.threads)
-        socket_timeout = cfg.CONF.eventlet_opts.client_socket_timeout or None
+        socket_timeout = cfg.CONF.senlin_api.client_socket_timeout or None
 
         try:
             eventlet.wsgi.server(
@@ -444,7 +431,7 @@ class Server(object):
                 url_length_limit=URL_LENGTH_LIMIT,
                 log=self._logger,
                 debug=cfg.CONF.debug,
-                keepalive=cfg.CONF.eventlet_opts.wsgi_keep_alive,
+                keepalive=cfg.CONF.senlin_api.wsgi_keep_alive,
                 socket_timeout=socket_timeout)
         except socket.error as err:
             if err[0] != errno.EINVAL:
@@ -843,7 +830,7 @@ class Controller(object):
 
 
 def log_exception(err, exc_info):
-    args = {'exc_info': exc_info} if cfg.CONF.verbose or cfg.CONF.debug else {}
+    args = {'exc_info': exc_info}
     LOG.error(_LE("Unexpected error occurred serving API: %s"), err, **args)
 
 
@@ -969,8 +956,7 @@ def _get_deployment_config_file():
 
     The retrieved item is formatted as an absolute pathname.
     """
-    config_path = cfg.CONF.find_file(
-        cfg.CONF.paste_deploy['api_paste_config'])
+    config_path = cfg.CONF.find_file(cfg.CONF.senlin_api.api_paste_config)
     if config_path is None:
         return None
 
