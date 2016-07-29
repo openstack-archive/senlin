@@ -104,8 +104,11 @@ class Policy(object):
         self.updated_at = kwargs.get('updated_at', None)
 
         self.spec_data = schema.Spec(self.spec_schema, spec)
-        self.properties = schema.Spec(self.properties_schema,
-                                      self.spec.get(self.PROPERTIES, {}))
+        self.properties = schema.Spec(
+            self.properties_schema,
+            self.spec.get(self.PROPERTIES, {}),
+            version)
+
         self.singleton = True
 
     @classmethod

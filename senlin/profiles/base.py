@@ -105,8 +105,10 @@ class Profile(object):
         self.updated_at = kwargs.get('updated_at', None)
 
         self.spec_data = schema.Spec(self.spec_schema, self.spec)
-        self.properties = schema.Spec(self.properties_schema,
-                                      self.spec.get(self.PROPERTIES, {}))
+        self.properties = schema.Spec(
+            self.properties_schema,
+            self.spec.get(self.PROPERTIES, {}),
+            version)
 
         if not self.id:
             # new object needs a context dict
