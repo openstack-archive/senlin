@@ -85,3 +85,4 @@ This section provides some guides for typical usage scenarios.
    :maxdepth: 1
 
    scenarios/affinity
+   scenarios/autoscaling
