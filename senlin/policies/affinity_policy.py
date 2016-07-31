@@ -53,6 +53,7 @@ class AffinityPolicy(base.Policy):
     TARGET = [
         ('BEFORE', consts.CLUSTER_SCALE_OUT),
         ('BEFORE', consts.CLUSTER_RESIZE),
+        ('BEFORE', consts.NODE_CREATE),
     ]
 
     PROFILE_TYPE = [
