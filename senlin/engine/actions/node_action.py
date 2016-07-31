@@ -10,14 +10,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import eventlet
+
 from senlin.common.i18n import _
 from senlin.common import scaleutils
 from senlin.engine.actions import base
-from senlin.engine import cluster as cluster_mod
+from senlin.engine import cluster as cm
 from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.engine import senlin_lock
-from senlin.policies import base as policy_mod
+from senlin.policies import base as pb
 
 
 class NodeAction(base.Action):
@@ -58,8 +60,7 @@ class NodeAction(base.Action):
         if self.node.cluster_id and self.cause == base.CAUSE_RPC:
             # If node is created with target cluster specified,
             # check cluster size constraint
-            cluster = cluster_mod.Cluster.load(self.context,
-                                               self.node.cluster_id)
+            cluster = cm.Cluster.load(self.context, self.node.cluster_id)
             result = scaleutils.check_size_params(
                 cluster, cluster.desired_capacity + 1, None, None, True)
 
@@ -96,13 +97,19 @@ class NodeAction(base.Action):
         if self.node.cluster_id and self.cause == base.CAUSE_RPC:
             # If node belongs to a cluster, check size constraint
             # before deleting it
-            cluster = cluster_mod.Cluster.load(self.context,
-                                               self.node.cluster_id)
+            cluster = cm.Cluster.load(self.context, self.node.cluster_id)
             result = scaleutils.check_size_params(cluster,
                                                   cluster.desired_capacity - 1,
                                                   None, None, True)
             if result:
                 return self.RES_ERROR, result
+
+            # handle grace_period
+            pd = self.data.get('deletion', None)
+            if pd:
+                grace_period = pd.get('grace_period', 0)
+                if grace_period:
+                    eventlet.sleep(grace_period)
 
         res = self.node.do_delete(self.context)
         if not res:
@@ -139,7 +146,7 @@ class NodeAction(base.Action):
         """
         cluster_id = self.inputs.get('cluster_id')
         # Check the size constraint of parent cluster
-        cluster = cluster_mod.Cluster.load(self.context, cluster_id)
+        cluster = cm.Cluster.load(self.context, cluster_id)
         new_capacity = cluster.desired_capacity + 1
         result = scaleutils.check_size_params(cluster, new_capacity,
                                               None, None, True)
@@ -159,8 +166,7 @@ class NodeAction(base.Action):
         :returns: A tuple containing the result and the corresponding reason.
         """
         # Check the size constraint of parent cluster
-        cluster = cluster_mod.Cluster.load(self.context,
-                                           self.node.cluster_id)
+        cluster = cm.Cluster.load(self.context, self.node.cluster_id)
         new_capacity = cluster.desired_capacity - 1
         result = scaleutils.check_size_params(cluster, new_capacity,
                                               None, None, True)
@@ -208,22 +214,19 @@ class NodeAction(base.Action):
         # Since node.cluster_id could be reset to '' during action execution,
         # we record it here for policy check and cluster lock release.
         saved_cluster_id = self.node.cluster_id
-        if self.node.cluster_id:
-            if self.cause == base.CAUSE_RPC:
-                res = senlin_lock.cluster_lock_acquire(
-                    self.context,
-                    self.node.cluster_id, self.id, self.owner,
-                    senlin_lock.NODE_SCOPE, False)
-                if not res:
-                    return self.RES_RETRY, _('Failed in locking cluster')
+        if (saved_cluster_id and self.cause == base.CAUSE_RPC):
+            res = senlin_lock.cluster_lock_acquire(
+                self.context, self.node.cluster_id, self.id, self.owner,
+                senlin_lock.NODE_SCOPE, False)
+
+            if not res:
+                return self.RES_RETRY, _('Failed in locking cluster')
 
             self.policy_check(self.node.cluster_id, 'BEFORE')
-            if self.data['status'] != policy_mod.CHECK_OK:
+            if self.data['status'] != pb.CHECK_OK:
                 # Don't emit message since policy_check should have done it
-                if self.cause == base.CAUSE_RPC:
-                    senlin_lock.cluster_lock_release(
-                        self.node.cluster_id, self.id, senlin_lock.NODE_SCOPE)
-
+                senlin_lock.cluster_lock_release(saved_cluster_id, self.id,
+                                                 senlin_lock.NODE_SCOPE)
                 return self.RES_ERROR, 'Policy check: ' + self.data['reason']
 
         reason = ''
@@ -235,17 +238,17 @@ class NodeAction(base.Action):
                 reason = _('Failed in locking node')
             else:
                 res, reason = self._execute()
-                if (self.cause == base.CAUSE_RPC and res == self.RES_OK and
-                        saved_cluster_id):
+                if (res == self.RES_OK and saved_cluster_id and
+                        self.cause == base.CAUSE_RPC):
                     self.policy_check(saved_cluster_id, 'AFTER')
-                    if self.data['status'] != policy_mod.CHECK_OK:
+                    if self.data['status'] != pb.CHECK_OK:
                         res = self.RES_ERROR
                         reason = 'Policy check: ' + self.data['reason']
                     else:
                         res = self.RES_OK
         finally:
             senlin_lock.node_lock_release(self.node.id, self.id)
-            if self.cause == base.CAUSE_RPC and saved_cluster_id:
+            if saved_cluster_id and self.cause == base.CAUSE_RPC:
                 senlin_lock.cluster_lock_release(saved_cluster_id, self.id,
                                                  senlin_lock.NODE_SCOPE)
         return res, reason

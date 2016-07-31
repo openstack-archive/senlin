@@ -981,10 +981,10 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual('Timeout!', res_msg)
         self.assertEqual({}, action.data)
 
-    @mock.patch.object(ca.ClusterAction, '_wait_before_deletion')
+    @mock.patch.object(ca.ClusterAction, '_sleep')
     @mock.patch.object(no.Node, 'get')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
-    def test_do_del_nodes(self, mock_delete, mock_get, mock_wait, mock_load):
+    def test_do_del_nodes(self, mock_delete, mock_get, mock_sleep, mock_load):
         cluster = mock.Mock()
         cluster.id = 'FAKE_CLUSTER'
         cluster.desired_capacity = 4
@@ -1025,21 +1025,47 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_delete.assert_called_once_with(['NODE_1', 'NODE_2'])
         self.assertEqual(2, cluster.desired_capacity)
 
-        # deletion policy is attached to the action
+    @mock.patch.object(ca.ClusterAction, '_sleep')
+    @mock.patch.object(no.Node, 'get')
+    @mock.patch.object(ca.ClusterAction, '_delete_nodes')
+    def test_do_del_nodes_with_deletion_policy(self, mock_delete, mock_get,
+                                               mock_sleep, mock_load):
+        cid = 'FAKE_CLUSTER'
+        cluster = mock.Mock(id=cid, desired_capacity=4)
+        mock_load.return_value = cluster
+
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
+        action.id = 'CLUSTER_ACTION_ID'
+        action.inputs = {'candidates': ['NODE_1', 'NODE_2']}
         action.data = {
             'deletion': {
                 'count': 2,
-                'grace_period': 2,
+                'candidates': ['NODE_1', 'NODE_2'],
                 'destroy_after_deletion': True,
-                'candidates': ['NODE_1', 'NODE_2']
+                'grace_period': 2,
+                'reduce_desired_capacity': False,
             }
         }
+
+        node1 = mock.Mock(id='NODE_1', cluster_id=cid)
+        node2 = mock.Mock(id='NODE_2', cluster_id=cid)
         mock_get.side_effect = [node1, node2]
         mock_delete.return_value = (action.RES_OK, 'Good to go!')
+
+        # do it
         res_code, res_msg = action.do_del_nodes()
+
+        # assertions
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Completed deleting nodes.', res_msg)
+        mock_get.assert_has_calls([
+            mock.call(action.context, 'NODE_1'),
+            mock.call(action.context, 'NODE_2')])
+        mock_delete.assert_called_once_with(['NODE_1', 'NODE_2'])
         self.assertTrue(action.data['deletion']['destroy_after_deletion'])
-        mock_wait.assert_called_once_with(2)
-        self.assertEqual(0, cluster.desired_capacity)
+        mock_sleep.assert_called_once_with(2)
+        # Note: desired_capacity not decreased due to policy enforcement
+        self.assertEqual(4, cluster.desired_capacity)
         cluster.store.has_calls([
             mock.call(action.context),
             mock.call(action.context)])
@@ -1532,12 +1558,12 @@ class ClusterActionTest(base.SenlinTestCase):
             mock.call(action.context, 'WARNING', 'Things out of control.')])
 
     @mock.patch.object(scaleutils, 'nodes_by_random')
-    @mock.patch.object(ca.ClusterAction, '_wait_before_deletion')
+    @mock.patch.object(ca.ClusterAction, '_sleep')
     @mock.patch.object(ca.ClusterAction, '_get_action_data')
     @mock.patch.object(scaleutils, 'parse_resize_params')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
     def test_do_resize_shrink(self, mock_delete, mock_parse, mock_get,
-                              mock_wait, mock_select, mock_load):
+                              mock_sleep, mock_select, mock_load):
         cluster = mock.Mock()
         cluster.id = 'CID'
         cluster.desired_capacity = 10
@@ -1583,14 +1609,30 @@ class ClusterActionTest(base.SenlinTestCase):
             mock.call(action.context, 'RESIZING', 'Cluster resize started.'),
             mock.call(action.context, 'ACTIVE', 'Cluster resize succeeded.',
                       desired_capacity=8)])
+        mock_sleep.assert_called_once_with(0)
 
-        # deletion policy is attached to the action
-        cluster.nodes = []
+    @mock.patch.object(scaleutils, 'nodes_by_random')
+    @mock.patch.object(ca.ClusterAction, '_sleep')
+    @mock.patch.object(ca.ClusterAction, '_get_action_data')
+    @mock.patch.object(scaleutils, 'parse_resize_params')
+    @mock.patch.object(ca.ClusterAction, '_delete_nodes')
+    def test_do_resize_shrink_with_deletion_policy(self, mock_delete,
+                                                   mock_parse, mock_get,
+                                                   mock_sleep, mock_select,
+                                                   mock_load):
+
+        cluster = mock.Mock(id='CID', desired_capacity=10, nodes=[],
+                            ACTIVE='ACTIVE', RESIZING='RESIZING')
         for n in range(10):
             node = mock.Mock()
             node.id = 'NODE-ID-%s' % (n + 1)
             cluster.nodes.append(node)
+
+        mock_parse.return_value = 'OK', ''
+        mock_load.return_value = cluster
         mock_get.return_value = (2, 9, [cluster.nodes[0]])
+
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.data = {
             'deletion': {
                 'count': 1,
@@ -1598,11 +1640,16 @@ class ClusterActionTest(base.SenlinTestCase):
                 'destroy_after_deletion': True
             }
         }
+
+        mock_delete.return_value = (action.RES_OK, 'All dependents completed.')
+
+        # deletion policy is attached to the action
         res_code, res_msg = action.do_resize()
+
         self.assertEqual({'deletion': {'count': 1, 'grace_period': 2,
                                        'destroy_after_deletion': True}},
                          action.data)
-        mock_wait.assert_called_once_with(2)
+        mock_sleep.assert_called_once_with(2)
 
     def test_do_resize_failed_checking(self, mock_load):
         cluster = mock.Mock()
@@ -1907,9 +1954,9 @@ class ClusterActionTest(base.SenlinTestCase):
             mock.call(action.context, cluster.ACTIVE,
                       'Cluster scaling succeeded.', desired_capacity=9)])
 
-    @mock.patch.object(ca.ClusterAction, '_wait_before_deletion')
+    @mock.patch.object(ca.ClusterAction, '_sleep')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
-    def test_do_scale_in_with_pd_no_input(self, mock_delete, mock_wait,
+    def test_do_scale_in_with_pd_no_input(self, mock_delete, mock_sleep,
                                           mock_load):
         cluster = mock.Mock()
         cluster.id = 'CID'
@@ -1949,7 +1996,7 @@ class ClusterActionTest(base.SenlinTestCase):
                       'Cluster scale in started.'),
             mock.call(action.context, cluster.ACTIVE,
                       'Cluster scaling succeeded.', desired_capacity=3)])
-        mock_wait.assert_called_once_with(2)
+        mock_sleep.assert_called_once_with(2)
 
     @mock.patch.object(scaleutils, 'nodes_by_random')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')

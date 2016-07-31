@@ -70,6 +70,10 @@ class ClusterAction(base.Action):
         except Exception:
             self.cluster = None
 
+    def _sleep(self, period):
+        if period:
+            eventlet.sleep(period)
+
     def _wait_for_dependents(self):
         """Wait for dependent actions to complete.
 
@@ -300,9 +304,6 @@ class ClusterAction(base.Action):
 
         return self.RES_OK, ''
 
-    def _wait_before_deletion(self, period):
-        eventlet.sleep(period)
-
     def do_delete(self):
         """Handler for the CLUSTER_DELETE action.
 
@@ -448,8 +449,7 @@ class ClusterAction(base.Action):
         if len(nodes) == 0:
             return self.RES_OK, reason
 
-        if grace_period:
-            self._wait_before_deletion(grace_period)
+        self._sleep(grace_period)
 
         result, new_reason = self._delete_nodes(nodes)
         if result != self.RES_OK:
@@ -581,7 +581,7 @@ class ClusterAction(base.Action):
         node_list = self.cluster.nodes
         current_size = len(node_list)
         count, desired, candidates = self._get_action_data(current_size)
-        grace_period = None
+        grace_period = 0
         # if policy is attached to the cluster, use policy data directly,
         # or parse resize params to get action data.
         if count == 0:
@@ -593,15 +593,14 @@ class ClusterAction(base.Action):
                 return result, reason
             count, desired, candidates = self._get_action_data(current_size)
         elif 'deletion' in self.data:
-            grace_period = self.data['deletion'].get('grace_period', None)
+            grace_period = self.data['deletion'].get('grace_period', 0)
         if candidates is not None and len(candidates) == 0:
             # Choose victims randomly
             candidates = scaleutils.nodes_by_random(self.cluster.nodes, count)
 
         # delete nodes if necessary
         if desired < current_size:
-            if grace_period is not None:
-                self._wait_before_deletion(grace_period)
+            self._sleep(grace_period)
             result, reason = self._delete_nodes(candidates)
         # Create new nodes if desired_capacity increased
         else:
@@ -685,8 +684,8 @@ class ClusterAction(base.Action):
         # We use policy data if any, deletion policy and scaling policy might
         # be attached.
         pd = self.data.get('deletion', None)
-        grace_period = None
-        if pd is not None:
+        grace_period = 0
+        if pd:
             grace_period = pd.get('grace_period', 0)
             candidates = pd.get('candidates', [])
             # if scaling policy is attached, get 'count' from action data
@@ -727,8 +726,7 @@ class ClusterAction(base.Action):
         if len(candidates) == 0:
             candidates = scaleutils.nodes_by_random(self.cluster.nodes, count)
 
-        if grace_period is not None:
-            self._wait_before_deletion(grace_period)
+        self._sleep(grace_period)
         # The policy data may contain destroy flag and grace period option
         result, reason = self._delete_nodes(candidates)
 
