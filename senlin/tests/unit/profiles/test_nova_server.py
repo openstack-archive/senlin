@@ -462,8 +462,8 @@ class TestNovaServerProfile(base.SenlinTestCase):
         }
 
         profile = server.ServerProfile('t', spec)
-        self.assertDictEqual(profile.properties['block_device_mapping_v2'][0],
-                             expected_volume)
+        self.assertEqual(profile.properties['block_device_mapping_v2'][0],
+                         expected_volume)
 
         profile._novaclient = novaclient
         profile._neutronclient = neutronclient
