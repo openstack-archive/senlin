@@ -84,10 +84,3 @@ After a while, you can check that the cluster has been shrinked by 1 node.
 For more details about managing receivers, please check the
 :doc:`Receivers <../user/receivers>` section in the
 :doc:`User References <../user/index>` documentation.
-
-Triggering a Receiver with an Aodh Alarm
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. TODO::
-
-  Check aodh command line and figure out how to create alarms.
