@@ -59,17 +59,18 @@ Senlin server comes with some built-in policy types. You can check the list
 of policy types using the following command::
 
   $ openstack cluster policy type list
-  +--------------------------------+
-  | name                           |
-  +--------------------------------+
-  | senlin.policy.batch            |
-  | senlin.policy.deletion         |
-  | senlin.policy.health           |
-  | senlin.policy.loadbalance      |
-  | senlin.policy.region_placement |
-  | senlin.policy.scaling          |
-  | senlin.policy.zone_placement   |
-  +--------------------------------+
+  +------------------------------------+
+  | name                               |
+  +------------------------------------+
+  | senlin.policy.affinity-1.0         |
+  | senlin.policy.deletion-1.0         |
+  | senlin.policy.health-1.0           |
+  | senlin.policy.loadbalance-1.0      |
+  | senlin.policy.region_placement-1.0 |
+  | senlin.policy.scaling-1.0          |
+  | senlin.policy.zone_placement-1.0   |
+  +------------------------------------+
+
 
 The output is a list of policy types supported by the Senlin server.
 
@@ -82,7 +83,7 @@ that describes the names and types of the properties that can be accepted. To
 show the schema of a specific policy type along with other properties, you can
 use the following command::
 
-  $ openstack cluster policy type show senlin.policy.deletion
+  $ openstack cluster policy type show senlin.policy.deletion-1.0
   name: senlin.policy.deletion
   schema:
     criteria:
@@ -132,7 +133,7 @@ The default output from the :command:`policy-type-show` command is in YAML
 format. You can choose to show the spec schema in JSON format by specifying
 the :option:`-F json` option as shown below::
 
-  $ openstack cluster policy type show -F json senlin.policy.deletion
+  $ openstack cluster policy type show -f json senlin.policy.deletion-1.0
 
 For information on how to manage the relationship between a policy and a
 cluster, please refer to :ref:`ref-bindings`.

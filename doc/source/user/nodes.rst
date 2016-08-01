@@ -123,7 +123,7 @@ To create a node, you need to specify the ID or name of the profile to be
 used. For example, the following example creates a node named ``test_node``
 using a profile named ``pstack``::
 
-  $ openstack cluster node create --profile pstack test_node
+  $ senlin node-create --profile pstack test_node
   +---------------+--------------------------------------+
   | Property      | Value                                |
   +---------------+--------------------------------------+
@@ -157,7 +157,7 @@ cluster, you can either use the :command:`openstack cluster member add`
 command (:ref:`ref-membership`) after the node is created, or specify the
 owning cluster upon node creation, as shown by the following example::
 
-  $ openstack cluster node create --profile pstack --cluster c1 test_node
+  $ senlin node-create --profile pstack --cluster c1 test_node
 
 The command above creates a new node using profile ``pstack`` and makes it a
 member of the cluster ``c1``, specified using the option :option:`--cluster`.
@@ -174,7 +174,7 @@ Another argument that could be useful when creating a new node is the option
 implementation to treat nodes differently. For example, the following command
 creates a node with a ``master`` role::
 
-  $ openstack cluster node create --profile pstack --cluster c1 \
+  $ senlin node-create --profile pstack --cluster c1 \
       --role master master_node
 
 A profile type implementation may check this role value when operating the
@@ -186,7 +186,7 @@ The last argument you can specify when creating a new node is the option
 key-value pairs seprated by a semicolon ('``;``'). These key-value pairs are
 attached to the node and can be used for whatever purposes. For example::
 
-  $ openstack cluster node create --profile pstack \
+  $ senlin node-create --profile pstack \
       --metadata owner=JohnWhite test_node
 
 
@@ -260,7 +260,7 @@ Using the :command:`openstack cluster node update` command, you can change the
 profile used by a node. The following example updates a node for switching to
 use a different profile::
 
-  $ openstack cluster node update --profile fedora21_server fedora20_server
+  $ senlin node-update --profile fedora21_server fedora20_server
 
 Suppose the node ``fedora20_server`` is now using a profile of type
 ``os.nova.server`` where a Fedora 20 image is used, the command above will
