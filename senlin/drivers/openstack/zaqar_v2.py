@@ -41,3 +41,20 @@ class ZaqarClient(base.DriverBase):
     @sdk.translate_exception
     def queue_delete(self, queue, ignore_missing=True):
         return self.conn.message.delete_queue(queue, ignore_missing)
+
+    @sdk.translate_exception
+    def message_post(self, queue_name, messages):
+        return self.conn.message.post_message(queue_name, messages)
+
+    @sdk.translate_exception
+    def message_list(self, queue_name, **query):
+        return [m for m in self.conn.message.messages(queue_name, **query)]
+
+    @sdk.translate_exception
+    def message_get(self, queue_name, message):
+        return self.conn.message.get_message(queue_name, message)
+
+    @sdk.translate_exception
+    def message_delete(self, queue_name, message, ignore_missing=True):
+        return self.conn.message.delete_message(queue_name, message,
+                                                ignore_missing)
