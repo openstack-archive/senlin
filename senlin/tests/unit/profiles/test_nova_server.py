@@ -1403,3 +1403,100 @@ class TestNovaServerProfile(base.SenlinTestCase):
         options = {'operation': 'RECREATE'}
         res = profile.do_recover(test_server, **options)
         self.assertFalse(res)
+
+    def test_handle_reboot(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        profile = server.ServerProfile('t', self.spec)
+        nc = mock.Mock()
+        nc.server_reboot = mock.Mock()
+        nc.wait_for_server = mock.Mock()
+        profile._novaclient = nc
+
+        # do it
+        res = profile.handle_reboot(obj, type='SOFT')
+
+        self.assertTrue(res)
+        nc.server_reboot.assert_called_once_with('FAKE_ID', 'SOFT')
+        nc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
+
+    def test_handle_reboot_no_physical_id(self):
+        obj = mock.Mock(physical_id=None)
+        profile = server.ServerProfile('t', self.spec)
+
+        # do it
+        res = profile.handle_reboot(obj, type='SOFT')
+
+        self.assertFalse(res)
+
+    def test_handle_reboot_default_type(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        profile = server.ServerProfile('t', self.spec)
+        nc = mock.Mock()
+        nc.server_reboot = mock.Mock()
+        nc.wait_for_server = mock.Mock()
+        profile._novaclient = nc
+
+        # do it
+        res = profile.handle_reboot(obj)
+
+        self.assertTrue(res)
+        nc.server_reboot.assert_called_once_with('FAKE_ID', 'SOFT')
+        nc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
+
+    def test_handle_reboot_bad_type(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = mock.Mock()
+
+        # do it
+        res = profile.handle_reboot(obj, type=['foo'])
+        self.assertFalse(res)
+
+        res = profile.handle_reboot(obj, type='foo')
+        self.assertFalse(res)
+
+    def test_handle_change_password(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        profile = server.ServerProfile('t', self.spec)
+        nc = mock.Mock()
+        nc.server_reboot = mock.Mock()
+        nc.wait_for_server = mock.Mock()
+        profile._novaclient = nc
+
+        # do it
+        res = profile.handle_change_password(obj, adminPass='new_pass')
+
+        self.assertTrue(res)
+        nc.server_change_password.assert_called_once_with('FAKE_ID',
+                                                          'new_pass')
+
+    def test_handle_change_password_no_physical_id(self):
+        obj = mock.Mock(physical_id=None)
+        profile = server.ServerProfile('t', self.spec)
+
+        # do it
+        res = profile.handle_change_password(obj, adminPass='new_pass')
+
+        self.assertFalse(res)
+
+    def test_handle_change_password_no_password(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = mock.Mock()
+
+        # do it
+        res = profile.handle_change_password(obj)
+
+        self.assertFalse(res)
+
+    def test_handle_change_password_bad_param(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = mock.Mock()
+
+        # do it
+        res = profile.handle_change_password(obj, adminPass=['foo'])
+        self.assertFalse(res)
+
+        res = profile.handle_change_password(obj, foo='bar')
+        self.assertFalse(res)

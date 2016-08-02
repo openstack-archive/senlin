@@ -237,13 +237,14 @@ class ServerProfile(base.Profile):
     }
 
     OP_NAMES = (
-        OP_REBOOT,
+        OP_REBOOT, OP_CHANGE_PASSWORD,
     ) = (
-        'reboot',
+        'reboot', 'change_password',
     )
 
     REBOOT_TYPE = 'type'
     REBOOT_TYPES = (REBOOT_SOFT, REBOOT_HARD) = ('SOFT', 'HARD')
+    ADMIN_PASSWORD = 'adminPass'
 
     OPERATIONS = {
         OP_REBOOT: schema.Operation(
@@ -257,7 +258,15 @@ class ServerProfile(base.Profile):
                     ]
                 )
             }
-        )
+        ),
+        OP_CHANGE_PASSWORD: schema.Operation(
+            _("Change the administrator password."),
+            schema={
+                ADMIN_PASSWORD: schema.String(
+                    _("New password for the administrator.")
+                )
+            }
+        ),
     }
 
     def __init__(self, type_name, name, **kwargs):
@@ -777,4 +786,26 @@ class ServerProfile(base.Profile):
 
     def handle_reboot(self, obj, **options):
         """Handler for the reboot operation."""
-        pass
+        if not obj.physical_id:
+            return False
+
+        reboot_type = options.get(self.REBOOT_TYPE, self.REBOOT_SOFT)
+        if (not isinstance(reboot_type, six.string_types) or
+                reboot_type not in self.REBOOT_TYPES):
+            return False
+
+        self.nova(obj).server_reboot(obj.physical_id, reboot_type)
+        self.nova(obj).wait_for_server(obj.physical_id, 'ACTIVE')
+        return True
+
+    def handle_change_password(self, obj, **options):
+        """Handler for the change_password operation."""
+        if not obj.physical_id:
+            return False
+
+        password = options.get(self.ADMIN_PASSWORD, None)
+        if (password is None or not isinstance(password, six.string_types)):
+            return False
+
+        self.nova(obj).server_change_password(obj.physical_id, password)
+        return True
