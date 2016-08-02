@@ -26,12 +26,6 @@ ENGINE
       or policies.
     * Always do health check before any scaling actions.
 
-POLICY
-------
-
-  - Investigate the impact of node-create and node-delete on certain policies.
-
-
 MIDDLE PRIORITY
 ===============
 
