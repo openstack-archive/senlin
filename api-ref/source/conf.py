@@ -63,7 +63,7 @@ copyright = u'2015-present, OpenStack Foundation'
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-from senlin.version import version_info
+from senlin.version import version_info  # NOQA
 # The full version, including alpha/beta/rc tags.
 release = version_info.release_string()
 # The short X.Y version.

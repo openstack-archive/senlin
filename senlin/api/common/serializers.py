@@ -58,11 +58,11 @@ class JSONRequestDeserializer(object):
 
     def from_json(self, datastring):
         try:
-            if len(datastring) > cfg.CONF.max_json_body_size:
+            if len(datastring) > cfg.CONF.senlin_api.max_json_body_size:
                 msg = _('JSON body size (%(len)s bytes) exceeds maximum '
                         'allowed size (%(limit)s bytes).'
                         ) % {'len': len(datastring),
-                             'limit': cfg.CONF.max_json_body_size}
+                             'limit': cfg.CONF.senlin_api.max_json_body_size}
                 raise exception.RequestLimitExceeded(message=msg)
             return jsonutils.loads(datastring)
         except ValueError as ex:
