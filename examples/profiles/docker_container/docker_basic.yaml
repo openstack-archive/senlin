@@ -1,0 +1,10 @@
+type: container.dockerinc.docker
+version: 1.0
+properties:
+  name: docker_container
+  image: hello-world
+  command: '/bin/sleep 30'
+  host_node: node1
+  port: 2375
+  context:
+    region_name: RegionOne

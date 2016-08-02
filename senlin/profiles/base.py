@@ -87,6 +87,8 @@ class Profile(object):
         """
 
         type_name, version = schema.get_spec_version(spec)
+        self.type_name = type_name
+        self.version = version
         type_str = "-".join([type_name, version])
 
         self.name = name

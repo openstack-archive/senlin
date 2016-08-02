@@ -17,8 +17,7 @@ class DockerClient(object):
     """Docker driver."""
 
     def __init__(self, url):
-        self.url = url
-        self._dockerclient = docker.Client(base_url=self.url)
+        self._dockerclient = docker.Client(base_url=url)
 
     def container_create(self, image, name=None, command=None):
         return self._dockerclient.create_container(name=name, image=image,
