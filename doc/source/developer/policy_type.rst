@@ -106,7 +106,7 @@ the list can accept. For example:
   spec_schema = {
     'criteria': schema.List(
       'Criteria for object selection that will be evaluated in order.',
-      schema=schema.String('Name of a criteron'),
+      schema=schema.String('Name of a criterion'),
     ),
     ...
   }

@@ -73,7 +73,7 @@ the profile referenced by individual nodes can be treated as the 'actual'
 profile(s). When the cluster scales out, new nodes will use the 'desired'
 profile referenced by the cluster. When existing nodes are added to an
 existing cluster, the existing nodes may have different profile IDs from the
-cluster. In this case, Senlin will not force an unncecessary profile update to
+cluster. In this case, Senlin will not force an unnecessary profile update to
 the nodes.
 
 

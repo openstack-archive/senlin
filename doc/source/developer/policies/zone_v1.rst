@@ -95,7 +95,7 @@ With the list of availability zones known to be good and the map of node
 distribution specified in the policy spec, senlin engine continues to
 calculate a distribution plan that best matches the desired distribution.
 If there are nodes that cannot be fit into the distribution plan, the policy
-check failes with an error recorded in the action's ``data``, as shown below:
+check fails with an error recorded in the action's ``data``, as shown below:
 
 ::
 
