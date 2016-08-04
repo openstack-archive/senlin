@@ -12,6 +12,7 @@ Clustering API
 .. include:: policy_types.inc
 .. include:: policies.inc
 .. include:: clusters.inc
+.. include:: cluster_attrs.inc
 .. include:: cluster_policies.inc
 .. include:: nodes.inc
 .. include:: receivers.inc
