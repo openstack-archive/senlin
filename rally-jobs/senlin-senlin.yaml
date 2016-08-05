@@ -1,6 +1,6 @@
 ---
 
-  SenlinScenario.create_and_delete_profile_cluster:
+  SenlinClusters.create_and_delete_profile_cluster:
     -
       args:
         profile_spec:
@@ -12,22 +12,22 @@
             image: cirros-0.3.4-x86_64-uec
             networks:
               - network: private
-        desired_capacity: 2
+        desired_capacity: 3
         min_size: 0
-        max_size: 3
+        max_size: 5
       runner:
-        type: constant
-        times: 2
+        type: "constant"
+        times: 3
         concurrency: 2
       context:
         users:
-          tenants: 1
-          users_per_tenant: 1
+          tenants: 2
+          users_per_tenant: 2
       sla:
         failure_rate:
           max: 0
 
-  SenlinScenario.create_resize_delete_cluster:
+  SenlinPlugin.create_resize_delete_cluster:
     -
       args:
         profile_spec:
@@ -51,12 +51,12 @@
           strict: false
       runner:
         type: constant
-        times: 2
+        times: 3
         concurrency: 2
       context:
         users:
-          tenants: 1
-          users_per_tenant: 1
+          tenants: 2
+          users_per_tenant: 2
       sla:
         failure_rate:
           max: 0
