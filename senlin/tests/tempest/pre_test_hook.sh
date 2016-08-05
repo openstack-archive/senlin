@@ -14,6 +14,8 @@
 
 # This script is executed inside pre_test_hook function in devstack gate.
 
+set -x
+
 export localconf=$BASE/new/devstack/local.conf
 export SENLIN_CONF=/etc/senlin/senlin.conf
 export SENLIN_BACKEND=${SENLIN_BACKEND:-'openstack_test'}
