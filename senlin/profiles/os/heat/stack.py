@@ -10,9 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import six
-
 from oslo_log import log as logging
+import six
 
 from senlin.common import exception
 from senlin.common.i18n import _
@@ -120,6 +119,7 @@ class StackProfile(base.Profile):
             'environment': self.properties[self.ENVIRONMENT],
         }
         try:
+            # TODO(Qiming): This is incorrect...
             self.heat(obj).stacks.validate(**kwargs)
         except Exception as ex:
             msg = _('Failed validate stack template due to '
@@ -147,8 +147,11 @@ class StackProfile(base.Profile):
             return False
 
     def do_create(self, obj):
-        '''Create a stack using the given profile.'''
+        """Create a heat stack using the given node object.
 
+        :param obj: The node object to operate on.
+        :returns: The UUID of the heat stack created.
+        """
         kwargs = {
             'stack_name': obj.name + '-' + utils.random_name(8),
             'template': self.properties[self.TEMPLATE],
@@ -175,24 +178,31 @@ class StackProfile(base.Profile):
         return stack.id
 
     def do_delete(self, obj):
+        """Delete the physical stack behind the node object.
+
+        :param obj: The node object to operate on.
+        :returns: A boolean indicating whether the operation was successful.
+        """
         self.stack_id = obj.physical_id
 
         try:
             self.heat(obj).stack_delete(self.stack_id, True)
             self.heat(obj).wait_for_stack_delete(self.stack_id)
         except Exception as ex:
+            # TODO(Qiming): Should catch a specific exception type here
             LOG.error('Error: %s' % six.text_type(ex))
             raise ex
 
         return True
 
     def do_update(self, obj, new_profile, **params):
-        '''Perform update on object.
+        """Perform update on object.
 
         :param obj: the node object to operate on
         :param new_profile: the new profile used for updating
         :param params: other parameters for the update request.
-        '''
+        :returns: A boolean indicating whether the operation is successful.
+        """
         self.stack_id = obj.physical_id
         if not self.stack_id:
             return True
@@ -229,6 +239,7 @@ class StackProfile(base.Profile):
             try:
                 self.heat(obj).stack_update(self.stack_id, **fields)
             except Exception as ex:
+                # TODO(Qiming): This should be limited to a specific exc type
                 LOG.exception(_('Failed in updating stack: %s'
                                 ), six.text_type(ex))
                 return False
@@ -244,15 +255,21 @@ class StackProfile(base.Profile):
         hc = self.heat(obj)
         try:
             stack = hc.stack_get(obj.physical_id)
-        except Exception as ex:
-            raise ex
+        except Exception:
+            LOG.exception(_('Failed in getting stack.'))
+            return False
+
+        # TODO(Qiming): This should be calling orchestration interface
+        # function
         # When the stack is in a status which can't be checked(
         # CREATE_IN_PROGRESS, DELETE_IN_PROGRESS, etc), return False.
         try:
             stack.check(hc.session)
         except Exception:
+            LOG.exception(_('Failed in invoking stack check.'))
             return False
 
+        # TODO(Qiming): This has to be fixed, we cannot allow endless loop
         status = stack.status
         while status == 'CHECK_IN_PROGRESS':
             status = hc.stack_get(obj.physical_id).status
@@ -262,7 +279,7 @@ class StackProfile(base.Profile):
             return False
 
     def do_get_details(self, obj):
-        if obj.physical_id is None or obj.physical_id == '':
+        if not obj.physical_id:
             return {}
 
         return self.heat(obj).stack_get(obj.physical_id)
