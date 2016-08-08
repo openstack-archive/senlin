@@ -163,9 +163,14 @@ class StackProfile(base.Profile):
         stack = self.heat(obj).stack_create(**kwargs)
         self.stack_id = stack.id
 
-        # Wait for action to complete/fail
-        while not self._check_action_complete(obj, 'CREATE'):
-            scheduler.sleep(1)
+        # Timeout = None means we will use the 'default_action_timeout'
+        # It can be overridden by the TIMEOUT profile propertie
+        timeout = None
+        if self.properties[self.TIMEOUT]:
+            timeout = self.properties[self.TIMEOUT] * 60
+
+        self.heat(obj).wait_for_stack(stack.id, 'CREATE_COMPLETE',
+                                      timeout=timeout)
 
         return stack.id
 

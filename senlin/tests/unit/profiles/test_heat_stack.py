@@ -11,6 +11,7 @@
 # under the License.
 
 import copy
+
 import mock
 
 from senlin.drivers import base as driver_base
@@ -112,14 +113,31 @@ class TestHeatStackProfile(base.SenlinTestCase):
 
         test_stack = mock.Mock()
         test_stack.name = 'test_stack'
-        fake_stack = mock.Mock()
-        profile.hc = mock.MagicMock()
-        fake_stack.id = 'ce8ae86c-9810-4cb1-8888-7fb53bc523bf'
-        profile._check_action_complete = mock.MagicMock(return_value=True)
-        profile.hc.stack_create = mock.MagicMock(return_value=fake_stack)
+        fake_stack = mock.Mock(id='FAKE_ID')
+        profile.hc = mock.Mock()
+        profile._check_action_complete = mock.Mock(return_value=True)
+        profile.hc.stack_create = mock.Mock(return_value=fake_stack)
+        profile.hc.wait_for_stack = mock.Mock()
         self.assertEqual(fake_stack.id, profile.do_create(test_stack))
         self.assertTrue(profile.hc.stack_create.called)
-        self.assertTrue(profile._check_action_complete.called)
+        profile.hc.wait_for_stack.assert_called_once_with(
+            'FAKE_ID', 'CREATE_COMPLETE', timeout=3600)
+
+    def test_do_create_default_timeout(self):
+        del self.spec['properties']['timeout']
+        profile = stack.StackProfile('t', self.spec)
+
+        test_stack = mock.Mock()
+        test_stack.name = 'test_stack'
+        fake_stack = mock.Mock(id='FAKE_ID')
+        profile.hc = mock.Mock()
+        profile._check_action_complete = mock.Mock(return_value=True)
+        profile.hc.stack_create = mock.Mock(return_value=fake_stack)
+        profile.hc.wait_for_stack = mock.Mock()
+        self.assertEqual(fake_stack.id, profile.do_create(test_stack))
+        self.assertTrue(profile.hc.stack_create.called)
+        profile.hc.wait_for_stack.assert_called_once_with(
+            'FAKE_ID', 'CREATE_COMPLETE', timeout=None)
 
     def test_do_delete(self):
         profile = stack.StackProfile('t', self.spec)

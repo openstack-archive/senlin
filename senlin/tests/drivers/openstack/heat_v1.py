@@ -77,5 +77,9 @@ class HeatClient(base.DriverBase):
     def stack_delete(self, stack_id, ignore_missing=True):
         return
 
+    def wait_for_stack(self, stack_id, status, failures=None, interval=2,
+                       timeout=None):
+        return
+
     def wait_for_stack_delete(self, stack_id, timeout=None):
         return
