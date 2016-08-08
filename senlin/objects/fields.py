@@ -48,6 +48,9 @@ class Json(fields.FieldType):
                 raise
         return str(value)
 
+    def get_schema(self):
+        return {'type': ['object']}
+
 
 class JsonField(fields.AutoTypedField):
     AUTO_TYPE = Json()
