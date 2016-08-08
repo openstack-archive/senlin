@@ -110,3 +110,44 @@ class TestZaqarV2(base.SenlinTestCase):
         zc.message_delete('foo', 'MESSAGE_ID')
         self.message.delete_message.assert_called_once_with(
             'foo', 'MESSAGE_ID', True)
+
+    def test_subscription_create(self):
+        zc = zaqar_v2.ZaqarClient(self.conn_params)
+        attrs = {'k1': 'v1'}
+        zc.subscription_create('foo', **attrs)
+        self.message.create_subscription.assert_called_once_with(
+            'foo', k1='v1')
+
+    def test_subscription_get(self):
+        zc = zaqar_v2.ZaqarClient(self.conn_params)
+        zc.subscription_get('foo', 'SUBSCRIPTION_ID')
+        self.message.get_subscription.assert_called_once_with(
+            'foo', 'SUBSCRIPTION_ID')
+
+    def test_subscription_list(self):
+        self.message.subscriptions.return_value = [{'id': 'ID1'},
+                                                   {'id': 'ID2'}]
+        zc = zaqar_v2.ZaqarClient(self.conn_params)
+        zc.subscription_list('foo')
+        self.message.subscriptions.assert_called_once_with('foo')
+        self.message.subscriptions.reset_mock()
+
+        zc.subscription_list('foo', marker='ID1')
+        self.message.subscriptions.assert_called_once_with(
+            'foo', marker='ID1')
+
+    def test_subscription_delete(self):
+        zc = zaqar_v2.ZaqarClient(self.conn_params)
+        zc.subscription_delete('foo', 'SUBSCRIPTION_ID', True)
+        self.message.delete_subscription.assert_called_once_with(
+            'foo', 'SUBSCRIPTION_ID', True)
+        self.message.delete_subscription.reset_mock()
+
+        zc.subscription_delete('foo', 'SUBSCRIPTION_ID', False)
+        self.message.delete_subscription.assert_called_once_with(
+            'foo', 'SUBSCRIPTION_ID', False)
+        self.message.delete_subscription.reset_mock()
+
+        zc.subscription_delete('foo', 'SUBSCRIPTION_ID')
+        self.message.delete_subscription.assert_called_once_with(
+            'foo', 'SUBSCRIPTION_ID', True)

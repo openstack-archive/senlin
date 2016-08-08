@@ -58,3 +58,22 @@ class ZaqarClient(base.DriverBase):
     def message_delete(self, queue_name, message, ignore_missing=True):
         return self.conn.message.delete_message(queue_name, message,
                                                 ignore_missing)
+
+    @sdk.translate_exception
+    def subscription_create(self, queue_name, **attrs):
+        return self.conn.message.create_subscription(queue_name, **attrs)
+
+    @sdk.translate_exception
+    def subscription_list(self, queue_name, **query):
+        return [s for s in self.conn.message.subscriptions(queue_name,
+                                                           **query)]
+
+    @sdk.translate_exception
+    def subscription_get(self, queue_name, subscription):
+        return self.conn.message.get_subscription(queue_name, subscription)
+
+    @sdk.translate_exception
+    def subscription_delete(self, queue_name, subscription,
+                            ignore_missing=True):
+        return self.conn.message.delete_subscription(queue_name, subscription,
+                                                     ignore_missing)
