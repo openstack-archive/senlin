@@ -49,6 +49,18 @@ class HeatClient(base.DriverBase):
                                                     ignore_missing)
 
     @sdk.translate_exception
+    def wait_for_stack(self, stack_id, status, failures=None, interval=2,
+                       timeout=None):
+        if failures is None:
+            failures = []
+
+        if timeout is None:
+            timeout = cfg.CONF.default_action_timeout
+
+        return self.conn.orchestration.wait_for_status(
+            stack_id, status, failures, interval, timeout)
+
+    @sdk.translate_exception
     def wait_for_stack_delete(self, stack_id, timeout=None):
         '''Wait for stack deleting complete'''
         if timeout is None:
