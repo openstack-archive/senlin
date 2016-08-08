@@ -34,14 +34,14 @@ the cluster will be scaled-in.
 Moreover, custom is easy to do when auto-scaling. Receivers can be created to
 generate webhooks from scale_out and scale_in actions. Moreover, placement_zone.yaml
 and placement_region.yaml can be attached to cluster and guide which zone/region to
-place new nodes when scale_out; delation_policy can be attached the cluster and guide
-the choice of candidates to delete when scale_in.
+place new nodes when scale_out; deletion_policy can be attached to the cluster and
+guide the choice of candidates to delete when scale_in.
 
 Sample template
 ~~~~~~~~~~~~~~~
 
 There have a sample template in heat-template project under directory of senlin
-for creation of Senlin elasic loadbalancerd cluster by Heat. Here we choose some
+for creation of Senlin elastic load-balanced cluster by Heat. Here we choose some
 important parts of the sample to explain one by one.
 
 The resource below defines a security_group for connection to created load-balanced
