@@ -28,6 +28,8 @@ import os
 import subprocess
 import sys
 
+import openstackdocstheme
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -42,8 +44,13 @@ sys.path.insert(0, os.path.abspath('./'))
 
 extensions = [
     'os_api_ref',
-    'oslosphinx',
 ]
+
+html_theme = 'openstackdocs'
+html_theme_path = [openstackdocstheme.get_html_theme_path()]
+html_theme_options = {
+    "sidebar_mode": "toc",
+}
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -63,7 +70,7 @@ copyright = u'2015-present, OpenStack Foundation'
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-from senlin.version import version_info  # NOQA
+from senlin.version import version_info
 # The full version, including alpha/beta/rc tags.
 release = version_info.release_string()
 # The short X.Y version.
