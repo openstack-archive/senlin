@@ -11,13 +11,18 @@ Trigger webhook action
 
 Triggers a webhook receiver.
 
-Normal response codes: 202
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- forbidden (403)
-- notFound (404)
-- serviceUnavailable (503)
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 403
+   - 404
+   - 503
 
 Request Parameters
 ------------------

@@ -12,14 +12,19 @@ List policies
 
 Lists all policies.
 
-Normal response codes: 200
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- serviceUnavailable (503)
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 503
 
 Request Parameters
 ------------------
@@ -66,14 +71,19 @@ Create policy
 
 Creates a policy.
 
-Normal response codes: 201
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- serviceUnavailable (503)
+   - 201
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 503
 
 Request Parameters
 ------------------
@@ -122,15 +132,20 @@ Show policy details
 
 Shows details for a policy.
 
-Normal response codes: 200
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- notFound(404)
-- serviceUnavailable (503)
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
 
 Request Parameters
 ------------------
@@ -171,15 +186,20 @@ Update policy
 
 Updates a policy.
 
-Normal response codes: 200
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- notFound(404)
-- serviceUnavailable (503)
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
 
 Request Parameters
 ------------------
@@ -232,19 +252,24 @@ Delete policy
 
 Deletes a policy.
 
+Response Codes
+--------------
+
 A policy cannot be deleted if it is still attached to cluster(s). In that
 case, a 409 error will be returned.
 
-Normal response codes: 204
+.. rest_status_code:: success status.yaml
 
-Error response codes:
+   - 204
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- notFound(404)
-- conflict(409)
-- serviceUnavailable (503)
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 409
+   - 503
 
 Request Parameters
 ------------------

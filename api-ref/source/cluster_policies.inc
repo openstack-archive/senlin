@@ -11,15 +11,20 @@ List all cluster policies
 
 Lists all policies attached to specific cluster
 
-Normal response codes: 200
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- notFound (404)
-- serviceUnavailable (503)
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
 
 Request Parameters
 ------------------
@@ -59,15 +64,20 @@ Show cluster_policy details
 
 Shows details for a cluster policy.
 
-Normal response codes: 200
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- notFound (404)
-- serviceUnavailable (503)
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
 
 Request Parameters
 ------------------

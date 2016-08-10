@@ -13,14 +13,19 @@ List clusters
 
 Lists clusters.
 
-Normal response codes: 200
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- serviceUnavailable (503)
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 503
 
 Request Parameters
 ------------------
@@ -76,14 +81,20 @@ Create cluster
 
 Creates a cluster.
 
-Error response codes: 201
+Response Codes
+--------------
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- internalError(500)
-- serviceUnavailable (503)
+.. rest_status_code:: success status.yaml
 
+   - 201
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 500
+   - 503
 
 Request Parameters
 ------------------
@@ -149,15 +160,20 @@ Show cluster details
 
 Shows details for a cluster.
 
-Normal response codes: 200
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- notFound(404)
-- serviceUnavailable (503)
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
 
 Request Parameters
 ------------------
@@ -208,18 +224,23 @@ Update cluster
 
 Updates a cluster.
 
-Normal response codes: 202
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- notFound (404)
-- serviceUnavailable (503)
+   - 202
 
-Request
--------
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
+
+Request Parameters
+------------------
 
 .. rest_parameters:: parameters.yaml
 
@@ -280,20 +301,24 @@ Delete cluster
 
 Deletes a cluster.
 
+Response Codes
+--------------
+
 A cluster cannot be deleted if there are still policies attached to it.
 It cannot be deleted if there are still receivers associated with it. In both
 cases, a 409 error will be returned.
 
-Normal response codes: 202
+.. rest_status_code:: success status.yaml
 
-Error response codes:
+   - 202
 
-- unauthorized (401)
-- forbidden (403)
-- notFound (404)
-- conflict(409)
-- serviceUnavailable (503)
+.. rest_status_code:: error status.yaml
 
+   - 401
+   - 403
+   - 404
+   - 409
+   - 503
 
 Request Parameters
 ------------------
@@ -318,16 +343,20 @@ Resize a Cluster
 
 Resize a cluster.
 
-Normal response codes: 202
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- notFound (404)
-- serviceUnavailable (503)
+   - 202
 
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
 
 Request Parameters
 ------------------
@@ -368,16 +397,20 @@ Scale-in a Cluster
 
 Shrink the size of a cluster by a given number.
 
-Normal response codes: 202
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- notFound (404)
-- serviceUnavailable (503)
+   - 202
 
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
 
 Request Parameters
 ------------------
@@ -413,15 +446,20 @@ Scale-out a Cluster
 
 Expand the size of a cluster by a given number.
 
-Normal response codes: 202
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- notFound (404)
-- serviceUnavailable (503)
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
 
 Request Parameters
 ------------------
@@ -457,15 +495,20 @@ Add nodes to a Cluster
 
 Add the specified list of nodes to the cluster.
 
-Normal response codes: 202
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- notFound (404)
-- serviceUnavailable (503)
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
 
 Request Parameters
 ------------------
@@ -501,15 +544,20 @@ Remove nodes from a Cluster
 
 Remove the specified list of nodes from the cluster.
 
-Normal response codes: 202
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- notFound (404)
-- serviceUnavailable (503)
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
 
 Request Parameters
 ------------------
@@ -545,15 +593,20 @@ Attach a Policy to a Cluster
 
 Attach the specified policy to the cluster.
 
-Normal response codes: 202
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- notFound (404)
-- serviceUnavailable (503)
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
 
 Request Parameters
 ------------------
@@ -589,15 +642,20 @@ Detach a Policy from a Cluster
 
 Detach the specified policy from the cluster.
 
-Normal response codes: 202
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- notFound (404)
-- serviceUnavailable (503)
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
 
 Request Parameters
 ------------------
@@ -632,15 +690,20 @@ Update a Policy on a Cluster
 
 Update the specified policy on the cluster.
 
-Normal response codes: 202
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- notFound (404)
-- serviceUnavailable (503)
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
 
 Request Parameters
 ------------------
@@ -668,6 +731,48 @@ Response Parameters
 
   - location: location
 
+Collect Attributes Across a Cluster
+===================================
+
+.. rest_method::  GET /v1/clusters/{cluster_id}/attrs/{path}
+
+  - min_version: 1.2
+
+Aggregate an attribute value across all nodes in a cluster.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - cluster_id: cluster_id_url
+  - path: path_url
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - cluster_attributes: cluster_attributes
+   - id: node_id
+   - value: attr_value
+
 Check a Cluster's Health Status
 ===============================
 
@@ -675,15 +780,20 @@ Check a Cluster's Health Status
 
 Check the health status of all nodes in a cluster.
 
-Normal response codes: 202
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- notFound (404)
-- serviceUnavailable (503)
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
 
 Request Parameters
 ------------------
@@ -718,15 +828,20 @@ Recover a Cluster to a Healthy Status
 
 Recover the health status for all nodes in a cluster.
 
-Normal response codes: 202
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- notFound (404)
-- serviceUnavailable (503)
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
 
 Request Parameters
 ------------------

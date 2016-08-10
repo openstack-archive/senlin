@@ -12,14 +12,19 @@ List actions
 
 Lists all actions.
 
-Normal response codes: 200
+Response codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- serviceUnavailable (503)
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 503
 
 Request Parameters
 ------------------
@@ -76,16 +81,20 @@ Show action details
 
 Shows details for an action.
 
+Response Codes
+--------------
 
-Normal response codes: 200
+.. rest_status_code:: success status.yaml
 
-Error response codes:
+   - 200
 
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- notFound (404)
-- serviceUnavailable (503)
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
 
 Request Parameters
 ------------------
