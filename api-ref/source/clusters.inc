@@ -668,45 +668,6 @@ Response Parameters
 
   - location: location
 
-
-Collect Attributes Across a Cluster
-===================================
-
-.. rest_method::  GET /v1/clusters/{cluster_id}/attrs/{path}
-
-  - min_version: 1.2
-
-Aggregate an attribute value across all nodes in a cluster.
-
-Normal response codes: 200
-
-Error response codes:
-
-- badRequest (400)
-- unauthorized (401)
-- forbidden (403)
-- notFound (404)
-- serviceUnavailable (503)
-
-Request Parameters
-------------------
-
-.. rest_parameters:: parameters.yaml
-
-  - OpenStack-API-Version: microversion
-  - cluster_id: cluster_id_url
-  - path: cluster_attrs_path
-
-Response Parameters
--------------------
-
-.. rest_parameters:: parameters.yaml
-
-   - cluster_attributes: cluster_attributes
-   - id: node_id
-   - value: cluster_attr_value
-
-
 Check a Cluster's Health Status
 ===============================
 
