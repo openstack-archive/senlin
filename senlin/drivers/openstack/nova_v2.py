@@ -111,8 +111,11 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.update_server(server, **attrs)
 
     @sdk.translate_exception
-    def server_delete(self, server, ignore_missing=True):
-        return self.conn.compute.delete_server(server, ignore_missing)
+    def server_delete(self, server, ignore_missing=True,
+                      force=False):
+        return self.conn.compute.delete_server(server,
+                                               ignore_missing,
+                                               force)
 
     @sdk.translate_exception
     def server_rebuild(self, server, imageref, name=None, admin_password=None,
@@ -270,3 +273,24 @@ class NovaClient(base.DriverBase):
     @sdk.translate_exception
     def hypervisor_get(self, hypervisor):
         return self.conn.compute.get_hypervisor(hypervisor)
+
+    @sdk.translate_exception
+    def service_list(self):
+        return self.conn.compute.services()
+
+    @sdk.translate_exception
+    def service_force_down(self, service):
+        return self.conn.compute.force_service_down(service, service.host,
+                                                    service.binary)
+
+    @sdk.translate_exception
+    def service_enable(self, service):
+        return self.conn.compute.enable_service(service, service.host,
+                                                service.binary)
+
+    @sdk.translate_exception
+    def service_disable(self, service, disabled_reason=None):
+        return self.conn.compute.disable_service(service,
+                                                 service.host,
+                                                 service.binary,
+                                                 disabled_reason)

@@ -194,9 +194,9 @@ class Profile(object):
         return profile.do_create(obj)
 
     @classmethod
-    def delete_object(cls, ctx, obj):
+    def delete_object(cls, ctx, obj, **params):
         profile = cls.load(ctx, profile_id=obj.profile_id)
-        return profile.do_delete(obj)
+        return profile.do_delete(obj, **params)
 
     @classmethod
     def update_object(cls, ctx, obj, new_profile_id=None, **params):
@@ -280,7 +280,7 @@ class Profile(object):
         """For subclass to override."""
         raise NotImplementedError
 
-    def do_delete(self, obj):
+    def do_delete(self, obj, **params):
         """For subclass to override."""
         raise NotImplementedError
 
@@ -320,12 +320,12 @@ class Profile(object):
         :param obj: The node object to operate on.
         :param options: Keyword arguments for the recover operation.
         """
-        operation = options.get('operation', None)
+        operation = options.pop('operation', None)
         if operation and operation != consts.RECOVER_RECREATE:
             LOG.error(_LE("Recover operation not supported: %s"), operation)
             return False
 
-        res = self.do_delete(obj)
+        res = self.do_delete(obj, **options)
         if res:
             try:
                 res = self.do_create(obj)

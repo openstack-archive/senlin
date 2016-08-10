@@ -623,6 +623,22 @@ class TestProfileBase(base.SenlinTestCase):
         self.assertEqual(False,
                          profile.do_recover(mock.Mock(), operation='bar'))
 
+    def test_do_recover_with_fencing(self):
+        profile = self._create_profile('test-profile')
+        self.patchobject(profile, 'do_create', return_value=True)
+        self.patchobject(profile, 'do_delete', return_value=True)
+        obj = mock.Mock()
+
+        self.assertEqual(True,
+                         profile.do_recover(obj,
+                                            ignore_missing=True,
+                                            force=True))
+
+        profile.do_delete.assert_called_once_with(obj,
+                                                  ignore_missing=True,
+                                                  force=True)
+        profile.do_create.assert_called_once_with(obj)
+
     def test_do_recover_with_recreate_succeeded(self):
         profile = self._create_profile('test-profile')
 
