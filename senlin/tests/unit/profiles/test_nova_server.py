@@ -530,7 +530,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         # Test specific exception path
         res = profile.do_delete(obj)
         self.assertFalse(res)
-        nc.server_delete.assert_called_once_with('FAKE_ID')
+        nc.server_delete.assert_called_once_with('FAKE_ID', True, False)
 
     def test_do_update_name_to_given_string_succeeded(self):
         obj = mock.Mock()

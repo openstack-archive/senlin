@@ -123,6 +123,25 @@ class NovaClient(base.DriverBase):
             "user_id": "fake"
         }
 
+        self.fake_service_list = [
+            {
+                'id': 'IDENTIFIER1',
+                'binary': 'nova-api',
+                'host': 'host1',
+                'status': 'enabled',
+                'state': 'up',
+                'zone': 'nova'
+            },
+            {
+                'id': 'IDENTIFIER2',
+                'binary': 'nova-compute',
+                'host': 'host1',
+                'status': 'enabled',
+                'state': 'up',
+                'zone': 'nova'
+            },
+        ]
+
     def flavor_find(self, name_or_id, ignore_missing=False):
         return sdk.FakeResourceObject(self.fake_flavor)
 
@@ -168,7 +187,7 @@ class NovaClient(base.DriverBase):
     def server_resize_revert(self, server):
         return
 
-    def server_delete(self, server, ignore_missing=True):
+    def server_delete(self, server, ignore_missing=True, force=False):
         return
 
     def server_metadata_get(self, server):
@@ -178,4 +197,16 @@ class NovaClient(base.DriverBase):
         return
 
     def server_metadata_delete(self, server, keys):
+        return
+
+    def service_list(self):
+        return sdk.FakeResourceObject(self.fake_service_list)
+
+    def service_force_down(self, service, host, binary):
+        return
+
+    def service_enable(self, service, host, binary):
+        return
+
+    def service_disable(self, service, host, binary):
         return

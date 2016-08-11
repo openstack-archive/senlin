@@ -232,7 +232,12 @@ class TestNovaV2(base.SenlinTestCase):
     def test_server_delete(self):
         d = nova_v2.NovaClient(self.conn_params)
         d.server_delete('foo', True)
-        self.compute.delete_server.assert_called_once_with('foo', True)
+        self.compute.delete_server.assert_called_once_with('foo', True, False)
+
+    def test_server_delete_with_force(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        d.server_delete('foo', True, True)
+        self.compute.delete_server.assert_called_once_with('foo', True, True)
 
     def test_server_rebuild(self):
         d = nova_v2.NovaClient(self.conn_params)
@@ -530,3 +535,32 @@ class TestNovaV2(base.SenlinTestCase):
         d = nova_v2.NovaClient(self.conn_params)
         d.hypervisor_get('k')
         self.compute.get_hypervisor.assert_called_once_with('k')
+
+    def test_service_list(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        d.service_list()
+        self.compute.services.assert_called_once()
+
+    def test_service_enable(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        services = d.service_list()
+        service = services.next()
+        d.service_enable(service)
+        self.compute.enable_service.assert_called_once_with(
+            service, service.host, service.binary)
+
+    def test_service_disable(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        services = d.service_list()
+        service = services.next()
+        d.service_disable(service)
+        self.compute.disable_service.assert_called_once_with(
+            service, service.host, service.binary, None)
+
+    def test_service_force_down(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        services = d.service_list()
+        service = services.next()
+        d.service_force_down(service)
+        self.compute.force_service_down.assert_called_once_with(
+            service, service.host, service.binary)

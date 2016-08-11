@@ -399,14 +399,22 @@ class ServerProfile(base.Profile):
 
         return server.id
 
-    def do_delete(self, obj):
+    def do_delete(self, obj, **params):
         self.server_id = obj.physical_id
 
         if not obj.physical_id:
             return True
 
+        ignore_missing = True
+        if 'ignore_missing' in params:
+            ignore_missing = params['ignore_missing']
+
+        force = False
+        if 'force' in params:
+            force = params['force']
+
         try:
-            self.nova(obj).server_delete(self.server_id)
+            self.nova(obj).server_delete(self.server_id, ignore_missing, force)
             self.nova(obj).wait_for_server_delete(self.server_id)
         except Exception as ex:
             LOG.error('Error: %s' % six.text_type(ex))
