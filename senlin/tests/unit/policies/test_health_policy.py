@@ -95,7 +95,13 @@ class TestHealthPolicy(base.SenlinTestCase):
         action.action = consts.CLUSTER_RECOVER
         res = self.hp.pre_op(self.cluster.id, action)
         self.assertTrue(res)
-        data = {'health': {'recover_action': 'REBUILD'}}
+        data = {
+            'health':
+                {
+                    'recover_action': 'REBUILD',
+                    'fencing': ['COMPUTE'],
+                }
+        }
         self.assertEqual(data, action.data)
 
     def test_post_op(self):
