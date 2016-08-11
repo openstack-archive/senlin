@@ -24,7 +24,7 @@ place for developers to perform different kinds of tests:
 
 - *Unit Tests*: These are source code level testing that verifies the classes
   and methods behave as implemented. Once implemented, these tests are also
-  used to gurantee that code behavior won't change accidentally by other
+  used to guarantee that code behavior won't change accidentally by other
   patches.
 - *API Tests*: These tests treat the *senlin-api* and the *senlin-engine* as
   black boxes. The test cases focus more on the API surface rather than how
@@ -201,7 +201,7 @@ designed for a specific use case or story line.
 Running Functional Tests
 ------------------------
 
-Similar to API tests, you will need to export your OpenStack crendentials
+Similar to API tests, you will need to export your OpenStack credentials
 before running any functional tests.
 
 The most straight forward way to run functional tests is to use the virtual
@@ -237,7 +237,7 @@ between senlin and other services than other things.
 
 All integration test cases are to be placed under the subdirectory
 :file:`senlin/tests/tempest/integration`. Test cases are expected to be
-organized into a small number of story lines that can excercise as many
+organized into a small number of story lines that can exercise as many
 interactions between senlin and backend services as possible.
 
 Each "story line" should be organized into a separate class module that
