@@ -11,13 +11,18 @@ Shows build information
 
 Shows build information for a Senlin deployment.
 
-Normal response codes: 200
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- unauthorized (401)
-- forbidden (403)
-- serviceUnavailable (503)
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 403
+   - 503
 
 Request Parameters
 ------------------

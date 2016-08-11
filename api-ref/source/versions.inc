@@ -16,9 +16,16 @@ List Major Versions
 
 Lists information for all Clustering API major versions.
 
+Response Codes
+--------------
 
-Normal response codes: 300
-Error response codes: serviceUnavailable (503)
+.. rest_status_code:: success status.yaml
+
+   - 300: multi_version
+
+.. rest_status_code:: error status.yaml
+
+   - 503
 
 Response Parameters
 -------------------
@@ -41,12 +48,17 @@ Show Details of an API Version
 
 Show details about an API major version.
 
-Normal response codes: 200
+Response Codes
+--------------
 
-Error response codes:
+.. rest_status_code:: success status.yaml
 
-- notFound (404)
-- serviceUnavailable (503)
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 404
+   - 503
 
 Response Parameters
 -------------------
@@ -54,7 +66,6 @@ Response Parameters
 .. rest_parameters:: parameters.yaml
 
   - version: version_url
-
 
 Response Parameters
 -------------------
