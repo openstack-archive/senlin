@@ -68,6 +68,10 @@ class TestHeatV1(base.SenlinTestCase):
         self.hc.stack_delete('stack_id', ignore_missing=True)
         self.orch.delete_stack.assert_called_once_with('stack_id', True)
 
+    def test_stack_delete_cannot_miss(self):
+        self.hc.stack_check('stack_id')
+        self.orch.check_stack.assert_called_once_with('stack_id')
+
     def test_wait_for_stack(self):
         self.hc.wait_for_stack('FAKE_ID', 'STATUS', [], 100, 200)
         self.orch.wait_for_status.assert_called_once_with(
