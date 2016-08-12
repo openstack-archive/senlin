@@ -252,10 +252,9 @@ class TestProfileBase(base.SenlinTestCase):
 
     @mock.patch.object(po.Profile, 'delete')
     def test_delete_busy(self, mock_delete):
-        err = exception.ResourceBusyError(resource_type='profile',
-                                          resource_id='FAKE_ID')
+        err = exception.EResourceBusy(type='profile', id='FAKE_ID')
         mock_delete.side_effect = err
-        self.assertRaises(exception.ResourceBusyError,
+        self.assertRaises(exception.EResourceBusy,
                           pb.Profile.delete,
                           self.ctx, 'FAKE_ID')
         mock_delete.assert_called_once_with(self.ctx, 'FAKE_ID')

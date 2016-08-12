@@ -400,7 +400,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         for status in ('WAITING', 'RUNNING', 'SUSPENDED'):
             action = _create_action(self.ctx, status=status)
             self.assertIsNotNone(action)
-            ex = self.assertRaises(exception.ResourceBusyError,
+            ex = self.assertRaises(exception.EResourceBusy,
                                    db_api.action_delete,
                                    self.ctx, action.id)
             self.assertEqual('The action (%s) is busy now.' % action.id,

@@ -336,7 +336,7 @@ class DBAPIProfileTest(base.SenlinTestCase):
         cluster = shared.create_cluster(self.ctx, profile)
 
         profile_id = profile.id
-        ex = self.assertRaises(exception.ResourceBusyError,
+        ex = self.assertRaises(exception.EResourceBusy,
                                db_api.profile_delete, self.ctx, profile_id)
         self.assertEqual('The profile (%s) is busy now.' % profile_id,
                          six.text_type(ex))
@@ -349,7 +349,7 @@ class DBAPIProfileTest(base.SenlinTestCase):
         node = shared.create_node(self.ctx, None, profile)
 
         profile_id = profile.id
-        ex = self.assertRaises(exception.ResourceBusyError,
+        ex = self.assertRaises(exception.EResourceBusy,
                                db_api.profile_delete, self.ctx, profile_id)
         self.assertEqual('The profile (%s) is busy now.' % profile_id,
                          six.text_type(ex))

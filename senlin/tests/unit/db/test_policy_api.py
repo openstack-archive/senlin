@@ -390,7 +390,7 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         }
         db_api.cluster_policy_attach(self.ctx, self.cluster.id, policy.id,
                                      fields)
-        self.assertRaises(exception.ResourceBusyError,
+        self.assertRaises(exception.EResourceBusy,
                           db_api.policy_delete,
                           self.ctx, policy.id)
 

@@ -442,7 +442,7 @@ class EngineService(service.Service):
         LOG.info(_LI("Deleting profile '%s'."), identity)
         try:
             profile_base.Profile.delete(context, db_profile.id)
-        except exception.ResourceBusyError:
+        except exception.EResourceBusy:
             LOG.error(_LI("The profile '%s' cannot be deleted."), identity)
             raise exception.ResourceInUse(resource_type='profile',
                                           resource_id=db_profile.id)
@@ -631,7 +631,7 @@ class EngineService(service.Service):
         LOG.info(_LI("Delete policy '%s'."), identity)
         try:
             policy_base.Policy.delete(context, db_policy.id)
-        except exception.ResourceBusyError:
+        except exception.EResourceBusy:
             LOG.error(_LI("Policy '%s' cannot be deleted."), identity)
             raise exception.ResourceInUse(resource_type='policy',
                                           resource_id=db_policy.id)
@@ -1949,7 +1949,7 @@ class EngineService(service.Service):
         LOG.info(_LI("Deleting action '%s'."), identity)
         try:
             action_mod.Action.delete(context, db_action.id)
-        except exception.ResourceBusyError:
+        except exception.EResourceBusy:
             raise exception.ResourceInUse(resource_type='action',
                                           resource_id=db_action.id)
 

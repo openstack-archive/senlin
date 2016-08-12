@@ -253,8 +253,7 @@ class ActionTest(base.SenlinTestCase):
         x_obj = mock.Mock()
         x_obj.id = 'FAKE_ID'
         mock_find.return_value = x_obj
-        ex = exc.ResourceBusyError(resource_type='action',
-                                   resource_id='FAKE_ID')
+        ex = exc.EResourceBusy(type='action', id='FAKE_ID')
         mock_delete.side_effect = ex
 
         ex = self.assertRaises(rpc.ExpectedException,
