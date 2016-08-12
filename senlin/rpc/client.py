@@ -103,6 +103,10 @@ class EngineClient(object):
                           self.make_msg('profile_delete',
                                         identity=identity))
 
+    def profile_validate(self, ctxt, spec):
+        return self.call(ctxt,
+                         self.make_msg('profile_validate', spec=spec))
+
     def policy_type_list(self, ctxt):
         return self.call(ctxt, self.make_msg('policy_type_list'))
 

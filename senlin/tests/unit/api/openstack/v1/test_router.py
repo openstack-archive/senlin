@@ -109,6 +109,13 @@ class RoutesTest(base.SenlinTestCase):
                 'profile_id': 'bbbb'
             })
 
+        self.assertRoute(
+            self.m,
+            '/profiles/validate',
+            'POST',
+            'validate',
+            'ProfileController')
+
     def test_policy_types_handling(self):
         self.assertRoute(
             self.m,

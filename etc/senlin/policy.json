@@ -19,6 +19,7 @@
     "profiles:get": "",
     "profiles:delete": "",
     "profiles:update": "",
+    "profiles:validate": "",
     "nodes:index": "",
     "nodes:create": "",
     "nodes:get": "",
