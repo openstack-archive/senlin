@@ -13,7 +13,7 @@
 from oslo_log import log as logging
 import six
 
-from senlin.common import exception
+from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.common import utils
@@ -126,9 +126,9 @@ class StackProfile(base.Profile):
         }
         try:
             self.heat(obj).validate_template(**kwargs)
-        except exception.InternalError as ex:
+        except exc.InternalError as ex:
             msg = _('Failed in validating template: %s') % six.text_type(ex)
-            raise exception.InvalidSpec(message=msg)
+            raise exc.InvalidSpec(message=msg)
 
         return True
 
@@ -160,7 +160,7 @@ class StackProfile(base.Profile):
             self.heat(obj).wait_for_stack(stack.id, 'CREATE_COMPLETE',
                                           timeout=timeout)
             return stack.id
-        except exception.InternalError as ex:
+        except exc.InternalError as ex:
             LOG.error(_('Failed in creating stack: %s'), six.text_type(ex))
             return None
 
@@ -175,7 +175,7 @@ class StackProfile(base.Profile):
         try:
             self.heat(obj).stack_delete(self.stack_id, True)
             self.heat(obj).wait_for_stack_delete(self.stack_id)
-        except exception.InternalError as ex:
+        except exc.InternalError as ex:
             LOG.error('Faild in deleting stack: %s' % six.text_type(ex))
             return False
 
@@ -233,7 +233,7 @@ class StackProfile(base.Profile):
             self.heat(obj).stack_update(self.stack_id, **fields)
             self.heat(obj).wait_for_stack(self.stack_id, 'UPDATE_COMPLETE',
                                           timeout=timeout)
-        except exception.InternalError as ex:
+        except exc.InternalError as ex:
             LOG.error(_('Failed in updating stack: %s'), six.text_type(ex))
             return False
 
@@ -258,7 +258,7 @@ class StackProfile(base.Profile):
                 timeout = self.properties[self.TIMEOUT] * 60
             hc.stack_check(stack_id)
             hc.wait_for_stack(stack_id, 'CHECK_COMPLETE', timeout=timeout)
-        except exception.InternalError as ex:
+        except exc.InternalError as ex:
             LOG.error(_('Failed in checking stack: %s.'), six.text_type(ex))
             return False
 
