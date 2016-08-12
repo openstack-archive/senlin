@@ -15,12 +15,12 @@ import six
 from oslo_log import log as logging
 from oslo_utils import timeutils
 
-from senlin.common import exception
+from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.common import utils
 from senlin.objects import node as no
-from senlin.profiles import base as profile_base
+from senlin.profiles import base as pb
 
 LOG = logging.getLogger(__name__)
 
@@ -85,10 +85,9 @@ class Node(object):
     def _load_runtime_data(self, context):
         profile = None
         try:
-            profile = profile_base.Profile.load(context,
-                                                profile_id=self.profile_id,
-                                                project_safe=False)
-        except exception.ProfileNotFound:
+            profile = pb.Profile.load(context, profile_id=self.profile_id,
+                                      project_safe=False)
+        except exc.ProfileNotFound:
             LOG.debug(_('Profile not found: %s'), self.profile_id)
 
         self.rt = {'profile': profile}
@@ -166,7 +165,7 @@ class Node(object):
         if db_node is None:
             db_node = no.Node.get(context, node_id, project_safe=project_safe)
             if db_node is None:
-                raise exception.NodeNotFound(node=node_id)
+                raise exc.NodeNotFound(node=node_id)
 
         return cls._from_object(context, db_node)
 
@@ -208,7 +207,7 @@ class Node(object):
         }
         return node_dict
 
-    def set_status(self, context, status, reason=None):
+    def set_status(self, context, status, reason=None, **params):
         '''Set status of the node.'''
 
         values = {}
@@ -216,6 +215,7 @@ class Node(object):
         if status == self.ACTIVE and self.status == self.CREATING:
             self.created_at = values['created_at'] = now
         elif status == self.ACTIVE and self.status == self.UPDATING:
+            # TODO(Qiming): update_at should be changed unconditionally
             self.updated_at = values['updated_at'] = now
 
         self.status = status
@@ -223,12 +223,15 @@ class Node(object):
         if reason:
             self.status_reason = reason
             values['status_reason'] = reason
+        for p, v in params.items():
+            setattr(self, p, v)
+            values[p] = v
         no.Node.update(context, self.id, values)
 
     def get_details(self, context):
         if not self.physical_id:
             return {}
-        return profile_base.Profile.get_details(context, self)
+        return pb.Profile.get_details(context, self)
 
     def _handle_exception(self, context, action, status, exception):
         msg = six.text_type(exception)
@@ -248,21 +251,16 @@ class Node(object):
         if self.status != self.INIT:
             LOG.error(_LE('Node is in status "%s"'), self.status)
             return False
-        self.set_status(context, self.CREATING, reason='Creation in progress')
+
+        self.set_status(context, self.CREATING, _('Creation in progress'))
         try:
-            physical_id = profile_base.Profile.create_object(context, self)
-        except exception.InternalError as ex:
-            LOG.exception(_('Failed in creating server: %s'),
-                          six.text_type(ex))
-            self._handle_exception(context, 'create', self.ERROR, ex)
-            return False
-        if not physical_id:
+            physical_id = pb.Profile.create_object(context, self)
+        except exc.EResourceCreation as ex:
+            self.set_status(context, self.ERROR, six.text_type(ex))
             return False
 
-        status_reason = 'Creation succeeded'
-        self.set_status(context, self.ACTIVE, status_reason)
-        self.physical_id = physical_id
-        self.store(context)
+        self.set_status(context, self.ACTIVE, _('Creation succeeded'),
+                        physical_id=physical_id)
         return True
 
     def do_delete(self, context):
@@ -273,8 +271,8 @@ class Node(object):
         # TODO(Qiming): check if actions are working on it and can be canceled
         self.set_status(context, self.DELETING, reason='Deletion in progress')
         try:
-            res = profile_base.Profile.delete_object(context, self)
-        except exception.ResourceStatusError as ex:
+            res = pb.Profile.delete_object(context, self)
+        except exc.ResourceStatusError as ex:
             self._handle_exception(context, 'delete', self.ERROR, ex)
             res = False
 
@@ -302,9 +300,9 @@ class Node(object):
         res = True
         if new_profile_id:
             try:
-                res = profile_base.Profile.update_object(
-                    context, self, new_profile_id, **params)
-            except exception.ResourceStatusError as ex:
+                res = pb.Profile.update_object(context, self, new_profile_id,
+                                               **params)
+            except exc.ResourceStatusError as ex:
                 self._handle_exception(context, 'update', self.ERROR, ex)
                 res = False
 
@@ -327,7 +325,7 @@ class Node(object):
     def do_join(self, context, cluster_id):
         if self.cluster_id == cluster_id:
             return True
-        res = profile_base.Profile.join_cluster(context, self, cluster_id)
+        res = pb.Profile.join_cluster(context, self, cluster_id)
         if res:
             timestamp = timeutils.utcnow(True)
             db_node = no.Node.migrate(context, self.id, cluster_id, timestamp)
@@ -342,7 +340,7 @@ class Node(object):
         if self.cluster_id == '':
             return True
 
-        res = profile_base.Profile.leave_cluster(context, self)
+        res = pb.Profile.leave_cluster(context, self)
         if res:
             timestamp = timeutils.utcnow(True)
             no.Node.migrate(context, self.id, None, timestamp)
@@ -357,7 +355,7 @@ class Node(object):
         if not self.physical_id:
             return False
 
-        res = profile_base.Profile.check_object(context, self)
+        res = pb.Profile.check_object(context, self)
 
         if not res:
             self.status = 'ERROR'
@@ -378,9 +376,8 @@ class Node(object):
                         reason=_('Recover in progress'))
 
         try:
-            physical_id = profile_base.Profile.recover_object(context, self,
-                                                              **options)
-        except exception.ResourceStatusError as ex:
+            physical_id = pb.Profile.recover_object(context, self, **options)
+        except exc.ResourceStatusError as ex:
             self._handle_exception(context, 'recover', self.ERROR, ex)
             return False
 

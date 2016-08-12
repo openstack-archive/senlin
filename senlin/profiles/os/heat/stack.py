@@ -161,8 +161,7 @@ class StackProfile(base.Profile):
                                           timeout=timeout)
             return stack.id
         except exc.InternalError as ex:
-            LOG.error(_('Failed in creating stack: %s'), six.text_type(ex))
-            return None
+            raise exc.EResourceCreation(type='stack', message=ex.message)
 
     def do_delete(self, obj):
         """Delete the physical stack behind the node object.

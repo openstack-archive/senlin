@@ -188,16 +188,20 @@ class TestHeatStackProfile(base.SenlinTestCase):
         profile = stack.StackProfile('t', self.spec)
         profile.hc = mock.Mock()
 
-        test_stack = mock.Mock()
-        test_stack.name = 'test_stack'
+        stack_node = mock.Mock()
+        stack_node.name = 'test_stack'
 
         profile.hc.stack_create = mock.Mock(
             side_effect=exception.InternalError(code=400, message='Too Bad'))
 
         # do it
-        res = profile.do_create(test_stack)
+        ex = self.assertRaises(exception.EResourceCreation,
+                               profile.do_create,
+                               stack_node)
 
         # assertions
+        self.assertEqual('Failed in creating stack: Too Bad.',
+                         six.text_type(ex))
         call_args = {
             'stack_name': mock.ANY,
             'template': self.spec['properties']['template'],
@@ -207,7 +211,6 @@ class TestHeatStackProfile(base.SenlinTestCase):
             'files': self.spec['properties']['files'],
             'environment': self.spec['properties']['environment'],
         }
-        self.assertIsNone(res)
         profile.hc.stack_create.assert_called_once_with(**call_args)
         self.assertEqual(0, profile.hc.wait_for_stack.call_count)
 
@@ -215,8 +218,8 @@ class TestHeatStackProfile(base.SenlinTestCase):
         del self.spec['properties']['timeout']
         profile = stack.StackProfile('t', self.spec)
 
-        test_stack = mock.Mock()
-        test_stack.name = 'test_stack'
+        stack_node = mock.Mock()
+        stack_node.name = 'test_stack'
         fake_stack = mock.Mock(id='FAKE_ID')
         profile.hc = mock.Mock()
 
@@ -225,10 +228,13 @@ class TestHeatStackProfile(base.SenlinTestCase):
             side_effect=exception.InternalError(code=400, message='Timeout'))
 
         # do it
-        res = profile.do_create(test_stack)
+        ex = self.assertRaises(exception.EResourceCreation,
+                               profile.do_create,
+                               stack_node)
 
         # assertions
-        self.assertIsNone(res)
+        self.assertEqual('Failed in creating stack: Timeout.',
+                         six.text_type(ex))
         kwargs = {
             'stack_name': mock.ANY,
             'template': self.spec['properties']['template'],

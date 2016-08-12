@@ -18,7 +18,7 @@ from oslo_utils import encodeutils
 import six
 
 from senlin.common import constraints
-from senlin.common import exception
+from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.drivers import base as driver_base
@@ -392,12 +392,12 @@ class ServerProfile(base.Profile):
                 hints.update({'group': group_id})
                 kwargs['scheduler_hints'] = hints
 
-        LOG.info('Creating server: %s' % kwargs)
-        server = self.nova(obj).server_create(**kwargs)
-        self.nova(obj).wait_for_server(server.id)
-        self.server_id = server.id
-
-        return server.id
+        try:
+            server = self.nova(obj).server_create(**kwargs)
+            self.nova(obj).wait_for_server(server.id)
+            return server.id
+        except exc.InternalError as ex:
+            raise exc.EResourceCreation(type='server', message=ex.message)
 
     def do_delete(self, obj, **params):
         self.server_id = obj.physical_id
@@ -541,7 +541,7 @@ class ServerProfile(base.Profile):
                       six.text_type(ex))
             self.nova(obj).server_resize_revert(obj.physical_id)
             self.nova(obj).wait_for_server(obj.physical_id, 'ACTIVE')
-            raise exception.EResourceUpdate(type='server', id=obj.physical_id)
+            raise exc.EResourceUpdate(type='server', id=obj.physical_id)
 
         self.nova(obj).server_resize_confirm(obj.physical_id)
         self.nova(obj).wait_for_server(obj.physical_id, 'ACTIVE')
@@ -571,7 +571,7 @@ class ServerProfile(base.Profile):
             # set to None if Nova service supports it
             LOG.error(_("Updating Nova server with image set to None is "
                         "not supported by Nova."))
-            raise exception.EResourceUpdate(type='server', id=obj.physical_id)
+            raise exc.EResourceUpdate(type='server', id=obj.physical_id)
 
     def _update_network(self, obj, networks_create, networks_delete):
         '''Updating server network interfaces'''
@@ -680,7 +680,7 @@ class ServerProfile(base.Profile):
 
         try:
             server = self.nova(obj).server_get(obj.physical_id)
-        except exception.InternalError as ex:
+        except exc.InternalError as ex:
             return {
                 'Error': {
                     'code': ex.code,

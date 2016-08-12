@@ -247,7 +247,7 @@ class TrustNotFound(InternalError):
 
 class EResourceCreation(InternalError):
     # Used when creating resources in other services
-    msg_fmt = _("Failed in creating %(type)s.")
+    msg_fmt = _("Failed in creating %(type)s: %(message)s.")
 
 
 class EResourceUpdate(InternalError):
