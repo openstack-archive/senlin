@@ -67,26 +67,23 @@ class Controller(object):
     @webob.dec.wsgify
     def __call__(self, req):
         """Respond to a request for all OpenStack API versions."""
-        version_objs = [
-            {
-                "id": "1.0",
-                "status": "CURRENT",
-                "updated": "2016-01-18T00:00:00Z",
-                "media-types": [
-                    {
-                        "base": "application/json",
-                        "type": "application/vnd.openstack.clustering-v1+json"
-                    }
-                ],
-                "links": [
-                    {
-                        "rel": "self",
-                        "href": "/v1/"
-                    }
-                ],
-                "min_version": _MIN_API_VERSION,
-                "max_version": _MAX_API_VERSION,
-            }]
+        version_objs = [{
+            "id": "1.0",
+            "status": "CURRENT",
+            "updated": "2016-01-18T00:00:00Z",
+            "media-types": [{
+                "base": "application/json",
+                "type": "application/vnd.openstack.clustering-v1+json"
+            }],
+            "links": [{
+                "rel": "self",
+                "href": "/v1/"}, {
+                "rel": "help",
+                "href": "http://developer.openstack.org/api-ref/clustering"
+            }],
+            "min_version": _MIN_API_VERSION,
+            "max_version": _MAX_API_VERSION,
+        }]
 
         body = jsonutils.dumps(dict(versions=version_objs))
 

@@ -21,21 +21,21 @@ class VersionController(wsgi.Controller):
 
     def version(self, req):
         version_info = {
-            'id': '1.0',
-            'status': 'CURRENT',
-            'updated': '2016-01-18T00:00:00Z',
-            'media-types': [
+            "id": "1.0",
+            "status": "CURRENT",
+            "updated": "2016-01-18T00:00:00Z",
+            "media-types": [
                 {
-                    'base': 'application/json',
-                    'type': 'application/vnd.openstack.clustering-v1+json'
+                    "base": "application/json",
+                    "type": "application/vnd.openstack.clustering-v1+json"
                 }
             ],
-            'links': [
-                {
-                    'href': '.',
-                    'rel': 'self'
-                }
-            ]
+            "links": [{
+                "href": ".",
+                "rel": "self"}, {
+                "rel": "help",
+                "href": "http://developer.openstack.org/api-ref/clustering"
+            }]
         }
 
-        return {'version': version_info}
+        return {"version": version_info}
