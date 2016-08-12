@@ -31,13 +31,12 @@ LOG = logging.getLogger(__name__)
 
 
 class SenlinException(Exception):
-    '''Base Senlin Exception.
+    """Base Senlin Exception.
 
-    To correctly use this class, inherit from it and define
-    a 'msg_fmt' property. That msg_fmt will get printf'd
-    with the keyword arguments provided to the constructor.
-    '''
-
+    To correctly use this class, inherit from it and define a 'msg_fmt'
+    property. That msg_fmt will get printed with the keyword arguments
+    provided to the constructor.
+    """
     message = _("An unknown exception occurred.")
 
     def __init__(self, **kwargs):
@@ -220,20 +219,20 @@ class NodeNotOrphan(SenlinException):
 
 
 class InternalError(SenlinException):
-    '''A base class for internal exceptions in senlin.
+    """A base class for internal exceptions in senlin.
 
     The internal exception classes which inherit from :class:`InternalError`
     class should be translated to a user facing exception type if need to be
     made user visible.
-    '''
-    msg_fmt = _('ERROR %(code)s happens for %(message)s.')
-    message = _('Internal error happens')
+    """
+    msg_fmt = _("%(message)s")
+    message = _('Internal error happened')
 
     def __init__(self, **kwargs):
-        super(InternalError, self).__init__(**kwargs)
-        if 'code' in kwargs:
-            self.code = kwargs.get('code', 500)
-            self.message = kwargs.get('message', self.message)
+        self.code = kwargs.pop('code', 500)
+        self.message = kwargs.pop('message', self.message)
+        super(InternalError, self).__init__(
+            code=self.code, message=self.message, **kwargs)
 
 
 class EResourceBusy(InternalError):
