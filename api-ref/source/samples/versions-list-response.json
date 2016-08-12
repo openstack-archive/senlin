@@ -6,6 +6,10 @@
                 {
                     "href": "/v1/",
                     "rel": "self"
+                },
+                {
+                    "href": "http://developer.openstack.org/api-ref/clustering",
+                    "rel": "help"
                 }
             ],
             "max_version": "1.0",
