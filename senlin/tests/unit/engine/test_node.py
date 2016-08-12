@@ -14,7 +14,6 @@ import mock
 import six
 
 from senlin.common import exception
-from senlin.common.i18n import _
 from senlin.common import utils as common_utils
 from senlin.engine import node as nodem
 from senlin.objects import node as node_obj
@@ -317,21 +316,19 @@ class TestNode(base.SenlinTestCase):
                          '%s' % six.text_type(ex), db_node.status_reason)
         self.assertIsNone(db_node.physical_id)
 
-    @mock.patch.object(nodem.Node, 'store')
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(profiles_base.Profile, 'create_object')
-    def test_node_create(self, mock_create, mock_status, mock_store):
+    def test_node_create(self, mock_create, mock_status):
         node = nodem.Node('node1', PROFILE_ID, CLUSTER_ID, self.context)
         physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
         mock_create.return_value = physical_id
         res = node.do_create(self.context)
         self.assertTrue(res)
         mock_status.assert_any_call(self.context, node.CREATING,
-                                    reason='Creation in progress')
+                                    'Creation in progress')
         mock_status.assert_any_call(self.context, node.ACTIVE,
-                                    'Creation succeeded')
-        mock_store.assert_called_once_with(self.context)
-        self.assertEqual(physical_id, node.physical_id)
+                                    'Creation succeeded',
+                                    physical_id=physical_id)
 
     def test_node_create_not_init(self):
         node = nodem.Node('node1', PROFILE_ID, CLUSTER_ID, self.context)
@@ -344,27 +341,16 @@ class TestNode(base.SenlinTestCase):
     def test_node_create_not_created(self, mock_create, mock_status):
 
         node = nodem.Node('node1', PROFILE_ID, CLUSTER_ID, self.context)
-        mock_create.return_value = None
-        res = node.do_create(self.context)
-        self.assertFalse(res)
-        mock_status.assert_called_once_with(self.context, node.CREATING,
-                                            reason='Creation in progress')
+        mock_create.side_effect = exception.EResourceCreation(
+            type='PROFILE', message='Boom')
 
-    @mock.patch.object(nodem.Node, 'store')
-    @mock.patch.object(nodem.Node, 'set_status')
-    @mock.patch.object(profiles_base.Profile, 'create_object')
-    def test_node_create_internal_error(self, mock_create, mock_status,
-                                        mock_store):
-        ex = exception.InternalError(code=500, message='internal error')
-        mock_create.side_effect = ex
-        node = nodem.Node('node1', PROFILE_ID, CLUSTER_ID, self.context)
         res = node.do_create(self.context)
+
         self.assertFalse(res)
         mock_status.assert_any_call(self.context, node.CREATING,
-                                    reason='Creation in progress')
-        reason = _('Profile failed in creating node due to: %(msg)s') % {
-            'msg': six.text_type(ex)}
-        mock_status.assert_any_call(self.context, node.ERROR, reason)
+                                    'Creation in progress')
+        mock_status.assert_any_call(self.context, node.ERROR,
+                                    'Failed in creating PROFILE: Boom.')
 
     @mock.patch.object(node_obj.Node, 'delete')
     @mock.patch.object(nodem.Node, 'set_status')
