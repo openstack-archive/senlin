@@ -10,6 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import mock
+
+from senlin.api.common import version_request as vr
 from senlin.api.openstack.v1 import version
 from senlin.tests.unit.api import shared
 from senlin.tests.unit.common import base
@@ -42,3 +45,22 @@ class VersionControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'rel': 'help',
         }]
         self.assertEqual(expected, response['links'])
+
+
+class APIVersionTest(base.SenlinTestCase):
+
+    def test_min_api_version(self):
+        res = version.min_api_version()
+        expected = vr.APIVersionRequest(version._MIN_API_VERSION)
+        self.assertEqual(expected, res)
+
+    def test_max_api_version(self):
+        res = version.max_api_version()
+        expected = vr.APIVersionRequest(version._MAX_API_VERSION)
+        self.assertEqual(expected, res)
+
+    def test_is_supported(self):
+        req = mock.Mock()
+        req.version_request = vr.APIVersionRequest(version._MIN_API_VERSION)
+        res = version.is_supported(req)
+        self.assertTrue(res)
