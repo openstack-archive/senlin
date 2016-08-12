@@ -541,7 +541,7 @@ class ServerProfile(base.Profile):
                       six.text_type(ex))
             self.nova(obj).server_resize_revert(obj.physical_id)
             self.nova(obj).wait_for_server(obj.physical_id, 'ACTIVE')
-            raise exception.ResourceUpdateFailure(resource=obj.physical_id)
+            raise exception.EResourceUpdate(type='server', id=obj.physical_id)
 
         self.nova(obj).server_resize_confirm(obj.physical_id)
         self.nova(obj).wait_for_server(obj.physical_id, 'ACTIVE')
@@ -571,7 +571,7 @@ class ServerProfile(base.Profile):
             # set to None if Nova service supports it
             LOG.error(_("Updating Nova server with image set to None is "
                         "not supported by Nova."))
-            raise exception.ResourceUpdateFailure(resource=obj.physical_id)
+            raise exception.EResourceUpdate(type='server', id=obj.physical_id)
 
     def _update_network(self, obj, networks_create, networks_delete):
         '''Updating server network interfaces'''
