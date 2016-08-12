@@ -251,14 +251,14 @@ class EResourceCreation(InternalError):
     msg_fmt = _("Failed in creating %(type)s.")
 
 
-class ResourceUpdateFailure(InternalError):
+class EResourceUpdate(InternalError):
     # Used when updating resources from other services
-    msg_fmt = _("Failed in updating %(resource)s.")
+    msg_fmt = _("Failed in updating %(type)s %(id)s.")
 
 
-class ResourceDeletionFailure(InternalError):
+class EResourceDeletion(InternalError):
     # Used when deleting resources from other services
-    msg_fmt = _("Failed in deleting %(resource)s.")
+    msg_fmt = _("Failed in deleting %(type)s %(id)s.")
 
 
 class ResourceNotFound(InternalError):

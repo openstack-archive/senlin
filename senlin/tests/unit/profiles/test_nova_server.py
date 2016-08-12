@@ -910,11 +910,10 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = novaclient
-        self.assertRaises(exception.ResourceUpdateFailure,
+        self.assertRaises(exception.EResourceUpdate,
                           profile._update_flavor, obj, 'old_flavor',
                           'new_flavor')
-        novaclient.server_resize.assert_called_once_with('FAKE_ID',
-                                                         '456')
+        novaclient.server_resize.assert_called_once_with('FAKE_ID', '456')
         novaclient.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
         novaclient.server_resize_revert.assert_called_once_with('FAKE_ID')
 
@@ -933,7 +932,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = novaclient
-        self.assertRaises(exception.ResourceUpdateFailure,
+        self.assertRaises(exception.EResourceUpdate,
                           profile._update_flavor, obj, 'old_flavor',
                           'new_flavor')
         novaclient.server_resize.assert_called_once_with('FAKE_ID',
@@ -1005,11 +1004,11 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = novaclient
-        ex = self.assertRaises(exception.ResourceUpdateFailure,
+        ex = self.assertRaises(exception.EResourceUpdate,
                                profile._update_image,
                                obj, 'old_image', None,
                                'adminpass')
-        msg = _("Failed in updating FAKE_ID.")
+        msg = _("Failed in updating server FAKE_ID.")
         self.assertEqual(msg, six.text_type(ex))
         novaclient.image_find.assert_called_once_with('old_image')
 
