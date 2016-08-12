@@ -19,7 +19,6 @@ from senlin.api.middleware import fault
 from senlin.api.middleware import trust
 from senlin.api.middleware import version_negotiation as vn
 from senlin.api.middleware import webhook
-from senlin.api.openstack import versions
 from senlin.tests.unit.common import base
 
 
@@ -40,9 +39,7 @@ class MiddlewareFilterTest(base.SenlinTestCase):
         actual = mw.version_filter(self.app, self.conf, **self.local_conf)
 
         self.assertEqual(exp, actual)
-        mock_vnf.assert_called_once_with(versions.Controller,
-                                         self.app, self.conf,
-                                         **self.local_conf)
+        mock_vnf.assert_called_once_with(self.app, self.conf)
 
     @mock.patch.object(fault, 'FaultWrapper')
     def test_faultwrap_filter(self, mock_fw):
