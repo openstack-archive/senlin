@@ -49,6 +49,10 @@ class HeatClient(base.DriverBase):
                                                     ignore_missing)
 
     @sdk.translate_exception
+    def stack_check(self, stack_id):
+        return self.conn.orchestration.check_stack(stack_id)
+
+    @sdk.translate_exception
     def wait_for_stack(self, stack_id, status, failures=None, interval=2,
                        timeout=None):
         if failures is None:
