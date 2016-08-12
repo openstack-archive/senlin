@@ -307,9 +307,7 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual(fake_id, db_node.physical_id)
 
         # Exception happens before physical node creation started.
-        ex = exception.ResourceCreationFailure(rtype='stack',
-                                               code=400,
-                                               message='Bad request')
+        ex = exception.EResourceCreation(type='stack')
         node = nodem.Node('node1', PROFILE_ID, None, self.context)
         node.store(self.context)
         node._handle_exception(self.context, 'CREATE', 'STATUS', ex)

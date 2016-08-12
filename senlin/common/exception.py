@@ -246,9 +246,9 @@ class TrustNotFound(InternalError):
     msg_fmt = _("The trust for trustor (%(trustor)s) could not be found.")
 
 
-class ResourceCreationFailure(InternalError):
+class EResourceCreation(InternalError):
     # Used when creating resources in other services
-    msg_fmt = _("Failed in creating %(rtype)s.")
+    msg_fmt = _("Failed in creating %(type)s.")
 
 
 class ResourceUpdateFailure(InternalError):
