@@ -397,8 +397,7 @@ class PolicyTest(base.SenlinTestCase):
     def test_policy_delete_policy_in_use(self, mock_find, mock_delete):
         x_obj = mock.Mock(id='POLICY_ID')
         mock_find.return_value = x_obj
-        err = exc.ResourceBusyError(resource_type='policy',
-                                    resource_id='POLICY_ID')
+        err = exc.EResourceBusy(type='policy', id='POLICY_ID')
         mock_delete.side_effect = err
 
         ex = self.assertRaises(rpc.ExpectedException,

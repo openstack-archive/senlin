@@ -394,8 +394,7 @@ class ProfileTest(base.SenlinTestCase):
     def test_profile_delete_profile_in_use(self, mock_find, mock_delete):
         x_obj = mock.Mock(id='PROFILE_ID')
         mock_find.return_value = x_obj
-        err = exc.ResourceBusyError(resource_type='profile',
-                                    resource_id='PROFILE_ID')
+        err = exc.EResourceBusy(type='profile', id='PROFILE_ID')
         mock_delete.side_effect = err
 
         ex = self.assertRaises(rpc.ExpectedException,

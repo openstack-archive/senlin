@@ -507,8 +507,7 @@ def policy_delete(context, policy_id, force=False):
         bindings = session.query(models.ClusterPolicies).filter_by(
             policy_id=policy_id)
         if bindings.count():
-            raise exception.ResourceBusyError(resource_type='policy',
-                                              resource_id=policy_id)
+            raise exception.EResourceBusy(type='policy', id=policy_id)
         session.delete(policy)
 
 
@@ -652,14 +651,12 @@ def profile_delete(context, profile_id, force=False):
         clusters = session.query(models.Cluster).filter_by(
             profile_id=profile_id)
         if clusters.count() > 0:
-            raise exception.ResourceBusyError(resource_type='profile',
-                                              resource_id=profile_id)
+            raise exception.EResourceBusy(type='profile', id=profile_id)
 
         # used by any nodes?
         nodes = session.query(models.Node).filter_by(profile_id=profile_id)
         if nodes.count() > 0:
-            raise exception.ResourceBusyError(resource_type='profile',
-                                              resource_id=profile_id)
+            raise exception.EResourceBusy(type='profile', id=profile_id)
         session.delete(profile)
 
 
@@ -1089,8 +1086,7 @@ def action_delete(context, action_id, force=False):
         if ((action.status == 'WAITING') or (action.status == 'RUNNING') or
                 (action.status == 'SUSPENDED')):
 
-            raise exception.ResourceBusyError(resource_type='action',
-                                              resource_id=action_id)
+            raise exception.EResourceBusy(type='action', id=action_id)
         session.delete(action)
 
 

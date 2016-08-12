@@ -236,8 +236,9 @@ class InternalError(SenlinException):
             self.message = kwargs.get('message', self.message)
 
 
-class ResourceBusyError(InternalError):
-    msg_fmt = _("The %(resource_type)s (%(resource_id)s) is busy now.")
+class EResourceBusy(InternalError):
+    # Internal exception, not to be exposed to end user.
+    msg_fmt = _("The %(type)s (%(id)s) is busy now.")
 
 
 class TrustNotFound(InternalError):
