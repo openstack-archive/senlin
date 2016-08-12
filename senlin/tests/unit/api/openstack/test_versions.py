@@ -55,6 +55,12 @@ class VersionControllerTest(base.SenlinTestCase):
             'wsgi.url_scheme': 'http',
         }
         req = wsgi.Request(environ)
+        links = [{
+            'rel': 'self',
+            'href': '/v1/'}, {
+            'rel': 'help',
+            'href': 'http://developer.openstack.org/api-ref/clustering',
+        }]
         expected_dict = {
             'versions': [{
                 'id': '1.0',
@@ -65,10 +71,7 @@ class VersionControllerTest(base.SenlinTestCase):
                     'type': 'application/vnd.openstack.clustering-v1+json'
 
                 }],
-                'links': [{
-                    'rel': 'self',
-                    'href': '/v1/'
-                }],
+                'links': links,
                 'min_version': versions._MIN_API_VERSION,
                 'max_version': versions._MAX_API_VERSION
             }]
