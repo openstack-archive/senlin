@@ -15,12 +15,10 @@ from senlin.api.middleware import fault
 from senlin.api.middleware import trust
 from senlin.api.middleware import version_negotiation as vn
 from senlin.api.middleware import webhook
-from senlin.api.openstack import versions
 
 
 def version_filter(app, conf, **local_conf):
-    return vn.VersionNegotiationFilter(versions.Controller, app,
-                                       conf, **local_conf)
+    return vn.VersionNegotiationFilter(app, conf)
 
 
 def fault_filter(app, conf, **local_conf):

@@ -34,8 +34,8 @@ LOG = logging.getLogger(__name__)
 
 class VersionNegotiationFilter(wsgi.Middleware):
 
-    def __init__(self, version_controller, app, conf, **local_conf):
-        self.versions_app = version_controller(conf)
+    def __init__(self, app, conf):
+        self.versions_app = os_ver.Controller(conf)
         self.version_uri_regex = re.compile(r"^v([1-9]\d*)\.?([1-9]\d*|0)?$")
         self.conf = conf
         super(VersionNegotiationFilter, self).__init__(app)
@@ -55,7 +55,7 @@ class VersionNegotiationFilter(wsgi.Middleware):
             return self.versions_app
 
         # Check if there is a requested (micro-)version for API
-        self.check_version_request(req)
+        self._check_version_request(req)
         match = self._match_version_string(req.path_info_peek(), req)
         if match:
             major = req.environ['api.major']
@@ -120,7 +120,7 @@ class VersionNegotiationFilter(wsgi.Middleware):
 
         return match is not None
 
-    def check_version_request(self, req):
+    def _check_version_request(self, req):
         """Set API version request based on the request header."""
         api_version = microversion_parse.get_version(req.headers,
                                                      service_type='clustering')
