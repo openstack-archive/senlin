@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
+
 from oslo_utils import uuidutils
 
 from senlin.drivers import base
@@ -194,7 +196,10 @@ class NovaClient(base.DriverBase):
         return {}
 
     def server_metadata_update(self, server, metadata):
-        return
+        new_server = copy.deepcopy(self.fake_server_get)
+        new_server['metadata'] = metadata
+        server = sdk.FakeResourceObject(new_server)
+        return server
 
     def server_metadata_delete(self, server, keys):
         return

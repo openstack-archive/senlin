@@ -233,8 +233,8 @@ class StackProfile(base.Profile):
             self.heat(obj).wait_for_stack(self.stack_id, 'UPDATE_COMPLETE',
                                           timeout=timeout)
         except exc.InternalError as ex:
-            LOG.error(_('Failed in updating stack: %s'), six.text_type(ex))
-            return False
+            raise exc.EResourceUpdate(type='stack', id=self.stack_id,
+                                      message=ex.message)
 
         return True
 

@@ -252,7 +252,7 @@ class EResourceCreation(InternalError):
 
 class EResourceUpdate(InternalError):
     # Used when updating resources from other services
-    msg_fmt = _("Failed in updating %(type)s %(id)s.")
+    msg_fmt = _("Failed in updating %(type)s %(id)s: %(message)s.")
 
 
 class EResourceDeletion(InternalError):

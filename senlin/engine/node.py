@@ -10,10 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import six
-
 from oslo_log import log as logging
 from oslo_utils import timeutils
+import six
 
 from senlin.common import exception as exc
 from senlin.common.i18n import _
@@ -293,8 +292,7 @@ class Node(object):
         if not self.physical_id:
             return False
 
-        self.set_status(context, self.UPDATING,
-                        reason='Update in progress')
+        self.set_status(context, self.UPDATING, 'Update in progress')
 
         new_profile_id = params.pop('new_profile_id', None)
         res = True
@@ -302,25 +300,24 @@ class Node(object):
             try:
                 res = pb.Profile.update_object(context, self, new_profile_id,
                                                **params)
-            except exc.ResourceStatusError as ex:
-                self._handle_exception(context, 'update', self.ERROR, ex)
-                res = False
+            except exc.EResourceUpdate as ex:
+                self.set_status(context, self.ERROR, six.text_type(ex))
+                return False
 
-        if res:
-            if 'name' in params:
-                self.name = params['name']
-            if 'role' in params:
-                self.role = params['role']
-            if 'metadata' in params:
-                self.metadata = params['metadata']
+        # update was not successful
+        if not res:
+            return False
 
-            if new_profile_id:
-                self.profile_id = new_profile_id
-            self.store(context)
+        props = dict([(k, v) for k, v in params.items()
+                      if k in ('name', 'role', 'metadata')])
+        if new_profile_id:
+            props['profile_id'] = new_profile_id
+            self.rt['profile'] = pb.Profile.load(context,
+                                                 profile_id=new_profile_id)
 
-            self.set_status(context, self.ACTIVE, reason='Update succeeded')
+        self.set_status(context, self.ACTIVE, 'Update succeeded', **props)
 
-        return res
+        return True
 
     def do_join(self, context, cluster_id):
         if self.cluster_id == cluster_id:

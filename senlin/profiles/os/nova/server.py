@@ -431,10 +431,10 @@ class ServerProfile(base.Profile):
         '''
         self.server_id = obj.physical_id
         if not self.server_id:
-            return True
+            return False
 
         if not new_profile:
-            return True
+            return False
 
         if not self.validate_for_update(new_profile):
             return False
@@ -442,8 +442,11 @@ class ServerProfile(base.Profile):
         # TODO(Yanyan Hu): Update block_device properties
 
         # Update basic properties of server
-        if not self._update_basic_properties(obj, new_profile):
-            return False
+        try:
+            self._update_basic_properties(obj, new_profile)
+        except exc.InternalError as ex:
+            raise exc.EResourceUpdate(type='server', id=self.server_id,
+                                      message=ex.message)
 
         # Update server flavor
         flavor = self.properties[self.FLAVOR]
@@ -451,10 +454,9 @@ class ServerProfile(base.Profile):
         if new_flavor != flavor:
             try:
                 self._update_flavor(obj, flavor, new_flavor)
-            except Exception as ex:
-                LOG.exception(_('Failed in updating server flavor: %s'),
-                              six.text_type(ex))
-                return False
+            except exc.InternalError as ex:
+                raise exc.EResourceUpdate(type='server', id=self.server_id,
+                                          message=ex.message)
 
         # Update server image
         old_passwd = self.properties.get(self.ADMIN_PASS)
@@ -466,10 +468,10 @@ class ServerProfile(base.Profile):
         if new_image != image:
             try:
                 self._update_image(obj, image, new_image, passwd)
-            except Exception as ex:
-                LOG.exception(_('Failed in updating server image: %s'),
-                              six.text_type(ex))
-                return False
+            except exc.InternalError as ex:
+                raise exc.EResourceUpdate(type='server', id=self.server_id,
+                                          message=ex.message)
+
         elif old_passwd != passwd:
             # TODO(Jun Xu): update server admin password
             pass
@@ -486,46 +488,46 @@ class ServerProfile(base.Profile):
             # We have network interfaces to be deleted and/or created
             try:
                 self._update_network(obj, networks_create, networks_delete)
-            except Exception as ex:
-                LOG.exception(_('Failed in updating server network: %s'),
-                              six.text_type(ex))
-                return False
-
+            except exc.InternalError as ex:
+                raise exc.EResourceUpdate(type='server', id=self.server_id,
+                                          message=ex.message)
         return True
 
     def _update_basic_properties(self, obj, new_profile):
-        '''Updating basic server properties including name, metadata'''
+        """Updating basic server properties including name, metadata.
 
+        :param obj: The node object to operate on.
+        :param new_profile: The new profile that may contain some changes of
+                            basic properties for update.
+        :returns: None
+        :raises: `InternalError` if the nova call fails.
+        """
         # Update server metadata
         metadata = self.properties[self.METADATA]
         new_metadata = new_profile.properties[self.METADATA]
         if new_metadata != metadata:
             if new_metadata is None:
                 new_metadata = {}
-            try:
-                self.nova(obj).server_metadata_update(self.server_id,
-                                                      new_metadata)
-            except Exception as ex:
-                LOG.exception(_('Failed in updating server metadata: %s'),
-                              six.text_type(ex))
-                return False
+            self.nova(obj).server_metadata_update(self.server_id, new_metadata)
 
         # Update server name
         name = self.properties[self.NAME]
         new_name = new_profile.properties[self.NAME]
         if new_name != name:
             attrs = {'name': new_name if new_name else obj.name}
-            try:
-                self.nova(obj).server_update(self.server_id, **attrs)
-            except Exception as ex:
-                LOG.exception(_('Failed in updating server name: %s'),
-                              six.text_type(ex))
-                return False
+            self.nova(obj).server_update(self.server_id, **attrs)
 
-        return True
+        return
 
     def _update_flavor(self, obj, old_flavor, new_flavor):
-        '''Updating server flavor'''
+        """Update server flavor.
+
+        :param obj: The node object to operate on.
+        :param old_flavor: The identity of the current flavor.
+        :param new_flavor: The identity of the new flavor.
+        :returns: ``None``.
+        :raises: `InternalError` when operation was a failure.
+        """
         res = self.nova(obj).flavor_find(old_flavor)
         old_flavor_id = res.id
         res = self.nova(obj).flavor_find(new_flavor)
@@ -536,19 +538,32 @@ class ServerProfile(base.Profile):
         try:
             self.nova(obj).server_resize(obj.physical_id, new_flavor_id)
             self.nova(obj).wait_for_server(obj.physical_id, 'VERIFY_RESIZE')
-        except Exception as ex:
-            LOG.error(_("Server resizing failed, revert it: %s"),
-                      six.text_type(ex))
-            self.nova(obj).server_resize_revert(obj.physical_id)
-            self.nova(obj).wait_for_server(obj.physical_id, 'ACTIVE')
-            raise exc.EResourceUpdate(type='server', id=obj.physical_id)
+        except exc.InternalError:
+            try:
+                self.nova(obj).server_resize_revert(obj.physical_id)
+                self.nova(obj).wait_for_server(obj.physical_id, 'ACTIVE')
+            except exc.InternalError:
+                raise
+            else:
+                raise
 
-        self.nova(obj).server_resize_confirm(obj.physical_id)
-        self.nova(obj).wait_for_server(obj.physical_id, 'ACTIVE')
+        try:
+            self.nova(obj).server_resize_confirm(obj.physical_id)
+            self.nova(obj).wait_for_server(obj.physical_id, 'ACTIVE')
+        except exc.InternalError:
+            raise
 
     def _update_image(self, obj, old_image, new_image, admin_password):
-        '''Updating server image'''
+        """Update image used by server node.
 
+        :param old: The node object to operate on.
+        :param old_image: The identity of the image currently used.
+        :param new_image: The identity of the new image to use.
+        :param admin_password: The new password for the administrative account
+                               if provided.
+        :returns: ``None``.
+        :raises: ``InternalError`` if operation was a failure.
+        """
         if old_image:
             res = self.nova(obj).image_find(old_image)
             image_id = res.id
@@ -556,22 +571,24 @@ class ServerProfile(base.Profile):
             server = self.nova(obj).server_get(obj.physical_id)
             image_id = server.image['id']
 
-        if new_image:
-            res = self.nova(obj).image_find(new_image)
-            new_image_id = res.id
-            if new_image_id != image_id:
-                # (Jun Xu): Not update name here if name changed,
-                # it should be updated  in do_update
-                self.nova(obj).server_rebuild(obj.physical_id, new_image_id,
-                                              self.properties.get(self.NAME),
-                                              admin_password)
-                self.nova(obj).wait_for_server(obj.physical_id, 'ACTIVE')
-        else:
+        if not new_image:
             # TODO(Yanyan Hu): Allow server update with new_image
             # set to None if Nova service supports it
-            LOG.error(_("Updating Nova server with image set to None is "
-                        "not supported by Nova."))
-            raise exc.EResourceUpdate(type='server', id=obj.physical_id)
+            message = _("Updating Nova server with image set to None is "
+                        "not supported by Nova.")
+            raise exc.InternalError(code=500, message=message)
+
+        res = self.nova(obj).image_find(new_image)
+        new_image_id = res.id
+        if new_image_id != image_id:
+            # (Jun Xu): Not update name here if name changed,
+            # it should be updated in do_update
+            self.nova(obj).server_rebuild(obj.physical_id, new_image_id,
+                                          self.properties.get(self.NAME),
+                                          admin_password)
+            self.nova(obj).wait_for_server(obj.physical_id, 'ACTIVE')
+
+        return
 
     def _update_network(self, obj, networks_create, networks_delete):
         '''Updating server network interfaces'''

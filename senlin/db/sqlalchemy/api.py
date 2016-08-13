@@ -591,7 +591,7 @@ def profile_create(context, values):
 
 def profile_get(context, profile_id, project_safe=True):
     query = model_query(context, models.Profile)
-    profile = query.filter_by(id=profile_id).first()
+    profile = query.get(profile_id)
 
     if profile is None:
         return None

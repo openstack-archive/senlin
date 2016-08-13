@@ -465,28 +465,36 @@ class TestHeatStackProfile(base.SenlinTestCase):
         new_spec['properties']['environment'] = {"new": "env1"}
         new_profile = stack.StackProfile('u', new_spec)
 
-        res = profile.do_update(stack_obj, new_profile)
-        self.assertEqual(False, res)
+        ex = self.assertRaises(exception.EResourceUpdate,
+                               profile.do_update,
+                               stack_obj, new_profile)
+
         profile.hc.stack_update.assert_called_once_with(
             'FAKE_ID', environment={"new": "env1"})
         self.assertEqual(0, profile.hc.wait_for_stack.call_count)
+        self.assertEqual('Failed in updating stack FAKE_ID: Failed.',
+                         six.text_type(ex))
 
     def test_do_update_timeout(self):
         profile = stack.StackProfile('t', self.spec)
         profile.hc = mock.Mock()
         profile.hc.wait_for_stack = mock.Mock(
-            side_effect=exception.InternalError(code=400, message='Failed'))
+            side_effect=exception.InternalError(code=400, message='Timeout'))
         stack_obj = mock.Mock(physical_id='FAKE_ID')
         new_spec = copy.deepcopy(self.spec)
         new_spec['properties']['environment'] = {"new": "env1"}
         new_profile = stack.StackProfile('u', new_spec)
 
-        res = profile.do_update(stack_obj, new_profile)
-        self.assertEqual(False, res)
+        ex = self.assertRaises(exception.EResourceUpdate,
+                               profile.do_update,
+                               stack_obj, new_profile)
+
         profile.hc.stack_update.assert_called_once_with(
             'FAKE_ID', environment={"new": "env1"})
         profile.hc.wait_for_stack.assert_called_once_with(
             'FAKE_ID', 'UPDATE_COMPLETE', timeout=3600)
+        self.assertEqual('Failed in updating stack FAKE_ID: Timeout.',
+                         six.text_type(ex))
 
     def test_do_check(self):
         node_obj = mock.Mock(physical_id='FAKE_ID')
