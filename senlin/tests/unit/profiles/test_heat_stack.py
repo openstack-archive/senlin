@@ -262,6 +262,20 @@ class TestHeatStackProfile(base.SenlinTestCase):
         profile.hc.stack_delete.assert_called_once_with('FAKE_ID', True)
         profile.hc.wait_for_stack_delete.assert_called_once_with('FAKE_ID')
 
+    def test_do_delete_ignore_missing(self):
+        profile = stack.StackProfile('t', self.spec)
+
+        test_stack = mock.Mock(physical_id='FAKE_ID')
+        profile.hc = mock.Mock()
+
+        # do it
+        res = profile.do_delete(test_stack, ignore_missing=False)
+
+        # assertions
+        self.assertTrue(res)
+        profile.hc.stack_delete.assert_called_once_with('FAKE_ID', False)
+        profile.hc.wait_for_stack_delete.assert_called_once_with('FAKE_ID')
+
     def test_do_delete_failed_deletion(self):
         profile = stack.StackProfile('t', self.spec)
 
@@ -271,10 +285,13 @@ class TestHeatStackProfile(base.SenlinTestCase):
             side_effect=exception.InternalError(code=400, message='Boom'))
 
         # do it
-        res = profile.do_delete(test_stack)
+        ex = self.assertRaises(exception.EResourceDeletion,
+                               profile.do_delete,
+                               test_stack)
 
         # assertions
-        self.assertFalse(res)
+        self.assertEqual('Failed in deleting stack FAKE_ID: Boom.',
+                         six.text_type(ex))
         profile.hc.stack_delete.assert_called_once_with('FAKE_ID', True)
         self.assertEqual(0, profile.hc.wait_for_stack_delete.call_count)
 
@@ -287,10 +304,12 @@ class TestHeatStackProfile(base.SenlinTestCase):
             side_effect=exception.InternalError(code=400, message='Boom'))
 
         # do it
-        res = profile.do_delete(test_stack)
+        ex = self.assertRaises(exception.EResourceDeletion,
+                               profile.do_delete, test_stack)
 
         # assertions
-        self.assertFalse(res)
+        self.assertEqual('Failed in deleting stack FAKE_ID: Boom.',
+                         six.text_type(ex))
         profile.hc.stack_delete.assert_called_once_with('FAKE_ID', True)
         profile.hc.wait_for_stack_delete.assert_called_once_with('FAKE_ID')
 

@@ -358,14 +358,16 @@ class TestNode(base.SenlinTestCase):
     @mock.patch.object(pb.Profile, 'delete_object')
     def test_node_delete(self, mock_delete, mock_status, mock_db_delete):
         node = nodem.Node('node1', PROFILE_ID, CLUSTER_ID, self.context)
-        node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
-        node.id = NODE_ID
+        node.physical_id = uuidutils.generate_uuid()
+        node.id = uuidutils.generate_uuid()
+
         res = node.do_delete(self.context)
+
         self.assertTrue(res)
-        mock_delete.assert_called_once_with(mock.ANY, node)
+        mock_delete.assert_called_once_with(self.context, node)
         mock_db_delete.assert_called_once_with(mock.ANY, node.id)
         mock_status.assert_called_once_with(self.context, node.DELETING,
-                                            reason='Deletion in progress')
+                                            'Deletion in progress')
 
     @mock.patch.object(node_obj.Node, 'delete')
     @mock.patch.object(pb.Profile, 'delete_object')
@@ -377,23 +379,24 @@ class TestNode(base.SenlinTestCase):
         self.assertFalse(mock_delete.called)
         self.assertTrue(mock_db_delete.called)
 
-    @mock.patch.object(nodem.Node, '_handle_exception')
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(pb.Profile, 'delete_object')
-    def test_node_delete_resource_status_error(self, mock_delete, mock_status,
-                                               mock_handle_exception):
-        ex = exception.ResourceStatusError(resource_id='id', status='ERROR',
-                                           reason='some reason')
+    def test_node_delete_EResourceDeletion(self, mock_delete, mock_status):
+        ex = exception.EResourceDeletion(type='PROFILE', id='NODE_ID',
+                                         message='Too Bad')
         mock_delete.side_effect = ex
         node = nodem.Node('node1', PROFILE_ID, CLUSTER_ID, self.context)
-        node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
+        node.physical_id = uuidutils.generate_uuid()
+
         res = node.do_delete(self.context)
+
         self.assertFalse(res)
         mock_delete.assert_called_once_with(self.context, node)
-        mock_handle_exception.assert_called_once_with(self.context, 'delete',
-                                                      'ERROR', ex)
-        mock_status.assert_any_call(self.context, 'ERROR',
-                                    reason='Deletion failed')
+        mock_status.assert_has_calls([
+            mock.call(self.context, node.DELETING, 'Deletion in progress'),
+            mock.call(self.context, node.ERROR,
+                      'Failed in deleting PROFILE NODE_ID: Too Bad.')
+        ])
 
     @mock.patch.object(node_obj.Node, 'update')
     @mock.patch.object(pb.Profile, 'update_object')

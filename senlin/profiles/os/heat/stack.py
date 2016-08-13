@@ -163,21 +163,25 @@ class StackProfile(base.Profile):
         except exc.InternalError as ex:
             raise exc.EResourceCreation(type='stack', message=ex.message)
 
-    def do_delete(self, obj):
+    def do_delete(self, obj, **params):
         """Delete the physical stack behind the node object.
 
         :param obj: The node object to operate on.
-        :returns: A boolean indicating whether the operation was successful.
+        :param kwargs params: Optional keyword arguments for the delete
+                              operation.
+        :returns: This operation always return True unless exception is
+                  caught.
+        :raises: `EResourceDeletion` if interaction with heat fails.
         """
-        self.stack_id = obj.physical_id
+        stack_id = obj.physical_id
 
+        ignore_missing = params.get('ignore_missing', True)
         try:
-            self.heat(obj).stack_delete(self.stack_id, True)
-            self.heat(obj).wait_for_stack_delete(self.stack_id)
+            self.heat(obj).stack_delete(stack_id, ignore_missing)
+            self.heat(obj).wait_for_stack_delete(stack_id)
         except exc.InternalError as ex:
-            LOG.error('Faild in deleting stack: %s' % six.text_type(ex))
-            return False
-
+            raise exc.EResourceDeletion(type='stack', id=stack_id,
+                                        message=six.text_type(ex))
         return True
 
     def do_update(self, obj, new_profile, **params):

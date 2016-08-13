@@ -257,7 +257,7 @@ class EResourceUpdate(InternalError):
 
 class EResourceDeletion(InternalError):
     # Used when deleting resources from other services
-    msg_fmt = _("Failed in deleting %(type)s %(id)s.")
+    msg_fmt = _("Failed in deleting %(type)s %(id)s: %(message)s.")
 
 
 class ResourceNotFound(InternalError):

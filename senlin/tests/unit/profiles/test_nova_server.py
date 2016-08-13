@@ -479,58 +479,64 @@ class TestNovaServerProfile(base.SenlinTestCase):
         novaclient.server_create.assert_called_once_with(**attrs)
         self.assertEqual(nova_server.id, server_id)
 
-    def test_do_delete_no_physical_id(self):
-        # Test path where server doesn't already exist
-        nc = mock.Mock()
-        profile = server.ServerProfile('t', self.spec)
-        profile._novaclient = nc
-        test_server = mock.Mock()
-        test_server.physical_id = None
-
-        self.assertTrue(profile.do_delete(test_server))
-
-    def test_do_delete_successful(self):
+    def test_do_delete_ok(self):
         profile = server.ServerProfile('t', self.spec)
 
         nc = mock.Mock()
         nc.server_delete.return_value = None
         profile._novaclient = nc
 
-        test_server = mock.Mock()
-        test_server.physical_id = 'FAKE_ID'
+        test_server = mock.Mock(physical_id='FAKE_ID')
 
         res = profile.do_delete(test_server)
+
         self.assertTrue(res)
-
-    def test_do_delete_wait_for_server_delete_timeout(self):
-        nc = mock.Mock()
-        profile = server.ServerProfile('t', self.spec)
-        profile._novaclient = nc
-
-        obj = mock.Mock()
-        obj.physical_id = 'FAKE_ID'
-        nc.wait_for_server_delete.side_effect = exception.InternalError(
-            code=500, message='timeout')
-
-        res = profile.do_delete(obj)
-        self.assertFalse(res)
+        nc.server_delete.assert_called_once_with('FAKE_ID', True, False)
         nc.wait_for_server_delete.assert_called_once_with('FAKE_ID')
 
-    def test_do_delete_with_delete_exception(self):
+    def test_do_delete_no_physical_id(self):
+        profile = server.ServerProfile('t', self.spec)
+        test_server = mock.Mock(physical_id=None)
+
+        res = profile.do_delete(test_server)
+
+        self.assertTrue(res)
+
+    def test_do_delete_with_delete_failure(self):
         nc = mock.Mock()
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = nc
 
-        err = exception.ProfileOperationTimeout(message='exception')
+        err = exception.InternalError(code=500, message='Nova Error')
         nc.server_delete.side_effect = err
+        obj = mock.Mock(physical_id='FAKE_ID')
 
-        obj = mock.Mock()
-        obj.physical_id = 'FAKE_ID'
+        # do it
+        ex = self.assertRaises(exception.EResourceDeletion,
+                               profile.do_delete, obj)
 
-        # Test specific exception path
-        res = profile.do_delete(obj)
-        self.assertFalse(res)
+        self.assertEqual('Failed in deleting server FAKE_ID: Nova Error.',
+                         six.text_type(ex))
         nc.server_delete.assert_called_once_with('FAKE_ID', True, False)
+        self.assertEqual(0, nc.wait_for_server_delete.call_count)
+
+    def test_do_delete_wait_for_server_timeout(self):
+        nc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = nc
+
+        obj = mock.Mock(physical_id='FAKE_ID')
+        err = exception.InternalError(code=500, message='TIMEOUT')
+        nc.wait_for_server_delete.side_effect = err
+
+        # do it
+        ex = self.assertRaises(exception.EResourceDeletion,
+                               profile.do_delete, obj)
+
+        self.assertEqual('Failed in deleting server FAKE_ID: TIMEOUT.',
+                         six.text_type(ex))
+        nc.server_delete.assert_called_once_with('FAKE_ID', True, False)
+        nc.wait_for_server_delete.assert_called_once_with('FAKE_ID')
 
     def test__update_basic_properties_ok(self):
         obj = mock.Mock()

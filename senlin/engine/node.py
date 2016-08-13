@@ -268,18 +268,15 @@ class Node(object):
             return True
 
         # TODO(Qiming): check if actions are working on it and can be canceled
-        self.set_status(context, self.DELETING, reason='Deletion in progress')
+        self.set_status(context, self.DELETING, 'Deletion in progress')
         try:
-            res = pb.Profile.delete_object(context, self)
-        except exc.ResourceStatusError as ex:
-            self._handle_exception(context, 'delete', self.ERROR, ex)
-            res = False
-
-        if res:
+            # The following operation always return True unless exception
+            # is thrown
+            pb.Profile.delete_object(context, self)
             no.Node.delete(context, self.id)
             return True
-        else:
-            self.set_status(context, self.ERROR, reason='Deletion failed')
+        except exc.EResourceDeletion as ex:
+            self.set_status(context, self.ERROR, six.text_type(ex))
             return False
 
     def do_update(self, context, params):

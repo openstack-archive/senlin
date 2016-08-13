@@ -400,35 +400,39 @@ class ServerProfile(base.Profile):
             raise exc.EResourceCreation(type='server', message=ex.message)
 
     def do_delete(self, obj, **params):
-        self.server_id = obj.physical_id
+        """Delete the physical resource associated with the specified node.
 
+        :param obj: The node object to operate on.
+        :param kwargs params: Optional keyword arguments for the delete
+                              operation.
+        :returns: This operation always return True unless exception is
+                  caught.
+        :raises: `EResourceDeletion` if interaction with nova fails.
+        """
         if not obj.physical_id:
             return True
 
-        ignore_missing = True
-        if 'ignore_missing' in params:
-            ignore_missing = params['ignore_missing']
-
-        force = False
-        if 'force' in params:
-            force = params['force']
+        server_id = obj.physical_id
+        ignore_missing = params.get('ignore_missing', True)
+        force = params.get('force', False)
 
         try:
-            self.nova(obj).server_delete(self.server_id, ignore_missing, force)
-            self.nova(obj).wait_for_server_delete(self.server_id)
-        except Exception as ex:
-            LOG.error('Error: %s' % six.text_type(ex))
-            return False
-
-        return True
+            self.nova(obj).server_delete(server_id, ignore_missing, force)
+            self.nova(obj).wait_for_server_delete(server_id)
+            return True
+        except exc.InternalError as ex:
+            raise exc.EResourceDeletion(type='server', id=server_id,
+                                        message=six.text_type(ex))
 
     def do_update(self, obj, new_profile=None, **params):
-        '''Perform update on the server.
+        """Perform update on the server.
 
         :param obj: the server to operate on
         :param new_profile: the new profile for the server.
         :param params: a dictionary of optional parameters.
-        '''
+        :returns: True if update was successful or False otherwise.
+        :raises: `EResourceUpdate` if operation fails.
+        """
         self.server_id = obj.physical_id
         if not self.server_id:
             return False
