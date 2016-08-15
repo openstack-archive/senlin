@@ -488,16 +488,31 @@ class TestProfileBase(base.SenlinTestCase):
         res_obj = profile.do_leave.return_value
         self.assertEqual(res_obj, res)
 
-    def test_validate(self):
+    def test_validate_without_properties(self):
         profile = self._create_profile('test_profile')
 
         profile.spec_data = mock.Mock()
         profile.properties = mock.Mock()
+        profile.do_validate = mock.Mock()
 
         profile.validate()
 
         profile.spec_data.validate.assert_called_once_with()
         profile.properties.validate.assert_called_once_with()
+        profile.do_validate.assert_not_called()
+
+    def test_validate_with_properties(self):
+        profile = self._create_profile('test_profile')
+
+        profile.spec_data = mock.Mock()
+        profile.properties = mock.Mock()
+        profile.do_validate = mock.Mock()
+
+        profile.validate(validate_props=True)
+
+        profile.spec_data.validate.assert_called_once_with()
+        profile.properties.validate.assert_called_once_with()
+        profile.do_validate.assert_called_once_with(obj=profile.context)
 
     @mock.patch.object(senlin_ctx, 'get_service_context')
     def test__init_context(self, mock_get):
@@ -609,6 +624,7 @@ class TestProfileBase(base.SenlinTestCase):
         self.assertEqual(True, profile.do_join(mock.Mock(), mock.Mock()))
         self.assertEqual(True, profile.do_leave(mock.Mock()))
         self.assertEqual(True, profile.do_rebuild(mock.Mock()))
+        self.assertEqual(True, profile.do_validate(mock.Mock()))
 
     def test_do_recover_default(self):
         profile = self._create_profile('test-profile')

@@ -283,6 +283,47 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual('BOOM',
                          six.text_type(ex.exc_info[1]))
 
+    def test_profile_validate_pass(self):
+        self._setup_fakes()
+
+        expected_resp = {
+            'created_at': None,
+            'domain': '',
+            'id': None,
+            'metadata': None,
+            'name': 'validated_profile',
+            'project': 'profile_test_project',
+            'type': 'TestProfile-1.0',
+            'updated_at': None,
+            'user': 'test_user_id',
+            'spec': {
+                'type': 'TestProfile',
+                'version': '1.0',
+                'properties': {
+                    'INT': 1,
+                    'STR': 'str',
+                    'LIST': ['v1', 'v2'],
+                    'MAP': {'KEY1': 1, 'KEY2': 'v2'},
+                }
+            }
+        }
+
+        resp = self.eng.profile_validate(self.ctx, self.spec)
+        self.assertEqual(expected_resp, resp)
+
+    def test_profile_validate_failed(self):
+        self._setup_fakes()
+
+        mock_do_validate = self.patchobject(fakes.TestProfile, 'do_validate')
+        mock_do_validate.side_effect = exc.InvalidSpec(message='BOOM')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.profile_validate,
+                               self.ctx, self.spec)
+        self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
+        self.assertEqual('BOOM',
+                         six.text_type(ex.exc_info[1]))
+
     @mock.patch.object(pb.Profile, 'load')
     @mock.patch.object(service.EngineService, 'profile_find')
     def test_profile_get(self, mock_find, mock_load):
