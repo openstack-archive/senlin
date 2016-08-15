@@ -332,6 +332,44 @@ class EngineService(service.Service):
 
         return [p.to_dict() for p in profiles]
 
+    def _validate_profile(self, context, spec, name=None,
+                          metadata=None):
+        """Validate a profile.
+
+        :param context: An instance of the request context.
+        :param name: The name for the profile to be created.
+        :param spec: A dictionary containing the spec for the profile.
+        :param metadata: A dictionary containing optional key-value pairs to
+                         be associated with the profile.
+        :return: Validated profile object.
+        """
+        type_name, version = schema.get_spec_version(spec)
+        type_str = "-".join([type_name, version])
+        try:
+            plugin = environment.global_env().get_profile(type_str)
+        except exception.ProfileTypeNotFound:
+            msg = _("The specified profile type (%(name)s) is not found."
+                    ) % {"name": type_str}
+            raise exception.SpecValidationFailed(message=msg)
+
+        kwargs = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+            'metadata': metadata
+        }
+        if name is None:
+            name = 'validated_profile'
+        profile = plugin(name, spec, **kwargs)
+        try:
+            profile.validate()
+        except exception.InvalidSpec as ex:
+            msg = six.text_type(ex)
+            LOG.error(_LE("Failed in validating profile: %s"), msg)
+            raise exception.SpecValidationFailed(message=msg)
+
+        return profile
+
     @request_context
     def profile_create(self, context, name, spec, metadata=None):
         """Create a profile with the given properties.
@@ -350,31 +388,11 @@ class EngineService(service.Service):
                         ) % {"name": name}
                 raise exception.BadRequest(msg=msg)
 
-        type_name, version = schema.get_spec_version(spec)
-        type_str = "-".join([type_name, version])
-        try:
-            plugin = environment.global_env().get_profile(type_str)
-        except exception.ProfileTypeNotFound:
-            msg = _("The specified profile type (%(name)s) is not found."
-                    ) % {"name": type_str}
-            raise exception.BadRequest(msg=msg)
+        profile = self._validate_profile(context, spec, name=name,
+                                         metadata=metadata)
 
         LOG.info(_LI("Creating profile %(type)s '%(name)s'."),
-                 {'type': type_str, 'name': name})
-
-        kwargs = {
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
-            'metadata': metadata,
-        }
-        profile = plugin(name, spec, **kwargs)
-        try:
-            profile.validate()
-        except exception.InvalidSpec as ex:
-            msg = six.text_type(ex)
-            LOG.error(_LE("Failed in creating profile: %s"), msg)
-            raise exception.BadRequest(msg=msg)
+                 {'type': profile.type, 'name': profile.name})
 
         profile.store(context)
 
