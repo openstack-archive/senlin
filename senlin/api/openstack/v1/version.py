@@ -54,7 +54,8 @@ class VersionController(wsgi.Controller):
     def __init__(self, conf):
         self.conf = conf
 
-    def version_info(self):
+    @classmethod
+    def version_info(cls):
         return {
             "id": "1.0",
             "status": "CURRENT",

@@ -21,6 +21,7 @@ from six.moves import http_client
 import webob.dec
 
 from senlin.api.common import version_request as vr
+from senlin.api.openstack.v1 import version as v1_controller
 
 
 # NOTE: A version change is required when you make any change to the API. This
@@ -61,31 +62,22 @@ def is_supported(req, min_version=_MIN_API_VERSION,
 class Controller(object):
     """A controller that produces information on the senlin API versions."""
 
+    Controllers = {
+        '1.0': v1_controller.VersionController,
+    }
+
     def __init__(self, conf):
         self.conf = conf
 
     @webob.dec.wsgify
     def __call__(self, req):
         """Respond to a request for all OpenStack API versions."""
-        version_objs = [{
-            "id": "1.0",
-            "status": "CURRENT",
-            "updated": "2016-01-18T00:00:00Z",
-            "media-types": [{
-                "base": "application/json",
-                "type": "application/vnd.openstack.clustering-v1+json"
-            }],
-            "links": [{
-                "rel": "self",
-                "href": "/v1/"}, {
-                "rel": "help",
-                "href": "http://developer.openstack.org/api-ref/clustering"
-            }],
-            "min_version": _MIN_API_VERSION,
-            "max_version": _MAX_API_VERSION,
-        }]
 
-        body = jsonutils.dumps(dict(versions=version_objs))
+        versions = []
+        for ver, vc in self.Controllers.items():
+            versions.append(vc.version_info())
+
+        body = jsonutils.dumps(dict(versions=versions))
 
         response = webob.Response(request=req,
                                   status=http_client.MULTIPLE_CHOICES,

@@ -18,6 +18,7 @@ import webob
 
 from senlin.api.common import version_request as vr
 from senlin.api.common import wsgi
+from senlin.api.openstack.v1 import version as v1_controller
 from senlin.api.openstack import versions
 from senlin.tests.unit.common import base
 
@@ -43,7 +44,9 @@ class VersionControllerTest(base.SenlinTestCase):
         self.assertIsNotNone(controller)
         self.assertEqual(conf, controller.conf)
 
-    def test_call(self):
+    @mock.patch.object(v1_controller.VersionController, 'version_info')
+    def test_call(self, mock_v1):
+        mock_v1.return_value = {'foo': 'bar'}
         conf = mock.Mock()
         controller = versions.Controller(conf)
         environ = {
@@ -55,26 +58,8 @@ class VersionControllerTest(base.SenlinTestCase):
             'wsgi.url_scheme': 'http',
         }
         req = wsgi.Request(environ)
-        links = [{
-            'rel': 'self',
-            'href': '/v1/'}, {
-            'rel': 'help',
-            'href': 'http://developer.openstack.org/api-ref/clustering',
-        }]
         expected_dict = {
-            'versions': [{
-                'id': '1.0',
-                'status': 'CURRENT',
-                'updated': '2016-01-18T00:00:00Z',
-                'media-types': [{
-                    'base': 'application/json',
-                    'type': 'application/vnd.openstack.clustering-v1+json'
-
-                }],
-                'links': links,
-                'min_version': versions._MIN_API_VERSION,
-                'max_version': versions._MAX_API_VERSION
-            }]
+            'versions': [{'foo': 'bar'}]
         }
         expected_body = jsonutils.dumps(expected_dict)
 
