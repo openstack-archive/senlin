@@ -47,6 +47,14 @@ class SenlinObject(base.VersionedObject):
 
         return obj
 
+    @staticmethod
+    def _transpose_metadata(values):
+        """Utility function to translate metadata field."""
+        if 'metadata' in values:
+            value = values.pop('metadata')
+            values['meta_data'] = value
+        return values
+
 
 class SenlinObjectRegistry(base.VersionedObjectRegistry):
 

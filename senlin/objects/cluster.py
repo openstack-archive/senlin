@@ -45,6 +45,7 @@ class Cluster(base.SenlinObject, base.VersionedObjectDictCompat):
 
     @classmethod
     def create(cls, context, values):
+        values = cls._transpose_metadata(values)
         obj = db_api.cluster_create(context, values)
         return cls._from_db_object(context, cls(context), obj)
 
@@ -78,7 +79,8 @@ class Cluster(base.SenlinObject, base.VersionedObjectDictCompat):
 
     @classmethod
     def update(cls, context, obj_id, values):
-        db_api.cluster_update(context, obj_id, values)
+        values = cls._transpose_metadata(values)
+        return db_api.cluster_update(context, obj_id, values)
 
     @classmethod
     def delete(cls, context, obj_id):

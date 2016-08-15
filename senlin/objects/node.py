@@ -44,6 +44,7 @@ class Node(base.SenlinObject, base.VersionedObjectDictCompat):
 
     @classmethod
     def create(cls, context, values):
+        values = cls._transpose_metadata(values)
         obj = db_api.node_create(context, values)
         return cls._from_db_object(context, cls(context), obj)
 
@@ -78,6 +79,7 @@ class Node(base.SenlinObject, base.VersionedObjectDictCompat):
 
     @classmethod
     def update(cls, context, obj_id, values):
+        values = cls._transpose_metadata(values)
         db_api.node_update(context, obj_id, values)
 
     @classmethod
