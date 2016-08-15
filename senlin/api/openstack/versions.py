@@ -20,42 +20,7 @@ from oslo_utils import encodeutils
 from six.moves import http_client
 import webob.dec
 
-from senlin.api.common import version_request as vr
 from senlin.api.openstack.v1 import version as v1_controller
-
-# NOTE: A version change is required when you make any change to the API. This
-# includes any semantic changes which may not affect the input or output
-# formats or even originate in the API code layer.
-#
-# The minimum and maximum versions of the API supported, where the default api
-# version request is defined to be the minimum version supported.
-_MIN_API_VERSION = "1.0"
-_MAX_API_VERSION = "1.2"
-DEFAULT_API_VERSION = _MIN_API_VERSION
-
-
-# min and max versions declared as functions so we can mock them for unittests.
-# Do not use the constants directly anywhere else.
-def min_api_version():
-    return vr.APIVersionRequest(_MIN_API_VERSION)
-
-
-def max_api_version():
-    return vr.APIVersionRequest(_MAX_API_VERSION)
-
-
-def is_supported(req, min_version=_MIN_API_VERSION,
-                 max_version=_MAX_API_VERSION):
-    """Check if API request version satisfies version restrictions.
-
-    :param req: request object
-    :param min_version: minimal version of API needed.
-    :param max_version: maximum version of API needed.
-    :returns: True if request satisfies minimal and maximum API version
-             requirements. False in other case.
-    """
-    return (vr.APIVersionRequest(max_version) >= req.version_request >=
-            vr.APIVersionRequest(min_version))
 
 
 class Controller(object):

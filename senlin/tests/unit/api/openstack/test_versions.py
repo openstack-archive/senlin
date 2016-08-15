@@ -16,22 +16,10 @@ from oslo_utils import encodeutils
 from six.moves import http_client
 import webob
 
-from senlin.api.common import version_request as vr
 from senlin.api.common import wsgi
 from senlin.api.openstack.v1 import version as v1_controller
 from senlin.api.openstack import versions
 from senlin.tests.unit.common import base
-
-
-class FakeRequest(wsgi.Request):
-
-    @staticmethod
-    def blank(*args, **kwargs):
-        kwargs['base_url'] = 'http://localhost/v1'
-        version = kwargs.pop('version', wsgi.DEFAULT_API_VERSION)
-        out = wsgi.Request.blank(*args, **kwargs)
-        out.version_request = vr.APIVersionRequest(version)
-        return out
 
 
 class VersionControllerTest(base.SenlinTestCase):
@@ -69,40 +57,3 @@ class VersionControllerTest(base.SenlinTestCase):
         self.assertEqual(expected_body, encodeutils.safe_decode(resp.body))
         self.assertEqual(http_client.MULTIPLE_CHOICES, resp.status_code)
         self.assertEqual('application/json', resp.content_type)
-
-
-class VersionRangeTest(base.SenlinTestCase):
-
-    def test_is_supported_min_version(self):
-        req = FakeRequest.blank('/fake', version='1.1')
-
-        self.assertTrue(versions.is_supported(req, min_version='1.0',
-                                              max_version='1.1'))
-        self.assertTrue(versions.is_supported(req, min_version='1.1',
-                                              max_version='1.1'))
-        self.assertFalse(versions.is_supported(req, min_version='1.2'))
-
-    def test_is_supported_max_version(self):
-        req = FakeRequest.blank('/fake', version='2.5')
-
-        self.assertFalse(versions.is_supported(req, max_version='2.4'))
-        self.assertTrue(versions.is_supported(req, max_version='2.5'))
-        self.assertTrue(versions.is_supported(req, max_version='2.6'))
-
-    def test_is_supported_min_and_max_version(self):
-        req = FakeRequest.blank('/fake', version='2.5')
-
-        self.assertFalse(versions.is_supported(req, min_version='2.3',
-                                               max_version='2.4'))
-        self.assertTrue(versions.is_supported(req, min_version='2.3',
-                                              max_version='2.5'))
-        self.assertTrue(versions.is_supported(req, min_version='2.3',
-                                              max_version='2.7'))
-        self.assertTrue(versions.is_supported(req, min_version='2.5',
-                                              max_version='2.7'))
-        self.assertFalse(versions.is_supported(req, min_version='2.6',
-                                               max_version='2.7'))
-        self.assertTrue(versions.is_supported(req, min_version='2.5',
-                                              max_version='2.5'))
-        self.assertFalse(versions.is_supported(req, min_version='2.10',
-                                               max_version='2.1'))
