@@ -23,7 +23,6 @@ import webob.dec
 from senlin.api.common import version_request as vr
 from senlin.api.openstack.v1 import version as v1_controller
 
-
 # NOTE: A version change is required when you make any change to the API. This
 # includes any semantic changes which may not affect the input or output
 # formats or even originate in the API code layer.
@@ -85,3 +84,11 @@ class Controller(object):
         response.body = encodeutils.safe_encode(body)
 
         return response
+
+    def get_controller(self, version):
+        """Return the version specific controller.
+
+        :param version: The version string for mapping.
+        :returns: A version controller instance or ``None``.
+        """
+        return self.Controllers.get(version, None)

@@ -28,24 +28,44 @@ class VersionNegotiationTest(base.SenlinTestCase):
     def setUp(self):
         super(VersionNegotiationTest, self).setUp()
 
-    def test_match_version_string(self, mock_vc):
-        vnf = vn.VersionNegotiationFilter(None, None)
-        request = webob.Request({})
-        major = 1
-        minor = 0
-
-        match = vnf._match_version_string('v{0}.{1}'.format(major, minor),
-                                          request)
-        self.assertTrue(match)
-        self.assertEqual(major, request.environ['api.major'])
-        self.assertEqual(minor, request.environ['api.minor'])
-
-    def test_not_match_version_string(self, mock_vc):
+    def test__get_version_controller(self, mock_vc):
+        gvc = mock_vc.return_value
+        xvc = mock.Mock()
+        gvc.get_controller = mock.Mock(return_value=xvc)
         vnf = vn.VersionNegotiationFilter(None, None)
         request = webob.Request({})
 
-        match = vnf._match_version_string("invalid", request)
-        self.assertFalse(match)
+        res = vnf._get_controller('v1.0', request)
+
+        self.assertEqual(xvc, res)
+        self.assertEqual(1, request.environ['api.major'])
+        self.assertEqual(0, request.environ['api.minor'])
+        gvc.get_controller.assert_called_once_with('1.0')
+
+    def test__get_version_controller_shorter_version(self, mock_vc):
+        gvc = mock_vc.return_value
+        xvc = mock.Mock()
+        gvc.get_controller = mock.Mock(return_value=xvc)
+        vnf = vn.VersionNegotiationFilter(None, None)
+        request = webob.Request({})
+
+        res = vnf._get_controller('v1', request)
+
+        self.assertEqual(xvc, res)
+        self.assertEqual(1, request.environ['api.major'])
+        self.assertEqual(0, request.environ['api.minor'])
+        gvc.get_controller.assert_called_once_with('1.0')
+
+    def test__get_controller_not_match_version(self, mock_vc):
+        gvc = mock_vc.return_value
+        gvc.get_controller = mock.Mock(return_value=None)
+        vnf = vn.VersionNegotiationFilter(None, None)
+        request = webob.Request({})
+
+        res = vnf._get_controller("invalid", request)
+
+        self.assertIsNone(res)
+        self.assertEqual(0, gvc.get_controller.call_count)
 
     def test_request_path_is_version(self, mock_vc):
         vnf = vn.VersionNegotiationFilter(None, None)
@@ -92,7 +112,7 @@ class VersionNegotiationTest(base.SenlinTestCase):
 
         response = vnf.process_request(request)
 
-        self.assertIs(mock_vc.return_value, response)
+        self.assertIsNone(response)
 
     def test_accept_header_contains_valid_version(self, mock_vc):
         vnf = vn.VersionNegotiationFilter(None, None)
@@ -114,11 +134,12 @@ class VersionNegotiationTest(base.SenlinTestCase):
 
         response = vnf.process_request(request)
 
-        self.assertIs(mock_vc.return_value, response)
+        self.assertIsNone(response)
 
         request.headers['Accept'] = 'application/vnd.openstack.clustering-vab'
         response = vnf.process_request(request)
-        self.assertIsNone(response)
+
+        self.assertIsInstance(response, webob.exc.HTTPNotFound)
 
     def test_no_URI_version_accept_with_invalid_MIME_type(self, mock_vc):
         vnf = vn.VersionNegotiationFilter(None, None)
