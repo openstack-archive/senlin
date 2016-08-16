@@ -251,8 +251,8 @@ class ProfileTest(base.SenlinTestCase):
                                self.eng.profile_create,
                                self.ctx, 'p-2', spec)
 
-        self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: The specified profile "
+        self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
+        self.assertEqual("The specified profile "
                          "type (FakeProfile-1.0) is not found.",
                          six.text_type(ex.exc_info[1]))
 
@@ -279,8 +279,8 @@ class ProfileTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.profile_create,
                                self.ctx, 'p-2', self.spec)
-        self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual('The request is malformed: BOOM',
+        self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
+        self.assertEqual('BOOM',
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(pb.Profile, 'load')
