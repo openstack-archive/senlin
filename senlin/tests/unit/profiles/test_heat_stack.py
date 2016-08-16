@@ -82,28 +82,27 @@ class TestHeatStackProfile(base.SenlinTestCase):
         profile = stack.StackProfile('t', self.spec)
         profile.hc = mock.Mock()
         node_obj = mock.Mock()
-        node_obj.name = 'stack_node'
+        node_obj.user = 'fake_user'
+        node_obj.project = 'fake_user'
 
         res = profile.do_validate(node_obj)
 
-        self.assertTrue(res)
         props = self.spec['properties']
         call_args = {
-            'stack_name': 'stack_node',
+            'stack_name': mock.ANY,
             'template': props['template'],
-            'timeout_mins': props['timeout'],
-            'disable_rollback': props['disable_rollback'],
             'parameters': props['parameters'],
             'files': props['files'],
             'environment': props['environment'],
+            'preview': True,
         }
-
-        profile.hc.validate_template.assert_called_once_with(**call_args)
+        self.assertTrue(res)
+        profile.hc.stack_create.assert_called_once_with(**call_args)
 
     def test_do_validate_fails(self):
         profile = stack.StackProfile('t', self.spec)
         profile.hc = mock.Mock()
-        profile.hc.validate_template = mock.Mock(
+        profile.hc.stack_create = mock.Mock(
             side_effect=exception.InternalError(code=400, message='Boom'))
         node_obj = mock.Mock()
         node_obj.name = 'stack_node'
@@ -113,15 +112,14 @@ class TestHeatStackProfile(base.SenlinTestCase):
 
         props = self.spec['properties']
         call_args = {
-            'stack_name': 'stack_node',
+            'stack_name': mock.ANY,
             'template': props['template'],
-            'timeout_mins': props['timeout'],
-            'disable_rollback': props['disable_rollback'],
             'parameters': props['parameters'],
             'files': props['files'],
             'environment': props['environment'],
+            'preview': True,
         }
-        profile.hc.validate_template.assert_called_once_with(**call_args)
+        profile.hc.stack_create.assert_called_once_with(**call_args)
         self.assertEqual('Failed in validating template: Boom',
                          six.text_type(ex))
 

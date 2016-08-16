@@ -512,7 +512,7 @@ class TestProfileBase(base.SenlinTestCase):
 
         profile.spec_data.validate.assert_called_once_with()
         profile.properties.validate.assert_called_once_with()
-        profile.do_validate.assert_called_once_with(obj=profile.context)
+        profile.do_validate.assert_called_once_with(obj=profile)
 
     @mock.patch.object(senlin_ctx, 'get_service_context')
     def test__init_context(self, mock_get):

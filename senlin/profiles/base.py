@@ -240,7 +240,7 @@ class Profile(object):
         # TODO(Anyone): need to check the contents in self.CONTEXT
 
         if validate_props:
-            self.do_validate(obj=self.context)
+            self.do_validate(obj=self)
 
     @classmethod
     def get_schema(cls):
