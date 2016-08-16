@@ -127,7 +127,8 @@ class TestHealthManager(base.SenlinTestCase):
                 'check_type': consts.NODE_STATUS_POLLING,
                 'interval': 12,
                 'params': {'k1': 'v1'},
-                'timer': timer1
+                'timer': timer1,
+                'enabled': True,
             },
             self.hm.registries[0])
         self.assertEqual(
@@ -136,7 +137,8 @@ class TestHealthManager(base.SenlinTestCase):
                 'check_type': consts.NODE_STATUS_POLLING,
                 'interval': 34,
                 'params': {'k2': 'v2'},
-                'timer': timer2
+                'timer': timer2,
+                'enabled': True,
             },
             self.hm.registries[1])
 
@@ -232,47 +234,29 @@ class TestHealthManager(base.SenlinTestCase):
 
         self.assertIsNone(res)
 
-    @mock.patch.object(hr.HealthRegistry, 'create')
-    def test_register_cluster(self, mock_reg_create):
-        ctx = mock.Mock()
-        timer = mock.Mock()
-        mock_add_tm = self.patchobject(self.hm.TG, 'add_timer',
-                                       return_value=timer)
-        mock_poll = self.patchobject(self.hm, '_poll_cluster',
-                                     return_value=mock.Mock())
-        x_reg = mock.Mock(cluster_id='CLUSTER_ID',
-                          check_type=consts.NODE_STATUS_POLLING,
-                          interval=50, params={})
-        mock_reg_create.return_value = x_reg
+    def test__stop_check_with_timer(self):
+        x_timer = mock.Mock()
+        entry = {'timer': x_timer}
+        mock_timer_done = self.patchobject(self.hm.TG, 'timer_done')
 
-        self.hm.register_cluster(ctx,
-                                 cluster_id='CLUSTER_ID',
-                                 check_type=consts.NODE_STATUS_POLLING,
-                                 interval=50)
+        # do it
+        res = self.hm._stop_check(entry)
 
-        mock_reg_create.assert_called_once_with(
-            ctx, 'CLUSTER_ID', consts.NODE_STATUS_POLLING, 50, {}, 'ENGINE_ID')
-        mock_add_tm.assert_called_with(50, mock_poll, None, 'CLUSTER_ID')
-        self.assertEqual(1, len(self.hm.registries))
+        self.assertIsNone(res)
+        x_timer.stop.assert_called_once_with()
+        mock_timer_done.assert_called_once_with(x_timer)
 
-    @mock.patch.object(hr.HealthRegistry, 'delete')
-    def test_unregister_cluster(self, mock_reg_delete):
-        ctx = mock.Mock()
-        timer = mock.Mock()
-        registry = {
-            'cluster_id': 'CLUSTER_ID',
-            'check_type': 'NODE_STATUS_POLLING',
-            'interval': 50,
-            'params': {},
-            'timer': timer
-        }
-        self.hm.rt['registries'] = [registry]
-        mock_tm_done = self.patchobject(self.hm.TG, 'timer_done',
-                                        return_value=mock.Mock())
-        self.hm.unregister_cluster(ctx, cluster_id='CLUSTER_ID')
-        mock_tm_done.assert_called_with(timer)
-        self.assertEqual(0, len(self.hm.registries))
-        mock_reg_delete.assert_called_once_with(ctx, 'CLUSTER_ID')
+    def test__stop_check_with_listener(self):
+        x_thread = mock.Mock()
+        entry = {'listener': x_thread}
+        mock_thread_done = self.patchobject(self.hm.TG, 'thread_done')
+
+        # do it
+        res = self.hm._stop_check(entry)
+
+        self.assertIsNone(res)
+        x_thread.stop.assert_called_once_with()
+        mock_thread_done.assert_called_once_with(x_thread)
 
     @mock.patch('oslo_messaging.Target')
     def test_start(self, mock_target):
@@ -299,3 +283,73 @@ class TestHealthManager(base.SenlinTestCase):
         mock_add_timer.assert_called_once_with(cfg.CONF.periodic_interval,
                                                self.hm._dummy_task)
         mock_load.assert_called_once_with()
+
+    @mock.patch.object(hr.HealthRegistry, 'create')
+    def test_register_cluster(self, mock_reg_create):
+        ctx = mock.Mock()
+        timer = mock.Mock()
+        mock_add_tm = self.patchobject(self.hm.TG, 'add_timer',
+                                       return_value=timer)
+        mock_poll = self.patchobject(self.hm, '_poll_cluster',
+                                     return_value=mock.Mock())
+        x_reg = mock.Mock(cluster_id='CLUSTER_ID',
+                          check_type=consts.NODE_STATUS_POLLING,
+                          interval=50, params={})
+        mock_reg_create.return_value = x_reg
+
+        self.hm.register_cluster(ctx,
+                                 cluster_id='CLUSTER_ID',
+                                 check_type=consts.NODE_STATUS_POLLING,
+                                 interval=50)
+
+        mock_reg_create.assert_called_once_with(
+            ctx, 'CLUSTER_ID', consts.NODE_STATUS_POLLING, 50, {}, 'ENGINE_ID')
+        mock_add_tm.assert_called_with(50, mock_poll, None, 'CLUSTER_ID')
+        self.assertEqual(1, len(self.hm.registries))
+
+    @mock.patch.object(health_manager.HealthManager, '_stop_check')
+    @mock.patch.object(hr.HealthRegistry, 'delete')
+    def test_unregister_cluster(self, mock_delete, mock_stop):
+        ctx = mock.Mock()
+        timer = mock.Mock()
+        registry = {
+            'cluster_id': 'CLUSTER_ID',
+            'check_type': 'NODE_STATUS_POLLING',
+            'interval': 50,
+            'params': {},
+            'timer': timer,
+            'enabled': True,
+        }
+        self.hm.rt['registries'] = [registry]
+
+        self.hm.unregister_cluster(ctx, cluster_id='CLUSTER_ID')
+
+        self.assertEqual(0, len(self.hm.registries))
+        mock_stop.assert_called_once_with(registry)
+        mock_delete.assert_called_once_with(ctx, 'CLUSTER_ID')
+
+    @mock.patch.object(health_manager.HealthManager, '_start_check')
+    def test_enable_cluster(self, mock_start):
+        ctx = mock.Mock()
+        entry1 = {'cluster_id': 'FAKE_ID', 'enabled': False}
+        entry2 = {'cluster_id': 'ANOTHER_CLUSTER', 'enabled': False}
+        self.hm.rt['registries'] = [entry1, entry2]
+
+        self.hm.enable_cluster(ctx, 'FAKE_ID')
+
+        mock_start.assert_called_once_with(entry1)
+        self.assertIn({'cluster_id': 'FAKE_ID', 'enabled': True},
+                      self.hm.rt['registries'])
+
+    @mock.patch.object(health_manager.HealthManager, '_stop_check')
+    def test_disable_cluster(self, mock_stop):
+        ctx = mock.Mock()
+        entry1 = {'cluster_id': 'FAKE_ID', 'enabled': True}
+        entry2 = {'cluster_id': 'ANOTHER_CLUSTER', 'enabled': True}
+        self.hm.rt['registries'] = [entry1, entry2]
+
+        self.hm.disable_cluster(ctx, 'FAKE_ID')
+
+        mock_stop.assert_called_once_with(entry1)
+        self.assertIn({'cluster_id': 'FAKE_ID', 'enabled': False},
+                      self.hm.rt['registries'])
