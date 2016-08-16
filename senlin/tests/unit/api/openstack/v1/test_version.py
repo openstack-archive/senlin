@@ -13,9 +13,21 @@
 import mock
 
 from senlin.api.common import version_request as vr
+from senlin.api.common import wsgi
 from senlin.api.openstack.v1 import version
 from senlin.tests.unit.api import shared
 from senlin.tests.unit.common import base
+
+
+class FakeRequest(wsgi.Request):
+
+    @staticmethod
+    def blank(*args, **kwargs):
+        kwargs['base_url'] = 'http://localhost/v1'
+        version = kwargs.pop('version', wsgi.DEFAULT_API_VERSION)
+        out = wsgi.Request.blank(*args, **kwargs)
+        out.version_request = vr.APIVersionRequest(version)
+        return out
 
 
 class VersionControllerTest(shared.ControllerTest, base.SenlinTestCase):
@@ -49,18 +61,47 @@ class VersionControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
 class APIVersionTest(base.SenlinTestCase):
 
+    def setUp(self):
+        super(APIVersionTest, self).setUp()
+        self.vc = version.VersionController
+
     def test_min_api_version(self):
-        res = version.min_api_version()
-        expected = vr.APIVersionRequest(version._MIN_API_VERSION)
+        res = self.vc.min_api_version()
+        expected = vr.APIVersionRequest(self.vc._MIN_API_VERSION)
         self.assertEqual(expected, res)
 
     def test_max_api_version(self):
-        res = version.max_api_version()
-        expected = vr.APIVersionRequest(version._MAX_API_VERSION)
+        res = self.vc.max_api_version()
+        expected = vr.APIVersionRequest(self.vc._MAX_API_VERSION)
         self.assertEqual(expected, res)
 
     def test_is_supported(self):
         req = mock.Mock()
-        req.version_request = vr.APIVersionRequest(version._MIN_API_VERSION)
-        res = version.is_supported(req)
+        req.version_request = vr.APIVersionRequest(self.vc._MIN_API_VERSION)
+        res = self.vc.is_supported(req)
         self.assertTrue(res)
+
+    def test_is_supported_min_version(self):
+        req = FakeRequest.blank('/fake', version='1.1')
+
+        self.assertTrue(self.vc.is_supported(req, '1.0', '1.1'))
+        self.assertTrue(self.vc.is_supported(req, '1.1', '1.1'))
+        self.assertFalse(self.vc.is_supported(req, '1.2'))
+
+    def test_is_supported_max_version(self):
+        req = FakeRequest.blank('/fake', version='2.5')
+
+        self.assertFalse(self.vc.is_supported(req, max_ver='2.4'))
+        self.assertTrue(self.vc.is_supported(req, max_ver='2.5'))
+        self.assertTrue(self.vc.is_supported(req, max_ver='2.6'))
+
+    def test_is_supported_min_and_max_version(self):
+        req = FakeRequest.blank('/fake', version='2.5')
+
+        self.assertFalse(self.vc.is_supported(req, '2.3', '2.4'))
+        self.assertTrue(self.vc.is_supported(req, '2.3', '2.5'))
+        self.assertTrue(self.vc.is_supported(req, '2.3', '2.7'))
+        self.assertTrue(self.vc.is_supported(req, '2.5', '2.7'))
+        self.assertFalse(self.vc.is_supported(req, '2.6', '2.7'))
+        self.assertTrue(self.vc.is_supported(req, '2.5', '2.5'))
+        self.assertFalse(self.vc.is_supported(req, '2.10', '2.1'))

@@ -54,71 +54,65 @@ class VersionNegotiationFilter(wsgi.Middleware):
         if req.path_info_peek() in ("versions", ""):
             return self.versions_app
 
+        accept = str(req.accept)
+
         # Check if there is a requested (micro-)version for API
         self._check_version_request(req)
-        match = self._match_version_string(req.path_info_peek(), req)
-        if match:
+        controller = self._get_controller(req.path_info_peek(), req)
+        if controller:
             major = req.environ['api.major']
             minor = req.environ['api.minor']
+            LOG.debug("Matched versioned URI. Version: %(major)d.%(minor)d"
+                      % {'major': major, 'minor': minor})
+            # Strip the version from the path
+            req.path_info_pop()
+            return None
+        else:
+            LOG.debug("Unknown version in URI")
 
-            if (major == 1 and minor == 0):
-                LOG.debug("Matched versioned URI. Version: %(major)d.%(minor)d"
-                          % {'major': major, 'minor': minor})
-                # Strip the version from the path
-                req.path_info_pop()
-                return None
-            else:
-                LOG.debug("Unknown version in versioned URI: "
-                          "%(major)d.%(minor)d. Returning version choices."
-                          % {'major': major, 'minor': minor})
-                return self.versions_app
-
-        accept = str(req.accept)
+        # Try another path
         if accept.startswith('application/vnd.openstack.clustering-'):
             token_loc = len('application/vnd.openstack.clustering-')
             accept_version = accept[token_loc:]
-            match = self._match_version_string(accept_version, req)
-            if match:
+            controller = self._get_controller(accept_version, req)
+            if controller:
                 major = req.environ['api.major']
                 minor = req.environ['api.minor']
-                if (major == 1 and minor == 0):
-                    LOG.debug("Matched versioned media type. Version: "
-                              "%(major)d.%(minor)d"
-                              % {'major': major, 'minor': minor})
-                    return None
-                else:
-                    LOG.debug("Unknown version in accept header: "
-                              "%(major)d.%(minor)d..."
-                              "returning version choices."
-                              % {'major': major, 'minor': minor})
-                    return self.versions_app
-        else:
-            if req.accept not in ('*/*', ''):
-                LOG.debug("Returning HTTP 404 due to unknown Accept header: "
-                          "%s ", req.accept)
+                LOG.debug("Matched versioned media type. Version: "
+                          "%(major)d.%(minor)d",
+                          {'major': major, 'minor': minor})
+                return None
+            else:
+                LOG.debug("Unknown version in request header")
+
+        if req.accept not in ('*/*', ''):
+            LOG.debug("Returning HTTP 404 due to unknown Accept header: %s ",
+                      req.accept)
             return webob.exc.HTTPNotFound()
 
-        return None
+        return self.versions_app
 
-    def _match_version_string(self, subject, req):
-        """Do version matching.
+    def _get_controller(self, subject, req):
+        """Get a version specific controller based on endpoint version.
 
         Given a subject string, tries to match a major and/or minor version
         number. If found, sets the api.major and api.minor environ variables.
 
         :param subject: The string to check
         :param req: Webob.Request object
-        :returns: True if there was a match, false otherwise.
+        :returns: A version controller instance or None.
         """
         match = self.version_uri_regex.match(subject)
-        if match:
-            major, minor = match.groups(0)
-            major = int(major)
-            minor = int(minor)
-            req.environ['api.major'] = major
-            req.environ['api.minor'] = minor
+        if not match:
+            return None
 
-        return match is not None
+        major, minor = match.groups(0)
+        major = int(major)
+        minor = int(minor)
+        req.environ['api.major'] = major
+        req.environ['api.minor'] = minor
+        version = '%s.%s' % (major, minor)
+        return self.versions_app.get_controller(version)
 
     def _check_version_request(self, req):
         """Set API version request based on the request header."""
