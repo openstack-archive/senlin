@@ -41,7 +41,7 @@ class VersionController(wsgi.Controller):
                 }
             ],
             "links": [{
-                "href": ".",
+                "href": "/v1",
                 "rel": "self"}, {
                 "rel": "help",
                 "href": "http://developer.openstack.org/api-ref/clustering"
