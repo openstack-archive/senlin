@@ -71,10 +71,10 @@ def ListenerProc(exchange, project_id, cluster_id):
         NotificationEndpoint(project_id, cluster_id),
     ]
     listener = messaging.get_notification_listener(
-        transport, targets, endpoints, pool="senlin-listeners")
+        transport, targets, endpoints, executor='threading',
+        pool="senlin-listeners")
 
     listener.start()
-    listener.wait()
 
 
 class HealthManager(service.Service):
@@ -161,6 +161,9 @@ class HealthManager(service.Service):
                 'interval': cluster.interval,
                 'params': cluster.params,
             }
+
+            LOG.info("Loading cluster %s for health monitoring",
+                     cluster.cluster_id)
 
             entry = self._start_check(entry)
             if entry:
