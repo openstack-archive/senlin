@@ -65,7 +65,7 @@ class NotificationEndpoint(object):
 def ListenerProc(exchange, project_id, cluster_id):
     transport = messaging.get_notification_transport(cfg.CONF)
     targets = [
-        messaging.Target(topic='notifications', exchange=exchange),
+        messaging.Target(topic='versioned_notifications', exchange=exchange),
     ]
     endpoints = [
         NotificationEndpoint(project_id, cluster_id),

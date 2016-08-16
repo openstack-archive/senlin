@@ -60,7 +60,7 @@ class TestListenerProc(base.SenlinTestCase):
 
         self.assertIsNone(res)
         mock_transport.assert_called_once_with(cfg.CONF)
-        mock_target.assert_called_once_with(topic="notifications",
+        mock_target.assert_called_once_with(topic="versioned_notifications",
                                             exchange='EXCHANGE')
         mock_endpoint.assert_called_once_with('PROJECT_ID', 'CLUSTER_ID')
         mock_listener.assert_called_once_with(
