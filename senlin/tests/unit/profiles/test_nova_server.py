@@ -853,7 +853,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
                          six.text_type(ex))
 
     @mock.patch.object(server.ServerProfile, '_update_flavor')
-    def test_do_update_flavor_succeeded(self, mock_update_flavor):
+    def test_do_update_update_flavor_succeeded(self, mock_update_flavor):
         obj = mock.Mock()
         obj.physical_id = 'FAKE_ID'
 
@@ -899,8 +899,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         novaclient.flavor_find.has_calls(
             [mock.call('old_flavor'), mock.call('new_flavor')])
-        novaclient.server_resize.assert_called_once_with('FAKE_ID',
-                                                         '456')
+        novaclient.server_resize.assert_called_once_with('FAKE_ID', '456')
         novaclient.wait_for_server.has_calls([
             mock.call('FAKE_ID', 'VERIFY_RESIZE'),
             mock.call('FAKE_ID', 'ACTIVE')])
@@ -921,11 +920,11 @@ class TestNovaServerProfile(base.SenlinTestCase):
                                obj, 'old_flavor', 'new_flavor')
 
         novaclient.server_resize.assert_called_once_with('FAKE_ID', '456')
-        novaclient.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
         novaclient.server_resize_revert.assert_called_once_with('FAKE_ID')
+        novaclient.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
         self.assertEqual('Resize failed', six.text_type(ex))
 
-    def test__update_flavor_wait_for_server_failed(self):
+    def test__update_flavor_first_wait_for_server_failed(self):
         obj = mock.Mock(physical_id='FAKE_ID')
         novaclient = mock.Mock()
         novaclient.flavor_find.side_effect = [
@@ -949,6 +948,76 @@ class TestNovaServerProfile(base.SenlinTestCase):
             mock.call('FAKE_ID', 'ACTIVE')])
         novaclient.server_resize_revert.assert_called_once_with('FAKE_ID')
         self.assertEqual('TIMEOUT', six.text_type(ex))
+
+    def test__update_flavor_resize_failed_revert_failed(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        novaclient = mock.Mock()
+        novaclient.flavor_find.side_effect = [
+            mock.Mock(id='123'), mock.Mock(id='456')]
+        err_resize = exception.InternalError(code=500, message='Resize')
+        novaclient.server_resize.side_effect = err_resize
+        err_revert = exception.InternalError(code=500, message='Revert')
+        novaclient.server_resize_revert.side_effect = err_revert
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = novaclient
+
+        # do it
+        ex = self.assertRaises(exception.InternalError,
+                               profile._update_flavor,
+                               obj, 'old_flavor', 'new_flavor')
+
+        # assertions
+        novaclient.server_resize.assert_called_once_with('FAKE_ID', '456')
+        novaclient.server_resize_revert.assert_called_once_with('FAKE_ID')
+        # the wait_for_server wasn't called
+        self.assertEqual(0, novaclient.wait_for_server.call_count)
+        self.assertEqual('Revert', six.text_type(ex))
+
+    def test__update_flavor_confirm_failed(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        novaclient = mock.Mock()
+        novaclient.flavor_find.side_effect = [
+            mock.Mock(id='123'), mock.Mock(id='456')]
+        err_confirm = exception.InternalError(code=500, message='Confirm')
+        novaclient.server_resize_confirm.side_effect = err_confirm
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = novaclient
+
+        # do it
+        ex = self.assertRaises(exception.InternalError,
+                               profile._update_flavor,
+                               obj, 'old_flavor', 'new_flavor')
+
+        # assertions
+        novaclient.server_resize.assert_called_once_with('FAKE_ID', '456')
+        novaclient.server_resize_confirm.assert_called_once_with('FAKE_ID')
+        novaclient.wait_for_server.assert_called_once_with('FAKE_ID',
+                                                           'VERIFY_RESIZE')
+        self.assertEqual('Confirm', six.text_type(ex))
+
+    def test__update_flavor_wait_confirm_failed(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        novaclient = mock.Mock()
+        novaclient.flavor_find.side_effect = [
+            mock.Mock(id='123'), mock.Mock(id='456')]
+        err_wait = exception.InternalError(code=500, message='Wait')
+        novaclient.wait_for_server.side_effect = [None, err_wait]
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = novaclient
+
+        # do it
+        ex = self.assertRaises(exception.InternalError,
+                               profile._update_flavor,
+                               obj, 'old_flavor', 'new_flavor')
+
+        # assertions
+        novaclient.server_resize.assert_called_once_with('FAKE_ID', '456')
+        novaclient.server_resize_confirm.assert_called_once_with('FAKE_ID')
+        novaclient.wait_for_server.assert_has_calls([
+            mock.call('FAKE_ID', 'VERIFY_RESIZE'),
+            mock.call('FAKE_ID', 'ACTIVE')
+        ])
+        self.assertEqual('Wait', six.text_type(ex))
 
     def test_update_image(self):
         obj = mock.Mock()
