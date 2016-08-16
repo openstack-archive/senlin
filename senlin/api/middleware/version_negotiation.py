@@ -19,7 +19,7 @@ return
 
 import re
 
-import microversion_parse
+import microversion_parse as mp
 from oslo_log import log as logging
 import six
 import webob
@@ -57,9 +57,9 @@ class VersionNegotiationFilter(wsgi.Middleware):
         accept = str(req.accept)
 
         # Check if there is a requested (micro-)version for API
-        self._check_version_request(req)
         controller = self._get_controller(req.path_info_peek(), req)
         if controller:
+            self._check_version_request(req, controller)
             major = req.environ['api.major']
             minor = req.environ['api.minor']
             LOG.debug("Matched versioned URI. Version: %(major)d.%(minor)d"
@@ -76,6 +76,7 @@ class VersionNegotiationFilter(wsgi.Middleware):
             accept_version = accept[token_loc:]
             controller = self._get_controller(accept_version, req)
             if controller:
+                self._check_version_request(req, controller)
                 major = req.environ['api.major']
                 minor = req.environ['api.minor']
                 LOG.debug("Matched versioned media type. Version: "
@@ -85,9 +86,9 @@ class VersionNegotiationFilter(wsgi.Middleware):
             else:
                 LOG.debug("Unknown version in request header")
 
-        if req.accept not in ('*/*', ''):
+        if accept not in ('*/*', ''):
             LOG.debug("Returning HTTP 404 due to unknown Accept header: %s ",
-                      req.accept)
+                      accept)
             return webob.exc.HTTPNotFound()
 
         return self.versions_app
@@ -114,14 +115,19 @@ class VersionNegotiationFilter(wsgi.Middleware):
         version = '%s.%s' % (major, minor)
         return self.versions_app.get_controller(version)
 
-    def _check_version_request(self, req):
-        """Set API version request based on the request header."""
-        api_version = microversion_parse.get_version(req.headers,
-                                                     service_type='clustering')
+    def _check_version_request(self, req, controller):
+        """Set API version request based on the request header and controller.
+
+        :param req: The webob.Request object.
+        :param controller: The API version controller.
+        :returns: ``None``
+        :raises: ``HTTPBadRequest`` if API version string is bad.
+        """
+        api_version = mp.get_version(req.headers, service_type='clustering')
         if api_version is None:
-            api_version = wsgi.DEFAULT_API_VERSION
+            api_version = controller.DEFAULT_API_VERSION
         elif api_version.lower() == 'latest':
-            req.version_request = os_ver.max_api_version()
+            req.version_request = controller.max_api_version()
             return
 
         try:
@@ -129,10 +135,11 @@ class VersionNegotiationFilter(wsgi.Middleware):
         except exception.InvalidAPIVersionString as e:
             raise webob.exc.HTTPBadRequest(six.text_type(e))
 
-        if not ver.matches(os_ver.min_api_version(), os_ver.max_api_version()):
+        if not ver.matches(controller.min_api_version(),
+                           controller.max_api_version()):
             raise exception.InvalidGlobalAPIVersion(
                 req_ver=api_version,
-                min_ver=six.text_type(os_ver.min_api_version()),
-                max_ver=six.text_type(os_ver.max_api_version()))
+                min_ver=six.text_type(controller.min_api_version()),
+                max_ver=six.text_type(controller.max_api_version()))
 
         req.version_request = ver
