@@ -27,15 +27,169 @@ from senlin.tests.unit.common import base
 @mock.patch('oslo_messaging.NotificationFilter')
 class TestNotificationEndpoint(base.SenlinTestCase):
 
-    def test_init(self, mock_filter):
+    @mock.patch('senlin.rpc.client.EngineClient')
+    def test_init(self, mock_rpc, mock_filter):
         x_filter = mock_filter.return_value
+        event_map = {
+            'compute.instance.delete.end': 'DELETE',
+            'compute.instance.pause.end': 'PAUSE',
+            'compute.instance.power_off.end': 'POWER_OFF',
+            'compute.instance.rebuild.error': 'REBUILD',
+            'compute.instance.shutdown.end': 'SHUTDOWN',
+            'compute.instance.soft_delete.end': 'SOFT_DELETE',
+        }
+
         obj = health_manager.NotificationEndpoint('PROJECT', 'CLUSTER')
 
         mock_filter.assert_called_once_with(
             publisher_id='^compute.*',
             event_type='^compute\.instance\..*',
             context={'project_id': '^PROJECT$'})
+        mock_rpc.assert_called_once_with()
         self.assertEqual(x_filter, obj.filter_rule)
+        self.assertEqual(mock_rpc.return_value, obj.rpc)
+        for e in event_map:
+            self.assertIn(e, obj.VM_FAILURE_EVENTS)
+            self.assertEqual(event_map[e], obj.VM_FAILURE_EVENTS[e])
+        self.assertEqual('PROJECT', obj.project_id)
+        self.assertEqual('CLUSTER', obj.cluster_id)
+
+    @mock.patch('senlin.common.context.RequestContext')
+    @mock.patch('senlin.rpc.client.EngineClient')
+    def test_info(self, mock_rpc, mock_context, mock_filter):
+        x_rpc = mock_rpc.return_value
+        endpoint = health_manager.NotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        ctx = mock.Mock()
+        payload = {
+            'metadata': {
+                'cluster_id': 'CLUSTER_ID',
+                'cluster_node_id': 'FAKE_NODE',
+                'cluster_node_index': '123',
+            },
+            'instance_id': 'PHYSICAL_ID',
+            'user_id': 'USER',
+            'state': 'shutoff',
+        }
+        metadata = {'timestamp': 'TIMESTAMP'}
+        call_ctx = mock.Mock()
+        mock_context.return_value = call_ctx
+
+        res = endpoint.info(ctx, 'PUBLISHER', 'compute.instance.delete.end',
+                            payload, metadata)
+
+        self.assertIsNone(res)
+        x_rpc.node_recover.assert_called_once_with(
+            call_ctx,
+            'FAKE_NODE',
+            {
+                'event': 'DELETE',
+                'state': 'shutoff',
+                'instance_id': 'PHYSICAL_ID',
+                'timestamp': 'TIMESTAMP',
+                'publisher': 'PUBLISHER',
+            })
+
+    @mock.patch('senlin.rpc.client.EngineClient')
+    def test_info_no_metadata(self, mock_rpc, mock_filter):
+        x_rpc = mock_rpc.return_value
+        endpoint = health_manager.NotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        ctx = mock.Mock()
+        payload = {'metadata': {}}
+        metadata = {'timestamp': 'TIMESTAMP'}
+
+        res = endpoint.info(ctx, 'PUBLISHER', 'compute.instance.delete.end',
+                            payload, metadata)
+
+        self.assertIsNone(res)
+        self.assertEqual(0, x_rpc.node_recover.call_count)
+
+    @mock.patch('senlin.rpc.client.EngineClient')
+    def test_info_no_cluster_in_metadata(self, mock_rpc, mock_filter):
+        x_rpc = mock_rpc.return_value
+        endpoint = health_manager.NotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        ctx = mock.Mock()
+        payload = {'metadata': {'foo': 'bar'}}
+        metadata = {'timestamp': 'TIMESTAMP'}
+
+        res = endpoint.info(ctx, 'PUBLISHER', 'compute.instance.delete.end',
+                            payload, metadata)
+
+        self.assertIsNone(res)
+        self.assertEqual(0, x_rpc.node_recover.call_count)
+
+    @mock.patch('senlin.rpc.client.EngineClient')
+    def test_info_cluster_id_not_match(self, mock_rpc, mock_filter):
+        x_rpc = mock_rpc.return_value
+        endpoint = health_manager.NotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        ctx = mock.Mock()
+        payload = {'metadata': {'cluster_id': 'FOOBAR'}}
+        metadata = {'timestamp': 'TIMESTAMP'}
+
+        res = endpoint.info(ctx, 'PUBLISHER', 'compute.instance.delete.end',
+                            payload, metadata)
+
+        self.assertIsNone(res)
+        self.assertEqual(0, x_rpc.node_recover.call_count)
+
+    @mock.patch('senlin.rpc.client.EngineClient')
+    def test_info_event_type_not_interested(self, mock_rpc, mock_filter):
+        x_rpc = mock_rpc.return_value
+        endpoint = health_manager.NotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        ctx = mock.Mock()
+        payload = {'metadata': {'cluster_id': 'CLUSTER_ID'}}
+        metadata = {'timestamp': 'TIMESTAMP'}
+
+        res = endpoint.info(ctx, 'PUBLISHER', 'compute.instance.delete.start',
+                            payload, metadata)
+
+        self.assertIsNone(res)
+        self.assertEqual(0, x_rpc.node_recover.call_count)
+
+    @mock.patch('senlin.rpc.client.EngineClient')
+    def test_info_no_node_id(self, mock_rpc, mock_filter):
+        x_rpc = mock_rpc.return_value
+        endpoint = health_manager.NotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        ctx = mock.Mock()
+        payload = {'metadata': {'cluster_id': 'CLUSTER_ID'}}
+        metadata = {'timestamp': 'TIMESTAMP'}
+
+        res = endpoint.info(ctx, 'PUBLISHER', 'compute.instance.delete.end',
+                            payload, metadata)
+
+        self.assertIsNone(res)
+        self.assertEqual(0, x_rpc.node_recover.call_count)
+
+    @mock.patch('senlin.common.context.RequestContext')
+    @mock.patch('senlin.rpc.client.EngineClient')
+    def test_info_default_values(self, mock_rpc, mock_context, mock_filter):
+        x_rpc = mock_rpc.return_value
+        endpoint = health_manager.NotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        ctx = mock.Mock()
+        payload = {
+            'metadata': {
+                'cluster_id': 'CLUSTER_ID',
+                'cluster_node_id': 'NODE_ID'
+            },
+            'user_id': 'USER',
+        }
+        metadata = {'timestamp': 'TIMESTAMP'}
+        call_ctx = mock.Mock()
+        mock_context.return_value = call_ctx
+
+        res = endpoint.info(ctx, 'PUBLISHER', 'compute.instance.delete.end',
+                            payload, metadata)
+
+        self.assertIsNone(res)
+        x_rpc.node_recover.assert_called_once_with(
+            call_ctx,
+            'NODE_ID',
+            {
+                'event': 'DELETE',
+                'state': 'Unknown',
+                'instance_id': 'Unknown',
+                'timestamp': 'TIMESTAMP',
+                'publisher': 'PUBLISHER',
+            })
 
 
 @mock.patch('senlin.engine.health_manager.NotificationEndpoint')
