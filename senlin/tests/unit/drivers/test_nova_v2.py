@@ -232,12 +232,14 @@ class TestNovaV2(base.SenlinTestCase):
     def test_server_delete(self):
         d = nova_v2.NovaClient(self.conn_params)
         d.server_delete('foo', True)
-        self.compute.delete_server.assert_called_once_with('foo', True, False)
+        self.compute.delete_server.assert_called_once_with(
+            'foo', ignore_missing=True)
 
-    def test_server_delete_with_force(self):
+    def test_server_force_delete(self):
         d = nova_v2.NovaClient(self.conn_params)
-        d.server_delete('foo', True, True)
-        self.compute.delete_server.assert_called_once_with('foo', True, True)
+        d.server_force_delete('foo', True)
+        self.compute.delete_server.assert_called_once_with(
+            'foo', ignore_missing=True, force=True)
 
     def test_server_rebuild(self):
         d = nova_v2.NovaClient(self.conn_params)
