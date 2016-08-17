@@ -111,11 +111,15 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.update_server(server, **attrs)
 
     @sdk.translate_exception
-    def server_delete(self, server, ignore_missing=True,
-                      force=False):
+    def server_delete(self, server, ignore_missing=True):
         return self.conn.compute.delete_server(server,
-                                               ignore_missing,
-                                               force)
+                                               ignore_missing=ignore_missing)
+
+    @sdk.translate_exception
+    def server_force_delete(self, server, ignore_missing=True):
+        return self.conn.compute.delete_server(server,
+                                               ignore_missing=ignore_missing,
+                                               force=True)
 
     @sdk.translate_exception
     def server_rebuild(self, server, imageref, name=None, admin_password=None,

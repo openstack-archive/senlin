@@ -491,7 +491,21 @@ class TestNovaServerProfile(base.SenlinTestCase):
         res = profile.do_delete(test_server)
 
         self.assertTrue(res)
-        nc.server_delete.assert_called_once_with('FAKE_ID', True, False)
+        nc.server_delete.assert_called_once_with('FAKE_ID', True)
+        nc.wait_for_server_delete.assert_called_once_with('FAKE_ID')
+
+    def test_do_delete_ignore_missing_force(self):
+        profile = server.ServerProfile('t', self.spec)
+
+        nc = mock.Mock()
+        profile._novaclient = nc
+
+        test_server = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_delete(test_server, ignore_missing=False, force=True)
+
+        self.assertTrue(res)
+        nc.server_force_delete.assert_called_once_with('FAKE_ID', False)
         nc.wait_for_server_delete.assert_called_once_with('FAKE_ID')
 
     def test_do_delete_no_physical_id(self):
@@ -517,7 +531,25 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         self.assertEqual('Failed in deleting server FAKE_ID: Nova Error.',
                          six.text_type(ex))
-        nc.server_delete.assert_called_once_with('FAKE_ID', True, False)
+        nc.server_delete.assert_called_once_with('FAKE_ID', True)
+        self.assertEqual(0, nc.wait_for_server_delete.call_count)
+
+    def test_do_delete_with_force_delete_failure(self):
+        nc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._novaclient = nc
+
+        err = exception.InternalError(code=500, message='Nova Error')
+        nc.server_force_delete.side_effect = err
+        obj = mock.Mock(physical_id='FAKE_ID')
+
+        # do it
+        ex = self.assertRaises(exception.EResourceDeletion,
+                               profile.do_delete, obj, force=True)
+
+        self.assertEqual('Failed in deleting server FAKE_ID: Nova Error.',
+                         six.text_type(ex))
+        nc.server_force_delete.assert_called_once_with('FAKE_ID', True)
         self.assertEqual(0, nc.wait_for_server_delete.call_count)
 
     def test_do_delete_wait_for_server_timeout(self):
@@ -535,7 +567,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         self.assertEqual('Failed in deleting server FAKE_ID: TIMEOUT.',
                          six.text_type(ex))
-        nc.server_delete.assert_called_once_with('FAKE_ID', True, False)
+        nc.server_delete.assert_called_once_with('FAKE_ID', True)
         nc.wait_for_server_delete.assert_called_once_with('FAKE_ID')
 
     def test__update_basic_properties_ok(self):

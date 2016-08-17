@@ -417,7 +417,10 @@ class ServerProfile(base.Profile):
         force = params.get('force', False)
 
         try:
-            self.nova(obj).server_delete(server_id, ignore_missing, force)
+            if force:
+                self.nova(obj).server_force_delete(server_id, ignore_missing)
+            else:
+                self.nova(obj).server_delete(server_id, ignore_missing)
             self.nova(obj).wait_for_server_delete(server_id)
             return True
         except exc.InternalError as ex:
