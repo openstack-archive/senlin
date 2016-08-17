@@ -12,6 +12,9 @@
 
 import six
 
+from oslo_config import cfg
+from oslo_utils import timeutils
+
 
 def exact_filter(query, model, filters):
     """Applies exact match filtering to a query.
@@ -73,3 +76,11 @@ def get_sort_params(value, default_key=None):
         dirs.append('asc')
 
     return keys, dirs
+
+
+def is_service_dead(service):
+    """Check if a given service is dead."""
+    cfg.CONF.import_opt("periodic_interval", "senlin.common.config")
+    max_elapse = 2 * cfg.CONF.periodic_interval
+
+    return timeutils.is_older_than(service.updated_at, max_elapse)

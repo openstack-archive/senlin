@@ -1188,11 +1188,12 @@ def service_get_all(context):
 # HealthRegistry
 def registry_claim(context, engine_id):
     with session_for_write() as session:
-        q_eng = session.query(models.Service)
-        svc_ids = [s.id for s in q_eng.all()]
-
+        engines = session.query(models.Service).all()
+        svc_ids = [e.id for e in engines if not utils.is_service_dead(e)]
         q_reg = session.query(models.HealthRegistry)
-        q_reg = q_reg.filter(models.HealthRegistry.engine_id.notin_(svc_ids))
+        if svc_ids:
+            q_reg = q_reg.filter(
+                models.HealthRegistry.engine_id.notin_(svc_ids))
         q_reg.update({'engine_id': engine_id}, synchronize_session=False)
         result = q_reg.all()
         return result

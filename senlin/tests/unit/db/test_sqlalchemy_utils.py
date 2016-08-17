@@ -11,6 +11,8 @@
 # under the License.
 
 import mock
+from oslo_config import cfg
+from oslo_utils import timeutils
 
 from senlin.db.sqlalchemy import utils
 from senlin.tests.unit.common import base
@@ -95,3 +97,22 @@ class SortParamTest(base.SenlinTestCase):
         self.assertEqual(['foo', 'bar', 'id'], keys)
         self.assertEqual(['asc-nullsfirst', 'asc-nullsfirst',
                           'asc-nullsfirst'], dirs)
+
+
+class ServiceAliveTest(base.SenlinTestCase):
+
+    def test_alive(self):
+        cfg.CONF.set_override('periodic_interval', 100)
+        service = mock.Mock(updated_at=timeutils.utcnow())
+
+        res = utils.is_service_dead(service)
+
+        self.assertFalse(res)
+
+    def test_dead(self):
+        cfg.CONF.set_override('periodic_interval', 0)
+        service = mock.Mock(updated_at=timeutils.utcnow())
+
+        res = utils.is_service_dead(service)
+
+        self.assertTrue(res)

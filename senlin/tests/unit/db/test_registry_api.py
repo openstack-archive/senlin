@@ -10,8 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import mock
 
 from senlin.db.sqlalchemy import api as db_api
+from senlin.db.sqlalchemy import utils as db_utils
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -57,6 +59,23 @@ class DBAPIRegistryTest(base.SenlinTestCase):
         self.assertEqual(2, len(registries))
         self.assertEqual('ENGINE_ID', registries[0].engine_id)
         self.assertEqual('ENGINE_ID', registries[1].engine_id)
+
+    @mock.patch.object(db_utils, 'is_service_dead')
+    def test_registry_claim_with_dead_engine(self, mock_check):
+        db_api.service_create(self.ctx, 'SERVICE_ID_DEAD')
+        self._create_registry(
+            cluster_id='CLUSTER_1', check_type='NODE_STATUS_POLLING',
+            interval=60, params={}, engine_id='SERVICE_ID')
+        self._create_registry(
+            cluster_id='CLUSTER_1', check_type='NODE_STATUS_POLLING',
+            interval=60, params={}, engine_id='SERVICE_ID_DEAD')
+
+        mock_check.side_effect = [False, True]
+
+        registries = db_api.registry_claim(self.ctx, engine_id='ENGINE_ID')
+
+        self.assertEqual(1, len(registries))
+        self.assertEqual('ENGINE_ID', registries[0].engine_id)
 
     def test_registry_delete(self):
         registry = self._create_registry('CLUSTER_ID',
