@@ -319,7 +319,7 @@ def node_migrate(context, node_id, to_cluster, timestamp, role=None):
         return node
 
 
-def node_delete(context, node_id, force=False):
+def node_delete(context, node_id):
     with session_for_write() as session:
         node = session.query(models.Node).get(node_id)
         if not node:
@@ -497,7 +497,7 @@ def policy_update(context, policy_id, values):
         return policy
 
 
-def policy_delete(context, policy_id, force=False):
+def policy_delete(context, policy_id):
     with session_for_write() as session:
         policy = session.query(models.Policy).get(policy_id)
 
@@ -641,7 +641,7 @@ def profile_update(context, profile_id, values):
         return profile
 
 
-def profile_delete(context, profile_id, force=False):
+def profile_delete(context, profile_id):
     with session_for_write() as session:
         profile = session.query(models.Profile).get(profile_id)
         if profile is None:
@@ -1078,7 +1078,7 @@ def action_signal_query(context, action_id):
     return action.control
 
 
-def action_delete(context, action_id, force=False):
+def action_delete(context, action_id):
     with session_for_write() as session:
         action = session.query(models.Action).get(action_id)
         if not action:
