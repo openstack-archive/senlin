@@ -114,13 +114,6 @@ class EngineService(service.Service):
         LOG.info(_LI("Starting dispatcher for engine %s"), self.engine_id)
         self.dispatcher.start()
 
-        # create a health manager RPC service for this engine.
-        self.health_mgr = health_manager.HealthManager(
-            self, self.health_mgr_topic, consts.RPC_API_VERSION)
-
-        LOG.info(_LI("Starting health manager for engine %s"), self.engine_id)
-        self.health_mgr.start()
-
         target = oslo_messaging.Target(version=consts.RPC_API_VERSION,
                                        server=self.host,
                                        topic=self.topic)
@@ -128,6 +121,14 @@ class EngineService(service.Service):
         self._rpc_server = rpc_messaging.get_rpc_server(target, self)
         self._rpc_server.start()
         self.service_manage_cleanup()
+
+        # create a health manager RPC service for this engine.
+        self.health_mgr = health_manager.HealthManager(
+            self, self.health_mgr_topic, consts.RPC_API_VERSION)
+
+        LOG.info(_LI("Starting health manager for engine %s"), self.engine_id)
+        self.health_mgr.start()
+
         self.TG.add_timer(cfg.CONF.periodic_interval,
                           self.service_manage_report)
         super(EngineService, self).start()

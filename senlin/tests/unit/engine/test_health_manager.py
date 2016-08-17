@@ -64,9 +64,9 @@ class TestListenerProc(base.SenlinTestCase):
                                             exchange='EXCHANGE')
         mock_endpoint.assert_called_once_with('PROJECT_ID', 'CLUSTER_ID')
         mock_listener.assert_called_once_with(
-            x_transport, [x_target], [x_endpoint], pool="senlin-listeners")
+            x_transport, [x_target], [x_endpoint],
+            executor='threading', pool="senlin-listeners")
         x_listener.start.assert_called_once_with()
-        x_listener.wait.assert_called_once_with()
 
 
 class TestHealthManager(base.SenlinTestCase):
