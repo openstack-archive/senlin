@@ -103,16 +103,16 @@ class HealthManager(service.Service):
     def _poll_cluster(self, cluster_id):
         """Routine to be executed for polling cluster status.
 
-        @param cluster_id: The UUID of the cluster to be checked.
-        @return Nothing.
+        :param cluster_id: The UUID of the cluster to be checked.
+        :returns: Nothing.
         """
         self.rpc_client.cluster_check(self.ctx, cluster_id)
 
     def _add_listener(self, cluster_id):
         """Routine to be executed for adding cluster listener.
 
-        @param cluster_id: The UUID of the cluster to be filtered.
-        @return Nothing.
+        :param cluster_id: The UUID of the cluster to be filtered.
+        :returns: Nothing.
         """
         cluster = objects.Cluster.get(self.ctx, cluster_id)
         if not cluster:
@@ -123,10 +123,10 @@ class HealthManager(service.Service):
         return self.TG.add_thread(ListenerProc, 'nova', project, cluster_id)
 
     def _start_check(self, entry):
-        """Routine to call for starting the checking for a cluster.
+        """Routine for starting the checking for a cluster.
 
-        @param entry: A dict containing the data associated with the cluster.
-        @return: An updated registry entry record.
+        :param entry: A dict containing the data associated with the cluster.
+        :returns: An updated registry entry record.
         """
         if entry['check_type'] == consts.NODE_STATUS_POLLING:
             interval = min(entry['interval'], cfg.CONF.periodic_interval_max)
@@ -150,6 +150,24 @@ class HealthManager(service.Service):
 
         return entry
 
+    def _stop_check(self, entry):
+        """Routine for stopping the checking for a cluster.
+
+        :param entry: A dict containing the data associated with the cluster.
+        :returns: ``None``.
+        """
+        timer = entry.get('timer', None)
+        if timer:
+            timer.stop()
+            self.TG.timer_done(timer)
+            return
+
+        listener = entry.get('listener', None)
+        if listener:
+            listener.stop()
+            self.TG.thread_done(listener)
+            return
+
     def _load_runtime_registry(self):
         """Load the initial runtime registry with a DB scan."""
         db_registries = objects.HealthRegistry.claim(self.ctx, self.engine_id)
@@ -160,6 +178,7 @@ class HealthManager(service.Service):
                 'check_type': cluster.check_type,
                 'interval': cluster.interval,
                 'params': cluster.params,
+                'enabled': True,
             }
 
             LOG.info("Loading cluster %s for health monitoring",
@@ -213,6 +232,7 @@ class HealthManager(service.Service):
             'check_type': registry.check_type,
             'interval': registry.interval,
             'params': registry.params,
+            'enabled': True
         }
 
         self._start_check(entry)
@@ -226,20 +246,24 @@ class HealthManager(service.Service):
         :return: None
         """
         for i in range(len(self.rt['registries']) - 1, -1, -1):
-            registry = self.rt['registries'][i]
-            if registry.get('cluster_id') == cluster_id:
-                timer = registry.get('timer', None)
-                if timer:
-                    timer.stop()
-                    self.TG.timer_done(timer)
-                listener = registry.get('listener', None)
-                if listener:
-                    listener.stop()
-                    self.TG.thread_done(listener)
-
+            entry = self.rt['registries'][i]
+            if entry.get('cluster_id') == cluster_id:
+                self._stop_check(entry)
                 self.rt['registries'].pop(i)
 
         objects.HealthRegistry.delete(ctx, cluster_id)
+
+    def enable_cluster(self, ctx, cluster_id, params=None):
+        for c in self.rt['registries']:
+            if c['cluster_id'] == cluster_id and not c['enabled']:
+                c['enabled'] = True
+                self._start_check(c)
+
+    def disable_cluster(self, ctx, cluster_id, params=None):
+        for c in self.rt['registries']:
+            if c['cluster_id'] == cluster_id and c['enabled']:
+                c['enabled'] = False
+                self._stop_check(c)
 
 
 def notify(engine_id, method, **kwargs):
@@ -286,6 +310,13 @@ def register(cluster_id, engine_id=None, **kwargs):
 
 
 def unregister(cluster_id, engine_id=None):
-    return notify(engine_id,
-                  'unregister_cluster',
-                  cluster_id=cluster_id)
+    return notify(engine_id, 'unregister_cluster', cluster_id=cluster_id)
+
+
+def enable(cluster_id, **kwargs):
+    return notify(None, 'enable_cluster', cluster_id=cluster_id, params=kwargs)
+
+
+def disable(cluster_id, **kwargs):
+    return notify(None, 'disable_cluster', cluster_id=cluster_id,
+                  params=kwargs)
