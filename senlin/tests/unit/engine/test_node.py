@@ -506,7 +506,9 @@ class TestNode(base.SenlinTestCase):
         node = nodem.Node('node1', PROFILE_ID, CLUSTER_ID, self.context)
         mock_join_cluster.return_value = True
         cluster_id = 'fb8bca7a-a82b-4442-a40f-92d3e3cfb0b9'
+
         res = node.do_join(self.context, cluster_id)
+
         self.assertTrue(res)
         mock_migrate.assert_called_once_with(self.context, node.id,
                                              cluster_id, mock.ANY)
@@ -516,17 +518,24 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual(mock_migrate.return_value.index, node.index)
         self.assertIsNotNone(node.updated_at)
 
+    @mock.patch.object(node_obj.Node, 'migrate')
     @mock.patch.object(pb.Profile, 'join_cluster')
-    def test_node_join_fail_update_server_metadata(self, mock_join):
+    def test_node_join_fail_profile_call(self, mock_join, mock_migrate):
         node = nodem.Node('node1', PROFILE_ID, None, self.context)
+        node.id = uuidutils.generate_uuid()
         mock_join.return_value = False
         cluster_id = 'fb8bca7a-a82b-4442-a40f-92d3e3cfb0b9'
+
         res = node.do_join(self.context, cluster_id)
+
         self.assertFalse(res)
+        mock_join.assert_called_once_with(self.context, node, cluster_id)
+        mock_migrate.assert_has_calls([
+            mock.call(self.context, node.id, cluster_id, mock.ANY),
+            mock.call(self.context, node.id, None, mock.ANY),
+        ])
         self.assertEqual('', node.cluster_id)
         self.assertEqual(-1, node.index)
-        self.assertIsNone(node.updated_at)
-        mock_join.assert_called_once_with(self.context, node, cluster_id)
 
     @mock.patch.object(node_obj.Node, 'migrate')
     def test_node_leave_no_cluster(self, mock_migrate):

@@ -319,16 +319,24 @@ class Node(object):
     def do_join(self, context, cluster_id):
         if self.cluster_id == cluster_id:
             return True
+
+        timestamp = timeutils.utcnow(True)
+        db_node = no.Node.migrate(context, self.id, cluster_id, timestamp)
+        self.cluster_id = cluster_id
+        self.updated_at = timestamp
+        self.index = db_node.index
+
         res = pb.Profile.join_cluster(context, self, cluster_id)
         if res:
-            timestamp = timeutils.utcnow(True)
-            db_node = no.Node.migrate(context, self.id, cluster_id, timestamp)
-            self.cluster_id = cluster_id
-            self.updated_at = timestamp
-            self.index = db_node.index
             return True
-        else:
-            return False
+
+        # rollback
+        db_node = no.Node.migrate(context, self.id, None, timestamp)
+        self.cluster_id = ''
+        self.updated_at = timestamp
+        self.index = -1
+
+        return False
 
     def do_leave(self, context):
         if self.cluster_id == '':
