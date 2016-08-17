@@ -13,6 +13,8 @@
 '''
 SDK Client
 '''
+import sys
+
 import functools
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -21,6 +23,7 @@ import six
 from openstack import connection
 from openstack import exceptions as sdk_exc
 from openstack import profile
+from openstack import utils
 from oslo_serialization import jsonutils
 from requests import exceptions as req_exc
 
@@ -29,6 +32,7 @@ from senlin.common import exception as senlin_exc
 USER_AGENT = 'senlin'
 exc = sdk_exc
 LOG = logging.getLogger(__name__)
+utils.enable_logging(debug=True, stream=sys.stdout)
 
 
 def parse_exception(ex):
