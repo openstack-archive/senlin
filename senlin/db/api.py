@@ -120,8 +120,8 @@ def node_migrate(context, node_id, to_cluster, timestamp, role=None):
     return IMPL.node_migrate(context, node_id, to_cluster, timestamp, role)
 
 
-def node_delete(context, node_id, force=False):
-    return IMPL.node_delete(context, node_id, force)
+def node_delete(context, node_id):
+    return IMPL.node_delete(context, node_id)
 
 
 # Locks
@@ -177,8 +177,8 @@ def policy_update(context, policy_id, values):
     return IMPL.policy_update(context, policy_id, values)
 
 
-def policy_delete(context, policy_id, force=False):
-    return IMPL.policy_delete(context, policy_id, force)
+def policy_delete(context, policy_id):
+    return IMPL.policy_delete(context, policy_id)
 
 
 # Cluster-Policy Associations
@@ -391,8 +391,8 @@ def action_signal_query(context, action_id):
     return IMPL.action_signal_query(context, action_id)
 
 
-def action_delete(context, action_id, force=False):
-    return IMPL.action_delete(context, action_id, force)
+def action_delete(context, action_id):
+    return IMPL.action_delete(context, action_id)
 
 
 def receiver_create(context, values):
