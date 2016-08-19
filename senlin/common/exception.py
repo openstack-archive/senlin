@@ -49,7 +49,7 @@ class SenlinException(Exception):
             # if kwargs doesn't match a variable in the message
             # log the issue and the kwargs
             LOG.exception(_LE('Exception in string format operation'))
-            for name, value in six.iteritems(kwargs):
+            for name, value in kwargs.items():
                 LOG.error("%s: %s" % (name, value))  # noqa
 
             if _FATAL_EXCEPTION_FORMAT_ERRORS:

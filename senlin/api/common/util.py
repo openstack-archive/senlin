@@ -13,7 +13,6 @@
 
 import functools
 
-import six
 from webob import exc
 
 from senlin.common import policy
@@ -56,7 +55,7 @@ def get_allowed_params(params, whitelist):
     """
     allowed_params = {}
 
-    for key, get_type in six.iteritems(whitelist):
+    for key, get_type in whitelist.items():
         value = None
         if get_type == 'single':
             value = params.get(key)

@@ -10,8 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import six
-
 from oslo_config import cfg
 from oslo_utils import timeutils
 
@@ -35,7 +33,7 @@ def exact_filter(query, model, filters):
     if filters is None:
         filters = {}
 
-    for key, value in six.iteritems(filters):
+    for key, value in filters.items():
         if isinstance(value, (list, tuple, set, frozenset)):
             column_attr = getattr(model, key)
             query = query.filter(column_attr.in_(value))

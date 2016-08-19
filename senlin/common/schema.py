@@ -366,7 +366,7 @@ class Map(PropertySchema):
         if not isinstance(value, collections.Mapping):
             raise TypeError(_('"%s" is not a Map') % value)
 
-        return dict(self._get_children(six.iteritems(value), context))
+        return dict(self._get_children(value.items(), context))
 
     def validate(self, value, context=None):
         if not isinstance(value, collections.Mapping):

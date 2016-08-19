@@ -12,7 +12,6 @@
 
 from oslo_config import cfg
 from oslo_log import log
-import six
 
 from senlin.common.i18n import _LW
 from senlin.drivers import base
@@ -210,7 +209,7 @@ class NovaClient(base.DriverBase):
         res = self.conn.compute.get_server_metadata(server)
         if res.metadata:
             self.conn.compute.delete_server_metadata(
-                server, list(six.iterkeys(res.metadata)))
+                server, list(res.metadata.keys()))
 
         # Then reset metadata to given value if it is not {}
         if metadata:
