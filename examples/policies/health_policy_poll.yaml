@@ -5,7 +5,7 @@ description: A policy for maintaining node health from a cluster.
 properties:
   detection:
     # Type for health checking, valid values include:
-    # NODE_STATUS_POLLING, LB_STATUS_POLLING, VM_EVENT_LISTENING
+    # NODE_STATUS_POLLING, LB_STATUS_POLLING, VM_LIFECYCLE_EVENTS
     type: NODE_STATUS_POLLING
 
     options:

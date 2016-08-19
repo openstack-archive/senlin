@@ -537,6 +537,9 @@ class ClusterAction(base.Action):
             self.data.update(pd)
         recover_action = pd.get('recover_action', 'RECREATE')
 
+        fencing_type = pd.get('fencing')
+        force_delete = fencing_type is not None and 'COMPUTE' in fencing_type
+
         reason = _('Cluster recovery succeeded.')
 
         children = []
@@ -548,7 +551,10 @@ class ClusterAction(base.Action):
                 self.context, node_id, consts.NODE_RECOVER,
                 name='node_recover_%s' % node_id[:8],
                 cause=base.CAUSE_DERIVED,
-                inputs={'operation': recover_action}
+                inputs={
+                    'operation': recover_action,
+                    'force': force_delete,
+                }
             )
             children.append(action_id)
 

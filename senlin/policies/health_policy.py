@@ -97,6 +97,7 @@ class HealthPolicy(base.Policy):
             },
             required=True,
         ),
+
         RECOVERY: schema.Map(
             _('Policy aspect for node failure recovery.'),
             schema={
@@ -130,6 +131,7 @@ class HealthPolicy(base.Policy):
         self.interval = options[self.DETECTION_INTERVAL]
         recover_settings = self.properties[self.RECOVERY]
         self.recover_actions = recover_settings[self.RECOVERY_ACTIONS]
+        self.fencing_types = recover_settings[self.RECOVERY_FENCING]
 
     def attach(self, cluster):
         """"Hook for policy attach.
@@ -168,6 +170,7 @@ class HealthPolicy(base.Policy):
 
         pd = {
             'recover_action': self.recover_actions[0],
+            'fencing': self.fencing_types,
         }
         action.data.update({'health': pd})
         action.store(action.context)
