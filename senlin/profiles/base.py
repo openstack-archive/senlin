@@ -231,13 +231,16 @@ class Profile(object):
         profile = cls.load(ctx, profile_id=obj.profile_id)
         return profile.do_recover(obj, **options)
 
-    def validate(self):
+    def validate(self, validate_props=False):
         '''Validate the schema and the data provided.'''
         # general validation
         self.spec_data.validate()
         self.properties.validate()
 
         # TODO(Anyone): need to check the contents in self.CONTEXT
+
+        if validate_props:
+            self.do_validate(obj=self.context)
 
     @classmethod
     def get_schema(cls):
@@ -335,6 +338,11 @@ class Profile(object):
                 return False
 
         return res
+
+    def do_validate(self, obj):
+        """For subclass to override."""
+        LOG.warning(_LW("Validate operation not supported."))
+        return True
 
     def to_dict(self):
         pb_dict = {

@@ -334,7 +334,7 @@ class EngineService(service.Service):
         return [p.to_dict() for p in profiles]
 
     def _validate_profile(self, context, spec, name=None,
-                          metadata=None):
+                          metadata=None, validate_props=False):
         """Validate a profile.
 
         :param context: An instance of the request context.
@@ -342,6 +342,8 @@ class EngineService(service.Service):
         :param spec: A dictionary containing the spec for the profile.
         :param metadata: A dictionary containing optional key-value pairs to
                          be associated with the profile.
+        :param validate_props: Whether to validate if provide a valid Value
+                               to property.
         :return: Validated profile object.
         """
         type_name, version = schema.get_spec_version(spec)
@@ -363,7 +365,7 @@ class EngineService(service.Service):
             name = 'validated_profile'
         profile = plugin(name, spec, **kwargs)
         try:
-            profile.validate()
+            profile.validate(validate_props=validate_props)
         except exception.InvalidSpec as ex:
             msg = six.text_type(ex)
             LOG.error(_LE("Failed in validating profile: %s"), msg)
@@ -399,6 +401,19 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Profile %(name)s is created: %(id)s."),
                  {'name': name, 'id': profile.id})
+
+        return profile.to_dict()
+
+    @request_context
+    def profile_validate(self, context, spec):
+        """Validate a profile with the given properties.
+
+        :param context: An instance of the request context.
+        :param spec: A dictionary containing the spec for the profile.
+        :return: A dictionary containing the details of the profile object
+                 validated.
+        """
+        profile = self._validate_profile(context, spec, validate_props=True)
 
         return profile.to_dict()
 
