@@ -189,7 +189,10 @@ class NovaClient(base.DriverBase):
     def server_resize_revert(self, server):
         return
 
-    def server_delete(self, server, ignore_missing=True, force=False):
+    def server_delete(self, server, ignore_missing=True):
+        return
+
+    def server_force_delete(self, server, ignore_missing=True):
         return
 
     def server_metadata_get(self, server):
