@@ -13,7 +13,6 @@
 from oslo_config import cfg
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
-from six.moves.urllib import parse
 
 from senlin.common import consts
 from senlin.common import exception
@@ -37,7 +36,8 @@ class Receiver(object):
         :returns: An instance of a specific sub-class of Receiver.
         """
         if rtype == consts.RECEIVER_WEBHOOK:
-            ReceiverClass = Webhook
+            from senlin.engine.receivers import webhook
+            ReceiverClass = webhook.Webhook
         else:
             ReceiverClass = Receiver
 
@@ -187,24 +187,3 @@ class Receiver(object):
 
     def initialize_channel(self):
         return {}
-
-
-class Webhook(Receiver):
-    """Webhook flavor of receivers."""
-
-    def initialize_channel(self):
-        host = CONF.webhook.host
-        port = CONF.webhook.port
-        base = "http://%(h)s:%(p)s/v1" % {'h': host, 'p': port}
-        webhook = "/webhooks/%(id)s/trigger" % {'id': self.id}
-        if self.params:
-            normalized = sorted(self.params.items(), key=lambda d: d[0])
-            qstr = parse.urlencode(normalized)
-            url = "".join([base, webhook, '?V=1&', qstr])
-        else:
-            url = "".join([base, webhook, '?V=1'])
-
-        self.channel = {
-            'alarm_url': url
-        }
-        return self.channel

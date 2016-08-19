@@ -11,13 +11,12 @@
 # under the License.
 
 import mock
-from oslo_config import cfg
 from oslo_utils import timeutils
 import six
 
 from senlin.common import exception
 from senlin.common import utils as common_utils
-from senlin.engine import receiver as rb
+from senlin.engine.receivers import base as rb
 from senlin.objects import receiver as ro
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -243,36 +242,3 @@ class TestReceiver(base.SenlinTestCase):
 
         result = rb.Receiver.load(self.context, receiver_id=receiver.id)
         self.assertEqual(expected, result.to_dict())
-
-
-class TestWebhook(base.SenlinTestCase):
-
-    def test_initialize_channel(self):
-        cfg.CONF.set_override('host', 'web.com', 'webhook')
-        cfg.CONF.set_override('port', '1234', 'webhook')
-        webhook = rb.Webhook('webhook', CLUSTER_ID, 'FAKE_ACTION',
-                             id=UUID1)
-        channel = webhook.initialize_channel()
-
-        expected = {
-            'alarm_url': ('http://web.com:1234/v1/webhooks/%s/trigger'
-                          '?V=1' % UUID1)
-        }
-        self.assertEqual(expected, channel)
-        self.assertEqual(expected, webhook.channel)
-
-    def test_initialize_channel_with_params(self):
-        cfg.CONF.set_override('host', 'web.com', 'webhook')
-        cfg.CONF.set_override('port', '1234', 'webhook')
-        webhook = rb.Webhook(
-            'webhook', CLUSTER_ID, 'FAKE_ACTION',
-            id=UUID1, params={'KEY': 884, 'FOO': 'BAR'})
-
-        channel = webhook.initialize_channel()
-
-        expected = {
-            'alarm_url': ('http://web.com:1234/v1/webhooks/%s/trigger'
-                          '?V=1&FOO=BAR&KEY=884' % UUID1)
-        }
-        self.assertEqual(expected, channel)
-        self.assertEqual(expected, webhook.channel)

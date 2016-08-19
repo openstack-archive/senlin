@@ -38,7 +38,7 @@ from senlin.engine import dispatcher
 from senlin.engine import environment
 from senlin.engine import health_manager
 from senlin.engine import node as node_mod
-from senlin.engine import receiver as receiver_mod
+from senlin.engine.receivers import base as receiver_mod
 from senlin.engine import scheduler
 from senlin.objects import action as action_obj
 from senlin.objects import cluster as cluster_obj
