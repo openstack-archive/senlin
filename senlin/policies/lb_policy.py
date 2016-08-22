@@ -268,11 +268,13 @@ class LoadBalancingPolicy(base.Policy):
         self.validate()
         self.lb = None
 
-    def validate(self):
+    def validate(self, validate_props=False):
         super(LoadBalancingPolicy, self).validate()
 
-        # validate subnet's exists
-        # subnet = self.nc.subnet_get(vip[self.VIP_SUBNET])
+        # TODO(elynn): Check if subnet exists
+        if validate_props:
+            pass
+            # subnet = self.nc.subnet_get(vip[self.VIP_SUBNET])
 
     def attach(self, cluster):
         """Routine to be invoked when policy is to be attached to a cluster.
