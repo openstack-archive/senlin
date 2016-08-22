@@ -17,7 +17,6 @@ import mock
 from oslo_config import cfg
 from oslo_utils import encodeutils
 import six
-import stubout
 import webob
 
 from senlin.api.common import version_request as vr
@@ -31,7 +30,6 @@ CONF = cfg.CONF
 class RequestTest(base.SenlinTestCase):
 
     def setUp(self):
-        self.stubs = stubout.StubOutForTesting()
         super(RequestTest, self).setUp()
 
     def test_content_type_missing(self):
@@ -86,7 +84,6 @@ class RequestTest(base.SenlinTestCase):
 class ResourceTest(base.SenlinTestCase):
 
     def setUp(self):
-        self.stubs = stubout.StubOutForTesting()
         super(ResourceTest, self).setUp()
 
     def test_get_action_args(self):
@@ -177,11 +174,16 @@ class ResourceTest(base.SenlinTestCase):
                               resource, request)
         self.assertIsInstance(e.exc, webob.exc.HTTPBadRequest)
 
-    def test_resource_call_error_handle_localized(self):
+    @mock.patch.object(wsgi, 'translate_exception')
+    def test_resource_call_error_handle_localized(self, mock_translate):
         class Controller(object):
             def delete(self, req, identity):
                 return (req, identity)
 
+        def fake_translate_exception(ex, locale):
+            return translated_ex
+
+        mock_translate.side_effect = fake_translate_exception
         actions = {'action': 'delete', 'id': 12, 'body': 'data'}
         env = {'wsgiorg.routing_args': [None, actions]}
         request = wsgi.Request.blank('/tests/123', environ=env)
@@ -190,12 +192,6 @@ class ResourceTest(base.SenlinTestCase):
         translated_ex = webob.exc.HTTPBadRequest(message_es)
 
         resource = wsgi.Resource(Controller())
-
-        def fake_translate_exception(ex, locale):
-            return translated_ex
-
-        self.stubs.SmartSet(wsgi, 'translate_exception',
-                            fake_translate_exception)
 
         e = self.assertRaises(exception.HTTPExceptionDisguise,
                               resource, request)
