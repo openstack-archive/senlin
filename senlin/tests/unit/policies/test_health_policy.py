@@ -88,12 +88,12 @@ class TestHealthPolicy(base.SenlinTestCase):
         self.assertEqual('', data)
         mock_hm_reg.assert_called_once_with('CLUSTER_ID')
 
-    def test_pre_op(self):
-        action = mock.Mock()
-        action.context = 'action_context'
-        action.data = {}
-        action.action = consts.CLUSTER_RECOVER
+    def test_pre_op_default(self):
+        action = mock.Mock(context='action_context', data={},
+                           action=consts.CLUSTER_RECOVER)
+
         res = self.hp.pre_op(self.cluster.id, action)
+
         self.assertTrue(res)
         data = {
             'health':
@@ -104,7 +104,28 @@ class TestHealthPolicy(base.SenlinTestCase):
         }
         self.assertEqual(data, action.data)
 
-    def test_post_op(self):
-        action = mock.Mock()
-        res = self.hp.post_op(self.cluster.id, action)
+    @mock.patch.object(health_manager, 'disable')
+    def test_pre_op_scale_in(self, mock_disable):
+        action = mock.Mock(context='action_context', data={},
+                           action=consts.CLUSTER_SCALE_IN)
+
+        res = self.hp.pre_op(self.cluster.id, action)
+
         self.assertTrue(res)
+        mock_disable.assert_called_once_with(self.cluster.id)
+
+    def test_post_op_default(self):
+        action = mock.Mock(action='FAKE_ACTION')
+
+        res = self.hp.post_op(self.cluster.id, action)
+
+        self.assertTrue(res)
+
+    @mock.patch.object(health_manager, 'enable')
+    def test_post_op_scale_in(self, mock_enable):
+        action = mock.Mock(action=consts.CLUSTER_SCALE_IN)
+
+        res = self.hp.post_op(self.cluster.id, action)
+
+        self.assertTrue(res)
+        mock_enable.assert_called_once_with(self.cluster.id)

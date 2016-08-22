@@ -28,6 +28,8 @@ class HealthPolicy(base.Policy):
     TARGET = [
         ('BEFORE', consts.CLUSTER_CHECK),
         ('BEFORE', consts.CLUSTER_RECOVER),
+        ('BEFORE', consts.CLUSTER_SCALE_IN),
+        ('AFTER', consts.CLUSTER_SCALE_IN),
     ]
 
     # Should be ANY if profile provides health check support?
@@ -164,8 +166,10 @@ class HealthPolicy(base.Policy):
         return True, ''
 
     def pre_op(self, cluster_id, action, **args):
-        # Ignore actions that are not required to be processed at this stage
-        if action.action != consts.CLUSTER_RECOVER:
+        # disable health policy if the operation is a cluster scale request,
+        # or else the policy will attempt to recover nodes that are deleted.
+        if action.action == consts.CLUSTER_SCALE_IN:
+            health_manager.disable(cluster_id)
             return True
 
         pd = {
@@ -178,11 +182,8 @@ class HealthPolicy(base.Policy):
         return True
 
     def post_op(self, cluster_id, action, **args):
-        # Ignore irrelevant action here
-        if action.action not in (consts.CLUSTER_CHECK,
-                                 consts.CLUSTER_RECOVER):
+        if action.action == consts.CLUSTER_SCALE_IN:
+            health_manager.enable(cluster_id)
             return True
 
-        # TODO(anyone): subscribe to vm-lifecycle-events for the specified VM
-        #               or add vm to the list of VM status polling
         return True
