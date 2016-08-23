@@ -12,6 +12,7 @@
 
 import mock
 from oslo_config import cfg
+from oslo_context import context as oslo_ctx
 from oslo_utils import timeutils
 import six
 
@@ -21,6 +22,7 @@ from senlin.common import utils as common_utils
 from senlin.drivers import base as driver_base
 from senlin.engine.receivers import base as rb
 from senlin.engine.receivers import webhook as rw
+from senlin.objects import credential as co
 from senlin.objects import receiver as ro
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -314,3 +316,73 @@ class TestReceiver(base.SenlinTestCase):
         self.assertIsNone(res)
         mock_get_service_context.assert_called_once_with()
         fake_kc.get_senlin_endpoint.assert_called_once_with()
+
+    @mock.patch.object(co.Credential, 'get')
+    @mock.patch.object(context, 'get_service_context')
+    @mock.patch.object(oslo_ctx, 'get_current')
+    def test_build_conn_params(self, mock_get_current, mock_get_service_ctx,
+                               mock_cred_get):
+        user = 'user1'
+        project = 'project1'
+        service_cred = {
+            'auth_url': 'AUTH_URL',
+            'username': 'senlin',
+            'user_domain_name': 'default',
+            'password': '123'
+        }
+        current_ctx = {
+            'auth_url': 'auth_url',
+            'user_name': user,
+            'user_domain_name': 'default',
+            'password': '456'
+        }
+        cred_info = {
+            'openstack': {
+                'trust': 'TRUST_ID',
+            }
+        }
+
+        cred = mock.Mock()
+        cred.cred = cred_info
+        mock_get_service_ctx.return_value = service_cred
+        mock_get_current.return_value = current_ctx
+        mock_cred_get.return_value = cred
+
+        receiver = self._create_receiver('receiver-1', UUID1)
+        receiver = rb.Receiver.load(self.context, receiver_obj=receiver)
+        expected_result = {
+            'auth_url': 'AUTH_URL',
+            'username': 'senlin',
+            'user_domain_name': 'default',
+            'password': '123',
+            'trust_id': 'TRUST_ID'
+        }
+        res = receiver._build_conn_params(user, project)
+        self.assertEqual(expected_result, res)
+        mock_get_service_ctx.assert_called_once_with()
+        mock_cred_get.assert_called_once_with(current_ctx, user, project)
+
+    @mock.patch.object(co.Credential, 'get')
+    @mock.patch.object(context, 'get_service_context')
+    @mock.patch.object(oslo_ctx, 'get_current')
+    def test_build_conn_params_trust_not_found(
+            self, mock_get_current, mock_get_service_ctx, mock_cred_get):
+
+        user = 'user1'
+        project = 'project1'
+        service_cred = {
+            'auth_url': 'AUTH_URL',
+            'username': 'senlin',
+            'user_domain_name': 'default',
+            'password': '123'
+        }
+
+        mock_get_service_ctx.return_value = service_cred
+        mock_cred_get.return_value = None
+
+        receiver = self._create_receiver('receiver-1', UUID1)
+        receiver = rb.Receiver.load(self.context, receiver_obj=receiver)
+        ex = self.assertRaises(exception.TrustNotFound,
+                               receiver._build_conn_params, user, project)
+        msg = "The trust for trustor (user1) could not be found."
+        self.assertEqual(msg, six.text_type(ex))
