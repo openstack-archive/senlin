@@ -510,3 +510,41 @@ class Cluster(object):
                 if zone == placement['zone']:
                     result.append(node)
         return result
+
+    def eval_status(self, ctx, operation):
+        """Re-evaluate cluster's health status.
+
+        :param ctx: The requesting context.
+        :param operation: The operation that triggers this status evaluation.
+        :returns: ``None``.
+        """
+        self.rt['nodes'] = node_mod.Node.load_all(ctx, cluster_id=self.id)
+        active_count = 0
+        for node in self.nodes:
+            if node.status == 'ACTIVE':
+                active_count += 1
+
+        values = {}
+        if active_count < self.min_size:
+            status = self.ERROR
+            reason = _("%(o)s: number of active nodes is below min_size "
+                       "(%(n)d).") % {'o': operation, 'n': self.min_size}
+        elif active_count < self.desired_capacity:
+            status = self.WARNING
+            reason = _("%(o)s: number of active nodes is below "
+                       "desired_capacity "
+                       "(%(n)d).") % {'o': operation,
+                                      'n': self.desired_capacity}
+        elif self.max_size < 0 or active_count < self.max_size:
+            status = self.ACTIVE
+            reason = _("%(o)s: number of active nodes is above "
+                       "desired_capacity "
+                       "(%(n)d).") % {'o': operation,
+                                      'n': self.desired_capacity}
+        else:
+            status = self.WARNING
+            reason = _("%(o)s: number of active nodes is above max_size "
+                       "(%(n)d).") % {'o': operation, 'n': self.max_size}
+
+        values = {'status': status, 'status_reason': reason}
+        co.Cluster.update(ctx, self.id, values)

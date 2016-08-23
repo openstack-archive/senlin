@@ -823,3 +823,79 @@ class TestCluster(base.SenlinTestCase):
 
         result = cluster.nodes_by_region('AZ3')
         self.assertEqual(0, len(result))
+
+    @mock.patch.object(co.Cluster, 'update')
+    @mock.patch.object(node_mod.Node, 'load_all')
+    def test_eval_status_below_min_size(self, mock_load, mock_update):
+        cluster = cb.Cluster('test-cluster', 5, PROFILE_ID,
+                             min_size=2, id=CLUSTER_ID)
+        node1 = mock.Mock(status='ACTIVE')
+        node2 = mock.Mock(status='ERROR')
+        node3 = mock.Mock(status='WARNING')
+        mock_load.return_value = [node1, node2, node3]
+
+        cluster.eval_status(self.context, 'TEST')
+
+        mock_load.assert_called_once_with(self.context, cluster_id=CLUSTER_ID)
+        mock_update.assert_called_once_with(
+            self.context, CLUSTER_ID,
+            {'status': cluster.ERROR,
+             'status_reason': 'TEST: number of active nodes is below '
+                              'min_size (2).'})
+
+    @mock.patch.object(co.Cluster, 'update')
+    @mock.patch.object(node_mod.Node, 'load_all')
+    def test_eval_status_below_desired_capacity(self, mock_load, mock_update):
+        cluster = cb.Cluster('test-cluster', 5, PROFILE_ID,
+                             min_size=1, id=CLUSTER_ID)
+        node1 = mock.Mock(status='ACTIVE')
+        node2 = mock.Mock(status='ERROR')
+        node3 = mock.Mock(status='WARNING')
+        mock_load.return_value = [node1, node2, node3]
+
+        cluster.eval_status(self.context, 'TEST')
+
+        mock_load.assert_called_once_with(self.context, cluster_id=CLUSTER_ID)
+        mock_update.assert_called_once_with(
+            self.context, CLUSTER_ID,
+            {'status': cluster.WARNING,
+             'status_reason': 'TEST: number of active nodes is below '
+                              'desired_capacity (5).'})
+
+    @mock.patch.object(co.Cluster, 'update')
+    @mock.patch.object(node_mod.Node, 'load_all')
+    def test_eval_status_above_desired_capacity(self, mock_load, mock_update):
+        cluster = cb.Cluster('test-cluster', 2, PROFILE_ID,
+                             min_size=1, id=CLUSTER_ID)
+        node1 = mock.Mock(status='ACTIVE')
+        node2 = mock.Mock(status='ACTIVE')
+        node3 = mock.Mock(status='ACTIVE')
+        mock_load.return_value = [node1, node2, node3]
+
+        cluster.eval_status(self.context, 'TEST')
+
+        mock_load.assert_called_once_with(self.context, cluster_id=CLUSTER_ID)
+        mock_update.assert_called_once_with(
+            self.context, CLUSTER_ID,
+            {'status': cluster.ACTIVE,
+             'status_reason': 'TEST: number of active nodes is above '
+                              'desired_capacity (2).'})
+
+    @mock.patch.object(co.Cluster, 'update')
+    @mock.patch.object(node_mod.Node, 'load_all')
+    def test_eval_status_above_max_size(self, mock_load, mock_update):
+        cluster = cb.Cluster('test-cluster', 2, PROFILE_ID,
+                             max_size=2, id=CLUSTER_ID)
+        node1 = mock.Mock(status='ACTIVE')
+        node2 = mock.Mock(status='ACTIVE')
+        node3 = mock.Mock(status='ACTIVE')
+        mock_load.return_value = [node1, node2, node3]
+
+        cluster.eval_status(self.context, 'TEST')
+
+        mock_load.assert_called_once_with(self.context, cluster_id=CLUSTER_ID)
+        mock_update.assert_called_once_with(
+            self.context, CLUSTER_ID,
+            {'status': cluster.WARNING,
+             'status_reason': 'TEST: number of active nodes is above '
+                              'max_size (2).'})
