@@ -47,6 +47,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-Id: request_id
   - receivers: receivers
   - action: receiver_action
   - actor: receiver_actor
@@ -117,6 +118,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-Id: request_id
   - receiver: receiver
   - action: receiver_action
   - actor: receiver_actor
@@ -174,6 +176,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-Id: request_id
   - receiver: receiver
   - action: receiver_action
   - actor: receiver_actor
@@ -221,11 +224,19 @@ Response Codes
 Request Parameters
 ------------------
 
+This operation does not accept a request body.
+
 .. rest_parameters:: parameters.yaml
 
   - OpenStack-API-Version: microversion
   - receiver_id: receiver_id_url
 
 
-This operation does not accept a request body and does not return a response
-body.
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - X-OpenStack-Request-Id: request_id
+
+This operation does not return a response body.

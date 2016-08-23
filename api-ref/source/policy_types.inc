@@ -36,6 +36,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-Id: request_id
   - policy_types: policy_types
 
 Response Example
@@ -79,6 +80,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-Id: request_id
   - policy_type: policy_type
   - name: policy_type_name
   - schema: policy_type_schema

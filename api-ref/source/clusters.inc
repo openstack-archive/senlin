@@ -45,6 +45,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-ID: request_id
   - clusters: clusters
   - created_at: created_at
   - data: cluster_data
@@ -123,7 +124,8 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-  - location: location
+  - X-OpenStack-Request-ID: request_id
+  - Location: location
   - cluster: cluster
   - created_at: created_at
   - data: cluster_data
@@ -188,6 +190,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-ID: request_id
   - cluster: cluster
   - created_at: created_at
   - data: cluster_data
@@ -264,7 +267,8 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-  - location: location
+  - X-OpenStack-Request-ID: request_id
+  - Location: location
   - cluster: cluster
   - created_at: created_at
   - data: cluster_data
@@ -333,7 +337,8 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-  - location: location
+  - X-OpenStack-Request-ID: request_id
+  - Location: location
 
 
 Resize a Cluster
@@ -387,7 +392,8 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - location: location
+  - X-OpenStack-Request-ID: request_id
+  - Location: location
 
 
 Scale-in a Cluster
@@ -436,7 +442,8 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - location: location
+  - X-OpenStack-Request-ID: request_id
+  - Location: location
 
 
 Scale-out a Cluster
@@ -485,7 +492,8 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - location: location
+  - X-OpenStack-Request-ID: request_id
+  - Location: location
 
 
 Add nodes to a Cluster
@@ -534,7 +542,8 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - location: location
+  - X-OpenStack-Request-ID: request_id
+  - Location: location
 
 
 Remove nodes from a Cluster
@@ -583,7 +592,8 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - location: location
+  - X-OpenStack-Request-ID: request_id
+  - Location: location
 
 
 Attach a Policy to a Cluster
@@ -632,7 +642,8 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - location: location
+  - X-OpenStack-Request-ID: request_id
+  - Location: location
 
 
 Detach a Policy from a Cluster
@@ -680,7 +691,8 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - location: location
+  - X-OpenStack-Request-ID: request_id
+  - Location: location
 
 
 Update a Policy on a Cluster
@@ -729,7 +741,8 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-  - location: location
+  - X-OpenStack-Request-ID: request_id
+  - Location: location
 
 Collect Attributes Across a Cluster
 ===================================
@@ -769,9 +782,10 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - cluster_attributes: cluster_attributes
-   - id: node_id
-   - value: attr_value
+  - X-OpenStack-Request-ID: request_id
+  - cluster_attributes: cluster_attributes
+  - id: node_id
+  - value: attr_value
 
 Check a Cluster's Health Status
 ===============================
@@ -818,7 +832,8 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - location: location
+  - X-OpenStack-Request-ID: request_id
+  - Location: location
 
 
 Recover a Cluster to a Healthy Status
@@ -866,4 +881,5 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-  - location: location
+  - X-OpenStack-Request-ID: request_id
+  - Location: location

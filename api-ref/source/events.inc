@@ -46,6 +46,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-ID: request_id
   - events: events
   - action: action_name
   - cluster_id: cluster_id
@@ -102,6 +103,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-ID: request_id
   - event: event
   - action: action_name
   - cluster_id: cluster_id

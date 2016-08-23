@@ -44,6 +44,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-ID: request_id
   - policies: policies
   - created_at: created_at
   - data: policy_data
@@ -106,6 +107,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-ID: request_id
   - policy: policy
   - created_at: created_at
   - data: policy_data
@@ -160,6 +162,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-ID: request_id
   - policy: policy
   - created_at: created_at
   - data: policy_data
@@ -226,6 +229,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-ID: request_id
   - policy: policy
   - created_at: created_at
   - data: policy_data
@@ -278,3 +282,10 @@ Request Parameters
 
   - OpenStack-API-Version: microversion
   - policy_id: policy_id_url
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - X-OpenStack-Request-ID: request_id

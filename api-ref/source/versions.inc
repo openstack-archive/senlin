@@ -32,6 +32,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-Id: request_id
   - versions: versions
 
 Response Example

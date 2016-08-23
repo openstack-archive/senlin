@@ -46,6 +46,7 @@ Reponse Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-ID: request_id
   - actions: actions
   - action: action_action
   - cause: cause
@@ -108,6 +109,7 @@ Response Parameters:
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-ID: request_id
   - action: action_action
   - cause: cause
   - context: action_context
