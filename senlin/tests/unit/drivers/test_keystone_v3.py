@@ -278,3 +278,15 @@ class TestKeystoneV3(base.SenlinTestCase):
 
         res = kc.validate_regions([])
         self.assertEqual([], res)
+
+    def test_get_senlin_endpoint(self, mock_create):
+        cfg.CONF.set_override('default_region_name', 'RegionN')
+        self.conn.session.get_endpoint.return_value = 'http://web.com:1234/v1'
+        mock_create.return_value = self.conn
+        kc = kv3.KeystoneClient({'k': 'v'})
+
+        res = kc.get_senlin_endpoint()
+
+        self.assertEqual('http://web.com:1234/v1', res)
+        self.conn.session.get_endpoint.assert_called_once_with(
+            service_type='clustering', interface='public', region='RegionN')

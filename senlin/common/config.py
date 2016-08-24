@@ -147,7 +147,6 @@ cfg.CONF.register_opts(revision_opts, group=revision_group)
 webhook_group = cfg.OptGroup('webhook')
 webhook_opts = [
     cfg.StrOpt('host',
-               default=socket.gethostname(),
                help=_('Address for invoking webhooks. It is useful for cases '
                       'where proxies are used for triggering webhooks. '
                       'Default to the hostname of the API node.')),

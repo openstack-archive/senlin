@@ -11,14 +11,20 @@
 # under the License.
 
 from oslo_config import cfg
+from oslo_log import log as logging
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
 
 from senlin.common import consts
+from senlin.common import context
 from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.common import utils
+from senlin.drivers import base as driver_base
 from senlin.objects import credential as co
 from senlin.objects import receiver as ro
+
+LOG = logging.getLogger(__name__)
 
 CONF = cfg.CONF
 
@@ -203,3 +209,15 @@ class Receiver(object):
         ro.Receiver.delete(context, receiver_obj.id)
 
         return
+
+    def _get_base_url(self):
+        base = None
+        service_cred = context.get_service_context()
+        kc = driver_base.SenlinDriver().identity(service_cred)
+        try:
+            base = kc.get_senlin_endpoint()
+        except exception.InternalError as ex:
+            msg = _('Senlin endpoint can not be found: %s.') % ex.message
+            LOG.warning(msg)
+
+        return base

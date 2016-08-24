@@ -11,12 +11,16 @@
 # under the License.
 
 import mock
+from oslo_config import cfg
 from oslo_utils import timeutils
 import six
 
+from senlin.common import context
 from senlin.common import exception
 from senlin.common import utils as common_utils
+from senlin.drivers import base as driver_base
 from senlin.engine.receivers import base as rb
+from senlin.engine.receivers import webhook as rw
 from senlin.objects import receiver as ro
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -139,7 +143,8 @@ class TestReceiver(base.SenlinTestCase):
         self.assertEqual(receiver.params, result.params)
         self.assertEqual(receiver.channel, result.channel)
 
-    def test_receiver_create(self):
+    @mock.patch.object(rw.Webhook, 'initialize_channel')
+    def test_receiver_create(self, mock_initialize_channel):
         cluster = mock.Mock()
         cluster.id = CLUSTER_ID
         receiver = rb.Receiver.create(self.context, 'webhook', cluster,
@@ -262,3 +267,50 @@ class TestReceiver(base.SenlinTestCase):
                                           receiver_id='test-receiver-id')
         mock_receiver.release_channel.assert_called_once_with()
         mock_delete.assert_called_once_with(self.context, 'test-receiver-id')
+
+    @mock.patch.object(context, "get_service_context")
+    @mock.patch.object(driver_base, "SenlinDriver")
+    def test__get_base_url_succeeded(self, mock_senlin_driver,
+                                     mock_get_service_context):
+        cfg.CONF.set_override('default_region_name', 'RegionOne')
+        fake_driver = mock.Mock()
+        fake_kc = mock.Mock()
+        fake_cred = mock.Mock()
+        mock_senlin_driver.return_value = fake_driver
+        fake_driver.identity.return_value = fake_kc
+        mock_get_service_context.return_value = fake_cred
+
+        fake_kc.get_senlin_endpoint.return_value = "http://web.com:1234/v1"
+
+        receiver = rb.Receiver(
+            'webhook', CLUSTER_ID, 'FAKE_ACTION',
+            id=UUID1, params={'KEY': 884, 'FOO': 'BAR'})
+
+        res = receiver._get_base_url()
+        self.assertEqual("http://web.com:1234/v1", res)
+        mock_get_service_context.assert_called_once_with()
+        fake_kc.get_senlin_endpoint.assert_called_once_with()
+
+    @mock.patch.object(context, "get_service_context")
+    @mock.patch.object(driver_base, "SenlinDriver")
+    def test__get_base_url_failed_get_endpoint_exception(
+            self, mock_senlin_driver, mock_get_service_context):
+        cfg.CONF.set_override('default_region_name', 'RegionOne')
+        fake_driver = mock.Mock()
+        fake_kc = mock.Mock()
+        fake_cred = mock.Mock()
+        mock_senlin_driver.return_value = fake_driver
+        fake_driver.identity.return_value = fake_kc
+        mock_get_service_context.return_value = fake_cred
+
+        fake_kc.get_senlin_endpoint.side_effect = exception.InternalError(
+            message='Error!')
+
+        receiver = rb.Receiver(
+            'webhook', CLUSTER_ID, 'FAKE_ACTION',
+            id=UUID1, params={'KEY': 884, 'FOO': 'BAR'})
+
+        res = receiver._get_base_url()
+        self.assertIsNone(res)
+        mock_get_service_context.assert_called_once_with()
+        fake_kc.get_senlin_endpoint.assert_called_once_with()
