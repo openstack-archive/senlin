@@ -220,7 +220,7 @@ htmlhelp_basename = 'senlindoc'
 # (source start file, target name, title, author, documentclass
 # [howto/manual]).
 latex_documents = [
-    ('index', 'Senlin.tex', u'OpenStack Clustring API Documentation',
+    ('index', 'Senlin.tex', u'OpenStack Clustering API Documentation',
      u'OpenStack Foundation', 'manual'),
 ]
 

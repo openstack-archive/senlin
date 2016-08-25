@@ -30,7 +30,7 @@ from senlin.api.openstack.v1 import webhooks
 
 
 class API(wsgi.Router):
-    '''WSGI router for Cluster v1 ReST API requests.'''
+    '''WSGI router for Cluster v1 REST API requests.'''
 
     def __init__(self, conf, **local_conf):
         self.conf = conf
