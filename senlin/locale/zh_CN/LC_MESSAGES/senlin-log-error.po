@@ -2,13 +2,13 @@
 # zzxwill <zzxwill@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: senlin 2.0.0.0b2.dev166\n"
+"Project-Id-Version: senlin 2.0.0.0b3.dev224\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-07-06 02:25+0000\n"
+"POT-Creation-Date: 2016-08-19 12:14+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-06-30 10:50+0000\n"
+"PO-Revision-Date: 2016-08-22 10:01+0000\n"
 "Last-Translator: zzxwill <zzxwill@gmail.com>\n"
 "Language-Team: Chinese (China)\n"
 "Language: zh-CN\n"
@@ -83,10 +83,6 @@ msgid "Failed in creating pool member (%s)."
 msgstr "负载均衡资源池成员（%s）创建失败。"
 
 #, python-format
-msgid "Failed in creating profile: %s"
-msgstr "样版创建失败：%s"
-
-#, python-format
 msgid "Failed in deleting healthmonitor (%s)."
 msgstr "健康状态监控（%s）删除失败。"
 
@@ -115,6 +111,10 @@ msgid "Failed in deleting pool (%s)."
 msgstr "负载均衡资源池（%s）删除失败。"
 
 #, python-format
+msgid "Failed in deleting pool member (%s)."
+msgstr "负载均衡资源池成员（%s）删除失败。"
+
+#, python-format
 msgid "Failed in getting %(resource)s: %(msg)s."
 msgstr "%(resource)s获取失败，失败信息：%(msg)s。"
 
@@ -127,6 +127,14 @@ msgid "Failed in getting subnet: %s."
 msgstr "子网获取失败：%s。"
 
 #, python-format
+msgid "Failed in removing member %(m)s from pool %(p)s: %(ex)s"
+msgstr "从资源池%(p)s中移除成员%(m)s失败：%(ex)s"
+
+#, python-format
+msgid "Failed in validating profile: %s"
+msgstr "样版验证失败：%s"
+
+#, python-format
 msgid "Failed to parse %s"
 msgstr "解析%s失败"
 
@@ -137,6 +145,10 @@ msgstr "读取%s失败"
 #, python-format
 msgid "Failed to stop engine service: %s"
 msgstr "engine服务停止失败：%s"
+
+#, python-format
+msgid "Loadbalancer %s is not ready."
+msgstr "负载均衡器%s还没准备好。"
 
 msgid "No availability zone found available."
 msgstr "找不到可用域。"
