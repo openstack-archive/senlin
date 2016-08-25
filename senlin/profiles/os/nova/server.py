@@ -736,14 +736,7 @@ class ServerProfile(base.Profile):
                 details[key] = val if val else '-'
 
         # process network addresses
-        details['addresses'] = {}
-        for net in server_data['addresses']:
-            addresses = []
-            for addr in server_data['addresses'][net]:
-                # Ignore IPv6 address
-                if addr['version'] == 4:
-                    addresses.append(addr['addr'])
-            details['addresses'][net] = addresses
+        details['addresses'] = copy.deepcopy(server_data['addresses'])
 
         # process security groups
         sgroups = []

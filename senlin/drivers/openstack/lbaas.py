@@ -272,7 +272,7 @@ class LoadBalancerDriver(base.DriverBase):
             return None
 
         # Use the first IP address if more than one are found in target network
-        address = addresses[net_name][0]
+        address = addresses[net_name][0]['addr']
         try:
             # FIXME(Yanyan Hu): Currently, Neutron lbaasv2 service can not
             # handle concurrent lb member operations well: new member creation

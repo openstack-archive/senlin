@@ -436,8 +436,8 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         node_detail = {
             'name': 'node-01',
             'addresses': {
-                'network1': ['ipaddr_net1'],
-                'network2': ['ipaddr_net2']
+                'network1': [{'addr': 'ipaddr_net1'}],
+                'network2': [{'addr': 'ipaddr_net2'}]
             }
         }
         node.get_details.return_value = node_detail
@@ -493,8 +493,8 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         node_detail = {
             'name': 'node-01',
             'addresses': {
-                'network1': ['ipaddr_net1'],
-                'network2': ['ipaddr_net2']
+                'network1': [{'addr': 'ipaddr_net1'}],
+                'network2': [{'addr': 'ipaddr_net2'}]
             }
         }
         node.get_details.return_value = node_detail
@@ -524,8 +524,8 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         node_detail = {
             'name': 'node-01',
             'addresses': {
-                'network1': ['ipaddr_net1'],
-                'network2': ['ipaddr_net2']
+                'network1': [{'addr': 'ipaddr_net1'}],
+                'network2': [{'addr': 'ipaddr_net2'}]
             }
         }
         node.get_details.return_value = node_detail
@@ -554,8 +554,8 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         node_detail = {
             'name': 'node-01',
             'addresses': {
-                'network1': ['ipaddr_net1'],
-                'network2': ['ipaddr_net2']
+                'network1': [{'addr': 'ipaddr_net1'}],
+                'network2': [{'addr': 'ipaddr_net2'}]
             }
         }
         node.get_details.return_value = node_detail
@@ -582,8 +582,8 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         node_detail = {
             'name': 'node-01',
             'addresses': {
-                'network1': ['ipaddr_net1'],
-                'network2': ['ipaddr_net2']
+                'network1': [{'addr': 'ipaddr_net1'}],
+                'network2': [{'addr': 'ipaddr_net2'}]
             }
         }
         node.get_details.return_value = node_detail
