@@ -31,6 +31,7 @@
     "policies:get": "",
     "policies:update": "",
     "policies:delete": "",
+    "policies:validate": "",
     "cluster_policies:index": "",
     "cluster_policies:attach": "",
     "cluster_policies:detach": "",

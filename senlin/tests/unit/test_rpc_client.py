@@ -217,6 +217,9 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
     def test_policy_delete_call(self):
         self._test_engine_api('policy_delete', 'call', identity='a-policy')
 
+    def test_policy_validate(self):
+        self._test_engine_api('policy_validate', 'call', spec=mock.ANY)
+
     def test_cluster_list(self):
         default_args = {
             'limit': mock.ANY,

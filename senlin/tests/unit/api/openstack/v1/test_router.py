@@ -182,6 +182,13 @@ class RoutesTest(base.SenlinTestCase):
                 'policy_id': 'bbbb'
             })
 
+        self.assertRoute(
+            self.m,
+            '/policies/validate',
+            'POST',
+            'validate',
+            'PolicyController')
+
     def test_cluster_collection(self):
         self.assertRoute(
             self.m,

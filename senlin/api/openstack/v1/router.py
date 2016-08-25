@@ -126,6 +126,10 @@ class API(wsgi.Router):
                                "/policies/{policy_id}",
                                action="delete",
                                conditions={'method': 'DELETE'})
+            sub_mapper.connect("policy_validate",
+                               "/policies/validate",
+                               action="validate",
+                               conditions={'method': 'POST'})
 
         # Clusters
         res = wsgi.Resource(clusters.ClusterController(conf))

@@ -115,3 +115,18 @@ class PolicyController(wsgi.Controller):
     def delete(self, req, policy_id):
         self.rpc_client.policy_delete(req.context, policy_id, cast=False)
         raise exc.HTTPNoContent()
+
+    @wsgi.Controller.api_version('1.2')
+    @util.policy_enforce
+    def validate(self, req, body):
+        data = body.get('policy', None)
+        if data is None:
+            raise exc.HTTPBadRequest(_("Malformed request data, missing "
+                                       "'policy' key in request body."))
+        spec = data.get(consts.POLICY_SPEC, None)
+        if not spec:
+            raise exc.HTTPBadRequest(_("No policy spec provided"))
+
+        result = self.rpc_client.policy_validate(req.context, spec)
+
+        return {'policy': result}

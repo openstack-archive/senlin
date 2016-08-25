@@ -514,3 +514,82 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
+
+    def test_policy_validate_version_mismatch(self, mock_enforce):
+        body = {
+            'policy': {}
+        }
+        req = self._post('/policies/validate', jsonutils.dumps(body),
+                         version='1.1')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+
+        ex = self.assertRaises(senlin_exc.MethodVersionNotFound,
+                               self.controller.validate,
+                               req, body=body)
+
+        mock_call.assert_not_called()
+        self.assertEqual('API version 1.1 is not supported on this method.',
+                         six.text_type(ex))
+
+    def test_profile_validate_denied_policy(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'validate', False)
+
+        body = {
+            'profile': {
+                'name': 'test_policy',
+                'spec': {
+                    'type': 'test_policy_type',
+                    'version': '1.0',
+                    'properties': {
+                        'param_1': 'value1',
+                        'param_2': 2,
+                    },
+                },
+                'metadata': {},
+            }
+        }
+
+        req = self._post('/policies/validate', jsonutils.dumps(body),
+                         version='1.2')
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.validate,
+                                              req, body=body)
+
+        self.assertEqual(403, resp.status_int)
+        self.assertIn('403 Forbidden', six.text_type(resp))
+
+    def test_policy_validate_no_body(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'validate', True)
+        body = {'foo': 'bar'}
+        req = self._post('/policies/validate', jsonutils.dumps(body),
+                         version='1.2')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.validate,
+                               req, body=body)
+        self.assertEqual("Malformed request data, missing 'policy' key in "
+                         "request body.", six.text_type(ex))
+
+    def test_policy_validate_success(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'validate', True)
+        spec = {
+            'spec': {
+                'type': 'senlin.policy.deletion',
+                'version': '1.0'
+            }
+        }
+        body = {
+            'policy': spec
+        }
+
+        req = self._post('/policies/validate', jsonutils.dumps(body),
+                         version='1.2')
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=spec)
+        result = self.controller.validate(req, body=body)
+        mock_call.assert_called_with(req.context,
+                                     ('policy_validate', spec))
+        expected = {'policy': spec}
+        self.assertEqual(expected, result)

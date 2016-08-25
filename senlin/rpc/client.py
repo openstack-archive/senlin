@@ -140,6 +140,10 @@ class EngineClient(object):
                           self.make_msg('policy_delete',
                                         identity=identity))
 
+    def policy_validate(self, ctxt, spec):
+        return self.call(ctxt,
+                         self.make_msg('policy_validate', spec=spec))
+
     def cluster_list(self, ctxt, limit=None, marker=None, sort=None,
                      filters=None, project_safe=True):
         return self.call(ctxt,
