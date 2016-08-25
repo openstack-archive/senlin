@@ -103,6 +103,21 @@ class ProfileController(wsgi.Controller):
 
         return {'profile': result}
 
+    @wsgi.Controller.api_version('1.2')
+    @util.policy_enforce
+    def validate(self, req, body):
+        profile_data = body.get('profile')
+        if profile_data is None:
+            raise exc.HTTPBadRequest(_("Malformed request data, missing "
+                                       "'profile' key in request body."))
+        if consts.PROFILE_SPEC not in profile_data:
+            raise exc.HTTPBadRequest(_("No profile spec provided"))
+
+        result = self.rpc_client.profile_validate(
+            req.context, profile_data[consts.PROFILE_SPEC])
+
+        return {'profile': result}
+
     @util.policy_enforce
     def get(self, req, profile_id):
         profile = self.rpc_client.profile_get(req.context,

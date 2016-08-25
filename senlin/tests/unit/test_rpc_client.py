@@ -173,6 +173,10 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
     def test_profile_delete_call(self):
         self._test_engine_api('profile_delete', 'call', identity='a-profile')
 
+    def test_profile_validate(self):
+        self._test_engine_api('profile_validate', 'call',
+                              spec=mock.ANY)
+
     def test_policy_type_list(self):
         self._test_engine_api('policy_type_list', 'call')
 

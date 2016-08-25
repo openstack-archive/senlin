@@ -83,6 +83,10 @@ class API(wsgi.Router):
                                "/profiles/{profile_id}",
                                action="delete",
                                conditions={'method': 'DELETE'})
+            sub_mapper.connect("profile_validate",
+                               "/profiles/validate",
+                               action="validate",
+                               conditions={'method': 'POST'})
 
         # Policy Types
         res = wsgi.Resource(policy_types.PolicyTypeController(conf))
