@@ -247,8 +247,8 @@ class PolicyTest(base.SenlinTestCase):
                                self.eng.policy_create,
                                self.ctx, 'p-2', spec)
 
-        self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: The specified policy "
+        self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
+        self.assertEqual("The specified policy "
                          "type (FakePolicy-1.0) is not found.",
                          six.text_type(ex.exc_info[1]))
 
@@ -275,8 +275,46 @@ class PolicyTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.policy_create,
                                self.ctx, 'p-2', self.spec)
-        self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual('The request is malformed: BOOM',
+        self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
+        self.assertEqual('BOOM',
+                         six.text_type(ex.exc_info[1]))
+
+    def test_policy_validate_pass(self):
+        self._setup_fakes()
+
+        expected_resp = {
+            'created_at': None,
+            'domain': '',
+            'id': None,
+            'data': {},
+            'name': 'validated_policy',
+            'project': 'policy_test_project',
+            'type': 'TestPolicy-1.0',
+            'updated_at': None,
+            'user': 'test_user_id',
+            'spec': {
+                'type': 'TestPolicy',
+                'version': '1.0',
+                'properties': {
+                    'KEY2': 6
+                }
+            }
+        }
+
+        resp = self.eng.policy_validate(self.ctx, self.spec)
+        self.assertEqual(expected_resp, resp)
+
+    def test_policy_validate_failed(self):
+        self._setup_fakes()
+
+        mock_validate = self.patchobject(fakes.TestPolicy, 'validate')
+        mock_validate.side_effect = exc.SpecValidationFailed(message='BOOM')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.policy_validate,
+                               self.ctx, self.spec)
+        self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
+        self.assertEqual('BOOM',
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(pb.Policy, 'load')

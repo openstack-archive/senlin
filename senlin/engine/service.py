@@ -567,6 +567,44 @@ class EngineService(service.Service):
         return [p.to_dict() for p in policies]
 
     @request_context
+    def _validate_policy(self, context, spec, name=None, validate_props=False):
+        """Validate a policy.
+
+        :param context: An instance of the request context.
+        :param spec: A dictionary containing the spec for the policy.
+        :param name: The name for the policy to be created.
+        :param validate_props: Whether to validate the value of property.
+        :return: Validated policy object.
+        """
+
+        type_name, version = schema.get_spec_version(spec)
+        type_str = "-".join([type_name, version])
+        try:
+            plugin = environment.global_env().get_policy(type_str)
+        except exception.PolicyTypeNotFound:
+            msg = _("The specified policy type (%(name)s) is not found."
+                    ) % {"name": type_str}
+            raise exception.SpecValidationFailed(message=msg)
+
+        kwargs = {
+            'user': context.user,
+            'project': context.project,
+            'domain': context.domain,
+        }
+        if name is None:
+            name = 'validated_policy'
+        policy = plugin(name, spec, **kwargs)
+
+        try:
+            policy.validate(validate_props=validate_props)
+        except exception.InvalidSpec as ex:
+            msg = six.text_type(ex)
+            LOG.error(_LE("Failed in validating policy: %s"), msg)
+            raise exception.SpecValidationFailed(message=msg)
+
+        return policy
+
+    @request_context
     def policy_create(self, context, name, spec):
         """Create a policy with the given name and spec.
 
@@ -582,31 +620,10 @@ class EngineService(service.Service):
                         ) % {"name": name}
                 raise exception.BadRequest(msg=msg)
 
-        type_name, version = schema.get_spec_version(spec)
-        type_str = "-".join([type_name, version])
-        try:
-            plugin = environment.global_env().get_policy(type_str)
-        except exception.PolicyTypeNotFound:
-            msg = _("The specified policy type (%(name)s) is not found."
-                    ) % {"name": type_str}
-            raise exception.BadRequest(msg=msg)
+        policy = self._validate_policy(context, spec, name=name)
 
         LOG.info(_LI("Creating policy %(type)s '%(name)s'"),
-                 {'type': type_str, 'name': name})
-
-        kwargs = {
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
-        }
-        policy = plugin(name, spec, **kwargs)
-
-        try:
-            policy.validate()
-        except exception.InvalidSpec as ex:
-            msg = six.text_type(ex)
-            LOG.error(_LE("Failed in creating policy: %s"), msg)
-            raise exception.BadRequest(msg=msg)
+                 {'type': policy.type, 'name': policy.name})
 
         policy.store(context)
         LOG.info(_LI("Policy '%(name)s' is created: %(id)s."),
@@ -671,6 +688,19 @@ class EngineService(service.Service):
                                           resource_id=db_policy.id)
 
         LOG.info(_LI("Policy '%s' is deleted."), identity)
+
+    @request_context
+    def policy_validate(self, context, spec):
+        """Validate a policy with the given properties.
+
+        :param context: An instance of the request context.
+        :param spec: A dictionary containing the spec for the policy.
+        :return: A dictionary containing the details of the policy object
+                 validated.
+        """
+        policy = self._validate_policy(context, spec, validate_props=True)
+
+        return policy.to_dict()
 
     def cluster_find(self, context, identity, project_safe=True):
         """Find a cluster with the given identity.
