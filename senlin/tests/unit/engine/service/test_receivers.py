@@ -17,7 +17,7 @@ from oslo_utils import uuidutils
 import six
 
 from senlin.common import exception as exc
-from senlin.engine import receiver as rb
+from senlin.engine.receivers import base as rb
 from senlin.engine import service
 from senlin.objects import receiver as ro
 from senlin.tests.unit.common import base

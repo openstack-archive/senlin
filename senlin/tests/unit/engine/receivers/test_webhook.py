@@ -1,0 +1,53 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+from oslo_config import cfg
+
+from senlin.engine.receivers import webhook as wmod
+from senlin.tests.unit.common import base
+
+CLUSTER_ID = '2c5139a6-24ba-4a6f-bd53-a268f61536de'
+UUID1 = 'aa5f86b8-e52b-4f2b-828a-4c14c770938d'
+UUID2 = '60efdaa1-06c2-4fcf-ae44-17a2d85ff3ea'
+
+
+class TestWebhook(base.SenlinTestCase):
+
+    def test_initialize_channel(self):
+        cfg.CONF.set_override('host', 'web.com', 'webhook')
+        cfg.CONF.set_override('port', '1234', 'webhook')
+        webhook = wmod.Webhook('webhook', CLUSTER_ID, 'FAKE_ACTION',
+                               id=UUID1)
+        channel = webhook.initialize_channel()
+
+        expected = {
+            'alarm_url': ('http://web.com:1234/v1/webhooks/%s/trigger'
+                          '?V=1' % UUID1)
+        }
+        self.assertEqual(expected, channel)
+        self.assertEqual(expected, webhook.channel)
+
+    def test_initialize_channel_with_params(self):
+        cfg.CONF.set_override('host', 'web.com', 'webhook')
+        cfg.CONF.set_override('port', '1234', 'webhook')
+        webhook = wmod.Webhook(
+            'webhook', CLUSTER_ID, 'FAKE_ACTION',
+            id=UUID1, params={'KEY': 884, 'FOO': 'BAR'})
+
+        channel = webhook.initialize_channel()
+
+        expected = {
+            'alarm_url': ('http://web.com:1234/v1/webhooks/%s/trigger'
+                          '?V=1&FOO=BAR&KEY=884' % UUID1)
+        }
+        self.assertEqual(expected, channel)
+        self.assertEqual(expected, webhook.channel)
