@@ -128,7 +128,7 @@ class SenlinTestCase(testscenarios.WithScenarios,
                 observed_keys = sorted(observed)
                 self.assertEqual(expected_keys, observed_keys)
 
-                for key in list(six.iterkeys(expected)):
+                for key in list(expected.keys()):
                     inner(expected[key], observed[key])
             elif (isinstance(expected, (list, tuple, set)) and
                   isinstance(observed, (list, tuple, set))):

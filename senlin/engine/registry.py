@@ -11,7 +11,6 @@
 # under the License.
 
 import itertools
-import six
 
 from oslo_log import log as logging
 
@@ -134,4 +133,4 @@ class Registry(object):
 
     def get_types(self):
         '''Return a list of valid plugin types.'''
-        return [{'name': name} for name in six.iterkeys(self._registry)]
+        return [{'name': name} for name in self._registry.keys()]
