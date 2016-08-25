@@ -22,6 +22,7 @@ PORT=8778
 HOST=$1 # Put your host IP here
 SVC_PASSWD=$2
 OS_REGION_NAME=${OS_REGION_NAME:-RegionOne}
+OS_IDENTITY_API_VERSION=${OS_IDENTITY_API_VERSION:-3}
 
 SERVICE_ID=$(openstack service show senlin -f value -cid 2>/dev/null)
 if [[ -z $SERVICE_ID ]]; then
@@ -36,12 +37,21 @@ if [[ -z $SERVICE_ID ]]; then
   exit
 fi
 
-openstack endpoint create \
-  --adminurl "http://$HOST:$PORT" \
-  --publicurl "http://$HOST:$PORT" \
-  --internalurl "http://$HOST:$PORT" \
-  --region $OS_REGION_NAME \
-  senlin
+if [ "$OS_IDENTITY_API_VERSION" = "3" ]; then
+    openstack endpoint create senlin admin "http://$HOST:$PORT" \
+      --region $OS_REGION_NAME
+    openstack endpoint create senlin public "http://$HOST:$PORT" \
+      --region $OS_REGION_NAME
+    openstack endpoint create senlin internal "http://$HOST:$PORT" \
+      --region $OS_REGION_NAME
+else
+    openstack endpoint create \
+      --adminurl "http://$HOST:$PORT" \
+      --publicurl "http://$HOST:$PORT" \
+      --internalurl "http://$HOST:$PORT" \
+      --region $OS_REGION_NAME \
+      senlin
+fi
 
 openstack user create \
   --password "$SVC_PASSWD" \
