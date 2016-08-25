@@ -116,16 +116,15 @@ class StackProfile(base.Profile):
         :raises: `InvalidSpec` exception is raised if template is invalid.
         """
         kwargs = {
-            'stack_name': obj.name,
+            'stack_name': utils.random_name(),
             'template': self.properties[self.TEMPLATE],
-            'timeout_mins': self.properties[self.TIMEOUT],
-            'disable_rollback': self.properties[self.DISABLE_ROLLBACK],
             'parameters': self.properties[self.PARAMETERS],
             'files': self.properties[self.FILES],
             'environment': self.properties[self.ENVIRONMENT],
+            'preview': True,
         }
         try:
-            self.heat(obj).validate_template(**kwargs)
+            self.heat(obj).stack_create(**kwargs)
         except exc.InternalError as ex:
             msg = _('Failed in validating template: %s') % six.text_type(ex)
             raise exc.InvalidSpec(message=msg)
