@@ -14,6 +14,8 @@
 
 # This script is executed inside post_test_hook function in devstack gate.
 
+set -ex
+
 export DEST=${DEST:-/opt/stack/new}
 export DEVSTACK_DIR=$DEST/devstack
 export SENLIN_DIR=$DEST/senlin
