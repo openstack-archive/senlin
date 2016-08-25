@@ -77,3 +77,20 @@ class ZaqarClient(base.DriverBase):
                             ignore_missing=True):
         return self.conn.message.delete_subscription(queue_name, subscription,
                                                      ignore_missing)
+
+    @sdk.translate_exception
+    def claim_create(self, queue_name, **attrs):
+        return self.conn.message.create_claim(queue_name, **attrs)
+
+    @sdk.translate_exception
+    def claim_update(self, queue_name, claim, **attrs):
+        return self.conn.message.update_claim(queue_name, claim, **attrs)
+
+    @sdk.translate_exception
+    def claim_get(self, queue_name, claim):
+        return self.conn.message.get_claim(queue_name, claim)
+
+    @sdk.translate_exception
+    def claim_delete(self, queue_name, claim, ignore_missing=True):
+        return self.conn.message.delete_claim(queue_name, claim,
+                                              ignore_missing)
