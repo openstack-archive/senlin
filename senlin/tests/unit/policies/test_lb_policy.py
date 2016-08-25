@@ -63,7 +63,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
                     'http_method': 'GET',
                     'url_path': '/index.html',
                     'expected_codes': '200,201,202'
-                }
+                },
+                'lb_status_timeout': 600
             }
         }
         sd = mock.Mock()
@@ -111,7 +112,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
                     'protocol': 'HTTP',
                     'protocol_port': 80,
                     'admin_state_up': True,
-                }
+                },
+                'lb_status_timeout': 600
             }
         }
 
@@ -122,6 +124,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         self.assertEqual('senlin.policy.loadbalance-1.0', policy.type)
         self.assertEqual(default_spec['properties']['pool'], policy.pool_spec)
         self.assertEqual(default_spec['properties']['vip'], policy.vip_spec)
+        self.assertEqual(default_spec['properties']['lb_status_timeout'],
+                         policy.lb_status_timeout)
         self.assertIsNone(policy.lb)
 
     @mock.patch.object(policy_base.Policy, 'validate')

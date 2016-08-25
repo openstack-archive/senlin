@@ -45,7 +45,7 @@ class LoadBalancingPolicy(base.Policy):
     the cluster (which could be created by the policy) when these actions are
     performed.
     """
-    VERSION = '1.0'
+    VERSION = '1.1'
 
     PRIORITY = 500
 
@@ -65,9 +65,9 @@ class LoadBalancingPolicy(base.Policy):
     ]
 
     KEYS = (
-        POOL, VIP, HEALTH_MONITOR,
+        POOL, VIP, HEALTH_MONITOR, LB_STATUS_TIMEOUT
     ) = (
-        'pool', 'vip', 'health_monitor',
+        'pool', 'vip', 'health_monitor', 'lb_status_timeout'
     )
 
     _POOL_KEYS = (
@@ -257,6 +257,13 @@ class LoadBalancingPolicy(base.Policy):
                 ),
             },
         ),
+        LB_STATUS_TIMEOUT: schema.Integer(
+            _('Time in second to wait for loadbalancer to be ready'
+              '(provisioning_status is ACTIVE and operating_status is '
+              'ONLINE) before and after senlin requests lbaas V2 service '
+              'for lb operations. '),
+            default=600,
+        )
     }
 
     def __init__(self, name, spec, **kwargs):
@@ -265,6 +272,7 @@ class LoadBalancingPolicy(base.Policy):
         self.pool_spec = self.properties.get(self.POOL, {})
         self.vip_spec = self.properties.get(self.VIP, {})
         self.hm_spec = self.properties.get(self.HEALTH_MONITOR, None)
+        self.lb_status_timeout = self.properties.get(self.LB_STATUS_TIMEOUT)
         self.validate()
         self.lb = None
 
@@ -289,6 +297,7 @@ class LoadBalancingPolicy(base.Policy):
                                  cluster_id=cluster.id)
 
         params = self._build_conn_params(cluster)
+        params['lb_status_timeout'] = self.lb_status_timeout
         lb_driver = driver_base.SenlinDriver().loadbalancing(params)
 
         res, data = lb_driver.lb_create(self.vip_spec, self.pool_spec,
@@ -332,6 +341,7 @@ class LoadBalancingPolicy(base.Policy):
         """
         reason = _('LB resources deletion succeeded.')
         params = self._build_conn_params(cluster)
+        params['lb_status_timeout'] = self.lb_status_timeout
         lb_driver = driver_base.SenlinDriver().loadbalancing(params)
 
         cp = cluster_policy.ClusterPolicy.load(oslo_context.get_current(),
@@ -424,6 +434,7 @@ class LoadBalancingPolicy(base.Policy):
 
         db_cluster = co.Cluster.get(action.context, cluster_id)
         params = self._build_conn_params(db_cluster)
+        params['lb_status_timeout'] = self.lb_status_timeout
         lb_driver = driver_base.SenlinDriver().loadbalancing(params)
         cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
                                                self.id)
@@ -473,6 +484,7 @@ class LoadBalancingPolicy(base.Policy):
 
         db_cluster = co.Cluster.get(action.context, cluster_id)
         params = self._build_conn_params(db_cluster)
+        params['lb_status_timeout'] = self.lb_status_timeout
         lb_driver = driver_base.SenlinDriver().loadbalancing(params)
         cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
                                                self.id)

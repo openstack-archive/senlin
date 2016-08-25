@@ -99,6 +99,7 @@ spec_lb_policy = {
             "http_method": "GET",
             "url_path": "/index.html",
             "expected_codes": "200,201,202"
-        }
+        },
+        "lb_status_timeout": 300
     }
 }

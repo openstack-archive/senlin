@@ -1,6 +1,6 @@
 # Load-balancing policy spec using Neutron LBaaS service
 type: senlin.policy.loadbalance
-version: 1.0
+version: 1.1
 description: A policy for load-balancing the nodes in a cluster.
 properties:
   pool:
@@ -65,3 +65,7 @@ properties:
 
     # Expected HTTP codes for a passing HTTP(S) monitor.
     expected_codes: '200, 202'
+
+  # Time in second to wait for loadbalancer to become ready before and after
+  # senlin requests lbaas V2 service for lb operations.
+  lb_status_timeout: 300

@@ -29,6 +29,7 @@ class LoadBalancerDriver(base.DriverBase):
     """Load-balancing driver based on Neutron LBaaS V2 service."""
 
     def __init__(self, params):
+        self.lb_status_timeout = params.pop('lb_status_timeout')
         super(LoadBalancerDriver, self).__init__(params)
         self._nc = None
 
@@ -39,7 +40,7 @@ class LoadBalancerDriver(base.DriverBase):
         self._nc = neutronclient.NeutronClient(self.conn_params)
         return self._nc
 
-    def _wait_for_lb_ready(self, lb_id, timeout=600, ignore_not_found=False):
+    def _wait_for_lb_ready(self, lb_id, ignore_not_found=False):
         """Keep waiting until loadbalancer is ready
 
         This method will keep waiting until loadbalancer resource specified
@@ -47,12 +48,11 @@ class LoadBalancerDriver(base.DriverBase):
         its operating_status is ONLINE.
 
         :param lb_id: ID of the load-balancer to check.
-        :param timeout: timeout in seconds.
         :param ignore_not_found: if set to True, nonexistent loadbalancer
             resource is also an acceptable result.
         """
         waited = 0
-        while waited < timeout:
+        while waited < self.lb_status_timeout:
             try:
                 lb = self.nc().loadbalancer_get(lb_id)
             except exception.InternalError as ex:
@@ -82,7 +82,7 @@ class LoadBalancerDriver(base.DriverBase):
 
         :param vip: A dict containing the properties for the VIP;
         :param pool: A dict describing the pool of load-balancer members.
-        :param pool: A dict describing the health monitor.
+        :param hm: A dict describing the health monitor.
         """
         def _cleanup(msg, **kwargs):
             LOG.error(msg)
