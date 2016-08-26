@@ -360,8 +360,11 @@ class ServerProfile(base.Profile):
             kwargs['name'] = obj.name
 
         metadata = self.properties[self.METADATA] or {}
+        metadata['cluster_node_id'] = obj.id
         if obj.cluster_id:
-            metadata['cluster'] = obj.cluster_id
+            metadata['cluster_id'] = obj.cluster_id
+            metadata['cluster_node_index'] = six.text_type(obj.index)
+
         kwargs['metadata'] = metadata
 
         block_device_mapping_v2 = self.properties[self.BLOCK_DEVICE_MAPPING_V2]
@@ -764,7 +767,8 @@ class ServerProfile(base.Profile):
             return False
 
         metadata = self.nova(obj).server_metadata_get(obj.physical_id) or {}
-        metadata['cluster'] = cluster_id
+        metadata['cluster_id'] = cluster_id
+        metadata['cluster_node_index'] = six.text_type(obj.index)
         self.nova(obj).server_metadata_update(obj.physical_id, metadata)
         return super(ServerProfile, self).do_join(obj, cluster_id)
 
@@ -772,7 +776,8 @@ class ServerProfile(base.Profile):
         if not obj.physical_id:
             return False
 
-        self.nova(obj).server_metadata_delete(obj.physical_id, ['cluster'])
+        keys = ['cluster_id', 'cluster_node_index']
+        self.nova(obj).server_metadata_delete(obj.physical_id, keys)
         return super(ServerProfile, self).do_leave(obj)
 
     def do_rebuild(self, obj):
