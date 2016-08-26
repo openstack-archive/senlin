@@ -52,7 +52,7 @@ class TrustMiddleware(wsgi.Middleware):
             if ex.code == 400:
                 trust = None
             else:
-                raise ex
+                raise
         if not trust:
             # Create a trust if no existing one found
             trust = kc.trust_create(ctx.user, admin_id, ctx.project, ctx.roles)
