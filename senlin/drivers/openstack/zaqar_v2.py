@@ -10,12 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo_log import log
-
 from senlin.drivers import base
 from senlin.drivers.openstack import sdk
-
-LOG = log.getLogger(__name__)
 
 
 class ZaqarClient(base.DriverBase):

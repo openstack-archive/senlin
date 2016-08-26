@@ -26,8 +26,6 @@ from senlin import objects
 
 _lazy.enable_lazy()
 
-LOG = logging.getLogger('senlin.engine')
-
 
 def main():
     logging.register_options(cfg.CONF)
