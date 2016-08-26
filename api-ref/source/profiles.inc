@@ -43,6 +43,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-Id: request_id
   - profiles: profiles
   - created_at: created_at
   - id: profile_id
@@ -104,6 +105,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-Id: request_id
   - profile: profile
   - created_at: created_at
   - domain: domain
@@ -159,6 +161,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-Id: request_id
   - profile: profile
   - created_at: created_at
   - domain: domain
@@ -223,6 +226,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-Id: request_id
   - profile: profile
   - created_at: created_at
   - id: profile_id
@@ -274,3 +278,11 @@ Request Parameters
 
   - OpenStack-API-Version: microversion
   - profile_id: profile_id_url
+
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - X-OpenStack-Request-Id: request_id

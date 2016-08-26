@@ -39,4 +39,5 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-  - location: location
+  - X-OpenStack-Request-Id: request_id
+  - Location: location

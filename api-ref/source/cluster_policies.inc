@@ -41,6 +41,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-ID: request_id
   - cluster_policies: cluster_policies
   - cluster_id: cluster_id
   - cluster_name: cluster_name
@@ -93,6 +94,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-ID: request_id
   - cluster_policy: cluster_policy
   - cluster_id: cluster_id
   - cluster_name: cluster_name

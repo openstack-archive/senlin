@@ -45,6 +45,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-ID: request_id
   - nodes: nodes
   - cluster_id: cluster_id
   - created_at: created_at
@@ -117,7 +118,8 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-  - location: location
+  - X-OpenStack-Request-ID: request_id
+  - Location: location
   - node: node
   - cluster_id: cluster_id
   - created_at: created_at
@@ -181,6 +183,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-ID: request_id
   - node: node
   - cluster_id: cluster_id
   - created_at: created_at
@@ -254,7 +257,8 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-  - location: location
+  - X-OpenStack-Request-ID: request_id
+  - Location: location
   - node: node
   - cluster_id: cluster_id
   - created_at: created_at
@@ -317,7 +321,8 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - location: location
+  - X-OpenStack-Request-ID: request_id
+  - Location: location
 
 
 Check a Node's Health
@@ -363,7 +368,8 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - location: location
+  - X-OpenStack-Request-ID: request_id
+  - Location: location
 
 
 Recover a Node to Healthy Status
@@ -409,4 +415,5 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - location: location
+  - X-OpenStack-Request-ID: request_id
+  - Location: location

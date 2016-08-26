@@ -42,6 +42,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-Id: request_id
   - profile_types: profile_types
 
 
@@ -79,6 +80,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-Id: request_id
   - profile_type: profile_type
   - name: profile_type_name
   - schema: profile_type_schema

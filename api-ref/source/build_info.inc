@@ -36,6 +36,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
+  - X-OpenStack-Request-ID: request_id
   - build_info: build_info
   - api: build_info_api
   - engine: build_info_engine
