@@ -205,17 +205,17 @@ following command creates a threshold alarm using aodh alarm service so that:
     --period 60 --evaluation_periods 1 \
     --alarm-action $ALRM_URL01 \
     --repeat-actions False \
-    --query metadata.user_metadata.cluster=$MYCLUSTER_ID
+    --query metadata.user_metadata.cluster_id=$MYCLUSTER_ID
 
 Note that we are referencing the two environment variables ``MYCLUSTER_ID``
 and ``ALRM_URL01`` in this command.
 
 .. note::
-  To make aodh aware of the ``cluster`` metadata senlin injects into each and
-  every VM server created, you may need to add the following line into your
-  :file:`/etc/ceilometer/ceilometer.conf` file::
+  To make aodh aware of the ``cluster_id`` metadata senlin injects into each
+  and every VM server created, you may need to add the following line into
+  your :file:`/etc/ceilometer/ceilometer.conf` file::
 
-    reserved_metadata_keys = cluster
+    reserved_metadata_keys = cluster_id
 
   Also note that to make sure your CPU utilization driven metrics are
   evaluated at least once per 60 seconds, you will need to change the

@@ -204,6 +204,8 @@ scaling operations:
       alarm_actions:
         - {get_attr: [receiver_scale_in, channel, alarm_url]}
       comparison_operator: le
+      query:
+        metadata.user_metadata.cluster_id: {get_resource: cluster}
 
   scale_out_alarm:
     type: OS::Ceilometer::Alarm
@@ -218,6 +220,8 @@ scaling operations:
       alarm_actions:
         - {get_attr: [receiver_scale_out, channel, alarm_url]}
       comparison_operator: ge
+      query:
+        metadata.user_metadata.cluster_id: {get_resource: cluster}
 
 Deployment Steps
 ~~~~~~~~~~~~~~~~
