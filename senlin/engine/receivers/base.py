@@ -187,3 +187,19 @@ class Receiver(object):
 
     def initialize_channel(self):
         return {}
+
+    def release_channel(self):
+        return
+
+    @classmethod
+    def delete(cls, context, receiver_id):
+        """Delete a receiver.
+
+        @param context: the context for db operations.
+        @param receiver_id: the unique ID of the receiver to delete.
+        """
+        receiver_obj = cls.load(context, receiver_id=receiver_id)
+        receiver_obj.release_channel()
+        ro.Receiver.delete(context, receiver_obj.id)
+
+        return
