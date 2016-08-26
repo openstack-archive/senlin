@@ -59,6 +59,7 @@ Response Codes
 .. rest_status_code:: error status.yaml
 
    - 404
+   - 406
    - 503
 
 Response Parameters

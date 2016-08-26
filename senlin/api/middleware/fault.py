@@ -52,6 +52,7 @@ class FaultWrapper(wsgi.Middleware):
         'FeatureNotSupported': webob.exc.HTTPConflict,
         'Forbidden': webob.exc.HTTPForbidden,
         'InternalError': webob.exc.HTTPInternalServerError,
+        'InvalidGlobalAPIVersion': webob.exc.HTTPNotAcceptable,
         'InvalidParameter': webob.exc.HTTPBadRequest,
         'InvalidSchemaError': webob.exc.HTTPBadRequest,
         'MethodVersionNotFound': webob.exc.HTTPBadRequest,

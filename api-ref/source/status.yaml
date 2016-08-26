@@ -42,6 +42,9 @@
 405:
   default: |
     Method is not valid for this endpoint.
+406:
+  default: |
+    The requested API version is not supported by the API.
 409:
  default: |
     This operation conflicted with another operation on this resource.
