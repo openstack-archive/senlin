@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-"""Health Manager class.
+"""Health Manager.
 
 Health Manager is responsible for monitoring the health of the clusters and
 trigger corresponding actions to recover the clusters based on the pre-defined
@@ -36,28 +36,53 @@ LOG = logging.getLogger(__name__)
 
 class NotificationEndpoint(object):
 
+    VM_FAILURE_EVENTS = {
+        'compute.instance.delete.end': 'DELETE',
+        'compute.instance.pause.end': 'PAUSE',
+        'compute.instance.power_off.end': 'POWER_OFF',
+        'compute.instance.rebuild.error': 'REBUILD',
+        'compute.instance.shutdown.end': 'SHUTDOWN',
+        'compute.instance.soft_delete.end': 'SOFT_DELETE',
+    }
+
     def __init__(self, project_id, cluster_id):
         self.filter_rule = messaging.NotificationFilter(
             publisher_id='^compute.*',
             event_type='^compute\.instance\..*',
             context={'project_id': '^%s$' % project_id})
+        self.project_id = project_id
         self.cluster_id = cluster_id
+        self.rpc = rpc_client.EngineClient()
 
     def info(self, ctxt, publisher_id, event_type, payload, metadata):
-        metadata = payload['metadata']
-        if 'cluster' in metadata and metadata['cluster'] == self.cluster_id:
-            LOG.info("publisher=%s" % publisher_id)
-            LOG.info("event_type=%s" % event_type)
+        meta = payload['metadata']
+        if meta.get('cluster_id') == self.cluster_id:
+            if event_type not in self.VM_FAILURE_EVENTS:
+                return
+            params = {
+                'event': self.VM_FAILURE_EVENTS[event_type],
+                'state': payload.get('state', 'Unknown'),
+                'instance_id': payload.get('instance_id', 'Unknown'),
+                'timestamp': metadata['timestamp'],
+                'publisher': publisher_id,
+            }
+            node_id = meta.get('cluster_node_id')
+            if node_id:
+                LOG.info(_LI("Requesting node recovery: %s"), node_id)
+                ctx_value = context.get_service_context(
+                    project=self.project_id, user=payload['user_id'])
+                ctx = context.RequestContext(**ctx_value)
+                self.rpc.node_recover(ctx, node_id, params)
 
     def warn(self, ctxt, publisher_id, event_type, payload, metadata):
-        metadata = payload['metadata']
-        if 'cluster' in metadata and metadata['cluster'] == self.cluster_id:
+        meta = payload.get('metadata', {})
+        if meta.get('cluster_id') == self.cluster_id:
             LOG.warning("publisher=%s" % publisher_id)
             LOG.warning("event_type=%s" % event_type)
 
     def debug(self, ctxt, publisher_id, event_type, payload, metadata):
-        metadata = payload['metadata']
-        if 'cluster' in metadata and metadata['cluster'] == self.cluster_id:
+        meta = payload.get('metadata', {})
+        if meta.get('cluster_id') == self.cluster_id:
             LOG.debug("publisher=%s" % publisher_id)
             LOG.debug("event_type=%s" % event_type)
 
@@ -164,8 +189,8 @@ class HealthManager(service.Service):
 
         listener = entry.get('listener', None)
         if listener:
-            listener.stop()
             self.TG.thread_done(listener)
+            listener.stop()
             return
 
     def _load_runtime_registry(self):
