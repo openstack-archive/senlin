@@ -151,20 +151,14 @@ class NodeActionTest(base.SenlinTestCase):
     @mock.patch.object(cluster_mod.Cluster, 'load')
     def test_do_delete_with_cluster_id_specified(self, mock_c_load,
                                                  mock_check, mock_load):
-        cluster = mock.Mock()
-        cluster.id = 'CID'
-        cluster.desired_capacity = 1
+        cluster = mock.Mock(id='CID', desired_capacity=1)
         mock_c_load.return_value = cluster
-        node = mock.Mock()
-        node.id = 'NID'
-        node.do_delete = mock.Mock(return_value=None)
-        node.cluster_id = cluster.id
+        node = mock.Mock(id='NID', cluster_id='CID')
+        node.do_delete.return_value = True
         mock_load.return_value = node
         mock_check.return_value = None
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
                                         cause=base_action.CAUSE_RPC)
-
-        node.do_delete = mock.Mock(return_value=mock.Mock())
 
         res_code, res_msg = action.do_delete()
 
@@ -179,14 +173,10 @@ class NodeActionTest(base.SenlinTestCase):
     @mock.patch.object(cluster_mod.Cluster, 'load')
     def test_do_delete_without_changing_capacity(self, mock_c_load,
                                                  mock_check, mock_load):
-        cluster = mock.Mock()
-        cluster.id = 'CID'
-        cluster.desired_capacity = 1
+        cluster = mock.Mock(id='CID', desired_capacity=1)
         mock_c_load.return_value = cluster
-        node = mock.Mock()
-        node.id = 'NID'
-        node.do_delete = mock.Mock(return_value=None)
-        node.cluster_id = cluster.id
+        node = mock.Mock(id='NID', cluster_id='CID')
+        node.do_delete.return_value = True
         mock_load.return_value = node
         mock_check.return_value = None
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
@@ -196,8 +186,6 @@ class NodeActionTest(base.SenlinTestCase):
                 'reduce_desired_capacity': False,
             }
         }
-
-        node.do_delete = mock.Mock(return_value=mock.Mock())
 
         res_code, res_msg = action.do_delete()
 
@@ -216,7 +204,7 @@ class NodeActionTest(base.SenlinTestCase):
         cluster = mock.Mock(id='CID', desired_capacity=1)
         mock_c_load.return_value = cluster
         node = mock.Mock(id='NID', cluster_id='CID')
-        node.do_delete = mock.Mock(return_value=None)
+        node.do_delete.return_value = True
         mock_load.return_value = node
         mock_check.return_value = None
         action = node_action.NodeAction('NID', 'ACTION', self.ctx,
@@ -226,8 +214,6 @@ class NodeActionTest(base.SenlinTestCase):
                 'reduce_desired_capacity': True,
             }
         }
-
-        node.do_delete = mock.Mock(return_value=mock.Mock())
 
         res_code, res_msg = action.do_delete()
 
@@ -247,7 +233,7 @@ class NodeActionTest(base.SenlinTestCase):
         cluster = mock.Mock(id='CID', desired_capacity=1)
         mock_c_load.return_value = cluster
         node = mock.Mock(id='NID', cluster_id='CID')
-        node.do_delete = mock.Mock(return_value=None)
+        node.do_delete.return_value = True
         mock_load.return_value = node
         mock_check.return_value = None
         action = node_action.NodeAction('NID', 'ACTION', self.ctx,
@@ -257,8 +243,6 @@ class NodeActionTest(base.SenlinTestCase):
                 'grace_period': 123,
             }
         }
-
-        node.do_delete = mock.Mock(return_value=mock.Mock())
 
         res_code, res_msg = action.do_delete()
 
@@ -276,15 +260,33 @@ class NodeActionTest(base.SenlinTestCase):
     def test_do_delete_for_derived_action(self, mock_c_load, mock_check,
                                           mock_sleep, mock_load):
         node = mock.Mock(id='NID', cluster_id='CLUSTER_ID')
-        node.do_delete = mock.Mock(return_value=None)
+        node.do_delete.return_value = True
         mock_load.return_value = node
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
                                         cause=base_action.CAUSE_DERIVED)
-        node.do_delete = mock.Mock(return_value=mock.Mock())
 
         res_code, res_msg = action.do_delete()
 
         self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual(0, mock_check.call_count)
+        self.assertEqual(0, mock_c_load.call_count)
+        mock_load.assert_called_once_with(action.context, node_id='NID')
+        self.assertEqual(0, mock_sleep.call_count)
+
+    @mock.patch.object(eventlet, 'sleep')
+    @mock.patch.object(scaleutils, 'check_size_params')
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    def test_do_delete_failed_deletion(self, mock_c_load, mock_check,
+                                       mock_sleep, mock_load):
+        node = mock.Mock(id='NID', cluster_id='CLUSTER_ID')
+        node.do_delete.return_value = False
+        mock_load.return_value = node
+        action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
+                                        cause=base_action.CAUSE_DERIVED)
+
+        res_code, res_msg = action.do_delete()
+
+        self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual(0, mock_check.call_count)
         self.assertEqual(0, mock_c_load.call_count)
         mock_load.assert_called_once_with(action.context, node_id='NID')
