@@ -15,9 +15,7 @@ from oslo_log import log as logging
 from oslo_utils import timeutils
 import time
 
-from senlin.common.i18n import _
-from senlin.common.i18n import _LE
-from senlin.common.i18n import _LI
+from senlin.common.i18n import _, _LE, _LI
 from senlin.engine import scheduler
 from senlin.objects import action as ao
 from senlin.objects import cluster_lock as cl_obj

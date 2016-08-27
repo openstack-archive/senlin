@@ -25,8 +25,7 @@ from oslo_service import threadgroup
 
 from senlin.common import consts
 from senlin.common import context
-from senlin.common.i18n import _LI
-from senlin.common.i18n import _LW
+from senlin.common.i18n import _LI, _LW
 from senlin.common import messaging as rpc
 from senlin import objects
 from senlin.rpc import client as rpc_client
