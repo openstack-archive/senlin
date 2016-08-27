@@ -185,11 +185,11 @@ class DeletionPolicy(base.Policy):
         else:
             db_cluster = co.Cluster.get(action.context, cluster_id,
                                         project_safe=True)
-            res = scaleutils.parse_resize_params(action, db_cluster)
-            if res[0] == base.CHECK_ERROR:
+            res, reason = scaleutils.parse_resize_params(action, db_cluster)
+            if res == base.CHECK_ERROR:
                 action.data['status'] = base.CHECK_ERROR
-                action.data['reason'] = res[1]
-                LOG.error(res[1])
+                action.data['reason'] = reason
+                LOG.error(reason)
                 return
 
             if 'deletion' not in action.data:

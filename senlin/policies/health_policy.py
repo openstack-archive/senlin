@@ -13,13 +13,15 @@
 from senlin.common import constraints
 from senlin.common import consts
 from senlin.common.i18n import _
+from senlin.common import scaleutils
 from senlin.common import schema
 from senlin.engine import health_manager
+from senlin.objects import cluster as co
 from senlin.policies import base
 
 
 class HealthPolicy(base.Policy):
-    '''Policy for health management of a cluster.'''
+    """Policy for health management of a cluster."""
 
     VERSION = '1.0'
 
@@ -28,8 +30,10 @@ class HealthPolicy(base.Policy):
     TARGET = [
         ('BEFORE', consts.CLUSTER_CHECK),
         ('BEFORE', consts.CLUSTER_RECOVER),
+        ('BEFORE', consts.CLUSTER_RESIZE),
         ('BEFORE', consts.CLUSTER_SCALE_IN),
         ('AFTER', consts.CLUSTER_SCALE_IN),
+        ('AFTER', consts.CLUSTER_RESIZE),
     ]
 
     # Should be ANY if profile provides health check support?
@@ -166,11 +170,38 @@ class HealthPolicy(base.Policy):
         return True, ''
 
     def pre_op(self, cluster_id, action, **args):
-        # disable health policy if the operation is a cluster scale request,
-        # or else the policy will attempt to recover nodes that are deleted.
+        """Hook before action execution.
+
+        One of the task for this routine is to disable health policy if the
+        action is a request that will shrink the cluster. The reason is that
+        the policy may attempt to recover nodes that are to be deleted.
+
+        :param cluster_id: The ID of the target cluster.
+        :param action: The action to be examined.
+        :param kwargs args: Other keyword arguments to be checked.
+        :returns: Boolean indicating whether the checking passed.
+        """
         if action.action == consts.CLUSTER_SCALE_IN:
             health_manager.disable(cluster_id)
             return True
+
+        if action.action == consts.CLUSTER_RESIZE:
+            deletion = action.data.get('deletion', None)
+            if deletion:
+                health_manager.disable(cluster_id)
+                return True
+
+            db_cluster = co.Cluster.get(action.context, cluster_id,
+                                        project_safe=True)
+            res, reason = scaleutils.parse_resize_params(action, db_cluster)
+            if res == base.CHECK_ERROR:
+                action.data['status'] = base.CHECK_ERROR
+                action.data['reason'] = reason
+                return False
+
+            if action.data.get('deletion', None):
+                health_manager.disable(cluster_id)
+                return True
 
         pd = {
             'recover_action': self.recover_actions[0],
@@ -182,8 +213,37 @@ class HealthPolicy(base.Policy):
         return True
 
     def post_op(self, cluster_id, action, **args):
+        """Hook before action execution.
+
+        One of the task for this routine is to re-enable health policy if the
+        action is a request that will shrink the cluster thus the policy has
+        been temporarily disabled.
+
+        :param cluster_id: The ID of the target cluster.
+        :param action: The action to be examined.
+        :param kwargs args: Other keyword arguments to be checked.
+        :returns: Boolean indicating whether the checking passed.
+        """
         if action.action == consts.CLUSTER_SCALE_IN:
             health_manager.enable(cluster_id)
             return True
+
+        if action.action == consts.CLUSTER_RESIZE:
+            deletion = action.data.get('deletion', None)
+            if deletion:
+                health_manager.enable(cluster_id)
+                return True
+
+            db_cluster = co.Cluster.get(action.context, cluster_id,
+                                        project_safe=True)
+            res, reason = scaleutils.parse_resize_params(action, db_cluster)
+            if res == base.CHECK_ERROR:
+                action.data['status'] = base.CHECK_ERROR
+                action.data['reason'] = reason
+                return False
+
+            if action.data.get('deletion', None):
+                health_manager.enable(cluster_id)
+                return True
 
         return True
