@@ -14,8 +14,7 @@ import itertools
 
 from oslo_log import log as logging
 
-from senlin.common.i18n import _LI
-from senlin.common.i18n import _LW
+from senlin.common.i18n import _LI, _LW
 
 LOG = logging.getLogger(__name__)
 

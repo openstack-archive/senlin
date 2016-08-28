@@ -41,10 +41,7 @@ from senlin.api.common import serializers
 from senlin.api.common import version_request
 from senlin.api.common import versioned_method
 from senlin.common import exception
-from senlin.common.i18n import _
-from senlin.common.i18n import _LE
-from senlin.common.i18n import _LI
-from senlin.common.i18n import _LW
+from senlin.common.i18n import _, _LE, _LI, _LW
 from senlin.rpc import client as rpc_client
 
 

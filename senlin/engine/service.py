@@ -24,9 +24,7 @@ import six
 from senlin.common import consts
 from senlin.common import context as senlin_context
 from senlin.common import exception
-from senlin.common.i18n import _
-from senlin.common.i18n import _LE
-from senlin.common.i18n import _LI
+from senlin.common.i18n import _, _LE, _LI
 from senlin.common import messaging as rpc_messaging
 from senlin.common import scaleutils as su
 from senlin.common import schema
