@@ -131,7 +131,7 @@ policy type. To create a policy object using this "spec" file, you can use the
 following command::
 
   $ cd /opt/stack/senlin/examples/policies
-  $ opentack cluster policy create --spec deletion_policy.yaml dp01
+  $ openstack cluster policy create --spec deletion_policy.yaml dp01
   +------------+-----------------------------------------------------------+
   | Property   | Value                                                     |
   +------------+-----------------------------------------------------------+
