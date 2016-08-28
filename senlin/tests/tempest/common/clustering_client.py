@@ -79,6 +79,14 @@ class ClusteringAPIClient(rest_client.RestClient):
 
         return self._parsed_resp(resp, body)
 
+    def validate_obj(self, obj_type, attrs):
+        uri = '{0}/{1}/validate'.format(self.version, obj_type)
+        headers = {'openstack-api-version': 'clustering 1.2'}
+        resp, body = self.post(uri, body=jsonutils.dumps(attrs),
+                               headers=headers)
+
+        return self._parsed_resp(resp, body)
+
     def trigger_webhook(self, webhook_url, params=None):
         if params is not None:
             params = jsonutils.dumps(params)
