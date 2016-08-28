@@ -99,7 +99,12 @@ from the following command, you will find the IP address for the specific node:
   |         | +-----------+--------------------------------------+ |
   |         | | addresses | {                                    | |
   |         | |           |   "private": [                       | |
-  |         | |           |     "10.0.0.9"                       | |
+  |         | |           |     {                                | |
+  |         | |           |       "OS-EXT-IPS-MAC:mac-addr": ... | |
+  |         | |           |       "OS-EXT-IPS:type": "fixed",    | |
+  |         | |           |       "addr": "10.0.0.9",            | |
+  |         | |           |       "version": 4                   | |
+  |         | |           |     }                                | |
   |         | |           |   ]                                  | |
   |         | |           | }                                    | |
   |         | | flavor    | 1                                    | |

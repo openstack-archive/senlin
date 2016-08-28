@@ -1203,7 +1203,14 @@ class TestNovaServerProfile(base.SenlinTestCase):
             'metadata': {},
             'name': 'FAKE_NAME',
             'os-extended-volumes:volumes_attached': [],
-            'addresses': {'private': ['10.0.0.3']},
+            'addresses': {
+                'private': [{
+                    'OS-EXT-IPS-MAC:mac_addr': 'fa:16:3e:5e:00:81',
+                    'version': 4,
+                    'addr': '10.0.0.3',
+                    'OS-EXT-IPS:type': 'fixed'
+                }]
+            },
             'progress': 0,
             'security_groups': 'default',
             'updated': 'UPDATE_TIMESTAMP',
@@ -1287,8 +1294,18 @@ class TestNovaServerProfile(base.SenlinTestCase):
             'id': 'FAKE_ID',
             'image': 'FAKE_IMAGE',
             'addresses': {
-                'private': ['10.0.0.3', '192.168.43.3'],
-                'public': ['172.16.5.3']},
+                'private': [{
+                    'version': 4,
+                    'addr': '10.0.0.3',
+                }, {
+                    'version': 4,
+                    'addr': '192.168.43.3'
+                }],
+                'public': [{
+                    'version': 4,
+                    'addr': '172.16.5.3',
+                }]
+            },
             'security_groups': ['default', 'webserver'],
         }
         self.assertEqual(expected, res)
