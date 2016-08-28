@@ -286,3 +286,52 @@ Response Parameters
 .. rest_parameters:: parameters.yaml
 
   - X-OpenStack-Request-Id: request_id
+
+
+Validate profile
+================
+
+.. rest_method::  POST /v1/profiles/validate
+
+Validates a profile.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 503
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - profile: profile
+  - spec: profile_spec
+
+Response Parameters
+-------------------
+
+The response contains properties as if the profile is created.
+
+.. rest_parameters:: parameters.yaml
+
+  - X-OpenStack-Request-Id: request_id
+  - created_at: created_at
+  - domain: domain
+  - id: profile_id
+  - metadata: metadata
+  - name: name
+  - project: project
+  - spec: profile_spec
+  - type: profile_type_name
+  - updated_at: updated_at
+  - user: user
