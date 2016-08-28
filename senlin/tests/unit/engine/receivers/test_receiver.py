@@ -242,3 +242,23 @@ class TestReceiver(base.SenlinTestCase):
 
         result = rb.Receiver.load(self.context, receiver_id=receiver.id)
         self.assertEqual(expected, result.to_dict())
+
+    def test_release_channel(self):
+        receiver = self._create_receiver('test-receiver', UUID1)
+        receiver = rb.Receiver.load(self.context, UUID1)
+        res = receiver.release_channel()
+        self.assertIsNone(res)
+
+    @mock.patch.object(ro.Receiver, 'delete')
+    @mock.patch.object(rb.Receiver, 'load')
+    def test_receiver_delete(self, mock_load, mock_delete):
+        mock_receiver = mock.Mock()
+        mock_receiver.id = 'test-receiver-id'
+        mock_load.return_value = mock_receiver
+
+        rb.Receiver.delete(self.context, 'test-receiver-id')
+
+        mock_load.assert_called_once_with(self.context,
+                                          receiver_id='test-receiver-id')
+        mock_receiver.release_channel.assert_called_once_with()
+        mock_delete.assert_called_once_with(self.context, 'test-receiver-id')

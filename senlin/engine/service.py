@@ -2173,7 +2173,7 @@ class EngineService(service.Service):
         """
         db_receiver = self.receiver_find(context, identity)
         LOG.info(_LI("Deleting receiver %s."), identity)
-        receiver_obj.Receiver.delete(context, db_receiver.id)
+        receiver_mod.Receiver.delete(context, db_receiver.id)
         LOG.info(_LI("Receiver %s is deleted."), identity)
 
     @request_context

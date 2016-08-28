@@ -329,7 +329,7 @@ class ReceiverTest(base.SenlinTestCase):
         self.assertEqual(exc.ReceiverNotFound, ex.exc_info[0])
 
     @mock.patch.object(service.EngineService, 'receiver_find')
-    @mock.patch.object(ro.Receiver, 'delete')
+    @mock.patch.object(rb.Receiver, 'delete')
     def test_receiver_delete(self, mock_delete, mock_find):
         fake_obj = mock.Mock()
         fake_obj.id = 'FAKE_ID'
