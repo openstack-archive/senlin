@@ -10,6 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import mock
+import socket
+
 from oslo_config import cfg
 
 from senlin.engine.receivers import webhook as wmod
@@ -22,7 +25,7 @@ UUID2 = '60efdaa1-06c2-4fcf-ae44-17a2d85ff3ea'
 
 class TestWebhook(base.SenlinTestCase):
 
-    def test_initialize_channel(self):
+    def test_initialize_channel_host_provided(self):
         cfg.CONF.set_override('host', 'web.com', 'webhook')
         cfg.CONF.set_override('port', '1234', 'webhook')
         webhook = wmod.Webhook('webhook', CLUSTER_ID, 'FAKE_ACTION',
@@ -31,6 +34,37 @@ class TestWebhook(base.SenlinTestCase):
 
         expected = {
             'alarm_url': ('http://web.com:1234/v1/webhooks/%s/trigger'
+                          '?V=1' % UUID1)
+        }
+        self.assertEqual(expected, channel)
+        self.assertEqual(expected, webhook.channel)
+
+    @mock.patch.object(wmod.Webhook, "_get_base_url")
+    def test_initialize_channel_host_not_provided(self, mock_get_base_url):
+        mock_get_base_url.return_value = 'http://web.com:1234/v1'
+        webhook = wmod.Webhook('webhook', CLUSTER_ID, 'FAKE_ACTION',
+                               id=UUID1)
+        channel = webhook.initialize_channel()
+
+        expected = {
+            'alarm_url': ('http://web.com:1234/v1/webhooks/%s/trigger'
+                          '?V=1' % UUID1)
+        }
+        self.assertEqual(expected, channel)
+        self.assertEqual(expected, webhook.channel)
+
+    @mock.patch.object(socket, "gethostname")
+    @mock.patch.object(wmod.Webhook, "_get_base_url")
+    def test_initialize_channel_no_host_no_base(self, mock_get_base_url,
+                                                mock_gethostname):
+        mock_get_base_url.return_value = None
+        mock_gethostname.return_value = 'test-host'
+        webhook = wmod.Webhook('webhook', CLUSTER_ID, 'FAKE_ACTION',
+                               id=UUID1)
+        channel = webhook.initialize_channel()
+
+        expected = {
+            'alarm_url': ('http://test-host:8778/v1/webhooks/%s/trigger'
                           '?V=1' % UUID1)
         }
         self.assertEqual(expected, channel)

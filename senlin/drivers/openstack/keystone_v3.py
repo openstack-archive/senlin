@@ -186,3 +186,15 @@ class KeystoneClient(base.DriverBase):
                 LOG.warning(_LW('Region %s is not found.'), r)
 
         return validated
+
+    @sdk.translate_exception
+    def get_senlin_endpoint(self):
+        '''Get Senlin service endpoint.'''
+        region = cfg.CONF.default_region_name
+        # TODO(Yanyan Hu): Currently, region filtering is unsupported in
+        # session.get_endpoint(). Need to propose fix to openstacksdk.
+        base = self.conn.session.get_endpoint(service_type='clustering',
+                                              interface='public',
+                                              region=region)
+
+        return base

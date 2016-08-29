@@ -10,10 +10,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import socket
+
 from oslo_config import cfg
+from oslo_log import log as logging
 from six.moves.urllib import parse
 
+from senlin.common.i18n import _
 from senlin.engine.receivers import base
+
+LOG = logging.getLogger(__name__)
 
 CONF = cfg.CONF
 
@@ -24,8 +30,24 @@ class Webhook(base.Receiver):
     def initialize_channel(self):
         host = CONF.webhook.host
         port = CONF.webhook.port
-        base = "http://%(h)s:%(p)s/v1" % {'h': host, 'p': port}
+        base = None
+
+        if not host:
+            # Try to get base url by querying senlin endpoint if host
+            # is not provided in configuration file
+            base = self._get_base_url()
+            if not base:
+                host = socket.gethostname()
+                msg = _('Webhook host is not specified in configuration '
+                        'file and Senlin service endpoint can not be found,'
+                        'using local hostname (%(host)s) for webhook url.'
+                        ) % {'host': host}
+                LOG.warning(msg)
+
+        if not base:
+            base = "http://%(h)s:%(p)s/v1" % {'h': host, 'p': port}
         webhook = "/webhooks/%(id)s/trigger" % {'id': self.id}
+
         if self.params:
             normalized = sorted(self.params.items(), key=lambda d: d[0])
             qstr = parse.urlencode(normalized)
