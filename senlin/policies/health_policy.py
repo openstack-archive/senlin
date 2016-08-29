@@ -143,8 +143,10 @@ class HealthPolicy(base.Policy):
         """"Hook for policy attach.
 
         Register the cluster for health management.
-        """
 
+        :param cluster: The target cluster.
+        :return: A tuple comprising execution result and policy data.
+        """
         kwargs = {
             'check_type': self.check_type,
             'interval': self.interval,
@@ -161,11 +163,12 @@ class HealthPolicy(base.Policy):
         return True, self._build_policy_data(data)
 
     def detach(self, cluster):
-        '''Hook for policy detach.
+        """Hook for policy detach.
 
         Unregister the cluster for health management.
-        '''
-
+        :param cluster: The target cluster.
+        :returns: A tuple comprising the execution result and reason.
+        """
         health_manager.unregister(cluster.id)
         return True, ''
 
@@ -204,7 +207,7 @@ class HealthPolicy(base.Policy):
                 return True
 
         pd = {
-            'recover_action': self.recover_actions[0],
+            'recover_action': self.recover_actions,
             'fencing': self.fencing_types,
         }
         action.data.update({'health': pd})

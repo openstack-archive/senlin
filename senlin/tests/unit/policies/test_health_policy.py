@@ -99,11 +99,10 @@ class TestHealthPolicy(base.SenlinTestCase):
 
         self.assertTrue(res)
         data = {
-            'health':
-                {
-                    'recover_action': 'REBUILD',
-                    'fencing': ['COMPUTE'],
-                }
+            'health': {
+                'recover_action': ['REBUILD'],
+                'fencing': ['COMPUTE'],
+            }
         }
         self.assertEqual(data, action.data)
 

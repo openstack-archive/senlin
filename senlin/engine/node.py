@@ -387,9 +387,10 @@ class Node(object):
             self.set_status(context, self.ERROR, reason=_('Recover failed'))
             return False
 
-        self.set_status(context, self.ACTIVE, reason=_('Recover succeeded'))
+        params = {}
         if self.physical_id != physical_id:
-            self.physical_id = physical_id
-            self.store(context)
+            params['physical_id'] = physical_id
+        self.set_status(context, self.ACTIVE, reason=_('Recover succeeded'),
+                        **params)
 
         return True

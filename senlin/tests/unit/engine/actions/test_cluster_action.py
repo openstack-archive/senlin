@@ -1302,10 +1302,7 @@ class ClusterActionTest(base.SenlinTestCase):
             action.context, 'NODE_2', 'NODE_RECOVER',
             name='node_recover_NODE_2',
             cause=ab.CAUSE_DERIVED,
-            inputs={
-                'operation': 'RECREATE',
-                'force': False,
-            }
+            inputs={}
         )
         mock_dep.assert_called_once_with(action.context, ['NODE_RECOVER_ID'],
                                          'CLUSTER_ACTION_ID')
@@ -1367,10 +1364,7 @@ class ClusterActionTest(base.SenlinTestCase):
             action.context, 'NODE_1', 'NODE_RECOVER',
             name='node_recover_NODE_1',
             cause=ab.CAUSE_DERIVED,
-            inputs={
-                'operation': 'REBOOT',
-                'force': False,
-            }
+            inputs={'operation': 'REBOOT'}
         )
         mock_dep.assert_called_once_with(action.context, ['NODE_RECOVER_ID'],
                                          'CLUSTER_ACTION_ID')
@@ -1431,10 +1425,7 @@ class ClusterActionTest(base.SenlinTestCase):
             action.context, 'NODE_1', 'NODE_RECOVER',
             name='node_recover_NODE_1',
             cause=ab.CAUSE_DERIVED,
-            inputs={
-                'operation': 'RECREATE',
-                'force': False,
-            }
+            inputs={}
         )
         mock_dep.assert_called_once_with(action.context, ['NODE_ACTION_ID'],
                                          'CLUSTER_ACTION_ID')

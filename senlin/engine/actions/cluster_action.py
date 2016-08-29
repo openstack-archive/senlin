@@ -528,20 +528,16 @@ class ClusterAction(base.Action):
 
         # process data from health_policy
         pd = self.data.get('health', None)
-        if pd is None:
-            pd = {
-                'health': {
-                    'recover_action': 'RECREATE',
-                }
-            }
-            self.data.update(pd)
-        recover_action = pd.get('recover_action', 'RECREATE')
-
-        fencing_type = pd.get('fencing')
-        force_delete = fencing_type is not None and 'COMPUTE' in fencing_type
+        inputs = {}
+        if pd:
+            recover_action = pd.get('recover_action', None)
+            fencing = pd.get('fencing', None)
+            if recover_action is not None:
+                inputs['operation'] = recover_action
+            if fencing is not None and 'COMPUTE' in fencing:
+                inputs['force'] = True
 
         reason = _('Cluster recovery succeeded.')
-
         children = []
         for node in self.cluster.nodes:
             if node.status == 'ACTIVE':
@@ -550,11 +546,7 @@ class ClusterAction(base.Action):
             action_id = base.Action.create(
                 self.context, node_id, consts.NODE_RECOVER,
                 name='node_recover_%s' % node_id[:8],
-                cause=base.CAUSE_DERIVED,
-                inputs={
-                    'operation': recover_action,
-                    'force': force_delete,
-                }
+                cause=base.CAUSE_DERIVED, inputs=inputs,
             )
             children.append(action_id)
 
