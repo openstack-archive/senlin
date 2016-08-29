@@ -781,27 +781,25 @@ class ServerProfile(base.Profile):
 
         try:
             server = self.nova(obj).server_get(self.server_id)
-        except Exception as ex:
-            LOG.exception(_('Failed at getting server: %s'),
-                          six.text_type(ex))
-            return False
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(op='rebuilding', type='server',
+                                         id=self.server_id,
+                                         message=six.text_type(ex))
 
         if server is None or server.image is None:
             return False
 
         image_id = server.image['id']
         admin_pass = self.properties.get(self.ADMIN_PASS)
-
         try:
             self.nova(obj).server_rebuild(self.server_id, image_id,
                                           self.properties.get(self.NAME),
                                           admin_pass)
             self.nova(obj).wait_for_server(self.server_id, 'ACTIVE')
-        except Exception as ex:
-            LOG.exception(_('Failed at rebuilding server: %s'),
-                          six.text_type(ex))
-            return False
-
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(op='rebuilding', type='server',
+                                         id=self.server_id,
+                                         message=six.text_type(ex))
         return True
 
     def do_recover(self, obj, **options):

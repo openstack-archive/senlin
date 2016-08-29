@@ -1397,70 +1397,102 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertFalse(res)
 
     def test_do_rebuild(self):
-        obj = mock.Mock()
-        obj.physical_id = 'FAKE_ID'
         profile = server.ServerProfile('t', self.spec)
-
-        return_server = mock.Mock()
+        x_image = {'id': '123'}
+        x_server = mock.Mock(image=x_image)
         nc = mock.Mock()
-        nc.server_get.return_value = return_server
+        nc.server_get.return_value = x_server
         nc.server_rebuild.return_value = True
         profile._novaclient = nc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
 
-        test_server = mock.Mock()
-        test_server.physical_id = 'FAKE_ID'
+        res = profile.do_rebuild(node_obj)
 
-        mock_image = {'id': '123'}
-        return_server.image = mock_image
-
-        res = profile.do_rebuild(test_server)
+        self.assertTrue(res)
         nc.server_get.assert_called_with('FAKE_ID')
-        nc.server_rebuild.assert_called_once_with('FAKE_ID',
-                                                  '123',
+        nc.server_rebuild.assert_called_once_with('FAKE_ID', '123',
                                                   'FAKE_SERVER_NAME',
                                                   'adminpass')
         nc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
-        self.assertTrue(res)
 
-    def test_do_rebuild_no_serverfind(self):
-        msg = "FAKE_ID is not found"
-        ex = exception.InternalError(code=404, message=msg)
+    def test_do_rebuild_server_not_found(self):
 
-        obj = mock.Mock()
-        obj.physical_id = 'FAKE_ID'
         profile = server.ServerProfile('t', self.spec)
-
         nc = mock.Mock()
-        nc.server_get.side_effect = ex
+        err = exception.InternalError(code=404, message='FAKE_ID not found')
+        nc.server_get.side_effect = err
+        profile._novaclient = nc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
 
-        test_server = mock.Mock()
-        test_server.physical_id = 'FAKE_ID'
+        ex = self.assertRaises(exception.EResourceOperation,
+                               profile.do_rebuild,
+                               node_obj)
 
-        res = profile.do_rebuild(test_server)
-        self.assertFalse(res)
+        self.assertEqual('Failed in rebuilding server FAKE_ID: '
+                         'FAKE_ID not found',
+                         six.text_type(ex))
+        nc.server_get.assert_called_once_with('FAKE_ID')
 
-    def test_do_rebuild_failed(self):
-        msg = "FAKE_SERVER_IMAGE is not found"
-        ex = exception.InternalError(code=404, message=msg)
-
-        obj = mock.Mock()
-        obj.physical_id = 'FAKE_ID'
+    def test_do_rebuild_failed_rebuild(self):
         profile = server.ServerProfile('t', self.spec)
-
-        return_server = mock.Mock()
+        x_image = {'id': '123'}
+        x_server = mock.Mock(image=x_image)
         nc = mock.Mock()
-        nc.server_get.return_value = return_server
+        nc.server_get.return_value = x_server
+        ex = exception.InternalError(code=500, message='cannot rebuild')
         nc.server_rebuild.side_effect = ex
         profile._novaclient = nc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
 
-        test_server = mock.Mock()
-        test_server.physical_id = 'FAKE_ID'
+        ex = self.assertRaises(exception.EResourceOperation,
+                               profile.do_rebuild,
+                               node_obj)
 
-        mock_image = {'id': '123'}
-        return_server.image = mock_image
+        self.assertEqual('Failed in rebuilding server FAKE_ID: '
+                         'cannot rebuild',
+                         six.text_type(ex))
+        nc.server_get.assert_called_once_with('FAKE_ID')
+        nc.server_rebuild.assert_called_once_with('FAKE_ID', '123',
+                                                  'FAKE_SERVER_NAME',
+                                                  'adminpass')
+        self.assertEqual(0, nc.wait_for_server.call_count)
 
-        res = profile.do_rebuild(test_server)
+    def test_do_rebuild_failed_waiting(self):
+        profile = server.ServerProfile('t', self.spec)
+        x_image = {'id': '123'}
+        x_server = mock.Mock(image=x_image)
+        nc = mock.Mock()
+        nc.server_get.return_value = x_server
+        ex = exception.InternalError(code=500, message='timeout')
+        nc.wait_for_server.side_effect = ex
+        profile._novaclient = nc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        ex = self.assertRaises(exception.EResourceOperation,
+                               profile.do_rebuild,
+                               node_obj)
+
+        self.assertEqual('Failed in rebuilding server FAKE_ID: timeout',
+                         six.text_type(ex))
+        nc.server_get.assert_called_once_with('FAKE_ID')
+        nc.server_rebuild.assert_called_once_with('FAKE_ID', '123',
+                                                  'FAKE_SERVER_NAME',
+                                                  'adminpass')
+        nc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
+
+    def test_do_rebuild_failed_retrieving_server(self):
+        profile = server.ServerProfile('t', self.spec)
+        nc = mock.Mock()
+        nc.server_get.return_value = None
+        profile._novaclient = nc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_rebuild(node_obj)
+
         self.assertFalse(res)
+        nc.server_get.assert_called_once_with('FAKE_ID')
+        self.assertEqual(0, nc.server_rebuild.call_count)
+        self.assertEqual(0, nc.wait_for_server.call_count)
 
     def test_do_rebuild_no_physical_id(self):
         profile = server.ServerProfile('t', self.spec)
