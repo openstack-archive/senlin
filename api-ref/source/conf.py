@@ -28,10 +28,6 @@ import os
 import subprocess
 import sys
 
-# TODO(Graham Hayes): Remove the following block of code when os-api-ref is
-# using openstackdocstheme
-
-import os_api_ref
 import openstackdocstheme  # noqa
 
 extensions = [

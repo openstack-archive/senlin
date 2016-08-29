@@ -207,8 +207,14 @@ class Node(object):
         return node_dict
 
     def set_status(self, context, status, reason=None, **params):
-        '''Set status of the node.'''
+        """Set status of the node.
 
+        :param context: The request context.
+        :param status: New status for the node.
+        :param reason: The reason that leads the node to its current status.
+        :param kwargs params: Other properties that need an update.
+        :returns: ``None``.
+        """
         values = {}
         now = timeutils.utcnow(True)
         if status == self.ACTIVE and self.status == self.CREATING:
@@ -343,12 +349,17 @@ class Node(object):
         if not self.physical_id:
             return False
 
-        res = pb.Profile.check_object(context, self)
+        res = True
+        try:
+            res = pb.Profile.check_object(context, self)
+        except exc.EResourceOperation as ex:
+            self.set_status(self.ERROR, six.text_type(ex))
+            return False
 
-        if not res:
-            self.status = 'ERROR'
-            self.status_reason = _('Physical node is not ACTIVE!')
-            self.store(context)
+        if res:
+            self.set_status(self.ACTIVE, _("Check: Node is ACTIVE."))
+        else:
+            self.set_status(self.ERROR, _("Check: Node is not ACTIVE."))
 
         return res
 
