@@ -12,7 +12,7 @@
 # under the License.
 
 from oslo_config import cfg
-
+from senlin.common.i18n import _
 
 service_available_group = cfg.OptGroup(name="service_available",
                                        title="Available OpenStack Services")
@@ -20,7 +20,7 @@ service_available_group = cfg.OptGroup(name="service_available",
 ServiceAvailableGroup = [
     cfg.BoolOpt("senlin",
                 default=True,
-                help="Whether or not senlin is expected to be available"),
+                help=_("Whether or not senlin is expected to be available")),
 ]
 
 clustering_group = cfg.OptGroup(name="clustering",
@@ -29,8 +29,8 @@ clustering_group = cfg.OptGroup(name="clustering",
 ClusteringGroup = [
     cfg.StrOpt("catalog_type",
                default="clustering",
-               help="Catalog type of the clustering service."),
+               help=_("Catalog type of the clustering service.")),
     cfg.IntOpt("wait_timeout",
                default=60,
-               help="Waiting time for a specific status, in seconds.")
+               help=_("Waiting time for a specific status, in seconds."))
 ]
