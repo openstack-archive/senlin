@@ -272,11 +272,11 @@ class TestConstraintsSchema(testtools.TestCase):
         }
 
         data = {'key1': 'value1', 'key2': 2}
-        spec = schema.Spec(spec_schema, data)
+        spec = schema.Spec(spec_schema, data, version='1.0')
         self.assertIsNone(spec.validate())
 
         data = {'key2': 2}
-        spec = schema.Spec(spec_schema, data)
+        spec = schema.Spec(spec_schema, data, version='1.0')
         self.assertIsNone(spec.validate())
 
     def test_spec_validate_fail_value_type_incorrect(self):
@@ -286,7 +286,7 @@ class TestConstraintsSchema(testtools.TestCase):
         }
 
         data = {'key1': 'value1', 'key2': 'abc'}
-        spec = schema.Spec(spec_schema, data)
+        spec = schema.Spec(spec_schema, data, version='1.0')
         ex = self.assertRaises(exception.SpecValidationFailed,
                                spec.validate)
         msg = _('The value "%s" cannot be converted into an '
@@ -299,7 +299,7 @@ class TestConstraintsSchema(testtools.TestCase):
         }
 
         data = {'key1': 'value1', 'key2': 2}
-        spec = schema.Spec(spec_schema, data)
+        spec = schema.Spec(spec_schema, data, version='1.0')
         ex = self.assertRaises(exception.SpecValidationFailed,
                                spec.validate)
         msg = _('Unrecognizable spec item "%s"') % 'key2'
@@ -312,10 +312,78 @@ class TestConstraintsSchema(testtools.TestCase):
         }
 
         data = {'key1': 'value1'}
-        spec = schema.Spec(spec_schema, data)
+        spec = schema.Spec(spec_schema, data, version='1.0')
         ex = self.assertRaises(exception.SpecValidationFailed,
                                spec.validate)
         msg = _('Required spec item "%s" not assigned') % 'key2'
+        self.assertNotEqual(-1, six.text_type(ex.message).find(msg))
+
+    def test_spec_validate_version_good(self):
+        spec_schema = {
+            'type': schema.String('Type name', required=True),
+            'version': schema.String('Version number', required=True),
+            'key1': schema.String('first key', default='value1'),
+            'key2': schema.Integer('second key', required=True,
+                                   min_version='1.0', max_version='1.2'),
+        }
+
+        data = {
+            'key1': 'value1',
+            'key2': 2,
+            'type': 'test-type',
+            'version': '1.0'
+        }
+        spec = schema.Spec(spec_schema, data)
+        self.assertIsNone(spec.validate())
+
+        data = {'key2': 2, 'type': 'test-type', 'version': '1.2'}
+        spec = schema.Spec(spec_schema, data)
+        self.assertIsNone(spec.validate())
+
+    def test_spec_validate_version_fail_unsupported_version(self):
+        spec_schema = {
+            'type': schema.String('Type name', required=True),
+            'version': schema.String('Version number', required=True),
+            'key1': schema.String('first key', default='value1',
+                                  min_version='1.1'),
+            'key2': schema.Integer('second key', required=True),
+        }
+
+        data = {
+            'key1': 'value1',
+            'key2': 2,
+            'type': 'test-type',
+            'version': '1.0'
+        }
+        spec = schema.Spec(spec_schema, data, version='1.0')
+        ex = self.assertRaises(exception.SpecValidationFailed,
+                               spec.validate)
+        msg = _('%(key)s(min_version=%(min)s) is not supported by '
+                'spec version %(version)s.'
+                ) % {'key': 'key1', 'min': '1.1', 'version': '1.0'}
+        self.assertNotEqual(-1, six.text_type(ex.message).find(msg))
+
+    def test_spec_validate_version_fail_version_over_max(self):
+        spec_schema = {
+            'type': schema.String('Type name', required=True),
+            'version': schema.String('Version number', required=True),
+            'key1': schema.String('first key', default='value1',
+                                  max_version='2.0'),
+            'key2': schema.Integer('second key', required=True),
+        }
+
+        data = {
+            'key1': 'value1',
+            'key2': 2,
+            'type': 'test-type',
+            'version': '3.0'
+        }
+        spec = schema.Spec(spec_schema, data, version='3.0')
+        ex = self.assertRaises(exception.SpecValidationFailed,
+                               spec.validate)
+        msg = _('%(key)s(max_version=%(max)s) is not supported '
+                'by spec version %(version)s.'
+                ) % {'version': '3.0', 'max': '2.0', 'key': 'key1'}
         self.assertNotEqual(-1, six.text_type(ex.message).find(msg))
 
 

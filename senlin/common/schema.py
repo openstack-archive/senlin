@@ -14,11 +14,14 @@ import collections
 import numbers
 import six
 
+from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import strutils
 
 from senlin.common import exception
 from senlin.common.i18n import _
+
+LOG = logging.getLogger(__name__)
 
 
 class AnyIndexDict(collections.Mapping):
@@ -44,8 +47,10 @@ class SchemaBase(collections.Mapping):
 
     KEYS = (
         TYPE, DESCRIPTION, DEFAULT, REQUIRED, SCHEMA, CONSTRAINTS,
+        MIN_VERSION, MAX_VERSION,
     ) = (
         'type', 'description', 'default', 'required', 'schema', 'constraints',
+        'min_version', 'max_version',
     )
 
     TYPES = (
@@ -55,7 +60,8 @@ class SchemaBase(collections.Mapping):
     )
 
     def __init__(self, description=None, default=None, required=False,
-                 schema=None, constraints=None):
+                 schema=None, constraints=None, min_version=None,
+                 max_version=None):
         if schema is not None:
             if type(self) not in (List, Map, Operation):
                 msg = _('Schema valid only for List or Map, not '
@@ -72,6 +78,8 @@ class SchemaBase(collections.Mapping):
         self.required = required
         self.constraints = constraints or []
         self._len = None
+        self.min_version = min_version
+        self.max_version = max_version
 
     def has_default(self):
         return self.default is not None
@@ -116,6 +124,25 @@ class SchemaBase(collections.Mapping):
         except ValueError as ex:
             raise exception.SpecValidationFailed(message=six.text_type(ex))
 
+    def _validate_version(self, version, key):
+        if self.min_version and self.min_version > version:
+            msg = _('%(key)s(min_version=%(min)s) is not supported by '
+                    'spec version %(version)s.'
+                    ) % {'key': key, 'min': self.min_version,
+                         'version': version}
+            raise exception.SpecValidationFailed(message=msg)
+        if self.max_version:
+            if version > self.max_version:
+                msg = _('%(key)s(max_version=%(max)s) is not supported '
+                        'by spec version %(version)s.'
+                        ) % {'version': version, 'max': self.max_version,
+                             'key': key}
+                raise exception.SpecValidationFailed(message=msg)
+            else:
+                msg = _('Warning: %(key)s will be deprecated after version '
+                        '%(version)s!') % {'key': key, 'version': version}
+                LOG.warning(msg)
+
     def __getitem__(self, key):
         if key == self.DESCRIPTION:
             if self.description is not None:
@@ -154,18 +181,21 @@ class PropertySchema(SchemaBase):
 
     KEYS = (
         TYPE, DESCRIPTION, DEFAULT, REQUIRED, SCHEMA, UPDATABLE,
-        CONSTRAINTS,
+        CONSTRAINTS, MIN_VERSION, MAX_VERSION,
     ) = (
         'type', 'description', 'default', 'required', 'schema', 'updatable',
-        'constraints',
+        'constraints', 'min_version', 'max_version',
     )
 
     def __init__(self, description=None, default=None, required=False,
-                 schema=None, updatable=False, constraints=None):
+                 schema=None, updatable=False, constraints=None,
+                 min_version=None, max_version=None):
         super(PropertySchema, self).__init__(description=description,
                                              default=default,
                                              required=required, schema=schema,
-                                             constraints=constraints)
+                                             constraints=constraints,
+                                             min_version=min_version,
+                                             max_version=max_version)
         self.updatable = updatable
 
     def __getitem__(self, key):
@@ -342,7 +372,7 @@ class Map(PropertySchema):
 
         sub_schema = self.schema
         if sub_schema is not None:
-            # sub_schema shoud be a dict here
+            # sub_schema shoud be a dict here.
             subspec = Spec(sub_schema, dict(values))
             subspec.validate()
 
@@ -390,16 +420,20 @@ class Operation(Map):
 
 class Spec(collections.Mapping):
     '''A class that contains all spec items.'''
-    def __init__(self, schema, data):
+    def __init__(self, schema, data, version=None):
         self._schema = schema
         self._data = data
+        self._version = version
 
     def validate(self):
         '''Validate the schema.'''
         for (k, s) in self._schema.items():
             try:
-                # validate through resolve
+                # Validate through resolve
                 self.resolve_value(k)
+                # Validate schema for versioned spec
+                if self._version:
+                    self._schema[k]._validate_version(self._version, k)
             except (TypeError, ValueError) as err:
                 msg = _('Spec validation error (%(key)s): %(err)s') % dict(
                     key=k, err=six.text_type(err))
