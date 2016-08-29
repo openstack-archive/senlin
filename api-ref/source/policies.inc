@@ -289,3 +289,53 @@ Response Parameters
 .. rest_parameters:: parameters.yaml
 
   - X-OpenStack-Request-ID: request_id
+
+
+Validate policy
+===============
+
+.. rest_method::  POST /v1/policies/validate
+
+Validates a policy.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 503
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - policy: policy
+  - spec: policy_spec
+
+Response Parameters
+-------------------
+
+The response contains properties as if the policy has been created.
+
+.. rest_parameters:: parameters.yaml
+
+  - X-OpenStack-Request-Id: request_id
+  - policy: policy
+  - created_at: created_at
+  - data: policy_data
+  - domain: domain
+  - id: policy_id
+  - name: name
+  - project: project
+  - spec: policy_spec
+  - type: policy_type_name
+  - updated_at: updated_at
+  - user: user
