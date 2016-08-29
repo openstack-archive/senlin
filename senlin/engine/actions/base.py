@@ -101,9 +101,6 @@ class Action(object):
         self.project = context.project
         self.domain = context.domain
 
-        # TODO(Qiming): make description a db column
-        self.description = kwargs.get('description', '')
-
         self.action = action
         self.target = target
 

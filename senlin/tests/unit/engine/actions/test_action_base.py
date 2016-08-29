@@ -69,7 +69,6 @@ class ActionBaseTest(base.SenlinTestCase):
     def _verify_new_action(self, obj, target, action):
         self.assertIsNone(obj.id)
         self.assertEqual('', obj.name)
-        self.assertEqual('', obj.description)
         self.assertEqual(target, obj.target)
         self.assertEqual(action, obj.action)
         self.assertEqual('', obj.cause)
@@ -96,7 +95,6 @@ class ActionBaseTest(base.SenlinTestCase):
     def test_action_init_with_values(self):
         values = copy.deepcopy(self.action_values)
         values['id'] = 'FAKE_ID'
-        values['description'] = 'FAKE_DESC'
         values['created_at'] = 'FAKE_CREATED_TIME'
         values['updated_at'] = 'FAKE_UPDATED_TIME'
 
@@ -104,7 +102,6 @@ class ActionBaseTest(base.SenlinTestCase):
 
         self.assertEqual('FAKE_ID', obj.id)
         self.assertEqual('FAKE_NAME', obj.name)
-        self.assertEqual('FAKE_DESC', obj.description)
         self.assertEqual(OBJID, obj.target)
         self.assertEqual('FAKE_CAUSE', obj.cause)
         self.assertEqual(OWNER_ID, obj.owner)
