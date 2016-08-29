@@ -19,7 +19,7 @@ import six
 
 from senlin.common import consts
 from senlin.common import context
-from senlin.common import exception
+from senlin.common import exception as exc
 from senlin.common.i18n import _, _LE, _LW
 from senlin.common import schema
 from senlin.common import utils
@@ -141,7 +141,7 @@ class Profile(object):
             profile = po.Profile.get(ctx, profile_id,
                                      project_safe=project_safe)
             if profile is None:
-                raise exception.ProfileNotFound(profile=profile_id)
+                raise exc.ProfileNotFound(profile=profile_id)
 
         return cls.from_object(profile)
 
@@ -269,7 +269,7 @@ class Profile(object):
         """
         cred = co.Credential.get(oslo_context.get_current(), user, project)
         if cred is None:
-            raise exception.TrustNotFound(trustor=user)
+            raise exc.TrustNotFound(trustor=user)
 
         trust_id = cred.cred['openstack']['trust']
 
@@ -328,15 +328,17 @@ class Profile(object):
             LOG.error(_LE("Recover operation not supported: %s"), operation)
             return False
 
-        res = self.do_delete(obj, **options)
-        if res:
-            try:
-                res = self.do_create(obj)
-            except Exception as ex:
-                LOG.exception(_('Failed at recovering obj: %s '),
-                              six.text_type(ex))
-                return False
-
+        try:
+            self.do_delete(obj, **options)
+        except exc.EResourceDeletion as ex:
+            raise exc.EResourceOperation(op='recovering', type='node',
+                                         id=obj.id, message=six.text_type(ex))
+        res = None
+        try:
+            res = self.do_create(obj)
+        except exc.EResourceCreation as ex:
+            raise exc.EResourceOperation(op='recovering', type='node',
+                                         id=obj.id, message=six.text_type(ex))
         return res
 
     def do_validate(self, obj):

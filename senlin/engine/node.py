@@ -232,20 +232,6 @@ class Node(object):
             return {}
         return pb.Profile.get_details(context, self)
 
-    def _handle_exception(self, context, action, status, exception):
-        msg = six.text_type(exception)
-        self.physical_id = exception.kwargs.get('resource_id', None)
-        if self.physical_id:
-            reason = _('Profile failed in %(action)s resource (%(id)s) due '
-                       'to: %(msg)s') % {'action': action[:-1] + 'ing',
-                                         'id': self.physical_id, 'msg': msg}
-        else:
-            # Exception happens before physical node creatin started.
-            reason = _('Profile failed in creating node due to: %(msg)s') % {
-                'msg': msg}
-        self.set_status(context, self.ERROR, reason)
-        self.store(context)
-
     def do_create(self, context):
         if self.status != self.INIT:
             LOG.error(_LE('Node is in status "%s"'), self.status)
@@ -379,8 +365,8 @@ class Node(object):
 
         try:
             physical_id = pb.Profile.recover_object(context, self, **options)
-        except exc.ResourceStatusError as ex:
-            self._handle_exception(context, 'recover', self.ERROR, ex)
+        except exc.EResourceOperation as ex:
+            self.set_status(context, self.ERROR, reason=six.text_type(ex))
             return False
 
         if not physical_id:

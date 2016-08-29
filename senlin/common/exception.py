@@ -260,14 +260,14 @@ class EResourceDeletion(InternalError):
     msg_fmt = _("Failed in deleting %(type)s %(id)s: %(message)s.")
 
 
+class EResourceOperation(InternalError):
+    # Used when deleting resources from other services
+    msg_fmt = _("Failed in %(op)s %(type)s %(id)s: %(message)s")
+
+
 class ResourceNotFound(InternalError):
     # Used when retrieving resources from other services
     msg_fmt = _("The resource (%(resource)s) could not be found.")
-
-
-class ResourceStatusError(InternalError):
-    msg_fmt = _("The resource %(resource_id)s is in error status "
-                "- '%(status)s' due to '%(reason)s'.")
 
 
 class InvalidPlugin(InternalError):

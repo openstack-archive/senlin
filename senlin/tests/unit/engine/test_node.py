@@ -291,32 +291,6 @@ class TestNode(base.SenlinTestCase):
         mock_details.assert_called_once_with(self.context, node)
         self.assertEqual({'foo': 'bar'}, res)
 
-    def test_node_handle_exception(self):
-        fake_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
-        ex = exception.ResourceStatusError(resource_id=fake_id,
-                                           status='FAKE_STATUS',
-                                           reason='FAKE_REASON')
-        node = nodem.Node('node1', PROFILE_ID, None, self.context)
-        node.store(self.context)
-        node._handle_exception(self.context, 'ACTION', 'STATUS', ex)
-        db_node = node_obj.Node.get(self.context, node.id)
-        self.assertEqual(node.ERROR, db_node.status)
-        self.assertEqual('Profile failed in ACTIOing resource '
-                         '(%s) due to: %s' % (fake_id, six.text_type(ex)),
-                         db_node.status_reason)
-        self.assertEqual(fake_id, db_node.physical_id)
-
-        # Exception happens before physical node creation started.
-        ex = exception.EResourceCreation(type='stack')
-        node = nodem.Node('node1', PROFILE_ID, None, self.context)
-        node.store(self.context)
-        node._handle_exception(self.context, 'CREATE', 'STATUS', ex)
-        db_node = node_obj.Node.get(self.context, node.id)
-        self.assertEqual(node.ERROR, db_node.status)
-        self.assertEqual('Profile failed in creating node due to: '
-                         '%s' % six.text_type(ex), db_node.status_reason)
-        self.assertIsNone(db_node.physical_id)
-
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(pb.Profile, 'create_object')
     def test_node_create(self, mock_create, mock_status):

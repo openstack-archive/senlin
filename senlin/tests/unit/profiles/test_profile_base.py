@@ -663,35 +663,29 @@ class TestProfileBase(base.SenlinTestCase):
 
     def test_do_recover_with_recreate_failed_delete(self):
         profile = self._create_profile('test-profile')
+        err = exception.EResourceDeletion(type='STACK', id='ID',
+                                          message='BANG')
+        self.patchobject(profile, 'do_delete', side_effect=err)
 
-        # Fail because do_delete not implemented
-        self.assertRaises(NotImplementedError,
-                          profile.do_recover,
-                          mock.Mock(), operation='RECREATE')
-
-        # Failed in do_delete
-        self.patchobject(profile, 'do_delete', return_value=False)
-        res = profile.do_recover(mock.Mock(), operation='RECREATE')
-        self.assertFalse(res)
+        ex = self.assertRaises(exception.EResourceOperation,
+                               profile.do_recover,
+                               mock.Mock(id='NODE_ID'), operation='RECREATE')
+        self.assertEqual("Failed in recovering node NODE_ID: "
+                         "Failed in deleting STACK ID: BANG.",
+                         six.text_type(ex))
 
     def test_do_recover_with_recreate_failed_create(self):
         profile = self._create_profile('test-profile')
-
-        # Failed because do_create is not implemented (weird case)
         self.patchobject(profile, 'do_delete', return_value=True)
-        res = profile.do_recover(mock.Mock(), operation='RECREATE')
-        self.assertEqual(False, res)
+        err = exception.EResourceCreation(type='STACK', message='BANNG')
+        self.patchobject(profile, 'do_create', side_effect=err)
 
-        # Failed in do_create
-        self.patchobject(profile, 'do_delete', return_value=True)
-        self.patchobject(profile, 'do_create', return_value=False)
-        res = profile.do_recover(mock.Mock(), operation='RECREATE')
-        self.assertFalse(res)
-
-        # Failed in do_create with exception
-        self.patchobject(profile, 'do_create', side_effect=Exception)
-        res = profile.do_recover(mock.Mock(), operation='RECREATE')
-        self.assertFalse(res)
+        ex = self.assertRaises(exception.EResourceOperation,
+                               profile.do_recover,
+                               mock.Mock(id='NODE_ID'), operation='RECREATE')
+        msg = ("Failed in recovering node NODE_ID: Failed in creating "
+               "STACK: BANNG.")
+        self.assertEqual(msg, six.text_type(ex))
 
     def test_to_dict(self):
         profile = self._create_profile('test-profile')
