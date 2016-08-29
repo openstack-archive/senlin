@@ -117,6 +117,26 @@ class TestHealthPolicy(base.SenlinTestCase):
         mock_disable.assert_called_once_with(self.cluster.id)
 
     @mock.patch.object(health_manager, 'disable')
+    def test_pre_op_cluster_del_nodes(self, mock_disable):
+        action = mock.Mock(context='action_context', data={},
+                           action=consts.CLUSTER_DEL_NODES)
+
+        res = self.hp.pre_op(self.cluster.id, action)
+
+        self.assertTrue(res)
+        mock_disable.assert_called_once_with(self.cluster.id)
+
+    @mock.patch.object(health_manager, 'disable')
+    def test_pre_op_node_delete(self, mock_disable):
+        action = mock.Mock(context='action_context', data={},
+                           action=consts.NODE_DELETE)
+
+        res = self.hp.pre_op(self.cluster.id, action)
+
+        self.assertTrue(res)
+        mock_disable.assert_called_once_with(self.cluster.id)
+
+    @mock.patch.object(health_manager, 'disable')
     def test_pre_op_resize_with_data(self, mock_disable):
         action = mock.Mock(context='action_context', data={'deletion': 'foo'},
                            action=consts.CLUSTER_RESIZE)
@@ -174,6 +194,24 @@ class TestHealthPolicy(base.SenlinTestCase):
     @mock.patch.object(health_manager, 'enable')
     def test_post_op_scale_in(self, mock_enable):
         action = mock.Mock(action=consts.CLUSTER_SCALE_IN)
+
+        res = self.hp.post_op(self.cluster.id, action)
+
+        self.assertTrue(res)
+        mock_enable.assert_called_once_with(self.cluster.id)
+
+    @mock.patch.object(health_manager, 'enable')
+    def test_post_op_cluster_del_nodes(self, mock_enable):
+        action = mock.Mock(action=consts.CLUSTER_DEL_NODES)
+
+        res = self.hp.post_op(self.cluster.id, action)
+
+        self.assertTrue(res)
+        mock_enable.assert_called_once_with(self.cluster.id)
+
+    @mock.patch.object(health_manager, 'enable')
+    def test_post_op_node_delete(self, mock_enable):
+        action = mock.Mock(action=consts.NODE_DELETE)
 
         res = self.hp.post_op(self.cluster.id, action)
 

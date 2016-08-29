@@ -29,11 +29,15 @@ class HealthPolicy(base.Policy):
 
     TARGET = [
         ('BEFORE', consts.CLUSTER_CHECK),
+        ('BEFORE', consts.CLUSTER_DEL_NODES),
         ('BEFORE', consts.CLUSTER_RECOVER),
         ('BEFORE', consts.CLUSTER_RESIZE),
         ('BEFORE', consts.CLUSTER_SCALE_IN),
+        ('BEFORE', consts.NODE_DELETE),
+        ('AFTER', consts.CLUSTER_DEL_NODES),
         ('AFTER', consts.CLUSTER_SCALE_IN),
         ('AFTER', consts.CLUSTER_RESIZE),
+        ('AFTER', consts.NODE_DELETE),
     ]
 
     # Should be ANY if profile provides health check support?
@@ -184,7 +188,9 @@ class HealthPolicy(base.Policy):
         :param kwargs args: Other keyword arguments to be checked.
         :returns: Boolean indicating whether the checking passed.
         """
-        if action.action == consts.CLUSTER_SCALE_IN:
+        if action.action in (consts.CLUSTER_SCALE_IN,
+                             consts.CLUSTER_DEL_NODES,
+                             consts.NODE_DELETE):
             health_manager.disable(cluster_id)
             return True
 
@@ -227,7 +233,9 @@ class HealthPolicy(base.Policy):
         :param kwargs args: Other keyword arguments to be checked.
         :returns: Boolean indicating whether the checking passed.
         """
-        if action.action == consts.CLUSTER_SCALE_IN:
+        if action.action in (consts.CLUSTER_SCALE_IN,
+                             consts.CLUSTER_DEL_NODES,
+                             consts.NODE_DELETE):
             health_manager.enable(cluster_id)
             return True
 
