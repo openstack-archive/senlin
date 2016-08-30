@@ -126,7 +126,8 @@ def error(context, entity, action, status=None, status_reason=None,
                   action=action, status=status, status_reason=status_reason,
                   user=context.user, project=context.project)
     event.store(context)
-    LOG.error(_LE('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s'),
+    msg = _LE('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s')
+    LOG.error(msg,
               {'name': event.oname,
                'id': event.oid and event.oid[:8],
                'action': action,
@@ -141,7 +142,8 @@ def warning(context, entity, action, status=None, status_reason=None,
                   action=action, status=status, status_reason=status_reason,
                   user=context.user, project=context.project)
     event.store(context)
-    LOG.warning(_LW('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s'),
+    msg = _LW('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s')
+    LOG.warning(msg,
                 {'name': event.oname,
                  'id': event.oid and event.oid[:8],
                  'action': action,

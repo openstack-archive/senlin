@@ -714,9 +714,9 @@ class ClusterAction(base.Action):
         # desired is checked when strict is True
         curr_size = len(self.cluster.nodes)
         if count > curr_size:
-            LOG.warning(_('Triming count (%(count)s) to current cluster size '
-                          '(%(curr)s) for scaling in'),
-                        {'count': count, 'curr': curr_size})
+            msg = _("Triming count (%(count)s) to current "
+                    "cluster size (%(curr)s) for scaling in")
+            LOG.warning(msg, {'count': count, 'curr': curr_size})
             count = curr_size
         new_size = curr_size - count
 
