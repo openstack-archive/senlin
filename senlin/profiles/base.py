@@ -324,6 +324,10 @@ class Profile(object):
         :param options: Keyword arguments for the recover operation.
         """
         operation = options.pop('operation', None)
+        # TODO(Qiming): The operaion input could be a list of operations.
+        if operation and not isinstance(operation, six.string_types):
+            operation = operation[0]
+
         if operation and operation != consts.RECOVER_RECREATE:
             LOG.error(_LE("Recover operation not supported: %s"), operation)
             return False

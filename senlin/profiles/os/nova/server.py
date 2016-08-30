@@ -664,22 +664,6 @@ class ServerProfile(base.Profile):
 
         return
 
-    def do_check(self, obj):
-        if not obj.physical_id:
-            return False
-
-        try:
-            server = self.nova(obj).server_get(obj.physical_id)
-        except exc.InternalError as ex:
-            raise exc.EResourceOperation(op='checking', type='server',
-                                         id=obj.physical_id,
-                                         message=six.text_type(ex))
-
-        if (server is None or server.status != 'ACTIVE'):
-            return False
-
-        return True
-
     def do_get_details(self, obj):
         known_keys = {
             'OS-DCF:diskConfig',
@@ -801,15 +785,36 @@ class ServerProfile(base.Profile):
                                          message=six.text_type(ex))
         return True
 
+    def do_check(self, obj):
+        if not obj.physical_id:
+            return False
+
+        try:
+            server = self.nova(obj).server_get(obj.physical_id)
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(op='checking', type='server',
+                                         id=obj.physical_id,
+                                         message=six.text_type(ex))
+
+        if (server is None or server.status != 'ACTIVE'):
+            return False
+
+        return True
+
     def do_recover(self, obj, **options):
+        # NOTE: We do a 'get' not a 'pop' here, because the operations may
+        #       get fall back to the base class for handling
+        operation = options.get('operation', None)
 
-        if 'operation' in options:
-            if options['operation'] == 'REBUILD':
-                return self.do_rebuild(obj)
+        if operation and not isinstance(operation, six.string_types):
+            operation = operation[0]
+        # TODO(Qiming): Handle the case that the operation contains other
+        #               alternative recover operation
+        # Depends-On: https://review.openstack.org/#/c/359676/
+        if operation == 'REBUILD':
+            return self.do_rebuild(obj)
 
-        res = super(ServerProfile, self).do_recover(obj, **options)
-
-        return res
+        return super(ServerProfile, self).do_recover(obj, **options)
 
     def handle_reboot(self, obj, **options):
         """Handler for the reboot operation."""

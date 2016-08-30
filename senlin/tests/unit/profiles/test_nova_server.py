@@ -1505,45 +1505,35 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertFalse(res)
 
     @mock.patch.object(server.ServerProfile, 'do_rebuild')
-    @mock.patch.object(profiles_base.Profile, 'do_recover')
-    def test_do_recover(self, mock_base_recover, mock_rebuild):
-        obj = mock.Mock()
-        obj.physical_id = 'FAKE_ID'
+    def test_do_recover_rebuild(self, mock_rebuild):
         profile = server.ServerProfile('t', self.spec)
+        node_obj = mock.Mock(physical_id='FAKE_ID')
 
-        mock_rebuild.return_value = True
-        nova_server = mock.Mock()
-        nova_server.id = 'FAKE_NOVA_SERVER_ID'
-        mock_base_recover.return_value = nova_server.id
+        res = profile.do_recover(node_obj, operation='REBUILD')
 
-        test_server = mock.Mock()
-        test_server.physical_id = 'FAKE_ID'
+        self.assertEqual(mock_rebuild.return_value, res)
+        mock_rebuild.assert_called_once_with(node_obj)
 
-        options = {'operation': 'REBUILD'}
-        res = profile.do_recover(test_server, **options)
-        mock_rebuild.assert_called_once_with(test_server)
-        self.assertTrue(res)
+    @mock.patch.object(server.ServerProfile, 'do_rebuild')
+    def test_do_recover_with_list(self, mock_rebuild):
+        profile = server.ServerProfile('t', self.spec)
+        node_obj = mock.Mock(physical_id='FAKE_ID')
 
-        options = {'operation': 'RECREATE'}
-        res = profile.do_recover(test_server, **options)
-        mock_base_recover.assert_called_once_with(test_server,
-                                                  **options)
-        self.assertEqual(nova_server.id, res)
+        res = profile.do_recover(node_obj, operation=['REBUILD'])
+
+        self.assertEqual(mock_rebuild.return_value, res)
+        mock_rebuild.assert_called_once_with(node_obj)
 
     @mock.patch.object(profiles_base.Profile, 'do_recover')
-    def test_do_recover_failed(self, mock_base_recover):
-        obj = mock.Mock()
-        obj.physical_id = 'FAKE_ID'
+    def test_do_recover_fallback(self, mock_base_recover):
         profile = server.ServerProfile('t', self.spec)
+        node_obj = mock.Mock(physical_id='FAKE_ID')
 
-        mock_base_recover.return_value = False
+        res = profile.do_recover(node_obj, operation='blahblah')
 
-        test_server = mock.Mock()
-        test_server.physical_id = 'FAKE_ID'
-
-        options = {'operation': 'RECREATE'}
-        res = profile.do_recover(test_server, **options)
-        self.assertFalse(res)
+        self.assertEqual(mock_base_recover.return_value, res)
+        mock_base_recover.assert_called_once_with(node_obj,
+                                                  operation='blahblah')
 
     def test_handle_reboot(self):
         obj = mock.Mock(physical_id='FAKE_ID')
