@@ -267,8 +267,8 @@ class LoadBalancerDriver(base.DriverBase):
         node_detail = node.get_details(oslo_context.get_current())
         addresses = node_detail.get('addresses')
         if net_name not in addresses:
-            LOG.error(_LE('Node is not in subnet %(subnet)s'),
-                      {'subnet': subnet})
+            msg = _LE('Node is not in subnet %(subnet)s')
+            LOG.error(msg, {'subnet': subnet})
             return None
 
         # Use the first IP address if more than one are found in target network
