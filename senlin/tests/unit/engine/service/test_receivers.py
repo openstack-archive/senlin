@@ -16,6 +16,7 @@ from oslo_messaging.rpc import dispatcher as rpc
 from oslo_utils import uuidutils
 import six
 
+from senlin.common import consts
 from senlin.common import exception as exc
 from senlin.engine.receivers import base as rb
 from senlin.engine import service
@@ -185,7 +186,7 @@ class ReceiverTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(rb.Receiver, 'create')
-    def test_receiver_create(self, mock_create, mock_find):
+    def test_receiver_create_webhook_succeed(self, mock_create, mock_find):
         fake_cluster = mock.Mock()
         fake_cluster.user = self.ctx.user
         mock_find.return_value = fake_cluster
@@ -243,7 +244,7 @@ class ReceiverTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(service.EngineService, 'cluster_find')
-    def test_receiver_create_cluster_not_found(self, mock_find):
+    def test_receiver_create_webhook_cluster_not_found(self, mock_find):
         mock_find.side_effect = exc.ClusterNotFound(cluster='C1')
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.receiver_create,
@@ -255,7 +256,7 @@ class ReceiverTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(rb.Receiver, 'create')
-    def test_receiver_create_forbidden(self, mock_create, mock_find):
+    def test_receiver_create_webhook_forbidden(self, mock_create, mock_find):
         fake_cluster = mock.Mock()
         fake_cluster.user = 'someone'
         mock_find.return_value = fake_cluster
@@ -280,7 +281,7 @@ class ReceiverTest(base.SenlinTestCase):
         # All other tests are done in 'test_receiver_create'
 
     @mock.patch.object(service.EngineService, 'cluster_find')
-    def test_receiver_create_bad_action(self, mock_find):
+    def test_receiver_create_webhook_bad_action(self, mock_find):
         fake_cluster = mock.Mock()
         fake_cluster.user = self.ctx.user
         mock_find.return_value = fake_cluster
@@ -300,6 +301,26 @@ class ReceiverTest(base.SenlinTestCase):
         self.assertEqual("The request is malformed: Action 'NODE_JOIN' is "
                          "not applicable to clusters.",
                          six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(rb.Receiver, 'create')
+    def test_receiver_create_non_webhook_succeed(self, mock_create):
+        fake_receiver = mock.Mock(id='FAKE_RECIEVER')
+        fake_receiver.to_dict.return_value = {
+            'id': 'FAKE_RECEIVER',
+            'foo': 'bar'
+        }
+        mock_create.return_value = fake_receiver
+
+        rtypes = consts.RECEIVER_TYPES
+        consts.RECEIVER_TYPES = ('webhook', 'foo')
+        result = self.eng.receiver_create(self.ctx, 'r1', 'foo', None, None)
+        consts.RECEIVER_TYPES = rtypes
+
+        self.assertIsInstance(result, dict)
+        self.assertEqual('FAKE_RECEIVER', result['id'])
+        mock_create.assert_called_once_with(
+            self.ctx, 'foo', None, None, name='r1', user=self.ctx.user,
+            project=self.ctx.project, domain=self.ctx.domain, params={})
 
     @mock.patch.object(rb.Receiver, 'load')
     def test_receiver_get(self, mock_load):

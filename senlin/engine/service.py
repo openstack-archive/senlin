@@ -2106,26 +2106,30 @@ class EngineService(service.Service):
             msg = _("Receiver type '%s' is not supported.") % rtype
             raise exception.BadRequest(msg=msg)
 
-        # Check whether cluster identified by cluster_id does exist
+        # Sanity check for webhook target
         cluster = None
-        try:
-            cluster = self.cluster_find(context, cluster_id)
-        except exception.ClusterNotFound:
-            msg = _("The referenced cluster '%s' is not found.") % cluster_id
-            raise exception.BadRequest(msg=msg)
+        if rtype == consts.RECEIVER_WEBHOOK:
+            # Check whether cluster identified by cluster_id does exist
+            try:
+                cluster = self.cluster_find(context, cluster_id)
+            except exception.ClusterNotFound:
+                msg = _("The referenced cluster '%s' is not found."
+                        ) % cluster_id
+                raise exception.BadRequest(msg=msg)
 
-        # permission checking
-        if not context.is_admin and context.user != cluster.user:
-            raise exception.Forbidden()
+            # permission checking
+            if not context.is_admin and context.user != cluster.user:
+                raise exception.Forbidden()
 
-        # Check action name
-        if action not in consts.ACTION_NAMES:
-            msg = _("Illegal action '%s' specified.") % action
-            raise exception.BadRequest(msg=msg)
+            # Check action name
+            if action not in consts.ACTION_NAMES:
+                msg = _("Illegal action '%s' specified.") % action
+                raise exception.BadRequest(msg=msg)
 
-        if action.lower().split('_')[0] != 'cluster':
-            msg = _("Action '%s' is not applicable to clusters.") % action
-            raise exception.BadRequest(msg=msg)
+            if action.lower().split('_')[0] != 'cluster':
+                msg = _("Action '%s' is not applicable to clusters."
+                        ) % action
+                raise exception.BadRequest(msg=msg)
 
         if not params:
             params = {}

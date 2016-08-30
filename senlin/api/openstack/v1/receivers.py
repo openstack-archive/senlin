@@ -38,20 +38,22 @@ class ReceiverData(object):
             raise exc.HTTPBadRequest(_("Missing 'name' in request."))
         return self.data.get(consts.RECEIVER_NAME, None)
 
-    def cluster_id(self):
-        if consts.RECEIVER_CLUSTER_ID not in self.data:
-            raise exc.HTTPBadRequest(_("Missing 'cluster_id' in request."))
-        return self.data[consts.RECEIVER_CLUSTER_ID]
-
     def type_name(self):
         if consts.RECEIVER_TYPE not in self.data:
             raise exc.HTTPBadRequest(_("Missing 'type' in request."))
         return self.data[consts.RECEIVER_TYPE]
 
+    def cluster_id(self):
+        if self.data.get(consts.RECEIVER_TYPE) == consts.RECEIVER_WEBHOOK:
+            if consts.RECEIVER_CLUSTER_ID not in self.data:
+                raise exc.HTTPBadRequest(_("Missing 'cluster_id' in request."))
+        return self.data.get(consts.RECEIVER_CLUSTER_ID, None)
+
     def action(self):
-        if consts.RECEIVER_ACTION not in self.data:
-            raise exc.HTTPBadRequest(_("Missing 'action' in request."))
-        return self.data[consts.RECEIVER_ACTION]
+        if self.data.get(consts.RECEIVER_TYPE) == consts.RECEIVER_WEBHOOK:
+            if consts.RECEIVER_ACTION not in self.data:
+                raise exc.HTTPBadRequest(_("Missing 'action' in request."))
+        return self.data.get(consts.RECEIVER_ACTION, None)
 
     def actor(self):
         return self.data.get(consts.RECEIVER_ACTOR, None)
