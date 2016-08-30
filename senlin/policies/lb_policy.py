@@ -273,11 +273,10 @@ class LoadBalancingPolicy(base.Policy):
         self.vip_spec = self.properties.get(self.VIP, {})
         self.hm_spec = self.properties.get(self.HEALTH_MONITOR, None)
         self.lb_status_timeout = self.properties.get(self.LB_STATUS_TIMEOUT)
-        self.validate()
         self.lb = None
 
-    def validate(self, validate_props=False):
-        super(LoadBalancingPolicy, self).validate()
+    def validate(self, context, validate_props=False):
+        super(LoadBalancingPolicy, self).validate(context, validate_props)
 
         # TODO(elynn): Check if subnet exists
         if validate_props:

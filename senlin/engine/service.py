@@ -594,7 +594,7 @@ class EngineService(service.Service):
         policy = plugin(name, spec, **kwargs)
 
         try:
-            policy.validate(validate_props=validate_props)
+            policy.validate(context, validate_props=validate_props)
         except exception.InvalidSpec as ex:
             msg = six.text_type(ex)
             LOG.error(_LE("Failed in validating policy: %s"), msg)

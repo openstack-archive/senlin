@@ -82,7 +82,6 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         self.assertEqual(self.spec['properties']['pool'], policy.pool_spec)
         self.assertEqual(self.spec['properties']['vip'], policy.vip_spec)
         self.assertIsNone(policy.lb)
-        mock_validate.assert_called_once_with()
 
     def test_init_with_default_value(self):
         spec = {
@@ -131,9 +130,11 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
     @mock.patch.object(policy_base.Policy, 'validate')
     def test_validate(self, mock_validate):
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        ctx = mock.Mock()
 
-        policy.validate()
-        mock_validate.assert_called_with()
+        policy.validate(ctx, True)
+
+        mock_validate.assert_called_with(ctx, True)
 
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_build_policy_data')
     @mock.patch.object(node_mod.Node, 'load_all')

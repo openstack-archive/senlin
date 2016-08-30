@@ -194,7 +194,7 @@ class Policy(object):
 
         return self.id
 
-    def validate(self, validate_props=False):
+    def validate(self, context, validate_props=False):
         '''Validate the schema and the data provided.'''
         self.spec_data.validate()
         self.properties.validate()
