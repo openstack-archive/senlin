@@ -597,50 +597,37 @@ class ClusterAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        self.cluster.set_status(self.context, self.cluster.RESIZING,
-                                'Cluster scale out started.')
         # We use policy output if any, or else the count is
         # set to 1 as default.
         pd = self.data.get('creation', None)
         if pd is not None:
             count = pd.get('count', 1)
         else:
-            # If no scaling policy is attached, use the
-            # input count directly
+            # If no scaling policy is attached, use the input count directly
             count = self.inputs.get('count', 1)
             try:
-                count = utils.parse_int_param('count', count,
-                                              allow_zero=False)
+                count = utils.parse_int_param('count', count, allow_zero=False)
             except exception.InvalidParameter:
                 reason = _('Invalid count (%s) for scaling out.') % count
-                status_reason = _('Cluster scaling failed: %s') % reason
-                self.cluster.set_status(self.context, self.cluster.ACTIVE,
-                                        status_reason)
                 return self.RES_ERROR, reason
 
         # check provided params against current properties
         # desired is checked when strict is True
         curr_size = len(self.cluster.nodes)
         new_size = curr_size + count
-
         result = scaleutils.check_size_params(self.cluster, new_size,
                                               None, None, True)
         if result:
-            status_reason = _('Cluster scaling failed: %s') % result
-            self.cluster.set_status(self.context, self.cluster.ACTIVE,
-                                    status_reason)
             return self.RES_ERROR, result
+
+        self.cluster.set_status(self.context, self.cluster.RESIZING,
+                                _('Cluster scale out started.'),
+                                desired_capacity=new_size)
 
         result, reason = self._create_nodes(count)
         if result == self.RES_OK:
             reason = _('Cluster scaling succeeded.')
-            self.cluster.set_status(self.context, self.cluster.ACTIVE, reason,
-                                    desired_capacity=new_size)
-        elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_ERROR]:
-            self.cluster.set_status(self.context, self.cluster.ERROR, reason,
-                                    desired_capacity=new_size)
-        else:  # RES_RETRY
-            pass
+        self.cluster.eval_status(self.context, 'scale-out')
 
         return result, reason
 
