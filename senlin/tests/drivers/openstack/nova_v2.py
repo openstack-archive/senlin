@@ -23,16 +23,16 @@ class NovaClient(base.DriverBase):
 
     def __init__(self, ctx):
         self.fake_flavor = {
-            "OS-FLV-DISABLED:disabled": False,
+            "is_disabled": False,
             "disk": 1,
             "OS-FLV-EXT-DATA:ephemeral": 0,
             "os-flavor-access:is_public": True,
-            "id": "66a81d68-bf48-4af5-897b-a3bfef7279a8",
+            "id": "1",
             "links": [],
             "name": "m1.tiny",
             "ram": 512,
             "swap": "",
-            "vcpus": 1
+            "vcpus": 1,
         }
 
         self.fake_image = {
@@ -47,7 +47,7 @@ class NovaClient(base.DriverBase):
             },
             "minDisk": 0,
             "minRam": 0,
-            "name": "cirros-0.3.2-x86_64-uec",
+            "name": "cirros-0.3.4-x86_64-uec",
             "progress": 100,
             "status": "ACTIVE",
             "updated": "2011-01-01T01:02:03Z"
@@ -144,11 +144,35 @@ class NovaClient(base.DriverBase):
             },
         ]
 
+        self.keypair = {
+            'public_key': 'blahblah',
+            'type': 'ssh',
+            'name': 'oskey',
+            'fingerprint': 'not-real',
+        }
+
+        self.availability_zone = {
+            'zoneState': {
+                'available': True
+            },
+            'hosts': None,
+            'zoneName': 'nova',
+        }
+
     def flavor_find(self, name_or_id, ignore_missing=False):
         return sdk.FakeResourceObject(self.fake_flavor)
 
+    def flavor_list(self, details=True, **query):
+        return [sdk.FakeResourceObject(self.fake_flavor)]
+
     def image_find(self, name_or_id, ignore_missing=False):
         return sdk.FakeResourceObject(self.fake_image)
+
+    def image_list(self, details=True, **query):
+        return [sdk.FakeResourceObject(self.fake_image)]
+
+    def keypair_list(self, details=True, **query):
+        return [sdk.FakeResourceObject(self.fake_keypair)]
 
     def server_create(self, **attrs):
         self.fake_server_create['id'] = uuidutils.generate_uuid()
@@ -218,3 +242,6 @@ class NovaClient(base.DriverBase):
 
     def service_disable(self, service, host, binary):
         return
+
+    def availability_zone_list(self, **query):
+        return [sdk.FakeResourceObject(self.availability_zone)]
