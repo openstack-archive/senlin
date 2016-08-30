@@ -1126,25 +1126,7 @@ class ClusterActionTest(base.SenlinTestCase):
         ])
         mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with()
-        cluster.set_status.assert_called_once_with(
-            action.context, 'old status', 'old reason')
-
-    def test_do_check_failed_checking(self, mock_load):
-        cluster = mock.Mock(status='old status', status_reason='old reason')
-        cluster.do_check.return_value = False
-        mock_load.return_value = cluster
-        action = ca.ClusterAction('FAKE_CLUSTER', 'CLUSTER_CHECK', self.ctx)
-
-        # do it
-        res_code, res_msg = action.do_check()
-
-        # assertions
-        self.assertEqual(action.RES_ERROR, res_code)
-        self.assertEqual('Cluster checking failed.', res_msg)
-
-        mock_load.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
-        cluster.set_status.assert_called_once_with(
-            action.context, 'old status', 'old reason')
+        cluster.eval_status.assert_called_once_with(action.context, 'check')
 
     def test_do_check_cluster_empty(self, mock_load):
         cluster = mock.Mock(id='FAKE_ID', nodes=[], status='old status',
@@ -1160,8 +1142,7 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Cluster checking completed.', res_msg)
         cluster.do_check.assert_called_once_with(self.ctx)
-        cluster.set_status.assert_called_once_with(
-            action.context, 'old status', 'old reason')
+        cluster.eval_status.assert_called_once_with(action.context, 'check')
 
     @mock.patch.object(ao.Action, 'update')
     @mock.patch.object(ab.Action, 'create')
@@ -1201,8 +1182,7 @@ class ClusterActionTest(base.SenlinTestCase):
                                             {'status': 'READY'})
         mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with()
-        cluster.set_status.assert_called_once_with(
-            action.context, 'old status', 'old reason')
+        cluster.eval_status.assert_called_once_with(action.context, 'check')
 
     @mock.patch.object(ao.Action, 'update')
     @mock.patch.object(ab.Action, 'create')
@@ -1231,7 +1211,7 @@ class ClusterActionTest(base.SenlinTestCase):
 
         # assertions
         self.assertEqual(action.RES_OK, res_code)
-        self.assertEqual('Everything is Okay', res_msg)
+        self.assertEqual('Cluster recovery succeeded.', res_msg)
 
         cluster.do_recover.assert_called_once_with(action.context)
         mock_action.assert_called_once_with(
@@ -1246,23 +1226,7 @@ class ClusterActionTest(base.SenlinTestCase):
                                             {'status': 'READY'})
         mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with()
-        cluster.set_status.assert_called_once_with(
-            action.context, cluster.ACTIVE, 'Everything is Okay')
-
-    def test_do_recover_failed_recover(self, mock_load):
-        cluster = mock.Mock(id='FAKE_ID')
-        cluster.do_recover.return_value = False
-        mock_load.return_value = cluster
-        action = ca.ClusterAction('FAKE_CLUSTER', 'CLUSTER_RECOVER', self.ctx)
-
-        # do it
-        res_code, res_msg = action.do_recover()
-
-        # assertions
-        self.assertEqual(action.RES_ERROR, res_code)
-        self.assertEqual('Cluster recovery failed.', res_msg)
-
-        mock_load.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
+        cluster.eval_status.assert_called_once_with(action.context, 'recover')
 
     @mock.patch.object(ao.Action, 'update')
     @mock.patch.object(ab.Action, 'create')
@@ -1293,7 +1257,7 @@ class ClusterActionTest(base.SenlinTestCase):
 
         # assertions
         self.assertEqual(action.RES_OK, res_code)
-        self.assertEqual('Everything is Okay', res_msg)
+        self.assertEqual('Cluster recovery succeeded.', res_msg)
 
         cluster.do_recover.assert_called_once_with(action.context)
         mock_action.assert_called_once_with(
@@ -1308,8 +1272,7 @@ class ClusterActionTest(base.SenlinTestCase):
                                             {'status': 'READY'})
         mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with()
-        cluster.set_status.assert_called_once_with(
-            action.context, cluster.ACTIVE, 'Everything is Okay')
+        cluster.eval_status.assert_called_once_with(action.context, 'recover')
 
     def test_do_recover_all_nodes_active(self, mock_load):
         cluster = mock.Mock(id='FAKE_ID')
@@ -1328,8 +1291,7 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Cluster recovery succeeded.', res_msg)
         cluster.do_recover.assert_called_once_with(self.ctx)
-        cluster.set_status.assert_called_once_with(
-            action.context, cluster.ACTIVE, 'Cluster recovery succeeded.')
+        cluster.eval_status.assert_called_once_with(action.context, 'recover')
 
     @mock.patch.object(ao.Action, 'update')
     @mock.patch.object(ab.Action, 'create')
@@ -1369,8 +1331,7 @@ class ClusterActionTest(base.SenlinTestCase):
                                             {'status': 'READY'})
         mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with()
-        cluster.set_status.assert_called_once_with(
-            action.context, cluster.ERROR, 'Timeout!')
+        cluster.eval_status.assert_called_once_with(action.context, 'recover')
 
     @mock.patch.object(ca.ClusterAction, '_get_action_data')
     @mock.patch.object(scaleutils, 'parse_resize_params')
