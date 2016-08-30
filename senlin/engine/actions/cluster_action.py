@@ -318,14 +318,10 @@ class ClusterAction(base.Action):
         if result == self.RES_OK:
             res = self.cluster.do_delete(self.context)
             if not res:
+                self.cluster.eval_status(self.context, 'delete')
                 return self.RES_ERROR, _('Cannot delete cluster object.')
-        elif result == self.RES_CANCEL:
-            self.cluster.set_status(self.context, self.cluster.ACTIVE, reason)
-        elif result in [self.RES_TIMEOUT, self.RES_ERROR]:
-            self.cluster.set_status(self.context, self.cluster.WARNING, reason)
         else:
-            # RETRY
-            pass
+            self.cluster.eval_status(self.context, 'delete')
 
         return result, reason
 

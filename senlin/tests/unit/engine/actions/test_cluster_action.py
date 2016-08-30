@@ -618,7 +618,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_delete.assert_called_once_with(['NODE_1', 'NODE_2'])
         cluster.do_delete.assert_called_once_with(action.context)
 
-    def test_do_delete_failed_delete_nodes(self, mock_load):
+    def test_do_delete_failed_delete_nodes_timeout(self, mock_load):
         node = mock.Mock(id='NODE_1')
         cluster = mock.Mock(id='CID', nodes=[node], ACTIVE='ACTIVE',
                             DELETING='DELETING', WARNING='WARNING')
@@ -626,49 +626,70 @@ class ClusterActionTest(base.SenlinTestCase):
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
         action.data = {}
-
-        # timeout
         self.patchobject(action, '_delete_nodes',
                          return_value=(action.RES_TIMEOUT, 'Timeout!'))
+
         res_code, res_msg = action.do_delete()
 
         self.assertEqual(action.RES_TIMEOUT, res_code)
         self.assertEqual('Timeout!', res_msg)
-        cluster.set_status.assert_has_calls([
-            mock.call(action.context, 'DELETING', 'Deletion in progress.'),
-            mock.call(action.context, 'WARNING', 'Timeout!')])
-        cluster.set_status.reset_mock()
+        cluster.set_status.assert_called_once_with(
+            action.context, 'DELETING', 'Deletion in progress.')
+        cluster.eval_status.assert_called_once_with(action.context, 'delete')
 
-        # error
+    def test_do_delete_failed_delete_nodes_with_error(self, mock_load):
+        node = mock.Mock(id='NODE_1')
+        cluster = mock.Mock(id='CID', nodes=[node], ACTIVE='ACTIVE',
+                            DELETING='DELETING', WARNING='WARNING')
+        mock_load.return_value = cluster
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
+        action.data = {}
         self.patchobject(action, '_delete_nodes',
                          return_value=(action.RES_ERROR, 'Error!'))
+
         res_code, res_msg = action.do_delete()
 
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Error!', res_msg)
-        cluster.set_status.assert_has_calls([
-            mock.call(action.context, 'DELETING', 'Deletion in progress.'),
-            mock.call(action.context, 'WARNING', 'Error!')])
-        cluster.set_status.reset_mock()
+        cluster.set_status.assert_called_once_with(
+            action.context, 'DELETING', 'Deletion in progress.')
+        cluster.eval_status.assert_called_once_with(action.context, 'delete')
 
-        # cancel
+    def test_do_delete_failed_delete_nodes_with_cancel(self, mock_load):
+        node = mock.Mock(id='NODE_1')
+        cluster = mock.Mock(id='CID', nodes=[node], ACTIVE='ACTIVE',
+                            DELETING='DELETING', WARNING='WARNING')
+        mock_load.return_value = cluster
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
+        action.data = {}
         self.patchobject(action, '_delete_nodes',
                          return_value=(action.RES_CANCEL, 'Cancelled!'))
+
         res_code, res_msg = action.do_delete()
 
         self.assertEqual(action.RES_CANCEL, res_code)
         self.assertEqual('Cancelled!', res_msg)
-        cluster.set_status.assert_has_calls([
-            mock.call(action.context, 'DELETING', 'Deletion in progress.'),
-            mock.call(action.context, 'ACTIVE', 'Cancelled!')])
+        cluster.set_status.assert_called_once_with(
+            action.context, 'DELETING', 'Deletion in progress.')
+        cluster.eval_status.assert_called_once_with(action.context, 'delete')
 
-        # retry
+    def test_do_delete_failed_delete_nodes_with_retry(self, mock_load):
+        node = mock.Mock(id='NODE_1')
+        cluster = mock.Mock(id='CID', nodes=[node], ACTIVE='ACTIVE',
+                            DELETING='DELETING', WARNING='WARNING')
+        mock_load.return_value = cluster
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
+        action.data = {}
         self.patchobject(action, '_delete_nodes',
                          return_value=(action.RES_RETRY, 'Busy!'))
+
         res_code, res_msg = action.do_delete()
 
         self.assertEqual(action.RES_RETRY, res_code)
         self.assertEqual('Busy!', res_msg)
+        cluster.set_status.assert_called_once_with(
+            action.context, 'DELETING', 'Deletion in progress.')
+        cluster.eval_status.assert_called_once_with(action.context, 'delete')
 
     def test_do_delete_failed_delete_cluster(self, mock_load):
         node = mock.Mock(id='NODE_1')
@@ -686,6 +707,9 @@ class ClusterActionTest(base.SenlinTestCase):
 
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Cannot delete cluster object.', res_msg)
+        cluster.set_status.assert_called_once_with(
+            action.context, 'DELETING', 'Deletion in progress.')
+        cluster.eval_status.assert_called_once_with(action.context, 'delete')
 
     @mock.patch.object(ao.Action, 'update')
     @mock.patch.object(ab.Action, 'create')
