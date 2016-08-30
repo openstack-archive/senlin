@@ -305,7 +305,67 @@ class ServerProfile(base.Profile):
         return self._neutronclient
 
     def do_validate(self, obj):
-        '''Validate if the spec has provided valid info for server creation.'''
+        """Validate if the spec has provided valid info for server creation.
+
+        :param obj: The node object.
+        """
+        # validate availability_zone
+        az_name = self.properties[self.AVAILABILITY_ZONE]
+        if az_name is not None:
+            res = self.nova(obj).validate_azs([az_name])
+            if not res:
+                msg = _("The specified %(key)s '%(value)s' could not be "
+                        "found.") % {'key': self.AVAILABILITY_ZONE,
+                                     'value': az_name}
+                raise exc.InvalidSpec(message=msg)
+
+        # validate flavor
+        flavor = self.properties[self.FLAVOR]
+        valid_flavors = self.nova(obj).flavor_list()
+        found = False
+        for f in valid_flavors:
+            if not f.is_disabled and (flavor == f.id or flavor == f.name):
+                found = True
+        if not found:
+            msg = _("The specified %(key)s '%(value)s' could not be found."
+                    ) % {'key': self.FLAVOR, 'value': flavor}
+            raise exc.InvalidSpec(message=msg)
+
+        # validate image
+        image = self.properties[self.IMAGE]
+        if image is not None:
+            valid_images = self.nova(obj).image_list()
+            found = False
+            for img in valid_images:
+                if image == img.id or image == img.name:
+                    found = True
+            if not found:
+                msg = _("The specified %(key)s '%(value)s' could not be "
+                        "found.") % {'key': self.IMAGE, 'value': image}
+                raise exc.InvalidSpec(message=msg)
+
+        # validate key_name
+        keypair = self.properties[self.KEY_NAME]
+        if keypair is not None:
+            valid_keys = self.nova(obj).keypair_list()
+            found = False
+            for key in valid_keys:
+                if keypair == key.name:
+                    found = True
+            if not found:
+                msg = _("The specified %(key)s '%(value)s' could not be "
+                        "found.") % {'key': self.KEY_NAME, 'value': keypair}
+                raise exc.InvalidSpec(message=msg)
+
+        # validate bdm conflicts
+        bdm = self.properties[self.BLOCK_DEVICE_MAPPING]
+        bdmv2 = self.properties[self.BLOCK_DEVICE_MAPPING_V2]
+        if all((bdm, bdmv2)):
+            msg = _("Only one of '%(key1)s' or '%(key2)s' can be specified, "
+                    "not both.") % {'key1': self.BLOCK_DEVICE_MAPPING,
+                                    'key2': self.BLOCK_DEVICE_MAPPING_V2}
+            raise exc.InvalidSpec(message=msg)
+
         return True
 
     def _resolve_bdm(self, bdm):

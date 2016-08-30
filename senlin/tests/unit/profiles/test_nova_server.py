@@ -17,7 +17,7 @@ import mock
 from oslo_utils import encodeutils
 import six
 
-from senlin.common import exception
+from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.drivers import base as driver_base
 from senlin.profiles import base as profiles_base
@@ -124,10 +124,152 @@ class TestNovaServerProfile(base.SenlinTestCase):
         mock_param.assert_called_once_with(obj.user, obj.project)
         sd.network.assert_called_once_with(params)
 
-    def test_do_validate(self):
+    def test_do_validate_all_passed(self):
         profile = server.ServerProfile('t', self.spec)
+        nc = mock.Mock()
+        nc.validate_azs.return_value = ['FAKE_AZ']
+        x_flavor = mock.Mock(is_disabled=False, id='FLAV')
+        nc.flavor_list.return_value = [x_flavor]
+        x_image = mock.Mock(id='FAKE_IMAGE')
+        nc.image_list.return_value = [x_image]
+        x_key = mock.Mock()
+        x_key.name = 'FAKE_KEYNAME'
+        nc.keypair_list.return_value = [x_key]
+        profile._novaclient = nc
+
         res = profile.do_validate(mock.Mock())
+
         self.assertTrue(res)
+        nc.validate_azs.assert_called_once_with(['FAKE_AZ'])
+        nc.flavor_list.assert_called_once_with()
+        nc.image_list.assert_called_once_with()
+        nc.keypair_list.assert_called_once_with()
+
+    def test_do_validate_az_not_found(self):
+        profile = server.ServerProfile('t', self.spec)
+        nc = mock.Mock()
+        nc.validate_azs.return_value = []
+        profile._novaclient = nc
+
+        ex = self.assertRaises(exc.InvalidSpec,
+                               profile.do_validate,
+                               mock.Mock())
+        self.assertEqual("The specified availability_zone 'FAKE_AZ' could "
+                         "not be found.", six.text_type(ex))
+        nc.validate_azs.assert_called_once_with(['FAKE_AZ'])
+
+    def test_do_validate_flavor_disabled(self):
+        profile = server.ServerProfile('t', self.spec)
+        nc = mock.Mock()
+        nc.validate_azs.return_value = ['FAKE_AZ']  # skip this
+        nc.flavor_list.return_value = [mock.Mock(is_disabled=True)]
+
+        profile._novaclient = nc
+
+        ex = self.assertRaises(exc.InvalidSpec,
+                               profile.do_validate,
+                               mock.Mock())
+        self.assertEqual("The specified flavor 'FLAV' could "
+                         "not be found.", six.text_type(ex))
+        nc.validate_azs.assert_called_once_with(['FAKE_AZ'])
+        nc.flavor_list.assert_called_once_with()
+
+    def test_do_validate_flavor_not_match(self):
+        profile = server.ServerProfile('t', self.spec)
+        nc = mock.Mock()
+        nc.validate_azs.return_value = ['FAKE_AZ']  # skip this
+        x_flavor = mock.Mock(is_disabled=False, id='FLA', name='FLAV_NAME')
+        nc.flavor_list.return_value = [x_flavor]
+
+        profile._novaclient = nc
+
+        ex = self.assertRaises(exc.InvalidSpec,
+                               profile.do_validate,
+                               mock.Mock())
+        self.assertEqual("The specified flavor 'FLAV' could "
+                         "not be found.", six.text_type(ex))
+        nc.validate_azs.assert_called_once_with(['FAKE_AZ'])
+        nc.flavor_list.assert_called_once_with()
+
+    def test_do_validate_image_not_found(self):
+        profile = server.ServerProfile('t', self.spec)
+        nc = mock.Mock()
+        nc.validate_azs.return_value = ['FAKE_AZ']  # skip this
+        # have id match this time
+        x_flavor = mock.Mock(is_disabled=False, id='FLAV', name='FLAV_NAME')
+        nc.flavor_list.return_value = [x_flavor]
+        x_image = mock.Mock(id='WEIRD_ID', name='WEIRD_NAME')
+        nc.image_list.return_value = [x_image]
+        profile._novaclient = nc
+
+        ex = self.assertRaises(exc.InvalidSpec,
+                               profile.do_validate,
+                               mock.Mock())
+        self.assertEqual("The specified image 'FAKE_IMAGE' could "
+                         "not be found.", six.text_type(ex))
+        nc.validate_azs.assert_called_once_with(['FAKE_AZ'])
+        nc.flavor_list.assert_called_once_with()
+        nc.image_list.assert_called_once_with()
+
+    def test_do_validate_key_not_found(self):
+        profile = server.ServerProfile('t', self.spec)
+        nc = mock.Mock()
+        nc.validate_azs.return_value = ['FAKE_AZ']  # skip this
+        # have name match this time
+        x_flavor = mock.Mock(is_disabled=False, id='FLAV_ID')
+        x_flavor.name = 'FLAV'
+        nc.flavor_list.return_value = [x_flavor]
+        # have ID match this time
+        x_image = mock.Mock(id='FAKE_IMAGE', name='WEIRD_NAME')
+        nc.image_list.return_value = [x_image]
+        x_key = mock.Mock(name='BOGUS_KEY')
+        nc.keypair_list.return_value = [x_key]
+        profile._novaclient = nc
+
+        ex = self.assertRaises(exc.InvalidSpec,
+                               profile.do_validate,
+                               mock.Mock())
+        self.assertEqual("The specified key_name 'FAKE_KEYNAME' could "
+                         "not be found.", six.text_type(ex))
+        nc.validate_azs.assert_called_once_with(['FAKE_AZ'])
+        nc.flavor_list.assert_called_once_with()
+        nc.image_list.assert_called_once_with()
+        nc.keypair_list.assert_called_once_with()
+
+    def test_do_validate_both_bdm_specified(self):
+        self.spec['properties']['block_device_mapping_v2'] = [{
+            'source_type': 'XTYPE',
+            'destination_type': 'YTYPE',
+            'volume_size': 10
+        }]
+        profile = server.ServerProfile('t', self.spec)
+        nc = mock.Mock()
+        nc.validate_azs.return_value = ['FAKE_AZ']  # skip this
+        # have name match this time
+        x_flavor = mock.Mock(is_disabled=False, id='FLAV_ID')
+        x_flavor.name = 'FLAV'
+        nc.flavor_list.return_value = [x_flavor]
+        # have name match this time
+        x_image = mock.Mock(id='WEIRD_ID')
+        x_image.name = 'FAKE_IMAGE'
+        nc.image_list.return_value = [x_image]
+        # let keypair pass this time
+        x_key = mock.Mock()
+        x_key.name = 'FAKE_KEYNAME'
+        nc.keypair_list.return_value = [x_key]
+        profile._novaclient = nc
+
+        ex = self.assertRaises(exc.InvalidSpec,
+                               profile.do_validate,
+                               mock.Mock())
+
+        self.assertEqual("Only one of 'block_device_mapping' or "
+                         "'block_device_mapping_v2' can be specified, "
+                         "not both.", six.text_type(ex))
+        nc.validate_azs.assert_called_once_with(['FAKE_AZ'])
+        nc.flavor_list.assert_called_once_with()
+        nc.image_list.assert_called_once_with()
+        nc.keypair_list.assert_called_once_with()
 
     def test_do_check(self):
         profile = server.ServerProfile('t', self.spec)
@@ -503,12 +645,12 @@ class TestNovaServerProfile(base.SenlinTestCase):
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = nc
 
-        err = exception.InternalError(code=500, message='Nova Error')
+        err = exc.InternalError(code=500, message='Nova Error')
         nc.server_delete.side_effect = err
         obj = mock.Mock(physical_id='FAKE_ID')
 
         # do it
-        ex = self.assertRaises(exception.EResourceDeletion,
+        ex = self.assertRaises(exc.EResourceDeletion,
                                profile.do_delete, obj)
 
         self.assertEqual('Failed in deleting server FAKE_ID: Nova Error.',
@@ -521,12 +663,12 @@ class TestNovaServerProfile(base.SenlinTestCase):
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = nc
 
-        err = exception.InternalError(code=500, message='Nova Error')
+        err = exc.InternalError(code=500, message='Nova Error')
         nc.server_force_delete.side_effect = err
         obj = mock.Mock(physical_id='FAKE_ID')
 
         # do it
-        ex = self.assertRaises(exception.EResourceDeletion,
+        ex = self.assertRaises(exc.EResourceDeletion,
                                profile.do_delete, obj, force=True)
 
         self.assertEqual('Failed in deleting server FAKE_ID: Nova Error.',
@@ -540,11 +682,11 @@ class TestNovaServerProfile(base.SenlinTestCase):
         profile._novaclient = nc
 
         obj = mock.Mock(physical_id='FAKE_ID')
-        err = exception.InternalError(code=500, message='TIMEOUT')
+        err = exc.InternalError(code=500, message='TIMEOUT')
         nc.wait_for_server_delete.side_effect = err
 
         # do it
-        ex = self.assertRaises(exception.EResourceDeletion,
+        ex = self.assertRaises(exc.EResourceDeletion,
                                profile.do_delete, obj)
 
         self.assertEqual('Failed in deleting server FAKE_ID: TIMEOUT.',
@@ -587,7 +729,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertEqual(0, novaclient.server_update.call_count)
 
     def test___update_basic_properties_update_metadata_failed(self):
-        ex = exception.InternalError(code=500, message='Nova Error')
+        ex = exc.InternalError(code=500, message='Nova Error')
 
         obj = mock.Mock()
         profile = server.ServerProfile('t', self.spec)
@@ -599,7 +741,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         new_spec['properties']['metadata'] = {'new_key': 'new_value'}
         new_profile = server.ServerProfile('t', new_spec)
 
-        ex = self.assertRaises(exception.InternalError,
+        ex = self.assertRaises(exc.InternalError,
                                profile._update_basic_properties,
                                obj, new_profile)
 
@@ -609,7 +751,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
     def test__update_basic_properties_update_name_failed(self):
         novaclient = mock.Mock()
-        err = exception.InternalError(code=500, message='Nova Error')
+        err = exc.InternalError(code=500, message='Nova Error')
         novaclient.server_update.side_effect = err
         obj = mock.Mock()
         profile = server.ServerProfile('t', self.spec)
@@ -620,7 +762,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         new_spec['properties']['name'] = 'TEST_SERVER'
         new_profile = server.ServerProfile('t', new_spec)
 
-        ex = self.assertRaises(exception.InternalError,
+        ex = self.assertRaises(exc.InternalError,
                                profile._update_basic_properties,
                                obj, new_profile)
 
@@ -846,7 +988,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
     @mock.patch.object(server.ServerProfile, '_update_image')
     def test_do_update_image_failed(self, mock_update_image):
-        ex = exception.InternalError(code=404, message='Image Not Found')
+        ex = exc.InternalError(code=404, message='Image Not Found')
         mock_update_image.side_effect = ex
         obj = mock.Mock(physical_id='FAKE_ID')
         obj.physical_id = 'FAKE_ID'
@@ -857,7 +999,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         new_spec['properties']['image'] = 'FAKE_IMAGE_NEW'
         new_profile = server.ServerProfile('t', new_spec)
 
-        ex = self.assertRaises(exception.EResourceUpdate,
+        ex = self.assertRaises(exc.EResourceUpdate,
                                profile.do_update,
                                obj, new_profile)
 
@@ -883,7 +1025,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
     @mock.patch.object(server.ServerProfile, '_update_flavor')
     def test_do_update__update_flavor_failed(self, mock_update_flavor):
-        ex = exception.InternalError(code=404, message='Flavor Not Found')
+        ex = exc.InternalError(code=404, message='Flavor Not Found')
         mock_update_flavor.side_effect = ex
         obj = mock.Mock(physical_id='FAKE_ID')
         profile = server.ServerProfile('t', self.spec)
@@ -892,7 +1034,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         new_spec['properties']['flavor'] = 'FAKE_FLAVOR_NEW'
         new_profile = server.ServerProfile('t', new_spec)
 
-        ex = self.assertRaises(exception.EResourceUpdate,
+        ex = self.assertRaises(exc.EResourceUpdate,
                                profile.do_update,
                                obj, new_profile)
 
@@ -925,11 +1067,11 @@ class TestNovaServerProfile(base.SenlinTestCase):
         novaclient.flavor_find.side_effect = [
             mock.Mock(id='123'), mock.Mock(id='456')]
         novaclient.server_resize.side_effect = [
-            exception.InternalError(code=500, message='Resize failed')]
+            exc.InternalError(code=500, message='Resize failed')]
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = novaclient
 
-        ex = self.assertRaises(exception.InternalError,
+        ex = self.assertRaises(exc.InternalError,
                                profile._update_flavor,
                                obj, 'old_flavor', 'new_flavor')
 
@@ -944,14 +1086,14 @@ class TestNovaServerProfile(base.SenlinTestCase):
         novaclient.flavor_find.side_effect = [
             mock.Mock(id='123'), mock.Mock(id='456')]
         novaclient.wait_for_server.side_effect = [
-            exception.InternalError(code=500, message='TIMEOUT'),
+            exc.InternalError(code=500, message='TIMEOUT'),
             None
         ]
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = novaclient
 
         # do it
-        ex = self.assertRaises(exception.InternalError,
+        ex = self.assertRaises(exc.InternalError,
                                profile._update_flavor,
                                obj, 'old_flavor', 'new_flavor')
 
@@ -968,15 +1110,15 @@ class TestNovaServerProfile(base.SenlinTestCase):
         novaclient = mock.Mock()
         novaclient.flavor_find.side_effect = [
             mock.Mock(id='123'), mock.Mock(id='456')]
-        err_resize = exception.InternalError(code=500, message='Resize')
+        err_resize = exc.InternalError(code=500, message='Resize')
         novaclient.server_resize.side_effect = err_resize
-        err_revert = exception.InternalError(code=500, message='Revert')
+        err_revert = exc.InternalError(code=500, message='Revert')
         novaclient.server_resize_revert.side_effect = err_revert
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = novaclient
 
         # do it
-        ex = self.assertRaises(exception.InternalError,
+        ex = self.assertRaises(exc.InternalError,
                                profile._update_flavor,
                                obj, 'old_flavor', 'new_flavor')
 
@@ -992,13 +1134,13 @@ class TestNovaServerProfile(base.SenlinTestCase):
         novaclient = mock.Mock()
         novaclient.flavor_find.side_effect = [
             mock.Mock(id='123'), mock.Mock(id='456')]
-        err_confirm = exception.InternalError(code=500, message='Confirm')
+        err_confirm = exc.InternalError(code=500, message='Confirm')
         novaclient.server_resize_confirm.side_effect = err_confirm
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = novaclient
 
         # do it
-        ex = self.assertRaises(exception.InternalError,
+        ex = self.assertRaises(exc.InternalError,
                                profile._update_flavor,
                                obj, 'old_flavor', 'new_flavor')
 
@@ -1014,13 +1156,13 @@ class TestNovaServerProfile(base.SenlinTestCase):
         novaclient = mock.Mock()
         novaclient.flavor_find.side_effect = [
             mock.Mock(id='123'), mock.Mock(id='456')]
-        err_wait = exception.InternalError(code=500, message='Wait')
+        err_wait = exc.InternalError(code=500, message='Wait')
         novaclient.wait_for_server.side_effect = [None, err_wait]
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = novaclient
 
         # do it
-        ex = self.assertRaises(exception.InternalError,
+        ex = self.assertRaises(exc.InternalError,
                                profile._update_flavor,
                                obj, 'old_flavor', 'new_flavor')
 
@@ -1095,7 +1237,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = novaclient
-        ex = self.assertRaises(exception.InternalError,
+        ex = self.assertRaises(exc.InternalError,
                                profile._update_image,
                                obj, 'old_image', None,
                                'adminpass')
@@ -1324,8 +1466,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
     def test_do_get_details_server_not_found(self):
         # Test path for server not created
         nc = mock.Mock()
-        err = exception.InternalError(code=404,
-                                      message='No Server found for ID')
+        err = exc.InternalError(code=404, message='No Server found for ID')
         nc.server_get.side_effect = err
         profile = server.ServerProfile('t', self.spec)
         profile._novaclient = nc
@@ -1419,12 +1560,12 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         profile = server.ServerProfile('t', self.spec)
         nc = mock.Mock()
-        err = exception.InternalError(code=404, message='FAKE_ID not found')
+        err = exc.InternalError(code=404, message='FAKE_ID not found')
         nc.server_get.side_effect = err
         profile._novaclient = nc
         node_obj = mock.Mock(physical_id='FAKE_ID')
 
-        ex = self.assertRaises(exception.EResourceOperation,
+        ex = self.assertRaises(exc.EResourceOperation,
                                profile.do_rebuild,
                                node_obj)
 
@@ -1439,12 +1580,12 @@ class TestNovaServerProfile(base.SenlinTestCase):
         x_server = mock.Mock(image=x_image)
         nc = mock.Mock()
         nc.server_get.return_value = x_server
-        ex = exception.InternalError(code=500, message='cannot rebuild')
+        ex = exc.InternalError(code=500, message='cannot rebuild')
         nc.server_rebuild.side_effect = ex
         profile._novaclient = nc
         node_obj = mock.Mock(physical_id='FAKE_ID')
 
-        ex = self.assertRaises(exception.EResourceOperation,
+        ex = self.assertRaises(exc.EResourceOperation,
                                profile.do_rebuild,
                                node_obj)
 
@@ -1463,12 +1604,12 @@ class TestNovaServerProfile(base.SenlinTestCase):
         x_server = mock.Mock(image=x_image)
         nc = mock.Mock()
         nc.server_get.return_value = x_server
-        ex = exception.InternalError(code=500, message='timeout')
+        ex = exc.InternalError(code=500, message='timeout')
         nc.wait_for_server.side_effect = ex
         profile._novaclient = nc
         node_obj = mock.Mock(physical_id='FAKE_ID')
 
-        ex = self.assertRaises(exception.EResourceOperation,
+        ex = self.assertRaises(exc.EResourceOperation,
                                profile.do_rebuild,
                                node_obj)
 
