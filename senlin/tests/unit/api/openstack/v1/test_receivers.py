@@ -49,11 +49,15 @@ class ReceiverDataTest(base.SenlinTestCase):
         self.assertEqual(body['actor'], data.actor())
         self.assertEqual(body['params'], data.params())
 
-    def test_required_fields_missing(self):
+    def test_name_type_name_missing(self):
         body = {'fake_field': 'fake_value'}
         data = receivers.ReceiverData(body)
         self.assertRaises(exc.HTTPBadRequest, data.name)
         self.assertRaises(exc.HTTPBadRequest, data.type_name)
+
+    def test_webhook_target_params_missing(self):
+        body = {'name': 'test-receiver', 'type': 'webhook'}
+        data = receivers.ReceiverData(body)
         self.assertRaises(exc.HTTPBadRequest, data.cluster_id)
         self.assertRaises(exc.HTTPBadRequest, data.action)
 
