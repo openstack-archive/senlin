@@ -194,12 +194,7 @@ class ClusterAction(base.Action):
 
         if result == self.RES_OK:
             reason = _('Cluster creation succeeded.')
-            self.cluster.set_status(self.context, self.cluster.ACTIVE, reason)
-        elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_ERROR]:
-            self.cluster.set_status(self.context, self.cluster.ERROR, reason)
-        else:
-            # in case of RES_RETRY, need to reset cluster status
-            self.cluster.set_status(self.context, self.cluster.INIT)
+        self.cluster.eval_status(self.context, 'create')
 
         return result, reason
 

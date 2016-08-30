@@ -310,8 +310,7 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Cluster creation succeeded.', res_msg)
         x_create_nodes.assert_called_once_with(cluster.desired_capacity)
-        cluster.set_status.assert_called_once_with(
-            action.context, 'ACTIVE', 'Cluster creation succeeded.')
+        cluster.eval_status.assert_called_once_with(action.context, 'create')
 
     def test_do_create_failed_create_cluster(self, mock_load):
         cluster = mock.Mock(id='FAKE_CLUSTER', ERROR='ERROR')
@@ -342,9 +341,9 @@ class ClusterActionTest(base.SenlinTestCase):
 
             self.assertEqual(code, res_code)
             self.assertEqual('Really Bad', res_msg)
-            cluster.set_status.assert_called_once_with(
-                action.context, 'ERROR', 'Really Bad')
-            cluster.set_status.reset_mock()
+            cluster.eval_status.assert_called_once_with(action.context,
+                                                        'create')
+            cluster.eval_status.reset_mock()
 
     def test_do_create_failed_for_retry(self, mock_load):
         cluster = mock.Mock(id='FAKE_ID', INIT='INIT')
@@ -359,7 +358,7 @@ class ClusterActionTest(base.SenlinTestCase):
 
         self.assertEqual(action.RES_RETRY, res_code)
         self.assertEqual('retry', res_msg)
-        cluster.set_status.assert_called_once_with(action.context, 'INIT')
+        cluster.eval_status.assert_called_once_with(action.context, 'create')
 
     @mock.patch.object(ao.Action, 'update')
     @mock.patch.object(ab.Action, 'create')
