@@ -511,7 +511,7 @@ class Cluster(object):
                     result.append(node)
         return result
 
-    def eval_status(self, ctx, operation):
+    def eval_status(self, ctx, operation, **params):
         """Re-evaluate cluster's health status.
 
         :param ctx: The requesting context.
@@ -524,7 +524,7 @@ class Cluster(object):
             if node.status == 'ACTIVE':
                 active_count += 1
 
-        values = {}
+        values = params or {}
         if active_count < self.min_size:
             status = self.ERROR
             reason = _("%(o)s: number of active nodes is below min_size "
@@ -546,5 +546,5 @@ class Cluster(object):
             reason = _("%(o)s: number of active nodes is above max_size "
                        "(%(n)d).") % {'o': operation, 'n': self.max_size}
 
-        values = {'status': status, 'status_reason': reason}
+        values.update({'status': status, 'status_reason': reason})
         co.Cluster.update(ctx, self.id, values)

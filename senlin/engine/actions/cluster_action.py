@@ -229,7 +229,7 @@ class ClusterAction(base.Action):
 
         reason = _('Cluster update completed.')
         if profile_id is None:
-            self.cluster.set_status(self.context, self.cluster.ACTIVE, reason)
+            self.cluster.eval_status(self.context, 'update')
             return self.RES_OK, reason
 
         fmt = _LI("Updating cluster '%(cluster)s': profile='%(profile)s'.")
@@ -256,13 +256,11 @@ class ClusterAction(base.Action):
 
             result, new_reason = self._wait_for_dependents()
             if result != self.RES_OK:
-                new_reason = _('Failed in updating nodes.')
-                self.cluster.set_status(self.context, self.cluster.WARNING,
-                                        new_reason)
-                return result, new_reason
+                self.cluster.eval_status(self.context, 'update')
+                return result, _('Failed in updating nodes.')
 
-        self.cluster.set_status(self.context, self.cluster.ACTIVE,
-                                reason, profile_id=profile_id)
+        self.cluster.profile_id = profile_id
+        self.cluster.eval_status(self.context, 'update', profile_id=profile_id)
         return self.RES_OK, reason
 
     def _delete_nodes(self, node_ids):
