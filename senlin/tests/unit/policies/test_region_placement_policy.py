@@ -77,14 +77,14 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         driver = mock.Mock()
         driver.identity.return_value = kc
         mock_sd.return_value = driver
-        cluster = mock.Mock()
+        cluster = mock.Mock(user='user1', project='project1')
         policy = rp.RegionPlacementPolicy('p1', self.spec)
 
         res = policy._keystone(cluster)
 
         self.assertEqual(kc, res)
         self.assertEqual(kc, policy._keystoneclient)
-        mock_conn.assert_called_once_with(cluster)
+        mock_conn.assert_called_once_with('user1', 'project1')
         mock_sd.assert_called_once_with()
         driver.identity.assert_called_once_with(params)
 

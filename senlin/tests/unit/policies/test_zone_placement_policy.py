@@ -62,14 +62,14 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         driver.compute.return_value = nc
         mock_driver.return_value = driver
 
-        cluster = mock.Mock()
+        cluster = mock.Mock(user='user1', project='project1')
         policy = zp.ZonePlacementPolicy('p1', self.spec)
 
         res = policy._nova(cluster)
 
         self.assertEqual(nc, res)
         self.assertEqual(nc, policy._novaclient)
-        mock_conn.assert_called_once_with(cluster)
+        mock_conn.assert_called_once_with('user1', 'project1')
         mock_driver.assert_called_once_with()
         driver.compute.assert_called_once_with(params)
 

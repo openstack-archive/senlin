@@ -47,7 +47,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
 
     @mock.patch("senlin.drivers.base.SenlinDriver")
     def test_nova(self, mock_driver):
-        cluster = mock.Mock()
+        cluster = mock.Mock(user='user1', project='project1')
         policy = ap.AffinityPolicy('test-policy', self.spec)
         mock_params = mock.Mock()
         mock_build = self.patchobject(policy, '_build_conn_params',
@@ -60,7 +60,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
         x_nova = x_driver.compute.return_value
         self.assertEqual(x_nova, result)
         self.assertEqual(x_nova, policy._novaclient)
-        mock_build.assert_called_once_with(cluster)
+        mock_build.assert_called_once_with('user1', 'project1')
         x_driver.compute.assert_called_once_with(mock_params)
 
     def test_nova_already_initialized(self):
