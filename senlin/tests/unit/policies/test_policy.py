@@ -429,16 +429,14 @@ class TestPolicyBase(base.SenlinTestCase):
             }
         }
 
-        cluster = mock.Mock()
-        cluster.user = 'user1'
-        cluster.project = 'project1'
-        cred = mock.Mock()
-        cred.cred = cred_info
+        cred = mock.Mock(cred=cred_info)
         mock_get_service_ctx.return_value = service_cred
         mock_get_current.return_value = current_ctx
         mock_cred_get.return_value = cred
-
         policy = self._create_policy('test-policy')
+
+        res = policy._build_conn_params('user1', 'project1')
+
         expected_result = {
             'auth_url': 'AUTH_URL',
             'username': 'senlin',
@@ -446,7 +444,6 @@ class TestPolicyBase(base.SenlinTestCase):
             'password': '123',
             'trust_id': 'TRUST_ID'
         }
-        res = policy._build_conn_params(cluster)
         self.assertEqual(expected_result, res)
         mock_get_service_ctx.assert_called_once_with()
         mock_cred_get.assert_called_once_with(current_ctx, 'user1', 'project1')
@@ -466,12 +463,11 @@ class TestPolicyBase(base.SenlinTestCase):
 
         mock_get_service_ctx.return_value = service_cred
         mock_cred_get.return_value = None
-        cluster = mock.Mock()
-        cluster.user = 'user1'
-        cluster.project = 'project1'
-
         policy = self._create_policy('test-policy')
+
         ex = self.assertRaises(exception.TrustNotFound,
-                               policy._build_conn_params, cluster)
+                               policy._build_conn_params,
+                               'user1', 'project1')
+
         msg = "The trust for trustor (user1) could not be found."
         self.assertEqual(msg, six.text_type(ex))

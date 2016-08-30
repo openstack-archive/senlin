@@ -475,7 +475,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
                                  m_load, m_conn):
         ctx = mock.Mock()
         cid = 'CLUSTER_ID'
-        cluster = mock.Mock()
+        cluster = mock.Mock(user='user1', project='project1')
         m_cluster_get.return_value = cluster
         node_obj = mock.Mock(data={})
         action = mock.Mock(data={}, context=ctx, action=consts.NODE_CREATE)
@@ -507,7 +507,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         # assertion
         self.assertIsNone(res)
         m_cluster_get.assert_called_once_with(ctx, 'CLUSTER_ID')
-        m_conn.assert_called_once_with(cluster)
+        m_conn.assert_called_once_with('user1', 'project1')
         m_load.assert_called_once_with(ctx, cid, policy.id)
         m_extract.assert_called_once_with(cp_data)
         m_node_load.assert_called_once_with(ctx, node_id='NODE_ID')
@@ -521,16 +521,17 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
     def test_post_op_add_nodes(self, m_cluster_get, m_node_load, m_extract,
                                m_load, m_conn):
         cid = 'CLUSTER_ID'
-        cluster = mock.Mock()
+        cluster = mock.Mock(user='user1', project='project1')
         m_cluster_get.return_value = cluster
-        node1 = mock.Mock()
-        node2 = mock.Mock()
-        node1.data = {}
-        node2.data = {}
-        action = mock.Mock()
-        action.data = {'creation': {'nodes': ['NODE1_ID', 'NODE2_ID']}}
-        action.context = 'action_context'
-        action.action = consts.CLUSTER_RESIZE
+        node1 = mock.Mock(data={})
+        node2 = mock.Mock(data={})
+        action = mock.Mock(context='action_context',
+                           action=consts.CLUSTER_RESIZE,
+                           data={
+                               'creation': {
+                                   'nodes': ['NODE1_ID', 'NODE2_ID']
+                               }
+                           })
         cp = mock.Mock()
         policy_data = {
             'loadbalancer': 'LB_ID',
@@ -549,12 +550,15 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         m_node_load.side_effect = [node1, node2]
         m_load.return_value = cp
         m_extract.return_value = policy_data
-
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+
+        # do it
         res = policy.post_op(cid, action)
+
+        # assertions
         self.assertIsNone(res)
         m_cluster_get.assert_called_once_with('action_context', 'CLUSTER_ID')
-        m_conn.assert_called_once_with(cluster)
+        m_conn.assert_called_once_with('user1', 'project1')
         m_load.assert_called_once_with('action_context', cid, policy.id)
         m_extract.assert_called_once_with(cp_data)
         calls_node_load = [
@@ -606,13 +610,10 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
     def test_post_op_add_nodes_failed(self, m_cluster_get, m_node_load,
                                       m_extract, m_load, m_conn):
         cluster_id = 'CLUSTER_ID'
-        node1 = mock.Mock()
-        node1.data = {}
-        action = mock.Mock()
-        action.data = {}
-        action.data = {'creation': {'nodes': ['NODE1_ID']}}
-        action.context = 'action_context'
-        action.action = consts.CLUSTER_RESIZE
+        node1 = mock.Mock(data={})
+        action = mock.Mock(data={'creation': {'nodes': ['NODE1_ID']}},
+                           context='action_context',
+                           action=consts.CLUSTER_RESIZE)
         self.lb_driver.member_add.return_value = None
         m_node_load.side_effect = [node1]
         m_extract.return_value = {
@@ -637,22 +638,18 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
     def test_pre_op_del_nodes_ok(self, m_cluster_get, m_node_load, m_extract,
                                  m_load, m_conn):
         cluster_id = 'CLUSTER_ID'
-        cluster = mock.Mock()
+        cluster = mock.Mock(user='user1', project='project1')
         m_cluster_get.return_value = cluster
-        node1 = mock.Mock()
-        node1.data = {'lb_member': 'MEMBER1_ID'}
-        node2 = mock.Mock()
-        node2.data = {'lb_member': 'MEMBER2_ID'}
-        action = mock.Mock()
-        action.data = {}
-        action.data = {
-            'deletion': {
-                'count': 2,
-                'candidates': ['NODE1_ID', 'NODE2_ID']
-            }
-        }
-        action.context = 'action_context'
-        action.action = consts.CLUSTER_DEL_NODES
+        node1 = mock.Mock(data={'lb_member': 'MEMBER1_ID'})
+        node2 = mock.Mock(data={'lb_member': 'MEMBER2_ID'})
+        action = mock.Mock(
+            context='action_context', action=consts.CLUSTER_DEL_NODES,
+            data={
+                'deletion': {
+                    'count': 2,
+                    'candidates': ['NODE1_ID', 'NODE2_ID']
+                }
+            })
         cp = mock.Mock()
         policy_data = {
             'loadbalancer': 'LB_ID',
@@ -662,8 +659,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         }
         cp_data = {
             'LoadBalancingPolicy': {
-                'version': '1.0',
-                'data': policy_data
+                'version': '1.0', 'data': policy_data
             }
         }
         cp.data = cp_data
@@ -678,7 +674,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
         self.assertIsNone(res)
         m_cluster_get.assert_called_once_with('action_context', 'CLUSTER_ID')
-        m_conn.assert_called_once_with(cluster)
+        m_conn.assert_called_once_with('user1', 'project1')
         m_load.assert_called_once_with('action_context', cluster_id, policy.id)
         m_extract.assert_called_once_with(cp_data)
         calls_node_load = [

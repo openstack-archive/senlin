@@ -107,7 +107,7 @@ class RegionPlacementPolicy(base.Policy):
         """
         if self._keystoneclient is not None:
             return self._keystoneclient
-        params = self._build_conn_params(obj)
+        params = self._build_conn_params(obj.user, obj.project)
         self._keystoneclient = driver_base.SenlinDriver().identity(params)
         return self._keystoneclient
 

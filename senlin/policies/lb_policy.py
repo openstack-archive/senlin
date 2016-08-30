@@ -298,7 +298,7 @@ class LoadBalancingPolicy(base.Policy):
         nodes = nm.Node.load_all(oslo_context.get_current(),
                                  cluster_id=cluster.id)
 
-        params = self._build_conn_params(cluster)
+        params = self._build_conn_params(cluster.user, cluster.project)
         params['lb_status_timeout'] = self.lb_status_timeout
         lb_driver = driver_base.SenlinDriver().loadbalancing(params)
 
@@ -342,7 +342,7 @@ class LoadBalancingPolicy(base.Policy):
             contains a error message.
         """
         reason = _('LB resources deletion succeeded.')
-        params = self._build_conn_params(cluster)
+        params = self._build_conn_params(cluster.user, cluster.project)
         params['lb_status_timeout'] = self.lb_status_timeout
         lb_driver = driver_base.SenlinDriver().loadbalancing(params)
 
@@ -435,7 +435,7 @@ class LoadBalancingPolicy(base.Policy):
             return
 
         db_cluster = co.Cluster.get(action.context, cluster_id)
-        params = self._build_conn_params(db_cluster)
+        params = self._build_conn_params(db_cluster.user, db_cluster.project)
         params['lb_status_timeout'] = self.lb_status_timeout
         lb_driver = driver_base.SenlinDriver().loadbalancing(params)
         cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
@@ -485,7 +485,7 @@ class LoadBalancingPolicy(base.Policy):
                 return
 
         db_cluster = co.Cluster.get(action.context, cluster_id)
-        params = self._build_conn_params(db_cluster)
+        params = self._build_conn_params(db_cluster.user, db_cluster.project)
         params['lb_status_timeout'] = self.lb_status_timeout
         lb_driver = driver_base.SenlinDriver().loadbalancing(params)
         cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,

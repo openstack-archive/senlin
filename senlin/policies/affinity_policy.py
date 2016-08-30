@@ -118,7 +118,7 @@ class AffinityPolicy(base.Policy):
         """
         if self._novaclient is not None:
             return self._novaclient
-        params = self._build_conn_params(obj)
+        params = self._build_conn_params(obj.user, obj.project)
         self._novaclient = driver.SenlinDriver().compute(params)
         return self._novaclient
 
