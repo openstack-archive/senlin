@@ -438,6 +438,7 @@ class ClusterAction(base.Action):
         if len(nodes) == 0:
             return self.RES_OK, reason
 
+        # sleep period
         self._sleep(grace_period)
 
         result, new_reason = self._delete_nodes(nodes)
@@ -636,8 +637,6 @@ class ClusterAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        self.cluster.set_status(self.context, self.cluster.RESIZING,
-                                'Cluster scale in started.')
         # We use policy data if any, deletion policy and scaling policy might
         # be attached.
         pd = self.data.get('deletion', None)
@@ -656,9 +655,6 @@ class ClusterAction(base.Action):
                                               allow_zero=False)
             except exception.InvalidParameter:
                 reason = _('Invalid count (%s) for scaling in.') % count
-                status_reason = _('Cluster scaling failed: %s') % reason
-                self.cluster.set_status(self.context, self.cluster.ACTIVE,
-                                        status_reason)
                 return self.RES_ERROR, reason
 
         # check provided params against current properties
@@ -674,29 +670,25 @@ class ClusterAction(base.Action):
         result = scaleutils.check_size_params(self.cluster, new_size,
                                               None, None, True)
         if result:
-            status_reason = _('Cluster scaling failed: %s') % result
-            self.cluster.set_status(self.context, self.cluster.ACTIVE,
-                                    status_reason)
             return self.RES_ERROR, result
+
+        self.cluster.set_status(self.context, self.cluster.RESIZING,
+                                _('Cluster scale in started.'),
+                                desired_capacity=new_size)
 
         # Choose victims randomly
         if len(candidates) == 0:
             candidates = scaleutils.nodes_by_random(self.cluster.nodes, count)
 
+        #
         self._sleep(grace_period)
-        # The policy data may contain destroy flag and grace period option
+
         result, reason = self._delete_nodes(candidates)
 
         if result == self.RES_OK:
             reason = _('Cluster scaling succeeded.')
-            self.cluster.set_status(self.context, self.cluster.ACTIVE, reason,
-                                    desired_capacity=new_size)
-        elif result in [self.RES_CANCEL, self.RES_TIMEOUT, self.RES_ERROR]:
-            self.cluster.set_status(self.context, self.cluster.ERROR, reason,
-                                    desired_capacity=new_size)
-        else:
-            # RES_RETRY
-            pass
+
+        self.cluster.eval_status(self.context, 'scale-in')
 
         return result, reason
 
