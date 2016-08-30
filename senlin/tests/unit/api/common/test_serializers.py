@@ -193,8 +193,8 @@ class JSONResponseSerializerTest(base.SenlinTestCase):
         response = webob.Response()
         serializers.JSONResponseSerializer().default(response, fixture)
         self.assertEqual(200, response.status_int)
-        content_types = filter(lambda h: h[0] == 'Content-Type',
-                               response.headerlist)
+        content_types = [h for h in response.headerlist
+                         if h[0] == 'Content-Type']
         # NOTE: filter returns a iterator in python 3.
         types = [t for t in content_types]
         self.assertEqual(1, len(types))
