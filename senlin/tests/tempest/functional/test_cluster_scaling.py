@@ -154,7 +154,7 @@ class TestClusterResize(base.BaseSenlinFunctionalTest):
         # Do best-effort resizing when size upper limit is broken
         kwargs = {
             'adj_type': 'CHANGE_IN_CAPACITY',
-            'number': 3,
+            'number': 1,
             'strict': False
         }
         utils.cluster_resize(self, self.cluster_id, **kwargs)
@@ -162,8 +162,8 @@ class TestClusterResize(base.BaseSenlinFunctionalTest):
         # Verify resizing result
         cluster = utils.get_a_cluster(self, self.cluster_id)
         self.assertEqual('ACTIVE', cluster['status'])
-        self.assertEqual(5, cluster['desired_capacity'])
-        self.assertEqual(5, len(cluster['nodes']))
+        self.assertEqual(4, cluster['desired_capacity'])
+        self.assertEqual(4, len(cluster['nodes']))
 
         # Do best-effort resizing when size lower limit is broken
         kwargs = {
@@ -186,7 +186,7 @@ class TestClusterResize(base.BaseSenlinFunctionalTest):
         kwargs = {
             'adj_type': 'CHANGE_IN_CAPACITY',
             'number': 3,
-            'max_size': 6
+            'max_size': 7
         }
         utils.cluster_resize(self, self.cluster_id, **kwargs)
 
@@ -195,7 +195,7 @@ class TestClusterResize(base.BaseSenlinFunctionalTest):
         self.assertEqual('ACTIVE', cluster['status'])
         self.assertEqual(6, cluster['desired_capacity'])
         self.assertEqual(6, len(cluster['nodes']))
-        self.assertEqual(6, cluster['max_size'])
+        self.assertEqual(7, cluster['max_size'])
 
         # Decrease cluster size upper limit with strict set to False
         kwargs = {

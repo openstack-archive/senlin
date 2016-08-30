@@ -549,8 +549,6 @@ class ClusterAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        self.cluster.set_status(self.context, self.cluster.RESIZING,
-                                'Cluster resize started.')
         node_list = self.cluster.nodes
         current_size = len(node_list)
         count, desired, candidates = self._get_action_data(current_size)
@@ -560,30 +558,15 @@ class ClusterAction(base.Action):
         if count == 0:
             result, reason = scaleutils.parse_resize_params(self, self.cluster)
             if result != self.RES_OK:
-                status_reason = _('Cluster resizing failed: %s') % reason
-                self.cluster.set_status(self.context, self.cluster.ACTIVE,
-                                        status_reason)
                 return result, reason
             count, desired, candidates = self._get_action_data(current_size)
         elif 'deletion' in self.data:
             grace_period = self.data['deletion'].get('grace_period', 0)
+
         if candidates is not None and len(candidates) == 0:
             # Choose victims randomly
             candidates = scaleutils.nodes_by_random(self.cluster.nodes, count)
 
-        # delete nodes if necessary
-        if desired < current_size:
-            self._sleep(grace_period)
-            result, reason = self._delete_nodes(candidates)
-        # Create new nodes if desired_capacity increased
-        else:
-            result, reason = self._create_nodes(count)
-
-        if result != self.RES_OK:
-            self.cluster.set_status(self.context, self.cluster.WARNING, reason)
-            return result, reason
-
-        reason = _('Cluster resize succeeded.')
         kwargs = {'desired_capacity': desired}
         min_size = self.inputs.get(consts.ADJUSTMENT_MIN_SIZE, None)
         max_size = self.inputs.get(consts.ADJUSTMENT_MAX_SIZE, None)
@@ -591,9 +574,23 @@ class ClusterAction(base.Action):
             kwargs['min_size'] = min_size
         if max_size is not None:
             kwargs['max_size'] = max_size
-        self.cluster.set_status(self.context, self.cluster.ACTIVE, reason,
-                                **kwargs)
-        return self.RES_OK, reason
+        self.cluster.set_status(self.context, self.cluster.RESIZING,
+                                _('Cluster resize started.'), **kwargs)
+
+        reason = _('Cluster resize succeeded.')
+        # delete nodes if necessary
+        if desired < current_size:
+            self._sleep(grace_period)
+            result, new_reason = self._delete_nodes(candidates)
+        # Create new nodes if desired_capacity increased
+        else:
+            result, new_reason = self._create_nodes(count)
+
+        if result != self.RES_OK:
+            reason = new_reason
+
+        self.cluster.eval_status(self.context, 'resize')
+        return result, reason
 
     def do_scale_out(self):
         """Handler for the CLUSTER_SCALE_OUT action.
