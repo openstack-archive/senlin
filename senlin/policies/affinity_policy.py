@@ -24,7 +24,7 @@ from oslo_log import log as logging
 from senlin.common import constraints
 from senlin.common import consts
 from senlin.common import context
-from senlin.common import exception
+from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
 from senlin.common import scaleutils as su
@@ -109,18 +109,37 @@ class AffinityPolicy(base.Policy):
         self.enable_drs = self.properties.get(self.ENABLE_DRS_EXTENSION)
         self._novaclient = None
 
-    def nova(self, obj):
-        """Construct nova client based on object.
+    def nova(self, user, project):
+        """Construct nova client based on user and project.
 
-        :param obj: Object for which the client is created. It is expected to
-                    be None when retrieving an existing client. When creating
-                    a client, it conatins the user and project to be used.
+        :param user: The ID of the requesting user.
+        :param project: The ID of the requesting project.
+        :returns: A reference to the nova client.
         """
         if self._novaclient is not None:
             return self._novaclient
-        params = self._build_conn_params(obj.user, obj.project)
+
+        params = self._build_conn_params(user, project)
         self._novaclient = driver.SenlinDriver().compute(params)
         return self._novaclient
+
+    def validate(self, context, validate_props=False):
+        super(AffinityPolicy, self).validate(context, validate_props)
+
+        if not validate_props:
+            return True
+
+        az_name = self.properties.get(self.AVAILABILITY_ZONE)
+        if az_name:
+            nc = self.nova(context.user, context.project)
+            valid_azs = nc.validate_azs([az_name])
+            if not valid_azs:
+                msg = _("The specified %(key)s '%(value)s' could not be "
+                        "found.") % {'key': self.AVAILABILITY_ZONE,
+                                     'value': az_name}
+                raise exc.InvalidSpec(message=msg)
+
+        return True
 
     def attach(self, cluster):
         """Routine to be invoked when policy is to be attached to a cluster.
@@ -134,7 +153,7 @@ class AffinityPolicy(base.Policy):
             return False, data
 
         data = {'inherited_group': False}
-        nc = self.nova(cluster)
+        nc = self.nova(cluster.user, cluster.project)
         group = self.properties.get(self.SERVER_GROUP)
 
         # guess servergroup name
@@ -149,7 +168,7 @@ class AffinityPolicy(base.Policy):
         if group_name:
             try:
                 server_group = nc.find_server_group(group_name, True)
-            except exception.InternalError as ex:
+            except exc.InternalError as ex:
                 msg = _("Failed in retrieving servergroup '%s'."
                         ) % group_name
                 LOG.exception(_LE('%(msg)s: %(ex)s') % {
@@ -215,7 +234,8 @@ class AffinityPolicy(base.Policy):
 
         if group_id and not inherited_group:
             try:
-                self.nova(cluster).delete_server_group(group_id)
+                nc = self.nova(cluster.user, cluster.project)
+                nc.delete_server_group(group_id)
             except Exception as ex:
                 msg = _('Failed in deleting servergroup.')
                 LOG.exception(_LE('%(msg)s: %(ex)s') % {
@@ -266,7 +286,7 @@ class AffinityPolicy(base.Policy):
         # the name of the vSphere host which has DRS enabled.
         if self.enable_drs:
             cluster_obj = co.Cluster.get(action.context, cluster_id)
-            nc = self.nova(cluster_obj)
+            nc = self.nova(cluster_obj.user, cluster_obj.project)
 
             hypervisors = nc.hypervisor_list()
             hv_id = ''
