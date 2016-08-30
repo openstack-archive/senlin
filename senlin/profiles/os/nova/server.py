@@ -668,13 +668,12 @@ class ServerProfile(base.Profile):
         if not obj.physical_id:
             return False
 
-        self.server_id = obj.physical_id
-
         try:
-            server = self.nova(obj).server_get(self.server_id)
-        except Exception as ex:
-            LOG.error('Error: %s' % six.text_type(ex))
-            return False
+            server = self.nova(obj).server_get(obj.physical_id)
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(op='checking', type='server',
+                                         id=obj.physical_id,
+                                         message=six.text_type(ex))
 
         if (server is None or server.status != 'ACTIVE'):
             return False

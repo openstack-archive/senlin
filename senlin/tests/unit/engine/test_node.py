@@ -544,8 +544,9 @@ class TestNode(base.SenlinTestCase):
         self.assertIsNone(node.updated_at)
         self.assertEqual(1, node.index)
 
+    @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(pb.Profile, 'check_object')
-    def test_node_check(self, mock_check):
+    def test_node_check(self, mock_check, mock_status):
         node = nodem.Node('node1', PROFILE_ID, '')
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
         mock_check.return_value = True
@@ -554,10 +555,12 @@ class TestNode(base.SenlinTestCase):
 
         self.assertTrue(res)
         mock_check.assert_called_once_with(self.context, node)
+        mock_status.assert_called_once_with(node.ACTIVE,
+                                            'Check: Node is ACTIVE.')
 
-    @mock.patch.object(nodem.Node, 'store')
+    @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(pb.Profile, 'check_object')
-    def test_node_check_failed_check(self, mock_check, mock_store):
+    def test_node_check_check_return_false(self, mock_check, mock_status):
         node = nodem.Node('node1', PROFILE_ID, '')
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
         mock_check.return_value = False
@@ -565,7 +568,25 @@ class TestNode(base.SenlinTestCase):
         res = node.do_check(self.context)
 
         self.assertFalse(res)
-        self.assertEqual('ERROR', node.status)
+        mock_status.assert_called_once_with(node.ERROR,
+                                            'Check: Node is not ACTIVE.')
+
+    @mock.patch.object(nodem.Node, 'set_status')
+    @mock.patch.object(pb.Profile, 'check_object')
+    def test_node_check_check_with_exc(self, mock_check, mock_status):
+        node = nodem.Node('node1', PROFILE_ID, '')
+        node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
+        err = exception.EResourceOperation(op='checking', type='server',
+                                           id=node.physical_id,
+                                           message='failed get')
+        mock_check.side_effect = err
+
+        res = node.do_check(self.context)
+
+        self.assertFalse(res)
+        mock_status.assert_called_once_with(
+            node.ERROR,
+            'Failed in checking server %s: failed get' % node.physical_id)
 
     def test_node_check_no_physical_id(self):
         node = nodem.Node('node1', PROFILE_ID, '')

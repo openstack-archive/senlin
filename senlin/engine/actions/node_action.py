@@ -77,17 +77,6 @@ class NodeAction(base.Action):
         else:
             return self.RES_ERROR, _('Node creation failed.')
 
-    def do_check(self):
-        """Handler for the NODE_check action.
-
-        :returns: A tuple containing the result and the corresponding reason.
-        """
-        res = self.node.do_check(self.context)
-        if res:
-            return self.RES_OK, _('Node status is ACTIVE.')
-        else:
-            return self.RES_ERROR, _('Node status is not ACTIVE.')
-
     def do_delete(self):
         """Handler for the NODE_DELETE action.
 
@@ -177,6 +166,17 @@ class NodeAction(base.Action):
             return self.RES_OK, _('Node successfully left cluster.')
         else:
             return self.RES_ERROR, _('Node failed in leaving cluster.')
+
+    def do_check(self):
+        """Handler for the NODE_check action.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
+        res = self.node.do_check(self.context)
+        if res:
+            return self.RES_OK, _('Node status is ACTIVE.')
+        else:
+            return self.RES_ERROR, _('Node status is not ACTIVE.')
 
     def do_recover(self):
         """Handler for the NODE_RECOVER action.
