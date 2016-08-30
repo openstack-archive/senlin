@@ -387,7 +387,7 @@ class TestCluster(base.SenlinTestCase):
 
         self.assertTrue(res)
         mock_status.assert_called_once_with(
-            self.context, cluster.CREATING, reason='Creation in progress')
+            self.context, cluster.CREATING, 'Creation in progress')
 
     def test_do_create_wrong_status(self):
         cluster = cb.Cluster('test-cluster', 0, PROFILE_ID)
@@ -416,7 +416,7 @@ class TestCluster(base.SenlinTestCase):
         res = cluster.do_update(self.context)
 
         mock_status.assert_called_once_with(self.context, cluster.UPDATING,
-                                            reason='Update in progress')
+                                            'Update in progress')
         self.assertTrue(res)
 
     def test_do_check(self):
@@ -426,7 +426,7 @@ class TestCluster(base.SenlinTestCase):
         res = cluster.do_check(self.context)
 
         mock_status.assert_called_once_with(self.context, cluster.CHECKING,
-                                            reason='Check in progress')
+                                            'Check in progress')
         self.assertTrue(res)
 
     def test_do_recover(self):
@@ -436,7 +436,7 @@ class TestCluster(base.SenlinTestCase):
         res = cluster.do_recover(self.context)
 
         mock_status.assert_called_once_with(self.context, cluster.RECOVERING,
-                                            reason='Recovery in progress')
+                                            'Recovery in progress')
         self.assertTrue(res)
 
     def test_nodes_property(self):

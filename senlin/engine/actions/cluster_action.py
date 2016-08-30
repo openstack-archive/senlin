@@ -468,13 +468,7 @@ class ClusterAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        saved_status = self.cluster.status
-        saved_reason = self.cluster.status_reason
-        res = self.cluster.do_check(self.context)
-        if not res:
-            reason = _('Cluster checking failed.')
-            self.cluster.set_status(self.context, saved_status, saved_reason)
-            return self.RES_ERROR, reason
+        self.cluster.do_check(self.context)
 
         child = []
         res = self.RES_OK
@@ -500,8 +494,7 @@ class ClusterAction(base.Action):
             if res != self.RES_OK:
                 reason = new_reason
 
-        self.cluster.set_status(self.context, saved_status, saved_reason)
-
+        self.cluster.eval_status(self.context, 'check')
         return res, reason
 
     def do_recover(self):
@@ -509,11 +502,7 @@ class ClusterAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        res = self.cluster.do_recover(self.context)
-        if not res:
-            reason = _('Cluster recovery failed.')
-            self.cluster.set_status(self.context, self.cluster.ERROR, reason)
-            return self.RES_ERROR, reason
+        self.cluster.do_recover(self.context)
 
         # process data from health_policy
         pd = self.data.get('health', None)
@@ -526,7 +515,6 @@ class ClusterAction(base.Action):
             if fencing is not None and 'COMPUTE' in fencing:
                 inputs['force'] = True
 
-        reason = _('Cluster recovery succeeded.')
         children = []
         for node in self.cluster.nodes:
             if node.status == 'ACTIVE':
@@ -539,6 +527,8 @@ class ClusterAction(base.Action):
             )
             children.append(action_id)
 
+        res = self.RES_OK
+        reason = _('Cluster recovery succeeded.')
         if children:
             dobj.Dependency.create(self.context, [c for c in children],
                                    self.id)
@@ -547,16 +537,12 @@ class ClusterAction(base.Action):
             dispatcher.start_action()
 
             # Wait for dependent action if any
-            res, reason = self._wait_for_dependents()
-
+            res, new_reason = self._wait_for_dependents()
             if res != self.RES_OK:
-                self.cluster.set_status(self.context, self.cluster.ERROR,
-                                        reason)
-                return res, reason
+                reason = new_reason
 
-        self.cluster.set_status(self.context, self.cluster.ACTIVE, reason)
-
-        return self.RES_OK, reason
+        self.cluster.eval_status(self.context, 'recover')
+        return res, reason
 
     def do_resize(self):
         """Handler for the CLUSTER_RESIZE action.
