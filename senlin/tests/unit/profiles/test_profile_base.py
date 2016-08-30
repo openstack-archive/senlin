@@ -97,6 +97,8 @@ class TestProfileBase(base.SenlinTestCase):
         self.assertIsNone(profile.id)
         self.assertEqual('test-profile', profile.name)
         self.assertEqual(self.spec, profile.spec)
+        self.assertEqual('os.dummy', profile.type_name)
+        self.assertEqual('1.0', profile.version)
         self.assertEqual('os.dummy-1.0', profile.type)
         self.assertEqual(self.ctx.user, profile.user)
         self.assertEqual(self.ctx.project, profile.project)
