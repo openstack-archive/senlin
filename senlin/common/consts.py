@@ -182,9 +182,9 @@ ACTION_SORT_KEYS = [
 ]
 
 RECEIVER_TYPES = (
-    RECEIVER_WEBHOOK,
+    RECEIVER_WEBHOOK, RECEIVER_MESSAGE,
 ) = (
-    'webhook',
+    'webhook', 'message',
 )
 
 RECEIVER_ATTRS = (

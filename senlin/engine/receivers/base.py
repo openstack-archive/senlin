@@ -11,12 +11,13 @@
 # under the License.
 
 from oslo_config import cfg
+from oslo_context import context as oslo_context
 from oslo_log import log as logging
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
 
 from senlin.common import consts
-from senlin.common import context
+from senlin.common import context as senlin_context
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import utils
@@ -44,6 +45,9 @@ class Receiver(object):
         if rtype == consts.RECEIVER_WEBHOOK:
             from senlin.engine.receivers import webhook
             ReceiverClass = webhook.Webhook
+        elif rtype == consts.RECEIVER_MESSAGE:
+            from senlin.engine.receivers import message
+            ReceiverClass = message.Message
         else:
             ReceiverClass = Receiver
 
@@ -212,7 +216,7 @@ class Receiver(object):
 
     def _get_base_url(self):
         base = None
-        service_cred = context.get_service_context()
+        service_cred = senlin_context.get_service_context()
         kc = driver_base.SenlinDriver().identity(service_cred)
         try:
             base = kc.get_senlin_endpoint()
@@ -221,3 +225,27 @@ class Receiver(object):
             LOG.warning(msg)
 
         return base
+
+    def _build_conn_params(self, user, project):
+        """Build connection params for specific user and project.
+
+        :param user: The ID of the user for which a trust will be used.
+        :param project: The ID of the project for which a trust will be used.
+        :returns: A dict containing the required parameters for connection
+                  creation.
+        """
+        service_creds = senlin_context.get_service_context()
+        params = {
+            'username': service_creds.get('username'),
+            'password': service_creds.get('password'),
+            'auth_url': service_creds.get('auth_url'),
+            'user_domain_name': service_creds.get('user_domain_name')
+        }
+
+        cred = co.Credential.get(oslo_context.get_current(),
+                                 user, project)
+        if cred is None:
+            raise exception.TrustNotFound(trustor=user)
+        params['trust_id'] = cred.cred['openstack']['trust']
+
+        return params
