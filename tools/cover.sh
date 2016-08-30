@@ -36,6 +36,9 @@ baseline_report=$(mktemp -t senlin_coverageXXXXXXX)
 python setup.py test --coverage --testr-args="^(?!senlin\.tests\.tempest)"
 coverage report > $baseline_report
 cat $baseline_report
+if [ -d "cover-master" ]; then
+    rm -rf cover-master
+fi
 mv cover cover-master
 baseline_missing=$(awk 'END { print $3 }' $baseline_report)
 
