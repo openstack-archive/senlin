@@ -18,7 +18,7 @@ microversion:
     API version.
 
 request_id:
-  type: UUID
+  type: string
   in: header
   description: |
     A unique ID for tracking service request. The request ID associated
