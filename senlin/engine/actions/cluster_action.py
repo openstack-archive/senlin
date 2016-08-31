@@ -14,6 +14,7 @@ import copy
 import eventlet
 
 from oslo_log import log as logging
+from oslo_utils import timeutils
 
 from senlin.common import consts
 from senlin.common import exception
@@ -192,9 +193,11 @@ class ClusterAction(base.Action):
 
         result, reason = self._create_nodes(self.cluster.desired_capacity)
 
+        params = {}
         if result == self.RES_OK:
             reason = _('Cluster creation succeeded.')
-        self.cluster.eval_status(self.context, 'create')
+            params = {'created_at': timeutils.utcnow(True)}
+        self.cluster.eval_status(self.context, 'create', **params)
 
         return result, reason
 
@@ -224,7 +227,8 @@ class ClusterAction(base.Action):
 
         reason = _('Cluster update completed.')
         if profile_id is None:
-            self.cluster.eval_status(self.context, 'update')
+            self.cluster.eval_status(self.context, 'update',
+                                     updated_at=timeutils.utcnow(True))
             return self.RES_OK, reason
 
         fmt = _LI("Updating cluster '%(cluster)s': profile='%(profile)s'.")
@@ -255,7 +259,9 @@ class ClusterAction(base.Action):
                 return result, _('Failed in updating nodes.')
 
         self.cluster.profile_id = profile_id
-        self.cluster.eval_status(self.context, 'update', profile_id=profile_id)
+        self.cluster.eval_status(self.context, 'update',
+                                 profile_id=profile_id,
+                                 updated_at=timeutils.utcnow(True))
         return self.RES_OK, reason
 
     def _delete_nodes(self, node_ids):
