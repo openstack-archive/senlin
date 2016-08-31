@@ -55,9 +55,11 @@ class HealthPolicy(base.Policy):
     )
 
     DETECTION_TYPES = (
-        VM_LIFECYCLE_EVENTS, NODE_STATUS_POLLING, LB_STATUS_POLLING,
+        VM_LIFECYCLE_EVENTS, NODE_STATUS_POLLING,
+        # LB_STATUS_POLLING,
     ) = (
-        'VM_LIFECYCLE_EVENTS', 'NODE_STATUS_POLLING', 'LB_STATUS_POLLING',
+        'VM_LIFECYCLE_EVENTS', 'NODE_STATUS_POLLING',
+        # 'LB_STATUS_POLLING',
     )
 
     _DETECTION_OPTIONS = (
@@ -73,15 +75,19 @@ class HealthPolicy(base.Policy):
     )
 
     RECOVERY_ACTION_VALUES = (
-        REBOOT, REBUILD, MIGRATE, EVACUATE, RECREATE, NOP
+        REBUILD, RECREATE,
+        # REBOOT, MIGRATE, EVACUATE,
     ) = (
-        'REBOOT', 'REBUILD', 'MIGRATE', 'EVACUATE', 'RECREATE', 'NOP',
+        "REBUILD", "RECREATE",
+        # 'REBOOT', 'MIGRATE', 'EVACUATE',
     )
 
     FENCING_OPTION_VALUES = (
-        COMPUTE, STORAGE, NETWORK,
+        COMPUTE,
+        # STORAGE, NETWORK,
     ) = (
-        'COMPUTE', 'STORAGE', 'NETWORK'
+        'COMPUTE',
+        # 'STORAGE', 'NETWORK'
     )
 
     properties_schema = {
