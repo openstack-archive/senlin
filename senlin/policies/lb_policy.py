@@ -23,6 +23,7 @@ from oslo_log import log as logging
 
 from senlin.common import constraints
 from senlin.common import consts
+from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.common.i18n import _LW
 from senlin.common import scaleutils
@@ -278,10 +279,29 @@ class LoadBalancingPolicy(base.Policy):
     def validate(self, context, validate_props=False):
         super(LoadBalancingPolicy, self).validate(context, validate_props)
 
-        # TODO(elynn): Check if subnet exists
-        if validate_props:
-            pass
-            # subnet = self.nc.subnet_get(vip[self.VIP_SUBNET])
+        if not validate_props:
+            return True
+
+        params = self._build_conn_params(context.user, context.project)
+        nc = driver_base.SenlinDriver().network(params)
+
+        # validate pool subnet
+        name_or_id = self.pool_spec.get(self.POOL_SUBNET)
+        try:
+            nc.subnet_get(name_or_id)
+        except exc.InternalError:
+            msg = _("The specified %(key)s '%(value)s' could not be found."
+                    ) % {'key': self.POOL_SUBNET, 'value': name_or_id}
+            raise exc.InvalidSpec(message=msg)
+
+        # validate VIP subnet
+        name_or_id = self.vip_spec.get(self.VIP_SUBNET)
+        try:
+            nc.subnet_get(name_or_id)
+        except exc.InternalError:
+            msg = _("The specified %(key)s '%(value)s' could not be found."
+                    ) % {'key': self.VIP_SUBNET, 'value': name_or_id}
+            raise exc.InvalidSpec(message=msg)
 
     def attach(self, cluster):
         """Routine to be invoked when policy is to be attached to a cluster.

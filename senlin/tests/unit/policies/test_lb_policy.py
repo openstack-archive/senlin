@@ -12,8 +12,10 @@
 
 import mock
 from oslo_context import context as oslo_context
+import six
 
 from senlin.common import consts
+from senlin.common import exception as exc
 from senlin.common import scaleutils
 from senlin.drivers import base as driver_base
 from senlin.engine import cluster_policy
@@ -38,7 +40,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
                 'pool': {
                     'protocol': 'HTTP',
                     'protocol_port': 80,
-                    'subnet': 'test-subnet',
+                    'subnet': 'internal-subnet',
                     'lb_method': 'ROUND_ROBIN',
                     'admin_state_up': True,
                     'session_persistence': {
@@ -48,7 +50,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
                 },
                 'vip': {
                     'address': '192.168.1.100',
-                    'subnet': 'test-subnet',
+                    'subnet': 'external-subnet',
                     'connection_limit': 500,
                     'protocol': 'HTTP',
                     'protocol_port': 80,
@@ -67,10 +69,12 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
                 'lb_status_timeout': 600
             }
         }
-        sd = mock.Mock()
-        self.patchobject(driver_base, 'SenlinDriver', return_value=sd)
+        self.sd = mock.Mock()
+        self.patchobject(driver_base, 'SenlinDriver', return_value=self.sd)
         self.lb_driver = mock.Mock()
-        sd.loadbalancing.return_value = self.lb_driver
+        self.net_driver = mock.Mock()
+        self.sd.loadbalancing.return_value = self.lb_driver
+        self.sd.network.return_value = self.net_driver
 
     @mock.patch.object(lb_policy.LoadBalancingPolicy, 'validate')
     def test_init(self, mock_validate):
@@ -88,8 +92,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
             'type': 'senlin.policy.loadbalance',
             'version': '1.0',
             'properties': {
-                'pool': {'subnet': 'test-subnet'},
-                'vip': {'subnet': 'test-subnet'}
+                'pool': {'subnet': 'internal-subnet'},
+                'vip': {'subnet': 'external-subnet'}
             }
         }
         default_spec = {
@@ -99,14 +103,14 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
                 'pool': {
                     'protocol': 'HTTP',
                     'protocol_port': 80,
-                    'subnet': 'test-subnet',
+                    'subnet': 'internal-subnet',
                     'lb_method': 'ROUND_ROBIN',
                     'admin_state_up': True,
                     'session_persistence': {},
                 },
                 'vip': {
                     'address': None,
-                    'subnet': 'test-subnet',
+                    'subnet': 'external-subnet',
                     'connection_limit': -1,
                     'protocol': 'HTTP',
                     'protocol_port': 80,
@@ -132,9 +136,54 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
         ctx = mock.Mock()
 
-        policy.validate(ctx, True)
+        res = policy.validate(ctx, False)
+
+        self.assertTrue(res)
+        mock_validate.assert_called_with(ctx, False)
+
+    @mock.patch.object(policy_base.Policy, '_build_conn_params')
+    @mock.patch.object(policy_base.Policy, 'validate')
+    def test_validate_pool_subnet_notfound(self, mock_validate, mock_params):
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        ctx = mock.Mock(user='user1', project='project1')
+        x_params = mock.Mock()
+        mock_params.return_value = x_params
+        self.net_driver.subnet_get = mock.Mock(
+            side_effect=exc.InternalError(code='404', message='not found'))
+
+        ex = self.assertRaises(exc.InvalidSpec, policy.validate, ctx, True)
 
         mock_validate.assert_called_with(ctx, True)
+        mock_params.assert_called_once_with('user1', 'project1')
+        self.sd.network.assert_called_once_with(x_params)
+        self.net_driver.subnet_get.assert_called_once_with('internal-subnet')
+        self.assertEqual("The specified subnet 'internal-subnet' could not "
+                         "be found.", six.text_type(ex))
+
+    @mock.patch.object(policy_base.Policy, '_build_conn_params')
+    @mock.patch.object(policy_base.Policy, 'validate')
+    def test_validate_vip_subnet_notfound(self, mock_validate, mock_params):
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        ctx = mock.Mock(user='user1', project='project1')
+        x_params = mock.Mock()
+        mock_params.return_value = x_params
+        self.net_driver.subnet_get = mock.Mock(
+            side_effect=[
+                mock.Mock(),  # for the internal (pool) one
+                exc.InternalError(code='404', message='not found')
+            ]
+        )
+
+        ex = self.assertRaises(exc.InvalidSpec, policy.validate, ctx, True)
+
+        mock_validate.assert_called_with(ctx, True)
+        mock_params.assert_called_once_with('user1', 'project1')
+        self.sd.network.assert_called_once_with(x_params)
+        self.net_driver.subnet_get.assert_has_calls([
+            mock.call('internal-subnet'), mock.call('external-subnet')
+        ])
+        self.assertEqual("The specified subnet 'external-subnet' could not "
+                         "be found.", six.text_type(ex))
 
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_build_policy_data')
     @mock.patch.object(node_mod.Node, 'load_all')
@@ -168,8 +217,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
                                                          policy.hm_spec)
         m_load.assert_called_once_with(mock.ANY, cluster_id=cluster.id)
         member_add_calls = [
-            mock.call(node1, 'LB_ID', 'POOL_ID', 80, 'test-subnet'),
-            mock.call(node2, 'LB_ID', 'POOL_ID', 80, 'test-subnet')
+            mock.call(node1, 'LB_ID', 'POOL_ID', 80, 'internal-subnet'),
+            mock.call(node2, 'LB_ID', 'POOL_ID', 80, 'internal-subnet')
         ]
         self.lb_driver.member_add.assert_has_calls(member_add_calls)
         node1.data.update.assert_called_once_with({'lb_member': 'MEMBER1_ID'})
