@@ -206,8 +206,7 @@ class ActionNotFound(SenlinException):
 
 
 class ActionInProgress(SenlinException):
-    msg_fmt = _("Cluster %(cluster_name)s already has an action (%(action)s) "
-                "in progress.")
+    msg_fmt = _("The %(type)s %(id)s is in status %(status)s.")
 
 
 class EventNotFound(SenlinException):
