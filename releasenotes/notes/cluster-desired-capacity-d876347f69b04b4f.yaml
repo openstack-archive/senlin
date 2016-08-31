@@ -1,0 +1,6 @@
+---
+fixes:
+  - The 'desired_capacity' reflects the expectation from a requester's view
+    point. The engine now changes the 'desired_capacity' after the request
+    is validated/sanitized, before the action is actually implemented. This
+    means the 'desired_capacity' will change event if an action fails.

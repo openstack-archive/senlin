@@ -1,0 +1,4 @@
+---
+fixes:
+  - The 'tools/setup-service' script has been fixed so that it works under
+    keystone v3.

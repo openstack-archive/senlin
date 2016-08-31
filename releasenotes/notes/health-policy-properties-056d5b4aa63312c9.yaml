@@ -1,0 +1,3 @@
+---
+fixes:
+  - The unimplemented properties for health policy are masked out.

@@ -1,0 +1,4 @@
+---
+features:
+  - A new policy-validate API has been added to validate the spec of a
+    policy without actually creating an instance of it.

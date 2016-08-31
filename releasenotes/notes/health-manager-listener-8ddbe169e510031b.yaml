@@ -1,0 +1,5 @@
+---
+features:
+  - The cluster health manager has gained a new feature where nova server
+    instance failures can be detected and handled, with and without a
+    health policy attached to a cluster.

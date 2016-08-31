@@ -1,0 +1,5 @@
+---
+features:
+  - A new profile type 'container.dockerinc.docker-1.0' is added to support
+    creation and management of docker clusters. This is still an experimental
+    feature. Please use with caution.
