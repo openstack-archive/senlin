@@ -642,7 +642,7 @@ class ClusterTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_delete(self, notify, mock_find, mock_policies,
                             mock_receivers, mock_action):
-        x_obj = mock.Mock(id='12345678AB')
+        x_obj = mock.Mock(id='12345678AB', status='ACTIVE')
         mock_find.return_value = x_obj
         mock_policies.return_value = []
         mock_receivers.return_value = []
@@ -675,6 +675,21 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual('The cluster (Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
 
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_node_delete_improper_status(self, mock_find):
+        for bad_status in [cm.Cluster.CREATING, cm.Cluster.UPDATING,
+                           cm.Cluster.DELETING, cm.Cluster.RECOVERING]:
+            fake_cluster = mock.Mock(id='12345678AB', status=bad_status)
+            mock_find.return_value = fake_cluster
+            ex = self.assertRaises(rpc.ExpectedException,
+                                   self.eng.cluster_delete,
+                                   self.ctx, 'BUSY')
+
+            self.assertEqual(exc.ActionInProgress, ex.exc_info[0])
+            self.assertEqual("The cluster BUSY is in status %s." % bad_status,
+                             six.text_type(ex.exc_info[1]))
+            # skipping assertion on mock_find
+
     @mock.patch.object(cpo.ClusterPolicy, 'get_all')
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_delete_policy_attached(self, mock_find, mock_policies):
@@ -687,7 +702,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, 'IDENTITY')
 
         self.assertEqual(exc.ClusterBusy, ex.exc_info[0])
-        expected_msg = _('The cluster (12345678AB) cannot be deleted: '
+        expected_msg = _('The cluster (IDENTITY) cannot be deleted: '
                          'there is still policy(s) attached to it.')
         self.assertEqual(expected_msg, six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'IDENTITY')
@@ -708,7 +723,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, 'IDENTITY')
 
         self.assertEqual(exc.ClusterBusy, ex.exc_info[0])
-        expected_msg = _('The cluster (12345678AB) cannot be deleted: '
+        expected_msg = _('The cluster (IDENTITY) cannot be deleted: '
                          'there is still receiver(s) associated with it.')
         self.assertEqual(expected_msg, six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'IDENTITY')

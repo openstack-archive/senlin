@@ -947,31 +947,39 @@ class EngineService(service.Service):
 
         LOG.info(_LI('Deleting cluster %s'), identity)
 
-        db_cluster = self.cluster_find(context, identity)
+        # 'cluster' below is a DB object.
+        cluster = self.cluster_find(context, identity)
 
-        policies = cp_obj.ClusterPolicy.get_all(context, db_cluster.id)
+        if cluster.status in [cluster_mod.Cluster.CREATING,
+                              cluster_mod.Cluster.UPDATING,
+                              cluster_mod.Cluster.DELETING,
+                              cluster_mod.Cluster.RECOVERING]:
+            raise exception.ActionInProgress(type='cluster', id=identity,
+                                             status=cluster.status)
+
+        policies = cp_obj.ClusterPolicy.get_all(context, cluster.id)
         if len(policies) > 0:
             msg = _('Cluster %(id)s cannot be deleted without having all '
                     'policies detached.') % {'id': identity}
             LOG.error(msg)
             reason = _("there is still policy(s) attached to it.")
-            raise exception.ClusterBusy(cluster=db_cluster.id, reason=reason)
+            raise exception.ClusterBusy(cluster=identity, reason=reason)
 
         receivers = receiver_obj.Receiver.get_all(
-            context, filters={'cluster_id': db_cluster.id})
+            context, filters={'cluster_id': cluster.id})
         if len(receivers) > 0:
             msg = _('Cluster %(id)s cannot be deleted without having all '
                     'receivers deleted.') % {'id': identity}
             LOG.error(msg)
             reason = _("there is still receiver(s) associated with it.")
-            raise exception.ClusterBusy(cluster=db_cluster.id, reason=reason)
+            raise exception.ClusterBusy(cluster=identity, reason=reason)
 
         params = {
-            'name': 'cluster_delete_%s' % db_cluster.id[:8],
+            'name': 'cluster_delete_%s' % cluster.id[:8],
             'cause': action_mod.CAUSE_RPC,
             'status': action_mod.Action.READY,
         }
-        action_id = action_mod.Action.create(context, db_cluster.id,
+        action_id = action_mod.Action.create(context, cluster.id,
                                              consts.CLUSTER_DELETE, **params)
         dispatcher.start_action()
         LOG.info(_LI("Cluster delete action queued: %s"), action_id)
