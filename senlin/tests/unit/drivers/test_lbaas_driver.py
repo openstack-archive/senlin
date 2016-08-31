@@ -187,7 +187,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
 
         status, res = self.lb_driver.lb_create(self.vip, self.pool, self.hm)
         self.assertFalse(status)
-        msg = _('Failed in creating load balancer (%s).') % 'LB_ID'
+        msg = _('Failed in creating loadbalancer (%s).') % 'LB_ID'
         self.assertEqual(msg, res)
         self.nc.loadbalancer_create.assert_called_once_with(
             'SUBNET_ID', self.vip['address'], self.vip['admin_state_up'])
