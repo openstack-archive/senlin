@@ -217,7 +217,7 @@ class LoadBalancingPolicy(base.Policy):
             _('Health monitor for loadbalancer.'),
             schema={
                 HM_TYPE: schema.String(
-                    _('The type of probe sent by the load balancer to verify '
+                    _('The type of probe sent by the loadbalancer to verify '
                       'the member state.'),
                     constraints=[
                         constraints.AllowedValues(HEALTH_MONITOR_TYPES),

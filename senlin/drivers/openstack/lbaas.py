@@ -112,7 +112,7 @@ class LoadBalancerDriver(base.DriverBase):
 
         res = self._wait_for_lb_ready(lb.id)
         if res is False:
-            msg = _LE('Failed in creating load balancer (%s).') % lb.id
+            msg = _LE('Failed in creating loadbalancer (%s).') % lb.id
             del result['vip_address']
             _cleanup(msg, **result)
             return False, msg
