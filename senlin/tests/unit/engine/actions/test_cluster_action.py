@@ -309,7 +309,8 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Cluster creation succeeded.', res_msg)
         x_create_nodes.assert_called_once_with(cluster.desired_capacity)
-        cluster.eval_status.assert_called_once_with(action.context, 'create')
+        cluster.eval_status.assert_called_once_with(
+            action.context, 'create', created_at=mock.ANY)
 
     def test_do_create_failed_create_cluster(self, mock_load):
         cluster = mock.Mock(id='FAKE_CLUSTER', ERROR='ERROR')
@@ -392,8 +393,9 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_update.assert_has_calls(update_calls)
 
         mock_start.assert_called_once_with()
-        cluster.eval_status.assert_called_once_with(action.context, 'update',
-                                                    profile_id='FAKE_PROFILE')
+        cluster.eval_status.assert_called_once_with(
+            action.context, 'update', profile_id='FAKE_PROFILE',
+            updated_at=mock.ANY)
 
     def test_do_update_not_profile(self, mock_load):
         cluster = mock.Mock(id='FAKE_ID', nodes=[], ACTIVE='ACTIVE')
@@ -404,7 +406,8 @@ class ClusterActionTest(base.SenlinTestCase):
 
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Cluster update completed.', res_msg)
-        cluster.eval_status.assert_called_once_with(action.context, 'update')
+        cluster.eval_status.assert_called_once_with(
+            action.context, 'update', updated_at=mock.ANY)
 
     def test_do_update_empty_cluster(self, mock_load):
         cluster = mock.Mock(id='FAKE_ID', nodes=[], ACTIVE='ACTIVE')
@@ -418,8 +421,9 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Cluster update completed.', res_msg)
         self.assertEqual('FAKE_PROFILE', cluster.profile_id)
-        cluster.eval_status.assert_called_once_with(action.context, 'update',
-                                                    profile_id='FAKE_PROFILE')
+        cluster.eval_status.assert_called_once_with(
+            action.context, 'update', profile_id='FAKE_PROFILE',
+            updated_at=mock.ANY)
 
     @mock.patch.object(ao.Action, 'update')
     @mock.patch.object(ab.Action, 'create')
