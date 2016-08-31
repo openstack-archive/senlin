@@ -1,0 +1,5 @@
+---
+features:
+  - The health policy was improved so that it will suspend itself when
+    a node deletion comes from senlin-engine or client request. The policy
+    will only effect when node failure is 'unexpected'.

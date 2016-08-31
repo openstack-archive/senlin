@@ -1,0 +1,4 @@
+---
+features:
+  - A new "lb_status_timeout" option is added to the LB policy to cope
+    with load-balancers that are not so responsive.

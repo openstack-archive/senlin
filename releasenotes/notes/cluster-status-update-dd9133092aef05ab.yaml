@@ -1,0 +1,5 @@
+---
+fixes:
+  - Fixed cluster status update logic so that cluster status is solely
+    determined by the status of its member nodes. The status is updated
+    each time a cluster operation has completed.

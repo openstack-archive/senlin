@@ -1,0 +1,5 @@
+---
+upgrade:
+  - With the newly added 'message' type of receivers, the 'cluster' and
+    the 'action' property are not always required when creating a receiver.
+    They are still required if the receiver type is 'webhook' (the default).

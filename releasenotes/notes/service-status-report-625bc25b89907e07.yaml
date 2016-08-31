@@ -1,0 +1,4 @@
+---
+fixes:
+  - The 'senlin-manage' command has been fixed so that it will report the
+    senlin service status correctly.

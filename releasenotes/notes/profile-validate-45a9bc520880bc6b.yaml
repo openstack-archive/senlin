@@ -1,0 +1,4 @@
+---
+features:
+  - A new profile-validate API has been added to validate the spec of a
+    profile without actually creating an instance of it.
