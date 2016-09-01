@@ -1,0 +1,4 @@
+---
+fixes:
+  - A cluster in the middle of an on-going action should not be deletable.
+    The engine service has been improved to detect this situation.
