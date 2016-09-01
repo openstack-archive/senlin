@@ -16,7 +16,6 @@ import six
 from senlin.common import consts
 from senlin.common import exception as exc
 from senlin.common import scaleutils as su
-from senlin.drivers import base as driver_base
 from senlin.engine import cluster as cluster_mod
 from senlin.objects import cluster as co
 from senlin.policies import base as policy_base
@@ -51,28 +50,6 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         self.assertEqual('senlin.policy.zone_placement-1.0', policy.type)
         expected = {'AZ1': 100, 'AZ2': 80, 'AZ3': 60, 'AZ4': 40}
         self.assertEqual(expected, policy.zones)
-        self.assertIsNone(policy. _novaclient)
-
-    @mock.patch.object(policy_base.Policy, '_build_conn_params')
-    @mock.patch.object(driver_base, 'SenlinDriver')
-    def test__nova(self, mock_driver, mock_conn):
-        params = mock.Mock()
-        mock_conn.return_value = params
-
-        nc = mock.Mock()
-        driver = mock.Mock()
-        driver.compute.return_value = nc
-        mock_driver.return_value = driver
-
-        policy = zp.ZonePlacementPolicy('p1', self.spec)
-
-        res = policy._nova('user1', 'project1')
-
-        self.assertEqual(nc, res)
-        self.assertEqual(nc, policy._novaclient)
-        mock_conn.assert_called_once_with('user1', 'project1')
-        mock_driver.assert_called_once_with()
-        driver.compute.assert_called_once_with(params)
 
     @mock.patch.object(policy_base.Policy, 'validate')
     def test_validate_okay(self, mock_base_validate):
@@ -303,15 +280,14 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(1, res)
 
-    @mock.patch.object(zp.ZonePlacementPolicy, '_nova')
     @mock.patch.object(cluster_mod.Cluster, 'load')
-    def test_pre_op_expand_using_input(self, mock_load, mock_nova):
+    def test_pre_op_expand_using_input(self, mock_load):
         policy = zp.ZonePlacementPolicy('test-policy', self.spec)
         zones = policy.zones
 
         nc = mock.Mock()
         nc.validate_azs.return_value = zones.keys()
-        mock_nova.return_value = nc
+        policy._novaclient = nc
 
         action = mock.Mock()
         action.action = 'CLUSTER_SCALE_OUT'
@@ -333,20 +309,18 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         self.assertEqual(1, dist['AZ3'])
 
         mock_load.assert_called_once_with(action.context, 'FAKE_CLUSTER')
-        mock_nova.assert_called_once_with('user1', 'project1')
         nc.validate_azs.assert_called_once_with(zones.keys())
         cluster.get_zone_distribution.assert_called_once_with(
             action.context, zones.keys())
 
-    @mock.patch.object(zp.ZonePlacementPolicy, '_nova')
     @mock.patch.object(cluster_mod.Cluster, 'load')
-    def test_pre_op_shrink_using_data(self, mock_load, mock_nova):
+    def test_pre_op_shrink_using_data(self, mock_load):
         policy = zp.ZonePlacementPolicy('test-policy', self.spec)
         zones = policy.zones
 
         nc = mock.Mock()
         nc.validate_azs.return_value = zones.keys()
-        mock_nova.return_value = nc
+        policy._novaclient = nc
 
         action = mock.Mock(action=consts.CLUSTER_SCALE_IN,
                            context=self.context, inputs={},
@@ -365,18 +339,16 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         self.assertEqual(1, dist['AZ4'])
 
         mock_load.assert_called_once_with(action.context, 'FAKE_CLUSTER')
-        mock_nova.assert_called_once_with('user1', 'project1')
         nc.validate_azs.assert_called_once_with(zones.keys())
         cluster.get_zone_distribution.assert_called_once_with(
             action.context, zones.keys())
 
-    @mock.patch.object(zp.ZonePlacementPolicy, '_nova')
     @mock.patch.object(cluster_mod.Cluster, 'load')
-    def test_pre_op_no_zones(self, mock_load, mock_nova):
+    def test_pre_op_no_zones(self, mock_load):
         policy = zp.ZonePlacementPolicy('p1', self.spec)
         nc = mock.Mock()
         nc.validate_azs.return_value = []
-        mock_nova.return_value = nc
+        policy._novaclient = nc
 
         action = mock.Mock(action=consts.CLUSTER_SCALE_OUT,
                            context=self.context,
@@ -392,15 +364,14 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         self.assertEqual('No availability zone found available.',
                          action.data['reason'])
 
-    @mock.patch.object(zp.ZonePlacementPolicy, '_nova')
     @mock.patch.object(cluster_mod.Cluster, 'load')
-    def test_pre_op_no_feasible_plan(self, mock_load, mock_nova):
+    def test_pre_op_no_feasible_plan(self, mock_load):
         policy = zp.ZonePlacementPolicy('p1', self.spec)
         zones = policy.zones
 
         nc = mock.Mock()
         nc.validate_azs.return_value = zones.keys()
-        mock_nova.return_value = nc
+        policy._novaclient = nc
 
         self.patchobject(policy, '_create_plan', return_value=None)
 

@@ -27,7 +27,6 @@ from senlin.common import exception as exc
 from senlin.common.i18n import _, _LE
 from senlin.common import scaleutils
 from senlin.common import schema
-from senlin.drivers import base as driver
 from senlin.engine import cluster as cm
 from senlin.objects import cluster as co
 from senlin.policies import base
@@ -87,23 +86,8 @@ class ZonePlacementPolicy(base.Policy):
     def __init__(self, name, spec, **kwargs):
         super(ZonePlacementPolicy, self).__init__(name, spec, **kwargs)
 
-        self._novaclient = None
         self.zones = dict((z[self.ZONE_NAME], z[self.ZONE_WEIGHT])
                           for z in self.properties.get(self.ZONES))
-
-    def _nova(self, user, project):
-        """Construct nova client based on object.
-
-        :param user: The ID of the requesting user.
-        :param project: The ID of the requesting project.
-        :returns: A reference to the nova client.
-        """
-        if self._novaclient is not None:
-            return self._novaclient
-
-        params = self._build_conn_params(user, project)
-        self._novaclient = driver.SenlinDriver().compute(params)
-        return self._novaclient
 
     def validate(self, context, validate_props=False):
         super(ZonePlacementPolicy, self).validate(context, validate_props)
@@ -111,7 +95,7 @@ class ZonePlacementPolicy(base.Policy):
         if not validate_props:
             return True
 
-        nc = self._nova(context.user, context.project)
+        nc = self.nova(context.user, context.project)
         input_azs = sorted(self.zones.keys())
         valid_azs = nc.validate_azs(input_azs)
         invalid_azs = sorted(set(input_azs) - set(valid_azs))
@@ -241,7 +225,7 @@ class ZonePlacementPolicy(base.Policy):
 
         cluster = cm.Cluster.load(action.context, cluster_id)
 
-        nc = self._nova(cluster.user, cluster.project)
+        nc = self.nova(cluster.user, cluster.project)
         zones_good = nc.validate_azs(self.zones.keys())
         if len(zones_good) == 0:
             action.data['status'] = base.CHECK_ERROR
