@@ -669,7 +669,7 @@ class NodeTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(service.EngineService, 'node_find')
-    def test_node_delete_node_improper(self, mock_find):
+    def test_node_delete_improper_status(self, mock_find):
         for bad_status in [node_mod.Node.CREATING, node_mod.Node.UPDATING,
                            node_mod.Node.DELETING, node_mod.Node.RECOVERING]:
             fake_node = mock.Mock(id='12345678AB', status=bad_status)
