@@ -272,10 +272,9 @@ class TestContainerDockerProfile(base.SenlinTestCase):
     def test_do_create(self, mock_docker):
         dockerclient = mock.Mock()
         mock_docker.return_value = dockerclient
-        container = mock.Mock()
+        container = {'Id': 'd' * 64}
         dockerclient.container_create.return_value = container
-        container_id = mock.Mock()
-        container.id = container_id
+        container_id = 'd' * 36
         profile = docker_profile.DockerProfile('container', self.spec)
         obj = mock.Mock()
         self.assertEqual(container_id, profile.do_create(obj))
