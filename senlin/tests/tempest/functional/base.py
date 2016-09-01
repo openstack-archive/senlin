@@ -12,14 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from oslo_log import log
 from tempest import config
 
 from senlin.tests.tempest import base
 from senlin.tests.tempest.common import clustering_client
 
 CONF = config.CONF
-lOG = log.getLogger(__name__)
 
 
 class BaseSenlinFunctionalTest(base.BaseSenlinTest):
