@@ -11,6 +11,7 @@
 # under the License.
 
 from oslo_log import log as logging
+import random
 import six
 
 from senlin.common import context
@@ -20,6 +21,7 @@ from senlin.common import schema
 from senlin.common import utils
 from senlin.drivers import base as driver_base
 from senlin.drivers.container import docker_v1 as docker_driver
+from senlin.engine import cluster
 from senlin.engine import node
 from senlin.profiles import base
 
@@ -36,9 +38,10 @@ class DockerProfile(base.Profile):
     ]
 
     KEYS = (
-        CONTEXT, IMAGE, NAME, COMMAND, HOST_NODE, PORT,
+        CONTEXT, IMAGE, NAME, COMMAND, HOST_NODE, HOST_CLUSTER, PORT,
     ) = (
-        'context', 'image', 'name', 'command', 'host_node', 'port',
+        'context', 'image', 'name', 'command', 'host_node', 'host_cluster',
+        'port',
     )
 
     properties_schema = {
@@ -62,6 +65,9 @@ class DockerProfile(base.Profile):
         HOST_NODE: schema.String(
             _('The node on which container will be launched.')
         ),
+        HOST_CLUSTER: schema.String(
+            _('The cluster on which container will be launched.')
+        ),
     }
 
     OPERATIONS = {}
@@ -84,20 +90,12 @@ class DockerProfile(base.Profile):
         if self._dockerclient is not None:
             return self._dockerclient
 
-        host_node = self.properties[self.HOST_NODE]
-        if not host_node:
-            msg = _("No host specified to start containers on")
-            raise exc.EResourceCreation(type='container', message=msg)
+        host_node = self.properties.get(self.HOST_NODE, None)
+        host_cluster = self.properties.get(self.HOST_CLUSTER, None)
+        ctx = context.get_admin_context()
+        host = self._get_host(ctx, host_node, host_cluster)
 
         # TODO(Anyone): Check node.data for per-node host selection
-
-        ctx = context.get_admin_context()
-        try:
-            host = node.Node.load(ctx, node_id=host_node)
-        except exc.NodeNotFound:
-            msg = _("The host_node (%s) could not be found") % host_node
-            raise exc.EResourceCreation(type='container', message=msg)
-
         host_type = host.rt['profile'].type_name
         if host_type not in self._VALID_HOST_TYPES:
             msg = _("Type of host node (%s) is not supported") % host_type
@@ -112,6 +110,85 @@ class DockerProfile(base.Profile):
                                          'port': self.properties[self.PORT]}
         self._dockerclient = docker_driver.DockerClient(url)
         return self._dockerclient
+
+    def _get_host(self, ctx, host_node, host_cluster):
+        """Determine which node to launch container on.
+
+        :param ctx: An instance of the request context.
+        :param host_node: The uuid of the hosting node.
+        :param host_cluster: The uuid of the hosting cluster.
+        """
+
+        if host_node is not None:
+            host = self._get_specified_node(ctx, host_node)
+            if host_cluster is not None:
+                cluster = self._get_host_cluster(ctx, host_cluster)
+                if host.id not in cluster.nodes:
+                    msg = _("Host node %(host_node)s does not belong to "
+                            "cluster %(host_cluster)s") % {
+                        "host_node": host_node,
+                        "host_cluster": host_cluster}
+                    raise exc.EResourceCreation(type='container', message=msg)
+        elif host_cluster is not None:
+            host = self._get_random_node(ctx, host_cluster)
+        else:
+            msg = _("Either host_node or host_cluster should be provided")
+            raise exc.EResourceCreation(type='container', message=msg)
+
+        return host
+
+    def _get_host_cluster(self, ctx, host_cluster):
+        """Get the specified cluster information.
+
+        :param ctx: An instance of the request context.
+        :param host_cluster: The uuid of the hosting cluster.
+        """
+
+        try:
+            host_cluster = cluster.Cluster.load(ctx, cluster_id=host_cluster)
+        except exc.ClusterNotFound:
+            msg = _("The host cluster (%s) could not be found") % host_cluster
+            raise exc.EResourceCreation(type='container', message=msg)
+        return host_cluster
+
+    def _get_specified_node(self, ctx, host_node):
+        """Get the specified node information.
+
+        :param ctx: An instance of the request context.
+        :param host_node: The uuid of the hosting node.
+        """
+
+        try:
+            host_node = node.Node.load(ctx, node_id=host_node)
+        except exc.NodeNotFound:
+            msg = _("The host_node (%s) could not be found") % host_node
+            raise exc.EResourceCreation(type='container', message=msg)
+        return host_node
+
+    def _get_random_node(self, ctx, host_cluster):
+        """Get a node randomly from the host cluster.
+
+        :param ctx: An instance of the request context.
+        :param host_cluster: The uuid of the hosting cluster.
+        """
+
+        cluster = self._get_host_cluster(ctx, host_cluster)
+        nodes = cluster.nodes
+        if len(nodes) == 0:
+            msg = _("The cluster (%s) contains no nodes") % host_cluster
+            raise exc.EResourceCreation(type='container', message=msg)
+        else:
+            good_nodes = []
+            for i in range(len(nodes)):
+                if nodes[i].status == "ACTIVE":
+                    good_nodes.append(nodes[i])
+            if len(good_nodes) > 0:
+                node = good_nodes[random.randrange(len(good_nodes))]
+            else:
+                msg = _("There is no active nodes running in the cluster (%s)"
+                        ) % host_cluster
+                raise exc.EResourceCreation(type='container', message=msg)
+        return node
 
     def _get_host_ip(self, obj, host_node, host_type):
         """Fetch the ip address of physical node.
