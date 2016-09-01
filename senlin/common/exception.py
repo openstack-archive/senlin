@@ -260,7 +260,7 @@ class EResourceDeletion(InternalError):
 
 
 class EResourceOperation(InternalError):
-    # Used when deleting resources from other services
+    # Used when operating resources from other services
     msg_fmt = _("Failed in %(op)s %(type)s %(id)s: %(message)s")
 
 
