@@ -1,8 +1,8 @@
 How To Use the Sample Spec File
 ===============================
 
-This directory contains sample spec files that can be used to create a
-Senlin profile using `senlin profile-create` command, for example:
+This directory contains sample spec files that can be used to create a Senlin
+profile using `openstack cluster profile create` command, for example:
 
 To create a os.nova.server profile::
 
@@ -25,4 +25,4 @@ To get help on the command line options for creating profiles::
 
 To show the profile created::
 
-  $ senlin profile-show <profile_id>
+  $ openstack cluster profile show <profile_id>
