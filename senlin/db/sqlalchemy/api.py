@@ -18,7 +18,6 @@ import six
 import sys
 import threading
 
-from oslo_config import cfg
 from oslo_db import api as oslo_db_api
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import enginefacade
@@ -35,9 +34,6 @@ from senlin.db.sqlalchemy import models
 from senlin.db.sqlalchemy import utils
 
 LOG = logging.getLogger(__name__)
-
-
-CONF = cfg.CONF
 
 _main_context_manager = None
 _CONTEXT = threading.local()

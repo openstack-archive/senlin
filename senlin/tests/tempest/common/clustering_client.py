@@ -15,14 +15,12 @@
 from six.moves.urllib import parse as urllib
 import time
 
-from oslo_log import log
 from oslo_serialization import jsonutils
 from tempest import config
 from tempest.lib.common import rest_client
 from tempest.lib import exceptions
 
 CONF = config.CONF
-lOG = log.getLogger(__name__)
 
 
 class ClusteringAPIClient(rest_client.RestClient):
