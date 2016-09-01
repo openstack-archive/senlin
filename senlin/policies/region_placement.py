@@ -25,7 +25,6 @@ from senlin.common import exception as exc
 from senlin.common.i18n import _, _LE
 from senlin.common import scaleutils
 from senlin.common import schema
-from senlin.drivers import base as driver_base
 from senlin.engine import cluster as cm
 from senlin.objects import cluster as co
 from senlin.policies import base
@@ -89,7 +88,6 @@ class RegionPlacementPolicy(base.Policy):
     def __init__(self, name, spec, **kwargs):
         super(RegionPlacementPolicy, self).__init__(name, spec, **kwargs)
 
-        self._keystoneclient = None
         regions = {}
         for r in self.properties.get(self.REGIONS):
             regions[r[self.REGION_NAME]] = {
@@ -98,26 +96,13 @@ class RegionPlacementPolicy(base.Policy):
             }
         self.regions = regions
 
-    def _keystone(self, user, project):
-        """Construct keystone client based on object.
-
-        :param user: The ID of the requesting user.
-        :param project: The ID of the requesting project.
-        :returns: A reference to the keystone client.
-        """
-        if self._keystoneclient is not None:
-            return self._keystoneclient
-        params = self._build_conn_params(user, project)
-        self._keystoneclient = driver_base.SenlinDriver().identity(params)
-        return self._keystoneclient
-
     def validate(self, context, validate_props=False):
         super(RegionPlacementPolicy, self).validate(context, validate_props)
 
         if not validate_props:
             return True
 
-        kc = self._keystone(context.user, context.project)
+        kc = self.keystone(context.user, context.project)
         input_regions = sorted(self.regions.keys())
         valid_regions = kc.validate_regions(input_regions)
         invalid_regions = sorted(set(input_regions) - set(valid_regions))
@@ -257,7 +242,7 @@ class RegionPlacementPolicy(base.Policy):
             count = -count
 
         cluster = cm.Cluster.load(action.context, cluster_id)
-        kc = self._keystone(cluster.user, cluster.project)
+        kc = self.keystone(cluster.user, cluster.project)
 
         regions_good = kc.validate_regions(self.regions.keys())
         if len(regions_good) == 0:

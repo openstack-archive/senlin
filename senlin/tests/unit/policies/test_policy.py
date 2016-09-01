@@ -351,12 +351,12 @@ class TestPolicyBase(base.SenlinTestCase):
         res = policy._extract_policy_data(policy_data)
         self.assertIsNone(res)
 
+    @mock.patch.object(pb.Policy, '_build_conn_params')
     @mock.patch("senlin.drivers.base.SenlinDriver")
-    def test_nova(self, mock_driver):
+    def test_nova(self, mock_driver, mock_params):
         policy = self._create_policy('test-policy')
-        mock_params = mock.Mock()
-        mock_build = self.patchobject(policy, '_build_conn_params',
-                                      return_value=mock_params)
+        fake_params = mock.Mock()
+        mock_params.return_value = fake_params
         x_driver = mock.Mock()
         mock_driver.return_value = x_driver
 
@@ -365,8 +365,8 @@ class TestPolicyBase(base.SenlinTestCase):
         x_nova = x_driver.compute.return_value
         self.assertEqual(x_nova, result)
         self.assertEqual(x_nova, policy._novaclient)
-        mock_build.assert_called_once_with('user1', 'project1')
-        x_driver.compute.assert_called_once_with(mock_params)
+        mock_params.assert_called_once_with('user1', 'project1')
+        x_driver.compute.assert_called_once_with(fake_params)
 
     def test_nova_already_initialized(self):
         policy = self._create_policy('test-policy')
@@ -376,6 +376,34 @@ class TestPolicyBase(base.SenlinTestCase):
         result = policy.nova('foo', 'bar')
 
         self.assertEqual(x_nova, result)
+
+    @mock.patch.object(pb.Policy, '_build_conn_params')
+    @mock.patch('senlin.drivers.base.SenlinDriver')
+    def test_keystone(self, mock_sd, mock_params):
+        policy = self._create_policy('test-policy')
+        fake_params = mock.Mock()
+        mock_params.return_value = fake_params
+        kc = mock.Mock()
+        driver = mock.Mock()
+        driver.identity.return_value = kc
+        mock_sd.return_value = driver
+
+        res = policy.keystone('user1', 'project1')
+
+        self.assertEqual(kc, res)
+        self.assertEqual(kc, policy._keystoneclient)
+        mock_params.assert_called_once_with('user1', 'project1')
+        mock_sd.assert_called_once_with()
+        driver.identity.assert_called_once_with(fake_params)
+
+    def test_keystone_already_initialized(self):
+        policy = self._create_policy('test-policy')
+        x_keystone = mock.Mock()
+        policy._keystoneclient = x_keystone
+
+        result = policy.keystone('foo', 'bar')
+
+        self.assertEqual(x_keystone, result)
 
     def test_default_need_check(self):
         action = mock.Mock()
