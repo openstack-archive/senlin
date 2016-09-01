@@ -212,12 +212,16 @@ def filter_error_nodes(nodes):
     """
     good = []
     bad = []
+    not_created = []
     for n in nodes:
         if n.status == 'ERROR':
             bad.append(n.id)
+        elif n.created_at is None:
+            not_created.append(n.id)
         else:
             good.append(n)
 
+    bad.extend(not_created)
     return bad, good
 
 
