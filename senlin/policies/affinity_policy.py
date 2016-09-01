@@ -30,7 +30,6 @@ from senlin.common.i18n import _LE
 from senlin.common import scaleutils as su
 from senlin.common import schema
 from senlin.common import utils
-from senlin.drivers import base as driver
 from senlin.objects import cluster as co
 from senlin.objects import cluster_policy as cpo
 from senlin.policies import base
@@ -107,21 +106,6 @@ class AffinityPolicy(base.Policy):
         super(AffinityPolicy, self).__init__(name, spec, **kwargs)
 
         self.enable_drs = self.properties.get(self.ENABLE_DRS_EXTENSION)
-        self._novaclient = None
-
-    def nova(self, user, project):
-        """Construct nova client based on user and project.
-
-        :param user: The ID of the requesting user.
-        :param project: The ID of the requesting project.
-        :returns: A reference to the nova client.
-        """
-        if self._novaclient is not None:
-            return self._novaclient
-
-        params = self._build_conn_params(user, project)
-        self._novaclient = driver.SenlinDriver().compute(params)
-        return self._novaclient
 
     def validate(self, context, validate_props=False):
         super(AffinityPolicy, self).validate(context, validate_props)

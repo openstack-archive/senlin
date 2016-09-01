@@ -48,32 +48,6 @@ class TestAffinityPolicy(base.SenlinTestCase):
         self.assertFalse(policy.enable_drs)
         self.assertIsNone(policy._novaclient)
 
-    @mock.patch("senlin.drivers.base.SenlinDriver")
-    def test_nova(self, mock_driver):
-        policy = ap.AffinityPolicy('test-policy', self.spec)
-        mock_params = mock.Mock()
-        mock_build = self.patchobject(policy, '_build_conn_params',
-                                      return_value=mock_params)
-        x_driver = mock.Mock()
-        mock_driver.return_value = x_driver
-
-        result = policy.nova('user1', 'project1')
-
-        x_nova = x_driver.compute.return_value
-        self.assertEqual(x_nova, result)
-        self.assertEqual(x_nova, policy._novaclient)
-        mock_build.assert_called_once_with('user1', 'project1')
-        x_driver.compute.assert_called_once_with(mock_params)
-
-    def test_nova_already_initialized(self):
-        policy = ap.AffinityPolicy('test-policy', self.spec)
-        x_nova = mock.Mock()
-        policy._novaclient = x_nova
-
-        result = policy.nova('foo', 'bar')
-
-        self.assertEqual(x_nova, result)
-
     @mock.patch.object(pb.Policy, 'validate')
     def test_validate_okay(self, mock_base_validate):
         new_spec = copy.deepcopy(self.spec)
