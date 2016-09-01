@@ -14,6 +14,11 @@ To create a os.heat.stack profile::
   $ cd ./heat_stack/nova_server
   $ openstack cluster profile create --spec-file heat_stack_nova_server.yaml my_stack
 
+To create a container.dockerinc.docker profile::
+
+  $ cd ./docker_container
+  $ openstack cluster profile create --spec-file docker_basic.yaml
+
 To get help on the command line options for creating profiles::
 
   $ openstack help cluster profile create
