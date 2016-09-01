@@ -275,8 +275,8 @@ class DockerProfile(base.Profile):
             raise exc.EResourceCreation(type='container',
                                         message=six.text_type(ex))
 
-        self.container_id = container.id
-        return container.id
+        self.container_id = container['Id'][:36]
+        return self.container_id
 
     def do_delete(self, obj):
         """Delete a container node.
