@@ -11,8 +11,10 @@
 # under the License.
 
 import mock
+import six
 
 from senlin.common import consts
+from senlin.common import exception as exc
 from senlin.common import scaleutils as su
 from senlin.drivers import base as driver_base
 from senlin.engine import cluster as cluster_mod
@@ -62,16 +64,56 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         driver.compute.return_value = nc
         mock_driver.return_value = driver
 
-        cluster = mock.Mock(user='user1', project='project1')
         policy = zp.ZonePlacementPolicy('p1', self.spec)
 
-        res = policy._nova(cluster)
+        res = policy._nova('user1', 'project1')
 
         self.assertEqual(nc, res)
         self.assertEqual(nc, policy._novaclient)
         mock_conn.assert_called_once_with('user1', 'project1')
         mock_driver.assert_called_once_with()
         driver.compute.assert_called_once_with(params)
+
+    @mock.patch.object(policy_base.Policy, 'validate')
+    def test_validate_okay(self, mock_base_validate):
+        policy = zp.ZonePlacementPolicy('test-policy', self.spec)
+        nc = mock.Mock()
+        nc.validate_azs.return_value = ['AZ1', 'AZ2', 'AZ3', 'AZ4']
+        policy._novaclient = nc
+        ctx = mock.Mock(user='U1', project='P1')
+
+        res = policy.validate(ctx, True)
+
+        self.assertTrue(res)
+        mock_base_validate.assert_called_once_with(ctx, True)
+        nc.validate_azs.assert_called_once_with(['AZ1', 'AZ2', 'AZ3', 'AZ4'])
+
+    @mock.patch.object(policy_base.Policy, 'validate')
+    def test_validate_no_validate_props(self, mock_base_validate):
+        policy = zp.ZonePlacementPolicy('test-policy', self.spec)
+        ctx = mock.Mock(user='U1', project='P1')
+
+        res = policy.validate(ctx, False)
+
+        self.assertTrue(res)
+        mock_base_validate.assert_called_once_with(ctx, False)
+
+    @mock.patch.object(policy_base.Policy, 'validate')
+    def test_validate_az_not_found(self, mock_base_validate):
+        policy = zp.ZonePlacementPolicy('test-policy', self.spec)
+        nc = mock.Mock()
+        nc.validate_azs.return_value = ['AZ1', 'AZ4']
+        policy._novaclient = nc
+        ctx = mock.Mock(user='U1', project='P1')
+
+        ex = self.assertRaises(exc.InvalidSpec,
+                               policy.validate,
+                               ctx, True)
+
+        mock_base_validate.assert_called_once_with(ctx, True)
+        nc.validate_azs.assert_called_once_with(['AZ1', 'AZ2', 'AZ3', 'AZ4'])
+        self.assertEqual("The specified name '['AZ2', 'AZ3']' "
+                         "could not be found.", six.text_type(ex))
 
     def test__create_plan_default(self):
         self.spec['properties']['zones'] = [
@@ -277,7 +319,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         action.data = {}
         action.inputs = {'count': 7}
 
-        cluster = mock.Mock()
+        cluster = mock.Mock(user='user1', project='project1')
         current_dist = {'AZ1': 2, 'AZ2': 3, 'AZ3': 2, 'AZ4': 1}
         cluster.get_zone_distribution.return_value = current_dist
         mock_load.return_value = cluster
@@ -291,7 +333,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         self.assertEqual(1, dist['AZ3'])
 
         mock_load.assert_called_once_with(action.context, 'FAKE_CLUSTER')
-        mock_nova.assert_called_once_with(cluster)
+        mock_nova.assert_called_once_with('user1', 'project1')
         nc.validate_azs.assert_called_once_with(zones.keys())
         cluster.get_zone_distribution.assert_called_once_with(
             action.context, zones.keys())
@@ -306,13 +348,11 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         nc.validate_azs.return_value = zones.keys()
         mock_nova.return_value = nc
 
-        action = mock.Mock()
-        action.action = 'CLUSTER_SCALE_IN'
-        action.context = self.context
-        action.data = {'deletion': {'count': 2}}
-        action.inputs = {}
+        action = mock.Mock(action=consts.CLUSTER_SCALE_IN,
+                           context=self.context, inputs={},
+                           data={'deletion': {'count': 2}})
 
-        cluster = mock.Mock()
+        cluster = mock.Mock(user='user1', project='project1')
         current_dist = {'AZ1': 2, 'AZ2': 2, 'AZ3': 2, 'AZ4': 1}
         cluster.get_zone_distribution.return_value = current_dist
         mock_load.return_value = cluster
@@ -325,7 +365,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         self.assertEqual(1, dist['AZ4'])
 
         mock_load.assert_called_once_with(action.context, 'FAKE_CLUSTER')
-        mock_nova.assert_called_once_with(cluster)
+        mock_nova.assert_called_once_with('user1', 'project1')
         nc.validate_azs.assert_called_once_with(zones.keys())
         cluster.get_zone_distribution.assert_called_once_with(
             action.context, zones.keys())
@@ -338,10 +378,9 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         nc.validate_azs.return_value = []
         mock_nova.return_value = nc
 
-        action = mock.Mock()
-        action.action = 'CLUSTER_SCALE_OUT'
-        action.context = self.context
-        action.data = {'creation': {'count': 3}}
+        action = mock.Mock(action=consts.CLUSTER_SCALE_OUT,
+                           context=self.context,
+                           data={'creation': {'count': 3}})
 
         cluster = mock.Mock()
         mock_load.return_value = cluster
@@ -365,11 +404,9 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
 
         self.patchobject(policy, '_create_plan', return_value=None)
 
-        action = mock.Mock()
-        action.action = 'CLUSTER_SCALE_OUT'
-        action.context = self.context
-        action.inputs = {}
-        action.data = {'creation': {'count': 3}}
+        action = mock.Mock(action=consts.CLUSTER_SCALE_OUT,
+                           context=self.context, inputs={},
+                           data={'creation': {'count': 3}})
 
         cluster = mock.Mock()
         current_dist = {'R1': 0, 'R2': 0, 'R3': 0, 'R4': 0}
