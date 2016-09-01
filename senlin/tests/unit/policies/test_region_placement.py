@@ -11,8 +11,10 @@
 # under the License.
 
 import mock
+import six
 
 from senlin.common import consts
+from senlin.common import exception as exc
 from senlin.common import scaleutils as su
 from senlin.drivers import base as driver_base
 from senlin.engine import cluster as cm
@@ -77,16 +79,56 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         driver = mock.Mock()
         driver.identity.return_value = kc
         mock_sd.return_value = driver
-        cluster = mock.Mock(user='user1', project='project1')
         policy = rp.RegionPlacementPolicy('p1', self.spec)
 
-        res = policy._keystone(cluster)
+        res = policy._keystone('user1', 'project1')
 
         self.assertEqual(kc, res)
         self.assertEqual(kc, policy._keystoneclient)
         mock_conn.assert_called_once_with('user1', 'project1')
         mock_sd.assert_called_once_with()
         driver.identity.assert_called_once_with(params)
+
+    @mock.patch.object(pb.Policy, 'validate')
+    def test_validate_okay(self, mock_base_validate):
+        policy = rp.RegionPlacementPolicy('test-policy', self.spec)
+        kc = mock.Mock()
+        kc.validate_regions.return_value = ['R1', 'R2', 'R3', 'R4']
+        policy._keystoneclient = kc
+        ctx = mock.Mock(user='U1', project='P1')
+
+        res = policy.validate(ctx, True)
+
+        self.assertTrue(res)
+        mock_base_validate.assert_called_once_with(ctx, True)
+        kc.validate_regions.assert_called_once_with(['R1', 'R2', 'R3', 'R4'])
+
+    @mock.patch.object(pb.Policy, 'validate')
+    def test_validate_no_validate_props(self, mock_base_validate):
+        policy = rp.RegionPlacementPolicy('test-policy', self.spec)
+        ctx = mock.Mock(user='U1', project='P1')
+
+        res = policy.validate(ctx, False)
+
+        self.assertTrue(res)
+        mock_base_validate.assert_called_once_with(ctx, False)
+
+    @mock.patch.object(pb.Policy, 'validate')
+    def test_validate_region_not_found(self, mock_base_validate):
+        policy = rp.RegionPlacementPolicy('test-policy', self.spec)
+        kc = mock.Mock()
+        kc.validate_regions.return_value = ['R2', 'R4']
+        policy._keystoneclient = kc
+        ctx = mock.Mock(user='U1', project='P1')
+
+        ex = self.assertRaises(exc.InvalidSpec,
+                               policy.validate,
+                               ctx, True)
+
+        mock_base_validate.assert_called_once_with(ctx, True)
+        kc.validate_regions.assert_called_once_with(['R1', 'R2', 'R3', 'R4'])
+        self.assertEqual("The specified regions '['R1', 'R3']' could not "
+                         "be found.", six.text_type(ex))
 
     def test__create_plan(self):
         policy = rp.RegionPlacementPolicy('p1', self.spec)
