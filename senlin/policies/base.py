@@ -112,6 +112,7 @@ class Policy(object):
 
         self.singleton = True
         self._novaclient = None
+        self._keystoneclient = None
 
     @classmethod
     def _from_object(cls, policy):
@@ -247,6 +248,19 @@ class Policy(object):
         params['trust_id'] = cred.cred['openstack']['trust']
 
         return params
+
+    def keystone(self, user, project):
+        """Construct keystone client based on object.
+
+        :param user: The ID of the requesting user.
+        :param project: The ID of the requesting project.
+        :returns: A reference to the keystone client.
+        """
+        if self._keystoneclient is not None:
+            return self._keystoneclient
+        params = self._build_conn_params(user, project)
+        self._keystoneclient = driver.SenlinDriver().identity(params)
+        return self._keystoneclient
 
     def nova(self, user, project):
         """Construct nova client based on user and project.

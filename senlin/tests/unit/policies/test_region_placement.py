@@ -16,7 +16,6 @@ import six
 from senlin.common import consts
 from senlin.common import exception as exc
 from senlin.common import scaleutils as su
-from senlin.drivers import base as driver_base
 from senlin.engine import cluster as cm
 from senlin.objects import cluster as co
 from senlin.policies import base as pb
@@ -69,25 +68,6 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
             }
         }
         self.assertEqual(expected, policy.regions)
-
-    @mock.patch.object(pb.Policy, '_build_conn_params')
-    @mock.patch.object(driver_base, 'SenlinDriver')
-    def test__keystone(self, mock_sd, mock_conn):
-        params = mock.Mock()
-        mock_conn.return_value = params
-        kc = mock.Mock()
-        driver = mock.Mock()
-        driver.identity.return_value = kc
-        mock_sd.return_value = driver
-        policy = rp.RegionPlacementPolicy('p1', self.spec)
-
-        res = policy._keystone('user1', 'project1')
-
-        self.assertEqual(kc, res)
-        self.assertEqual(kc, policy._keystoneclient)
-        mock_conn.assert_called_once_with('user1', 'project1')
-        mock_sd.assert_called_once_with()
-        driver.identity.assert_called_once_with(params)
 
     @mock.patch.object(pb.Policy, 'validate')
     def test_validate_okay(self, mock_base_validate):
@@ -305,16 +285,15 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(1, res)
 
-    @mock.patch.object(rp.RegionPlacementPolicy, '_keystone')
     @mock.patch.object(cm.Cluster, 'load')
-    def test_pre_op(self, mock_load, mock_keystone):
+    def test_pre_op(self, mock_load):
         # test pre_op method whether returns the correct action.data
         policy = rp.RegionPlacementPolicy('p1', self.spec)
         regions = policy.regions
 
         kc = mock.Mock()
         kc.validate_regions.return_value = regions.keys()
-        mock_keystone.return_value = kc
+        policy._keystoneclient = kc
 
         plan = {'R1': 1, 'R3': 2}
         self.patchobject(policy, '_create_plan', return_value=plan)
@@ -350,16 +329,15 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         policy._create_plan.assert_called_once_with(
             current_dist, regions, 3, True)
 
-    @mock.patch.object(rp.RegionPlacementPolicy, '_keystone')
     @mock.patch.object(cm.Cluster, 'load')
-    def test_pre_op_count_from_inputs(self, mock_load, mock_keystone):
+    def test_pre_op_count_from_inputs(self, mock_load):
         # test pre_op method whether returns the correct action.data
         policy = rp.RegionPlacementPolicy('p1', self.spec)
         regions = policy.regions
 
         kc = mock.Mock()
         kc.validate_regions.return_value = regions.keys()
-        mock_keystone.return_value = kc
+        policy._keystoneclient = kc
 
         cluster = mock.Mock()
         current_dist = {'R1': 0, 'R2': 0, 'R3': 0, 'R4': 0}
@@ -384,14 +362,13 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         self.assertEqual(1, dist['R1'])
         self.assertEqual(2, dist['R3'])
 
-    @mock.patch.object(rp.RegionPlacementPolicy, '_keystone')
     @mock.patch.object(cm.Cluster, 'load')
-    def test_pre_op_no_regions(self, mock_load, mock_keystone):
+    def test_pre_op_no_regions(self, mock_load):
         # test pre_op method whether returns the correct action.data
         policy = rp.RegionPlacementPolicy('p1', self.spec)
         kc = mock.Mock()
         kc.validate_regions.return_value = []
-        mock_keystone.return_value = kc
+        policy._keystoneclient = kc
 
         action = mock.Mock()
         action.action = 'CLUSTER_SCALE_OUT'
@@ -407,16 +384,15 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         self.assertEqual('ERROR', action.data['status'])
         self.assertEqual('No region is found usable.', action.data['reason'])
 
-    @mock.patch.object(rp.RegionPlacementPolicy, '_keystone')
     @mock.patch.object(cm.Cluster, 'load')
-    def test_pre_op_no_feasible_plan(self, mock_load, mock_keystone):
+    def test_pre_op_no_feasible_plan(self, mock_load):
         # test pre_op method whether returns the correct action.data
         policy = rp.RegionPlacementPolicy('p1', self.spec)
         regions = policy.regions
 
         kc = mock.Mock()
         kc.validate_regions.return_value = regions.keys()
-        mock_keystone.return_value = kc
+        policy._keystoneclient = kc
 
         self.patchobject(policy, '_create_plan', return_value=None)
 
