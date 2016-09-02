@@ -113,6 +113,8 @@ class Policy(object):
         self.singleton = True
         self._novaclient = None
         self._keystoneclient = None
+        self._networkclient = None
+        self._lbaasclient = None
 
     @classmethod
     def _from_object(cls, policy):
@@ -275,6 +277,35 @@ class Policy(object):
         params = self._build_conn_params(user, project)
         self._novaclient = driver.SenlinDriver().compute(params)
         return self._novaclient
+
+    def network(self, user, project):
+        """Construct network client based on user and project.
+
+        :param user: The ID of the requesting user.
+        :param project: The ID of the requesting project.
+        :returns: A reference to the network client.
+        """
+        if self._networkclient is not None:
+            return self._networkclient
+
+        params = self._build_conn_params(user, project)
+        self._networkclient = driver.SenlinDriver().network(params)
+        return self._networkclient
+
+    def lbaas(self, user, project):
+        """Construct LB service client based on user and project.
+
+        :param user: The ID of the requesting user.
+        :param project: The ID of the requesting project.
+        :returns: A reference to the LB service client.
+        """
+        if self._lbaasclient is not None:
+            return self._lbaasclient
+
+        params = self._build_conn_params(user, project)
+
+        self._lbaasclient = driver.SenlinDriver().loadbalancing(params)
+        return self._lbaasclient
 
     def attach(self, cluster):
         '''Method to be invoked before policy is attached to a cluster.

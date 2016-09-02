@@ -24,11 +24,9 @@ from oslo_log import log as logging
 from senlin.common import constraints
 from senlin.common import consts
 from senlin.common import exception as exc
-from senlin.common.i18n import _
-from senlin.common.i18n import _LW
+from senlin.common.i18n import _, _LW
 from senlin.common import scaleutils
 from senlin.common import schema
-from senlin.drivers import base as driver_base
 from senlin.engine import cluster_policy
 from senlin.engine import node as nm
 from senlin.objects import cluster as co
@@ -282,8 +280,7 @@ class LoadBalancingPolicy(base.Policy):
         if not validate_props:
             return True
 
-        params = self._build_conn_params(context.user, context.project)
-        nc = driver_base.SenlinDriver().network(params)
+        nc = self.network(context.user, context.project)
 
         # validate pool subnet
         name_or_id = self.pool_spec.get(self.POOL_SUBNET)
@@ -317,9 +314,8 @@ class LoadBalancingPolicy(base.Policy):
         nodes = nm.Node.load_all(oslo_context.get_current(),
                                  cluster_id=cluster.id)
 
-        params = self._build_conn_params(cluster.user, cluster.project)
-        params['lb_status_timeout'] = self.lb_status_timeout
-        lb_driver = driver_base.SenlinDriver().loadbalancing(params)
+        lb_driver = self.lbaas(cluster.user, cluster.project)
+        lb_driver.lb_status_timeout = self.lb_status_timeout
 
         res, data = lb_driver.lb_create(self.vip_spec, self.pool_spec,
                                         self.hm_spec)
@@ -361,9 +357,8 @@ class LoadBalancingPolicy(base.Policy):
             contains a error message.
         """
         reason = _('LB resources deletion succeeded.')
-        params = self._build_conn_params(cluster.user, cluster.project)
-        params['lb_status_timeout'] = self.lb_status_timeout
-        lb_driver = driver_base.SenlinDriver().loadbalancing(params)
+        lb_driver = self.lbaas(cluster.user, cluster.project)
+        lb_driver.lb_status_timeout = self.lb_status_timeout
 
         cp = cluster_policy.ClusterPolicy.load(oslo_context.get_current(),
                                                cluster.id, self.id)
@@ -454,9 +449,8 @@ class LoadBalancingPolicy(base.Policy):
             return
 
         db_cluster = co.Cluster.get(action.context, cluster_id)
-        params = self._build_conn_params(db_cluster.user, db_cluster.project)
-        params['lb_status_timeout'] = self.lb_status_timeout
-        lb_driver = driver_base.SenlinDriver().loadbalancing(params)
+        lb_driver = self.lbaas(db_cluster.user, db_cluster.project)
+        lb_driver.lb_status_timeout = self.lb_status_timeout
         cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
                                                self.id)
         policy_data = self._extract_policy_data(cp.data)
@@ -492,7 +486,6 @@ class LoadBalancingPolicy(base.Policy):
         :param action: The action object that triggered this operation.
         :returns: Nothing.
         """
-
         # TODO(Yanyanhu): Need special handling for cross-az scenario
         # which is supported by Neutron lbaas.
         if action.action == consts.NODE_CREATE:
@@ -504,9 +497,8 @@ class LoadBalancingPolicy(base.Policy):
                 return
 
         db_cluster = co.Cluster.get(action.context, cluster_id)
-        params = self._build_conn_params(db_cluster.user, db_cluster.project)
-        params['lb_status_timeout'] = self.lb_status_timeout
-        lb_driver = driver_base.SenlinDriver().loadbalancing(params)
+        lb_driver = self.lbaas(db_cluster.user, db_cluster.project)
+        lb_driver.lb_status_timeout = self.lb_status_timeout
         cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
                                                self.id)
         policy_data = self._extract_policy_data(cp.data)

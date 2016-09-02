@@ -352,32 +352,6 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertIsNone(res)
 
     @mock.patch.object(pb.Policy, '_build_conn_params')
-    @mock.patch("senlin.drivers.base.SenlinDriver")
-    def test_nova(self, mock_driver, mock_params):
-        policy = self._create_policy('test-policy')
-        fake_params = mock.Mock()
-        mock_params.return_value = fake_params
-        x_driver = mock.Mock()
-        mock_driver.return_value = x_driver
-
-        result = policy.nova('user1', 'project1')
-
-        x_nova = x_driver.compute.return_value
-        self.assertEqual(x_nova, result)
-        self.assertEqual(x_nova, policy._novaclient)
-        mock_params.assert_called_once_with('user1', 'project1')
-        x_driver.compute.assert_called_once_with(fake_params)
-
-    def test_nova_already_initialized(self):
-        policy = self._create_policy('test-policy')
-        x_nova = mock.Mock()
-        policy._novaclient = x_nova
-
-        result = policy.nova('foo', 'bar')
-
-        self.assertEqual(x_nova, result)
-
-    @mock.patch.object(pb.Policy, '_build_conn_params')
     @mock.patch('senlin.drivers.base.SenlinDriver')
     def test_keystone(self, mock_sd, mock_params):
         policy = self._create_policy('test-policy')
@@ -404,6 +378,84 @@ class TestPolicyBase(base.SenlinTestCase):
         result = policy.keystone('foo', 'bar')
 
         self.assertEqual(x_keystone, result)
+
+    @mock.patch.object(pb.Policy, '_build_conn_params')
+    @mock.patch("senlin.drivers.base.SenlinDriver")
+    def test_nova(self, mock_driver, mock_params):
+        policy = self._create_policy('test-policy')
+        fake_params = mock.Mock()
+        mock_params.return_value = fake_params
+        x_driver = mock.Mock()
+        mock_driver.return_value = x_driver
+
+        result = policy.nova('user1', 'project1')
+
+        x_nova = x_driver.compute.return_value
+        self.assertEqual(x_nova, result)
+        self.assertEqual(x_nova, policy._novaclient)
+        mock_params.assert_called_once_with('user1', 'project1')
+        x_driver.compute.assert_called_once_with(fake_params)
+
+    def test_nova_already_initialized(self):
+        policy = self._create_policy('test-policy')
+        x_nova = mock.Mock()
+        policy._novaclient = x_nova
+
+        result = policy.nova('foo', 'bar')
+
+        self.assertEqual(x_nova, result)
+
+    @mock.patch.object(pb.Policy, '_build_conn_params')
+    @mock.patch("senlin.drivers.base.SenlinDriver")
+    def test_network(self, mock_driver, mock_params):
+        policy = self._create_policy('test-policy')
+        fake_params = mock.Mock()
+        mock_params.return_value = fake_params
+        x_driver = mock.Mock()
+        mock_driver.return_value = x_driver
+
+        result = policy.network('user1', 'project1')
+
+        x_network = x_driver.network.return_value
+        self.assertEqual(x_network, result)
+        self.assertEqual(x_network, policy._networkclient)
+        mock_params.assert_called_once_with('user1', 'project1')
+        x_driver.network.assert_called_once_with(fake_params)
+
+    def test_network_already_initialized(self):
+        policy = self._create_policy('test-policy')
+        x_network = mock.Mock()
+        policy._networkclient = x_network
+
+        result = policy.network('foo', 'bar')
+
+        self.assertEqual(x_network, result)
+
+    @mock.patch.object(pb.Policy, '_build_conn_params')
+    @mock.patch("senlin.drivers.base.SenlinDriver")
+    def test_lbaas(self, mock_driver, mock_params):
+        policy = self._create_policy('test-policy')
+        fake_params = mock.Mock()
+        mock_params.return_value = fake_params
+        x_driver = mock.Mock()
+        mock_driver.return_value = x_driver
+
+        result = policy.lbaas('user1', 'project1')
+
+        x_lbaas = x_driver.loadbalancing.return_value
+        self.assertEqual(x_lbaas, result)
+        self.assertEqual(x_lbaas, policy._lbaasclient)
+        mock_params.assert_called_once_with('user1', 'project1')
+        x_driver.loadbalancing.assert_called_once_with(fake_params)
+
+    def test_lbaas_already_initialized(self):
+        policy = self._create_policy('test-policy')
+        x_lbaas = mock.Mock()
+        policy._lbaasclient = x_lbaas
+
+        result = policy.lbaas('foo', 'bar')
+
+        self.assertEqual(x_lbaas, result)
 
     def test_default_need_check(self):
         action = mock.Mock()
