@@ -17,7 +17,6 @@ from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.common import utils
-from senlin.drivers import base as driver_base
 from senlin.profiles import base
 
 LOG = logging.getLogger(__name__)
@@ -92,21 +91,7 @@ class StackProfile(base.Profile):
 
     def __init__(self, type_name, name, **kwargs):
         super(StackProfile, self).__init__(type_name, name, **kwargs)
-
-        self.hc = None
         self.stack_id = None
-
-    def heat(self, obj):
-        """Construct heat client using the combined context.
-
-        :param obj: Node object to operate on.
-        :returns: A reference to the orchestration driver.
-        """
-        if self.hc:
-            return self.hc
-        params = self._build_conn_params(obj.user, obj.project)
-        self.hc = driver_base.SenlinDriver().orchestration(params)
-        return self.hc
 
     def do_validate(self, obj):
         """Validate the stack template used by a node.
@@ -124,7 +109,7 @@ class StackProfile(base.Profile):
             'preview': True,
         }
         try:
-            self.heat(obj).stack_create(**kwargs)
+            self.orchestration(obj).stack_create(**kwargs)
         except exc.InternalError as ex:
             msg = _('Failed in validating template: %s') % six.text_type(ex)
             raise exc.InvalidSpec(message=msg)
@@ -148,7 +133,7 @@ class StackProfile(base.Profile):
         }
 
         try:
-            stack = self.heat(obj).stack_create(**kwargs)
+            stack = self.orchestration(obj).stack_create(**kwargs)
 
             # Timeout = None means we will use the 'default_action_timeout'
             # It can be overridden by the TIMEOUT profile propertie
@@ -156,8 +141,8 @@ class StackProfile(base.Profile):
             if self.properties[self.TIMEOUT]:
                 timeout = self.properties[self.TIMEOUT] * 60
 
-            self.heat(obj).wait_for_stack(stack.id, 'CREATE_COMPLETE',
-                                          timeout=timeout)
+            self.orchestration(obj).wait_for_stack(stack.id, 'CREATE_COMPLETE',
+                                                   timeout=timeout)
             return stack.id
         except exc.InternalError as ex:
             raise exc.EResourceCreation(type='stack', message=ex.message)
@@ -176,8 +161,8 @@ class StackProfile(base.Profile):
 
         ignore_missing = params.get('ignore_missing', True)
         try:
-            self.heat(obj).stack_delete(stack_id, ignore_missing)
-            self.heat(obj).wait_for_stack_delete(stack_id)
+            self.orchestration(obj).stack_delete(stack_id, ignore_missing)
+            self.orchestration(obj).wait_for_stack_delete(stack_id)
         except exc.InternalError as ex:
             raise exc.EResourceDeletion(type='stack', id=stack_id,
                                         message=six.text_type(ex))
@@ -227,14 +212,15 @@ class StackProfile(base.Profile):
             return True
 
         try:
+            hc = self.orchestration(obj)
             # Timeout = None means we will use the 'default_action_timeout'
             # It can be overridden by the TIMEOUT profile propertie
             timeout = None
             if self.properties[self.TIMEOUT]:
                 timeout = self.properties[self.TIMEOUT] * 60
-            self.heat(obj).stack_update(self.stack_id, **fields)
-            self.heat(obj).wait_for_stack(self.stack_id, 'UPDATE_COMPLETE',
-                                          timeout=timeout)
+            hc.stack_update(self.stack_id, **fields)
+            hc.wait_for_stack(self.stack_id, 'UPDATE_COMPLETE',
+                              timeout=timeout)
         except exc.InternalError as ex:
             raise exc.EResourceUpdate(type='stack', id=self.stack_id,
                                       message=ex.message)
@@ -251,7 +237,7 @@ class StackProfile(base.Profile):
         if stack_id is None:
             return False
 
-        hc = self.heat(obj)
+        hc = self.orchestration(obj)
         try:
             # Timeout = None means we will use the 'default_action_timeout'
             # It can be overridden by the TIMEOUT profile propertie
@@ -270,7 +256,7 @@ class StackProfile(base.Profile):
         if not obj.physical_id:
             return {}
 
-        return self.heat(obj).stack_get(obj.physical_id)
+        return self.orchestration(obj).stack_get(obj.physical_id)
 
     def handle_abandon(self, obj, **options):
         """Handler for abandoning a heat stack node."""

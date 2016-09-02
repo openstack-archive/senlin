@@ -302,18 +302,31 @@ class Profile(object):
         return self._computeclient
 
     def network(self, obj):
-        '''Construct network client based on object.
+        """Construct network client based on object.
 
         :param obj: Object for which the client is created. It is expected to
                     be None when retrieving an existing client. When creating
                     a client, it contains the user and project to be used.
-        '''
-
+        """
         if self._networkclient is not None:
             return self._networkclient
         params = self._build_conn_params(obj.user, obj.project)
         self._networkclient = driver_base.SenlinDriver().network(params)
         return self._networkclient
+
+    def orchestration(self, obj):
+        """Construct orchestration client based on object.
+
+        :param obj: Object for which the client is created. It is expected to
+                    be None when retrieving an existing client. When creating
+                    a client, it contains the user and project to be used.
+        """
+        if self._orchestrationclient is not None:
+            return self._orchestrationclient
+        params = self._build_conn_params(obj.user, obj.project)
+        oc = driver_base.SenlinDriver().orchestration(params)
+        self._orchestrationclient = oc
+        return oc
 
     def do_create(self, obj):
         """For subclass to override."""
