@@ -76,6 +76,7 @@ class DockerProfile(base.Profile):
 
         self._dockerclient = None
         self.container_id = None
+        self.host = None
 
     def docker(self, obj):
         """Construct docker client based on object.
@@ -90,15 +91,15 @@ class DockerProfile(base.Profile):
         host_node = self.properties.get(self.HOST_NODE, None)
         host_cluster = self.properties.get(self.HOST_CLUSTER, None)
         ctx = context.get_admin_context()
-        host = self._get_host(ctx, host_node, host_cluster)
+        self.host = self._get_host(ctx, host_node, host_cluster)
 
         # TODO(Anyone): Check node.data for per-node host selection
-        host_type = host.rt['profile'].type_name
+        host_type = self.host.rt['profile'].type_name
         if host_type not in self._VALID_HOST_TYPES:
             msg = _("Type of host node (%s) is not supported") % host_type
             raise exc.EResourceCreation(type='container', message=msg)
 
-        host_ip = self._get_host_ip(obj, host.physical_id, host_type)
+        host_ip = self._get_host_ip(obj, self.host.physical_id, host_type)
         if host_ip is None:
             msg = _("Unable to determine the IP address of host node")
             raise exc.EResourceCreation(type='container', message=msg)
@@ -239,13 +240,31 @@ class DockerProfile(base.Profile):
         # TODO(Anyone): Wrap docker exceptions at the driver layer so they
         # are converted to exc.InternalError
         try:
-            container = self.docker(obj).container_create(**params)
+            dockerclient = self.docker(obj)
+            self.add_dependents_to_vm(obj.id)
+            container = dockerclient.container_create(**params)
         except Exception as ex:
             raise exc.EResourceCreation(type='container',
                                         message=six.text_type(ex))
 
         self.container_id = container['Id'][:36]
         return self.container_id
+
+    def add_dependents_to_vm(self, node_id):
+        """Add container node id to host vm.
+
+        :param node_id: The id of the container node
+        """
+
+        ctx = context.get_admin_context()
+        containers = self.host.dependents.get('containers', None)
+        if not containers:
+            dependents = {'containers': [node_id]}
+        else:
+            containers.append(node_id)
+            dependents = {'containers': containers}
+
+        self.host.add_dependents(ctx, dependents)
 
     def do_delete(self, obj):
         """Delete a container node.

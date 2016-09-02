@@ -189,6 +189,7 @@ class TestNode(base.SenlinTestCase):
             'status_reason': node.status_reason,
             'data': node.data,
             'metadata': node.metadata,
+            'dependents': node.dependents,
             'profile_name': self.profile.name,
         }
         result = nodem.Node.load(self.context, x_node_id)
@@ -219,6 +220,7 @@ class TestNode(base.SenlinTestCase):
             'status_reason': node.status_reason,
             'data': node.data,
             'metadata': node.metadata,
+            'dependents': node.dependents,
             'profile_name': 'Unknown',
         }
         mock_profile_get.return_value = None
@@ -290,6 +292,15 @@ class TestNode(base.SenlinTestCase):
         res = node.get_details(self.context)
         mock_details.assert_called_once_with(self.context, node)
         self.assertEqual({'foo': 'bar'}, res)
+
+    @mock.patch.object(node_obj.Node, 'update')
+    def test_add_dependents(self, mock_update):
+        node = nodem.Node('node1', PROFILE_ID, CLUSTER_ID, self.context)
+        node.id = 'node_id'
+        dependents = {'containers': ['container1']}
+        node.add_dependents(self.context, dependents)
+        values = {'dependents': {'containers': ['container1']}}
+        mock_update.assert_called_once_with(self.context, 'node_id', values)
 
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(pb.Profile, 'create_object')
