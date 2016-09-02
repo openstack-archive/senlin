@@ -29,8 +29,8 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         super(TestNeutronLBaaSDriver, self).setUp()
         self.context = utils.dummy_context()
         self.conn_params = self.context.to_dict()
-        self.conn_params['lb_status_timeout'] = 10
         self.lb_driver = lbaas.LoadBalancerDriver(self.conn_params)
+        self.lb_driver.lb_status_timeout = 10
         self.patchobject(neutron_v2, 'NeutronClient')
         self.nc = self.lb_driver.nc()
 
@@ -105,20 +105,20 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         lb_id = 'LB_ID'
         self.nc.loadbalancer_get.return_value = None
 
-        res = self.lb_driver._wait_for_lb_ready(lb_id,
-                                                ignore_not_found=True)
+        res = self.lb_driver._wait_for_lb_ready(lb_id, ignore_not_found=True)
+
         self.assertTrue(res)
 
     @mock.patch.object(eventlet, 'sleep')
     def test_wait_for_lb_ready_timeout(self, mock_sleep):
         lb_id = 'LB_ID'
-        lb_obj = mock.Mock()
-        lb_obj.id = lb_id
+        lb_obj = mock.Mock(id=lb_id)
         self.nc.loadbalancer_get.return_value = lb_obj
-
         lb_obj.provisioning_status = 'PENDING_UPDATE'
         lb_obj.operating_status = 'OFFLINE'
+
         res = self.lb_driver._wait_for_lb_ready(lb_id)
+
         self.assertFalse(res)
         mock_sleep.assert_called_once_with(10)
 

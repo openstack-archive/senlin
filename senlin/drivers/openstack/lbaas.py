@@ -29,8 +29,8 @@ class LoadBalancerDriver(base.DriverBase):
     """Load-balancing driver based on Neutron LBaaS V2 service."""
 
     def __init__(self, params):
-        self.lb_status_timeout = params.pop('lb_status_timeout')
         super(LoadBalancerDriver, self).__init__(params)
+        self.lb_status_timeout = 600
         self._nc = None
 
     def nc(self):
