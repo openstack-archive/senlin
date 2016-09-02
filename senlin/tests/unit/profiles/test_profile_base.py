@@ -116,6 +116,10 @@ class TestProfileBase(base.SenlinTestCase):
         self.assertEqual(2, profile.properties['key2'])
         self.assertEqual({'foo': 'bar'}, profile.context)
 
+        self.assertIsNone(profile._computeclient)
+        self.assertIsNone(profile._networkclient)
+        self.assertIsNone(profile._orchestrationclient)
+
     @mock.patch.object(senlin_ctx, 'get_service_context')
     def test_init_with_context(self, mock_ctx):
         mock_ctx.return_value = {'foo': 'bar'}
@@ -614,6 +618,53 @@ class TestProfileBase(base.SenlinTestCase):
 
         mock_current.assert_called_once_with()
         mock_get.assert_called_once_with(fake_ctx, 'FAKE_USER', 'FAKE_PROJECT')
+
+    @mock.patch.object(pb.Profile, '_build_conn_params')
+    @mock.patch("senlin.drivers.base.SenlinDriver")
+    def test_compute(self, mock_senlindriver, mock_params):
+        obj = mock.Mock()
+        sd = mock.Mock()
+        cc = mock.Mock()
+        sd.compute.return_value = cc
+        mock_senlindriver.return_value = sd
+        fake_params = mock.Mock()
+        mock_params.return_value = fake_params
+        profile = self._create_profile('test-profile')
+
+        res = profile.compute(obj)
+
+        self.assertEqual(cc, res)
+        self.assertEqual(cc, profile._computeclient)
+        mock_params.assert_called_once_with(obj.user, obj.project)
+        sd.compute.assert_called_once_with(fake_params)
+
+    def test_compute_with_cache(self):
+        cc = mock.Mock()
+        profile = self._create_profile('test-profile')
+        profile._computeclient = cc
+
+        res = profile.compute(mock.Mock())
+
+        self.assertEqual(cc, res)
+
+    @mock.patch.object(pb.Profile, '_build_conn_params')
+    @mock.patch("senlin.drivers.base.SenlinDriver")
+    def test_neutron_client(self, mock_senlindriver, mock_params):
+        obj = mock.Mock()
+        sd = mock.Mock()
+        nc = mock.Mock()
+        sd.network.return_value = nc
+        mock_senlindriver.return_value = sd
+        fake_params = mock.Mock()
+        mock_params.return_value = fake_params
+        profile = self._create_profile('test-profile')
+
+        res = profile.network(obj)
+
+        self.assertEqual(nc, res)
+        self.assertEqual(nc, profile._networkclient)
+        mock_params.assert_called_once_with(obj.user, obj.project)
+        sd.network.assert_called_once_with(fake_params)
 
     def test_interface_methods(self):
         profile = self._create_profile('test-profile')
