@@ -19,7 +19,6 @@ from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.common import utils
-from senlin.drivers import base as driver_base
 from senlin.drivers.container import docker_v1 as docker_driver
 from senlin.engine import cluster
 from senlin.engine import node
@@ -76,8 +75,6 @@ class DockerProfile(base.Profile):
         super(DockerProfile, self).__init__(type_name, name, **kwargs)
 
         self._dockerclient = None
-        self._novaclient = None
-        self._heatclient = None
         self.container_id = None
 
     def docker(self, obj):
@@ -201,13 +198,13 @@ class DockerProfile(base.Profile):
         """
         host_ip = None
         if host_type == self.HOST_NOVA_SERVER:
-            server = self.nova(obj).server_get(host_node)
+            server = self.compute(obj).server_get(host_node)
             private_addrs = server.addresses['private']
             for addr in private_addrs:
                 if addr['version'] == 4 and addr['OS-EXT-IPS:type'] == 'fixed':
                     host_ip = addr['addr']
         elif host_type == self.HOST_HEAT_STACK:
-            stack = self.heat(obj).stack_get(host_node)
+            stack = self.orchestration(obj).stack_get(host_node)
             outputs = stack.outputs or {}
             if outputs:
                 for output in outputs:
@@ -221,34 +218,6 @@ class DockerProfile(base.Profile):
                 raise exc.EResourceCreation(type='container', message=msg)
 
         return host_ip
-
-    def nova(self, obj):
-        """Construct nova client based on object.
-
-        :param obj: Object for which the client is created. It is expected to
-                    be None when retrieving an existing client. When creating
-                    a client, it contains the user and project to be used.
-        """
-
-        if self._novaclient is not None:
-            return self._novaclient
-        params = self._build_conn_params(obj.user, obj.project)
-        self._novaclient = driver_base.SenlinDriver().compute(params)
-        return self._novaclient
-
-    def heat(self, obj):
-        """Construct heat client based on object.
-
-        :param obj: Object for which the client is created. It is expected to
-                    be None when retrieving an existing client. When creating
-                    a client, it contains the user and project to be used.
-        """
-        if self._heatclient is not None:
-            return self._heatclient
-
-        params = self._build_conn_params(obj.user, obj.project)
-        self._heatclient = driver_base.SenlinDriver().orchestration(params)
-        return self._heatclient
 
     def do_create(self, obj):
         """Create a container instance using the given profile.

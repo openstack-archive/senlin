@@ -47,8 +47,6 @@ class TestContainerDockerProfile(base.SenlinTestCase):
     def test_init(self):
         profile = docker_profile.DockerProfile('t', self.spec)
         self.assertIsNone(profile._dockerclient)
-        self.assertIsNone(profile._novaclient)
-        self.assertIsNone(profile._heatclient)
         self.assertIsNone(profile.container_id)
 
     @mock.patch('senlin.drivers.container.docker_v1.DockerClient')
@@ -230,40 +228,48 @@ class TestContainerDockerProfile(base.SenlinTestCase):
                 'running in the cluster (host_cluster).')
         self.assertEqual(msg, ex.message)
 
-    @mock.patch.object(docker_profile.DockerProfile, 'nova')
-    def test_get_host_ip_nova_server(self, mock_nova):
+    def test_get_host_ip_nova_server(self):
         addresses = {
             'private': [{'version': 4, 'OS-EXT-IPS:type': 'fixed',
                          'addr': '1.2.3.4'}]
         }
         server = mock.Mock(addresses=addresses)
-        novaclient = mock.Mock()
-        mock_nova.return_value = novaclient
-        novaclient.server_get.return_value = server
+        cc = mock.Mock()
+        cc.server_get.return_value = server
         profile = docker_profile.DockerProfile('container', self.spec)
+        profile._computeclient = cc
         obj = mock.Mock()
         host_ip = profile._get_host_ip(obj, 'fake_node', 'os.nova.server')
         self.assertEqual('1.2.3.4', host_ip)
-        novaclient.server_get.assert_called_once_with('fake_node')
+        cc.server_get.assert_called_once_with('fake_node')
 
-    @mock.patch.object(docker_profile.DockerProfile, 'heat')
-    def test_get_host_ip_heat_stack(self, mock_heat):
-        heatclient = mock.Mock()
-        mock_heat.return_value = heatclient
-        stack = mock.Mock()
-        heatclient.stack_get.return_value = stack
-        outputs = [{'output_key': 'fixed_ip', 'output_value': '1.2.3.4'}]
-        stack.outputs = outputs
+    def test_get_host_ip_heat_stack(self):
+        oc = mock.Mock()
+        stack = mock.Mock(
+            outputs=[{'output_key': 'fixed_ip', 'output_value': '1.2.3.4'}]
+        )
+        oc.stack_get.return_value = stack
         profile = docker_profile.DockerProfile('container', self.spec)
+        profile._orchestrationclient = oc
         obj = mock.Mock()
+
         host_ip = profile._get_host_ip(obj, 'fake_node', 'os.heat.stack')
+
         self.assertEqual('1.2.3.4', host_ip)
-        heatclient.stack_get.assert_called_once_with('fake_node')
-        # No outputs in stack
-        stack.outputs = None
+        oc.stack_get.assert_called_once_with('fake_node')
+
+    def test_get_host_ip_heat_stack_no_outputs(self):
+        oc = mock.Mock()
+        stack = mock.Mock(outputs=None)
+        oc.stack_get.return_value = stack
+        profile = docker_profile.DockerProfile('container', self.spec)
+        profile._orchestrationclient = oc
+        obj = mock.Mock()
+
         ex = self.assertRaises(exc.EResourceCreation,
                                profile._get_host_ip,
                                obj, 'fake_node', 'os.heat.stack')
+
         msg = _("Failed in creating container: Output 'fixed_ip' is "
                 "missing from the provided stack node.")
         self.assertEqual(msg, ex.message)
