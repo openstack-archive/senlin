@@ -23,6 +23,7 @@ from senlin.common import exception as exc
 from senlin.common.i18n import _, _LE, _LW
 from senlin.common import schema
 from senlin.common import utils
+from senlin.drivers import base as driver_base
 from senlin.engine import environment
 from senlin.objects import credential as co
 from senlin.objects import profile as po
@@ -115,6 +116,11 @@ class Profile(object):
             self.context = self._init_context()
         else:
             self.context = kwargs.get('context')
+
+        # initialize clients
+        self._computeclient = None
+        self._networkclient = None
+        self._orchestrationclient = None
 
     @classmethod
     def from_object(cls, profile):
@@ -280,6 +286,34 @@ class Profile(object):
         params['trust_id'] = trust_id
 
         return params
+
+    def compute(self, obj):
+        '''Construct compute client based on object.
+
+        :param obj: Object for which the client is created. It is expected to
+                    be None when retrieving an existing client. When creating
+                    a client, it contains the user and project to be used.
+        '''
+
+        if self._computeclient is not None:
+            return self._computeclient
+        params = self._build_conn_params(obj.user, obj.project)
+        self._computeclient = driver_base.SenlinDriver().compute(params)
+        return self._computeclient
+
+    def network(self, obj):
+        '''Construct network client based on object.
+
+        :param obj: Object for which the client is created. It is expected to
+                    be None when retrieving an existing client. When creating
+                    a client, it contains the user and project to be used.
+        '''
+
+        if self._networkclient is not None:
+            return self._networkclient
+        params = self._build_conn_params(obj.user, obj.project)
+        self._networkclient = driver_base.SenlinDriver().network(params)
+        return self._networkclient
 
     def do_create(self, obj):
         """For subclass to override."""

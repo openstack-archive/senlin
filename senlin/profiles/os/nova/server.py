@@ -21,7 +21,6 @@ from senlin.common import constraints
 from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.common import schema
-from senlin.drivers import base as driver_base
 from senlin.profiles import base
 
 LOG = logging.getLogger(__name__)
@@ -271,38 +270,7 @@ class ServerProfile(base.Profile):
 
     def __init__(self, type_name, name, **kwargs):
         super(ServerProfile, self).__init__(type_name, name, **kwargs)
-
-        self._novaclient = None
-        self._neutronclient = None
         self.server_id = None
-
-    def nova(self, obj):
-        '''Construct nova client based on object.
-
-        :param obj: Object for which the client is created. It is expected to
-                    be None when retrieving an existing client. When creating
-                    a client, it contains the user and project to be used.
-        '''
-
-        if self._novaclient is not None:
-            return self._novaclient
-        params = self._build_conn_params(obj.user, obj.project)
-        self._novaclient = driver_base.SenlinDriver().compute(params)
-        return self._novaclient
-
-    def neutron(self, obj):
-        '''Construct neutron client based on object.
-
-        :param obj: Object for which the client is created. It is expected to
-                    be None when retrieving an existing client. When creating
-                    a client, it contains the user and project to be used.
-        '''
-
-        if self._neutronclient is not None:
-            return self._neutronclient
-        params = self._build_conn_params(obj.user, obj.project)
-        self._neutronclient = driver_base.SenlinDriver().network(params)
-        return self._neutronclient
 
     def do_validate(self, obj):
         """Validate if the spec has provided valid info for server creation.
@@ -312,7 +280,7 @@ class ServerProfile(base.Profile):
         # validate availability_zone
         az_name = self.properties[self.AVAILABILITY_ZONE]
         if az_name is not None:
-            res = self.nova(obj).validate_azs([az_name])
+            res = self.compute(obj).validate_azs([az_name])
             if not res:
                 msg = _("The specified %(key)s '%(value)s' could not be "
                         "found.") % {'key': self.AVAILABILITY_ZONE,
@@ -321,7 +289,7 @@ class ServerProfile(base.Profile):
 
         # validate flavor
         flavor = self.properties[self.FLAVOR]
-        valid_flavors = self.nova(obj).flavor_list()
+        valid_flavors = self.compute(obj).flavor_list()
         found = False
         for f in valid_flavors:
             if not f.is_disabled and (flavor == f.id or flavor == f.name):
@@ -334,7 +302,7 @@ class ServerProfile(base.Profile):
         # validate image
         image = self.properties[self.IMAGE]
         if image is not None:
-            valid_images = self.nova(obj).image_list()
+            valid_images = self.compute(obj).image_list()
             found = False
             for img in valid_images:
                 if image == img.id or image == img.name:
@@ -347,7 +315,7 @@ class ServerProfile(base.Profile):
         # validate key_name
         keypair = self.properties[self.KEY_NAME]
         if keypair is not None:
-            valid_keys = self.nova(obj).keypair_list()
+            valid_keys = self.compute(obj).keypair_list()
             found = False
             for key in valid_keys:
                 if keypair == key.name:
@@ -401,13 +369,13 @@ class ServerProfile(base.Profile):
 
         name_or_id = self.properties[self.IMAGE]
         if name_or_id is not None:
-            image = self.nova(obj).image_find(name_or_id)
+            image = self.compute(obj).image_find(name_or_id)
             # wait for new version of openstacksdk to fix this
             kwargs.pop(self.IMAGE)
             kwargs['imageRef'] = image.id
 
         flavor_id = self.properties[self.FLAVOR]
-        flavor = self.nova(obj).flavor_find(flavor_id, False)
+        flavor = self.compute(obj).flavor_find(flavor_id, False)
 
         # wait for new verson of openstacksdk to fix this
         kwargs.pop(self.FLAVOR)
@@ -439,8 +407,8 @@ class ServerProfile(base.Profile):
 
         networks = self.properties[self.NETWORKS]
         if networks is not None:
-            kwargs['networks'] = self._resolve_network(networks,
-                                                       self.neutron(obj))
+            nc = self.network(obj)
+            kwargs['networks'] = self._resolve_network(networks, nc)
 
         secgroups = self.properties[self.SECURITY_GROUPS]
         if secgroups:
@@ -456,8 +424,8 @@ class ServerProfile(base.Profile):
                 kwargs['scheduler_hints'] = hints
 
         try:
-            server = self.nova(obj).server_create(**kwargs)
-            self.nova(obj).wait_for_server(server.id)
+            server = self.compute(obj).server_create(**kwargs)
+            self.compute(obj).wait_for_server(server.id)
             return server.id
         except exc.InternalError as ex:
             raise exc.EResourceCreation(type='server', message=ex.message)
@@ -470,7 +438,7 @@ class ServerProfile(base.Profile):
                               operation.
         :returns: This operation always return True unless exception is
                   caught.
-        :raises: `EResourceDeletion` if interaction with nova fails.
+        :raises: `EResourceDeletion` if interaction with compute service fails.
         """
         if not obj.physical_id:
             return True
@@ -480,11 +448,12 @@ class ServerProfile(base.Profile):
         force = params.get('force', False)
 
         try:
+            driver = self.compute(obj)
             if force:
-                self.nova(obj).server_force_delete(server_id, ignore_missing)
+                driver.server_force_delete(server_id, ignore_missing)
             else:
-                self.nova(obj).server_delete(server_id, ignore_missing)
-            self.nova(obj).wait_for_server_delete(server_id)
+                driver.server_delete(server_id, ignore_missing)
+            driver.wait_for_server_delete(server_id)
             return True
         except exc.InternalError as ex:
             raise exc.EResourceDeletion(type='server', id=server_id,
@@ -570,7 +539,7 @@ class ServerProfile(base.Profile):
         :param new_profile: The new profile that may contain some changes of
                             basic properties for update.
         :returns: None
-        :raises: `InternalError` if the nova call fails.
+        :raises: `InternalError` if the compute call fails.
         """
         # Update server metadata
         metadata = self.properties[self.METADATA]
@@ -578,14 +547,15 @@ class ServerProfile(base.Profile):
         if new_metadata != metadata:
             if new_metadata is None:
                 new_metadata = {}
-            self.nova(obj).server_metadata_update(self.server_id, new_metadata)
+            self.compute(obj).server_metadata_update(
+                self.server_id, new_metadata)
 
         # Update server name
         name = self.properties[self.NAME]
         new_name = new_profile.properties[self.NAME]
         if new_name != name:
             attrs = {'name': new_name if new_name else obj.name}
-            self.nova(obj).server_update(self.server_id, **attrs)
+            self.compute(obj).server_update(self.server_id, **attrs)
 
         return
 
@@ -598,28 +568,29 @@ class ServerProfile(base.Profile):
         :returns: ``None``.
         :raises: `InternalError` when operation was a failure.
         """
-        res = self.nova(obj).flavor_find(old_flavor)
+        driver = self.compute(obj)
+        res = driver.flavor_find(old_flavor)
         old_flavor_id = res.id
-        res = self.nova(obj).flavor_find(new_flavor)
+        res = driver.flavor_find(new_flavor)
         new_flavor_id = res.id
         if new_flavor_id == old_flavor_id:
             return
 
         try:
-            self.nova(obj).server_resize(obj.physical_id, new_flavor_id)
-            self.nova(obj).wait_for_server(obj.physical_id, 'VERIFY_RESIZE')
+            driver.server_resize(obj.physical_id, new_flavor_id)
+            driver.wait_for_server(obj.physical_id, 'VERIFY_RESIZE')
         except exc.InternalError:
             try:
-                self.nova(obj).server_resize_revert(obj.physical_id)
-                self.nova(obj).wait_for_server(obj.physical_id, 'ACTIVE')
+                driver.server_resize_revert(obj.physical_id)
+                driver.wait_for_server(obj.physical_id, 'ACTIVE')
             except exc.InternalError:
                 raise
             else:
                 raise
 
         try:
-            self.nova(obj).server_resize_confirm(obj.physical_id)
-            self.nova(obj).wait_for_server(obj.physical_id, 'ACTIVE')
+            driver.server_resize_confirm(obj.physical_id)
+            driver.wait_for_server(obj.physical_id, 'ACTIVE')
         except exc.InternalError:
             raise
 
@@ -634,11 +605,13 @@ class ServerProfile(base.Profile):
         :returns: ``None``.
         :raises: ``InternalError`` if operation was a failure.
         """
+        driver = self.compute(obj)
+
         if old_image:
-            res = self.nova(obj).image_find(old_image)
+            res = driver.image_find(old_image)
             image_id = res.id
         else:
-            server = self.nova(obj).server_get(obj.physical_id)
+            server = driver.server_get(obj.physical_id)
             image_id = server.image['id']
 
         if not new_image:
@@ -648,23 +621,24 @@ class ServerProfile(base.Profile):
                         "not supported by Nova.")
             raise exc.InternalError(code=500, message=message)
 
-        res = self.nova(obj).image_find(new_image)
+        res = driver.image_find(new_image)
         new_image_id = res.id
         if new_image_id != image_id:
             # (Jun Xu): Not update name here if name changed,
             # it should be updated in do_update
-            self.nova(obj).server_rebuild(obj.physical_id, new_image_id,
-                                          self.properties.get(self.NAME),
-                                          admin_password)
-            self.nova(obj).wait_for_server(obj.physical_id, 'ACTIVE')
+            driver.server_rebuild(obj.physical_id, new_image_id,
+                                  self.properties.get(self.NAME),
+                                  admin_password)
+            driver.wait_for_server(obj.physical_id, 'ACTIVE')
 
         return
 
     def _update_network(self, obj, networks_create, networks_delete):
         '''Updating server network interfaces'''
-
-        server = self.nova(obj).server_get(self.server_id)
-        ports_existing = list(self.nova(obj).server_interface_list(server))
+        cc = self.compute(obj)
+        nc = self.network(obj)
+        server = cc.server_get(self.server_id)
+        ports_existing = list(cc.server_interface_list(server))
         ports = []
         for p in ports_existing:
             fixed_ips = []
@@ -681,28 +655,25 @@ class ServerProfile(base.Profile):
                     if p['port_id'] == n['port']:
                         ports.remove(p)
                         break
-                res = self.nova(obj).server_interface_delete(n['port'],
-                                                             server)
+                res = cc.server_interface_delete(n['port'], server)
             elif n['fixed-ip'] is not None:
-                res = self.neutron(obj).network_get(n['network'])
+                res = nc.network_get(n['network'])
                 net_id = res.id
                 for p in ports:
                     if (n['fixed-ip'] in p['fixed_ips']) and (
                             p['net_id'] == net_id):
-                        res = self.nova(obj).server_interface_delete(
-                            p['port_id'], server)
+                        res = cc.server_interface_delete(p['port_id'], server)
                         ports.remove(p)
                         break
 
         # Step2. Fuzzy search port with net_id
         for n in networks_delete:
             if n['port'] is None and n['fixed-ip'] is None:
-                res = self.neutron(obj).network_get(n['network'])
+                res = nc.network_get(n['network'])
                 net_id = res.id
                 for p in ports:
                     if p['net_id'] == net_id:
-                        res = self.nova(obj).server_interface_delete(
-                            p['port_id'], server)
+                        res = cc.server_interface_delete(p['port_id'], server)
                         ports.remove(p)
                         break
 
@@ -710,7 +681,7 @@ class ServerProfile(base.Profile):
         for n in networks_create:
             net_name_id = n.get(self.NETWORK, None)
             if net_name_id:
-                res = self.neutron(obj).network_get(net_name_id)
+                res = nc.network_get(net_name_id)
                 n['net_id'] = res.id
                 if n['fixed-ip'] is not None:
                     n['fixed_ips'] = [
@@ -720,7 +691,7 @@ class ServerProfile(base.Profile):
             del n['network']
             del n['port']
             del n['fixed-ip']
-            self.nova(obj).server_interface_create(server, **n)
+            cc.server_interface_create(server, **n)
 
         return
 
@@ -748,8 +719,9 @@ class ServerProfile(base.Profile):
         if obj.physical_id is None or obj.physical_id == '':
             return {}
 
+        driver = self.compute(obj)
         try:
-            server = self.nova(obj).server_get(obj.physical_id)
+            server = driver.server_get(obj.physical_id)
         except exc.InternalError as ex:
             return {
                 'Error': {
@@ -802,10 +774,11 @@ class ServerProfile(base.Profile):
         if not obj.physical_id:
             return False
 
-        metadata = self.nova(obj).server_metadata_get(obj.physical_id) or {}
+        driver = self.compute(obj)
+        metadata = driver.server_metadata_get(obj.physical_id) or {}
         metadata['cluster_id'] = cluster_id
         metadata['cluster_node_index'] = six.text_type(obj.index)
-        self.nova(obj).server_metadata_update(obj.physical_id, metadata)
+        driver.server_metadata_update(obj.physical_id, metadata)
         return super(ServerProfile, self).do_join(obj, cluster_id)
 
     def do_leave(self, obj):
@@ -813,7 +786,7 @@ class ServerProfile(base.Profile):
             return False
 
         keys = ['cluster_id', 'cluster_node_index']
-        self.nova(obj).server_metadata_delete(obj.physical_id, keys)
+        self.compute(obj).server_metadata_delete(obj.physical_id, keys)
         return super(ServerProfile, self).do_leave(obj)
 
     def do_rebuild(self, obj):
@@ -821,9 +794,9 @@ class ServerProfile(base.Profile):
             return False
 
         self.server_id = obj.physical_id
-
+        driver = self.compute(obj)
         try:
-            server = self.nova(obj).server_get(self.server_id)
+            server = driver.server_get(self.server_id)
         except exc.InternalError as ex:
             raise exc.EResourceOperation(op='rebuilding', type='server',
                                          id=self.server_id,
@@ -835,10 +808,10 @@ class ServerProfile(base.Profile):
         image_id = server.image['id']
         admin_pass = self.properties.get(self.ADMIN_PASS)
         try:
-            self.nova(obj).server_rebuild(self.server_id, image_id,
-                                          self.properties.get(self.NAME),
-                                          admin_pass)
-            self.nova(obj).wait_for_server(self.server_id, 'ACTIVE')
+            driver.server_rebuild(self.server_id, image_id,
+                                  self.properties.get(self.NAME),
+                                  admin_pass)
+            driver.wait_for_server(self.server_id, 'ACTIVE')
         except exc.InternalError as ex:
             raise exc.EResourceOperation(op='rebuilding', type='server',
                                          id=self.server_id,
@@ -850,7 +823,7 @@ class ServerProfile(base.Profile):
             return False
 
         try:
-            server = self.nova(obj).server_get(obj.physical_id)
+            server = self.compute(obj).server_get(obj.physical_id)
         except exc.InternalError as ex:
             raise exc.EResourceOperation(op='checking', type='server',
                                          id=obj.physical_id,
@@ -886,8 +859,8 @@ class ServerProfile(base.Profile):
                 reboot_type not in self.REBOOT_TYPES):
             return False
 
-        self.nova(obj).server_reboot(obj.physical_id, reboot_type)
-        self.nova(obj).wait_for_server(obj.physical_id, 'ACTIVE')
+        self.compute(obj).server_reboot(obj.physical_id, reboot_type)
+        self.compute(obj).wait_for_server(obj.physical_id, 'ACTIVE')
         return True
 
     def handle_change_password(self, obj, **options):
@@ -899,5 +872,5 @@ class ServerProfile(base.Profile):
         if (password is None or not isinstance(password, six.string_types)):
             return False
 
-        self.nova(obj).server_change_password(obj.physical_id, password)
+        self.compute(obj).server_change_password(obj.physical_id, password)
         return True
