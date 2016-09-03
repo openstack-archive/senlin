@@ -555,7 +555,7 @@ class TestNode(base.SenlinTestCase):
 
         self.assertTrue(res)
         mock_check.assert_called_once_with(self.context, node)
-        mock_status.assert_called_once_with(node.ACTIVE,
+        mock_status.assert_called_once_with(self.context, node.ACTIVE,
                                             'Check: Node is ACTIVE.')
 
     @mock.patch.object(nodem.Node, 'set_status')
@@ -568,7 +568,7 @@ class TestNode(base.SenlinTestCase):
         res = node.do_check(self.context)
 
         self.assertFalse(res)
-        mock_status.assert_called_once_with(node.ERROR,
+        mock_status.assert_called_once_with(self.context, node.ERROR,
                                             'Check: Node is not ACTIVE.')
 
     @mock.patch.object(nodem.Node, 'set_status')

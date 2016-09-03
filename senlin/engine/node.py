@@ -9,7 +9,6 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
 from oslo_log import log as logging
 from oslo_utils import timeutils
 import six
@@ -357,9 +356,11 @@ class Node(object):
             return False
 
         if res:
-            self.set_status(self.ACTIVE, _("Check: Node is ACTIVE."))
+            self.set_status(context, self.ACTIVE,
+                            _("Check: Node is ACTIVE."))
         else:
-            self.set_status(self.ERROR, _("Check: Node is not ACTIVE."))
+            self.set_status(context, self.ERROR,
+                            _("Check: Node is not ACTIVE."))
 
         return res
 
