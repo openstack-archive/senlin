@@ -29,7 +29,7 @@ class Node(object):
 
     All operations are performed without further checking because the
     checkings are supposed to be done before/after/during an action is
-    excuted.
+    executed.
     """
 
     statuses = (
