@@ -457,19 +457,6 @@ class ClusterAction(base.Action):
 
         return result, reason
 
-    def _get_action_data(self, current_size):
-        if 'deletion' in self.data:
-            count = self.data['deletion']['count']
-            desired = current_size - count
-            candidates = self.data['deletion'].get('candidates', [])
-        elif 'creation' in self.data:
-            count = self.data['creation']['count']
-            desired = current_size + count
-            candidates = None
-        else:
-            return 0, 0, None
-        return count, desired, candidates
-
     def do_check(self):
         """Handler for CLUSTER_CHECK action.
 
@@ -551,29 +538,8 @@ class ClusterAction(base.Action):
         self.cluster.eval_status(self.context, 'recover')
         return res, reason
 
-    def do_resize(self):
-        """Handler for the CLUSTER_RESIZE action.
-
-        :returns: A tuple containing the result and the corresponding reason.
-        """
-        node_list = self.cluster.nodes
-        current_size = len(node_list)
-        count, desired, candidates = self._get_action_data(current_size)
-        grace_period = 0
-        # if policy is attached to the cluster, use policy data directly,
-        # or parse resize params to get action data.
-        if count == 0:
-            result, reason = scaleutils.parse_resize_params(self, self.cluster)
-            if result != self.RES_OK:
-                return result, reason
-            count, desired, candidates = self._get_action_data(current_size)
-        elif 'deletion' in self.data:
-            grace_period = self.data['deletion'].get('grace_period', 0)
-
-        if candidates is not None and len(candidates) == 0:
-            # Choose victims randomly
-            candidates = scaleutils.nodes_by_random(self.cluster.nodes, count)
-
+    def _update_cluster_size(self, desired):
+        """Private function for updating cluster properties."""
         kwargs = {'desired_capacity': desired}
         min_size = self.inputs.get(consts.ADJUSTMENT_MIN_SIZE, None)
         max_size = self.inputs.get(consts.ADJUSTMENT_MAX_SIZE, None)
@@ -584,13 +550,40 @@ class ClusterAction(base.Action):
         self.cluster.set_status(self.context, self.cluster.RESIZING,
                                 _('Cluster resize started.'), **kwargs)
 
+    def do_resize(self):
+        """Handler for the CLUSTER_RESIZE action.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
+        # if no policy decision(s) found, use policy inputs directly,
+        # Note the 'parse_resize_params' function is capable of calculating
+        # desired capacity and handling best effort scaling. It also verifies
+        # that the inputs are valid
+        if 'creation' not in self.data and 'deletion' not in self.data:
+            result, reason = scaleutils.parse_resize_params(self, self.cluster)
+            if result != self.RES_OK:
+                return result, reason
+
+        # action input consolidated to action data now
         reason = _('Cluster resize succeeded.')
-        # delete nodes if necessary
-        if desired < current_size:
+        if 'deletion' in self.data:
+            count = self.data['deletion']['count']
+            candidates = self.data['deletion'].get('candidates', [])
+
+            # Choose victims randomly if not already picked
+            if not candidates:
+                node_list = self.cluster.nodes
+                candidates = scaleutils.nodes_by_random(node_list, count)
+
+            self._update_cluster_size(self.cluster.desired_capacity - count)
+
+            grace_period = self.data['deletion'].get('grace_period', 0)
             self._sleep(grace_period)
             result, new_reason = self._delete_nodes(candidates)
-        # Create new nodes if desired_capacity increased
         else:
+            # 'creation' in self.data:
+            count = self.data['creation']['count']
+            self._update_cluster_size(self.cluster.desired_capacity + count)
             result, new_reason = self._create_nodes(count)
 
         if result != self.RES_OK:
