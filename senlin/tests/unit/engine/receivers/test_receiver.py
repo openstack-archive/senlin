@@ -185,7 +185,7 @@ class TestReceiver(base.SenlinTestCase):
         self._verify_receiver(receiver, result)
 
     def test_receiver_load_not_found(self):
-        ex = self.assertRaises(exception.ReceiverNotFound,
+        ex = self.assertRaises(exception.ResourceNotFound,
                                rb.Receiver.load,
                                self.context, 'fake-receiver', None)
         self.assertEqual('The receiver (fake-receiver) could not be found.',
@@ -195,7 +195,7 @@ class TestReceiver(base.SenlinTestCase):
         receiver = self._create_receiver('receiver-1', UUID1)
 
         new_context = utils.dummy_context(project='a-different-project')
-        ex = self.assertRaises(exception.ReceiverNotFound,
+        ex = self.assertRaises(exception.ResourceNotFound,
                                rb.Receiver.load,
                                new_context, UUID1, None)
         self.assertEqual('The receiver (%s) could not be found.' % UUID1,

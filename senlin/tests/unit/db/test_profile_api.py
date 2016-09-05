@@ -314,7 +314,7 @@ class DBAPIProfileTest(base.SenlinTestCase):
         self.assertEqual('test_profile_name_2', new_profile.name)
 
     def test_profile_update_not_found(self):
-        self.assertRaises(exception.ProfileNotFound,
+        self.assertRaises(exception.ResourceNotFound,
                           db_api.profile_update,
                           self.ctx, 'BogusID', {})
 

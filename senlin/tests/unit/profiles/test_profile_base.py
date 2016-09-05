@@ -134,7 +134,7 @@ class TestProfileBase(base.SenlinTestCase):
             'properties': '',
         }
 
-        self.assertRaises(exception.ProfileTypeNotFound,
+        self.assertRaises(exception.ResourceNotFound,
                           pb.Profile,
                           'test-profile', bad_spec)
 
@@ -199,7 +199,7 @@ class TestProfileBase(base.SenlinTestCase):
     @mock.patch.object(po.Profile, 'get')
     def test_load_not_found(self, mock_get):
         mock_get.return_value = None
-        self.assertRaises(exception.ProfileNotFound,
+        self.assertRaises(exception.ResourceNotFound,
                           pb.Profile.load,
                           self.ctx, profile_id='FAKE_ID')
         mock_get.assert_called_once_with(self.ctx, 'FAKE_ID',

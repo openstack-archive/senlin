@@ -227,7 +227,7 @@ class Action(object):
         if db_action is None:
             db_action = ao.Action.get(context, action_id)
             if db_action is None:
-                raise exception.ActionNotFound(action=action_id)
+                raise exception.ResourceNotFound(type='action', id=action_id)
 
         return cls._from_object(db_action)
 

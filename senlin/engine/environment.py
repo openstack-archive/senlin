@@ -116,7 +116,7 @@ class Environment(object):
         self._check_plugin_name('Profile', name)
         plugin = self.profile_registry.get_plugin(name)
         if plugin is None:
-            raise exception.ProfileTypeNotFound(profile_type=name)
+            raise exception.ResourceNotFound(type='profile_type', id=name)
         return plugin
 
     def get_profile_types(self):
@@ -130,7 +130,7 @@ class Environment(object):
         self._check_plugin_name('Policy', name)
         plugin = self.policy_registry.get_plugin(name)
         if plugin is None:
-            raise exception.PolicyTypeNotFound(policy_type=name)
+            raise exception.ResourceNotFound(type='policy_type', id=name)
         return plugin
 
     def get_policy_types(self):

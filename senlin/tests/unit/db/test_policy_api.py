@@ -363,7 +363,7 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         self.assertEqual('new_scaling_policy', new_policy.name)
 
     def test_policy_update_not_found(self):
-        self.assertRaises(exception.PolicyNotFound,
+        self.assertRaises(exception.ResourceNotFound,
                           db_api.policy_update,
                           self.ctx, 'BogusID', {})
 

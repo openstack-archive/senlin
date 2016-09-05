@@ -344,7 +344,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
         req = self._post('/receivers', jsonutils.dumps(body))
 
-        error = senlin_exc.ClusterNotFound(cluster=cluster_id)
+        error = senlin_exc.ResourceNotFound(type='cluster', id=cluster_id)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      side_effect=error)
 
@@ -360,7 +360,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context,
                                           ('receiver_create', expected_args))
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ClusterNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_receiver_create_illegal_action(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -468,7 +468,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         wid = 'non-existent-receiver'
         req = self._get('/receivers/%(receiver_id)s' % {'receiver_id': wid})
 
-        error = senlin_exc.ReceiverNotFound(receiver=wid)
+        error = senlin_exc.ResourceNotFound(type='receiver', id=wid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -477,7 +477,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, receiver_id=wid)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ReceiverNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_receiver_get_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)
@@ -511,7 +511,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         wid = 'aaaa-bbbb-cccc'
         req = self._delete('/receivers/%(receiver_id)s' % {'receiver_id': wid})
 
-        error = senlin_exc.ReceiverNotFound(receiver=wid)
+        error = senlin_exc.ResourceNotFound(type='receiver', id=wid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -520,7 +520,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, receiver_id=wid)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ReceiverNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_receiver_delete_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', False)

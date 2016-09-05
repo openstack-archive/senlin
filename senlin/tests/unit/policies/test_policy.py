@@ -120,7 +120,7 @@ class TestPolicyBase(base.SenlinTestCase):
             'properties': '',
         }
 
-        self.assertRaises(exception.PolicyTypeNotFound,
+        self.assertRaises(exception.ResourceNotFound,
                           pb.Policy,
                           'test-policy', bad_spec)
 
@@ -145,7 +145,7 @@ class TestPolicyBase(base.SenlinTestCase):
         policy = utils.create_policy(self.ctx, UUID1)
 
         new_ctx = utils.dummy_context(project='a-different-project')
-        self.assertRaises(exception.PolicyNotFound,
+        self.assertRaises(exception.ResourceNotFound,
                           pb.Policy.load,
                           new_ctx, policy.id, None)
 
@@ -154,13 +154,13 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual(policy.id, res.id)
 
     def test_load_not_found(self):
-        ex = self.assertRaises(exception.PolicyNotFound,
+        ex = self.assertRaises(exception.ResourceNotFound,
                                pb.Policy.load,
                                self.ctx, 'fake-policy', None)
         self.assertEqual('The policy (fake-policy) could not be found.',
                          six.text_type(ex))
 
-        ex = self.assertRaises(exception.PolicyNotFound,
+        ex = self.assertRaises(exception.ResourceNotFound,
                                pb.Policy.load,
                                self.ctx, None, None)
         self.assertEqual('The policy (None) could not be found.',
@@ -213,7 +213,7 @@ class TestPolicyBase(base.SenlinTestCase):
 
         res = pb.Policy.delete(self.ctx, policy_id)
         self.assertIsNone(res)
-        self.assertRaises(exception.PolicyNotFound,
+        self.assertRaises(exception.ResourceNotFound,
                           pb.Policy.load,
                           self.ctx, policy_id, None)
 

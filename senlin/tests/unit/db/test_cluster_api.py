@@ -391,7 +391,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertEqual('update failed', cluster.status_reason)
         self.assertEqual(90, cluster.timeout)
 
-        self.assertRaises(exception.ClusterNotFound,
+        self.assertRaises(exception.ResourceNotFound,
                           db_api.cluster_update, self.ctx, UUID2, values)
 
     def test_nested_cluster_get_by_name(self):
@@ -417,7 +417,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertIsNone(db_api.cluster_get(self.ctx, cluster_id))
         res = db_api.node_get(self.ctx, node.id)
         self.assertIsNone(res)
-        self.assertRaises(exception.ClusterNotFound, db_api.cluster_delete,
+        self.assertRaises(exception.ResourceNotFound, db_api.cluster_delete,
                           self.ctx, cluster_id)
 
         # Testing child nodes deletion

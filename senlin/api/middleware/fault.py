@@ -45,10 +45,7 @@ class FaultWrapper(wsgi.Middleware):
 
     error_map = {
         'ActionInProgress': webob.exc.HTTPConflict,
-        'ActionNotFound': webob.exc.HTTPNotFound,
-        'ClusterNotFound': webob.exc.HTTPNotFound,
         'ClusterBusy': webob.exc.HTTPConflict,
-        'EventNotFound': webob.exc.HTTPNotFound,
         'FeatureNotSupported': webob.exc.HTTPConflict,
         'Forbidden': webob.exc.HTTPForbidden,
         'InternalError': webob.exc.HTTPInternalServerError,
@@ -57,21 +54,15 @@ class FaultWrapper(wsgi.Middleware):
         'InvalidSchemaError': webob.exc.HTTPBadRequest,
         'MethodVersionNotFound': webob.exc.HTTPBadRequest,
         'MultipleChoices': webob.exc.HTTPBadRequest,
-        'NodeNotFound': webob.exc.HTTPNotFound,
         'NodeNotOrphan': webob.exc.HTTPConflict,
         'PolicyBindingNotFound': webob.exc.HTTPNotFound,
-        'PolicyNotFound': webob.exc.HTTPNotFound,
-        'PolicyTypeNotFound': webob.exc.HTTPNotFound,
         'ProfileInUse': webob.exc.HTTPConflict,
-        'ProfileNotFound': webob.exc.HTTPNotFound,
-        'ProfileTypeNotFound': webob.exc.HTTPNotFound,
         'ProfileTypeNotMatch': webob.exc.HTTPBadRequest,
-        'ReceiverNotFound': webob.exc.HTTPNotFound,
         'RequestLimitExceeded': webob.exc.HTTPBadRequest,
         'ResourceInUse': webob.exc.HTTPConflict,
         'BadRequest': webob.exc.HTTPBadRequest,
         'SpecValidationFailed': webob.exc.HTTPBadRequest,
-        'WebhookNotFound': webob.exc.HTTPNotFound,
+        'ResourceNotFound': webob.exc.HTTPNotFound,
     }
 
     def _map_exception_to_error(self, class_exception):

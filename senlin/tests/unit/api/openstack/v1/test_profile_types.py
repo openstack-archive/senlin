@@ -88,7 +88,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         type_name = 'BogusProfileType'
         req = self._get('/profile_types/%(type)s' % {'type': type_name})
 
-        error = senlin_exc.ProfileTypeNotFound(profile_type=type_name)
+        error = senlin_exc.ResourceNotFound(type='profile_type', id=type_name)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -101,7 +101,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             ('profile_type_get', {'type_name': type_name}))
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ProfileTypeNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_profile_type_get_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)

@@ -153,7 +153,7 @@ class Policy(object):
             db_policy = po.Policy.get(context, policy_id,
                                       project_safe=project_safe)
             if db_policy is None:
-                raise exception.PolicyNotFound(policy=policy_id)
+                raise exception.ResourceNotFound(type='policy', id=policy_id)
 
         return cls._from_object(db_policy)
 

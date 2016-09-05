@@ -24,7 +24,7 @@ from senlin.common import exception as senlin_exc
 from senlin.tests.unit.common import base
 
 
-class ClusterNotFoundChild(senlin_exc.ClusterNotFound):
+class ClusterNotFoundChild(senlin_exc.ResourceNotFound):
     pass
 
 
@@ -57,13 +57,15 @@ class FaultMiddlewareTest(base.SenlinTestCase):
 
     def test_openstack_exception_with_kwargs(self):
         wrapper = fault.FaultWrapper(None)
-        msg = wrapper._error(senlin_exc.ClusterNotFound(cluster='a'))
+        msg = wrapper._error(senlin_exc.ResourceNotFound(type='cluster',
+                                                         id='a'))
+
         expected = {
             'code': 404,
             'error': {
                 'code': 404,
                 'message': 'The cluster (a) could not be found.',
-                'type': 'ClusterNotFound'
+                'type': 'ResourceNotFound'
             },
             'explanation': 'The resource could not be found.',
             'title': 'Not Found'
@@ -109,7 +111,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
 
     def test_remote_exception(self):
         cfg.CONF.set_override('debug', True, enforce_type=True)
-        error = senlin_exc.ClusterNotFound(cluster='a')
+        error = senlin_exc.ResourceNotFound(type='cluster', id='a')
         exc_info = (type(error), error, None)
         serialized = rpc_common.serialize_remote_exception(exc_info)
         remote_error = rpc_common.deserialize_remote_exception(
@@ -122,7 +124,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
             'error': {
                 'code': 404,
                 'message': expected_message,
-                'type': 'ClusterNotFound'
+                'type': 'ResourceNotFound'
             },
             'explanation': 'The resource could not be found.',
             'title': 'Not Found'
@@ -159,7 +161,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
                     continue
                 elif obj == senlin_exc.Error:
                     error = obj('Error')
-                elif obj == senlin_exc.NodeNotFound:
+                elif obj == senlin_exc.ResourceNotFound:
                     error = obj()
                 else:
                     continue
@@ -187,7 +189,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
     def test_should_not_ignore_parent_classes(self):
         wrapper = fault.FaultWrapper(None)
 
-        msg = wrapper._error(ClusterNotFoundChild(cluster='a'))
+        msg = wrapper._error(ClusterNotFoundChild(type='cluster', id='a'))
         expected = {
             'code': 404,
             'error': {
@@ -223,7 +225,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
     def test_should_not_ignore_parent_classes_even_for_remote_ones(self):
         cfg.CONF.set_override('debug', True, enforce_type=True)
 
-        error = ClusterNotFoundChild(cluster='a')
+        error = ClusterNotFoundChild(type='cluster', id='a')
         exc_info = (type(error), error, None)
         serialized = rpc_common.serialize_remote_exception(exc_info)
         remote_error = rpc_common.deserialize_remote_exception(

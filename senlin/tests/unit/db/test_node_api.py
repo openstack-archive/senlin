@@ -410,7 +410,7 @@ class DBAPINodeTest(base.SenlinTestCase):
 
     def test_node_update_not_found(self):
         new_attributes = {'name': 'new_name'}
-        ex = self.assertRaises(exception.NodeNotFound,
+        ex = self.assertRaises(exception.ResourceNotFound,
                                db_api.node_update,
                                self.ctx, 'BogusId', new_attributes)
         self.assertEqual('The node (BogusId) could not be found.',

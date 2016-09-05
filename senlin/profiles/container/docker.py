@@ -141,8 +141,8 @@ class DockerProfile(base.Profile):
 
         try:
             host_cluster = cluster.Cluster.load(ctx, cluster_id=host_cluster)
-        except exc.ClusterNotFound:
-            msg = _("The host cluster (%s) could not be found") % host_cluster
+        except exc.ResourceNotFound as ex:
+            msg = ex.enhance_msg('host', ex)
             raise exc.EResourceCreation(type='container', message=msg)
         return host_cluster
 
@@ -155,8 +155,8 @@ class DockerProfile(base.Profile):
 
         try:
             host_node = node.Node.load(ctx, node_id=host_node)
-        except exc.NodeNotFound:
-            msg = _("The host_node (%s) could not be found") % host_node
+        except exc.ResourceNotFound as ex:
+            msg = ex.enhance_msg('host', ex)
             raise exc.EResourceCreation(type='container', message=msg)
         return host_node
 

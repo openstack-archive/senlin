@@ -321,7 +321,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         pid = 'non-existent-policy'
         req = self._get('/policies/%(policy_id)s' % {'policy_id': pid})
 
-        error = senlin_exc.PolicyNotFound(policy=pid)
+        error = senlin_exc.ResourceNotFound(type='policy', id=pid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -330,7 +330,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, policy_id=pid)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('PolicyNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_policy_get_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)
@@ -446,7 +446,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._patch('/policies/%(policy_id)s' % {'policy_id': pid},
                           jsonutils.dumps(body))
 
-        error = senlin_exc.PolicyNotFound(policy=pid)
+        error = senlin_exc.ResourceNotFound(type='policy', id=pid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -455,7 +455,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, policy_id=pid, body=body)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('PolicyNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_policy_update_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', False)
@@ -492,7 +492,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         pid = 'aaaa-bbbb-cccc'
         req = self._delete('/policies/%(policy_id)s' % {'policy_id': pid})
 
-        error = senlin_exc.PolicyNotFound(policy=pid)
+        error = senlin_exc.ResourceNotFound(type='policy', id=pid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -501,7 +501,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, policy_id=pid)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('PolicyNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_policy_delete_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', False)

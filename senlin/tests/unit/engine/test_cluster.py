@@ -222,7 +222,7 @@ class TestCluster(base.SenlinTestCase):
     @mock.patch.object(co.Cluster, 'get')
     def test_load_not_found(self, mock_get):
         mock_get.return_value = None
-        ex = self.assertRaises(exception.ClusterNotFound,
+        ex = self.assertRaises(exception.ResourceNotFound,
                                cb.Cluster.load,
                                self.context, cluster_id=CLUSTER_ID)
         self.assertEqual('The cluster (%s) could not be found.' % CLUSTER_ID,

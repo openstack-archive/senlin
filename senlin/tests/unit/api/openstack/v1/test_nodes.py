@@ -239,7 +239,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cluster_id = 'non-existent'
         req = self._get('/nodes', {'cluster_id': cluster_id})
 
-        error = senlin_exc.ClusterNotFound(cluster=cluster_id)
+        error = senlin_exc.ResourceNotFound(type='cluster', id=cluster_id)
         self.patchobject(rpc_client.EngineClient, 'call',
                          side_effect=shared.to_remote_error(error))
 
@@ -247,7 +247,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               self.controller.index, req)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ClusterNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_node_index_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
@@ -327,7 +327,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
         req = self._post('/nodes', jsonutils.dumps(body))
 
-        error = senlin_exc.ProfileNotFound(profile='bad-profile')
+        error = senlin_exc.ResourceNotFound(type='profile', id='bad-profile')
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      side_effect=error)
 
@@ -337,7 +337,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context,
                                           ('node_create', body['node']))
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ProfileNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_node_create_with_bad_cluster(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -352,7 +352,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
         req = self._post('/nodes', jsonutils.dumps(body))
 
-        error = senlin_exc.ClusterNotFound(cluster='non-existent-cluster')
+        error = senlin_exc.ResourceNotFound(type='cluster',
+                                            id='non-existent-cluster')
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      side_effect=error)
 
@@ -363,7 +364,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context,
                                           ('node_create', body['node']))
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ClusterNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_node_get_success(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
@@ -421,7 +422,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         node_id = 'non-existent-node'
         req = self._get('/nodes/%(node_id)s' % {'node_id': node_id})
 
-        error = senlin_exc.NodeNotFound(node=node_id)
+        error = senlin_exc.ResourceNotFound(type='node', id=node_id)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -430,7 +431,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, node_id=node_id)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('NodeNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_node_get_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)
@@ -516,7 +517,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._patch('/nodes/%(node_id)s' % {'node_id': nid},
                           jsonutils.dumps(body))
 
-        error = senlin_exc.NodeNotFound(node=nid)
+        error = senlin_exc.ResourceNotFound(type='node', id=nid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      side_effect=shared.to_remote_error(error))
 
@@ -536,7 +537,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         )
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('NodeNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_node_update_invalid_profile(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -553,7 +554,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._patch('/nodes/%(node_id)s' % {'node_id': nid},
                           jsonutils.dumps(body))
 
-        error = senlin_exc.ProfileNotFound(profile=nid)
+        error = senlin_exc.ResourceNotFound(type='profile', id=nid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      side_effect=shared.to_remote_error(error))
 
@@ -571,7 +572,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             })
         )
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ProfileNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_node_update_cluster_id_specified(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -666,7 +667,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._post('/nodes/%(node_id)s/actions' % {'node_id': node_id},
                          jsonutils.dumps(body))
 
-        error = senlin_exc.NodeNotFound(node=node_id)
+        error = senlin_exc.ResourceNotFound(type='node', id=node_id)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -675,7 +676,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, node_id=node_id, body=body)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('NodeNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_node_action_recover_success(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -755,7 +756,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._post('/nodes/%(node_id)s/actions' % {'node_id': node_id},
                          jsonutils.dumps(body))
 
-        error = senlin_exc.NodeNotFound(node=node_id)
+        error = senlin_exc.ResourceNotFound(type='node', id=node_id)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -764,7 +765,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, node_id=node_id, body=body)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('NodeNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
         mock_call.assert_called_once_with(
             req.context,
@@ -775,7 +776,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         nid = 'aaaa-bbbb-cccc'
         req = self._delete('/nodes/%(node_id)s' % {'node_id': nid})
 
-        error = senlin_exc.NodeNotFound(node=nid)
+        error = senlin_exc.ResourceNotFound(type='node', id=nid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -784,4 +785,4 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, node_id=nid)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('NodeNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])

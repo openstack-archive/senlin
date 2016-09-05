@@ -62,7 +62,7 @@ class PolicyTypeTest(base.SenlinTestCase):
     @mock.patch.object(environment, 'global_env')
     def test_policy_type_get_nonexist(self, mock_env):
         x_env = mock.Mock()
-        err = exc.PolicyTypeNotFound(policy_type='FAKE_TYPE')
+        err = exc.ResourceNotFound(type='policy_type', id='FAKE_TYPE')
         x_env.get_policy.side_effect = err
         mock_env.return_value = x_env
 
@@ -70,8 +70,8 @@ class PolicyTypeTest(base.SenlinTestCase):
                                self.eng.policy_type_get,
                                self.ctx, 'FAKE_TYPE')
 
-        self.assertEqual(exc.PolicyTypeNotFound, ex.exc_info[0])
-        self.assertEqual('Policy type (FAKE_TYPE) is not found.',
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual('The policy_type (FAKE_TYPE) could not be found.',
                          six.text_type(ex.exc_info[1]))
         mock_env.assert_called_once_with()
         x_env.get_policy.assert_called_once_with('FAKE_TYPE')

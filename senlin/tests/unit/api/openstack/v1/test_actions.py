@@ -216,7 +216,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         action_id = 'non-existent-action'
         req = self._get('/actions/%(action_id)s' % {'action_id': action_id})
 
-        error = senlin_exc.ActionNotFound(action=action_id)
+        error = senlin_exc.ResourceNotFound(type='action', id=action_id)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -225,7 +225,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, action_id=action_id)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ActionNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_action_get_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)

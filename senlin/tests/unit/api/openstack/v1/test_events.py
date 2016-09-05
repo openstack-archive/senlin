@@ -251,7 +251,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         event_id = 'non-existent-event'
         req = self._get('/events/%(event_id)s' % {'event_id': event_id})
 
-        error = senlin_exc.EventNotFound(event=event_id)
+        error = senlin_exc.ResourceNotFound(type='event', id=event_id)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -260,7 +260,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, event_id=event_id)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('EventNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_event_get_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)

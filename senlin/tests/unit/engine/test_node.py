@@ -103,7 +103,7 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual(node_id, new_node_id)
 
     def test_node_load(self):
-        ex = self.assertRaises(exception.NodeNotFound,
+        ex = self.assertRaises(exception.ResourceNotFound,
                                nodem.Node.load,
                                self.context, 'non-existent', None)
         self.assertEqual('The node (non-existent) could not be found.',
@@ -140,7 +140,7 @@ class TestNode(base.SenlinTestCase):
         utils.create_node(self.context, x_node_id, PROFILE_ID, CLUSTER_ID)
 
         new_ctx = utils.dummy_context(project='a-different-project')
-        ex = self.assertRaises(exception.NodeNotFound,
+        ex = self.assertRaises(exception.ResourceNotFound,
                                nodem.Node.load,
                                new_ctx, x_node_id, None)
         self.assertEqual('The node (%s) could not be found.' % x_node_id,
