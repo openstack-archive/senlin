@@ -21,6 +21,7 @@ from senlin.objects import node as no
 from senlin.profiles import base as pb
 
 LOG = logging.getLogger(__name__)
+_CONTAINER_PROFILE_TYPE = 'container.dockerinc.docker'
 
 
 class Node(object):
@@ -69,6 +70,7 @@ class Node(object):
         self.status_reason = kwargs.get('status_reason', 'Initializing')
         self.data = kwargs.get('data', {})
         self.metadata = kwargs.get('metadata', {})
+        self.dependents = kwargs.get('dependents', {})
         self.rt = {}
 
         if context is not None:
@@ -116,6 +118,7 @@ class Node(object):
             'status_reason': self.status_reason,
             'meta_data': self.metadata,
             'data': self.data,
+            'dependents': self.dependents,
         }
 
         if self.id:
@@ -152,6 +155,7 @@ class Node(object):
             'status_reason': obj.status_reason,
             'data': obj.data,
             'metadata': obj.metadata,
+            'dependents': obj.dependents,
         }
 
         return cls(obj.name, obj.profile_id, obj.cluster_id,
@@ -201,6 +205,7 @@ class Node(object):
             'status_reason': self.status_reason,
             'data': self.data,
             'metadata': self.metadata,
+            'dependents': self.dependents,
             'profile_name': profile_name,
         }
         return node_dict
@@ -236,6 +241,16 @@ class Node(object):
         if not self.physical_id:
             return {}
         return pb.Profile.get_details(context, self)
+
+    def add_dependents(self, context, dependents):
+        """Add dependency information into node's property.
+
+        :param context: An instance of request context.
+        :param dependents: The dependency information node.
+        """
+
+        values = {'dependents': dependents}
+        no.Node.update(context, self.id, values)
 
     def do_create(self, context):
         if self.status != self.INIT:

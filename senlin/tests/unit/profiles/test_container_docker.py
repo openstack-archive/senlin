@@ -48,6 +48,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         profile = docker_profile.DockerProfile('t', self.spec)
         self.assertIsNone(profile._dockerclient)
         self.assertIsNone(profile.container_id)
+        self.assertIsNone(profile.host)
 
     @mock.patch('senlin.drivers.container.docker_v1.DockerClient')
     @mock.patch.object(docker_profile.DockerProfile, '_get_host_ip')
@@ -274,22 +275,44 @@ class TestContainerDockerProfile(base.SenlinTestCase):
                 "missing from the provided stack node.")
         self.assertEqual(msg, ex.message)
 
+    @mock.patch.object(docker_profile.DockerProfile, 'add_dependents_to_vm')
+    @mock.patch.object(context, 'get_admin_context')
     @mock.patch.object(docker_profile.DockerProfile, 'docker')
-    def test_do_create(self, mock_docker):
+    def test_do_create(self, mock_docker, mock_ctx, mock_add):
         dockerclient = mock.Mock()
         mock_docker.return_value = dockerclient
         container = {'Id': 'd' * 64}
         dockerclient.container_create.return_value = container
         container_id = 'd' * 36
         profile = docker_profile.DockerProfile('container', self.spec)
-        obj = mock.Mock()
-        self.assertEqual(container_id, profile.do_create(obj))
+        obj = mock.Mock(id='fake_con_id')
+        ret_container_id = profile.do_create(obj)
+        mock_add.assert_called_once_with('fake_con_id')
+        self.assertEqual(container_id, ret_container_id)
         params = {
             'image': 'hello-world',
             'name': 'docker_container',
             'command': '/bin/sleep 30',
         }
         dockerclient.container_create.assert_called_once_with(**params)
+
+    @mock.patch.object(context, 'get_admin_context')
+    def test_add_dependents_to_vm(self, mock_ctx):
+        host = mock.Mock(dependents={}, id='fake_host')
+        container = mock.Mock()
+        ctx = mock.Mock()
+        mock_ctx.return_value = ctx
+        profile = docker_profile.DockerProfile('container', self.spec)
+        profile.host = host
+        profile.add_dependents_to_vm(container)
+        dependents = {'containers': [container]}
+        profile.host.add_dependents.assert_any_call(ctx, dependents)
+        dep = {'containers': ['container1']}
+        host = mock.Mock(dependents=dep, id='fake_host')
+        profile.host = host
+        dependents = {'containers': ['container1', container]}
+        profile.add_dependents_to_vm(container)
+        profile.host.add_dependents.assert_any_call(ctx, dependents)
 
     @mock.patch.object(docker_profile.DockerProfile, 'docker')
     def test_do_create_failed(self, mock_docker):
