@@ -362,7 +362,7 @@ action_timeout:
     treated as timeout.
 
 actions:
-  type: list
+  type: array
   in: body
   required: True
   description: |
@@ -488,7 +488,7 @@ cluster:
     The structured definition of a cluster object.
 
 cluster_attributes:
-  type: list
+  type: array
   in: body
   required: True
   description: |
@@ -510,7 +510,7 @@ cluster_id:
     The UUID of the cluster object.
 
 cluster_member_nodes:
-  type: list
+  type: array
   in: body
   reqruied: True
   description: |
@@ -527,7 +527,7 @@ cluster_name:
     The name of the cluster object.
 
 cluster_nodes:
-  type: list
+  type: array
   in: body
   required: True
   description: |
@@ -535,14 +535,14 @@ cluster_nodes:
     cluster.
 
 cluster_policies:
-  type: list
+  type: array
   in: body
   required: True
   description: |
     A list of cluster_policy objects.
 
 cluster_policies_property:
-  type: list
+  type: array
   in: body
   required: True
   description: |
@@ -570,7 +570,7 @@ cluster_policy_id:
     The UUID of a cluster_policy object.
 
 cluster_policy_property:
-  type: list
+  type: array
   in: body
   description: |
     A list of the UUIDs of policy objects which are attached to the current
@@ -584,7 +584,7 @@ cluster_status:
     The string representation of the current status of the cluster.
 
 clusters:
-  type: list
+  type: array
   in: body
   required: True
   description: |
@@ -600,14 +600,14 @@ created_at:
     ``2016-01-18T00:00:00Z``
 
 depended_by:
-  type: list
+  type: array
   in: body
   required: True
   description: |
     A list of UUIDs of the actions that depend on the current action.
 
 depends_on:
-  type: list
+  type: array
   in: body
   required: True
   description: |
@@ -673,7 +673,7 @@ event_timestamp:
     format is ISO8601: ``CCYY-MM-DDThh:mm:ssZ``.
 
 events:
-  type: list
+  type: array
   in: body
   required: True
   description: |
@@ -810,7 +810,7 @@ node_status:
     The string representation of the current status of the node object.
 
 nodes:
-  type: list
+  type: array
   in: body
   required: True
   description: |
@@ -853,7 +853,7 @@ physical_id:
     The UUID of the physical resource represented by the node object.
 
 policies:
-  type: list
+  type: array
   in: body
   required: True
   description: |
@@ -924,7 +924,7 @@ policy_type_schema:
     based on the specific type implementation.
 
 policy_types:
-  type: list
+  type: array
   in: body
   required: True
   description: |
@@ -1000,14 +1000,14 @@ profile_type_schema:
     properties are defined by a particular profile type implementation.
 
 profile_types:
-  type: list
+  type: array
   in: body
   required: True
   description: |
     A list of profile_type objects.
 
 profiles:
-  type: list
+  type: array
   in: body
   required: True
   description: |
@@ -1101,7 +1101,7 @@ receiver_type_req:
     The type of the receiver. The only valid value is ``webhook`` currently.
 
 receivers:
-  type: list
+  type: array
   in: body
   required: True
   description: |
@@ -1197,7 +1197,7 @@ version_id:
     The string representation of an API version number, e.g. ``1.0``.
 
 version_links:
-  type: list
+  type: array
   in: body
   required: True
   description: |
@@ -1211,7 +1211,7 @@ version_max_version:
     The string representation of the maximum microversion supported.
 
 version_media_types:
-  type: list
+  type: array
   in: body
   required: True
   description: |
@@ -1241,7 +1241,7 @@ version_updated:
     ``2016-01-18T00:00:00Z``
 
 versions:
-  type: list
+  type: array
   in: body
   required: True
   description: |
