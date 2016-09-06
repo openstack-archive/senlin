@@ -144,7 +144,7 @@ enabled_query:
     Filters the response by a policy enabled status on the cluster.
 
 global_project:
-  type: bool
+  type: boolean
   in: query
   default: False
   description: |
@@ -213,7 +213,7 @@ receiver_type_query:
     Filters the response by the ``type`` property of the receiver.
 
 show_details:
-  type: bool
+  type: boolean
   in: query
   default: False
   required: False
@@ -402,7 +402,7 @@ adjustment_number:
     integer.
 
 adjustment_strict:
-  type: bool
+  type: boolean
   in: body
   default: False
   description: |
@@ -556,7 +556,7 @@ cluster_policy:
     The structured description of a cluster_policy object.
 
 cluster_policy_enabled:
-  type: bool
+  type: boolean
   in: body
   required: True
   description: |
